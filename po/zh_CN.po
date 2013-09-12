@@ -4,79 +4,40 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-08-23 14:51-0400\n"
+"POT-Creation-Date: 2012-06-27 12:35-0400\n"
 "PO-Revision-Date: 2013-08-08 07:17-0400\n"
 "Last-Translator: leahliu <lliu@redhat.com>\n"
 "Language-Team: Chinese (Simplified, China)\n"
-"Language: zh-Hans-CN\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: zh-Hans-CN\n"
 "Plural-Forms: nplurals=1; plural=0\n"
 "X-Generator: Zanata 2.2.2\n"
 
-#: src/main/java/org/candlepin/model/EntitlementCurator.java:266
-#, java-format
-msgid "No product found for product ID {0}"
-msgstr "在产品 ID {0} 下没有找到任何产品"
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/auth/interceptor/SecurityInterceptor.java:196
+msgid "Unable to verify request."
+msgstr "无法验证请求。"
 
-#: src/main/java/org/candlepin/model/UeberCertificateGenerator.java:122
-#: src/main/java/org/candlepin/resource/OwnerResource.java:609
+#: src/main/java/org/candlepin/auth/interceptor/SecurityInterceptor.java:210
+#: src/main/java/org/candlepin/auth/interceptor/SecurityInterceptor.java:233
 #, java-format
-msgid "No such unit type: {0}"
-msgstr "没有这种单元类型：{0} "
+msgid "{0} with id {1} could not be found."
+msgstr "没有找到 id 为 {1} 的 {0}"
 
-#: src/main/java/org/candlepin/model/ProductCurator.java:139
-#, java-format
-msgid "The attribute ''{0}'' must be an integer value."
-msgstr "属性 ''{0}'' 必须是一个整数。"
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/auth/interceptor/SecurityInterceptor.java:227
+msgid "Organization"
+msgstr "机构"
 
-#: src/main/java/org/candlepin/model/ProductCurator.java:146
-#: src/main/java/org/candlepin/model/ProductCurator.java:165
+#: src/main/java/org/candlepin/auth/interceptor/SecurityInterceptor.java:334
+#: src/main/java/org/candlepin/resteasy/interceptor/ConsumerAuth.java:55
 #, java-format
-msgid "The attribute ''{0}'' must have a positive value."
-msgstr "属性 ''{0}'' 必须是一个正整数。"
-
-#: src/main/java/org/candlepin/model/ProductCurator.java:158
-#, java-format
-msgid "The attribute ''{0}'' must be a long value."
-msgstr "属性 ''{0}'' 必须是一个长值。"
-
-#: src/main/java/org/candlepin/model/ProductCurator.java:176
-#, java-format
-msgid "The attribute ''{0}'' must be a boolean value."
-msgstr "属性 ''{0}'' 必须是一个布尔值。"
-
-#: src/main/java/org/candlepin/model/ProductCurator.java:185
-#, java-format
-msgid ""
-"You cannot create a circular reference for products that ''{0}'' relies on."
-msgstr "您不能创建一个参考 ''{0}'' 依赖的产品。"
-
-#: src/main/java/org/candlepin/model/ConsumerCurator.java:100
-#, java-format
-msgid "Name of the unit must be shorter than {0} characters."
-msgstr "单元名称应少于 {0} 字符。"
-
-#: src/main/java/org/candlepin/model/ConsumerCurator.java:332
-#, java-format
-msgid ""
-"The fact ''{0}'' must be an integer instead of ''{1}''. No value will exist "
-"for that fact."
-msgstr "fact ''{0}'' 必须是一个整数而不是 ''{1}''。那个 fact 还没有任何数值。"
-
-#: src/main/java/org/candlepin/model/ConsumerCurator.java:341
-#, java-format
-msgid ""
-"The fact ''{0}'' must have a positive integer value instead of ''{1}''. No "
-"value will exist for that fact."
-msgstr ""
-"fact ''{0}'' 必须是一个正整数而不是 ''{1}''。那个 fact 还没有任何数值。"
-
-#: src/main/java/org/candlepin/model/ConsumerCurator.java:411
-#, java-format
-msgid "The system with UUID {0} is a virtual guest. It does not have guests."
-msgstr "UUID 为 {0} 的系统是虚拟机。它没有虚拟机。"
+msgid "Unit {0} has been deleted"
+msgstr "已删除单元 {0}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -258,23 +219,624 @@ msgstr "{0} 创建了虚拟机 id {1} "
 msgid "{0} deleted the guest id {1}"
 msgstr "{0} 删除了虚拟机 id {1} "
 
-#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:81
+#: src/main/java/org/candlepin/resource/UserResource.java:141
 #, java-format
-msgid "Subscriptions for {0} expired on: {1}"
-msgstr "{0} 的订阅于 {1} 过期"
+msgid "User {0} does not exist"
+msgstr "用户 {0} 不存在"
 
-# translation auto-copied from project Candlepin, version master, document
-# keys, author xhuang
-#: src/main/java/org/candlepin/policy/js/entitlement/AbstractEntitlementRules.java:133
+#: src/main/java/org/candlepin/resource/UserResource.java:157
 #, java-format
-msgid "''{0}'' Should contain name, priority and at least one attribute"
-msgstr "''{0}'' 应该包含名称、优先级和至少一个属性"
+msgid "User {0} not found"
+msgstr "未找到用户 {0}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/policy/js/entitlement/AbstractEntitlementRules.java:148
-msgid "second parameter should be the priority number."
-msgstr "第二个参数应该是优先权数。"
+#: src/main/java/org/candlepin/resource/RoleResource.java:82
+#, java-format
+msgid "No such owner: {0}"
+msgstr "没有这个拥有者：{0}"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/RoleResource.java:112
+msgid "Role ID does not match path."
+msgstr "角色 ID 与路径不匹配。"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/RoleResource.java:138
+msgid "Access type NONE not supported."
+msgstr "不支持访问类型 NONE。"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/RoleResource.java:177
+#, java-format
+msgid "No such permission: {0} in role: {1}"
+msgstr "角色 {1} 没有这个授权 {0}"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/RoleResource.java:191
+#, java-format
+msgid "No such role: {0}"
+msgstr "没有这个角色：{0}"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/RoleResource.java:199
+#, java-format
+msgid "No such user: {0}"
+msgstr "没有这个用户：{0}"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author xhuang
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:238
+#, java-format
+msgid "Organization with key: {0} was not found."
+msgstr "无法找到具有密钥 {0} 的机构。"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:257
+#: src/main/java/org/candlepin/resource/OwnerResource.java:599
+msgid "Cannot specify other query parameters with consumer IDs."
+msgstr "无法使用用户 ID 指定其他查询参数。"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author xhuang
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:338
+msgid "Insufficient permissions"
+msgstr "权限不够"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author xhuang
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:344
+msgid "Must specify an org to register with activation keys."
+msgstr "必须指定一个用激活密钥注册的机构。"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author xhuang
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:348
+msgid "Cannot specify username with activation keys."
+msgstr "无法用激活密钥指定用户名。"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:371
+msgid "A unit type of 'person' cannot be used with activation keys"
+msgstr "单元类型为 'person' 无法和激活码一起使用"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:376
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:386
+msgid "System name cannot contain most special characters."
+msgstr "系统名不能包含大多数特殊字符。"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:431
+msgid "Pool ID must be provided"
+msgstr "必须提供池 ID"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:455
+#, java-format
+msgid "Problem creating unit {0}"
+msgstr "创建单元的问题 {0}"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:536
+msgid "System name cannot be null."
+msgstr "系统名称不能为空。"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:543
+msgid "System name cannot begin with # character"
+msgstr "系统名称不能以 # 字符开头"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:558
+#: src/main/java/org/candlepin/resource/OwnerResource.java:847
+#, java-format
+msgid "Service level ''{0}'' is not available to units of organization {1}."
+msgstr "机构 {1} 的单元无法使用服务等级 ''{0}'' 。"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author xhuang
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:588
+#, java-format
+msgid "Activation key ''{0}'' not found for organization ''{1}''."
+msgstr "未找到机构 ''{1}'' 的激活密钥 ''{0}''。"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:608
+#, java-format
+msgid "User with ID ''{0}'' could not be found."
+msgstr ""
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:615
+#, java-format
+msgid "User ''{0}'' has no roles for organization ''{1}''"
+msgstr ""
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:627
+#, java-format
+msgid "User ''{0}'' has already registered a personal consumer"
+msgstr ""
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:644
+msgid "You must specify an organization for new units."
+msgstr "你必须为新单元指定一个机构。"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author xhuang
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:655
+#, java-format
+msgid "Organization {0} does not exist."
+msgstr "机构 {0} 不存在。"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:663
+#, java-format
+msgid "User ''{0}'' cannot access organization ''{1}''."
+msgstr ""
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:725
+#, java-format
+msgid "Unit type ''{0}'' could not be found."
+msgstr ""
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:811
+#, java-format
+msgid "Environment with ID ''{0}'' could not be found."
+msgstr ""
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1121
+#, java-format
+msgid "Cannot unregister {0} {1} because: {2}"
+msgstr "无法取消 {0} {1} 中的注册，因为：{2}"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1208
+msgid "Unable to create entitlement certificate archive"
+msgstr "无法创建授权证书归档"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1320
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1331
+msgid "Cannot bind by multiple parameters."
+msgstr "无法绑定多个参数。"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author xhuang
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1325
+msgid "Cannot specify a quantity when auto-binding."
+msgstr "在自动绑定时无法指定数量。"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1398
+#, java-format
+msgid "Unable to attach a subscription for a product that has no pool: {0} "
+msgstr "无法为没有池的产品附加订阅：{0}"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1464
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1553
+#: src/main/java/org/candlepin/resource/EntitlementResource.java:141
+#, java-format
+msgid "Unit with ID ''{0}'' could not be found."
+msgstr ""
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author xhuang
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1474
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1590
+#: src/main/java/org/candlepin/resource/EntitlementResource.java:174
+#: src/main/java/org/candlepin/resource/EntitlementResource.java:209
+#: src/main/java/org/candlepin/resource/EntitlementResource.java:233
+#: src/main/java/org/candlepin/resource/EntitlementResource.java:259
+#, java-format
+msgid "Entitlement with ID ''{0}'' could not be found."
+msgstr "无法找到具有 ID ''{0}'' 的权利。"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1500
+#, java-format
+msgid "Product with ID ''{0}'' could not be found."
+msgstr ""
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1613
+#, java-format
+msgid "Entitlement Certificate with serial number ''{0}'' could not be found."
+msgstr ""
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1676
+#, java-format
+msgid ""
+"Unit {0} cannot be exported. A manifest cannot be made for units of type "
+"''{1}''."
+msgstr "客户 {0} 无法导出。无法为类型单元 ''{1}'' 生成清单。"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1694
+msgid "Unable to create export archive"
+msgstr "无法创建导出归档"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1766
+#, java-format
+msgid "Problem regenerating ID cert for unit {0}"
+msgstr "为单元 {0} 重新生成 id 证书时的问题"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1805
+#, java-format
+msgid "The system with UUID {0} is not a virtual guest."
+msgstr "UUID 为 {0} 的系统不是虚拟客户端。"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1911
+#, java-format
+msgid "Deletion record for hypervisor ''{0}'' not found."
+msgstr ""
+
+#: src/main/java/org/candlepin/resource/EntitlementResource.java:91
+#, java-format
+msgid "Object with ID ''{0}'' could not found."
+msgstr ""
+
+#: src/main/java/org/candlepin/resource/EntitlementResource.java:119
+#, java-format
+msgid "Unit ''{0}'' has no subscription for product ''{1}''."
+msgstr ""
+
+#: src/main/java/org/candlepin/resource/EntitlementResource.java:194
+msgid "Quantity value must be greater than 0."
+msgstr ""
+
+#: src/main/java/org/candlepin/resource/ProductResource.java:121
+#: src/main/java/org/candlepin/resource/ProductResource.java:140
+#: src/main/java/org/candlepin/resource/ProductResource.java:297
+#: src/main/java/org/candlepin/resource/ProductResource.java:372
+#, java-format
+msgid "Product with UUID ''{0}'' could not be found."
+msgstr "无法找到 UUID 为 ''{0}'' 的产品"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author xhuang
+#: src/main/java/org/candlepin/resource/ProductResource.java:301
+#, java-format
+msgid "Product with UUID ''{0}'' cannot be deleted while subscriptions exist."
+msgstr "当订阅已存在时无法删除 UUID 为 ''{0}'' 的产品"
+
+#: src/main/java/org/candlepin/resource/ProductResource.java:356
+msgid "Must specify product ID."
+msgstr "必须指定产品 ID。"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/StatisticResource.java:61
+msgid "couldn't generate statistics"
+msgstr "无法生成统计"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author xhuang
+#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:132
+msgid "The quantity must be greater than 0"
+msgstr "数量必须大于 0"
+
+#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:142
+msgid ""
+"Cannot add pools that are restricted to unit type 'person' to activation "
+"keys."
+msgstr "无法在激活码中添加仅限于单元类型 ‘person’ 的池。"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author xhuang
+#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:149
+msgid ""
+"Error: Only pools with multi-entitlement product subscriptions can be added "
+"to the activation key with a quantity greater than one."
+msgstr "错误：只有具有多重权限产品订阅的池可以用大于 1 的数目添加到激活码里。"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author xhuang
+#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:156
+msgid "The quantity must not be greater than the total allowed for the pool"
+msgstr "数量必须大于池所允许的总数"
+
+#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:163
+msgid "Activation keys can only use host restricted pools from a single host."
+msgstr "激活码只能使用来自单一主机的限制主机的池。"
+
+#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:224
+#, java-format
+msgid "ActivationKey with id {0} could not be found."
+msgstr "没有找到 id 为 {0} 的激活码"
+
+#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:235
+#, java-format
+msgid "Pool with id {0} could not be found."
+msgstr "无法找到 id 为 {0} 的池"
+
+#: src/main/java/org/candlepin/resource/ContentResource.java:87
+#: src/main/java/org/candlepin/resource/ContentResource.java:122
+#, java-format
+msgid "Content with id {0} could not be found."
+msgstr "无法找到 id 为 {0} 的内容"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/RulesResource.java:85
+msgid "Error decoding the rules. The text should be base 64 encoded"
+msgstr "解码规则时出错。文本应使用 64 位代码。"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/RulesResource.java:111
+msgid "couldn't read rules file"
+msgstr "无法读取规则文件"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author leahliu
+#: src/main/java/org/candlepin/resource/SubscriptionResource.java:122
+#, java-format
+msgid "no certificate for subscription {0}"
+msgstr "订阅 {0} 没有证书"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author xhuang
+#: src/main/java/org/candlepin/resource/SubscriptionResource.java:141
+msgid "email is required for notification"
+msgstr "需要电子邮件来接收通知"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author xhuang
+#: src/main/java/org/candlepin/resource/SubscriptionResource.java:146
+msgid "email locale is required for notification"
+msgstr "需要接收通知的电子邮件的地区编码"
+
+#: src/main/java/org/candlepin/resource/SubscriptionResource.java:152
+#: src/main/java/org/candlepin/resource/OwnerResource.java:784
+#, java-format
+msgid "No such unit: {0}"
+msgstr "没有这个单元：{0}"
+
+#: src/main/java/org/candlepin/resource/SubscriptionResource.java:182
+#, java-format
+msgid "Subscription with id {0} could not be found."
+msgstr "没有找到 id 为 {0} 的订阅。"
+
+#: src/main/java/org/candlepin/resource/HypervisorResource.java:102
+#, java-format
+msgid "Hypervisor {0} has been deleted previously"
+msgstr "之前已删除 Hypervisor {0}"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author xhuang
+#: src/main/java/org/candlepin/resource/EventResource.java:85
+#, java-format
+msgid "Event with ID ''{0}'' could not be found."
+msgstr "没有找到 ID 为 ''{0}'' 的事件"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:260
+#, java-format
+msgid "Could not create the Owner: {0}. Parent {1} does not exist."
+msgstr "无法创建拥有者：{0}。上级 {1} 不存在。"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:272
+#, java-format
+msgid "Could not create the Owner: {0}"
+msgstr "无法创建拥有者：{0}"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author xhuang
+#: src/main/java/org/candlepin/resource/OwnerResource.java:492
+msgid "Must provide a name for activation key."
+msgstr "必须为激活密钥提供一个名称。"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:499
+#, java-format
+msgid ""
+"The activation key name ''{0}'' must be alphanumeric or include the "
+"characters '-' or '_'"
+msgstr "激活码名称 ''{0}'' 必须是字母数字或者包含字符'-' 或 '_'。"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:506
+#, java-format
+msgid "The activation key name ''{0}'' is already in use for owner {1}"
+msgstr "激活码名称 ''{0}'' 已被拥有者 {1} 使用"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:610
+#: src/main/java/org/candlepin/model/UeberCertificateGenerator.java:122
+#, java-format
+msgid "No such unit type: {0}"
+msgstr "没有这种单元类型：{0} "
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:651
+#: src/main/java/org/candlepin/resource/PoolResource.java:140
+#, java-format
+msgid "Unit: {0} not found"
+msgstr "没有找到单元 {0}"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/OwnerResource.java:661
+#: src/main/java/org/candlepin/resource/PoolResource.java:217
+#, java-format
+msgid "User {0} cannot access consumer {1}"
+msgstr "用户 {0} 不能访问客户 {1}"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/OwnerResource.java:774
+#: src/main/java/org/candlepin/resource/OwnerResource.java:879
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1084
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1114
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1143
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1169
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1208
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1240
+#, java-format
+msgid "owner with key: {0} was not found."
+msgstr "无法找到密钥 {0} 的拥有者。"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/OwnerResource.java:898
+#, java-format
+msgid "subscription with id: {0} not found."
+msgstr "没有找到 id 为 {0} 的订阅。"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:998
+msgid "Unknown conflict to force"
+msgstr "未知冲突的强制"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1027
+msgid "Error reading export archive"
+msgstr "读取导出归档出错"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author xhuang
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1190
+#, java-format
+msgid "Problem generating ueber cert for owner {0}"
+msgstr "为所有者 {0} 生成 ueber 证书出现问题"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author xhuang
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1216
+#, java-format
+msgid "ueber certificate for owner {0} was not found. Please generate one."
+msgstr "没有找到为所有者 {0} 的 ueber 证书，请生成一个。"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1268
+#, java-format
+msgid "{0} file imported successfully."
+msgstr "成功导入 {0} 文件。"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1270
+#, java-format
+msgid "{0} file imported forcibly"
+msgstr "强制导入 {0} 文件。"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1302
+#, java-format
+msgid "Subscriptions deleted by {0}"
+msgstr "已被 {0} 删除的订阅 "
+
+#: src/main/java/org/candlepin/resource/PoolResource.java:123
+msgid "Cannot filter on both owner and unit"
+msgstr "无法同时过滤拥有者和单元"
+
+#: src/main/java/org/candlepin/resource/PoolResource.java:127
+msgid "A unit or owner is needed to filter on product"
+msgstr "根据产品过滤需要有单元或者拥有者"
+
+#: src/main/java/org/candlepin/resource/PoolResource.java:146
+#, java-format
+msgid "User {0} cannot access unit {1}"
+msgstr "用户 {0} 不能访问单元 {1}"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/PoolResource.java:157
+#, java-format
+msgid "owner: {0}"
+msgstr "拥有者：{0}"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/PoolResource.java:161
+#: src/main/java/org/candlepin/resource/PoolResource.java:302
+#, java-format
+msgid "User {0} cannot access owner {1}"
+msgstr "用户 {0} 不能访问拥有者 {1}"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/PoolResource.java:170
+#, java-format
+msgid "User {0} cannot access all pools."
+msgstr "用户 {0} 不能访问所有池。"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/PoolResource.java:212
+#, java-format
+msgid "consumer: {0} not found"
+msgstr "没有找到客户 {0}"
+
+#: src/main/java/org/candlepin/resource/PoolResource.java:234
+#: src/main/java/org/candlepin/resource/PoolResource.java:292
+#, java-format
+msgid "Subscription Pool with ID ''{0}'' could not be found."
+msgstr "无法找到 ID 为 ''{0}'' 的订阅池。"
+
+#: src/main/java/org/candlepin/resource/PoolResource.java:251
+#, java-format
+msgid "Entitlement Pool with ID ''{0}'' could not be found."
+msgstr "无法找到 ID 为 ''{0}'' 的授权池。"
+
+#: src/main/java/org/candlepin/resource/JobResource.java:110
+msgid ""
+"You must specify exactly one of owner key, unit UUID, or principal name."
+msgstr "您必须指定拥有者密钥值、单元 UUID 或 principal 名字中的一个。"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author xhuang
+#: src/main/java/org/candlepin/resource/JobResource.java:169
+msgid "Error setting scheduler status"
+msgstr "设置调度程序状态出错"
+
+#: src/main/java/org/candlepin/resource/JobResource.java:197
+msgid "job already canceled"
+msgstr "已经取消的任务"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author xhuang
+#: src/main/java/org/candlepin/resource/JobResource.java:200
+msgid "cannot cancel a job that is not in CREATED state"
+msgstr "无法取消不出于 CREATED 状态的任务"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author leahliu
+#: src/main/java/org/candlepin/resource/EnvironmentResource.java:98
+#: src/main/java/org/candlepin/resource/EnvironmentResource.java:117
+#: src/main/java/org/candlepin/resource/EnvironmentResource.java:247
+#, java-format
+msgid "No such environment: {0}"
+msgstr "没有这个环境：{0}"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/MigrationResource.java:64
+msgid "Bad entity value."
+msgstr "坏的条目值。"
+
+#: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:85
+msgid "Unit type with id '"
+msgstr "使用 id 的单元类型"
+
+#: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:107
+#, java-format
+msgid "Problem creating unit type: {0}"
+msgstr "创建单元的问题：{0}"
+
+#: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:128
+#, java-format
+msgid "Unit type with label {0} could not be found."
+msgstr "无法找到标记为 {0} 的单元类型。"
+
+#: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:149
+#, java-format
+msgid "Unit type with id {0} could not be found."
+msgstr "无法找到 id 为 {0} 的单元类型。"
+
+#: src/main/java/org/candlepin/resource/DistributorVersionResource.java:104
+#, java-format
+msgid "A distributor version with name {0} already exists"
+msgstr ""
+
+#: src/main/java/org/candlepin/resource/DistributorVersionResource.java:132
+#, java-format
+msgid "No such distributor version: {0}"
+msgstr "没有这个发布程序版本：{0}"
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:58
 msgid "Not covered by a valid subscription."
@@ -307,6 +869,203 @@ msgstr "{2}覆盖问题。覆盖 {1} 的 {0}。"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author xhuang
+#: src/main/java/org/candlepin/policy/js/entitlement/AbstractEntitlementRules.java:133
+#, java-format
+msgid "''{0}'' Should contain name, priority and at least one attribute"
+msgstr "''{0}'' 应该包含名称、优先级和至少一个属性"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/policy/js/entitlement/AbstractEntitlementRules.java:148
+msgid "second parameter should be the priority number."
+msgstr "第二个参数应该是优先权数。"
+
+#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:81
+#, java-format
+msgid "Subscriptions for {0} expired on: {1}"
+msgstr "{0} 的订阅于 {1} 过期"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/guice/I18nProvider.java:92
+#: src/main/java/org/candlepin/exceptions/mappers/BadRequestExceptionMapper.java:70
+msgid "Bad Request"
+msgstr "坏请求"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/exceptions/mappers/CandlepinExceptionMapper.java:99
+#, java-format
+msgid "Runtime Error {0} at {1}.{2}:{3}"
+msgstr "{1}.{2}:{3} 中的运行时错误 {0}"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/exceptions/mappers/BadRequestExceptionMapper.java:66
+#, java-format
+msgid "{0} is not a valid value for {1}"
+msgstr "{0} 对于 {1} 来说不是个有效值"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/sync/Importer.java:171
+msgid "Wrong metadata type"
+msgstr "错误的元数据类型"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/sync/Importer.java:180
+msgid "Invalid owner"
+msgstr "无效拥有者"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/sync/Importer.java:194
+msgid "Import is older than existing data"
+msgstr "导入的数据比现有数据旧"
+
+#: src/main/java/org/candlepin/sync/Importer.java:204
+msgid "Import is the same as existing data"
+msgstr "导入与现有数据相同"
+
+#: src/main/java/org/candlepin/sync/Importer.java:229
+msgid "The archive does not contain the required signature file"
+msgstr "该归档不包含所需签名文件"
+
+#: src/main/java/org/candlepin/sync/Importer.java:249
+msgid "Archive failed signature check"
+msgstr "归档签名检查失败"
+
+#: src/main/java/org/candlepin/sync/Importer.java:263
+msgid "The consumer_export archive has no contents"
+msgstr "用户导出没有内容的归档"
+
+#: src/main/java/org/candlepin/sync/Importer.java:283
+msgid "The archive does not contain the required consumer_export.zip file"
+msgstr "该归档不包含所需 consumer_export.zip 文件"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author leahliu
+#: src/main/java/org/candlepin/sync/Importer.java:288
+#: src/main/java/org/candlepin/sync/Importer.java:293
+msgid "Failed to import archive"
+msgstr "导入归档失败"
+
+#: src/main/java/org/candlepin/sync/Importer.java:299
+msgid "Unable to extract export archive"
+msgstr "无法提起导出的归档"
+
+#: src/main/java/org/candlepin/sync/Importer.java:304
+msgid "Certificate exception checking archive signature"
+msgstr "证书意外检查归档签名"
+
+#: src/main/java/org/candlepin/sync/Importer.java:335
+msgid "The archive does not contain the required meta.json file"
+msgstr "该归档不包含所需 meta.json 文件"
+
+#: src/main/java/org/candlepin/sync/Importer.java:340
+msgid "The archive does not contain the required consumer_types directory"
+msgstr "该归档不包含所需 consumer_types 目录"
+
+#: src/main/java/org/candlepin/sync/Importer.java:345
+msgid "The archive does not contain the required consumer.json file"
+msgstr "该归档不包含所需 consumer_json 目录"
+
+#: src/main/java/org/candlepin/sync/Importer.java:351
+msgid "The archive does not contain the required entitlements directory"
+msgstr "该归档不包含所需授权目录"
+
+#: src/main/java/org/candlepin/sync/Importer.java:610
+#, java-format
+msgid "The archive {0} is not a properly compressed file or is empty"
+msgstr "归档 {0} 没有正确压缩或者为空"
+
+#: src/main/java/org/candlepin/sync/ConsumerImporter.java:59
+msgid "No ID for upstream subscription management application."
+msgstr "Upstream 订阅管理程序无 ID"
+
+#: src/main/java/org/candlepin/sync/ConsumerImporter.java:74
+msgid ""
+"This subscription management application has already been imported by "
+"another owner."
+msgstr "这个订阅管理程序已经由另一个拥有者导入。"
+
+#: src/main/java/org/candlepin/sync/ConsumerImporter.java:82
+msgid ""
+"Owner has already imported from another subscription management application."
+msgstr "拥有者已从另一个订阅管理程序中导入。"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author leahliu
+#: src/main/java/org/candlepin/sync/EntitlementImporter.java:139
+msgid "Unable to find product with ID: "
+msgstr "无法根据 ID 找到产品："
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resteasy/interceptor/BasicAuth.java:71
+msgid "Invalid Credentials"
+msgstr "无效证书"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resteasy/interceptor/BasicAuth.java:86
+msgid "Error contacting user service"
+msgstr "联系用户服务出错"
+
+#: src/main/java/org/candlepin/resteasy/interceptor/PageRequestInterceptor.java:102
+msgid "offset and limit parameters must be positive integers"
+msgstr "抵消和限制参数必须是正整数"
+
+#: src/main/java/org/candlepin/resteasy/interceptor/PageRequestInterceptor.java:120
+msgid "the order parameter must be either 'ascending' or 'descending'"
+msgstr "参数顺序必须是“升序”或者“降序”"
+
+#: src/main/java/org/candlepin/resteasy/interceptor/PageRequestInterceptor.java:129
+msgid "Expected a positive integer."
+msgstr "预期是正整数。"
+
+#: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:119
+#: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:155
+msgid "Invalid oauth unit or secret"
+msgstr "无效 oauth 单元或者 secret"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:123
+#, java-format
+msgid "OAuth problem encountered. Internal message is: {0}"
+msgstr "遇到 OAuth 问题。内部信息为：{0}"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:129
+#, java-format
+msgid "OAuth error encountered. Internal message is: {0}"
+msgstr "遇到 OAuth 错误。内部信息为：{0}"
+
+#: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:160
+msgid "Error getting oauth unit key"
+msgstr "获取 oauth 单元密钥出错"
+
+#: src/main/java/org/candlepin/service/impl/DefaultEntitlementCertServiceAdapter.java:276
+#, java-format
+msgid ""
+"Too many content sets for certificate {0}. A newer client may be available "
+"to address this problem. See kbase "
+"https://access.redhat.com/knowledge/node/129003 for more information."
+msgstr ""
+"证书 {0} 的内容组过多。较新的客户端可解决这个问题。详情请查看知识库 "
+"https://access.redhat.com/knowledge/node/129003。"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author xhuang
+#: src/main/java/org/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java:145
+msgid "Standalone candlepin does not support redeeming a subscription."
+msgstr "独立的 candlepin 不支持兑换订阅。"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author xhuang
 #: src/main/java/org/candlepin/controller/Entitler.java:80
 #, java-format
 msgid "Subscription pool {0} does not exist."
@@ -315,7 +1074,8 @@ msgstr "订阅池 {0} 不存在。"
 #: src/main/java/org/candlepin/controller/Entitler.java:107
 #, java-format
 msgid ""
-"This unit has already had the subscription matching pool ID ''{0}'' attached."
+"This unit has already had the subscription matching pool ID ''{0}'' "
+"attached."
 msgstr "这个单元已经附加与池 ID ''{0}'' 匹配的订阅。"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:112
@@ -422,857 +1182,58 @@ msgstr "只有虚拟系统可以附加订阅 ''{0}''。"
 msgid "Unable to attach subscription for the product ''{0}'': {1}."
 msgstr "无法为产品 ''{0}'' 附加订阅：{1}."
 
-# translation auto-copied from project Candlepin, version master, document
-# keys, author xhuang
-#: src/main/java/org/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java:145
-msgid "Standalone candlepin does not support redeeming a subscription."
-msgstr "独立的 candlepin 不支持兑换订阅。"
+#: src/main/java/org/candlepin/model/EntitlementCurator.java:269
+#, java-format
+msgid "No product found for product ID {0}"
+msgstr "在产品 ID {0} 下没有找到任何产品"
 
-#: src/main/java/org/candlepin/service/impl/DefaultEntitlementCertServiceAdapter.java:276
+#: src/main/java/org/candlepin/model/ProductCurator.java:139
+#, java-format
+msgid "The attribute ''{0}'' must be an integer value."
+msgstr "属性 ''{0}'' 必须是一个整数。"
+
+#: src/main/java/org/candlepin/model/ProductCurator.java:146
+#: src/main/java/org/candlepin/model/ProductCurator.java:165
+#, java-format
+msgid "The attribute ''{0}'' must have a positive value."
+msgstr "属性 ''{0}'' 必须是一个正整数。"
+
+#: src/main/java/org/candlepin/model/ProductCurator.java:158
+#, java-format
+msgid "The attribute ''{0}'' must be a long value."
+msgstr "属性 ''{0}'' 必须是一个长值。"
+
+#: src/main/java/org/candlepin/model/ProductCurator.java:176
+#, java-format
+msgid "The attribute ''{0}'' must be a boolean value."
+msgstr "属性 ''{0}'' 必须是一个布尔值。"
+
+#: src/main/java/org/candlepin/model/ProductCurator.java:185
 #, java-format
 msgid ""
-"Too many content sets for certificate {0}. A newer client may be available "
-"to address this problem. See kbase https://access.redhat.com/knowledge/"
-"node/129003 for more information."
-msgstr ""
-"证书 {0} 的内容组过多。较新的客户端可解决这个问题。详情请查看知识库 https://"
-"access.redhat.com/knowledge/node/129003。"
+"You cannot create a circular reference for products that ''{0}'' relies on."
+msgstr "您不能创建一个参考 ''{0}'' 依赖的产品。"
 
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/auth/interceptor/SecurityInterceptor.java:196
-msgid "Unable to verify request."
-msgstr "无法验证请求。"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/auth/interceptor/SecurityInterceptor.java:216
-msgid "Organization"
-msgstr "机构"
-
-#: src/main/java/org/candlepin/auth/interceptor/SecurityInterceptor.java:222
+#: src/main/java/org/candlepin/model/ConsumerCurator.java:100
 #, java-format
-msgid "{0} with id {1} could not be found."
-msgstr "没有找到 id 为 {1} 的 {0}"
+msgid "Name of the unit must be shorter than {0} characters."
+msgstr "单元名称应少于 {0} 字符。"
 
-#: src/main/java/org/candlepin/auth/interceptor/SecurityInterceptor.java:323
-#: src/main/java/org/candlepin/resteasy/interceptor/ConsumerAuth.java:55
-#, java-format
-msgid "Unit {0} has been deleted"
-msgstr "已删除单元 {0}"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/guice/I18nProvider.java:92
-#: src/main/java/org/candlepin/exceptions/mappers/BadRequestExceptionMapper.java:70
-msgid "Bad Request"
-msgstr "坏请求"
-
-#: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:119
-#: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:155
-msgid "Invalid oauth unit or secret"
-msgstr "无效 oauth 单元或者 secret"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:123
-#, java-format
-msgid "OAuth problem encountered. Internal message is: {0}"
-msgstr "遇到 OAuth 问题。内部信息为：{0}"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:129
-#, java-format
-msgid "OAuth error encountered. Internal message is: {0}"
-msgstr "遇到 OAuth 错误。内部信息为：{0}"
-
-#: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:160
-msgid "Error getting oauth unit key"
-msgstr "获取 oauth 单元密钥出错"
-
-#: src/main/java/org/candlepin/resteasy/interceptor/PageRequestInterceptor.java:102
-msgid "offset and limit parameters must be positive integers"
-msgstr "抵消和限制参数必须是正整数"
-
-#: src/main/java/org/candlepin/resteasy/interceptor/PageRequestInterceptor.java:120
-msgid "the order parameter must be either 'ascending' or 'descending'"
-msgstr "参数顺序必须是“升序”或者“降序”"
-
-#: src/main/java/org/candlepin/resteasy/interceptor/PageRequestInterceptor.java:129
-msgid "Expected a positive integer."
-msgstr "预期是正整数。"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resteasy/interceptor/BasicAuth.java:71
-msgid "Invalid Credentials"
-msgstr "无效证书"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resteasy/interceptor/BasicAuth.java:86
-msgid "Error contacting user service"
-msgstr "联系用户服务出错"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/exceptions/mappers/CandlepinExceptionMapper.java:99
-#, java-format
-msgid "Runtime Error {0} at {1}.{2}:{3}"
-msgstr "{1}.{2}:{3} 中的运行时错误 {0}"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/exceptions/mappers/BadRequestExceptionMapper.java:66
-#, java-format
-msgid "{0} is not a valid value for {1}"
-msgstr "{0} 对于 {1} 来说不是个有效值"
-
-#: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:85
-msgid "Unit type with id '"
-msgstr "使用 id 的单元类型"
-
-#: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:107
-#, java-format
-msgid "Problem creating unit type: {0}"
-msgstr "创建单元的问题：{0}"
-
-#: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:128
-#, java-format
-msgid "Unit type with label {0} could not be found."
-msgstr "无法找到标记为 {0} 的单元类型。"
-
-#: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:149
-#, java-format
-msgid "Unit type with id {0} could not be found."
-msgstr "无法找到 id 为 {0} 的单元类型。"
-
-#: src/main/java/org/candlepin/resource/ProductResource.java:121
-#: src/main/java/org/candlepin/resource/ProductResource.java:140
-#: src/main/java/org/candlepin/resource/ProductResource.java:297
-#: src/main/java/org/candlepin/resource/ProductResource.java:372
-#, java-format
-msgid "Product with UUID ''{0}'' could not be found."
-msgstr "无法找到 UUID 为 ''{0}'' 的产品"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author xhuang
-#: src/main/java/org/candlepin/resource/ProductResource.java:301
-#, java-format
-msgid "Product with UUID ''{0}'' cannot be deleted while subscriptions exist."
-msgstr "当订阅已存在时无法删除 UUID 为 ''{0}'' 的产品"
-
-#: src/main/java/org/candlepin/resource/ProductResource.java:356
-msgid "Must specify product ID."
-msgstr "必须指定产品 ID。"
-
-#: src/main/java/org/candlepin/resource/ContentResource.java:87
-#: src/main/java/org/candlepin/resource/ContentResource.java:122
-#, java-format
-msgid "Content with id {0} could not be found."
-msgstr "无法找到 id 为 {0} 的内容"
-
-#: src/main/java/org/candlepin/resource/UserResource.java:141
-#, java-format
-msgid "User {0} does not exist"
-msgstr "用户 {0} 不存在"
-
-#: src/main/java/org/candlepin/resource/UserResource.java:157
-#, java-format
-msgid "User {0} not found"
-msgstr "未找到用户 {0}"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author leahliu
-#: src/main/java/org/candlepin/resource/EnvironmentResource.java:98
-#: src/main/java/org/candlepin/resource/EnvironmentResource.java:117
-#: src/main/java/org/candlepin/resource/EnvironmentResource.java:247
-#, java-format
-msgid "No such environment: {0}"
-msgstr "没有这个环境：{0}"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author xhuang
-#: src/main/java/org/candlepin/resource/EventResource.java:85
-#, java-format
-msgid "Event with ID ''{0}'' could not be found."
-msgstr "没有找到 ID 为 ''{0}'' 的事件"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author xhuang
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:238
-#, java-format
-msgid "Organization with key: {0} was not found."
-msgstr "无法找到具有密钥 {0} 的机构。"
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:257
-#: src/main/java/org/candlepin/resource/OwnerResource.java:598
-msgid "Cannot specify other query parameters with consumer IDs."
-msgstr "无法使用用户 ID 指定其他查询参数。"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author xhuang
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:338
-msgid "Insufficient permissions"
-msgstr "权限不够"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author xhuang
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:344
-msgid "Must specify an org to register with activation keys."
-msgstr "必须指定一个用激活密钥注册的机构。"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author xhuang
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:348
-msgid "Cannot specify username with activation keys."
-msgstr "无法用激活密钥指定用户名。"
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:371
-msgid "A unit type of 'person' cannot be used with activation keys"
-msgstr "单元类型为 'person' 无法和激活码一起使用"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:376
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:386
-msgid "System name cannot contain most special characters."
-msgstr "系统名不能包含大多数特殊字符。"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:431
-msgid "Pool ID must be provided"
-msgstr "必须提供池 ID"
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:455
-#, java-format
-msgid "Problem creating unit {0}"
-msgstr "创建单元的问题 {0}"
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:536
-msgid "System name cannot be null."
-msgstr "系统名称不能为空。"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:543
-msgid "System name cannot begin with # character"
-msgstr "系统名称不能以 # 字符开头"
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:558
-#: src/main/java/org/candlepin/resource/OwnerResource.java:846
-#, java-format
-msgid "Service level ''{0}'' is not available to units of organization {1}."
-msgstr "机构 {1} 的单元无法使用服务等级 ''{0}'' 。"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author xhuang
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:588
-#, java-format
-msgid "Activation key ''{0}'' not found for organization ''{1}''."
-msgstr "未找到机构 ''{1}'' 的激活密钥 ''{0}''。"
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:608
-#, java-format
-msgid "User with ID ''{0}'' could not be found."
-msgstr ""
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:615
-#, java-format
-msgid "User ''{0}'' has no roles for organization ''{1}''"
-msgstr ""
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:627
-#, java-format
-msgid "User ''{0}'' has already registered a personal consumer"
-msgstr ""
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:644
-msgid "You must specify an organization for new units."
-msgstr "你必须为新单元指定一个机构。"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author xhuang
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:655
-#, java-format
-msgid "Organization {0} does not exist."
-msgstr "机构 {0} 不存在。"
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:663
-#, java-format
-msgid "User ''{0}'' cannot access organization ''{1}''."
-msgstr ""
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:725
-#, java-format
-msgid "Unit type ''{0}'' could not be found."
-msgstr ""
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:811
-#, java-format
-msgid "Environment with ID ''{0}'' could not be found."
-msgstr ""
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1121
-#, java-format
-msgid "Cannot unregister {0} {1} because: {2}"
-msgstr "无法取消 {0} {1} 中的注册，因为：{2}"
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1208
-msgid "Unable to create entitlement certificate archive"
-msgstr "无法创建授权证书归档"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1319
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1330
-msgid "Cannot bind by multiple parameters."
-msgstr "无法绑定多个参数。"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author xhuang
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1324
-msgid "Cannot specify a quantity when auto-binding."
-msgstr "在自动绑定时无法指定数量。"
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1397
-#, java-format
-msgid "Unable to attach a subscription for a product that has no pool: {0} "
-msgstr "无法为没有池的产品附加订阅：{0}"
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1463
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1552
-#: src/main/java/org/candlepin/resource/EntitlementResource.java:141
-#, java-format
-msgid "Unit with ID ''{0}'' could not be found."
-msgstr ""
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author xhuang
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1473
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1589
-#: src/main/java/org/candlepin/resource/EntitlementResource.java:174
-#: src/main/java/org/candlepin/resource/EntitlementResource.java:209
-#: src/main/java/org/candlepin/resource/EntitlementResource.java:233
-#: src/main/java/org/candlepin/resource/EntitlementResource.java:259
-#, java-format
-msgid "Entitlement with ID ''{0}'' could not be found."
-msgstr "无法找到具有 ID ''{0}'' 的权利。"
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1499
-#, java-format
-msgid "Product with ID ''{0}'' could not be found."
-msgstr ""
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1612
-#, java-format
-msgid "Entitlement Certificate with serial number ''{0}'' could not be found."
-msgstr ""
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1675
+#: src/main/java/org/candlepin/model/ConsumerCurator.java:332
 #, java-format
 msgid ""
-"Unit {0} cannot be exported. A manifest cannot be made for units of type "
-"''{1}''."
-msgstr "客户 {0} 无法导出。无法为类型单元 ''{1}'' 生成清单。"
+"The fact ''{0}'' must be an integer instead of ''{1}''. No value will exist "
+"for that fact."
+msgstr "fact ''{0}'' 必须是一个整数而不是 ''{1}''。那个 fact 还没有任何数值。"
 
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1693
-msgid "Unable to create export archive"
-msgstr "无法创建导出归档"
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1765
-#, java-format
-msgid "Problem regenerating ID cert for unit {0}"
-msgstr "为单元 {0} 重新生成 id 证书时的问题"
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1804
-#, java-format
-msgid "The system with UUID {0} is not a virtual guest."
-msgstr "UUID 为 {0} 的系统不是虚拟客户端。"
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1908
-#, java-format
-msgid "Deletion record for hypervisor ''{0}'' not found."
-msgstr ""
-
-#: src/main/java/org/candlepin/resource/DistributorVersionResource.java:104
-#, java-format
-msgid "A distributor version with name {0} already exists"
-msgstr ""
-
-#: src/main/java/org/candlepin/resource/DistributorVersionResource.java:132
-#, java-format
-msgid "No such distributor version: {0}"
-msgstr "没有这个发布程序版本：{0}"
-
-#: src/main/java/org/candlepin/resource/OwnerResource.java:260
-#, java-format
-msgid "Could not create the Owner: {0}. Parent {1} does not exist."
-msgstr "无法创建拥有者：{0}。上级 {1} 不存在。"
-
-#: src/main/java/org/candlepin/resource/OwnerResource.java:272
-#, java-format
-msgid "Could not create the Owner: {0}"
-msgstr "无法创建拥有者：{0}"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author xhuang
-#: src/main/java/org/candlepin/resource/OwnerResource.java:492
-msgid "Must provide a name for activation key."
-msgstr "必须为激活密钥提供一个名称。"
-
-#: src/main/java/org/candlepin/resource/OwnerResource.java:499
+#: src/main/java/org/candlepin/model/ConsumerCurator.java:341
 #, java-format
 msgid ""
-"The activation key name ''{0}'' must be alphanumeric or include the "
-"characters '-' or '_'"
-msgstr "激活码名称 ''{0}'' 必须是字母数字或者包含字符'-' 或 '_'。"
+"The fact ''{0}'' must have a positive integer value instead of ''{1}''. No "
+"value will exist for that fact."
+msgstr "fact ''{0}'' 必须是一个正整数而不是 ''{1}''。那个 fact 还没有任何数值。"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:506
+#: src/main/java/org/candlepin/model/ConsumerCurator.java:411
 #, java-format
-msgid "The activation key name ''{0}'' is already in use for owner {1}"
-msgstr "激活码名称 ''{0}'' 已被拥有者 {1} 使用"
-
-#: src/main/java/org/candlepin/resource/OwnerResource.java:650
-#: src/main/java/org/candlepin/resource/PoolResource.java:140
-#, java-format
-msgid "Unit: {0} not found"
-msgstr "没有找到单元 {0}"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/OwnerResource.java:660
-#: src/main/java/org/candlepin/resource/PoolResource.java:216
-#, java-format
-msgid "User {0} cannot access consumer {1}"
-msgstr "用户 {0} 不能访问客户 {1}"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/OwnerResource.java:773
-#: src/main/java/org/candlepin/resource/OwnerResource.java:878
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1083
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1113
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1142
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1168
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1207
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1239
-#, java-format
-msgid "owner with key: {0} was not found."
-msgstr "无法找到密钥 {0} 的拥有者。"
-
-#: src/main/java/org/candlepin/resource/OwnerResource.java:783
-#: src/main/java/org/candlepin/resource/SubscriptionResource.java:152
-#, java-format
-msgid "No such unit: {0}"
-msgstr "没有这个单元：{0}"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/OwnerResource.java:897
-#, java-format
-msgid "subscription with id: {0} not found."
-msgstr "没有找到 id 为 {0} 的订阅。"
-
-#: src/main/java/org/candlepin/resource/OwnerResource.java:997
-msgid "Unknown conflict to force"
-msgstr "未知冲突的强制"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1026
-msgid "Error reading export archive"
-msgstr "读取导出归档出错"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author xhuang
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1189
-#, java-format
-msgid "Problem generating ueber cert for owner {0}"
-msgstr "为所有者 {0} 生成 ueber 证书出现问题"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author xhuang
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1215
-#, java-format
-msgid "ueber certificate for owner {0} was not found. Please generate one."
-msgstr "没有找到为所有者 {0} 的 ueber 证书，请生成一个。"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1267
-#, java-format
-msgid "{0} file imported successfully."
-msgstr "成功导入 {0} 文件。"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1269
-#, java-format
-msgid "{0} file imported forcibly"
-msgstr "强制导入 {0} 文件。"
-
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1301
-#, java-format
-msgid "Subscriptions deleted by {0}"
-msgstr "已被 {0} 删除的订阅 "
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author xhuang
-#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:132
-msgid "The quantity must be greater than 0"
-msgstr "数量必须大于 0"
-
-#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:142
-msgid ""
-"Cannot add pools that are restricted to unit type 'person' to activation "
-"keys."
-msgstr "无法在激活码中添加仅限于单元类型 ‘person’ 的池。"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author xhuang
-#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:149
-msgid ""
-"Error: Only pools with multi-entitlement product subscriptions can be added "
-"to the activation key with a quantity greater than one."
-msgstr "错误：只有具有多重权限产品订阅的池可以用大于 1 的数目添加到激活码里。"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author xhuang
-#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:156
-msgid "The quantity must not be greater than the total allowed for the pool"
-msgstr "数量必须大于池所允许的总数"
-
-#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:163
-msgid "Activation keys can only use host restricted pools from a single host."
-msgstr "激活码只能使用来自单一主机的限制主机的池。"
-
-#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:224
-#, java-format
-msgid "ActivationKey with id {0} could not be found."
-msgstr "没有找到 id 为 {0} 的激活码"
-
-#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:235
-#, java-format
-msgid "Pool with id {0} could not be found."
-msgstr "无法找到 id 为 {0} 的池"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/MigrationResource.java:64
-msgid "Bad entity value."
-msgstr "坏的条目值。"
-
-#: src/main/java/org/candlepin/resource/PoolResource.java:123
-msgid "Cannot filter on both owner and unit"
-msgstr "无法同时过滤拥有者和单元"
-
-#: src/main/java/org/candlepin/resource/PoolResource.java:127
-msgid "A unit or owner is needed to filter on product"
-msgstr "根据产品过滤需要有单元或者拥有者"
-
-#: src/main/java/org/candlepin/resource/PoolResource.java:146
-#, java-format
-msgid "User {0} cannot access unit {1}"
-msgstr "用户 {0} 不能访问单元 {1}"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/PoolResource.java:157
-#, java-format
-msgid "owner: {0}"
-msgstr "拥有者：{0}"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/PoolResource.java:161
-#: src/main/java/org/candlepin/resource/PoolResource.java:296
-#, java-format
-msgid "User {0} cannot access owner {1}"
-msgstr "用户 {0} 不能访问拥有者 {1}"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/PoolResource.java:170
-#, java-format
-msgid "User {0} cannot access all pools."
-msgstr "用户 {0} 不能访问所有池。"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/PoolResource.java:211
-#, java-format
-msgid "consumer: {0} not found"
-msgstr "没有找到客户 {0}"
-
-#: src/main/java/org/candlepin/resource/PoolResource.java:228
-#: src/main/java/org/candlepin/resource/PoolResource.java:286
-#, java-format
-msgid "Subscription Pool with ID ''{0}'' could not be found."
-msgstr "无法找到 ID 为 ''{0}'' 的订阅池。"
-
-#: src/main/java/org/candlepin/resource/PoolResource.java:245
-#, java-format
-msgid "Entitlement Pool with ID ''{0}'' could not be found."
-msgstr "无法找到 ID 为 ''{0}'' 的授权池。"
-
-#: src/main/java/org/candlepin/resource/EntitlementResource.java:91
-#, java-format
-msgid "Object with ID ''{0}'' could not found."
-msgstr ""
-
-#: src/main/java/org/candlepin/resource/EntitlementResource.java:119
-#, java-format
-msgid "Unit ''{0}'' has no subscription for product ''{1}''."
-msgstr ""
-
-#: src/main/java/org/candlepin/resource/EntitlementResource.java:194
-msgid "Quantity value must be greater than 0."
-msgstr ""
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/RoleResource.java:82
-#, java-format
-msgid "No such owner: {0}"
-msgstr "没有这个拥有者：{0}"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/RoleResource.java:112
-msgid "Role ID does not match path."
-msgstr "角色 ID 与路径不匹配。"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/RoleResource.java:138
-msgid "Access type NONE not supported."
-msgstr "不支持访问类型 NONE。"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/RoleResource.java:177
-#, java-format
-msgid "No such permission: {0} in role: {1}"
-msgstr "角色 {1} 没有这个授权 {0}"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/RoleResource.java:191
-#, java-format
-msgid "No such role: {0}"
-msgstr "没有这个角色：{0}"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/RoleResource.java:199
-#, java-format
-msgid "No such user: {0}"
-msgstr "没有这个用户：{0}"
-
-#: src/main/java/org/candlepin/resource/JobResource.java:110
-msgid ""
-"You must specify exactly one of owner key, unit UUID, or principal name."
-msgstr "您必须指定拥有者密钥值、单元 UUID 或 principal 名字中的一个。"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author xhuang
-#: src/main/java/org/candlepin/resource/JobResource.java:169
-msgid "Error setting scheduler status"
-msgstr "设置调度程序状态出错"
-
-#: src/main/java/org/candlepin/resource/JobResource.java:197
-msgid "job already canceled"
-msgstr "已经取消的任务"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author xhuang
-#: src/main/java/org/candlepin/resource/JobResource.java:200
-msgid "cannot cancel a job that is not in CREATED state"
-msgstr "无法取消不出于 CREATED 状态的任务"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/StatisticResource.java:61
-msgid "couldn't generate statistics"
-msgstr "无法生成统计"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/RulesResource.java:85
-msgid "Error decoding the rules. The text should be base 64 encoded"
-msgstr "解码规则时出错。文本应使用 64 位代码。"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/RulesResource.java:111
-msgid "couldn't read rules file"
-msgstr "无法读取规则文件"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author leahliu
-#: src/main/java/org/candlepin/resource/SubscriptionResource.java:122
-#, java-format
-msgid "no certificate for subscription {0}"
-msgstr "订阅 {0} 没有证书"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author xhuang
-#: src/main/java/org/candlepin/resource/SubscriptionResource.java:141
-msgid "email is required for notification"
-msgstr "需要电子邮件来接收通知"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author xhuang
-#: src/main/java/org/candlepin/resource/SubscriptionResource.java:146
-msgid "email locale is required for notification"
-msgstr "需要接收通知的电子邮件的地区编码"
-
-#: src/main/java/org/candlepin/resource/SubscriptionResource.java:182
-#, java-format
-msgid "Subscription with id {0} could not be found."
-msgstr "没有找到 id 为 {0} 的订阅。"
-
-#: src/main/java/org/candlepin/resource/HypervisorResource.java:102
-#, java-format
-msgid "Hypervisor {0} has been deleted previously"
-msgstr "之前已删除 Hypervisor {0}"
-
-#: src/main/java/org/candlepin/sync/ConsumerImporter.java:59
-msgid "No ID for upstream subscription management application."
-msgstr "Upstream 订阅管理程序无 ID"
-
-#: src/main/java/org/candlepin/sync/ConsumerImporter.java:74
-msgid ""
-"This subscription management application has already been imported by "
-"another owner."
-msgstr "这个订阅管理程序已经由另一个拥有者导入。"
-
-#: src/main/java/org/candlepin/sync/ConsumerImporter.java:82
-msgid ""
-"Owner has already imported from another subscription management application."
-msgstr "拥有者已从另一个订阅管理程序中导入。"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author leahliu
-#: src/main/java/org/candlepin/sync/EntitlementImporter.java:139
-msgid "Unable to find product with ID: "
-msgstr "无法根据 ID 找到产品："
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/sync/Importer.java:171
-msgid "Wrong metadata type"
-msgstr "错误的元数据类型"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/sync/Importer.java:180
-msgid "Invalid owner"
-msgstr "无效拥有者"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/sync/Importer.java:194
-msgid "Import is older than existing data"
-msgstr "导入的数据比现有数据旧"
-
-#: src/main/java/org/candlepin/sync/Importer.java:204
-msgid "Import is the same as existing data"
-msgstr "导入与现有数据相同"
-
-#: src/main/java/org/candlepin/sync/Importer.java:229
-msgid "The archive does not contain the required signature file"
-msgstr "该归档不包含所需签名文件"
-
-#: src/main/java/org/candlepin/sync/Importer.java:249
-msgid "Archive failed signature check"
-msgstr "归档签名检查失败"
-
-#: src/main/java/org/candlepin/sync/Importer.java:263
-msgid "The consumer_export archive has no contents"
-msgstr "用户导出没有内容的归档"
-
-#: src/main/java/org/candlepin/sync/Importer.java:283
-msgid "The archive does not contain the required consumer_export.zip file"
-msgstr "该归档不包含所需 consumer_export.zip 文件"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author leahliu
-#: src/main/java/org/candlepin/sync/Importer.java:288
-#: src/main/java/org/candlepin/sync/Importer.java:293
-msgid "Failed to import archive"
-msgstr "导入归档失败"
-
-#: src/main/java/org/candlepin/sync/Importer.java:299
-msgid "Unable to extract export archive"
-msgstr "无法提起导出的归档"
-
-#: src/main/java/org/candlepin/sync/Importer.java:304
-msgid "Certificate exception checking archive signature"
-msgstr "证书意外检查归档签名"
-
-#: src/main/java/org/candlepin/sync/Importer.java:335
-msgid "The archive does not contain the required meta.json file"
-msgstr "该归档不包含所需 meta.json 文件"
-
-#: src/main/java/org/candlepin/sync/Importer.java:340
-msgid "The archive does not contain the required consumer_types directory"
-msgstr "该归档不包含所需 consumer_types 目录"
-
-#: src/main/java/org/candlepin/sync/Importer.java:345
-msgid "The archive does not contain the required consumer.json file"
-msgstr "该归档不包含所需 consumer_json 目录"
-
-#: src/main/java/org/candlepin/sync/Importer.java:351
-msgid "The archive does not contain the required entitlements directory"
-msgstr "该归档不包含所需授权目录"
-
-#: src/main/java/org/candlepin/sync/Importer.java:610
-#, java-format
-msgid "The archive {0} is not a properly compressed file or is empty"
-msgstr "归档 {0} 没有正确压缩或者为空"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author xhuang
-#~ msgid "User {0} has no roles for organization {1}"
-#~ msgstr "用户 {0} 没有机构 {1} 的角色。"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#~ msgid "User {0} has already registered a personal consumer"
-#~ msgstr "用户 {0} 已经注册为个人客户"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author xhuang
-#~ msgid "User {0} cannot access organization {1}"
-#~ msgstr "用户 {0} 无法访问机构 {1}"
-
-#~ msgid "No such subscription: {0}"
-#~ msgstr "没有此订阅：{0}"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#~ msgid "No such product: {0}"
-#~ msgstr "没有这个产品：{0}"
-
-#~ msgid "Unit with ID "
-#~ msgstr "ID 单元"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#~ msgid "Entitlement Certificate with serial number {0} could not be found."
-#~ msgstr "无法找到序列号为 {0} 的权利证书。"
-
-#~ msgid "Unit: {0} has no subscription for product {1}"
-#~ msgstr "单元：{0} 没有产品 {1} 订阅"
-
-#~ msgid "Quantity value must be greater than 0"
-#~ msgstr "数量值必须大于 0"
-
-#~ msgid "Subscription with ID ''{0}'' could not be found."
-#~ msgstr "无法找到 ID 为 ''{0}'' 的订阅。"
+msgid "The system with UUID {0} is a virtual guest. It does not have guests."
+msgstr "UUID 为 {0} 的系统是虚拟机。它没有虚拟机。"
