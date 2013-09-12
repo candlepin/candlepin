@@ -33,11 +33,13 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Random;
 import java.util.Set;
+
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.GuestId;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.ProductPoolAttribute;
@@ -1376,5 +1378,339 @@ public class ComplianceRulesTest {
         assertEquals(ComplianceStatus.GREEN, status.getStatus());
     }
 
+    @Test
+    public void virtLimitSingleEntitlementCovered() {
+        Consumer c = mockConsumer(new String[]{ PRODUCT_1 });
+        c.setFact("cpu.core(s)_per_socket", "4");
+        for (int i = 0; i < 5; i++) {
+            c.addGuestId(new GuestId("" + i, c, true));
+        }
 
+        Entitlement ent = mockEntitlement(c, PRODUCT_1);
+        ent.getPool().setProductAttribute("cores", "32", PRODUCT_1);
+        ent.getPool().setProductAttribute("guest_limit", "8", PRODUCT_1);
+
+        when(entCurator.listByConsumer(eq(c))).thenReturn(Arrays.asList(ent));
+        ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
+
+        assertEquals(0, status.getNonCompliantProducts().size());
+        assertEquals(0, status.getPartiallyCompliantProducts().size());
+        assertEquals(1, status.getCompliantProducts().size());
+        assertTrue(status.getCompliantProducts().keySet().contains(PRODUCT_1));
+    }
+
+    @Test
+    public void virtLimitSingleEntitlementPartial() {
+        Consumer c = mockConsumer(new String[]{ PRODUCT_1 });
+        c.setFact("cpu.core(s)_per_socket", "4");
+        for (int i = 0; i < 5; i++) {
+            c.addGuestId(new GuestId("" + i, c, true));
+        }
+
+        Entitlement ent = mockEntitlement(c, PRODUCT_1);
+        ent.getPool().setProductAttribute("cores", "32", PRODUCT_1);
+        ent.getPool().setProductAttribute("guest_limit", "4", PRODUCT_1);
+
+        when(entCurator.listByConsumer(eq(c))).thenReturn(Arrays.asList(ent));
+        ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
+
+        assertEquals(0, status.getNonCompliantProducts().size());
+        assertEquals(1, status.getPartiallyCompliantProducts().size());
+        assertEquals(0, status.getCompliantProducts().size());
+        assertTrue(status.getPartiallyCompliantProducts().keySet().contains(PRODUCT_1));
+        assertEquals(ComplianceStatus.YELLOW, status.getStatus());
+    }
+
+    @Test
+    public void partiallyCompliantVirtLimitStack() {
+        Consumer c = mockConsumer(PRODUCT_1, PRODUCT_2);
+        for (int i = 0; i < 5; i++) {
+            c.addGuestId(new GuestId("" + i, c, true));
+        }
+        List<Entitlement> ents = new LinkedList<Entitlement>();
+
+        ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product",
+            PRODUCT_1, PRODUCT_2));
+        ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product",
+            PRODUCT_1, PRODUCT_2));
+        ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product",
+            PRODUCT_1, PRODUCT_2));
+        ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product",
+            PRODUCT_1, PRODUCT_2));
+        for (Entitlement ent : ents) {
+            ent.getPool().setProductAttribute("guest_limit", "4", PRODUCT_1);
+        }
+        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+
+        ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
+
+        assertEquals(0, status.getNonCompliantProducts().size());
+        assertEquals(0, status.getCompliantProducts().size());
+
+        assertEquals(2, status.getPartiallyCompliantProducts().size());
+        assertTrue(status.getPartiallyCompliantProducts().keySet().contains(PRODUCT_1));
+        assertTrue(status.getPartiallyCompliantProducts().keySet().contains(PRODUCT_2));
+
+        assertEquals(4, status.getPartiallyCompliantProducts().get(PRODUCT_1).size());
+        assertEquals(4, status.getPartiallyCompliantProducts().get(PRODUCT_2).size());
+    }
+
+    @Test
+    public void fullyCompliantVirtLimitStackWithInactiveGuests() {
+        Consumer c = mockConsumer(PRODUCT_1, PRODUCT_2);
+        for (int i = 0; i < 5; i++) {
+            c.addGuestId(new GuestId("" + i, c, false));
+        }
+        List<Entitlement> ents = new LinkedList<Entitlement>();
+
+        ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product",
+            PRODUCT_1, PRODUCT_2));
+        ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product",
+            PRODUCT_1, PRODUCT_2));
+        ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product",
+            PRODUCT_1, PRODUCT_2));
+        ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product",
+            PRODUCT_1, PRODUCT_2));
+        for (Entitlement ent : ents) {
+            ent.getPool().setProductAttribute("guest_limit", "4", PRODUCT_1);
+        }
+        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+
+        ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
+
+        assertEquals(0, status.getNonCompliantProducts().size());
+        assertEquals(0, status.getPartiallyCompliantProducts().size());
+
+        assertEquals(2, status.getCompliantProducts().size());
+        assertTrue(status.getCompliantProducts().keySet().contains(PRODUCT_1));
+        assertTrue(status.getCompliantProducts().keySet().contains(PRODUCT_2));
+
+        assertEquals(4, status.getCompliantProducts().get(PRODUCT_1).size());
+        assertEquals(4, status.getCompliantProducts().get(PRODUCT_2).size());
+    }
+
+    @Test
+    public void fullyCompliantVirtLimitStack() {
+        Consumer c = mockConsumer(PRODUCT_1, PRODUCT_2);
+        for (int i = 0; i < 5; i++) {
+            c.addGuestId(new GuestId("" + i, c, true));
+        }
+        List<Entitlement> ents = new LinkedList<Entitlement>();
+
+        ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product",
+            PRODUCT_1, PRODUCT_2));
+        ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product",
+            PRODUCT_1, PRODUCT_2));
+        ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product",
+            PRODUCT_1, PRODUCT_2));
+        ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product",
+            PRODUCT_1, PRODUCT_2));
+        for (Entitlement ent : ents) {
+            ent.getPool().setProductAttribute("guest_limit", "8", PRODUCT_1);
+        }
+        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+
+        ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
+
+        assertEquals(0, status.getNonCompliantProducts().size());
+        assertEquals(2, status.getCompliantProducts().size());
+        assertEquals(0, status.getPartiallyCompliantProducts().size());
+        assertTrue(status.getCompliantProducts().keySet().contains(PRODUCT_1));
+        assertTrue(status.getCompliantProducts().keySet().contains(PRODUCT_2));
+
+        assertEquals(4, status.getCompliantProducts().get(PRODUCT_1).size());
+        assertEquals(4, status.getCompliantProducts().get(PRODUCT_2).size());
+    }
+
+    @Test
+    public void fullyCompliantVirtLimitStackVaryingLimits() {
+        Consumer c = mockConsumer(PRODUCT_1, PRODUCT_2);
+        for (int i = 0; i < 5; i++) {
+            c.addGuestId(new GuestId("" + i, c, true));
+        }
+        List<Entitlement> ents = new LinkedList<Entitlement>();
+
+        ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product",
+            PRODUCT_1, PRODUCT_2));
+        ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product",
+            PRODUCT_1, PRODUCT_2));
+        ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product",
+            PRODUCT_1, PRODUCT_2));
+        ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product",
+            PRODUCT_1, PRODUCT_2));
+        for (Entitlement ent : ents) {
+            ent.getPool().setProductAttribute("guest_limit", "1", PRODUCT_1);
+        }
+        ents.get(0).getPool().setProductAttribute("guest_limit", "5", PRODUCT_1);
+        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+
+        ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
+
+        assertEquals(0, status.getNonCompliantProducts().size());
+        assertEquals(2, status.getCompliantProducts().size());
+        assertEquals(0, status.getPartiallyCompliantProducts().size());
+        assertTrue(status.getCompliantProducts().keySet().contains(PRODUCT_1));
+        assertTrue(status.getCompliantProducts().keySet().contains(PRODUCT_2));
+
+        assertEquals(4, status.getCompliantProducts().get(PRODUCT_1).size());
+        assertEquals(4, status.getCompliantProducts().get(PRODUCT_2).size());
+    }
+
+    @Test
+    public void fullyCompliantVirtLimitStackWithUnlimited() {
+        Consumer c = mockConsumer(PRODUCT_1, PRODUCT_2);
+        for (int i = 0; i < 5; i++) {
+            c.addGuestId(new GuestId("" + i, c, true));
+        }
+        List<Entitlement> ents = new LinkedList<Entitlement>();
+
+        ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product",
+            PRODUCT_1, PRODUCT_2));
+        ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product",
+            PRODUCT_1, PRODUCT_2));
+        ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product",
+            PRODUCT_1, PRODUCT_2));
+        ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product",
+            PRODUCT_1, PRODUCT_2));
+        for (Entitlement ent : ents) {
+            ent.getPool().setProductAttribute("guest_limit", "1", PRODUCT_1);
+        }
+        ents.get(0).getPool().setProductAttribute("guest_limit", "-1", PRODUCT_1);
+        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+
+        ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
+
+        assertEquals(0, status.getNonCompliantProducts().size());
+        assertEquals(2, status.getCompliantProducts().size());
+        assertEquals(0, status.getPartiallyCompliantProducts().size());
+        assertTrue(status.getCompliantProducts().keySet().contains(PRODUCT_1));
+        assertTrue(status.getCompliantProducts().keySet().contains(PRODUCT_2));
+
+        assertEquals(4, status.getCompliantProducts().get(PRODUCT_1).size());
+        assertEquals(4, status.getCompliantProducts().get(PRODUCT_2).size());
+    }
+
+    @Test
+    public void fullyCompliantVirtLimitStackAllUnlimited() {
+        Consumer c = mockConsumer(PRODUCT_1, PRODUCT_2);
+        for (int i = 0; i < 5; i++) {
+            c.addGuestId(new GuestId("" + i, c, true));
+        }
+        List<Entitlement> ents = new LinkedList<Entitlement>();
+
+        ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product",
+            PRODUCT_1, PRODUCT_2));
+        ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product",
+            PRODUCT_1, PRODUCT_2));
+        ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product",
+            PRODUCT_1, PRODUCT_2));
+        ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product",
+            PRODUCT_1, PRODUCT_2));
+        for (Entitlement ent : ents) {
+            ent.getPool().setProductAttribute("guest_limit", "-1", PRODUCT_1);
+        }
+        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+
+        ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
+
+        assertEquals(0, status.getNonCompliantProducts().size());
+        assertEquals(2, status.getCompliantProducts().size());
+        assertEquals(0, status.getPartiallyCompliantProducts().size());
+        assertTrue(status.getCompliantProducts().keySet().contains(PRODUCT_1));
+        assertTrue(status.getCompliantProducts().keySet().contains(PRODUCT_2));
+
+        assertEquals(4, status.getCompliantProducts().get(PRODUCT_1).size());
+        assertEquals(4, status.getCompliantProducts().get(PRODUCT_2).size());
+    }
+
+    /*
+     * This test should behave more like the scenarios discussed in implementation.
+     * A base subscription with a virt limit of 4, and a hypervisor which overrides
+     * the unrelated subscriptions virt limit, making it unlimited as well.
+     */
+    @Test
+    public void fullyCompliantOverriddenVirtLimit() {
+        Consumer c = mockConsumer(PRODUCT_1, PRODUCT_2);
+        for (int i = 0; i < 5; i++) {
+            c.addGuestId(new GuestId("" + i, c, true));
+        }
+        List<Entitlement> ents = new LinkedList<Entitlement>();
+
+        Entitlement mockServerEntitlement = mockEntitlement(c, "Awesome OS server",
+            PRODUCT_1, PRODUCT_2);
+        mockServerEntitlement.getPool().setProductAttribute("guest_limit", "4", PRODUCT_1);
+        ents.add(mockServerEntitlement);
+        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+
+        // Before we add the hypervisor, this product shouldn't be compliant
+        ComplianceStatus status =
+            compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
+
+        // Should be partial
+        assertEquals("partial", status.getStatus());
+        assertEquals(2, status.getPartiallyCompliantProducts().size());
+
+        Entitlement mockHypervisorEntitlement = mockEntitlement(c,
+            "Awesome Enterprise Hypervisor", PRODUCT_1, PRODUCT_2);
+        mockHypervisorEntitlement.getPool()
+            .setProductAttribute("guest_limit", "-1", PRODUCT_1);
+        ents.add(mockHypervisorEntitlement);
+
+        // Now that we've added the hypervisor,
+        // the base guest_limit of 4 should be overridden
+        status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
+
+        assertEquals(0, status.getNonCompliantProducts().size());
+        assertEquals(2, status.getCompliantProducts().size());
+        assertEquals(0, status.getPartiallyCompliantProducts().size());
+        assertTrue(status.getCompliantProducts().keySet().contains(PRODUCT_1));
+        assertTrue(status.getCompliantProducts().keySet().contains(PRODUCT_2));
+
+        assertEquals(1, status.getCompliantProducts().get(PRODUCT_1).size());
+        assertEquals(1, status.getCompliantProducts().get(PRODUCT_2).size());
+    }
+
+    @Test
+    public void isEntFullyCompliantOverriddenVirtLimit() {
+        Consumer c = mockConsumer(PRODUCT_1, PRODUCT_2);
+        for (int i = 0; i < 5; i++) {
+            c.addGuestId(new GuestId("" + i, c, true));
+        }
+        List<Entitlement> ents = new LinkedList<Entitlement>();
+
+        Entitlement mockServerEntitlement = mockEntitlement(c, "Awesome OS server",
+            PRODUCT_1, PRODUCT_2);
+        mockServerEntitlement.getPool().setProductAttribute("guest_limit", "4", PRODUCT_1);
+        ents.add(mockServerEntitlement);
+
+        Entitlement mockHypervisorEntitlement = mockEntitlement(c,
+            "Awesome Enterprise Hypervisor", PRODUCT_1, PRODUCT_2);
+        mockHypervisorEntitlement.getPool()
+            .setProductAttribute("guest_limit", "-1", PRODUCT_1);
+        ents.add(mockHypervisorEntitlement);
+
+        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        // Now that we've added the hypervisor,
+        // the base guest_limit of 4 should be overridden
+        assertTrue(compliance.isEntitlementCompliant(c, mockServerEntitlement));
+    }
+
+    @Test
+    public void isEntPartiallyCompliantNonOverriddenVirtLimit() {
+        Consumer c = mockConsumer(PRODUCT_1, PRODUCT_2);
+        for (int i = 0; i < 5; i++) {
+            c.addGuestId(new GuestId("" + i, c, true));
+        }
+        List<Entitlement> ents = new LinkedList<Entitlement>();
+
+        Entitlement mockServerEntitlement = mockEntitlement(c, "Awesome OS server",
+            PRODUCT_1, PRODUCT_2);
+        mockServerEntitlement.getPool().setProductAttribute("guest_limit", "4", PRODUCT_1);
+        ents.add(mockServerEntitlement);
+
+        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+
+        // The guest limit has not been modified, should not be compliant.
+        assertFalse(compliance.isEntitlementCompliant(c, mockServerEntitlement));
+    }
 }
