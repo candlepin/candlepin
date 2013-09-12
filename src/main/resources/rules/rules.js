@@ -45,6 +45,7 @@ var CORES_ATTRIBUTE = "cores";
 var ARCH_ATTRIBUTE = "arch";
 var RAM_ATTRIBUTE = "ram";
 var INSTANCE_ATTRIBUTE = "instance_multiplier";
+var VIRT_LIMIT_ATTRIBUTE = "virt_limit";
 var REQUIRES_HOST_ATTRIBUTE = "requires_host";
 var VIRT_ONLY = "virt_only";
 var POOL_DERIVED = "pool_derived";
@@ -69,7 +70,8 @@ var ATTRIBUTES_AFFECTING_COVERAGE = [
     ARCH_ATTRIBUTE,
     SOCKETS_ATTRIBUTE,
     CORES_ATTRIBUTE,
-    RAM_ATTRIBUTE
+    RAM_ATTRIBUTE,
+    VIRT_LIMIT_ATTRIBUTE
 ];
 
 /**
@@ -103,7 +105,8 @@ var STACKABLE_ATTRIBUTES = [
     SOCKETS_ATTRIBUTE,
     CORES_ATTRIBUTE,
     RAM_ATTRIBUTE,
-    ARCH_ATTRIBUTE
+    ARCH_ATTRIBUTE,
+    VIRT_LIMIT_ATTRIBUTE
 ];
 
 
@@ -383,6 +386,11 @@ var FactValueCalculator = {
             var cores = consumerCoresPerSocket * consumerSockets;
             log.debug("Consumer has " + cores + " cores.");
             return cores;
+        },
+
+        virt_limit: function (prodAttr, consumer) {
+            var consumerVirt = consumer.guestIds === null ? 0 : consumer.guestIds.length;
+            return consumerVirt;
         }
     },
 
@@ -509,7 +517,7 @@ var CoverageCalculator = {
                 var sourceValue = sourceData.values[prodAttr];
 
                 // We assume that the value coming back is an int right now.
-                var covered = parseInt(sourceValue) >= consumerQuantity;
+                var covered = (sourceValue === "unlimited") || (parseInt(sourceValue) >= consumerQuantity);
                 log.debug("  System's " + prodAttr + " covered: " + covered);
 
                 var reason = null;
@@ -1127,6 +1135,18 @@ function createStackTracker(consumer, stackId) {
                     var stackValue = currentStackValue || [];
                     stackValue.push(poolValue);
                     return stackValue;
+                },
+
+                virt_limit: function (currentStackValue, poolValue, pool, quantity) {
+                    if (poolValue === "unlimited" || currentStackValue === "unlimited") {
+                        return "unlimited";
+                    }
+                    var stackValue = currentStackValue || 0;
+                    var poolInt = parseInt(poolValue);
+                    if (poolInt > stackValue) {
+                        return poolInt;
+                    }
+                    return currentStackValue;
                 }
             };
 
@@ -1275,6 +1295,7 @@ var Entitlement = {
             "sockets:1:sockets," +
             "ram:1:ram," +
             "cores:1:cores," +
+            "virt_only:1:virt_only," +
             "requires_consumer_type:1:requires_consumer_type," +
             "virt_only:1:virt_only," +
             "virt_limit:1:virt_limit," +
@@ -1406,6 +1427,20 @@ var Entitlement = {
     },
 
     pre_virt_limit: function() {
+        var result = Entitlement.ValidationResult();
+        context = Entitlement.get_attribute_context();
+        var consumer = context.consumer;
+        var pool = context.pool;
+        if (consumer.type.manifest) {
+            return JSON.stringify(result);
+        }
+        var consumerGuests = FactValueCalculator.getFact(VIRT_LIMIT_ATTRIBUTE, consumer);
+        if (!pool.hasProductAttribute("stacking_id") && pool.hasProductAttribute(VIRT_LIMIT_ATTRIBUTE) &&
+                pool.getProductAttribute(VIRT_LIMIT_ATTRIBUTE) !== "unlimited" &&
+                parseInt(pool.getProductAttribute(VIRT_LIMIT_ATTRIBUTE)) < consumerGuests) {
+                    result.addWarning("rulewarning.unsupported.number.of.guests");
+        }
+        return JSON.stringify(result);
     },
 
     pre_architecture: function() {
