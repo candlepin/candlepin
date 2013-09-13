@@ -739,7 +739,7 @@ var CoverageCalculator = {
         // Some stacked attributes do not affect the quantity needed to
         // make the stack valid. Stacking multiple instances of 'arch'
         // does nothing (there is no quantity).
-        var stackableAttrsNotAffectingQuantity = [ARCH_ATTRIBUTE];
+        var stackableAttrsNotAffectingQuantity = [ARCH_ATTRIBUTE, VIRT_LIMIT_ATTRIBUTE];
 
         log.debug("Determining number of entitlements to cover consumer...");
 
@@ -1295,7 +1295,6 @@ var Entitlement = {
             "sockets:1:sockets," +
             "ram:1:ram," +
             "cores:1:cores," +
-            "virt_only:1:virt_only," +
             "requires_consumer_type:1:requires_consumer_type," +
             "virt_only:1:virt_only," +
             "virt_limit:1:virt_limit," +
@@ -1749,15 +1748,23 @@ var Autobind = {
             /*
              * Generates sets of attributes to attempt to remove
              */
-            get_attribute_sets: function() {
+            get_attribute_sets: function(pools) {
                 var stack_attributes = [];
                 // get unique list of additive stack attributes
                 for (var attrIdx in STACKABLE_ATTRIBUTES) {
                     var attr = STACKABLE_ATTRIBUTES[attrIdx];
                     if (attr != ARCH_ATTRIBUTE) {
-                        stack_attributes.push(attr);
+                        // Only check attributes that the pools actually use
+                        for (var poolIdx = 0; poolIdx < pools.length; poolIdx++) {
+                            var pool = pools[poolIdx];
+                            if (pool.hasProductAttribute(attr)) {
+                                stack_attributes.push(attr);
+                                break;
+                            }
+                        }
                     }
                 }
+                log.debug("entitlement group uses attributes: " + stack_attributes);
                 sets = this.get_sets(stack_attributes, stack_attributes.length - 1);
                 for (var i = sets.length - 1; i >= 0; i--) {
                     var set = sets[i];
@@ -1777,7 +1784,7 @@ var Autobind = {
                 var possible_pool_sets = [];
                 possible_pool_sets.push(this.pools);
                 var original_provided = this.get_provided_products().length;
-                var sets_to_check = this.get_attribute_sets(); //array of arrays of attributes to remove
+                var sets_to_check = this.get_attribute_sets(this.pools); //array of arrays of attributes to remove
                 for (var setIdx = 0; setIdx < sets_to_check.length; setIdx++) {
                     var attrs_to_remove = sets_to_check[setIdx];
                     for (var attrIdx = 0; attrIdx < attrs_to_remove.length; attrIdx++) {
