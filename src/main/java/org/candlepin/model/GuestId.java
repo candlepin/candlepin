@@ -59,6 +59,8 @@ public class GuestId extends AbstractHibernateObject {
     @Index(name = "cp_consumerguest_consumer_fk_idx")
     private Consumer consumer;
 
+    private boolean active;
+
     public GuestId() {
     }
 
@@ -69,6 +71,11 @@ public class GuestId extends AbstractHibernateObject {
     public GuestId(String guestId, Consumer consumer) {
         this.guestId = guestId;
         this.consumer = consumer;
+    }
+
+    public GuestId(String guestId, Consumer consumer, boolean active) {
+        this(guestId, consumer);
+        this.setActive(active);
     }
 
     public String getGuestId() {
@@ -94,6 +101,14 @@ public class GuestId extends AbstractHibernateObject {
 
     public void setConsumer(Consumer consumer) {
         this.consumer = consumer;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
     }
 
     @Override

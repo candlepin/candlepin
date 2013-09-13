@@ -389,8 +389,17 @@ var FactValueCalculator = {
         },
 
         virt_limit: function (prodAttr, consumer) {
-            var consumerVirt = consumer.guestIds === null ? 0 : consumer.guestIds.length;
-            return consumerVirt;
+            if (consumer.guestIds === null) {
+                return 0;
+            }
+            var activeGuestCount = 0;
+            for (var guestIdx = 0; guestIdx < consumer.guestIds.length; guestIdx++) {
+                var guest = consumer.guestIds[guestIdx];
+                if (guest.active) {
+                    activeGuestCount++;
+                }
+            }
+            return activeGuestCount;
         }
     },
 

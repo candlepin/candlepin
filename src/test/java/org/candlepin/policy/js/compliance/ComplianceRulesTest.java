@@ -1363,7 +1363,7 @@ public class ComplianceRulesTest {
         Consumer c = mockConsumer(new String[]{ PRODUCT_1 });
         c.setFact("cpu.core(s)_per_socket", "4");
         for (int i = 0; i < 5; i++) {
-            c.addGuestId(new GuestId("" + i));
+            c.addGuestId(new GuestId("" + i, c, true));
         }
 
         Entitlement ent = mockEntitlement(c, PRODUCT_1);
@@ -1385,7 +1385,7 @@ public class ComplianceRulesTest {
         Consumer c = mockConsumer(new String[]{ PRODUCT_1 });
         c.setFact("cpu.core(s)_per_socket", "4");
         for (int i = 0; i < 5; i++) {
-            c.addGuestId(new GuestId("" + i));
+            c.addGuestId(new GuestId("" + i, c, true));
         }
 
         Entitlement ent = mockEntitlement(c, PRODUCT_1);
@@ -1406,7 +1406,7 @@ public class ComplianceRulesTest {
     public void partiallyCompliantVirtLimitStack() {
         Consumer c = mockConsumer(PRODUCT_1, PRODUCT_2);
         for (int i = 0; i < 5; i++) {
-            c.addGuestId(new GuestId("" + i));
+            c.addGuestId(new GuestId("" + i, c, true));
         }
         List<Entitlement> ents = new LinkedList<Entitlement>();
 
@@ -1437,10 +1437,44 @@ public class ComplianceRulesTest {
     }
 
     @Test
+    public void fullyCompliantVirtLimitStackWithInactiveGuests() {
+        Consumer c = mockConsumer(PRODUCT_1, PRODUCT_2);
+        for (int i = 0; i < 5; i++) {
+            c.addGuestId(new GuestId("" + i, c, false));
+        }
+        List<Entitlement> ents = new LinkedList<Entitlement>();
+
+        ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product",
+            PRODUCT_1, PRODUCT_2));
+        ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product",
+            PRODUCT_1, PRODUCT_2));
+        ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product",
+            PRODUCT_1, PRODUCT_2));
+        ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product",
+            PRODUCT_1, PRODUCT_2));
+        for (Entitlement ent : ents) {
+            ent.getPool().setProductAttribute("virt_limit", "4", PRODUCT_1);
+        }
+        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+
+        ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
+
+        assertEquals(0, status.getNonCompliantProducts().size());
+        assertEquals(0, status.getPartiallyCompliantProducts().size());
+
+        assertEquals(2, status.getCompliantProducts().size());
+        assertTrue(status.getCompliantProducts().keySet().contains(PRODUCT_1));
+        assertTrue(status.getCompliantProducts().keySet().contains(PRODUCT_2));
+
+        assertEquals(4, status.getCompliantProducts().get(PRODUCT_1).size());
+        assertEquals(4, status.getCompliantProducts().get(PRODUCT_2).size());
+    }
+
+    @Test
     public void fullyCompliantVirtLimitStack() {
         Consumer c = mockConsumer(PRODUCT_1, PRODUCT_2);
         for (int i = 0; i < 5; i++) {
-            c.addGuestId(new GuestId("" + i));
+            c.addGuestId(new GuestId("" + i, c, true));
         }
         List<Entitlement> ents = new LinkedList<Entitlement>();
 
@@ -1473,7 +1507,7 @@ public class ComplianceRulesTest {
     public void fullyCompliantVirtLimitStackVaryingLimits() {
         Consumer c = mockConsumer(PRODUCT_1, PRODUCT_2);
         for (int i = 0; i < 5; i++) {
-            c.addGuestId(new GuestId("" + i));
+            c.addGuestId(new GuestId("" + i, c, true));
         }
         List<Entitlement> ents = new LinkedList<Entitlement>();
 
@@ -1507,7 +1541,7 @@ public class ComplianceRulesTest {
     public void fullyCompliantVirtLimitStackWithUnlimited() {
         Consumer c = mockConsumer(PRODUCT_1, PRODUCT_2);
         for (int i = 0; i < 5; i++) {
-            c.addGuestId(new GuestId("" + i));
+            c.addGuestId(new GuestId("" + i, c, true));
         }
         List<Entitlement> ents = new LinkedList<Entitlement>();
 
@@ -1541,7 +1575,7 @@ public class ComplianceRulesTest {
     public void fullyCompliantVirtLimitStackAllUnlimited() {
         Consumer c = mockConsumer(PRODUCT_1, PRODUCT_2);
         for (int i = 0; i < 5; i++) {
-            c.addGuestId(new GuestId("" + i));
+            c.addGuestId(new GuestId("" + i, c, true));
         }
         List<Entitlement> ents = new LinkedList<Entitlement>();
 
