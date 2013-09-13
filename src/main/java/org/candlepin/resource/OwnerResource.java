@@ -71,6 +71,7 @@ import org.candlepin.model.ExporterMetadata;
 import org.candlepin.model.ExporterMetadataCurator;
 import org.candlepin.model.ImportRecord;
 import org.candlepin.model.ImportRecordCurator;
+import org.candlepin.model.ImportUpstreamConsumer;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerInfo;
@@ -93,7 +94,6 @@ import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.sync.ConflictOverrides;
-import org.candlepin.sync.ConsumerDto;
 import org.candlepin.sync.Importer;
 import org.candlepin.sync.ImporterException;
 import org.candlepin.sync.Meta;
@@ -942,6 +942,7 @@ public class OwnerResource {
         }
 
         // Clear out upstream ID so owner can import from other distributors:
+        UpstreamConsumer uc = owner.getUpstreamConsumer();
         owner.setUpstreamConsumer(null);
 
         ExporterMetadata metadata = exportCurator.lookupByTypeAndOwner(
@@ -951,7 +952,7 @@ public class OwnerResource {
         }
         exportCurator.delete(metadata);
 
-        this.recordManifestDeletion(owner, principal.getUsername());
+        this.recordManifestDeletion(owner, principal.getUsername(), uc);
 
         // Refresh pools to cleanup entitlements:
         return RefreshPoolsJob.forOwner(owner, false);
@@ -1255,14 +1256,11 @@ public class OwnerResource {
 
         ImportRecord record = new ImportRecord(owner);
         Meta meta = (Meta) data.get("meta");
-        ConsumerDto consumer = (ConsumerDto) data.get("consumer");
         if (meta != null) {
             record.setGeneratedBy(meta.getPrincipalName());
             record.setGeneratedDate(meta.getCreated());
         }
-        if (consumer != null) {
-            record.setUpstreamId(consumer.getUuid());
-        }
+        record.setUpstreamConsumer(createImportUpstreamConsumer(owner, null));
         record.setFileName(filename);
 
         String msg = i18n.tr("{0} file imported successfully.", owner.getKey());
@@ -1279,15 +1277,12 @@ public class OwnerResource {
         String filename) {
         ImportRecord record = new ImportRecord(owner);
         Meta meta = (Meta) data.get("meta");
-        ConsumerDto consumer = (ConsumerDto) data.get("consumer");
         log.error("Recording import failure", error);
         if (meta != null) {
             record.setGeneratedBy(meta.getPrincipalName());
             record.setGeneratedDate(meta.getCreated());
         }
-        if (consumer != null) {
-            record.setUpstreamId(consumer.getUuid());
-        }
+        record.setUpstreamConsumer(createImportUpstreamConsumer(owner, null));
         record.setFileName(filename);
 
         record.recordStatus(ImportRecord.Status.FAILURE, error.getMessage());
@@ -1295,15 +1290,33 @@ public class OwnerResource {
         this.importRecordCurator.create(record);
     }
 
-    private void recordManifestDeletion(Owner owner, String username) {
+    private void recordManifestDeletion(Owner owner, String username,
+        UpstreamConsumer uc) {
         ImportRecord record = new ImportRecord(owner);
         record.setGeneratedBy(username);
         record.setGeneratedDate(new Date());
         String msg = i18n.tr("Subscriptions deleted by {0}", username);
         record.recordStatus(ImportRecord.Status.DELETE, msg);
-
+        record.setUpstreamConsumer(createImportUpstreamConsumer(owner, uc));
 
         this.importRecordCurator.create(record);
     }
 
+    private ImportUpstreamConsumer createImportUpstreamConsumer(Owner owner,
+        UpstreamConsumer uc) {
+        ImportUpstreamConsumer iup = null;
+        if (uc == null) {
+            uc = owner.getUpstreamConsumer();
+        }
+        if (uc != null) {
+            iup = new ImportUpstreamConsumer();
+            iup.setOwnerName(owner.getDisplayName());
+            iup.setName(uc.getName());
+            iup.setUuid(uc.getUuid());
+            iup.setType(uc.getType().getLabel());
+            iup.setWebUrl(uc.getWebUrl());
+            iup.setApiUrl(uc.getApiUrl());
+        }
+        return iup;
+    }
 }
