@@ -102,6 +102,7 @@ import org.candlepin.pinsetter.tasks.EntitlerJob;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.consumer.ConsumerRules;
+import org.candlepin.policy.js.quantity.QuantityRules;
 import org.candlepin.resource.util.ConsumerInstalledProductEnricher;
 import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.service.EntitlementCertServiceAdapter;
@@ -155,6 +156,7 @@ public class ConsumerResource {
     private EnvironmentCurator environmentCurator;
     private DistributorVersionCurator distributorVersionCurator;
     private Config config;
+    private QuantityRules quantityRules;
 
     @Inject
     public ConsumerResource(ConsumerCurator consumerCurator,
@@ -172,7 +174,7 @@ public class ConsumerResource {
         ComplianceRules complianceRules, DeletedConsumerCurator deletedConsumerCurator,
         EnvironmentCurator environmentCurator,
         DistributorVersionCurator distributorVersionCurator,
-        Config config) {
+        Config config, QuantityRules quantityRules) {
 
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -202,6 +204,7 @@ public class ConsumerResource {
         this.consumerSystemNamePattern = Pattern.compile(config.getString(
             ConfigProperties.CONSUMER_SYSTEM_NAME_PATTERN));
         this.config = config;
+        this.quantityRules = quantityRules;
     }
 
     /**
@@ -1308,7 +1311,7 @@ public class ConsumerResource {
         @QueryParam("pool") @Verify(value = Pool.class, nullable = true)
                 String poolIdString,
         @QueryParam("product") String[] productIds,
-        @QueryParam("quantity") @DefaultValue("1") Integer quantity,
+        @QueryParam("quantity") Integer quantity,
         @QueryParam("email") String email,
         @QueryParam("email_locale") String emailLocale,
         @QueryParam("async") @DefaultValue("false") boolean async,
@@ -1320,7 +1323,7 @@ public class ConsumerResource {
                 i18n.tr("Cannot bind by multiple parameters."));
         }
 
-        if (poolIdString == null && quantity > 1) {
+        if (poolIdString == null && quantity != null && quantity > 1) {
             throw new BadRequestException(
                 i18n.tr("Cannot specify a quantity when auto-binding."));
         }
@@ -1356,6 +1359,16 @@ public class ConsumerResource {
             throw e;
         }
 
+        if (poolIdString != null && quantity == null) {
+            Pool pool = poolManager.find(poolIdString);
+            if (pool != null) {
+                quantity = quantityRules.getSuggestedQuantity(pool, consumer, new Date()).getSuggested().intValue();
+            }
+            else {
+                quantity = 1;
+            }
+            
+        }
         //
         // HANDLE ASYNC
         //
