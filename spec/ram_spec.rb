@@ -331,7 +331,7 @@ describe 'RAM Limiting' do
     pool = find_pool(@owner.id, @stackable_ram_sub.id)
     pool.should_not == nil
 
-    entitlement = system.consume_pool(pool.id)
+    entitlement = system.consume_pool(pool.id, {:quantity => 1})
     entitlement.should_not == nil
     
     entitlements = system.consume_product()

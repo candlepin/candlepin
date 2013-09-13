@@ -1362,12 +1362,12 @@ public class ConsumerResource {
         if (poolIdString != null && quantity == null) {
             Pool pool = poolManager.find(poolIdString);
             if (pool != null) {
-                quantity = quantityRules.getSuggestedQuantity(pool, consumer, new Date()).getSuggested().intValue();
+                quantity = Math.max(1, quantityRules.getSuggestedQuantity(pool,
+                    consumer, new Date()).getSuggested().intValue());
             }
             else {
                 quantity = 1;
             }
-            
         }
         //
         // HANDLE ASYNC
