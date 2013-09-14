@@ -37,7 +37,7 @@ describe 'Environments Certificate V3' do
     @cp.refresh_pools(@owner['key'])
 
     pools = @cp.list_pools(:owner => @owner['id'], :product => product['id'])
-    ent = consumer_cp.consume_pool(pools[0]['id'])[0]
+    ent = consumer_cp.consume_pool(pools[0]['id'], {:quantity => 1})[0]
 
     value = extension_from_cert(ent['certificates'][0]['cert'], "1.3.6.1.4.1.2312.9.6")
     value.should == "3.2"
@@ -73,7 +73,7 @@ describe 'Environments Certificate V3' do
     @cp.refresh_pools(@owner['key'])
 
     pools = @cp.list_pools(:owner => @owner['id'], :product => product['id'])
-    ent = consumer_cp.consume_pool(pools[0]['id'])[0]
+    ent = consumer_cp.consume_pool(pools[0]['id'], {:quantity => 1})[0]
 
     value = extension_from_cert(ent['certificates'][0]['cert'], "1.3.6.1.4.1.2312.9.6")
     value.should == "3.2"

@@ -64,7 +64,7 @@ describe 'Entitlement serialization' do
 
     consumer_client = consumer_client(@owner_client, random_string(),
         "candlepin")
-    ent_id = consumer_client.consume_pool(@pool.id)[0]['id']
+    ent_id = consumer_client.consume_pool(@pool.id, {:quantity => 1})[0]['id']
     @ent = @cp.get_entitlement(ent_id)
   end
 

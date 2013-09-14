@@ -79,7 +79,7 @@ describe 'Pool Resource' do
     consumer2_cp = consumer_client(admin_cp, random_string('testsystem'))
 
     # Consume that one entitlement:
-    consumer1_cp.consume_pool(pool.id).size.should == 1
+    consumer1_cp.consume_pool(pool.id, {:quantity => 1}).size.should == 1
 
     pools = consumer2_cp.list_pools({:consumer => consumer2_cp.uuid,
       :listall => true})
@@ -121,7 +121,7 @@ describe 'Pool Resource' do
     pool = owner1_client.list_pools(:owner => owner1.id).first
 
     consumer1_cp = consumer_client(owner1_client, random_string('testsystem'))
-    ent = consumer1_cp.consume_pool(pool['id']).first
+    ent = consumer1_cp.consume_pool(pool['id'], {:quantity => 1}).first
 
     # Org admin should not be able to do this:
     lambda {
