@@ -395,7 +395,8 @@ var FactValueCalculator = {
             var activeGuestCount = 0;
             for (var guestIdx = 0; guestIdx < consumer.guestIds.length; guestIdx++) {
                 var guest = consumer.guestIds[guestIdx];
-                if (guest.active) {
+                // We can remove "active" in guest after rules rev to 5.0
+                if ("active" in guest && guest.active) {
                     activeGuestCount++;
                 }
             }
