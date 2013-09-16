@@ -891,4 +891,40 @@ describe 'Consumer Resource' do
     consumer['facts']['lscpu.numa_node0_cpu(s)'].should == '0-3'
   end
 
+  # When no quantity is sent to the server, the suggested quantity should be attached
+  it "should bind correct quantity when not specified" do
+    facts = {
+        'cpu.cpu_socket(s)' => '4',
+    }
+    product1 = create_product(random_string('product'), random_string('product-multiple-arch'),
+        :attributes => { :sockets => '1', :'multi-entitlement' => 'yes', :stacking_id => 'consumer-bind-test'})
+    sub = @cp.create_subscription(@owner1['key'], product1.id, 10)
+    installed = [
+        {'productId' => product1.id, 'productName' => product1.name}
+    ]
+    @consumer1.update_consumer({:installedProducts => installed, :facts => facts})
+    @cp.refresh_pools(@owner1['key'])
+    pool = @consumer1.list_pools({:owner => @owner1['id']}).first
+    ent = @consumer1.consume_pool(pool.id)
+    ent[0]["quantity"].should == 4
+  end
+
+  it "should bind quantity 1 when suggested is 0 and not specified" do
+    facts = {
+      'cpu.cpu_socket(s)' => '4',
+    }
+    product1 = create_product(random_string('product'), random_string('product-multiple-arch'),
+        :attributes => { :sockets => '2', :'multi-entitlement' => 'yes', :stacking_id => 'consumer-bind-test'})
+    sub = @cp.create_subscription(@owner1['key'], product1.id, 10)
+    installed = [
+        {'productId' => product1.id, 'productName' => product1.name}
+    ]
+    @consumer1.update_consumer({:installedProducts => installed, :facts => facts})
+    @cp.refresh_pools(@owner1['key'])
+    pool = @consumer1.list_pools({:owner => @owner1['id']}).first
+    # Cover product with 2 2 socket ents, then suggested will be 0
+    ent = @consumer1.consume_pool(pool.id, {:quantity => 2})
+    ent = @consumer1.consume_pool(pool.id)
+    ent[0]["quantity"].should == 1
+  end
 end
