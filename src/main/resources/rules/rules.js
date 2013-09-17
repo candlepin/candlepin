@@ -1,4 +1,4 @@
-// Version: 4.2
+// Version: 4.3
 
 /*
  * Default Candlepin rule set.
@@ -2670,7 +2670,10 @@ var Quantity = {
             for (var j = 0; j < validEntitlements.length; j++) {
                 var ent = validEntitlements[j];
                 ent.pool = createPool(ent.pool);
-                stackTracker.updateAccumulatedFromEnt(ent);
+                if (ent.pool.hasProductAttribute("stacking_id") &&
+                        ent.pool.getProductAttribute("stacking_id") == pool.getProductAttribute("stacking_id")) {
+                    stackTracker.updateAccumulatedFromEnt(ent);
+                }
             }
 
             result.suggested = CoverageCalculator.getQuantityToCoverStack(stackTracker, pool, consumer);
