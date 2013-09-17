@@ -252,7 +252,7 @@ describe 'Candlepin Import', :serial => true do
     pools =  @import_owner_client.list_pools({:owner => @import_owner['id']})
     pool = pools.find_all {|p| p.subscriptionId == sublist.first.id}[0]
     consumer = consumer_client(@import_owner_client, 'system6')
-    entitlement = consumer.consume_pool(pool.id)[0]
+    entitlement = consumer.consume_pool(pool.id, {:quantity => 1})[0]
     ent =  @cp.get_subscription_cert_by_ent_id entitlement.id
     cert.should == ent
   end

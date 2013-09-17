@@ -117,7 +117,7 @@ public class HypervisorResourceTest {
             this.userService, null, null, null, this.ownerCurator,
             this.activationKeyCurator,
             null, this.complianceRules, this.deletedConsumerCurator,
-            null, null, new CandlepinCommonTestConfig());
+            null, null, new CandlepinCommonTestConfig(), null);
 
         hypervisorResource = new HypervisorResource(consumerResource,
             consumerCurator, this.deletedConsumerCurator, i18n);

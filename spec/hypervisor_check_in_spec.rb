@@ -20,7 +20,7 @@ describe 'Hypervisor Resource', :type => :virt do
 
     @cp.get_consumer_guests(@expected_host).length.should == 2
     @host_client = registered_consumer_client(consumer)
-    @host_client.consume_pool(@virt_limit_pool['id'])
+    @host_client.consume_pool(@virt_limit_pool['id'], {:quantity => 1})
   end
 
   it 'should add consumer to created when new host id and no guests reported' do
@@ -113,7 +113,7 @@ describe 'Hypervisor Resource', :type => :virt do
   it 'should not revoke guest entitlements when guest no longer registered' do
     guest_pool = find_guest_virt_pool(@guest1_client, @guest1.uuid)
 
-    @guest1_client.consume_pool(guest_pool.id)
+    @guest1_client.consume_pool(guest_pool.id, {:quantity => 1})
     @guest1_client.list_entitlements.length.should == 1
 
     # Host stops reporting guest:
@@ -139,7 +139,7 @@ describe 'Hypervisor Resource', :type => :virt do
   it 'should not revoke host and guest entitlements when guestId list is empty' do
     guest_pool = find_guest_virt_pool(@guest1_client, @guest1.uuid)
 
-    @guest1_client.consume_pool(guest_pool.id)
+    @guest1_client.consume_pool(guest_pool.id, {:quantity => 1})
     @guest1_client.list_entitlements.length.should == 1
 
     # Host stops reporting guest:
