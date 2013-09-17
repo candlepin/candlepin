@@ -345,7 +345,7 @@ public class ConsumerResourceTest {
                 null, sa, null, null, null, i18n, null, null, null, null,
                 null, null, null, null, null, null, e, null, null, null,
                 null, new CandlepinCommonTestConfig(), null);
-            cr.bind("fakeConsumer", null, prodIds, 1, null, null, false, null);
+            cr.bind("fakeConsumer", null, prodIds, null, null, null, false, null);
         }
         catch (Throwable t) {
             fail("Runtime exception should be caught in ConsumerResource.bind");
@@ -374,7 +374,7 @@ public class ConsumerResourceTest {
             null, new CandlepinCommonTestConfig(), null);
         String dtStr = "2011-09-26T18:10:50.184081+00:00";
         Date dt = ResourceDateParser.parseDateString(dtStr);
-        cr.bind("fakeConsumer", null, null, 1, null, null, false, dtStr);
+        cr.bind("fakeConsumer", null, null, null, null, null, false, dtStr);
         verify(e).bindByProducts(eq((String []) null), eq(c), eq(dt));
     }
 

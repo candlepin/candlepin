@@ -1323,7 +1323,7 @@ public class ConsumerResource {
                 i18n.tr("Cannot bind by multiple parameters."));
         }
 
-        if (poolIdString == null && quantity != null && quantity > 1) {
+        if (poolIdString == null && quantity != null) {
             throw new BadRequestException(
                 i18n.tr("Cannot specify a quantity when auto-binding."));
         }
