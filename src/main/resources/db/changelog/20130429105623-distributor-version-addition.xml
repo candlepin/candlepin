@@ -8,7 +8,7 @@
 
     <property name="now" value="sysdate" dbms="oracle"/>
     <property name="now" value="LOCALTIMESTAMP" dbms="postgresql"/>
-    <changeSet id="20130429105623" author="wpoteat">
+    <changeSet id="20130429105623" author="wpoteat" dbms="oracle,postgresql">
         <comment>Insert the current list of known distributor versions</comment>
         <insert tableName="cp_dist_version">
             <column name="id" value="1000"/>
