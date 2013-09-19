@@ -451,4 +451,34 @@ public class QuantityRulesTest {
             futureDate);
         assertEquals(new Long(4), suggested.getSuggested());
     }
+
+    @Test
+    public void testStackOnlyStacksWithSameStackingId() {
+        consumer.setFact(IS_VIRT, "false");
+        consumer.setFact(SOCKET_FACT, "8");
+        pool.setProductAttribute(SOCKET_ATTRIBUTE, "2", product.getId());
+        pool.setQuantity(10L);
+        Product product1 = TestUtil.createProduct();
+        Pool pool1 = TestUtil.createPool(owner, product1);
+        Entitlement e = TestUtil.createEntitlement(owner, consumer, pool1,
+            new EntitlementCertificate());
+
+        Set<Entitlement> entSet = new HashSet<Entitlement>();
+        entSet.add(e);
+        pool1.setEntitlements(entSet);
+        pool1.setProductAttribute("multi-entitlement", "yes", product1.getId());
+        pool1.setProductAttribute("stacking_id", "2", product1.getId());
+        pool1.setProductAttribute(SOCKET_ATTRIBUTE, "2", product1.getId());
+        pool1.setQuantity(10L);
+
+        // Consume 2 subscriptions with another stacking ID
+        Entitlement toAdd = pool1.getEntitlements().iterator().next();
+        toAdd.setQuantity(2);
+        consumer.addEntitlement(toAdd);
+
+        // Ensure the 2 attached entitlements do not cause the suggested quantity to change
+        SuggestedQuantity suggested =
+            quantityRules.getSuggestedQuantity(pool, consumer, new Date());
+        assertEquals(new Long(4), suggested.getSuggested());
+    }
 }

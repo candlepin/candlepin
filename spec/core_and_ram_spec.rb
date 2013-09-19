@@ -56,7 +56,7 @@ describe 'Core and RAM Limiting' do
     pool = find_pool(@owner.id, @core_socket_sub.id)
     pool.should_not == nil
 
-    entitlement = system.consume_pool(pool.id)
+    entitlement = system.consume_pool(pool.id, {:quantity => 1})
     entitlement.should_not == nil
 
     compliance_status = @cp.get_compliance(consumer_id=system.uuid)
@@ -81,7 +81,7 @@ describe 'Core and RAM Limiting' do
     pool = find_pool(@owner.id, @core_socket_sub.id)
     pool.should_not == nil
 
-    entitlement = system.consume_pool(pool.id)
+    entitlement = system.consume_pool(pool.id, {:quantity => 1})
     entitlement.should_not == nil
 
     compliance_status = @cp.get_compliance(consumer_id=system.uuid)
@@ -105,7 +105,7 @@ describe 'Core and RAM Limiting' do
     pool = find_pool(@owner.id, @core_socket_sub.id)
     pool.should_not == nil
 
-    entitlement = system.consume_pool(pool.id)
+    entitlement = system.consume_pool(pool.id, {:quantity => 1})
     entitlement.should_not == nil
 
     compliance_status = @cp.get_compliance(consumer_id=system.uuid)
@@ -129,7 +129,7 @@ describe 'Core and RAM Limiting' do
     pool = find_pool(@owner.id, @core_socket_sub.id)
     pool.should_not == nil
 
-    entitlement = system.consume_pool(pool.id)
+    entitlement = system.consume_pool(pool.id, {:quantity => 1})
     entitlement.should_not == nil
 
     compliance_status = @cp.get_compliance(consumer_id=system.uuid)
@@ -177,7 +177,7 @@ describe 'Core and RAM Limiting' do
     pool = find_pool(@owner.id, @core_socket_sub_2.id)
     pool.should_not == nil
 
-    entitlement = system.consume_pool(pool.id)
+    entitlement = system.consume_pool(pool.id, {:quantity => 1})
     entitlement.should_not == nil
 
     compliance_status = @cp.get_compliance(consumer_id=system.uuid)

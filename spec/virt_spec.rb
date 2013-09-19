@@ -24,14 +24,14 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
         key=@host2['idCert']['key'])
 
     pools = @host1_client.list_pools :consumer => @host1['uuid']
-    @host_ent = @host1_client.consume_pool(@virt_limit_pool['id'])[0]
+    @host_ent = @host1_client.consume_pool(@virt_limit_pool['id'], {:quantity => 1})[0]
     # After binding the host should see no pools available:
     pools = @host1_client.list_pools :consumer => @host1['uuid']
     # one should remain
     pools.length.should == 1
 
     pools = @host2_client.list_pools :consumer => @host2['uuid']
-    host2_ent = @host2_client.consume_pool(@virt_limit_pool['id'])[0]
+    host2_ent = @host2_client.consume_pool(@virt_limit_pool['id'], {:quantity => 1})[0]
     # After binding the host should see no pools available:
     pools = @host2_client.list_pools :consumer => @host2['uuid']
 
@@ -55,12 +55,12 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
     requires_host['value'].should == @host1['uuid']
 
     # Guest 1 should be able to use the pool:
-    @guest1_client.consume_pool(@guest_pool['id'])
+    @guest1_client.consume_pool(@guest_pool['id'], {:quantity => 1})
 
     # Should not be able to use the pool as this guest is not on the correct
     # host:
     lambda do
-        @guest2_client.consume_pool(@guest_pool['id'])
+        @guest2_client.consume_pool(@guest_pool['id'], {:quantity => 1})
     end.should raise_exception(RestClient::Forbidden)
   end
 
@@ -72,7 +72,7 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
 
   it 'should revoke guest entitlements when host unbinds' do
     # Guest 1 should be able to use the pool:
-    @guest1_client.consume_pool(@guest_pool['id'])
+    @guest1_client.consume_pool(@guest_pool['id'], {:quantity => 1})
     @guest1_client.list_entitlements.length.should == 1
 
     @host1_client.unbind_entitlement(@host_ent['id'])
@@ -83,10 +83,10 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
   it 'should revoke guest entitlements when host unregisters' do
     # Guest 1 should be able to use the pool:
     @host1_client.update_consumer({:guestIds => [{'guestId' => @uuid2}, {'guestId' => @uuid1}]});
-    @guest1_client.consume_pool(@guest_pool['id'])
+    @guest1_client.consume_pool(@guest_pool['id'], {:quantity => 1})
     @guest1_client.list_entitlements.length.should == 1
 
-    @guest2_client.consume_pool(@guest_pool['id'])
+    @guest2_client.consume_pool(@guest_pool['id'], {:quantity => 1})
     @guest2_client.list_entitlements.length.should == 1
 
     # without the fix for #811581, this will 500
@@ -99,7 +99,7 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
     activation_key = @cp.create_activation_key(@owner['key'], random_string('test_token'))
     @cp.add_pool_to_key(activation_key['id'], @guest_pool['id'])
     # Guest 1 should be able to use the pool:
-    @guest1_client.consume_pool(@guest_pool['id'])
+    @guest1_client.consume_pool(@guest_pool['id'], {:quantity => 1})
     @guest1_client.list_entitlements.length.should == 1
 
     @host1_client.unbind_entitlement(@host_ent['id'])
@@ -108,7 +108,7 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
   end
 
   it 'should not revoke guest entitlements when host stops reporting guest ID' do
-    @guest1_client.consume_pool(@guest_pool['id'])
+    @guest1_client.consume_pool(@guest_pool['id'], {:quantity => 1})
     @guest1_client.list_entitlements.length.should == 1
 
     # Host 1 stops reporting guest:
@@ -119,7 +119,7 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
   end
 
   it 'should lose entitlement when guest stops and is restarted elsewhere' do
-    @guest1_client.consume_pool(@guest_pool['id'])
+    @guest1_client.consume_pool(@guest_pool['id'], {:quantity => 1})
     @guest1_client.list_entitlements.length.should == 1
 
     # Host 1 stops reporting guest:
@@ -150,7 +150,7 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
     # entitlements are revoked.
     @host1_client.update_consumer({:guestIds => [{'guestId' => @uuid2}, {'guestId' => @uuid1}]});
 
-    @guest2_client.consume_pool(@guest_pool['id'])
+    @guest2_client.consume_pool(@guest_pool['id'], {:quantity => 1})
     @guest2_client.list_entitlements.length.should == 1
 
     # Host 2 reports the new guest before Host 1 reports it removed.

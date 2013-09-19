@@ -17,7 +17,7 @@ describe 'Statistic Resource' do
 
     consumer_client = consumer_client(owner1_client, random_string('testsystem'))
     p = consumer_client.get_pool(pool.id)
-    consumer_client.consume_pool(p.id)
+    consumer_client.consume_pool(p.id, {:quantity => 1})
 
     @cp.generate_statistics
 

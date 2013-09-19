@@ -19,7 +19,7 @@ describe 'Unsubscribe' do
       :product => @monitoring.id,
       :consumer => consumer.uuid).first
 
-    ent = consumer.consume_pool(pool.id).first
+    ent = consumer.consume_pool(pool.id, {:quantity => 1}).first
 
     consumer.unbind_entitlement ent.id
     consumer.list_entitlements.should be_empty
@@ -30,7 +30,7 @@ describe 'Unsubscribe' do
     pool = consumer.list_pools(
       :product => @monitoring.id,
       :consumer => consumer.uuid).first
-    ent = consumer.consume_pool(pool.id).first
+    ent = consumer.consume_pool(pool.id, {:quantity => 1}).first
 
     consumer.unbind_entitlement ent.id
     consumer.get_pool(pool.id).quantity.should == 4
@@ -41,7 +41,7 @@ describe 'Unsubscribe' do
     pool = consumer.list_pools(
       :product => @monitoring.id,
       :consumer => consumer.uuid).first
-    ent = consumer.consume_pool(pool.id).first
+    ent = consumer.consume_pool(pool.id, {:quantity => 1}).first
 
     # Gather up the serials
     serials = consumer.list_entitlements(:product_id => @monitoring.id).collect do |ent|
@@ -63,12 +63,12 @@ describe 'Unsubscribe' do
     pool = consumer.list_pools(
       :product => @monitoring.id,
       :consumer => consumer.uuid).first
-    monitoring_ent = consumer.consume_pool(pool.id).first
+    monitoring_ent = consumer.consume_pool(pool.id, {:quantity => 1}).first
 
     pool = consumer.list_pools(
       :product => virt_host.id,
       :consumer => consumer.uuid).first
-    virt_host_ent = consumer.consume_pool(pool.id).first
+    virt_host_ent = consumer.consume_pool(pool.id, {:quantity => 1}).first
 
     # Gather up the serials
     serials = consumer.list_entitlements(:product_id => @monitoring.id).collect do |ent|

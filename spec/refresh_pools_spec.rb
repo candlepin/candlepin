@@ -79,7 +79,7 @@ describe 'Refresh Pools' do
 
     consumer_id = random_string("consumer")
     consumer = consumer_client(user, consumer_id)
-    consumer.consume_pool(pools.first.id).size.should == 1
+    consumer.consume_pool(pools.first.id, {:quantity => 1}).size.should == 1
 
     # Update the subscription to be expired so that
     # sub, pool, and entitlements are removed.
@@ -107,7 +107,7 @@ describe 'Refresh Pools' do
 
     consumer_id = random_string("consumer")
     consumer = consumer_client(user, consumer_id)
-    ents = consumer.consume_pool(pools.first.id)
+    ents = consumer.consume_pool(pools.first.id, {:quantity => 1})
     ents.size.should == 1
     ent = ents[0]
     old_cert = ent['certificates'][0]
