@@ -117,9 +117,17 @@ describe 'Candlepin Import', :serial => true do
   end
 
   it 'should return a 409 on a duplicate import' do
-    lambda do
+    exception = false
+    begin
       @cp.import(@import_owner['key'], @cp_export_file)
-    end.should raise_exception RestClient::Conflict
+    rescue RestClient::Conflict => e
+      json = JSON.parse(e.http_body)
+      json["conflicts"].should have(1).things
+      json["conflicts"].include?("MANIFEST_SAME").should be_true
+      exception = true
+    end
+    exception.should be_true
+
   end
 
   it 'should not allow importing an old manifest' do
