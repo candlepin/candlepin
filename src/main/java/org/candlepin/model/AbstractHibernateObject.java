@@ -24,11 +24,14 @@ import javax.persistence.PreUpdate;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+
 /**
  * Abstract class for hibernate entities
  */
 @MappedSuperclass
 @XmlType(name = "CandlepinObject")
+@JsonIgnoreProperties(ignoreUnknown = true)
 public abstract class AbstractHibernateObject implements Persisted, Serializable {
     public static final String DEFAULT_SORT_FIELD = "created";
 
