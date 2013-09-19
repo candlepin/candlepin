@@ -9,31 +9,42 @@
     <property name="now" value="NOW()" dbms="mysql"/>
     
     <!--
-         MySQL "features" a behavior where the first column in a table declared to be a TIMESTAMP is
-         automatically set to have the CURRENT_TIMESTAMP as default and to be set with the CURRENT_TIMESTAMP
-         on every update.  In most cases, we have the "created" column as the first column which we most
-         certainly do not want to be changed on every update.  Additionally, TIMESTAMPS that are not declared
-         with the NULL option are set by default to "0000-00-00 00:00:00" which cannot be represented by a 
-         java.sql.Timestamp.  To avoid these issues, we need to declare the type to be TIMESTAMP .
-         (This allows the columns to contain NULL and to default to NULL.)  This should bring the MySQL behavior 
-         to be more in line with PostgreSQL.
+      We are using DATETIME to store date information in MySQL.  In MySQL, DATETIME does not store any time zone
+      information.  This is consistent with our Postgres and Oracle schemas which use TIMESTAMP WITHOUT TIME ZONE.
 
-         Unfortunately, Liquibase does not recognize the "TIMESTAMP NULL DEFAULT NULL" as a type and instead converts
-         the columns to DATETIME.  (The difference between TIMESTAMP and DATETIME in MySQL is that TIMESTAMP is 
-         stored in UTC and converted to the user's timezone on retrieval).  So we have to use the modifySql tag
-         to change the data type on the fly.  To make things more complicated, there are some TIMESTAMPS that we don't
-         want to be nullable so we need to create a dummy datatype, NULLABLE_TS to replace using the modifySql
-         statement. 
+      The MySQL TIMESTAMP data type automatically converts values into UTC.  Should we ever need to convert to TIMESTAMP
+      there are several things to keep in mind:
+        1. TIMESTAMP only goes up to the year 2038.  DATETIME goes to 9999.
+        2. MySQL has a "feature" for TIMESTAMP where the first TIMESTAMP in a column is given an automatic default
+           and automatically updated when the record is changed.  This can be avoided by using TIMESTAMP NULL DEFAULT NULL.
+           See http://dev.mysql.com/doc/refman/5.5/en/timestamp-initialization.html
 
-         See also http://dev.mysql.com/doc/refman/5.5/en/timestamp-initialization.html
+           To avoid this behavior, you must jump through some hoops to get Liquibase to set the data type correctly.
+           Additionally, if the TIMESTAMP has a nullable="false" constraint, you will need to set a default on the column
+           or else MySQL will use it's auto-default/auto-update behavior.
+
+           Here is an example of how to handle things:
+
+           <changeSet author="awood" id="123" dbms="mysql">
+              <createTable tableName="cp_consumer_type">
+                 <column name="x" type="NULLABLE_TS"/>
+                 <column name="y" type="TIMESTAMP">
+                    <constraints nullable="false"/>
+                 </column>
+              </createTable>
+              <modifySql>
+                 <replace replace="NULLABLE_TS" with="TIMESTAMP NULL DEFAULT NULL"/>
+                 <replace replace="TIMESTAMP" with="TIMESTAMP DEFAULT 0"/>
+              </modifySql>
+           </changeSet>
     -->
     <changeSet author="awood" id="1379350211813-1-1" dbms="mysql">
         <createTable tableName="cp_activation_key">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_activation_key_pkey"/>
             </column>
-            <column name="created" type="NULLABLE_TS"/>
-            <column name="updated" type="NULLABLE_TS"/>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
             <column name="name" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
@@ -41,17 +52,14 @@
                 <constraints nullable="false"/>
             </column>
         </createTable>
-        <modifySql>
-            <replace replace="NULLABLE_TS" with="TIMESTAMP NULL DEFAULT NULL"/>
-        </modifySql>
     </changeSet>   
      <changeSet author="awood (generated)" id="1379350211813-1" dbms="mysql">
         <createTable tableName="cp_activationkey_pool">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_activationkey_pool_pkey"/>
             </column>
-            <column name="created" type="NULLABLE_TS"/>
-            <column name="updated" type="NULLABLE_TS"/>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
             <column name="quantity" type="BIGINT">
                 <constraints nullable="false"/>
             </column>
@@ -62,36 +70,30 @@
                 <constraints nullable="false"/>
             </column>
         </createTable>
-        <modifySql>
-            <replace replace="NULLABLE_TS" with="TIMESTAMP NULL DEFAULT NULL"/>
-        </modifySql>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-2" dbms="mysql">
         <createTable tableName="cp_cert_serial">
             <column name="id" type="BIGINT">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_cert_serial_pkey"/>
             </column>
-            <column name="created" type="NULLABLE_TS"/>
-            <column name="updated" type="NULLABLE_TS"/>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
             <column name="collected" type="BOOLEAN">
                 <constraints nullable="false"/>
             </column>
-            <column name="expiration" type="NULLABLE_TS"/>
+            <column name="expiration" type="DATETIME"/>
             <column name="revoked" type="BOOLEAN">
                 <constraints nullable="false"/>
             </column>
         </createTable>
-        <modifySql>
-            <replace replace="NULLABLE_TS" with="TIMESTAMP NULL DEFAULT NULL"/>
-        </modifySql>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-3" dbms="mysql">
         <createTable tableName="cp_certificate">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_certificate_pkey"/>
             </column>
-            <column name="created" type="NULLABLE_TS"/>
-            <column name="updated" type="NULLABLE_TS"/>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
             <column name="cert" type="BLOB">
                 <constraints nullable="false"/>
             </column>
@@ -100,20 +102,17 @@
             </column>
             <column name="serial_id" type="BIGINT"/>
         </createTable>
-        <modifySql>
-            <replace replace="NULLABLE_TS" with="TIMESTAMP NULL DEFAULT NULL"/>
-        </modifySql>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-4" dbms="mysql">
         <createTable tableName="cp_consumer">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_consumer_pkey"/>
             </column>
-            <column name="created" type="NULLABLE_TS"/>
-            <column name="updated" type="NULLABLE_TS"/>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
             <column name="autoheal" type="BOOLEAN"/>
             <column name="entitlementstatus" type="VARCHAR(32)"/>
-            <column name="lastcheckin" type="NULLABLE_TS"/>
+            <column name="lastcheckin" type="DATETIME"/>
             <column name="name" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
@@ -133,9 +132,6 @@
             </column>
             <column name="releasever" type="VARCHAR(255)"/>
         </createTable>
-        <modifySql>
-            <replace replace="NULLABLE_TS" with="TIMESTAMP NULL DEFAULT NULL"/>
-        </modifySql>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-5" dbms="mysql">
         <createTable tableName="cp_consumer_capability">
@@ -166,8 +162,8 @@
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_consumer_guests_pkey"/>
             </column>
-            <column name="created" type="NULLABLE_TS"/>
-            <column name="updated" type="NULLABLE_TS"/>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
             <column name="guest_id" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
@@ -175,17 +171,14 @@
                 <constraints nullable="false"/>
             </column>
         </createTable>
-        <modifySql>
-            <replace replace="NULLABLE_TS" with="TIMESTAMP NULL DEFAULT NULL"/>
-        </modifySql>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-8" dbms="mysql">
         <createTable tableName="cp_consumer_type">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_consumer_type_pkey"/>
             </column>
-            <column name="created" type="NULLABLE_TS"/>
-            <column name="updated" type="NULLABLE_TS"/>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
             <column name="label" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
@@ -193,17 +186,14 @@
                 <constraints nullable="false"/>
             </column>
         </createTable>
-        <modifySql>
-            <replace replace="NULLABLE_TS" with="TIMESTAMP NULL DEFAULT NULL"/>
-        </modifySql>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-9" dbms="mysql">
         <createTable tableName="cp_content">
             <column name="id" type="VARCHAR(255)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_content_pkey"/>
             </column>
-            <column name="created" type="NULLABLE_TS"/>
-            <column name="updated" type="NULLABLE_TS"/>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
             <column name="contenturl" type="VARCHAR(255)"/>
             <column name="gpgurl" type="VARCHAR(255)"/>
             <column name="label" type="VARCHAR(255)">
@@ -223,9 +213,6 @@
             </column>
             <column name="arches" type="VARCHAR(255)"/>
         </createTable>
-        <modifySql>
-            <replace replace="NULLABLE_TS" with="TIMESTAMP NULL DEFAULT NULL"/>
-        </modifySql>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-10" dbms="mysql">
         <createTable tableName="cp_content_modified_products">
@@ -240,8 +227,8 @@
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_deleted_consumers_pkey"/>
             </column>
-            <column name="created" type="NULLABLE_TS"/>
-            <column name="updated" type="NULLABLE_TS"/>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
             <column name="consumer_uuid" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
@@ -251,9 +238,6 @@
             <column name="owner_key" type="VARCHAR(255)"/>
             <column name="owner_displayname" type="VARCHAR(255)"/>
         </createTable>
-        <modifySql>
-            <replace replace="NULLABLE_TS" with="TIMESTAMP NULL DEFAULT NULL"/>
-        </modifySql>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-12" dbms="mysql">
         <createTable tableName="cp_dist_version">
@@ -266,12 +250,9 @@
             <column name="display_name" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
-            <column name="created" type="NULLABLE_TS"/>
-            <column name="updated" type="NULLABLE_TS"/>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
         </createTable>
-        <modifySql>
-            <replace replace="NULLABLE_TS" with="TIMESTAMP NULL DEFAULT NULL"/>
-        </modifySql>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-13" dbms="mysql">
         <createTable tableName="cp_dist_version_capability">
@@ -291,8 +272,8 @@
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_ent_certificate_pkey"/>
             </column>
-            <column name="created" type="NULLABLE_TS"/>
-            <column name="updated" type="NULLABLE_TS"/>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
             <column name="cert" type="BLOB">
                 <constraints nullable="false"/>
             </column>
@@ -304,17 +285,14 @@
             </column>
             <column name="serial_id" type="BIGINT"/>
         </createTable>
-        <modifySql>
-            <replace replace="NULLABLE_TS" with="TIMESTAMP NULL DEFAULT NULL"/>
-        </modifySql>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-15" dbms="mysql">
         <createTable tableName="cp_entitlement">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_entitlement_pkey"/>
             </column>
-            <column name="created" type="NULLABLE_TS"/>
-            <column name="updated" type="NULLABLE_TS"/>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
             <column name="quantity" type="INTEGER"/>
             <column name="consumer_id" type="VARCHAR(32)">
                 <constraints nullable="false"/>
@@ -325,17 +303,14 @@
             <column name="pool_id" type="VARCHAR(32)"/>
             <column defaultValueBoolean="false" name="dirty" type="BOOLEAN"/>
         </createTable>
-        <modifySql>
-            <replace replace="NULLABLE_TS" with="TIMESTAMP NULL DEFAULT NULL"/>
-        </modifySql>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-16" dbms="mysql">
         <createTable tableName="cp_env_content">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_env_content_pkey"/>
             </column>
-            <column name="created" type="NULLABLE_TS"/>
-            <column name="updated" type="NULLABLE_TS"/>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
             <column name="contentid" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
@@ -344,17 +319,14 @@
                 <constraints nullable="false"/>
             </column>
         </createTable>
-        <modifySql>
-            <replace replace="NULLABLE_TS" with="TIMESTAMP NULL DEFAULT NULL"/>
-        </modifySql>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-17" dbms="mysql">
         <createTable tableName="cp_environment">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_environment_pkey"/>
             </column>
-            <column name="created" type="NULLABLE_TS"/>
-            <column name="updated" type="NULLABLE_TS"/>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
             <column name="description" type="VARCHAR(255)"/>
             <column name="name" type="VARCHAR(255)">
                 <constraints nullable="false"/>
@@ -363,9 +335,6 @@
                 <constraints nullable="false"/>
             </column>
         </createTable>
-        <modifySql>
-            <replace replace="NULLABLE_TS" with="TIMESTAMP NULL DEFAULT NULL"/>
-        </modifySql>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-18" dbms="mysql">
         <createTable tableName="cp_event">
@@ -386,29 +355,22 @@
                 <constraints nullable="false"/>
             </column>
             <column name="targetname" type="VARCHAR(255)"/>
-            <column name="timestamp" type="TIMESTAMP">
+            <column name="timestamp" type="DATETIME">
                 <constraints nullable="false"/>
             </column>
             <column name="type" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
         </createTable>
-        <!--
-             In this case since TIMESTAMP is not nullable, we need a default so we can avoid MySQL's 
-             auto-update "feature"
-        -->
-        <modifySql>
-            <replace replace="TIMESTAMP" with="TIMESTAMP DEFAULT 0"/>
-        </modifySql>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-19" dbms="mysql">
         <createTable tableName="cp_export_metadata">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_export_metadata_pkey"/>
             </column>
-            <column name="created" type="NULLABLE_TS"/>
-            <column name="updated" type="NULLABLE_TS"/>
-            <column name="exported" type="TIMESTAMP">
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
+            <column name="exported" type="DATETIME">
                 <constraints nullable="false"/>
             </column>
             <column name="type" type="VARCHAR(255)">
@@ -416,22 +378,14 @@
             </column>
             <column name="owner_id" type="VARCHAR(32)"/>
         </createTable>
-        <modifySql>
-            <replace replace="NULLABLE_TS" with="TIMESTAMP NULL DEFAULT NULL"/>
-            <!--
-             In this case since TIMESTAMP is not nullable, we need a default so we can avoid MySQL's 
-             auto-update "feature"
-            -->
-            <replace replace="TIMESTAMP" with="TIMESTAMP DEFAULT 0"/>
-        </modifySql>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-20" dbms="mysql">
         <createTable tableName="cp_id_cert">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_id_cert_pkey"/>
             </column>
-            <column name="created" type="NULLABLE_TS"/>
-            <column name="updated" type="NULLABLE_TS"/>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
             <column name="cert" type="BLOB">
                 <constraints nullable="false"/>
             </column>
@@ -440,36 +394,30 @@
             </column>
             <column name="serial_id" type="BIGINT"/>
         </createTable>
-        <modifySql>
-            <replace replace="NULLABLE_TS" with="TIMESTAMP NULL DEFAULT NULL"/>
-        </modifySql>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-21" dbms="mysql">
         <createTable tableName="cp_import_record">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_import_record_pkey"/>
             </column>
-            <column name="created" type="NULLABLE_TS"/>
-            <column name="updated" type="NULLABLE_TS"/>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
             <column name="status" type="INTEGER"/>
             <column name="statusmessage" type="VARCHAR(255)"/>
             <column name="owner_id" type="VARCHAR(32)"/>
             <column name="generated_by" type="VARCHAR(255)"/>
-            <column name="generated_date" type="NULLABLE_TS"/>
+            <column name="generated_date" type="DATETIME"/>
             <column name="upstream_id" type="VARCHAR(255)"/>
             <column name="file_name" type="VARCHAR(255)"/>
         </createTable>
-        <modifySql>
-            <replace replace="NULLABLE_TS" with="TIMESTAMP NULL DEFAULT NULL"/>
-        </modifySql>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-22" dbms="mysql">
         <createTable tableName="cp_installed_products">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_installed_products_pkey"/>
             </column>
-            <column name="created" type="NULLABLE_TS"/>
-            <column name="updated" type="NULLABLE_TS"/>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
             <column name="product_id" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
@@ -480,51 +428,42 @@
             <column name="product_version" type="VARCHAR(20)"/>
             <column name="product_arch" type="VARCHAR(63)"/>
         </createTable>
-        <modifySql>
-            <replace replace="NULLABLE_TS" with="TIMESTAMP NULL DEFAULT NULL"/>
-        </modifySql>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-23" dbms="mysql">
         <createTable tableName="cp_job">
             <column name="id" type="VARCHAR(255)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_job_pkey"/>
             </column>
-            <column name="created" type="NULLABLE_TS"/>
-            <column name="updated" type="NULLABLE_TS"/>
-            <column name="finishtime" type="NULLABLE_TS"/>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
+            <column name="finishtime" type="DATETIME"/>
             <column name="jobgroup" type="VARCHAR(15)"/>
             <column name="principalname" type="VARCHAR(255)"/>
             <column name="result" type="VARCHAR(255)"/>
-            <column name="starttime" type="NULLABLE_TS"/>
+            <column name="starttime" type="DATETIME"/>
             <column name="state" type="INTEGER"/>
             <column name="targetid" type="VARCHAR(255)"/>
             <column name="targettype" type="INTEGER"/>
         </createTable>
-        <modifySql>
-            <replace replace="NULLABLE_TS" with="TIMESTAMP NULL DEFAULT NULL"/>
-        </modifySql>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-24" dbms="mysql">
         <createTable tableName="cp_key_pair">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_key_pair_pkey"/>
             </column>
-            <column name="created" type="NULLABLE_TS"/>
-            <column name="updated" type="NULLABLE_TS"/>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
             <column name="privatekey" type="BLOB"/>
             <column name="publickey" type="BLOB"/>
         </createTable>
-        <modifySql>
-            <replace replace="NULLABLE_TS" with="TIMESTAMP NULL DEFAULT NULL"/>
-        </modifySql>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-25" dbms="mysql">
         <createTable tableName="cp_owner">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_owner_pkey"/>
             </column>
-            <column name="created" type="NULLABLE_TS"/>
-            <column name="updated" type="NULLABLE_TS"/>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
             <column name="contentprefix" type="VARCHAR(255)"/>
             <column name="defaultservicelevel" type="VARCHAR(255)"/>
             <column name="displayname" type="VARCHAR(255)">
@@ -536,17 +475,14 @@
             <column name="parent_owner" type="VARCHAR(32)"/>
             <column name="upstream_id" type="VARCHAR(32)"/>
         </createTable>
-        <modifySql>
-            <replace replace="NULLABLE_TS" with="TIMESTAMP NULL DEFAULT NULL"/>
-        </modifySql>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-26" dbms="mysql">
         <createTable tableName="cp_owner_permission">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_owner_permission_pkey"/>
             </column>
-            <column name="created" type="NULLABLE_TS"/>
-            <column name="updated" type="NULLABLE_TS"/>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
             <column name="owner_access" type="INTEGER"/>
             <column name="owner_id" type="VARCHAR(32)">
                 <constraints nullable="false"/>
@@ -555,21 +491,18 @@
                 <constraints nullable="false"/>
             </column>
         </createTable>
-        <modifySql>
-            <replace replace="NULLABLE_TS" with="TIMESTAMP NULL DEFAULT NULL"/>
-        </modifySql>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-27" dbms="mysql">
         <createTable tableName="cp_pool">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_pool_pkey"/>
             </column>
-            <column name="created" type="NULLABLE_TS"/>
-            <column name="updated" type="NULLABLE_TS"/>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
             <column name="accountnumber" type="VARCHAR(255)"/>
             <column name="activesubscription" type="BOOLEAN"/>
             <column name="contractnumber" type="VARCHAR(255)"/>
-            <column name="enddate" type="TIMESTAMP">
+            <column name="enddate" type="DATETIME">
                 <constraints nullable="false"/>
             </column>
             <column name="productid" type="VARCHAR(255)">
@@ -580,7 +513,7 @@
                 <constraints nullable="false"/>
             </column>
             <column name="restrictedtousername" type="VARCHAR(255)"/>
-            <column name="startdate" type="TIMESTAMP">
+            <column name="startdate" type="DATETIME">
                 <constraints nullable="false"/>
             </column>
             <column name="subscriptionid" type="VARCHAR(255)"/>
@@ -598,22 +531,14 @@
             <column name="sourcestackid" type="VARCHAR(255)"/>
             <column name="sourceconsumer_id" type="VARCHAR(32)"/>
         </createTable>
-        <modifySql>
-            <replace replace="NULLABLE_TS" with="TIMESTAMP NULL DEFAULT NULL"/>
-            <!--
-             In this case since TIMESTAMP is not nullable, we need a default so we can avoid MySQL's 
-             auto-update "feature"
-            -->
-            <replace replace="TIMESTAMP" with="TIMESTAMP DEFAULT 0"/>
-        </modifySql>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-28" dbms="mysql">
         <createTable tableName="cp_pool_attribute">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_pool_attribute_pkey"/>
             </column>
-            <column name="created" type="NULLABLE_TS"/>
-            <column name="updated" type="NULLABLE_TS"/>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
             <column name="name" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
@@ -622,17 +547,14 @@
                 <constraints nullable="false"/>
             </column>
         </createTable>
-        <modifySql>
-            <replace replace="NULLABLE_TS" with="TIMESTAMP NULL DEFAULT NULL"/>
-        </modifySql>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-29" dbms="mysql">
         <createTable tableName="cp_pool_products">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_pool_products_pkey"/>
             </column>
-            <column name="created" type="NULLABLE_TS"/>
-            <column name="updated" type="NULLABLE_TS"/>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
             <column name="product_id" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
@@ -642,33 +564,27 @@
             </column>
             <column name="dtype" type="VARCHAR(30)"/>
         </createTable>
-        <modifySql>
-            <replace replace="NULLABLE_TS" with="TIMESTAMP NULL DEFAULT NULL"/>
-        </modifySql>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-30" dbms="mysql">
         <createTable tableName="cp_product">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_product_pkey"/>
             </column>
-            <column name="created" type="NULLABLE_TS"/>
-            <column name="updated" type="NULLABLE_TS"/>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
             <column name="multiplier" type="BIGINT"/>
             <column name="name" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
         </createTable>
-        <modifySql>
-            <replace replace="NULLABLE_TS" with="TIMESTAMP NULL DEFAULT NULL"/>
-        </modifySql>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-31" dbms="mysql">
         <createTable tableName="cp_product_attribute">
             <column name="id" type="VARCHAR(255)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_product_attribute_pkey"/>
             </column>
-            <column name="created" type="NULLABLE_TS"/>
-            <column name="updated" type="NULLABLE_TS"/>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
             <column name="name" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
@@ -677,17 +593,14 @@
                 <constraints nullable="false"/>
             </column>
         </createTable>
-        <modifySql>
-            <replace replace="NULLABLE_TS" with="TIMESTAMP NULL DEFAULT NULL"/>
-        </modifySql>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-32" dbms="mysql">
         <createTable tableName="cp_product_certificate">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_product_certificate_pkey"/>
             </column>
-            <column name="created" type="NULLABLE_TS"/>
-            <column name="updated" type="NULLABLE_TS"/>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
             <column name="cert" type="BLOB">
                 <constraints nullable="false"/>
             </column>
@@ -698,9 +611,6 @@
                 <constraints nullable="false"/>
             </column>
         </createTable>
-        <modifySql>
-            <replace replace="NULLABLE_TS" with="TIMESTAMP NULL DEFAULT NULL"/>
-        </modifySql>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-33" dbms="mysql">
         <createTable tableName="cp_product_content">
@@ -711,12 +621,9 @@
                 <constraints nullable="false"/>
             </column>
             <column name="enabled" type="BOOLEAN"/>
-            <column name="created" type="NULLABLE_TS"/>
-            <column name="updated" type="NULLABLE_TS"/>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
         </createTable>
-        <modifySql>
-            <replace replace="NULLABLE_TS" with="TIMESTAMP NULL DEFAULT NULL"/>
-        </modifySql>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-34" dbms="mysql">
         <createTable tableName="cp_product_dependent_products">
@@ -731,8 +638,8 @@
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_product_pool_attribute_pkey"/>
             </column>
-            <column name="created" type="NULLABLE_TS"/>
-            <column name="updated" type="NULLABLE_TS"/>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
             <column name="name" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
@@ -745,9 +652,6 @@
             </column>
             <column name="dtype" type="VARCHAR(30)"/>
         </createTable>
-        <modifySql>
-            <replace replace="NULLABLE_TS" with="TIMESTAMP NULL DEFAULT NULL"/>
-        </modifySql>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-36" dbms="mysql">
         <createTable tableName="cp_product_reliance">
@@ -764,15 +668,12 @@
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_role_pkey"/>
             </column>
-            <column name="created" type="NULLABLE_TS"/>
-            <column name="updated" type="NULLABLE_TS"/>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
             <column name="name" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
         </createTable>
-        <modifySql>
-            <replace replace="NULLABLE_TS" with="TIMESTAMP NULL DEFAULT NULL"/>
-        </modifySql>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-38" dbms="mysql">
         <createTable tableName="cp_role_users">
@@ -789,24 +690,21 @@
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_rules_pkey"/>
             </column>
-            <column name="created" type="NULLABLE_TS"/>
-            <column name="updated" type="NULLABLE_TS"/>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
             <column name="rules_blob" type="TEXT"/>
             <column name="version" type="VARCHAR(20)">
                 <constraints nullable="false"/>
             </column>
         </createTable>
-        <modifySql>
-            <replace replace="NULLABLE_TS" with="TIMESTAMP NULL DEFAULT NULL"/>
-        </modifySql>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-40" dbms="mysql">
         <createTable tableName="cp_stat_history">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_stat_history_pkey"/>
             </column>
-            <column name="created" type="NULLABLE_TS"/>
-            <column name="updated" type="NULLABLE_TS"/>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
             <column name="entry_type" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
@@ -817,9 +715,6 @@
             <column name="value_reference" type="VARCHAR(255)"/>
             <column name="value_type" type="VARCHAR(255)"/>
         </createTable>
-        <modifySql>
-            <replace replace="NULLABLE_TS" with="TIMESTAMP NULL DEFAULT NULL"/>
-        </modifySql>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-41" dbms="mysql">
         <createTable tableName="cp_sub_derivedprods">
@@ -836,18 +731,18 @@
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_subscription_pkey"/>
             </column>
-            <column name="created" type="NULLABLE_TS"/>
-            <column name="updated" type="NULLABLE_TS"/>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
             <column name="accountnumber" type="VARCHAR(255)"/>
             <column name="contractnumber" type="VARCHAR(255)"/>
-            <column name="enddate" type="TIMESTAMP">
+            <column name="enddate" type="DATETIME">
                 <constraints nullable="false"/>
             </column>
-            <column name="modified" type="NULLABLE_TS"/>
+            <column name="modified" type="DATETIME"/>
             <column name="quantity" type="BIGINT">
                 <constraints nullable="false"/>
             </column>
-            <column name="startdate" type="TIMESTAMP">
+            <column name="startdate" type="DATETIME">
                 <constraints nullable="false"/>
             </column>
             <column name="upstream_pool_id" type="VARCHAR(255)"/>
@@ -863,14 +758,6 @@
             <column name="upstream_consumer_id" type="VARCHAR(255)"/>
             <column name="derivedproduct_id" type="VARCHAR(255)"/>
         </createTable>
-        <modifySql>
-            <replace replace="NULLABLE_TS" with="TIMESTAMP NULL DEFAULT NULL"/>
-            <!--
-             In this case since TIMESTAMP is not nullable, we need a default so we can avoid MySQL's 
-             auto-update "feature"
-            -->
-            <replace replace="TIMESTAMP" with="TIMESTAMP DEFAULT 0"/>
-        </modifySql>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-43" dbms="mysql">
         <createTable tableName="cp_subscription_products">
@@ -893,8 +780,8 @@
             <column name="name" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
-            <column name="created" type="NULLABLE_TS"/>
-            <column name="updated" type="NULLABLE_TS"/>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
             <column name="owner_id" type="VARCHAR(32)">
                 <constraints nullable="false"/>
             </column>
@@ -905,17 +792,14 @@
             <column name="prefix_url_web" type="VARCHAR(255)"/>
             <column name="prefix_url_api" type="VARCHAR(255)"/>
         </createTable>
-        <modifySql>
-            <replace replace="NULLABLE_TS" with="TIMESTAMP NULL DEFAULT NULL"/>
-        </modifySql>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-45" dbms="mysql">
         <createTable tableName="cp_user">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_user_pkey"/>
             </column>
-            <column name="created" type="NULLABLE_TS"/>
-            <column name="updated" type="NULLABLE_TS"/>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
             <column name="hashedpassword" type="VARCHAR(255)"/>
             <column name="superadmin" type="BOOLEAN">
                 <constraints nullable="false"/>
@@ -924,9 +808,6 @@
                 <constraints nullable="false"/>
             </column>
         </createTable>
-        <modifySql>
-            <replace replace="NULLABLE_TS" with="TIMESTAMP NULL DEFAULT NULL"/>
-        </modifySql>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-46" dbms="mysql">
         <createTable tableName="qrtz_blob_triggers">
