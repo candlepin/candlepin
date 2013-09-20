@@ -46,6 +46,7 @@ data["owners"].each do |new_owner|
 
   # Create one dummy activation key for the owner
   cp.create_activation_key(owner['key'], "default_key")
+  cp.create_activation_key(owner['key'], "awesome_os_pool")
 end
 
 puts
@@ -206,7 +207,7 @@ data['products'].each do |product|
     end
   end
 
-  # TODO: not sure what's going on here?
+  # Generate a product id cert in generated_certs for each engineering product
   if id.to_i.to_s == id
     product_cert = cp.get_product_cert(product_ret['id'])
     cert_file = File.new(CERT_DIR + '/' + product_ret['id'] + '.pem', 'w+')
@@ -223,4 +224,15 @@ end
 owner_keys.each do |owner_key|
     puts "refreshing pools for " + owner_key
     cp.refresh_pools(owner_key)
+end
+
+owner_keys.each do |owner_key|
+    pools = cp.list_owner_pools(owner_key)
+    pools.each do |pool|
+        #pp pool contractNumber
+        key_name = owner_key + '-' + pool['productId'] + '-' + pool['contractNumber'] + '-key'
+        puts "creating activation_key " + key_name
+        key = cp.create_activation_key(owner_key, key_name)
+        new_key = cp.add_pool_to_key(key['id'], pool['id'])
+    end
 end
