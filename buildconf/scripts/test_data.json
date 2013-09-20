@@ -1317,6 +1317,7 @@
         {
             "name": "Shared File System",
             "id": "sfs",
+            "type": "MKT",
             "provided_products": [
                 "88888"
             ],
