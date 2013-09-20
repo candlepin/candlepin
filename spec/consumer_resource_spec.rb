@@ -891,4 +891,20 @@ describe 'Consumer Resource' do
     consumer['facts']['lscpu.numa_node0_cpu(s)'].should == '0-3'
   end
 
+  it 'should be able to add unused attributes' do
+    guests = [{'guestId' => 'guest1', 'fooBar' => 'some value'}]
+
+    user_cp = user_client(@owner1, random_string('test-user'))
+    consumer = user_cp.register(random_string('host'), :system, nil,
+      {}, nil, nil, [], [])
+
+    consumer_client = Candlepin.new(username=nil, password=nil,
+        cert=consumer['idCert']['cert'],
+        key=consumer['idCert']['key'])
+    consumer_client.update_consumer({:guestIds => guests})
+
+    consumer = @cp.get_consumer(consumer['uuid'])
+    consumer['guestIds'].length.should == 1
+    consumer['guestIds'][0]['guestId'].should == 'guest1'
+  end
 end
