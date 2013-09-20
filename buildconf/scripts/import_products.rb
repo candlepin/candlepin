@@ -321,10 +321,14 @@ end
 thread_pool.shutdown
 
 # Refresh to create pools for all subscriptions just created:
+thread_pool = Pool.new(4)
 owner_keys.each do |owner_key|
-    puts "refreshing pools for " + owner_key
-    cp.refresh_pools(owner_key)
+    thread_pool.schedule do
+        puts "refreshing pools for " + owner_key
+        cp.refresh_pools(owner_key)
+    end
 end
+thread_pool.shutdown
 
 def create_activation_key_for_pool(cp, pool, owner_key)
     #pp pool contractNumber
@@ -333,6 +337,8 @@ def create_activation_key_for_pool(cp, pool, owner_key)
     key = cp.create_activation_key(owner_key, key_name)
     new_key = cp.add_pool_to_key(key['id'], pool['id'])
 end
+
+exit
 
 thread_pool = Pool.new(6)
 owner_keys.each do |owner_key|
