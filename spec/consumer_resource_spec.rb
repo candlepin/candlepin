@@ -926,5 +926,21 @@ describe 'Consumer Resource' do
     ent = @consumer1.consume_pool(pool.id, {:quantity => 2})
     ent = @consumer1.consume_pool(pool.id)
     ent[0]["quantity"].should == 1
+
+  it 'should be able to add unused attributes' do
+    guests = [{'guestId' => 'guest1', 'fooBar' => 'some value'}]
+
+    user_cp = user_client(@owner1, random_string('test-user'))
+    consumer = user_cp.register(random_string('host'), :system, nil,
+      {}, nil, nil, [], [])
+
+    consumer_client = Candlepin.new(username=nil, password=nil,
+        cert=consumer['idCert']['cert'],
+        key=consumer['idCert']['key'])
+    consumer_client.update_consumer({:guestIds => guests})
+
+    consumer = @cp.get_consumer(consumer['uuid'])
+    consumer['guestIds'].length.should == 1
+    consumer['guestIds'][0]['guestId'].should == 'guest1'
   end
 end
