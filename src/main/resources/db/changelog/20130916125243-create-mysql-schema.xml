@@ -9,6 +9,9 @@
     <property name="now" value="NOW()" dbms="mysql"/>
     
     <!--
+      On Unix-like systems, MySQL table names are case sensitive, so we need to use all capitals with the Quartz
+      tables, because that is how Quartz refers to them.  See http://dev.mysql.com/doc/refman/5.5/en/identifier-case-sensitivity.html
+
       We are using DATETIME to store date information in MySQL.  In MySQL, DATETIME does not store any time zone
       information.  This is consistent with our Postgres and Oracle schemas which use TIMESTAMP WITHOUT TIME ZONE.
 
@@ -810,7 +813,7 @@
         </createTable>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-46" dbms="mysql">
-        <createTable tableName="qrtz_blob_triggers">
+        <createTable tableName="QRTZ_BLOB_TRIGGERS">
             <column name="trigger_name" type="VARCHAR(200)">
                 <constraints nullable="false"/>
             </column>
@@ -824,7 +827,7 @@
         </createTable>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-47" dbms="mysql">
-        <createTable tableName="qrtz_calendars">
+        <createTable tableName="QRTZ_CALENDARS">
             <column name="calendar_name" type="VARCHAR(200)">
                 <constraints nullable="false"/>
             </column>
@@ -837,7 +840,7 @@
         </createTable>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-48" dbms="mysql">
-        <createTable tableName="qrtz_cron_triggers">
+        <createTable tableName="QRTZ_CRON_TRIGGERS">
             <column name="trigger_name" type="VARCHAR(200)">
                 <constraints nullable="false"/>
             </column>
@@ -854,7 +857,7 @@
         </createTable>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-49" dbms="mysql">
-        <createTable tableName="qrtz_fired_triggers">
+        <createTable tableName="QRTZ_FIRED_TRIGGERS">
             <column name="entry_id" type="VARCHAR(95)">
                 <constraints nullable="false"/>
             </column>
@@ -887,7 +890,7 @@
         </createTable>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-50" dbms="mysql">
-        <createTable tableName="qrtz_job_details">
+        <createTable tableName="QRTZ_JOB_DETAILS">
             <column name="job_name" type="VARCHAR(200)">
                 <constraints nullable="false"/>
             </column>
@@ -913,7 +916,7 @@
         </createTable>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-51" dbms="mysql">
-        <createTable tableName="qrtz_locks">
+        <createTable tableName="QRTZ_LOCKS">
             <column name="lock_name" type="VARCHAR(40)">
                 <constraints nullable="false"/>
             </column>
@@ -923,7 +926,7 @@
         </createTable>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-52" dbms="mysql">
-        <createTable tableName="qrtz_paused_trigger_grps">
+        <createTable tableName="QRTZ_PAUSED_TRIGGER_GRPS">
             <column name="trigger_group" type="VARCHAR(200)">
                 <constraints nullable="false"/>
             </column>
@@ -933,7 +936,7 @@
         </createTable>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-53" dbms="mysql">
-        <createTable tableName="qrtz_scheduler_state">
+        <createTable tableName="QRTZ_SCHEDULER_STATE">
             <column name="instance_name" type="VARCHAR(200)">
                 <constraints nullable="false"/>
             </column>
@@ -949,7 +952,7 @@
         </createTable>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-54" dbms="mysql">
-        <createTable tableName="qrtz_simple_triggers">
+        <createTable tableName="QRTZ_SIMPLE_TRIGGERS">
             <column name="trigger_name" type="VARCHAR(200)">
                 <constraints nullable="false"/>
             </column>
@@ -971,7 +974,7 @@
         </createTable>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-55" dbms="mysql">
-        <createTable tableName="qrtz_simprop_triggers">
+        <createTable tableName="QRTZ_SIMPROP_TRIGGERS">
             <column name="sched_name" type="VARCHAR(120)">
                 <constraints nullable="false"/>
             </column>
@@ -995,7 +998,7 @@
         </createTable>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-56" dbms="mysql">
-        <createTable tableName="qrtz_triggers">
+        <createTable tableName="QRTZ_TRIGGERS">
             <column name="trigger_name" type="VARCHAR(200)">
                 <constraints nullable="false"/>
             </column>
@@ -1043,37 +1046,37 @@
         <addPrimaryKey columnNames="subscription_id, product_id" constraintName="cp_subscription_products_pkey" tableName="cp_subscription_products"/>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-61" dbms="mysql">
-        <addPrimaryKey columnNames="sched_name, trigger_name, trigger_group" constraintName="qrtz_blob_triggers_pkey" tableName="qrtz_blob_triggers"/>
+        <addPrimaryKey columnNames="sched_name, trigger_name, trigger_group" constraintName="qrtz_blob_triggers_pkey" tableName="QRTZ_BLOB_TRIGGERS"/>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-62" dbms="mysql">
-        <addPrimaryKey columnNames="sched_name, calendar_name" constraintName="qrtz_calendars_pkey" tableName="qrtz_calendars"/>
+        <addPrimaryKey columnNames="sched_name, calendar_name" constraintName="qrtz_calendars_pkey" tableName="QRTZ_CALENDARS"/>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-63" dbms="mysql">
-        <addPrimaryKey columnNames="sched_name, trigger_name, trigger_group" constraintName="qrtz_cron_triggers_pkey" tableName="qrtz_cron_triggers"/>
+        <addPrimaryKey columnNames="sched_name, trigger_name, trigger_group" constraintName="qrtz_cron_triggers_pkey" tableName="QRTZ_CRON_TRIGGERS"/>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-64" dbms="mysql">
-        <addPrimaryKey columnNames="sched_name, entry_id" constraintName="qrtz_fired_triggers_pkey" tableName="qrtz_fired_triggers"/>
+        <addPrimaryKey columnNames="sched_name, entry_id" constraintName="qrtz_fired_triggers_pkey" tableName="QRTZ_FIRED_TRIGGERS"/>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-65" dbms="mysql">
-        <addPrimaryKey columnNames="sched_name, job_name, job_group" constraintName="qrtz_job_details_pkey" tableName="qrtz_job_details"/>
+        <addPrimaryKey columnNames="sched_name, job_name, job_group" constraintName="qrtz_job_details_pkey" tableName="QRTZ_JOB_DETAILS"/>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-66" dbms="mysql">
-        <addPrimaryKey columnNames="sched_name, lock_name" constraintName="qrtz_locks_pkey" tableName="qrtz_locks"/>
+        <addPrimaryKey columnNames="sched_name, lock_name" constraintName="qrtz_locks_pkey" tableName="QRTZ_LOCKS"/>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-67" dbms="mysql">
-        <addPrimaryKey columnNames="sched_name, trigger_group" constraintName="qrtz_paused_trigger_grps_pkey" tableName="qrtz_paused_trigger_grps"/>
+        <addPrimaryKey columnNames="sched_name, trigger_group" constraintName="qrtz_paused_trigger_grps_pkey" tableName="QRTZ_PAUSED_TRIGGER_GRPS"/>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-68" dbms="mysql">
-        <addPrimaryKey columnNames="sched_name, instance_name" constraintName="qrtz_scheduler_state_pkey" tableName="qrtz_scheduler_state"/>
+        <addPrimaryKey columnNames="sched_name, instance_name" constraintName="qrtz_scheduler_state_pkey" tableName="QRTZ_SCHEDULER_STATE"/>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-69" dbms="mysql">
-        <addPrimaryKey columnNames="sched_name, trigger_name, trigger_group" constraintName="qrtz_simple_triggers_pkey" tableName="qrtz_simple_triggers"/>
+        <addPrimaryKey columnNames="sched_name, trigger_name, trigger_group" constraintName="qrtz_simple_triggers_pkey" tableName="QRTZ_SIMPLE_TRIGGERS"/>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-70" dbms="mysql">
-        <addPrimaryKey columnNames="sched_name, trigger_name, trigger_group" constraintName="qrtz_simprop_triggers_pkey" tableName="qrtz_simprop_triggers"/>
+        <addPrimaryKey columnNames="sched_name, trigger_name, trigger_group" constraintName="qrtz_simprop_triggers_pkey" tableName="QRTZ_SIMPROP_TRIGGERS"/>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-71" dbms="mysql">
-        <addPrimaryKey columnNames="sched_name, trigger_name, trigger_group" constraintName="qrtz_triggers_pkey" tableName="qrtz_triggers"/>
+        <addPrimaryKey columnNames="sched_name, trigger_name, trigger_group" constraintName="qrtz_triggers_pkey" tableName="QRTZ_TRIGGERS"/>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-72" dbms="mysql">
         <addUniqueConstraint columnNames="key_id, pool_id" constraintName="cp_ak_pool_key_id_pool_id_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_activationkey_pool"/>
@@ -1259,19 +1262,19 @@
         <addForeignKeyConstraint baseColumnNames="type_id" baseTableName="cp_upstream_consumer" constraintName="fk_upstream_consumer_type" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer_type" />
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-133" dbms="mysql">
-        <addForeignKeyConstraint baseColumnNames="sched_name, trigger_name, trigger_group" baseTableName="qrtz_blob_triggers" constraintName="qrtz_blob_trg_name_fkey" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="sched_name, trigger_name, trigger_group" referencedTableName="qrtz_triggers" />
+        <addForeignKeyConstraint baseColumnNames="sched_name, trigger_name, trigger_group" baseTableName="QRTZ_BLOB_TRIGGERS" constraintName="qrtz_blob_trg_name_fkey" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="sched_name, trigger_name, trigger_group" referencedTableName="QRTZ_TRIGGERS" />
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-134" dbms="mysql">
-        <addForeignKeyConstraint baseColumnNames="sched_name, trigger_name, trigger_group" baseTableName="qrtz_cron_triggers" constraintName="qrtz_cron_trg_name_fkey" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="sched_name, trigger_name, trigger_group" referencedTableName="qrtz_triggers" />
+        <addForeignKeyConstraint baseColumnNames="sched_name, trigger_name, trigger_group" baseTableName="QRTZ_CRON_TRIGGERS" constraintName="qrtz_cron_trg_name_fkey" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="sched_name, trigger_name, trigger_group" referencedTableName="QRTZ_TRIGGERS" />
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-135" dbms="mysql">
-        <addForeignKeyConstraint baseColumnNames="sched_name, trigger_name, trigger_group" baseTableName="qrtz_simple_triggers" constraintName="qrtz_simple_trg_name_fkey" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="sched_name, trigger_name, trigger_group" referencedTableName="qrtz_triggers" />
+        <addForeignKeyConstraint baseColumnNames="sched_name, trigger_name, trigger_group" baseTableName="QRTZ_SIMPLE_TRIGGERS" constraintName="qrtz_simple_trg_name_fkey" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="sched_name, trigger_name, trigger_group" referencedTableName="QRTZ_TRIGGERS" />
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-136" dbms="mysql">
-        <addForeignKeyConstraint baseColumnNames="sched_name, trigger_name, trigger_group" baseTableName="qrtz_simprop_triggers" constraintName="qrtz_simprop_trg_name_fkey" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="sched_name, trigger_name, trigger_group" referencedTableName="qrtz_triggers" />
+        <addForeignKeyConstraint baseColumnNames="sched_name, trigger_name, trigger_group" baseTableName="QRTZ_SIMPROP_TRIGGERS" constraintName="qrtz_simprop_trg_name_fkey" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="sched_name, trigger_name, trigger_group" referencedTableName="QRTZ_TRIGGERS" />
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-137" dbms="mysql">
-        <addForeignKeyConstraint baseColumnNames="sched_name, job_name, job_group" baseTableName="qrtz_triggers" constraintName="qrtz_triggers_job_name_fkey" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="sched_name, job_name, job_group" referencedTableName="qrtz_job_details" />
+        <addForeignKeyConstraint baseColumnNames="sched_name, job_name, job_group" baseTableName="QRTZ_TRIGGERS" constraintName="qrtz_triggers_job_name_fkey" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="sched_name, job_name, job_group" referencedTableName="QRTZ_JOB_DETAILS" />
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-138" dbms="mysql">
         <createIndex indexName="cp_cnsmr_guests_guest_id_idx" tableName="cp_consumer_guests" unique="false">
@@ -1314,83 +1317,83 @@
         </createIndex>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-146" dbms="mysql">
-        <createIndex indexName="idx_qrtz_ft_inst_job_req_rcvry" tableName="qrtz_fired_triggers" unique="false">
+        <createIndex indexName="idx_qrtz_ft_inst_job_req_rcvry" tableName="QRTZ_FIRED_TRIGGERS" unique="false">
             <column name="sched_name"/>
             <column name="instance_name"/>
             <column name="requests_recovery"/>
         </createIndex>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-147" dbms="mysql">
-        <createIndex indexName="idx_qrtz_ft_j_g" tableName="qrtz_fired_triggers" unique="false">
+        <createIndex indexName="idx_qrtz_ft_j_g" tableName="QRTZ_FIRED_TRIGGERS" unique="false">
             <column name="sched_name"/>
             <column name="job_name"/>
             <column name="job_group"/>
         </createIndex>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-148" dbms="mysql">
-        <createIndex indexName="idx_qrtz_ft_jg" tableName="qrtz_fired_triggers" unique="false">
+        <createIndex indexName="idx_qrtz_ft_jg" tableName="QRTZ_FIRED_TRIGGERS" unique="false">
             <column name="sched_name"/>
             <column name="job_group"/>
         </createIndex>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-149" dbms="mysql">
-        <createIndex indexName="idx_qrtz_ft_t_g" tableName="qrtz_fired_triggers" unique="false">
+        <createIndex indexName="idx_qrtz_ft_t_g" tableName="QRTZ_FIRED_TRIGGERS" unique="false">
             <column name="sched_name"/>
             <column name="trigger_name"/>
             <column name="trigger_group"/>
         </createIndex>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-150" dbms="mysql">
-        <createIndex indexName="idx_qrtz_ft_tg" tableName="qrtz_fired_triggers" unique="false">
+        <createIndex indexName="idx_qrtz_ft_tg" tableName="QRTZ_FIRED_TRIGGERS" unique="false">
             <column name="sched_name"/>
             <column name="trigger_group"/>
         </createIndex>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-151" dbms="mysql">
-        <createIndex indexName="idx_qrtz_ft_trig_inst_name" tableName="qrtz_fired_triggers" unique="false">
+        <createIndex indexName="idx_qrtz_ft_trig_inst_name" tableName="QRTZ_FIRED_TRIGGERS" unique="false">
             <column name="sched_name"/>
             <column name="instance_name"/>
         </createIndex>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-152" dbms="mysql">
-        <createIndex indexName="idx_qrtz_j_grp" tableName="qrtz_job_details" unique="false">
+        <createIndex indexName="idx_qrtz_j_grp" tableName="QRTZ_JOB_DETAILS" unique="false">
             <column name="sched_name"/>
             <column name="job_group"/>
         </createIndex>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-153" dbms="mysql">
-        <createIndex indexName="idx_qrtz_j_req_recovery" tableName="qrtz_job_details" unique="false">
+        <createIndex indexName="idx_qrtz_j_req_recovery" tableName="QRTZ_JOB_DETAILS" unique="false">
             <column name="sched_name"/>
             <column name="requests_recovery"/>
         </createIndex>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-154" dbms="mysql">
-        <createIndex indexName="idx_qrtz_t_c" tableName="qrtz_triggers" unique="false">
+        <createIndex indexName="idx_qrtz_t_c" tableName="QRTZ_TRIGGERS" unique="false">
             <column name="sched_name"/>
             <column name="calendar_name"/>
         </createIndex>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-155" dbms="mysql">
-        <createIndex indexName="idx_qrtz_t_g" tableName="qrtz_triggers" unique="false">
+        <createIndex indexName="idx_qrtz_t_g" tableName="QRTZ_TRIGGERS" unique="false">
             <column name="sched_name"/>
             <column name="trigger_group"/>
         </createIndex>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-156" dbms="mysql">
-        <createIndex indexName="idx_qrtz_t_jg" tableName="qrtz_triggers" unique="false">
+        <createIndex indexName="idx_qrtz_t_jg" tableName="QRTZ_TRIGGERS" unique="false">
             <column name="sched_name"/>
             <column name="job_group"/>
         </createIndex>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-157" dbms="mysql">
-        <createIndex indexName="idx_qrtz_t_n_g_state" tableName="qrtz_triggers" unique="false">
+        <createIndex indexName="idx_qrtz_t_n_g_state" tableName="QRTZ_TRIGGERS" unique="false">
             <column name="sched_name"/>
             <column name="trigger_group"/>
             <column name="trigger_state"/>
         </createIndex>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-158" dbms="mysql">
-        <createIndex indexName="idx_qrtz_t_n_state" tableName="qrtz_triggers" unique="false">
+        <createIndex indexName="idx_qrtz_t_n_state" tableName="QRTZ_TRIGGERS" unique="false">
             <column name="sched_name"/>
             <column name="trigger_name"/>
             <column name="trigger_group"/>
@@ -1398,27 +1401,27 @@
         </createIndex>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-159" dbms="mysql">
-        <createIndex indexName="idx_qrtz_t_next_fire_time" tableName="qrtz_triggers" unique="false">
+        <createIndex indexName="idx_qrtz_t_next_fire_time" tableName="QRTZ_TRIGGERS" unique="false">
             <column name="sched_name"/>
             <column name="next_fire_time"/>
         </createIndex>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-160" dbms="mysql">
-        <createIndex indexName="idx_qrtz_t_nft_misfire" tableName="qrtz_triggers" unique="false">
+        <createIndex indexName="idx_qrtz_t_nft_misfire" tableName="QRTZ_TRIGGERS" unique="false">
             <column name="sched_name"/>
             <column name="misfire_instr"/>
             <column name="next_fire_time"/>
         </createIndex>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-161" dbms="mysql">
-        <createIndex indexName="idx_qrtz_t_nft_st" tableName="qrtz_triggers" unique="false">
+        <createIndex indexName="idx_qrtz_t_nft_st" tableName="QRTZ_TRIGGERS" unique="false">
             <column name="sched_name"/>
             <column name="trigger_state"/>
             <column name="next_fire_time"/>
         </createIndex>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-162" dbms="mysql">
-        <createIndex indexName="idx_qrtz_t_nft_st_misfire" tableName="qrtz_triggers" unique="false">
+        <createIndex indexName="idx_qrtz_t_nft_st_misfire" tableName="QRTZ_TRIGGERS" unique="false">
             <column name="sched_name"/>
             <column name="misfire_instr"/>
             <column name="next_fire_time"/>
@@ -1426,7 +1429,7 @@
         </createIndex>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-163" dbms="mysql">
-        <createIndex indexName="idx_qrtz_t_nft_st_misfire_grp" tableName="qrtz_triggers" unique="false">
+        <createIndex indexName="idx_qrtz_t_nft_st_misfire_grp" tableName="QRTZ_TRIGGERS" unique="false">
             <column name="sched_name"/>
             <column name="misfire_instr"/>
             <column name="next_fire_time"/>
@@ -1435,30 +1438,30 @@
         </createIndex>
     </changeSet>
     <changeSet author="awood (generated)" id="1379350211813-164" dbms="mysql">
-        <createIndex indexName="idx_qrtz_t_state" tableName="qrtz_triggers" unique="false">
+        <createIndex indexName="idx_qrtz_t_state" tableName="QRTZ_TRIGGERS" unique="false">
             <column name="sched_name"/>
             <column name="trigger_state"/>
         </createIndex>
     </changeSet>
     <changeSet author="awood" id="1379350211813-165" dbms="mysql">
         <comment>Add the default quartz lock columns.</comment>
-        <insert tableName="qrtz_locks">
+        <insert tableName="QRTZ_LOCKS">
             <column name="LOCK_NAME" value="TRIGGER_ACCESS"/>
             <column name="SCHED_NAME" value="TestScheduler"/>
         </insert>
-        <insert tableName="qrtz_locks">
+        <insert tableName="QRTZ_LOCKS">
             <column name="LOCK_NAME" value="JOB_ACCESS"/>
             <column name="SCHED_NAME" value="TestScheduler"/>
         </insert>
-        <insert tableName="qrtz_locks">
+        <insert tableName="QRTZ_LOCKS">
             <column name="LOCK_NAME" value="CALENDAR_ACCESS"/>
             <column name="SCHED_NAME" value="TestScheduler"/>
         </insert>
-        <insert tableName="qrtz_locks">
+        <insert tableName="QRTZ_LOCKS">
             <column name="LOCK_NAME" value="STATE_ACCESS"/>
             <column name="SCHED_NAME" value="TestScheduler"/>
         </insert>
-        <insert tableName="qrtz_locks">
+        <insert tableName="QRTZ_LOCKS">
             <column name="LOCK_NAME" value="MISFIRE_ACCESS"/>
             <column name="SCHED_NAME" value="TestScheduler"/>
         </insert>
