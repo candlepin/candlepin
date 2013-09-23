@@ -1,4 +1,4 @@
-// Version: 4.3
+// Version: 4.4
 
 /*
  * Default Candlepin rule set.
@@ -45,6 +45,7 @@ var CORES_ATTRIBUTE = "cores";
 var ARCH_ATTRIBUTE = "arch";
 var RAM_ATTRIBUTE = "ram";
 var INSTANCE_ATTRIBUTE = "instance_multiplier";
+var VIRT_LIMIT_ATTRIBUTE = "virt_limit";
 var REQUIRES_HOST_ATTRIBUTE = "requires_host";
 var VIRT_ONLY = "virt_only";
 var POOL_DERIVED = "pool_derived";
@@ -69,7 +70,8 @@ var ATTRIBUTES_AFFECTING_COVERAGE = [
     ARCH_ATTRIBUTE,
     SOCKETS_ATTRIBUTE,
     CORES_ATTRIBUTE,
-    RAM_ATTRIBUTE
+    RAM_ATTRIBUTE,
+    VIRT_LIMIT_ATTRIBUTE
 ];
 
 /**
@@ -103,7 +105,8 @@ var STACKABLE_ATTRIBUTES = [
     SOCKETS_ATTRIBUTE,
     CORES_ATTRIBUTE,
     RAM_ATTRIBUTE,
-    ARCH_ATTRIBUTE
+    ARCH_ATTRIBUTE,
+    VIRT_LIMIT_ATTRIBUTE
 ];
 
 
@@ -383,6 +386,21 @@ var FactValueCalculator = {
             var cores = consumerCoresPerSocket * consumerSockets;
             log.debug("Consumer has " + cores + " cores.");
             return cores;
+        },
+
+        virt_limit: function (prodAttr, consumer) {
+            if (consumer.guestIds === null) {
+                return 0;
+            }
+            var activeGuestCount = 0;
+            for (var guestIdx = 0; guestIdx < consumer.guestIds.length; guestIdx++) {
+                var guest = consumer.guestIds[guestIdx];
+                // We can remove "active" in guest after rules rev to 5.0
+                if ("active" in guest && guest.active) {
+                    activeGuestCount++;
+                }
+            }
+            return activeGuestCount;
         }
     },
 
@@ -509,7 +527,7 @@ var CoverageCalculator = {
                 var sourceValue = sourceData.values[prodAttr];
 
                 // We assume that the value coming back is an int right now.
-                var covered = parseInt(sourceValue) >= consumerQuantity;
+                var covered = (sourceValue === "unlimited") || (parseInt(sourceValue) >= consumerQuantity);
                 log.debug("  System's " + prodAttr + " covered: " + covered);
 
                 var reason = null;
@@ -731,7 +749,7 @@ var CoverageCalculator = {
         // Some stacked attributes do not affect the quantity needed to
         // make the stack valid. Stacking multiple instances of 'arch'
         // does nothing (there is no quantity).
-        var stackableAttrsNotAffectingQuantity = [ARCH_ATTRIBUTE];
+        var stackableAttrsNotAffectingQuantity = [ARCH_ATTRIBUTE, VIRT_LIMIT_ATTRIBUTE];
 
         log.debug("Determining number of entitlements to cover consumer...");
 
@@ -1127,6 +1145,18 @@ function createStackTracker(consumer, stackId) {
                     var stackValue = currentStackValue || [];
                     stackValue.push(poolValue);
                     return stackValue;
+                },
+
+                virt_limit: function (currentStackValue, poolValue, pool, quantity) {
+                    if (poolValue === "unlimited" || currentStackValue === "unlimited") {
+                        return "unlimited";
+                    }
+                    var stackValue = currentStackValue || 0;
+                    var poolInt = parseInt(poolValue);
+                    if (poolInt > stackValue) {
+                        return poolInt;
+                    }
+                    return currentStackValue;
                 }
             };
 
@@ -1406,6 +1436,20 @@ var Entitlement = {
     },
 
     pre_virt_limit: function() {
+        var result = Entitlement.ValidationResult();
+        context = Entitlement.get_attribute_context();
+        var consumer = context.consumer;
+        var pool = context.pool;
+        if (consumer.type.manifest) {
+            return JSON.stringify(result);
+        }
+        var consumerGuests = FactValueCalculator.getFact(VIRT_LIMIT_ATTRIBUTE, consumer);
+        if (!pool.hasProductAttribute("stacking_id") && pool.hasProductAttribute(VIRT_LIMIT_ATTRIBUTE) &&
+                pool.getProductAttribute(VIRT_LIMIT_ATTRIBUTE) !== "unlimited" &&
+                parseInt(pool.getProductAttribute(VIRT_LIMIT_ATTRIBUTE)) < consumerGuests) {
+                    result.addWarning("rulewarning.unsupported.number.of.guests");
+        }
+        return JSON.stringify(result);
     },
 
     pre_architecture: function() {
@@ -1714,15 +1758,23 @@ var Autobind = {
             /*
              * Generates sets of attributes to attempt to remove
              */
-            get_attribute_sets: function() {
+            get_attribute_sets: function(pools) {
                 var stack_attributes = [];
                 // get unique list of additive stack attributes
                 for (var attrIdx in STACKABLE_ATTRIBUTES) {
                     var attr = STACKABLE_ATTRIBUTES[attrIdx];
                     if (attr != ARCH_ATTRIBUTE) {
-                        stack_attributes.push(attr);
+                        // Only check attributes that the pools actually use
+                        for (var poolIdx = 0; poolIdx < pools.length; poolIdx++) {
+                            var pool = pools[poolIdx];
+                            if (pool.hasProductAttribute(attr)) {
+                                stack_attributes.push(attr);
+                                break;
+                            }
+                        }
                     }
                 }
+                log.debug("entitlement group uses attributes: " + stack_attributes);
                 sets = this.get_sets(stack_attributes, stack_attributes.length - 1);
                 for (var i = sets.length - 1; i >= 0; i--) {
                     var set = sets[i];
@@ -1742,7 +1794,7 @@ var Autobind = {
                 var possible_pool_sets = [];
                 possible_pool_sets.push(this.pools);
                 var original_provided = this.get_provided_products().length;
-                var sets_to_check = this.get_attribute_sets(); //array of arrays of attributes to remove
+                var sets_to_check = this.get_attribute_sets(this.pools); //array of arrays of attributes to remove
                 for (var setIdx = 0; setIdx < sets_to_check.length; setIdx++) {
                     var attrs_to_remove = sets_to_check[setIdx];
                     for (var attrIdx = 0; attrIdx < attrs_to_remove.length; attrIdx++) {

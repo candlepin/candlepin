@@ -1269,6 +1269,20 @@
             }
         },
         {
+            "name": "Awesome OS with up to 4 virtual guests Stackable",
+            "id": "awesomeos-virt-4-stackable",
+            "version": "6.1",
+            "type": "MKT",
+            "provided_products": [
+                "37060"
+            ],
+            "attributes": {
+                "virt_limit": 4,
+                "multi-entitlement": "yes",
+                "stacking_id": "aos-4virt-stackable"
+            }
+        },
+        {
             "name": "Awesome OS with unlimited virtual guests",
             "id": "awesomeos-virt-unlimited",
             "version": "6.1",
