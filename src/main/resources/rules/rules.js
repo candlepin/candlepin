@@ -1,4 +1,4 @@
-// Version: 4.3
+// Version: 4.4
 
 /*
  * Default Candlepin rule set.
