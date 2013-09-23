@@ -37,6 +37,12 @@ RSpec.configure do |config|
   #  c.syntax = :expect
   #end
 
+  # Sometimes when diagnosing a test failure, you might not want to
+  # run the :after hook so you can do a post-mortem.  If that's the case
+  # set this value to false using an environment variable.
+  config.add_setting(:run_after_hook, :default => true)
+  RSpec.configuration.run_after_hook = false if ENV['run_after_hook'] == 'false'
+
   include CleanupHooks
 
   config.before(:each) do
@@ -84,7 +90,9 @@ RSpec.configure do |config|
   end
 
   config.after(:each) do
-    cleanup_after()
+    if RSpec.configuration.run_after_hook?
+      cleanup_after()
+    end
   end
 end
 

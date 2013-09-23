@@ -7,7 +7,7 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
 
-    <changeSet id="20130829085043" author="wpoteat">
+    <changeSet id="20130829085043" author="wpoteat" dbms="oracle,postgresql">
         <comment>Create Satellite version 5.6 capabilities</comment>
         <!-- See http://www.liquibase.org/manual/refactoring_commands -->
         <insert tableName="cp_dist_version">
