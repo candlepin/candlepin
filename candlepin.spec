@@ -31,7 +31,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.8.27
+Version: 0.8.28
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -323,6 +323,9 @@ fi
 
 
 %changelog
+* Mon Sep 23 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.28-1
+- 1007836: calculate suggested quantity with only matching stacking_ids (ckozak@redhat.com)
+
 * Thu Sep 12 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.27-1
 - 845600, 996672: fix suggested quantities (ckozak@redhat.com)
 - Strings update. (dgoodwin@redhat.com)
