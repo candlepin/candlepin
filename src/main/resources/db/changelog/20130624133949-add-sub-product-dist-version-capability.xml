@@ -7,7 +7,7 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
 
-    <changeSet id="20130624133949" author="mstead">
+    <changeSet id="20130624133949" author="mstead" dbms="oracle,postgresql">
         <comment>Add the derived product distributor version capability for SAM-1.3 and Satellite-6.0</comment>
             <insert tableName="cp_dist_version_capability">
                 <column name="id" value="1008"/>

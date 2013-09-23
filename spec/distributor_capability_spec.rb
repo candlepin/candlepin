@@ -11,26 +11,26 @@ describe 'Distributor Capability' do
  
   it 'should allow distributor version creation' do
     count = @cp.get_distributor_versions.size
-    dist_version = create_distributor_version(random_string("SAMvBillion"),
-                                    "Subscription Asset Manager Billion",
+    dist_version = create_distributor_version(random_string("WidgetvBillion"),
+                                    "Widget Billion",
                                    ["midas touch",
                                     "telepathy",
                                     "lightning speed"]) 
-    dist_version.id.should_not be nil
+    dist_version.id.should_not be_nil
     @cp.get_distributor_versions().size.should == count+1
     dist_version.capabilities.size.should == 3	
   end
 
   it 'should allow distributor version update' do
     count = @cp.get_distributor_versions.size
-    dist_version = create_distributor_version(random_string("SAMvBillion"),
-                                    "Subscription Asset Manager Billion",
+    dist_version = create_distributor_version(random_string("WidgetvBillion"),
+                                    "Widget Billion",
                                    ["midas touch",
                                     "telepathy",
                                     "lightning speed"]) 
     dist_version_id = dist_version.id
     dist_version = update_distributor_version(dist_version_id, dist_version.name,
-                                    "Subscription Asset Manager Billion",
+                                    "Widget Billion",
                                    ["midas touch",
                                     "lightning speed"]) 
     @cp.get_distributor_versions().size.should == count+1
@@ -40,9 +40,9 @@ describe 'Distributor Capability' do
 
 
   it 'can assign consumer capabilities based on distributor version when creating' do
-    name = random_string("SAMvBillion")
+    name = random_string("WidgetvBillion")
     dist_version = create_distributor_version(name,
-                                    "Subscription Asset Manager Billion",
+                                    "Widget Billion",
                                    ["midas touch",
                                     "telepathy",
                                     "lightning speed"]) 
@@ -55,9 +55,9 @@ describe 'Distributor Capability' do
   end
 
   it 'will assign consumer capabilities based on capability list when creating' do
-    name = random_string("SAMvBillion")
+    name = random_string("WidgetvBillion")
     dist_version = create_distributor_version(name,
-                                    "Subscription Asset Manager Billion",
+                                    "Widget Billion",
                                    ["midas touch",
                                     "telepathy",
                                     "lightning speed"]) 
@@ -73,9 +73,9 @@ describe 'Distributor Capability' do
 
 
   it 'can update consumer capabilities based on changed distributor version when updating consumer' do
-    name = random_string("SAMvBillion")
+    name = random_string("WidgetvBillion")
     dist_version = create_distributor_version(name,
-                                    "Subscription Asset Manager Billion",
+                                    "Widget Billion",
                                    ["midas touch",
                                     "telepathy",
                                     "lightning speed"]) 
@@ -85,9 +85,9 @@ describe 'Distributor Capability' do
     consumer = @user.register(random_string("consumer"), :candlepin, nil, facts)
     consumer.capabilities.size.should == 3  
 
-    name = random_string("SAMvBazillion")
+    name = random_string("WidgetvBazillion")
     dist_version = create_distributor_version(name,
-                                    "Subscription Asset Manager Bazillion",
+                                    "Widget Bazillion",
                                    ["midas touch",
                                     "telekenesis",
                                     "ludicrist speed",
@@ -97,14 +97,14 @@ describe 'Distributor Capability' do
     }
     @cp.update_consumer({:uuid => consumer['uuid'], :facts => facts})
     consumer = @cp.get_consumer(consumer['uuid'])
-    consumer.lastCheckin.should be nil
+    consumer.lastCheckin.should be_nil
     consumer.capabilities.size.should == 4
   end
 
   it 'can update consumer capabilities from capability list' do
-    name = random_string("SAMvBazillion")
+    name = random_string("WidgetvBazillion")
     dist_version = create_distributor_version(name,
-                                    "Subscription Asset Manager Bazillion",
+                                    "Widget Bazillion",
                                    ["midas touch",
                                     "telekenesis",
                                     "ludicrist speed",
@@ -114,14 +114,14 @@ describe 'Distributor Capability' do
     }
     consumer = @user.register(random_string("consumer"), :candlepin, nil, facts)
     consumer.capabilities.size.should == 4
-    consumer.lastCheckin.should be nil 
+    consumer.lastCheckin.should be_nil
 
     consumer_client = Candlepin.new(username=nil, password=nil,
         cert=consumer['idCert']['cert'],
         key=consumer['idCert']['key'])
     consumer_client.update_consumer({})
     consumer = @cp.get_consumer(consumer['uuid'])
-    consumer.lastCheckin.should_not be nil 
+    consumer.lastCheckin.should_not be_nil
 
     capabilities = ["midas touch",
                     "telekenesis",
@@ -147,9 +147,9 @@ describe 'Distributor Capability' do
     entitlements = @cp.consume_product(@product.id, {:uuid => consumer.uuid})
     nil.should == entitlements
 
-    name = random_string("SAMvBillion")
+    name = random_string("WidgetvBillion")
     dist_version = create_distributor_version(name,
-                                "Subscription Asset Manager Billion",
+                                "Widget Billion",
                                ["cores"])
     facts = {
       'distributor_version' => name
@@ -160,15 +160,15 @@ describe 'Distributor Capability' do
   end
 
   it 'can filter distributor version list' do
-    name1 = random_string("SAMvBillion")
-    name2 = random_string("SAMvBazillion")
+    name1 = random_string("WidgetvBillion")
+    name2 = random_string("WidgetvBazillion")
     dist_version = create_distributor_version(name1,
-                                    "Subscription Asset Manager Billion",
+                                    "Widget Billion",
                                    ["midas touch",
                                     "telepathy",
                                     "lightning speed"]) 
     dist_version = create_distributor_version(name2,
-                                    "Subscription Asset Manager Bazillion",
+                                    "Widget Bazillion",
                                    ["midas touch",
                                     "telekenesis",
                                     "ludicrist speed",
@@ -177,7 +177,7 @@ describe 'Distributor Capability' do
     dist_vers.size.should == 1
     dist_vers[0]['name'].should == name1
 
-    dist_vers = @cp.get_distributor_versions('SAM')
+    dist_vers = @cp.get_distributor_versions('Widget')
     dist_vers.size.should == 2
 
     dist_vers = @cp.get_distributor_versions(nil, 'telepathy')

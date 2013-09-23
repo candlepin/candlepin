@@ -188,7 +188,7 @@ public class Importer {
             lastrun = expMetaCurator.create(lastrun);
         }
         else {
-            if (lastrun.getExported().compareTo(m.getCreated()) > 0) {
+            if (lastrun.getExported().after(m.getCreated())) {
                 if (!forcedConflicts.isForced(Importer.Conflict.MANIFEST_OLD)) {
                     throw new ImportConflictException(i18n.tr(
                         "Import is older than existing data"),
@@ -198,14 +198,25 @@ public class Importer {
                     log.warn("Manifest older than existing data.");
                 }
             }
-            else if (lastrun.getExported().compareTo(m.getCreated()) == 0) {
-                if (!forcedConflicts.isForced(Importer.Conflict.MANIFEST_SAME)) {
-                    throw new ImportConflictException(i18n.tr(
-                        "Import is the same as existing data"),
-                        Importer.Conflict.MANIFEST_SAME);
-                }
-                else {
-                    log.warn("Manifest same as existing data.");
+            else {
+                /*
+                 *  Prior to 5.6.4, MySQL did not store fractions of a second in
+                 *  temporal values.  Consequently, the manifest metadata can end up
+                 *  with a created date that is a fraction of a second ahead of
+                 *  the created date in the cp_export_metadata table.  So we throw away
+                 *  the fractions of a second.
+                 */
+                long exported = lastrun.getExported().getTime() / 1000;
+                long created = m.getCreated().getTime() / 1000;
+                if (exported == created) {
+                    if (!forcedConflicts.isForced(Importer.Conflict.MANIFEST_SAME)) {
+                        throw new ImportConflictException(i18n.tr(
+                            "Import is the same as existing data"),
+                            Importer.Conflict.MANIFEST_SAME);
+                    }
+                    else {
+                        log.warn("Manifest same as existing data.");
+                    }
                 }
             }
 

@@ -7,7 +7,7 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
 
-    <changeSet id="20130725093910" author="dgoodwin">
+    <changeSet id="20130725093910" author="dgoodwin" dbms="oracle,postgresql">
         <comment>Adding linkedStackId column to Pool to support one subpool per stack.</comment>
         <addColumn tableName="cp_pool">
             <column name="sourceconsumer_id" type="varchar(32)"/>

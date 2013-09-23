@@ -11,6 +11,7 @@ describe 'Candlepin Import', :serial => true do
 
     @cp_export = StandardExporter.new
     @cp_export.create_candlepin_export()
+    @cp_export_file = @cp_export.export_filename
 
     @candlepin_consumer = @cp_export.candlepin_client.get_consumer()
     @cp.unregister @candlepin_consumer['uuid']
@@ -18,7 +19,7 @@ describe 'Candlepin Import', :serial => true do
     @import_owner = @cp.create_owner(random_string("test_owner"))
     @import_username = random_string("import-user")
     @import_owner_client = user_client(@import_owner, @import_username)
-    @cp.import(@import_owner['key'], @cp_export.export_filename)
+    @cp.import(@import_owner['key'], @cp_export_file)
 
     @exporters = [@cp_export]
   end
@@ -59,7 +60,7 @@ describe 'Candlepin Import', :serial => true do
       import['generatedBy'].should == consumer['name']
       import['generatedDate'].should_not be_nil
       import['upstreamId'].should == consumer['uuid']
-      import['fileName'].should == @cp_export.export_filename.split("/").last
+      import['fileName'].should == @cp_export_file.split("/").last
     end
   end
 
@@ -81,7 +82,7 @@ describe 'Candlepin Import', :serial => true do
     custom_sub = @cp.get_subscription(custom_sub['id'])
 
     # should be able to re-import without an "older than existing" error:
-    @cp.import(@import_owner['key'], @cp_export.export_filename)
+    @cp.import(@import_owner['key'], @cp_export_file)
     o = @cp.get_owner(@import_owner['key'])
     o['upstreamConsumer']['uuid'].should == @cp_export.candlepin_client.uuid
 
@@ -90,12 +91,12 @@ describe 'Candlepin Import', :serial => true do
     job = @import_owner_client.undo_import(@import_owner['key'])
     wait_for_job(job['id'], 30)
     another_owner = @cp.create_owner(random_string('testowner'))
-    @cp.import(another_owner['key'], @cp_export.export_filename)
+    @cp.import(another_owner['key'], @cp_export_file)
     @cp.delete_owner(another_owner['key'])
     @cp.delete_subscription(custom_sub['id'])
 
     # Re-import so the rest of the tests can pass:
-    @cp.import(@import_owner['key'], @cp_export.export_filename)
+    @cp.import(@import_owner['key'], @cp_export_file)
   end
 
   it 'should create a SUCCESS record of the import' do
@@ -112,13 +113,44 @@ describe 'Candlepin Import', :serial => true do
       import.status == 'DELETE'
     end.should_not be_empty
     # Re-import so the rest of the tests can pass:
-    @cp.import(@import_owner['key'], @cp_export.export_filename)
+    @cp.import(@import_owner['key'], @cp_export_file)
   end
 
   it 'should return a 409 on a duplicate import' do
-    lambda do
-      @cp.import(@import_owner['key'], @cp_export.export_filename)
-    end.should raise_exception RestClient::Conflict
+    exception = false
+    begin
+      @cp.import(@import_owner['key'], @cp_export_file)
+    rescue RestClient::Conflict => e
+      json = JSON.parse(e.http_body)
+      json["conflicts"].should have(1).things
+      json["conflicts"].include?("MANIFEST_SAME").should be_true
+      exception = true
+    end
+    exception.should be_true
+
+  end
+
+  it 'should not allow importing an old manifest' do
+    owner = create_owner(random_string("test_owner"))
+    exporter = StandardExporter.new
+    @exporters << exporter
+    older = exporter.create_candlepin_export().export_filename
+
+    sleep 2
+
+    newer = exporter.create_candlepin_export().export_filename
+
+    @cp.import(owner['key'], newer)
+    exception = false
+    begin
+      @cp.import(owner['key'], older)
+    rescue RestClient::Conflict => e
+      json = JSON.parse(e.http_body)
+      json["conflicts"].should have(1).things
+      json["conflicts"].include?("MANIFEST_OLD").should be_true
+      exception = true
+    end
+    exception.should be_true
   end
 
   it 'should create a FAILURE record on a duplicate import' do
@@ -140,7 +172,7 @@ describe 'Candlepin Import', :serial => true do
 
   it 'should allow forcing the same manifest' do
     # This test must run after a successful import has already occurred.
-    @cp.import(@import_owner['key'], @cp_export.export_filename,
+    @cp.import(@import_owner['key'], @cp_export_file,
       {:force => ["MANIFEST_SAME", "DISTRIBUTOR_CONFLICT"]})
   end
 
@@ -227,11 +259,11 @@ describe 'Candlepin Import', :serial => true do
     job = @import_owner_client.undo_import(@import_owner['key'])
     wait_for_job(job['id'], 30)
 
-    @cp.import(@import_owner['key'], @cp_export.export_filename)
+    @cp.import(@import_owner['key'], @cp_export_file)
     owner2 = @cp.create_owner(random_string("owner2"))
     exception = false
     begin
-      @cp.import(owner2['key'], @cp_export.export_filename)
+      @cp.import(owner2['key'], @cp_export_file)
     rescue RestClient::Exception => e
         expected = "This subscription management application has already been imported by another owner."
         JSON.parse(e.http_body)["displayMessage"].should == expected
