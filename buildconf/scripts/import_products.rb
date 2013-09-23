@@ -6,6 +6,7 @@ require 'rubygems'
 require 'date'
 require 'json'
 require 'pp'
+require 'thread'
 
 SMALL_SUB_QUANTITY = 5
 LARGE_SUB_QUANTITY = 10
@@ -31,12 +32,42 @@ filenames.each do |filename|
   data['roles'] = data.fetch('roles', []) + product_data['roles']
 end
 
+# from http://burgestrand.se/articles/quick-and-simple-ruby-thread-pool.html
+class Pool
+  def initialize(size)
+    @size = size
+    @jobs = Queue.new
+    @pool = Array.new(@size) do |i|
+      Thread.new do
+        Thread.current[:id] = i
+        catch(:exit) do
+          loop do
+            job, args = @jobs.pop
+            job.call(*args)
+          end
+        end
+      end
+    end
+  end
+
+  def schedule(*args, &block)
+    @jobs << [block, args]
+  end
+
+  def shutdown
+    @size.times do
+      schedule { throw :exit }
+    end
+
+    @pool.map(&:join)
+  end
+end
+
 cp = Candlepin.new(username='admin', password='admin', cert=nil, key=nil, host='localhost', post=8443)
 
-# create some owners
-puts "Create some owners"
-data["owners"].each do |new_owner|
-  owner_name = new_owner['name']
+
+def create_owner(cp, new_owner)
+  owner_name =  new_owner['name']
   displayName = new_owner['displayName']
 
   puts "owner: #{owner_name}"
@@ -46,13 +77,19 @@ data["owners"].each do |new_owner|
 
   # Create one dummy activation key for the owner
   cp.create_activation_key(owner['key'], "default_key")
+  cp.create_activation_key(owner['key'], "awesome_os_pool")
 end
 
-puts
+thread_pool = Pool.new(4)
+data['owners'].each do |new_owner|
+    thread_pool.schedule do
+        create_owner(cp, new_owner)
+    end
+end
+thread_pool.shutdown
 
-# create some users
-puts "Create some users"
-data["users"].each do |new_user|
+
+def create_user(cp, new_user)
   user_name = new_user['username']
   user_pass = new_user['password']
   user_super = new_user['superadmin'] || false
@@ -62,13 +99,21 @@ data["users"].each do |new_user|
   puts "\t super_user: #{user_super}"
 
   owner = cp.create_user(user_name, user_pass, user_super)
-
 end
+
+puts "Create some users"
+thread_pool = Pool.new(4)
+data['users'].each do |new_user|
+    thread_pool.schedule do
+        create_user(cp, new_user)
+    end
+end
+thread_pool.shutdown
 
 puts
 # Create roles:
 puts "Create some roles"
-data['roles'].each do |new_role|
+def create_role(cp, new_role)
   role_name = new_role['name']
   perms = new_role['permissions']
   users = new_role['users']
@@ -89,12 +134,20 @@ data['roles'].each do |new_role|
 
 end
 
-puts
+thread_pool = Pool.new(4)
+data['roles'].each do |new_role|
+    thread_pool.schedule do
+        create_role(cp, new_role)
+    end
+end
+thread_pool.shutdown
+
+
 
 # import all the content sets
 puts "Importing content set data..."
-data['content'].each do |c|
 
+def create_content(cp, c)
   puts c['name']
 
   params = {}
@@ -116,6 +169,14 @@ data['content'].each do |c|
                     c['vendor'], params)
 end
 
+thread_pool = Pool.new(4)
+data['content'].each do |content|
+    thread_pool.schedule do
+        create_content(cp, content)
+    end
+end
+thread_pool.shutdown
+
 
 owners = cp.list_owners({:fetch => true})
 owner_keys = owners.map{|owner| owner['key']}.compact
@@ -128,8 +189,17 @@ end
 
 puts
 puts "Import product data..."
-contract_number = 0
+eng_products = []
+mkt_products = []
 data['products'].each do |product|
+    if product['type'] == 'MKT'
+        mkt_products << product
+    else
+        eng_products << product
+    end
+end
+
+def create_product(cp, product)
 
   name = product['name']
   id = product['id']
@@ -156,6 +226,43 @@ data['products'].each do |product|
                                              :relies_on => relies_on})
   puts "product name: " + name + " version: " + version + \
        " arch: " + arch + " type: " + type
+  return product_ret
+end
+
+def create_eng_product(cp, thread_pool, product)
+  product_ret = create_product(cp, product)
+  product_content = product['content'] || []
+
+  # Generate a product id cert in generated_certs for each engineering product
+  product_cert = cp.get_product_cert(product_ret['id'])
+  cert_file = File.new(CERT_DIR + '/' + product_ret['id'] + '.pem', 'w+')
+  cert_file.puts(product_cert['cert'])
+
+  product_content.each do |content|
+        cp.add_content_to_product(product_ret['id'], content[0], content[1])
+  end
+end
+
+puts "creating eng products"
+thread_pool = Pool.new(6)
+eng_products.each do |product|
+    thread_pool.schedule do
+        create_eng_product(cp, thread_pool, product)
+    end
+end
+thread_pool.shutdown
+
+def create_mkt_product(cp, product, owner_keys)
+  product_ret = create_product(cp, product)
+
+  if product.has_key?('skip_subs'):
+    next
+  end
+
+  provided_products = product['provided_products'] || []
+  derived_product_id = product['derived_product_id']
+  derived_provided_products = product['derived_provided_products'] || []
+
   startDate1 =  Date.today
   endDate1 = startDate1 + 365
   startDate2 = endDate1 - 10
@@ -163,11 +270,9 @@ data['products'].each do |product|
   startDate3 = endDate1 + 1
   endDate3 = startDate2 + 365
 
-  # If product ID is non-numeric, we assume it's a marketing product
-  # and create subscriptions for it:
-  if id.to_i.to_s != id && !attrs.has_key?('skip_subs')
-    # Create a SMALL and a LARGE with the slightly similar begin/end dates.
-    owner_keys.each do |owner_key|
+  contract_number = 0
+  # Create a SMALL and a LARGE with the slightly similar begin/end dates.
+  owner_keys.each do |owner_key|
       subscription = cp.create_subscription(owner_key,
                                             product_ret['id'],
                                             SMALL_SUB_QUANTITY,
@@ -203,24 +308,45 @@ data['products'].each do |product|
                                               'derived_provided_products' => derived_provided_products
                                             })
       contract_number += 1
-    end
   end
-
-  # TODO: not sure what's going on here?
-  if id.to_i.to_s == id
-    product_cert = cp.get_product_cert(product_ret['id'])
-    cert_file = File.new(CERT_DIR + '/' + product_ret['id'] + '.pem', 'w+')
-    cert_file.puts(product_cert['cert'])
-  end
-
-  product_content.each do |content|
-    cp.add_content_to_product(product_ret['id'], content[0], content[1])
-  end
-
 end
+
+puts "creating mkt products"
+thread_pool = Pool.new(6)
+mkt_products.each do |product|
+    thread_pool.schedule do
+        create_mkt_product(cp, product, owner_key)
+    end
+end
+thread_pool.shutdown
 
 # Refresh to create pools for all subscriptions just created:
+thread_pool = Pool.new(4)
 owner_keys.each do |owner_key|
-    puts "refreshing pools for " + owner_key
-    cp.refresh_pools(owner_key)
+    thread_pool.schedule do
+        puts "refreshing pools for " + owner_key
+        cp.refresh_pools(owner_key)
+    end
 end
+thread_pool.shutdown
+
+def create_activation_key_for_pool(cp, pool, owner_key)
+    #pp pool contractNumber
+    key_name = owner_key + '-' + pool['productId'] + '-' + pool['contractNumber'] + '-key'
+    puts "creating activation_key " + key_name
+    key = cp.create_activation_key(owner_key, key_name)
+    new_key = cp.add_pool_to_key(key['id'], pool['id'])
+end
+
+exit
+
+thread_pool = Pool.new(6)
+owner_keys.each do |owner_key|
+    thread_pool.schedule do
+        pools = cp.list_owner_pools(owner_key)
+        pools.each do |pool|
+          create_activation_key_for_pool(cp, pool, owner_key)
+        end
+   end
+end
+thread_pool.shutdown
