@@ -255,24 +255,22 @@ thread_pool.shutdown
 def create_mkt_product(cp, product, owner_keys)
   product_ret = create_product(cp, product)
 
-  if product.has_key?('skip_subs'):
-    next
-  end
+  if !product.has_key?('skip_subs') then
 
-  provided_products = product['provided_products'] || []
-  derived_product_id = product['derived_product_id']
-  derived_provided_products = product['derived_provided_products'] || []
+    provided_products = product['provided_products'] || []
+    derived_product_id = product['derived_product_id']
+    derived_provided_products = product['derived_provided_products'] || []
 
-  startDate1 =  Date.today
-  endDate1 = startDate1 + 365
-  startDate2 = endDate1 - 10
-  endDate2 = startDate2 + 365
-  startDate3 = endDate1 + 1
-  endDate3 = startDate2 + 365
+    startDate1 =  Date.today
+    endDate1 = startDate1 + 365
+    startDate2 = endDate1 - 10
+    endDate2 = startDate2 + 365
+    startDate3 = endDate1 + 1
+    endDate3 = startDate2 + 365
 
-  contract_number = 0
-  # Create a SMALL and a LARGE with the slightly similar begin/end dates.
-  owner_keys.each do |owner_key|
+    contract_number = 0
+    # Create a SMALL and a LARGE with the slightly similar begin/end dates.
+    owner_keys.each do |owner_key|
       subscription = cp.create_subscription(owner_key,
                                             product_ret['id'],
                                             SMALL_SUB_QUANTITY,
@@ -308,6 +306,7 @@ def create_mkt_product(cp, product, owner_keys)
                                               'derived_provided_products' => derived_provided_products
                                             })
       contract_number += 1
+    end
   end
 end
 
@@ -315,7 +314,7 @@ puts "creating mkt products"
 thread_pool = Pool.new(6)
 mkt_products.each do |product|
     thread_pool.schedule do
-        create_mkt_product(cp, product, owner_key)
+        create_mkt_product(cp, product, owner_keys)
     end
 end
 thread_pool.shutdown
