@@ -31,7 +31,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.8.27
+Version: 0.8.27.0
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -323,6 +323,9 @@ fi
 
 
 %changelog
+* Tue Sep 24 2013 Devan Goodwin <dgoodwin@rm-rf.ca> 0.8.27.0-1
+- 1011100: Fix orphaned virt bonus pools in hosted. (dgoodwin@redhat.com)
+
 * Thu Sep 12 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.27-1
 - 845600, 996672: fix suggested quantities (ckozak@redhat.com)
 - Strings update. (dgoodwin@redhat.com)
