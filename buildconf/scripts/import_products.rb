@@ -98,7 +98,7 @@ def create_user(cp, new_user)
   puts "\t password: #{user_pass}"
   puts "\t super_user: #{user_super}"
 
-  owner = cp.create_user(user_name, user_pass, user_super)
+  cp.create_user(user_name, user_pass, user_super)
 end
 
 puts "Create some users"
@@ -180,7 +180,7 @@ thread_pool.shutdown
 
 owners = cp.list_owners({:fetch => true})
 owner_keys = owners.map{|owner| owner['key']}.compact
-owner_key = 'admin'
+admin_owner_key = 'admin'
 
 CERT_DIR='generated_certs'
 if not File.directory? CERT_DIR
@@ -255,8 +255,8 @@ thread_pool.shutdown
 def create_mkt_product(cp, product, owner_keys)
   product_ret = create_product(cp, product)
 
-  if product.has_key?('skip_subs'):
-    next
+  if product.has_key?('skip_subs')
+    return
   end
 
   provided_products = product['provided_products'] || []
@@ -315,7 +315,7 @@ puts "creating mkt products"
 thread_pool = Pool.new(6)
 mkt_products.each do |product|
     thread_pool.schedule do
-        create_mkt_product(cp, product, owner_key)
+        create_mkt_product(cp, product, owner_keys)
     end
 end
 thread_pool.shutdown
@@ -335,7 +335,7 @@ def create_activation_key_for_pool(cp, pool, owner_key)
     key_name = owner_key + '-' + pool['productId'] + '-' + pool['contractNumber'] + '-key'
     puts "creating activation_key " + key_name
     key = cp.create_activation_key(owner_key, key_name)
-    new_key = cp.add_pool_to_key(key['id'], pool['id'])
+    cp.add_pool_to_key(key['id'], pool['id'])
 end
 
 exit
