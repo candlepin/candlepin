@@ -2,14 +2,12 @@
 <%-
 # When you write local variables in the template, use the provided _ variable to store the information.
 # If you store directly to self, then you run the risk of interferring with already provided values.
-# Also note that the _ variable is an OpenStruct so if you are using an "or" construct, enclose it in
-# parenthesis otherwise the first value in the "or" clause will be assigned even if it is nil!
 if ENV['logdriver'] 
   _.driver_class = profile.logdriver_class
-  _.jdbc_url = "jdbc:log:#{driver_class or profile.driver_class}:#{(jdbc_url or profile.jdbc_url).sub!(/^jdbc:/, "")}"
+  _.jdbc_url = "jdbc:log:#{driver_class || profile.driver_class}:#{(jdbc_url || profile.jdbc_url).sub!(/^jdbc:/, "")}"
 else
-  _.driver_class = (driver_class or profile.driver_class)
-  _.jdbc_url = (jdbc_url or profile.jdbc_url)
+  _.driver_class = driver_class || profile.driver_class
+  _.jdbc_url = jdbc_url || profile.jdbc_url
 end
 -%>
 <%- if ENV['logdriver'] -%>
@@ -20,32 +18,32 @@ log4j.logger.net.rkbloom.logdriver.LogConnection=DEBUG
 <%- end -%>  
 jpa.config.hibernate.connection.driver_class=<%= _.driver_class %>
 jpa.config.hibernate.connection.url=<%= _.jdbc_url %>
-jpa.config.hibernate.connection.username=<%= username or profile.username %>
-jpa.config.hibernate.connection.password=<%= password or profile.password %>
+jpa.config.hibernate.connection.username=<%= username || profile.username %>
+jpa.config.hibernate.connection.password=<%= password || profile.password %>
 
-jpa.config.hibernate.dialect=<%= dialect or profile.dialect %>
-jpa.config.hibernate.show_sql=<%= show_hibernate or false %>
+jpa.config.hibernate.dialect=<%= dialect || profile.dialect %>
+jpa.config.hibernate.show_sql=<%= show_hibernate || false %>
 
-candlepin.auth.oauth.enable=<%= oauth_enable or true %>
+candlepin.auth.oauth.enable=<%= oauth_enable || true %>
 candlepin.auth.oauth.consumer.rspec.secret=rspec-oauth-secret
 candlepin.auth.oauth.consumer.thumbslug.secret=thumbslug-secret
 
-candlepin.importer.fail_on_unknown=<%= fail_on_unknown or false %>
-candlepin.pretty_print=<%= cp_pretty_print or true %>
-candlepin.hidden_resources=<%= hidden_resources or "" %>
+candlepin.importer.fail_on_unknown=<%= fail_on_unknown || false %>
+candlepin.pretty_print=<%= cp_pretty_print || true %>
+candlepin.hidden_resources=<%= hidden_resources || "" %>
 
-candlepin.pinsetter.enable=<%= pinsetter_enabled or true %>
+candlepin.pinsetter.enable=<%= pinsetter_enabled || true %>
 org.quartz.jobStore.misfireThreshold=60000
 org.quartz.jobStore.useProperties=false
 org.quartz.jobStore.dataSource=myDS
 org.quartz.jobStore.tablePrefix=QRTZ_
 org.quartz.jobStore.class=org.quartz.impl.jdbcjobstore.JobStoreTX
-org.quartz.jobStore.driverDelegateClass=<%= quartz_driver or profile.quartz_driver %>
+org.quartz.jobStore.driverDelegateClass=<%= quartz_driver || profile.quartz_driver %>
 
 org.quartz.dataSource.myDS.driver=<%= _.driver_class %>
 org.quartz.dataSource.myDS.URL=<%= _.jdbc_url %>
-org.quartz.dataSource.myDS.user=<%= username or profile.username %>
-org.quartz.dataSource.myDS.password=<%= password or profile.password %>
+org.quartz.dataSource.myDS.user=<%= username || profile.username %>
+org.quartz.dataSource.myDS.password=<%= password || profile.password %>
 org.quartz.dataSource.myDS.maxConnections=5
 
 <%- custom_logging.each do |key, value| -%>
