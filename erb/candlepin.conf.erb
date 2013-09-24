@@ -50,6 +50,6 @@ org.quartz.dataSource.myDS.maxConnections=5
 
 <%- custom_logging.each do |key, value| -%>
 <%= "#" if key[0] == "#" %>log4j.logger.<%= key[/^#?(.*)/, 1] %>=<%= value %>
-<%- end -%>
+<%- end if custom_logging -%>
 
 <%= additional_properties %>

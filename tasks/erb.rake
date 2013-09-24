@@ -45,7 +45,7 @@ module ErbRenderer
       @profile
     end
 
-    def initialize(yaml, output_file, project)
+    def initialize(full_yaml, output_file, project)
       # Provide an OpenStruct we can use as a namespace within ERB templates if we need to set
       # variables.
       @_ = OpenStruct.new()
@@ -56,7 +56,7 @@ module ErbRenderer
       @_project = project
 
       begin
-        @yaml = yaml.fetch(output_file)
+        @yaml = full_yaml.fetch(output_file)
       rescue KeyError
         warn("#{File.basename(project.erb.yaml)} does not have any data for #{output_file}!")
       end
@@ -147,7 +147,12 @@ module ErbRenderer
         desc "Render ERB files"
         project.task('erb') do |task|
           # Load YAML at beginning so if the file is malformed, we'll just abort.
-          yaml = YAML.load_file(project.erb.yaml)
+          if File.exist?(project.erb.yaml)
+            yaml = YAML.load_file(project.erb.yaml)
+          else
+            yaml = {}
+          end
+
           mkdir_p(project.erb.output_dir)
           files = FileList[File.join(project.erb.erb_directory, '*.erb')]
           files.each do |file|
