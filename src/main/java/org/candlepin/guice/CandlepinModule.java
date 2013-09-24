@@ -205,7 +205,7 @@ public class CandlepinModule extends AbstractModule {
         bind(CertificateRevocationListTask.class);
         bind(JobCleaner.class);
 
-        bind(Exporter.class).asEagerSingleton();
+        bind(Exporter.class);
         bind(MetaExporter.class);
         bind(ConsumerTypeExporter.class);
         bind(ConsumerExporter.class);
