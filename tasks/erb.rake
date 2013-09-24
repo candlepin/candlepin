@@ -79,9 +79,9 @@ module ErbRenderer
     # Get a variable from @yaml or return nil.  Takes a block that will only be run
     # if the key is in the hash.  This allows for statements like
     #
-    # <%= get("my_optional_value") { |v| v.upcase } or "some default" %>
+    # <%= get("my_optional_value") { |v| v.upcase } || "some default" %>
     #
-    # If you instead ran <%= my_optional_value.upcase or "some default" %> then
+    # If you instead ran <%= my_optional_value.upcase || "some default" %> then
     # you would get an error because you were dereferencing a nil.
     def get(key)
       if @yaml.has_key?(key) and block_given?
