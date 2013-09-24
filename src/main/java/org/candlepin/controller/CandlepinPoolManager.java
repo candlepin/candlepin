@@ -178,7 +178,17 @@ public class CandlepinPoolManager implements PoolManager {
         // delete pools whose subscription disappeared:
         for (Entry<String, List<Pool>> entry : subToPoolMap.entrySet()) {
             for (Pool p : entry.getValue()) {
-                if (!p.hasAttribute("pool_derived")) {
+                // WARNING: need to be very careful here. We do not want to delete
+                // derived pools with a source entitlement or stack, these will be cleaned
+                // up when the entitlements in the master pool are revoked.
+                //
+                // However if this is an older bonus pool (hosted) not tied to any
+                // entitlements, we need to proceed:
+                if (p.hasAttribute("pool_derived") && (
+                    p.getSourceStackId() != null || p.getSourceEntitlement() != null)) {
+                    continue;
+                }
+                else {
                     deletePool(p);
                 }
             }
