@@ -41,8 +41,8 @@ org.quartz.jobStore.tablePrefix=QRTZ_
 org.quartz.jobStore.class=org.quartz.impl.jdbcjobstore.JobStoreTX
 org.quartz.jobStore.driverDelegateClass=<%= profile.quartz_driver %>
 
-org.quartz.dataSource.myDS.driver=<%= profile.driver_class %>
-org.quartz.dataSource.myDS.URL=<%= profile.jdbc_url %>
+org.quartz.dataSource.myDS.driver=<%= _.driver_class %>
+org.quartz.dataSource.myDS.URL=<%= _.jdbc_url %>
 org.quartz.dataSource.myDS.user=<%= profile.username %>
 org.quartz.dataSource.myDS.password=<%= profile.password %>
 org.quartz.dataSource.myDS.maxConnections=5
