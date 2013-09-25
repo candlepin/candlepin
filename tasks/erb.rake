@@ -16,7 +16,7 @@ module ErbRenderer
         settings = ErbRenderer::YamlData.new(yaml, output_file, project)
         destination = File.join(project.erb.output_dir, output_file)
         File.open(destination, 'w') do |file|
-          file.write(template.result(settings.get_binding()))
+          file.write(template.result(settings.get_binding))
         end
       rescue => e
         warn("Could not render #{basename}!")
@@ -48,7 +48,7 @@ module ErbRenderer
     def initialize(full_yaml, output_file, project)
       # Provide an OpenStruct we can use as a namespace within ERB templates if we need to set
       # variables.
-      @_ = OpenStruct.new()
+      @_ = OpenStruct.new
 
       # Make the profile an OpenStruct so we can use dot notation to grab properties
       @profile = ProfileStruct.new(Buildr.settings.profile)
@@ -84,7 +84,7 @@ module ErbRenderer
     # If you instead ran <%= my_optional_value.upcase || "some default" %> then
     # you would get an error because you were dereferencing a nil.
     def get(key)
-      if @yaml.has_key?(key) and block_given?
+      if @yaml.has_key?(key) && block_given?
         yield @yaml[key]
       else
         @yaml[key]
@@ -101,7 +101,7 @@ module ErbRenderer
     end
 
     def get_binding
-      binding()
+      binding
     end
   end
 
