@@ -354,6 +354,8 @@ public class PinsetterKernel {
             return status;
         }
         catch (SchedulerException e) {
+            log.error("There was a problem scheduling " +
+                detail.getKey().getName(), e);
             throw new PinsetterException("There was a problem scheduling " +
                 detail.getKey().getName(), e);
         }
