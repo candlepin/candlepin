@@ -18,6 +18,8 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -26,10 +28,11 @@ import javax.xml.bind.annotation.XmlRootElement;
 import org.candlepin.jackson.HateoasInclude;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.map.annotate.JsonFilter;
+import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
 
 /**
- * UpstreamConsumer
+ * ImportUpstreamConsumer
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
@@ -51,11 +54,13 @@ public class ImportUpstreamConsumer extends AbstractHibernateObject {
     @Column(nullable = false)
     private String name;
 
-    @Column(nullable = false)
-    private String type;
+    @ManyToOne
+    @JoinColumn(nullable = false)
+    @ForeignKey(name = "fk_import_upstream_cnsmr_type")
+    private ConsumerType type;
 
-    @Column(nullable = false, name = "owner_name")
-    private String ownerName;
+    @Column(nullable = false, name = "owner_id")
+    private String ownerId;
 
     @Column(length = 255, name = "prefix_url_web")
     private String prefixUrlWeb;
@@ -114,31 +119,32 @@ public class ImportUpstreamConsumer extends AbstractHibernateObject {
     }
 
     /**
-     * @return the consumers type.
+     * @return this consumers type.
      */
-    public String getType() {
+    public ConsumerType getType() {
         return type;
     }
 
     /**
-     * @param type the consumer type
+     * @param typeIn consumer type
      */
-    public void setType(String type) {
-        this.type = type;
+    public void setType(ConsumerType typeIn) {
+        type = typeIn;
     }
 
     /**
-     * @return String the owner's name.
+     * @return the owner of this Consumer.
      */
-    public String getOwnerName() {
-        return ownerName;
+    public String getOwnerId() {
+        return ownerId;
     }
 
     /**
-     * @param ownerName the owner's name
+     * Associates an owner to this Consumer.
+     * @param oid owner to associate to this Consumer.
      */
-    public void setOwnerName(String ownerName) {
-        this.ownerName = ownerName;
+    public void setOwnerId(String oid) {
+        this.ownerId = oid;
     }
 
     /**

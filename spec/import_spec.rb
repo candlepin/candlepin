@@ -60,6 +60,7 @@ describe 'Candlepin Import', :serial => true do
       import['generatedDate'].should_not be_nil
       import['upstreamConsumer']['uuid'].should == consumer['uuid']
       import['upstreamConsumer']['name'].should == consumer['name']
+      import['upstreamConsumer']['ownerId'].should == @import_owner.id
       import['fileName'].should == @cp_export.export_filename.split("/").last
     end
   end

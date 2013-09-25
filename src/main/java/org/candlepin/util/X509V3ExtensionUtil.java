@@ -119,6 +119,7 @@ public class X509V3ExtensionUtil extends X509Util{
             contentPrefix, promotedContent);
 
         String json = toJson(map);
+        log.info("Entitlement JSON: " + json);
         return processPayload(json);
     }
 

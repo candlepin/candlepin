@@ -1310,10 +1310,10 @@ public class OwnerResource {
         }
         if (uc != null) {
             iup = new ImportUpstreamConsumer();
-            iup.setOwnerName(owner.getDisplayName());
+            iup.setOwnerId(uc.getOwnerId());
             iup.setName(uc.getName());
             iup.setUuid(uc.getUuid());
-            iup.setType(uc.getType().getLabel());
+            iup.setType(uc.getType());
             iup.setWebUrl(uc.getWebUrl());
             iup.setApiUrl(uc.getApiUrl());
         }
