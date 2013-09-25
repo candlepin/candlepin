@@ -942,6 +942,7 @@ describe 'Consumer Resource' do
     ent = @consumer1.consume_pool(pool.id, {:quantity => 2})
     ent = @consumer1.consume_pool(pool.id)
     ent[0]["quantity"].should == 1
+  end
 
   it 'should be able to add unused attributes' do
     guests = [{'guestId' => 'guest1', 'fooBar' => 'some value'}]
