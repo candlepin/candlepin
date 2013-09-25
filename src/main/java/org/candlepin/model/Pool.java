@@ -17,7 +17,6 @@ package org.candlepin.model;
 import org.candlepin.jackson.HateoasInclude;
 import org.candlepin.util.DateSource;
 
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.map.annotate.JsonFilter;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.ForeignKey;
@@ -60,7 +59,6 @@ import javax.xml.bind.annotation.XmlTransient;
 @Entity
 @Table(name = "cp_pool", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"subscriptionid", "subscriptionsubkey"})})
-@JsonIgnoreProperties(ignoreUnknown = true)
 @JsonFilter("PoolFilter")
 public class Pool extends AbstractHibernateObject implements Persisted, Owned {
 

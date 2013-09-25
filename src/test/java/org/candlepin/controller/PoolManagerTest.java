@@ -156,7 +156,7 @@ public class PoolManagerTest {
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Test
-    public void testRefreshPoolsForDeletingPools() {
+    public void testRefreshPoolsDeletesOrphanedPools() {
         List<Subscription> subscriptions = Util.newList();
         List<Pool> pools = Util.newList();
         Pool p = TestUtil.createPool(TestUtil.createProduct());
@@ -174,6 +174,90 @@ public class PoolManagerTest {
                 anyBoolean(), any(PageRequest.class))).thenReturn(page);
         this.manager.getRefresher().add(getOwner()).run();
         verify(this.manager).deletePool(same(p));
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @Test
+    public void testRefreshPoolsDeletesOrphanedHostedVirtBonusPool() {
+        List<Subscription> subscriptions = Util.newList();
+        List<Pool> pools = Util.newList();
+        Pool p = TestUtil.createPool(TestUtil.createProduct());
+        p.setSubscriptionId("112");
+
+        // Make it look like a hosted virt bonus pool:
+        p.setAttribute("pool_derived", "true");
+        p.setSourceStackId(null);
+        p.setSourceEntitlement(null);
+
+        pools.add(p);
+        when(mockSubAdapter.getSubscriptions(any(Owner.class))).thenReturn(
+            subscriptions);
+
+        Page page = mock(Page.class);
+        when(page.getPageData()).thenReturn(pools);
+
+        when(
+            mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
+                any(Owner.class), anyString(), any(Date.class),
+                anyBoolean(), any(PageRequest.class))).thenReturn(page);
+        this.manager.getRefresher().add(getOwner()).run();
+        verify(this.manager).deletePool(same(p));
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @Test
+    public void testRefreshPoolsSkipsOrphanedEntitlementDerivedPools() {
+        List<Subscription> subscriptions = Util.newList();
+        List<Pool> pools = Util.newList();
+        Pool p = TestUtil.createPool(TestUtil.createProduct());
+        p.setSubscriptionId("112");
+
+        // Mock a pool with a source entitlement:
+        p.setAttribute("pool_derived", "true");
+        p.setSourceStackId(null);
+        p.setSourceEntitlement(new Entitlement());
+
+        pools.add(p);
+        when(mockSubAdapter.getSubscriptions(any(Owner.class))).thenReturn(
+            subscriptions);
+
+        Page page = mock(Page.class);
+        when(page.getPageData()).thenReturn(pools);
+
+        when(
+            mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
+                any(Owner.class), anyString(), any(Date.class),
+                anyBoolean(), any(PageRequest.class))).thenReturn(page);
+        this.manager.getRefresher().add(getOwner()).run();
+        verify(this.manager, never()).deletePool(same(p));
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @Test
+    public void testRefreshPoolsSkipsOrphanedStackDerivedPools() {
+        List<Subscription> subscriptions = Util.newList();
+        List<Pool> pools = Util.newList();
+        Pool p = TestUtil.createPool(TestUtil.createProduct());
+        p.setSubscriptionId("112");
+
+        // Mock a pool with a source stack ID:
+        p.setAttribute("pool_derived", "true");
+        p.setSourceStackId("blah");
+        p.setSourceEntitlement(null);
+
+        pools.add(p);
+        when(mockSubAdapter.getSubscriptions(any(Owner.class))).thenReturn(
+            subscriptions);
+
+        Page page = mock(Page.class);
+        when(page.getPageData()).thenReturn(pools);
+
+        when(
+            mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
+                any(Owner.class), anyString(), any(Date.class),
+                anyBoolean(), any(PageRequest.class))).thenReturn(page);
+        this.manager.getRefresher().add(getOwner()).run();
+        verify(this.manager, never()).deletePool(same(p));
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })

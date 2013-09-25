@@ -8,6 +8,16 @@ function evalrc ()
     fi
 }
 
+function recreate_mysql()
+{
+    if [ $(mysql --user=root mysql --execute="SELECT 1 FROM mysql.user WHERE user = '$DBUSER'" | wc -l) -eq 0 ]; then
+        mysql --user=root mysql --execute="CREATE USER '$DBUSER'@'localhost'; GRANT ALL PRIVILEGES on $DBUSER.* TO '$DBUSER'@'localhost' WITH GRANT OPTION"
+    fi
+    mysqladmin --user="$DBUSER" --force drop candlepin
+    mysqladmin --user="$DBUSER" create candlepin
+    evalrc $? "mysqladmin create failed"
+}
+
 function recreate_postgresql ()
 {
     # need to setup .pgpass for this to use passwds
@@ -39,6 +49,8 @@ if [ "$GENDB" == "1" ]; then
     CHANGELOG="changelog-create.xml"
     if [ "$USE_ORACLE" == "1" ]; then
         recreate_oracle
+    elif [ "$USE_MYSQL" == "1" ]; then
+        recreate_mysql
     else
         recreate_postgresql
     fi
@@ -51,6 +63,13 @@ if [ "$USE_ORACLE" == "1" ]; then
     DRIVER="oracle.jdbc.OracleDriver"
     JDBC_JAR="/usr/lib/oracle/11.2/client64/lib/ojdbc6.jar"
     JDBC_URL="jdbc:oracle:thin:@//localhost:1521/XE "
+    if [ -z "$DBPASSWORD" ] ; then
+        DBPASSWORD="candlepin"
+    fi
+elif [ "$USE_MYSQL" == "1" ]; then
+    DRIVER="com.mysql.jdbc.Driver"
+    JDBC_JAR="/usr/share/java/mysql-connector-java.jar"
+    JDBC_URL="jdbc:mysql:///candlepin"
 else
     DRIVER="org.postgresql.Driver"
     JDBC_JAR="/usr/share/java/postgresql-jdbc.jar"
@@ -139,6 +158,7 @@ function usage
         -t  import test data
         -o  use Oracle
         -l  use Logdriver
+        -m  use MySQL
 HELP
 }
 
@@ -149,18 +169,24 @@ fi
 
 DBUSER="candlepin"
 
-while getopts ":fgtol" opt; do
+while getopts ":fgtolm" opt; do
     case $opt in
         f  ) FORCECERT="1" ;;
         g  ) GENDB="1";;
         t  ) TESTDATA="1";;
         o  ) USE_ORACLE="1";;
         l  ) LOGDRIVER="logdriver";;
+        m  ) USE_MYSQL="1";;
         ?  ) usage; exit;;
     esac
 done
 
 shift $(($OPTIND - 1))
+
+if [ "$USE_ORACLE" == "1" -a "$USE_MYSQL" == "1" ]; then
+    echo "You can't use Oracle and MySQL at the same time."
+    exit 1
+fi
 
 if [ "$JBOSS_HOME" != "" ]; then
     # we're using JBOSS AS

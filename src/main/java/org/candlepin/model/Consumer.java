@@ -43,7 +43,6 @@ import javax.xml.bind.annotation.XmlTransient;
 import org.candlepin.jackson.HateoasArrayExclude;
 import org.candlepin.jackson.HateoasInclude;
 import org.candlepin.util.Util;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.map.annotate.JsonFilter;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CollectionOfElements;
@@ -66,7 +65,6 @@ import org.hibernate.annotations.Type;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_consumer")
-@JsonIgnoreProperties(ignoreUnknown = true)
 @JsonFilter("ConsumerFilter")
 public class Consumer extends AbstractHibernateObject implements Linkable, Owned {
 

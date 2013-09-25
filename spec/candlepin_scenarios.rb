@@ -278,7 +278,9 @@ class Exporter
     @exports.each do |export|
       export.cleanup()
     end
-    cleanup_after()
+    if RSpec.configuration.run_after_hook?
+      cleanup_after()
+    end
   end
 
   #Convenience methods to get the file name and directory of the most recent

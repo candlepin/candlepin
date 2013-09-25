@@ -6,8 +6,9 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
-
-    <changeSet id="20130425102131" author="wpoteat">
+    <!-- The Postgresql only changes in this file were an oversight and are corrected in
+         a separate changelog, 20130611152026-add-missing-capability-indexes-on-oracle.xml -->
+    <changeSet id="20130425102131" author="wpoteat" dbms="oracle,postgresql">
         <createTable tableName="cp_consumer_capability">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_consumer_capability_pkey"/>
@@ -19,7 +20,6 @@
                 <constraints nullable="false"/>
             </column>
         </createTable>
-        <!-- See http://www.liquibase.org/manual/refactoring_commands -->
     </changeSet>
     <changeSet id="20130425102131-1" author="wpoteat" dbms="postgresql">
         <createIndex tableName="cp_consumer_capability" indexName="cp_consumer_capability_id_idx">
@@ -28,7 +28,7 @@
         <addForeignKeyConstraint baseColumnNames="consumer_id" baseTableName="cp_consumer_capability" baseTableSchemaName="public" constraintName="fk_cnsmr_capability_cnsmr" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
     </changeSet>
     
-    <changeSet id="20130425102131-2" author="wpoteat">
+    <changeSet id="20130425102131-2" author="wpoteat" dbms="oracle,postgresql">
         <createTable tableName="cp_dist_version">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_dist_version_pkey"/>
@@ -42,7 +42,6 @@
             <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
             <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
         </createTable>
-        <!-- See http://www.liquibase.org/manual/refactoring_commands -->
     </changeSet>
     <changeSet id="20130425102131-3" author="wpoteat" dbms="postgresql">
         <createIndex tableName="cp_dist_version" indexName="cp_dist_version_id_idx">
@@ -51,7 +50,7 @@
         <addUniqueConstraint columnNames="name" constraintName="cp_dist_version_name_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_dist_version"/> 
     </changeSet>
 
-    <changeSet id="20130425102131-4" author="wpoteat">
+    <changeSet id="20130425102131-4" author="wpoteat" dbms="oracle,postgresql">
         <createTable tableName="cp_dist_version_capability">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_dist_vrsn_capability_pkey"/>
@@ -63,7 +62,6 @@
                 <constraints nullable="false"/>
             </column>
         </createTable>
-        <!-- See http://www.liquibase.org/manual/refactoring_commands -->
     </changeSet>
     <changeSet id="20130425102131-5" author="wpoteat" dbms="postgresql">
         <createIndex tableName="cp_dist_version_capability" indexName="cp_dist_vrsn_cpblty_id_idx">

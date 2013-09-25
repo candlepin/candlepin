@@ -58,7 +58,7 @@ HIBERNATE = ['org.hibernate:hibernate-core:jar:3.3.2.GA',
              'org.freemarker:freemarker:jar:2.3.15',
              'c3p0:c3p0:jar:0.9.0',
              'dom4j:dom4j:jar:1.6.1']
-DB = 'postgresql:postgresql:jar:9.0-801.jdbc4'
+DB = ['postgresql:postgresql:jar:9.0-801.jdbc4', 'mysql:mysql-connector-java:jar:5.1.26']
 ORACLE = ['com.oracle:ojdbc6:jar:11.2.0', 'org.quartz-scheduler:quartz-oracle:jar:2.1.5']
 COMMONS = ['commons-codec:commons-codec:jar:1.4',
            'commons-collections:commons-collections:jar:3.1',

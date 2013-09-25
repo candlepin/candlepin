@@ -7,7 +7,7 @@
             http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
 
-            <changeSet id="20130501152202-1" author="alikins">
+            <changeSet id="20130501152202-1" author="alikins" dbms="oracle,postgresql">
                 <comment>Add a cp_content_arch for content/arch mapping</comment>
                 <createTable tableName="cp_arch">
 
@@ -22,7 +22,7 @@
                </createTable>
             </changeSet>
 
-            <changeSet id="20130501152202-2" author="alikins">
+            <changeSet id="20130501152202-2" author="alikins" dbms="oracle,postgresql">
             <createTable tableName="cp_content_arch">
                     <column name="content_id" type="VARCHAR(255)">
                         <constraints nullable="false"/>
@@ -35,19 +35,19 @@
                </createTable>
            </changeSet>
 
-            <changeSet id="20130501152202-3" author="alikins">
+            <changeSet id="20130501152202-3" author="alikins" dbms="oracle,postgresql">
                 <addPrimaryKey columnNames="arch_id, content_id" constraintName="cp_content_arch_pkey" tableName="cp_content_arch"/>
             </changeSet>
 
-            <changeSet id="20130501152202-4" author="alikins">
+            <changeSet id="20130501152202-4" author="alikins" dbms="oracle,postgresql">
                 <addForeignKeyConstraint baseColumnNames="arch_id" baseTableName="cp_content_arch" constraintName="fk_content_arch_arch" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_arch" referencesUniqueColumn="false"/>
             </changeSet>
 
-            <changeSet id="20130501152202-5" author="alikins">
+            <changeSet id="20130501152202-5" author="alikins" dbms="oracle,postgresql">
                 <addForeignKeyConstraint baseColumnNames="content_id" baseTableName="cp_content_arch" constraintName="fk_content_arch_content" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_content" referencesUniqueColumn="false"/>
             </changeSet>
 
-            <changeSet id="20130501152202-6" author="alikins">
+            <changeSet id="20130501152202-6" author="alikins" dbms="oracle,postgresql">
                 <comment>populate arch table</comment>
                 <insert tableName="cp_arch">
                     <column name="id" value="0"/>

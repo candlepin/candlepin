@@ -6,7 +6,7 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
-    <changeSet id="20130705140300" author="awood">
+    <changeSet id="20130705140300" author="awood" dbms="oracle,postgresql">
         <comment>Add the cert_v3 capability to SAM 1.3 and Satellite 6.0</comment>
         <insert tableName="cp_dist_version_capability">
             <column name="id" value="1010"/>
