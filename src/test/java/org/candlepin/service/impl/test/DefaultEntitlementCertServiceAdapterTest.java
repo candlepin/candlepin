@@ -775,6 +775,20 @@ public class DefaultEntitlementCertServiceAdapterTest {
             cont.getId() + "." + contentType + ".1");
     }
 
+    private Boolean extMapHasProductBrandType(Product product, Map<String, String> extMap) {
+        return extMap.containsKey("1.3.6.1.4.1.2312.9.1." +
+            product.getId() + "." + "5");
+    }
+
+    private Boolean extMapProductBrandTypeMatches(Product product, Map<String,
+        String> extMap, String brandType) {
+        String brandTypeOid = "1.3.6.1.4.1.2312.9.1." +
+            product.getId() + "." + "5";
+        String extBrandType = extMap.get(brandTypeOid);
+
+        return extBrandType.equals(brandType);
+    }
+
     @Test
     public void testPrepareV1Extensions() throws IOException,
         GeneralSecurityException {
@@ -795,6 +809,28 @@ public class DefaultEntitlementCertServiceAdapterTest {
         // do we have a yum content type oid
         assertTrue(extMapHasContentType(content, extMap, "1"));
         assertFalse(extMapHasContentType(content, extMap, "2"));
+    }
+
+    @Test
+    public void testPrepareV1ExtensionsBrandedProduct() throws IOException,
+        GeneralSecurityException {
+        Set<Product> products = new HashSet<Product>();
+
+        ProductAttribute brandAttr = new ProductAttribute("brand_type", "os");
+        product.addAttribute(brandAttr);
+        products.add(product);
+        setupEntitlements(ARCH_LABEL, "1.0");
+
+        Set<X509ExtensionWrapper> extensions =
+            certServiceAdapter.prepareV1Extensions(products, entitlement, "",
+                null);
+        Map<String, X509ExtensionWrapper> map = getEncodedContent(extensions);
+        Map<String, String> extMap = getEncodedContentMap(extensions);
+
+        assertTrue(isEncodedContentValid(map));
+        assertTrue(extMapHasProductBrandType(product, extMap));
+        assertTrue(extMapProductBrandTypeMatches(product, extMap, "os"));
+
     }
 
     @Test
