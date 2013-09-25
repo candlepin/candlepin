@@ -278,7 +278,9 @@ class Exporter
     @exports.each do |export|
       export.cleanup()
     end
-    cleanup_after()
+    if RSpec.configuration.run_after_hook?
+      cleanup_after()
+    end
   end
 
   #Convenience methods to get the file name and directory of the most recent
@@ -356,11 +358,11 @@ class StandardExporter < Exporter
 
     ent_names = ["entitlement1", "entitlement2", "entitlement3", "entitlement_up"]
     ent_names.zip([@pool1, @pool2, @pool4, @pool_up]).each do |ent_name, pool|
-      instance_variable_set("@#{ent_name}", @candlepin_client.consume_pool(pool.id)[0])
+      instance_variable_set("@#{ent_name}", @candlepin_client.consume_pool(pool.id, {:quantity => 1})[0])
     end
 
     # pool3 is special
-    @candlepin_client.consume_pool(@pool3.id)
+    @candlepin_client.consume_pool(@pool3.id, {:quantity => 1})
   end
 
   def create_candlepin_export_update
@@ -388,8 +390,8 @@ class StandardExporter < Exporter
     pool1 = @cp.list_pools(:owner => @owner.id, :product => product1.id)[0]
     pool2 = @cp.list_pools(:owner => @owner.id, :product => product2.id)[0]
 
-    @candlepin_client.consume_pool(pool1.id)
-    @candlepin_client.consume_pool(pool2.id)
+    @candlepin_client.consume_pool(pool1.id, {:quantity => 1})
+    @candlepin_client.consume_pool(pool2.id, {:quantity => 1})
     @candlepin_client.consume_pool(@pool_up.id, {:quantity => 4})
 
     @cp.unbind_entitlement(@entitlement2.id, :uuid => @candlepin_client.uuid)

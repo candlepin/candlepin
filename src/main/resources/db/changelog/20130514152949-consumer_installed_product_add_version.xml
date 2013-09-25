@@ -7,7 +7,7 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
 
-    <changeSet id="20130514152949" author="ckozak">
+    <changeSet id="20130514152949" author="ckozak" dbms="oracle,postgresql">
         <comment>Added version to ConsumerInstalledProduct</comment>
         <addColumn tableName="cp_installed_products">
             <column name="product_version" type="varchar(20)"/>

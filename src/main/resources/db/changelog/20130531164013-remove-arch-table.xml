@@ -6,25 +6,25 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
-    <changeSet id="20130531164013-0" author="alikins">
+    <changeSet id="20130531164013-0" author="alikins" dbms="oracle,postgresql">
         <comment>Drop fks on cp_arch</comment>
         <dropForeignKeyConstraint baseTableName="cp_content_arch" constraintName="fk_content_arch_content"/>
         <dropForeignKeyConstraint baseTableName="cp_content_arch" constraintName="fk_content_arch_arch"/>
     </changeSet>
 
-    <changeSet id="20130531164013-1" author="adrian">
+    <changeSet id="20130531164013-1" author="adrian" dbms="oracle,postgresql">
         <comment>Drop Arch table</comment>
         <!-- See http://www.liquibase.org/manual/refactoring_commands -->
         <dropTable tableName="cp_arch"/>
     </changeSet>
 
-    <changeSet id="20130531164013-2" author="adrian">
+    <changeSet id="20130531164013-2" author="adrian" dbms="oracle,postgresql">
         <comment>Drop content arch table</comment>
         <!-- See http://www.liquibase.org/manual/refactoring_commands -->
         <dropTable tableName="cp_content_arch"/>
     </changeSet>
 
-    <changeSet id="20130531164013-4" author="adrian">
+    <changeSet id="20130531164013-4" author="adrian" dbms="oracle,postgresql">
         <comment>add arches varchar to content </comment>
         <!-- See http://www.liquibase.org/manual/refactoring_commands -->
         <addColumn tableName="cp_content">

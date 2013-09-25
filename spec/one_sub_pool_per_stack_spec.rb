@@ -156,7 +156,7 @@ describe 'One Sub Pool Per Stack Feature' do
   end
 
   it 'should create one sub pool when host binds to stackable virt_limit pool' do
-    host_ent = @host_client.consume_pool(@stacked_virt_pool1['id'])[0]
+    host_ent = @host_client.consume_pool(@stacked_virt_pool1['id'], {:quantity => 1})[0]
     host_ent.should_not be_nil
 
     @host_client.list_pools(:consumer => @host['uuid']).should have(@initial_pool_count).things
@@ -172,8 +172,8 @@ describe 'One Sub Pool Per Stack Feature' do
   end
 
   it 'should not include host entitlements from another stack' do
-    ent1 = @host_client.consume_pool(@regular_stacked_with_diff_stackid['id'])[0]
-    ent2 = @host_client.consume_pool(@stacked_virt_pool1['id'])[0]
+    ent1 = @host_client.consume_pool(@regular_stacked_with_diff_stackid['id'], {:quantity => 1})[0]
+    ent2 = @host_client.consume_pool(@stacked_virt_pool1['id'], {:quantity => 1})[0]
 
     sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
     sub_pool.should_not be_nil
@@ -184,9 +184,9 @@ describe 'One Sub Pool Per Stack Feature' do
   end
 
   it 'should delete sub pool when all host entitlements are removed from the stack' do
-    ent1 = @host_client.consume_pool(@stacked_virt_pool1['id'])[0]
-    ent2 = @host_client.consume_pool(@stacked_virt_pool2['id'])[0]
-    ent3 = @host_client.consume_pool(@stacked_non_virt_pool['id'])[0]
+    ent1 = @host_client.consume_pool(@stacked_virt_pool1['id'], {:quantity => 1})[0]
+    ent2 = @host_client.consume_pool(@stacked_virt_pool2['id'], {:quantity => 1})[0]
+    ent3 = @host_client.consume_pool(@stacked_non_virt_pool['id'], {:quantity => 1})[0]
     @host_client.list_entitlements.length.should == 3
 
     sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
@@ -201,8 +201,8 @@ describe 'One Sub Pool Per Stack Feature' do
   end
 
   it 'should update sub pool date range when another stacked entitlement is added' do
-    ent1 = @host_client.consume_pool(@stacked_virt_pool1['id'])[0]
-    ent2 = @host_client.consume_pool(@stacked_virt_pool2['id'])[0]
+    ent1 = @host_client.consume_pool(@stacked_virt_pool1['id'], {:quantity => 1})[0]
+    ent2 = @host_client.consume_pool(@stacked_virt_pool2['id'], {:quantity => 1})[0]
 
     sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
     sub_pool.should_not be_nil
@@ -212,8 +212,8 @@ describe 'One Sub Pool Per Stack Feature' do
   end
 
   it 'should update product data on adding entitlement of same stack' do
-    ent1 = @host_client.consume_pool(@stacked_virt_pool1['id'])[0]
-    ent2 = @host_client.consume_pool(@stacked_non_virt_pool['id'])[0]
+    ent1 = @host_client.consume_pool(@stacked_virt_pool1['id'], {:quantity => 1})[0]
+    ent2 = @host_client.consume_pool(@stacked_non_virt_pool['id'], {:quantity => 1})[0]
 
     sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
     sub_pool.should_not be_nil
@@ -226,14 +226,14 @@ describe 'One Sub Pool Per Stack Feature' do
   end
 
   it 'should update provided products when stacked entitlements change' do
-    ent1 = @host_client.consume_pool(@stacked_virt_pool1['id'])[0]
+    ent1 = @host_client.consume_pool(@stacked_virt_pool1['id'], {:quantity => 1})[0]
 
     sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
     sub_pool.should_not be_nil
     sub_pool['providedProducts'].length.should == 1
     sub_pool['providedProducts'][0]['productId'].should == @virt_limit_provided_product.id
 
-    ent2 = @host_client.consume_pool(@stacked_non_virt_pool['id'])[0]
+    ent2 = @host_client.consume_pool(@stacked_non_virt_pool['id'], {:quantity => 1})[0]
 
     sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
     sub_pool.should_not be_nil
@@ -248,7 +248,7 @@ describe 'One Sub Pool Per Stack Feature' do
   end
 
   it 'should incude derived provided products if supporting entitlements are in stack' do
-    ent1 = @host_client.consume_pool(@datacenter_pool['id'])[0]
+    ent1 = @host_client.consume_pool(@datacenter_pool['id'], {:quantity => 1})[0]
     ent1.should_not be_nil
 
     @guest_client.list_pools(:consumer => @guest['uuid']).size.should == 8
@@ -258,7 +258,7 @@ describe 'One Sub Pool Per Stack Feature' do
     sub_pool['providedProducts'].length.should == 1
     sub_pool['providedProducts'][0]['productId'].should == @derived_provided_product.id
 
-    ent2 = @host_client.consume_pool(@stacked_non_virt_pool['id'])[0]
+    ent2 = @host_client.consume_pool(@stacked_non_virt_pool['id'], {:quantity => 1})[0]
 
     sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
     sub_pool.should_not be_nil
@@ -273,8 +273,8 @@ describe 'One Sub Pool Per Stack Feature' do
   end
 
   it 'should update product data on removing entitlement of same stack' do
-    ent1 = @host_client.consume_pool(@stacked_virt_pool1['id'])[0]
-    ent2 = @host_client.consume_pool(@stacked_non_virt_pool['id'])[0]
+    ent1 = @host_client.consume_pool(@stacked_virt_pool1['id'], {:quantity => 1})[0]
+    ent2 = @host_client.consume_pool(@stacked_non_virt_pool['id'], {:quantity => 1})[0]
     @host_client.unbind_entitlement(ent1['id'])
 
     sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
@@ -287,8 +287,8 @@ describe 'One Sub Pool Per Stack Feature' do
   end
 
   it 'should not update product data from products not in the stack' do
-    ent1 = @host_client.consume_pool(@stacked_virt_pool1['id'])[0]
-    ent2 = @host_client.consume_pool(@non_stacked_pool['id'])[0]
+    ent1 = @host_client.consume_pool(@stacked_virt_pool1['id'], {:quantity => 1})[0]
+    ent2 = @host_client.consume_pool(@non_stacked_pool['id'], {:quantity => 1})[0]
     ent2.should_not be_nil
 
     sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
@@ -299,15 +299,15 @@ describe 'One Sub Pool Per Stack Feature' do
   end
 
   it 'should revoke guest entitlement from sub pool when last host ent in stack is removed' do
-    ent1 = @host_client.consume_pool(@stacked_virt_pool1['id'])[0]
-    ent2 = @host_client.consume_pool(@stacked_virt_pool2['id'])[0]
-    ent3 = @host_client.consume_pool(@stacked_non_virt_pool['id'])[0]
+    ent1 = @host_client.consume_pool(@stacked_virt_pool1['id'], {:quantity => 1})[0]
+    ent2 = @host_client.consume_pool(@stacked_virt_pool2['id'], {:quantity => 1})[0]
+    ent3 = @host_client.consume_pool(@stacked_non_virt_pool['id'], {:quantity => 1})[0]
     @host_client.list_entitlements.length.should == 3
 
     sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
     sub_pool.should_not be_nil
 
-    @guest_client.consume_pool(sub_pool['id'])
+    @guest_client.consume_pool(sub_pool['id'], {:quantity => 1})
     @guest_client.list_entitlements.length.should == 1
 
     @host_client.unbind_entitlement(ent1['id'])
@@ -320,15 +320,15 @@ describe 'One Sub Pool Per Stack Feature' do
   end
 
   it 'should remove guest entitlement when host unregisters' do
-    ent1 = @host_client.consume_pool(@stacked_virt_pool1['id'])[0]
-    ent2 = @host_client.consume_pool(@stacked_virt_pool2['id'])[0]
-    ent3 = @host_client.consume_pool(@stacked_non_virt_pool['id'])[0]
+    ent1 = @host_client.consume_pool(@stacked_virt_pool1['id'], {:quantity => 1})[0]
+    ent2 = @host_client.consume_pool(@stacked_virt_pool2['id'], {:quantity => 1})[0]
+    ent3 = @host_client.consume_pool(@stacked_non_virt_pool['id'], {:quantity => 1})[0]
     @host_client.list_entitlements.length.should == 3
 
     sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
     sub_pool.should_not be_nil
 
-    @guest_client.consume_pool(sub_pool['id'])
+    @guest_client.consume_pool(sub_pool['id'], {:quantity => 1})
     @guest_client.list_entitlements.length.should == 1
 
     @host_client.unregister
@@ -338,11 +338,11 @@ describe 'One Sub Pool Per Stack Feature' do
   end
 
   it 'should remove guest entitlement when guest is migrated' do
-    ent1 = @host_client.consume_pool(@stacked_virt_pool1['id'])[0]
+    ent1 = @host_client.consume_pool(@stacked_virt_pool1['id'], {:quantity => 1})[0]
     sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
     sub_pool.should_not be_nil
 
-    @guest_client.consume_pool(sub_pool['id'])
+    @guest_client.consume_pool(sub_pool['id'], {:quantity => 1})
     @guest_client.list_entitlements.length.should == 1
 
     # Simulate migration
@@ -354,12 +354,12 @@ describe 'One Sub Pool Per Stack Feature' do
 
   it 'should update guest sub pool ent when product is updated' do
     # Attach sub to host and ensure sub pool is created.
-    host_ent = @host_client.consume_pool(@stacked_virt_pool1['id'])[0]
+    host_ent = @host_client.consume_pool(@stacked_virt_pool1['id'], {:quantity => 1})[0]
     sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
     sub_pool.should_not be_nil
 
     # Consumer ent for guest
-    initial_guest_ent = @guest_client.consume_pool(sub_pool['id'])[0]
+    initial_guest_ent = @guest_client.consume_pool(sub_pool['id'], {:quantity => 1})[0]
     initial_guest_ent.should_not be_nil
     find_product_attribute(initial_guest_ent.pool, "sockets").should be_nil
 
@@ -375,12 +375,12 @@ describe 'One Sub Pool Per Stack Feature' do
   end
 
   it 'should update guest sub pool ent as host stack is updated' do
-    @host_client.consume_pool(@stacked_virt_pool1['id'])
-    ent = @host_client.consume_pool(@stacked_non_virt_pool['id'])[0]
+    @host_client.consume_pool(@stacked_virt_pool1['id'], {:quantity => 1})
+    ent = @host_client.consume_pool(@stacked_non_virt_pool['id'], {:quantity => 1})[0]
 
     sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
     sub_pool.should_not be_nil
-    initial_guest_ent = @guest_client.consume_pool(sub_pool['id'])[0]
+    initial_guest_ent = @guest_client.consume_pool(sub_pool['id'], {:quantity => 1})[0]
 
     # Remove an ent from the host so that the guest ent will be updated.
     @host_client.unbind_entitlement(ent['id'])
@@ -394,9 +394,9 @@ describe 'One Sub Pool Per Stack Feature' do
   end
 
   it 'should update quantity of sub pool when stack changes' do
-    ent1 = @host_client.consume_pool(@stacked_virt_pool1['id'])[0]
-    ent2 = @host_client.consume_pool(@stacked_non_virt_pool['id'])[0]
-    ent3 = @host_client.consume_pool(@stacked_virt_pool3['id'])[0]
+    ent1 = @host_client.consume_pool(@stacked_virt_pool1['id'], {:quantity => 1})[0]
+    ent2 = @host_client.consume_pool(@stacked_non_virt_pool['id'], {:quantity => 1})[0]
+    ent3 = @host_client.consume_pool(@stacked_virt_pool3['id'], {:quantity => 1})[0]
     @host_client.list_entitlements.length.should == 3
 
     sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
@@ -415,17 +415,17 @@ describe 'One Sub Pool Per Stack Feature' do
   end
 
   it 'should regenerate ent certs when sub pool is update and client checks in' do
-    @host_client.consume_pool(@stacked_virt_pool1['id'])
+    @host_client.consume_pool(@stacked_virt_pool1['id'], {:quantity => 1})
 
     sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
     sub_pool.should_not be_nil
-    initial_guest_ent = @guest_client.consume_pool(sub_pool['id'])[0]
+    initial_guest_ent = @guest_client.consume_pool(sub_pool['id'], {:quantity => 1})[0]
     initial_guest_ent.should_not be_nil
     initial_guest_ent["certificates"].length.should == 1
     initial_guest_cert = initial_guest_ent['certificates'][0]
 
     # Grab another ent for the host to force a change in the guest's cert.
-    @host_client.consume_pool(@stacked_virt_pool2['id'])[0]
+    @host_client.consume_pool(@stacked_virt_pool2['id'], {:quantity => 1})[0]
 
     # Listing the certs will cause a regeneration of dirty ents before
     # returning them (simulate client checkin).
@@ -443,11 +443,11 @@ describe 'One Sub Pool Per Stack Feature' do
   end
 
   it 'should not regenerate certs on refresh pools when sub pool has not been changed' do
-    @host_client.consume_pool(@stacked_virt_pool1['id'])
+    @host_client.consume_pool(@stacked_virt_pool1['id'], {:quantity => 1})
 
     sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
     sub_pool.should_not be_nil
-    initial_guest_ent = @guest_client.consume_pool(sub_pool['id'])[0]
+    initial_guest_ent = @guest_client.consume_pool(sub_pool['id'], {:quantity => 1})[0]
     initial_guest_ent.should_not be_nil
     initial_guest_ent["certificates"].length.should == 1
     initial_guest_cert = initial_guest_ent['certificates'][0]

@@ -4,85 +4,40 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-08-23 14:51-0400\n"
+"POT-Creation-Date: 2012-06-27 12:35-0400\n"
 "PO-Revision-Date: 2013-08-06 10:40-0400\n"
 "Last-Translator: ypoyarko <ypoyarko@redhat.com>\n"
 "Language-Team: Russian\n"
-"Language: ru\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
-"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)\n"
+"Language: ru\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)\n"
 "X-Generator: Zanata 2.2.2\n"
 
-#: src/main/java/org/candlepin/model/EntitlementCurator.java:266
-#, java-format
-msgid "No product found for product ID {0}"
-msgstr "Продукт с ID {0} не найден."
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ypoyarko
+#: src/main/java/org/candlepin/auth/interceptor/SecurityInterceptor.java:196
+msgid "Unable to verify request."
+msgstr "Не удалось подтвердить запрос."
 
-#: src/main/java/org/candlepin/model/UeberCertificateGenerator.java:122
-#: src/main/java/org/candlepin/resource/OwnerResource.java:609
+#: src/main/java/org/candlepin/auth/interceptor/SecurityInterceptor.java:210
+#: src/main/java/org/candlepin/auth/interceptor/SecurityInterceptor.java:233
 #, java-format
-msgid "No such unit type: {0}"
-msgstr "Нет такого типа: {0}"
+msgid "{0} with id {1} could not be found."
+msgstr "Не удалось найти {0} с ID {1}"
 
-#: src/main/java/org/candlepin/model/ProductCurator.java:139
-#, java-format
-msgid "The attribute ''{0}'' must be an integer value."
-msgstr "Атрибут «{0}» должен быть целым числом."
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ypoyarko
+#: src/main/java/org/candlepin/auth/interceptor/SecurityInterceptor.java:227
+msgid "Organization"
+msgstr "Организация"
 
-#: src/main/java/org/candlepin/model/ProductCurator.java:146
-#: src/main/java/org/candlepin/model/ProductCurator.java:165
+#: src/main/java/org/candlepin/auth/interceptor/SecurityInterceptor.java:334
+#: src/main/java/org/candlepin/resteasy/interceptor/ConsumerAuth.java:55
 #, java-format
-msgid "The attribute ''{0}'' must have a positive value."
-msgstr "Атрибут «{0}» должен быть положительным целым числом."
-
-#: src/main/java/org/candlepin/model/ProductCurator.java:158
-#, java-format
-msgid "The attribute ''{0}'' must be a long value."
-msgstr "Атрибут «{0}» должен содержать длинное значение."
-
-#: src/main/java/org/candlepin/model/ProductCurator.java:176
-#, java-format
-msgid "The attribute ''{0}'' must be a boolean value."
-msgstr "Атрибут «{0}» должен содержить логическое значение."
-
-#: src/main/java/org/candlepin/model/ProductCurator.java:185
-#, java-format
-msgid ""
-"You cannot create a circular reference for products that ''{0}'' relies on."
-msgstr ""
-"Вы не можете создать циклическую ссылку для продуктов, от которых зависит "
-"«{0}»."
-
-#: src/main/java/org/candlepin/model/ConsumerCurator.java:100
-#, java-format
-msgid "Name of the unit must be shorter than {0} characters."
-msgstr "Имя группы не может превышать {0} знаков."
-
-#: src/main/java/org/candlepin/model/ConsumerCurator.java:332
-#, java-format
-msgid ""
-"The fact ''{0}'' must be an integer instead of ''{1}''. No value will exist "
-"for that fact."
-msgstr ""
-"Атрибут «{0}» должен содержать целое число, а не «{1}». Он будет оставлен "
-"пустым."
-
-#: src/main/java/org/candlepin/model/ConsumerCurator.java:341
-#, java-format
-msgid ""
-"The fact ''{0}'' must have a positive integer value instead of ''{1}''. No "
-"value will exist for that fact."
-msgstr ""
-"Атрибут «{0}» должен быть положительным целым числом, а не «{1}». Он будет "
-"оставлен пустым."
-
-#: src/main/java/org/candlepin/model/ConsumerCurator.java:411
-#, java-format
-msgid "The system with UUID {0} is a virtual guest. It does not have guests."
-msgstr "Система с UUID {0} является виртуальным гостем. У нее нет гостей."
+msgid "Unit {0} has been deleted"
+msgstr "Группа {0} удалена."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ypoyarko
@@ -264,23 +219,629 @@ msgstr "{0} создал ID гостя {1}"
 msgid "{0} deleted the guest id {1}"
 msgstr "{0} удалил ID гостя {1}"
 
-#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:81
+#: src/main/java/org/candlepin/resource/UserResource.java:141
 #, java-format
-msgid "Subscriptions for {0} expired on: {1}"
-msgstr "Срок действия подписок для {0} истек {1}"
+msgid "User {0} does not exist"
+msgstr "Пользователь {0} не существует."
+
+#: src/main/java/org/candlepin/resource/UserResource.java:157
+#, java-format
+msgid "User {0} not found"
+msgstr "Пользователь {0} не найден."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ypoyarko
-#: src/main/java/org/candlepin/policy/js/entitlement/AbstractEntitlementRules.java:133
+#: src/main/java/org/candlepin/resource/RoleResource.java:82
 #, java-format
-msgid "''{0}'' Should contain name, priority and at least one attribute"
-msgstr "«{0}» должно содержать имя, приоритет и как минимум один атрибут."
+msgid "No such owner: {0}"
+msgstr "Владелец {0} не существует."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ypoyarko
+#: src/main/java/org/candlepin/resource/RoleResource.java:112
+msgid "Role ID does not match path."
+msgstr "ID роли не соответствует пути."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ypoyarko
+#: src/main/java/org/candlepin/resource/RoleResource.java:138
+msgid "Access type NONE not supported."
+msgstr "Тип доступа \"NONE\" не поддерживается."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ypoyarko
+#: src/main/java/org/candlepin/resource/RoleResource.java:177
+#, java-format
+msgid "No such permission: {0} in role: {1}"
+msgstr "Нет разрешения {0} для роли {1}"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ypoyarko
+#: src/main/java/org/candlepin/resource/RoleResource.java:191
+#, java-format
+msgid "No such role: {0}"
+msgstr "Роль {0} не существует."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ypoyarko
+#: src/main/java/org/candlepin/resource/RoleResource.java:199
+#, java-format
+msgid "No such user: {0}"
+msgstr "Пользователь {0} не существует."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ypoyarko
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:238
+#, java-format
+msgid "Organization with key: {0} was not found."
+msgstr "Не найдена организация с ключом {0}."
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:257
+#: src/main/java/org/candlepin/resource/OwnerResource.java:599
+msgid "Cannot specify other query parameters with consumer IDs."
+msgstr "ID клиента не должен использоваться с другими параметрами."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ypoyarko
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:338
+msgid "Insufficient permissions"
+msgstr "Недостаточно полномочий"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ypoyarko
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:344
+msgid "Must specify an org to register with activation keys."
+msgstr ""
+"Для регистрации с помощью ключей активации необходимо указать организацию."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ypoyarko
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:348
+msgid "Cannot specify username with activation keys."
+msgstr "Имя пользователя не должно указываться с ключами активации."
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:371
+msgid "A unit type of 'person' cannot be used with activation keys"
+msgstr "Тип «person» не может использоваться с ключами активации."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/policy/js/entitlement/AbstractEntitlementRules.java:148
-msgid "second parameter should be the priority number."
-msgstr "второй параметр должен содержать приоритет."
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:376
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:386
+msgid "System name cannot contain most special characters."
+msgstr "Имя системы не должно содержать специальных символов."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ypoyarko
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:431
+msgid "Pool ID must be provided"
+msgstr "Требуется ID пула"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:455
+#, java-format
+msgid "Problem creating unit {0}"
+msgstr "Не удалось создать {0}"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:536
+msgid "System name cannot be null."
+msgstr "Имя системы не может быть пустым."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ypoyarko
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:543
+msgid "System name cannot begin with # character"
+msgstr "Имя системы не может начинаться с #."
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:558
+#: src/main/java/org/candlepin/resource/OwnerResource.java:847
+#, java-format
+msgid "Service level ''{0}'' is not available to units of organization {1}."
+msgstr "Уровень обслуживания «{0}» недоступен группам организации {1}."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ypoyarko
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:588
+#, java-format
+msgid "Activation key ''{0}'' not found for organization ''{1}''."
+msgstr "Не найден ключ активации «{0}»для организации «{1}»."
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:608
+#, java-format
+msgid "User with ID ''{0}'' could not be found."
+msgstr ""
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:615
+#, java-format
+msgid "User ''{0}'' has no roles for organization ''{1}''"
+msgstr ""
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:627
+#, java-format
+msgid "User ''{0}'' has already registered a personal consumer"
+msgstr ""
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:644
+msgid "You must specify an organization for new units."
+msgstr "Для новых групп необходимо выбрать организацию."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ypoyarko
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:655
+#, java-format
+msgid "Organization {0} does not exist."
+msgstr "Организация {0} не существует."
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:663
+#, java-format
+msgid "User ''{0}'' cannot access organization ''{1}''."
+msgstr ""
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:725
+#, java-format
+msgid "Unit type ''{0}'' could not be found."
+msgstr ""
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:811
+#, java-format
+msgid "Environment with ID ''{0}'' could not be found."
+msgstr ""
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1121
+#, java-format
+msgid "Cannot unregister {0} {1} because: {2}"
+msgstr "Не удалось удалить регистрацию {0} {1}. Причина: {2}"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1208
+msgid "Unable to create entitlement certificate archive"
+msgstr "Не удалось создать архив сертификатов"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ypoyarko
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1320
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1331
+msgid "Cannot bind by multiple parameters."
+msgstr "Нельзя привязать несколько параметров."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ypoyarko
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1325
+msgid "Cannot specify a quantity when auto-binding."
+msgstr "Не разрешается указывать количество при автоматической привязке."
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1398
+#, java-format
+msgid "Unable to attach a subscription for a product that has no pool: {0} "
+msgstr "Невозможно назначить подписку продукту, который не входит в пул: {0}."
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1464
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1553
+#: src/main/java/org/candlepin/resource/EntitlementResource.java:141
+#, java-format
+msgid "Unit with ID ''{0}'' could not be found."
+msgstr ""
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ypoyarko
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1474
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1590
+#: src/main/java/org/candlepin/resource/EntitlementResource.java:174
+#: src/main/java/org/candlepin/resource/EntitlementResource.java:209
+#: src/main/java/org/candlepin/resource/EntitlementResource.java:233
+#: src/main/java/org/candlepin/resource/EntitlementResource.java:259
+#, java-format
+msgid "Entitlement with ID ''{0}'' could not be found."
+msgstr "Не найдено полномочие с ID «{0}»."
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1500
+#, java-format
+msgid "Product with ID ''{0}'' could not be found."
+msgstr ""
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1613
+#, java-format
+msgid "Entitlement Certificate with serial number ''{0}'' could not be found."
+msgstr ""
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1676
+#, java-format
+msgid ""
+"Unit {0} cannot be exported. A manifest cannot be made for units of type "
+"''{1}''."
+msgstr ""
+"Невозможно выполнить экспорт группы {0}. Нельзя создать манифест для групп "
+"типа «{1}»."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1694
+msgid "Unable to create export archive"
+msgstr "Не удалось создать архив для экспорта"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1766
+#, java-format
+msgid "Problem regenerating ID cert for unit {0}"
+msgstr "Ошибка при повторной генерации сертификата ID для {0}"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1805
+#, java-format
+msgid "The system with UUID {0} is not a virtual guest."
+msgstr "Система с UUID {0} не является виртуальным гостем."
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1911
+#, java-format
+msgid "Deletion record for hypervisor ''{0}'' not found."
+msgstr ""
+
+#: src/main/java/org/candlepin/resource/EntitlementResource.java:91
+#, java-format
+msgid "Object with ID ''{0}'' could not found."
+msgstr ""
+
+#: src/main/java/org/candlepin/resource/EntitlementResource.java:119
+#, java-format
+msgid "Unit ''{0}'' has no subscription for product ''{1}''."
+msgstr ""
+
+#: src/main/java/org/candlepin/resource/EntitlementResource.java:194
+msgid "Quantity value must be greater than 0."
+msgstr ""
+
+#: src/main/java/org/candlepin/resource/ProductResource.java:121
+#: src/main/java/org/candlepin/resource/ProductResource.java:140
+#: src/main/java/org/candlepin/resource/ProductResource.java:297
+#: src/main/java/org/candlepin/resource/ProductResource.java:372
+#, java-format
+msgid "Product with UUID ''{0}'' could not be found."
+msgstr "Не найден продукт с UUID {0}"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ypoyarko
+#: src/main/java/org/candlepin/resource/ProductResource.java:301
+#, java-format
+msgid "Product with UUID ''{0}'' cannot be deleted while subscriptions exist."
+msgstr "Продукт с UUID {0} не может быть удален, пока существуют подписки."
+
+#: src/main/java/org/candlepin/resource/ProductResource.java:356
+msgid "Must specify product ID."
+msgstr "Необходимо указать ID продукта."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ypoyarko
+#: src/main/java/org/candlepin/resource/StatisticResource.java:61
+msgid "couldn't generate statistics"
+msgstr "ошибка генерации статистики"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ypoyarko
+#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:132
+msgid "The quantity must be greater than 0"
+msgstr "Количество должно превышать 0."
+
+#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:142
+msgid ""
+"Cannot add pools that are restricted to unit type 'person' to activation "
+"keys."
+msgstr "Не удалось добавить пулы для типа «person» в ключ активации."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ypoyarko
+#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:149
+msgid ""
+"Error: Only pools with multi-entitlement product subscriptions can be added "
+"to the activation key with a quantity greater than one."
+msgstr ""
+"Ошибка. К ключу активации можно добавить только пулы с многократными "
+"полномочиями подписок."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ypoyarko
+#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:156
+msgid "The quantity must not be greater than the total allowed for the pool"
+msgstr "Количество не может превышать максимально допустимое число для пула"
+
+#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:163
+msgid "Activation keys can only use host restricted pools from a single host."
+msgstr "Ключи активации должны использовать пулы в пределах одного хоста."
+
+#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:224
+#, java-format
+msgid "ActivationKey with id {0} could not be found."
+msgstr "Не найден ключ активации с ID {0}"
+
+#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:235
+#, java-format
+msgid "Pool with id {0} could not be found."
+msgstr "Не найден пул {0}."
+
+#: src/main/java/org/candlepin/resource/ContentResource.java:87
+#: src/main/java/org/candlepin/resource/ContentResource.java:122
+#, java-format
+msgid "Content with id {0} could not be found."
+msgstr "Не найдено содержимое с ID {0}"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/RulesResource.java:85
+msgid "Error decoding the rules. The text should be base 64 encoded"
+msgstr "Не удалось расшифровать правила: требуется кодировка Base64"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/RulesResource.java:111
+msgid "couldn't read rules file"
+msgstr "ошибка чтения файла правил"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ypoyarko
+#: src/main/java/org/candlepin/resource/SubscriptionResource.java:122
+#, java-format
+msgid "no certificate for subscription {0}"
+msgstr "нет сертификата для подписки {0}"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ypoyarko
+#: src/main/java/org/candlepin/resource/SubscriptionResource.java:141
+msgid "email is required for notification"
+msgstr "Необходимо указать адрес для получения уведомлений."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ypoyarko
+#: src/main/java/org/candlepin/resource/SubscriptionResource.java:146
+msgid "email locale is required for notification"
+msgstr "Необходимо выбрать язык почтовых уведомлений."
+
+#: src/main/java/org/candlepin/resource/SubscriptionResource.java:152
+#: src/main/java/org/candlepin/resource/OwnerResource.java:784
+#, java-format
+msgid "No such unit: {0}"
+msgstr "Нет такой группы: {0}"
+
+#: src/main/java/org/candlepin/resource/SubscriptionResource.java:182
+#, java-format
+msgid "Subscription with id {0} could not be found."
+msgstr "Не найдена подписка с ID {0}"
+
+#: src/main/java/org/candlepin/resource/HypervisorResource.java:102
+#, java-format
+msgid "Hypervisor {0} has been deleted previously"
+msgstr "Клиент {0} уже был удален."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ypoyarko
+#: src/main/java/org/candlepin/resource/EventResource.java:85
+#, java-format
+msgid "Event with ID ''{0}'' could not be found."
+msgstr "Не найдено событие с ID {0}"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:260
+#, java-format
+msgid "Could not create the Owner: {0}. Parent {1} does not exist."
+msgstr "Не удалось создать владельца {0}. {1} не существует."
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:272
+#, java-format
+msgid "Could not create the Owner: {0}"
+msgstr "Не удалось создать владельца: {0}"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ypoyarko
+#: src/main/java/org/candlepin/resource/OwnerResource.java:492
+msgid "Must provide a name for activation key."
+msgstr "Необходимо указать имя ключа активации."
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:499
+#, java-format
+msgid ""
+"The activation key name ''{0}'' must be alphanumeric or include the "
+"characters '-' or '_'"
+msgstr "Имя ключа «{0}» может содержать буквы, цифры, знаки «-» и «_»."
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:506
+#, java-format
+msgid "The activation key name ''{0}'' is already in use for owner {1}"
+msgstr "Имя ключа активации «{0}» уже используется владельцем {1}."
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:610
+#: src/main/java/org/candlepin/model/UeberCertificateGenerator.java:122
+#, java-format
+msgid "No such unit type: {0}"
+msgstr "Нет такого типа: {0}"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:651
+#: src/main/java/org/candlepin/resource/PoolResource.java:140
+#, java-format
+msgid "Unit: {0} not found"
+msgstr "Группа {0} не найдена"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ypoyarko
+#: src/main/java/org/candlepin/resource/OwnerResource.java:661
+#: src/main/java/org/candlepin/resource/PoolResource.java:217
+#, java-format
+msgid "User {0} cannot access consumer {1}"
+msgstr "У {0} нет доступа к клиенту {1}"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/OwnerResource.java:774
+#: src/main/java/org/candlepin/resource/OwnerResource.java:879
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1084
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1114
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1143
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1169
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1208
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1240
+#, java-format
+msgid "owner with key: {0} was not found."
+msgstr "не найден пользователь с ключом {0}"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/OwnerResource.java:898
+#, java-format
+msgid "subscription with id: {0} not found."
+msgstr "Подписка с ID {0} не найдена"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:998
+msgid "Unknown conflict to force"
+msgstr "Неизвестный конфликт"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1027
+msgid "Error reading export archive"
+msgstr "Ошибка чтения экспортируемого архива"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ypoyarko
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1190
+#, java-format
+msgid "Problem generating ueber cert for owner {0}"
+msgstr "Не удалось создать сертификат для владельца {0}"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ypoyarko
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1216
+#, java-format
+msgid "ueber certificate for owner {0} was not found. Please generate one."
+msgstr "Не найден сертификат для пользователя {0}. Необходимо его создать."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ypoyarko
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1268
+#, java-format
+msgid "{0} file imported successfully."
+msgstr "импорт файла {0} завершен."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1270
+#, java-format
+msgid "{0} file imported forcibly"
+msgstr "Файл {0} импортирован принудительно."
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1302
+#, java-format
+msgid "Subscriptions deleted by {0}"
+msgstr "{0} удалил подписки"
+
+#: src/main/java/org/candlepin/resource/PoolResource.java:123
+msgid "Cannot filter on both owner and unit"
+msgstr "Не разрешается фильтровать по владельцу и группам"
+
+#: src/main/java/org/candlepin/resource/PoolResource.java:127
+msgid "A unit or owner is needed to filter on product"
+msgstr "Для выбора по продукту необходимо указать группу или владельца"
+
+#: src/main/java/org/candlepin/resource/PoolResource.java:146
+#, java-format
+msgid "User {0} cannot access unit {1}"
+msgstr "Пользователь {0} не имеет доступа к {1}"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/PoolResource.java:157
+#, java-format
+msgid "owner: {0}"
+msgstr "владелец: {0}"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ypoyarko
+#: src/main/java/org/candlepin/resource/PoolResource.java:161
+#: src/main/java/org/candlepin/resource/PoolResource.java:302
+#, java-format
+msgid "User {0} cannot access owner {1}"
+msgstr "Пользователь {0} не имеет доступа к владельцу {1}"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ypoyarko
+#: src/main/java/org/candlepin/resource/PoolResource.java:170
+#, java-format
+msgid "User {0} cannot access all pools."
+msgstr "Пользователь {0} не имеет доступа ко всем пулам."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ypoyarko
+#: src/main/java/org/candlepin/resource/PoolResource.java:212
+#, java-format
+msgid "consumer: {0} not found"
+msgstr "клиент {0} не найден"
+
+#: src/main/java/org/candlepin/resource/PoolResource.java:234
+#: src/main/java/org/candlepin/resource/PoolResource.java:292
+#, java-format
+msgid "Subscription Pool with ID ''{0}'' could not be found."
+msgstr "Не найден пул подписок с ID «{0}»."
+
+#: src/main/java/org/candlepin/resource/PoolResource.java:251
+#, java-format
+msgid "Entitlement Pool with ID ''{0}'' could not be found."
+msgstr "Не найден пул полномочий с ID {0}."
+
+#: src/main/java/org/candlepin/resource/JobResource.java:110
+msgid ""
+"You must specify exactly one of owner key, unit UUID, or principal name."
+msgstr "Необходимо указать ключ владельца, UUID группы или имя субъекта."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ypoyarko
+#: src/main/java/org/candlepin/resource/JobResource.java:169
+msgid "Error setting scheduler status"
+msgstr "Ошибка при установке статуса планировщика"
+
+#: src/main/java/org/candlepin/resource/JobResource.java:197
+msgid "job already canceled"
+msgstr "задание уже отменено"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ypoyarko
+#: src/main/java/org/candlepin/resource/JobResource.java:200
+msgid "cannot cancel a job that is not in CREATED state"
+msgstr "нельзя отменить задание, если оно не в состоянии CREATED"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ypoyarko
+#: src/main/java/org/candlepin/resource/EnvironmentResource.java:98
+#: src/main/java/org/candlepin/resource/EnvironmentResource.java:117
+#: src/main/java/org/candlepin/resource/EnvironmentResource.java:247
+#, java-format
+msgid "No such environment: {0}"
+msgstr "Окружение не существует: {0}"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ypoyarko
+#: src/main/java/org/candlepin/resource/MigrationResource.java:64
+msgid "Bad entity value."
+msgstr "Недопустимый идентификатор."
+
+#: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:85
+msgid "Unit type with id '"
+msgstr "Тип группы с ID "
+
+#: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:107
+#, java-format
+msgid "Problem creating unit type: {0}"
+msgstr "Не удалось создать тип {0}"
+
+#: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:128
+#, java-format
+msgid "Unit type with label {0} could not be found."
+msgstr "Не найден тип с меткой {0}"
+
+#: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:149
+#, java-format
+msgid "Unit type with id {0} could not be found."
+msgstr "Не найден тип с ID {0}"
+
+#: src/main/java/org/candlepin/resource/DistributorVersionResource.java:104
+#, java-format
+msgid "A distributor version with name {0} already exists"
+msgstr ""
+
+#: src/main/java/org/candlepin/resource/DistributorVersionResource.java:132
+#, java-format
+msgid "No such distributor version: {0}"
+msgstr "Нет версии дистрибьютора: {0}"
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:58
 msgid "Not covered by a valid subscription."
@@ -313,6 +874,207 @@ msgstr "Проблема покрытия {2}. Распространяется 
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ypoyarko
+#: src/main/java/org/candlepin/policy/js/entitlement/AbstractEntitlementRules.java:133
+#, java-format
+msgid "''{0}'' Should contain name, priority and at least one attribute"
+msgstr "«{0}» должно содержать имя, приоритет и как минимум один атрибут."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/policy/js/entitlement/AbstractEntitlementRules.java:148
+msgid "second parameter should be the priority number."
+msgstr "второй параметр должен содержать приоритет."
+
+#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:81
+#, java-format
+msgid "Subscriptions for {0} expired on: {1}"
+msgstr "Срок действия подписок для {0} истек {1}"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/guice/I18nProvider.java:92
+#: src/main/java/org/candlepin/exceptions/mappers/BadRequestExceptionMapper.java:70
+msgid "Bad Request"
+msgstr "Недопустимый запрос"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/exceptions/mappers/CandlepinExceptionMapper.java:99
+#, java-format
+msgid "Runtime Error {0} at {1}.{2}:{3}"
+msgstr "Ошибка выполнения {0} в {1}.{2}:{3}"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/exceptions/mappers/BadRequestExceptionMapper.java:66
+#, java-format
+msgid "{0} is not a valid value for {1}"
+msgstr "{0} не является допустимым значением для {1}"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/sync/Importer.java:171
+msgid "Wrong metadata type"
+msgstr "Неверный тип метаданных"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/sync/Importer.java:180
+msgid "Invalid owner"
+msgstr "Недопустимый владелец"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/sync/Importer.java:194
+msgid "Import is older than existing data"
+msgstr "Импортируемые данные старее существующих"
+
+#: src/main/java/org/candlepin/sync/Importer.java:204
+msgid "Import is the same as existing data"
+msgstr "Импортируемые данные не отличаются от существующих"
+
+#: src/main/java/org/candlepin/sync/Importer.java:229
+msgid "The archive does not contain the required signature file"
+msgstr "Архив не содержит обязательный файл подписи"
+
+#: src/main/java/org/candlepin/sync/Importer.java:249
+msgid "Archive failed signature check"
+msgstr "Архив не прошел проверку подписи"
+
+#: src/main/java/org/candlepin/sync/Importer.java:263
+msgid "The consumer_export archive has no contents"
+msgstr "Пустой архив consumer_export"
+
+#: src/main/java/org/candlepin/sync/Importer.java:283
+msgid "The archive does not contain the required consumer_export.zip file"
+msgstr "Архив не содержит обязательный файл consumer_export.zip"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ypoyarko
+#: src/main/java/org/candlepin/sync/Importer.java:288
+#: src/main/java/org/candlepin/sync/Importer.java:293
+msgid "Failed to import archive"
+msgstr "Ошибка импорта архива"
+
+#: src/main/java/org/candlepin/sync/Importer.java:299
+msgid "Unable to extract export archive"
+msgstr "Не удалось извлечь архив"
+
+#: src/main/java/org/candlepin/sync/Importer.java:304
+msgid "Certificate exception checking archive signature"
+msgstr "Исключение сертификата при проверке подписи архива"
+
+#: src/main/java/org/candlepin/sync/Importer.java:335
+msgid "The archive does not contain the required meta.json file"
+msgstr "Архив не содержит обязательный файл meta.json"
+
+#: src/main/java/org/candlepin/sync/Importer.java:340
+msgid "The archive does not contain the required consumer_types directory"
+msgstr "Архив не содержит обязательный каталог consumer_types."
+
+#: src/main/java/org/candlepin/sync/Importer.java:345
+msgid "The archive does not contain the required consumer.json file"
+msgstr "Архив не содержит обязательный файл consumer.json"
+
+#: src/main/java/org/candlepin/sync/Importer.java:351
+msgid "The archive does not contain the required entitlements directory"
+msgstr "Архив не содержит каталог полномочий"
+
+#: src/main/java/org/candlepin/sync/Importer.java:610
+#, java-format
+msgid "The archive {0} is not a properly compressed file or is empty"
+msgstr "Недопустимый формат архива {0} или пустой архив."
+
+#: src/main/java/org/candlepin/sync/ConsumerImporter.java:59
+msgid "No ID for upstream subscription management application."
+msgstr "Нет идентификатора программы управления подписками."
+
+#: src/main/java/org/candlepin/sync/ConsumerImporter.java:74
+msgid ""
+"This subscription management application has already been imported by "
+"another owner."
+msgstr "Программа управления подписками уже импортирована другим владельцем."
+
+#: src/main/java/org/candlepin/sync/ConsumerImporter.java:82
+msgid ""
+"Owner has already imported from another subscription management application."
+msgstr ""
+"Владелец уже выполнил импорт из другой программы управления подписками. "
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ypoyarko
+#: src/main/java/org/candlepin/sync/EntitlementImporter.java:139
+msgid "Unable to find product with ID: "
+msgstr "Не найден продукт с ID:"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resteasy/interceptor/BasicAuth.java:71
+msgid "Invalid Credentials"
+msgstr "Недопустимые реквизиты"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resteasy/interceptor/BasicAuth.java:86
+msgid "Error contacting user service"
+msgstr "Ошибка обращения к службе пользователя"
+
+#: src/main/java/org/candlepin/resteasy/interceptor/PageRequestInterceptor.java:102
+msgid "offset and limit parameters must be positive integers"
+msgstr ""
+"Максимальное значение и смещение должны содержать целое положительное число."
+
+#: src/main/java/org/candlepin/resteasy/interceptor/PageRequestInterceptor.java:120
+msgid "the order parameter must be either 'ascending' or 'descending'"
+msgstr ""
+"параметр должен определять порядок сортировки (по возрастанию или убыванию)"
+
+#: src/main/java/org/candlepin/resteasy/interceptor/PageRequestInterceptor.java:129
+msgid "Expected a positive integer."
+msgstr "Необходимо указать целое число."
+
+#: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:119
+#: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:155
+msgid "Invalid oauth unit or secret"
+msgstr "Недопустимая группа oauth или секрет"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ypoyarko
+#: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:123
+#, java-format
+msgid "OAuth problem encountered. Internal message is: {0}"
+msgstr "Ошибка OAuth: {0}"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ypoyarko
+#: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:129
+#, java-format
+msgid "OAuth error encountered. Internal message is: {0}"
+msgstr "Ошибка OAuth: {0}"
+
+#: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:160
+msgid "Error getting oauth unit key"
+msgstr "Ошибка при получении ключа OAuth"
+
+#: src/main/java/org/candlepin/service/impl/DefaultEntitlementCertServiceAdapter.java:276
+#, java-format
+msgid ""
+"Too many content sets for certificate {0}. A newer client may be available "
+"to address this problem. See kbase "
+"https://access.redhat.com/knowledge/node/129003 for more information."
+msgstr ""
+"Слишком много наборов содержимого для сертификата {0}. Обновление клиента "
+"может решить эту проблему (см. "
+"https://access.redhat.com/knowledge/node/129003)."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ypoyarko
+#: src/main/java/org/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java:145
+msgid "Standalone candlepin does not support redeeming a subscription."
+msgstr "Автономный candlepin не поддерживает получение подписок."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ypoyarko
 #: src/main/java/org/candlepin/controller/Entitler.java:80
 #, java-format
 msgid "Subscription pool {0} does not exist."
@@ -321,7 +1083,8 @@ msgstr "Пул {0} не существует."
 #: src/main/java/org/candlepin/controller/Entitler.java:107
 #, java-format
 msgid ""
-"This unit has already had the subscription matching pool ID ''{0}'' attached."
+"This unit has already had the subscription matching pool ID ''{0}'' "
+"attached."
 msgstr "Этой группе уже сопоставлен ID пула «{0}»."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:112
@@ -431,866 +1194,64 @@ msgstr "Подписка «{0}» доступна только виртуаль�
 msgid "Unable to attach subscription for the product ''{0}'': {1}."
 msgstr "Не удалось назначить подписку продукту «{0}»: {1}"
 
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ypoyarko
-#: src/main/java/org/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java:145
-msgid "Standalone candlepin does not support redeeming a subscription."
-msgstr "Автономный candlepin не поддерживает получение подписок."
+#: src/main/java/org/candlepin/model/EntitlementCurator.java:269
+#, java-format
+msgid "No product found for product ID {0}"
+msgstr "Продукт с ID {0} не найден."
 
-#: src/main/java/org/candlepin/service/impl/DefaultEntitlementCertServiceAdapter.java:276
+#: src/main/java/org/candlepin/model/ProductCurator.java:139
+#, java-format
+msgid "The attribute ''{0}'' must be an integer value."
+msgstr "Атрибут «{0}» должен быть целым числом."
+
+#: src/main/java/org/candlepin/model/ProductCurator.java:146
+#: src/main/java/org/candlepin/model/ProductCurator.java:165
+#, java-format
+msgid "The attribute ''{0}'' must have a positive value."
+msgstr "Атрибут «{0}» должен быть положительным целым числом."
+
+#: src/main/java/org/candlepin/model/ProductCurator.java:158
+#, java-format
+msgid "The attribute ''{0}'' must be a long value."
+msgstr "Атрибут «{0}» должен содержать длинное значение."
+
+#: src/main/java/org/candlepin/model/ProductCurator.java:176
+#, java-format
+msgid "The attribute ''{0}'' must be a boolean value."
+msgstr "Атрибут «{0}» должен содержить логическое значение."
+
+#: src/main/java/org/candlepin/model/ProductCurator.java:185
 #, java-format
 msgid ""
-"Too many content sets for certificate {0}. A newer client may be available "
-"to address this problem. See kbase https://access.redhat.com/knowledge/"
-"node/129003 for more information."
+"You cannot create a circular reference for products that ''{0}'' relies on."
 msgstr ""
-"Слишком много наборов содержимого для сертификата {0}. Обновление клиента "
-"может решить эту проблему (см. https://access.redhat.com/knowledge/"
-"node/129003)."
+"Вы не можете создать циклическую ссылку для продуктов, от которых зависит "
+"«{0}»."
 
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ypoyarko
-#: src/main/java/org/candlepin/auth/interceptor/SecurityInterceptor.java:196
-msgid "Unable to verify request."
-msgstr "Не удалось подтвердить запрос."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ypoyarko
-#: src/main/java/org/candlepin/auth/interceptor/SecurityInterceptor.java:216
-msgid "Organization"
-msgstr "Организация"
-
-#: src/main/java/org/candlepin/auth/interceptor/SecurityInterceptor.java:222
+#: src/main/java/org/candlepin/model/ConsumerCurator.java:100
 #, java-format
-msgid "{0} with id {1} could not be found."
-msgstr "Не удалось найти {0} с ID {1}"
+msgid "Name of the unit must be shorter than {0} characters."
+msgstr "Имя группы не может превышать {0} знаков."
 
-#: src/main/java/org/candlepin/auth/interceptor/SecurityInterceptor.java:323
-#: src/main/java/org/candlepin/resteasy/interceptor/ConsumerAuth.java:55
-#, java-format
-msgid "Unit {0} has been deleted"
-msgstr "Группа {0} удалена."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/guice/I18nProvider.java:92
-#: src/main/java/org/candlepin/exceptions/mappers/BadRequestExceptionMapper.java:70
-msgid "Bad Request"
-msgstr "Недопустимый запрос"
-
-#: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:119
-#: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:155
-msgid "Invalid oauth unit or secret"
-msgstr "Недопустимая группа oauth или секрет"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ypoyarko
-#: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:123
-#, java-format
-msgid "OAuth problem encountered. Internal message is: {0}"
-msgstr "Ошибка OAuth: {0}"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ypoyarko
-#: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:129
-#, java-format
-msgid "OAuth error encountered. Internal message is: {0}"
-msgstr "Ошибка OAuth: {0}"
-
-#: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:160
-msgid "Error getting oauth unit key"
-msgstr "Ошибка при получении ключа OAuth"
-
-#: src/main/java/org/candlepin/resteasy/interceptor/PageRequestInterceptor.java:102
-msgid "offset and limit parameters must be positive integers"
-msgstr ""
-"Максимальное значение и смещение должны содержать целое положительное число."
-
-#: src/main/java/org/candlepin/resteasy/interceptor/PageRequestInterceptor.java:120
-msgid "the order parameter must be either 'ascending' or 'descending'"
-msgstr ""
-"параметр должен определять порядок сортировки (по возрастанию или убыванию)"
-
-#: src/main/java/org/candlepin/resteasy/interceptor/PageRequestInterceptor.java:129
-msgid "Expected a positive integer."
-msgstr "Необходимо указать целое число."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resteasy/interceptor/BasicAuth.java:71
-msgid "Invalid Credentials"
-msgstr "Недопустимые реквизиты"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resteasy/interceptor/BasicAuth.java:86
-msgid "Error contacting user service"
-msgstr "Ошибка обращения к службе пользователя"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/exceptions/mappers/CandlepinExceptionMapper.java:99
-#, java-format
-msgid "Runtime Error {0} at {1}.{2}:{3}"
-msgstr "Ошибка выполнения {0} в {1}.{2}:{3}"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/exceptions/mappers/BadRequestExceptionMapper.java:66
-#, java-format
-msgid "{0} is not a valid value for {1}"
-msgstr "{0} не является допустимым значением для {1}"
-
-#: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:85
-msgid "Unit type with id '"
-msgstr "Тип группы с ID "
-
-#: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:107
-#, java-format
-msgid "Problem creating unit type: {0}"
-msgstr "Не удалось создать тип {0}"
-
-#: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:128
-#, java-format
-msgid "Unit type with label {0} could not be found."
-msgstr "Не найден тип с меткой {0}"
-
-#: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:149
-#, java-format
-msgid "Unit type with id {0} could not be found."
-msgstr "Не найден тип с ID {0}"
-
-#: src/main/java/org/candlepin/resource/ProductResource.java:121
-#: src/main/java/org/candlepin/resource/ProductResource.java:140
-#: src/main/java/org/candlepin/resource/ProductResource.java:297
-#: src/main/java/org/candlepin/resource/ProductResource.java:372
-#, java-format
-msgid "Product with UUID ''{0}'' could not be found."
-msgstr "Не найден продукт с UUID {0}"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ypoyarko
-#: src/main/java/org/candlepin/resource/ProductResource.java:301
-#, java-format
-msgid "Product with UUID ''{0}'' cannot be deleted while subscriptions exist."
-msgstr "Продукт с UUID {0} не может быть удален, пока существуют подписки."
-
-#: src/main/java/org/candlepin/resource/ProductResource.java:356
-msgid "Must specify product ID."
-msgstr "Необходимо указать ID продукта."
-
-#: src/main/java/org/candlepin/resource/ContentResource.java:87
-#: src/main/java/org/candlepin/resource/ContentResource.java:122
-#, java-format
-msgid "Content with id {0} could not be found."
-msgstr "Не найдено содержимое с ID {0}"
-
-#: src/main/java/org/candlepin/resource/UserResource.java:141
-#, java-format
-msgid "User {0} does not exist"
-msgstr "Пользователь {0} не существует."
-
-#: src/main/java/org/candlepin/resource/UserResource.java:157
-#, java-format
-msgid "User {0} not found"
-msgstr "Пользователь {0} не найден."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ypoyarko
-#: src/main/java/org/candlepin/resource/EnvironmentResource.java:98
-#: src/main/java/org/candlepin/resource/EnvironmentResource.java:117
-#: src/main/java/org/candlepin/resource/EnvironmentResource.java:247
-#, java-format
-msgid "No such environment: {0}"
-msgstr "Окружение не существует: {0}"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ypoyarko
-#: src/main/java/org/candlepin/resource/EventResource.java:85
-#, java-format
-msgid "Event with ID ''{0}'' could not be found."
-msgstr "Не найдено событие с ID {0}"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ypoyarko
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:238
-#, java-format
-msgid "Organization with key: {0} was not found."
-msgstr "Не найдена организация с ключом {0}."
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:257
-#: src/main/java/org/candlepin/resource/OwnerResource.java:598
-msgid "Cannot specify other query parameters with consumer IDs."
-msgstr "ID клиента не должен использоваться с другими параметрами."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ypoyarko
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:338
-msgid "Insufficient permissions"
-msgstr "Недостаточно полномочий"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ypoyarko
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:344
-msgid "Must specify an org to register with activation keys."
-msgstr ""
-"Для регистрации с помощью ключей активации необходимо указать организацию."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ypoyarko
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:348
-msgid "Cannot specify username with activation keys."
-msgstr "Имя пользователя не должно указываться с ключами активации."
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:371
-msgid "A unit type of 'person' cannot be used with activation keys"
-msgstr "Тип «person» не может использоваться с ключами активации."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:376
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:386
-msgid "System name cannot contain most special characters."
-msgstr "Имя системы не должно содержать специальных символов."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ypoyarko
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:431
-msgid "Pool ID must be provided"
-msgstr "Требуется ID пула"
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:455
-#, java-format
-msgid "Problem creating unit {0}"
-msgstr "Не удалось создать {0}"
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:536
-msgid "System name cannot be null."
-msgstr "Имя системы не может быть пустым."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ypoyarko
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:543
-msgid "System name cannot begin with # character"
-msgstr "Имя системы не может начинаться с #."
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:558
-#: src/main/java/org/candlepin/resource/OwnerResource.java:846
-#, java-format
-msgid "Service level ''{0}'' is not available to units of organization {1}."
-msgstr "Уровень обслуживания «{0}» недоступен группам организации {1}."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ypoyarko
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:588
-#, java-format
-msgid "Activation key ''{0}'' not found for organization ''{1}''."
-msgstr "Не найден ключ активации «{0}»для организации «{1}»."
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:608
-#, java-format
-msgid "User with ID ''{0}'' could not be found."
-msgstr ""
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:615
-#, java-format
-msgid "User ''{0}'' has no roles for organization ''{1}''"
-msgstr ""
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:627
-#, java-format
-msgid "User ''{0}'' has already registered a personal consumer"
-msgstr ""
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:644
-msgid "You must specify an organization for new units."
-msgstr "Для новых групп необходимо выбрать организацию."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ypoyarko
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:655
-#, java-format
-msgid "Organization {0} does not exist."
-msgstr "Организация {0} не существует."
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:663
-#, java-format
-msgid "User ''{0}'' cannot access organization ''{1}''."
-msgstr ""
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:725
-#, java-format
-msgid "Unit type ''{0}'' could not be found."
-msgstr ""
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:811
-#, java-format
-msgid "Environment with ID ''{0}'' could not be found."
-msgstr ""
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1121
-#, java-format
-msgid "Cannot unregister {0} {1} because: {2}"
-msgstr "Не удалось удалить регистрацию {0} {1}. Причина: {2}"
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1208
-msgid "Unable to create entitlement certificate archive"
-msgstr "Не удалось создать архив сертификатов"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ypoyarko
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1319
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1330
-msgid "Cannot bind by multiple parameters."
-msgstr "Нельзя привязать несколько параметров."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ypoyarko
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1324
-msgid "Cannot specify a quantity when auto-binding."
-msgstr "Не разрешается указывать количество при автоматической привязке."
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1397
-#, java-format
-msgid "Unable to attach a subscription for a product that has no pool: {0} "
-msgstr "Невозможно назначить подписку продукту, который не входит в пул: {0}."
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1463
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1552
-#: src/main/java/org/candlepin/resource/EntitlementResource.java:141
-#, java-format
-msgid "Unit with ID ''{0}'' could not be found."
-msgstr ""
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ypoyarko
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1473
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1589
-#: src/main/java/org/candlepin/resource/EntitlementResource.java:174
-#: src/main/java/org/candlepin/resource/EntitlementResource.java:209
-#: src/main/java/org/candlepin/resource/EntitlementResource.java:233
-#: src/main/java/org/candlepin/resource/EntitlementResource.java:259
-#, java-format
-msgid "Entitlement with ID ''{0}'' could not be found."
-msgstr "Не найдено полномочие с ID «{0}»."
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1499
-#, java-format
-msgid "Product with ID ''{0}'' could not be found."
-msgstr ""
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1612
-#, java-format
-msgid "Entitlement Certificate with serial number ''{0}'' could not be found."
-msgstr ""
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1675
+#: src/main/java/org/candlepin/model/ConsumerCurator.java:332
 #, java-format
 msgid ""
-"Unit {0} cannot be exported. A manifest cannot be made for units of type "
-"''{1}''."
+"The fact ''{0}'' must be an integer instead of ''{1}''. No value will exist "
+"for that fact."
 msgstr ""
-"Невозможно выполнить экспорт группы {0}. Нельзя создать манифест для групп "
-"типа «{1}»."
+"Атрибут «{0}» должен содержать целое число, а не «{1}». Он будет оставлен "
+"пустым."
 
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1693
-msgid "Unable to create export archive"
-msgstr "Не удалось создать архив для экспорта"
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1765
-#, java-format
-msgid "Problem regenerating ID cert for unit {0}"
-msgstr "Ошибка при повторной генерации сертификата ID для {0}"
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1804
-#, java-format
-msgid "The system with UUID {0} is not a virtual guest."
-msgstr "Система с UUID {0} не является виртуальным гостем."
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1908
-#, java-format
-msgid "Deletion record for hypervisor ''{0}'' not found."
-msgstr ""
-
-#: src/main/java/org/candlepin/resource/DistributorVersionResource.java:104
-#, java-format
-msgid "A distributor version with name {0} already exists"
-msgstr ""
-
-#: src/main/java/org/candlepin/resource/DistributorVersionResource.java:132
-#, java-format
-msgid "No such distributor version: {0}"
-msgstr "Нет версии дистрибьютора: {0}"
-
-#: src/main/java/org/candlepin/resource/OwnerResource.java:260
-#, java-format
-msgid "Could not create the Owner: {0}. Parent {1} does not exist."
-msgstr "Не удалось создать владельца {0}. {1} не существует."
-
-#: src/main/java/org/candlepin/resource/OwnerResource.java:272
-#, java-format
-msgid "Could not create the Owner: {0}"
-msgstr "Не удалось создать владельца: {0}"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ypoyarko
-#: src/main/java/org/candlepin/resource/OwnerResource.java:492
-msgid "Must provide a name for activation key."
-msgstr "Необходимо указать имя ключа активации."
-
-#: src/main/java/org/candlepin/resource/OwnerResource.java:499
+#: src/main/java/org/candlepin/model/ConsumerCurator.java:341
 #, java-format
 msgid ""
-"The activation key name ''{0}'' must be alphanumeric or include the "
-"characters '-' or '_'"
-msgstr "Имя ключа «{0}» может содержать буквы, цифры, знаки «-» и «_»."
-
-#: src/main/java/org/candlepin/resource/OwnerResource.java:506
-#, java-format
-msgid "The activation key name ''{0}'' is already in use for owner {1}"
-msgstr "Имя ключа активации «{0}» уже используется владельцем {1}."
-
-#: src/main/java/org/candlepin/resource/OwnerResource.java:650
-#: src/main/java/org/candlepin/resource/PoolResource.java:140
-#, java-format
-msgid "Unit: {0} not found"
-msgstr "Группа {0} не найдена"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ypoyarko
-#: src/main/java/org/candlepin/resource/OwnerResource.java:660
-#: src/main/java/org/candlepin/resource/PoolResource.java:216
-#, java-format
-msgid "User {0} cannot access consumer {1}"
-msgstr "У {0} нет доступа к клиенту {1}"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/OwnerResource.java:773
-#: src/main/java/org/candlepin/resource/OwnerResource.java:878
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1083
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1113
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1142
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1168
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1207
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1239
-#, java-format
-msgid "owner with key: {0} was not found."
-msgstr "не найден пользователь с ключом {0}"
-
-#: src/main/java/org/candlepin/resource/OwnerResource.java:783
-#: src/main/java/org/candlepin/resource/SubscriptionResource.java:152
-#, java-format
-msgid "No such unit: {0}"
-msgstr "Нет такой группы: {0}"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/OwnerResource.java:897
-#, java-format
-msgid "subscription with id: {0} not found."
-msgstr "Подписка с ID {0} не найдена"
-
-#: src/main/java/org/candlepin/resource/OwnerResource.java:997
-msgid "Unknown conflict to force"
-msgstr "Неизвестный конфликт"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1026
-msgid "Error reading export archive"
-msgstr "Ошибка чтения экспортируемого архива"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ypoyarko
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1189
-#, java-format
-msgid "Problem generating ueber cert for owner {0}"
-msgstr "Не удалось создать сертификат для владельца {0}"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ypoyarko
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1215
-#, java-format
-msgid "ueber certificate for owner {0} was not found. Please generate one."
-msgstr "Не найден сертификат для пользователя {0}. Необходимо его создать."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ypoyarko
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1267
-#, java-format
-msgid "{0} file imported successfully."
-msgstr "импорт файла {0} завершен."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1269
-#, java-format
-msgid "{0} file imported forcibly"
-msgstr "Файл {0} импортирован принудительно."
-
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1301
-#, java-format
-msgid "Subscriptions deleted by {0}"
-msgstr "{0} удалил подписки"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ypoyarko
-#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:132
-msgid "The quantity must be greater than 0"
-msgstr "Количество должно превышать 0."
-
-#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:142
-msgid ""
-"Cannot add pools that are restricted to unit type 'person' to activation "
-"keys."
-msgstr "Не удалось добавить пулы для типа «person» в ключ активации."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ypoyarko
-#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:149
-msgid ""
-"Error: Only pools with multi-entitlement product subscriptions can be added "
-"to the activation key with a quantity greater than one."
+"The fact ''{0}'' must have a positive integer value instead of ''{1}''. No "
+"value will exist for that fact."
 msgstr ""
-"Ошибка. К ключу активации можно добавить только пулы с многократными "
-"полномочиями подписок."
+"Атрибут «{0}» должен быть положительным целым числом, а не «{1}». Он будет "
+"оставлен пустым."
 
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ypoyarko
-#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:156
-msgid "The quantity must not be greater than the total allowed for the pool"
-msgstr "Количество не может превышать максимально допустимое число для пула"
-
-#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:163
-msgid "Activation keys can only use host restricted pools from a single host."
-msgstr "Ключи активации должны использовать пулы в пределах одного хоста."
-
-#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:224
+#: src/main/java/org/candlepin/model/ConsumerCurator.java:411
 #, java-format
-msgid "ActivationKey with id {0} could not be found."
-msgstr "Не найден ключ активации с ID {0}"
-
-#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:235
-#, java-format
-msgid "Pool with id {0} could not be found."
-msgstr "Не найден пул {0}."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ypoyarko
-#: src/main/java/org/candlepin/resource/MigrationResource.java:64
-msgid "Bad entity value."
-msgstr "Недопустимый идентификатор."
-
-#: src/main/java/org/candlepin/resource/PoolResource.java:123
-msgid "Cannot filter on both owner and unit"
-msgstr "Не разрешается фильтровать по владельцу и группам"
-
-#: src/main/java/org/candlepin/resource/PoolResource.java:127
-msgid "A unit or owner is needed to filter on product"
-msgstr "Для выбора по продукту необходимо указать группу или владельца"
-
-#: src/main/java/org/candlepin/resource/PoolResource.java:146
-#, java-format
-msgid "User {0} cannot access unit {1}"
-msgstr "Пользователь {0} не имеет доступа к {1}"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/PoolResource.java:157
-#, java-format
-msgid "owner: {0}"
-msgstr "владелец: {0}"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ypoyarko
-#: src/main/java/org/candlepin/resource/PoolResource.java:161
-#: src/main/java/org/candlepin/resource/PoolResource.java:296
-#, java-format
-msgid "User {0} cannot access owner {1}"
-msgstr "Пользователь {0} не имеет доступа к владельцу {1}"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ypoyarko
-#: src/main/java/org/candlepin/resource/PoolResource.java:170
-#, java-format
-msgid "User {0} cannot access all pools."
-msgstr "Пользователь {0} не имеет доступа ко всем пулам."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ypoyarko
-#: src/main/java/org/candlepin/resource/PoolResource.java:211
-#, java-format
-msgid "consumer: {0} not found"
-msgstr "клиент {0} не найден"
-
-#: src/main/java/org/candlepin/resource/PoolResource.java:228
-#: src/main/java/org/candlepin/resource/PoolResource.java:286
-#, java-format
-msgid "Subscription Pool with ID ''{0}'' could not be found."
-msgstr "Не найден пул подписок с ID «{0}»."
-
-#: src/main/java/org/candlepin/resource/PoolResource.java:245
-#, java-format
-msgid "Entitlement Pool with ID ''{0}'' could not be found."
-msgstr "Не найден пул полномочий с ID {0}."
-
-#: src/main/java/org/candlepin/resource/EntitlementResource.java:91
-#, java-format
-msgid "Object with ID ''{0}'' could not found."
-msgstr ""
-
-#: src/main/java/org/candlepin/resource/EntitlementResource.java:119
-#, java-format
-msgid "Unit ''{0}'' has no subscription for product ''{1}''."
-msgstr ""
-
-#: src/main/java/org/candlepin/resource/EntitlementResource.java:194
-msgid "Quantity value must be greater than 0."
-msgstr ""
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ypoyarko
-#: src/main/java/org/candlepin/resource/RoleResource.java:82
-#, java-format
-msgid "No such owner: {0}"
-msgstr "Владелец {0} не существует."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ypoyarko
-#: src/main/java/org/candlepin/resource/RoleResource.java:112
-msgid "Role ID does not match path."
-msgstr "ID роли не соответствует пути."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ypoyarko
-#: src/main/java/org/candlepin/resource/RoleResource.java:138
-msgid "Access type NONE not supported."
-msgstr "Тип доступа \"NONE\" не поддерживается."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ypoyarko
-#: src/main/java/org/candlepin/resource/RoleResource.java:177
-#, java-format
-msgid "No such permission: {0} in role: {1}"
-msgstr "Нет разрешения {0} для роли {1}"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ypoyarko
-#: src/main/java/org/candlepin/resource/RoleResource.java:191
-#, java-format
-msgid "No such role: {0}"
-msgstr "Роль {0} не существует."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ypoyarko
-#: src/main/java/org/candlepin/resource/RoleResource.java:199
-#, java-format
-msgid "No such user: {0}"
-msgstr "Пользователь {0} не существует."
-
-#: src/main/java/org/candlepin/resource/JobResource.java:110
-msgid ""
-"You must specify exactly one of owner key, unit UUID, or principal name."
-msgstr "Необходимо указать ключ владельца, UUID группы или имя субъекта."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ypoyarko
-#: src/main/java/org/candlepin/resource/JobResource.java:169
-msgid "Error setting scheduler status"
-msgstr "Ошибка при установке статуса планировщика"
-
-#: src/main/java/org/candlepin/resource/JobResource.java:197
-msgid "job already canceled"
-msgstr "задание уже отменено"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ypoyarko
-#: src/main/java/org/candlepin/resource/JobResource.java:200
-msgid "cannot cancel a job that is not in CREATED state"
-msgstr "нельзя отменить задание, если оно не в состоянии CREATED"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ypoyarko
-#: src/main/java/org/candlepin/resource/StatisticResource.java:61
-msgid "couldn't generate statistics"
-msgstr "ошибка генерации статистики"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/RulesResource.java:85
-msgid "Error decoding the rules. The text should be base 64 encoded"
-msgstr "Не удалось расшифровать правила: требуется кодировка Base64"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/RulesResource.java:111
-msgid "couldn't read rules file"
-msgstr "ошибка чтения файла правил"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ypoyarko
-#: src/main/java/org/candlepin/resource/SubscriptionResource.java:122
-#, java-format
-msgid "no certificate for subscription {0}"
-msgstr "нет сертификата для подписки {0}"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ypoyarko
-#: src/main/java/org/candlepin/resource/SubscriptionResource.java:141
-msgid "email is required for notification"
-msgstr "Необходимо указать адрес для получения уведомлений."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ypoyarko
-#: src/main/java/org/candlepin/resource/SubscriptionResource.java:146
-msgid "email locale is required for notification"
-msgstr "Необходимо выбрать язык почтовых уведомлений."
-
-#: src/main/java/org/candlepin/resource/SubscriptionResource.java:182
-#, java-format
-msgid "Subscription with id {0} could not be found."
-msgstr "Не найдена подписка с ID {0}"
-
-#: src/main/java/org/candlepin/resource/HypervisorResource.java:102
-#, java-format
-msgid "Hypervisor {0} has been deleted previously"
-msgstr "Клиент {0} уже был удален."
-
-#: src/main/java/org/candlepin/sync/ConsumerImporter.java:59
-msgid "No ID for upstream subscription management application."
-msgstr "Нет идентификатора программы управления подписками."
-
-#: src/main/java/org/candlepin/sync/ConsumerImporter.java:74
-msgid ""
-"This subscription management application has already been imported by "
-"another owner."
-msgstr "Программа управления подписками уже импортирована другим владельцем."
-
-#: src/main/java/org/candlepin/sync/ConsumerImporter.java:82
-msgid ""
-"Owner has already imported from another subscription management application."
-msgstr ""
-"Владелец уже выполнил импорт из другой программы управления подписками. "
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ypoyarko
-#: src/main/java/org/candlepin/sync/EntitlementImporter.java:139
-msgid "Unable to find product with ID: "
-msgstr "Не найден продукт с ID:"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/sync/Importer.java:171
-msgid "Wrong metadata type"
-msgstr "Неверный тип метаданных"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/sync/Importer.java:180
-msgid "Invalid owner"
-msgstr "Недопустимый владелец"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/sync/Importer.java:194
-msgid "Import is older than existing data"
-msgstr "Импортируемые данные старее существующих"
-
-#: src/main/java/org/candlepin/sync/Importer.java:204
-msgid "Import is the same as existing data"
-msgstr "Импортируемые данные не отличаются от существующих"
-
-#: src/main/java/org/candlepin/sync/Importer.java:229
-msgid "The archive does not contain the required signature file"
-msgstr "Архив не содержит обязательный файл подписи"
-
-#: src/main/java/org/candlepin/sync/Importer.java:249
-msgid "Archive failed signature check"
-msgstr "Архив не прошел проверку подписи"
-
-#: src/main/java/org/candlepin/sync/Importer.java:263
-msgid "The consumer_export archive has no contents"
-msgstr "Пустой архив consumer_export"
-
-#: src/main/java/org/candlepin/sync/Importer.java:283
-msgid "The archive does not contain the required consumer_export.zip file"
-msgstr "Архив не содержит обязательный файл consumer_export.zip"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ypoyarko
-#: src/main/java/org/candlepin/sync/Importer.java:288
-#: src/main/java/org/candlepin/sync/Importer.java:293
-msgid "Failed to import archive"
-msgstr "Ошибка импорта архива"
-
-#: src/main/java/org/candlepin/sync/Importer.java:299
-msgid "Unable to extract export archive"
-msgstr "Не удалось извлечь архив"
-
-#: src/main/java/org/candlepin/sync/Importer.java:304
-msgid "Certificate exception checking archive signature"
-msgstr "Исключение сертификата при проверке подписи архива"
-
-#: src/main/java/org/candlepin/sync/Importer.java:335
-msgid "The archive does not contain the required meta.json file"
-msgstr "Архив не содержит обязательный файл meta.json"
-
-#: src/main/java/org/candlepin/sync/Importer.java:340
-msgid "The archive does not contain the required consumer_types directory"
-msgstr "Архив не содержит обязательный каталог consumer_types."
-
-#: src/main/java/org/candlepin/sync/Importer.java:345
-msgid "The archive does not contain the required consumer.json file"
-msgstr "Архив не содержит обязательный файл consumer.json"
-
-#: src/main/java/org/candlepin/sync/Importer.java:351
-msgid "The archive does not contain the required entitlements directory"
-msgstr "Архив не содержит каталог полномочий"
-
-#: src/main/java/org/candlepin/sync/Importer.java:610
-#, java-format
-msgid "The archive {0} is not a properly compressed file or is empty"
-msgstr "Недопустимый формат архива {0} или пустой архив."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ypoyarko
-#~ msgid "User {0} has no roles for organization {1}"
-#~ msgstr "Для пользователя {0} не определены роли в организации {1}."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#~ msgid "User {0} has already registered a personal consumer"
-#~ msgstr "{0} уже зарегистрирован как частный пользователь"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ypoyarko
-#~ msgid "User {0} cannot access organization {1}"
-#~ msgstr "У пользователя {0} нет доступа к организации {1}."
-
-#~ msgid "No such subscription: {0}"
-#~ msgstr "Нет подписки: {0}"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#~ msgid "No such product: {0}"
-#~ msgstr "Нет продукта: {0}"
-
-#~ msgid "Unit with ID "
-#~ msgstr "Группа с ID"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#~ msgid "Entitlement Certificate with serial number {0} could not be found."
-#~ msgstr "Не найден сертификат полномочий с номером {0}."
-
-#~ msgid "Unit: {0} has no subscription for product {1}"
-#~ msgstr "Группа {0} не подписана на продукт {1}"
-
-#~ msgid "Quantity value must be greater than 0"
-#~ msgstr "Количество должно превышать 0."
-
-#~ msgid "Subscription with ID ''{0}'' could not be found."
-#~ msgstr "Подписка с ID «{0}» не найдена."
+msgid "The system with UUID {0} is a virtual guest. It does not have guests."
+msgstr "Система с UUID {0} является виртуальным гостем. У нее нет гостей."

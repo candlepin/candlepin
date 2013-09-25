@@ -7,7 +7,7 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
 
-    <changeSet id="20130904120007" author="dgoodwin">
+    <changeSet id="20130904120007" author="dgoodwin" dbms="oracle,postgresql">
         <comment>Drop duplicated start/end dates on entitlement, use the pool.</comment>
         <dropColumn tableName="cp_entitlement" columnName="startdate"/>
         <dropColumn tableName="cp_entitlement" columnName="enddate"/>

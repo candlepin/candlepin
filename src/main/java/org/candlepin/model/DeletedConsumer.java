@@ -14,7 +14,6 @@
  */
 package org.candlepin.model;
 
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.Column;
@@ -33,7 +32,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_deleted_consumers")
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class DeletedConsumer extends AbstractHibernateObject {
 
     @Id
