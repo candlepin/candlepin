@@ -140,12 +140,16 @@ module ErbRenderer
       @erb ||= ErbRenderer::Config.new(project)
     end
 
-    #TODO use a Rake rule to handle the erb files more generically?
-    #See Buildr's TestTask in buildr/core/test.rb
-    after_define do |project|
-      if project.erb.enabled?
-        desc "Render ERB files"
-        project.task('erb') do |task|
+    first_time do
+      desc "Render ERB files"
+      Project.local_task('erb')
+    end
+
+    before_define do |project|
+      task('erb') do |task|
+        if task.prerequisites.empty?
+          warn("No ERB directory given!")
+        else
           # Load YAML at beginning so if the file is malformed, we'll just abort.
           if File.exist?(project.erb.yaml)
             yaml = YAML.load_file(project.erb.yaml)
@@ -153,14 +157,22 @@ module ErbRenderer
             yaml = {}
           end
 
+          files = task.prerequisites.map do |path|
+            Dir.glob(File.join(path, '**', '*.erb'))
+          end
+          files.flatten!
+
           mkdir_p(project.erb.output_dir)
-          files = FileList[File.join(project.erb.erb_directory, '*.erb')]
           files.each do |file|
             puts "Rendering #{File.basename(file)} ..."
             ErbRenderer.render(yaml, file, project)
           end
         end
       end
+    end
+
+    after_define do |project|
+      task('erb' => project.erb.erb_directory) if project.erb.enabled?
     end
   end
 end
