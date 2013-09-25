@@ -54,13 +54,16 @@ describe 'Candlepin Import', :serial => true do
     o.upstreamConsumer.uuid.should == @cp_export.candlepin_client.uuid
   end
 
-  it "originating information should be populated in the import" do
+  it "originating information should be populated in the import record" do
     @import_owner_client.list_imports(@import_owner['key']).find_all do |import|
       consumer = @candlepin_consumer
       import['generatedBy'].should == consumer['name']
       import['generatedDate'].should_not be_nil
       import['upstreamId'].should == consumer['uuid']
       import['fileName'].should == @cp_export_file.split("/").last
+      import['upstreamConsumer']['uuid'].should == consumer['uuid']
+      import['upstreamConsumer']['name'].should == consumer['name']
+      import['upstreamConsumer']['ownerId'].should == @import_owner.id
     end
   end
 

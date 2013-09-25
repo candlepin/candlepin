@@ -19,6 +19,7 @@ import org.hibernate.annotations.GenericGenerator;
 import java.io.Serializable;
 import java.util.Date;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -61,14 +62,19 @@ public class ImportRecord extends AbstractHibernateObject {
 
     private Status status;
     private String statusMessage;
+
     @Column(name = "file_name", nullable = true)
     private String fileName;
+
     @Column(name = "generated_by", nullable = true)
     private String generatedBy;
+
     @Column(name = "generated_date", nullable = true)
     private Date generatedDate;
-    @Column(name = "upstream_id", nullable = true)
-    private String upstreamId;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "upstream_id")
+    private ImportUpstreamConsumer upstreamConsumer;
 
     @SuppressWarnings("unused")
     private ImportRecord() {
@@ -137,11 +143,11 @@ public class ImportRecord extends AbstractHibernateObject {
         this.generatedDate = generatedDate;
     }
 
-    public String getUpstreamId() {
-        return upstreamId;
+    public ImportUpstreamConsumer getUpstreamConsumer() {
+        return upstreamConsumer;
     }
 
-    public void setUpstreamId(String upstreamId) {
-        this.upstreamId = upstreamId;
+    public void setUpstreamConsumer(ImportUpstreamConsumer upstreamConsumer) {
+        this.upstreamConsumer = upstreamConsumer;
     }
 }
