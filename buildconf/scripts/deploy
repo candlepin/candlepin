@@ -10,11 +10,8 @@ function evalrc ()
 
 function recreate_mysql()
 {
-    if [ $(mysql --user=root mysql --execute="SELECT 1 FROM mysql.user WHERE user = '$DBUSER'" | wc -l) -eq 0 ]; then
-        mysql --user=root mysql --execute="CREATE USER '$DBUSER'@'localhost'; GRANT ALL PRIVILEGES on $DBUSER.* TO '$DBUSER'@'localhost' WITH GRANT OPTION"
-    fi
-    mysqladmin --user="$DBUSER" --force drop candlepin
-    mysqladmin --user="$DBUSER" create candlepin
+    mysqladmin --user="$DBUSER" --password="$DBPASSWORD" --force drop candlepin
+    mysqladmin --user="$DBUSER" --password="$DBPASSWORD" create candlepin
     evalrc $? "mysqladmin create failed"
 }
 
