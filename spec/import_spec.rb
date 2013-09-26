@@ -59,7 +59,6 @@ describe 'Candlepin Import', :serial => true do
       consumer = @candlepin_consumer
       import['generatedBy'].should == consumer['name']
       import['generatedDate'].should_not be_nil
-      import['upstreamId'].should == consumer['uuid']
       import['fileName'].should == @cp_export_file.split("/").last
       import['upstreamConsumer']['uuid'].should == consumer['uuid']
       import['upstreamConsumer']['name'].should == consumer['name']
