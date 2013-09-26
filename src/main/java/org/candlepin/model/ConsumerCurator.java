@@ -28,7 +28,6 @@ import org.hibernate.Query;
 import org.hibernate.ReplicationMode;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
-import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -49,7 +48,6 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     @Inject private ConsumerTypeCurator consumerTypeCurator;
     @Inject private DeletedConsumerCurator deletedConsumerCurator;
     @Inject private Config config;
-    @Inject private I18n i18n;
     private static final int NAME_LENGTH = 250;
     private static Logger log = Logger.getLogger(ConsumerCurator.class);
 
