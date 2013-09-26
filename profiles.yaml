@@ -1,0 +1,35 @@
+# the ampersand and name create an alias to an item
+# the "<<" is used to merge two hashes together and the asterisk plus a name dereferences an alias
+# See http://viewsourcecode.org/why/redhanded/bits/yamlSMergeKey.html
+
+common: &common
+  username: "candlepin"
+  password: ""
+  logdriver_class: "net.rkbloom.logdriver.LogDriver"
+
+postgresql: &default
+  <<: *common
+  driver_class: "org.postgresql.Driver"
+  jdbc_url: "jdbc:postgresql:candlepin"
+  dialect: "org.hibernate.dialect.PostgreSQLDialect"
+  quartz_driver: "org.quartz.impl.jdbcjobstore.PostgreSQLDelegate"
+
+# Buildr's default environment is "development" so
+# by default, go against postgresql.
+development:
+  <<: *default
+
+oracle:
+  <<: *common
+  driver_class: "oracle.jdbc.OracleDriver"
+  jdbc_url: "jdbc:oracle:thin:@//localhost:1521/XE"
+  password: "candlepin"
+  dialect: "org.hibernate.dialect.Oracle10gDialect"
+  quartz_driver: "org.quartz.impl.jdbcjobstore.oracle.OracleDelegate"
+
+mysql:
+  <<: *common
+  driver_class: "com.mysql.jdbc.Driver"
+  jdbc_url: "jdbc:mysql:///candlepin"
+  dialect: "org.hibernate.dialect.MySQL5InnoDBDialect"
+  quartz_driver: "org.quartz.impl.jdbcjobstore.StdJDBCDelegate"
