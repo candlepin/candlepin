@@ -1362,8 +1362,13 @@ public class ConsumerResource {
         if (poolIdString != null && quantity == null) {
             Pool pool = poolManager.find(poolIdString);
             if (pool != null) {
+                Date now = new Date();
+                // If the pool is being attached in the future, calculate
+                // suggested quantity on the start date
+                Date onDate = now.before(pool.getStartDate()) ?
+                    pool.getStartDate() : now;
                 quantity = Math.max(1, quantityRules.getSuggestedQuantity(pool,
-                    consumer, new Date()).getSuggested().intValue());
+                    consumer, onDate).getSuggested().intValue());
             }
             else {
                 quantity = 1;
