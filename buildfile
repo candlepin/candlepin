@@ -41,7 +41,7 @@ SUN_JAXB = 'com.sun.xml.bind:jaxb-impl:jar:2.1.12'
 JUNIT = ['junit:junit:jar:4.5', 'org.mockito:mockito-all:jar:1.8.5']
 LOG4J = 'log4j:log4j:jar:1.2.14'
 HIBERNATE = ['org.hibernate:hibernate-core:jar:4.2.5.Final',
-             'org.hibernate.common:hibernate-commons-annotations:jar:4.0.1.Final',
+             'org.hibernate.common:hibernate-commons-annotations:jar:4.0.2.Final',
              'org.hibernate:hibernate-entitymanager:jar:4.2.5.Final',
              'org.hibernate:hibernate-tools:jar:3.2.4.GA',
              # hibernate-validator required for hibernate-tools
