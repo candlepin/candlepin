@@ -35,6 +35,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductPoolAttribute;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Subscription;
+import org.candlepin.model.Pool.PoolType;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
@@ -307,5 +308,20 @@ public class PoolTest extends DatabaseTestFixture {
         Pool pool2 = poolCurator.find(pool.getId());
         assertTrue(pool2.getConsumed() == 5);
         assertTrue(pool2.getEntitlements().size() == 1);
+    }
+
+    @Test
+    public void testPoolType() {
+        assertEquals(PoolType.NORMAL, pool.getType());
+
+        pool.setAttribute("pool_derived", "true");
+        assertEquals(PoolType.BONUS, pool.getType());
+
+        pool.setSourceEntitlement(new Entitlement());
+        assertEquals(PoolType.ENTITLEMENT_DERIVED, pool.getType());
+
+        pool.setSourceEntitlement(null);
+        pool.setSourceStackId("something");
+        assertEquals(PoolType.STACK_DERIVED, pool.getType());
     }
 }

@@ -62,6 +62,32 @@ import javax.xml.bind.annotation.XmlTransient;
 @JsonFilter("PoolFilter")
 public class Pool extends AbstractHibernateObject implements Persisted, Owned {
 
+    /**
+     * PoolType
+     *
+     * Pools can have be of several major types which can radically alter how they
+     * behave.
+     *
+     * NORMAL - A regular pool. Usually created 1-1 with a subscription.
+     *
+     * ENTITLEMENT_DERIVED - A pool created as the result of a consumer's use of an
+     * entitlement. Will be cleaned up when the source entitlement is revoked.
+     *
+     * STACK_DERIVED - A pool created as a result of the consumer's use of a stack of
+     * entitlements. Will be cleaned up when the last entitlement in the stack is revoked.
+     * This type of pool can have certain fields change as a result of adding or removing
+     * entitlements to the stack.
+     *
+     * BONUS - A virt-only pool created only in hosted environments when a subscription
+     * has a virt_limit attribute but no host_limited attribute.
+     */
+    public enum PoolType {
+        NORMAL,
+        ENTITLEMENT_DERIVED,
+        STACK_DERIVED,
+        BONUS
+    }
+
     @Id
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
@@ -774,5 +800,35 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
 
     public void setSourceConsumer(Consumer sourceConsumer) {
         this.sourceConsumer = sourceConsumer;
+    }
+
+    /**
+     * There are a number of radically different types of pools. This field is
+     * a quick indicator of what type of pool you are looking at.
+     * See PoolType comments for descriptions of types.
+     *
+     * @return pool type
+     */
+    public PoolType getType() {
+        if (hasAttribute("pool_derived")) {
+            if (getSourceEntitlement() != null) {
+                return PoolType.ENTITLEMENT_DERIVED;
+            }
+            else if (getSourceStackId() != null) {
+                return PoolType.STACK_DERIVED;
+            }
+            else {
+                return PoolType.BONUS;
+            }
+        }
+        return PoolType.NORMAL;
+    }
+
+    public boolean isStacked() {
+        return hasProductAttribute("stacking_id");
+    }
+
+    public String getStackId() {
+        return getProductAttributeValue("stacking_id");
     }
 }
