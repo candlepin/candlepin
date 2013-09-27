@@ -14,33 +14,33 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.jackson.HateoasArrayExclude;
-import org.candlepin.jackson.HateoasInclude;
-import org.codehaus.jackson.map.annotate.JsonFilter;
-import org.hibernate.annotations.ForeignKey;
-import org.hibernate.annotations.GenericGenerator;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.candlepin.jackson.HateoasInclude;
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+import org.codehaus.jackson.map.annotate.JsonFilter;
+import org.hibernate.annotations.ForeignKey;
+import org.hibernate.annotations.GenericGenerator;
+
 /**
- * UpstreamConsumer
+ * ImportUpstreamConsumer
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "cp_upstream_consumer")
+@Table(name = "cp_import_upstream_consumer")
+@JsonIgnoreProperties(ignoreUnknown = true)
 @JsonFilter("ApiHateoas")
-public class UpstreamConsumer extends AbstractHibernateObject {
+public class ImportUpstreamConsumer extends AbstractHibernateObject {
 
     @Id
     @GeneratedValue(generator = "system-uuid")
@@ -54,16 +54,12 @@ public class UpstreamConsumer extends AbstractHibernateObject {
     @Column(nullable = false)
     private String name;
 
-    @OneToOne
-    @JoinColumn(name = "consumer_idcert_id")
-    private IdentityCertificate idCert;
-
     @ManyToOne
     @JoinColumn(nullable = false)
-    @ForeignKey(name = "fk_upstream_consumer_type")
+    @ForeignKey(name = "fk_import_upstream_cnsmr_type")
     private ConsumerType type;
 
-    @Column(name = "owner_id", length = 32, nullable = false)
+    @Column(nullable = false, name = "owner_id")
     private String ownerId;
 
     @Column(length = 255, name = "prefix_url_web")
@@ -72,26 +68,8 @@ public class UpstreamConsumer extends AbstractHibernateObject {
     @Column(length = 255, name = "prefix_url_api")
     private String prefixUrlApi;
 
-    public UpstreamConsumer(String name, Owner owner, ConsumerType type, String uuid) {
-        if (uuid == null) {
-            throw new IllegalArgumentException("uuid is null");
-        }
-
-        this.name = name;
-        if (owner != null) {
-            this.ownerId = owner.getId();
-        }
-        this.type = type;
-        this.uuid = uuid;
-    }
-
-    public UpstreamConsumer(String uuid) {
-        this(null, null, null, uuid);
-    }
-
-    public UpstreamConsumer() {
+    public ImportUpstreamConsumer() {
         // needed for Hibernate
-        this("");
     }
 
     /**
@@ -125,17 +103,8 @@ public class UpstreamConsumer extends AbstractHibernateObject {
         this.id = id;
     }
 
-    @HateoasArrayExclude
-    public IdentityCertificate getIdCert() {
-        return idCert;
-    }
-
-    public void setIdCert(IdentityCertificate idCert) {
-        this.idCert = idCert;
-    }
-
     /**
-     * @return the name of this consumer.
+     * @return the name of the consumer.
      */
     @HateoasInclude
     public String getName() {
@@ -143,7 +112,7 @@ public class UpstreamConsumer extends AbstractHibernateObject {
     }
 
     /**
-     * @param name the name of this consumer.
+     * @param name the name of the consumer.
      */
     public void setName(String name) {
         this.name = name;

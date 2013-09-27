@@ -58,7 +58,7 @@ describe 'Healing' do
     future_iso8601 = (Time.now + (60 * 60 * 24 * 35)).utc.iso8601 # a string
     pool = find_pool(@owner['id'], future_sub['id'], future_iso8601)
 
-    ent = @consumer_cp.consume_pool(pool['id'])
+    ent = @consumer_cp.consume_pool(pool['id'], {:quantity => 1})
 
     current_pool = find_pool(@owner['id'], current_sub['id'])
 

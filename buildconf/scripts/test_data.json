@@ -641,13 +641,13 @@
             "type": "MKT",
             "version": "0.1",
             "arch": "x86_64,x86,s390x,ppc64,ia64,arm",
+            "skip_subs" : "true",
             "attributes": {
                 "sockets": 2,
                 "cores": 4,
                 "ram": 2,
                 "support_level": "Full-Service",
-                "support_type": "Drive-Through",
-                "skip_subs" : "true"
+                "support_type": "Drive-Through"
             }
         },
         {
@@ -1317,6 +1317,7 @@
         {
             "name": "Shared File System",
             "id": "sfs",
+            "type": "MKT",
             "provided_products": [
                 "88888"
             ],

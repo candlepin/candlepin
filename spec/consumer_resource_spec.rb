@@ -25,7 +25,7 @@ describe 'Consumer Resource' do
     @cp.refresh_pools(@owner1['key'])
     pool = @consumer1.list_pools({:owner => @owner1['id']}).first
     lambda {
-      @consumer2.consume_pool(pool.id).size.should == 1
+      @consumer2.consume_pool(pool.id, {:quantity => 1}).size.should == 1
     }.should raise_exception(RestClient::Forbidden)
   end
 
@@ -51,7 +51,7 @@ describe 'Consumer Resource' do
     @cp.refresh_pools(@owner1['key'])
     pool = @consumer1.list_pools({:owner => @owner1['id']}).first
 
-    @consumer1.consume_pool(pool.id).size.should == 1
+    @consumer1.consume_pool(pool.id, {:quantity => 1}).size.should == 1
     @consumer1.get_consumer()['entitlementStatus'].should == "valid"
   end
 
@@ -248,7 +248,7 @@ describe 'Consumer Resource' do
     @cp.refresh_pools(owner['key'])
     pool = cp_client.list_pools({:owner => owner['id']}).first
 
-    cp_client.consume_pool(pool.id).size.should == 1
+    cp_client.consume_pool(pool.id, {:quantity => 1}).size.should == 1
   end
 
   it 'updates consumer updated timestamp on bind' do
@@ -264,7 +264,11 @@ describe 'Consumer Resource' do
 
     # Do a bind and make sure the updated timestamp changed:
     old_updated = @cp.get_consumer(consumer['uuid'])['updated']
-    consumer_client.consume_pool(pool['id'])
+
+    # MySQL before 5.6.4 doesn't store fractional seconds on timestamps.
+    sleep 1
+
+    consumer_client.consume_pool(pool['id'], {:quantity => 1})
     @cp.get_consumer(consumer['uuid'])['updated'].should_not == old_updated
   end
 
@@ -414,7 +418,7 @@ describe 'Consumer Resource' do
     @cp.refresh_pools(owner['key'])
 
     for pool in @cp.list_owner_pools(owner['key']) do
-        cp_client.consume_pool(pool.id)
+        cp_client.consume_pool(pool.id, {:quantity => 1})
     end
 
     consumer = @cp.get_consumer(cp_client.uuid)
@@ -683,7 +687,7 @@ describe 'Consumer Resource' do
     @cp.refresh_pools(owner['key'])
     pool = consumer.list_pools(:consumer => consumer.uuid)[0]
     pool.consumed.should == 0
-    consumer.consume_pool(pool.id)
+    consumer.consume_pool(pool.id, {:quantity => 1})
     @cp.get_pool(pool.id).consumed.should == 1
     consumer.unregister(consumer.uuid)
     @cp.get_pool(pool.id).consumed.should == 0
@@ -813,6 +817,12 @@ describe 'Consumer Resource' do
         cert=host_consumer1['idCert']['cert'],
         key=host_consumer1['idCert']['key'])
     consumer_client1.update_consumer({:guestIds => guests1})
+
+    # MySQL before 5.6.4 doesn't store fractional seconds on timestamps
+    # and getHost() method in ConsumerCurator (which is what tells us which
+    # host a guest is associated with) sorts results by updated time.
+    sleep 1
+
     consumer_client2 = Candlepin.new(username=nil, password=nil,
         cert=host_consumer2['idCert']['cert'],
         key=host_consumer2['idCert']['key'])
@@ -843,6 +853,12 @@ describe 'Consumer Resource' do
         cert=host_consumer1['idCert']['cert'],
         key=host_consumer1['idCert']['key'])
     consumer_client1.update_consumer({:guestIds => guests1})
+
+    # MySQL before 5.6.4 doesn't store fractional seconds on timestamps
+    # and getHost() method in ConsumerCurator (which is what tells us which
+    # host a guest is associated with) sorts results by updated time.
+    sleep 1
+
     consumer_client2 = Candlepin.new(username=nil, password=nil,
         cert=host_consumer2['idCert']['cert'],
         key=host_consumer2['idCert']['key'])
@@ -891,4 +907,57 @@ describe 'Consumer Resource' do
     consumer['facts']['lscpu.numa_node0_cpu(s)'].should == '0-3'
   end
 
+  # When no quantity is sent to the server, the suggested quantity should be attached
+  it "should bind correct quantity when not specified" do
+    facts = {
+        'cpu.cpu_socket(s)' => '4',
+    }
+    product1 = create_product(random_string('product'), random_string('product-multiple-arch'),
+        :attributes => { :sockets => '1', :'multi-entitlement' => 'yes', :stacking_id => 'consumer-bind-test'})
+    sub = @cp.create_subscription(@owner1['key'], product1.id, 10)
+    installed = [
+        {'productId' => product1.id, 'productName' => product1.name}
+    ]
+    @consumer1.update_consumer({:installedProducts => installed, :facts => facts})
+    @cp.refresh_pools(@owner1['key'])
+    pool = @consumer1.list_pools({:owner => @owner1['id']}).first
+    ent = @consumer1.consume_pool(pool.id)
+    ent[0]["quantity"].should == 4
+  end
+
+  it "should bind quantity 1 when suggested is 0 and not specified" do
+    facts = {
+      'cpu.cpu_socket(s)' => '4',
+    }
+    product1 = create_product(random_string('product'), random_string('product-multiple-arch'),
+        :attributes => { :sockets => '2', :'multi-entitlement' => 'yes', :stacking_id => 'consumer-bind-test'})
+    sub = @cp.create_subscription(@owner1['key'], product1.id, 10)
+    installed = [
+        {'productId' => product1.id, 'productName' => product1.name}
+    ]
+    @consumer1.update_consumer({:installedProducts => installed, :facts => facts})
+    @cp.refresh_pools(@owner1['key'])
+    pool = @consumer1.list_pools({:owner => @owner1['id']}).first
+    # Cover product with 2 2 socket ents, then suggested will be 0
+    ent = @consumer1.consume_pool(pool.id, {:quantity => 2})
+    ent = @consumer1.consume_pool(pool.id)
+    ent[0]["quantity"].should == 1
+  end
+
+  it 'should be able to add unused attributes' do
+    guests = [{'guestId' => 'guest1', 'fooBar' => 'some value'}]
+
+    user_cp = user_client(@owner1, random_string('test-user'))
+    consumer = user_cp.register(random_string('host'), :system, nil,
+      {}, nil, nil, [], [])
+
+    consumer_client = Candlepin.new(username=nil, password=nil,
+        cert=consumer['idCert']['cert'],
+        key=consumer['idCert']['key'])
+    consumer_client.update_consumer({:guestIds => guests})
+
+    consumer = @cp.get_consumer(consumer['uuid'])
+    consumer['guestIds'].length.should == 1
+    consumer['guestIds'][0]['guestId'].should == 'guest1'
+  end
 end

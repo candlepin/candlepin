@@ -123,7 +123,7 @@ describe 'Environments' do
     @cp.refresh_pools(@owner['key'])
 
     pools = @cp.list_pools(:owner => @owner['id'], :product => product['id'])
-    ent = consumer_cp.consume_pool(pools[0]['id'])[0]
+    ent = consumer_cp.consume_pool(pools[0]['id'], {:quantity => 1})[0]
 
     x509 = OpenSSL::X509::Certificate.new(ent['certificates'][0]['cert'])
     extensions_hash = Hash[x509.extensions.collect { |ext| [ext.oid, ext.value] }]
@@ -158,7 +158,7 @@ describe 'Environments' do
     @cp.refresh_pools(@owner['key'])
 
     pools = @cp.list_pools(:owner => @owner['id'], :product => product['id'])
-    ent = consumer_cp.consume_pool(pools[0]['id'])[0]
+    ent = consumer_cp.consume_pool(pools[0]['id'], {:quantity => 1})[0]
 
     x509 = OpenSSL::X509::Certificate.new(ent['certificates'][0]['cert'])
     extensions_hash = Hash[x509.extensions.collect { |ext| [ext.oid, ext.value] }]

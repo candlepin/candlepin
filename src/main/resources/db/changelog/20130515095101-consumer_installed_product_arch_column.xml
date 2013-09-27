@@ -7,7 +7,7 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
 
-    <changeSet id="20130515095101" author="ckozak">
+    <changeSet id="20130515095101" author="ckozak" dbms="oracle,postgresql">
         <comment>Added architecture to consumer installed products</comment>
         <addColumn tableName="cp_installed_products">
             <column name="product_arch" type="varchar(63)"/>

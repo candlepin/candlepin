@@ -1,0 +1,1681 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+        
+    <property name="now" value="NOW()" dbms="mysql"/>
+    
+    <!--
+      On Unix-like systems, MySQL table names are case sensitive, so we need to use all capitals with the Quartz
+      tables, because that is how Quartz refers to them.  See http://dev.mysql.com/doc/refman/5.5/en/identifier-case-sensitivity.html
+
+      We are using DATETIME to store date information in MySQL.  In MySQL, DATETIME does not store any time zone
+      information.  This is consistent with our Postgres and Oracle schemas which use TIMESTAMP WITHOUT TIME ZONE.
+
+      The MySQL TIMESTAMP data type automatically converts values into UTC.  Should we ever need to convert to TIMESTAMP
+      there are several things to keep in mind:
+        1. TIMESTAMP only goes up to the year 2038.  DATETIME goes to 9999.
+        2. MySQL has a "feature" for TIMESTAMP where the first TIMESTAMP in a column is given an automatic default
+           and automatically updated when the record is changed.  This can be avoided by using TIMESTAMP NULL DEFAULT NULL.
+           See http://dev.mysql.com/doc/refman/5.5/en/timestamp-initialization.html
+
+           To avoid this behavior, you must jump through some hoops to get Liquibase to set the data type correctly.
+           Additionally, if the TIMESTAMP has a nullable="false" constraint, you will need to set a default on the column
+           or else MySQL will use it's auto-default/auto-update behavior.
+
+           Here is an example of how to handle things:
+
+           <changeSet author="awood" id="123" dbms="mysql">
+              <createTable tableName="cp_consumer_type">
+                 <column name="x" type="NULLABLE_TS"/>
+                 <column name="y" type="TIMESTAMP">
+                    <constraints nullable="false"/>
+                 </column>
+              </createTable>
+              <modifySql>
+                 <replace replace="NULLABLE_TS" with="TIMESTAMP NULL DEFAULT NULL"/>
+                 <replace replace="TIMESTAMP" with="TIMESTAMP DEFAULT 0"/>
+              </modifySql>
+           </changeSet>
+    -->
+    <changeSet author="awood" id="1379350211813-1-1" dbms="mysql">
+        <createTable tableName="cp_activation_key">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_activation_key_pkey"/>
+            </column>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="owner_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>   
+     <changeSet author="awood (generated)" id="1379350211813-1" dbms="mysql">
+        <createTable tableName="cp_activationkey_pool">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_activationkey_pool_pkey"/>
+            </column>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
+            <column name="quantity" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="key_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="pool_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-2" dbms="mysql">
+        <createTable tableName="cp_cert_serial">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_cert_serial_pkey"/>
+            </column>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
+            <column name="collected" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="expiration" type="DATETIME"/>
+            <column name="revoked" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-3" dbms="mysql">
+        <createTable tableName="cp_certificate">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_certificate_pkey"/>
+            </column>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
+            <column name="cert" type="BLOB">
+                <constraints nullable="false"/>
+            </column>
+            <column name="privatekey" type="BLOB">
+                <constraints nullable="false"/>
+            </column>
+            <column name="serial_id" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-4" dbms="mysql">
+        <createTable tableName="cp_consumer">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_consumer_pkey"/>
+            </column>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
+            <column name="autoheal" type="BOOLEAN"/>
+            <column name="entitlementstatus" type="VARCHAR(32)"/>
+            <column name="lastcheckin" type="DATETIME"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="servicelevel" type="VARCHAR(32)"/>
+            <column name="username" type="VARCHAR(255)"/>
+            <column name="uuid" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="environment_id" type="VARCHAR(32)"/>
+            <column name="consumer_idcert_id" type="VARCHAR(32)"/>
+            <column name="keypair_id" type="VARCHAR(32)"/>
+            <column name="owner_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="releasever" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-5" dbms="mysql">
+        <createTable tableName="cp_consumer_capability">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_consumer_capability_pkey"/>
+            </column>
+            <column name="consumer_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-6" dbms="mysql">
+        <createTable tableName="cp_consumer_facts">
+            <column name="cp_consumer_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="element" type="VARCHAR(255)"/>
+            <column name="mapkey" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-7" dbms="mysql">
+        <createTable tableName="cp_consumer_guests">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_consumer_guests_pkey"/>
+            </column>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
+            <column name="guest_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="consumer_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-8" dbms="mysql">
+        <createTable tableName="cp_consumer_type">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_consumer_type_pkey"/>
+            </column>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
+            <column name="label" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="manifest" type="char(1)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-9" dbms="mysql">
+        <createTable tableName="cp_content">
+            <column name="id" type="VARCHAR(255)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_content_pkey"/>
+            </column>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
+            <column name="contenturl" type="VARCHAR(255)"/>
+            <column name="gpgurl" type="VARCHAR(255)"/>
+            <column name="label" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="metadataexpire" type="BIGINT"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="releasever" type="VARCHAR(255)"/>
+            <column name="requiredtags" type="VARCHAR(255)"/>
+            <column name="type" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="vendor" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="arches" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-10" dbms="mysql">
+        <createTable tableName="cp_content_modified_products">
+            <column name="cp_content_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="element" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-11" dbms="mysql">
+        <createTable tableName="cp_deleted_consumers">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_deleted_consumers_pkey"/>
+            </column>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
+            <column name="consumer_uuid" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="owner_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="owner_key" type="VARCHAR(255)"/>
+            <column name="owner_displayname" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-12" dbms="mysql">
+        <createTable tableName="cp_dist_version">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_dist_version_pkey"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="display_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-13" dbms="mysql">
+        <createTable tableName="cp_dist_version_capability">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_dist_vrsn_capability_pkey"/>
+            </column>
+            <column name="dist_version_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-14" dbms="mysql">
+        <createTable tableName="cp_ent_certificate">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_ent_certificate_pkey"/>
+            </column>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
+            <column name="cert" type="BLOB">
+                <constraints nullable="false"/>
+            </column>
+            <column name="privatekey" type="BLOB">
+                <constraints nullable="false"/>
+            </column>
+            <column name="entitlement_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="serial_id" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-15" dbms="mysql">
+        <createTable tableName="cp_entitlement">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_entitlement_pkey"/>
+            </column>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
+            <column name="quantity" type="INTEGER"/>
+            <column name="consumer_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="owner_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="pool_id" type="VARCHAR(32)"/>
+            <column defaultValueBoolean="false" name="dirty" type="BOOLEAN"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-16" dbms="mysql">
+        <createTable tableName="cp_env_content">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_env_content_pkey"/>
+            </column>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
+            <column name="contentid" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="enabled" type="BOOLEAN"/>
+            <column name="environment_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-17" dbms="mysql">
+        <createTable tableName="cp_environment">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_environment_pkey"/>
+            </column>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
+            <column name="description" type="VARCHAR(255)"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="owner_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-18" dbms="mysql">
+        <createTable tableName="cp_event">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_event_pkey"/>
+            </column>
+            <column name="consumerid" type="VARCHAR(255)"/>
+            <column name="entityid" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ownerid" type="VARCHAR(255)"/>
+            <column name="principal" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="referenceid" type="VARCHAR(255)"/>
+            <column name="referencetype" type="VARCHAR(255)"/>
+            <column name="target" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="targetname" type="VARCHAR(255)"/>
+            <column name="timestamp" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-19" dbms="mysql">
+        <createTable tableName="cp_export_metadata">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_export_metadata_pkey"/>
+            </column>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
+            <column name="exported" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="owner_id" type="VARCHAR(32)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-20" dbms="mysql">
+        <createTable tableName="cp_id_cert">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_id_cert_pkey"/>
+            </column>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
+            <column name="cert" type="BLOB">
+                <constraints nullable="false"/>
+            </column>
+            <column name="privatekey" type="BLOB">
+                <constraints nullable="false"/>
+            </column>
+            <column name="serial_id" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-21" dbms="mysql">
+        <createTable tableName="cp_import_record">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_import_record_pkey"/>
+            </column>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
+            <column name="status" type="INTEGER"/>
+            <column name="statusmessage" type="VARCHAR(255)"/>
+            <column name="owner_id" type="VARCHAR(32)"/>
+            <column name="generated_by" type="VARCHAR(255)"/>
+            <column name="generated_date" type="DATETIME"/>
+            <column name="upstream_id" type="VARCHAR(255)"/>
+            <column name="file_name" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-22" dbms="mysql">
+        <createTable tableName="cp_installed_products">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_installed_products_pkey"/>
+            </column>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
+            <column name="product_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="product_name" type="VARCHAR(255)"/>
+            <column name="consumer_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="product_version" type="VARCHAR(20)"/>
+            <column name="product_arch" type="VARCHAR(63)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-23" dbms="mysql">
+        <createTable tableName="cp_job">
+            <column name="id" type="VARCHAR(255)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_job_pkey"/>
+            </column>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
+            <column name="finishtime" type="DATETIME"/>
+            <column name="jobgroup" type="VARCHAR(15)"/>
+            <column name="principalname" type="VARCHAR(255)"/>
+            <column name="result" type="VARCHAR(255)"/>
+            <column name="starttime" type="DATETIME"/>
+            <column name="state" type="INTEGER"/>
+            <column name="targetid" type="VARCHAR(255)"/>
+            <column name="targettype" type="INTEGER"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-24" dbms="mysql">
+        <createTable tableName="cp_key_pair">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_key_pair_pkey"/>
+            </column>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
+            <column name="privatekey" type="BLOB"/>
+            <column name="publickey" type="BLOB"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-25" dbms="mysql">
+        <createTable tableName="cp_owner">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_owner_pkey"/>
+            </column>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
+            <column name="contentprefix" type="VARCHAR(255)"/>
+            <column name="defaultservicelevel" type="VARCHAR(255)"/>
+            <column name="displayname" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="account" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="parent_owner" type="VARCHAR(32)"/>
+            <column name="upstream_id" type="VARCHAR(32)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-26" dbms="mysql">
+        <createTable tableName="cp_owner_permission">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_owner_permission_pkey"/>
+            </column>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
+            <column name="owner_access" type="INTEGER"/>
+            <column name="owner_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="role_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-27" dbms="mysql">
+        <createTable tableName="cp_pool">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_pool_pkey"/>
+            </column>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
+            <column name="accountnumber" type="VARCHAR(255)"/>
+            <column name="activesubscription" type="BOOLEAN"/>
+            <column name="contractnumber" type="VARCHAR(255)"/>
+            <column name="enddate" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="productid" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="productname" type="VARCHAR(255)"/>
+            <column name="quantity" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="restrictedtousername" type="VARCHAR(255)"/>
+            <column name="startdate" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="subscriptionid" type="VARCHAR(255)"/>
+            <column name="subscriptionsubkey" type="VARCHAR(255)"/>
+            <column name="version" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="owner_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sourceentitlement_id" type="VARCHAR(32)"/>
+            <column name="ordernumber" type="VARCHAR(255)"/>
+            <column name="derivedproductid" type="VARCHAR(255)"/>
+            <column name="derivedproductname" type="VARCHAR(255)"/>
+            <column name="sourcestackid" type="VARCHAR(255)"/>
+            <column name="sourceconsumer_id" type="VARCHAR(32)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-28" dbms="mysql">
+        <createTable tableName="cp_pool_attribute">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_pool_attribute_pkey"/>
+            </column>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="value" type="VARCHAR(255)"/>
+            <column name="pool_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-29" dbms="mysql">
+        <createTable tableName="cp_pool_products">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_pool_products_pkey"/>
+            </column>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
+            <column name="product_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="product_name" type="VARCHAR(255)"/>
+            <column name="pool_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="dtype" type="VARCHAR(30)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-30" dbms="mysql">
+        <createTable tableName="cp_product">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_product_pkey"/>
+            </column>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
+            <column name="multiplier" type="BIGINT"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-31" dbms="mysql">
+        <createTable tableName="cp_product_attribute">
+            <column name="id" type="VARCHAR(255)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_product_attribute_pkey"/>
+            </column>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="value" type="VARCHAR(255)"/>
+            <column name="product_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-32" dbms="mysql">
+        <createTable tableName="cp_product_certificate">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_product_certificate_pkey"/>
+            </column>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
+            <column name="cert" type="BLOB">
+                <constraints nullable="false"/>
+            </column>
+            <column name="privatekey" type="BLOB">
+                <constraints nullable="false"/>
+            </column>
+            <column name="product_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-33" dbms="mysql">
+        <createTable tableName="cp_product_content">
+            <column name="product_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="enabled" type="BOOLEAN"/>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-34" dbms="mysql">
+        <createTable tableName="cp_product_dependent_products">
+            <column name="cp_product_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="element" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-35" dbms="mysql">
+        <createTable tableName="cp_product_pool_attribute">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_product_pool_attribute_pkey"/>
+            </column>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="value" type="VARCHAR(255)"/>
+            <column name="productid" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="pool_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="dtype" type="VARCHAR(30)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-36" dbms="mysql">
+        <createTable tableName="cp_product_reliance">
+            <column name="parent_product_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="child_product_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-37" dbms="mysql">
+        <createTable tableName="cp_role">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_role_pkey"/>
+            </column>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-38" dbms="mysql">
+        <createTable tableName="cp_role_users">
+            <column name="role_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-39" dbms="mysql">
+        <createTable tableName="cp_rules">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_rules_pkey"/>
+            </column>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
+            <column name="rules_blob" type="TEXT"/>
+            <column name="version" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-40" dbms="mysql">
+        <createTable tableName="cp_stat_history">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_stat_history_pkey"/>
+            </column>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
+            <column name="entry_type" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="owner_id" type="VARCHAR(255)"/>
+            <column name="value" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="value_reference" type="VARCHAR(255)"/>
+            <column name="value_type" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-41" dbms="mysql">
+        <createTable tableName="cp_sub_derivedprods">
+            <column name="subscription_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="product_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-42" dbms="mysql">
+        <createTable tableName="cp_subscription">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_subscription_pkey"/>
+            </column>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
+            <column name="accountnumber" type="VARCHAR(255)"/>
+            <column name="contractnumber" type="VARCHAR(255)"/>
+            <column name="enddate" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified" type="DATETIME"/>
+            <column name="quantity" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="startdate" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="upstream_pool_id" type="VARCHAR(255)"/>
+            <column name="certificate_id" type="VARCHAR(32)"/>
+            <column name="owner_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="product_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ordernumber" type="VARCHAR(255)"/>
+            <column name="upstream_entitlement_id" type="VARCHAR(32)"/>
+            <column name="upstream_consumer_id" type="VARCHAR(255)"/>
+            <column name="derivedproduct_id" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-43" dbms="mysql">
+        <createTable tableName="cp_subscription_products">
+            <column name="subscription_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="product_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-44" dbms="mysql">
+        <createTable tableName="cp_upstream_consumer">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_upstream_consumer_pkey"/>
+            </column>
+            <column name="uuid" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
+            <column name="owner_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="consumer_idcert_id" type="VARCHAR(32)"/>
+            <column name="prefix_url_web" type="VARCHAR(255)"/>
+            <column name="prefix_url_api" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-45" dbms="mysql">
+        <createTable tableName="cp_user">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_user_pkey"/>
+            </column>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
+            <column name="hashedpassword" type="VARCHAR(255)"/>
+            <column name="superadmin" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="username" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-46" dbms="mysql">
+        <createTable tableName="QRTZ_BLOB_TRIGGERS">
+            <column name="trigger_name" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="trigger_group" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="blob_data" type="BLOB"/>
+            <column defaultValue="TestScheduler" name="sched_name" type="VARCHAR(120)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-47" dbms="mysql">
+        <createTable tableName="QRTZ_CALENDARS">
+            <column name="calendar_name" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="calendar" type="BLOB">
+                <constraints nullable="false"/>
+            </column>
+            <column defaultValue="TestScheduler" name="sched_name" type="VARCHAR(120)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-48" dbms="mysql">
+        <createTable tableName="QRTZ_CRON_TRIGGERS">
+            <column name="trigger_name" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="trigger_group" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="cron_expression" type="VARCHAR(120)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="time_zone_id" type="VARCHAR(80)"/>
+            <column defaultValue="TestScheduler" name="sched_name" type="VARCHAR(120)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-49" dbms="mysql">
+        <createTable tableName="QRTZ_FIRED_TRIGGERS">
+            <column name="entry_id" type="VARCHAR(95)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="trigger_name" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="trigger_group" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="instance_name" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="fired_time" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="priority" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="state" type="VARCHAR(16)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="job_name" type="VARCHAR(200)"/>
+            <column name="job_group" type="VARCHAR(200)"/>
+            <column name="requests_recovery" type="BOOLEAN"/>
+            <column name="is_nonconcurrent" type="BOOLEAN"/>
+            <column name="is_update_data" type="BOOLEAN"/>
+            <column defaultValue="TestScheduler" name="sched_name" type="VARCHAR(120)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-50" dbms="mysql">
+        <createTable tableName="QRTZ_JOB_DETAILS">
+            <column name="job_name" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="job_group" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="VARCHAR(250)"/>
+            <column name="job_class_name" type="VARCHAR(250)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_durable" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="requests_recovery" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="job_data" type="BLOB"/>
+            <column name="is_nonconcurrent" type="BOOLEAN"/>
+            <column name="is_update_data" type="BOOLEAN"/>
+            <column defaultValue="TestScheduler" name="sched_name" type="VARCHAR(120)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-51" dbms="mysql">
+        <createTable tableName="QRTZ_LOCKS">
+            <column name="lock_name" type="VARCHAR(40)">
+                <constraints nullable="false"/>
+            </column>
+            <column defaultValue="TestScheduler" name="sched_name" type="VARCHAR(120)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-52" dbms="mysql">
+        <createTable tableName="QRTZ_PAUSED_TRIGGER_GRPS">
+            <column name="trigger_group" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column defaultValue="TestScheduler" name="sched_name" type="VARCHAR(120)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-53" dbms="mysql">
+        <createTable tableName="QRTZ_SCHEDULER_STATE">
+            <column name="instance_name" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_checkin_time" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="checkin_interval" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column defaultValue="TestScheduler" name="sched_name" type="VARCHAR(120)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-54" dbms="mysql">
+        <createTable tableName="QRTZ_SIMPLE_TRIGGERS">
+            <column name="trigger_name" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="trigger_group" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="repeat_count" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="repeat_interval" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="times_triggered" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column defaultValue="TestScheduler" name="sched_name" type="VARCHAR(120)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-55" dbms="mysql">
+        <createTable tableName="QRTZ_SIMPROP_TRIGGERS">
+            <column name="sched_name" type="VARCHAR(120)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="trigger_name" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="trigger_group" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="str_prop_1" type="VARCHAR(512)"/>
+            <column name="str_prop_2" type="VARCHAR(512)"/>
+            <column name="str_prop_3" type="VARCHAR(512)"/>
+            <column name="int_prop_1" type="INTEGER"/>
+            <column name="int_prop_2" type="INTEGER"/>
+            <column name="long_prop_1" type="BIGINT"/>
+            <column name="long_prop_2" type="BIGINT"/>
+            <column name="dec_prop_1" type="NUMERIC(13,4)"/>
+            <column name="dec_prop_2" type="NUMERIC(13,4)"/>
+            <column name="bool_prop_1" type="BOOLEAN"/>
+            <column name="bool_prop_2" type="BOOLEAN"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-56" dbms="mysql">
+        <createTable tableName="QRTZ_TRIGGERS">
+            <column name="trigger_name" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="trigger_group" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="job_name" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="job_group" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="VARCHAR(250)"/>
+            <column name="next_fire_time" type="BIGINT"/>
+            <column name="prev_fire_time" type="BIGINT"/>
+            <column name="priority" type="INTEGER"/>
+            <column name="trigger_state" type="VARCHAR(16)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="trigger_type" type="VARCHAR(8)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="start_time" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="end_time" type="BIGINT"/>
+            <column name="calendar_name" type="VARCHAR(200)"/>
+            <column name="misfire_instr" type="SMALLINT"/>
+            <column name="job_data" type="BLOB"/>
+            <column defaultValue="TestScheduler" name="sched_name" type="VARCHAR(120)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-57" dbms="mysql">
+        <addPrimaryKey columnNames="cp_consumer_id, mapkey" constraintName="cp_consumer_facts_pkey" tableName="cp_consumer_facts"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-58" dbms="mysql">
+        <addPrimaryKey columnNames="product_id, content_id" constraintName="cp_product_content_pkey" tableName="cp_product_content"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-59" dbms="mysql">
+        <addPrimaryKey columnNames="role_id, user_id" constraintName="cp_role_users_pkey" tableName="cp_role_users"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-60" dbms="mysql">
+        <addPrimaryKey columnNames="subscription_id, product_id" constraintName="cp_subscription_products_pkey" tableName="cp_subscription_products"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-61" dbms="mysql">
+        <addPrimaryKey columnNames="sched_name, trigger_name, trigger_group" constraintName="qrtz_blob_triggers_pkey" tableName="QRTZ_BLOB_TRIGGERS"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-62" dbms="mysql">
+        <addPrimaryKey columnNames="sched_name, calendar_name" constraintName="qrtz_calendars_pkey" tableName="QRTZ_CALENDARS"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-63" dbms="mysql">
+        <addPrimaryKey columnNames="sched_name, trigger_name, trigger_group" constraintName="qrtz_cron_triggers_pkey" tableName="QRTZ_CRON_TRIGGERS"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-64" dbms="mysql">
+        <addPrimaryKey columnNames="sched_name, entry_id" constraintName="qrtz_fired_triggers_pkey" tableName="QRTZ_FIRED_TRIGGERS"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-65" dbms="mysql">
+        <addPrimaryKey columnNames="sched_name, job_name, job_group" constraintName="qrtz_job_details_pkey" tableName="QRTZ_JOB_DETAILS"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-66" dbms="mysql">
+        <addPrimaryKey columnNames="sched_name, lock_name" constraintName="qrtz_locks_pkey" tableName="QRTZ_LOCKS"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-67" dbms="mysql">
+        <addPrimaryKey columnNames="sched_name, trigger_group" constraintName="qrtz_paused_trigger_grps_pkey" tableName="QRTZ_PAUSED_TRIGGER_GRPS"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-68" dbms="mysql">
+        <addPrimaryKey columnNames="sched_name, instance_name" constraintName="qrtz_scheduler_state_pkey" tableName="QRTZ_SCHEDULER_STATE"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-69" dbms="mysql">
+        <addPrimaryKey columnNames="sched_name, trigger_name, trigger_group" constraintName="qrtz_simple_triggers_pkey" tableName="QRTZ_SIMPLE_TRIGGERS"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-70" dbms="mysql">
+        <addPrimaryKey columnNames="sched_name, trigger_name, trigger_group" constraintName="qrtz_simprop_triggers_pkey" tableName="QRTZ_SIMPROP_TRIGGERS"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-71" dbms="mysql">
+        <addPrimaryKey columnNames="sched_name, trigger_name, trigger_group" constraintName="qrtz_triggers_pkey" tableName="QRTZ_TRIGGERS"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-72" dbms="mysql">
+        <addUniqueConstraint columnNames="key_id, pool_id" constraintName="cp_ak_pool_key_id_pool_id_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_activationkey_pool"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-73" dbms="mysql">
+        <addUniqueConstraint columnNames="uuid" constraintName="cp_consumer_uuid_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_consumer"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-74" dbms="mysql">
+        <addUniqueConstraint columnNames="label" constraintName="cp_consumer_type_label_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_consumer_type"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-75" dbms="mysql">
+        <addUniqueConstraint columnNames="label" constraintName="cp_content_label_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_content"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-76" dbms="mysql">
+        <addUniqueConstraint columnNames="consumer_uuid" constraintName="cp_dltd_cnsmrs_cnsmr_uuid_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_deleted_consumers"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-77" dbms="mysql">
+        <addUniqueConstraint columnNames="name" constraintName="cp_dist_version_name_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_dist_version"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-78" dbms="mysql">
+        <addUniqueConstraint columnNames="environment_id, contentid" constraintName="cp_env_cnt_env_id_cntid_ky" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_env_content"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-79" dbms="mysql">
+        <addUniqueConstraint columnNames="owner_id, name" constraintName="cp_env_owner_id_name_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_environment"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-80" dbms="mysql">
+        <addUniqueConstraint columnNames="account" constraintName="cp_owner_account_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_owner"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-81" dbms="mysql">
+        <addUniqueConstraint columnNames="id, subscriptionid, subscriptionsubkey" constraintName="cp_pool_subid_subsubkey_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_pool"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-82" dbms="mysql">
+        <addUniqueConstraint columnNames="name" constraintName="cp_role_name_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_role"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-83" dbms="mysql">
+        <addUniqueConstraint columnNames="username" constraintName="cp_user_username_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_user"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-84" dbms="mysql">
+        <addForeignKeyConstraint baseColumnNames="key_id" baseTableName="cp_activationkey_pool" constraintName="fk_activation_key_pool_k" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_activation_key" />
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-85" dbms="mysql">
+        <addForeignKeyConstraint baseColumnNames="pool_id" baseTableName="cp_activationkey_pool" constraintName="fk_activation_key_pool_p" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_pool" />
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-86" dbms="mysql">
+        <addForeignKeyConstraint baseColumnNames="serial_id" baseTableName="cp_certificate" constraintName="fk16370c54b9410fc" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_cert_serial" />
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-87" dbms="mysql">
+        <addForeignKeyConstraint baseColumnNames="consumer_idcert_id" baseTableName="cp_consumer" constraintName="fk58205388a0b39916" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_id_cert" />
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-88" dbms="mysql">
+        <addForeignKeyConstraint baseColumnNames="environment_id" baseTableName="cp_consumer" constraintName="fk_consumer_env" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_environment" />
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-89" dbms="mysql">
+        <addForeignKeyConstraint baseColumnNames="keypair_id" baseTableName="cp_consumer" constraintName="fk5820538861936445" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_key_pair" />
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-90" dbms="mysql">
+        <addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="cp_consumer" constraintName="fk_consumer_owner" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" />
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-91" dbms="mysql">
+        <addForeignKeyConstraint baseColumnNames="type_id" baseTableName="cp_consumer" constraintName="fk_consumer_consumer_type" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer_type" />
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-92" dbms="mysql">
+        <addForeignKeyConstraint baseColumnNames="consumer_id" baseTableName="cp_consumer_capability" constraintName="fk_cnsmr_capability_cnsmr" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer" />
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-93" dbms="mysql">
+        <addForeignKeyConstraint baseColumnNames="cp_consumer_id" baseTableName="cp_consumer_facts" constraintName="fk278ce810390317d" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer" />
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-94" dbms="mysql">
+        <addForeignKeyConstraint baseColumnNames="consumer_id" baseTableName="cp_consumer_guests" constraintName="fk_consumer_guests" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer" />
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-95" dbms="mysql">
+        <addForeignKeyConstraint baseColumnNames="cp_content_id" baseTableName="cp_content_modified_products" constraintName="fkc93d6a8232912b37" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_content" />
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-96" dbms="mysql">
+        <addForeignKeyConstraint baseColumnNames="dist_version_id" baseTableName="cp_dist_version_capability" constraintName="fk_dist_vrsn_capability" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_dist_version" />
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-97" dbms="mysql">
+        <addForeignKeyConstraint baseColumnNames="entitlement_id" baseTableName="cp_ent_certificate" constraintName="fk_cert_entitlement" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_entitlement" />
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-98" dbms="mysql">
+        <addForeignKeyConstraint baseColumnNames="serial_id" baseTableName="cp_ent_certificate" constraintName="fke76508714b9410fc" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_cert_serial" />
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-99" dbms="mysql">
+        <addForeignKeyConstraint baseColumnNames="consumer_id" baseTableName="cp_entitlement" constraintName="fk_entitlement_consumer" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer" />
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-100" dbms="mysql">
+        <addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="cp_entitlement" constraintName="fk_entitlement_owner" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" />
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-101" dbms="mysql">
+        <addForeignKeyConstraint baseColumnNames="pool_id" baseTableName="cp_entitlement" constraintName="fk_entitlement_pool" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_pool" />
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-102" dbms="mysql">
+        <addForeignKeyConstraint baseColumnNames="environment_id" baseTableName="cp_env_content" constraintName="fk_env_content_env" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_environment" />
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-103" dbms="mysql">
+        <addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="cp_environment" constraintName="fk_env_owner" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" />
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-104" dbms="mysql">
+        <addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="cp_export_metadata" constraintName="fkf06f6b8872cc5ca5" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" />
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-105" dbms="mysql">
+        <addForeignKeyConstraint baseColumnNames="serial_id" baseTableName="cp_id_cert" constraintName="fk456324f64b9410fc" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_cert_serial" />
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-106" dbms="mysql">
+        <addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="cp_import_record" constraintName="fk9349dd972cc5ca5" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" />
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-107" dbms="mysql">
+        <addForeignKeyConstraint baseColumnNames="consumer_id" baseTableName="cp_installed_products" constraintName="fk_installed_product" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer" />
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-108" dbms="mysql">
+        <addForeignKeyConstraint baseColumnNames="parent_owner" baseTableName="cp_owner" constraintName="fkf93e9c616343755c" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" />
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-109" dbms="mysql">
+        <addForeignKeyConstraint baseColumnNames="upstream_id" baseTableName="cp_owner" constraintName="fk_upstream_consumer_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_upstream_consumer" />
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-110" dbms="mysql">
+        <addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="cp_owner_permission" constraintName="fk_permission_owner" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" />
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-111" dbms="mysql">
+        <addForeignKeyConstraint baseColumnNames="role_id" baseTableName="cp_owner_permission" constraintName="fk_permission_role" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_role" />
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-112" dbms="mysql">
+        <addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="cp_pool" constraintName="fk_pool_owner" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" />
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-113" dbms="mysql">
+        <addForeignKeyConstraint baseColumnNames="sourceentitlement_id" baseTableName="cp_pool" constraintName="fk_pool_source_entitlement" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_entitlement" />
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-114" dbms="mysql">
+        <addForeignKeyConstraint baseColumnNames="pool_id" baseTableName="cp_pool_attribute" constraintName="fk_pool_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_pool" />
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-115" dbms="mysql">
+        <addForeignKeyConstraint baseColumnNames="pool_id" baseTableName="cp_pool_products" constraintName="fk_pool_provided_product" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_pool" />
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-116" dbms="mysql">
+        <addForeignKeyConstraint baseColumnNames="product_id" baseTableName="cp_product_attribute" constraintName="fk_product_attrib_product_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_product" />
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-117" dbms="mysql">
+        <addForeignKeyConstraint baseColumnNames="product_id" baseTableName="cp_product_certificate" constraintName="fk_cert_product" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_product" />
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-118" dbms="mysql">
+        <addForeignKeyConstraint baseColumnNames="content_id" baseTableName="cp_product_content" constraintName="fkce093157574ef825" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_content" />
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-119" dbms="mysql">
+        <addForeignKeyConstraint baseColumnNames="product_id" baseTableName="cp_product_content" constraintName="fkce09315764dd9c65" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_product" />
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-120" dbms="mysql">
+        <addForeignKeyConstraint baseColumnNames="cp_product_id" baseTableName="cp_product_dependent_products" constraintName="fk9ef75306401fcf77" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_product" />
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-121" dbms="mysql">
+        <addForeignKeyConstraint baseColumnNames="pool_id" baseTableName="cp_product_pool_attribute" constraintName="fk_prdct_pool_attrib_pool_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_pool" />
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-122" dbms="mysql">
+        <addForeignKeyConstraint baseColumnNames="parent_product_id" baseTableName="cp_product_reliance" constraintName="fk_product_reliance" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_product" />
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-123" dbms="mysql">
+        <addForeignKeyConstraint baseColumnNames="role_id" baseTableName="cp_role_users" constraintName="fk_user_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_role" />
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-124" dbms="mysql">
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="cp_role_users" constraintName="fk_role_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_user" />
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-125" dbms="mysql">
+        <addForeignKeyConstraint baseColumnNames="certificate_id" baseTableName="cp_subscription" constraintName="fk27d80fafd8564fd9" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_certificate" />
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-126" dbms="mysql">
+        <addForeignKeyConstraint baseColumnNames="derivedproduct_id" baseTableName="cp_subscription" constraintName="fk_sub_derivedprod" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_product" />
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-127" dbms="mysql">
+        <addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="cp_subscription" constraintName="fk_subscription_owner" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" />
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-128" dbms="mysql">
+        <addForeignKeyConstraint baseColumnNames="product_id" baseTableName="cp_subscription" constraintName="fk_subscription_product" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_product" />
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-129" dbms="mysql">
+        <addForeignKeyConstraint baseColumnNames="product_id" baseTableName="cp_subscription_products" constraintName="fk_subscription_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_product" />
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-130" dbms="mysql">
+        <addForeignKeyConstraint baseColumnNames="subscription_id" baseTableName="cp_subscription_products" constraintName="fk_product_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_subscription" />
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-131" dbms="mysql">
+        <addForeignKeyConstraint baseColumnNames="consumer_idcert_id" baseTableName="cp_upstream_consumer" constraintName="fk54b0f288a0b39916" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_id_cert" />
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-132" dbms="mysql">
+        <addForeignKeyConstraint baseColumnNames="type_id" baseTableName="cp_upstream_consumer" constraintName="fk_upstream_consumer_type" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer_type" />
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-133" dbms="mysql">
+        <addForeignKeyConstraint baseColumnNames="sched_name, trigger_name, trigger_group" baseTableName="QRTZ_BLOB_TRIGGERS" constraintName="qrtz_blob_trg_name_fkey" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="sched_name, trigger_name, trigger_group" referencedTableName="QRTZ_TRIGGERS" />
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-134" dbms="mysql">
+        <addForeignKeyConstraint baseColumnNames="sched_name, trigger_name, trigger_group" baseTableName="QRTZ_CRON_TRIGGERS" constraintName="qrtz_cron_trg_name_fkey" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="sched_name, trigger_name, trigger_group" referencedTableName="QRTZ_TRIGGERS" />
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-135" dbms="mysql">
+        <addForeignKeyConstraint baseColumnNames="sched_name, trigger_name, trigger_group" baseTableName="QRTZ_SIMPLE_TRIGGERS" constraintName="qrtz_simple_trg_name_fkey" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="sched_name, trigger_name, trigger_group" referencedTableName="QRTZ_TRIGGERS" />
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-136" dbms="mysql">
+        <addForeignKeyConstraint baseColumnNames="sched_name, trigger_name, trigger_group" baseTableName="QRTZ_SIMPROP_TRIGGERS" constraintName="qrtz_simprop_trg_name_fkey" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="sched_name, trigger_name, trigger_group" referencedTableName="QRTZ_TRIGGERS" />
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-137" dbms="mysql">
+        <addForeignKeyConstraint baseColumnNames="sched_name, job_name, job_group" baseTableName="QRTZ_TRIGGERS" constraintName="qrtz_triggers_job_name_fkey" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="sched_name, job_name, job_group" referencedTableName="QRTZ_JOB_DETAILS" />
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-138" dbms="mysql">
+        <createIndex indexName="cp_cnsmr_guests_guest_id_idx" tableName="cp_consumer_guests" unique="false">
+            <column name="guest_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-139" dbms="mysql">
+        <createIndex indexName="cp_dltd_cnsmrs_owner_id_idx" tableName="cp_deleted_consumers" unique="false">
+            <column name="owner_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-140" dbms="mysql">
+        <createIndex indexName="cp_event_consumerid_idx" tableName="cp_event" unique="false">
+            <column name="consumerid"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-141" dbms="mysql">
+        <createIndex indexName="cp_event_ownerid_idx" tableName="cp_event" unique="false">
+            <column name="ownerid"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-142" dbms="mysql">
+        <createIndex indexName="cp_pool_productid_idx" tableName="cp_pool" unique="false">
+            <column name="productid"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-143" dbms="mysql">
+        <createIndex indexName="cp_pool_subscriptionid_idx" tableName="cp_pool" unique="false">
+            <column name="subscriptionid"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-144" dbms="mysql">
+        <createIndex indexName="cp_stat_history_owner_id_idx" tableName="cp_stat_history" unique="false">
+            <column name="owner_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-145" dbms="mysql">
+        <createIndex indexName="cp_subs_upstream_pool_id_idx" tableName="cp_subscription" unique="false">
+            <column name="upstream_pool_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-146" dbms="mysql">
+        <createIndex indexName="idx_qrtz_ft_inst_job_req_rcvry" tableName="QRTZ_FIRED_TRIGGERS" unique="false">
+            <column name="sched_name"/>
+            <column name="instance_name"/>
+            <column name="requests_recovery"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-147" dbms="mysql">
+        <createIndex indexName="idx_qrtz_ft_j_g" tableName="QRTZ_FIRED_TRIGGERS" unique="false">
+            <column name="sched_name"/>
+            <column name="job_name"/>
+            <column name="job_group"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-148" dbms="mysql">
+        <createIndex indexName="idx_qrtz_ft_jg" tableName="QRTZ_FIRED_TRIGGERS" unique="false">
+            <column name="sched_name"/>
+            <column name="job_group"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-149" dbms="mysql">
+        <createIndex indexName="idx_qrtz_ft_t_g" tableName="QRTZ_FIRED_TRIGGERS" unique="false">
+            <column name="sched_name"/>
+            <column name="trigger_name"/>
+            <column name="trigger_group"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-150" dbms="mysql">
+        <createIndex indexName="idx_qrtz_ft_tg" tableName="QRTZ_FIRED_TRIGGERS" unique="false">
+            <column name="sched_name"/>
+            <column name="trigger_group"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-151" dbms="mysql">
+        <createIndex indexName="idx_qrtz_ft_trig_inst_name" tableName="QRTZ_FIRED_TRIGGERS" unique="false">
+            <column name="sched_name"/>
+            <column name="instance_name"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-152" dbms="mysql">
+        <createIndex indexName="idx_qrtz_j_grp" tableName="QRTZ_JOB_DETAILS" unique="false">
+            <column name="sched_name"/>
+            <column name="job_group"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-153" dbms="mysql">
+        <createIndex indexName="idx_qrtz_j_req_recovery" tableName="QRTZ_JOB_DETAILS" unique="false">
+            <column name="sched_name"/>
+            <column name="requests_recovery"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-154" dbms="mysql">
+        <createIndex indexName="idx_qrtz_t_c" tableName="QRTZ_TRIGGERS" unique="false">
+            <column name="sched_name"/>
+            <column name="calendar_name"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-155" dbms="mysql">
+        <createIndex indexName="idx_qrtz_t_g" tableName="QRTZ_TRIGGERS" unique="false">
+            <column name="sched_name"/>
+            <column name="trigger_group"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-156" dbms="mysql">
+        <createIndex indexName="idx_qrtz_t_jg" tableName="QRTZ_TRIGGERS" unique="false">
+            <column name="sched_name"/>
+            <column name="job_group"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-157" dbms="mysql">
+        <createIndex indexName="idx_qrtz_t_n_g_state" tableName="QRTZ_TRIGGERS" unique="false">
+            <column name="sched_name"/>
+            <column name="trigger_group"/>
+            <column name="trigger_state"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-158" dbms="mysql">
+        <createIndex indexName="idx_qrtz_t_n_state" tableName="QRTZ_TRIGGERS" unique="false">
+            <column name="sched_name"/>
+            <column name="trigger_name"/>
+            <column name="trigger_group"/>
+            <column name="trigger_state"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-159" dbms="mysql">
+        <createIndex indexName="idx_qrtz_t_next_fire_time" tableName="QRTZ_TRIGGERS" unique="false">
+            <column name="sched_name"/>
+            <column name="next_fire_time"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-160" dbms="mysql">
+        <createIndex indexName="idx_qrtz_t_nft_misfire" tableName="QRTZ_TRIGGERS" unique="false">
+            <column name="sched_name"/>
+            <column name="misfire_instr"/>
+            <column name="next_fire_time"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-161" dbms="mysql">
+        <createIndex indexName="idx_qrtz_t_nft_st" tableName="QRTZ_TRIGGERS" unique="false">
+            <column name="sched_name"/>
+            <column name="trigger_state"/>
+            <column name="next_fire_time"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-162" dbms="mysql">
+        <createIndex indexName="idx_qrtz_t_nft_st_misfire" tableName="QRTZ_TRIGGERS" unique="false">
+            <column name="sched_name"/>
+            <column name="misfire_instr"/>
+            <column name="next_fire_time"/>
+            <column name="trigger_state"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-163" dbms="mysql">
+        <createIndex indexName="idx_qrtz_t_nft_st_misfire_grp" tableName="QRTZ_TRIGGERS" unique="false">
+            <column name="sched_name"/>
+            <column name="misfire_instr"/>
+            <column name="next_fire_time"/>
+            <column name="trigger_group"/>
+            <column name="trigger_state"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1379350211813-164" dbms="mysql">
+        <createIndex indexName="idx_qrtz_t_state" tableName="QRTZ_TRIGGERS" unique="false">
+            <column name="sched_name"/>
+            <column name="trigger_state"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="awood" id="1379350211813-165" dbms="mysql">
+        <comment>Add the default quartz lock columns.</comment>
+        <insert tableName="QRTZ_LOCKS">
+            <column name="LOCK_NAME" value="TRIGGER_ACCESS"/>
+            <column name="SCHED_NAME" value="TestScheduler"/>
+        </insert>
+        <insert tableName="QRTZ_LOCKS">
+            <column name="LOCK_NAME" value="JOB_ACCESS"/>
+            <column name="SCHED_NAME" value="TestScheduler"/>
+        </insert>
+        <insert tableName="QRTZ_LOCKS">
+            <column name="LOCK_NAME" value="CALENDAR_ACCESS"/>
+            <column name="SCHED_NAME" value="TestScheduler"/>
+        </insert>
+        <insert tableName="QRTZ_LOCKS">
+            <column name="LOCK_NAME" value="STATE_ACCESS"/>
+            <column name="SCHED_NAME" value="TestScheduler"/>
+        </insert>
+        <insert tableName="QRTZ_LOCKS">
+            <column name="LOCK_NAME" value="MISFIRE_ACCESS"/>
+            <column name="SCHED_NAME" value="TestScheduler"/>
+        </insert>
+    </changeSet>
+    <changeSet author="awood" id="1379350211813-166" dbms="mysql">
+        <comment>Insert the default consumer types.</comment>
+        <insert tableName="cp_consumer_type">
+            <column name="id" value="1000"/>
+            <column name="label" value="system"/>
+            <column name="manifest" value="N"/>
+            <column name="created" valueDate="${now}"/>
+            <column name="updated" valueDate="${now}"/>
+        </insert>
+        <insert tableName="cp_consumer_type">
+            <column name="id" value="1001"/>
+            <column name="label" value="person"/>
+            <column name="manifest" value="N"/>
+            <column name="created" valueDate="${now}"/>
+            <column name="updated" valueDate="${now}"/>
+        </insert>
+        <insert tableName="cp_consumer_type">
+            <column name="id" value="1002"/>
+            <column name="label" value="domain"/>
+            <column name="manifest" value="N"/>
+            <column name="created" valueDate="${now}"/>
+            <column name="updated" valueDate="${now}"/>
+        </insert>
+        <insert tableName="cp_consumer_type">
+            <column name="id" value="1003"/>
+            <column name="label" value="candlepin"/>
+            <column name="manifest" value="Y"/>
+            <column name="created" valueDate="${now}"/>
+            <column name="updated" valueDate="${now}"/>
+        </insert>
+        <insert tableName="cp_consumer_type">
+            <column name="id" value="1004"/>
+            <column name="label" value="hypervisor"/>
+            <column name="manifest" value="N"/>
+            <column name="created" valueDate="${now}"/>
+            <column name="updated" valueDate="${now}"/>
+        </insert>
+        <insert tableName="cp_consumer_type">
+            <column name="id" value="1005"/>
+            <column name="label" value="uebercert"/>
+            <column name="manifest" value="N"/>
+            <column name="created" valueDate="${now}"/>
+            <column name="updated" valueDate="${now}"/>
+        </insert>
+    </changeSet>
+    <changeSet author="awood" id="1379350211813-167" dbms="mysql">
+        <preConditions onFail="MARK_RAN">
+            <changeLogPropertyDefined property="community" value="True"/>
+        </preConditions>
+        <comment>Add community friendly names for Headpin and Katello</comment>
+        <insert tableName="cp_consumer_type">
+            <column name="id" value="1006"/>
+            <column name="label" value="headpin"/>
+            <column name="manifest" value="Y"/>
+            <column name="created" valueDate="${now}"/>
+            <column name="updated" valueDate="${now}"/>
+        </insert>
+        <insert tableName="cp_consumer_type">
+            <column name="id" value="1007"/>
+            <column name="label" value="katello"/>
+            <column name="manifest" value="Y"/>
+            <column name="created" valueDate="${now}"/>
+            <column name="updated" valueDate="${now}"/>
+        </insert>
+    </changeSet>
+    <changeSet author="awood" id="1379350211813-168" dbms="mysql">
+        <preConditions onFail="MARK_RAN">
+            <changeLogPropertyDefined property="community" value="False"/>
+        </preConditions>
+        <comment>Add product friendly names for Headpin and Katello</comment>
+        <insert tableName="cp_consumer_type">
+            <column name="id" value="1006"/>
+            <column name="label" value="sam"/>
+            <column name="manifest" value="Y"/>
+            <column name="created" valueDate="${now}"/>
+            <column name="updated" valueDate="${now}"/>
+        </insert>
+        <insert tableName="cp_consumer_type">
+            <column name="id" value="1007"/>
+            <column name="label" value="system engine"/>
+            <column name="manifest" value="Y"/>
+            <column name="created" valueDate="${now}"/>
+            <column name="updated" valueDate="${now}"/>
+        </insert>
+    </changeSet>
+    <changeSet author="awood" id="1379350211813-169" dbms="mysql">
+        <comment>Insert the current list of known distributor versions</comment>
+        <insert tableName="cp_dist_version">
+            <column name="id" value="1000"/>
+            <column name="name" value="sat-5.5"/>
+            <column name="display_name" value="Satellite 5.5"/>
+            <column name="created" valueDate="${now}"/>
+            <column name="updated" valueDate="${now}"/>
+        </insert>
+        <insert tableName="cp_dist_version">
+            <column name="id" value="1001"/>
+            <column name="name" value="sat-6.0"/>
+            <column name="display_name" value="Satellite 6.0"/>
+            <column name="created" valueDate="${now}"/>
+            <column name="updated" valueDate="${now}"/>
+        </insert>
+        <insert tableName="cp_dist_version_capability">
+            <column name="id" value="1001"/>
+            <column name="dist_version_id" value="1001"/>
+            <column name="name" value="ram"/>
+        </insert>
+        <insert tableName="cp_dist_version_capability">
+            <column name="id" value="1002"/>
+            <column name="dist_version_id" value="1001"/>
+            <column name="name" value="cores"/>
+        </insert>
+        <insert tableName="cp_dist_version_capability">
+            <column name="id" value="1003"/>
+            <column name="dist_version_id" value="1001"/>
+            <column name="name" value="instance_multiplier"/>
+        </insert>
+        <insert tableName="cp_dist_version">
+            <column name="id" value="1002"/>
+            <column name="name" value="sam-1.2"/>
+            <column name="display_name" value="Subscription Asset Manager 1.2"/>
+            <column name="created" valueDate="${now}"/>
+            <column name="updated" valueDate="${now}"/>
+        </insert>
+        <insert tableName="cp_dist_version_capability">
+            <column name="id" value="1004"/>
+            <column name="dist_version_id" value="1002"/>
+            <column name="name" value="ram"/>
+        </insert>
+        <insert tableName="cp_dist_version">
+            <column name="id" value="1003"/>
+            <column name="name" value="sam-1.3"/>
+            <column name="display_name" value="Subscription Asset Manager 1.3"/>
+            <column name="created" valueDate="${now}"/>
+            <column name="updated" valueDate="${now}"/>
+        </insert>
+        <insert tableName="cp_dist_version_capability">
+            <column name="id" value="1005"/>
+            <column name="dist_version_id" value="1003"/>
+            <column name="name" value="ram"/>
+        </insert>
+        <insert tableName="cp_dist_version_capability">
+            <column name="id" value="1006"/>
+            <column name="dist_version_id" value="1003"/>
+            <column name="name" value="cores"/>
+        </insert>
+        <insert tableName="cp_dist_version_capability">
+            <column name="id" value="1007"/>
+            <column name="dist_version_id" value="1003"/>
+            <column name="name" value="instance_multiplier"/>
+        </insert>
+    </changeSet>
+    <changeSet author="awood" id="1379350211813-170" dbms="mysql">
+        <comment>Add the derived product distributor version capability for SAM-1.3 and Satellite-6.0</comment>
+            <insert tableName="cp_dist_version_capability">
+                <column name="id" value="1008"/>
+                <column name="dist_version_id" value="1001"/>
+                <column name="name" value="derived_product"/>
+            </insert>
+            <insert tableName="cp_dist_version_capability">
+                <column name="id" value="1009"/>
+                <column name="dist_version_id" value="1003"/>
+                <column name="name" value="derived_product"/>
+            </insert>
+    </changeSet>
+    <changeSet author="awood" id="1379350211813-171" dbms="mysql">
+        <comment>Add the cert_v3 capability to SAM 1.3 and Satellite 6.0</comment>
+        <insert tableName="cp_dist_version_capability">
+            <column name="id" value="1010"/>
+            <column name="dist_version_id" value="1001"/>
+            <column name="name" value="cert_v3"/>
+        </insert>
+        <insert tableName="cp_dist_version_capability">
+            <column name="id" value="1011"/>
+            <column name="dist_version_id" value="1003"/>
+            <column name="name" value="cert_v3"/>
+        </insert>
+    </changeSet>
+    <changeSet author="awood" id="1379350211813-172" dbms="mysql">
+        <comment>Create Satellite version 5.6 capabilities</comment>
+        <insert tableName="cp_dist_version">
+            <column name="id" value="1004"/>
+            <column name="name" value="sat-5.6"/>
+            <column name="display_name" value="Satellite 5.6"/>
+            <column name="created" valueDate="${now}"/>
+            <column name="updated" valueDate="${now}"/>
+        </insert>
+        <insert tableName="cp_dist_version_capability">
+            <column name="id" value="1012"/>
+            <column name="dist_version_id" value="1004"/>
+            <column name="name" value="ram"/>
+        </insert>
+        <insert tableName="cp_dist_version_capability">
+            <column name="id" value="1013"/>
+            <column name="dist_version_id" value="1004"/>
+            <column name="name" value="cores"/>
+        </insert>
+        <insert tableName="cp_dist_version_capability">
+            <column name="id" value="1014"/>
+            <column name="dist_version_id" value="1004"/>
+            <column name="name" value="instance_multiplier"/>
+        </insert>
+        <insert tableName="cp_dist_version_capability">
+            <column name="id" value="1015"/>
+            <column name="dist_version_id" value="1004"/>
+            <column name="name" value="cert_v3"/>
+        </insert>
+        <insert tableName="cp_dist_version_capability">
+            <column name="id" value="1016"/>
+            <column name="dist_version_id" value="1004"/>
+            <column name="name" value="derived_product"/>
+        </insert>
+    </changeSet>
+</databaseChangeLog>
