@@ -65,7 +65,6 @@ import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.test.TestUtil;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -522,4 +521,5 @@ public class ConsumerResourceTest {
         assertTrue(results.containsKey("1"));
         assertTrue(results.containsKey("2"));
     }
+
 }

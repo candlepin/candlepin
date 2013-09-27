@@ -29,6 +29,34 @@ describe 'Consumer Resource' do
     }.should raise_exception(RestClient::Forbidden)
   end
 
+  it "should expose a consumer's event atom feed" do
+    atom = @consumer1.list_consumer_events_atom(@consumer1.uuid)
+    atom.include?("xml").should be_true
+    atom.include?("atom").should be_true
+    atom.include?("CONSUMER CREATED").should be_true
+
+    # Consumer 2 should not be able to see consumer 1's feed:
+    lambda {
+      @consumer2.list_consumer_events_atom(@consumer1.uuid)
+    }.should raise_exception(RestClient::Forbidden)
+  end
+
+  it "should expose a consumer's events" do
+    events = @consumer1.list_consumer_events(@consumer1.uuid)
+    events.size.should be > 0
+
+    # Events are sorted in order of descending timestamp, so the first
+    # event should be consumer created:
+    events[-1]['target'].should == 'CONSUMER'
+    events[-1]['type'].should == 'CREATED'
+    events[-1]['principal']['name'].should == @username1
+
+    # Consumer 2 should not be able to see consumer 1's feed:
+    lambda {
+      @consumer2.list_consumer_events(@consumer1.uuid)
+    }.should raise_exception(RestClient::Forbidden)
+  end
+
   it 'should receive paged data back when requested' do
     (1..4).each do |i|
       consumer_client(@user1, random_string('system'))

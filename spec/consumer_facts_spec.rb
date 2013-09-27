@@ -60,31 +60,27 @@ describe 'Consumer Facts' do
   end
 
   it 'emits an event when facts are updated' do
+    event_size = @consumer_api.list_consumer_events(@consumer.uuid).size
     updated_facts = {
       'uname.machine' => 'x86_64',
       'uname.system'     => 'Linux',
     }
     @consumer_api.update_consumer({:facts => updated_facts})
 
-    events = @cp.list_consumer_events(@owner['key'], @consumer.uuid)
-
-    # Punting on this for now...
-    events.should include("consumer")
-    events.should include("updated")
+    events = @consumer_api.list_consumer_events(@consumer.uuid)
+    events.size.should == event_size + 1
+    events[0]['type'].should == 'MODIFIED'
   end
 
   it 'does not emit an event when facts do not change' do
+    event_size = @consumer_api.list_consumer_events(@consumer.uuid).size
     updated_facts = {
       'uname.machine' => 'i686',
       'uname.system'     => 'Linux',
     }
     @consumer_api.update_consumer({:facts => updated_facts})
-
-    events = @cp.list_consumer_events(@owner['key'], @consumer.uuid)
-
-    # Punting on this for now...
-    events.should include("consumer")
-    events.should include("updated")
+    event_size_after = @consumer_api.list_consumer_events(@consumer.uuid).size
+    event_size_after.should == event_size
   end
 
   it 'updates consumer updated date when facts are updated' do
