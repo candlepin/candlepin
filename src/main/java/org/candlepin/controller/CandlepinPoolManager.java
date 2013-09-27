@@ -48,6 +48,7 @@ import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Subscription;
+import org.candlepin.model.Pool.PoolType;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.policy.EntitlementRefusedException;
@@ -184,11 +185,7 @@ public class CandlepinPoolManager implements PoolManager {
                 //
                 // However if this is an older bonus pool (hosted) not tied to any
                 // entitlements, we need to proceed:
-                if (p.hasAttribute("pool_derived") && (
-                    p.getSourceStackId() != null || p.getSourceEntitlement() != null)) {
-                    continue;
-                }
-                else {
+                if (p.getType() == PoolType.NORMAL || p.getType() == PoolType.BONUS) {
                     deletePool(p);
                 }
             }
@@ -649,7 +646,7 @@ public class CandlepinPoolManager implements PoolManager {
         if (sub != null) {
             // Need to make sure that we check for a defined sub product
             // if it is a derived pool.
-            boolean derived = pool.hasAttribute("pool_derived");
+            boolean derived = pool.getType() != PoolType.NORMAL;
             product = derived && sub.getDerivedProduct() != null ? sub.getDerivedProduct() :
                 sub.getProduct();
         }
