@@ -944,6 +944,29 @@ describe 'Consumer Resource' do
     ent[0]["quantity"].should == 1
   end
 
+  it "should bind correct future quantity when fully subscribed today" do
+    facts = {
+      'cpu.cpu_socket(s)' => '4',
+    }
+    product1 = create_product(random_string('product'), random_string('product-multiple-arch'),
+        :attributes => { :sockets => '2', :'multi-entitlement' => 'yes', :stacking_id => 'consumer-bind-test'})
+    sub = @cp.create_subscription(@owner1['key'], product1.id, 10)
+    start = Date.today + 400
+    future_sub = @cp.create_subscription(@owner1['key'], product1.id, 10, [], '', '', '', start)
+    installed = [
+        {'productId' => product1.id, 'productName' => product1.name}
+    ]
+    @consumer1.update_consumer({:installedProducts => installed, :facts => facts})
+    @cp.refresh_pools(@owner1['key'])
+    pool = @consumer1.list_pools({:owner => @owner1['id']}).first
+    # Fully cover the product1 for a year
+    @consumer1.consume_pool(pool.id, {:quantity => 2})
+
+    future_pool = @consumer1.list_pools({:owner => @owner1['id'], :activeon => Date.today + 450}).first
+    ent = @consumer1.consume_pool(future_pool.id)[0]
+    ent["quantity"].should == 2
+  end
+
   it 'should be able to add unused attributes' do
     guests = [{'guestId' => 'guest1', 'fooBar' => 'some value'}]
 
