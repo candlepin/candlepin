@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 require 'spec_helper'
 require 'candlepin_scenarios'
+require 'rexml/document'
 
 describe 'Consumer Resource' do
 
@@ -31,9 +32,9 @@ describe 'Consumer Resource' do
 
   it "should expose a consumer's event atom feed" do
     atom = @consumer1.list_consumer_events_atom(@consumer1.uuid)
-    atom.include?("xml").should be_true
-    atom.include?("atom").should be_true
-    atom.include?("CONSUMER CREATED").should be_true
+    doc = REXML::Document.new(atom)
+    events = REXML::XPath.match(doc, "//*[local-name()='event'][type = 'CREATED' and target ='CONSUMER']")
+    events.should have(1).things
 
     # Consumer 2 should not be able to see consumer 1's feed:
     lambda {
