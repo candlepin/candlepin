@@ -4,14 +4,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-10-02 15:44-0300\n"
-"PO-Revision-Date: 2013-08-08 07:17-0400\n"
+"POT-Creation-Date: 2012-06-27 12:35-0400\n"
+"PO-Revision-Date: 2013-09-18 09:08-0400\n"
 "Last-Translator: leahliu <lliu@redhat.com>\n"
 "Language-Team: Chinese (Simplified, China)\n"
-"Language: zh-Hans-CN\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: zh-Hans-CN\n"
 "Plural-Forms: nplurals=1; plural=0\n"
 "X-Generator: Zanata 2.2.2\n"
 
@@ -347,17 +347,17 @@ msgstr "未找到机构 ''{1}'' 的激活密钥 ''{0}''。"
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:611
 #, java-format
 msgid "User with ID ''{0}'' could not be found."
-msgstr ""
+msgstr "没有找到 ID 为 ''{0}'' 的用户"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:618
 #, java-format
 msgid "User ''{0}'' has no roles for organization ''{1}''"
-msgstr ""
+msgstr "用户 ''{0}'' 没有机构 ''{1}'' 的角色。"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:630
 #, java-format
 msgid "User ''{0}'' has already registered a personal consumer"
-msgstr ""
+msgstr "用户 ''{0}'' 已经注册为个人客户"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:647
 msgid "You must specify an organization for new units."
@@ -373,17 +373,17 @@ msgstr "机构 {0} 不存在。"
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:666
 #, java-format
 msgid "User ''{0}'' cannot access organization ''{1}''."
-msgstr ""
+msgstr "用户 ''{0}'' 无法访问机构 ''{1}''"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:728
 #, java-format
 msgid "Unit type ''{0}'' could not be found."
-msgstr ""
+msgstr "无法找到单元类型 ''{0}''。"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:814
 #, java-format
 msgid "Environment with ID ''{0}'' could not be found."
-msgstr ""
+msgstr "没有找到 ID 为 ''{0}'' 的环境。"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1124
 #, java-format
@@ -417,7 +417,7 @@ msgstr "无法为没有池的产品附加订阅：{0}"
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:141
 #, java-format
 msgid "Unit with ID ''{0}'' could not be found."
-msgstr ""
+msgstr "无法找到 ID 为 ''{0}'' 的单元。"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author xhuang
@@ -434,12 +434,12 @@ msgstr "无法找到具有 ID ''{0}'' 的权利。"
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1518
 #, java-format
 msgid "Product with ID ''{0}'' could not be found."
-msgstr ""
+msgstr "无法找到 ID 为 ''{0}'' 的产品"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1631
 #, java-format
 msgid "Entitlement Certificate with serial number ''{0}'' could not be found."
-msgstr ""
+msgstr "无法找到序列号为 ''{0}'' 的权利证书。"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1694
 #, java-format
@@ -467,21 +467,21 @@ msgstr "UUID 为 {0} 的系统不是虚拟客户端。"
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1929
 #, java-format
 msgid "Deletion record for hypervisor ''{0}'' not found."
-msgstr ""
+msgstr "未找到删除 hypervisor ''{0}'' 的记录。"
 
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:91
 #, java-format
 msgid "Object with ID ''{0}'' could not found."
-msgstr ""
+msgstr "没有找到 ID 为 ''{0}'' 的对象。"
 
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:119
 #, java-format
 msgid "Unit ''{0}'' has no subscription for product ''{1}''."
-msgstr ""
+msgstr "单元 ''{0}'' 订阅没有产品 ''{1}''。"
 
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:194
 msgid "Quantity value must be greater than 0."
-msgstr ""
+msgstr "数量值必须大于 0。"
 
 #: src/main/java/org/candlepin/resource/ProductResource.java:121
 #: src/main/java/org/candlepin/resource/ProductResource.java:140
@@ -831,7 +831,7 @@ msgstr "无法找到 id 为 {0} 的单元类型。"
 #: src/main/java/org/candlepin/resource/DistributorVersionResource.java:104
 #, java-format
 msgid "A distributor version with name {0} already exists"
-msgstr ""
+msgstr "名称 {0} 已存在的发行商版本"
 
 #: src/main/java/org/candlepin/resource/DistributorVersionResource.java:132
 #, java-format
@@ -1052,11 +1052,11 @@ msgstr "获取 oauth 单元密钥出错"
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
-"to address this problem. See kbase https://access.redhat.com/knowledge/"
-"node/129003 for more information."
+"to address this problem. See kbase "
+"https://access.redhat.com/knowledge/node/129003 for more information."
 msgstr ""
-"证书 {0} 的内容组过多。较新的客户端可解决这个问题。详情请查看知识库 https://"
-"access.redhat.com/knowledge/node/129003。"
+"证书 {0} 的内容组过多。较新的客户端可解决这个问题。详情请查看知识库 "
+"https://access.redhat.com/knowledge/node/129003。"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author xhuang
@@ -1074,7 +1074,8 @@ msgstr "订阅池 {0} 不存在。"
 #: src/main/java/org/candlepin/controller/Entitler.java:107
 #, java-format
 msgid ""
-"This unit has already had the subscription matching pool ID ''{0}'' attached."
+"This unit has already had the subscription matching pool ID ''{0}'' "
+"attached."
 msgstr "这个单元已经附加与池 ID ''{0}'' 匹配的订阅。"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:112
@@ -1230,8 +1231,7 @@ msgstr "fact ''{0}'' 必须是一个整数而不是 ''{1}''。那个 fact 还没
 msgid ""
 "The fact ''{0}'' must have a positive integer value instead of ''{1}''. No "
 "value will exist for that fact."
-msgstr ""
-"fact ''{0}'' 必须是一个正整数而不是 ''{1}''。那个 fact 还没有任何数值。"
+msgstr "fact ''{0}'' 必须是一个正整数而不是 ''{1}''。那个 fact 还没有任何数值。"
 
 #: src/main/java/org/candlepin/model/ConsumerCurator.java:411
 #, java-format

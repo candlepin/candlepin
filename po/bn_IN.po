@@ -4,14 +4,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-10-02 15:44-0300\n"
-"PO-Revision-Date: 2013-08-12 05:24-0400\n"
+"POT-Creation-Date: 2012-06-27 12:35-0400\n"
+"PO-Revision-Date: 2013-09-18 02:31-0400\n"
 "Last-Translator: bnin <sray@redhat.com>\n"
 "Language-Team: Bengali (India)\n"
-"Language: bn-IN\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: bn-IN\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 "X-Generator: Zanata 2.2.2\n"
 
@@ -133,7 +133,9 @@ msgstr "{0} দ্বারা {1} এককের একটি রপ্তা�
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:142
 #, java-format
 msgid "{0} imported a manifest for owner {1}"
-msgstr "{0} দ্বারা {1} মালিকের জন্য একটি তালিকা অর্থাৎ ম্যানিফেস্ট ইম্পোর্ট করা হয়েছে"
+msgstr ""
+"{0} দ্বারা {1} মালিকের জন্য একটি তালিকা অর্থাৎ ম্যানিফেস্ট ইম্পোর্ট করা "
+"হয়েছে"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author runab
@@ -291,7 +293,8 @@ msgstr "অপর্যাপ্ত অনুমতি"
 # keys, author runab
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:347
 msgid "Must specify an org to register with activation keys."
-msgstr "অ্যাক্টিভেশন-কি সহযোগে নিবন্ধনের জন্য একটি প্রতিষ্ঠা উল্লেখ করা আবশ্যক।"
+msgstr ""
+"অ্যাক্টিভেশন-কি সহযোগে নিবন্ধনের জন্য একটি প্রতিষ্ঠা উল্লেখ করা আবশ্যক।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author runab
@@ -347,17 +350,17 @@ msgstr "''{0}'' অ্যাক্টিভেশন-কি-টি ''{1}'' প�
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:611
 #, java-format
 msgid "User with ID ''{0}'' could not be found."
-msgstr ""
+msgstr "ID ''{0}'' বিশিষ্ট ব্যবহারকারী খুঁজে পাওয়া গেল না।"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:618
 #, java-format
 msgid "User ''{0}'' has no roles for organization ''{1}''"
-msgstr ""
+msgstr "''{0}'' ব্যবহারকারীর ''{1}'' প্রতিষ্ঠানে কোনো ভূমিকা নেই"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:630
 #, java-format
 msgid "User ''{0}'' has already registered a personal consumer"
-msgstr ""
+msgstr "''{0}'' ব্যবহারকারী ব্যক্তিগত গ্রাহক রূপে ইতিমধ্যেই নিবন্ধন করিয়েছেন"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:647
 msgid "You must specify an organization for new units."
@@ -373,17 +376,17 @@ msgstr "{0} প্রতিষ্ঠান বর্তমানে উপস্
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:666
 #, java-format
 msgid "User ''{0}'' cannot access organization ''{1}''."
-msgstr ""
+msgstr " ''{0}'' ব্যবহারকারী দ্বারা \"{1}\" প্রতিষ্ঠান ব্যবহার করা সম্ভব নয়।"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:728
 #, java-format
 msgid "Unit type ''{0}'' could not be found."
-msgstr ""
+msgstr "\"{0}\" এককের ধরন পাওয়া যায়নি।"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:814
 #, java-format
 msgid "Environment with ID ''{0}'' could not be found."
-msgstr ""
+msgstr "ID ''{0}'' বিশিষ্ট এনভায়রনমেন্ট খুঁজে পাওয়া যায়নি।"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1124
 #, java-format
@@ -417,7 +420,7 @@ msgstr "পুল বিহীন কোনো প্রোডাক্টের
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:141
 #, java-format
 msgid "Unit with ID ''{0}'' could not be found."
-msgstr ""
+msgstr "ID \"{0}\" বিশিষ্ট এককের ধরন পাওয়া যায়নি।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author runab
@@ -434,12 +437,12 @@ msgstr "''{0}'' সহ এনটাইটেলমেন্ট পাওয়া �
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1518
 #, java-format
 msgid "Product with ID ''{0}'' could not be found."
-msgstr ""
+msgstr "ID ''{0}'' বিশিষ্ট প্রোডাক্ট পাওয়া যায়নি।"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1631
 #, java-format
 msgid "Entitlement Certificate with serial number ''{0}'' could not be found."
-msgstr ""
+msgstr "\"{0}\" ক্রমিক সংখ্যা বিশিষ্ট এনটাইটেলমেন্ট সার্টিফিকেট পাওয়া যায়নি।"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1694
 #, java-format
@@ -447,8 +450,8 @@ msgid ""
 "Unit {0} cannot be exported. A manifest cannot be made for units of type "
 "''{1}''."
 msgstr ""
-"{0} একক এক্সপোর্ট করা সম্ভব নয়। ''{1}'' ধরনের এককের জন্য ম্যানিফেস্ট প্রস্তুত করা "
-"সম্ভব নয়।"
+"{0} একক এক্সপোর্ট করা সম্ভব নয়। ''{1}'' ধরনের এককের জন্য ম্যানিফেস্ট "
+"প্রস্তুত করা সম্ভব নয়।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -469,21 +472,21 @@ msgstr "UUID {0} সহ সিস্টেম ভার্চুয়াল গে
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1929
 #, java-format
 msgid "Deletion record for hypervisor ''{0}'' not found."
-msgstr ""
+msgstr "''{0}'' হাইপারভাইজরের মোছার রেকর্ড খুঁজে পাওয়া যায়নি।"
 
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:91
 #, java-format
 msgid "Object with ID ''{0}'' could not found."
-msgstr ""
+msgstr "ID ''{0}'' বিশিষ্ট অবজেক্ট পাওয়া যায়নি।"
 
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:119
 #, java-format
 msgid "Unit ''{0}'' has no subscription for product ''{1}''."
-msgstr ""
+msgstr "''{0}'' ইউনিটের ''{1}'' প্রোডাক্টের ক্ষেত্রে কোনো সাবস্ক্রিপশন নেই।"
 
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:194
 msgid "Quantity value must be greater than 0."
-msgstr ""
+msgstr "পরিমাণ 0 থেকে বেশি হওয়া আবশ্যক।"
 
 #: src/main/java/org/candlepin/resource/ProductResource.java:121
 #: src/main/java/org/candlepin/resource/ProductResource.java:140
@@ -530,19 +533,22 @@ msgid ""
 "Error: Only pools with multi-entitlement product subscriptions can be added "
 "to the activation key with a quantity greater than one."
 msgstr ""
-"ত্রুটি: একাধিক-এনটাইটেলমেন্ট সহ উৎপাদন সাবস্ক্রিপশন বিশিষ্ট পুল-গুলির ক্ষেত্রেই শুধুমাত্র "
-"এক থেকে বেশি সংখ্যা সহ চিহ্নিত অ্যাক্টিভেশন-কিগুলি ব্যবহার করা যাবে।"
+"ত্রুটি: একাধিক-এনটাইটেলমেন্ট সহ উৎপাদন সাবস্ক্রিপশন বিশিষ্ট পুল-গুলির "
+"ক্ষেত্রেই শুধুমাত্র এক থেকে বেশি সংখ্যা সহ চিহ্নিত অ্যাক্টিভেশন-কিগুলি "
+"ব্যবহার করা যাবে।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author runab
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:156
 msgid "The quantity must not be greater than the total allowed for the pool"
-msgstr "পুলের জন্য অনুমোদিত সম্পূর্ণ পরিমানের থেকে বেশি পরিমাণ ধার্য করা যাবে না"
+msgstr ""
+"পুলের জন্য অনুমোদিত সম্পূর্ণ পরিমানের থেকে বেশি পরিমাণ ধার্য করা যাবে না"
 
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:163
 msgid "Activation keys can only use host restricted pools from a single host."
 msgstr ""
-"অ্যাক্টিভেশন-কি কোনো একক হোস্ট থেকে শুধুমাত্র হোস্ট সীমাবদ্ধ পুল ব্যবহার করতে পারে।"
+"অ্যাক্টিভেশন-কি কোনো একক হোস্ট থেকে শুধুমাত্র হোস্ট সীমাবদ্ধ পুল ব্যবহার "
+"করতে পারে।"
 
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:224
 #, java-format
@@ -564,7 +570,8 @@ msgstr "{0} id বিশিষ্ট তথ্য পাওয়া যায়ন�
 # keys
 #: src/main/java/org/candlepin/resource/RulesResource.java:85
 msgid "Error decoding the rules. The text should be base 64 encoded"
-msgstr "নিয়ম ডিকোড করতে সমস্যা। টেক্সটের ক্ষেত্রে base 64 এনকোডিং প্রয়োগ করা আবশ্যক"
+msgstr ""
+"নিয়ম ডিকোড করতে সমস্যা। টেক্সটের ক্ষেত্রে base 64 এনকোডিং প্রয়োগ করা আবশ্যক"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -636,13 +643,14 @@ msgid ""
 "The activation key name ''{0}'' must be alphanumeric or include the "
 "characters '-' or '_'"
 msgstr ""
-"অ্যাক্টিভেশন-কি-র নাম ''{0}'' অবশ্যই বর্ণ সাংখ্যিক হতে হবে বা তাতে '-' অথবা '_' "
-"অক্ষর থাকতে হবে"
+"অ্যাক্টিভেশন-কি-র নাম ''{0}'' অবশ্যই বর্ণ সাংখ্যিক হতে হবে বা তাতে '-' অথবা "
+"'_' অক্ষর থাকতে হবে"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:506
 #, java-format
 msgid "The activation key name ''{0}'' is already in use for owner {1}"
-msgstr "''{0}'' অ্যাক্টিভেশন-কি নামটি {1} মালিকের জন্য ইতিমধ্যেই ব্যবহৃত হচ্ছে।"
+msgstr ""
+"''{0}'' অ্যাক্টিভেশন-কি নামটি {1} মালিকের জন্য ইতিমধ্যেই ব্যবহৃত হচ্ছে।"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:610
 #: src/main/java/org/candlepin/model/UeberCertificateGenerator.java:122
@@ -707,7 +715,8 @@ msgstr "{0} মালিকের জন্য ueber cert প্রস্তু�
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1217
 #, java-format
 msgid "ueber certificate for owner {0} was not found. Please generate one."
-msgstr "{0} মালিকের ueber সার্টিফিকেট পাওয়া যায়নি। অনুগ্রহ করে একটি প্রস্তুত করুন।"
+msgstr ""
+"{0} মালিকের ueber সার্টিফিকেট পাওয়া যায়নি। অনুগ্রহ করে একটি প্রস্তুত করুন।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author runab
@@ -734,7 +743,8 @@ msgstr "মালিক ও একক উভয়ের উপর একসাথ�
 
 #: src/main/java/org/candlepin/resource/PoolResource.java:127
 msgid "A unit or owner is needed to filter on product"
-msgstr "প্রোডাক্টের উপর ফিল্টার প্রয়োগ করার জন্য একক অথবা মালিক উল্লেখ করা আবশ্যক"
+msgstr ""
+"প্রোডাক্টের উপর ফিল্টার প্রয়োগ করার জন্য একক অথবা মালিক উল্লেখ করা আবশ্যক"
 
 #: src/main/java/org/candlepin/resource/PoolResource.java:146
 #, java-format
@@ -839,7 +849,7 @@ msgstr "{0} id বিশিষ্ট এককের ধরন পাওয়া �
 #: src/main/java/org/candlepin/resource/DistributorVersionResource.java:104
 #, java-format
 msgid "A distributor version with name {0} already exists"
-msgstr ""
+msgstr "{0} নামের একটি বিতরণ সংস্করণ ইতিমধ্যেই উপস্থিত"
 
 #: src/main/java/org/candlepin/resource/DistributorVersionResource.java:132
 #, java-format
@@ -880,7 +890,9 @@ msgstr "{2} অাওতাভুক্ত করায় সমস্যা। {1
 #: src/main/java/org/candlepin/policy/js/entitlement/AbstractEntitlementRules.java:133
 #, java-format
 msgid "''{0}'' Should contain name, priority and at least one attribute"
-msgstr "''{0}''-র মধ্যে নাম, গুরুত্বের মাত্রা ও অন্তত একটি বৈশিষ্ট্য উপস্থিত থাকা আবশ্যক"
+msgstr ""
+"''{0}''-র মধ্যে নাম, গুরুত্বের মাত্রা ও অন্তত একটি বৈশিষ্ট্য উপস্থিত থাকা "
+"আবশ্যক"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -997,14 +1009,15 @@ msgid ""
 "This subscription management application has already been imported by "
 "another owner."
 msgstr ""
-"এই সাবস্ক্রিপশন পরিচালনা অ্যাপ্লিকেশনটি অন্য মালিকের দ্বারা ইতিমধ্যেই অামদানি করা "
-"হয়েছে।"
+"এই সাবস্ক্রিপশন পরিচালনা অ্যাপ্লিকেশনটি অন্য মালিকের দ্বারা ইতিমধ্যেই "
+"অামদানি করা হয়েছে।"
 
 #: src/main/java/org/candlepin/sync/ConsumerImporter.java:82
 msgid ""
 "Owner has already imported from another subscription management application."
 msgstr ""
-"মালিক ইতিমধ্যেই অপর সাবস্ক্রিপশন পরিচালনা অ্যাপ্লিকেশন থেকে অামদানি করা হয়েছে।"
+"মালিক ইতিমধ্যেই অপর সাবস্ক্রিপশন পরিচালনা অ্যাপ্লিকেশন থেকে অামদানি করা "
+"হয়েছে।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author runab
@@ -1030,7 +1043,8 @@ msgstr "অফসেট এবং লিমিট প্যারামিটা
 
 #: src/main/java/org/candlepin/resteasy/interceptor/PageRequestInterceptor.java:120
 msgid "the order parameter must be either 'ascending' or 'descending'"
-msgstr "অর্ডার প্যারামিটার অবশ্যই হয় 'মানের 'ঊর্ধ্বক্রমে' বা 'অধক্রমে' হতে হবে "
+msgstr ""
+"অর্ডার প্যারামিটার অবশ্যই হয় 'মানের 'ঊর্ধ্বক্রমে' বা 'অধক্রমে' হতে হবে "
 
 #: src/main/java/org/candlepin/resteasy/interceptor/PageRequestInterceptor.java:129
 msgid "Expected a positive integer."
@@ -1063,12 +1077,12 @@ msgstr "oauth একক কি প্রাপ্ত করতে ত্রু�
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
-"to address this problem. See kbase https://access.redhat.com/knowledge/"
-"node/129003 for more information."
+"to address this problem. See kbase "
+"https://access.redhat.com/knowledge/node/129003 for more information."
 msgstr ""
-"{0} সার্টিফিকেটের অনেকগুলি বিষয়বস্তুর সেট। এই সমস্যার সমাধান করে দিতে অপেক্ষাকৃত "
-"নতুন কোনো ক্লায়েন্ট উপলব্ধ থাকতে পারে। অারো জানতে kbase https://access.redhat."
-"com/knowledge/node/129003 দেখুন।"
+"{0} সার্টিফিকেটের অনেকগুলি বিষয়বস্তুর সেট। এই সমস্যার সমাধান করে দিতে "
+"অপেক্ষাকৃত নতুন কোনো ক্লায়েন্ট উপলব্ধ থাকতে পারে। অারো জানতে kbase "
+"https://access.redhat.com/knowledge/node/129003 দেখুন।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author runab
@@ -1086,7 +1100,8 @@ msgstr "সাবস্ক্রিপশন পুল {0} বর্তমান
 #: src/main/java/org/candlepin/controller/Entitler.java:107
 #, java-format
 msgid ""
-"This unit has already had the subscription matching pool ID ''{0}'' attached."
+"This unit has already had the subscription matching pool ID ''{0}'' "
+"attached."
 msgstr "এই এককে ইতিমধ্যেই সাবস্ক্রিপশন মানানসই পুল  ID ''{0}'' সংযুক্ত।  "
 
 #: src/main/java/org/candlepin/controller/Entitler.java:112
@@ -1120,7 +1135,8 @@ msgstr "সাবস্ক্রিপশন পরিচালনা অ্য�
 #: src/main/java/org/candlepin/controller/Entitler.java:133
 #, java-format
 msgid "Pool is restricted to virtual guests: ''{0}''."
-msgstr "শুধুমাত্র ভার্চুয়াল গেস্টদের ব্যবহারের জন্য পুলটি সংরক্ষিত হয়েছে: ''{0}''."
+msgstr ""
+"শুধুমাত্র ভার্চুয়াল গেস্টদের ব্যবহারের জন্য পুলটি সংরক্ষিত হয়েছে: ''{0}''."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:142
 #, java-format
@@ -1160,19 +1176,22 @@ msgstr "''{0}'' এনটাইটেলমেন্টে সমতাবিধ
 msgid ""
 "Multi-entitlement not supported for pool connected with entitlement ''{0}''."
 msgstr ""
-"''{0}'' এনটাইটেলমেন্টের সংগে সংযুক্ত পুলের ক্ষেত্রে একাধিক এনটাইটেলমেন্ট সমর্থিত নয়।"
+"''{0}'' এনটাইটেলমেন্টের সংগে সংযুক্ত পুলের ক্ষেত্রে একাধিক এনটাইটেলমেন্ট "
+"সমর্থিত নয়।"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:194
 #, java-format
 msgid "Unable to adjust quantity for the entitlement with id ''{0}'': {1}"
-msgstr "''{0}'' id সহ এনটাইটেলমেন্টের ক্ষেত্রে গুণমান সমতাবিধান করতে ব্যর্থ: {1}"
+msgstr ""
+"''{0}'' id সহ এনটাইটেলমেন্টের ক্ষেত্রে গুণমান সমতাবিধান করতে ব্যর্থ: {1}"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:270
 #, java-format
 msgid ""
 "This system already has a subscription for the product ''{0}'' attached."
 msgstr ""
-"এই সিস্টেমে ''{0}'' প্রোডাক্টের একটি সাবস্ক্রিপশন ইতিমধ্যেই সংযুক্ত অবস্থায় অাছে।"
+"এই সিস্টেমে ''{0}'' প্রোডাক্টের একটি সাবস্ক্রিপশন ইতিমধ্যেই সংযুক্ত অবস্থায় "
+"অাছে।"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:274
 #, java-format
@@ -1188,7 +1207,9 @@ msgstr "এই ধরনের একক ''{0}'' প্রোডাক্টে�
 #: src/main/java/org/candlepin/controller/Entitler.java:283
 #, java-format
 msgid "Only virtual systems can have subscription ''{0}'' attached."
-msgstr "শুধুমাত্র ভার্চুয়াল সিস্টেমে ''{0}'' সাবস্ক্রিপশন সংযুক্ত অবস্থায় থাকতে পারে।"
+msgstr ""
+"শুধুমাত্র ভার্চুয়াল সিস্টেমে ''{0}'' সাবস্ক্রিপশন সংযুক্ত অবস্থায় থাকতে "
+"পারে।"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:288
 #, java-format
@@ -1226,8 +1247,8 @@ msgstr "অ্যাট্রিবিউট ''{0}'' অবশ্যই এক b
 msgid ""
 "You cannot create a circular reference for products that ''{0}'' relies on."
 msgstr ""
-"''{0}'' নির্ভরশীল এমন প্রোডাক্টের ক্ষেত্রে অাপনি বৃত্তীয় রেফারেন্স তৈরি করতে পারবেন "
-"না।"
+"''{0}'' নির্ভরশীল এমন প্রোডাক্টের ক্ষেত্রে অাপনি বৃত্তীয় রেফারেন্স তৈরি করতে"
+" পারবেন না।"
 
 #: src/main/java/org/candlepin/model/ConsumerCurator.java:100
 #, java-format
@@ -1240,8 +1261,8 @@ msgid ""
 "The fact ''{0}'' must be an integer instead of ''{1}''. No value will exist "
 "for that fact."
 msgstr ""
-"ফ্যাক্ট ''{0}'' ''{1}'' - এর পরিবর্তে অবশ্যই এক পূর্ণ সংখ্যা হতে হবে। ফ্যাক্টটির জন্য "
-"কোনো মান উপস্থিত থাকবে না।"
+"ফ্যাক্ট ''{0}'' ''{1}'' - এর পরিবর্তে অবশ্যই এক পূর্ণ সংখ্যা হতে হবে। "
+"ফ্যাক্টটির জন্য কোনো মান উপস্থিত থাকবে না।"
 
 #: src/main/java/org/candlepin/model/ConsumerCurator.java:341
 #, java-format
@@ -1249,8 +1270,8 @@ msgid ""
 "The fact ''{0}'' must have a positive integer value instead of ''{1}''. No "
 "value will exist for that fact."
 msgstr ""
-"ফ্যাক্ট ''{0}'' - এ ''{1}'' - এর পরিবর্তে এক ধনাত্মক পূর্ণ সংখ্যা থাকতে হবে। "
-"ফ্যাক্টটির জন্য কোনো মান উপস্থিত থাকবে না।"
+"ফ্যাক্ট ''{0}'' - এ ''{1}'' - এর পরিবর্তে এক ধনাত্মক পূর্ণ সংখ্যা থাকতে হবে।"
+" ফ্যাক্টটির জন্য কোনো মান উপস্থিত থাকবে না।"
 
 #: src/main/java/org/candlepin/model/ConsumerCurator.java:411
 #, java-format

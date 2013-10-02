@@ -4,14 +4,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-10-02 15:44-0300\n"
-"PO-Revision-Date: 2013-08-07 12:07-0400\n"
+"POT-Creation-Date: 2012-06-27 12:35-0400\n"
+"PO-Revision-Date: 2013-09-17 09:12-0400\n"
 "Last-Translator: samfreemanz <sfriedma@redhat.com>\n"
 "Language-Team: French\n"
-"Language: fr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: fr\n"
 "Plural-Forms: nplurals=2; plural=(n > 1)\n"
 "X-Generator: Zanata 2.2.2\n"
 
@@ -357,17 +357,19 @@ msgstr "Clé d'activation « {0} » introuvable pour l'organisation « {1} �
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:611
 #, java-format
 msgid "User with ID ''{0}'' could not be found."
-msgstr ""
+msgstr "Impossible de trouver l'utilisateur avec l'ID « {0} »."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:618
 #, java-format
 msgid "User ''{0}'' has no roles for organization ''{1}''"
 msgstr ""
+"L'utilisateur « {0} » ne possède pas de rôles pour l''organisation « {1} »"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:630
 #, java-format
 msgid "User ''{0}'' has already registered a personal consumer"
 msgstr ""
+"L'utilisateur « {0} » est déjà enregistré comme consommateur personnel"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:647
 msgid "You must specify an organization for new units."
@@ -383,17 +385,17 @@ msgstr "L'organisation {0} n'existe pas."
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:666
 #, java-format
 msgid "User ''{0}'' cannot access organization ''{1}''."
-msgstr ""
+msgstr "L'utilisateur « {0} » ne peut accéder à l'organisation « {1} »."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:728
 #, java-format
 msgid "Unit type ''{0}'' could not be found."
-msgstr ""
+msgstr "Le type d'unité « {0} » est introuvable."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:814
 #, java-format
 msgid "Environment with ID ''{0}'' could not be found."
-msgstr ""
+msgstr "L'environnement avec l'ID « {0} » est introuvable."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1124
 #, java-format
@@ -429,7 +431,7 @@ msgstr ""
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:141
 #, java-format
 msgid "Unit with ID ''{0}'' could not be found."
-msgstr ""
+msgstr "L'unité avec l'ID « {0} » est introuvable."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author samfreemanz
@@ -446,12 +448,14 @@ msgstr "Impossible de trouver le droit d'accès avec l'ID « {0} »."
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1518
 #, java-format
 msgid "Product with ID ''{0}'' could not be found."
-msgstr ""
+msgstr "Le produit avec l'ID « {0} » est introuvable."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1631
 #, java-format
 msgid "Entitlement Certificate with serial number ''{0}'' could not be found."
 msgstr ""
+"Le certificat de droits d'accès avec le numéro de série « {0} » est "
+"introuvable."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1694
 #, java-format
@@ -481,21 +485,21 @@ msgstr "Le système avec l'UUID {0} n'est pas un invité virtuel."
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1929
 #, java-format
 msgid "Deletion record for hypervisor ''{0}'' not found."
-msgstr ""
+msgstr "L'archive de suppression pour l'hyperviseur « {0} » est introuvable."
 
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:91
 #, java-format
 msgid "Object with ID ''{0}'' could not found."
-msgstr ""
+msgstr "L'objet avec l'ID « {0} » est introuvable."
 
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:119
 #, java-format
 msgid "Unit ''{0}'' has no subscription for product ''{1}''."
-msgstr ""
+msgstr "L'unité « {0} » ne possède pas d'abonnement pour le produit « {1} »."
 
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:194
 msgid "Quantity value must be greater than 0."
-msgstr ""
+msgstr "La valeur de la quantité doit être supérieure à 0."
 
 #: src/main/java/org/candlepin/resource/ProductResource.java:121
 #: src/main/java/org/candlepin/resource/ProductResource.java:140
@@ -553,7 +557,8 @@ msgstr ""
 # keys, author samfreemanz
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:156
 msgid "The quantity must not be greater than the total allowed for the pool"
-msgstr "La quantité ne doit pas être supérieure au total autorisé pour le pool"
+msgstr ""
+"La quantité ne doit pas être supérieure au total autorisé pour le pool"
 
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:163
 msgid "Activation keys can only use host restricted pools from a single host."
@@ -564,7 +569,8 @@ msgstr ""
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:224
 #, java-format
 msgid "ActivationKey with id {0} could not be found."
-msgstr "Impossible de trouver la clé d'activation ActivationKey avec l'ID {0}."
+msgstr ""
+"Impossible de trouver la clé d'activation ActivationKey avec l'ID {0}."
 
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:235
 #, java-format
@@ -582,7 +588,8 @@ msgstr "Impossible de trouver le contenu avec l'ID {0}."
 #: src/main/java/org/candlepin/resource/RulesResource.java:85
 msgid "Error decoding the rules. The text should be base 64 encoded"
 msgstr ""
-"Erreur lors du décodage des règles. Le texte devrait être encodé avec base 64"
+"Erreur lors du décodage des règles. Le texte devrait être encodé avec base "
+"64"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -636,7 +643,8 @@ msgstr "Impossible de trouver l'événement avec l'ID « {0} »."
 #: src/main/java/org/candlepin/resource/OwnerResource.java:260
 #, java-format
 msgid "Could not create the Owner: {0}. Parent {1} does not exist."
-msgstr "Impossible de créer le propriétaire : {0}. Le parent {1} n'existe pas."
+msgstr ""
+"Impossible de créer le propriétaire : {0}. Le parent {1} n'existe pas."
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:272
 #, java-format
@@ -866,12 +874,12 @@ msgstr "Le type d'unité avec l'ID {0} est introuvable."
 #: src/main/java/org/candlepin/resource/DistributorVersionResource.java:104
 #, java-format
 msgid "A distributor version with name {0} already exists"
-msgstr ""
+msgstr "Une version de distributeur avec le nom {0} existe déjà"
 
 #: src/main/java/org/candlepin/resource/DistributorVersionResource.java:132
 #, java-format
 msgid "No such distributor version: {0}"
-msgstr "Pas de telle version de distribution : {0}"
+msgstr "Pas de telle version de distributeur : {0}"
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:58
 msgid "Not covered by a valid subscription."
@@ -1014,7 +1022,8 @@ msgstr "L'archive ne contient pas le répertoire des droits d'accès requis"
 #, java-format
 msgid "The archive {0} is not a properly compressed file or is empty"
 msgstr ""
-"L'archive {0} est un fichier qui n'est pas compressé correctement ou est vide"
+"L'archive {0} est un fichier qui n'est pas compressé correctement ou est "
+"vide"
 
 #: src/main/java/org/candlepin/sync/ConsumerImporter.java:59
 msgid "No ID for upstream subscription management application."
@@ -1061,8 +1070,8 @@ msgstr ""
 #: src/main/java/org/candlepin/resteasy/interceptor/PageRequestInterceptor.java:120
 msgid "the order parameter must be either 'ascending' or 'descending'"
 msgstr ""
-"le paramètre d'ordre doit être soit « ascending » (ascendant), ou "
-"« descending » (descendant)"
+"le paramètre d'ordre doit être soit « ascending » (ascendant), ou « "
+"descending » (descendant)"
 
 #: src/main/java/org/candlepin/resteasy/interceptor/PageRequestInterceptor.java:129
 msgid "Expected a positive integer."
@@ -1095,12 +1104,13 @@ msgstr "Erreur lors de l'obtention de la clé d'unité OAuth"
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
-"to address this problem. See kbase https://access.redhat.com/knowledge/"
-"node/129003 for more information."
+"to address this problem. See kbase "
+"https://access.redhat.com/knowledge/node/129003 for more information."
 msgstr ""
 "Trop d'ensembles de contenus pour le certificat {0}. Un client plus récent "
-"peut être disponible pour résoudre ce problème. Voir kbase https://access."
-"redhat.com/knowledge/node/129003 pour obtenir davantage d'informations."
+"peut être disponible pour résoudre ce problème. Voir kbase "
+"https://access.redhat.com/knowledge/node/129003 pour obtenir davantage "
+"d'informations."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author samfreemanz
@@ -1120,7 +1130,8 @@ msgstr "Le pool d'abonnements {0} n'existe pas."
 #: src/main/java/org/candlepin/controller/Entitler.java:107
 #, java-format
 msgid ""
-"This unit has already had the subscription matching pool ID ''{0}'' attached."
+"This unit has already had the subscription matching pool ID ''{0}'' "
+"attached."
 msgstr ""
 "Cette unité possède déjà l'ID de pool correspondant à l'abonnement « {0} » "
 "attaché."
@@ -1134,8 +1145,8 @@ msgstr "Aucun abonnement n'est disponible depuis le pool avec l'ID « {0} »."
 #, java-format
 msgid "Units of this type are not allowed to attach the pool with ID ''{0}''."
 msgstr ""
-"Les unités de ce type n'ont pas le droit d'attacher le pool avec l'ID "
-"« {0} »."
+"Les unités de ce type n'ont pas le droit d'attacher le pool avec l'ID « {0} "
+"»."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:121
 #, java-format
@@ -1168,22 +1179,23 @@ msgstr "Pool restreint aux invités virtuels : « {0} »."
 #, java-format
 msgid "Quantity ''{0}'' is not a multiple of instance multiplier ''{1}''"
 msgstr ""
-"La quantité « {0} » n'est pas un multiple du multiplicateur d'instances "
-"« {1} »"
+"La quantité « {0} » n'est pas un multiple du multiplicateur d'instances « "
+"{1} »"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:146
 #, java-format
 msgid ""
 "Unit does not support instance based calculation required by pool ''{0}''"
 msgstr ""
-"L'unité ne prend pas en charge les calculs basés sur instances requis par le "
-"pool « {0} »"
+"L'unité ne prend pas en charge les calculs basés sur instances requis par le"
+" pool « {0} »"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:150
 #, java-format
 msgid "Unit does not support core calculation required by pool ''{0}''"
 msgstr ""
-"L'unité ne prend pas en charge les calculs de cœur requis par le pool « {0} »"
+"L'unité ne prend pas en charge les calculs de cœur requis par le pool « {0} "
+"»"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:154
 #, java-format
@@ -1224,15 +1236,16 @@ msgstr ""
 #, java-format
 msgid ""
 "This system already has a subscription for the product ''{0}'' attached."
-msgstr "Ce système possède déjà un abonnement attaché pour le produit « {0} »."
+msgstr ""
+"Ce système possède déjà un abonnement attaché pour le produit « {0} »."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:274
 #, java-format
 msgid ""
 "There are not enough free subscriptions available for the product ''{0}''"
 msgstr ""
-"Il n'y a pas suffisamment d'abonnements gratuits disponibles pour le produit "
-"« {0} »"
+"Il n'y a pas suffisamment d'abonnements gratuits disponibles pour le produit"
+" « {0} »"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:278
 #, java-format

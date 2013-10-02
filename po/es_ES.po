@@ -6,14 +6,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-10-02 15:44-0300\n"
-"PO-Revision-Date: 2013-08-06 09:57-0400\n"
+"POT-Creation-Date: 2012-06-27 12:35-0400\n"
+"PO-Revision-Date: 2013-09-17 08:14-0400\n"
 "Last-Translator: Gladys Guerrero Lozano <gladysguerrerolozano419@gmail.com>\n"
 "Language-Team: Spanish (Spain)\n"
-"Language: es-ES\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: es-ES\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 "X-Generator: Zanata 2.2.2\n"
 
@@ -191,7 +191,7 @@ msgstr "{0} ha creado la nueva suscripción para el producto {1}"
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:154
 #, java-format
 msgid "{0} deleted a subscription for product {1}"
-msgstr "{0} ha borrado una suscripción para el  producto {1}"
+msgstr "{0} ha borrado una suscripción para el producto {1}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -356,17 +356,17 @@ msgstr ""
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:611
 #, java-format
 msgid "User with ID ''{0}'' could not be found."
-msgstr ""
+msgstr "No se encontró ID de usuario ''{0}''"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:618
 #, java-format
 msgid "User ''{0}'' has no roles for organization ''{1}''"
-msgstr ""
+msgstr "El usuario  ''{0}'' no tiene roles para la organización  ''{1}'' "
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:630
 #, java-format
 msgid "User ''{0}'' has already registered a personal consumer"
-msgstr ""
+msgstr "El usuario ''{0}'' ya ha registrado un usuario personal"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:647
 msgid "You must specify an organization for new units."
@@ -382,17 +382,17 @@ msgstr "No existe la organización {0}."
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:666
 #, java-format
 msgid "User ''{0}'' cannot access organization ''{1}''."
-msgstr ""
+msgstr "El usuario  ''{0}'' no puede acceder a la organización  ''{1}'' "
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:728
 #, java-format
 msgid "Unit type ''{0}'' could not be found."
-msgstr ""
+msgstr "No se encontró el tipo de unidad  ''{0}'' ."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:814
 #, java-format
 msgid "Environment with ID ''{0}'' could not be found."
-msgstr ""
+msgstr "No se pudo encontrar entorno con ID ''{0}''."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1124
 #, java-format
@@ -420,14 +420,15 @@ msgstr "No se puede especificar una cantidad al autovincular."
 #, java-format
 msgid "Unable to attach a subscription for a product that has no pool: {0} "
 msgstr ""
-"No se pudo adjuntar una suscripción para un producto que no tiene grupo: {0} "
+"No se pudo adjuntar una suscripción para un producto que no tiene grupo: {0}"
+" "
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1482
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1571
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:141
 #, java-format
 msgid "Unit with ID ''{0}'' could not be found."
-msgstr ""
+msgstr "No se encontró unidad con ID  ''{0}'' ."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author gguerrer
@@ -444,12 +445,12 @@ msgstr "No se encontró derecho con ID ''{0}'' ."
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1518
 #, java-format
 msgid "Product with ID ''{0}'' could not be found."
-msgstr ""
+msgstr "No se encontró producto con ID ''{0}''."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1631
 #, java-format
 msgid "Entitlement Certificate with serial number ''{0}'' could not be found."
-msgstr ""
+msgstr "No se encontró el certificado de derecho con número serial  ''{0}''."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1694
 #, java-format
@@ -479,21 +480,21 @@ msgstr "El usuario con UUID {0} no tiene un huésped virtual."
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1929
 #, java-format
 msgid "Deletion record for hypervisor ''{0}'' not found."
-msgstr ""
+msgstr "No se encontró el registro para hipervisor  ''{0}'' ."
 
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:91
 #, java-format
 msgid "Object with ID ''{0}'' could not found."
-msgstr ""
+msgstr "No se pudo encontrar objeto con ID ''{0}''."
 
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:119
 #, java-format
 msgid "Unit ''{0}'' has no subscription for product ''{1}''."
-msgstr ""
+msgstr "La unidad ''{0}'' no tiene suscripción para producto ''{1}''."
 
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:194
 msgid "Quantity value must be greater than 0."
-msgstr ""
+msgstr "El valor de cantidad debe ser mayor que 0."
 
 #: src/main/java/org/candlepin/resource/ProductResource.java:121
 #: src/main/java/org/candlepin/resource/ProductResource.java:140
@@ -543,7 +544,7 @@ msgid ""
 "Error: Only pools with multi-entitlement product subscriptions can be added "
 "to the activation key with a quantity greater than one."
 msgstr ""
-"Error: solamente los grupos de suscripciones de productos multi-derechos "
+"Error: solamente los grupos de suscripciones de productos multiderechos "
 "pueden ser agregados a la llave de activación con una cantidad superior a "
 "uno."
 
@@ -651,8 +652,8 @@ msgid ""
 "The activation key name ''{0}'' must be alphanumeric or include the "
 "characters '-' or '_'"
 msgstr ""
-"El nombre de llave de activación ''{0}'' debe ser alfanumérico o incluye los "
-"caracteres '-' o '_'"
+"El nombre de llave de activación ''{0}'' debe ser alfanumérico o incluye los"
+" caracteres '-' o '_'"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:506
 #, java-format
@@ -724,8 +725,8 @@ msgstr "Problema al generar certificado Ueber para propietario {0}"
 #, java-format
 msgid "ueber certificate for owner {0} was not found. Please generate one."
 msgstr ""
-"No se encontró el certificado Ueber para propietario  {0}. Por favor generar "
-"uno.  "
+"No se encontró el certificado Ueber para propietario  {0}. Por favor generar"
+" uno.  "
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author gguerrer
@@ -859,7 +860,7 @@ msgstr "No se encontró el tipo de unidad con ID {0} ."
 #: src/main/java/org/candlepin/resource/DistributorVersionResource.java:104
 #, java-format
 msgid "A distributor version with name {0} already exists"
-msgstr ""
+msgstr "Ya existe una versión de distribuidor con el nombre {0}"
 
 #: src/main/java/org/candlepin/resource/DistributorVersionResource.java:132
 #, java-format
@@ -911,7 +912,7 @@ msgstr "Segundo parámetro debe ser el número de prioridad."
 #: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:81
 #, java-format
 msgid "Subscriptions for {0} expired on: {1}"
-msgstr "Suscripcciones para {0} expirados en: {1}"
+msgstr "Suscripciones para {0} expirados en: {1}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -985,7 +986,7 @@ msgstr "No se pudo extraer el archivador de exportación."
 
 #: src/main/java/org/candlepin/sync/Importer.java:315
 msgid "Certificate exception checking archive signature"
-msgstr "Excepción de certificado de revisón de firma de archivador"
+msgstr "Excepción de certificado de revisión de firma de archivador"
 
 #: src/main/java/org/candlepin/sync/Importer.java:346
 msgid "The archive does not contain the required meta.json file"
@@ -1007,7 +1008,7 @@ msgstr "El archivador no contiene el directorio de derechos requerido"
 #, java-format
 msgid "The archive {0} is not a properly compressed file or is empty"
 msgstr ""
-"El archivador {0} no es un archivo comrpimido apropiadamente o está vacío"
+"El archivador {0} no es un archivo comprimido apropiadamente o está vacío"
 
 #: src/main/java/org/candlepin/sync/ConsumerImporter.java:59
 msgid "No ID for upstream subscription management application."
@@ -1087,13 +1088,13 @@ msgstr "Error en la obtención de llave de unidad oauth"
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
-"to address this problem. See kbase https://access.redhat.com/knowledge/"
-"node/129003 for more information."
+"to address this problem. See kbase "
+"https://access.redhat.com/knowledge/node/129003 for more information."
 msgstr ""
 "Demasiados conjuntos de contenido para certificado {0}. Un cliente más "
 "reciente puede estar disponible para resolver este problema. Consulte la "
-"kbase https://access.redhat.com/knowledge/node/129003 para obtener mayor "
-"información."
+"base de conocimientos en https://access.redhat.com/knowledge/node/129003 "
+"para obtener mayor información."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author gguerrer
@@ -1111,7 +1112,8 @@ msgstr "No existe el grupo de suscripción {0}."
 #: src/main/java/org/candlepin/controller/Entitler.java:107
 #, java-format
 msgid ""
-"This unit has already had the subscription matching pool ID ''{0}'' attached."
+"This unit has already had the subscription matching pool ID ''{0}'' "
+"attached."
 msgstr ""
 "Esta unidad ya tiene ID de grupo correspondiente a la suscripción ''{0}''."
 
@@ -1130,7 +1132,7 @@ msgstr ""
 #: src/main/java/org/candlepin/controller/Entitler.java:121
 #, java-format
 msgid "Multi-entitlement not supported for pool with ID ''{0}''."
-msgstr "Multi-derechos no soportados para grupo con ID ''{0}''."
+msgstr "Multiderechos no soportados para grupo con ID ''{0}''."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -1143,7 +1145,7 @@ msgstr "El host de Guest no coincide con el propietario del grupo: ''{0}''."
 msgid "Pool not available to subscription management applications."
 msgstr ""
 "El grupo no está disponible para aplicaciones de administración de "
-"aplicación.."
+"aplicaciones."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -1163,8 +1165,8 @@ msgstr ""
 msgid ""
 "Unit does not support instance based calculation required by pool ''{0}''"
 msgstr ""
-"La unidad no soporta el cálculo basado en instancia de soporte requerido por "
-"el grupo ''{0}''."
+"La unidad no soporta el cálculo basado en instancia de soporte requerido por"
+" el grupo ''{0}''."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:150
 #, java-format
@@ -1192,7 +1194,7 @@ msgstr "Cantidad del grupo disponible para ajuste al derecho ''{0}''."
 #, java-format
 msgid ""
 "Multi-entitlement not supported for pool connected with entitlement ''{0}''."
-msgstr "Multi-derechos no soportados para grupo conectado con derecho ''{0}''."
+msgstr "Multiderechos no soportados para grupo conectado con derecho ''{0}''."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:194
 #, java-format
@@ -1220,7 +1222,8 @@ msgstr "Las unidades de este tipo no tienen permiso para el producto ''{0}''"
 #: src/main/java/org/candlepin/controller/Entitler.java:283
 #, java-format
 msgid "Only virtual systems can have subscription ''{0}'' attached."
-msgstr "Solamente sistemas virtuales pueden tener ''{0}'' suscripción adjunta."
+msgstr ""
+"Solamente sistemas virtuales pueden tener ''{0}'' suscripción adjunta."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:288
 #, java-format

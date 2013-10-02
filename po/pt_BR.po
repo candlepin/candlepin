@@ -5,14 +5,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-10-02 15:44-0300\n"
-"PO-Revision-Date: 2013-08-07 12:35-0400\n"
+"POT-Creation-Date: 2012-06-27 12:35-0400\n"
+"PO-Revision-Date: 2013-09-18 09:04-0400\n"
 "Last-Translator: gcintra <gcintra@fedoraproject.org>\n"
 "Language-Team: Portuguese (Brazil)\n"
-"Language: pt-BR\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: pt-BR\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 "X-Generator: Zanata 2.2.2\n"
 
@@ -353,17 +353,17 @@ msgstr "Chave de ativaçao \"{0}\" não encontrada para organização \"{1}\"."
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:611
 #, java-format
 msgid "User with ID ''{0}'' could not be found."
-msgstr ""
+msgstr "O usuário com o ID \"{0}\" não pode ser encontrado."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:618
 #, java-format
 msgid "User ''{0}'' has no roles for organization ''{1}''"
-msgstr ""
+msgstr "O usuário \"{0}\" não possui nenhuma função para a organização \"{1}\""
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:630
 #, java-format
 msgid "User ''{0}'' has already registered a personal consumer"
-msgstr ""
+msgstr "O usuário \"{0}\" já registrou o consumidores pessoal"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:647
 msgid "You must specify an organization for new units."
@@ -379,17 +379,17 @@ msgstr "Organização {0} não existe."
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:666
 #, java-format
 msgid "User ''{0}'' cannot access organization ''{1}''."
-msgstr ""
+msgstr "Usuário \"{0}\"não pode acessar a organização \"{1}\""
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:728
 #, java-format
 msgid "Unit type ''{0}'' could not be found."
-msgstr ""
+msgstr "Tipo de unidade \"{0}\" não foi encontrado."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:814
 #, java-format
 msgid "Environment with ID ''{0}'' could not be found."
-msgstr ""
+msgstr "Ambiente com o ID ''{0}'' não foi encontrado."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1124
 #, java-format
@@ -424,7 +424,7 @@ msgstr ""
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:141
 #, java-format
 msgid "Unit with ID ''{0}'' could not be found."
-msgstr ""
+msgstr "Unidade com ID \"{0}\" não foi encontrado."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author gcintra
@@ -441,12 +441,13 @@ msgstr "Serviços com o ID ''{0}'' não foi encontrado."
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1518
 #, java-format
 msgid "Product with ID ''{0}'' could not be found."
-msgstr ""
+msgstr "O produto com ID ''{0}'' não pode ser encontrado."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1631
 #, java-format
 msgid "Entitlement Certificate with serial number ''{0}'' could not be found."
 msgstr ""
+"O Certificado de Direito com número serial \"{0}\" não pôde ser encontrado."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1694
 #, java-format
@@ -476,21 +477,21 @@ msgstr "O sistema com UUID {0}não é um convidado virtual"
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1929
 #, java-format
 msgid "Deletion record for hypervisor ''{0}'' not found."
-msgstr ""
+msgstr "Gravação de remoção para o hypervisor  ''{0}'' não foi encontrado."
 
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:91
 #, java-format
 msgid "Object with ID ''{0}'' could not found."
-msgstr ""
+msgstr "Objeto com o ID ''{0}'' não foi encontrado."
 
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:119
 #, java-format
 msgid "Unit ''{0}'' has no subscription for product ''{1}''."
-msgstr ""
+msgstr "Unidade \"{0}\" não possui subscrição para o produto \"{1}\"."
 
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:194
 msgid "Quantity value must be greater than 0."
-msgstr ""
+msgstr "Valor da quantidade deve ser maior do que 0."
 
 #: src/main/java/org/candlepin/resource/ProductResource.java:121
 #: src/main/java/org/candlepin/resource/ProductResource.java:140
@@ -540,8 +541,8 @@ msgid ""
 "Error: Only pools with multi-entitlement product subscriptions can be added "
 "to the activation key with a quantity greater than one."
 msgstr ""
-"Erro: Somente conjuntos com subscrições de produtos multi-direitos podem ser "
-"adicionadas à chave de ativação com uma quantidade maior que um."
+"Erro: Somente conjuntos com subscrições de produtos multi-direitos podem ser"
+" adicionadas à chave de ativação com uma quantidade maior que um."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author rgyorfy
@@ -856,7 +857,7 @@ msgstr "Tipo de unidade com id {0} não foi encontrado."
 #: src/main/java/org/candlepin/resource/DistributorVersionResource.java:104
 #, java-format
 msgid "A distributor version with name {0} already exists"
-msgstr ""
+msgstr "Uma versão do distribuidor com o nome {0} já existe."
 
 #: src/main/java/org/candlepin/resource/DistributorVersionResource.java:132
 #, java-format
@@ -998,12 +999,14 @@ msgstr "O arquivo não contém o arquivo consumer.json requerido"
 
 #: src/main/java/org/candlepin/sync/Importer.java:362
 msgid "The archive does not contain the required entitlements directory"
-msgstr "O arquivo não contém o diretório de direitos a serviços como requerido"
+msgstr ""
+"O arquivo não contém o diretório de direitos a serviços como requerido"
 
 #: src/main/java/org/candlepin/sync/Importer.java:621
 #, java-format
 msgid "The archive {0} is not a properly compressed file or is empty"
-msgstr "O arquivo {0} não é um arquivo comprimido adequadamente ou está vazio."
+msgstr ""
+"O arquivo {0} não é um arquivo comprimido adequadamente ou está vazio."
 
 #: src/main/java/org/candlepin/sync/ConsumerImporter.java:59
 msgid "No ID for upstream subscription management application."
@@ -1081,12 +1084,12 @@ msgstr "Erro ao obter a chave de unidade do oauth"
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
-"to address this problem. See kbase https://access.redhat.com/knowledge/"
-"node/129003 for more information."
+"to address this problem. See kbase "
+"https://access.redhat.com/knowledge/node/129003 for more information."
 msgstr ""
 "Muitos conjuntos de conteúdo para o certificado {0}. Um cliente mais novo "
-"pode estar disponível para solucionar este problema. Veja kbase https://"
-"access.redhat.com/knowledge/node/129003 para obter mais informações."
+"pode estar disponível para solucionar este problema. Veja kbase "
+"https://access.redhat.com/knowledge/node/129003 para obter mais informações."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author rgyorfy
@@ -1104,7 +1107,8 @@ msgstr "Conjunto de subscrição {0} não existe"
 #: src/main/java/org/candlepin/controller/Entitler.java:107
 #, java-format
 msgid ""
-"This unit has already had the subscription matching pool ID ''{0}'' attached."
+"This unit has already had the subscription matching pool ID ''{0}'' "
+"attached."
 msgstr ""
 "Esta unidade já  teve sua ID de pool coincidente de subscrição ''{0}'' "
 "anexada."
@@ -1135,7 +1139,8 @@ msgstr "A máquina do convidado não coincide o proprietário da pool: ''{0}''."
 #: src/main/java/org/candlepin/controller/Entitler.java:129
 msgid "Pool not available to subscription management applications."
 msgstr ""
-"O pool não está disponível para as aplicações de gerenciamento de subscrição."
+"O pool não está disponível para as aplicações de gerenciamento de "
+"subscrição."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -1178,7 +1183,8 @@ msgstr "Incapaz de anexar a pool com o ID ''{0}''.: {1}."
 msgid ""
 "Insufficient pool quantity available for adjustment to entitlement ''{0}''."
 msgstr ""
-"Quantidade de Pool insuficiente disponível para acertos aos serviços ''{0}''."
+"Quantidade de Pool insuficiente disponível para acertos aos serviços "
+"''{0}''."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:184
 #: src/main/java/org/candlepin/controller/Entitler.java:189

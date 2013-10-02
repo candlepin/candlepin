@@ -1,19 +1,18 @@
 # Sandeep Shedmake <sshedmak@redhat.com>, 2012.
 # Sandeep Shedmake <sshedmak@redhat.com>, 2012, 2013.
 # sandeeps <sandeeps@fedoraproject.org>, 2012. #zanata
-# sandeeps <sandeeps@fedoraproject.org>, 2013. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2013-10-02 15:44-0300\n"
-"PO-Revision-Date: 2013-08-18 12:56-0400\n"
-"Last-Translator: sandeeps <sandeeps@fedoraproject.org>\n"
-"Language-Team: Marathi <kde-i18n-doc@kde.org>\n"
-"Language: mr\n"
+"PO-Revision-Date: 2013-09-19 09:13-0400\n"
+"Last-Translator: Sandeep Shedmake <sshedmak@redhat.com>\n"
+"Language-Team: Marathi\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: mr\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: Zanata 2.2.2\n"
 
@@ -349,17 +348,17 @@ msgstr "संस्था ''{1}'' करीता ॲक्टिवेशन �
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:611
 #, java-format
 msgid "User with ID ''{0}'' could not be found."
-msgstr ""
+msgstr "ID ''{0}'' सह वापरकर्ता आढळला नाही."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:618
 #, java-format
 msgid "User ''{0}'' has no roles for organization ''{1}''"
-msgstr ""
+msgstr "वापरकर्ता ''{0}'' कडे संस्था ''{1}'' करिता रोल्स नाही"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:630
 #, java-format
 msgid "User ''{0}'' has already registered a personal consumer"
-msgstr ""
+msgstr "वापरकर्ता ''{0}'' ने आधिपासूनच व्यक्तिगत ग्राहकाची नोंदणी केली"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:647
 msgid "You must specify an organization for new units."
@@ -375,17 +374,17 @@ msgstr "संस्था {0} अस्तित्वात नाही."
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:666
 #, java-format
 msgid "User ''{0}'' cannot access organization ''{1}''."
-msgstr ""
+msgstr "वापकर्ता ''{0}'' संस्था ''{1}'' करिता प्रवेश प्राप्त करू शकत नाही."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:728
 #, java-format
 msgid "Unit type ''{0}'' could not be found."
-msgstr ""
+msgstr "युनिट प्रकार ''{0}'' आढळले नाही."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:814
 #, java-format
 msgid "Environment with ID ''{0}'' could not be found."
-msgstr ""
+msgstr "ID ''{0}'' सह वातावरण आढळले नाही."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1124
 #, java-format
@@ -419,7 +418,7 @@ msgstr "विना पूल: {0} उत्पादनकरीता सब�
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:141
 #, java-format
 msgid "Unit with ID ''{0}'' could not be found."
-msgstr ""
+msgstr "ID ''{0}'' सह युनिट आढळले नाही."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author sandeeps
@@ -436,12 +435,12 @@ msgstr "ID ''{0}'' सह एंटाइटलमेंट आढळले न�
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1518
 #, java-format
 msgid "Product with ID ''{0}'' could not be found."
-msgstr ""
+msgstr "ID ''{0}'' सह उत्पादन आढळले नाही."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1631
 #, java-format
 msgid "Entitlement Certificate with serial number ''{0}'' could not be found."
-msgstr ""
+msgstr "सिरिअल क्रमांक ''{0}'' सह एंटाइटलमेंट प्रमाणपत्र आढळले नाही."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1694
 #, java-format
@@ -449,8 +448,8 @@ msgid ""
 "Unit {0} cannot be exported. A manifest cannot be made for units of type "
 "''{1}''."
 msgstr ""
-"युनिट {0} ला एक्सपोर्ट करणे अशक्य. ''{1}'' प्रकारच्या युनिट्सकरिता मॅनिफेस्ट निर्माण करणे "
-"अशक्य."
+"युनिट {0} ला एक्सपोर्ट करणे अशक्य. ''{1}'' प्रकारच्या युनिट्सकरिता मॅनिफेस्ट"
+" निर्माण करणे अशक्य."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -471,21 +470,21 @@ msgstr "UUID {0} सह प्रणाली वर्च्युअल अत
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1929
 #, java-format
 msgid "Deletion record for hypervisor ''{0}'' not found."
-msgstr ""
+msgstr "हायपरवाइजर ''{0}'' करिता डिलिशन रेकार्ड आढळले नाही."
 
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:91
 #, java-format
 msgid "Object with ID ''{0}'' could not found."
-msgstr ""
+msgstr "ID ''{0}'' सह ऑबजेक्ट आढळले नाही."
 
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:119
 #, java-format
 msgid "Unit ''{0}'' has no subscription for product ''{1}''."
-msgstr ""
+msgstr "युनिट ''{0}'' कडे उत्पादन ''{1}'' करिता सबस्क्रिप्शन नाही."
 
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:194
 msgid "Quantity value must be greater than 0."
-msgstr ""
+msgstr "प्रमाण मूल्य 0 पेक्षा जास्त पाहिजे."
 
 #: src/main/java/org/candlepin/resource/ProductResource.java:121
 #: src/main/java/org/candlepin/resource/ProductResource.java:140
@@ -500,7 +499,8 @@ msgstr "UUID ''{0}'' सह उत्पादन आढळले नाही."
 #: src/main/java/org/candlepin/resource/ProductResource.java:301
 #, java-format
 msgid "Product with UUID ''{0}'' cannot be deleted while subscriptions exist."
-msgstr "सबस्क्रिप्शन अस्तित्वात असताना UUID ''{0}'' सह उत्पादन नष्ट करणे अशक्य."
+msgstr ""
+"सबस्क्रिप्शन अस्तित्वात असताना UUID ''{0}'' सह उत्पादन नष्ट करणे अशक्य."
 
 #: src/main/java/org/candlepin/resource/ProductResource.java:356
 msgid "Must specify product ID."
@@ -522,7 +522,8 @@ msgstr "प्रमाण 0 पेक्षा जास्त असायल�
 msgid ""
 "Cannot add pools that are restricted to unit type 'person' to activation "
 "keys."
-msgstr "ॲक्टिवेशन किजकरिता युनिट प्रकार 'person' करिता पूल्स समाविष्ट करणे अशक्य."
+msgstr ""
+"ॲक्टिवेशन किजकरिता युनिट प्रकार 'person' करिता पूल्स समाविष्ट करणे अशक्य."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author sandeeps
@@ -531,8 +532,8 @@ msgid ""
 "Error: Only pools with multi-entitlement product subscriptions can be added "
 "to the activation key with a quantity greater than one."
 msgstr ""
-"त्रुटी: फक्त बहु-एंटाइटलमेंट उत्पादन सबस्क्रिप्शन्स् सह पूल्स्ला ॲक्टिवेशन किमध्ये समाविष्ट करणे "
-"शक्य आहे."
+"त्रुटी: फक्त बहु-एंटाइटलमेंट उत्पादन सबस्क्रिप्शन्स् सह पूल्स्ला ॲक्टिवेशन "
+"किमध्ये समाविष्ट करणे शक्य आहे."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author sandeeps
@@ -542,7 +543,8 @@ msgstr "प्रमाण पूलकरीता स्वीकार्य 
 
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:163
 msgid "Activation keys can only use host restricted pools from a single host."
-msgstr "ॲक्टिवेशन किज एका यजमानपासून फक्त यजमान प्रतिबंधीत पूलचा वापर करू शकतात."
+msgstr ""
+"ॲक्टिवेशन किज एका यजमानपासून फक्त यजमान प्रतिबंधीत पूलचा वापर करू शकतात."
 
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:224
 #, java-format
@@ -636,8 +638,8 @@ msgid ""
 "The activation key name ''{0}'' must be alphanumeric or include the "
 "characters '-' or '_'"
 msgstr ""
-"ॲक्टिवेशन कि नाव ''{0}'' अल्फान्युमेरिक पाहिजे किंवा अक्षरे '-' किंवा '_' समाविष्टीत "
-"पाहिजे"
+"ॲक्टिवेशन कि नाव ''{0}'' अल्फान्युमेरिक पाहिजे किंवा अक्षरे '-' किंवा '_' "
+"समाविष्टीत पाहिजे"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:506
 #, java-format
@@ -784,7 +786,8 @@ msgstr "ID ''{0}'' सह एंटाइटलमेंट पूल आढळ�
 #: src/main/java/org/candlepin/resource/JobResource.java:110
 msgid ""
 "You must specify exactly one of owner key, unit UUID, or principal name."
-msgstr "अगदी तसेच मालकी कि, युनिट UUID, किंवा प्राथमिक नाव निर्देशीत करणे आवश्यक."
+msgstr ""
+"अगदी तसेच मालकी कि, युनिट UUID, किंवा प्राथमिक नाव निर्देशीत करणे आवश्यक."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -996,12 +999,14 @@ msgstr "अपस्ट्रिम सबस्क्रिप्शन मॅ�
 msgid ""
 "This subscription management application has already been imported by "
 "another owner."
-msgstr "सबस्क्रिप्शन मॅनेजमेंट ॲप्लिकेशन आधिपासूनच इतर मालकीतर्फे आयात केले आहे."
+msgstr ""
+"सबस्क्रिप्शन मॅनेजमेंट ॲप्लिकेशन आधिपासूनच इतर मालकीतर्फे आयात केले आहे."
 
 #: src/main/java/org/candlepin/sync/ConsumerImporter.java:82
 msgid ""
 "Owner has already imported from another subscription management application."
-msgstr "इतर सबस्क्रिप्शन मॅनेजमेंट ॲप्लिकेशनपासून मालकी आधिपासूनच आयात केली आहे."
+msgstr ""
+"इतर सबस्क्रिप्शन मॅनेजमेंट ॲप्लिकेशनपासून मालकी आधिपासूनच आयात केली आहे."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author sandeeps
@@ -1060,12 +1065,12 @@ msgstr "oauth युनिट कि प्राप्त करतेवेळ
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
-"to address this problem. See kbase https://access.redhat.com/knowledge/"
-"node/129003 for more information."
+"to address this problem. See kbase "
+"https://access.redhat.com/knowledge/node/129003 for more information."
 msgstr ""
-"प्रमाणपत्र {0} करीता एकापेक्षा जास्त कंटेंट सेट्स. या अडचणीच्या निवारणकरीता नवीन क्लाएंट "
-"कदाचीत उपलब्ध असू शकते. अधिक माहितीकरीता kbase https://access.redhat.com/"
-"knowledge/node/129003 पहा."
+"प्रमाणपत्र {0} करीता एकापेक्षा जास्त कंटेंट सेट्स. या अडचणीच्या निवारणकरीता "
+"नवीन क्लाएंट कदाचीत उपलब्ध असू शकते. अधिक माहितीकरीता kbase "
+"https://access.redhat.com/knowledge/node/129003 पहा."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author sandeeps
@@ -1083,8 +1088,10 @@ msgstr "सबस्क्रिप्शन पूल {0} अस्तित्
 #: src/main/java/org/candlepin/controller/Entitler.java:107
 #, java-format
 msgid ""
-"This unit has already had the subscription matching pool ID ''{0}'' attached."
-msgstr "ह्या युनिटसह आधीपासूनच सबस्क्रिप्शन मॅचिंग पूल ID ''{0}'' जुळलेले आहे."
+"This unit has already had the subscription matching pool ID ''{0}'' "
+"attached."
+msgstr ""
+"ह्या युनिटसह आधीपासूनच सबस्क्रिप्शन मॅचिंग पूल ID ''{0}'' जुळलेले आहे."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:112
 #, java-format
@@ -1128,7 +1135,8 @@ msgstr "प्रमाण ''{0}'' इंस्टन्स मल्टिप�
 #, java-format
 msgid ""
 "Unit does not support instance based calculation required by pool ''{0}''"
-msgstr "पूल ''{0}'' तर्फे आवश्यक युनिट घटना आधारित गणनाकरिता समर्थन पुरवत नाही"
+msgstr ""
+"पूल ''{0}'' तर्फे आवश्यक युनिट घटना आधारित गणनाकरिता समर्थन पुरवत नाही"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:150
 #, java-format
@@ -1156,7 +1164,8 @@ msgstr "एंटाइटलमेंट ''{0}'' करीता सुस्�
 #, java-format
 msgid ""
 "Multi-entitlement not supported for pool connected with entitlement ''{0}''."
-msgstr "एंटाइटलमेंट ''{0}'' सह पूलकरीता एकापेक्षा जास्त एंटाइटलमेंट समर्थीत नाही."
+msgstr ""
+"एंटाइटलमेंट ''{0}'' सह पूलकरीता एकापेक्षा जास्त एंटाइटलमेंट समर्थीत नाही."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:194
 #, java-format
@@ -1167,7 +1176,8 @@ msgstr "id ''{0}'': {1} सह एंटाइटलमेंटकरीता 
 #, java-format
 msgid ""
 "This system already has a subscription for the product ''{0}'' attached."
-msgstr "उत्पादन ''{0}'' करिता ह्या प्रणालीकडे आधीपासूनच सबस्क्रिप्शन जुळलेले आहे."
+msgstr ""
+"उत्पादन ''{0}'' करिता ह्या प्रणालीकडे आधीपासूनच सबस्क्रिप्शन जुळलेले आहे."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:274
 #, java-format
@@ -1220,7 +1230,8 @@ msgstr "गुणधर्म ''{0}'' बूलियन मूल्य पा�
 #, java-format
 msgid ""
 "You cannot create a circular reference for products that ''{0}'' relies on."
-msgstr "''{0}'' वर आधारित उत्पादनांकरीता सर्क्युलर रेफरेंस निर्माण करणे अशक्य."
+msgstr ""
+"''{0}'' वर आधारित उत्पादनांकरीता सर्क्युलर रेफरेंस निर्माण करणे अशक्य."
 
 #: src/main/java/org/candlepin/model/ConsumerCurator.java:100
 #, java-format
@@ -1232,7 +1243,9 @@ msgstr "युनिटचे नाव {0} अक्षरांपेक्ष
 msgid ""
 "The fact ''{0}'' must be an integer instead of ''{1}''. No value will exist "
 "for that fact."
-msgstr "फॅक्ट ''{0}'', ''{1}'' ऐवजी इंटिजर पाहिजे. फॅक्टकरीता मूल्य अस्तित्वात नसावे."
+msgstr ""
+"फॅक्ट ''{0}'', ''{1}'' ऐवजी इंटिजर पाहिजे. फॅक्टकरीता मूल्य अस्तित्वात "
+"नसावे."
 
 #: src/main/java/org/candlepin/model/ConsumerCurator.java:341
 #, java-format
@@ -1240,7 +1253,8 @@ msgid ""
 "The fact ''{0}'' must have a positive integer value instead of ''{1}''. No "
 "value will exist for that fact."
 msgstr ""
-"फॅक्ट ''{0}'' कडे ''{1}'' ऐवजी पॉजिटिव्ह इंटिजर पाहिजे. फॅक्टकरीता मूल्य अस्तीत्वात नाही."
+"फॅक्ट ''{0}'' कडे ''{1}'' ऐवजी पॉजिटिव्ह इंटिजर पाहिजे. फॅक्टकरीता मूल्य "
+"अस्तीत्वात नाही."
 
 #: src/main/java/org/candlepin/model/ConsumerCurator.java:411
 #, java-format
