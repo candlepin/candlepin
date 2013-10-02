@@ -16,7 +16,6 @@ CP_SERVER = "localhost"
 CP_PORT = 8443
 CP_ADMIN_USER = "admin"
 CP_ADMIN_PASS = "admin"
-CP_OWNER_KEY = "admin"
 
 def debug(msg)
     STDERR.write Thread.current[:name]
@@ -34,16 +33,9 @@ def an_ent()
     return "\033[32m.\033[0m"
 end
 
-def reg_and_consume(server, port, user, pass, product)
-  cp = Candlepin.new(username=user, password=pass,
-    cert=nil, key=nil,
-    host=server, port=port)
-  consumer = cp.register("test" << rand(10000).to_s, :system, nil, {}, nil, CP_OWNER_KEY)
-
-  cp = Candlepin.new(nil, nil, consumer['idCert']['cert'],
-                     consumer['idCert']['key'], server, port)
-  ent = cp.consume_product(product)[0]
-  pool = cp.get_pool(ent['pool']['id'])
+def consume(consumer_cp, pool_id)
+  ent = consumer_cp.consume_pool(pool_id)[0]
+  pool = consumer_cp.get_pool(ent['pool']['id'])
   debug "Got entitlement #{ent['id']} from pool #{ent['pool']['id']} (#{pool['consumed']} of #{pool['quantity']})"
   return ent, pool
 end
@@ -53,10 +45,22 @@ product_id = "concurproduct-#{rand(100000)}"
 cp = Candlepin.new(username=CP_ADMIN_USER, password=CP_ADMIN_PASS,
   cert=nil, key=nil,
   host=CP_SERVER, port=CP_PORT)
-cp.create_product(product_id, product_id)
-cp.create_subscription(CP_OWNER_KEY, product_id, 5)
-cp.refresh_pools(CP_OWNER_KEY)
+test_owner = cp.create_owner("testowner-#{rand(100000)}")
+attributes = {'multi-entitlement' => "yes"}
+cp.create_product(product_id, product_id, {:attributes => attributes})
+cp.create_subscription(test_owner['key'], product_id, 10)
+cp.refresh_pools(test_owner['key'])
+pools = cp.list_pools(:owner => test_owner['id'])
+pool = pools[0]
 
+# Create a consumer to bind entitlements to. We'll just use one combined
+# with a pool that supports multi-entitlement:
+consumer = cp.register("test" << rand(10000).to_s, :candlepin,
+  nil, {}, nil, test_owner['key'])
+consumer_cp = Candlepin.new(nil, nil, consumer['idCert']['cert'],
+  consumer['idCert']['key'], CP_SERVER, CP_PORT)
+
+# Launch threads to try to bind at same time:
 num_threads = ARGV[0].to_i
 if num_threads == 0
   num_threads = 1
@@ -67,10 +71,9 @@ queue = Queue.new
 threads = []
 for i in 0..num_threads - 1
   threads[i] = Thread.new do
-    Thread.current[:name] = "Thread #{i}"
+    Thread.current[:name] = "Thread"
     begin
-      ent = reg_and_consume(CP_SERVER, CP_PORT, CP_ADMIN_USER, CP_ADMIN_PASS,
-                            product_id)
+      ent = consume(consumer_cp, pool['id'])
       queue << (ent.nil? ? no_ent : an_ent)
     rescue
       debug "Exception caught / no entitlement"
