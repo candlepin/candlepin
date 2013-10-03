@@ -74,7 +74,7 @@ public class ConsumerPrincipal extends Principal {
 
     @Override
     public String getPrincipalName() {
-        return consumer.getName();
+        return consumer.getUuid();
     }
 
     @Override
