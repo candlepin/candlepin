@@ -46,11 +46,22 @@ public class LoggingFilter implements Filter {
     public void doFilter(ServletRequest request, ServletResponse response,
         FilterChain chain) throws IOException, ServletException {
 
+        HttpServletRequest castRequest = (HttpServletRequest) request;
+        HttpServletResponse castResponse = (HttpServletResponse) response;
+
+        // Log some basic info about the request at info level.
+        StringBuilder requestBuilder = new StringBuilder()
+            .append("Request: ")
+            .append(castRequest.getMethod()).append("  ")
+            .append(castRequest.getRequestURL());
+        if (castRequest.getQueryString() != null) {
+            requestBuilder.append("?").append(castRequest.getQueryString());
+        }
+        log.info(requestBuilder.toString());
+
         if (log.isDebugEnabled()) {
-            LoggingRequestWrapper lRequest = new LoggingRequestWrapper(
-                (HttpServletRequest) request);
-            LoggingResponseWrapper lResponse = new LoggingResponseWrapper(
-                (HttpServletResponse) response);
+            LoggingRequestWrapper lRequest = new LoggingRequestWrapper(castRequest);
+            LoggingResponseWrapper lResponse = new LoggingResponseWrapper(castResponse);
             logRequest(lRequest);
             chain.doFilter(lRequest, lResponse);
             logResponse(lResponse);
@@ -89,12 +100,10 @@ public class LoggingFilter implements Filter {
     private void logHeaders(LoggingRequestWrapper lRequest) {
         Enumeration<?> headerNames = lRequest.getHeaderNames();
         StringBuilder builder =
-            new StringBuilder().append("\nRequest: ")
+            new StringBuilder().append("\nRequest Body: ")
                 .append(lRequest.getMethod()).append("  ")
                 .append(lRequest.getRequestURL());
-        if (lRequest.getQueryString() != null) {
-            builder.append("?").append(lRequest.getQueryString());
-        }
+
         builder.append("\n====Headers====");
         while (headerNames.hasMoreElements()) {
             String headerName = (String) headerNames.nextElement();
