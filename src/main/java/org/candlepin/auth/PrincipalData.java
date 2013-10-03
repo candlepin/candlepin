@@ -60,4 +60,7 @@ public class PrincipalData {
         this.name = name;
     }
 
+    public String toString() {
+        return "[Principal: " + getName() + ", type: " + getType() + "]";
+    }
 }
