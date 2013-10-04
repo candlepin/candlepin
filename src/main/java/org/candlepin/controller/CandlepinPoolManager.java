@@ -602,6 +602,8 @@ public class CandlepinPoolManager implements PoolManager {
 
         // we might have changed the bonus pool quantities, lets find out.
         handler.handleBonusPools(pool, entitlement);
+        log.info("Granted entitlement: " + entitlement.getId() + " from pool: " +
+            pool.getId());
         return entitlement;
     }
 
@@ -1123,12 +1125,14 @@ public class CandlepinPoolManager implements PoolManager {
                 newResults.add(p);
             }
             else {
-                log.info("Omitting pool due to failed rule check: " + p.getId());
-                if (result.hasErrors()) {
-                    log.info("\tErrors: " + result.getErrors());
-                }
-                if (result.hasWarnings()) {
-                    log.info("\tWarnings: " + result.getWarnings());
+                if (log.isDebugEnabled()) {
+                    log.debug("Omitting pool due to failed rules: " + p.getId());
+                    if (result.hasErrors()) {
+                        log.debug("\tErrors: " + result.getErrors());
+                    }
+                    if (result.hasWarnings()) {
+                        log.debug("\tWarnings: " + result.getWarnings());
+                    }
                 }
             }
         }
