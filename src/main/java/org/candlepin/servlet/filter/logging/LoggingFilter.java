@@ -15,9 +15,11 @@
 package org.candlepin.servlet.filter.logging;
 
 import org.apache.log4j.Logger;
+import org.apache.log4j.MDC;
 
 import java.io.IOException;
 import java.util.Enumeration;
+import java.util.UUID;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -48,6 +50,11 @@ public class LoggingFilter implements Filter {
 
         HttpServletRequest castRequest = (HttpServletRequest) request;
         HttpServletResponse castResponse = (HttpServletResponse) response;
+
+        // Generate a UUID for this request and store in log4j's thread local MDC.
+        // Will be logged with every request if the ConversionPattern uses it.
+        MDC.put("requestType", "req");
+        MDC.put("requestUuid", UUID.randomUUID().toString());
 
         // Log some basic info about the request at info level.
         StringBuilder requestBuilder = new StringBuilder()

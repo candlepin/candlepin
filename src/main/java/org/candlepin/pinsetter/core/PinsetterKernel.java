@@ -331,8 +331,8 @@ public class PinsetterKernel {
 
         try {
             scheduler.getListenerManager()
-                .addJobListenerMatcher(PinsetterJobListener.LISTENER_NAME
-                    , jobNameEquals(detail.getKey().getName()));
+                .addJobListenerMatcher(PinsetterJobListener.LISTENER_NAME,
+                    jobNameEquals(detail.getKey().getName()));
 
             JobStatus status = null;
             try {
