@@ -48,6 +48,7 @@ public class LoggingFilter implements Filter {
     public void doFilter(ServletRequest request, ServletResponse response,
         FilterChain chain) throws IOException, ServletException {
 
+        long startTime = System.currentTimeMillis();
         HttpServletRequest castRequest = (HttpServletRequest) request;
         HttpServletResponse castResponse = (HttpServletResponse) response;
 
@@ -56,7 +57,27 @@ public class LoggingFilter implements Filter {
         MDC.put("requestType", "req");
         MDC.put("requestUuid", UUID.randomUUID().toString());
 
-        // Log some basic info about the request at info level.
+        // Log some basic info about the request at INFO level:
+        logBasicRequestInfo(castRequest);
+
+        if (log.isDebugEnabled()) {
+            LoggingRequestWrapper lRequest = new LoggingRequestWrapper(castRequest);
+            LoggingResponseWrapper lResponse = new LoggingResponseWrapper(castResponse);
+            logRequest(lRequest);
+            chain.doFilter(lRequest, lResponse);
+            logBasicResponseInfo(lResponse, startTime);
+            logResponseBody(lResponse);
+            lResponse.getWriter().close();
+        }
+        else {
+            StatusResponseWrapper responseWrapper = new StatusResponseWrapper(castResponse);
+            chain.doFilter(request, responseWrapper);
+            logBasicResponseInfo(responseWrapper, startTime);
+        }
+
+    }
+
+    private void logBasicRequestInfo(HttpServletRequest castRequest) {
         StringBuilder requestBuilder = new StringBuilder()
             .append("Request: ")
             .append(castRequest.getMethod()).append("  ")
@@ -65,18 +86,16 @@ public class LoggingFilter implements Filter {
             requestBuilder.append("?").append(castRequest.getQueryString());
         }
         log.info(requestBuilder.toString());
+    }
 
-        if (log.isDebugEnabled()) {
-            LoggingRequestWrapper lRequest = new LoggingRequestWrapper(castRequest);
-            LoggingResponseWrapper lResponse = new LoggingResponseWrapper(castResponse);
-            logRequest(lRequest);
-            chain.doFilter(lRequest, lResponse);
-            logResponse(lResponse);
-            lResponse.getWriter().close();
-        }
-        else {
-            chain.doFilter(request, response);
-        }
+    private void logBasicResponseInfo(StatusResponseWrapper responseWrapper,
+        long startTime) {
+        long duration = System.currentTimeMillis() - startTime;
+        log.info(
+            new StringBuilder().append("Response: status: ")
+                .append(responseWrapper.getStatus())
+                .append(", content-type: ").append(responseWrapper.getContentType())
+                .append(", time: ").append(duration).append("ms").toString());
     }
 
     /**
@@ -90,13 +109,7 @@ public class LoggingFilter implements Filter {
     /**
      * @param lResponse
      */
-    private void logResponse(LoggingResponseWrapper lResponse) {
-        log.debug(
-            new StringBuilder().append("\n====Response====")
-                .append("\n  Status: ").append(lResponse.getStatus())
-                .append("\n  Content-type: ").append(lResponse.getContentType())
-                .append("\n====Response====")
-        );
+    private void logResponseBody(LoggingResponseWrapper lResponse) {
         logBody("Response", lResponse);
     }
 
@@ -106,10 +119,7 @@ public class LoggingFilter implements Filter {
      */
     private void logHeaders(LoggingRequestWrapper lRequest) {
         Enumeration<?> headerNames = lRequest.getHeaderNames();
-        StringBuilder builder =
-            new StringBuilder().append("\nRequest Body: ")
-                .append(lRequest.getMethod()).append("  ")
-                .append(lRequest.getRequestURL());
+        StringBuilder builder = new StringBuilder();
 
         builder.append("\n====Headers====");
         while (headerNames.hasMoreElements()) {
