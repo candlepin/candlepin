@@ -89,6 +89,7 @@ import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.paging.Paginate;
 import org.candlepin.pinsetter.tasks.EntitlerJob;
+import org.candlepin.pinsetter.tasks.HealEntireOrgJob;
 import org.candlepin.pinsetter.tasks.RefreshPoolsJob;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ResourceDateParser;
@@ -423,12 +424,7 @@ public class OwnerResource {
     @Path("{owner_key}/entitlements")
     public JobDetail healEntire(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
-        Owner owner = findOwner(ownerKey);
-        Set<String> uuids = new HashSet<String>();
-        for (Consumer consumer : owner.getConsumers()) {
-            uuids.add(consumer.getUuid());
-        }
-        return EntitlerJob.healEntireOrg(uuids, new Date());
+        return HealEntireOrgJob.healEntireOrg(ownerKey, new Date());
     }
 
     /**

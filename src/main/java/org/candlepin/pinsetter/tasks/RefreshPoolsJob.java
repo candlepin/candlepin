@@ -26,7 +26,6 @@ import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 import com.google.inject.persist.UnitOfWork;
 
-import org.apache.log4j.Logger;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
@@ -37,7 +36,6 @@ import org.quartz.JobExecutionException;
  * {@link Owner}.
  */
 public class RefreshPoolsJob extends CpJob {
-    private static Logger log = Logger.getLogger(RefreshPoolsJob.class);
 
     private OwnerCurator ownerCurator;
     private PoolManager poolManager;

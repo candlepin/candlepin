@@ -16,6 +16,7 @@ package org.candlepin.pinsetter.tasks;
 
 import javax.persistence.PersistenceException;
 
+import org.apache.log4j.Logger;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -28,7 +29,8 @@ import com.google.inject.persist.UnitOfWork;
  */
 public abstract class CpJob implements Job {
 
-    private UnitOfWork unitOfWork;
+    protected static Logger log = Logger.getLogger(CpJob.class);
+    protected UnitOfWork unitOfWork;
     
     @Inject
     public CpJob(UnitOfWork unitOfWork) {
