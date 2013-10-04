@@ -26,6 +26,10 @@ function quantity_name_space() {
     return Quantity;
 }
 
+function override_name_space() {
+    return Override;
+}
+
 // consumer types
 var SYSTEM_TYPE = "system";
 var HYPERVISOR_TYPE = "hypervisor";
@@ -2702,6 +2706,20 @@ var Quantity = {
             return CoverageCalculator.getQuantityToCoverStack(stackTracker, pool, consumer);
         }
         return 1;
+    }
+}
+
+var Override = {
+    get_override_context: function() {
+        context = JSON.parse(json_context);
+        return context;
+    },
+
+    get_allow_override: function() {
+    	var blacklist = ['name','label','baseurl','ui_id']
+        var context = Override.get_override_context();
+        var name = context.name;
+        return blacklist.indexOf(name) > 0;
     }
 }
 

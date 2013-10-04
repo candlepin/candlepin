@@ -43,6 +43,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventAdapter;
@@ -69,11 +70,15 @@ import org.candlepin.model.ActivationKeyPool;
 import org.candlepin.model.CertificateSerialDto;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCapability;
+import org.candlepin.model.ConsumerContentOverride;
+import org.candlepin.model.ConsumerContentOverrideCurator;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.Content;
+import org.candlepin.model.ContentCurator;
 import org.candlepin.model.DeleteResult;
 import org.candlepin.model.DeletedConsumer;
 import org.candlepin.model.DeletedConsumerCurator;
@@ -102,6 +107,7 @@ import org.candlepin.pinsetter.tasks.EntitlerJob;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.consumer.ConsumerRules;
+import org.candlepin.policy.js.override.OverrideRules;
 import org.candlepin.policy.js.quantity.QuantityRules;
 import org.candlepin.resource.util.ConsumerInstalledProductEnricher;
 import org.candlepin.resource.util.ResourceDateParser;
@@ -131,8 +137,10 @@ public class ConsumerResource {
     private Pattern consumerPersonNamePattern;
 
     private static Logger log = Logger.getLogger(ConsumerResource.class);
+    private ConsumerContentOverrideCurator consumerContentOverrideCurator;
     private ConsumerCurator consumerCurator;
     private ConsumerTypeCurator consumerTypeCurator;
+    private ContentCurator contentCurator;
     private ProductServiceAdapter productAdapter;
     private SubscriptionServiceAdapter subAdapter;
     private EntitlementCurator entitlementCurator;
@@ -157,6 +165,7 @@ public class ConsumerResource {
     private DistributorVersionCurator distributorVersionCurator;
     private Config config;
     private QuantityRules quantityRules;
+    private OverrideRules overrideRules;
 
     @Inject
     public ConsumerResource(ConsumerCurator consumerCurator,
@@ -174,7 +183,9 @@ public class ConsumerResource {
         ComplianceRules complianceRules, DeletedConsumerCurator deletedConsumerCurator,
         EnvironmentCurator environmentCurator,
         DistributorVersionCurator distributorVersionCurator,
-        Config config, QuantityRules quantityRules) {
+        Config config, QuantityRules quantityRules,
+        ConsumerContentOverrideCurator consumerContentOverrideCurator,
+        ContentCurator contentCurator, OverrideRules overrideRules) {
 
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -205,6 +216,9 @@ public class ConsumerResource {
             ConfigProperties.CONSUMER_SYSTEM_NAME_PATTERN));
         this.config = config;
         this.quantityRules = quantityRules;
+        this.consumerContentOverrideCurator = consumerContentOverrideCurator;
+        this.contentCurator = contentCurator;
+        this.overrideRules = overrideRules;
     }
 
     /**
@@ -1484,6 +1498,16 @@ public class ConsumerResource {
         return consumer;
     }
 
+    private Content verifyAndLookupContent(String contentLabel) {
+        Content content = contentCurator.retrieveByLabel(contentLabel);
+
+        if (content == null) {
+            throw new NotFoundException(i18n.tr(
+                "Content with label ''{0}'' could not be found.", contentLabel));
+        }
+        return content;
+    }
+
     private Entitlement verifyAndLookupEntitlement(String entitlementId) {
         Entitlement entitlement = entitlementCurator.find(entitlementId);
 
@@ -1929,5 +1953,103 @@ public class ConsumerResource {
                 "Deletion record for hypervisor ''{0}'' not found.", uuid));
         }
         deletedConsumerCurator.delete(dc);
+    }
+
+    /*
+    *
+    *
+    * @param uuid
+    *
+    * @httpcode 404
+    * @httpcode 200
+    */
+    @PUT
+    @Path("{consumer_uuid}/content_overrides")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Transactional
+    public List<ConsumerContentOverride> addContentOverrides(
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
+        List<ConsumerContentOverride> entries) {
+        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        List<String> errors = new ArrayList();
+        for (ConsumerContentOverride entry : entries) {
+            if (overrideRules.canOverrideForConsumer(consumer, entry.getName())) {
+                Content content = verifyAndLookupContent(entry.getContentLabel());
+                ConsumerContentOverride cco = consumerContentOverrideCurator.retrieve(
+                    consumer, content, entry.getName());
+                if (cco != null) {
+                    cco.setValue(entry.getValue());
+                    cco.setUpdated(null);
+                    consumerContentOverrideCurator.merge(cco);
+                }
+                else {
+                    entry.setConsumerId(consumer.getId());
+                    entry.setContentLabel(content.getLabel());
+                    consumerContentOverrideCurator.create(entry);
+                }
+            }
+            else {
+                errors.add(i18n.tr(
+                    "The value for name ''{0}'' is not allowed to be overridden.",
+                    entry.getName()));
+            }
+        }
+        if (errors.size() > 0) {
+            throw new BadRequestException(errors.toString());
+        }
+        return consumerContentOverrideCurator.getList(consumer);
+    }
+    /*
+    *
+    *
+    * @param uuid
+    *
+    * @httpcode 404
+    * @httpcode 200
+    */
+    @DELETE
+    @Path("{consumer_uuid}/content_overrides")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Transactional
+    public List<ConsumerContentOverride> deleteContentOverrides(
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
+        List<ConsumerContentOverride> entries) {
+
+        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        if (entries.size() == 0) {
+            consumerContentOverrideCurator.removeByConsumer(consumer);
+        }
+        else {
+            for (ConsumerContentOverride entry : entries) {
+                String label = entry.getContentLabel();
+                if (StringUtils.isBlank(label)) {
+                    consumerContentOverrideCurator.removeByConsumer(consumer);
+                }
+                else {
+                    Content content = verifyAndLookupContent(label);
+                    String name = entry.getName();
+                    if (StringUtils.isBlank(name)) {
+                        consumerContentOverrideCurator.removeByContentLabel(
+                            consumer, content);
+                    }
+                    else {
+                        consumerContentOverrideCurator.removeByName(consumer,
+                            content, name);
+                    }
+                }
+            }
+        }
+        return consumerContentOverrideCurator.getList(consumer);
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{consumer_uuid}/content_overrides")
+    public List<ConsumerContentOverride> getContentOverrideList(
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
+        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        return consumerContentOverrideCurator.getList(consumer);
     }
 }
