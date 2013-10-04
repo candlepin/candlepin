@@ -51,8 +51,7 @@ public class GuiceJobFactory implements JobFactory {
 
         candlepinSingletonScope.enter();
         try {
-            return new TransactionalPinsetterJob(injector.getInstance(jobClass),
-                injector.getInstance(UnitOfWork.class));
+            return injector.getInstance(jobClass);
         }
         finally {
             candlepinSingletonScope.exit();

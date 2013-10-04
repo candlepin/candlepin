@@ -19,24 +19,27 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
 import com.google.inject.Inject;
+import com.google.inject.persist.UnitOfWork;
+
 import org.candlepin.controller.PoolManager;
 
 /**
  * The Class RegenEntitlementCertsJob.
  */
-public class RegenProductEntitlementCertsJob implements Job {
+public class RegenProductEntitlementCertsJob extends CpJob {
 
     private PoolManager poolManager;
     public static final String PROD_ID = "product_id";
     public static final String LAZY_REGEN = "lazy_regen";
 
     @Inject
-    public RegenProductEntitlementCertsJob(PoolManager poolManager) {
+    public RegenProductEntitlementCertsJob(PoolManager poolManager, UnitOfWork unitOfWork) {
+        super(unitOfWork);
         this.poolManager = poolManager;
     }
 
     @Override
-    public void execute(JobExecutionContext arg0) throws JobExecutionException {
+    public void toExecute(JobExecutionContext arg0) throws JobExecutionException {
         String prodId = arg0.getJobDetail().getJobDataMap().getString(
             PROD_ID);
         boolean lazy = arg0.getJobDetail().getJobDataMap().getBoolean(LAZY_REGEN);

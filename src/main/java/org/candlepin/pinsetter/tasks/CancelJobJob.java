@@ -26,28 +26,28 @@ import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
-
 import com.google.inject.Inject;
+import com.google.inject.persist.UnitOfWork;
 
 /**
  * CancelJobJob
  */
-public class CancelJobJob implements Job {
+public class CancelJobJob extends CpJob {
 
     private static Logger log = Logger.getLogger(CancelJobJob.class);
     public static final String DEFAULT_SCHEDULE = "0/5 * * * * ?"; //every five seconds
     private JobCurator jobCurator;
     private PinsetterKernel pinsetterKernel;
 
-
     @Inject
-    public CancelJobJob(JobCurator jobCurator, PinsetterKernel pinsetterKernel) {
+    public CancelJobJob(JobCurator jobCurator, PinsetterKernel pinsetterKernel, UnitOfWork unitOfWork) {
+        super(unitOfWork);
         this.jobCurator = jobCurator;
         this.pinsetterKernel = pinsetterKernel;
     }
 
     @Override
-    public void execute(JobExecutionContext ctx) throws JobExecutionException {
+    public void toExecute(JobExecutionContext ctx) throws JobExecutionException {
         List<JobStatus> canceledJobs;
 
         try {

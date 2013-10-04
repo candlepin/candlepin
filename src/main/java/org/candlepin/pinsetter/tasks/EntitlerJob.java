@@ -25,6 +25,7 @@ import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
+import com.google.inject.persist.UnitOfWork;
 
 import org.quartz.Job;
 import org.quartz.JobDataMap;
@@ -39,20 +40,20 @@ import java.util.Set;
 /**
  * EntitlerJob
  */
-public class EntitlerJob implements Job {
+public class EntitlerJob extends CpJob {
     private static Logger log = Logger.getLogger(EntitlerJob.class);
 
     private Entitler entitler;
     private ConsumerCurator consumerCurator;
 
     @Inject
-    public EntitlerJob(Entitler e, ConsumerCurator c) {
+    public EntitlerJob(Entitler e, ConsumerCurator c, UnitOfWork unitOfWork) {
+        super(unitOfWork);
         entitler = e;
         consumerCurator = c;
     }
 
-    @Override
-    public void execute(JobExecutionContext ctx) throws JobExecutionException {
+    public void toExecute(JobExecutionContext ctx) throws JobExecutionException {
         try {
             JobDataMap map = ctx.getMergedJobDataMap();
             Integer qty = map.getInt("quantity");

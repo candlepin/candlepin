@@ -414,9 +414,10 @@ public class PinsetterKernel {
 
     public void unpauseScheduler() throws PinsetterException {
         log.debug("looking for canceled jobs since scheduler was paused");
-        CancelJobJob cjj = new CancelJobJob(jobCurator, this);
+        CancelJobJob cjj = new CancelJobJob(jobCurator, this, null);
         try {
-            cjj.execute(null);
+            //Not sure why we don't want to use a UnitOfWork here
+            cjj.toExecute(null);
         }
         catch (JobExecutionException e1) {
             throw new PinsetterException("Could not clear canceled jobs before starting");

@@ -12,30 +12,26 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.pinsetter.core;
+package org.candlepin.pinsetter.tasks;
 
 import javax.persistence.PersistenceException;
-
-import com.google.inject.persist.UnitOfWork;
 
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
+import com.google.inject.Inject;
+import com.google.inject.persist.UnitOfWork;
+
 /**
- * TransactionalPinsetterJob - wrapper to execute our pinsetter jobs in a db
- * unit of work only as big as a single job execution, avoiding the caching
- * we'd have from the app's default http request scope.
- *
- * A System principal is also provided, for event emission
+ * CpJob
  */
-class TransactionalPinsetterJob implements Job {
+public abstract class CpJob implements Job {
 
     private UnitOfWork unitOfWork;
-    private Job wrappedJob;
-
-    TransactionalPinsetterJob(Job wrappedJob, UnitOfWork unitOfWork) {
-        this.wrappedJob = wrappedJob;
+    
+    @Inject
+    public CpJob(UnitOfWork unitOfWork) {
         this.unitOfWork = unitOfWork;
     }
 
@@ -47,7 +43,7 @@ class TransactionalPinsetterJob implements Job {
          */
         unitOfWork.begin();
         try {
-            wrappedJob.execute(context);
+            toExecute(context);
         }
         catch (PersistenceException e) {
             // Multiple refreshpools running at once can cause the following:
@@ -75,8 +71,10 @@ class TransactionalPinsetterJob implements Job {
         }
     }
 
-    // For testing
-    Job getWrappedJob() {
-        return wrappedJob;
-    }
+    /**
+     * Method for actual execution, execute handles unitOfWork for us
+     * @param context
+     * @throws JobExecutionException
+     */
+    public abstract void toExecute(JobExecutionContext context) throws JobExecutionException;
 }

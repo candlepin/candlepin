@@ -17,6 +17,7 @@ package org.candlepin.pinsetter.tasks;
 import org.candlepin.model.StatisticCurator;
 
 import com.google.inject.Inject;
+import com.google.inject.persist.UnitOfWork;
 
 import org.apache.log4j.Logger;
 import org.hibernate.HibernateException;
@@ -27,7 +28,7 @@ import org.quartz.JobExecutionException;
 /**
  * StatisticHistoryTask.
  */
-public class StatisticHistoryTask implements Job {
+public class StatisticHistoryTask extends CpJob {
 
     public static final String DEFAULT_SCHEDULE = "0 0 1 * * ?"; // run every
                                                                  // day at 1 AM
@@ -42,12 +43,14 @@ public class StatisticHistoryTask implements Job {
      * @param statCurator the StatisticCurator
      */
     @Inject
-    public StatisticHistoryTask(StatisticCurator statCurator) {
+    public StatisticHistoryTask(StatisticCurator statCurator,
+        UnitOfWork unitOfWork) {
+        super(unitOfWork);
         this.statCurator = statCurator;
     }
 
     @Override
-    public void execute(JobExecutionContext ctx) throws JobExecutionException {
+    public void toExecute(JobExecutionContext ctx) throws JobExecutionException {
         log.info("Executing Statistic History Job.");
 
         try {

@@ -21,6 +21,8 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
 import com.google.inject.Inject;
+import com.google.inject.persist.UnitOfWork;
+
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Environment;
 
@@ -30,7 +32,7 @@ import org.candlepin.model.Environment;
  * Regenerates entitlements within an environment which are affected by the
  * promotion/demotion of the given content sets.
  */
-public class RegenEnvEntitlementCertsJob implements Job {
+public class RegenEnvEntitlementCertsJob extends CpJob {
 
     private PoolManager poolManager;
     public static final String ENV = "env_id";
@@ -38,12 +40,13 @@ public class RegenEnvEntitlementCertsJob implements Job {
     public static final String LAZY_REGEN = "lazy_regen";
 
     @Inject
-    public RegenEnvEntitlementCertsJob(PoolManager poolManager) {
+    public RegenEnvEntitlementCertsJob(PoolManager poolManager, UnitOfWork unitOfWork) {
+        super(unitOfWork);
         this.poolManager = poolManager;
     }
 
     @Override
-    public void execute(JobExecutionContext arg0) throws JobExecutionException {
+    public void toExecute(JobExecutionContext arg0) throws JobExecutionException {
         Environment env = (Environment) arg0.getJobDetail().getJobDataMap().get(
             ENV);
         Set<String> contentIds = (Set<String>)
