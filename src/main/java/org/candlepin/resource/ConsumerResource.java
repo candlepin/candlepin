@@ -291,7 +291,8 @@ public class ConsumerResource {
             }
 
             if (expire.before(futureExpire)) {
-                log.warn("regenerating certificate for [" + uuid + "]");
+                log.info("Regenerating identity certificate for consumer: " + uuid +
+                    ", expiry: " + expire);
                 consumer = this.regenerateIdentityCertificates(uuid);
             }
 
@@ -445,6 +446,9 @@ public class ConsumerResource {
             consumer.setEntitlementStatus(compliance.getStatus());
             consumerCurator.update(consumer);
 
+            log.info("Consumer " + consumer.getUuid() + " created in org " +
+                consumer.getOwner().getKey());
+
             return consumer;
         }
         catch (CandlepinException ce) {
@@ -568,9 +572,8 @@ public class ConsumerResource {
         List<ActivationKey> keys, ConsumerType type) {
         if (log.isDebugEnabled()) {
             log.debug("Got consumerTypeLabel of: " + type.getLabel());
-            log.debug("got facts: \n" + consumer.getFacts());
-
             if (consumer.getFacts() != null) {
+                log.debug("incoming facts:");
                 for (String key : consumer.getFacts().keySet()) {
                     log.debug("   " + key + " = " + consumer.getFact(key));
                 }
@@ -1785,8 +1788,7 @@ public class ConsumerResource {
         }
 
         if (log.isDebugEnabled()) {
-            log.debug("Generated identity cert: " + idCert);
-            log.debug("Created consumer: " + c);
+            log.debug("Generated identity cert: " + idCert.getSerial().getId());
         }
 
         return idCert;
