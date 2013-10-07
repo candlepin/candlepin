@@ -55,7 +55,16 @@ public class LoggingFilter implements Filter {
         // Generate a UUID for this request and store in log4j's thread local MDC.
         // Will be logged with every request if the ConversionPattern uses it.
         MDC.put("requestType", "req");
-        MDC.put("requestUuid", UUID.randomUUID().toString());
+        String requestUUID = UUID.randomUUID().toString();
+        MDC.put("requestUuid", requestUUID);
+
+        // Add requestUuid to the serverRequest as an attribute, so tomcat can
+        //   log it to the access log with "%{requestUuid}r"
+        castRequest.setAttribute("requestUuid", requestUUID);
+
+        // Report the requestUuid to the client in the response.
+        // Not sure this is useful yet.
+        castResponse.setHeader("x-candlepin-request-uuid", requestUUID);
 
         // Log some basic info about the request at INFO level:
         logBasicRequestInfo(castRequest);
