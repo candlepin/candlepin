@@ -14,6 +14,10 @@
  */
 package org.candlepin.policy.js.pool;
 
+import java.util.HashSet;
+import java.util.Set;
+
+import org.apache.commons.lang.StringUtils;
 import org.candlepin.model.Pool;
 
 /**
@@ -77,6 +81,46 @@ public class PoolUpdate {
         return datesChanged || quantityChanged || productsChanged ||
             productAttributesChanged ||
             orderChanged || derivedProductsChanged || derivedProductAttributesChanged;
+    }
+
+    /**
+     * @return a string representing the changes to the pool. Mainly used for
+     * logging purposes.
+     */
+    public String toString() {
+        StringBuffer buffer = new StringBuffer();
+        Set<String> changes = new HashSet<String>();
+
+        buffer.append("PoolUpdate[pool: ");
+        buffer.append(pool.getId());
+        buffer.append(", changes:");
+
+        if (datesChanged) {
+            changes.add("dates");
+        }
+        if (quantityChanged) {
+            changes.add("quantity");
+        }
+        if (productsChanged) {
+            changes.add("products");
+        }
+        if (productAttributesChanged) {
+            changes.add("productattributes");
+        }
+        if (orderChanged) {
+            changes.add("order");
+        }
+        if (derivedProductsChanged) {
+            changes.add("derivedproducts");
+        }
+        if (derivedProductAttributesChanged) {
+            changes.add("derivedproductattributes");
+        }
+        buffer.append(StringUtils.join(changes, " "));
+        buffer.append("]");
+
+        return buffer.toString();
+
     }
 
     public Pool getPool() {
