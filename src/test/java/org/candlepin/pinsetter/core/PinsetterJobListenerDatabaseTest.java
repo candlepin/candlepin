@@ -28,6 +28,7 @@ import com.google.inject.persist.jpa.JpaPersistModule;
 import org.apache.commons.lang.RandomStringUtils;
 import org.candlepin.CandlepinNonServletEnvironmentTestingModule;
 import org.candlepin.auth.Principal;
+import org.candlepin.guice.I18nProvider;
 import org.candlepin.guice.JPAInitializer;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.guice.TestPrincipalProvider;
@@ -41,6 +42,7 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.quartz.JobListener;
 import org.quartz.spi.JobFactory;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * PinsetterJobListenerDatabaseTest is a unit test that uses a real database to
@@ -101,6 +103,7 @@ public class PinsetterJobListenerDatabaseTest {
         @Override
         protected void configure() {
             install(new JpaPersistModule("default"));
+            bind(I18n.class).toProvider(I18nProvider.class);
             bind(JPAInitializer.class).asEagerSingleton();
             bind(JobFactory.class).to(GuiceJobFactory.class);
             bind(JobListener.class).to(PinsetterJobListener.class);
