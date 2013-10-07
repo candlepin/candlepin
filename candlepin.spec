@@ -212,6 +212,8 @@ rm -rf $RPM_BUILD_ROOT
 install -d -m 755 $RPM_BUILD_ROOT/%{_sysconfdir}/%{name}/certs/
 install -d -m 755 $RPM_BUILD_ROOT/%{_sysconfdir}/%{name}/certs/upstream/
 install -m 644 conf/candlepin-redhat-ca.crt %{buildroot}%{_sysconfdir}/%{name}/certs/upstream/
+install -d 755 %{buildroot}%{_sysconfdir}/logrotate.d/
+install -m 644 conf/logrotate.conf %{buildroot}%{_sysconfdir}/logrotate.d/%{name}
 install -d -m 755 $RPM_BUILD_ROOT/%{_sysconfdir}/%{name}/
 install -d -m 755 $RPM_BUILD_ROOT/%{_datadir}/%{name}/
 install -m 755 code/setup/cpsetup $RPM_BUILD_ROOT/%{_datadir}/%{name}/cpsetup
@@ -294,6 +296,7 @@ fi
 # If a deployment is managing their own, they will need to restore from the
 # .rpmsave backup after upgrading the candlepin rpm.
 %config %attr(644, root, root) %{_sysconfdir}/%{name}/certs/upstream/candlepin-redhat-ca.crt
+%config(noreplace) %attr(644,root,root) %{_sysconfdir}/logrotate.d/candlepin
 %doc LICENSE
 %doc README
 
