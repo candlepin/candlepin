@@ -64,8 +64,8 @@ import java.util.Set;
 @Singleton
 public class PinsetterKernel {
 
-    private static final String CRON_GROUP = "cron group";
-    private static final String SINGLE_JOB_GROUP = "async group";
+    public static final String CRON_GROUP = "cron group";
+    public static final String SINGLE_JOB_GROUP = "async group";
 
     private static Logger log = Logger.getLogger(PinsetterKernel.class);
 

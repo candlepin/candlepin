@@ -30,7 +30,7 @@ import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
-
+ 
 /**
  * Asynchronous job for refreshing the entitlement pools for specific
  * {@link Owner}.

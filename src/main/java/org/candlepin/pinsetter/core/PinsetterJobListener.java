@@ -14,6 +14,8 @@
  */
 package org.candlepin.pinsetter.core;
 
+import static org.quartz.TriggerBuilder.newTrigger;
+
 import org.apache.log4j.Logger;
 import org.candlepin.auth.Principal;
 import org.candlepin.model.JobCurator;
@@ -28,6 +30,8 @@ import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.quartz.JobListener;
+import org.quartz.SchedulerException;
+import org.quartz.Trigger;
 
 /**
  * This component receives events around job status and performs actions to
@@ -113,6 +117,21 @@ public class PinsetterJobListener implements JobListener {
             }
             else {
                 status.update(ctx);
+            }
+            if (status.getBlockingJob() != null &&
+                    (status.getState() == JobState.FAILED ||
+                    status.getState() == JobState.FINISHED ||
+                    status.getState() == JobState.CANCELED)) {
+                Trigger trigger = newTrigger()
+                    .withIdentity(status.getBlockingJob() + " trigger", PinsetterKernel.SINGLE_JOB_GROUP)
+                    .build();
+                try {
+                    log.debug("CAKO scheduling existing job");
+                    ctx.getScheduler().scheduleJob(trigger);
+                }
+                catch (SchedulerException e) {
+                    log.debug("CAKO failed to start blocked job " + status.getBlockingJob());
+                }
             }
             curator.merge(status);
         }

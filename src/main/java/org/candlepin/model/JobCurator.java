@@ -102,4 +102,16 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
             .add(Restrictions.eq("jobClass", jobClass))
             .list();
     }
+
+    @SuppressWarnings("unchecked")
+    public List<JobStatus> findRunningByOwnerAndClass(
+            String ownerKey, Class<? extends CpJob> jobClass) {
+        //Perhaps this should be much more general, and get criterion from the jobClass
+        //definitely should move if we come up with more complex unique job types
+        return this.currentSession().createCriteria(JobStatus.class)
+            .add(Restrictions.eq("state", JobState.RUNNING))
+            .add(Restrictions.eq("targetId", ownerKey))
+            .add(Restrictions.eq("jobClass", jobClass))
+            .list();
+    }
 }

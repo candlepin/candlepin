@@ -108,8 +108,13 @@ public abstract class CpJob implements Job {
             status = jobCurator.find(detail.getKey().getName());
             jobCurator.merge(status);
         }
-    
-        scheduler.scheduleJob(detail, trigger);
+        
+        if (trigger != null) {
+            scheduler.scheduleJob(detail, trigger);
+        }
+        else {
+            scheduler.addJob(detail, false);
+        }
         return status;
     }
 }
