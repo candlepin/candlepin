@@ -328,19 +328,17 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
                         value = Integer.parseInt(entry.getValue());
                     }
                     catch (NumberFormatException nfe) {
-                        log.error(i18n.tr(
-                            "The fact ''{0}'' must be an integer instead of ''{1}''. " +
-                            "No value will exist for that fact.",
-                            entry.getKey(), entry.getValue()));
+                        log.error("The fact " + entry.getKey() +
+                            " must be an integer instead of " + entry.getValue() +
+                            ". " + "No value will exist for that fact.");
                         continue;
                     }
                     if (posFacts != null && posFacts.contains(
                         entry.getKey()) &&
                         value < 0) {
-                        log.error(i18n.tr(
-                            "The fact ''{0}'' must have a positive integer value " +
-                            "instead of ''{1}''. No value will exist for that fact.",
-                            entry.getKey(), entry.getValue()));
+                        log.error("The fact " + entry.getKey() +
+                            " must have a positive integer value instead of " +
+                            entry.getValue() + ". No value will exist for that fact.");
                         continue;
                     }
                 }
