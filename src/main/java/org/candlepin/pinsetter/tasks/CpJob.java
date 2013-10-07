@@ -14,12 +14,22 @@
  */
 package org.candlepin.pinsetter.tasks;
 
+import static org.quartz.impl.matchers.NameMatcher.jobNameEquals;
+
+import javax.persistence.EntityExistsException;
 import javax.persistence.PersistenceException;
 
 import org.apache.log4j.Logger;
+import org.candlepin.model.JobCurator;
+import org.candlepin.pinsetter.core.PinsetterJobListener;
+import org.candlepin.pinsetter.core.model.JobStatus;
 import org.quartz.Job;
+import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.quartz.Scheduler;
+import org.quartz.SchedulerException;
+import org.quartz.Trigger;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.UnitOfWork;
@@ -31,7 +41,7 @@ public abstract class CpJob implements Job {
 
     protected static Logger log = Logger.getLogger(CpJob.class);
     protected UnitOfWork unitOfWork;
-    
+
     @Inject
     public CpJob(UnitOfWork unitOfWork) {
         this.unitOfWork = unitOfWork;
@@ -79,4 +89,27 @@ public abstract class CpJob implements Job {
      * @throws JobExecutionException
      */
     public abstract void toExecute(JobExecutionContext context) throws JobExecutionException;
+
+    public static JobStatus scheduleJob(JobCurator jobCurator,
+            Scheduler scheduler, JobDetail detail,
+            Trigger trigger) throws SchedulerException {
+
+        scheduler.getListenerManager().addJobListenerMatcher(
+            PinsetterJobListener.LISTENER_NAME,
+            jobNameEquals(detail.getKey().getName()));
+
+        JobStatus status = null;
+        try {
+            status = jobCurator.create(new JobStatus(detail));
+        }
+        catch (EntityExistsException e) {
+            // status exists, let's update it
+            // in theory this should be the rare case
+            status = jobCurator.find(detail.getKey().getName());
+            jobCurator.merge(status);
+        }
+    
+        scheduler.scheduleJob(detail, trigger);
+        return status;
+    }
 }

@@ -15,6 +15,7 @@
 package org.candlepin.pinsetter.core.model;
 
 import java.util.Date;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -26,7 +27,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import org.candlepin.auth.Principal;
 import org.candlepin.model.AbstractHibernateObject;
 import org.candlepin.pinsetter.core.PinsetterJobListener;
-
+import org.candlepin.pinsetter.tasks.CpJob;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 
@@ -77,6 +78,9 @@ public class JobStatus extends AbstractHibernateObject {
     private TargetType targetType;
     private String targetId;
 
+    @Column(length = 255)
+    private Class<? extends CpJob> jobClass;
+
     public JobStatus() { }
 
     public JobStatus(JobDetail jobDetail) {
@@ -86,6 +90,7 @@ public class JobStatus extends AbstractHibernateObject {
         this.targetType = getTargetType(jobDetail);
         this.targetId = getTargetId(jobDetail);
         this.principalName = getPrincipalName(jobDetail);
+        this.jobClass = getJobClass(jobDetail);
     }
 
     private String getPrincipalName(JobDetail detail) {
@@ -100,6 +105,11 @@ public class JobStatus extends AbstractHibernateObject {
 
     private String getTargetId(JobDetail jobDetail) {
         return (String) jobDetail.getJobDataMap().get(TARGET_ID);
+    }
+
+    @SuppressWarnings("unchecked")
+    private Class<? extends CpJob> getJobClass(JobDetail jobDetail) {
+        return (Class<? extends CpJob>) jobDetail.getJobClass();
     }
 
     public void update(JobExecutionContext context) {
@@ -183,5 +193,9 @@ public class JobStatus extends AbstractHibernateObject {
 
     public String getPrincipalName() {
         return this.principalName;
+    }
+
+    public Class<? extends CpJob> getJobClass() {
+        return jobClass;
     }
 }

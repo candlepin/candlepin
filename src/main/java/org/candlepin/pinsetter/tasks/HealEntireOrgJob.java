@@ -38,20 +38,23 @@ import com.google.inject.persist.UnitOfWork;
 /**
  * HealEntireOrgJob
  */
-public class HealEntireOrgJob extends EntitlerJob {
+public class HealEntireOrgJob extends UniqueByOwnerJob {
 
     protected OwnerCurator ownerCurator;
+    protected Entitler entitler;
+    protected ConsumerCurator consumerCurator;
 
     @Inject
     public HealEntireOrgJob(Entitler e, UnitOfWork unitOfWork,
             ConsumerCurator c, OwnerCurator o) {
-        super(e, c, unitOfWork);
-        ownerCurator = o;
+        super(unitOfWork);
+        this.entitler = e;
+        this.consumerCurator = c;
+        this.ownerCurator = o;
     }
 
     @Override
     public void toExecute(JobExecutionContext ctx) throws JobExecutionException {
-        //Using execute here not toExecute because we want to handle our own units of work
         try {
             JobDataMap map = ctx.getMergedJobDataMap();
             String ownerId = (String) map.get("ownerId");

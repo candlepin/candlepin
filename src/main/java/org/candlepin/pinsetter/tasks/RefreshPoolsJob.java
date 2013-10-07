@@ -35,7 +35,7 @@ import org.quartz.JobExecutionException;
  * Asynchronous job for refreshing the entitlement pools for specific
  * {@link Owner}.
  */
-public class RefreshPoolsJob extends CpJob {
+public class RefreshPoolsJob extends UniqueByOwnerJob {
 
     private OwnerCurator ownerCurator;
     private PoolManager poolManager;

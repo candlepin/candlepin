@@ -21,7 +21,6 @@ import static org.quartz.JobKey.jobKey;
 import static org.quartz.TriggerBuilder.newTrigger;
 import static org.quartz.TriggerKey.triggerKey;
 import static org.quartz.impl.matchers.GroupMatcher.jobGroupEquals;
-import static org.quartz.impl.matchers.NameMatcher.jobNameEquals;
 
 import org.candlepin.auth.SystemPrincipal;
 import org.candlepin.config.Config;
@@ -57,8 +56,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
-
-import javax.persistence.EntityExistsException;
 
 /**
  * Pinsetter Kernel.
@@ -330,22 +327,10 @@ public class PinsetterKernel {
         detailImpl.setGroup(grpName);
 
         try {
-            scheduler.getListenerManager()
-                .addJobListenerMatcher(PinsetterJobListener.LISTENER_NAME
-                    , jobNameEquals(detail.getKey().getName()));
-
-            JobStatus status = null;
-            try {
-                status = jobCurator.create(new JobStatus(detail));
-            }
-            catch (EntityExistsException e) {
-                // status exists, let's update it
-                // in theory this should be the rare case
-                status = jobCurator.find(detail.getKey().getName());
-                jobCurator.merge(status);
-            }
-
-            scheduler.scheduleJob(detail, trigger);
+            JobStatus status = (JobStatus) (detail.getJobClass()
+                .getMethod("scheduleJob", JobCurator.class,
+                    Scheduler.class, JobDetail.class, Trigger.class)
+                .invoke(null, jobCurator, scheduler, detail, trigger));
 
             if (log.isDebugEnabled()) {
                 log.debug("Scheduled " + detailImpl.getFullName());
@@ -353,7 +338,7 @@ public class PinsetterKernel {
 
             return status;
         }
-        catch (SchedulerException e) {
+        catch (Exception e) {
             log.error("There was a problem scheduling " +
                 detail.getKey().getName(), e);
             throw new PinsetterException("There was a problem scheduling " +

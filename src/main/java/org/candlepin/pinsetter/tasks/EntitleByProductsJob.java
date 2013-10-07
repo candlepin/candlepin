@@ -16,33 +16,32 @@ package org.candlepin.pinsetter.tasks;
 
 import static org.quartz.JobBuilder.newJob;
 
+import java.util.Date;
+import java.util.List;
+
 import org.candlepin.controller.Entitler;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.util.Util;
-
-import com.google.inject.Inject;
-import com.google.inject.persist.UnitOfWork;
-
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
-import java.util.Date;
-import java.util.List;
+import com.google.inject.Inject;
+import com.google.inject.persist.UnitOfWork;
 
 /**
- * EntitlerJob
+ * EntitleByProductsJob
  */
-public class EntitlerJob extends CpJob {
+public class EntitleByProductsJob extends CpJob {
 
     protected Entitler entitler;
     protected ConsumerCurator consumerCurator;
 
     @Inject
-    public EntitlerJob(Entitler e, ConsumerCurator c, UnitOfWork unitOfWork) {
+    public EntitleByProductsJob(Entitler e, ConsumerCurator c, UnitOfWork unitOfWork) {
         super(unitOfWork);
         entitler = e;
         consumerCurator = c;
@@ -52,13 +51,11 @@ public class EntitlerJob extends CpJob {
     public void toExecute(JobExecutionContext ctx) throws JobExecutionException {
         try {
             JobDataMap map = ctx.getMergedJobDataMap();
-            Integer qty = map.getInt("quantity");
             String uuid = (String) map.get(JobStatus.TARGET_ID);
-
-            String poolId = map.getString("pool_id");
-            List<Entitlement> ents = entitler.bindByPool(poolId, uuid, qty);
+            Date entitleDate = (Date) map.get("entitle_date");
+            String[] prodIds = (String[]) map.get("product_ids");
+            List<Entitlement> ents = entitler.bindByProducts(prodIds, uuid, entitleDate);
             entitler.sendEvents(ents);
-
             ctx.setResult("Entitlements created for owner");
         }
         // Catch any exception that is fired and re-throw as a JobExecutionException
@@ -70,19 +67,18 @@ public class EntitlerJob extends CpJob {
         }
     }
 
-    public static JobDetail bindByPool(String poolId, String uuid, Integer qty) {
+    public static JobDetail bindByProducts(String[] prodIds, String uuid,
+        Date entitleDate) {
         JobDataMap map = new JobDataMap();
-        map.put("pool_id", poolId);
+        map.put("product_ids", prodIds);
         map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.CONSUMER);
         map.put(JobStatus.TARGET_ID, uuid);
-        map.put("quantity", qty);
+        map.put("entitle_date", entitleDate);
 
-        JobDetail detail = newJob(EntitlerJob.class)
-            .withIdentity("bind_by_pool_" + Util.generateUUID())
-            .requestRecovery(false) // do not recover the job upon restarts
+        JobDetail detail = newJob(EntitleByProductsJob.class)
+            .withIdentity("bind_by_products_" + Util.generateUUID())
             .usingJobData(map)
             .build();
-
         return detail;
     }
 }
