@@ -54,11 +54,14 @@ public abstract class UniqueByOwnerJob extends CpJob {
             (Class<? extends CpJob>) detail.getJobClass());
         if (!results.isEmpty()) {
             log.debug("CAKO found a matching running job, scheduling without a trigger");
-            JobStatus status = CpJob.scheduleJob(jobCurator, scheduler, detail, null);
             JobStatus blocking = results.get(0);
-            blocking.setBlockingJob(status.getId());
-            jobCurator.merge(blocking);
-            return status;
+            if (blocking.getBlockingJob() == null) {
+                JobStatus status = CpJob.scheduleJob(jobCurator, scheduler, detail, null);
+                blocking.setBlockingJob(status.getId());
+                jobCurator.merge(blocking);
+                return status;
+            }
+            return jobCurator.find(blocking.getBlockingJob());
         }
         return CpJob.scheduleJob(jobCurator, scheduler, detail, trigger);
     }
