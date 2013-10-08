@@ -29,6 +29,7 @@ import com.google.inject.persist.UnitOfWork;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.quartz.JobKey;
 import org.quartz.JobListener;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
@@ -123,14 +124,15 @@ public class PinsetterJobListener implements JobListener {
                     status.getState() == JobState.FINISHED ||
                     status.getState() == JobState.CANCELED)) {
                 Trigger trigger = newTrigger()
-                    .withIdentity(status.getBlockingJob() + " trigger", PinsetterKernel.SINGLE_JOB_GROUP)
+                    .forJob(new JobKey(status.getBlockingJob(), status.getJobKey().getGroup()))
+                    .withIdentity(status.getBlockingJob() + " trigger", status.getJobKey().getGroup())
                     .build();
                 try {
                     log.debug("CAKO scheduling existing job");
                     ctx.getScheduler().scheduleJob(trigger);
                 }
                 catch (SchedulerException e) {
-                    log.debug("CAKO failed to start blocked job " + status.getBlockingJob());
+                    log.debug("CAKO failed to start blocked job " + status.getBlockingJob() + "due to " + e.getMessage(), e);
                 }
             }
             curator.merge(status);

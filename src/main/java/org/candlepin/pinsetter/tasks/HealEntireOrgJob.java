@@ -101,6 +101,7 @@ public class HealEntireOrgJob extends UniqueByOwnerJob {
         JobDetail detail = newJob(HealEntireOrgJob.class)
             .withIdentity("heal_entire_org_" + Util.generateUUID())
             .usingJobData(map)
+            .storeDurably(true) //required if we have to postpone the job
             .build();
 
         return detail;
