@@ -1416,8 +1416,8 @@ public class ConsumerResource {
                 throw cvce;
             }
             catch (RuntimeException re) {
-                log.warn(i18n.tr("Unable to attach a subscription for a product that " +
-                    "has no pool: {0} ", re.getMessage()));
+                log.warn("Unable to attach a subscription for a product that " +
+                    "has no pool: " + re.getMessage());
             }
         }
 

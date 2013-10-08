@@ -29,7 +29,6 @@ import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.Subqueries;
-import org.xnap.commons.i18n.I18n;
 
 import java.util.Date;
 import java.util.HashSet;
@@ -43,16 +42,14 @@ import java.util.Set;
 public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     private static Logger log = Logger.getLogger(EntitlementCurator.class);
     private ProductServiceAdapter productAdapter;
-    private I18n i18n;
 
     /**
      * default ctor
      */
     @Inject
-    public EntitlementCurator(ProductServiceAdapter productAdapter, I18n i18n) {
+    public EntitlementCurator(ProductServiceAdapter productAdapter) {
         super(Entitlement.class);
         this.productAdapter = productAdapter;
-        this.i18n = i18n;
     }
 
     // TODO: handles addition of new entitlements only atm!
