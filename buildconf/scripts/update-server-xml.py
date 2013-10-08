@@ -26,9 +26,11 @@ commentedout_https_connector_pattern = '<!--\s*?\n*?<Connector port="8443".*?-->
 
 access_log_pattern = """<Valve className="org.apache.catalina.valves.AccessLogValve".*?/>"""
 commentedout_access_log_pattern = """<!--\s*?\n*?<Valve className="org.apache.catalina.valves.AccessLogValve".*?-->"""
+
+# apache http "combined" format (using subman version header added to user agent), plus request time and request uuid
 access_log_configuration = """<Valve className="org.apache.catalina.valves.AccessLogValve" directory="/var/log/candlepin/"
 prefix="access" rotatable="false" suffix=".log"
-pattern='%h %l %u %t "%r" %s %b %T %{x-subscription-manager-version}i %{requestUuid}r' resolveHosts="false"/>"""
+pattern='%h %l %u %t "%r" %s %b "" "%{user-agent}i sm/%{x-subscription-manager-version}i" "req_time=%T,req=%{requestUuid}r"' resolveHosts="false"/>"""
 
 end_of_host_section_pattern = """\s*?</Host>"""
 
