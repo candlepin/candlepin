@@ -14,8 +14,8 @@
  */
 package org.candlepin.policy.js.pool;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 import org.candlepin.model.Pool;
@@ -89,7 +89,7 @@ public class PoolUpdate {
      */
     public String toString() {
         StringBuffer buffer = new StringBuffer();
-        Set<String> changes = new HashSet<String>();
+        List<String> changes = new LinkedList<String>();
 
         buffer.append("PoolUpdate[pool: ");
         buffer.append(pool.getId());
