@@ -89,8 +89,8 @@ public class LoggingFilter implements Filter {
     private void logBasicRequestInfo(HttpServletRequest castRequest) {
         StringBuilder requestBuilder = new StringBuilder()
             .append("Request: verb=")
-            .append(castRequest.getMethod()).append(", url=")
-            .append(castRequest.getRequestURL());
+            .append(castRequest.getMethod()).append(", uri=")
+            .append(castRequest.getRequestURI());
         if (castRequest.getQueryString() != null) {
             requestBuilder.append("?").append(castRequest.getQueryString());
         }
