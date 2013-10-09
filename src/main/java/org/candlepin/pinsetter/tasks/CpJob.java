@@ -23,7 +23,9 @@ import org.apache.log4j.Logger;
 import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.PinsetterJobListener;
 import org.candlepin.pinsetter.core.model.JobStatus;
+import org.candlepin.util.Util;
 import org.quartz.Job;
+import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -41,6 +43,7 @@ public abstract class CpJob implements Job {
 
     protected static Logger log = Logger.getLogger(CpJob.class);
     protected UnitOfWork unitOfWork;
+    protected static String prefix = "job";
 
     @Inject
     public CpJob(UnitOfWork unitOfWork) {
@@ -53,33 +56,38 @@ public abstract class CpJob implements Job {
          * Execute our 'real' job inside a custom unit of work scope, instead
          * of the guice provided one, which is http request scoped.
          */
-        unitOfWork.begin();
-        try {
+        if (unitOfWork != null) {
+            unitOfWork.begin();
+            try {
+                toExecute(context);
+            }
+            catch (PersistenceException e) {
+                // Multiple refreshpools running at once can cause the following:
+                // one job attempts to delete a pool that was deleted by another job
+                // one job attempts to add a pool that was already added
+                // one job attempts to update a pool that was already updated
+                // all 3 of these conditions will cause some form of JPA/hibernate
+                // exception to bubble up.  the exception seems to vary based on the
+                // underlying db, so just catch the toplevel  exception. We then
+                // throw an exception that will let pinsetter/quartz know  that
+                // there was a race condition detected, and get it to reschedule
+                // the job. the other job will have completed successfully, and
+                // this one can then run (and possibly use new information, which
+                // is why there could be two jobs in the queue for  the same owner).
+                //
+                // I guess if other jobs fail its ok to restart them, too?
+                // note that we have to catch at this level rather than inside the
+                // job for any update collisions, which will only be detected
+                // on commit.
+    
+                throw new JobExecutionException(e, true);
+            }
+            finally {
+                unitOfWork.end();
+            }
+        }
+        else {
             toExecute(context);
-        }
-        catch (PersistenceException e) {
-            // Multiple refreshpools running at once can cause the following:
-            // one job attempts to delete a pool that was deleted by another job
-            // one job attempts to add a pool that was already added
-            // one job attempts to update a pool that was already updated
-            // all 3 of these conditions will cause some form of JPA/hibernate
-            // exception to bubble up.  the exception seems to vary based on the
-            // underlying db, so just catch the toplevel  exception. We then
-            // throw an exception that will let pinsetter/quartz know  that
-            // there was a race condition detected, and get it to reschedule
-            // the job. the other job will have completed successfully, and
-            // this one can then run (and possibly use new information, which
-            // is why there could be two jobs in the queue for  the same owner).
-            //
-            // I guess if other jobs fail its ok to restart them, too?
-            // note that we have to catch at this level rather than inside the
-            // job for any update collisions, which will only be detected
-            // on commit.
-
-            throw new JobExecutionException(e, true);
-        }
-        finally {
-            unitOfWork.end();
         }
     }
 
@@ -101,6 +109,7 @@ public abstract class CpJob implements Job {
         JobStatus status = null;
         try {
             status = jobCurator.create(new JobStatus(detail));
+            jobCurator.lockAndLoad(status);
         }
         catch (EntityExistsException e) {
             // status exists, let's update it

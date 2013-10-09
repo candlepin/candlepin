@@ -41,6 +41,7 @@ public class RefreshPoolsJob extends UniqueByOwnerJob {
     private PoolManager poolManager;
 
     public static final String LAZY_REGEN = "lazy_regen";
+    protected static String prefix = "refresh_pools_";
 
     @Inject
     public RefreshPoolsJob(OwnerCurator ownerCurator, PoolManager poolManager,
@@ -95,6 +96,7 @@ public class RefreshPoolsJob extends UniqueByOwnerJob {
         map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.OWNER);
         map.put(JobStatus.TARGET_ID, owner.getKey());
         map.put(LAZY_REGEN, lazy);
+        //map.put("statusId", prefix + Util.generateUUID());
 
         // Not sure if this is the best way to go:
         // Give each job a UUID to ensure that it is unique

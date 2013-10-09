@@ -14,8 +14,6 @@
  */
 package org.candlepin.pinsetter.tasks;
 
-import java.util.List;
-
 import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.quartz.JobDetail;
@@ -34,35 +32,38 @@ public abstract class UniqueByOwnerJob extends CpJob {
         super(unitOfWork);
     }
 
-    // This isn't especially safe, but better than what we've got
     @SuppressWarnings("unchecked")
     public static JobStatus scheduleJob(JobCurator jobCurator,
         Scheduler scheduler, JobDetail detail,
         Trigger trigger) throws SchedulerException {
-
-        List<JobStatus> results = jobCurator.findQueuedByOwnerAndClass(
+        JobStatus result = jobCurator.getLatestByClassAndOwner(
             detail.getJobDataMap().getString(JobStatus.TARGET_ID),
             (Class<? extends CpJob>) detail.getJobClass());
+        if (result == null){
+            log.debug("CAKO scheduling a new job");
+            return CpJob.scheduleJob(jobCurator, scheduler, detail, trigger);
+        }
+        //result = jobCurator.lockAndLoad(result);
+        if (result.getState() == JobStatus.JobState.PENDING ||
+            result.getState() == JobStatus.JobState.CREATED) {
+            log.debug("CAKO returning existing job");
+            //jobCurator.merge(result);
+            return result;
+        }
+        if (result.getBlockingJob() != null) {
+            log.debug("CAKO this is awkward ========================================");
+            //we're in a state where there isn't anything queued, however the running job thinks it's blocking something
+            //with proper locking this shouldn't be necessary
 
-        if (!results.isEmpty()) {
-            log.debug("CAKO found a matching job, using that one rather than scheduling another");
-            return results.get(0);
+            //return jobCurator.find(result.getBlockingJob());
+            return null;
         }
-        
-        results = jobCurator.findRunningByOwnerAndClass(
-            detail.getJobDataMap().getString(JobStatus.TARGET_ID),
-            (Class<? extends CpJob>) detail.getJobClass());
-        if (!results.isEmpty()) {
-            log.debug("CAKO found a matching running job, scheduling without a trigger");
-            JobStatus blocking = results.get(0);
-            if (blocking.getBlockingJob() == null) {
-                JobStatus status = CpJob.scheduleJob(jobCurator, scheduler, detail, null);
-                blocking.setBlockingJob(status.getId());
-                jobCurator.merge(blocking);
-                return status;
-            }
-            return jobCurator.find(blocking.getBlockingJob());
-        }
-        return CpJob.scheduleJob(jobCurator, scheduler, detail, trigger);
+        log.debug("CAKO scheduling a job without a trigger");
+        result.setBlockingJob(detail.getKey().getName());
+        JobStatus status = CpJob.scheduleJob(jobCurator, scheduler, detail, null);
+        status = jobCurator.lockAndLoad(status);
+        jobCurator.merge(status);
+        jobCurator.merge(result);
+        return status;
     }
 }

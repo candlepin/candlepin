@@ -20,6 +20,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.Version;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -29,6 +30,7 @@ import org.candlepin.auth.Principal;
 import org.candlepin.model.AbstractHibernateObject;
 import org.candlepin.pinsetter.core.PinsetterJobListener;
 import org.candlepin.pinsetter.tasks.CpJob;
+import org.candlepin.util.Util;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
@@ -81,8 +83,12 @@ public class JobStatus extends AbstractHibernateObject {
 
     @Column(length = 255)
     private Class<? extends CpJob> jobClass;
+
     @Column(length = 255)
     private String blockingJob;
+
+    @Version
+    private int version;
 
     public JobStatus() { }
 
@@ -198,27 +204,21 @@ public class JobStatus extends AbstractHibernateObject {
         return this.principalName;
     }
 
-    //make sure this is the correct annotation
     @XmlTransient
     public Class<? extends CpJob> getJobClass() {
         return jobClass;
     }
 
-    //make sure this is the correct annotation
     @XmlTransient
     public JobKey getJobKey() {
         return new JobKey(this.getId(), this.getGroup());
     }
 
-    //make sure this is the correct annotation
     @XmlTransient
     public String getBlockingJob() {
         return blockingJob;
     }
 
-    /**
-     * @param blockingJob the blockingJob to set
-     */
     public void setBlockingJob(String blockingJob) {
         this.blockingJob = blockingJob;
     }

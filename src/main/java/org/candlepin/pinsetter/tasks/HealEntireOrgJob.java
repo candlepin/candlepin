@@ -43,6 +43,7 @@ public class HealEntireOrgJob extends UniqueByOwnerJob {
     protected OwnerCurator ownerCurator;
     protected Entitler entitler;
     protected ConsumerCurator consumerCurator;
+    protected static String prefix = "heal_entire_org_";
 
     @Inject
     public HealEntireOrgJob(Entitler e, UnitOfWork unitOfWork,
@@ -98,6 +99,7 @@ public class HealEntireOrgJob extends UniqueByOwnerJob {
         map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.OWNER);
         map.put(JobStatus.TARGET_ID, ownerId);
         map.put("entitle_date", entitleDate);
+        //map.put("statusId", prefix + Util.generateUUID());
         JobDetail detail = newJob(HealEntireOrgJob.class)
             .withIdentity("heal_entire_org_" + Util.generateUUID())
             .usingJobData(map)

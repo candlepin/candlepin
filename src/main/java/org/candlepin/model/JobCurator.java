@@ -19,7 +19,11 @@ import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.pinsetter.core.model.JobStatus.JobState;
 import org.candlepin.pinsetter.core.model.JobStatus.TargetType;
 import org.candlepin.pinsetter.tasks.CpJob;
+import org.hibernate.LockMode;
+import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.criterion.Subqueries;
 
 import java.util.Date;
 import java.util.List;
@@ -70,6 +74,12 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
         return findByTarget(JobStatus.TargetType.CONSUMER, uuid);
     }
 
+    public JobStatus lockAndLoad(JobStatus jobStatus) {
+        //currentSession().refresh(jobStatus, LockMode.READ);
+        //getEntityManager().refresh(jobStatus);
+        return jobStatus;
+    }
+
     @SuppressWarnings("unchecked")
     public List<JobStatus> findByPrincipalName(String principalName) {
         return this.currentSession().createCriteria(JobStatus.class)
@@ -110,6 +120,45 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
         //definitely should move if we come up with more complex unique job types
         return this.currentSession().createCriteria(JobStatus.class)
             .add(Restrictions.eq("state", JobState.RUNNING))
+            .add(Restrictions.eq("targetId", ownerKey))
+            .add(Restrictions.eq("jobClass", jobClass))
+            .list();
+    }
+
+    public JobStatus getLatestByClassAndOwner(
+            String ownerKey, Class<? extends CpJob> jobClass) {
+        //return status;
+        //Perhaps this should be much more general, and get criterion from the jobClass
+        //definitely should move if we come up with more complex unique job types
+        DetachedCriteria maxCreated = DetachedCriteria.forClass(JobStatus.class)
+            .add(Restrictions.ne("state", JobState.FINISHED))
+            .add(Restrictions.ne("state", JobState.FAILED))
+            .add(Restrictions.ne("state", JobState.CANCELED))
+            .add(Restrictions.eq("targetId", ownerKey))
+            .add(Restrictions.eq("jobClass", jobClass))
+            .setProjection(Projections.max("created"));
+
+        return (JobStatus) this.currentSession().createCriteria(JobStatus.class)
+            //.setLockMode(LockMode.READ)
+            .add(Subqueries.propertyIn("created", maxCreated))
+            .add(Restrictions.ne("state", JobState.FINISHED))
+            .add(Restrictions.ne("state", JobState.FAILED))
+            .add(Restrictions.ne("state", JobState.CANCELED))
+            .add(Restrictions.eq("targetId", ownerKey))
+            .add(Restrictions.eq("jobClass", jobClass))
+            .uniqueResult();
+        
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<JobStatus> doStuff(
+            String ownerKey, Class<? extends CpJob> jobClass) {
+        //Perhaps this should be much more general, and get criterion from the jobClass
+        //definitely should move if we come up with more complex unique job types
+        return this.currentSession().createCriteria(JobStatus.class)
+            .add(Restrictions.or(
+                Restrictions.eq("state", JobState.CREATED),
+                Restrictions.eq("state", JobState.PENDING)))
             .add(Restrictions.eq("targetId", ownerKey))
             .add(Restrictions.eq("jobClass", jobClass))
             .list();

@@ -16,11 +16,16 @@ package org.candlepin.pinsetter.core;
 
 import static org.quartz.TriggerBuilder.newTrigger;
 
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+
 import org.apache.log4j.Logger;
 import org.candlepin.auth.Principal;
 import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.pinsetter.core.model.JobStatus.JobState;
+import org.candlepin.pinsetter.tasks.HealEntireOrgJob;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -110,7 +115,9 @@ public class PinsetterJobListener implements JobListener {
     @Transactional
     private void updateJob(JobExecutionContext ctx, JobExecutionException exc) {
         JobStatus status = curator.find(ctx.getJobDetail().getKey().getName());
+
         if (status != null) {
+            //status = curator.lockAndLoad(status);
             if (exc != null) {
                 log.error("Job [" + status.getId() + "] failed." , exc);
                 status.setState(JobState.FAILED);
@@ -125,14 +132,14 @@ public class PinsetterJobListener implements JobListener {
                     status.getState() == JobState.CANCELED)) {
                 Trigger trigger = newTrigger()
                     .forJob(new JobKey(status.getBlockingJob(), status.getJobKey().getGroup()))
-                    .withIdentity(status.getBlockingJob() + " trigger", status.getJobKey().getGroup())
+                    .withIdentity(status.getBlockingJob() + " trigger", status.getGroup())
                     .build();
                 try {
                     log.debug("CAKO scheduling existing job");
                     ctx.getScheduler().scheduleJob(trigger);
                 }
                 catch (SchedulerException e) {
-                    log.debug("CAKO failed to start blocked job " + status.getBlockingJob() + "due to " + e.getMessage(), e);
+                    log.error("CAKO failed to start blocked job " + status.getBlockingJob() + "due to " + e.getMessage(), e);
                 }
             }
             curator.merge(status);
