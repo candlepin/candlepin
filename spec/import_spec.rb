@@ -284,7 +284,9 @@ describe 'Candlepin Import', :serial => true do
 
     # while were here, lets access the upstream cert via entitlement id
     pools =  @import_owner_client.list_pools({:owner => @import_owner['id']})
-    pool = pools.find_all {|p| p.subscriptionId == sublist.first.id}[0]
+    pool = pools.find_all {
+      |p| p.subscriptionId == sublist.first.id and p.subscriptionSubKey == "master"
+    }[0]
     consumer = consumer_client(@import_owner_client, 'system6')
     entitlement = consumer.consume_pool(pool.id, {:quantity => 1})[0]
     ent =  @cp.get_subscription_cert_by_ent_id entitlement.id
