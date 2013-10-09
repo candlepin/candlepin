@@ -17,6 +17,7 @@ package org.candlepin.policy.js;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.log4j.Logger;
 import org.candlepin.exceptions.IseException;
 import org.codehaus.jackson.map.AnnotationIntrospector;
 import org.codehaus.jackson.map.DeserializationConfig;
@@ -43,6 +44,8 @@ import org.codehaus.jackson.xc.JaxbAnnotationIntrospector;
  *
  */
 public class RulesObjectMapper {
+
+    private static Logger log = Logger.getLogger(RulesObjectMapper.class);
 
     private static class InstanceHolder {
         public static final RulesObjectMapper INSTANCE = new RulesObjectMapper();
@@ -106,6 +109,8 @@ public class RulesObjectMapper {
             return mapper.readValue(json, clazz);
         }
         catch (Exception e) {
+            log.error("Error parsing JSON from rules into: " + clazz.getName(), e);
+            log.error(json);
             throw new IseException("Unable to build object from JSON.", e);
         }
     }

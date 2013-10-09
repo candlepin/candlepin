@@ -14,6 +14,7 @@
  */
 package org.candlepin.policy.js;
 
+import java.io.InputStream;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -32,6 +33,8 @@ import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolAttribute;
 import org.candlepin.model.ProductPoolAttribute;
+import org.candlepin.policy.js.compliance.ComplianceStatus;
+import org.candlepin.util.Util;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -119,6 +122,21 @@ public class RulesObjectMapperTest {
 
         // Shouldn't see a productId:
         assertFalse(output.contains("PRODID"));
+    }
+
+    /*
+     * Tests a bug found where consumer environment content is serialized without
+     * an environment (as it would be a circular dep), resulting in a null environment
+     * on the object and a very upset hashCode method.
+     */
+    @Test
+    public void testComplianceStatusWithSourceConsumerInEnv() {
+        InputStream is = this.getClass().getResourceAsStream(
+            "/json/compliancestatus-with-env.json");
+        String json = Util.readFile(is);
+
+        // Just need this to parse without error:
+        ComplianceStatus cs = objMapper.toObject(json, ComplianceStatus.class);
     }
 
 }
