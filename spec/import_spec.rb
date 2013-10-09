@@ -57,7 +57,7 @@ describe 'Candlepin Import', :serial => true do
   it "originating information should be populated in the import record" do
     @import_owner_client.list_imports(@import_owner['key']).find_all do |import|
       consumer = @candlepin_consumer
-      import['generatedBy'].should == consumer['name']
+      import['generatedBy'].should == consumer['uuid']
       import['generatedDate'].should_not be_nil
       import['fileName'].should == @cp_export_file.split("/").last
       import['upstreamConsumer']['uuid'].should == consumer['uuid']
