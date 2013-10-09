@@ -75,7 +75,7 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
     }
 
     public JobStatus lockAndLoad(JobStatus jobStatus) {
-        currentSession().refresh(jobStatus, LockMode.FORCE);
+        currentSession().refresh(jobStatus, LockMode.UPGRADE);
         getEntityManager().refresh(jobStatus);
         return jobStatus;
     }
@@ -139,7 +139,7 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
             .setProjection(Projections.max("created"));
 
         return (JobStatus) this.currentSession().createCriteria(JobStatus.class)
-            .setLockMode(LockMode.FORCE)
+            .setLockMode(LockMode.UPGRADE)
             .add(Subqueries.propertyIn("created", maxCreated))
             .add(Restrictions.ne("state", JobState.FINISHED))
             .add(Restrictions.ne("state", JobState.FAILED))
@@ -152,7 +152,7 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
 
     public JobStatus getById(String id) {
         return (JobStatus) this.currentSession().createCriteria(JobStatus.class)
-            .setLockMode(LockMode.FORCE)
+            .setLockMode(LockMode.UPGRADE)
             .add(Restrictions.eq("id", id))
             .uniqueResult();
     }

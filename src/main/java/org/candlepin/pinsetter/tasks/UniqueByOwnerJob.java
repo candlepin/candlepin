@@ -15,7 +15,6 @@
 package org.candlepin.pinsetter.tasks;
 
 import org.candlepin.model.JobCurator;
-import org.candlepin.pinsetter.core.PinsetterJobListener;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.quartz.JobDetail;
 import org.quartz.Scheduler;
@@ -40,7 +39,6 @@ public abstract class UniqueByOwnerJob extends CpJob {
         Trigger trigger, Injector injector) throws SchedulerException {
 
         UnitOfWork uow = injector.getInstance(UnitOfWork.class);
-
         try
         {
         uow.end();

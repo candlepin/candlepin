@@ -116,23 +116,10 @@ public class PinsetterJobListener extends JobChainingJobListener {
         updateJob(ctx, null);
     }
 
-    private void addTrigger(Scheduler sch, JobKey key) {
-        try {
-            Trigger trigger = newTrigger()
-                .forJob(key)
-                .withIdentity(key.getName() + " trigger", key.getGroup())
-                .build();
-            sch.scheduleJob(trigger);
-        }
-        catch (SchedulerException e) {
-            log.error("CAKO failed to start blocked job " + key.getName() + "due to " + e.getMessage(), e);
-            addTrigger(sch, key);
-        }
-    }
     @Transactional
     private void updateJob(JobExecutionContext ctx, JobExecutionException exc) {
         //JobStatus status = curator.find(ctx.getJobDetail().getKey().getName());
-        JobStatus status = curator.getById(ctx.getJobDetail().getKey().getName()); //Locks on read
+        JobStatus status = curator.getById(ctx.getJobDetail().getKey().getName());
         if (status != null) {
             status = curator.lockAndLoad(status);
             if (exc != null) {
@@ -147,7 +134,7 @@ public class PinsetterJobListener extends JobChainingJobListener {
                     (status.getState() == JobState.FAILED ||
                     status.getState() == JobState.FINISHED ||
                     status.getState() == JobState.CANCELED)) {
-                /*Trigger trigger = newTrigger()
+                Trigger trigger = newTrigger()
                     .forJob(new JobKey(status.getBlockingJob(), status.getJobKey().getGroup()))
                     .withIdentity(status.getBlockingJob() + " trigger", status.getGroup())
                     .build();
@@ -157,8 +144,7 @@ public class PinsetterJobListener extends JobChainingJobListener {
                 }
                 catch (SchedulerException e) {
                     log.error("CAKO failed to start blocked job " + status.getBlockingJob() + "due to " + e.getMessage(), e);
-                }*/
-                addTrigger(ctx.getScheduler(), new JobKey(status.getBlockingJob(), status.getJobKey().getGroup()));
+                }
             }
             curator.merge(status);
         }
