@@ -88,8 +88,8 @@ public class LoggingFilter implements Filter {
 
     private void logBasicRequestInfo(HttpServletRequest castRequest) {
         StringBuilder requestBuilder = new StringBuilder()
-            .append("Request: ")
-            .append(castRequest.getMethod()).append("  ")
+            .append("Request: verb=")
+            .append(castRequest.getMethod()).append(", url=")
             .append(castRequest.getRequestURL());
         if (castRequest.getQueryString() != null) {
             requestBuilder.append("?").append(castRequest.getQueryString());
@@ -101,10 +101,10 @@ public class LoggingFilter implements Filter {
         long startTime) {
         long duration = System.currentTimeMillis() - startTime;
         log.info(
-            new StringBuilder().append("Response: status: ")
+            new StringBuilder().append("Response: status=")
                 .append(responseWrapper.getStatus())
-                .append(", content-type: ").append(responseWrapper.getContentType())
-                .append(", time: ").append(duration).append("ms").toString());
+                .append(", content-type=\"").append(responseWrapper.getContentType())
+                .append("\", time=").append(duration).append("ms").toString());
     }
 
     /**
