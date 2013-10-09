@@ -15,12 +15,14 @@
 package org.candlepin.pinsetter.tasks;
 
 import org.candlepin.model.JobCurator;
+import org.candlepin.pinsetter.core.PinsetterJobListener;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.quartz.JobDetail;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
 
+import com.google.inject.Injector;
 import com.google.inject.persist.UnitOfWork;
 
 /**
@@ -35,35 +37,48 @@ public abstract class UniqueByOwnerJob extends CpJob {
     @SuppressWarnings("unchecked")
     public static JobStatus scheduleJob(JobCurator jobCurator,
         Scheduler scheduler, JobDetail detail,
-        Trigger trigger) throws SchedulerException {
-        JobStatus result = jobCurator.getLatestByClassAndOwner(
-            detail.getJobDataMap().getString(JobStatus.TARGET_ID),
-            (Class<? extends CpJob>) detail.getJobClass());
-        if (result == null){
-            log.debug("CAKO scheduling a new job");
-            return CpJob.scheduleJob(jobCurator, scheduler, detail, trigger);
-        }
-        //result = jobCurator.lockAndLoad(result);
-        if (result.getState() == JobStatus.JobState.PENDING ||
-            result.getState() == JobStatus.JobState.CREATED) {
-            log.debug("CAKO returning existing job");
-            //jobCurator.merge(result);
-            return result;
-        }
-        if (result.getBlockingJob() != null) {
-            log.debug("CAKO this is awkward ========================================");
-            //we're in a state where there isn't anything queued, however the running job thinks it's blocking something
-            //with proper locking this shouldn't be necessary
+        Trigger trigger, Injector injector) throws SchedulerException {
 
-            //return jobCurator.find(result.getBlockingJob());
-            return null;
+        UnitOfWork uow = injector.getInstance(UnitOfWork.class);
+
+        try
+        {
+        uow.end();
+        uow.begin();
+        } catch (Exception e) {
+            log.debug("CAKO error: "+e.getMessage(), e);
         }
-        log.debug("CAKO scheduling a job without a trigger");
-        result.setBlockingJob(detail.getKey().getName());
-        JobStatus status = CpJob.scheduleJob(jobCurator, scheduler, detail, null);
-        status = jobCurator.lockAndLoad(status);
-        jobCurator.merge(status);
-        jobCurator.merge(result);
-        return status;
+
+        try {
+            JobStatus result = jobCurator.getLatestByClassAndOwner(
+                detail.getJobDataMap().getString(JobStatus.TARGET_ID),
+                (Class<? extends CpJob>) detail.getJobClass());
+            if (result == null){
+                log.debug("CAKO scheduling a new job");
+                return CpJob.scheduleJob(jobCurator, scheduler, detail, trigger, injector);
+            }
+            jobCurator.lockAndLoad(result);
+            if (result.getState() == JobStatus.JobState.PENDING ||
+                result.getState() == JobStatus.JobState.CREATED) {
+                log.debug("CAKO returning existing job");
+                return result;
+            }
+            if (result.getBlockingJob() != null) {
+                log.debug("CAKO this is awkward ========================================");
+                //we're in a state where there isn't anything queued, however the running job thinks it's blocking something
+                //with proper locking this shouldn't be necessary
+    
+                //return jobCurator.find(result.getBlockingJob());
+                return null;
+            }
+            result.setBlockingJob(detail.getKey().getName());
+            log.debug("CAKO scheduling a job without a trigger");
+            JobStatus status = CpJob.scheduleJob(jobCurator, scheduler, detail, null, injector);
+            return status;
+            }
+        finally {
+            uow.end();
+            uow.begin();
+        }
     }
 }

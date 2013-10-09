@@ -36,15 +36,18 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.quartz.JobKey;
 import org.quartz.JobListener;
+import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
+import org.quartz.listeners.JobChainingJobListener;
 
 /**
  * This component receives events around job status and performs actions to
  * allow for the job in question to run outside of a request scope, as well as
  * record the status of the job for later retreival.
  */
-public class PinsetterJobListener implements JobListener {
+//public class PinsetterJobListener implements JobListener {
+public class PinsetterJobListener extends JobChainingJobListener {
     private static Logger log = Logger.getLogger(PinsetterJobListener.class);
 
     public static final String LISTENER_NAME = "Pinsetter Job Listener";
@@ -59,6 +62,7 @@ public class PinsetterJobListener implements JobListener {
 
     @Inject
     public PinsetterJobListener(JobCurator curator, UnitOfWork unitOfWork) {
+        super("PinsetterJobListener");
         this.curator = curator;
         this.unitOfWork = unitOfWork;
     }
@@ -112,12 +116,25 @@ public class PinsetterJobListener implements JobListener {
         updateJob(ctx, null);
     }
 
+    private void addTrigger(Scheduler sch, JobKey key) {
+        try {
+            Trigger trigger = newTrigger()
+                .forJob(key)
+                .withIdentity(key.getName() + " trigger", key.getGroup())
+                .build();
+            sch.scheduleJob(trigger);
+        }
+        catch (SchedulerException e) {
+            log.error("CAKO failed to start blocked job " + key.getName() + "due to " + e.getMessage(), e);
+            addTrigger(sch, key);
+        }
+    }
     @Transactional
     private void updateJob(JobExecutionContext ctx, JobExecutionException exc) {
-        JobStatus status = curator.find(ctx.getJobDetail().getKey().getName());
-
+        //JobStatus status = curator.find(ctx.getJobDetail().getKey().getName());
+        JobStatus status = curator.getById(ctx.getJobDetail().getKey().getName()); //Locks on read
         if (status != null) {
-            //status = curator.lockAndLoad(status);
+            status = curator.lockAndLoad(status);
             if (exc != null) {
                 log.error("Job [" + status.getId() + "] failed." , exc);
                 status.setState(JobState.FAILED);
@@ -130,17 +147,18 @@ public class PinsetterJobListener implements JobListener {
                     (status.getState() == JobState.FAILED ||
                     status.getState() == JobState.FINISHED ||
                     status.getState() == JobState.CANCELED)) {
-                Trigger trigger = newTrigger()
+                /*Trigger trigger = newTrigger()
                     .forJob(new JobKey(status.getBlockingJob(), status.getJobKey().getGroup()))
                     .withIdentity(status.getBlockingJob() + " trigger", status.getGroup())
                     .build();
                 try {
-                    log.debug("CAKO scheduling existing job");
                     ctx.getScheduler().scheduleJob(trigger);
+                    log.debug("CAKO scheduling existing job");
                 }
                 catch (SchedulerException e) {
                     log.error("CAKO failed to start blocked job " + status.getBlockingJob() + "due to " + e.getMessage(), e);
-                }
+                }*/
+                addTrigger(ctx.getScheduler(), new JobKey(status.getBlockingJob(), status.getJobKey().getGroup()));
             }
             curator.merge(status);
         }

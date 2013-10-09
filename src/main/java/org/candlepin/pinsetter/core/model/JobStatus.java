@@ -129,8 +129,8 @@ public class JobStatus extends AbstractHibernateObject {
             setState(JobState.RUNNING);
 
             if (runTime > -1) {
-                this.finishTime = new Date(startTime.getTime() + runTime);
                 setState(JobState.FINISHED);
+                this.finishTime = new Date(startTime.getTime() + runTime);
             }
         }
         else {

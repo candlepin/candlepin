@@ -32,6 +32,7 @@ import org.candlepin.util.PropertyUtil;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
 import org.apache.log4j.Logger;
@@ -72,6 +73,7 @@ public class PinsetterKernel {
     private Scheduler scheduler;
     private Config config;
     private JobCurator jobCurator;
+    private Injector injector;
 
     /**
      * Kernel main driver behind Pinsetter
@@ -82,10 +84,11 @@ public class PinsetterKernel {
     @Inject
     public PinsetterKernel(Config conf, JobFactory jobFactory,
         JobListener listener, JobCurator jobCurator,
-        StdSchedulerFactory fact) throws InstantiationException {
+        StdSchedulerFactory fact, Injector injector) throws InstantiationException {
 
         this.config = conf;
         this.jobCurator = jobCurator;
+        this.injector = injector;
 
         Properties props = config.getNamespaceProperties("org.quartz");
 
@@ -329,8 +332,8 @@ public class PinsetterKernel {
         try {
             JobStatus status = (JobStatus) (detail.getJobClass()
                 .getMethod("scheduleJob", JobCurator.class,
-                    Scheduler.class, JobDetail.class, Trigger.class)
-                .invoke(null, jobCurator, scheduler, detail, trigger));
+                    Scheduler.class, JobDetail.class, Trigger.class, Injector.class)
+                .invoke(null, jobCurator, scheduler, detail, trigger, injector));
 
             if (log.isDebugEnabled()) {
                 log.debug("Scheduled " + detailImpl.getFullName());

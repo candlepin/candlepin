@@ -34,6 +34,7 @@ import org.quartz.SchedulerException;
 import org.quartz.Trigger;
 
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 import com.google.inject.persist.UnitOfWork;
 
 /**
@@ -100,7 +101,7 @@ public abstract class CpJob implements Job {
 
     public static JobStatus scheduleJob(JobCurator jobCurator,
             Scheduler scheduler, JobDetail detail,
-            Trigger trigger) throws SchedulerException {
+            Trigger trigger, Injector injector) throws SchedulerException {
 
         scheduler.getListenerManager().addJobListenerMatcher(
             PinsetterJobListener.LISTENER_NAME,
@@ -109,7 +110,6 @@ public abstract class CpJob implements Job {
         JobStatus status = null;
         try {
             status = jobCurator.create(new JobStatus(detail));
-            jobCurator.lockAndLoad(status);
         }
         catch (EntityExistsException e) {
             // status exists, let's update it
