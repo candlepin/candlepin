@@ -1123,12 +1123,12 @@ public class CandlepinPoolManager implements PoolManager {
                 newResults.add(p);
             }
             else {
-                log.info("Omitting pool due to failed rule check: " + p.getId());
+                log.debug("Omitting pool due to failed rule check: " + p.getId());
                 if (result.hasErrors()) {
-                    log.info("\tErrors: " + result.getErrors());
+                    log.debug("\tErrors: " + result.getErrors());
                 }
                 if (result.hasWarnings()) {
-                    log.info("\tWarnings: " + result.getWarnings());
+                    log.debug("\tWarnings: " + result.getWarnings());
                 }
             }
         }

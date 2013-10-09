@@ -46,6 +46,9 @@ org.quartz.dataSource.myDS.user=<%= username || profile.username %>
 org.quartz.dataSource.myDS.password=<%= password || profile.password %>
 org.quartz.dataSource.myDS.maxConnections=5
 
+# uncomment to enable debug logging in catalina.out
+#log4j.logger.org.candlepin=DEBUG
+
 <%- custom_logging.each do |key, value| -%>
 <%= "#" if key[0] == "#" %>log4j.logger.<%= key[/^#?(.*)/, 1] %>=<%= value %>
 <%- end if custom_logging -%>

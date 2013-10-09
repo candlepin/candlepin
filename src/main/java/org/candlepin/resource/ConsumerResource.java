@@ -837,7 +837,7 @@ public class ConsumerResource {
         }
 
         if (changesMade) {
-            log.info("Consumer " + toUpdate.getUuid() + " updated.");
+            log.debug("Consumer " + toUpdate.getUuid() + " updated.");
 
             ComplianceStatus compliance = complianceRules.getStatus(toUpdate,
                 Calendar.getInstance().getTime());
