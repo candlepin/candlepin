@@ -267,7 +267,7 @@ public class SecurityInterceptor implements MethodInterceptor {
                         }
                     }
                     if (orgKey != null) {
-                        MDC.put("org", " [org=" + orgKey + "]");
+                        MDC.put("org", orgKey);
                     }
                 }
             }
