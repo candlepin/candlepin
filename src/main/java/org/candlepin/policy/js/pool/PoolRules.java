@@ -73,7 +73,7 @@ public class PoolRules {
 
             int instanceMultiplier = Integer.parseInt(
                 sub.getProduct().getAttribute("instance_multiplier").getValue());
-            log.info("Increasing pool quantity for instance multiplier: " +
+            log.debug("Increasing pool quantity for instance multiplier: " +
                 instanceMultiplier);
             quantity = quantity * instanceMultiplier;
         }
@@ -209,8 +209,8 @@ public class PoolRules {
     }
 
     public List<PoolUpdate> updatePools(Subscription sub, List<Pool> existingPools) {
-        log.info("Refreshing pools for existing subscription: " + sub);
-        log.info("  existing pools: " + existingPools.size());
+        log.debug("Refreshing pools for existing subscription: " + sub);
+        log.debug("  existing pools: " + existingPools.size());
         PoolHelper helper = new PoolHelper(this.poolManager, this.productCache, null);
 
         List<PoolUpdate> poolsUpdated = new LinkedList<PoolUpdate>();
@@ -218,7 +218,7 @@ public class PoolRules {
             helper.getFlattenedAttributes(sub.getProduct());
         for (Pool existingPool : existingPools) {
 
-            log.info("Updating pool: " + existingPool.getId());
+            log.debug("Checking pool: " + existingPool.getId());
 
             // Used to track if anything has changed:
             PoolUpdate update = new PoolUpdate(existingPool);
@@ -254,7 +254,7 @@ public class PoolRules {
                 poolsUpdated.add(update);
             }
             else {
-                log.info("   No updates required.");
+                log.debug("   No updates required.");
             }
         }
 
@@ -371,7 +371,6 @@ public class PoolRules {
         PoolHelper helper, Pool existingPool) {
         boolean orderDataChanged = helper.checkForOrderChanges(existingPool, sub);
         if (orderDataChanged) {
-            log.info("   Order Data Changed");
             existingPool.setAccountNumber(sub.getAccountNumber());
             existingPool.setOrderNumber(sub.getOrderNumber());
             existingPool.setContractNumber(sub.getContractNumber());
@@ -391,9 +390,6 @@ public class PoolRules {
             prodAttrsChanged = helper.copyProductAttributesOntoPool(
                 sub.getProduct().getId(), existingPool);
         }
-        if (prodAttrsChanged) {
-            log.info("Updated product attributes from subscription.");
-        }
 
         return prodAttrsChanged;
     }
@@ -404,9 +400,6 @@ public class PoolRules {
         if (!existingPool.hasAttribute("pool_derived") && sub.getDerivedProduct() != null) {
             subProdAttrsChanged = helper.copySubProductAttributesOntoPool(
                 sub.getDerivedProduct().getId(), existingPool);
-        }
-        if (subProdAttrsChanged) {
-            log.info("Updated sub-product attributes from subscription.");
         }
         return subProdAttrsChanged;
     }
@@ -437,7 +430,6 @@ public class PoolRules {
         productsChanged = productsChanged || !currentProvided.equals(incomingProvided);
 
         if (productsChanged) {
-            log.info("   Subscription products changed.");
             existingPool.setProductId(incomingProductId);
             existingPool.setProductName(incomingProductName);
             existingPool.getProvidedProducts().clear();
@@ -476,7 +468,6 @@ public class PoolRules {
             // Above we check getDerivedProduct for null, but here
             // we ignore the fact that it may be null. So we will
             // now check for null to avoid blowing up.
-            log.info("   Subscription sub-products changed.");
             if (sub.getDerivedProduct() != null) {
                 existingPool.setDerivedProductName(sub.getDerivedProduct().getName());
                 existingPool.setDerivedProductId(sub.getDerivedProduct().getId());
@@ -501,7 +492,6 @@ public class PoolRules {
             (!end.equals(existingPool.getEndDate()));
 
         if (datesChanged) {
-            log.info("   Subscription dates changed.");
             existingPool.setStartDate(start);
             existingPool.setEndDate(end);
         }
@@ -521,7 +511,6 @@ public class PoolRules {
         boolean quantityChanged = !(expectedQuantity == existingPool.getQuantity());
 
         if (quantityChanged) {
-            log.info("   Quantity changed to: " + expectedQuantity);
             existingPool.setQuantity(expectedQuantity);
         }
 

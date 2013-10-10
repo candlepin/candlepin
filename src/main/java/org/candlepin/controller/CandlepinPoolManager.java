@@ -130,7 +130,7 @@ public class CandlepinPoolManager implements PoolManager {
     Set<Entitlement> refreshPoolsWithoutRegeneration(Owner owner) {
         log.info("Refreshing pools for owner: " + owner.getKey());
         List<Subscription> subs = subAdapter.getSubscriptions(owner);
-        log.debug("Found " + subs.size() + " subscriptions.");
+        log.debug("Found " + subs.size() + " existing subscriptions.");
 
         List<Pool> pools = this.listAvailableEntitlementPools(null,
             owner, null, null, false, false, null).getPageData();
@@ -276,6 +276,7 @@ public class CandlepinPoolManager implements PoolManager {
         for (PoolUpdate updatedPool : updatedPools) {
 
             Pool existingPool = updatedPool.getPool();
+            log.info("Pool changed: " + updatedPool.toString());
 
             // Delete pools the rules signal needed to be cleaned up:
             if (existingPool.hasAttribute(PoolManager.DELETE_FLAG) &&
@@ -602,6 +603,8 @@ public class CandlepinPoolManager implements PoolManager {
 
         // we might have changed the bonus pool quantities, lets find out.
         handler.handleBonusPools(pool, entitlement);
+        log.info("Granted entitlement: " + entitlement.getId() + " from pool: " +
+            pool.getId());
         return entitlement;
     }
 
@@ -674,8 +677,6 @@ public class CandlepinPoolManager implements PoolManager {
             " entitlement certificates for consumer: " + consumer);
         // TODO - Assumes only 1 entitlement certificate exists per entitlement
         this.regenerateCertificatesOf(consumer.getEntitlements(), lazy);
-        log.info("Finished regenerating entitlement certificates for consumer: " +
-            consumer);
     }
 
     @Transactional
@@ -885,6 +886,8 @@ public class CandlepinPoolManager implements PoolManager {
             this.regenerateCertificatesOf(entitlementCurator
                 .listModifying(entitlement), true);
         }
+
+        log.info("Revoked entitlement: " + entitlement.getId());
 
         // Check consumer's new compliance status and save:
         ComplianceStatus compliance = complianceRules.getStatus(consumer, new Date());
@@ -1123,12 +1126,14 @@ public class CandlepinPoolManager implements PoolManager {
                 newResults.add(p);
             }
             else {
-                log.info("Omitting pool due to failed rule check: " + p.getId());
-                if (result.hasErrors()) {
-                    log.info("\tErrors: " + result.getErrors());
-                }
-                if (result.hasWarnings()) {
-                    log.info("\tWarnings: " + result.getWarnings());
+                if (log.isDebugEnabled()) {
+                    log.debug("Omitting pool due to failed rules: " + p.getId());
+                    if (result.hasErrors()) {
+                        log.debug("\tErrors: " + result.getErrors());
+                    }
+                    if (result.hasWarnings()) {
+                        log.debug("\tWarnings: " + result.getWarnings());
+                    }
                 }
             }
         }

@@ -18,6 +18,7 @@ import javax.persistence.PersistenceException;
 
 import com.google.inject.persist.UnitOfWork;
 
+import org.apache.log4j.MDC;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -41,11 +42,18 @@ class TransactionalPinsetterJob implements Job {
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
+
+        // Store the job's unique ID in log4j's thread local MDC, which will automatically
+        // add it to all log entries executed for this job.
+        MDC.put("requestType", "job");
+        MDC.put("requestUuid", context.getJobDetail().getKey().getName());
+
         /*
          * Execute our 'real' job inside a custom unit of work scope, instead
          * of the guice provided one, which is http request scoped.
          */
         unitOfWork.begin();
+
         try {
             wrappedJob.execute(context);
         }

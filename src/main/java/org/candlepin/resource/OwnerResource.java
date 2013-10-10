@@ -264,6 +264,7 @@ public class OwnerResource {
 
         sink.emitOwnerCreated(owner);
 
+        log.info("Created owner: " + owner);
         if (toReturn != null) {
             return toReturn;
         }

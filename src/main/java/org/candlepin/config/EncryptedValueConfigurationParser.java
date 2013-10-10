@@ -43,30 +43,30 @@ public abstract class EncryptedValueConfigurationParser extends
         String secretFile = config
             .getString(ConfigProperties.PASSPHRASE_SECRET_FILE);
 
-        log.info("reading secret file: " +  secretFile);
+        log.debug("reading secret file: " +  secretFile);
         try {
             BufferedReader in = new BufferedReader(new FileReader(secretFile));
             String str;
             StringBuilder tmpPassphrase = new StringBuilder();
             while ((str = in.readLine()) != null) {
-                log.info("str passphrase: " + str);
+                log.debug("str passphrase: " + str);
                 tmpPassphrase.append(str);
             }
             in.close();
-            log.info("tmpPassphrase: " + tmpPassphrase.toString());
+            log.debug("tmpPassphrase: " + tmpPassphrase.toString());
             passphrase = tmpPassphrase.toString();
         }
         catch (FileNotFoundException e) {
-            log.info("File not found: " + secretFile);
+            log.debug("File not found: " + secretFile);
             passphrase = null;
             // FIXME: log, complain, etc
         }
         catch (IOException e) {
-            log.info("IOException while reading: " + secretFile);
+            log.debug("IOException while reading: " + secretFile);
             passphrase = null;
         }
 
-        log.info("Using katello-passwd passphrase: " + passphrase);
+        log.debug("Using katello-passwd passphrase: " + passphrase);
     }
 
     /*
