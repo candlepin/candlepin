@@ -207,7 +207,7 @@ define "candlepin" do
   test.with LOGDRIVER if use_logdriver
   # tell log4j to use a different config file during unit tests
   # this avoids log4j using the config from guice-persist
-  test.using :java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError', '-Dlog4j.configuration=log4j-test.properties' ]
+  test.using :java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError', '-Dlog4j.configuration=log4j.properties' ]
 
 
   #

@@ -545,11 +545,9 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
     }
 
     public String toString() {
-        return "EntitlementPool [id = " + getId() + ", owner = " + owner.getId() +
-            ", products = " + productId + " - " + getProvidedProducts() +
-            ", sub = " + getSubscriptionId() +
-            ", attributes = " + getAttributes() +
-            ", quantity = " + getQuantity() + ", expires = " + getEndDate() + "]";
+        return "Pool[id: " + getId() + ", owner: " + owner.getId() +
+            ", product: " + productId +
+            ", quantity: " + getQuantity() + ", expires: " + getEndDate() + "]";
     }
 
     public Set<ProvidedProduct> getProvidedProducts() {

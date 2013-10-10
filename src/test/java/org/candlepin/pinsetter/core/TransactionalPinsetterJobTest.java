@@ -15,37 +15,15 @@
 package org.candlepin.pinsetter.core;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-
-import com.google.inject.persist.UnitOfWork;
 
 import org.junit.Test;
 import org.quartz.Job;
-import org.quartz.JobExecutionContext;
 
 /**
  * TransactionalPinsetterJobTest
  */
 public class TransactionalPinsetterJobTest {
-
-    @Test
-    public void execute() throws Exception {
-        UnitOfWork manager = mock(UnitOfWork.class);
-        Job wrapped = mock(Job.class);
-        JobExecutionContext ctx = mock(JobExecutionContext.class);
-        TransactionalPinsetterJob tpj = new TransactionalPinsetterJob(wrapped, manager);
-
-        tpj.execute(ctx);
-
-        verify(manager).begin();
-        verify(wrapped).execute(eq(ctx));
-        verify(manager).end();
-        verifyNoMoreInteractions(wrapped);
-        verifyNoMoreInteractions(manager);
-    }
 
     @Test
     public void sameJob() {

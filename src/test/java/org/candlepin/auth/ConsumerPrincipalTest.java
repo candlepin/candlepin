@@ -53,7 +53,7 @@ public class ConsumerPrincipalTest {
 
     @Test
     public void name() {
-        when(consumer.getName()).thenReturn("ae5ba-some-name");
+        when(consumer.getUuid()).thenReturn("ae5ba-some-name");
         assertEquals("ae5ba-some-name", principal.getPrincipalName());
     }
 
