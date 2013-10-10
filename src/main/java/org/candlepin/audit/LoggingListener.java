@@ -58,9 +58,9 @@ public class LoggingListener implements EventListener {
             df.format(e.getTimestamp()),
             e.getPrincipal().getType(),
             e.getPrincipal().getName(),
-            e.getType(),
             e.getTarget(),
             e.getEntityId(),
+            e.getType(),
             e.getOwnerId()));
         if (verbose) {
             auditLog.info(String.format("==OLD==\n%s\n==NEW==\n%s\n\n", e.getOldEntity(),
