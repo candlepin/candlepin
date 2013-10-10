@@ -12,23 +12,20 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.pinsetter.core;
-
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
-
-import org.junit.Test;
-import org.quartz.Job;
+package org.candlepin.exceptions;
 
 /**
- * TransactionalPinsetterJobTest
+ * ConcurrentModificationException
+ *
+ * Thrown when a request attempts to modify an Entity that has already been
+ * modified by another request.
+ *
+ * This exception produces a 409 error.
  */
-public class TransactionalPinsetterJobTest {
+public class ConcurrentModificationException extends ConflictException {
 
-    @Test
-    public void sameJob() {
-        Job wrapped = mock(Job.class);
-        TransactionalPinsetterJob tpj = new TransactionalPinsetterJob(wrapped, null);
-        assertEquals(wrapped, tpj.getWrappedJob());
+    public ConcurrentModificationException(String message, Exception e) {
+        super(message, e);
     }
+
 }

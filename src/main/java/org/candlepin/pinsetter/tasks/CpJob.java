@@ -20,6 +20,7 @@ import javax.persistence.EntityExistsException;
 import javax.persistence.PersistenceException;
 
 import org.apache.log4j.Logger;
+import org.apache.log4j.MDC;
 import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.PinsetterJobListener;
 import org.candlepin.pinsetter.core.model.JobStatus;
@@ -53,6 +54,12 @@ public abstract class CpJob implements Job {
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
+
+        // Store the job's unique ID in log4j's thread local MDC, which will automatically
+        // add it to all log entries executed for this job.
+        MDC.put("requestType", "job");
+        MDC.put("requestUuid", context.getJobDetail().getKey().getName());
+
         /*
          * Execute our 'real' job inside a custom unit of work scope, instead
          * of the guice provided one, which is http request scoped.
@@ -80,7 +87,7 @@ public abstract class CpJob implements Job {
                 // note that we have to catch at this level rather than inside the
                 // job for any update collisions, which will only be detected
                 // on commit.
-    
+
                 throw new JobExecutionException(e, true);
             }
             finally {
@@ -117,7 +124,7 @@ public abstract class CpJob implements Job {
             status = jobCurator.find(detail.getKey().getName());
             jobCurator.merge(status);
         }
-        
+
         if (trigger != null) {
             scheduler.scheduleJob(detail, trigger);
         }

@@ -15,6 +15,9 @@
 package org.candlepin.audit;
 
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.TimeZone;
 
 import org.apache.log4j.FileAppender;
 import org.apache.log4j.PatternLayout;
@@ -31,6 +34,8 @@ public class LoggingListener implements EventListener {
 
     private boolean verbose;
 
+    private final DateFormat df;
+
     public LoggingListener() throws IOException {
         Config config = new Config();
 
@@ -40,14 +45,23 @@ public class LoggingListener implements EventListener {
         auditLog.setAdditivity(false);
 
         verbose = config.getBoolean(ConfigProperties.AUDIT_LOG_VERBOSE);
+        TimeZone tz = TimeZone.getDefault();
+        // Format for ISO8601 to match our other logging:
+        df = new SimpleDateFormat("yyyy-MM-dd' 'HH:mm:ssZ");
+        df.setTimeZone(tz);
     }
 
     @Override
     public void onEvent(Event e) {
         auditLog.info(String.format(
-            "%s - %s %s on %s owner %s performed by %s\n",
-            e.getTimestamp(), e.getTarget(), e.getType(), e.getEntityId(),
-            e.getOwnerId(), e.getPrincipal()));
+            "%s principalType=%s principal=%s target=%s entityId=%s type=%s owner=%s\n",
+            df.format(e.getTimestamp()),
+            e.getPrincipal().getType(),
+            e.getPrincipal().getName(),
+            e.getTarget(),
+            e.getEntityId(),
+            e.getType(),
+            e.getOwnerId()));
         if (verbose) {
             auditLog.info(String.format("==OLD==\n%s\n==NEW==\n%s\n\n", e.getOldEntity(),
                 e.getNewEntity()));
