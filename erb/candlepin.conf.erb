@@ -2,7 +2,7 @@
 <%-
 # When you write local variables in the template, use the provided _ variable to store the information.
 # If you store directly to self, then you run the risk of interferring with already provided values.
-if ENV['logdriver'] 
+if ENV['logdriver']
   _.driver_class = profile.logdriver_class
   _.jdbc_url = "jdbc:log:#{driver_class || profile.driver_class}:#{(jdbc_url || profile.jdbc_url).sub!(/^jdbc:/, "")}"
 else
@@ -15,7 +15,7 @@ log4j.logger.net.rkbloom.logdriver.LogPreparedStatement=DEBUG
 log4j.logger.net.rkbloom.logdriver.LogStatement=DEBUG
 log4j.logger.net.rkbloom.logdriver.LogCallableStatement=DEBUG
 log4j.logger.net.rkbloom.logdriver.LogConnection=DEBUG
-<%- end -%>  
+<%- end -%>
 jpa.config.hibernate.connection.driver_class=<%= _.driver_class %>
 jpa.config.hibernate.connection.url=<%= _.jdbc_url %>
 jpa.config.hibernate.connection.username=<%= username || profile.username %>
@@ -31,6 +31,9 @@ candlepin.auth.oauth.consumer.thumbslug.secret=thumbslug-secret
 candlepin.importer.fail_on_unknown=<%= fail_on_unknown || false %>
 candlepin.pretty_print=<%= cp_pretty_print || true %>
 candlepin.hidden_resources=<%= hidden_resources || "" %>
+
+# uncomment to enable debug logging in candlepin.log:
+#log4j.logger.org.candlepin=DEBUG
 
 candlepin.pinsetter.enable=<%= pinsetter_enabled || true %>
 org.quartz.jobStore.misfireThreshold=60000
