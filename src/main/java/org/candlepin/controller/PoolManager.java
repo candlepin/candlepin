@@ -207,4 +207,28 @@ public interface PoolManager {
      * @return pool update specifics
      */
     PoolUpdate updatePoolFromStack(Pool pool, Consumer consumer, String stackId);
+
+    /**
+     * @param guest products we want to provide for
+     * @param host to bind entitlements to
+     * @param entitleDate
+     * @param owner
+     * @param serviceLevelOverride
+     * @return list of entitlements to bind
+     * @throws EntitlementRefusedException if unable to bind
+     */
+    List<PoolQuantity> getBestPoolsForHost(Consumer guest,
+        Consumer host, Date entitleDate, Owner owner,
+        String serviceLevelOverride) throws EntitlementRefusedException;
+
+    /**
+     * @param consumer
+     * @param host
+     * @param entitleDate
+     * @return list of entitlements to bind
+     * @throws EntitlementRefusedException if unable to bind
+     */
+    List<Entitlement> entitleByProductsForHost(Consumer consumer,
+        Consumer host, Date entitleDate)
+        throws EntitlementRefusedException;
 }
