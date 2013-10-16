@@ -235,15 +235,18 @@ public class Entitler {
         if (consumer.hasFact("virt.uuid")) {
             String guestUuid = consumer.getFact("virt.uuid");
             Consumer host = consumerCurator.getHost(guestUuid);
-            if (host != null && (force || host.isAutoheal())) {
-                log.debug("Healing host machine with UUID " + host.getUuid());
+            if (host != null && consumer.getOwner().equals(host.getOwner()) &&
+                    (force || host.isAutoheal())) {
+                log.info("Attempting to heal host machine with UUID " +
+                    host.getUuid() + " for guest with UUID " + consumer.getUuid());
                 try {
                     List<Entitlement> hostEntitlements =
-                        bindByProducts(null, host, entitleDate, force);
+                        poolManager.entitleByProductsForHost(consumer, host, entitleDate);
                     sendEvents(hostEntitlements);
                 }
                 catch (Exception e) {
-                    log.debug("Healing failed for UUID " + host.getUuid() +
+                    //log and continue, this should NEVER block
+                    log.debug("Healing failed for host UUID " + host.getUuid() +
                         " with message: " + e.getMessage());
                 }
                 // Consumer is stale at this point.
