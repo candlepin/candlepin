@@ -168,21 +168,21 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
   end
 
   it 'should heal the host before healing itself' do
-    @second_product = create_product()
-    @cp.create_subscription(@owner['key'], @second_product.id, 1)
     @cp.refresh_pools(@owner['key'])
 
     @installed_product_list = [
-    {'productId' => @virt_limit_product.id, 'productName' => @virt_limit_product.name},
-    {'productId' => @second_product.id, 'productName' => @second_product.name}]
+        {'productId' => @virt_limit_product.id, 'productName' => @virt_limit_product.name}]
 
-    @guest1_client.update_consumer({:installedProducts => [@installed_product_list[0]]})
+    @guest1_client.update_consumer({:installedProducts => @installed_product_list})
     @host1_client.update_consumer({:guestIds => [{'guestId' => @uuid1}]});
-    @host1_client.update_consumer({:installedProducts => [@installed_product_list[1]]})
+    @host1_client.update_consumer({:installedProducts => []})
 
     @host1_client.update_consumer({:autoheal => true})
     for ent in @host1_client.list_entitlements do
         @host1_client.unbind_entitlement(ent.id)
+    end
+    for ent in @guest1_client.list_entitlements do
+        @guest1_client.unbind_entitlement(ent.id)
     end
     @host1_client.list_entitlements.length.should == 0
     @guest1_client.list_entitlements.length.should == 0
@@ -190,6 +190,124 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
     # After the guest autobinds, the host should also be healed 
     @guest1_client.list_entitlements.length.should == 1
     @host1_client.list_entitlements.length.should == 1
+  end
+
+  it 'should not bind products on host if virt_only are already available for guest' do
+    @second_product = create_product(nil, nil, {:attributes => { :virt_only => true }})
+    @cp.create_subscription(@owner['key'],
+      @second_product.id, 10, [@virt_limit_product.id])
+    @cp.refresh_pools(@owner['key'])
+
+    @installed_product_list = [
+        {'productId' => @virt_limit_product.id, 'productName' => @virt_limit_product.name}]
+
+    @guest1_client.update_consumer({:installedProducts => @installed_product_list})
+    @host1_client.update_consumer({:guestIds => [{'guestId' => @uuid1}]});
+    @host1_client.update_consumer({:installedProducts => []})
+
+    @host1_client.update_consumer({:autoheal => true})
+    for ent in @host1_client.list_entitlements do
+        @host1_client.unbind_entitlement(ent.id)
+    end
+    for ent in @guest1_client.list_entitlements do
+        @guest1_client.unbind_entitlement(ent.id)
+    end
+    @host1_client.list_entitlements.length.should == 0
+    @guest1_client.list_entitlements.length.should == 0
+    @guest1_client.consume_product()
+    # After the guest autobinds, the host should also be healed 
+    @guest1_client.list_entitlements.length.should == 1
+    @host1_client.list_entitlements.length.should == 0
+  end
+
+  it 'should not heal host if nothing is installed' do
+    @cp.refresh_pools(@owner['key'])
+
+    @installed_product_list = [
+        {'productId' => @virt_limit_product.id, 'productName' => @virt_limit_product.name}]
+
+    @host1_client.update_consumer({:installedProducts => @installed_product_list})
+    @host1_client.update_consumer({:guestIds => [{'guestId' => @uuid1}]});
+    @guest1_client.update_consumer({:installedProducts => []})
+
+    @host1_client.update_consumer({:autoheal => true})
+    for ent in @host1_client.list_entitlements do
+        @host1_client.unbind_entitlement(ent.id)
+    end
+    for ent in @guest1_client.list_entitlements do
+        @guest1_client.unbind_entitlement(ent.id)
+    end
+    @host1_client.list_entitlements.length.should == 0
+    @guest1_client.list_entitlements.length.should == 0
+    @guest1_client.consume_product()
+    # After the guest autobinds, the host should also be healed 
+    @guest1_client.list_entitlements.length.should == 0
+    @host1_client.list_entitlements.length.should == 0
+  end
+
+  it 'should not heal the host if the product is already compliant' do
+    @second_product = create_product
+    @cp.create_subscription(@owner['key'],
+      @second_product.id, 10, [@virt_limit_product.id])
+    @cp.refresh_pools(@owner['key'])
+
+    @installed_product_list = [
+        {'productId' => @virt_limit_product.id, 'productName' => @virt_limit_product.name}]
+
+    @guest1_client.update_consumer({:installedProducts => @installed_product_list})
+    @host1_client.update_consumer({:guestIds => [{'guestId' => @uuid1}]});
+    @host1_client.update_consumer({:installedProducts => @installed_product_list})
+
+    @host1_client.update_consumer({:autoheal => true})
+    for ent in @host1_client.list_entitlements do
+        @host1_client.unbind_entitlement(ent.id)
+    end
+    for ent in @guest1_client.list_entitlements do
+        @guest1_client.unbind_entitlement(ent.id)
+    end
+    @guest1_client.list_entitlements.length.should == 0
+    for pool in @host1_client.list_pools({:owner => @owner['id']}) do
+        if pool['productId'] == @second_product.id
+            @host1_client.consume_pool(pool['id'])
+            break
+        end
+    end
+    @host1_client.list_entitlements.length.should == 1
+    @guest1_client.consume_product()
+    # After the guest autobinds, the host should also be healed
+    @guest1_client.list_entitlements.length.should == 1
+    @host1_client.list_entitlements.length.should == 1
+    @host1_client.list_entitlements[0]['pool']['productId'].should == @second_product.id
+  end
+
+  it 'should not heal other host products' do
+    @second_product = create_product()
+    @cp.create_subscription(@owner['key'], @second_product.id, 1)
+    @cp.refresh_pools(@owner['key'])
+
+    @guest_installed_product_list = [
+        {'productId' => @virt_limit_product.id, 'productName' => @virt_limit_product.name}]
+    @host_installed_product_list = [
+        {'productId' => @second_product.id, 'productName' => @second_product.name}]
+
+    @guest1_client.update_consumer({:installedProducts => @guest_installed_product_list})
+    @host1_client.update_consumer({:guestIds => [{'guestId' => @uuid1}]});
+    @host1_client.update_consumer({:installedProducts => @host_installed_product_list})
+
+    @host1_client.update_consumer({:autoheal => true})
+    for ent in @host1_client.list_entitlements do
+        @host1_client.unbind_entitlement(ent.id)
+    end
+    for ent in @guest1_client.list_entitlements do
+        @guest1_client.unbind_entitlement(ent.id)
+    end
+    @host1_client.list_entitlements.length.should == 0
+    @guest1_client.list_entitlements.length.should == 0
+    @guest1_client.consume_product()
+    # After the guest autobinds, the host should also be healed 
+    @guest1_client.list_entitlements.length.should == 1
+    @host1_client.list_entitlements.length.should == 1
+    @host1_client.list_entitlements[0]['pool']['productId'].should == @virt_limit_product.id
   end
 
   it 'should not change the quantity on sub-pool when the source entitlement quantity changes' do
