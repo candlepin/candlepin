@@ -115,6 +115,7 @@ import org.candlepin.sync.Exporter;
 import org.candlepin.util.Util;
 import org.candlepin.version.CertVersionConflictException;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
+import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.quartz.JobDetail;
 import org.xnap.commons.i18n.I18n;
@@ -1652,6 +1653,24 @@ public class ConsumerResource {
             eventAdapter.addMessageText(events);
         }
         return events;
+    }
+
+    /**
+     * @return the consumer event atom feed.
+     * @httpcode 404
+     * @httpcode 200
+     */
+    @GET
+    @Produces("application/atom+xml")
+    @Path("/{consumer_uuid}/atom")
+    public Feed getConsumerAtomFeed(
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
+        String path = String.format("/consumers/%s/atom", consumerUuid);
+        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        Feed feed = this.eventAdapter.toFeed(
+            this.eventCurator.listMostRecent(FEED_LIMIT, consumer), path);
+        feed.setTitle("Event feed for consumer " + consumer.getUuid());
+        return feed;
     }
 
     /**
