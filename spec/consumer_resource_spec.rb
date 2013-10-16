@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 require 'spec_helper'
 require 'candlepin_scenarios'
+require 'rexml/document'
 
 describe 'Consumer Resource' do
 
@@ -26,6 +27,34 @@ describe 'Consumer Resource' do
     pool = @consumer1.list_pools({:owner => @owner1['id']}).first
     lambda {
       @consumer2.consume_pool(pool.id, {:quantity => 1}).size.should == 1
+    }.should raise_exception(RestClient::Forbidden)
+  end
+
+  it "should expose a consumer's event atom feed" do
+    atom = @consumer1.list_consumer_events_atom(@consumer1.uuid)
+    doc = REXML::Document.new(atom)
+    events = REXML::XPath.match(doc, "//*[local-name()='event'][type = 'CREATED' and target ='CONSUMER']")
+    events.should have(1).things
+
+    # Consumer 2 should not be able to see consumer 1's feed:
+    lambda {
+      @consumer2.list_consumer_events_atom(@consumer1.uuid)
+    }.should raise_exception(RestClient::Forbidden)
+  end
+
+  it "should expose a consumer's events" do
+    events = @consumer1.list_consumer_events(@consumer1.uuid)
+    events.size.should be > 0
+
+    # Events are sorted in order of descending timestamp, so the first
+    # event should be consumer created:
+    events[-1]['target'].should == 'CONSUMER'
+    events[-1]['type'].should == 'CREATED'
+    events[-1]['principal']['name'].should == @username1
+
+    # Consumer 2 should not be able to see consumer 1's feed:
+    lambda {
+      @consumer2.list_consumer_events(@consumer1.uuid)
     }.should raise_exception(RestClient::Forbidden)
   end
 

@@ -66,11 +66,9 @@ describe 'Consumer Facts' do
     }
     @consumer_api.update_consumer({:facts => updated_facts})
 
-    events = @cp.list_consumer_events(@owner['key'], @consumer.uuid)
-
-    # Punting on this for now...
-    events.should include("consumer")
-    events.should include("updated")
+    events = @consumer_api.list_consumer_events(@consumer.uuid)
+    # Look for a consumer modified event:
+    events.find { |e| e['type'] == 'MODIFIED' and e['target'] == 'CONSUMER' }.should_not be_nil
   end
 
   it 'does not emit an event when facts do not change' do
@@ -79,12 +77,9 @@ describe 'Consumer Facts' do
       'uname.system'     => 'Linux',
     }
     @consumer_api.update_consumer({:facts => updated_facts})
-
-    events = @cp.list_consumer_events(@owner['key'], @consumer.uuid)
-
-    # Punting on this for now...
-    events.should include("consumer")
-    events.should include("updated")
+    events = @consumer_api.list_consumer_events(@consumer.uuid)
+    # No consumer modified event should exist as facts did not change:
+    events.find { |e| e['type'] == 'MODIFIED' and e['target'] == 'CONSUMER' }.should be_nil
   end
 
   it 'updates consumer updated date when facts are updated' do

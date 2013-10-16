@@ -841,8 +841,12 @@ class Candlepin
     get("/serials/#{serial_id}")
   end
 
-  def list_consumer_events(owner_key, consumer_id)
-    get_text("/owners/#{owner_key}/consumers/#{consumer_id}/atom")
+  def list_consumer_events(consumer_id)
+    get("/consumers/#{consumer_id}/events")
+  end
+
+  def list_consumer_events_atom(consumer_id)
+    get_text("/consumers/#{consumer_id}/atom")
   end
 
   def list_events
