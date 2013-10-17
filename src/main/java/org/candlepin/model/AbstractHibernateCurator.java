@@ -22,11 +22,14 @@ import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.OptimisticLockException;
 
+import org.candlepin.auth.Principal;
 import org.candlepin.exceptions.ConcurrentModificationException;
+import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
+import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projection;
@@ -52,6 +55,8 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     @Inject protected I18n i18n;
     private final Class<E> entityType;
     private int batchSize = 30;
+    @Inject private PrincipalProvider principalProvider;
+
 
     protected AbstractHibernateCurator(Class<E> entityType) {
         //entityType = (Class<E>) ((ParameterizedType)
@@ -210,6 +215,17 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
             resultsPage = listByCriteria(query, pageRequest);
         }
         return resultsPage;
+    }
+
+    protected Criteria createSecureCriteria() {
+        Principal p = principalProvider.get();
+        Criteria c = currentSession().createCriteria(entityType);
+        List<Criterion> filters  = p.getCriteriaRestrictions(entityType);
+        for (Criterion crit : filters) {
+            System.out.println("got filter");
+            c.add(crit);
+        }
+        return c;
     }
 
     @SuppressWarnings("unchecked")

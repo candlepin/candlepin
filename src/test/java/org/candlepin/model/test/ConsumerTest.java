@@ -20,6 +20,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import org.candlepin.auth.Access;
 import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
@@ -49,6 +50,7 @@ import org.junit.Test;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -498,13 +500,41 @@ public class ConsumerTest extends DatabaseTestFixture {
         lookedUp = consumerCurator.find(consumer.getId());
         assertEquals(1, lookedUp.getGuestIds().size());
     }
-//
-//    @Test
-//    public void testListUsernameRestriction() {
-//        Set<Permission> perms = new HashSet<Permission>();
-//        User u = new User("fakeuser", "dontcare");
-//        perms.add(new UsersConsumersPermission(u));
-//        Principal p = new UserPrincipal(u.getUsername(), perms, false);
-//    }
+
+    @Test
+    public void testListForOwnerPermissionFiltering() {
+        User u = setupOnlyMyConsumersPrincipal();
+
+        Consumer c1 = new Consumer("c1", u.getUsername(), owner, consumerType);
+        consumerCurator.create(c1);
+        Consumer c2 = new Consumer("c2", "anotheruser", owner, consumerType);
+        consumerCurator.create(c2);
+
+        List<Consumer> results = consumerCurator.listByOwner(owner);
+        assertEquals(1, results.size());
+        assertEquals(c1.getName(), results.get(0).getName());
+    }
+
+    @Test
+    public void testFindByUuidPermissionFiltering() {
+        User u = setupOnlyMyConsumersPrincipal();
+
+        Consumer c1 = new Consumer("c1", u.getUsername(), owner, consumerType);
+        consumerCurator.create(c1);
+        Consumer c2 = new Consumer("c2", "anotheruser", owner, consumerType);
+        consumerCurator.create(c2);
+
+        assertEquals(c1, consumerCurator.findByUuid(c1.getUuid()));
+        assertNull(consumerCurator.findByUuid(c2.getUuid()));
+    }
+
+    private User setupOnlyMyConsumersPrincipal() {
+        Set<Permission> perms = new HashSet<Permission>();
+        User u = new User("fakeuser", "dontcare");
+        perms.add(new UsersConsumersPermission(u, owner, Access.READ_ONLY));
+        Principal p = new UserPrincipal(u.getUsername(), perms, false);
+        setupPrincipal(p);
+        return u;
+    }
 
 }

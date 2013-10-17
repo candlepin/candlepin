@@ -17,6 +17,7 @@ package org.candlepin.auth.permissions;
 import org.candlepin.auth.Access;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Pool;
+import org.hibernate.criterion.Criterion;
 
 /**
  *
@@ -39,5 +40,14 @@ public class ConsumerPoolPermission extends TypedPermission<Pool> {
         // should we mess with username restrictions here?
         return target.getOwner().getKey().equals(consumer.getOwner().getKey());
     }
+
+    /* (non-Javadoc)
+     * @see org.candlepin.auth.permissions.Permission#getCriteriaRestrictions(java.lang.Class)
+     */
+    @Override
+    public Criterion getCriteriaRestrictions(Class entityClass) {
+        return null;
+    }
+
 
 }
