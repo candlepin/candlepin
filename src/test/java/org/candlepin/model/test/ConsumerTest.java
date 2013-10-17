@@ -21,6 +21,10 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import org.candlepin.auth.ConsumerPrincipal;
+import org.candlepin.auth.Principal;
+import org.candlepin.auth.UserPrincipal;
+import org.candlepin.auth.permissions.Permission;
+import org.candlepin.auth.permissions.UsersConsumersPermission;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
@@ -44,7 +48,9 @@ import org.junit.Test;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import javax.persistence.PersistenceException;
 
@@ -492,5 +498,13 @@ public class ConsumerTest extends DatabaseTestFixture {
         lookedUp = consumerCurator.find(consumer.getId());
         assertEquals(1, lookedUp.getGuestIds().size());
     }
+//
+//    @Test
+//    public void testListUsernameRestriction() {
+//        Set<Permission> perms = new HashSet<Permission>();
+//        User u = new User("fakeuser", "dontcare");
+//        perms.add(new UsersConsumersPermission(u));
+//        Principal p = new UserPrincipal(u.getUsername(), perms, false);
+//    }
 
 }
