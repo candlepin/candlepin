@@ -25,6 +25,8 @@ import java.io.Serializable;
  */
 public abstract class TypedPermission<T> implements Permission, Serializable {
 
+    protected Access access;
+
     public abstract Class<T> getTargetType();
 
     public abstract boolean canAccessTarget(T target, Access action);
@@ -38,5 +40,14 @@ public abstract class TypedPermission<T> implements Permission, Serializable {
         return false;
     }
 
+    /**
+     * Return true if this permission provides the requested access type.
+     * If we have ALL, assume a match, otherwise do an explicit comparison.
+     *
+     * @return true if we provide the given access level.
+     */
+    public boolean providesAccess(Access requiredAccess) {
+        return (this.access == Access.ALL || this.access == requiredAccess);
+    }
 
 }
