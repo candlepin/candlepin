@@ -378,7 +378,7 @@ public class PinsetterKernelTest {
     public void unpauseScheduler() throws Exception {
         pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
         pk.unpauseScheduler();
-        verify(jcurator).findCanceledJobs();
+        verify(jcurator).findCanceledJobs(any(Set.class));
         verify(sched).start();
     }
 

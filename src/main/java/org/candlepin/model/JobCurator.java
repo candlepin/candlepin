@@ -18,11 +18,13 @@ import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.pinsetter.core.model.JobStatus.JobState;
 import org.candlepin.pinsetter.core.model.JobStatus.TargetType;
-
+import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 /**
  *
@@ -83,9 +85,23 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
             .add(Restrictions.eq("targetType", type)).list();
     }
 
+    /**
+     * This implementation allows us to avoid looping through all canceled jobs.
+     * Finds all jobs marked as CANCELED which have an ID in the input list
+     * so we can remove the scheduled job.
+     *
+     * @param activeJobs Names of jobs that are currently active
+     * @return JobStatus list to have quartz job canceled
+     */
     @SuppressWarnings("unchecked")
-    public List<JobStatus> findCanceledJobs() {
-        return this.currentSession().createCriteria(JobStatus.class)
-        .add(Restrictions.eq("state", JobState.CANCELED)).list();
+    public List<JobStatus> findCanceledJobs(Set<String> activeJobs) {
+        if (activeJobs.isEmpty()) {
+            //query will fail with an empty list
+            return new LinkedList<JobStatus>();
+        }
+        Criteria c = this.currentSession().createCriteria(JobStatus.class)
+            .add(Restrictions.eq("state", JobState.CANCELED))
+            .add(Restrictions.in("id", activeJobs));
+        return c.list();
     }
 }

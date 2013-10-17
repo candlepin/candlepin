@@ -14,7 +14,9 @@
  */
 package org.candlepin.pinsetter.tasks;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.candlepin.model.JobCurator;
@@ -25,7 +27,8 @@ import org.hibernate.HibernateException;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
-
+import org.quartz.JobKey;
+import org.quartz.SchedulerException;
 
 import com.google.inject.Inject;
 
@@ -48,24 +51,32 @@ public class CancelJobJob implements Job {
 
     @Override
     public void execute(JobExecutionContext ctx) throws JobExecutionException {
-        List<JobStatus> canceledJobs;
-
+        Set<String> statusIds = new HashSet<String>();
+        List<JobStatus> jobsToCancel = null;
         try {
-            canceledJobs = jobCurator.findCanceledJobs();
-        }
-        catch (HibernateException e) {
-            log.error("Cannot execute query: ", e);
-            throw new JobExecutionException(e);
-        }
-        for (JobStatus j : canceledJobs) {
+            Set<JobKey> keys = pinsetterKernel.getSingleJobKeys();
+            for (JobKey key : keys) {
+                statusIds.add(key.getName());
+            }
             try {
-                pinsetterKernel.cancelJob(j.getId(), j.getGroup());
+                jobsToCancel = jobCurator.findCanceledJobs(statusIds);
             }
-            catch (PinsetterException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+            catch (HibernateException e) {
+                log.error("Cannot execute query: ", e);
+                throw new JobExecutionException(e);
             }
+            for (JobStatus j : jobsToCancel) {
+                try {
+                    pinsetterKernel.cancelJob(j.getId(), j.getGroup());
+                    log.info("Canceled job: " + j.getId() + ", " + j.getGroup());
+                }
+                catch (PinsetterException e) {
+                    log.error("Exception canceling job " + j.getId(), e);
+                }
+            }
+        }
+        catch (SchedulerException e) {
+            log.error("Unable to cancel jobs", e);
         }
     }
-
 }

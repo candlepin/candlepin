@@ -20,7 +20,7 @@ import static org.quartz.JobBuilder.newJob;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-
+import java.util.Set;
 
 import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.PinsetterException;
@@ -30,8 +30,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Matchers.any;
 
 import org.quartz.Job;
 import org.quartz.JobDetail;
@@ -56,7 +58,7 @@ public class CancelJobJobTest {
 
     @Test
     public void noCancellationsTest() throws JobExecutionException {
-        when(j.findCanceledJobs()).thenReturn(new ArrayList<JobStatus>());
+        when(j.findCanceledJobs(any(Set.class))).thenReturn(new ArrayList<JobStatus>());
         cancelJobJob.execute(ctx);
     }
 
@@ -69,7 +71,7 @@ public class CancelJobJobTest {
         JobStatus js = new JobStatus(jd);
         List<JobStatus> jl = new ArrayList<JobStatus>();
         jl.add(js);
-        when(j.findCanceledJobs()).thenReturn(jl);
+        when(j.findCanceledJobs(any(Set.class))).thenReturn(jl);
         cancelJobJob.execute(ctx);
         verify(pk, atLeastOnce()).cancelJob((Serializable) "Kayfabe", "Deluxe");
     }
