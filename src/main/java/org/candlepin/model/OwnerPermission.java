@@ -28,6 +28,7 @@ import org.candlepin.auth.permissions.Permission;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Index;
+import org.hibernate.criterion.Criterion;
 
 /**
  * A permission represents an owner to be accessed in some fashion, and a verb which
@@ -124,5 +125,13 @@ public class OwnerPermission extends AbstractHibernateObject implements Permissi
 
     public void setRole(Role role) {
         this.role = role;
+    }
+
+    /* (non-Javadoc)
+     * @see org.candlepin.auth.permissions.Permission#getCriteriaRestrictions(java.lang.Class)
+     */
+    @Override
+    public Criterion getCriteriaRestrictions(Class entityClass) {
+        return null;
     }
 }

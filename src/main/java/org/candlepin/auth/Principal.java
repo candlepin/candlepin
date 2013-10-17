@@ -16,10 +16,17 @@ package org.candlepin.auth;
 
 import org.apache.log4j.Logger;
 import org.candlepin.auth.permissions.Permission;
+import org.candlepin.model.Owned;
 import org.candlepin.util.Util;
+import org.hibernate.criterion.Criterion;
+import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.criterion.Restrictions;
+
+import sun.misc.Perf.GetPerfAction;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -78,6 +85,17 @@ public abstract class Principal implements Serializable {
     @Override
     public String toString() {
         return Util.toJson(this.getData());
+    }
+
+    public List<Criterion> getCriteriaRestrictions(Class entityClass) {
+        List<Criterion> filters = new LinkedList<Criterion>();
+        for (Permission p : permissions) {
+            Criterion crit = p.getCriteriaRestrictions(entityClass);
+            if (crit != null) {
+                filters.add(crit);
+            }
+        }
+        return filters;
     }
 
 }

@@ -18,6 +18,8 @@ import org.candlepin.auth.Access;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
 import org.candlepin.model.User;
+import org.hibernate.criterion.Criterion;
+import org.hibernate.criterion.Restrictions;
 
 /**
  * A permission allowing a user access to consumers in their org only if they were the ones
@@ -47,4 +49,14 @@ public class UsersConsumersPermission extends TypedPermission<Consumer> {
             target.getUsername().equals(user.getUsername()) && providesAccess(action);
     }
 
+    /* (non-Javadoc)
+     * @see org.candlepin.auth.permissions.Permission#getCriteriaRestrictions(java.lang.Class)
+     */
+    @Override
+    public Criterion getCriteriaRestrictions(Class entityClass) {
+        if (entityClass.equals(Consumer.class)) {
+            return Restrictions.eq("username", user.getUsername());
+        }
+        return null;
+    }
 }

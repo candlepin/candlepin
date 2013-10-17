@@ -14,11 +14,9 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.auth.Principal;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.exceptions.BadRequestException;
-import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 
@@ -26,7 +24,6 @@ import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import org.apache.log4j.Logger;
-import org.hibernate.Criteria;
 import org.hibernate.Query;
 import org.hibernate.ReplicationMode;
 import org.hibernate.criterion.DetachedCriteria;
@@ -52,7 +49,6 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     @Inject private ConsumerTypeCurator consumerTypeCurator;
     @Inject private DeletedConsumerCurator deletedConsumerCurator;
     @Inject private Config config;
-    @Inject private PrincipalProvider principalProvider;
 
     private static final int NAME_LENGTH = 250;
     private static Logger log = Logger.getLogger(ConsumerCurator.class);
@@ -138,12 +134,6 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             .add(Restrictions.eq("name", name))
             .add(Restrictions.eq("owner", o))
             .uniqueResult();
-    }
-
-    protected Criteria createSecureCriteria() {
-        Principal p = principalProvider.get();
-        log.debug("Querying consumers for principal " + p);
-        return currentSession().createCriteria(Consumer.class);
     }
 
     /**
