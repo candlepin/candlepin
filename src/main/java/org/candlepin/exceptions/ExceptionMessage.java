@@ -18,6 +18,8 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.apache.log4j.MDC;
+
 /**
  * ExceptionMessage
  */
@@ -26,12 +28,15 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class ExceptionMessage {
 
     private String displayMessage;
+    private String requestUuid;
 
     public ExceptionMessage() {
+        this.setRequestUuid();
     }
 
     public ExceptionMessage(String displayMessage) {
         this.displayMessage = displayMessage;
+        this.setRequestUuid();
     }
 
     public ExceptionMessage setDisplayMessage(String displayMessage) {
@@ -41,5 +46,27 @@ public class ExceptionMessage {
 
     public String getDisplayMessage() {
         return displayMessage;
+    }
+
+    public String getRequestUuid() {
+        return requestUuid;
+    }
+
+    public void setRequestUuid(String requestUuid) {
+        this.requestUuid = requestUuid;
+    }
+
+    /**
+     * Pulls the request UUID from the log4j MDC if possible, and sets them
+     * for return to the client.
+     *
+     * Doesn't include the requestType, as I believe we can assume it's an HTTP request
+     * and not a job, if this exception is being used.
+     */
+    private void setRequestUuid() {
+        if (MDC.get("requestUuid") != null) {
+            this.requestUuid = (String) MDC.get("requestUuid");
+        }
+
     }
 }

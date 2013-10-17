@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 require 'spec_helper'
 require 'candlepin_scenarios'
+require 'rexml/document'
 
 describe 'Consumer Resource' do
 
@@ -26,6 +27,34 @@ describe 'Consumer Resource' do
     pool = @consumer1.list_pools({:owner => @owner1['id']}).first
     lambda {
       @consumer2.consume_pool(pool.id, {:quantity => 1}).size.should == 1
+    }.should raise_exception(RestClient::Forbidden)
+  end
+
+  it "should expose a consumer's event atom feed" do
+    atom = @consumer1.list_consumer_events_atom(@consumer1.uuid)
+    doc = REXML::Document.new(atom)
+    events = REXML::XPath.match(doc, "//*[local-name()='event'][type = 'CREATED' and target ='CONSUMER']")
+    events.should have(1).things
+
+    # Consumer 2 should not be able to see consumer 1's feed:
+    lambda {
+      @consumer2.list_consumer_events_atom(@consumer1.uuid)
+    }.should raise_exception(RestClient::Forbidden)
+  end
+
+  it "should expose a consumer's events" do
+    events = @consumer1.list_consumer_events(@consumer1.uuid)
+    events.size.should be > 0
+
+    # Events are sorted in order of descending timestamp, so the first
+    # event should be consumer created:
+    events[-1]['target'].should == 'CONSUMER'
+    events[-1]['type'].should == 'CREATED'
+    events[-1]['principal']['name'].should == @username1
+
+    # Consumer 2 should not be able to see consumer 1's feed:
+    lambda {
+      @consumer2.list_consumer_events(@consumer1.uuid)
     }.should raise_exception(RestClient::Forbidden)
   end
 
@@ -942,6 +971,29 @@ describe 'Consumer Resource' do
     ent = @consumer1.consume_pool(pool.id, {:quantity => 2})
     ent = @consumer1.consume_pool(pool.id)
     ent[0]["quantity"].should == 1
+  end
+
+  it "should bind correct future quantity when fully subscribed today" do
+    facts = {
+      'cpu.cpu_socket(s)' => '4',
+    }
+    product1 = create_product(random_string('product'), random_string('product-multiple-arch'),
+        :attributes => { :sockets => '2', :'multi-entitlement' => 'yes', :stacking_id => 'consumer-bind-test'})
+    sub = @cp.create_subscription(@owner1['key'], product1.id, 10)
+    start = Date.today + 400
+    future_sub = @cp.create_subscription(@owner1['key'], product1.id, 10, [], '', '', '', start)
+    installed = [
+        {'productId' => product1.id, 'productName' => product1.name}
+    ]
+    @consumer1.update_consumer({:installedProducts => installed, :facts => facts})
+    @cp.refresh_pools(@owner1['key'])
+    pool = @consumer1.list_pools({:owner => @owner1['id']}).first
+    # Fully cover the product1 for a year
+    @consumer1.consume_pool(pool.id, {:quantity => 2})
+
+    future_pool = @consumer1.list_pools({:owner => @owner1['id'], :activeon => Date.today + 450}).first
+    ent = @consumer1.consume_pool(future_pool.id)[0]
+    ent["quantity"].should == 2
   end
 
   it 'should be able to add unused attributes' do

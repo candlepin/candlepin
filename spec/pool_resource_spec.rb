@@ -18,6 +18,7 @@ describe 'Pool Resource' do
     consumer_client = consumer_client(owner1_client, random_string('testsystem'))
     p = consumer_client.get_pool(pool.id)
     p.id.should == pool.id
+    p['type'].should == 'NORMAL'
   end
 
   it 'does not let consumers view another owners pool' do

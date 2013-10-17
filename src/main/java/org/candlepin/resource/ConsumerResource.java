@@ -115,6 +115,7 @@ import org.candlepin.sync.Exporter;
 import org.candlepin.util.Util;
 import org.candlepin.version.CertVersionConflictException;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
+import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.quartz.JobDetail;
 import org.xnap.commons.i18n.I18n;
@@ -291,7 +292,8 @@ public class ConsumerResource {
             }
 
             if (expire.before(futureExpire)) {
-                log.warn("regenerating certificate for [" + uuid + "]");
+                log.info("Regenerating identity certificate for consumer: " + uuid +
+                    ", expiry: " + expire);
                 consumer = this.regenerateIdentityCertificates(uuid);
             }
 
@@ -445,6 +447,9 @@ public class ConsumerResource {
             consumer.setEntitlementStatus(compliance.getStatus());
             consumerCurator.update(consumer);
 
+            log.info("Consumer " + consumer.getUuid() + " created in org " +
+                consumer.getOwner().getKey());
+
             return consumer;
         }
         catch (CandlepinException ce) {
@@ -568,9 +573,8 @@ public class ConsumerResource {
         List<ActivationKey> keys, ConsumerType type) {
         if (log.isDebugEnabled()) {
             log.debug("Got consumerTypeLabel of: " + type.getLabel());
-            log.debug("got facts: \n" + consumer.getFacts());
-
             if (consumer.getFacts() != null) {
+                log.debug("incoming facts:");
                 for (String key : consumer.getFacts().keySet()) {
                     log.debug("   " + key + " = " + consumer.getFact(key));
                 }
@@ -1362,8 +1366,13 @@ public class ConsumerResource {
         if (poolIdString != null && quantity == null) {
             Pool pool = poolManager.find(poolIdString);
             if (pool != null) {
+                Date now = new Date();
+                // If the pool is being attached in the future, calculate
+                // suggested quantity on the start date
+                Date onDate = now.before(pool.getStartDate()) ?
+                    pool.getStartDate() : now;
                 quantity = Math.max(1, quantityRules.getSuggestedQuantity(pool,
-                    consumer, new Date()).getSuggested().intValue());
+                    consumer, onDate).getSuggested().intValue());
             }
             else {
                 quantity = 1;
@@ -1408,8 +1417,8 @@ public class ConsumerResource {
                 throw cvce;
             }
             catch (RuntimeException re) {
-                log.warn(i18n.tr("Unable to attach a subscription for a product that " +
-                    "has no pool: {0} ", re.getMessage()));
+                log.warn("Unable to attach a subscription for a product that " +
+                    "has no pool: " + re.getMessage());
             }
         }
 
@@ -1647,6 +1656,24 @@ public class ConsumerResource {
     }
 
     /**
+     * @return the consumer event atom feed.
+     * @httpcode 404
+     * @httpcode 200
+     */
+    @GET
+    @Produces("application/atom+xml")
+    @Path("/{consumer_uuid}/atom")
+    public Feed getConsumerAtomFeed(
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
+        String path = String.format("/consumers/%s/atom", consumerUuid);
+        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        Feed feed = this.eventAdapter.toFeed(
+            this.eventCurator.listMostRecent(FEED_LIMIT, consumer), path);
+        feed.setTitle("Event feed for consumer " + consumer.getUuid());
+        return feed;
+    }
+
+    /**
      * @httpcode 404
      * @httpcode 200
      */
@@ -1780,8 +1807,7 @@ public class ConsumerResource {
         }
 
         if (log.isDebugEnabled()) {
-            log.debug("Generated identity cert: " + idCert);
-            log.debug("Created consumer: " + c);
+            log.debug("Generated identity cert: " + idCert.getSerial().getId());
         }
 
         return idCert;

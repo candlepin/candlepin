@@ -31,7 +31,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.8.28
+Version: 0.8.29
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -214,6 +214,8 @@ rm -rf $RPM_BUILD_ROOT
 install -d -m 755 $RPM_BUILD_ROOT/%{_sysconfdir}/%{name}/certs/
 install -d -m 755 $RPM_BUILD_ROOT/%{_sysconfdir}/%{name}/certs/upstream/
 install -m 644 conf/candlepin-redhat-ca.crt %{buildroot}%{_sysconfdir}/%{name}/certs/upstream/
+install -d 755 %{buildroot}%{_sysconfdir}/logrotate.d/
+install -m 644 conf/logrotate.conf %{buildroot}%{_sysconfdir}/logrotate.d/%{name}
 install -d -m 755 $RPM_BUILD_ROOT/%{_sysconfdir}/%{name}/
 install -d -m 755 $RPM_BUILD_ROOT/%{_datadir}/%{name}/
 install -m 755 code/setup/cpsetup $RPM_BUILD_ROOT/%{_datadir}/%{name}/cpsetup
@@ -296,6 +298,7 @@ fi
 # If a deployment is managing their own, they will need to restore from the
 # .rpmsave backup after upgrading the candlepin rpm.
 %config %attr(644, root, root) %{_sysconfdir}/%{name}/certs/upstream/candlepin-redhat-ca.crt
+%config(noreplace) %attr(644,root,root) %{_sysconfdir}/logrotate.d/candlepin
 %doc LICENSE
 %doc README
 
@@ -325,6 +328,29 @@ fi
 
 
 %changelog
+* Wed Oct 02 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.29-1
+- 1011100: Fix orphaned virt bonus pools in hosted. (dgoodwin@redhat.com)
+- 1006374: add delete cascade to cp_pool_* (jesusr@redhat.com)
+- Updated translations and extract latest strings. (dgoodwin@redhat.com)
+- Improve the concurrency-test.rb script. (dgoodwin@redhat.com)
+- support default quantity for future pools (ckozak@redhat.com)
+- Add a type indicator to Pool. (dgoodwin@redhat.com)
+- Fix use of skip_subs in test data importer. (mstead@redhat.com)
+- Fix NPE from base64 (jesusr@redhat.com)
+- Make v1 certs populate 'brand_type' too. (alikins@redhat.com)
+- Log scheduler exception (ckozak@redhat.com)
+- Add option to deploy candlepin.conf automatically. (awood@redhat.com)
+- Generate candlepin.conf based on a template and YAML data. (awood@redhat.com)
+- Fix import_products on ruby-1.9 (alikins@redhat.com)
+- Add spec test for nonexistant attributes (ckozak@redhat.com)
+- Allow unknown properties in HibernateObjects.  Futureproofing (ckozak@redhat.com)
+- Stop using Exporter as a singleton. (dgoodwin@redhat.com)
+- Thread the pool refresh as well. (alikins@redhat.com)
+- make import_products loader multithreaded (alikins@redhat.com)
+- test-data: Shared File System should 'MKT' (alikins@redhat.com)
+- Create activation keys for all owner-pool-contract (alikins@redhat.com)
+- Various changes to deploy script: MySQL support, DB passwords, etc. (awood@redhat.com)
+
 * Mon Sep 23 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.28-1
 - 1007836: calculate suggested quantity with only matching stacking_ids (ckozak@redhat.com)
 

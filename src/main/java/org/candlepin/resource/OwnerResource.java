@@ -264,6 +264,7 @@ public class OwnerResource {
 
         sink.emitOwnerCreated(owner);
 
+        log.info("Created owner: " + owner);
         if (toReturn != null) {
             return toReturn;
         }
@@ -711,25 +712,6 @@ public class OwnerResource {
         Feed feed = this.eventAdapter.toFeed(
             this.eventCurator.listMostRecent(FEED_LIMIT, o), path);
         feed.setTitle("Event feed for owner " + o.getDisplayName());
-        return feed;
-    }
-
-    /**
-     * @return the consumer Feed
-     * @httpcode 404
-     * @httpcode 200
-     */
-    @GET
-    @Produces("application/atom+xml")
-    @Path("{owner_key}/consumers/{consumer_uuid}/atom")
-    public Feed getConsumerAtomFeed(
-        @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
-        @PathParam("consumer_uuid") String consumerUuid) {
-        String path = String.format("/consumers/%s/atom", consumerUuid);
-        Consumer consumer = findConsumer(consumerUuid);
-        Feed feed = this.eventAdapter.toFeed(
-            this.eventCurator.listMostRecent(FEED_LIMIT, consumer), path);
-        feed.setTitle("Event feed for consumer " + consumer.getUuid());
         return feed;
     }
 

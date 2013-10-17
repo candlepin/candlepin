@@ -14,13 +14,17 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.paging.PageRequest;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+import javax.persistence.EntityManager;
+import javax.persistence.OptimisticLockException;
+
+import org.candlepin.exceptions.ConcurrentModificationException;
 import org.candlepin.paging.Page;
-
-import com.google.inject.Inject;
-import com.google.inject.Provider;
-import com.google.inject.persist.Transactional;
-
+import org.candlepin.paging.PageRequest;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.criterion.DetachedCriteria;
@@ -30,13 +34,11 @@ import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.internal.CriteriaImpl;
 import org.hibernate.transform.ResultTransformer;
+import org.xnap.commons.i18n.I18n;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
-import javax.persistence.EntityManager;
+import com.google.inject.Inject;
+import com.google.inject.Provider;
+import com.google.inject.persist.Transactional;
 
 /**
  * AbstractHibernateCurator base class for all Candlepin curators. Curators are
@@ -47,6 +49,7 @@ import javax.persistence.EntityManager;
  */
 public abstract class AbstractHibernateCurator<E extends Persisted> {
     @Inject protected Provider<EntityManager> entityManager;
+    @Inject protected I18n i18n;
     private final Class<E> entityType;
     private int batchSize = 30;
 
@@ -283,7 +286,13 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     }
 
     protected final void flush() {
-        getEntityManager().flush();
+        try {
+            getEntityManager().flush();
+        }
+        catch (OptimisticLockException e) {
+            throw new ConcurrentModificationException(getConcurrentModificationMessage(),
+                e);
+        }
     }
 
     protected Session currentSession() {
@@ -296,13 +305,19 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     }
 
     public void saveOrUpdateAll(List<E> entries) {
-        Session session = currentSession();
-        for (int i = 0; i < entries.size(); i++) {
-            session.saveOrUpdate(entries.get(i));
-            if (i % batchSize == 0) {
-                session.flush();
-                session.clear();
+        try {
+            Session session = currentSession();
+            for (int i = 0; i < entries.size(); i++) {
+                session.saveOrUpdate(entries.get(i));
+                if (i % batchSize == 0) {
+                    session.flush();
+                    session.clear();
+                }
             }
+        }
+        catch (OptimisticLockException e) {
+            throw new ConcurrentModificationException(getConcurrentModificationMessage(),
+                e);
         }
 
     }
@@ -324,5 +339,9 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         // sublist returns a portion of the list between the specified fromIndex,
         // inclusive, and toIndex, exclusive.
         return results.subList(fromIndex, toIndex);
+    }
+
+    private String getConcurrentModificationMessage() {
+        return i18n.tr("Request failed due to concurrent modification, please re-try.");
     }
 }

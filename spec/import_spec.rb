@@ -57,7 +57,7 @@ describe 'Candlepin Import', :serial => true do
   it "originating information should be populated in the import record" do
     @import_owner_client.list_imports(@import_owner['key']).find_all do |import|
       consumer = @candlepin_consumer
-      import['generatedBy'].should == consumer['name']
+      import['generatedBy'].should == consumer['uuid']
       import['generatedDate'].should_not be_nil
       import['fileName'].should == @cp_export_file.split("/").last
       import['upstreamConsumer']['uuid'].should == consumer['uuid']
@@ -284,7 +284,9 @@ describe 'Candlepin Import', :serial => true do
 
     # while were here, lets access the upstream cert via entitlement id
     pools =  @import_owner_client.list_pools({:owner => @import_owner['id']})
-    pool = pools.find_all {|p| p.subscriptionId == sublist.first.id}[0]
+    pool = pools.find_all {
+      |p| p.subscriptionId == sublist.first.id && p.subscriptionSubKey == "master"
+    }[0]
     consumer = consumer_client(@import_owner_client, 'system6')
     entitlement = consumer.consume_pool(pool.id, {:quantity => 1})[0]
     ent =  @cp.get_subscription_cert_by_ent_id entitlement.id

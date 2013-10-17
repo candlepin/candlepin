@@ -48,6 +48,7 @@ import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Subscription;
+import org.candlepin.model.Pool.PoolType;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.policy.EntitlementRefusedException;
@@ -129,7 +130,7 @@ public class CandlepinPoolManager implements PoolManager {
     Set<Entitlement> refreshPoolsWithoutRegeneration(Owner owner) {
         log.info("Refreshing pools for owner: " + owner.getKey());
         List<Subscription> subs = subAdapter.getSubscriptions(owner);
-        log.debug("Found " + subs.size() + " subscriptions.");
+        log.debug("Found " + subs.size() + " existing subscriptions.");
 
         List<Pool> pools = this.listAvailableEntitlementPools(null,
             owner, null, null, false, false, null).getPageData();
@@ -184,11 +185,7 @@ public class CandlepinPoolManager implements PoolManager {
                 //
                 // However if this is an older bonus pool (hosted) not tied to any
                 // entitlements, we need to proceed:
-                if (p.hasAttribute("pool_derived") && (
-                    p.getSourceStackId() != null || p.getSourceEntitlement() != null)) {
-                    continue;
-                }
-                else {
+                if (p.getType() == PoolType.NORMAL || p.getType() == PoolType.BONUS) {
                     deletePool(p);
                 }
             }
@@ -279,6 +276,7 @@ public class CandlepinPoolManager implements PoolManager {
         for (PoolUpdate updatedPool : updatedPools) {
 
             Pool existingPool = updatedPool.getPool();
+            log.info("Pool changed: " + updatedPool.toString());
 
             // Delete pools the rules signal needed to be cleaned up:
             if (existingPool.hasAttribute(PoolManager.DELETE_FLAG) &&
@@ -429,6 +427,160 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         return entitlements;
+    }
+
+    /**
+     * Request an entitlement by product for a host system in
+     * a host-guest relationship.  Allows getBestPoolsForHost
+     * to choose products to bind.
+     *
+     * @param guest consumer requesting to have host entitled
+     * @param host host consumer to entitle
+     * @param entitleDate specific date to entitle by.
+     * @return Entitlement
+     * @throws EntitlementRefusedException if entitlement is refused
+     */
+    //
+    // NOTE: after calling this method both entitlement pool and consumer
+    // parameters
+    // will most certainly be stale. beware!
+    //
+    @Override
+    @Transactional
+    public List<Entitlement> entitleByProductsForHost(Consumer guest,
+        Consumer host, Date entitleDate)
+        throws EntitlementRefusedException {
+        List<Entitlement> entitlements = new LinkedList<Entitlement>();
+        if (!host.getOwner().equals(guest.getOwner())) {
+            log.debug("Host " + host.getUuid() + " and guest " +
+                guest.getUuid() + " have different owners.");
+            return entitlements;
+        }
+        Owner owner = host.getOwner();
+
+        // Use the current date if one wasn't provided:
+        if (entitleDate == null) {
+            entitleDate = new Date();
+        }
+
+        List<PoolQuantity> bestPools = getBestPoolsForHost(guest, host,
+            entitleDate, owner, null);
+
+        if (bestPools == null) {
+            throw new RuntimeException("No entitlements for host: " + host.getUuid());
+        }
+
+        // now make the entitlements
+        for (PoolQuantity entry : bestPools) {
+            entitlements.add(addOrUpdateEntitlement(host, entry.getPool(),
+                null, entry.getQuantity(), false, CallerType.BIND));
+        }
+
+        return entitlements;
+    }
+
+    /**
+     * Here we pick uncovered products from the guest where no virt-only
+     * subscriptions exist, and have the host bind non-zero virt_limit
+     * subscriptions in order to generate pools for the guest to bind later.
+     *
+     * @param guest whose products we want to provide
+     * @param host to bind entitlements to
+     * @param entitleDate
+     * @param owner
+     * @param serviceLevelOverride
+     * @return PoolQuantity list to attempt to attach
+     * @throws EntitlementRefusedException if unable to bind
+     */
+    @Override
+    public List<PoolQuantity> getBestPoolsForHost(Consumer guest,
+        Consumer host, Date entitleDate, Owner owner,
+        String serviceLevelOverride)
+        throws EntitlementRefusedException {
+
+        ValidationResult failedResult = null;
+
+        List<Pool> allOwnerPools = this.listAvailableEntitlementPools(
+            host, owner, (String) null, entitleDate, true, false, null).getPageData();
+        List<Pool> allOwnerPoolsForGuest = this.listAvailableEntitlementPools(
+            guest, owner, (String) null, entitleDate, true, false, null).getPageData();
+        for (Entitlement ent : host.getEntitlements()) {
+            //filter out pools that are attached, there is no need to
+            //complete partial stacks, as they are already granting
+            //virtual pools
+            allOwnerPools.remove(ent.getPool());
+        }
+        List<Pool> filteredPools = new LinkedList<Pool>();
+
+        ComplianceStatus guestCompliance = complianceRules.getStatus(guest, entitleDate);
+        Set<String> tmpSet = new HashSet<String>();
+        //we only want to heal red products, not yellow
+        tmpSet.addAll(guestCompliance.getNonCompliantProducts());
+
+        /*Do not attempt to create subscriptions for products that
+          already have virt_limit pools available to the guest */
+        Set<String> productsToRemove = new HashSet<String>();
+        for (Pool pool : allOwnerPoolsForGuest) {
+            if (pool.hasProductAttribute("virt_only")) {
+                for (String prodId : tmpSet) {
+                    if (pool.provides(prodId)) {
+                        productsToRemove.add(prodId);
+                    }
+                }
+            }
+        }
+        tmpSet.removeAll(productsToRemove);
+        String[] productIds = tmpSet.toArray(new String [] {});
+
+        if (log.isDebugEnabled()) {
+            log.debug("Attempting for products on date: " + entitleDate);
+            for (String productId : productIds) {
+                log.debug("  " + productId);
+            }
+        }
+
+        for (Pool pool : allOwnerPools) {
+            boolean providesProduct = false;
+            // Would parse the int here, but it can be 'unlimited'
+            // and we only need to check that it's non-zero
+            if (pool.hasProductAttribute("virt_limit") &&
+                    !pool.getProductAttribute("virt_limit").getValue().equals("0")) {
+                for (String productId : productIds) {
+                    if (pool.provides(productId)) {
+                        providesProduct = true;
+                        break;
+                    }
+                }
+            }
+            if (providesProduct) {
+                ValidationResult result = enforcer.preEntitlement(host,
+                    pool, 1, CallerType.BEST_POOLS);
+
+                if (result.hasErrors() || result.hasWarnings()) {
+                    // Just keep the last one around, if we need it
+                    failedResult = result;
+                    if (log.isDebugEnabled()) {
+                        log.debug("Pool filtered from candidates due to rules " +
+                            "failure: " +
+                            pool.getId());
+                    }
+                }
+                else {
+                    filteredPools.add(pool);
+                }
+            }
+        }
+
+        // Only throw refused exception if we actually hit the rules:
+        if (filteredPools.size() == 0 && failedResult != null) {
+            throw new EntitlementRefusedException(failedResult);
+        }
+        ComplianceStatus hostCompliance = complianceRules.getStatus(host, entitleDate);
+
+        List<PoolQuantity> enforced = autobindRules.selectBestPools(host,
+            productIds, filteredPools, hostCompliance, serviceLevelOverride,
+            poolCurator.retrieveServiceLevelsForOwner(owner, true));
+        return enforced;
     }
 
     @Override
@@ -605,6 +757,8 @@ public class CandlepinPoolManager implements PoolManager {
 
         // we might have changed the bonus pool quantities, lets find out.
         handler.handleBonusPools(pool, entitlement);
+        log.info("Granted entitlement: " + entitlement.getId() + " from pool: " +
+            pool.getId());
         return entitlement;
     }
 
@@ -649,7 +803,7 @@ public class CandlepinPoolManager implements PoolManager {
         if (sub != null) {
             // Need to make sure that we check for a defined sub product
             // if it is a derived pool.
-            boolean derived = pool.hasAttribute("pool_derived");
+            boolean derived = pool.getType() != PoolType.NORMAL;
             product = derived && sub.getDerivedProduct() != null ? sub.getDerivedProduct() :
                 sub.getProduct();
         }
@@ -677,8 +831,6 @@ public class CandlepinPoolManager implements PoolManager {
             " entitlement certificates for consumer: " + consumer);
         // TODO - Assumes only 1 entitlement certificate exists per entitlement
         this.regenerateCertificatesOf(consumer.getEntitlements(), lazy);
-        log.info("Finished regenerating entitlement certificates for consumer: " +
-            consumer);
     }
 
     @Transactional
@@ -888,6 +1040,8 @@ public class CandlepinPoolManager implements PoolManager {
             this.regenerateCertificatesOf(entitlementCurator
                 .listModifying(entitlement), true);
         }
+
+        log.info("Revoked entitlement: " + entitlement.getId());
 
         // Check consumer's new compliance status and save:
         ComplianceStatus compliance = complianceRules.getStatus(consumer, new Date());
@@ -1126,12 +1280,14 @@ public class CandlepinPoolManager implements PoolManager {
                 newResults.add(p);
             }
             else {
-                log.info("Omitting pool due to failed rule check: " + p.getId());
-                if (result.hasErrors()) {
-                    log.info("\tErrors: " + result.getErrors());
-                }
-                if (result.hasWarnings()) {
-                    log.info("\tWarnings: " + result.getWarnings());
+                if (log.isDebugEnabled()) {
+                    log.debug("Omitting pool due to failed rules: " + p.getId());
+                    if (result.hasErrors()) {
+                        log.debug("\tErrors: " + result.getErrors());
+                    }
+                    if (result.hasWarnings()) {
+                        log.debug("\tWarnings: " + result.getWarnings());
+                    }
                 }
             }
         }

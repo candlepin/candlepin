@@ -28,7 +28,6 @@ import org.hibernate.Query;
 import org.hibernate.ReplicationMode;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
-import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -49,7 +48,6 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     @Inject private ConsumerTypeCurator consumerTypeCurator;
     @Inject private DeletedConsumerCurator deletedConsumerCurator;
     @Inject private Config config;
-    @Inject private I18n i18n;
     private static final int NAME_LENGTH = 250;
     private static Logger log = Logger.getLogger(ConsumerCurator.class);
 
@@ -328,19 +326,17 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
                         value = Integer.parseInt(entry.getValue());
                     }
                     catch (NumberFormatException nfe) {
-                        log.error(i18n.tr(
-                            "The fact ''{0}'' must be an integer instead of ''{1}''. " +
-                            "No value will exist for that fact.",
-                            entry.getKey(), entry.getValue()));
+                        log.error("The fact " + entry.getKey() +
+                            " must be an integer instead of " + entry.getValue() +
+                            ". " + "No value will exist for that fact.");
                         continue;
                     }
                     if (posFacts != null && posFacts.contains(
                         entry.getKey()) &&
                         value < 0) {
-                        log.error(i18n.tr(
-                            "The fact ''{0}'' must have a positive integer value " +
-                            "instead of ''{1}''. No value will exist for that fact.",
-                            entry.getKey(), entry.getValue()));
+                        log.error("The fact " + entry.getKey() +
+                            " must have a positive integer value instead of " +
+                            entry.getValue() + ". No value will exist for that fact.");
                         continue;
                     }
                 }

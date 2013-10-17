@@ -19,17 +19,15 @@ import java.io.PrintWriter;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpServletResponseWrapper;
 
 /**
  * LoggingResponseWrapper
  */
-public class LoggingResponseWrapper extends HttpServletResponseWrapper
+public class LoggingResponseWrapper extends StatusResponseWrapper
     implements BodyLogger {
 
     protected StringBuffer buffer = new StringBuffer();
     protected HttpServletResponse realResponse;
-    protected int status;
     protected ServletOutputStream outputStream;
     protected PrintWriter writer;
 
@@ -62,20 +60,6 @@ public class LoggingResponseWrapper extends HttpServletResponseWrapper
 
     public String getResponseBody() {
         return buffer.toString();
-    }
-
-    public void setStatus(int status) {
-        super.setStatus(status);
-        this.status = status;
-    }
-
-    public void setStatus(int status, String sm) {
-        super.setStatus(status, sm);
-        this.status = status;
-    }
-
-    public int getStatus() {
-        return status;
     }
 
     public String getBody() {

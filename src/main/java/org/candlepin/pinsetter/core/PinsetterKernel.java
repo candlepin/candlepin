@@ -163,7 +163,7 @@ public class PinsetterKernel {
                 log.warn("No tasks to schedule");
                 return;
             }
-            log.warn("jobImpls:" + jobImpls);
+            log.debug("Jobs implemented:" + jobImpls);
             Set<JobKey> jobKeys = scheduler.getJobKeys(jobGroupEquals(CRON_GROUP));
 
             for (String jobImpl : jobImpls) {
@@ -331,8 +331,8 @@ public class PinsetterKernel {
 
         try {
             scheduler.getListenerManager()
-                .addJobListenerMatcher(PinsetterJobListener.LISTENER_NAME
-                    , jobNameEquals(detail.getKey().getName()));
+                .addJobListenerMatcher(PinsetterJobListener.LISTENER_NAME,
+                    jobNameEquals(detail.getKey().getName()));
 
             JobStatus status = null;
             try {

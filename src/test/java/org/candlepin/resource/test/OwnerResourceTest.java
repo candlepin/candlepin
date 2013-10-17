@@ -397,18 +397,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     }
 
     @Test(expected = ForbiddenException.class)
-    public void consumerCannotAccessConsumerAtomFeed() {
-        Consumer c = TestUtil.createConsumer(owner);
-        consumerTypeCurator.create(c.getType());
-        consumerCurator.create(c);
-        setupPrincipal(new ConsumerPrincipal(c));
-
-        securityInterceptor.enable();
-
-        ownerResource.getConsumerAtomFeed(owner.getKey(), c.getUuid());
-    }
-
-    @Test(expected = ForbiddenException.class)
     public void consumerCannotListAllConsumersInOwner() {
         Consumer c = TestUtil.createConsumer(owner);
         consumerTypeCurator.create(c.getType());
@@ -531,51 +519,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         ownerResource.getPools(owner.getKey(), c.getUuid(),
             p.getId(), true, null, setupPrincipal(owner2, Access.NONE), null);
-    }
-
-    @Test(expected = ForbiddenException.class)
-    public void ownerCannotAccessAnotherOwnersConsumerAtomFeed() {
-        Owner owner2 = new Owner("anotherOwner");
-        ownerCurator.create(owner2);
-
-        securityInterceptor.enable();
-
-        Event e1 = createConsumerCreatedEvent(owner);
-        Consumer c = consumerCurator.find(e1.getEntityId());
-
-        // Should see no results:
-        setupPrincipal(owner2, Access.ALL);
-        ownerResource.getConsumerAtomFeed(owner.getKey(), c.getUuid());
-    }
-
-    @Test
-    public void consumersAtomFeed() {
-        Owner owner2 = new Owner("anotherOwner");
-        ownerCurator.create(owner2);
-
-        // Make a consumer, we'll look for this creation event:
-        Event e1 = createConsumerCreatedEvent(owner);
-        Consumer c = consumerCurator.find(e1.getEntityId());
-
-        // Make another consumer in this org, we do *not* want to see this in
-        // the results:
-        createConsumerCreatedEvent(owner);
-
-        // Create another consumer in a different org, again do not want to see
-        // this:
-        setupPrincipal(owner2, Access.ALL);
-        // leaving the interceptors off here because consumer types are created
-        // by the test harness, which will fail if the interceptors are turned on
-        createConsumerCreatedEvent(owner2);
-
-        // Make sure we're acting as the correct owner admin:
-        setupPrincipal(owner, Access.ALL);
-        securityInterceptor.enable();
-
-        Feed feed = ownerResource.getConsumerAtomFeed(owner.getKey(), c.getUuid());
-        assertEquals(1, feed.getEntries().size());
-        Entry entry = feed.getEntries().get(0);
-        assertEquals(e1.getTimestamp(), entry.getPublished());
     }
 
     @Test
