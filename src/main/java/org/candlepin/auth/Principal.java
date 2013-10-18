@@ -87,15 +87,30 @@ public abstract class Principal implements Serializable {
         return Util.toJson(this.getData());
     }
 
-    public List<Criterion> getCriteriaRestrictions(Class entityClass) {
+    /**
+     * Assembles all criteria from all permissions. We use an *or* for this, so a principal
+     * could carry permissions for multiple owners (for example), but still have their
+     * results filtered without one of the perms hiding the results from the other.
+     *
+     * @param entityClass Type of object we're querying.
+     * @return All criterion from all permissions or'd together.
+     */
+    public Criterion getCriteriaRestrictions(Class entityClass) {
+        Criterion finalCriterion = null;
         List<Criterion> filters = new LinkedList<Criterion>();
         for (Permission p : permissions) {
             Criterion crit = p.getCriteriaRestrictions(entityClass);
             if (crit != null) {
+                if (finalCriterion == null) {
+                    finalCriterion = crit;
+                }
+                else {
+                    finalCriterion = Restrictions.or(finalCriterion, crit);
+                }
                 filters.add(crit);
             }
         }
-        return filters;
+        return finalCriterion;
     }
 
 }

@@ -22,6 +22,7 @@ import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.OptimisticLockException;
 
+import org.apache.log4j.Logger;
 import org.candlepin.auth.Principal;
 import org.candlepin.exceptions.ConcurrentModificationException;
 import org.candlepin.guice.PrincipalProvider;
@@ -56,7 +57,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     private final Class<E> entityType;
     private int batchSize = 30;
     @Inject private PrincipalProvider principalProvider;
-
+    private static Logger log = Logger.getLogger(AbstractHibernateCurator.class);
 
     protected AbstractHibernateCurator(Class<E> entityType) {
         //entityType = (Class<E>) ((ParameterizedType)
@@ -217,15 +218,24 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         return resultsPage;
     }
 
+    /**
+     * Checks if the current principal has any permisisons which wish to restrict the
+     * results of a query for the entity we're dealing with.
+     * @return Criteria restrictions from principal's permissions.
+     */
     protected Criteria createSecureCriteria() {
         Principal p = principalProvider.get();
-        Criteria c = currentSession().createCriteria(entityType);
-        List<Criterion> filters  = p.getCriteriaRestrictions(entityType);
-        for (Criterion crit : filters) {
-            System.out.println("got filter");
-            c.add(crit);
+        Criteria query = currentSession().createCriteria(entityType);
+        Criterion permissionCrit = p.getCriteriaRestrictions(entityType);
+        if (permissionCrit != null && log.isDebugEnabled()) {
+            log.debug("Got criteria restrictions from permissions for " +
+                entityType + ": " + permissionCrit);
         }
-        return c;
+
+        if (permissionCrit != null) {
+            query.add(permissionCrit);
+        }
+        return query;
     }
 
     @SuppressWarnings("unchecked")
