@@ -294,7 +294,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
     private Criteria criteriaToSelectEntitlementForPool(Pool entitlementPool) {
         return currentSession().createCriteria(Entitlement.class)
-        .add(Restrictions.eq("pool", entitlementPool));
+            .add(Restrictions.eq("pool", entitlementPool));
     }
 
     /**
