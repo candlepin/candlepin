@@ -457,7 +457,6 @@ public class ConsumerResource {
         }
         catch (Exception e) {
             log.error("Problem creating unit:", e);
-            e.printStackTrace();
             throw new BadRequestException(i18n.tr(
                 "Problem creating unit {0}", consumer));
         }
@@ -1788,7 +1787,7 @@ public class ConsumerResource {
         }
 
         if (log.isDebugEnabled()) {
-            log.debug("Generated identity cert: " + idCert.getSerial().getId());
+            log.debug("Generated identity cert: " + idCert.getSerial());
         }
 
         return idCert;

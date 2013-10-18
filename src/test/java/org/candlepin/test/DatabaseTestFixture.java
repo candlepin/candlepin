@@ -214,6 +214,9 @@ public class DatabaseTestFixture {
 
     @After
     public void shutdown() {
+        // We are using a singleton for the principal in tests. Make sure we clear it out
+        // after every test. TestPrincipalProvider controls the default behavior.
+        TestPrincipalProviderSetter.get().setPrincipal(null);
         try {
             injector.getInstance(PersistFilter.class).destroy();
 

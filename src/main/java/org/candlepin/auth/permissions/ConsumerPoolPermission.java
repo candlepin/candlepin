@@ -41,9 +41,6 @@ public class ConsumerPoolPermission extends TypedPermission<Pool> {
         return target.getOwner().getKey().equals(consumer.getOwner().getKey());
     }
 
-    /* (non-Javadoc)
-     * @see org.candlepin.auth.permissions.Permission#getCriteriaRestrictions(java.lang.Class)
-     */
     @Override
     public Criterion getCriteriaRestrictions(Class entityClass) {
         return null;

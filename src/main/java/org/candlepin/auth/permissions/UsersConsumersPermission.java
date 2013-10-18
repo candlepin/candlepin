@@ -49,9 +49,6 @@ public class UsersConsumersPermission extends TypedPermission<Consumer> {
             target.getUsername().equals(user.getUsername()) && providesAccess(action);
     }
 
-    /* (non-Javadoc)
-     * @see org.candlepin.auth.permissions.Permission#getCriteriaRestrictions(java.lang.Class)
-     */
     @Override
     public Criterion getCriteriaRestrictions(Class entityClass) {
         if (entityClass.equals(Consumer.class)) {
