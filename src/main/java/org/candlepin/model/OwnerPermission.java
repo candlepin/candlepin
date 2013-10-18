@@ -29,6 +29,7 @@ import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Index;
 import org.hibernate.criterion.Criterion;
+import org.hibernate.criterion.Restrictions;
 
 /**
  * A permission represents an owner to be accessed in some fashion, and a verb which
@@ -127,11 +128,13 @@ public class OwnerPermission extends AbstractHibernateObject implements Permissi
         this.role = role;
     }
 
-    /* (non-Javadoc)
-     * @see org.candlepin.auth.permissions.Permission#getCriteriaRestrictions(java.lang.Class)
-     */
     @Override
     public Criterion getCriteriaRestrictions(Class entityClass) {
+        if (entityClass.equals(Owner.class)) {
+            return Restrictions.eq("key", owner.getKey());
+        }
+        // TODO: Since this is not a typed permission, it would be good to do some
+        // filtering for other classes here as well;
         return null;
     }
 }

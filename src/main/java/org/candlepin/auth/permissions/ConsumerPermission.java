@@ -39,9 +39,6 @@ public class ConsumerPermission extends TypedPermission<Consumer> {
         return this.consumer.getUuid().equals(target.getUuid());
     }
 
-    /* (non-Javadoc)
-     * @see org.candlepin.auth.permissions.Permission#getCriteriaRestrictions(java.lang.Class)
-     */
     @Override
     public Criterion getCriteriaRestrictions(Class entityClass) {
         return null;

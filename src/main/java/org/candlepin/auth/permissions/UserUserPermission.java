@@ -39,9 +39,6 @@ public class UserUserPermission extends TypedPermission<User> {
         return target.getUsername().equals(username);
     }
 
-    /* (non-Javadoc)
-     * @see org.candlepin.auth.permissions.Permission#getCriteriaRestrictions(java.lang.Class)
-     */
     @Override
     public Criterion getCriteriaRestrictions(Class entityClass) {
         return null;

@@ -43,9 +43,6 @@ public class ConsumerServiceLevelsPermission extends TypedPermission<Owner> {
             action.equals(Access.READ_SERVICE_LEVELS);
     }
 
-    /* (non-Javadoc)
-     * @see org.candlepin.auth.permissions.Permission#getCriteriaRestrictions(java.lang.Class)
-     */
     @Override
     public Criterion getCriteriaRestrictions(Class entityClass) {
         return null;

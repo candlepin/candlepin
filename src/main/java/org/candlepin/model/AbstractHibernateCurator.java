@@ -101,12 +101,12 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      * @return all entities for a particular type.
      */
     public List<E> listAll() {
-        return listByCriteria(DetachedCriteria.forClass(entityType));
+        return listByCriteria(createSecureDetachedCriteria());
     }
 
     public List<E> listAllByIds(Collection<? extends Serializable> ids) {
         return listByCriteria(
-            DetachedCriteria.forClass(entityType).add(Restrictions.in("id", ids)));
+            createSecureDetachedCriteria().add(Restrictions.in("id", ids)));
     }
 
     @SuppressWarnings("unchecked")
@@ -141,10 +141,10 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         Page<List<E>> page = new Page<List<E>>();
 
         if (pageRequest != null) {
-            Criteria count = currentSession().createCriteria(entityType);
+            Criteria count = createSecureCriteria();
             page.setMaxRecords(findRowCount(count));
 
-            Criteria c = currentSession().createCriteria(entityType);
+            Criteria c = createSecureCriteria();
             page.setPageData(loadPageData(c, pageRequest));
             page.setPageRequest(pageRequest);
         }
@@ -226,6 +226,35 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     protected Criteria createSecureCriteria() {
         Principal p = principalProvider.get();
         Criteria query = currentSession().createCriteria(entityType);
+
+        /*
+         * There are situations where consumer queries are run before there is a principal,
+         * i.e. during authentication when we're looking up the consumer itself.
+         */
+        if (p == null) {
+            return query;
+        }
+
+        Criterion permissionCrit = p.getCriteriaRestrictions(entityType);
+        if (permissionCrit != null && log.isDebugEnabled()) {
+            log.debug("Got criteria restrictions from permissions for " +
+                entityType + ": " + permissionCrit);
+        }
+
+        if (permissionCrit != null) {
+            query.add(permissionCrit);
+        }
+        return query;
+    }
+
+    /**
+     * Checks if the current principal has any permisisons which wish to restrict the
+     * results of a query for the entity we're dealing with.
+     * @return Criteria restrictions from principal's permissions.
+     */
+    protected DetachedCriteria createSecureDetachedCriteria() {
+        Principal p = principalProvider.get();
+        DetachedCriteria query = DetachedCriteria.forClass(entityType);
         Criterion permissionCrit = p.getCriteriaRestrictions(entityType);
         if (permissionCrit != null && log.isDebugEnabled()) {
             log.debug("Got criteria restrictions from permissions for " +

@@ -28,7 +28,7 @@ public interface Permission {
      * Permissions have the ability to add restrictions to a hibernate query. This allows
      * us to do things like limit the results from a database query based on the principal,
      * while still allowing the database to do the filtering and use pagination.
-     * @param entity Type of object being queried.
+     * @param entityClass Type of object being queried.
      * @return Restrictions to be added to the criteria. This is handled
      * in the abstract hibernate curator.
      */

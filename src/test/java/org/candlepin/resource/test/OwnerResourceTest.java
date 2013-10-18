@@ -300,7 +300,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertEquals(2, pools.size());
     }
 
-    @Test(expected = ForbiddenException.class)
+    @Test(expected = NotFoundException.class)
     public void ownerAdminCannotAccessAnotherOwnersPools() {
         Owner evilOwner = new Owner("evilowner");
         ownerCurator.create(evilOwner);
@@ -368,7 +368,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertEquals(e1.getTimestamp(), entry.getPublished());
     }
 
-    @Test(expected = ForbiddenException.class)
+    @Test(expected = NotFoundException.class)
     public void ownerCannotAccessAnotherOwnersAtomFeed() {
         Owner owner2 = new Owner("anotherOwner");
         ownerCurator.create(owner2);
@@ -501,7 +501,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertNotNull(returnedPool.getCalculatedAttributes());
     }
 
-    @Test(expected = ForbiddenException.class)
+    @Test(expected = NotFoundException.class)
     public void testConsumerListPoolsCannotAccessOtherConsumer() {
         Product p = TestUtil.createProduct();
         productCurator.create(p);

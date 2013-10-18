@@ -16,13 +16,10 @@ package org.candlepin.auth;
 
 import org.apache.log4j.Logger;
 import org.candlepin.auth.permissions.Permission;
-import org.candlepin.model.Owned;
 import org.candlepin.util.Util;
 import org.hibernate.criterion.Criterion;
-import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
 
-import sun.misc.Perf.GetPerfAction;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -97,6 +94,12 @@ public abstract class Principal implements Serializable {
      */
     public Criterion getCriteriaRestrictions(Class entityClass) {
         Criterion finalCriterion = null;
+
+        // Admins do not need query filtering enabled.
+        if (hasFullAccess()) {
+            return finalCriterion;
+        }
+
         List<Criterion> filters = new LinkedList<Criterion>();
         for (Permission p : permissions) {
             Criterion crit = p.getCriteriaRestrictions(entityClass);
