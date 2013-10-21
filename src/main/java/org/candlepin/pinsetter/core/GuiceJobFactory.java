@@ -23,7 +23,6 @@ import org.quartz.spi.TriggerFiredBundle;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import com.google.inject.persist.UnitOfWork;
 
 /**
  * GuiceJobFactory is a custom Quartz JobFactory implementation which

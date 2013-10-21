@@ -24,9 +24,7 @@ import org.apache.log4j.MDC;
 import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.PinsetterJobListener;
 import org.candlepin.pinsetter.core.model.JobStatus;
-import org.candlepin.util.Util;
 import org.quartz.Job;
-import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -35,7 +33,6 @@ import org.quartz.SchedulerException;
 import org.quartz.Trigger;
 
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 import com.google.inject.persist.UnitOfWork;
 
 /**
@@ -57,58 +54,59 @@ public abstract class CpJob implements Job {
 
         // Store the job's unique ID in log4j's thread local MDC, which will automatically
         // add it to all log entries executed for this job.
-        MDC.put("requestType", "job");
-        MDC.put("requestUuid", context.getJobDetail().getKey().getName());
+        try {
+            MDC.put("requestType", "job");
+            MDC.put("requestUuid", context.getJobDetail().getKey().getName());
+        }
+        catch (NullPointerException npe) {
+            //this can occur in testing
+        }
 
         /*
          * Execute our 'real' job inside a custom unit of work scope, instead
          * of the guice provided one, which is http request scoped.
          */
-        if (unitOfWork != null) {
-            unitOfWork.begin();
-            try {
-                toExecute(context);
-            }
-            catch (PersistenceException e) {
-                // Multiple refreshpools running at once can cause the following:
-                // one job attempts to delete a pool that was deleted by another job
-                // one job attempts to add a pool that was already added
-                // one job attempts to update a pool that was already updated
-                // all 3 of these conditions will cause some form of JPA/hibernate
-                // exception to bubble up.  the exception seems to vary based on the
-                // underlying db, so just catch the toplevel  exception. We then
-                // throw an exception that will let pinsetter/quartz know  that
-                // there was a race condition detected, and get it to reschedule
-                // the job. the other job will have completed successfully, and
-                // this one can then run (and possibly use new information, which
-                // is why there could be two jobs in the queue for  the same owner).
-                //
-                // I guess if other jobs fail its ok to restart them, too?
-                // note that we have to catch at this level rather than inside the
-                // job for any update collisions, which will only be detected
-                // on commit.
-
-                throw new JobExecutionException(e, true);
-            }
-            finally {
-                unitOfWork.end();
-            }
-        }
-        else {
+        startUnitOfWork();
+        try {
             toExecute(context);
+        }
+        catch (PersistenceException e) {
+            // Multiple refreshpools running at once can cause the following:
+            // one job attempts to delete a pool that was deleted by another job
+            // one job attempts to add a pool that was already added
+            // one job attempts to update a pool that was already updated
+            // all 3 of these conditions will cause some form of JPA/hibernate
+            // exception to bubble up.  the exception seems to vary based on the
+            // underlying db, so just catch the toplevel  exception. We then
+            // throw an exception that will let pinsetter/quartz know  that
+            // there was a race condition detected, and get it to reschedule
+            // the job. the other job will have completed successfully, and
+            // this one can then run (and possibly use new information, which
+            // is why there could be two jobs in the queue for  the same owner).
+            //
+            // I guess if other jobs fail its ok to restart them, too?
+            // note that we have to catch at this level rather than inside the
+            // job for any update collisions, which will only be detected
+            // on commit.
+
+            throw new JobExecutionException(e, true);
+        }
+        finally {
+            endUnitOfWork();
         }
     }
 
     /**
      * Method for actual execution, execute handles unitOfWork for us
      * @param context
-     * @throws JobExecutionException
+     * @throws JobExecutionException if there's a problem executing the job
      */
-    public abstract void toExecute(JobExecutionContext context) throws JobExecutionException;
+    public abstract void toExecute(JobExecutionContext context)
+        throws JobExecutionException;
 
     public static JobStatus scheduleJob(JobCurator jobCurator,
             Scheduler scheduler, JobDetail detail,
-            Trigger trigger, Injector injector) throws SchedulerException {
+            Trigger trigger) throws SchedulerException {
 
         scheduler.getListenerManager().addJobListenerMatcher(
             PinsetterJobListener.LISTENER_NAME,
@@ -116,7 +114,7 @@ public abstract class CpJob implements Job {
 
         JobStatus status = null;
         try {
-            status = jobCurator.create(new JobStatus(detail));
+            status = jobCurator.create(new JobStatus(detail, trigger == null));
         }
         catch (EntityExistsException e) {
             // status exists, let's update it
@@ -132,5 +130,35 @@ public abstract class CpJob implements Job {
             scheduler.addJob(detail, false);
         }
         return status;
+    }
+
+    public static boolean isSchedulable(JobCurator jobCurator, JobStatus status) {
+        return true;
+    }
+
+    protected void startUnitOfWork() {
+        if (unitOfWork != null) {
+            try {
+                unitOfWork.begin();
+            }
+            catch (IllegalStateException e) {
+                log.debug("Already have an open unit of work, " +
+                    "will close and start a new one");
+                endUnitOfWork();
+                startUnitOfWork();
+            }
+        }
+    }
+
+    protected void endUnitOfWork() {
+        if (unitOfWork != null) {
+            try {
+                unitOfWork.end();
+            }
+            catch (IllegalStateException e) {
+                log.debug("Unit of work is already closed, doing nothing");
+                //If there is no active unit of work, there is no reason to close it
+            }
+        }
     }
 }

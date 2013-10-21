@@ -25,7 +25,6 @@ import org.candlepin.util.Util;
 import com.google.inject.Inject;
 import com.google.inject.persist.UnitOfWork;
 
-import org.quartz.Job;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;

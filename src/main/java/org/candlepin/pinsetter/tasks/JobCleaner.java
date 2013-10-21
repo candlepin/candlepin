@@ -18,7 +18,6 @@ import java.util.Date;
 
 import org.candlepin.model.JobCurator;
 import org.candlepin.util.Util;
-import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 

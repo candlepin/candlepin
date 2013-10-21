@@ -32,7 +32,6 @@ import org.candlepin.util.PropertyUtil;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
 import org.apache.log4j.Logger;
@@ -73,7 +72,6 @@ public class PinsetterKernel {
     private Scheduler scheduler;
     private Config config;
     private JobCurator jobCurator;
-    private Injector injector;
 
     /**
      * Kernel main driver behind Pinsetter
@@ -84,11 +82,10 @@ public class PinsetterKernel {
     @Inject
     public PinsetterKernel(Config conf, JobFactory jobFactory,
         JobListener listener, JobCurator jobCurator,
-        StdSchedulerFactory fact, Injector injector) throws InstantiationException {
+        StdSchedulerFactory fact) throws InstantiationException {
 
         this.config = conf;
         this.jobCurator = jobCurator;
-        this.injector = injector;
 
         Properties props = config.getNamespaceProperties("org.quartz");
 
@@ -332,14 +329,18 @@ public class PinsetterKernel {
         try {
             JobStatus status = (JobStatus) (detail.getJobClass()
                 .getMethod("scheduleJob", JobCurator.class,
-                    Scheduler.class, JobDetail.class, Trigger.class, Injector.class)
-                .invoke(null, jobCurator, scheduler, detail, trigger, injector));
+                    Scheduler.class, JobDetail.class, Trigger.class)
+                .invoke(null, jobCurator, scheduler, detail, trigger));
 
             if (log.isDebugEnabled()) {
                 log.debug("Scheduled " + detailImpl.getFullName());
             }
 
             return status;
+        }
+        catch (NullPointerException npe) {
+            log.debug("CAKO " + npe.getMessage() + " " + npe.getCause());
+            throw npe;
         }
         catch (Exception e) {
             log.error("There was a problem scheduling " +
@@ -377,6 +378,14 @@ public class PinsetterKernel {
             .build();
 
         return scheduleJob(jobDetail, SINGLE_JOB_GROUP, trigger);
+    }
+
+    public void addTrigger(JobStatus status) throws SchedulerException {
+        Trigger trigger = newTrigger()
+            .withIdentity(status.getId() + " trigger", SINGLE_JOB_GROUP)
+            .forJob(status.getJobKey())
+            .build();
+        scheduler.scheduleJob(trigger);
     }
 
     public boolean getSchedulerStatus() throws PinsetterException {

@@ -30,7 +30,6 @@ import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -52,7 +51,7 @@ public class EntitlerJob extends CpJob {
     public void toExecute(JobExecutionContext ctx) throws JobExecutionException {
         try {
             JobDataMap map = ctx.getMergedJobDataMap();
-            Integer qty = map.getInt("quantity");
+            Integer qty = (Integer) map.get("quantity");
             String uuid = (String) map.get(JobStatus.TARGET_ID);
 
             String poolId = map.getString("pool_id");

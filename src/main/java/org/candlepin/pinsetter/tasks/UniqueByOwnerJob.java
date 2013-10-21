@@ -21,7 +21,6 @@ import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
 
-import com.google.inject.Injector;
 import com.google.inject.persist.UnitOfWork;
 
 /**
@@ -36,47 +35,27 @@ public abstract class UniqueByOwnerJob extends CpJob {
     @SuppressWarnings("unchecked")
     public static JobStatus scheduleJob(JobCurator jobCurator,
         Scheduler scheduler, JobDetail detail,
-        Trigger trigger, Injector injector) throws SchedulerException {
-
-        UnitOfWork uow = injector.getInstance(UnitOfWork.class);
-        try
-        {
-        uow.end();
-        uow.begin();
-        } catch (Exception e) {
-            log.debug("CAKO error: "+e.getMessage(), e);
+        Trigger trigger) throws SchedulerException {
+        JobStatus result = jobCurator.getLatestByClassAndOwner(
+            detail.getJobDataMap().getString(JobStatus.TARGET_ID),
+            (Class<? extends CpJob>) detail.getJobClass());
+        if (result == null) {
+            return CpJob.scheduleJob(jobCurator, scheduler, detail, trigger);
         }
-
-        try {
-            JobStatus result = jobCurator.getLatestByClassAndOwner(
-                detail.getJobDataMap().getString(JobStatus.TARGET_ID),
-                (Class<? extends CpJob>) detail.getJobClass());
-            if (result == null){
-                log.debug("CAKO scheduling a new job");
-                return CpJob.scheduleJob(jobCurator, scheduler, detail, trigger, injector);
-            }
-            jobCurator.lockAndLoad(result);
-            if (result.getState() == JobStatus.JobState.PENDING ||
-                result.getState() == JobStatus.JobState.CREATED) {
-                log.debug("CAKO returning existing job");
-                return result;
-            }
-            if (result.getBlockingJob() != null) {
-                log.debug("CAKO this is awkward ========================================");
-                //we're in a state where there isn't anything queued, however the running job thinks it's blocking something
-                //with proper locking this shouldn't be necessary
-    
-                //return jobCurator.find(result.getBlockingJob());
-                return null;
-            }
-            result.setBlockingJob(detail.getKey().getName());
-            log.debug("CAKO scheduling a job without a trigger");
-            JobStatus status = CpJob.scheduleJob(jobCurator, scheduler, detail, null, injector);
-            return status;
-            }
-        finally {
-            uow.end();
-            uow.begin();
+        if (result.getState() == JobStatus.JobState.PENDING ||
+            result.getState() == JobStatus.JobState.CREATED ||
+            result.getState() == JobStatus.JobState.WAITING) {
+            log.debug("Returning existing job id: " + result.getId());
+            return result;
         }
+        log.debug("Scheduling job without a trigger: " + detail.getKey().getName());
+        JobStatus status = CpJob.scheduleJob(jobCurator, scheduler, detail, null);
+        return status;
+    }
+
+    public static boolean isSchedulable(JobCurator jobCurator, JobStatus status) {
+        int running = jobCurator.findNumRunningByOwnerAndClass(
+            status.getTargetId(), status.getJobClass());
+        return running == 0;  //We can start the job if there are 0 like it running
     }
 }

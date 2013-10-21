@@ -46,7 +46,8 @@ public class RegenEntitlementCertsJobTest {
         when(jec.getJobDetail()).thenReturn(detail);
 
         // test
-        RegenProductEntitlementCertsJob recj = new RegenProductEntitlementCertsJob(pm);
+        RegenProductEntitlementCertsJob recj =
+            new RegenProductEntitlementCertsJob(pm, null);
         recj.execute(jec);
 
         // verification

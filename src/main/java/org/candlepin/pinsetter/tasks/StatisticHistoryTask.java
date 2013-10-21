@@ -21,7 +21,6 @@ import com.google.inject.persist.UnitOfWork;
 
 import org.apache.log4j.Logger;
 import org.hibernate.HibernateException;
-import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 

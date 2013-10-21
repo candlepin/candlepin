@@ -14,7 +14,6 @@
  */
 package org.candlepin.pinsetter.tasks;
 
-import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 

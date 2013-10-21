@@ -22,7 +22,6 @@ import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.CrlGenerator;
 import org.candlepin.util.CrlFileUtil;
-import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 

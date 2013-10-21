@@ -67,8 +67,8 @@ public class HealEntireOrgJob extends UniqueByOwnerJob {
                 String consumerUuid = c.getUuid();
                 // Do not send in product ids.  CandlepinPoolManager will take care
                 // of looking up the non or partially compliant products to bind.
-                
-                //unitOfWork.begin();
+
+                startUnitOfWork();
                 try {
                     Consumer consumer = consumerCurator.getConsumer(consumerUuid);
                     List<Entitlement> ents = entitler.bindByProducts(null, consumer,
@@ -82,7 +82,7 @@ public class HealEntireOrgJob extends UniqueByOwnerJob {
                         " with message: " + e.getMessage());
                 }
                 finally {
-                    //unitOfWork.end();
+                    endUnitOfWork();
                 }
             }
         }
@@ -99,7 +99,6 @@ public class HealEntireOrgJob extends UniqueByOwnerJob {
         map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.OWNER);
         map.put(JobStatus.TARGET_ID, ownerId);
         map.put("entitle_date", entitleDate);
-        //map.put("statusId", prefix + Util.generateUUID());
         JobDetail detail = newJob(HealEntireOrgJob.class)
             .withIdentity("heal_entire_org_" + Util.generateUUID())
             .usingJobData(map)

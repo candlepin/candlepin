@@ -51,7 +51,7 @@ public class CancelJobJobTest {
     @Before
     public void init() {
         MockitoAnnotations.initMocks(this);
-        cancelJobJob = new CancelJobJob(j, pk);
+        cancelJobJob = new CancelJobJob(j, pk, null);
     }
 
     @Test

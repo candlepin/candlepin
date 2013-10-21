@@ -14,18 +14,11 @@
  */
 package org.candlepin.pinsetter.core;
 
-import static org.quartz.TriggerBuilder.newTrigger;
-
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-
 import org.apache.log4j.Logger;
 import org.candlepin.auth.Principal;
 import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.pinsetter.core.model.JobStatus.JobState;
-import org.candlepin.pinsetter.tasks.HealEntireOrgJob;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -34,20 +27,14 @@ import com.google.inject.persist.UnitOfWork;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
-import org.quartz.JobKey;
 import org.quartz.JobListener;
-import org.quartz.Scheduler;
-import org.quartz.SchedulerException;
-import org.quartz.Trigger;
-import org.quartz.listeners.JobChainingJobListener;
 
 /**
  * This component receives events around job status and performs actions to
  * allow for the job in question to run outside of a request scope, as well as
  * record the status of the job for later retreival.
  */
-//public class PinsetterJobListener implements JobListener {
-public class PinsetterJobListener extends JobChainingJobListener {
+public class PinsetterJobListener implements JobListener {
     private static Logger log = Logger.getLogger(PinsetterJobListener.class);
 
     public static final String LISTENER_NAME = "Pinsetter Job Listener";
@@ -62,7 +49,6 @@ public class PinsetterJobListener extends JobChainingJobListener {
 
     @Inject
     public PinsetterJobListener(JobCurator curator, UnitOfWork unitOfWork) {
-        super("PinsetterJobListener");
         this.curator = curator;
         this.unitOfWork = unitOfWork;
     }
@@ -118,10 +104,8 @@ public class PinsetterJobListener extends JobChainingJobListener {
 
     @Transactional
     private void updateJob(JobExecutionContext ctx, JobExecutionException exc) {
-        //JobStatus status = curator.find(ctx.getJobDetail().getKey().getName());
-        JobStatus status = curator.getById(ctx.getJobDetail().getKey().getName());
+        JobStatus status = curator.find(ctx.getJobDetail().getKey().getName());
         if (status != null) {
-            status = curator.lockAndLoad(status);
             if (exc != null) {
                 log.error("Job [" + status.getId() + "] failed." , exc);
                 status.setState(JobState.FAILED);
@@ -129,22 +113,6 @@ public class PinsetterJobListener extends JobChainingJobListener {
             }
             else {
                 status.update(ctx);
-            }
-            if (status.getBlockingJob() != null &&
-                    (status.getState() == JobState.FAILED ||
-                    status.getState() == JobState.FINISHED ||
-                    status.getState() == JobState.CANCELED)) {
-                Trigger trigger = newTrigger()
-                    .forJob(new JobKey(status.getBlockingJob(), status.getJobKey().getGroup()))
-                    .withIdentity(status.getBlockingJob() + " trigger", status.getGroup())
-                    .build();
-                try {
-                    ctx.getScheduler().scheduleJob(trigger);
-                    log.debug("CAKO scheduling existing job");
-                }
-                catch (SchedulerException e) {
-                    log.error("CAKO failed to start blocked job " + status.getBlockingJob() + "due to " + e.getMessage(), e);
-                }
             }
             curator.merge(status);
         }

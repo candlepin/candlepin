@@ -30,7 +30,7 @@ import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
- 
+
 /**
  * Asynchronous job for refreshing the entitlement pools for specific
  * {@link Owner}.
@@ -96,7 +96,6 @@ public class RefreshPoolsJob extends UniqueByOwnerJob {
         map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.OWNER);
         map.put(JobStatus.TARGET_ID, owner.getKey());
         map.put(LAZY_REGEN, lazy);
-        //map.put("statusId", prefix + Util.generateUUID());
 
         // Not sure if this is the best way to go:
         // Give each job a UUID to ensure that it is unique

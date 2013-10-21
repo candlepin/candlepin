@@ -20,7 +20,6 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import javax.persistence.Version;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -30,7 +29,6 @@ import org.candlepin.auth.Principal;
 import org.candlepin.model.AbstractHibernateObject;
 import org.candlepin.pinsetter.core.PinsetterJobListener;
 import org.candlepin.pinsetter.tasks.CpJob;
-import org.candlepin.util.Util;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
@@ -51,6 +49,7 @@ public class JobStatus extends AbstractHibernateObject {
      */
     public enum JobState {
         CREATED,
+        WAITING,
         PENDING,
         RUNNING,
         FINISHED,
@@ -84,18 +83,22 @@ public class JobStatus extends AbstractHibernateObject {
     @Column(length = 255)
     private Class<? extends CpJob> jobClass;
 
-    @Column(length = 255)
-    private String blockingJob;
-
-    @Version
-    private int version;
-
     public JobStatus() { }
 
     public JobStatus(JobDetail jobDetail) {
         this.id = jobDetail.getKey().getName();
         this.jobGroup = jobDetail.getKey().getGroup();
         this.state = JobState.CREATED;
+        this.targetType = getTargetType(jobDetail);
+        this.targetId = getTargetId(jobDetail);
+        this.principalName = getPrincipalName(jobDetail);
+        this.jobClass = getJobClass(jobDetail);
+    }
+
+    public JobStatus(JobDetail jobDetail, boolean waiting) {
+        this.id = jobDetail.getKey().getName();
+        this.jobGroup = jobDetail.getKey().getGroup();
+        this.state = waiting ? JobState.WAITING : JobState.CREATED;
         this.targetType = getTargetType(jobDetail);
         this.targetId = getTargetId(jobDetail);
         this.principalName = getPrincipalName(jobDetail);
@@ -212,14 +215,5 @@ public class JobStatus extends AbstractHibernateObject {
     @XmlTransient
     public JobKey getJobKey() {
         return new JobKey(this.getId(), this.getGroup());
-    }
-
-    @XmlTransient
-    public String getBlockingJob() {
-        return blockingJob;
-    }
-
-    public void setBlockingJob(String blockingJob) {
-        this.blockingJob = blockingJob;
     }
 }

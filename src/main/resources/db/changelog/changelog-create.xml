@@ -1136,6 +1136,4 @@
     <include file="db/changelog/20130912153356-create-import-upstream-consumer.xml" />
     <include file="db/changelog/20130920132949-add-delete-cascade-pool-products.xml" />
     <include file="db/changelog/20131007121855-add_class_to_jobstatus.xml" />
-    <include file="db/changelog/20131007170338-add_blockingJob_to_jobstatus.xml" />
-    <include file="db/changelog/20131008115504-add_version_to_job_status.xml" />
 </databaseChangeLog>
