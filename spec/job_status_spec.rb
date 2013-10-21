@@ -38,12 +38,25 @@ describe 'Job Status' do
 
   it 'should be findable by owner key' do
     jobs = []
-    3.times { jobs << @cp.refresh_pools(@owner['key'], true) }
+    3.times {
+        jobs << @cp.refresh_pools(@owner['key'], true)
+        finish_job(jobs[-1])
+    }
 
     @cp.list_jobs(@owner['key']).length.should == 3
+  end
 
+  it 'should get duplicate refresh pools jobs back' do
+  # This is a weird one.  If we schedule multiple refresh jobs
+  # in very quick succession, we should get the same handle for some
+  # because they block the next job
+    jobs = []
+    10.times { jobs << @cp.refresh_pools(@owner['key'], true) }
+    status_len = @cp.list_jobs(@owner['key']).length
+    status_len.should < 10
+    status_len.should > 1
     jobs.each do |job|
-      finish_job(job)
+        finish_job(job)
     end
   end
 
@@ -53,14 +66,18 @@ describe 'Job Status' do
 
     jobs = []
     # Just some random numbers here
-    6.times { jobs << @cp.refresh_pools(owner2['key'], true) }
-    4.times { jobs << @cp.refresh_pools(@owner['key'], true) }
+    4.times {
+        jobs << @cp.refresh_pools(owner2['key'], true)
+        jobs << @cp.refresh_pools(@owner['key'], true)
+        finish_job(jobs[-1])
+        finish_job(jobs[-2])
+    }
+    2.times {
+        jobs << @cp.refresh_pools(owner2['key'], true)
+        finish_job(jobs[-1])
+    }
 
     @cp.list_jobs(@owner['key']).length.should == 4
-
-    jobs.each do |job|
-      finish_job(job)
-    end
   end
 
   it 'should find an empty list if the owner key is wrong' do
