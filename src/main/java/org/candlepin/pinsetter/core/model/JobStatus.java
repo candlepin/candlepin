@@ -28,7 +28,7 @@ import javax.xml.bind.annotation.XmlTransient;
 import org.candlepin.auth.Principal;
 import org.candlepin.model.AbstractHibernateObject;
 import org.candlepin.pinsetter.core.PinsetterJobListener;
-import org.candlepin.pinsetter.tasks.CpJob;
+import org.candlepin.pinsetter.tasks.KingpinJob;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
@@ -81,7 +81,7 @@ public class JobStatus extends AbstractHibernateObject {
     private String targetId;
 
     @Column(length = 255)
-    private Class<? extends CpJob> jobClass;
+    private Class<? extends KingpinJob> jobClass;
 
     public JobStatus() { }
 
@@ -120,8 +120,8 @@ public class JobStatus extends AbstractHibernateObject {
     }
 
     @SuppressWarnings("unchecked")
-    private Class<? extends CpJob> getJobClass(JobDetail jobDetail) {
-        return (Class<? extends CpJob>) jobDetail.getJobClass();
+    private Class<? extends KingpinJob> getJobClass(JobDetail jobDetail) {
+        return (Class<? extends KingpinJob>) jobDetail.getJobClass();
     }
 
     public void update(JobExecutionContext context) {
@@ -208,7 +208,7 @@ public class JobStatus extends AbstractHibernateObject {
     }
 
     @XmlTransient
-    public Class<? extends CpJob> getJobClass() {
+    public Class<? extends KingpinJob> getJobClass() {
         return jobClass;
     }
 

@@ -33,7 +33,7 @@ import org.quartz.JobExecutionException;
 /**
  * RefreshPoolsForProductJob
  */
-public class RefreshPoolsForProductJob extends CpJob {
+public class RefreshPoolsForProductJob extends KingpinJob {
 
     private ProductServiceAdapter productAdapter;
     private PoolManager poolManager;

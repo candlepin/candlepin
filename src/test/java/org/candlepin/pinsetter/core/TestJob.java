@@ -14,7 +14,7 @@
  */
 package org.candlepin.pinsetter.core;
 
-import org.candlepin.pinsetter.tasks.CpJob;
+import org.candlepin.pinsetter.tasks.KingpinJob;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
@@ -25,7 +25,7 @@ import com.google.inject.persist.UnitOfWork;
  * TestJob
  * @version $Rev$
  */
-public class TestJob extends CpJob {
+public class TestJob extends KingpinJob {
 
     private boolean ran = false;
 

@@ -31,7 +31,7 @@ import com.google.inject.persist.UnitOfWork;
 /**
  * CancelJobJob
  */
-public class CancelJobJob extends CpJob {
+public class CancelJobJob extends KingpinJob {
 
     private static Logger log = Logger.getLogger(CancelJobJob.class);
     public static final String DEFAULT_SCHEDULE = "0/5 * * * * ?"; //every five seconds

@@ -35,7 +35,7 @@ import com.google.inject.persist.UnitOfWork;
 /**
  * EntitleByProductsJob
  */
-public class EntitleByProductsJob extends CpJob {
+public class EntitleByProductsJob extends KingpinJob {
 
     protected Entitler entitler;
     protected ConsumerCurator consumerCurator;

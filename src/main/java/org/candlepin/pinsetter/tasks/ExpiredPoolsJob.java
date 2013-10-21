@@ -30,7 +30,7 @@ import org.quartz.JobExecutionException;
  * done on a scheduled basis to make sure we re-source derived pools if the stack has
  * other still valid entitlements.
  */
-public class ExpiredPoolsJob extends CpJob {
+public class ExpiredPoolsJob extends KingpinJob {
 
     // Every 4 hours:
     public static final String DEFAULT_SCHEDULE = "0 0 0/4 * * ?";

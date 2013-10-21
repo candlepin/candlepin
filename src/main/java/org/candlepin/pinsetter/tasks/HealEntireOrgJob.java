@@ -55,7 +55,7 @@ public class HealEntireOrgJob extends UniqueByOwnerJob {
     }
 
     @Override
-    public void toExecute(JobExecutionContext ctx) throws JobExecutionException {
+    public void execute(JobExecutionContext ctx) throws JobExecutionException {
         try {
             JobDataMap map = ctx.getMergedJobDataMap();
             String ownerId = (String) map.get("ownerId");

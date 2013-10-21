@@ -27,7 +27,7 @@ import org.quartz.JobExecutionException;
 /**
  * StatisticHistoryTask.
  */
-public class StatisticHistoryTask extends CpJob {
+public class StatisticHistoryTask extends KingpinJob {
 
     public static final String DEFAULT_SCHEDULE = "0 0 1 * * ?"; // run every
                                                                  // day at 1 AM

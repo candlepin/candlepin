@@ -31,14 +31,14 @@ import com.google.inject.persist.UnitOfWork;
 /**
  * StartWaitingJobJob
  */
-public class StartWaitingJobJob extends CpJob {
+public class UnpauseJob extends KingpinJob {
     private static Logger log = Logger.getLogger(CancelJobJob.class);
     public static final String DEFAULT_SCHEDULE = "0/5 * * * * ?"; //every five seconds
     private JobCurator jobCurator;
     private PinsetterKernel pinsetterKernel;
 
     @Inject
-    public StartWaitingJobJob(JobCurator jobCurator,
+    public UnpauseJob(JobCurator jobCurator,
             PinsetterKernel pinsetterKernel, UnitOfWork unitOfWork) {
         super(unitOfWork);
         this.jobCurator = jobCurator;

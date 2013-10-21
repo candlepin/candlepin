@@ -35,7 +35,7 @@ import java.util.List;
 /**
  * EntitlerJob
  */
-public class EntitlerJob extends CpJob {
+public class EntitlerJob extends KingpinJob {
 
     protected Entitler entitler;
     protected ConsumerCurator consumerCurator;

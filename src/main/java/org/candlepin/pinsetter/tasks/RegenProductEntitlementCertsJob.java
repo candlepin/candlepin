@@ -25,7 +25,7 @@ import org.candlepin.controller.PoolManager;
 /**
  * The Class RegenEntitlementCertsJob.
  */
-public class RegenProductEntitlementCertsJob extends CpJob {
+public class RegenProductEntitlementCertsJob extends KingpinJob {
 
     private PoolManager poolManager;
     public static final String PROD_ID = "product_id";

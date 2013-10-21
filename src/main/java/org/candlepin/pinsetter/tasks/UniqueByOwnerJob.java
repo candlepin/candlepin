@@ -26,7 +26,7 @@ import com.google.inject.persist.UnitOfWork;
 /**
  * UniqueByOwnerJob
  */
-public abstract class UniqueByOwnerJob extends CpJob {
+public abstract class UniqueByOwnerJob extends KingpinJob {
 
     public UniqueByOwnerJob(UnitOfWork unitOfWork) {
         super(unitOfWork);
@@ -38,9 +38,9 @@ public abstract class UniqueByOwnerJob extends CpJob {
         Trigger trigger) throws SchedulerException {
         JobStatus result = jobCurator.getLatestByClassAndOwner(
             detail.getJobDataMap().getString(JobStatus.TARGET_ID),
-            (Class<? extends CpJob>) detail.getJobClass());
+            (Class<? extends KingpinJob>) detail.getJobClass());
         if (result == null) {
-            return CpJob.scheduleJob(jobCurator, scheduler, detail, trigger);
+            return KingpinJob.scheduleJob(jobCurator, scheduler, detail, trigger);
         }
         if (result.getState() == JobStatus.JobState.PENDING ||
             result.getState() == JobStatus.JobState.CREATED ||
@@ -49,7 +49,7 @@ public abstract class UniqueByOwnerJob extends CpJob {
             return result;
         }
         log.debug("Scheduling job without a trigger: " + detail.getKey().getName());
-        JobStatus status = CpJob.scheduleJob(jobCurator, scheduler, detail, null);
+        JobStatus status = KingpinJob.scheduleJob(jobCurator, scheduler, detail, null);
         return status;
     }
 

@@ -31,7 +31,7 @@ import org.candlepin.model.Environment;
  * Regenerates entitlements within an environment which are affected by the
  * promotion/demotion of the given content sets.
  */
-public class RegenEnvEntitlementCertsJob extends CpJob {
+public class RegenEnvEntitlementCertsJob extends KingpinJob {
 
     private PoolManager poolManager;
     public static final String ENV = "env_id";

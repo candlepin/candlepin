@@ -27,7 +27,7 @@ import com.google.inject.persist.UnitOfWork;
 /**
  * JobCleaner
  */
-public class JobCleaner extends CpJob {
+public class JobCleaner extends KingpinJob {
 
     private JobCurator jobCurator;
     public static final String DEFAULT_SCHEDULE = "0 0 12 * * ?";

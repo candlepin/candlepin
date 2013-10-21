@@ -34,7 +34,7 @@ import java.security.cert.X509CRL;
 /**
  * CertificateRevocationListTask.
  */
-public class CertificateRevocationListTask extends CpJob {
+public class CertificateRevocationListTask extends KingpinJob {
 
     public static final String DEFAULT_SCHEDULE = "0 0 12 * * ?";
 

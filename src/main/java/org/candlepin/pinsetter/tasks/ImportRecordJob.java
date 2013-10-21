@@ -29,7 +29,7 @@ import org.quartz.JobExecutionException;
 /**
  *
  */
-public class ImportRecordJob extends CpJob {
+public class ImportRecordJob extends KingpinJob {
 
     public static final String DEFAULT_SCHEDULE = "0 0 12 * * ?";
 

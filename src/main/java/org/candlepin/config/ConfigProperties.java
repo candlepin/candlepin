@@ -24,7 +24,7 @@ import org.candlepin.pinsetter.tasks.CertificateRevocationListTask;
 import org.candlepin.pinsetter.tasks.ExpiredPoolsJob;
 import org.candlepin.pinsetter.tasks.ImportRecordJob;
 import org.candlepin.pinsetter.tasks.JobCleaner;
-import org.candlepin.pinsetter.tasks.StartWaitingJobJob;
+import org.candlepin.pinsetter.tasks.UnpauseJob;
 import org.candlepin.pinsetter.tasks.StatisticHistoryTask;
 
 /**
@@ -76,7 +76,7 @@ public class ConfigProperties {
         JobCleaner.class.getName(), ImportRecordJob.class.getName(),
         StatisticHistoryTask.class.getName(),
         CancelJobJob.class.getName(), ExpiredPoolsJob.class.getName(),
-        StartWaitingJobJob.class.getName()};
+        UnpauseJob.class.getName()};
 
     public static final String SYNC_WORK_DIR = "candlepin.sync.work_dir";
     public static final String CONSUMER_FACTS_MATCHER =

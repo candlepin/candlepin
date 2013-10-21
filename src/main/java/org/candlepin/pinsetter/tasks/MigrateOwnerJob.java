@@ -63,7 +63,7 @@ import javax.ws.rs.core.Response.Status;
  * flag that indicates whether the original owner should be deleted once
  * migration has occurred.
  */
-public class MigrateOwnerJob extends CpJob {
+public class MigrateOwnerJob extends KingpinJob {
     private static Logger log = Logger.getLogger(MigrateOwnerJob.class);
 
     private OwnerCurator ownerCurator;

@@ -18,7 +18,7 @@ import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.pinsetter.core.model.JobStatus.JobState;
 import org.candlepin.pinsetter.core.model.JobStatus.TargetType;
-import org.candlepin.pinsetter.tasks.CpJob;
+import org.candlepin.pinsetter.tasks.KingpinJob;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
@@ -100,9 +100,7 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
     }
 
     public int findNumRunningByOwnerAndClass(
-            String ownerKey, Class<? extends CpJob> jobClass) {
-        //Perhaps this should be much more general, and get criterion from the jobClass
-        //definitely should move if we come up with more complex unique job types
+            String ownerKey, Class<? extends KingpinJob> jobClass) {
         return (Integer) this.currentSession().createCriteria(JobStatus.class)
             .add(Restrictions.eq("state", JobState.RUNNING))
             .add(Restrictions.eq("targetId", ownerKey))
@@ -112,7 +110,7 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
     }
 
     public JobStatus getLatestByClassAndOwner(
-            String ownerKey, Class<? extends CpJob> jobClass) {
+            String ownerKey, Class<? extends KingpinJob> jobClass) {
         DetachedCriteria maxCreated = DetachedCriteria.forClass(JobStatus.class)
             .add(Restrictions.ne("state", JobState.FINISHED))
             .add(Restrictions.ne("state", JobState.FAILED))

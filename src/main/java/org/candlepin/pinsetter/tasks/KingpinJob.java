@@ -38,14 +38,14 @@ import com.google.inject.persist.UnitOfWork;
 /**
  * CpJob
  */
-public abstract class CpJob implements Job {
+public abstract class KingpinJob implements Job {
 
-    protected static Logger log = Logger.getLogger(CpJob.class);
+    protected static Logger log = Logger.getLogger(KingpinJob.class);
     protected UnitOfWork unitOfWork;
     protected static String prefix = "job";
 
     @Inject
-    public CpJob(UnitOfWork unitOfWork) {
+    public KingpinJob(UnitOfWork unitOfWork) {
         this.unitOfWork = unitOfWork;
     }
 
@@ -101,8 +101,9 @@ public abstract class CpJob implements Job {
      * @param context
      * @throws JobExecutionException if there's a problem executing the job
      */
-    public abstract void toExecute(JobExecutionContext context)
-        throws JobExecutionException;
+    public void toExecute(JobExecutionContext context)
+        throws JobExecutionException {
+    }
 
     public static JobStatus scheduleJob(JobCurator jobCurator,
             Scheduler scheduler, JobDetail detail,
