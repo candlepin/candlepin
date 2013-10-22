@@ -49,12 +49,12 @@ public class JobStatus extends AbstractHibernateObject {
      */
     public enum JobState {
         CREATED,
-        WAITING,
         PENDING,
         RUNNING,
         FINISHED,
         CANCELED,
-        FAILED;
+        FAILED,
+        WAITING;
     }
 
     /**

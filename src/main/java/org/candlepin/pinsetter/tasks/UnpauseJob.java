@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2012 Red Hat, Inc.
+ * Copyright (c) 2013 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -29,10 +29,14 @@ import com.google.inject.Inject;
 import com.google.inject.persist.UnitOfWork;
 
 /**
- * StartWaitingJobJob
+ * StartWaitingJobJob prompts each paused job to check if it
+ * is safe to continue executing every 5 seconds.  The polling
+ * approach isn't as fast or efficient as allowing blocking jobs
+ * to trigger the next in line, but this avoids concurrency
+ * and locking problems
  */
 public class UnpauseJob extends KingpinJob {
-    private static Logger log = Logger.getLogger(CancelJobJob.class);
+    private static Logger log = Logger.getLogger(UnpauseJob.class);
     public static final String DEFAULT_SCHEDULE = "0/5 * * * * ?"; //every five seconds
     private JobCurator jobCurator;
     private PinsetterKernel pinsetterKernel;

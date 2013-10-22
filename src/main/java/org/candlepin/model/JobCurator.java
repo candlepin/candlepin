@@ -14,11 +14,14 @@
  */
 package org.candlepin.model;
 
+import org.apache.log4j.Logger;
 import org.candlepin.exceptions.NotFoundException;
+import org.candlepin.pinsetter.core.PinsetterKernel;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.pinsetter.core.model.JobStatus.JobState;
 import org.candlepin.pinsetter.core.model.JobStatus.TargetType;
 import org.candlepin.pinsetter.tasks.KingpinJob;
+import org.hibernate.Query;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
@@ -31,6 +34,7 @@ import java.util.List;
  *
  */
 public class JobCurator extends AbstractHibernateCurator<JobStatus> {
+    private static Logger log = Logger.getLogger(JobCurator.class);
 
     public JobCurator() {
         super(JobStatus.class);
@@ -127,5 +131,34 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
             .add(Restrictions.eq("targetId", ownerKey))
             .add(Restrictions.eq("jobClass", jobClass))
             .uniqueResult();
+    }
+
+    /*
+     * Cancel jobs that should have a quartz job (but don't),
+     * and have not been updated within the last 2 minutes.
+     */
+    public int cancelOrphanedJobs(List<String> activeIds) {
+        Date before = new Date(new Date().getTime() - (1000L * 60L * 2L)); //2 minutes
+        String hql = "update JobStatus j " +
+            "set j.state = :canceled " +
+            "where j.jobGroup = :async and " +
+            "j.state != :canceled and " +
+            "j.state != :finished and " +
+            "j.state != :failed and " +
+            "j.updated <= :date";
+        if (!activeIds.isEmpty()) {
+            hql += " and j.id not in (:activeIds)";
+        }
+        Query query = this.currentSession().createQuery(hql);
+        
+        query.setTimestamp("date", before);
+        query.setParameter("async", PinsetterKernel.SINGLE_JOB_GROUP);
+        query.setInteger("finished", JobState.FINISHED.ordinal());
+        query.setInteger("failed", JobState.FAILED.ordinal());
+        query.setInteger("canceled", JobState.CANCELED.ordinal());
+        if (!activeIds.isEmpty()) {
+            query.setParameterList("activeIds", activeIds);
+        }
+        return query.executeUpdate();
     }
 }

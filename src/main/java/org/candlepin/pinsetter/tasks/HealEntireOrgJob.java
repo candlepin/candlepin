@@ -55,7 +55,7 @@ public class HealEntireOrgJob extends UniqueByOwnerJob {
     }
 
     @Override
-    public void execute(JobExecutionContext ctx) throws JobExecutionException {
+    public void toExecute(JobExecutionContext ctx) throws JobExecutionException {
         try {
             JobDataMap map = ctx.getMergedJobDataMap();
             String ownerId = (String) map.get("ownerId");
@@ -67,8 +67,6 @@ public class HealEntireOrgJob extends UniqueByOwnerJob {
                 String consumerUuid = c.getUuid();
                 // Do not send in product ids.  CandlepinPoolManager will take care
                 // of looking up the non or partially compliant products to bind.
-
-                startUnitOfWork();
                 try {
                     Consumer consumer = consumerCurator.getConsumer(consumerUuid);
                     List<Entitlement> ents = entitler.bindByProducts(null, consumer,
@@ -80,9 +78,6 @@ public class HealEntireOrgJob extends UniqueByOwnerJob {
                 catch (Exception e) {
                     log.debug("Healing failed for UUID " + consumerUuid +
                         " with message: " + e.getMessage());
-                }
-                finally {
-                    endUnitOfWork();
                 }
             }
         }
