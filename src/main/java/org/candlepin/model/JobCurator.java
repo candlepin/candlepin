@@ -149,13 +149,12 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
         if (!activeIds.isEmpty()) {
             hql += " and j.id not in (:activeIds)";
         }
-        Query query = this.currentSession().createQuery(hql);
-        
-        query.setTimestamp("date", before);
-        query.setParameter("async", PinsetterKernel.SINGLE_JOB_GROUP);
-        query.setInteger("finished", JobState.FINISHED.ordinal());
-        query.setInteger("failed", JobState.FAILED.ordinal());
-        query.setInteger("canceled", JobState.CANCELED.ordinal());
+        Query query = this.currentSession().createQuery(hql)
+            .setTimestamp("date", before)
+            .setParameter("async", PinsetterKernel.SINGLE_JOB_GROUP)
+            .setInteger("finished", JobState.FINISHED.ordinal())
+            .setInteger("failed", JobState.FAILED.ordinal())
+            .setInteger("canceled", JobState.CANCELED.ordinal());
         if (!activeIds.isEmpty()) {
             query.setParameterList("activeIds", activeIds);
         }

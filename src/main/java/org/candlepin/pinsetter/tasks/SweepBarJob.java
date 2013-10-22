@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013 - 2012 Red Hat, Inc.
+ * Copyright (c) 2009 - 2012 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -50,7 +50,7 @@ public class SweepBarJob extends KingpinJob {
 
     private static Logger log = Logger.getLogger(SweepBarJob.class);
     public static final String DEFAULT_SCHEDULE = "0 0/5 * * * ?"; //every five minutes
-    
+
     private JobCurator jobCurator;
     private PinsetterKernel pinsetterKernel;
 
@@ -74,7 +74,8 @@ public class SweepBarJob extends KingpinJob {
             if (canceled > 0) {
                 log.info("Canceled " + canceled + " orphaned jobs");
             }
-        } catch (Exception e) { 
+        }
+        catch (Exception e) {
             log.error("Failed to cancel orphaned jobs", e);
         }
     }

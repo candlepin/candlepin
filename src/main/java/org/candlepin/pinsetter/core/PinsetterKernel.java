@@ -450,7 +450,7 @@ public class PinsetterKernel {
     }
 
     public Set<JobKey> getSingleJobKeys() throws SchedulerException {
-        return scheduler.getJobKeys(GroupMatcher.jobGroupEquals(SINGLE_JOB_GROUP)); 
+        return scheduler.getJobKeys(GroupMatcher.jobGroupEquals(SINGLE_JOB_GROUP));
     }
 
     private boolean isClustered() {
