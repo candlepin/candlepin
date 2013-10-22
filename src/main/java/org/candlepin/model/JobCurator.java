@@ -14,7 +14,6 @@
  */
 package org.candlepin.model;
 
-import org.apache.log4j.Logger;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.pinsetter.core.PinsetterKernel;
 import org.candlepin.pinsetter.core.model.JobStatus;
@@ -34,7 +33,6 @@ import java.util.List;
  *
  */
 public class JobCurator extends AbstractHibernateCurator<JobStatus> {
-    private static Logger log = Logger.getLogger(JobCurator.class);
 
     public JobCurator() {
         super(JobStatus.class);
@@ -51,6 +49,7 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
     }
 
     public int cleanupFailedJobs(Date deadline) {
+        //TODO: Should probably use setTimestamp rather than setDate
         return this.currentSession().createQuery(
             "delete from JobStatus where startTime <= :date and " +
             "state = :failed")
@@ -60,6 +59,7 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
     }
 
     public int cleanUpOldJobs(Date deadLineDt) {
+        //TODO: Should probably use setTimestamp rather than setDate
         return this.currentSession().createQuery(
             "delete from JobStatus where finishTime <= :date and " +
             "(state = :completed or state = :canceled)")
@@ -98,7 +98,8 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
 
     @SuppressWarnings("unchecked")
     public List<JobStatus> findWaitingJobs() {
-        //Perhaps unique jobClass/target combinations.
+        //Perhaps unique jobClass/target combinations, However
+        //we're already in a weird state if that makes a difference
         return this.currentSession().createCriteria(JobStatus.class)
         .add(Restrictions.eq("state", JobState.WAITING)).list();
     }
@@ -146,6 +147,8 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
             "j.state != :finished and " +
             "j.state != :failed and " +
             "j.updated <= :date";
+        // Must trim out activeIds if the list is empty, otherwise the
+        // statement will fail.
         if (!activeIds.isEmpty()) {
             hql += " and j.id not in (:activeIds)";
         }

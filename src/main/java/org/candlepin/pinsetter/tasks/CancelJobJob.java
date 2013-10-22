@@ -22,6 +22,7 @@ import org.candlepin.pinsetter.core.PinsetterException;
 import org.candlepin.pinsetter.core.PinsetterKernel;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.hibernate.HibernateException;
+import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
@@ -31,6 +32,7 @@ import com.google.inject.persist.UnitOfWork;
 /**
  * CancelJobJob
  */
+@DisallowConcurrentExecution
 public class CancelJobJob extends KingpinJob {
 
     private static Logger log = Logger.getLogger(CancelJobJob.class);

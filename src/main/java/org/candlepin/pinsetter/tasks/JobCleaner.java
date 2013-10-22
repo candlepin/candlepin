@@ -41,6 +41,8 @@ public class JobCleaner extends KingpinJob {
     @Override
     public void toExecute(JobExecutionContext arg0) throws JobExecutionException {
         //TODO: Configure deadline date to something else..
+        //CAUTION: jobCurator uses setDate on the delete query,
+        //so all time info is stripped off
         Date deadLineDt = Util.yesterday();
         this.jobCurator.cleanUpOldJobs(deadLineDt);
     }

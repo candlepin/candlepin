@@ -21,6 +21,7 @@ import java.util.Set;
 import org.apache.log4j.Logger;
 import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.PinsetterKernel;
+import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.quartz.JobKey;
@@ -46,6 +47,7 @@ import com.google.inject.persist.UnitOfWork;
  * removed, however cp_jobs (JobStatus) will not reflect
  * changes.
  */
+@DisallowConcurrentExecution
 public class SweepBarJob extends KingpinJob {
 
     private static Logger log = Logger.getLogger(SweepBarJob.class);

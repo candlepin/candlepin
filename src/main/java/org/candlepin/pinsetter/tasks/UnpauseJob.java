@@ -22,6 +22,7 @@ import org.candlepin.pinsetter.core.PinsetterKernel;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.pinsetter.core.model.JobStatus.JobState;
 import org.hibernate.HibernateException;
+import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
@@ -35,6 +36,7 @@ import com.google.inject.persist.UnitOfWork;
  * to trigger the next in line, but this avoids concurrency
  * and locking problems
  */
+@DisallowConcurrentExecution
 public class UnpauseJob extends KingpinJob {
     private static Logger log = Logger.getLogger(UnpauseJob.class);
     public static final String DEFAULT_SCHEDULE = "0/5 * * * * ?"; //every five seconds
