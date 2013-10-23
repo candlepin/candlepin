@@ -15,19 +15,21 @@
 package org.candlepin.pinsetter.tasks;
 
 import com.google.inject.Inject;
+import com.google.inject.persist.UnitOfWork;
+
 import java.util.List;
+
 import org.candlepin.model.ImportRecord;
 import org.candlepin.model.ImportRecordCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
-import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
 /**
  *
  */
-public class ImportRecordJob implements Job {
+public class ImportRecordJob extends KingpinJob {
 
     public static final String DEFAULT_SCHEDULE = "0 0 12 * * ?";
 
@@ -39,7 +41,8 @@ public class ImportRecordJob implements Job {
 
     @Inject
     public ImportRecordJob(ImportRecordCurator importRecordCurator,
-            OwnerCurator ownerCurator) {
+            OwnerCurator ownerCurator, UnitOfWork unitOfWork) {
+        super(unitOfWork);
         this.importRecordCurator = importRecordCurator;
         this.ownerCurator = ownerCurator;
     }
@@ -49,7 +52,7 @@ public class ImportRecordJob implements Job {
     //        really fancy with sub-selects as they are not supported by
     //        add databases.
     @Override
-    public void execute(JobExecutionContext jec) throws JobExecutionException {
+    public void toExecute(JobExecutionContext jec) throws JobExecutionException {
         for (Owner owner : this.ownerCurator.listAll()) {
             List<ImportRecord> records = this.importRecordCurator.findRecords(owner);
 

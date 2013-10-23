@@ -14,38 +14,37 @@
  */
 package org.candlepin.pinsetter.tasks;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.candlepin.model.JobCurator;
-import org.candlepin.pinsetter.core.PinsetterException;
 import org.candlepin.pinsetter.core.PinsetterKernel;
 import org.candlepin.pinsetter.core.model.JobStatus;
+import org.candlepin.pinsetter.core.model.JobStatus.JobState;
 import org.hibernate.HibernateException;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
-import org.quartz.JobKey;
-import org.quartz.SchedulerException;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.UnitOfWork;
 
 /**
- * CancelJobJob
+ * StartWaitingJobJob prompts each paused job to check if it
+ * is safe to continue executing every 5 seconds.  The polling
+ * approach isn't as fast or efficient as allowing blocking jobs
+ * to trigger the next in line, but this avoids concurrency
+ * and locking problems
  */
 @DisallowConcurrentExecution
-public class CancelJobJob extends KingpinJob {
-
-    private static Logger log = Logger.getLogger(CancelJobJob.class);
+public class UnpauseJob extends KingpinJob {
+    private static Logger log = Logger.getLogger(UnpauseJob.class);
     public static final String DEFAULT_SCHEDULE = "0/5 * * * * ?"; //every five seconds
     private JobCurator jobCurator;
     private PinsetterKernel pinsetterKernel;
 
     @Inject
-    public CancelJobJob(JobCurator jobCurator,
+    public UnpauseJob(JobCurator jobCurator,
             PinsetterKernel pinsetterKernel, UnitOfWork unitOfWork) {
         super(unitOfWork);
         this.jobCurator = jobCurator;
@@ -54,32 +53,30 @@ public class CancelJobJob extends KingpinJob {
 
     @Override
     public void toExecute(JobExecutionContext ctx) throws JobExecutionException {
-        Set<String> statusIds = new HashSet<String>();
-        List<JobStatus> jobsToCancel = null;
+        List<JobStatus> waitingJobs;
+
         try {
-            Set<JobKey> keys = pinsetterKernel.getSingleJobKeys();
-            for (JobKey key : keys) {
-                statusIds.add(key.getName());
-            }
-            try {
-                jobsToCancel = jobCurator.findCanceledJobs(statusIds);
-            }
-            catch (HibernateException e) {
-                log.error("Cannot execute query: ", e);
-                throw new JobExecutionException(e);
-            }
-            for (JobStatus j : jobsToCancel) {
-                try {
-                    pinsetterKernel.cancelJob(j.getId(), j.getGroup());
-                    log.info("Canceled job: " + j.getId() + ", " + j.getGroup());
-                }
-                catch (PinsetterException e) {
-                    log.error("Exception canceling job " + j.getId(), e);
-                }
-            }
+            waitingJobs = jobCurator.findWaitingJobs();
         }
-        catch (SchedulerException e) {
-            log.error("Unable to cancel jobs", e);
+        catch (HibernateException e) {
+            log.error("Cannot execute query: ", e);
+            throw new JobExecutionException(e);
+        }
+        for (JobStatus j : waitingJobs) {
+            try {
+                boolean schedule = (Boolean) j.getJobClass()
+                    .getMethod("isSchedulable", JobCurator.class, JobStatus.class)
+                    .invoke(null, jobCurator, j);
+                if (schedule) {
+                    log.debug("Triggering waiting job: " + j.getId());
+                    pinsetterKernel.addTrigger(j);
+                    j.setState(JobState.CREATED);
+                    jobCurator.merge(j);
+                }
+            }
+            catch (Exception e) {
+                log.debug("Failed to schedule waiting job: " + j.getId(), e);
+            }
         }
     }
 }

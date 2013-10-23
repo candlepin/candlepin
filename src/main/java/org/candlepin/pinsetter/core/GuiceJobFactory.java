@@ -23,7 +23,6 @@ import org.quartz.spi.TriggerFiredBundle;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import com.google.inject.persist.UnitOfWork;
 
 /**
  * GuiceJobFactory is a custom Quartz JobFactory implementation which
@@ -51,8 +50,7 @@ public class GuiceJobFactory implements JobFactory {
 
         candlepinSingletonScope.enter();
         try {
-            return new TransactionalPinsetterJob(injector.getInstance(jobClass),
-                injector.getInstance(UnitOfWork.class));
+            return injector.getInstance(jobClass);
         }
         finally {
             candlepinSingletonScope.exit();

@@ -196,9 +196,9 @@ public class JobResource {
         if (j.getState().equals(JobState.CANCELED)) {
             throw new BadRequestException(i18n.tr("job already canceled"));
         }
-        if (j.getState() != JobState.CREATED) {
+        if (j.getState() != JobState.CREATED && j.getState() != JobState.WAITING) {
             throw new BadRequestException(i18n.tr("cannot cancel a job that " +
-                "is not in CREATED state"));
+                "is not in CREATED or WAITING state"));
         }
         return curator.cancel(jobId);
     }

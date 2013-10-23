@@ -18,28 +18,31 @@ import java.util.Date;
 
 import org.candlepin.model.JobCurator;
 import org.candlepin.util.Util;
-import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
 import com.google.inject.Inject;
+import com.google.inject.persist.UnitOfWork;
 
 /**
  * JobCleaner
  */
-public class JobCleaner implements Job {
+public class JobCleaner extends KingpinJob {
 
     private JobCurator jobCurator;
     public static final String DEFAULT_SCHEDULE = "0 0 12 * * ?";
 
     @Inject
-    public JobCleaner(JobCurator curator) {
+    public JobCleaner(JobCurator curator, UnitOfWork unitOfWork) {
+        super(unitOfWork);
         this.jobCurator = curator;
     }
 
     @Override
-    public void execute(JobExecutionContext arg0) throws JobExecutionException {
+    public void toExecute(JobExecutionContext arg0) throws JobExecutionException {
         //TODO: Configure deadline date to something else..
+        //CAUTION: jobCurator uses setDate on the delete query,
+        //so all time info is stripped off
         Date deadLineDt = Util.yesterday();
         this.jobCurator.cleanUpOldJobs(deadLineDt);
     }

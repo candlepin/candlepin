@@ -19,6 +19,7 @@ import org.candlepin.auth.Principal;
 import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.pinsetter.core.model.JobStatus.JobState;
+import org.candlepin.pinsetter.tasks.UniqueByOwnerJob;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -27,7 +28,9 @@ import com.google.inject.persist.UnitOfWork;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.quartz.JobKey;
 import org.quartz.JobListener;
+import org.quartz.SchedulerException;
 
 /**
  * This component receives events around job status and performs actions to
@@ -84,13 +87,31 @@ public class PinsetterJobListener implements JobListener {
     @Override
     public void jobWasExecuted(JobExecutionContext context,
         JobExecutionException exception) {
+        deleteDetail(context);
         try {
             unitOfWork.begin();
             updateJob(context, exception);
         }
         catch (Exception e) {
-            log.error("jobWasExecuted encountered a problem. Usually means " +
-                "there was a problem storing the job status. Job finished ok.", e);
+            if (UniqueByOwnerJob.class.isAssignableFrom(
+                    context.getJobDetail().getJobClass())) {
+                log.error("jobWasExecuted encountered a problem on a blocking job." +
+                    " This can block other jobs.  Marking finished, if possible", e);
+                try {
+                    //This time only update the state so it doesn't block other jobs
+                    JobStatus finished = curator.find(
+                        context.getJobDetail().getKey().getName());
+                    finished.setState(JobState.FINISHED);
+                    curator.merge(finished);
+                }
+                catch (Exception ex) {
+                    log.error("Failed again to modify the status", ex);
+                }
+            }
+            else {
+                log.error("jobWasExecuted encountered a problem. Usually means " +
+                    "there was a problem storing the job status. Job finished ok.", e);
+            }
         }
         finally {
             unitOfWork.end();
@@ -118,6 +139,18 @@ public class PinsetterJobListener implements JobListener {
         }
         else {
             log.debug("No jobinfo found for job: " + ctx);
+        }
+    }
+
+    private void deleteDetail(JobExecutionContext cx) {
+        JobKey key = cx.getJobDetail().getKey();
+        if (key.getGroup().equals(PinsetterKernel.SINGLE_JOB_GROUP)) {
+            try {
+                cx.getScheduler().deleteJob(key);
+            }
+            catch (SchedulerException e1) {
+                // Should fail if the job isn't durable
+            }
         }
     }
 }

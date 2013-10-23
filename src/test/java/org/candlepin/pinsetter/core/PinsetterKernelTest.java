@@ -43,10 +43,10 @@ import org.candlepin.pinsetter.tasks.CancelJobJob;
 import org.candlepin.pinsetter.tasks.JobCleaner;
 import org.candlepin.pinsetter.tasks.StatisticHistoryTask;
 import org.candlepin.util.Util;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 import org.quartz.CronTrigger;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
@@ -352,6 +352,7 @@ public class PinsetterKernelTest {
         JobKey jobKey = jobKey("name", "group");
         when(detail.getKey()).thenReturn(jobKey);
         when(detail.getJobDataMap()).thenReturn(map);
+        Mockito.doReturn(TestJob.class).when(detail).getJobClass();
         pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
         pk.scheduleSingleJob(detail);
         verify(detail).setGroup(eq(singlegrp));

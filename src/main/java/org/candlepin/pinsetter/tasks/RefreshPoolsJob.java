@@ -24,9 +24,8 @@ import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
+import com.google.inject.persist.UnitOfWork;
 
-import org.apache.log4j.Logger;
-import org.quartz.Job;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
@@ -36,16 +35,18 @@ import org.quartz.JobExecutionException;
  * Asynchronous job for refreshing the entitlement pools for specific
  * {@link Owner}.
  */
-public class RefreshPoolsJob implements Job {
-    private static Logger log = Logger.getLogger(RefreshPoolsJob.class);
+public class RefreshPoolsJob extends UniqueByOwnerJob {
 
     private OwnerCurator ownerCurator;
     private PoolManager poolManager;
 
     public static final String LAZY_REGEN = "lazy_regen";
+    protected static String prefix = "refresh_pools_";
 
     @Inject
-    public RefreshPoolsJob(OwnerCurator ownerCurator, PoolManager poolManager) {
+    public RefreshPoolsJob(OwnerCurator ownerCurator, PoolManager poolManager,
+        UnitOfWork unitOfWork) {
+        super(unitOfWork);
         this.ownerCurator = ownerCurator;
         this.poolManager = poolManager;
     }
@@ -58,9 +59,8 @@ public class RefreshPoolsJob implements Job {
      *
      * @param context the job's execution context
      */
-    @Override
     @Transactional
-    public void execute(JobExecutionContext context) throws JobExecutionException {
+    public void toExecute(JobExecutionContext context) throws JobExecutionException {
         try {
             JobDataMap map = context.getMergedJobDataMap();
             String ownerKey = map.getString(JobStatus.TARGET_ID);
@@ -103,6 +103,7 @@ public class RefreshPoolsJob implements Job {
             .withIdentity("refresh_pools_" + Util.generateUUID())
             .requestRecovery(true) // recover the job upon restarts
             .usingJobData(map)
+            .storeDurably(true) //required if we have to postpone the job
             .build();
 
         return detail;

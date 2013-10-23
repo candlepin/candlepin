@@ -15,11 +15,17 @@
 package org.candlepin.model;
 
 import org.candlepin.exceptions.NotFoundException;
+import org.candlepin.pinsetter.core.PinsetterKernel;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.pinsetter.core.model.JobStatus.JobState;
 import org.candlepin.pinsetter.core.model.JobStatus.TargetType;
+import org.candlepin.pinsetter.tasks.KingpinJob;
+import org.hibernate.Query;
+import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.criterion.Projections;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.criterion.Subqueries;
 
 import java.util.Date;
 import java.util.LinkedList;
@@ -46,6 +52,7 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
     }
 
     public int cleanupFailedJobs(Date deadline) {
+        //TODO: Should probably use setTimestamp rather than setDate
         return this.currentSession().createQuery(
             "delete from JobStatus where startTime <= :date and " +
             "state = :failed")
@@ -55,6 +62,7 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
     }
 
     public int cleanUpOldJobs(Date deadLineDt) {
+        //TODO: Should probably use setTimestamp rather than setDate
         return this.currentSession().createQuery(
             "delete from JobStatus where finishTime <= :date and " +
             "(state = :completed or state = :canceled)")
@@ -103,5 +111,73 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
             .add(Restrictions.eq("state", JobState.CANCELED))
             .add(Restrictions.in("id", activeJobs));
         return c.list();
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<JobStatus> findWaitingJobs() {
+        //Perhaps unique jobClass/target combinations, However
+        //we're already in a weird state if that makes a difference
+        return this.currentSession().createCriteria(JobStatus.class)
+        .add(Restrictions.eq("state", JobState.WAITING)).list();
+    }
+
+    public int findNumRunningByOwnerAndClass(
+            String ownerKey, Class<? extends KingpinJob> jobClass) {
+        return (Integer) this.currentSession().createCriteria(JobStatus.class)
+            .add(Restrictions.eq("state", JobState.RUNNING))
+            .add(Restrictions.eq("targetId", ownerKey))
+            .add(Restrictions.eq("jobClass", jobClass))
+            .setProjection(Projections.count("id"))
+            .uniqueResult();
+    }
+
+    public JobStatus getLatestByClassAndOwner(
+            String ownerKey, Class<? extends KingpinJob> jobClass) {
+        DetachedCriteria maxCreated = DetachedCriteria.forClass(JobStatus.class)
+            .add(Restrictions.ne("state", JobState.FINISHED))
+            .add(Restrictions.ne("state", JobState.FAILED))
+            .add(Restrictions.ne("state", JobState.CANCELED))
+            .add(Restrictions.eq("targetId", ownerKey))
+            .add(Restrictions.eq("jobClass", jobClass))
+            .setProjection(Projections.max("created"));
+
+        return (JobStatus) this.currentSession().createCriteria(JobStatus.class)
+            .add(Subqueries.propertyIn("created", maxCreated))
+            .add(Restrictions.ne("state", JobState.FINISHED))
+            .add(Restrictions.ne("state", JobState.FAILED))
+            .add(Restrictions.ne("state", JobState.CANCELED))
+            .add(Restrictions.eq("targetId", ownerKey))
+            .add(Restrictions.eq("jobClass", jobClass))
+            .uniqueResult();
+    }
+
+    /*
+     * Cancel jobs that should have a quartz job (but don't),
+     * and have not been updated within the last 2 minutes.
+     */
+    public int cancelOrphanedJobs(List<String> activeIds) {
+        Date before = new Date(new Date().getTime() - (1000L * 60L * 2L)); //2 minutes
+        String hql = "update JobStatus j " +
+            "set j.state = :canceled " +
+            "where j.jobGroup = :async and " +
+            "j.state != :canceled and " +
+            "j.state != :finished and " +
+            "j.state != :failed and " +
+            "j.updated <= :date";
+        // Must trim out activeIds if the list is empty, otherwise the
+        // statement will fail.
+        if (!activeIds.isEmpty()) {
+            hql += " and j.id not in (:activeIds)";
+        }
+        Query query = this.currentSession().createQuery(hql)
+            .setTimestamp("date", before)
+            .setParameter("async", PinsetterKernel.SINGLE_JOB_GROUP)
+            .setInteger("finished", JobState.FINISHED.ordinal())
+            .setInteger("failed", JobState.FAILED.ordinal())
+            .setInteger("canceled", JobState.CANCELED.ordinal());
+        if (!activeIds.isEmpty()) {
+            query.setParameterList("activeIds", activeIds);
+        }
+        return query.executeUpdate();
     }
 }

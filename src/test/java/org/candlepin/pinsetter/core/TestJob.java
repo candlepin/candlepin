@@ -14,22 +14,31 @@
  */
 package org.candlepin.pinsetter.core;
 
-import org.quartz.Job;
+import org.candlepin.pinsetter.tasks.KingpinJob;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+
+import com.google.inject.Inject;
+import com.google.inject.persist.UnitOfWork;
 
 /**
  * TestJob
  * @version $Rev$
  */
-public class TestJob implements Job {
+public class TestJob extends KingpinJob {
+
     private boolean ran = false;
 
     /**
-     * {@inheritDoc}
+     * @param unitOfWork
      */
+    @Inject
+    public TestJob(UnitOfWork unitOfWork) {
+        super(unitOfWork);
+    }
+
     @Override
-    public void execute(JobExecutionContext arg0In)
+    public void toExecute(JobExecutionContext arg0In)
         throws JobExecutionException {
         ran = true;
     }
