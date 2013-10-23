@@ -60,7 +60,7 @@ public class ActivationKeyPool extends AbstractHibernateObject {
     @Index(name = "cp_activation_key_pool_p_fk_idx")
     private Pool pool;
 
-    @Column(nullable = false, name = "quantity")
+    @Column(nullable = true, name = "quantity")
     private Long quantity;
 
     public ActivationKeyPool() {

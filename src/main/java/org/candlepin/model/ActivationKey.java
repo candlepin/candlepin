@@ -125,7 +125,7 @@ public class ActivationKey extends AbstractHibernateObject implements Owned {
         this.owner = owner;
     }
 
-    public void addPool(Pool pool, long quantity) {
+    public void addPool(Pool pool, Long quantity) {
         ActivationKeyPool akp = new ActivationKeyPool(this, pool, quantity);
         this.getPools().add(akp);
     }

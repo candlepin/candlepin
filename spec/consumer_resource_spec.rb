@@ -354,6 +354,33 @@ describe 'Consumer Resource' do
     @cp.get_pool(pool1.id).consumed.should == 3
   end
 
+  it 'should allow a consumer to register with activation keys with null quantity' do
+    owner = create_owner random_string('owner')
+
+    user1 = user_client(owner, random_string("user1"))
+    prod1 = create_product(random_string('product1'), random_string('product1'),
+                           :attributes => { :'multi-entitlement' => 'yes',
+                                            :'stacking_id' => random_string('stacking_id'),
+                                            :'sockets' => '1'})
+    subs1 = @cp.create_subscription(owner['key'], prod1.id, 10)
+    @cp.refresh_pools(owner['key'])
+    pool1 = @cp.list_pools({:owner => owner['id']}).first
+
+    # Connect without any credentials:
+    client = Candlepin.new
+
+    key1 = @cp.create_activation_key(owner['key'], 'key1')
+    # null quantity
+    @cp.add_pool_to_key(key1['id'], pool1['id'])
+    @cp.create_activation_key(owner['key'], 'key2')
+    consumer = client.register(random_string('machine1'), :system, nil, {'cpu.cpu_socket(s)' => '4'}, nil,
+      owner['key'], ["key1", "key2"])
+    consumer.uuid.should_not be_nil
+
+    # TODO: Verify activation keys did what we expect once they are functional
+    @cp.get_pool(pool1.id).consumed.should == 4
+  end
+
   it 'handles failed activation key registration' do
     owner = create_owner random_string('owner')
 
