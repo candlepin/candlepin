@@ -77,7 +77,6 @@ import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
-import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.DeleteResult;
 import org.candlepin.model.DeletedConsumer;
@@ -140,7 +139,6 @@ public class ConsumerResource {
     private ConsumerContentOverrideCurator consumerContentOverrideCurator;
     private ConsumerCurator consumerCurator;
     private ConsumerTypeCurator consumerTypeCurator;
-    private ContentCurator contentCurator;
     private ProductServiceAdapter productAdapter;
     private SubscriptionServiceAdapter subAdapter;
     private EntitlementCurator entitlementCurator;
@@ -217,7 +215,6 @@ public class ConsumerResource {
         this.config = config;
         this.quantityRules = quantityRules;
         this.consumerContentOverrideCurator = consumerContentOverrideCurator;
-        this.contentCurator = contentCurator;
         this.overrideRules = overrideRules;
     }
 
@@ -1498,16 +1495,6 @@ public class ConsumerResource {
         return consumer;
     }
 
-    private Content verifyAndLookupContent(String contentLabel) {
-        Content content = contentCurator.retrieveByLabel(contentLabel);
-
-        if (content == null) {
-            throw new NotFoundException(i18n.tr(
-                "Content with label ''{0}'' could not be found.", contentLabel));
-        }
-        return content;
-    }
-
     private Entitlement verifyAndLookupEntitlement(String entitlementId) {
         Entitlement entitlement = entitlementCurator.find(entitlementId);
 
@@ -1956,7 +1943,7 @@ public class ConsumerResource {
     }
 
     /*
-    *
+    * Add override for content set
     *
     * @param uuid
     *
@@ -1972,20 +1959,18 @@ public class ConsumerResource {
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         List<ConsumerContentOverride> entries) {
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
-        List<String> errors = new ArrayList();
+        List<String> errors = new ArrayList<String>();
         for (ConsumerContentOverride entry : entries) {
             if (overrideRules.canOverrideForConsumer(consumer, entry.getName())) {
-                Content content = verifyAndLookupContent(entry.getContentLabel());
                 ConsumerContentOverride cco = consumerContentOverrideCurator.retrieve(
-                    consumer, content, entry.getName());
+                    consumer, entry.getContentLabel(), entry.getName());
                 if (cco != null) {
                     cco.setValue(entry.getValue());
                     cco.setUpdated(null);
                     consumerContentOverrideCurator.merge(cco);
                 }
                 else {
-                    entry.setConsumerId(consumer.getId());
-                    entry.setContentLabel(content.getLabel());
+                    entry.setConsumer(consumer);
                     consumerContentOverrideCurator.create(entry);
                 }
             }
@@ -2000,8 +1985,9 @@ public class ConsumerResource {
         }
         return consumerContentOverrideCurator.getList(consumer);
     }
+
     /*
-    *
+    * Remove override based on included criteria
     *
     * @param uuid
     *
@@ -2028,15 +2014,14 @@ public class ConsumerResource {
                     consumerContentOverrideCurator.removeByConsumer(consumer);
                 }
                 else {
-                    Content content = verifyAndLookupContent(label);
                     String name = entry.getName();
                     if (StringUtils.isBlank(name)) {
                         consumerContentOverrideCurator.removeByContentLabel(
-                            consumer, content);
+                            consumer, entry.getContentLabel());
                     }
                     else {
                         consumerContentOverrideCurator.removeByName(consumer,
-                            content, name);
+                            entry.getContentLabel(), name);
                     }
                 }
             }
@@ -2044,6 +2029,14 @@ public class ConsumerResource {
         return consumerContentOverrideCurator.getList(consumer);
     }
 
+    /*
+    * Get the list of content set overrides for this consumer
+    *
+    * @param uuid
+    *
+    * @httpcode 404
+    * @httpcode 200
+    */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{consumer_uuid}/content_overrides")

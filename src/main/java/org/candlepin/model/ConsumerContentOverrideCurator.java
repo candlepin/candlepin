@@ -32,25 +32,25 @@ public class ConsumerContentOverrideCurator
     public List<ConsumerContentOverride> getList(Consumer consumer) {
         return currentSession()
             .createCriteria(ConsumerContentOverride.class)
-            .add(Restrictions.eq("consumerId", consumer.getId())).list();
+            .add(Restrictions.eq("consumer", consumer)).list();
     }
 
-    public void removeByName(Consumer consumer, Content content, String name) {
+    public void removeByName(Consumer consumer, String contentLabel, String name) {
         List<ConsumerContentOverride> overrides = currentSession()
             .createCriteria(ConsumerContentOverride.class)
-            .add(Restrictions.eq("consumerId", consumer.getId()))
-            .add(Restrictions.eq("contentLabel", content.getLabel()))
+            .add(Restrictions.eq("consumer", consumer))
+            .add(Restrictions.eq("contentLabel", contentLabel))
             .add(Restrictions.eq("name", name)).list();
         for (ConsumerContentOverride cco : overrides) {
             delete(cco);
         }
     }
 
-    public void removeByContentLabel(Consumer consumer, Content content) {
+    public void removeByContentLabel(Consumer consumer, String contentLabel) {
         List<ConsumerContentOverride> overrides = currentSession()
             .createCriteria(ConsumerContentOverride.class)
-            .add(Restrictions.eq("consumerId", consumer.getId()))
-            .add(Restrictions.eq("contentLabel", content.getLabel())).list();
+            .add(Restrictions.eq("consumer", consumer))
+            .add(Restrictions.eq("contentLabel", contentLabel)).list();
         for (ConsumerContentOverride cco : overrides) {
             delete(cco);
         }
@@ -59,18 +59,18 @@ public class ConsumerContentOverrideCurator
     public void removeByConsumer(Consumer consumer) {
         List<ConsumerContentOverride> overrides = currentSession()
             .createCriteria(ConsumerContentOverride.class)
-            .add(Restrictions.eq("consumerId", consumer.getId())).list();
+            .add(Restrictions.eq("consumer", consumer)).list();
         for (ConsumerContentOverride cco : overrides) {
             delete(cco);
         }
     }
 
-    public ConsumerContentOverride retrieve(Consumer consumer, Content content,
+    public ConsumerContentOverride retrieve(Consumer consumer, String contentLabel,
         String name) {
         List<ConsumerContentOverride> overrides = currentSession()
             .createCriteria(ConsumerContentOverride.class)
-            .add(Restrictions.eq("consumerId", consumer.getId()))
-            .add(Restrictions.eq("contentLabel", content.getLabel()))
+            .add(Restrictions.eq("consumer", consumer))
+            .add(Restrictions.eq("contentLabel", contentLabel))
             .add(Restrictions.eq("name", name)).list();
         if (overrides.size() == 0) {
             return null;

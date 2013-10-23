@@ -1,4 +1,4 @@
-// Version: 4.3
+// Version: 4.4
 
 /*
  * Default Candlepin rule set.
@@ -2709,6 +2709,12 @@ var Quantity = {
     }
 }
 
+/**
+ * Namespace for determining ability to override a specific content set
+ *  value
+ *
+ * The list of disallowed value names are listed in this method
+ */
 var Override = {
     get_override_context: function() {
         context = JSON.parse(json_context);
@@ -2716,7 +2722,7 @@ var Override = {
     },
 
     get_allow_override: function() {
-    	var blacklist = ['name','label','baseurl','ui_id']
+        var blacklist = ['name','label','baseurl']
         var context = Override.get_override_context();
         var name = context.name;
         return blacklist.indexOf(name) > 0;

@@ -20,13 +20,19 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlTransient;
 
+import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Index;
 
 /**
  * ConsumerContentOverride
+ *
+ * Represents an override to a value for a specific content set and named field.
  */
 @Entity
 @Table(name = "cp_consumer_content_override")
@@ -38,8 +44,11 @@ public class ConsumerContentOverride extends AbstractHibernateObject {
     @Column(length = 32)
     private String id;
 
-    @Column(name = "consumer_id")
-    private String consumerId;
+    @ManyToOne
+    @ForeignKey(name = "fk_consumer_content_consumer")
+    @JoinColumn(nullable = false)
+    @Index(name = "cp_cnsmr_cntnt_cnsmr_fk_idx")
+    private Consumer consumer;
 
     @Column(name = "content_label")
     private String contentLabel;
@@ -52,9 +61,9 @@ public class ConsumerContentOverride extends AbstractHibernateObject {
 
     }
 
-    public ConsumerContentOverride(String consumerId,
+    public ConsumerContentOverride(Consumer consumer,
         String contentLabel, String name, String value) {
-        this.setConsumerId(consumerId);
+        this.setConsumer(consumer);
         this.setContentLabel(contentLabel);
         this.setName(name);
         this.setValue(value);
@@ -77,13 +86,13 @@ public class ConsumerContentOverride extends AbstractHibernateObject {
         return contentLabel;
     }
 
-    public void setConsumerId(String consumerId) {
-        this.consumerId = consumerId;
+    public void setConsumer(Consumer consumer) {
+        this.consumer = consumer;
     }
 
     @XmlTransient
-    public String getConsumerId() {
-        return consumerId;
+    public Consumer getConsumer() {
+        return consumer;
     }
 
     public void setName(String name) {
@@ -114,16 +123,16 @@ public class ConsumerContentOverride extends AbstractHibernateObject {
 
     public String toString() {
         StringBuffer result = new StringBuffer();
-        result.append("ConsumerId: ");
-        result.append(consumerId);
+        result.append("[consumer=");
+        result.append(consumer.getUuid());
         result.append(", ");
-        result.append("Content Label: ");
+        result.append("content=");
         result.append(contentLabel);
         result.append(", ");
-        result.append("Name: ");
+        result.append("name=");
         result.append(name);
         result.append(", ");
-        result.append("Value: ");
+        result.append("value=");
         result.append(value);
         return result.toString();
     }

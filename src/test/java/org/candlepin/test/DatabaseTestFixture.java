@@ -14,12 +14,15 @@
  */
 package org.candlepin.test;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Module;
-import com.google.inject.persist.PersistFilter;
-import com.google.inject.persist.UnitOfWork;
-import com.google.inject.util.Modules;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashSet;
+
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.servlet.http.HttpServletRequest;
 
 import org.candlepin.CandlepinCommonTestingModule;
 import org.candlepin.CandlepinNonServletEnvironmentTestingModule;
@@ -36,6 +39,7 @@ import org.candlepin.model.ActivationKeyCurator;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerContentOverrideCurator;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
@@ -81,15 +85,12 @@ import org.junit.After;
 import org.junit.Before;
 import org.xnap.commons.i18n.I18n;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashSet;
-
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.servlet.http.HttpServletRequest;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Module;
+import com.google.inject.persist.PersistFilter;
+import com.google.inject.persist.UnitOfWork;
+import com.google.inject.util.Modules;
 
 /**
  * Test fixture for test classes requiring access to the database.
@@ -111,6 +112,7 @@ public class DatabaseTestFixture {
     protected SubscriptionServiceAdapter subAdapter;
     protected ConsumerCurator consumerCurator;
     protected ConsumerTypeCurator consumerTypeCurator;
+    protected ConsumerContentOverrideCurator consumerContentOverrideCurator;
     protected SubscriptionsCertificateCurator certificateCurator;
     protected PoolCurator poolCurator;
     protected PoolAttributeCurator poolAttributeCurator;
@@ -175,6 +177,8 @@ public class DatabaseTestFixture {
         roleCurator = injector.getInstance(RoleCurator.class);
 
         consumerTypeCurator = injector.getInstance(ConsumerTypeCurator.class);
+        consumerContentOverrideCurator = injector.getInstance(
+            ConsumerContentOverrideCurator.class);
         certificateCurator = injector
             .getInstance(SubscriptionsCertificateCurator.class);
         poolCurator = injector.getInstance(PoolCurator.class);

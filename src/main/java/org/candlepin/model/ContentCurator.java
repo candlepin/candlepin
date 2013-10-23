@@ -14,10 +14,6 @@
  */
 package org.candlepin.model;
 
-import java.util.List;
-
-import org.hibernate.criterion.Restrictions;
-
 import com.google.inject.persist.Transactional;
 
 /**
@@ -38,15 +34,5 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
         }
         // Copy the ID so Hibernate knows this is an existing entity to merge:
         return merge(c);
-    }
-
-    public Content retrieveByLabel(String label) {
-        List<Content> contents = currentSession()
-            .createCriteria(Content.class)
-            .add(Restrictions.eq("label", label)).list();
-        if (contents.size() == 0) {
-            return null;
-        }
-        return contents.get(0);
     }
 }

@@ -24,6 +24,8 @@ import com.google.inject.Inject;
 
 /**
  * OverrideRules
+ *
+ * To determine which fields can be overridden per consumer in the content sets
  */
 public class OverrideRules {
 
