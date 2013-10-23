@@ -14,15 +14,16 @@
  */
 package org.candlepin.hibernate;
 
-import org.hibernate.Hibernate;
-import org.hibernate.HibernateException;
-import org.hibernate.usertype.UserType;
-
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+
+import org.hibernate.HibernateException;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.usertype.UserType;
 
 /**
  * This type is meant to convert a null into an empty string on reads.  Mainly
@@ -70,16 +71,18 @@ public class EmptyStringUserType implements UserType {
     }
 
     @Override
-    public Object nullSafeGet(ResultSet rs, String[] names, Object owner)
+    public Object nullSafeGet(ResultSet rs, String[] names, SessionImplementor si,
+        Object owner)
         throws HibernateException, SQLException {
-        String value = (String) Hibernate.STRING.nullSafeGet(rs, names[0]);
+        String value = (String) StandardBasicTypes.STRING.nullSafeGet(rs, names[0], si);
         return (value == null) ? "" : value;
     }
 
     @Override
-    public void nullSafeSet(PreparedStatement st, Object value, int index)
+    public void nullSafeSet(PreparedStatement st, Object value, int index,
+        SessionImplementor si)
         throws HibernateException, SQLException {
-        Hibernate.STRING.nullSafeSet(st, value, index);
+        StandardBasicTypes.STRING.nullSafeSet(st, value, index, si);
     }
 
     @Override

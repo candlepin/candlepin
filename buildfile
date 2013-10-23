@@ -40,24 +40,25 @@ JACKSON = [group('jackson-core-lgpl',
 SUN_JAXB = 'com.sun.xml.bind:jaxb-impl:jar:2.1.12'
 JUNIT = ['junit:junit:jar:4.5', 'org.mockito:mockito-all:jar:1.8.5']
 LOG4J = 'log4j:log4j:jar:1.2.14'
-HIBERNATE = ['org.hibernate:hibernate-core:jar:3.3.2.GA',
-             'org.hibernate:hibernate-annotations:jar:3.4.0.GA',
-             'org.hibernate:hibernate-commons-annotations:jar:3.3.0.ga',
-             'org.hibernate:hibernate-entitymanager:jar:3.4.0.GA',
+HIBERNATE = ['org.hibernate:hibernate-core:jar:4.2.5.Final',
+             'org.hibernate.common:hibernate-commons-annotations:jar:4.0.2.Final',
+             'org.hibernate:hibernate-entitymanager:jar:4.2.5.Final',
              'org.hibernate:hibernate-tools:jar:3.2.4.GA',
              # hibernate-validator required for hibernate-tools
-             'org.hibernate:hibernate-validator:jar:3.1.0.GA',
-             'javax.persistence:persistence-api:jar:1.0',
-             'antlr:antlr:jar:2.7.6',
+             'org.hibernate:hibernate-validator:jar:4.3.1.Final',
+             'org.hibernate:hibernate-c3p0:jar:4.2.5.Final',
+             'org.hibernate.javax.persistence:hibernate-jpa-2.0-api:jar:1.0.1.Final',
+             'antlr:antlr:jar:2.7.7',
              'asm:asm:jar:3.0',
              'cglib:cglib:jar:2.2',
-             'javassist:javassist:jar:3.9.0.GA',
+             'javassist:javassist:jar:3.12.0.GA',
              'javax.transaction:jta:jar:1.1',
              'org.slf4j:slf4j-api:jar:1.5.8',
              'org.slf4j:slf4j-log4j12:jar:1.4.2',
              'org.freemarker:freemarker:jar:2.3.15',
-             'c3p0:c3p0:jar:0.9.0',
-             'dom4j:dom4j:jar:1.6.1']
+             'c3p0:c3p0:jar:0.9.1.2',
+             'dom4j:dom4j:jar:1.6.1',
+             'org.jboss.logging:jboss-logging:jar:3.1.1.GA']
 DB = ['postgresql:postgresql:jar:9.0-801.jdbc4', 'mysql:mysql-connector-java:jar:5.1.26']
 ORACLE = ['com.oracle:ojdbc6:jar:11.2.0', 'org.quartz-scheduler:quartz-oracle:jar:2.1.5']
 COMMONS = ['commons-codec:commons-codec:jar:1.4',
@@ -65,7 +66,7 @@ COMMONS = ['commons-codec:commons-codec:jar:1.4',
            'commons-io:commons-io:jar:1.3.2',
            'commons-logging:commons-logging:jar:1.1.1',
            'commons-lang:commons-lang:jar:2.5']
-HSQLDB = ['hsqldb:hsqldb:jar:1.8.0.10']
+HSQLDB = 'hsqldb:hsqldb:jar:1.8.0.10'
 GETTEXT_COMMONS = 'org.xnap.commons:gettext-commons:jar:0.9.6'
 
 BOUNCYCASTLE = group('bcprov-jdk16', :under=>'org.bouncycastle', :version=>'1.46')

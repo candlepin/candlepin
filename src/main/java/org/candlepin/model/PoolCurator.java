@@ -34,7 +34,7 @@ import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.impl.FilterImpl;
+import org.hibernate.internal.FilterImpl;
 
 import java.io.Serializable;
 import java.util.ArrayList;

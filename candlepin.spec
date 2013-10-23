@@ -61,12 +61,12 @@ BuildRequires: scl-utils-build
 BuildRequires: candlepin-scl
 
 BuildRequires: bouncycastle
-BuildRequires: hibernate3 >= 3.3.2
-BuildRequires: hibernate3-annotations >= 0:3.4.0
+BuildRequires: hibernate4-core >= 0:4.2.5
+BuildRequires: hibernate4-c3p0 >= 0:4.2.5
 
 # for schema
-BuildRequires: hibernate3-entitymanager >= 0:3.4.0
-BuildRequires: hibernate3-commons-annotations
+BuildRequires: hibernate4-entitymanager >= 0:4.2.5
+BuildRequires: hibernate4-commons-annotations >= 0:4.0.2
 
 BuildRequires: google-collections >= 0:1.0
 BuildRequires: resteasy >= 0:2.3.1
@@ -84,7 +84,7 @@ BuildRequires: codehaus-jackson-mapper-lgpl
 BuildRequires: codehaus-jackson-xc
 BuildRequires: codehaus-jackson-jaxrs
 BuildRequires: jakarta-commons-httpclient
-BuildRequires: jpa_1_0_api
+BuildRequires: hibernate-jpa-2.0-api >= 1.0.1
 BuildRequires: netty
 BuildRequires: glassfish-jaxb
 BuildRequires: jms >= 0:1.1
@@ -92,7 +92,7 @@ BuildRequires: oauth
 BuildRequires: slf4j >= 0:1.6.1
 
 # needed to setup runtime deps, not for compilation
-BuildRequires: c3p0
+BuildRequires: c3p0 >= 0.9.1.2
 BuildRequires: scannotation
 BuildRequires: postgresql-jdbc
 BuildRequires: servlet
@@ -115,11 +115,13 @@ Requires: postgresql-jdbc
 %if !0%{?reqcpdeps}
 # candlepin webapp requires
 Requires: bouncycastle
-Requires: hibernate3 >= 3.3.2
-Requires: hibernate3-annotations >= 0:3.4.0
-Requires: hibernate3-entitymanager >= 0:3.4.0
+Requires: hibernate4-core >= 0:4.2.5
+Requires: hibernate4-entitymanager >= 0:4.2.5
+Requires: hibernate4-c3p0 >= 0:4.2.5
+Requires: hibernate4-commons-annotations >= 0:4.0.2
+Requires: hibernate-jpa-2.0-api >= 0:1.0.1
 Requires: candlepin-scl
-Requires: c3p0
+Requires: c3p0 >= 0:0.9.1.2
 Requires: resteasy >= 0:2.3.1
 Requires: google-guice >= 0:3.0
 Requires: codehaus-jackson >= 0:1.9.2

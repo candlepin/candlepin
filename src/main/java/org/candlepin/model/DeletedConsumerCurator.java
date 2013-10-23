@@ -58,9 +58,9 @@ public class DeletedConsumerCurator extends
     }
 
     public int countByConsumerUuid(String uuid) {
-        return (Integer) currentSession().createCriteria(DeletedConsumer.class)
-                        .add(Restrictions.eq("consumerUuid", uuid))
-                        .setProjection(Projections.rowCount()).uniqueResult();
+        return ((Long) currentSession().createCriteria(DeletedConsumer.class)
+                       .add(Restrictions.eq("consumerUuid", uuid))
+                       .setProjection(Projections.rowCount()).uniqueResult()).intValue();
 
     }
 
