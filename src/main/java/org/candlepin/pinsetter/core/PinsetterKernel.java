@@ -47,6 +47,7 @@ import org.quartz.SchedulerException;
 import org.quartz.Trigger;
 import org.quartz.impl.JobDetailImpl;
 import org.quartz.impl.StdSchedulerFactory;
+import org.quartz.impl.matchers.GroupMatcher;
 import org.quartz.spi.JobFactory;
 
 import java.io.Serializable;
@@ -448,6 +449,10 @@ public class PinsetterKernel {
             deleteJobs(CRON_GROUP);
             deleteJobs(SINGLE_JOB_GROUP);
         }
+    }
+
+    public Set<JobKey> getSingleJobKeys() throws SchedulerException {
+        return scheduler.getJobKeys(GroupMatcher.jobGroupEquals(SINGLE_JOB_GROUP));
     }
 
     private boolean isClustered() {
