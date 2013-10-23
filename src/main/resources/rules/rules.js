@@ -1,4 +1,4 @@
-// Version: 4.3
+// Version: 4.4
 
 /*
  * Default Candlepin rule set.
@@ -24,6 +24,10 @@ function autobind_name_space() {
 
 function quantity_name_space() {
     return Quantity;
+}
+
+function override_name_space() {
+    return Override;
 }
 
 // consumer types
@@ -2702,6 +2706,26 @@ var Quantity = {
             return CoverageCalculator.getQuantityToCoverStack(stackTracker, pool, consumer);
         }
         return 1;
+    }
+}
+
+/**
+ * Namespace for determining ability to override a specific content set
+ *  value
+ *
+ * The list of disallowed value names are listed in this method
+ */
+var Override = {
+    get_override_context: function() {
+        context = JSON.parse(json_context);
+        return context;
+    },
+
+    get_allow_override: function() {
+        var blacklist = ['name','label','baseurl']
+        var context = Override.get_override_context();
+        var name = context.name;
+        return blacklist.indexOf(name) > 0;
     }
 }
 

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+
+    <changeSet id="20131002150608" author="wpoteat">
+        <comment>Consumer content overrides</comment>
+        <createTable tableName="cp_consumer_content_override">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_consumer_content_pkey"/>
+            </column>
+            <column name="consumer_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content_label" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="value" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="wpoteat" id="20131002150608-01">
+        <addForeignKeyConstraint baseColumnNames="consumer_id" baseTableName="cp_consumer_content_override" constraintName="fk_consumer_content_consumer" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="wpoteat" id="20131002150608-02">
+        <addUniqueConstraint columnNames="consumer_id, content_label, name" constraintName="cp_consumer_content_ukey" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_consumer_content_override"/>
+    </changeSet>
+    
+
+</databaseChangeLog>

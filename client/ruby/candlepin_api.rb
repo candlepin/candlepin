@@ -980,6 +980,18 @@ class Candlepin
     get(query)
   end
 
+  def add_content_overrides(uuid, overrides=[])
+    put("consumers/#{uuid}/content_overrides", overrides)
+  end
+
+  def delete_content_overrides(uuid, overrides=[])
+    delete("consumers/#{uuid}/content_overrides", overrides)
+  end
+
+  def get_content_overrides(uuid)
+    get("consumers/#{uuid}/content_overrides")
+  end
+
   # Assumes a zip archive currently. Returns filename (random#.zip) of the
   # temp file created.
   def get_file(uri, dest_dir)
@@ -1026,11 +1038,15 @@ class Candlepin
     return JSON.parse(response.body) unless response.body.empty?
   end
 
-  def delete(uri)
+  def delete(uri, data=nil)
     puts ("DELETE #{uri}") if @verbose
-    response = get_client(uri, Net::HTTP::Delete, :delete)[URI.escape(uri)].delete
+    client = get_client(uri, Net::HTTP::Delete, :delete)
+    client.options[:payload] = data.to_json if not data.nil?
+    response = client[URI.escape(uri)].delete(:content_type => :json, :accepts => :json)
     return JSON.parse(response.body) unless response.body.empty?
   end
+
+  
 
   protected
 

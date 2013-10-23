@@ -43,6 +43,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventAdapter;
@@ -69,11 +70,14 @@ import org.candlepin.model.ActivationKeyPool;
 import org.candlepin.model.CertificateSerialDto;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCapability;
+import org.candlepin.model.ConsumerContentOverride;
+import org.candlepin.model.ConsumerContentOverrideCurator;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.ContentCurator;
 import org.candlepin.model.DeleteResult;
 import org.candlepin.model.DeletedConsumer;
 import org.candlepin.model.DeletedConsumerCurator;
@@ -102,6 +106,7 @@ import org.candlepin.pinsetter.tasks.EntitlerJob;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.consumer.ConsumerRules;
+import org.candlepin.policy.js.override.OverrideRules;
 import org.candlepin.policy.js.quantity.QuantityRules;
 import org.candlepin.resource.util.ConsumerInstalledProductEnricher;
 import org.candlepin.resource.util.ResourceDateParser;
@@ -132,6 +137,7 @@ public class ConsumerResource {
     private Pattern consumerPersonNamePattern;
 
     private static Logger log = Logger.getLogger(ConsumerResource.class);
+    private ConsumerContentOverrideCurator consumerContentOverrideCurator;
     private ConsumerCurator consumerCurator;
     private ConsumerTypeCurator consumerTypeCurator;
     private ProductServiceAdapter productAdapter;
@@ -158,6 +164,7 @@ public class ConsumerResource {
     private DistributorVersionCurator distributorVersionCurator;
     private Config config;
     private QuantityRules quantityRules;
+    private OverrideRules overrideRules;
 
     @Inject
     public ConsumerResource(ConsumerCurator consumerCurator,
@@ -175,7 +182,9 @@ public class ConsumerResource {
         ComplianceRules complianceRules, DeletedConsumerCurator deletedConsumerCurator,
         EnvironmentCurator environmentCurator,
         DistributorVersionCurator distributorVersionCurator,
-        Config config, QuantityRules quantityRules) {
+        Config config, QuantityRules quantityRules,
+        ConsumerContentOverrideCurator consumerContentOverrideCurator,
+        ContentCurator contentCurator, OverrideRules overrideRules) {
 
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -206,6 +215,8 @@ public class ConsumerResource {
             ConfigProperties.CONSUMER_SYSTEM_NAME_PATTERN));
         this.config = config;
         this.quantityRules = quantityRules;
+        this.consumerContentOverrideCurator = consumerContentOverrideCurator;
+        this.overrideRules = overrideRules;
     }
 
     /**
@@ -1950,5 +1961,109 @@ public class ConsumerResource {
                 "Deletion record for hypervisor ''{0}'' not found.", uuid));
         }
         deletedConsumerCurator.delete(dc);
+    }
+
+    /*
+    * Add override for content set
+    *
+    * @param uuid
+    *
+    * @httpcode 404
+    * @httpcode 200
+    */
+    @PUT
+    @Path("{consumer_uuid}/content_overrides")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Transactional
+    public List<ConsumerContentOverride> addContentOverrides(
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
+        List<ConsumerContentOverride> entries) {
+        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        List<String> errors = new ArrayList<String>();
+        for (ConsumerContentOverride entry : entries) {
+            if (overrideRules.canOverrideForConsumer(consumer, entry.getName())) {
+                ConsumerContentOverride cco = consumerContentOverrideCurator.retrieve(
+                    consumer, entry.getContentLabel(), entry.getName());
+                if (cco != null) {
+                    cco.setValue(entry.getValue());
+                    cco.setUpdated(null);
+                    consumerContentOverrideCurator.merge(cco);
+                }
+                else {
+                    entry.setConsumer(consumer);
+                    consumerContentOverrideCurator.create(entry);
+                }
+            }
+            else {
+                errors.add(i18n.tr(
+                    "The value for name ''{0}'' is not allowed to be overridden.",
+                    entry.getName()));
+            }
+        }
+        if (errors.size() > 0) {
+            throw new BadRequestException(errors.toString());
+        }
+        return consumerContentOverrideCurator.getList(consumer);
+    }
+
+    /*
+    * Remove override based on included criteria
+    *
+    * @param uuid
+    *
+    * @httpcode 404
+    * @httpcode 200
+    */
+    @DELETE
+    @Path("{consumer_uuid}/content_overrides")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Transactional
+    public List<ConsumerContentOverride> deleteContentOverrides(
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
+        List<ConsumerContentOverride> entries) {
+
+        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        if (entries.size() == 0) {
+            consumerContentOverrideCurator.removeByConsumer(consumer);
+        }
+        else {
+            for (ConsumerContentOverride entry : entries) {
+                String label = entry.getContentLabel();
+                if (StringUtils.isBlank(label)) {
+                    consumerContentOverrideCurator.removeByConsumer(consumer);
+                }
+                else {
+                    String name = entry.getName();
+                    if (StringUtils.isBlank(name)) {
+                        consumerContentOverrideCurator.removeByContentLabel(
+                            consumer, entry.getContentLabel());
+                    }
+                    else {
+                        consumerContentOverrideCurator.removeByName(consumer,
+                            entry.getContentLabel(), name);
+                    }
+                }
+            }
+        }
+        return consumerContentOverrideCurator.getList(consumer);
+    }
+
+    /*
+    * Get the list of content set overrides for this consumer
+    *
+    * @param uuid
+    *
+    * @httpcode 404
+    * @httpcode 200
+    */
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{consumer_uuid}/content_overrides")
+    public List<ConsumerContentOverride> getContentOverrideList(
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
+        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        return consumerContentOverrideCurator.getList(consumer);
     }
 }
