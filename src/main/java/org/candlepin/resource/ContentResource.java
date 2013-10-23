@@ -14,6 +14,7 @@
  */
 package org.candlepin.resource;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -109,6 +110,28 @@ public class ContentResource {
         }
 
         return contentCurator.create(content);
+    }
+
+    /**
+     * @return a Content object
+     * @httpcode 200
+     */
+    @POST
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/batch")
+    public List<Content> createBatchContent(List<Content> contents) {
+        List<Content> result = new ArrayList<Content>();
+        for (Content content : contents) {
+            Content lookedUp = contentCurator.find(content.getId());
+            if (lookedUp != null) {
+                content.setId(lookedUp.getId());
+                result.add(contentCurator.merge(content));
+            }
+            else {
+                result.add(contentCurator.create(content));
+            }
+        }
+        return result;
     }
 
     @PUT

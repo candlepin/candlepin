@@ -60,6 +60,16 @@ module CandlepinMethods
       random_str, params)
   end
 
+  def create_batch_content(count=1)
+    contents = []
+    (0..count).each do |i|
+      random_str = random_string(nil, true).to_i
+      contents << @cp.create_content(random_str, random_str, random_str, "yum",
+        random_str, {:content_url => "/content/dist/rhel/$releasever#{i}/$basearch#{i}/debug#{i}"}, false)
+    end
+    @cp.create_batch_content(contents)
+  end
+
   # Wrapper for ruby API so we can track all distributor versions we created and clean them up.
   def create_distributor_version(dist_name, display_name, capabilities=[])
     dist_version = @cp.create_distributor_version(dist_name, display_name, capabilities)

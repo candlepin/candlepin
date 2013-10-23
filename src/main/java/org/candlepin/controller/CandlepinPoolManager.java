@@ -43,12 +43,12 @@ import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
+import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Subscription;
-import org.candlepin.model.Pool.PoolType;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.policy.EntitlementRefusedException;
@@ -64,6 +64,7 @@ import org.candlepin.policy.js.pool.PoolRules;
 import org.candlepin.policy.js.pool.PoolUpdate;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
+import org.candlepin.util.CertificateSizeException;
 import org.candlepin.util.Util;
 import org.candlepin.version.CertVersionConflictException;
 
@@ -820,6 +821,9 @@ public class CandlepinPoolManager implements PoolManager {
         catch (CertVersionConflictException cvce) {
             throw cvce;
         }
+        catch (CertificateSizeException cse) {
+            throw cse;
+        }
         catch (Exception ex) {
             throw new RuntimeException(ex);
         }
@@ -918,24 +922,34 @@ public class CandlepinPoolManager implements PoolManager {
         if (log.isDebugEnabled()) {
             log.debug("Revoking entitlementCertificates of : " + e);
         }
-        this.entCertAdapter.revokeEntitlementCertificates(e);
-        for (EntitlementCertificate ec : e.getCertificates()) {
-            if (log.isDebugEnabled()) {
-                log.debug("Deleting entitlementCertificate: #" + ec.getId());
-            }
-            this.entitlementCertificateCurator.delete(ec);
-        }
+
+        Entitlement tempE = new Entitlement();
+        tempE.getCertificates().addAll(e.getCertificates());
         e.getCertificates().clear();
         // below call creates new certificates and saves it to the backend.
-        EntitlementCertificate generated = this.generateEntitlementCertificate(
-            e.getPool(), e, ueberCertificate);
-        e.setDirty(false);
-        entitlementCurator.merge(e);
+        try {
+            EntitlementCertificate generated = this.generateEntitlementCertificate(
+                e.getPool(), e, ueberCertificate);
+            e.setDirty(false);
+            entitlementCurator.merge(e);
+            this.entCertAdapter.revokeEntitlementCertificates(tempE);
+            for (EntitlementCertificate ec : tempE.getCertificates()) {
+                if (log.isDebugEnabled()) {
+                    log.debug("Deleting entitlementCertificate: #" + ec.getId());
+                }
+                this.entitlementCertificateCurator.delete(ec);
+            }
 
-        // send entitlement changed event.
-        this.sink.sendEvent(this.eventFactory.entitlementChanged(e));
-        if (log.isDebugEnabled()) {
-            log.debug("Generated entitlementCertificate: #" + generated.getId());
+            // send entitlement changed event.
+            this.sink.sendEvent(this.eventFactory.entitlementChanged(e));
+            if (log.isDebugEnabled()) {
+                log.debug("Generated entitlementCertificate: #" + generated.getId());
+            }
+        }
+        catch (CertificateSizeException cse) {
+            e.getCertificates().addAll(tempE.getCertificates());
+            log.warn("The certificate cannot be regenerated at this time: " +
+                cse.getMessage());
         }
     }
 

@@ -403,7 +403,7 @@ class Candlepin
   end
 
   def create_content(name, id, label, type, vendor,
-      params={})
+      params={}, post=true)
 
     metadata_expire = params[:metadata_expire] || nil
     required_tags = params[:required_tags] || nil
@@ -425,7 +425,15 @@ class Candlepin
     }
     content['metadataExpire'] = metadata_expire if not metadata_expire.nil?
     content['requiredTags'] = required_tags if not required_tags.nil?
-    post("/content", content)
+    if post
+      post("/content", content)
+    else
+      return content
+    end
+  end
+
+  def create_batch_content(contents=[])
+    post("/content/batch", contents)
   end
 
   def list_content
@@ -442,6 +450,14 @@ class Candlepin
 
   def add_content_to_product(product_id, content_id, enabled=true)
     post("/products/#{product_id}/content/#{content_id}?enabled=#{enabled}")
+  end
+
+  def add_batch_content_to_product(product_id, content_ids, enabled=true)
+    data = {}
+    content_ids.each do |id|
+      data[id] = enabled
+    end
+    post("/products/#{product_id}/batch_content", data)
   end
 
   def remove_content_from_product(product_id, content_id)

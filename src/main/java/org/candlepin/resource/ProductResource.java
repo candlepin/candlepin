@@ -16,7 +16,9 @@ package org.candlepin.resource;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -28,6 +30,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import org.apache.log4j.Logger;
 import org.candlepin.auth.interceptor.SecurityHole;
 import org.candlepin.auth.interceptor.Verify;
 import org.candlepin.exceptions.BadRequestException;
@@ -44,8 +47,6 @@ import org.candlepin.model.StatisticCurator;
 import org.candlepin.pinsetter.tasks.RefreshPoolsForProductJob;
 import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.service.ProductServiceAdapter;
-
-import org.apache.log4j.Logger;
 import org.quartz.JobDetail;
 import org.xnap.commons.i18n.I18n;
 
@@ -227,6 +228,26 @@ public class ProductResource {
         // not calling setHref() it's a no op and pointless to call.
 
         return changesMade;
+    }
+
+    /**
+     * @return the Product
+     * @httpcode 200
+     */
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/{product_uuid}/batch_content")
+    public Product addBatchContent(@PathParam("product_uuid") String pid,
+                              Map<String, Boolean> contentMap) {
+        Product product = prodAdapter.getProductById(pid);
+        for (String contentId : contentMap.keySet()) {
+            Content content = contentCurator.find(contentId);
+            ProductContent productContent = new ProductContent(product, content,
+                contentMap.get(contentId));
+            product.getProductContent().add(productContent);
+        }
+        return prodAdapter.getProductById((product.getId()));
     }
 
     /**
