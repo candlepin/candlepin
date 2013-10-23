@@ -24,7 +24,6 @@ import static org.quartz.TriggerBuilder.newTrigger;
 
 import org.candlepin.guice.CandlepinSingletonScope;
 import org.candlepin.test.DatabaseTestFixture;
-
 import org.junit.Test;
 import org.quartz.Job;
 import org.quartz.JobDetail;
@@ -68,8 +67,7 @@ public class HighlanderFactoryTest extends DatabaseTestFixture{
             false, null, null, null, null);
         Job j = hf.newJob(tfb, null);
         assertNotNull(j);
-        assertEquals(TransactionalPinsetterJob.class, j.getClass());
-        assertEquals(TestJob.class,
-            ((TransactionalPinsetterJob) j).getWrappedJob().getClass());
+        //We no longer encapsulate the job
+        assertEquals(TestJob.class, j.getClass());
     }
 }

@@ -23,8 +23,8 @@ import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
+import com.google.inject.persist.UnitOfWork;
 
-import org.quartz.Job;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
@@ -33,7 +33,7 @@ import org.quartz.JobExecutionException;
 /**
  * RefreshPoolsForProductJob
  */
-public class RefreshPoolsForProductJob implements Job {
+public class RefreshPoolsForProductJob extends KingpinJob {
 
     private ProductServiceAdapter productAdapter;
     private PoolManager poolManager;
@@ -42,13 +42,14 @@ public class RefreshPoolsForProductJob implements Job {
 
     @Inject
     public RefreshPoolsForProductJob(ProductServiceAdapter productAdapter,
-        PoolManager poolManager) {
+        PoolManager poolManager, UnitOfWork unitOfWork) {
+        super(unitOfWork);
         this.productAdapter = productAdapter;
         this.poolManager = poolManager;
     }
 
     @Override
-    public void execute(JobExecutionContext context)
+    public void toExecute(JobExecutionContext context)
         throws JobExecutionException {
         String productId = context.getMergedJobDataMap().getString(JobStatus.TARGET_ID);
         Boolean lazy = context.getMergedJobDataMap().getBoolean(LAZY_REGEN);

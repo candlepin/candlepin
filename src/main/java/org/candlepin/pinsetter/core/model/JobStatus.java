@@ -15,6 +15,7 @@
 package org.candlepin.pinsetter.core.model;
 
 import java.util.Date;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -22,14 +23,15 @@ import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 import org.candlepin.auth.Principal;
 import org.candlepin.model.AbstractHibernateObject;
 import org.candlepin.pinsetter.core.PinsetterJobListener;
-
+import org.candlepin.pinsetter.tasks.KingpinJob;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
-
+import org.quartz.JobKey;
 /**
  * Represents the current status for a long-running job.
  */
@@ -51,7 +53,8 @@ public class JobStatus extends AbstractHibernateObject {
         RUNNING,
         FINISHED,
         CANCELED,
-        FAILED;
+        FAILED,
+        WAITING;
     }
 
     /**
@@ -77,6 +80,9 @@ public class JobStatus extends AbstractHibernateObject {
     private TargetType targetType;
     private String targetId;
 
+    @Column(length = 255)
+    private Class<? extends KingpinJob> jobClass;
+
     public JobStatus() { }
 
     public JobStatus(JobDetail jobDetail) {
@@ -86,6 +92,17 @@ public class JobStatus extends AbstractHibernateObject {
         this.targetType = getTargetType(jobDetail);
         this.targetId = getTargetId(jobDetail);
         this.principalName = getPrincipalName(jobDetail);
+        this.jobClass = getJobClass(jobDetail);
+    }
+
+    public JobStatus(JobDetail jobDetail, boolean waiting) {
+        this.id = jobDetail.getKey().getName();
+        this.jobGroup = jobDetail.getKey().getGroup();
+        this.state = waiting ? JobState.WAITING : JobState.CREATED;
+        this.targetType = getTargetType(jobDetail);
+        this.targetId = getTargetId(jobDetail);
+        this.principalName = getPrincipalName(jobDetail);
+        this.jobClass = getJobClass(jobDetail);
     }
 
     private String getPrincipalName(JobDetail detail) {
@@ -102,6 +119,11 @@ public class JobStatus extends AbstractHibernateObject {
         return (String) jobDetail.getJobDataMap().get(TARGET_ID);
     }
 
+    @SuppressWarnings("unchecked")
+    private Class<? extends KingpinJob> getJobClass(JobDetail jobDetail) {
+        return (Class<? extends KingpinJob>) jobDetail.getJobClass();
+    }
+
     public void update(JobExecutionContext context) {
         this.startTime = context.getFireTime();
         long runTime = context.getJobRunTime();
@@ -110,8 +132,8 @@ public class JobStatus extends AbstractHibernateObject {
             setState(JobState.RUNNING);
 
             if (runTime > -1) {
-                this.finishTime = new Date(startTime.getTime() + runTime);
                 setState(JobState.FINISHED);
+                this.finishTime = new Date(startTime.getTime() + runTime);
             }
         }
         else {
@@ -183,5 +205,15 @@ public class JobStatus extends AbstractHibernateObject {
 
     public String getPrincipalName() {
         return this.principalName;
+    }
+
+    @XmlTransient
+    public Class<? extends KingpinJob> getJobClass() {
+        return jobClass;
+    }
+
+    @XmlTransient
+    public JobKey getJobKey() {
+        return new JobKey(this.getId(), this.getGroup());
     }
 }

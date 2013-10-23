@@ -16,10 +16,12 @@ package org.candlepin.pinsetter.tasks;
 
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.never;
 import static org.quartz.JobBuilder.newJob;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,21 +33,16 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.atLeastOnce;
-
-import org.quartz.Job;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.quartz.SchedulerException;
 
 /**
- * CancelJobJobTest
+ * UnpauseJobTest
  */
-public class CancelJobJobTest {
-    private CancelJobJob cancelJobJob;
+public class UnpauseJobTest {
+    private UnpauseJob unpauseJob;
     @Mock private JobCurator j;
     @Mock private PinsetterKernel pk;
     @Mock private JobExecutionContext ctx;
@@ -54,33 +51,37 @@ public class CancelJobJobTest {
     @Before
     public void init() {
         MockitoAnnotations.initMocks(this);
-        cancelJobJob = new CancelJobJob(j, pk, null);
+        unpauseJob = new UnpauseJob(j, pk, null);
     }
 
     @Test
-    public void noCancellationsTest() throws JobExecutionException {
-        when(j.findCanceledJobs()).thenReturn(new ArrayList<JobStatus>());
-        cancelJobJob.execute(ctx);
+    public void noUnPausesTest() throws JobExecutionException {
+        when(j.findWaitingJobs()).thenReturn(new ArrayList<JobStatus>());
+        unpauseJob.execute(ctx);
         try {
-            verify(pk, never()).cancelJob(any(Serializable.class), any(String.class));
+            verify(pk, never()).addTrigger(any(JobStatus.class));
         }
-        catch (PinsetterException e) {
+        catch (SchedulerException e) {
             fail("Should not be executed, much less fail");
         }
     }
 
     @Test
-    public void cancelTest() throws JobExecutionException, PinsetterException {
-        JobDetail jd = newJob(Job.class)
+    public void unPauseTest() throws JobExecutionException, PinsetterException {
+        JobDetail jd = newJob(KingpinJob.class)
             .withIdentity("Kayfabe", "Deluxe")
             .build();
 
-        JobStatus js = new JobStatus(jd);
+        JobStatus js = new JobStatus(jd, true);
         List<JobStatus> jl = new ArrayList<JobStatus>();
         jl.add(js);
-        when(j.findCanceledJobs()).thenReturn(jl);
-        cancelJobJob.execute(ctx);
-        verify(pk, atLeastOnce()).cancelJob((Serializable) "Kayfabe", "Deluxe");
+        when(j.findWaitingJobs()).thenReturn(jl);
+        unpauseJob.execute(ctx);
+        try {
+            verify(pk, atLeastOnce()).addTrigger(js);
+        }
+        catch (SchedulerException e) {
+            fail("Should not throw an exception");
+        }
     }
-
 }

@@ -98,6 +98,7 @@ import org.candlepin.model.User;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.paging.Paginate;
+import org.candlepin.pinsetter.tasks.EntitleByProductsJob;
 import org.candlepin.pinsetter.tasks.EntitlerJob;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
@@ -1388,7 +1389,7 @@ public class ConsumerResource {
                 detail = EntitlerJob.bindByPool(poolIdString, consumerUuid, quantity);
             }
             else {
-                detail = EntitlerJob.bindByProducts(productIds,
+                detail = EntitleByProductsJob.bindByProducts(productIds,
                         consumerUuid, entitleDate);
             }
 

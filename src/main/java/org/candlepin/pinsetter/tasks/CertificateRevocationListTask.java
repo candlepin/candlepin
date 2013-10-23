@@ -15,13 +15,13 @@
 package org.candlepin.pinsetter.tasks;
 
 import com.google.inject.Inject;
+import com.google.inject.persist.UnitOfWork;
 
 import org.apache.log4j.Logger;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.CrlGenerator;
 import org.candlepin.util.CrlFileUtil;
-import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
@@ -34,7 +34,7 @@ import java.security.cert.X509CRL;
 /**
  * CertificateRevocationListTask.
  */
-public class CertificateRevocationListTask implements Job {
+public class CertificateRevocationListTask extends KingpinJob {
 
     public static final String DEFAULT_SCHEDULE = "0 0 12 * * ?";
 
@@ -52,14 +52,15 @@ public class CertificateRevocationListTask implements Job {
      */
     @Inject
     public CertificateRevocationListTask(Config conf,
-        CrlFileUtil crlFileUtil, CrlGenerator crlGenerator) {
+        CrlFileUtil crlFileUtil, CrlGenerator crlGenerator,
+        UnitOfWork unitOfWork) {
+        super(unitOfWork);
         this.config = conf;
         this.crlFileUtil = crlFileUtil;
         this.crlGenerator = crlGenerator;
     }
 
-    @Override
-    public void execute(JobExecutionContext ctx) throws JobExecutionException {
+    public void toExecute(JobExecutionContext ctx) throws JobExecutionException {
         String filePath = config.getString(ConfigProperties.CRL_FILE_PATH);
         log.info("Executing CRL Job. CRL filePath=" + filePath);
 

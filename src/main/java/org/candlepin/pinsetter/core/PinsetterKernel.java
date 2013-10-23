@@ -21,7 +21,6 @@ import static org.quartz.JobKey.jobKey;
 import static org.quartz.TriggerBuilder.newTrigger;
 import static org.quartz.TriggerKey.triggerKey;
 import static org.quartz.impl.matchers.GroupMatcher.jobGroupEquals;
-import static org.quartz.impl.matchers.NameMatcher.jobNameEquals;
 
 import org.candlepin.auth.SystemPrincipal;
 import org.candlepin.config.Config;
@@ -47,6 +46,7 @@ import org.quartz.SchedulerException;
 import org.quartz.Trigger;
 import org.quartz.impl.JobDetailImpl;
 import org.quartz.impl.StdSchedulerFactory;
+import org.quartz.impl.matchers.GroupMatcher;
 import org.quartz.spi.JobFactory;
 
 import java.io.Serializable;
@@ -58,8 +58,6 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
-import javax.persistence.EntityExistsException;
-
 /**
  * Pinsetter Kernel.
  * @version $Rev$
@@ -67,8 +65,8 @@ import javax.persistence.EntityExistsException;
 @Singleton
 public class PinsetterKernel {
 
-    private static final String CRON_GROUP = "cron group";
-    private static final String SINGLE_JOB_GROUP = "async group";
+    public static final String CRON_GROUP = "cron group";
+    public static final String SINGLE_JOB_GROUP = "async group";
 
     private static Logger log = Logger.getLogger(PinsetterKernel.class);
 
@@ -330,22 +328,10 @@ public class PinsetterKernel {
         detailImpl.setGroup(grpName);
 
         try {
-            scheduler.getListenerManager()
-                .addJobListenerMatcher(PinsetterJobListener.LISTENER_NAME,
-                    jobNameEquals(detail.getKey().getName()));
-
-            JobStatus status = null;
-            try {
-                status = jobCurator.create(new JobStatus(detail));
-            }
-            catch (EntityExistsException e) {
-                // status exists, let's update it
-                // in theory this should be the rare case
-                status = jobCurator.find(detail.getKey().getName());
-                jobCurator.merge(status);
-            }
-
-            scheduler.scheduleJob(detail, trigger);
+            JobStatus status = (JobStatus) (detail.getJobClass()
+                .getMethod("scheduleJob", JobCurator.class,
+                    Scheduler.class, JobDetail.class, Trigger.class)
+                .invoke(null, jobCurator, scheduler, detail, trigger));
 
             if (log.isDebugEnabled()) {
                 log.debug("Scheduled " + detailImpl.getFullName());
@@ -353,7 +339,11 @@ public class PinsetterKernel {
 
             return status;
         }
-        catch (SchedulerException e) {
+        catch (NullPointerException npe) {
+            log.debug("CAKO " + npe.getMessage() + " " + npe.getCause());
+            throw npe;
+        }
+        catch (Exception e) {
             log.error("There was a problem scheduling " +
                 detail.getKey().getName(), e);
             throw new PinsetterException("There was a problem scheduling " +
@@ -391,6 +381,14 @@ public class PinsetterKernel {
         return scheduleJob(jobDetail, SINGLE_JOB_GROUP, trigger);
     }
 
+    public void addTrigger(JobStatus status) throws SchedulerException {
+        Trigger trigger = newTrigger()
+            .withIdentity(status.getId() + " trigger", SINGLE_JOB_GROUP)
+            .forJob(status.getJobKey())
+            .build();
+        scheduler.scheduleJob(trigger);
+    }
+
     public boolean getSchedulerStatus() throws PinsetterException {
         try {
             // return true when scheduler is running (double negative)
@@ -414,9 +412,10 @@ public class PinsetterKernel {
 
     public void unpauseScheduler() throws PinsetterException {
         log.debug("looking for canceled jobs since scheduler was paused");
-        CancelJobJob cjj = new CancelJobJob(jobCurator, this);
+        CancelJobJob cjj = new CancelJobJob(jobCurator, this, null);
         try {
-            cjj.execute(null);
+            //Not sure why we don't want to use a UnitOfWork here
+            cjj.toExecute(null);
         }
         catch (JobExecutionException e1) {
             throw new PinsetterException("Could not clear canceled jobs before starting");
@@ -448,6 +447,10 @@ public class PinsetterKernel {
             deleteJobs(CRON_GROUP);
             deleteJobs(SINGLE_JOB_GROUP);
         }
+    }
+
+    public Set<JobKey> getSingleJobKeys() throws SchedulerException {
+        return scheduler.getJobKeys(GroupMatcher.jobGroupEquals(SINGLE_JOB_GROUP));
     }
 
     private boolean isClustered() {
