@@ -369,12 +369,15 @@ describe 'Consumer Resource' do
     # Connect without any credentials:
     client = Candlepin.new
 
-    key1 = @cp.create_activation_key(owner['key'], 'key1')
+    act_key1 = @cp.create_activation_key(owner['key'], 'act_key1')
+
     # null quantity
-    @cp.add_pool_to_key(key1['id'], pool1['id'])
-    @cp.create_activation_key(owner['key'], 'key2')
+    @cp.add_pool_to_key(act_key1['id'], pool1['id'])
+    @cp.create_activation_key(owner['key'], 'act_key2')
+
     consumer = client.register(random_string('machine1'), :system, nil, {'cpu.cpu_socket(s)' => '4'}, nil,
-      owner['key'], ["key1", "key2"])
+      owner['key'], ["act_key1", "act_key2"])
+
     consumer.uuid.should_not be_nil
 
     # TODO: Verify activation keys did what we expect once they are functional
