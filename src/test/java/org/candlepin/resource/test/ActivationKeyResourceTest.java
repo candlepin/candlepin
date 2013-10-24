@@ -103,7 +103,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         key.setName("dd");
         key = activationKeyCurator.create(key);
         assertNotNull(key.getId());
-        activationKeyResource.addPoolToKey(key.getId(), pool.getId(), 1);
+        activationKeyResource.addPoolToKey(key.getId(), pool.getId(), 1L);
 //        key = activationKeyResource.createActivationKey(key);
         assertTrue(key.getPools().size() == 1);
         activationKeyResource.removePoolFromKey(key.getId(), pool.getId());
@@ -122,7 +122,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         when(poolManager.find(eq("testPool"))).thenReturn(p);
 
         ActivationKeyResource akr = new ActivationKeyResource(akc, i18n, poolManager);
-        akr.addPoolToKey("testKey", "testPool", 2);
+        akr.addPoolToKey("testKey", "testPool", 2L);
     }
 
     @Test(expected = BadRequestException.class)
@@ -140,7 +140,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         when(p.getQuantity()).thenReturn(10L);
 
         ActivationKeyResource akr = new ActivationKeyResource(akc, i18n, poolManager);
-        akr.addPoolToKey("testKey", "testPool", -3);
+        akr.addPoolToKey("testKey", "testPool", -3L);
     }
 
     @Test(expected = BadRequestException.class)
@@ -158,7 +158,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         when(p.getQuantity()).thenReturn(10L);
 
         ActivationKeyResource akr = new ActivationKeyResource(akc, i18n, poolManager);
-        akr.addPoolToKey("testKey", "testPool", 15);
+        akr.addPoolToKey("testKey", "testPool", 15L);
     }
 
     @Test
@@ -176,7 +176,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         when(ppa.getValue()).thenReturn("yes");
 
         ActivationKeyResource akr = new ActivationKeyResource(akc, i18n, poolManager);
-        akr.addPoolToKey("testKey", "testPool", 15);
+        akr.addPoolToKey("testKey", "testPool", 15L);
     }
 
 
@@ -195,7 +195,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         when(p.getQuantity()).thenReturn(1L);
 
         ActivationKeyResource akr = new ActivationKeyResource(akc, i18n, poolManager);
-        akr.addPoolToKey("testKey", "testPool", 1);
+        akr.addPoolToKey("testKey", "testPool", 1L);
     }
 
     @Test
@@ -213,7 +213,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         when(p.getQuantity()).thenReturn(1L);
 
         ActivationKeyResource akr = new ActivationKeyResource(akc, i18n, poolManager);
-        assertNotNull(akr.addPoolToKey("testKey", "testPool", 1));
+        assertNotNull(akr.addPoolToKey("testKey", "testPool", 1L));
     }
 
     @Test
@@ -234,12 +234,12 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
 
         ActivationKeyResource akr = new ActivationKeyResource(akc, i18n, poolManager);
         when(ak.getPools()).thenReturn(new HashSet<ActivationKeyPool>());
-        akr.addPoolToKey("testKey", "testPool1", 1);
+        akr.addPoolToKey("testKey", "testPool1", 1L);
         verify(ak).addPool(eq(p1), eq(1L));
         Set<ActivationKeyPool> akPools = new HashSet<ActivationKeyPool>();
         akPools.add(new ActivationKeyPool(ak, p1, 1L));
         when(ak.getPools()).thenReturn(akPools);
-        akr.addPoolToKey("testKey", "testPool2", 1);
+        akr.addPoolToKey("testKey", "testPool2", 1L);
         verify(ak).addPool(eq(p2), eq(1L));
     }
 
@@ -262,7 +262,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         when(ak.getPools()).thenReturn(akPools);
 
         ActivationKeyResource akr = new ActivationKeyResource(akc, i18n, poolManager);
-        akr.addPoolToKey("testKey", "testPool1", 1);
+        akr.addPoolToKey("testKey", "testPool1", 1L);
     }
 
     @Test
@@ -283,12 +283,26 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
 
         ActivationKeyResource akr = new ActivationKeyResource(akc, i18n, poolManager);
         when(ak.getPools()).thenReturn(new HashSet<ActivationKeyPool>());
-        akr.addPoolToKey("testKey", "testPool1", 1);
+        akr.addPoolToKey("testKey", "testPool1", 1L);
         verify(ak).addPool(eq(p1), eq(1L));
         Set<ActivationKeyPool> akPools = new HashSet<ActivationKeyPool>();
         akPools.add(new ActivationKeyPool(ak, p1, 1L));
         when(ak.getPools()).thenReturn(akPools);
-        akr.addPoolToKey("testKey", "testPool2", 1);
+        akr.addPoolToKey("testKey", "testPool2", 1L);
         verify(ak).addPool(eq(p2), eq(1L));
+    }
+
+    @Test
+    public void testActivationKeyWithNullQuantity() {
+        ActivationKey ak = mock(ActivationKey.class);
+        ActivationKeyCurator akc = mock(ActivationKeyCurator.class);
+        Pool p = mock(Pool.class);
+        PoolManager poolManager = mock(PoolManager.class);
+
+        when(akc.find(eq("testKey"))).thenReturn(ak);
+        when(poolManager.find(eq("testPool"))).thenReturn(p);
+
+        ActivationKeyResource akr = new ActivationKeyResource(akc, i18n, poolManager);
+        akr.addPoolToKey("testKey", "testPool", null);
     }
 }

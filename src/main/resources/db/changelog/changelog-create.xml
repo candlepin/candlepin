@@ -23,7 +23,7 @@
             <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
             <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
             <column name="quantity" type="int8">
-                <constraints nullable="false"/>
+                <constraints nullable="true"/>
             </column>
             <column name="key_id" type="VARCHAR(32)">
                 <constraints nullable="false"/>

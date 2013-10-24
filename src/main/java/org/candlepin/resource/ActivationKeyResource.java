@@ -18,7 +18,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -125,9 +124,9 @@ public class ActivationKeyResource {
         @PathParam("activation_key_id") @Verify(ActivationKey.class) String activationKeyId,
         @PathParam("pool_id")
         @Verify(value = Pool.class, require = Access.READ_POOLS) String poolId,
-        @QueryParam("quantity") @DefaultValue("1") long quantity) {
+        @QueryParam("quantity") Long quantity) {
 
-        if (quantity < 1) {
+        if (quantity != null && quantity < 1) {
             throw new BadRequestException(
                 i18n.tr("The quantity must be greater than 0"));
         }
@@ -142,7 +141,7 @@ public class ActivationKeyResource {
             throw new BadRequestException(i18n.tr("Cannot add pools that are " +
                     "restricted to unit type 'person' to activation keys."));
         }
-        if (quantity > 1) {
+        if (quantity != null && quantity > 1) {
             ProductPoolAttribute ppa = pool.getProductAttribute("multi-entitlement");
             if (ppa == null || !ppa.getValue().equalsIgnoreCase("yes")) {
                 throw new BadRequestException(
@@ -151,7 +150,7 @@ public class ActivationKeyResource {
                         " a quantity greater than one."));
             }
         }
-        if ((!pool.isUnlimited()) && (quantity > pool.getQuantity())) {
+        if (quantity != null && (!pool.isUnlimited()) && (quantity > pool.getQuantity())) {
             throw new BadRequestException(
                 i18n.tr("The quantity must not be greater than the total " +
                     "allowed for the pool"));

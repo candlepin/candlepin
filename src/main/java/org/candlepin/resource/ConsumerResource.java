@@ -108,6 +108,7 @@ import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.consumer.ConsumerRules;
 import org.candlepin.policy.js.override.OverrideRules;
 import org.candlepin.policy.js.quantity.QuantityRules;
+import org.candlepin.policy.js.quantity.SuggestedQuantity;
 import org.candlepin.resource.util.ConsumerInstalledProductEnricher;
 import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.service.EntitlementCertServiceAdapter;
@@ -348,8 +349,7 @@ public class ConsumerResource {
         // API:registerConsumer
         Set<String> keyStrings = splitKeys(activationKeys);
 
-        // Only let NoAuth principals through if there are activation keys to
-        // consider:
+        // Only let NoAuth principals through if there are activation keys to consider:
         if ((principal instanceof NoAuthPrincipal) && (keyStrings.size() == 0)) {
             throw new ForbiddenException(i18n.tr("Insufficient permissions"));
         }
@@ -438,20 +438,7 @@ public class ConsumerResource {
 
             sink.emitConsumerCreated(consumer);
 
-            // Process activation keys.
-            for (ActivationKey ak : keys) {
-                for (ActivationKeyPool akp : ak.getPools()) {
-                    List<Entitlement> entitlements = null;
-
-                    String poolId = Util.assertNotNull(akp.getPool().getId(),
-                        i18n.tr("Pool ID must be provided"));
-                    entitlements = entitler.bindByPool(poolId, consumer, akp
-                        .getQuantity().intValue());
-
-                    // Trigger events:
-                    entitler.sendEvents(entitlements);
-                }
-            }
+            handleActivationKeys(consumer, keys);
 
             ComplianceStatus compliance = complianceRules.getStatus(consumer,
                 Calendar.getInstance().getTime());
@@ -474,6 +461,24 @@ public class ConsumerResource {
                 "Problem creating unit {0}", consumer));
         }
     }
+
+    private void handleActivationKeys(Consumer consumer, List<ActivationKey> keys) {
+        // Process activation keys.
+        for (ActivationKey ak : keys) {
+            for (ActivationKeyPool akp : ak.getPools()) {
+                List<Entitlement> entitlements = null;
+                String poolId = Util.assertNotNull(akp.getPool().getId(),
+                    i18n.tr("Pool ID must be provided"));
+                int quantity = (akp.getQuantity() == null) ?
+                    getQuantityToBind(akp.getPool(), consumer) :
+                    akp.getQuantity().intValue();
+                entitlements = entitler.bindByPool(poolId, consumer, quantity);
+                // Trigger events:
+                entitler.sendEvents(entitlements);
+            }
+        }
+    }
+
     /**
      * @param consumer
      * @param principal
@@ -1377,13 +1382,7 @@ public class ConsumerResource {
         if (poolIdString != null && quantity == null) {
             Pool pool = poolManager.find(poolIdString);
             if (pool != null) {
-                Date now = new Date();
-                // If the pool is being attached in the future, calculate
-                // suggested quantity on the start date
-                Date onDate = now.before(pool.getStartDate()) ?
-                    pool.getStartDate() : now;
-                quantity = Math.max(1, quantityRules.getSuggestedQuantity(pool,
-                    consumer, onDate).getSuggested().intValue());
+                quantity = getQuantityToBind(pool, consumer);
             }
             else {
                 quantity = 1;
@@ -2065,5 +2064,20 @@ public class ConsumerResource {
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
         return consumerContentOverrideCurator.getList(consumer);
+    }
+
+    private int getQuantityToBind(Pool pool, Consumer consumer) {
+        Date now = new Date();
+        // If the pool is being attached in the future, calculate
+        // suggested quantity on the start date
+        Date onDate = now.before(pool.getStartDate()) ?
+            pool.getStartDate() : now;
+        SuggestedQuantity suggested = quantityRules.getSuggestedQuantity(pool,
+            consumer, onDate);
+        int quantity = Math.max(suggested.getIncrement().intValue(),
+            suggested.getSuggested().intValue());
+        //It's possible that increment is greater than the number available
+        //but whatever we do here, the bind will fail
+        return quantity;
     }
 }
