@@ -36,7 +36,10 @@ import com.google.inject.Inject;
 import com.google.inject.persist.UnitOfWork;
 
 /**
- * CpJob
+ * KingpinJob replaces TransactionalPinsetterJob, which encapsulated
+ * other jobs.  Using a supertype between actual jobs and the
+ * Quartz Job type gives us more freedom to define behavior.
+ * Every candlepin job must extend KingpinJob
  */
 public abstract class KingpinJob implements Job {
 

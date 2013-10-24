@@ -23,7 +23,6 @@ import org.candlepin.controller.Entitler;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Entitlement;
-import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.util.Util;
@@ -60,15 +59,12 @@ public class HealEntireOrgJob extends UniqueByOwnerJob {
             JobDataMap map = ctx.getMergedJobDataMap();
             String ownerId = (String) map.get("ownerId");
             Date entitleDate = (Date) map.get("entitle_date");
-            Owner owner = ownerCurator.lookupByKey(ownerId);
-            //Is there a better way to get all consumer UUIDs for an owner?
-            for (Consumer c : owner.getConsumers()) {
-                //This is a bit odd, but the consumer may be stale by now
-                String consumerUuid = c.getUuid();
+            List<String> uuids = ownerCurator.getConsumerUuids(ownerId);
+            for (String uuid : uuids) {
                 // Do not send in product ids.  CandlepinPoolManager will take care
                 // of looking up the non or partially compliant products to bind.
                 try {
-                    Consumer consumer = consumerCurator.getConsumer(consumerUuid);
+                    Consumer consumer = consumerCurator.getConsumer(uuid);
                     List<Entitlement> ents = entitler.bindByProducts(null, consumer,
                         entitleDate, true);
                     entitler.sendEvents(ents);
@@ -76,7 +72,7 @@ public class HealEntireOrgJob extends UniqueByOwnerJob {
                 // We want to catch everything and continue.
                 // Perhaps add something to surface errors later
                 catch (Exception e) {
-                    log.debug("Healing failed for UUID " + consumerUuid +
+                    log.debug("Healing failed for UUID " + uuid +
                         " with message: " + e.getMessage());
                 }
             }

@@ -24,7 +24,10 @@ import org.quartz.Trigger;
 import com.google.inject.persist.UnitOfWork;
 
 /**
- * UniqueByOwnerJob
+ * UniqueByOwnerJob can by extended by jobs that should not be
+ * run concurrently per owner.  A job will wait for the running
+ * job to finish before beginning execution.  Additional scheduled
+ * jobs will be given the status of the waiting job.
  */
 public abstract class UniqueByOwnerJob extends KingpinJob {
 

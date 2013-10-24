@@ -339,10 +339,6 @@ public class PinsetterKernel {
 
             return status;
         }
-        catch (NullPointerException npe) {
-            log.debug("CAKO " + npe.getMessage() + " " + npe.getCause());
-            throw npe;
-        }
         catch (Exception e) {
             log.error("There was a problem scheduling " +
                 detail.getKey().getName(), e);

@@ -99,13 +99,11 @@ public class PinsetterJobListener implements JobListener {
                     " This can block other jobs.  Marking finished, if possible", e);
                 try {
                     //This time only update the state so it doesn't block other jobs
-                    JobStatus finished = curator.find(
-                        context.getJobDetail().getKey().getName());
-                    finished.setState(JobState.FINISHED);
-                    curator.merge(finished);
+                    curator.cancelNoReturn(context.getJobDetail().getKey().getName());
                 }
                 catch (Exception ex) {
-                    log.error("Failed again to modify the status", ex);
+                    log.error("Failed again to cancel status: " +
+                        context.getJobDetail().getKey().getName(), ex);
                 }
             }
             else {

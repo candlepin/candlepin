@@ -54,7 +54,7 @@ public class JobStatus extends AbstractHibernateObject {
         FINISHED,
         CANCELED,
         FAILED,
-        WAITING;
+        WAITING; // added late, reordering would be problematic now
     }
 
     /**
@@ -86,13 +86,7 @@ public class JobStatus extends AbstractHibernateObject {
     public JobStatus() { }
 
     public JobStatus(JobDetail jobDetail) {
-        this.id = jobDetail.getKey().getName();
-        this.jobGroup = jobDetail.getKey().getGroup();
-        this.state = JobState.CREATED;
-        this.targetType = getTargetType(jobDetail);
-        this.targetId = getTargetId(jobDetail);
-        this.principalName = getPrincipalName(jobDetail);
-        this.jobClass = getJobClass(jobDetail);
+        this(jobDetail, false);
     }
 
     public JobStatus(JobDetail jobDetail, boolean waiting) {

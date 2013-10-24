@@ -42,31 +42,41 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
     }
 
     public JobStatus cancel(String jobId) {
-        JobStatus j = this.find(jobId);
-        if (j == null) {
+        this.cancelNoReturn(jobId);
+        JobStatus result = this.find(jobId);
+        if (result != null) {
+            this.refresh(result);
+        }
+        return result;
+    }
+
+    public void cancelNoReturn(String jobId) {
+        String hql = "update JobStatus j " +
+            "set j.state = :canceled " +
+            "where j.id = :jobid";
+        Query query = this.currentSession().createQuery(hql)
+            .setParameter("jobid", jobId)
+            .setInteger("canceled", JobState.CANCELED.ordinal());
+        int updated = query.executeUpdate();
+        if (updated == 0) {
             throw new NotFoundException("job not found");
         }
-        j.setState(JobState.CANCELED);
-        merge(j);
-        return j;
     }
 
     public int cleanupFailedJobs(Date deadline) {
-        //TODO: Should probably use setTimestamp rather than setDate
         return this.currentSession().createQuery(
             "delete from JobStatus where startTime <= :date and " +
             "state = :failed")
-               .setDate("date", deadline)
+               .setDate("date", deadline) // Strips time
                .setInteger("failed", JobState.FAILED.ordinal())
                .executeUpdate();
     }
 
     public int cleanUpOldJobs(Date deadLineDt) {
-        //TODO: Should probably use setTimestamp rather than setDate
         return this.currentSession().createQuery(
             "delete from JobStatus where finishTime <= :date and " +
             "(state = :completed or state = :canceled)")
-               .setDate("date", deadLineDt)
+               .setDate("date", deadLineDt) // Strips time
                .setInteger("completed", JobState.FINISHED.ordinal())
                .setInteger("canceled", JobState.CANCELED.ordinal())
                .executeUpdate();
@@ -115,8 +125,8 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
 
     @SuppressWarnings("unchecked")
     public List<JobStatus> findWaitingJobs() {
-        //Perhaps unique jobClass/target combinations, However
-        //we're already in a weird state if that makes a difference
+        // Perhaps unique jobClass/target combinations, However
+        // we're already in a weird state if that makes a difference
         return this.currentSession().createCriteria(JobStatus.class)
         .add(Restrictions.eq("state", JobState.WAITING)).list();
     }
@@ -156,7 +166,11 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
      * and have not been updated within the last 2 minutes.
      */
     public int cancelOrphanedJobs(List<String> activeIds) {
-        Date before = new Date(new Date().getTime() - (1000L * 60L * 2L)); //2 minutes
+        return cancelOrphanedJobs(activeIds, 1000L * 60L * 2L); //2 minutes
+    }
+
+    public int cancelOrphanedJobs(List<String> activeIds, Long millis) {
+        Date before = new Date(new Date().getTime() - millis);
         String hql = "update JobStatus j " +
             "set j.state = :canceled " +
             "where j.jobGroup = :async and " +

@@ -30,7 +30,7 @@ import com.google.inject.Inject;
 import com.google.inject.persist.UnitOfWork;
 
 /**
- * StartWaitingJobJob prompts each paused job to check if it
+ * UnpauseJob prompts each paused job to check if it
  * is safe to continue executing every 5 seconds.  The polling
  * approach isn't as fast or efficient as allowing blocking jobs
  * to trigger the next in line, but this avoids concurrency
