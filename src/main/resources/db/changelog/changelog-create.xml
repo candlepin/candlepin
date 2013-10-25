@@ -1135,4 +1135,5 @@
     <include file="db/changelog/20130916125243-create-mysql-schema.xml" />
     <include file="db/changelog/20130912153356-create-import-upstream-consumer.xml" />
     <include file="db/changelog/20130920132949-add-delete-cascade-pool-products.xml" />
+    <include file="db/changelog/20131025111347-migrate-import-upstream-consumer.xml" />
 </databaseChangeLog>
