@@ -31,7 +31,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.8.29
+Version: 0.8.30
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -326,6 +326,28 @@ fi
 
 
 %changelog
+* Thu Oct 24 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.30-1
+- 1011257: Throw Conflict exception on StaleStateException (mstead@redhat.com)
+- 1017394: Do not block entitlement generation with large content sets (wpoteat@redhat.com)
+- Add content overrides to list of supported resources. (awood@redhat.com)
+- Strings update. (dgoodwin@redhat.com)
+- ActKeys can take null quantity, pick quantity upon activation (ckozak@redhat.com)
+- Added pinsetter job blocking for owner unique jobs (ckozak@redhat.com)
+- Efficiently cancel jobs (ckozak@redhat.com)
+- Heal virt-host using guest products and only virt_limit pools (ckozak@redhat.com)
+- Move consumer atom feed to correct API location. (dgoodwin@redhat.com)
+- Improved and more machine parsable event logging. (dgoodwin@redhat.com)
+- Consumer specific content set/repo overrides (wpoteat@redhat.com)
+- Log with ISO8601 date format. (dgoodwin@redhat.com)
+- Add logrotate config for new Candlepin log files. (dgoodwin@redhat.com)
+- Improve request/response logging. (dgoodwin@redhat.com)
+- Log a unique request/job ID with every statement. (dgoodwin@redhat.com)
+- Improve event logging in audit.log. (dgoodwin@redhat.com)
+- Start logging in candlepin specific files rather than catalina.out.  (dgoodwin@redhat.com)
+- Improve default access.log format. (alikins@redhat.com)
+- Setup a access.log in our server.xml via deploy (alikins@redhat.com)
+- Add the requestUuid into servlet request attribs. (alikins@redhat.com)
+
 * Wed Oct 02 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.29-1
 - 1011100: Fix orphaned virt bonus pools in hosted. (dgoodwin@redhat.com)
 - 1006374: add delete cascade to cp_pool_* (jesusr@redhat.com)
