@@ -14,7 +14,6 @@
  */
 package org.candlepin.pinsetter.tasks;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.eq;
@@ -58,7 +57,7 @@ public class RefreshPoolsJobTest {
         when(refresher.add(eq(owner))).thenReturn(refresher);
 
         // test
-        RefreshPoolsJob rpj = new RefreshPoolsJob(oc, pm);
+        RefreshPoolsJob rpj = new RefreshPoolsJob(oc, pm, null);
         rpj.execute(ctx);
 
         // verification
@@ -77,7 +76,6 @@ public class RefreshPoolsJobTest {
         assertNotNull(detail);
         assertNotNull(detail.getJobDataMap());
         assertTrue(detail.requestsRecovery());
-        assertFalse(detail.isDurable());
         assertEquals("owner key", detail.getJobDataMap().get(JobStatus.TARGET_ID));
     }
 
@@ -102,7 +100,7 @@ public class RefreshPoolsJobTest {
         doThrow(new NullPointerException()).when(refresher).run();
 
         // test
-        RefreshPoolsJob rpj = new RefreshPoolsJob(oc, pm);
+        RefreshPoolsJob rpj = new RefreshPoolsJob(oc, pm, null);
         rpj.execute(ctx);
     }
 }

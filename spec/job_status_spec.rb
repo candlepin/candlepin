@@ -38,13 +38,12 @@ describe 'Job Status' do
 
   it 'should be findable by owner key' do
     jobs = []
-    3.times { jobs << @cp.refresh_pools(@owner['key'], true) }
+    3.times {
+        jobs << @cp.refresh_pools(@owner['key'], true)
+        finish_job(jobs[-1])
+    }
 
     @cp.list_jobs(@owner['key']).length.should == 3
-
-    jobs.each do |job|
-      finish_job(job)
-    end
   end
 
   it 'should only find jobs with the correct owner key' do
@@ -53,14 +52,18 @@ describe 'Job Status' do
 
     jobs = []
     # Just some random numbers here
-    6.times { jobs << @cp.refresh_pools(owner2['key'], true) }
-    4.times { jobs << @cp.refresh_pools(@owner['key'], true) }
+    4.times {
+        jobs << @cp.refresh_pools(owner2['key'], true)
+        jobs << @cp.refresh_pools(@owner['key'], true)
+        finish_job(jobs[-1])
+        finish_job(jobs[-2])
+    }
+    2.times {
+        jobs << @cp.refresh_pools(owner2['key'], true)
+        finish_job(jobs[-1])
+    }
 
     @cp.list_jobs(@owner['key']).length.should == 4
-
-    jobs.each do |job|
-      finish_job(job)
-    end
   end
 
   it 'should find an empty list if the owner key is wrong' do

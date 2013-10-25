@@ -15,6 +15,7 @@
 package org.candlepin.model.test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -195,5 +196,30 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         // verify all is well in the world
         assertNotNull(found);
         assertEquals(owner.getId(), found.getId());
+    }
+
+    @Test
+    public void getConsumerUuids() {
+        ConsumerType type = new ConsumerType(ConsumerTypeEnum.SYSTEM);
+        consumerTypeCurator.create(type);
+
+        Owner owner = new Owner("owner");
+        Owner otherOwner = new Owner("other owner");
+
+        ownerCurator.create(owner);
+        ownerCurator.create(otherOwner);
+
+        Consumer c1 = new Consumer("name1", "uname1", owner, type);
+        Consumer c2 = new Consumer("name2", "uname2", owner, type);
+        Consumer c3 = new Consumer("name3", "uname3", otherOwner, type);
+        consumerCurator.create(c1);
+        consumerCurator.create(c2);
+        consumerCurator.create(c3);
+
+        List<String> result = ownerCurator.getConsumerUuids(owner.getKey());
+        assertEquals(2, result.size());
+        assertTrue(result.contains(c1.getUuid()));
+        assertTrue(result.contains(c2.getUuid()));
+        assertFalse(result.contains(c3.getUuid()));
     }
 }

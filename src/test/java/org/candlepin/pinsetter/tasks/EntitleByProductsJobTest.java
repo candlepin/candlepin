@@ -15,7 +15,6 @@
 package org.candlepin.pinsetter.tasks;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.eq;
@@ -23,30 +22,27 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
 import org.candlepin.controller.Entitler;
-import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.model.Entitlement;
 import org.candlepin.pinsetter.core.model.JobStatus;
-
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutput;
-import java.io.ObjectOutputStream;
-import java.util.ArrayList;
-import java.util.List;
-
 /**
- * EntitlerJobTest
+ * EntitleByProductsJobTest
  */
-public class EntitlerJobTest {
+public class EntitleByProductsJobTest {
 
     private String consumerUuid;
     private Entitler e;
@@ -58,30 +54,32 @@ public class EntitlerJobTest {
     }
 
     @Test
-    public void bindByPoolSetup() {
-        String pool = "pool10";
+    public void bindByProductsSetup() {
+        String[] pids = {"pid1", "pid2", "pid3"};
 
-        JobDetail detail = EntitlerJob.bindByPool(pool, consumerUuid, 1);
+        JobDetail detail = EntitleByProductsJob.bindByProducts(pids, consumerUuid, null);
         assertNotNull(detail);
-        String resultpool = (String) detail.getJobDataMap().get("pool_id");
-        assertEquals("pool10", resultpool);
+        String[] resultpids = (String[]) detail.getJobDataMap().get("product_ids");
+        assertEquals("pid2", resultpids[1]);
         assertEquals(consumerUuid, detail.getJobDataMap().get(JobStatus.TARGET_ID));
-        assertTrue(detail.getKey().getName().startsWith("bind_by_pool_"));
+        assertTrue(detail.getKey().getName().startsWith("bind_by_products_"));
     }
 
     @Test
-    public void bindByPoolExec() throws JobExecutionException {
-        String pool = "pool10";
+    public void bindByProductsExec() throws JobExecutionException {
+        String[] pids = {"pid1", "pid2", "pid3"};
 
-        JobDetail detail = EntitlerJob.bindByPool(pool, consumerUuid, 1);
+        JobDetail detail = EntitleByProductsJob.bindByProducts(pids, consumerUuid, null);
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
-        List<Entitlement> ents = new ArrayList<Entitlement>();
-        when(e.bindByPool(eq(pool), eq(consumerUuid), eq(1))).thenReturn(ents);
 
-        EntitlerJob job = new EntitlerJob(e, null, null);
+        List<Entitlement> ents = new ArrayList<Entitlement>();
+        when(e.bindByProducts(eq(pids), eq(consumerUuid),
+            eq((Date) null))).thenReturn(ents);
+
+        EntitleByProductsJob job = new EntitleByProductsJob(e, null, null);
         job.execute(ctx);
-        verify(e).bindByPool(eq(pool), eq(consumerUuid), eq(1));
+        verify(e).bindByProducts(eq(pids), eq(consumerUuid), eq((Date) null));
         verify(e).sendEvents(eq(ents));
     }
 
@@ -94,39 +92,15 @@ public class EntitlerJobTest {
      * @throws IOException
      */
     @Test
-    public void serializeJobDataMapForPool() throws IOException {
-        JobDetail detail = EntitlerJob.bindByPool("pool10", consumerUuid, 1);
+    public void serializeJobDataMapForProducts() throws IOException {
+        String[] pids = {"pid1", "pid2", "pid3"};
+        JobDetail detail = EntitleByProductsJob.bindByProducts(pids, consumerUuid, null);
         serialize(detail.getJobDataMap());
-    }
-
-    @Test
-    public void recoveryIsFalse() {
-        JobDetail detail = EntitlerJob.bindByPool("pool10", consumerUuid, 1);
-        assertFalse(detail.requestsRecovery());
-        assertFalse(detail.isDurable());
     }
 
     private void serialize(Object obj) throws IOException {
         ObjectOutput out = new ObjectOutputStream(new FileOutputStream("obj.ser"));
         out.writeObject(obj);
         out.close();
-    }
-
-    @Test(expected = JobExecutionException.class)
-    public void handleException() throws JobExecutionException {
-        String pool = "pool10";
-        JobDetail detail = EntitlerJob.bindByPool(pool, consumerUuid, 1);
-        JobExecutionContext ctx = mock(JobExecutionContext.class);
-        when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
-        when(e.bindByPool(eq(pool), eq(consumerUuid), eq(1))).thenThrow(
-            new ForbiddenException("job should fail"));
-
-        EntitlerJob job = new EntitlerJob(e, null, null);
-        job.execute(ctx);
-    }
-
-    @After
-    public void cleanup() {
-        new File("obj.ser").delete();
     }
 }

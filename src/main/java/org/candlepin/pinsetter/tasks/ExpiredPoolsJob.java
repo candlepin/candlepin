@@ -15,10 +15,10 @@
 package org.candlepin.pinsetter.tasks;
 
 import com.google.inject.Inject;
+import com.google.inject.persist.UnitOfWork;
 
 import org.apache.log4j.Logger;
 import org.candlepin.controller.PoolManager;
-import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
@@ -30,7 +30,7 @@ import org.quartz.JobExecutionException;
  * done on a scheduled basis to make sure we re-source derived pools if the stack has
  * other still valid entitlements.
  */
-public class ExpiredPoolsJob implements Job {
+public class ExpiredPoolsJob extends KingpinJob {
 
     // Every 4 hours:
     public static final String DEFAULT_SCHEDULE = "0 0 0/4 * * ?";
@@ -40,12 +40,12 @@ public class ExpiredPoolsJob implements Job {
     private static Logger log = Logger.getLogger(ExpiredPoolsJob.class);
 
     @Inject
-    public ExpiredPoolsJob(PoolManager poolManager) {
+    public ExpiredPoolsJob(PoolManager poolManager, UnitOfWork unitOfWork) {
+        super(unitOfWork);
         this.poolManager = poolManager;
     }
 
-    @Override
-    public void execute(JobExecutionContext ctx) throws JobExecutionException {
+    public void toExecute(JobExecutionContext ctx) throws JobExecutionException {
 
         log.info("Executing ExpiredPoolsJob");
         poolManager.cleanupExpiredPools();

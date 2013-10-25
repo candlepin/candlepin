@@ -32,7 +32,7 @@ public class JobCleanerTest {
     @Test
     public void execute() throws Exception {
         JobCurator curator = mock(JobCurator.class);
-        JobCleaner cleaner = new JobCleaner(curator);
+        JobCleaner cleaner = new JobCleaner(curator, null);
         cleaner.execute(null);
         verify(curator).cleanUpOldJobs(any(Date.class));
     }

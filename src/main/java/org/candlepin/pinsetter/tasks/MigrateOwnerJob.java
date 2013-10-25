@@ -35,13 +35,13 @@ import org.candlepin.model.PoolCurator;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
+import com.google.inject.persist.UnitOfWork;
 
 import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.jboss.resteasy.client.ClientResponse;
-import org.quartz.Job;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
@@ -63,7 +63,7 @@ import javax.ws.rs.core.Response.Status;
  * flag that indicates whether the original owner should be deleted once
  * migration has occurred.
  */
-public class MigrateOwnerJob implements Job {
+public class MigrateOwnerJob extends KingpinJob {
     private static Logger log = Logger.getLogger(MigrateOwnerJob.class);
 
     private OwnerCurator ownerCurator;
@@ -89,8 +89,9 @@ public class MigrateOwnerJob implements Job {
     @Inject
     public MigrateOwnerJob(CandlepinConnection connection, Config conf,
         OwnerCurator oc, PoolCurator pc, EntitlementCurator ec,
-        ConsumerCurator cc, EventSink es) {
-
+        ConsumerCurator cc, EventSink es,
+        UnitOfWork unitOfWork) {
+        super(unitOfWork);
         ownerCurator = oc;
         consumerCurator = cc;
         conn = connection;
@@ -125,7 +126,7 @@ public class MigrateOwnerJob implements Job {
     }
 
     @Override
-    public void execute(JobExecutionContext ctx)
+    public void toExecute(JobExecutionContext ctx)
         throws JobExecutionException {
         String key = ctx.getMergedJobDataMap().getString("owner_key");
         String uri = buildUri(ctx.getMergedJobDataMap().getString("uri"));

@@ -98,4 +98,17 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
             .add(Subqueries.propertyIn("o.key", distinctQuery))
             .list();
     }
+
+    @SuppressWarnings("unchecked")
+    public List<String> getConsumerUuids(String ownerKey) {
+        DetachedCriteria ownerQuery =
+            DetachedCriteria.forClass(Owner.class)
+                .add(Restrictions.eq("key", ownerKey))
+                .setProjection(Property.forName("id"));
+
+        return this.currentSession().createCriteria(Consumer.class)
+            .add(Subqueries.propertyEq("owner.id", ownerQuery))
+            .setProjection(Property.forName("uuid"))
+            .list();
+    }
 }
