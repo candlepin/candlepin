@@ -18,23 +18,26 @@ package org.candlepin.resource;
  * RootResource
  */
 
+import org.candlepin.auth.interceptor.SecurityHole;
+import org.candlepin.config.Config;
+import org.candlepin.config.ConfigProperties;
+
 import com.google.inject.Inject;
 
 import org.apache.log4j.Logger;
 
+import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-
-import org.candlepin.auth.interceptor.SecurityHole;
-import org.candlepin.config.Config;
-import org.candlepin.config.ConfigProperties;
 
 /**
  * A root resource, responsible for returning client a struct of links to the
@@ -46,6 +49,7 @@ public class RootResource {
 
     private static Logger log = Logger.getLogger(RootResource.class);
     public static final List<Class> RESOURCE_CLASSES;
+    public static final Map<String, Method> PSEUDO_RESOURCES;
     private Config config;
     private static List<Link> links = null;
 
@@ -77,6 +81,19 @@ public class RootResource {
         RESOURCE_CLASSES.add(RootResource.class);
         RESOURCE_CLASSES.add(DistributorVersionResource.class);
         RESOURCE_CLASSES.add(DeletedConsumerResource.class);
+
+        PSEUDO_RESOURCES = new HashMap<String, Method>();
+        Method m;
+        try {
+            m = ConsumerResource.class.getMethod("getContentOverrideList",
+                String.class);
+            PSEUDO_RESOURCES.put("content_overrides", m);
+        }
+        catch (NoSuchMethodException e) {
+            // If the method name changes, throwing this will abort deployment.
+            throw new IllegalStateException(
+                "Can not find method to introspect!", e);
+        }
     }
 
     @Inject
@@ -91,26 +108,53 @@ public class RootResource {
             ConfigProperties.HIDDEN_RESOURCES).split(" "));
 
         List<Link> newLinks = new LinkedList<Link>();
-        for (Class c : RESOURCE_CLASSES) {
-            Path a = (Path) c.getAnnotation(Path.class);
-            String href = a.value();
-            String rel = href;
-            // Chop off leading "/" for the resource name:
-            if (rel.charAt(0) == '/') {
-                rel = rel.substring(1);
-            }
+        for (Class clazz : RESOURCE_CLASSES) {
+            add(resourceLink(clazz), hideResources, newLinks);
+        }
 
-            if (!hideResources.contains(rel)) {
-                newLinks.add(new Link(rel, href));
-            }
-            else {
-                log.debug("Hiding supported resource: " + rel);
-            }
+        for (Map.Entry<String, Method> entry : PSEUDO_RESOURCES.entrySet()) {
+            String rel = entry.getKey();
+            Method method = entry.getValue();
 
+            add(methodLink(rel, method), hideResources, newLinks);
         }
         return newLinks;
     }
 
+    @SecurityHole(noAuth = true, anon = true)
+    protected Link methodLink(String rel, Method m) {
+        Path resource = m.getDeclaringClass().getAnnotation(Path.class);
+        Path method = m.getAnnotation(Path.class);
+
+        String href = resource.value() + "/" + method.value();
+        // Remove doubled slashes and trailing slash
+        href = href.replaceAll("/+", "/").replaceAll("/$", "");
+
+        return new Link(rel, href);
+    }
+
+    @SecurityHole(noAuth = true, anon = true)
+    protected Link resourceLink(Class clazz) {
+        Path a = (Path) clazz.getAnnotation(Path.class);
+        String href = a.value();
+        String rel = href;
+        // Chop off leading "/" for the resource name:
+        if (rel.charAt(0) == '/') {
+            rel = rel.substring(1);
+        }
+
+        return new Link(rel, href);
+    }
+
+    private void add(Link link, List<String> hideResources, List<Link> newLinks) {
+        String rel = link.getRel();
+        if (!hideResources.contains(rel)) {
+            newLinks.add(link);
+        }
+        else {
+            log.debug("Hiding supported resource: " + rel);
+        }
+    }
 
     /**
      * @httpcode 200
