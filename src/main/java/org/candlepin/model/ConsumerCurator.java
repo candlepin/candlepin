@@ -27,6 +27,7 @@ import org.apache.log4j.Logger;
 import org.hibernate.Query;
 import org.hibernate.ReplicationMode;
 import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 
 import java.util.ArrayList;
@@ -426,4 +427,12 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         return guests;
     }
 
+    public boolean doesConsumerExist(String uuid) {
+        int result = (Integer) currentSession()
+            .createCriteria(Consumer.class)
+            .add(Restrictions.eq("uuid", uuid))
+            .setProjection(Projections.count("id"))
+            .uniqueResult();
+        return result != 0;
+    }
 }
