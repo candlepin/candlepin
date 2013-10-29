@@ -62,6 +62,7 @@ import java.util.Set;
  * EntitlementImporterTest
  */
 @RunWith(MockitoJUnitRunner.class)
+@SuppressWarnings("synthetic-access")
 public class EntitlementImporterTest {
 
     @Mock private EventSink sink;
@@ -618,6 +619,7 @@ public class EntitlementImporterTest {
 
         assertEquals(pool.getAccountNumber(), sub.getAccountNumber());
         assertEquals(pool.getContractNumber(), sub.getContractNumber());
+        assertEquals(pool.getOrderNumber(), sub.getOrderNumber());
 
         assertEquals(ent.getQuantity().intValue(), sub.getQuantity().intValue());
 
@@ -640,7 +642,7 @@ public class EntitlementImporterTest {
         assertEquals(cert.getSerial().getUpdated(), serial.getUpdated());
     }
 
-    private Subscription createSubscription(Owner owner, String productId,
+    private Subscription createSubscription(Owner daOwner, String productId,
             String poolId, String entId, String conId, long quantity) {
         Subscription sub = new Subscription();
         sub.setProduct(new Product(productId, productId));
@@ -648,7 +650,7 @@ public class EntitlementImporterTest {
         sub.setUpstreamEntitlementId(entId);
         sub.setUpstreamConsumerId(conId);
         sub.setQuantity(quantity);
-        sub.setOwner(owner);
+        sub.setOwner(daOwner);
         sub.setId("" + index++);
         return sub;
     }
