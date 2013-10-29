@@ -31,7 +31,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.8.29.1
+Version: 0.8.29.2
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -323,6 +323,9 @@ fi
 
 
 %changelog
+* Tue Oct 29 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.29.2-1
+- Moved the foreign key constraint from new table on creation (wpoteat@redhat.com)
+
 * Wed Oct 02 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.29-1
 - 1011100: Fix orphaned virt bonus pools in hosted. (dgoodwin@redhat.com)
 - 1006374: add delete cascade to cp_pool_* (jesusr@redhat.com)
