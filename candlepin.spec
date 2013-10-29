@@ -31,7 +31,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.8.30
+Version: 0.8.31
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -326,6 +326,9 @@ fi
 
 
 %changelog
+* Tue Oct 29 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.31-1
+- Moved the foreign key constraint from new table on creation (wpoteat@redhat.com)
+
 * Thu Oct 24 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.30-1
 - 1011257: Throw Conflict exception on StaleStateException (mstead@redhat.com)
 - 1017394: Do not block entitlement generation with large content sets (wpoteat@redhat.com)
