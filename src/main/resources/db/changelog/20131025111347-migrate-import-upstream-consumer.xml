@@ -21,7 +21,7 @@
     <changeSet id="20131025111347-1" author="wpoteat">
         <preConditions onFail="MARK_RAN">
             <not>
-                <foreignKeyConstraintExists foreignKeyName="fk_imp_upstream_cnsmr_id" />
+                <foreignKeyConstraintExists foreignKeyName="fk_imp_upstream_cnsmr_id" foreignKeyTableName="cp_import_record" />
             </not>
         </preConditions>
         <comment>Need to move some data from import record for exisitng entries</comment>
@@ -51,7 +51,7 @@
     <changeSet id="20131025111347-2" author="wpoteat">
         <preConditions onFail="MARK_RAN">
             <not>
-                <foreignKeyConstraintExists foreignKeyName="fk_imp_upstream_cnsmr_id" />
+                <foreignKeyConstraintExists foreignKeyName="fk_imp_upstream_cnsmr_id" foreignKeyTableName="cp_import_record" />
             </not>
         </preConditions>
         <addForeignKeyConstraint constraintName="fk_imp_upstream_cnsmr_id" baseColumnNames="upstream_id" baseTableName="cp_import_record" referencedTableName="cp_import_upstream_consumer" referencedColumnNames="id"/>
