@@ -16,30 +16,7 @@ package org.candlepin.resource;
 
 import static org.quartz.JobBuilder.newJob;
 
-import org.candlepin.auth.interceptor.Verify;
-import org.candlepin.controller.Entitler;
-import org.candlepin.controller.PoolManager;
-import org.candlepin.exceptions.BadRequestException;
-import org.candlepin.exceptions.NotFoundException;
-import org.candlepin.model.Consumer;
-import org.candlepin.model.ConsumerCurator;
-import org.candlepin.model.Entitlement;
-import org.candlepin.model.EntitlementCurator;
-import org.candlepin.paging.PageRequest;
-import org.candlepin.paging.Page;
-import org.candlepin.paging.Paginate;
-import org.candlepin.pinsetter.tasks.RegenProductEntitlementCertsJob;
-import org.candlepin.service.ProductServiceAdapter;
-import org.candlepin.service.SubscriptionServiceAdapter;
-import org.candlepin.util.Util;
-
-import com.google.inject.Inject;
-
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
-import org.quartz.JobDataMap;
-import org.quartz.JobDetail;
-import org.xnap.commons.i18n.I18n;
-
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 
@@ -54,6 +31,30 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+
+import org.candlepin.auth.interceptor.Verify;
+import org.candlepin.controller.Entitler;
+import org.candlepin.controller.PoolManager;
+import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.exceptions.NotFoundException;
+import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.Cdn;
+import org.candlepin.model.Entitlement;
+import org.candlepin.model.EntitlementCurator;
+import org.candlepin.paging.Page;
+import org.candlepin.paging.PageRequest;
+import org.candlepin.paging.Paginate;
+import org.candlepin.pinsetter.tasks.RegenProductEntitlementCertsJob;
+import org.candlepin.service.ProductServiceAdapter;
+import org.candlepin.service.SubscriptionServiceAdapter;
+import org.candlepin.util.Util;
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.quartz.JobDataMap;
+import org.quartz.JobDetail;
+import org.xnap.commons.i18n.I18n;
+
+import com.google.inject.Inject;
 
 /**
  * REST api gateway for the User object.
@@ -219,10 +220,11 @@ public class EntitlementResource {
      * @httpcode 200
      */
     @GET
-    @Consumes({MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
-    @Produces({ MediaType.TEXT_PLAIN })
+    @Produces(MediaType.TEXT_PLAIN)
+    // @Produces(MediaType.APPLICATION_JSON)
     @Path("{dbid}/upstream_cert")
     public String getEntitlementUpstreamCert(
+    // public CdnInfo getEntitlementUpstreamCert(
         @PathParam("dbid") String dbid) {
         Entitlement ent = entitlementCurator.find(dbid);
         // optimization: don't do entitlement regen here, as we don't read
@@ -237,6 +239,9 @@ public class EntitlementResource {
         SubscriptionResource subResource = new SubscriptionResource(subService,
             consumerCurator, i18n);
         return subResource.getSubCertAsPem(subscriptionId);
+        // Cdn cdn = subResource.getSubscription(subscriptionId).getCdn();
+        // CdnInfo result = new CdnInfo(cdn, subResource.getSubCertAsPem(subscriptionId));
+        // return result;
     }
 
     /**
@@ -279,6 +284,41 @@ public class EntitlementResource {
             .build();
 
         return detail;
+    }
+
+    /**
+     *
+     * CdnInfo
+     *
+     * Container for subscription entitlement and cdn
+     */
+    public class CdnInfo implements Serializable {
+        private Cdn cdn;
+        private String subCert;
+
+        public CdnInfo() {
+        }
+
+        public CdnInfo(Cdn cdn, String subEntitlement) {
+            this.cdn = cdn;
+            this.subCert = subEntitlement;
+        }
+
+        public Cdn getCdn() {
+            return this.cdn;
+        }
+
+        public void setCdn(Cdn cdn) {
+            this.cdn = cdn;
+        }
+
+        public String getSubCert() {
+            return this.subCert;
+        }
+
+        public void setSubCert(String subCert) {
+            this.subCert = subCert;
+        }
     }
 
 }

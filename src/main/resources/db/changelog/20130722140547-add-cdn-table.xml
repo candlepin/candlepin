@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+
+    <changeSet id="20130722140547" author="wpoteat">
+        <comment>CDN record</comment>
+        <createTable tableName="cp_cdn">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_cdn_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="key" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="url" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="certificate_id" type="VARCHAR(32)">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+        <!-- See http://www.liquibase.org/manual/refactoring_commands -->
+    </changeSet>
+    <changeSet id="20130722140547-1" author="wpoteat">
+        <createIndex tableName="cp_cdn" indexName="cp_cdn_key_idx">
+            <column name="key"/>
+        </createIndex>
+    </changeSet>
+        <changeSet author="wpoteat" id="20130722140547-2">
+        <createTable tableName="cp_cdn_certificate">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_cdn_certificate_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="cert" type="bytea">
+                <constraints nullable="false"/>
+            </column>
+            <column name="privatekey" type="bytea">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+</databaseChangeLog>

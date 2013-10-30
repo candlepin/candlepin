@@ -67,6 +67,7 @@ import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.ActivationKey;
 import org.candlepin.model.ActivationKeyCurator;
 import org.candlepin.model.ActivationKeyPool;
+import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerialDto;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCapability;
@@ -164,6 +165,7 @@ public class ConsumerResource {
     private DeletedConsumerCurator deletedConsumerCurator;
     private EnvironmentCurator environmentCurator;
     private DistributorVersionCurator distributorVersionCurator;
+    private CdnCurator cdnCurator;
     private Config config;
     private QuantityRules quantityRules;
     private OverrideRules overrideRules;
@@ -186,7 +188,8 @@ public class ConsumerResource {
         DistributorVersionCurator distributorVersionCurator,
         Config config, QuantityRules quantityRules,
         ConsumerContentOverrideCurator consumerContentOverrideCurator,
-        ContentCurator contentCurator, OverrideRules overrideRules) {
+        ContentCurator contentCurator, OverrideRules overrideRules,
+        CdnCurator cdnCurator) {
 
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -211,6 +214,7 @@ public class ConsumerResource {
         this.deletedConsumerCurator = deletedConsumerCurator;
         this.environmentCurator = environmentCurator;
         this.distributorVersionCurator = distributorVersionCurator;
+        this.cdnCurator = cdnCurator;
         this.consumerPersonNamePattern = Pattern.compile(config.getString(
             ConfigProperties.CONSUMER_PERSON_NAME_PATTERN));
         this.consumerSystemNamePattern = Pattern.compile(config.getString(
@@ -1717,7 +1721,10 @@ public class ConsumerResource {
     public File exportData(
         @Context HttpServletResponse response,
         @PathParam("consumer_uuid")
-        @Verify(value = Consumer.class, require = Access.ALL) String consumerUuid) {
+        @Verify(value = Consumer.class, require = Access.ALL) String consumerUuid,
+        @QueryParam("cdn_key") String cdnKey,
+        @QueryParam("webapp_prefix") String webAppPrefix,
+        @QueryParam("api_url") String apiUrl) {
 
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
         if (consumer.getType() == null ||
@@ -1729,12 +1736,18 @@ public class ConsumerResource {
                     consumerUuid, consumer.getType().getLabel()));
         }
 
+        if (!StringUtils.isBlank(cdnKey) &&
+            cdnCurator.lookupByKey(cdnKey) == null) {
+            throw new ForbiddenException(
+                i18n.tr("A CDN with key {0} does not exist on this system.", cdnKey));
+        }
+
         poolManager.regenerateDirtyEntitlements(
             entitlementCurator.listByConsumer(consumer));
 
         File archive;
         try {
-            archive = exporter.getFullExport(consumer);
+            archive = exporter.getFullExport(consumer, cdnKey, webAppPrefix, apiUrl);
             response.addHeader("Content-Disposition", "attachment; filename=" +
                 archive.getName());
 

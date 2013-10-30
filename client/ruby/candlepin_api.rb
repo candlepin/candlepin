@@ -370,8 +370,13 @@ class Candlepin
     return status['result']
   end
 
-  def export_consumer(dest_dir)
+  def export_consumer(dest_dir, params={})
     path = "/consumers/#{@uuid}/export"
+    path += "?" if params
+    path += "cdn_key=#{params[:cdn_key]}&" if params[:cdn_key]
+    path += "webapp_prefix=#{params[:webapp_prefix]}&" if params[:webapp_prefix]
+    path += "api_url=#{params[:api_url]}&" if params[:api_url]
+
     begin
       get_file(path, dest_dir)
     rescue Exception => e
@@ -994,6 +999,33 @@ class Candlepin
     query << "&" if name_search and capability
     query << "capability=#{capability}" if capability
     get(query)
+  end
+
+  def create_content_delivery_network(key, name, url, cert=nil)
+    cdn =  {
+      'key' => key,
+      'name' => name,
+      'url' => url,
+      'certificate' => cert
+    }
+    post('/content_delivery_network', cdn)
+  end
+
+  def update_content_delivery_network(key, name, url, cert=nil)
+    cdn =  {
+      'name' => name,
+      'url' => url,
+      'certificate' => cert
+    }
+    put("/content_delivery_network/#{key}", cdn)
+  end
+
+  def delete_content_delivery_network(key)
+    delete("/content_delivery_network/#{key}")
+  end
+
+  def get_content_delivery_networks()
+    get("/content_delivery_network")
   end
 
   def add_content_overrides(uuid, overrides=[])

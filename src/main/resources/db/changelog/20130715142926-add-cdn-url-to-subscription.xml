@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+
+    <changeSet id="20130715142926" author="wpoteat">
+        <comment>Record cdn url in subscription information when specified</comment>
+        <addColumn tableName="cp_subscription">
+            <column name="cdn_id" type="varchar(32)"/>
+        </addColumn>
+        <!-- See http://www.liquibase.org/manual/refactoring_commands -->
+    </changeSet>
+
+</databaseChangeLog>

@@ -45,6 +45,8 @@ import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.ContentCurator;
+import org.candlepin.model.Cdn;
+import org.candlepin.model.CdnCurator;
 import org.candlepin.model.DistributorVersion;
 import org.candlepin.model.DistributorVersionCurator;
 import org.candlepin.model.ExporterMetadata;
@@ -85,7 +87,8 @@ public class Importer {
         PRODUCTS("products"),
         RULES_FILE("rules2/rules.js"),
         UPSTREAM_CONSUMER("upstream_consumer"),
-        DISTRIBUTOR_VERSIONS("distributor_version");
+        DISTRIBUTOR_VERSIONS("distributor_version"),
+        CONTENT_DELIVERY_NETWORKS("content_delivery_network");
 
         private String fileName;
         ImportFile(String fileName) {
@@ -122,6 +125,7 @@ public class Importer {
     private Config config;
     private ExporterMetadataCurator expMetaCurator;
     private CertificateSerialCurator csCurator;
+    private CdnCurator cdnCurator;
     private EventSink sink;
     private I18n i18n;
     private DistributorVersionCurator distVerCurator;
@@ -133,7 +137,8 @@ public class Importer {
         ContentCurator contentCurator, SubscriptionCurator subCurator, PoolManager pm,
         PKIUtility pki, Config config, ExporterMetadataCurator emc,
         CertificateSerialCurator csc, EventSink sink, I18n i18n,
-        DistributorVersionCurator distVerCurator) {
+        DistributorVersionCurator distVerCurator,
+        CdnCurator cdnCurator) {
 
         this.config = config;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -151,6 +156,7 @@ public class Importer {
         this.sink = sink;
         this.i18n = i18n;
         this.distVerCurator = distVerCurator;
+        this.cdnCurator = cdnCurator;
     }
 
     /**
@@ -388,6 +394,11 @@ public class Importer {
             importDistributorVersions(distributorVersions.listFiles());
         }
 
+        File cdns = importFiles.get(ImportFile.CONTENT_DELIVERY_NETWORKS.fileName());
+        if (cdns != null) {
+            importContentDeliveryNetworks(cdns.listFiles());
+        }
+
         // per user elements
         try {
             validateMetadata(ExporterMetadata.TYPE_PER_USER, owner, metadata,
@@ -424,6 +435,7 @@ public class Importer {
         // If the consumer has no entitlements, this products directory will end up empty.
         // This also implies there will be no entitlements to import.
         Refresher refresher = poolManager.getRefresher();
+        Meta meta = mapper.readValue(metadata, Meta.class);
         if (importFiles.get(ImportFile.PRODUCTS.fileName()) != null) {
             ProductImporter importer = new ProductImporter(productCurator, contentCurator);
 
@@ -438,8 +450,9 @@ public class Importer {
 
             importer.store(productsToImport);
 
+            meta = mapper.readValue(metadata, Meta.class);
             importEntitlements(owner, productsToImport, entitlements.listFiles(),
-                consumer);
+                consumer, meta);
 
             refresher.add(owner);
             refresher.run();
@@ -447,7 +460,7 @@ public class Importer {
         else {
             log.warn("No products found to import, skipping product import.");
             log.warn("No entitlements in manifest, removing all subscriptions for owner.");
-            importEntitlements(owner, new HashSet<Product>(), new File[]{}, consumer);
+            importEntitlements(owner, new HashSet<Product>(), new File[]{}, consumer, meta);
             refresher.add(owner);
             refresher.run();
         }
@@ -576,10 +589,10 @@ public class Importer {
     }
 
     public void importEntitlements(Owner owner, Set<Product> products, File[] entitlements,
-        ConsumerDto consumer)
+        ConsumerDto consumer, Meta meta)
         throws IOException, SyncDataFormatException {
         EntitlementImporter importer = new EntitlementImporter(subCurator, csCurator,
-            sink, i18n);
+            cdnCurator, sink, i18n);
 
         Map<String, Product> productsById = new HashMap<String, Product>();
         for (Product product : products) {
@@ -592,7 +605,8 @@ public class Importer {
             try {
                 log.debug("Import entitlement: " + entitlement.getName());
                 reader = new FileReader(entitlement);
-                subscriptionsToImport.add(importer.importObject(mapper, reader, owner, productsById, consumer));
+                subscriptionsToImport.add(importer.importObject(mapper, reader, owner,
+                    productsById, consumer, meta));
             }
             finally {
                 if (reader != null) {
@@ -699,5 +713,24 @@ public class Importer {
             }
         }
         importer.store(distVers);
+    }
+
+    public void importContentDeliveryNetworks(File[] cdnFiles) throws IOException {
+        CdnImporter importer =
+            new CdnImporter(cdnCurator);
+        Set<Cdn> cdns = new HashSet<Cdn>();
+        for (File cdnFile : cdnFiles) {
+            Reader reader = null;
+            try {
+                reader = new FileReader(cdnFile);
+                cdns.add(importer.createObject(mapper, reader));
+            }
+            finally {
+                if (reader != null) {
+                    reader.close();
+                }
+            }
+        }
+        importer.store(cdns);
     }
 }

@@ -25,17 +25,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventSink;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
+import org.candlepin.model.Cdn;
+import org.candlepin.model.CdnCurator;
+import org.candlepin.model.DerivedProvidedProduct;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProvidedProduct;
-import org.candlepin.model.DerivedProvidedProduct;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.model.SubscriptionsCertificate;
@@ -50,20 +53,23 @@ public class EntitlementImporter {
 
     private SubscriptionCurator subscriptionCurator;
     private CertificateSerialCurator csCurator;
+    private CdnCurator cdnCurator;
     private EventSink sink;
     private I18n i18n;
 
     public EntitlementImporter(SubscriptionCurator subscriptionCurator,
-        CertificateSerialCurator csCurator, EventSink sink, I18n i18n) {
+        CertificateSerialCurator csCurator, CdnCurator cdnCurator,
+        EventSink sink, I18n i18n) {
 
         this.subscriptionCurator = subscriptionCurator;
         this.csCurator = csCurator;
+        this.cdnCurator = cdnCurator;
         this.sink = sink;
         this.i18n = i18n;
     }
 
     public Subscription importObject(ObjectMapper mapper, Reader reader, Owner owner,
-        Map<String, Product> productsById, ConsumerDto consumer)
+        Map<String, Product> productsById, ConsumerDto consumer, Meta meta)
         throws IOException, SyncDataFormatException {
 
         Entitlement entitlement = mapper.readValue(reader, Entitlement.class);
@@ -84,6 +90,13 @@ public class EntitlementImporter {
         subscription.setQuantity(entitlement.getQuantity().longValue());
 
         subscription.setProduct(findProduct(productsById, entitlement.getProductId()));
+        String cdnKey = meta.getCdnKey();
+        if (!StringUtils.isBlank(cdnKey)) {
+            Cdn cdn = cdnCurator.lookupByKey(cdnKey);
+            if (cdn != null) {
+                subscription.setCdn(cdn);
+            }
+        }
 
         Set<Product> products = new HashSet<Product>();
         for (ProvidedProduct providedProduct : entitlement.getPool().
