@@ -31,7 +31,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.8.29.2
+Version: 0.8.29.3
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -323,6 +323,10 @@ fi
 
 
 %changelog
+* Wed Oct 30 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.29.3-1
+- Set Liquibase log level emulate 2.0.5 behavior. (awood@redhat.com)
+- Add missing attribute in foreignKeyConstraintExists element.  (awood@redhat.com)
+
 * Tue Oct 29 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.29.2-1
 - Moved the foreign key constraint from new table on creation (wpoteat@redhat.com)
 
