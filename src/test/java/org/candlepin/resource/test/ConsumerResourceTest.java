@@ -257,6 +257,8 @@ public class ConsumerResourceTest {
         ComplianceRules rules = Mockito.mock(ComplianceRules.class);
 
         Consumer consumer = createConsumer();
+        ComplianceStatus status = new ComplianceStatus();
+        when(rules.getStatus(any(Consumer.class), any(Date.class))).thenReturn(status);
         // cert expires today which will trigger regen
         consumer.setIdCert(createIdCert());
         BigInteger origserial = consumer.getIdCert().getSerial().getSerial();
@@ -281,6 +283,8 @@ public class ConsumerResourceTest {
         ComplianceRules rules = Mockito.mock(ComplianceRules.class);
 
         Consumer consumer = createConsumer();
+        ComplianceStatus status = new ComplianceStatus();
+        when(rules.getStatus(any(Consumer.class), any(Date.class))).thenReturn(status);
         consumer.setIdCert(createIdCert(TestUtil.createDate(2025, 6, 9)));
         BigInteger origserial = consumer.getIdCert().getSerial().getSerial();
 
@@ -519,6 +523,26 @@ public class ConsumerResourceTest {
         assertEquals(2, results.size());
         assertTrue(results.containsKey("1"));
         assertTrue(results.containsKey("2"));
+    }
+
+    @Test
+    public void testConsumerExistsYes() {
+        when(mockedConsumerCurator.doesConsumerExist(any(String.class))).thenReturn(true);
+        ConsumerResource cr = new ConsumerResource(mockedConsumerCurator, null,
+            null, null, null, null, null, i18n, null, null, null,
+            null, null, null, null, null, null, null, null, mockedComplianceRules,
+            null, null, null, new CandlepinCommonTestConfig(), null, null, null, null);
+        cr.consumerExists("uuid");
+    }
+
+    @Test (expected = NotFoundException.class)
+    public void testConsumerExistsNo() {
+        when(mockedConsumerCurator.doesConsumerExist(any(String.class))).thenReturn(false);
+        ConsumerResource cr = new ConsumerResource(mockedConsumerCurator, null,
+            null, null, null, null, null, i18n, null, null, null,
+            null, null, null, null, null, null, null, null, mockedComplianceRules,
+            null, null, null, new CandlepinCommonTestConfig(), null, null, null, null);
+        cr.consumerExists("uuid");
     }
 
 }

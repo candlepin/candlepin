@@ -33,6 +33,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
+import javax.ws.rs.HEAD;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -275,6 +276,24 @@ public class ConsumerResource {
             }
 
             return consumerCurator.findByUuids(uuids);
+        }
+    }
+
+    /**
+     * This method is used to check if a consumer is available on a particular
+     * shard.  There is no need to do a full GET for the consumer for this check.
+     *
+     * @param uuid uuid of the consumer sought.
+     * @httpcode 404 If the consumer doesn't exist or cannot be accessed
+     * @httpcode 204 If the consumer exists and can be accessed
+     */
+    @HEAD
+    @Path("{consumer_uuid}/exists")
+    public void consumerExists(
+        @PathParam("consumer_uuid") String uuid) {
+        if (!consumerCurator.doesConsumerExist(uuid)) {
+            throw new NotFoundException(i18n.tr(
+                "Consumer with id {1} could not be found.", uuid));
         }
     }
 
@@ -1927,6 +1946,7 @@ public class ConsumerResource {
 
         ComplianceStatus complianceStatus = complianceRules.getStatus(
                            consumer, Calendar.getInstance().getTime());
+        consumer.setEntitlementStatus(complianceStatus.getStatus());
 
         ConsumerInstalledProductEnricher enricher = new ConsumerInstalledProductEnricher(
             consumer, complianceStatus, complianceRules);

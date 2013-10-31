@@ -359,4 +359,22 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         assertFalse(results.contains(consumer));
         assertFalse(results.contains(consumer3));
     }
+
+    @Test
+    public void testDoesConsumerExistNo() {
+        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        consumer.setUuid("1");
+        consumer = consumerCurator.create(consumer);
+        boolean result = consumerCurator.doesConsumerExist("unknown");
+        assertFalse(result);
+    }
+
+    @Test
+    public void testDoesConsumerExistYes() {
+        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        consumer.setUuid("1");
+        consumer = consumerCurator.create(consumer);
+        boolean result = consumerCurator.doesConsumerExist("1");
+        assertTrue(result);
+    }
 }
