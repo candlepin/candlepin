@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <property name="quantity.type" value="BIGINT" dbms="oracle"/>
+    <property name="quantity.type" value="int8" dbms="postgresql"/>
+    <property name="quantity.type" value="BIGINT" dbms="mysql"/>
+
+    <changeSet id="20131025150828" author="ckozak">
+        <comment>remove non null constraint from activation key pool quantity</comment>
+        <dropNotNullConstraint
+            columnDataType="${quantity.type}"
+            columnName="quantity"
+            tableName="cp_activationkey_pool"/>
+    </changeSet>
+
+</databaseChangeLog>

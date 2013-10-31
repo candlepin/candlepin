@@ -64,7 +64,7 @@
             <column name="created" type="DATETIME"/>
             <column name="updated" type="DATETIME"/>
             <column name="quantity" type="BIGINT">
-                <constraints nullable="true"/>
+                <constraints nullable="false"/>
             </column>
             <column name="key_id" type="VARCHAR(32)">
                 <constraints nullable="false"/>
