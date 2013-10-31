@@ -51,6 +51,122 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         assertFalse(result.isSuccessful());
     }
 
+    @Test
+    public void testListForSufficientCores() {
+        Product product = new Product(productId, "A product for testing");
+        product.addAttribute(new ProductAttribute("cores", "10"));
+        Pool pool = createPool(owner, product);
+
+        consumer.setFacts(new HashMap<String, String>());
+        consumer.setFact("cpu.cpu_socket(s)", "1");
+        consumer.setFact("cpu.core(s)_per_socket", "10");
+
+        when(this.prodAdapter.getProductById(productId)).thenReturn(product);
+
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
+
+        assertFalse(result.hasErrors());
+        assertFalse(result.hasWarnings());
+        assertTrue(result.isSuccessful());
+    }
+
+    @Test
+    public void testListForInsufficientCores() {
+        Product product = new Product(productId, "A product for testing");
+        product.addAttribute(new ProductAttribute("cores", "10"));
+        Pool pool = createPool(owner, product);
+
+        consumer.setFacts(new HashMap<String, String>());
+        consumer.setFact("cpu.cpu_socket(s)", "2");
+        consumer.setFact("cpu.core(s)_per_socket", "10");
+
+        when(this.prodAdapter.getProductById(productId)).thenReturn(product);
+
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
+
+        assertFalse(result.hasErrors());
+        assertTrue(result.hasWarnings());
+        assertTrue(result.isSuccessful());
+        assertEquals("rulewarning.unsupported.number.of.cores",
+            result.getWarnings().get(0).getResourceKey());
+    }
+
+    @Test
+    public void testListForSufficientRAM() {
+        Product product = new Product(productId, "A product for testing");
+        product.addAttribute(new ProductAttribute("ram", "16"));
+        Pool pool = createPool(owner, product);
+
+        consumer.setFacts(new HashMap<String, String>());
+        consumer.setFact("memory.memtotal", "16777216");
+
+        when(this.prodAdapter.getProductById(productId)).thenReturn(product);
+
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
+
+        assertFalse(result.hasErrors());
+        assertFalse(result.hasWarnings());
+        assertTrue(result.isSuccessful());
+    }
+
+    @Test
+    public void testListForInsufficientRAM() {
+        Product product = new Product(productId, "A product for testing");
+        product.addAttribute(new ProductAttribute("ram", "10"));
+        Pool pool = createPool(owner, product);
+
+        consumer.setFacts(new HashMap<String, String>());
+        consumer.setFact("memory.memtotal", "16777216");
+
+        when(this.prodAdapter.getProductById(productId)).thenReturn(product);
+
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
+
+        assertFalse(result.hasErrors());
+        assertTrue(result.hasWarnings());
+        assertTrue(result.isSuccessful());
+        assertEquals("rulewarning.unsupported.ram",
+            result.getWarnings().get(0).getResourceKey());
+    }
+
+    @Test
+    public void testListForSufficientSockets() {
+        Product product = new Product(productId, "A product for testing");
+        product.addAttribute(new ProductAttribute("sockets", "2"));
+        Pool pool = createPool(owner, product);
+
+        consumer.setFacts(new HashMap<String, String>());
+        consumer.setFact("cpu.cpu_socket(s)", "1");
+
+        when(this.prodAdapter.getProductById(productId)).thenReturn(product);
+
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
+
+        assertFalse(result.hasErrors());
+        assertFalse(result.hasWarnings());
+        assertTrue(result.isSuccessful());
+    }
+
+    @Test
+    public void testListForInsufficientSockets() {
+        Product product = new Product(productId, "A product for testing");
+        product.addAttribute(new ProductAttribute("sockets", "2"));
+        Pool pool = createPool(owner, product);
+
+        consumer.setFacts(new HashMap<String, String>());
+        consumer.setFact("cpu.cpu_socket(s)", "4");
+
+        when(this.prodAdapter.getProductById(productId)).thenReturn(product);
+
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
+
+        assertFalse(result.hasErrors());
+        assertTrue(result.hasWarnings());
+        assertTrue(result.isSuccessful());
+        assertEquals("rulewarning.unsupported.number.of.sockets",
+            result.getWarnings().get(0).getResourceKey());
+    }
+
     @Test public void bindWithQuantityNoMultiEntitle() {
         Product product = new Product(productId, "A product for testing");
         Pool pool = createPool(owner, product);

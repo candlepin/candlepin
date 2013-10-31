@@ -1461,7 +1461,7 @@ var Entitlement = {
             var consumerCores = FactValueCalculator.getFact(CORES_ATTRIBUTE, consumer);
             if (consumerCores && !pool.getProductAttribute("stacking_id")) {
                 var poolCores = parseInt(pool.getProductAttribute(CORES_ATTRIBUTE));
-                if (poolCores > 0 && poolCores < consumer.facts[CORES_FACT]) {
+                if (poolCores > 0 && poolCores < consumerCores) {
                     result.addWarning("rulewarning.unsupported.number.of.cores");
                 }
             }
