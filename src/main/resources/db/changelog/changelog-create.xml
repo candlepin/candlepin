@@ -1137,5 +1137,6 @@
     <include file="db/changelog/20130920132949-add-delete-cascade-pool-products.xml" />
     <include file="db/changelog/20131002150608-consumer-content-override.xml" />
     <include file="db/changelog/20131007121855-add_class_to_jobstatus.xml" />
+    <include file="db/changelog/20131025111347-migrate-import-upstream-consumer.xml" />
     <include file="db/changelog/20131025150828-nullable_actkey_pool_version.xml" />
 </databaseChangeLog>

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <changeSet id="20131025111347" author="wpoteat">
+        <addDefaultValue
+            tableName="cp_import_upstream_consumer"
+            columnName="uuid"
+            defaultValue="unknown"
+        />
+        <addDefaultValue
+            tableName="cp_import_upstream_consumer"
+            columnName="name"
+            defaultValue="unknown"
+        />
+    </changeSet> 
+    <changeSet id="20131025111347-1" author="wpoteat">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="fk_imp_upstream_cnsmr_id" foreignKeyTableName="cp_import_record" />
+            </not>
+        </preConditions>
+        <comment>Need to move some data from import record for exisitng entries</comment>
+        <sql>
+            INSERT INTO cp_import_upstream_consumer (id, owner_id,
+                   type_id, created, updated)
+            SELECT ir.id,
+                   ir.owner_id,
+                   ct.id,
+                   ir.created,
+                   ir.updated
+            FROM cp_import_record ir,
+                   cp_consumer_type ct
+            WHERE ct.label = 'candlepin'
+       </sql>
+       <sql>
+           UPDATE cp_import_upstream_consumer
+           SET uuid = cp_import_record.upstream_id
+           FROM cp_import_record
+           WHERE cp_import_upstream_consumer.id = cp_import_record.id
+           AND cp_import_record.upstream_id IS NOT NULL
+       </sql>
+       <sql>
+            UPDATE cp_import_record set upstream_id = id 
+       </sql>
+    </changeSet>
+    <changeSet id="20131025111347-2" author="wpoteat">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyName="fk_imp_upstream_cnsmr_id" foreignKeyTableName="cp_import_record" />
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint constraintName="fk_imp_upstream_cnsmr_id" baseColumnNames="upstream_id" baseTableName="cp_import_record" referencedTableName="cp_import_upstream_consumer" referencedColumnNames="id"/>
+    </changeSet>
+</databaseChangeLog>
