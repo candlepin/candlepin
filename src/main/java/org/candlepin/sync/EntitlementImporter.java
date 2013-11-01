@@ -80,6 +80,7 @@ public class EntitlementImporter {
 
         subscription.setAccountNumber(entitlement.getPool().getAccountNumber());
         subscription.setContractNumber(entitlement.getPool().getContractNumber());
+        subscription.setOrderNumber(entitlement.getPool().getOrderNumber());
 
         subscription.setQuantity(entitlement.getQuantity().longValue());
 
