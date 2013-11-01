@@ -69,8 +69,8 @@ public class Subscription extends AbstractHibernateObject {
     private Product derivedProduct;
 
     @ManyToMany(targetEntity = Product.class)
-    @ForeignKey(name = "fk_product_id",
-            inverseName = "fk_subscription_id")
+    @ForeignKey(name = "fk_subscription_id",
+            inverseName = "fk_product_id")
     @JoinTable(name = "cp_subscription_products",
         joinColumns = @JoinColumn(name = "subscription_id"),
         inverseJoinColumns = @JoinColumn(name = "product_id"))
