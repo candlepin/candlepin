@@ -17,9 +17,13 @@ package org.candlepin.audit;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 
-import org.apache.log4j.FileAppender;
-import org.apache.log4j.Logger;
-import org.apache.log4j.PatternLayout;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.FileAppender;
+
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.text.DateFormat;
@@ -35,8 +39,7 @@ import java.util.TimeZone;
  * See http://slf4j.org/faq.html#when
  */
 public class LoggingListener implements EventListener {
-    private static Logger auditLog =
-        Logger.getLogger(LoggingListener.class.getCanonicalName() + ".AuditLog");
+    private static Logger auditLog;
 
     private boolean verbose;
 
@@ -45,10 +48,23 @@ public class LoggingListener implements EventListener {
     public LoggingListener() throws IOException {
         Config config = new Config();
 
-        auditLog.addAppender(new FileAppender(new PatternLayout("%m"),
-            config.getString(ConfigProperties.AUDIT_LOG_FILE)));
+        LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
+        auditLog = lc.getLogger(LoggingListener.class.getCanonicalName() + ".AuditLog");
+
+        PatternLayoutEncoder encoder = new PatternLayoutEncoder();
+        encoder.setContext(lc);
+        encoder.setPattern("%m");
+        encoder.start();
+
+        FileAppender<ILoggingEvent> appender = new FileAppender<ILoggingEvent>();
+        appender.setFile(config.getString(ConfigProperties.AUDIT_LOG_FILE));
+        appender.setEncoder(encoder);
+        appender.setName("AUDITLOG");
+        appender.setContext(lc);
+        appender.start();
+
         // Keep these messages in audit.log only
-        auditLog.setAdditivity(false);
+        auditLog.setAdditive(false);
 
         verbose = config.getBoolean(ConfigProperties.AUDIT_LOG_VERBOSE);
         TimeZone tz = TimeZone.getDefault();

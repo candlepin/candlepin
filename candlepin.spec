@@ -72,7 +72,7 @@ BuildRequires: google-collections >= 0:1.0
 BuildRequires: resteasy >= 0:2.3.1
 BuildRequires: hornetq >= 0:2.2.11
 BuildRequires: google-guice >= 0:3.0
-BuildRequires: log4j
+BuildRequires: logback-classic
 BuildRequires: jakarta-commons-lang
 BuildRequires: jakarta-commons-io
 BuildRequires: apache-commons-codec
@@ -130,7 +130,7 @@ Requires: codehaus-jackson-jaxrs
 Requires: hornetq >= 0:2.2.11
 Requires: netty
 Requires: oauth
-Requires: log4j
+Requires: logback-classic
 Requires: glassfish-jaxb
 Requires: scannotation
 Requires: slf4j >= 0:1.6.1
@@ -349,6 +349,10 @@ fi
 - Added consumers/uuid/exists (ckozak@redhat.com)
 - fixed bad changes to liquibase scripts, created a new changeset for them (ckozak@redhat.com)
 - Reduce the line length to fix the style checks (bkearney@redhat.com)
+
+* Tue Nov 05 2013 Alex Wood <awood@redhat.com> 0.8.31-2
+- Add logback-classic dependency
+
 * Tue Oct 29 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.31-1
 - Moved the foreign key constraint from new table on creation (wpoteat@redhat.com)
 

@@ -14,10 +14,12 @@
  */
 package org.candlepin.config;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.LoggerContext;
+
 import com.google.inject.Inject;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.Map.Entry;
@@ -41,10 +43,11 @@ public class LoggingConfig {
     }
 
     public void configure(Config config) {
+        LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
         Map<String, String> logLevels = config.configurationWithPrefix(PREFIX);
         for (Entry<String, String> entry : logLevels.entrySet()) {
             String key = entry.getKey().replace(PREFIX, "");
-            Logger.getLogger(key).setLevel(Level.toLevel(entry.getValue()));
+            lc.getLogger(key).setLevel(Level.toLevel(entry.getValue()));
         }
     }
 }

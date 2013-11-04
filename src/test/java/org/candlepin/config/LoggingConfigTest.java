@@ -20,10 +20,13 @@ import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.LoggerContext;
+
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -45,7 +48,8 @@ public class LoggingConfigTest {
 
     @Test
     public void configure() {
-        Logger l = Logger.getLogger(LoggingConfigTest.class);
+        LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
+        Logger l = context.getLogger(LoggingConfigTest.class);
         assertNotNull(l);
         assertNull(l.getLevel());
 
