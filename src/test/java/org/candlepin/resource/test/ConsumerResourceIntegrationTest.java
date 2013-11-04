@@ -38,6 +38,7 @@ import org.candlepin.auth.permissions.Permission;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.ForbiddenException;
+import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
@@ -328,7 +329,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
             consumerResource.listEntitlements(consumer.getUuid(), null, null).size());
     }
 
-    @Test(expected = ForbiddenException.class)
+    @Test(expected = NotFoundException.class)
     public void testCannotGetAnotherConsumersCerts() {
         consumerResource.bind(consumer.getUuid(), pool.getId().toString(),
             null, 1, null, null, false, null);
@@ -364,7 +365,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
                 null).size());
     }
 
-    @Test(expected = ForbiddenException.class)
+    @Test(expected = NotFoundException.class)
     public void canNotDeleteConsumerOtherThanSelf() {
         Consumer evilConsumer = TestUtil.createConsumer(standardSystemType,
             owner);
@@ -455,7 +456,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
             consumerResource.listEntitlements(consumer.getUuid(), null, null).size());
     }
 
-    @Test(expected = ForbiddenException.class)
+    @Test(expected = NotFoundException.class)
     public void consumerShouldNotSeeAnotherConsumersEntitlements() {
         Consumer evilConsumer = TestUtil.createConsumer(standardSystemType,
             owner);

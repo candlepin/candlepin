@@ -232,7 +232,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
     }
 
 
-    @Test(expected = ForbiddenException.class)
+    @Test(expected = NotFoundException.class)
     public void testConsumerCannotListPoolsForAnotherOwnersConsumer() {
         Principal p = setupPrincipal(new ConsumerPrincipal(foreignConsumer));
         securityInterceptor.enable();

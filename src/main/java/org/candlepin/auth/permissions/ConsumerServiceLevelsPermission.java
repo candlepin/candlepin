@@ -18,6 +18,7 @@ import org.candlepin.auth.Access;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
 import org.hibernate.criterion.Criterion;
+import org.hibernate.criterion.Restrictions;
 
 /**
  * Permission allowing consumers to view their owner's service levels.

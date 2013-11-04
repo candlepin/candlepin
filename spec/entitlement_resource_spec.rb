@@ -90,7 +90,7 @@ describe 'Entitlement Resource' do
       system2.list_entitlements(:uuid => @system.uuid)
 
       # Then
-    end.should raise_exception(RestClient::Forbidden)
+    end.should raise_exception(RestClient::ResourceNotFound)
   end
 
   it 'should allow consumer to change entitlement quantity' do

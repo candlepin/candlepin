@@ -18,6 +18,7 @@ import org.candlepin.auth.Access;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.hibernate.criterion.Criterion;
+import org.hibernate.criterion.Restrictions;
 
 /**
  *
@@ -42,6 +43,9 @@ public class ConsumerEntitlementPermission extends TypedPermission<Entitlement> 
 
     @Override
     public Criterion getCriteriaRestrictions(Class entityClass) {
+        if (entityClass.equals(Entitlement.class)) {
+            return Restrictions.eq("consumer", consumer);
+        }
         return null;
     }
 

@@ -39,7 +39,7 @@ describe 'Consumer Resource' do
     # Consumer 2 should not be able to see consumer 1's feed:
     lambda {
       @consumer2.list_consumer_events_atom(@consumer1.uuid)
-    }.should raise_exception(RestClient::Forbidden)
+    }.should raise_exception(RestClient::ResourceNotFound)
   end
 
   it "should expose a consumer's events" do
@@ -55,7 +55,7 @@ describe 'Consumer Resource' do
     # Consumer 2 should not be able to see consumer 1's feed:
     lambda {
       @consumer2.list_consumer_events(@consumer1.uuid)
-    }.should raise_exception(RestClient::Forbidden)
+    }.should raise_exception(RestClient::ResourceNotFound)
   end
 
   it 'should receive paged data back when requested' do
@@ -235,7 +235,7 @@ describe 'Consumer Resource' do
 
     lambda do
       consumer1.get_consumer(consumer2.uuid)
-    end.should raise_exception(RestClient::Forbidden)
+    end.should raise_exception(RestClient::ResourceNotFound)
   end
 
   it "does not let an owner register with UUID of another owner's consumer" do

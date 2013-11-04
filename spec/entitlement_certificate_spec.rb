@@ -156,7 +156,7 @@ describe 'Entitlement Certificate' do
 
     lambda do
       @system2.put("/consumers/#{@system.uuid}/certificates")
-    end.should raise_exception(RestClient::Forbidden)
+    end.should raise_exception(RestClient::ResourceNotFound)
   end
 
   it "won't let one consumer regenerate another's certificate by entitlement" do
@@ -166,7 +166,7 @@ describe 'Entitlement Certificate' do
 
     lambda do
       @system2.regenerate_entitlement_certificates_for_entitlement(ents.first.id, @system.uuid)
-    end.should raise_exception(RestClient::Forbidden)
+    end.should raise_exception(RestClient::ResourceNotFound)
   end
 
 end

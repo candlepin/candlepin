@@ -18,6 +18,7 @@ import org.candlepin.auth.Access;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Pool;
 import org.hibernate.criterion.Criterion;
+import org.hibernate.criterion.Restrictions;
 
 /**
  *
@@ -43,6 +44,9 @@ public class ConsumerPoolPermission extends TypedPermission<Pool> {
 
     @Override
     public Criterion getCriteriaRestrictions(Class entityClass) {
+        if (entityClass.equals(Pool.class)) {
+            return Restrictions.eq("owner", consumer.getOwner());
+        }
         return null;
     }
 
