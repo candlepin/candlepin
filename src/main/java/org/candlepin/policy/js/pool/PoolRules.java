@@ -14,6 +14,26 @@
  */
 package org.candlepin.policy.js.pool;
 
+import org.candlepin.config.Config;
+import org.candlepin.controller.PoolManager;
+import org.candlepin.model.Consumer;
+import org.candlepin.model.DerivedProvidedProduct;
+import org.candlepin.model.Entitlement;
+import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.Pool;
+import org.candlepin.model.Product;
+import org.candlepin.model.ProductAttribute;
+import org.candlepin.model.ProductPoolAttribute;
+import org.candlepin.model.ProvidedProduct;
+import org.candlepin.model.Subscription;
+import org.candlepin.policy.js.ProductCache;
+
+import com.google.inject.Inject;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -22,30 +42,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
-import org.candlepin.config.Config;
-import org.candlepin.controller.PoolManager;
-import org.candlepin.model.Consumer;
-import org.candlepin.model.Entitlement;
-import org.candlepin.model.EntitlementCurator;
-import org.candlepin.model.Pool;
-import org.candlepin.model.Product;
-import org.candlepin.model.ProductAttribute;
-import org.candlepin.model.ProductPoolAttribute;
-import org.candlepin.model.ProvidedProduct;
-import org.candlepin.model.DerivedProvidedProduct;
-import org.candlepin.model.Subscription;
-import org.candlepin.policy.js.ProductCache;
-
-import com.google.inject.Inject;
-
 /**
  * Rules for creation and updating of pools during a refresh pools operation.
  */
 public class PoolRules {
 
-    private static Logger log = Logger.getLogger(PoolRules.class);
+    private static Logger log = LoggerFactory.getLogger(PoolRules.class);
 
     private PoolManager poolManager;
     private ProductCache productCache;

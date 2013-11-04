@@ -14,8 +14,9 @@
  */
 package org.candlepin.servlet.filter.logging;
 
-import org.apache.log4j.Logger;
-import org.apache.log4j.MDC;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import java.io.IOException;
 import java.util.Enumeration;
@@ -35,7 +36,7 @@ import javax.servlet.http.HttpServletResponse;
  */
 public class LoggingFilter implements Filter {
 
-    private static Logger log = Logger.getLogger(LoggingFilter.class);
+    private static Logger log = LoggerFactory.getLogger(LoggingFilter.class);
 
     public void init(FilterConfig filterConfig) throws ServletException {
         // Nothing to do here
@@ -137,7 +138,7 @@ public class LoggingFilter implements Filter {
                 .append(lRequest.getHeader(headerName));
         }
         builder.append("\n====Headers====");
-        log.debug(builder);
+        log.debug("{}", builder.toString());
     }
 
     private void logBody(String type, BodyLogger bodyLogger) {

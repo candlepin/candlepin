@@ -14,9 +14,6 @@
  */
 package org.candlepin.controller;
 
-import com.google.inject.Inject;
-
-import org.apache.log4j.Logger;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
@@ -29,6 +26,11 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.policy.EntitlementRefusedException;
+
+import com.google.inject.Inject;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
@@ -40,7 +42,7 @@ import java.util.List;
  * entitler
  */
 public class Entitler {
-    private static Logger log = Logger.getLogger(Entitler.class);
+    private static Logger log = LoggerFactory.getLogger(Entitler.class);
 
     private PoolManager poolManager;
     private I18n i18n;

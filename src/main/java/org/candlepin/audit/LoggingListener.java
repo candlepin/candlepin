@@ -14,19 +14,25 @@
  */
 package org.candlepin.audit;
 
+import org.candlepin.config.Config;
+import org.candlepin.config.ConfigProperties;
+
+import org.apache.log4j.FileAppender;
+import org.apache.log4j.Logger;
+import org.apache.log4j.PatternLayout;
+
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.TimeZone;
 
-import org.apache.log4j.FileAppender;
-import org.apache.log4j.PatternLayout;
-import org.apache.log4j.Logger;
-import org.candlepin.config.Config;
-import org.candlepin.config.ConfigProperties;
-
 /**
  * LoggingListener
+ *
+ * Since we are actually adjusting logging configuration, we have to access the
+ * underlying logger implementation instead of going through slf4j.
+ *
+ * See http://slf4j.org/faq.html#when
  */
 public class LoggingListener implements EventListener {
     private static Logger auditLog =

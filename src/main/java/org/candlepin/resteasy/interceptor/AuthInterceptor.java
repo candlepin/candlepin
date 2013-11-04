@@ -14,13 +14,6 @@
  */
 package org.candlepin.resteasy.interceptor;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.ext.Provider;
-
-import org.apache.log4j.Logger;
 import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.NoAuthPrincipal;
 import org.candlepin.auth.Principal;
@@ -30,6 +23,10 @@ import org.candlepin.exceptions.UnauthorizedException;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.service.UserServiceAdapter;
+
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+
 import org.jboss.resteasy.annotations.interception.ServerInterceptor;
 import org.jboss.resteasy.core.ResourceMethod;
 import org.jboss.resteasy.core.ServerResponse;
@@ -37,10 +34,15 @@ import org.jboss.resteasy.spi.Failure;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.jboss.resteasy.spi.interception.PreProcessInterceptor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
-import com.google.inject.Inject;
-import com.google.inject.Injector;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.ext.Provider;
 
 /**
  * NoAuthInterceptor
@@ -48,7 +50,7 @@ import com.google.inject.Injector;
 @Provider
 @ServerInterceptor
 public class AuthInterceptor implements PreProcessInterceptor {
-    private static Logger log = Logger.getLogger(AuthInterceptor.class);
+    private static Logger log = LoggerFactory.getLogger(AuthInterceptor.class);
 
     private Injector injector;
     private ConsumerCurator consumerCurator;

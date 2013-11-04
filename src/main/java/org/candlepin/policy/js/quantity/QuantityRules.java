@@ -23,7 +23,8 @@ import org.candlepin.policy.js.RulesObjectMapper;
 
 import com.google.inject.Inject;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Date;
 import java.util.HashSet;
@@ -36,7 +37,7 @@ public class QuantityRules {
 
     private JsRunner jsRules;
     private RulesObjectMapper mapper;
-    private static Logger log = Logger.getLogger(QuantityRules.class);
+    private static Logger log = LoggerFactory.getLogger(QuantityRules.class);
 
     @Inject
     public QuantityRules(JsRunner jsRules) {

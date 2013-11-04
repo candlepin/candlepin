@@ -14,22 +14,24 @@
  */
 package org.candlepin.resteasy.interceptor;
 
-import org.apache.log4j.Logger;
 import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.exceptions.GoneException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.DeletedConsumerCurator;
-import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * ConsumerAuth
  */
 public abstract class ConsumerAuth implements AuthProvider {
 
-    private static Logger log = Logger.getLogger(ConsumerAuth.class);
+    private static Logger log = LoggerFactory.getLogger(ConsumerAuth.class);
 
     protected ConsumerCurator consumerCurator;
     protected DeletedConsumerCurator deletedConsumerCurator;

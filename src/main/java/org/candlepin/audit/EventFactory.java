@@ -14,12 +14,6 @@
  */
 package org.candlepin.audit;
 
-import org.apache.log4j.Logger;
-import org.codehaus.jackson.map.AnnotationIntrospector;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.introspect.JacksonAnnotationIntrospector;
-import org.codehaus.jackson.map.ser.impl.SimpleFilterProvider;
-import org.codehaus.jackson.xc.JaxbAnnotationIntrospector;
 import org.candlepin.auth.Principal;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.jackson.HateoasBeanPropertyFilter;
@@ -34,13 +28,21 @@ import org.candlepin.model.Subscription;
 
 import com.google.inject.Inject;
 
+import org.codehaus.jackson.map.AnnotationIntrospector;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.introspect.JacksonAnnotationIntrospector;
+import org.codehaus.jackson.map.ser.impl.SimpleFilterProvider;
+import org.codehaus.jackson.xc.JaxbAnnotationIntrospector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * EventFactory
  */
 public class EventFactory {
     private final PrincipalProvider principalProvider;
     private final ObjectMapper mapper;
-    private static Logger logger = Logger.getLogger(EventFactory.class);
+    private static Logger logger = LoggerFactory.getLogger(EventFactory.class);
 
     @Inject
     public EventFactory(PrincipalProvider principalProvider) {

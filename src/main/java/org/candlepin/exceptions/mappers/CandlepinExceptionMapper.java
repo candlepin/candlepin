@@ -17,7 +17,6 @@ package org.candlepin.exceptions.mappers;
 import static org.jboss.resteasy.util.MediaTypeHelper.getBestMatch;
 import static org.jboss.resteasy.util.MediaTypeHelper.parseHeader;
 
-import org.apache.log4j.Logger;
 import org.candlepin.exceptions.ExceptionMessage;
 import org.candlepin.util.VersionUtil;
 
@@ -25,6 +24,8 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import org.jboss.resteasy.util.HttpHeaderNames;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.LinkedList;
@@ -57,7 +58,7 @@ public class CandlepinExceptionMapper {
     @Inject
     protected I18n i18n;
 
-    private static Logger log = Logger.getLogger(CandlepinExceptionMapper.class);
+    private static Logger log = LoggerFactory.getLogger(CandlepinExceptionMapper.class);
 
 
     public MediaType determineBestMediaType() {

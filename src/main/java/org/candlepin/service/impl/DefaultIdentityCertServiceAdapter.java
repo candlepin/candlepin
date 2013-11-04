@@ -14,14 +14,6 @@
  */
 package org.candlepin.service.impl;
 
-import java.io.IOException;
-import java.math.BigInteger;
-import java.security.GeneralSecurityException;
-import java.security.KeyPair;
-import java.security.cert.X509Certificate;
-import java.util.Date;
-
-import org.apache.log4j.Logger;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Consumer;
@@ -35,14 +27,24 @@ import com.google.common.base.Function;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.math.BigInteger;
+import java.security.GeneralSecurityException;
+import java.security.KeyPair;
+import java.security.cert.X509Certificate;
+import java.util.Date;
+
 /**
  * DefaultIdentityCertServiceAdapter
  */
 public class DefaultIdentityCertServiceAdapter implements
     IdentityCertServiceAdapter {
     private PKIUtility pki;
-    private static Logger log = Logger
-        .getLogger(DefaultIdentityCertServiceAdapter.class);
+    private static Logger log =
+        LoggerFactory.getLogger(DefaultIdentityCertServiceAdapter.class);
     private IdentityCertificateCurator idCertCurator;
     private KeyPairCurator keyPairCurator;
     private CertificateSerialCurator serialCurator;

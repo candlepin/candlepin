@@ -46,8 +46,9 @@ import com.google.inject.Provider;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
-import org.apache.log4j.Logger;
-import org.apache.log4j.MDC;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.xnap.commons.i18n.I18n;
 
 import java.lang.annotation.Annotation;
@@ -81,7 +82,7 @@ public class SecurityInterceptor implements MethodInterceptor {
     @SuppressWarnings("rawtypes")
     private final Map<Class, EntityStore> storeMap;
 
-    private static Logger log = Logger.getLogger(SecurityInterceptor.class);
+    private static Logger log = LoggerFactory.getLogger(SecurityInterceptor.class);
 
     @SuppressWarnings("rawtypes")
     public SecurityInterceptor() {

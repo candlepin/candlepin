@@ -14,19 +14,20 @@
  */
 package org.candlepin.resteasy.interceptor;
 
-import java.security.cert.X509Certificate;
-import java.util.HashMap;
-import java.util.Map;
-
-import org.apache.log4j.Logger;
 import org.candlepin.auth.Principal;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.DeletedConsumerCurator;
 
+import com.google.inject.Inject;
+
 import org.jboss.resteasy.spi.HttpRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
-import com.google.inject.Inject;
+import java.security.cert.X509Certificate;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Pulls the consumer id off off a certificate and creates a principal for that.
@@ -36,7 +37,7 @@ class SSLAuth extends ConsumerAuth {
     private static final String CERTIFICATES_ATTR = "javax.servlet.request.X509Certificate";
     private static final String UUID_DN_ATTRIBUTE = "CN";
 
-    private static Logger log = Logger.getLogger(SSLAuth.class);
+    private static Logger log = LoggerFactory.getLogger(SSLAuth.class);
 
     @Inject
     SSLAuth(ConsumerCurator consumerCurator,

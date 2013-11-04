@@ -14,12 +14,6 @@
  */
 package org.candlepin.util;
 
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
-import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
@@ -29,13 +23,21 @@ import org.candlepin.model.ProductContent;
 
 import com.google.common.base.Predicate;
 
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
 
 /**
  * X509Util
  */
 public abstract class X509Util {
 
-    private static Logger log = Logger.getLogger(X509Util.class);
+    private static Logger log = LoggerFactory.getLogger(X509Util.class);
 
     public static final Predicate<Product>
     PROD_FILTER_PREDICATE = new Predicate<Product>() {

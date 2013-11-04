@@ -14,16 +14,18 @@
  */
 package org.candlepin.pinsetter.tasks;
 
-import com.google.inject.Inject;
-import com.google.inject.persist.UnitOfWork;
-
-import org.apache.log4j.Logger;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.CrlGenerator;
 import org.candlepin.util.CrlFileUtil;
+
+import com.google.inject.Inject;
+import com.google.inject.persist.UnitOfWork;
+
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -42,7 +44,8 @@ public class CertificateRevocationListTask extends KingpinJob {
     private CrlGenerator crlGenerator;
     private CrlFileUtil crlFileUtil;
 
-    private static Logger log = Logger.getLogger(CertificateRevocationListTask.class);
+    private static Logger log =
+        LoggerFactory.getLogger(CertificateRevocationListTask.class);
 
     /**
      * Instantiates a new certificate revocation list task.

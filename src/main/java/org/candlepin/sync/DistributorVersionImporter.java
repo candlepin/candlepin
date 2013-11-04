@@ -14,21 +14,23 @@
  */
 package org.candlepin.sync;
 
-import java.io.IOException;
-import java.io.Reader;
-import java.util.Set;
-
-import org.apache.log4j.Logger;
 import org.candlepin.model.DistributorVersion;
 import org.candlepin.model.DistributorVersionCapability;
 import org.candlepin.model.DistributorVersionCurator;
+
 import org.codehaus.jackson.map.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.io.Reader;
+import java.util.Set;
 
 /**
  * DistributorVersionImporter
  */
 public class DistributorVersionImporter {
-    private static Logger log = Logger.getLogger(DistributorVersionImporter.class);
+    private static Logger log = LoggerFactory.getLogger(DistributorVersionImporter.class);
 
     private DistributorVersionCurator curator;
 

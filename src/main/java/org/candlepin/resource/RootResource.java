@@ -24,7 +24,8 @@ import org.candlepin.config.ConfigProperties;
 
 import com.google.inject.Inject;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -47,7 +48,7 @@ import javax.ws.rs.core.MediaType;
 @Path("/")
 public class RootResource {
 
-    private static Logger log = Logger.getLogger(RootResource.class);
+    private static Logger log = LoggerFactory.getLogger(RootResource.class);
     public static final List<Class> RESOURCE_CLASSES;
     public static final Map<String, Method> PSEUDO_RESOURCES;
     private Config config;

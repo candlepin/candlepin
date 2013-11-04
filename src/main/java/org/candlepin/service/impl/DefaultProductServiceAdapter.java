@@ -29,7 +29,8 @@ import org.candlepin.util.X509ExtensionUtil;
 
 import com.google.inject.Inject;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -46,8 +47,8 @@ import java.util.Set;
  */
 public class DefaultProductServiceAdapter implements ProductServiceAdapter {
 
-    private static Logger log = Logger
-        .getLogger(DefaultProductServiceAdapter.class);
+    private static Logger log =
+        LoggerFactory.getLogger(DefaultProductServiceAdapter.class);
 
     private ProductCurator prodCurator;
 

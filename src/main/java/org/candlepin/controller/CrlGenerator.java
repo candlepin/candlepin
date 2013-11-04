@@ -17,15 +17,6 @@ package org.candlepin.controller;
 import static org.candlepin.util.Util.newList;
 import static org.candlepin.util.Util.newMap;
 
-import java.math.BigInteger;
-import java.security.cert.X509CRL;
-import java.security.cert.X509CRLEntry;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import org.apache.log4j.Logger;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.pki.PKIUtility;
@@ -36,6 +27,17 @@ import org.candlepin.util.Util;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.math.BigInteger;
+import java.security.cert.X509CRL;
+import java.security.cert.X509CRLEntry;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 // TODO:  Clean up these protected methods - most are protected only for unit testing!
 /**
  * CRLGenerator
@@ -45,7 +47,7 @@ public class CrlGenerator {
     private PKIUtility pkiUtility;
     private CertificateSerialCurator certificateSerialCurator;
 
-    private static Logger log = Logger.getLogger(CrlGenerator.class);
+    private static Logger log = LoggerFactory.getLogger(CrlGenerator.class);
 
     /**
      * Instantiates a new certificate revocation list task.
