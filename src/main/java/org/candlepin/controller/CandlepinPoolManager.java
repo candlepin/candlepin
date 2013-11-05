@@ -519,10 +519,10 @@ public class CandlepinPoolManager implements PoolManager {
         tmpSet.addAll(guestCompliance.getNonCompliantProducts());
 
         /*Do not attempt to create subscriptions for products that
-          already have virt_limit pools available to the guest */
+          already have virt_only pools available to the guest */
         Set<String> productsToRemove = new HashSet<String>();
         for (Pool pool : allOwnerPoolsForGuest) {
-            if (pool.hasProductAttribute("virt_only")) {
+            if (pool.hasProductAttribute("virt_only") || pool.hasAttribute("virt_only")) {
                 for (String prodId : tmpSet) {
                     if (pool.provides(prodId)) {
                         productsToRemove.add(prodId);
