@@ -70,21 +70,26 @@ public class LoggingFilter implements Filter {
         // Log some basic info about the request at INFO level:
         logBasicRequestInfo(castRequest);
 
-        if (log.isDebugEnabled()) {
-            LoggingRequestWrapper lRequest = new LoggingRequestWrapper(castRequest);
-            LoggingResponseWrapper lResponse = new LoggingResponseWrapper(castResponse);
-            logRequest(lRequest);
-            chain.doFilter(lRequest, lResponse);
-            logBasicResponseInfo(lResponse, startTime);
-            logResponseBody(lResponse);
-            lResponse.getWriter().close();
+        try {
+            if (log.isDebugEnabled()) {
+                LoggingRequestWrapper lRequest = new LoggingRequestWrapper(castRequest);
+                LoggingResponseWrapper lResponse = new LoggingResponseWrapper(castResponse);
+                logRequest(lRequest);
+                chain.doFilter(lRequest, lResponse);
+                logBasicResponseInfo(lResponse, startTime);
+                logResponseBody(lResponse);
+                lResponse.getWriter().close();
+            }
+            else {
+                StatusResponseWrapper responseWrapper =
+                    new StatusResponseWrapper(castResponse);
+                chain.doFilter(request, responseWrapper);
+                logBasicResponseInfo(responseWrapper, startTime);
+            }
         }
-        else {
-            StatusResponseWrapper responseWrapper = new StatusResponseWrapper(castResponse);
-            chain.doFilter(request, responseWrapper);
-            logBasicResponseInfo(responseWrapper, startTime);
+        finally {
+            MDC.clear();
         }
-
     }
 
     private void logBasicRequestInfo(HttpServletRequest castRequest) {
