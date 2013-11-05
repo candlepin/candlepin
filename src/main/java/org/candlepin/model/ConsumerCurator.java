@@ -238,7 +238,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     public Page<List<Consumer>> listByUsernameAndType(String userName,
         ConsumerType type, Owner owner, PageRequest pageRequest) {
 
-        DetachedCriteria criteria = DetachedCriteria.forClass(Consumer.class);
+        DetachedCriteria criteria = createSecureDetachedCriteria();
 
         if (userName != null) {
             criteria.add(Restrictions.eq("username", userName));
@@ -429,8 +429,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     }
 
     public boolean doesConsumerExist(String uuid) {
-        int result = (Integer) currentSession()
-            .createCriteria(Consumer.class)
+        int result = (Integer) createSecureCriteria()
             .add(Restrictions.eq("uuid", uuid))
             .setProjection(Projections.count("id"))
             .uniqueResult();

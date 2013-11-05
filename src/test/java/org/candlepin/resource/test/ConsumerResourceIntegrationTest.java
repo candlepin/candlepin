@@ -527,6 +527,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
         Principal emailuser = TestUtil.createPrincipal(username, owner,
             Access.ALL);
+        setupPrincipal(emailuser);
 
         Consumer personal = TestUtil.createConsumer(personType, owner);
         personal.setName(((UserPrincipal) emailuser).getUsername());

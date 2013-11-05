@@ -106,7 +106,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @return Pools created as a result of this entitlement.
      */
     public List<Pool> listBySourceEntitlement(Entitlement e) {
-        List<Pool> results = currentSession().createCriteria(Pool.class)
+        List<Pool> results = createSecureCriteria()
             .add(Restrictions.eq("sourceEntitlement", e)).list();
         if (results == null) {
             results = new LinkedList<Pool>();
@@ -150,7 +150,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     @SuppressWarnings("unchecked")
     public List<Pool> listExpiredPools() {
         Date today = new Date();
-        Criteria crit = currentSession().createCriteria(Pool.class).add(
+        Criteria crit = createSecureCriteria().add(
             Restrictions.lt("endDate", today));
         List<Pool> results = crit.list();
         if (results == null) {
@@ -188,7 +188,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             log.debug("   product: " + productId);
         }
 
-        DetachedCriteria crit = DetachedCriteria.forClass(Pool.class);
+        DetachedCriteria crit = createSecureDetachedCriteria();
         if (activeOnly) {
             crit.add(Restrictions.eq("activeSubscription", Boolean.TRUE));
         }
@@ -269,8 +269,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
     @Transactional
     public Pool findUeberPool(Owner o) {
-        return (Pool) currentSession()
-            .createCriteria(Pool.class)
+        return (Pool) createSecureCriteria()
             .add(Restrictions.eq("owner", o))
             .add(Restrictions.eq("productName", Product.ueberProductNameForOwner(o)))
             .uniqueResult();
@@ -293,7 +292,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     }
 
     private Criteria criteriaToSelectEntitlementForPool(Pool entitlementPool) {
-        return currentSession().createCriteria(Entitlement.class)
+        return this.currentSession().createCriteria(Entitlement.class)
             .add(Restrictions.eq("pool", entitlementPool));
     }
 
@@ -308,7 +307,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     }
 
     public List<Pool> lookupBySubscriptionId(String subId) {
-        return currentSession().createCriteria(Pool.class)
+        return createSecureCriteria()
         .add(Restrictions.eq("subscriptionId", subId)).list();
     }
 
@@ -564,7 +563,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @return Number of derived pools which exist for the given consumer and stack
      */
     public Pool getSubPoolForStackId(Consumer consumer, String stackId) {
-        Criteria getCount = currentSession().createCriteria(Pool.class)
+        Criteria getCount = createSecureCriteria()
             .add(Restrictions.eq("sourceConsumer", consumer))
             .add(Restrictions.and(Restrictions.isNotNull("sourceStackId"),
                                   Restrictions.eq("sourceStackId", stackId)));

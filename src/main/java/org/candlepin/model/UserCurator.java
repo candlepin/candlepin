@@ -29,7 +29,7 @@ public class UserCurator extends AbstractHibernateCurator<User> {
     }
 
     public User findByLogin(String login) {
-        return (User) this.currentSession().createCriteria(User.class)
+        return (User) createSecureCriteria()
         .add(Restrictions.eq("username", login))
         .uniqueResult();
     }

@@ -184,7 +184,7 @@ describe 'Consumer Resource' do
     lambda do
       consumer_client(user2, random_string("consumer1"), 'person',
                       username)
-    end.should raise_exception(RestClient::Forbidden)
+    end.should raise_exception(RestClient::ResourceNotFound)
   end
 
 

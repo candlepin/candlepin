@@ -65,6 +65,10 @@ public class TestUtil {
         return new Consumer("TestConsumer" + randomInt(), "User", owner, type);
     }
 
+    public static Consumer createConsumer(ConsumerType type, Owner owner, String username) {
+        return new Consumer("TestConsumer" + randomInt(), username, owner, type);
+    }
+
     /**
      * Create a consumer with a new owner
      *
