@@ -250,8 +250,9 @@ define "candlepin" do
   task :apicrawl  do
     options.test = 'no'
 
-    # Join compile classpath with the package jar:
-    cp = [project('candlepin').package(:jar)] | compile_classpath
+    # Join compile classpath with the package jar. Add the test log4j
+    # to the front of the classpath:
+    cp = ['src/test/resources'] | [project('candlepin').package(:jar)] | compile_classpath
     Java::Commands.java('org.candlepin.util.apicrawl.ApiCrawler',
                         {:classpath => cp})
 
