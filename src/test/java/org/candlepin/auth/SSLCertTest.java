@@ -34,6 +34,11 @@ import org.junit.Test;
  * some useful sources of certificate-related information:
  * http://www.herongyang.com/Cryptography/index.html (in particular:
  * http://bit.ly/a2sX1d ) http://bit.ly/aOqTAV
+ *
+ * Certificates:
+ * - ca.crt: Root certificate used to sign the certchain.crt
+ * - certchain.crt: Chained certificate signed by ca.crt
+ * - selfsigned.crt: A self signed certificate seperate from the others.
  */
 public class SSLCertTest {
 
