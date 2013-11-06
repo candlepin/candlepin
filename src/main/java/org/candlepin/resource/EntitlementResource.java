@@ -214,6 +214,13 @@ public class EntitlementResource {
 
     /**
      * Return the subscription cert for the given id.
+     * 
+     * We can't return CdnInfo at this time, but when the time comes this
+     * is the implementation we want to start from. It will require changes
+     * to thumbslug.
+     * public CdnInfo getEntitlementUpstreamCert
+     * will also @Produces(MediaType.APPLICATION_JSON)
+     * 
      * @param dbid entitlement id.
      * @return the subscription cert for the given id.
      * @httpcode 404
@@ -221,10 +228,8 @@ public class EntitlementResource {
      */
     @GET
     @Produces(MediaType.TEXT_PLAIN)
-    // @Produces(MediaType.APPLICATION_JSON)
     @Path("{dbid}/upstream_cert")
     public String getEntitlementUpstreamCert(
-    // public CdnInfo getEntitlementUpstreamCert(
         @PathParam("dbid") String dbid) {
         Entitlement ent = entitlementCurator.find(dbid);
         // optimization: don't do entitlement regen here, as we don't read
@@ -288,9 +293,7 @@ public class EntitlementResource {
 
     /**
      *
-     * CdnInfo
-     *
-     * Container for subscription entitlement and cdn
+     * CdnInfo represents a container for subscription entitlement and cdn
      */
     public class CdnInfo implements Serializable {
         private Cdn cdn;

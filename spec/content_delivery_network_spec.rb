@@ -10,62 +10,62 @@ describe 'Content Delivery Network' do
   end
 
   it 'should allow content delivery network creation' do
-    count = @cp.get_content_delivery_networks.size
+    count = @cp.get_cdns.size
     cdn_key = random_string("test-cdn")
-    cdn = create_content_delivery_network(cdn_key,
-                                   "Test CDN",
-                                   "https://cdn.test.com")
+    cdn = create_cdn(cdn_key,
+                     "Test CDN",
+                     "https://cdn.test.com")
     cdn.id.should_not be nil
-    @cp.get_content_delivery_networks.size.should == count+1
+    @cp.get_cdns.size.should == count+1
   end
 
   it 'should allow content delivery network update' do
-    count = @cp.get_content_delivery_networks.size
+    count = @cp.get_cdns.size
     cdn_key = random_string("test-cdn")
-    cdn = create_content_delivery_network(cdn_key,
-                                   "Test CDN",
-                                   "https://cdn.test.com")
+    cdn = create_cdn(cdn_key,
+                     "Test CDN",
+                     "https://cdn.test.com")
     cdn_id = cdn.id
-    cdn = update_content_delivery_network(cdn_key,
-                                   "Test CDN 2",
-                                   "https://special.cdn.test.com")
-    @cp.get_content_delivery_networks.size.should == count+1
+    cdn = update_cdn(cdn_key,
+                     "Test CDN 2",
+                     "https://special.cdn.test.com")
+    @cp.get_cdns.size.should == count+1
     cdn.id.should == cdn_id
     cdn.url.should == "https://special.cdn.test.com"
     cdn.name.should == "Test CDN 2"
   end
 
   it 'should allow certificate to be put on CDN on create' do
-    count = @cp.get_content_delivery_networks.size
+    count = @cp.get_cdns.size
     cdn_key = random_string("test-cdn")
     certificate = {
         'key' => 'test-key',
         'cert' => 'test-cert'
     }
-    cdn = create_content_delivery_network(cdn_key,
-                                   "Test CDN",
-                                   "https://cdn.test.com",
-                                   certificate)
+    cdn = create_cdn(cdn_key,
+                     "Test CDN",
+                     "https://cdn.test.com",
+                     certificate)
     cdn.id.should_not be nil
-    @cp.get_content_delivery_networks.size.should == count+1
+    @cp.get_cdns.size.should == count+1
     cdn.certificate['key'].should == "test-key"
     cdn.certificate['cert'].should == "test-cert"
   end
 
   it 'should allow certificate to be put on CDN on update' do
-    count = @cp.get_content_delivery_networks.size
+    count = @cp.get_cdns.size
     cdn_key = random_string("test-cdn")
     certificate = {
         'key' => 'test-key',
         'cert' => 'test-cert'
     }
-    cdn = create_content_delivery_network(cdn_key,
-                                   "Test CDN",
-                                   "https://cdn.test.com")
+    cdn = create_cdn(cdn_key,
+                     "Test CDN",
+                     "https://cdn.test.com")
     cdn_id = cdn.id
     cdn.id.should_not be nil
-    cdn = update_content_delivery_network(cdn_key, nil, nil, certificate)
-    @cp.get_content_delivery_networks.size.should == count+1
+    cdn = update_cdn(cdn_key, nil, nil, certificate)
+    @cp.get_cdns.size.should == count+1
     cdn.certificate['key'].should == "test-key"
     cdn.certificate['cert'].should == "test-cert"
   end

@@ -20,6 +20,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -43,6 +44,9 @@ public class CdnCertificate extends AbstractCertificate {
     @Column(length = 32)
     private String id;
 
+    @OneToOne
+    private CertificateSerial serial;
+
     /**
      * @return the id
      */
@@ -55,5 +59,13 @@ public class CdnCertificate extends AbstractCertificate {
      */
     public void setId(String id) {
         this.id = id;
+    }
+
+    public CertificateSerial getSerial() {
+        return serial;
+    }
+
+    public void setSerial(CertificateSerial serialNumber) {
+        this.serial = serialNumber;
     }
 }

@@ -48,6 +48,7 @@
             <column name="privatekey" type="bytea">
                 <constraints nullable="false"/>
             </column>
+            <column name="serial_id" type="int8"/>
         </createTable>
     </changeSet>
 

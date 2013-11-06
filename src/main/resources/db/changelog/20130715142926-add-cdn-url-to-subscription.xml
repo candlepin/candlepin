@@ -8,7 +8,7 @@
 
 
     <changeSet id="20130715142926" author="wpoteat">
-        <comment>Record cdn url in subscription information when specified</comment>
+        <comment>Record cdn id in subscription information when specified</comment>
         <addColumn tableName="cp_subscription">
             <column name="cdn_id" type="varchar(32)"/>
         </addColumn>

@@ -87,20 +87,20 @@ module CandlepinMethods
   end
 
   # Wrapper for ruby API so we can track all content delivery network we created and clean them up.
-  def create_content_delivery_network(key, name, url, cert=nil)
-    content_delivery_network = @cp.create_content_delivery_network(key, name, url, cert)
-    @content_delivery_networks << content_delivery_network
+  def create_cdn(key, name, url, cert=nil)
+    cdn = @cp.create_cdn(key, name, url, cert)
+    @cdns << cdn
 
-    return content_delivery_network
+    return cdn
   end
 
-  def update_content_delivery_network(key, name, url, cert=nil)
-    content_delivery_network = @cp.update_content_delivery_network(key, name, url, cert)
-    if not @content_delivery_networks.map { |cdn| cdn['key'] }.include?(key)
-        @content_delivery_networks << content_delivery_network
+  def update_cdn(key, name, url, cert=nil)
+    cdn = @cp.update_cdn(key, name, url, cert)
+    if not @cdns.map { |cdn| cdn['key'] }.include?(key)
+        @cdns << cdn
     end
 
-    return content_delivery_network
+    return cdn
   end
 
   def user_client(owner, user_name, readonly=false)
@@ -396,9 +396,9 @@ class StandardExporter < Exporter
     # pool3 is special
     @candlepin_client.consume_pool(@pool3.id, {:quantity => 1})
 
-    @cdn = create_content_delivery_network(@cdn_key,
-	                               "Test CDN",
-	                               "https://cdn.test.com")
+    @cdn = create_cdn(@cdn_key,
+	              "Test CDN",
+	              "https://cdn.test.com")
   end
 
   def create_candlepin_export_update

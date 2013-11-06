@@ -59,13 +59,14 @@ public class Cdn extends AbstractHibernateObject {
     private CdnCertificate cert;
 
     public Cdn() {
+        this(null, null, null, null);
     }
 
     public Cdn(String key, String name, String url,
         CdnCertificate cert) {
         this.key = key;
         this.name = name;
-        this.url = name;
+        this.url = url;
         this.cert = cert;
     }
 
@@ -75,9 +76,7 @@ public class Cdn extends AbstractHibernateObject {
      * @param string3
      */
     public Cdn(String key, String name, String url) {
-        this.key = key;
-        this.name = name;
-        this.url = name;
+        this(key, name, url, null);
     }
 
     public String getId() {

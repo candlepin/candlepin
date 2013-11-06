@@ -1001,31 +1001,31 @@ class Candlepin
     get(query)
   end
 
-  def create_content_delivery_network(key, name, url, cert=nil)
+  def create_cdn(key, name, url, cert=nil)
     cdn =  {
       'key' => key,
       'name' => name,
       'url' => url,
       'certificate' => cert
     }
-    post('/content_delivery_network', cdn)
+    post('/cdn', cdn)
   end
 
-  def update_content_delivery_network(key, name, url, cert=nil)
+  def update_cdn(key, name, url, cert=nil)
     cdn =  {
       'name' => name,
       'url' => url,
       'certificate' => cert
     }
-    put("/content_delivery_network/#{key}", cdn)
+    put("/cdn/#{key}", cdn)
   end
 
-  def delete_content_delivery_network(key)
-    delete("/content_delivery_network/#{key}")
+  def delete_cdn(key)
+    delete("/cdn/#{key}")
   end
 
-  def get_content_delivery_networks()
-    get("/content_delivery_network")
+  def get_cdns()
+    get("/cdn")
   end
 
   def add_content_overrides(uuid, overrides=[])
