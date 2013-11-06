@@ -54,6 +54,8 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.CdnCurator;
+import org.candlepin.model.DerivedProvidedProduct;
 import org.candlepin.model.DistributorVersion;
 import org.candlepin.model.DistributorVersionCapability;
 import org.candlepin.model.DistributorVersionCurator;
@@ -67,7 +69,6 @@ import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
-import org.candlepin.model.DerivedProvidedProduct;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.policy.js.export.ExportRules;
 import org.candlepin.service.EntitlementCertServiceAdapter;
@@ -96,6 +97,8 @@ public class ExporterTest {
     private EntitlementCurator ec;
     private DistributorVersionCurator dvc;
     private DistributorVersionExporter dve;
+    private CdnCurator cdnc;
+    private CdnExporter cdne;
     private EntitlementExporter ee;
     private PKIUtility pki;
     private CandlepinCommonTestConfig config;
@@ -123,6 +126,8 @@ public class ExporterTest {
         pprov = mock(PrincipalProvider.class);
         dvc = mock(DistributorVersionCurator.class);
         dve = new DistributorVersionExporter();
+        cdnc = mock(CdnCurator.class);
+        cdne = new CdnExporter();
 
         when(exportRules.canExport(any(Entitlement.class))).thenReturn(Boolean.TRUE);
     }
@@ -236,7 +241,7 @@ public class ExporterTest {
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve);
+            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne);
 
         File export = e.getFullExport(consumer);
 
@@ -289,7 +294,7 @@ public class ExporterTest {
             .thenReturn("publicKey".getBytes());
 
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve);
+            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne);
 
         e.getFullExport(consumer);
     }
@@ -326,7 +331,7 @@ public class ExporterTest {
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve);
+            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne);
         File export = e.getFullExport(consumer);
 
         // VERIFY
@@ -372,7 +377,7 @@ public class ExporterTest {
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve);
+            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne);
         File export = e.getFullExport(consumer);
 
         // VERIFY
@@ -419,7 +424,7 @@ public class ExporterTest {
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve);
+            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne);
         File export = e.getFullExport(consumer);
 
         verifyContent(export, "export/consumer.json",
@@ -473,7 +478,7 @@ public class ExporterTest {
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve);
+            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne);
         File export = e.getFullExport(consumer);
 
         verifyContent(export, "export/distributor_version/test-dist-ver.json",

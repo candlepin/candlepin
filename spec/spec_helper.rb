@@ -10,6 +10,7 @@ module CleanupHooks
     @users = []
     @roles = []
     @rules = nil
+    @cdns = []
   end
 
   def cleanup_after
@@ -18,6 +19,7 @@ module CleanupHooks
     @users.reverse_each { |user| @cp.delete_user user['username'] }
     @created_products.reverse_each { |product| @cp.delete_product product['id'] }
     @dist_versions.reverse_each { |dist_version| @cp.delete_distributor_version dist_version['id'] }
+    @cdns.reverse_each { |cdn| @cp.delete_cdn cdn['key'] }
 
     # restore the original rules
     if (@rules)

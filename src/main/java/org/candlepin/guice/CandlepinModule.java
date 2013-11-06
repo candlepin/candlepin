@@ -66,6 +66,7 @@ import org.candlepin.resource.AtomFeedResource;
 import org.candlepin.resource.CertificateSerialResource;
 import org.candlepin.resource.ConsumerResource;
 import org.candlepin.resource.ConsumerTypeResource;
+import org.candlepin.resource.CdnResource;
 import org.candlepin.resource.ContentResource;
 import org.candlepin.resource.CrlResource;
 import org.candlepin.resource.DeletedConsumerResource;
@@ -191,6 +192,7 @@ public class CandlepinModule extends AbstractModule {
         bind(UniqueIdGenerator.class).to(DefaultUniqueIdGenerator.class);
         bind(DistributorVersionResource.class);
         bind(DeletedConsumerResource.class);
+        bind(CdnResource.class);
 
 
         bind(I18n.class).toProvider(I18nProvider.class);

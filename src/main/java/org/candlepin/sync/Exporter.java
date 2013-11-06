@@ -38,6 +38,9 @@ import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.Cdn;
+import org.candlepin.model.CdnCurator;
+import org.candlepin.model.DerivedProvidedProduct;
 import org.candlepin.model.DistributorVersion;
 import org.candlepin.model.DistributorVersionCurator;
 import org.candlepin.model.Entitlement;
@@ -47,7 +50,6 @@ import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProvidedProduct;
-import org.candlepin.model.DerivedProvidedProduct;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.policy.js.export.ExportRules;
 import org.candlepin.service.EntitlementCertServiceAdapter;
@@ -75,6 +77,8 @@ public class Exporter {
     private EntitlementExporter entExporter;
     private DistributorVersionCurator distVerCurator;
     private DistributorVersionExporter distVerExporter;
+    private CdnCurator cdnCurator;
+    private CdnExporter cdnExporter;
 
     private ConsumerTypeCurator consumerTypeCurator;
     private EntitlementCertServiceAdapter entCertAdapter;
@@ -96,7 +100,9 @@ public class Exporter {
         EntitlementCurator entitlementCurator, EntitlementExporter entExporter,
         PKIUtility pki, Config config, ExportRules exportRules,
         PrincipalProvider principalProvider, DistributorVersionCurator distVerCurator,
-        DistributorVersionExporter distVerExporter) {
+        DistributorVersionExporter distVerExporter,
+        CdnCurator cdnCurator,
+        CdnExporter cdnExporter) {
 
         this.consumerTypeCurator = consumerTypeCurator;
 
@@ -117,11 +123,19 @@ public class Exporter {
         this.principalProvider = principalProvider;
         this.distVerCurator = distVerCurator;
         this.distVerExporter = distVerExporter;
+        this.cdnCurator = cdnCurator;
+        this.cdnExporter = cdnExporter;
 
         mapper = SyncUtils.getObjectMapper(this.config);
     }
 
     public File getFullExport(Consumer consumer) throws ExportCreationException {
+        return getFullExport(consumer, null, null, null);
+    }
+
+    public File getFullExport(Consumer consumer, String cdnKey, String webAppPrefix,
+        String apiUrl)
+        throws ExportCreationException {
         // TODO: need to delete tmpDir (which contains the archive,
         // which we need to return...)
         try {
@@ -129,8 +143,8 @@ public class Exporter {
             File baseDir = new File(tmpDir.getAbsolutePath(), "export");
             baseDir.mkdir();
 
-            exportMeta(baseDir);
-            exportConsumer(baseDir, consumer);
+            exportMeta(baseDir, cdnKey);
+            exportConsumer(baseDir, consumer, webAppPrefix, apiUrl);
             exportIdentityCertificate(baseDir, consumer);
             exportEntitlements(baseDir, consumer);
             exportEntitlementsCerts(baseDir, consumer, null, true);
@@ -138,6 +152,7 @@ public class Exporter {
             exportConsumerTypes(baseDir);
             exportRules(baseDir);
             exportDistributorVersions(baseDir);
+            exportContentDeliveryNetworks(baseDir);
             return makeArchive(consumer, tmpDir, baseDir);
         }
         catch (IOException e) {
@@ -155,7 +170,7 @@ public class Exporter {
             File baseDir = new File(tmpDir.getAbsolutePath(), "export");
             baseDir.mkdir();
 
-            exportMeta(baseDir);
+            exportMeta(baseDir, null);
             exportEntitlementsCerts(baseDir, consumer, serials, false);
             return makeArchive(consumer, tmpDir, baseDir);
         }
@@ -288,28 +303,35 @@ public class Exporter {
         out.closeEntry();
     }
 
-    private void exportMeta(File baseDir) throws IOException {
+    private void exportMeta(File baseDir, String cdnKey)
+        throws IOException {
         File file = new File(baseDir.getCanonicalPath(), "meta.json");
         FileWriter writer = new FileWriter(file);
         Meta m = new Meta(getVersion(), new Date(),
             principalProvider.get().getPrincipalName(),
-            getPrefixWebUrl());
+            null, cdnKey);
         meta.export(mapper, writer, m);
         writer.close();
     }
 
-    private String getPrefixWebUrl() {
+    private String getPrefixWebUrl(String override) {
         String prefixWebUrl = config.getString(ConfigProperties.PREFIX_WEBURL);
-        if (prefixWebUrl != null && prefixWebUrl.trim().equals("")) {
-            prefixWebUrl = null;
+        if (!StringUtils.isBlank(override)) {
+            return override;
+        }
+        if (StringUtils.isBlank(prefixWebUrl)) {
+            return null;
         }
         return prefixWebUrl;
     }
 
-    private String getPrefixApiUrl() {
+    private String getPrefixApiUrl(String override) {
         String prefixApiUrl = config.getString(ConfigProperties.PREFIX_APIURL);
-        if (prefixApiUrl != null && prefixApiUrl.trim().equals("")) {
-            prefixApiUrl = null;
+        if (!StringUtils.isBlank(override)) {
+            return override;
+        }
+        if (StringUtils.isBlank(prefixApiUrl)) {
+            return null;
         }
         return prefixApiUrl;
     }
@@ -319,11 +341,13 @@ public class Exporter {
         return map.get("version") + "-" + map.get("release");
     }
 
-    private void exportConsumer(File baseDir, Consumer consumer) throws IOException {
+    private void exportConsumer(File baseDir, Consumer consumer, String webAppPrefix,
+        String apiUrl)
+        throws IOException {
         File file = new File(baseDir.getCanonicalPath(), "consumer.json");
         FileWriter writer = new FileWriter(file);
-        this.consumerExporter.export(mapper, writer, consumer, getPrefixWebUrl(),
-            getPrefixApiUrl());
+        this.consumerExporter.export(mapper, writer, consumer,
+            getPrefixWebUrl(webAppPrefix), getPrefixApiUrl(apiUrl));
         writer.close();
     }
 
@@ -539,6 +563,31 @@ public class Exporter {
                 File file = new File(distVerDir.getCanonicalPath(), dv.getName() + ".json");
                 writer = new FileWriter(file);
                 distVerExporter.export(mapper, writer, dv);
+            }
+            finally {
+                if (writer != null) {
+                    writer.close();
+                }
+            }
+        }
+    }
+
+    private void exportContentDeliveryNetworks(File baseDir) throws IOException {
+        List<Cdn> cdns = cdnCurator.list();
+        if (cdns == null || cdns.isEmpty()) { return; }
+
+        File cdnDir = new File(baseDir.getCanonicalPath(), "content_delivery_network");
+        cdnDir.mkdir();
+
+        FileWriter writer = null;
+        for (Cdn cdn : cdns) {
+            if (log.isDebugEnabled()) {
+                log.debug("Exporting Content Delivery Network" + cdn.getName());
+            }
+            try {
+                File file = new File(cdnDir.getCanonicalPath(), cdn.getKey() + ".json");
+                writer = new FileWriter(file);
+                cdnExporter.export(mapper, writer, cdn);
             }
             finally {
                 if (writer != null) {

@@ -258,7 +258,8 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         consumerCurator.update(consumer);
         setupPrincipal(owner, Access.READ_ONLY);
         securityInterceptor.enable();
-        consumerResource.exportData(mock(HttpServletResponse.class), consumer.getUuid());
+        consumerResource.exportData(mock(HttpServletResponse.class),
+            consumer.getUuid(), null, null, null);
     }
 
     @SuppressWarnings("unchecked")
@@ -555,7 +556,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
             null, null, this.entitlementCurator, null, null, null, null, null,
             null, null, null, null, this.poolManager, null, null, null,
             null, null, null, null, null, new CandlepinCommonTestConfig(), null, null,
-            null, null);
+            null, null, null);
 
         Response rsp = consumerResource.bind(
             consumer.getUuid(), pool.getId().toString(), null, 1, null,
