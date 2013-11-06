@@ -15,7 +15,7 @@
 package org.candlepin.guice;
 
 import org.candlepin.audit.HornetqContextListener;
-import org.candlepin.audit.LoggerContextListener;
+import org.candlepin.logging.LoggerContextListener;
 import org.candlepin.pinsetter.core.PinsetterContextListener;
 
 import com.google.inject.Binding;

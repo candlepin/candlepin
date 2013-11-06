@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.audit;
+package org.candlepin.logging;
 
 import ch.qos.logback.classic.LoggerContext;
 
@@ -23,6 +23,11 @@ import org.slf4j.LoggerFactory;
  * In order to release the resources used by logback-classic, it is always a
  * good idea to stop the logback context. Stopping the context will close all
  * appenders attached to loggers defined by the context and stop any active threads.
+ *
+ * See
+ * <a href="http://logback.qos.ch/manual/jmxConfig.html#leak">
+ * http://logback.qos.ch/manual/jmxConfig.html#leak
+ * </a>
  */
 public class LoggerContextListener {
     public void contextDestroyed() {
