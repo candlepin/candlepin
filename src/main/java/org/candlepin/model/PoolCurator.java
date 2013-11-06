@@ -308,7 +308,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
     public List<Pool> lookupBySubscriptionId(String subId) {
         return createSecureCriteria()
-        .add(Restrictions.eq("subscriptionId", subId)).list();
+            .add(Restrictions.eq("subscriptionId", subId)).list();
     }
 
     /**

@@ -16,7 +16,6 @@ package org.candlepin.auth.permissions;
 
 import org.candlepin.auth.Access;
 import org.candlepin.model.Consumer;
-import org.candlepin.model.Entitlement;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Restrictions;
 
