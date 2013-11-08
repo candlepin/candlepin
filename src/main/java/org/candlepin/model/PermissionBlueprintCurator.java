@@ -19,28 +19,17 @@ import java.util.List;
 import org.hibernate.criterion.Restrictions;
 
 /**
- * RoleCurator
+ * PermissionBlueprintCurator
  */
-public class RoleCurator extends AbstractHibernateCurator<Role> {
+public class PermissionBlueprintCurator extends
+    AbstractHibernateCurator<PermissionBlueprint> {
 
-    protected RoleCurator() {
-        super(Role.class);
+    protected PermissionBlueprintCurator() {
+        super(PermissionBlueprint.class);
     }
 
-    public List<Role> listForOwner(Owner o) {
-        return this.currentSession().createCriteria(Role.class)
-            .createCriteria("permissions")
-            .add(Restrictions.eq("owner", o)).list();
+    public List<PermissionBlueprint> findByOwner(Owner owner) {
+        return currentSession().createCriteria(PermissionBlueprint.class)
+            .add(Restrictions.eq("owner", owner)).list();
     }
-
-    /**
-     * @param name role's unique name to lookup.
-     * @return the role whose name matches the one given.
-     */
-    public Role lookupByName(String name) {
-        return (Role) currentSession().createCriteria(Role.class)
-        .add(Restrictions.eq("name", name))
-        .uniqueResult();
-    }
-
 }

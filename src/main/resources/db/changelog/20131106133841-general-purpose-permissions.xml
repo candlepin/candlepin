@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+
+    <changeSet id="20131106133841" author="dgoodwin">
+        <renameTable oldTableName="cp_owner_permission" newTableName="cp_permission"/>
+    </changeSet>
+
+    <changeSet id="20131106133841-1" author="dgoodwin">
+        <comment>Rename column to be more generic.</comment>
+        <renameColumn tableName="cp_permission" oldColumnName="owner_access" newColumnName="access"/>
+    </changeSet>
+
+    <changeSet id="20131106133841-2" author="dgoodwin">
+        <comment>Add column for permission type, setting all existing rows to the owner type.</comment>
+        <addColumn tableName="cp_permission">
+            <column name="permission_type" type="varchar(32)" value="OWNER"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="20131106133841-3" author="dgoodwin">
+        <comment>Add a not null constraint for permission type now that we've set values.</comment>
+        <addNotNullConstraint
+            tableName="cp_permission"
+            columnName="permission_type"/>
+    </changeSet>
+
+
+</databaseChangeLog>

@@ -22,7 +22,6 @@ import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerPermission;
 import org.candlepin.model.User;
 import org.candlepin.test.DatabaseTestFixture;
 import org.junit.Before;

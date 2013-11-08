@@ -12,22 +12,13 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.model;
+package org.candlepin.auth.permissions;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
-import javax.xml.bind.annotation.XmlTransient;
+import java.io.Serializable;
 
 import org.candlepin.auth.Access;
-import org.candlepin.auth.permissions.Permission;
-import org.hibernate.annotations.ForeignKey;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Index;
+import org.candlepin.model.Owned;
+import org.candlepin.model.Owner;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Restrictions;
 
@@ -35,62 +26,14 @@ import org.hibernate.criterion.Restrictions;
  * A permission represents an owner to be accessed in some fashion, and a verb which
  * the permissions is granting.
  */
-@Entity
-@Table(name = "cp_owner_permission")
-public class OwnerPermission extends AbstractHibernateObject implements Permission {
+public class OwnerPermission implements Permission, Serializable {
 
-    @Id
-    @GeneratedValue(generator = "system-uuid")
-    @GenericGenerator(name = "system-uuid", strategy = "uuid")
-    @Column(length = 32)
-    private String id;
-
-    @ManyToOne
-    @ForeignKey(name = "fk_permission_owner")
-    @JoinColumn(nullable = false)
-    @Index(name = "cp_permission_owner_fk_idx")
     private Owner owner;
 
-    @ManyToOne
-    @ForeignKey(name = "fk_permission_role")
-    @JoinColumn(nullable = false)
-    @Index(name = "cp_permission_role_fk_idx")
-    private Role role;
-
-    @Column(name = "owner_access")
     private Access access;
 
     public OwnerPermission(Owner owner, Access access) {
         this.owner = owner;
-        this.access = access;
-    }
-
-    protected OwnerPermission() {
-        // JPA
-    }
-
-    public Owner getOwner() {
-        return owner;
-    }
-
-    public void setOwner(Owner owner) {
-        this.owner = owner;
-    }
-
-    @Override
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public Access getAccess() {
-        return access;
-    }
-
-    public void setAccess(Access access) {
         this.access = access;
     }
 
@@ -119,15 +62,6 @@ public class OwnerPermission extends AbstractHibernateObject implements Permissi
         return (this.access == Access.ALL || this.access == requiredAccess);
     }
 
-    @XmlTransient
-    public Role getRole() {
-        return role;
-    }
-
-    public void setRole(Role role) {
-        this.role = role;
-    }
-
     @Override
     public Criterion getCriteriaRestrictions(Class entityClass) {
         if (entityClass.equals(Owner.class)) {
@@ -136,5 +70,10 @@ public class OwnerPermission extends AbstractHibernateObject implements Permissi
         // TODO: Since this is not a typed permission, it would be good to do some
         // filtering for other classes here as well;
         return null;
+    }
+
+    @Override
+    public Owner getOwner() {
+        return owner;
     }
 }

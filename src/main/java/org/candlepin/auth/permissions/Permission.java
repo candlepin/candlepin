@@ -15,6 +15,7 @@
 package org.candlepin.auth.permissions;
 
 import org.candlepin.auth.Access;
+import org.candlepin.model.Owner;
 import org.hibernate.criterion.Criterion;
 
 /**
@@ -33,4 +34,9 @@ public interface Permission {
      * in the abstract hibernate curator.
      */
     Criterion getCriteriaRestrictions(Class entityClass);
+
+    /**
+     * @return an owner if this permission is specific to one, otherwise null
+     */
+    Owner getOwner();
 }

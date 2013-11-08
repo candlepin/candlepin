@@ -162,9 +162,10 @@ public class UserResource {
     }
 
     /**
-     * @return a list of Owners
+     * @return a list of owners this user has admin rights for.
      * @httpcode 200
      */
+    // TODO: should probably accept an access level query param someday
     @GET
     @Path("/{username}/owners")
     @Produces(MediaType.APPLICATION_JSON)
@@ -178,7 +179,9 @@ public class UserResource {
             owners.addAll(ownerCurator.listAll());
         }
         else {
-            owners.addAll(user.getOwners(Access.ALL));
+            for (Owner o : user.getOwners(Access.ALL)) {
+                owners.add(o);
+            }
         }
         return owners;
     }

@@ -18,8 +18,8 @@ import org.candlepin.auth.permissions.ConsumerEntitlementPermission;
 import org.candlepin.auth.permissions.ConsumerPermission;
 import org.candlepin.auth.permissions.ConsumerPoolPermission;
 import org.candlepin.auth.permissions.ConsumerServiceLevelsPermission;
+import org.candlepin.auth.permissions.OwnerPermission;
 import org.candlepin.model.Consumer;
-import org.candlepin.model.OwnerPermission;
 
 /**
  *

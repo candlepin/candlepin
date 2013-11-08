@@ -31,6 +31,7 @@ import org.candlepin.auth.NoAuthPrincipal;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.interceptor.SecurityHole;
+import org.candlepin.auth.permissions.PermissionFactory;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.Config;
 import org.candlepin.exceptions.UnauthorizedException;
@@ -63,6 +64,7 @@ public class AuthInterceptorTest {
     private DeletedConsumerCurator dcc;
     private Injector injector;
     private I18n i18n;
+    private PermissionFactory permFactory;
 
     @Before
     public void init() {
@@ -71,6 +73,7 @@ public class AuthInterceptorTest {
         cc = mock(ConsumerCurator.class);
         dcc = mock(DeletedConsumerCurator.class);
         injector = Guice.createInjector(new AuthInterceptorTestModule());
+        permFactory = mock(PermissionFactory.class);
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         interceptor = new AuthInterceptor(config, usa, cc, dcc, injector, i18n);
     }
@@ -191,9 +194,11 @@ public class AuthInterceptorTest {
         protected void configure() {
             HttpServletRequest req = mock(HttpServletRequest.class);
             when(req.getLocale()).thenReturn(Locale.US);
+            PermissionFactory factory = mock(PermissionFactory.class);
 
             bind(I18n.class).toProvider(I18nProvider.class).asEagerSingleton();
             bind(HttpServletRequest.class).toInstance(req);
+            bind(PermissionFactory.class).toInstance(factory);
         }
     }
 }

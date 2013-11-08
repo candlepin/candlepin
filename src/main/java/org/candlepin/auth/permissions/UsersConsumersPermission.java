@@ -56,4 +56,9 @@ public class UsersConsumersPermission extends TypedPermission<Consumer> {
         }
         return null;
     }
+
+    @Override
+    public Owner getOwner() {
+        return owner;
+    }
 }

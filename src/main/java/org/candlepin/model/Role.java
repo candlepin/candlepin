@@ -55,7 +55,7 @@ public class Role extends AbstractHibernateObject implements Linkable {
     private Set<User> users = new HashSet<User>();
 
     @OneToMany(mappedBy = "role", cascade = CascadeType.ALL)
-    private Set<OwnerPermission> permissions = new HashSet<OwnerPermission>();
+    private Set<PermissionBlueprint> permissions = new HashSet<PermissionBlueprint>();
 
     @Column(unique = true, nullable = false)
     private String name;
@@ -64,7 +64,7 @@ public class Role extends AbstractHibernateObject implements Linkable {
         this.name = name;
     }
 
-    public Role(String name, Set<User> users, Set<OwnerPermission> memberships) {
+    public Role(String name, Set<User> users, Set<PermissionBlueprint> memberships) {
         this.name = name;
         this.users = users;
         this.permissions = memberships;
@@ -123,15 +123,15 @@ public class Role extends AbstractHibernateObject implements Linkable {
         }
     }
 
-    public Set<OwnerPermission> getPermissions() {
+    public Set<PermissionBlueprint> getPermissions() {
         return permissions;
     }
 
-    public void setPermissions(Set<OwnerPermission> permissions) {
+    public void setPermissions(Set<PermissionBlueprint> permissions) {
         this.permissions = permissions;
     }
 
-    public void addPermission(OwnerPermission p) {
+    public void addPermission(PermissionBlueprint p) {
         this.permissions.add(p);
         p.setRole(this);
     }

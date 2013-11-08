@@ -109,6 +109,7 @@ module CandlepinMethods
   def create_role(name, owner_key, access_type)
     name ||= random_string 'test_role'
     perms = [{
+      :type => "OWNER",
       :owner => {:key => owner_key},
       :access => access_type,
     }]
@@ -205,7 +206,7 @@ class Export
   attr_reader :tmp_dir
   attr_reader :export_dir
   attr_accessor :export_filename
-  
+
   def initialize
     @tmp_dir = File.join(Dir.tmpdir, random_string('candlepin-rspec'))
     Dir.mkdir(@tmp_dir)

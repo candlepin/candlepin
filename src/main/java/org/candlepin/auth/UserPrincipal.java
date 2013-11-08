@@ -18,7 +18,6 @@ import java.util.LinkedList;
 import java.util.List;
 import org.candlepin.auth.permissions.Permission;
 import org.candlepin.auth.permissions.UserUserPermission;
-import org.candlepin.model.OwnerPermission;
 
 import java.util.Collection;
 import org.candlepin.model.Owner;
@@ -122,12 +121,16 @@ public class UserPrincipal extends Principal {
         return ownerKeys;
     }
 
+    /**
+     * @return list of owners this principal has some level of access to.
+     */
     public List<Owner> getOwners() {
         List<Owner> owners = new LinkedList<Owner>();
 
         for (Permission permission : permissions) {
-            if (permission instanceof OwnerPermission) {
-                owners.add(((OwnerPermission) permission).getOwner());
+            Owner o = permission.getOwner();
+            if (o != null) {
+                owners.add(o);
             }
         }
 

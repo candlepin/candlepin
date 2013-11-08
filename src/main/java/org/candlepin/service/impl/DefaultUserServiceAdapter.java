@@ -18,7 +18,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.candlepin.model.OwnerPermission;
+import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.Role;
 import org.candlepin.model.RoleCurator;
 import org.candlepin.model.User;
@@ -74,7 +74,7 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
         }
         role.setUsers(actualUsers);
 
-        for (OwnerPermission permission : role.getPermissions()) {
+        for (PermissionBlueprint permission : role.getPermissions()) {
             permission.setRole(role);
         }
 

@@ -47,4 +47,5 @@
     <include file="db/changelog/20131007121855-add_class_to_jobstatus.xml" />
     <include file="db/changelog/20131025111347-migrate-import-upstream-consumer.xml" />
     <include file="db/changelog/20131025150828-nullable_actkey_pool_version.xml" />
+    <include file="db/changelog/20131106133841-general-purpose-permissions.xml" />
 </databaseChangeLog>

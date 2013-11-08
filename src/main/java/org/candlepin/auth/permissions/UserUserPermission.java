@@ -15,6 +15,7 @@
 package org.candlepin.auth.permissions;
 
 import org.candlepin.auth.Access;
+import org.candlepin.model.Owner;
 import org.candlepin.model.User;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Restrictions;
@@ -45,6 +46,12 @@ public class UserUserPermission extends TypedPermission<User> {
         if (entityClass.equals(User.class)) {
             return Restrictions.eq("username", username);
         }
+        return null;
+    }
+
+    @Override
+    public Owner getOwner() {
+        // This permission is not specific to any owner.
         return null;
     }
 }

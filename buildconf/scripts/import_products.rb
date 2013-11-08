@@ -118,7 +118,6 @@ def create_role(cp, new_role)
   perms = new_role['permissions']
   users = new_role['users']
 
-#  puts " permissions: \t #{pp perms}"
   puts "role_name: #{role_name}"
   perms.each do |perm|
     puts "\t owner: #{perm['owner']}"

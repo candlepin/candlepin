@@ -17,6 +17,7 @@ package org.candlepin.auth.permissions;
 import org.candlepin.auth.Access;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
+import org.candlepin.model.Owner;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Restrictions;
 
@@ -49,4 +50,8 @@ public class ConsumerEntitlementPermission extends TypedPermission<Entitlement> 
         return null;
     }
 
+    @Override
+    public Owner getOwner() {
+        return consumer.getOwner();
+    }
 }

@@ -412,7 +412,7 @@ public class ConsumerResource {
                     i18n.tr("System name cannot contain most special characters."));
             }
 
-            verifyPersonConsumer(consumer, type, owner, userName);
+            verifyPersonConsumer(consumer, type, owner, userName, principal);
         }
 
         if (type.isType(ConsumerTypeEnum.SYSTEM) &&
@@ -634,7 +634,7 @@ public class ConsumerResource {
     }
 
     private void verifyPersonConsumer(Consumer consumer, ConsumerType type,
-        Owner owner, String username) {
+        Owner owner, String username, Principal principal) {
 
         User user = null;
         try {
@@ -652,7 +652,7 @@ public class ConsumerResource {
 
         // When registering person consumers we need to be sure the username
         // has some association with the owner the consumer is destined for:
-        if (!user.hasOwnerAccess(owner, Access.ALL) && !user.isSuperAdmin()) {
+        if (!principal.canAccess(owner, Access.ALL) && !principal.hasFullAccess()) {
             throw new ForbiddenException(i18n.tr(
                 "User ''{0}'' has no roles for organization ''{1}''",
                 user.getUsername(), owner.getKey()));

@@ -21,8 +21,11 @@ import org.candlepin.auth.UserPrincipal;
 import org.candlepin.service.UserServiceAdapter;
 
 import com.google.inject.Injector;
+
 import java.util.ArrayList;
+
 import org.candlepin.auth.permissions.Permission;
+import org.candlepin.auth.permissions.PermissionFactory;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.model.Role;
 import org.candlepin.model.User;
@@ -36,11 +39,13 @@ public abstract class UserAuth implements AuthProvider {
     protected UserServiceAdapter userServiceAdapter;
     protected Injector injector;
     protected I18n i18n;
+    protected PermissionFactory permissionFactory;
 
     public UserAuth(UserServiceAdapter userServiceAdapter, Injector injector) {
         this.userServiceAdapter = userServiceAdapter;
         this.injector = injector;
         this.i18n = this.injector.getInstance(I18n.class);
+        this.permissionFactory = this.injector.getInstance(PermissionFactory.class);
     }
 
     /**
@@ -60,7 +65,8 @@ public abstract class UserAuth implements AuthProvider {
 
             // flatten out the permissions from the combined roles
             for (Role role : user.getRoles()) {
-                permissions.addAll(role.getPermissions());
+                permissions.addAll(permissionFactory.createPermissions(
+                    role.getPermissions()));
             }
 
             Principal principal = new UserPrincipal(username, permissions, false);

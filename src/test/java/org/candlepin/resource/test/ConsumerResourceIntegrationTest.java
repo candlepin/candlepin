@@ -34,6 +34,7 @@ import org.candlepin.auth.Access;
 import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
+import org.candlepin.auth.permissions.OwnerPermission;
 import org.candlepin.auth.permissions.Permission;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.exceptions.BadRequestException;
@@ -46,7 +47,6 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerPermission;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
@@ -115,8 +115,9 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         ownerAdminRole.addUser(someuser);
         roleCurator.create(ownerAdminRole);
 
-        principal = new UserPrincipal(USER_NAME,
-                new ArrayList<Permission>(ownerAdminRole.getPermissions()), false);
+        List<Permission> perms = permFactory.createPermissions(
+            ownerAdminRole.getPermissions());
+        principal = new UserPrincipal(USER_NAME, perms, false);
         setupPrincipal(principal);
 
         consumer = TestUtil.createConsumer(standardSystemType, owner);

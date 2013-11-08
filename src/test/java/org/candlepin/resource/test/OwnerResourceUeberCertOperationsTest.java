@@ -60,7 +60,8 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
         roleCurator.create(ownerAdminRole);
 
         principal = new UserPrincipal("testing user",
-            new ArrayList<Permission>(ownerAdminRole.getPermissions()), false);
+            new ArrayList<Permission>(permFactory.createPermissions(
+                ownerAdminRole.getPermissions())), false);
         setupPrincipal(principal);
 
         ConsumerType ueberCertType = new ConsumerType(ConsumerTypeEnum.UEBER_CERT);

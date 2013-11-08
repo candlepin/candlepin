@@ -47,4 +47,9 @@ public class ConsumerServiceLevelsPermission extends TypedPermission<Owner> {
     public Criterion getCriteriaRestrictions(Class entityClass) {
         return null;
     }
+
+    @Override
+    public Owner getOwner() {
+        return consumer.getOwner();
+    }
 }

@@ -75,8 +75,8 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerInfo;
 import org.candlepin.model.OwnerInfoCurator;
-import org.candlepin.model.OwnerPermission;
-import org.candlepin.model.OwnerPermissionCurator;
+import org.candlepin.model.PermissionBlueprint;
+import org.candlepin.model.PermissionBlueprintCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Statistic;
 import org.candlepin.model.StatisticCurator;
@@ -131,7 +131,7 @@ public class OwnerResource {
     private Importer importer;
     private ExporterMetadataCurator exportCurator;
     private ImportRecordCurator importRecordCurator;
-    private OwnerPermissionCurator permissionCurator;
+    private PermissionBlueprintCurator permissionCurator;
     private PoolManager poolManager;
     private ConsumerTypeCurator consumerTypeCurator;
     private EntitlementCertificateCurator entitlementCertCurator;
@@ -155,7 +155,7 @@ public class OwnerResource {
         OwnerInfoCurator ownerInfoCurator,
         ImportRecordCurator importRecordCurator,
         SubscriptionServiceAdapter subService,
-        OwnerPermissionCurator permCurator,
+        PermissionBlueprintCurator permCurator,
         ConsumerTypeCurator consumerTypeCurator,
         EntitlementCertificateCurator entitlementCertCurator,
         EntitlementCurator entitlementCurator,
@@ -355,7 +355,7 @@ public class OwnerResource {
             importRecordCurator.delete(record);
         }
 
-        for (OwnerPermission perm : permissionCurator.findByOwner(owner)) {
+        for (PermissionBlueprint perm : permissionCurator.findByOwner(owner)) {
             log.info("Deleting permission: " + perm.getAccess());
             perm.getRole().getPermissions().remove(perm);
             permissionCurator.delete(perm);

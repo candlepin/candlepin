@@ -21,8 +21,9 @@ import java.util.List;
 
 import org.apache.commons.lang.RandomStringUtils;
 import org.candlepin.auth.Access;
+import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerPermission;
+import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.Role;
 import org.candlepin.model.User;
 import org.candlepin.test.DatabaseTestFixture;
@@ -53,7 +54,8 @@ public class RoleTest extends DatabaseTestFixture {
         User user = new User(RandomStringUtils.random(5), "pass");
         userCurator.create(user);
 
-        OwnerPermission p = new OwnerPermission(o, Access.ALL);
+        PermissionBlueprint p = new PermissionBlueprint(PermissionType.OWNER, o,
+            Access.ALL);
 
         Role r = new Role("role" + TestUtil.randomInt());
         r.addPermission(p);
@@ -80,16 +82,12 @@ public class RoleTest extends DatabaseTestFixture {
     public void testAddPermission() {
         Role role = new Role("myrole");
         roleCurator.create(role);
-        role.addPermission(new OwnerPermission(owner, Access.ALL));
+        role.addPermission(new PermissionBlueprint(PermissionType.OWNER, owner,
+            Access.ALL));
         role = roleCurator.find(role.getId());
         assertEquals(1, role.getPermissions().size());
-        OwnerPermission perm = role.getPermissions().iterator().next();
+        PermissionBlueprint perm = role.getPermissions().iterator().next();
         assertNotNull(perm.getId());
     }
-
-//    @Test
-//    public void testNoDuplicatePermissionsInSameRole() {
-//        fail();
-//    }
 
 }

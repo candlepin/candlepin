@@ -30,6 +30,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 import org.candlepin.auth.Access;
+import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
 import org.candlepin.util.Util;
 import org.hibernate.annotations.GenericGenerator;
 
@@ -125,19 +126,22 @@ public class User extends AbstractHibernateObject {
     }
 
     /**
-     * Looks up permissions to find associated owners.
+     * Looks up permissions to find associated owners. We return any owner we find
+     * on a permission, regardless of permission type or access level. You can use this
+     * API call to list the owners a user should be able to see / use in some capacity.
      *
-     * WARNING: will return *any* owner this user has a permission for, regardless
-     * of what access level it is.
+     * This can be a handy entrypoint as it can sometimes be difficult to locate the
      *
      * @return associated owners
      */
     @XmlTransient
     public Set<Owner> getOwners(Access accessLevel) {
         Set<Owner> owners = new HashSet<Owner>();
+
         for (Role role : getRoles()) {
-            for (OwnerPermission p : role.getPermissions()) {
-                if (p.providesAccess(accessLevel)) {
+            for (PermissionBlueprint p : role.getPermissions()) {
+                if (p.getType().equals(PermissionType.OWNER) &&
+                    p.providesAccess(accessLevel)) {
                     owners.add(p.getOwner());
                 }
             }
@@ -146,14 +150,6 @@ public class User extends AbstractHibernateObject {
         return owners;
     }
 
-    public boolean hasOwnerAccess(Owner canAccess, Access accessLevel) {
-        for (Owner o : getOwners(accessLevel)) {
-            if (o.getKey().equals(canAccess.getKey())) {
-                return true;
-            }
-        }
-        return false;
-    }
 
     /**
      * @return the roles
@@ -180,8 +176,8 @@ public class User extends AbstractHibernateObject {
      * @return all of this user's unique permissions.
      */
     @XmlTransient
-    public Set<OwnerPermission> getPermissions() {
-        Set<OwnerPermission> perms = new HashSet<OwnerPermission>();
+    public Set<PermissionBlueprint> getPermissions() {
+        Set<PermissionBlueprint> perms = new HashSet<PermissionBlueprint>();
         for (Role r : getRoles()) {
             perms.addAll(r.getPermissions());
         }
