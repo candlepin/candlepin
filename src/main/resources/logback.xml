@@ -1,25 +1,46 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-  <contextName>candlepin</contextName>
-  <appender name="RootAppender" class="ch.qos.logback.core.FileAppender">
-    <file>/var/log/candlepin/candlepin.log</file>
-    <encoder>
-      <pattern>%d{ISO8601} [%X{requestType}=%X{requestUuid}, org=%X{org}] %-5p %c - %m%n</pattern>
-    </encoder>
-  </appender>
-  <appender name="ErrorAppender" class="ch.qos.logback.core.FileAppender">
-    <file>/var/log/candlepin/error.log</file>
-    <encoder>
-      <pattern>%d{ISO8601} [%X{requestType}=%X{requestUuid}, org=%X{org}] %-5p %c - %m%n</pattern>
-    </encoder>
-    <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-      <level>WARN</level>
-    </filter>
-  </appender>
-  <logger name="org.candlepin" level="INFO"/>
-  <logger name="org.candlepin.util.filters.DumpFilter" level="INFO"/>
-  <root level="WARN">
-    <appender-ref ref="RootAppender"/>
-    <appender-ref ref="ErrorAppender"/>
-  </root>
+    <contextName>candlepin</contextName>
+    <appender name="CandlepinAppender" class="ch.qos.logback.core.FileAppender">
+        <file>/var/log/candlepin/candlepin.log</file>
+        <encoder>
+            <pattern>%d{ISO8601} [%X{requestType}=%X{requestUuid}, org=%X{org}] %-5p %c - %m%n</pattern>
+        </encoder>
+    </appender>
+    <appender name="ErrorAppender" class="ch.qos.logback.core.FileAppender">
+        <file>/var/log/candlepin/error.log</file>
+        <encoder>
+            <pattern>%d{ISO8601} [%X{requestType}=%X{requestUuid}, org=%X{org}] %-5p %c - %m%n</pattern>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>WARN</level>
+        </filter>
+    </appender>
+    <appender name="OrgSiftingAppender" class="ch.qos.logback.classic.sift.SiftingAppender">
+        <maxAppenderCount>10000</maxAppenderCount>
+        <discriminator>
+            <key>org</key>
+            <defaultValue>unknown</defaultValue>
+        </discriminator>
+        <sift>
+            <appender name="${org}_Appender" class="ch.qos.logback.core.FileAppender">
+                <file>/var/log/candlepin/${org}.log</file>
+                <encoder>
+                    <pattern>%d{ISO8601} [%X{requestType}=%X{requestUuid}, org=%X{org}] %-5p %c - %m%n</pattern>
+                </encoder>
+            </appender>
+        </sift>
+        <filter class="ch.qos.logback.core.filter.EvaluatorFilter">
+            <evaluator class="org.candlepin.logging.OrgLoggingEvaluator"/>
+            <OnMatch>ACCEPT</OnMatch>
+            <OnMismatch>DENY</OnMismatch>
+        </filter>
+    </appender>
+
+    <logger name="org.candlepin" level="INFO" />
+    <root level="WARN">
+        <appender-ref ref="CandlepinAppender" />
+        <appender-ref ref="ErrorAppender" />
+        <appender-ref ref="OrgSiftingAppender" />
+    </root>
 </configuration>

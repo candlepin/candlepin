@@ -1851,9 +1851,7 @@ public class ConsumerResource {
                 "Problem regenerating ID cert for unit {0}", c));
         }
 
-        if (log.isDebugEnabled()) {
-            log.debug("Generated identity cert: " + idCert.getSerial().getId());
-        }
+        log.debug("Generated identity cert: {}", idCert.getSerial());
 
         return idCert;
     }

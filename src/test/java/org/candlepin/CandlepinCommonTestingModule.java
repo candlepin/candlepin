@@ -16,7 +16,6 @@ package org.candlepin;
 
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Principal;
-import org.candlepin.auth.interceptor.SecurityInterceptor;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.Config;
 import org.candlepin.config.LoggingConfig;
@@ -25,6 +24,7 @@ import org.candlepin.controller.PoolManager;
 import org.candlepin.guice.CandlepinModule;
 import org.candlepin.guice.CandlepinSingletonScope;
 import org.candlepin.guice.CandlepinSingletonScoped;
+import org.candlepin.guice.HttpMethodMatcher;
 import org.candlepin.guice.I18nProvider;
 import org.candlepin.guice.JPAInitializer;
 import org.candlepin.guice.PrincipalProvider;
@@ -63,6 +63,7 @@ import org.candlepin.service.impl.DefaultSubscriptionServiceAdapter;
 import org.candlepin.service.impl.DefaultUniqueIdGenerator;
 import org.candlepin.service.impl.DefaultUserServiceAdapter;
 import org.candlepin.service.impl.stub.StubEntitlementCertServiceAdapter;
+import org.candlepin.test.AuthMethodInterceptorFactory;
 import org.candlepin.test.DateSourceForTesting;
 import org.candlepin.test.EnforcerForTesting;
 import org.candlepin.test.EventSinkForTesting;
@@ -70,9 +71,6 @@ import org.candlepin.test.PKIReaderForTesting;
 import org.candlepin.util.DateSource;
 import org.candlepin.util.ExpiryDateFunction;
 import org.candlepin.util.X509ExtensionUtil;
-import org.quartz.JobListener;
-import org.quartz.spi.JobFactory;
-import org.xnap.commons.i18n.I18n;
 
 import com.google.common.base.Function;
 import com.google.inject.Singleton;
@@ -80,10 +78,13 @@ import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Names;
 import com.google.inject.persist.jpa.JpaPersistModule;
 
+import org.quartz.JobListener;
+import org.quartz.spi.JobFactory;
+import org.xnap.commons.i18n.I18n;
+
 public class CandlepinCommonTestingModule extends CandlepinModule {
 
-    private TestingInterceptor crudInterceptor;
-    private TestingInterceptor securityInterceptor;
+    private TestingInterceptor authMethodInterceptor;
 
     @Override
     public void configure() {
@@ -133,13 +134,12 @@ public class CandlepinCommonTestingModule extends CandlepinModule {
         bind(Principal.class).toProvider(TestPrincipalProvider.class);
         bind(EventSink.class).to(EventSinkForTesting.class);
 
-        SecurityInterceptor se = new SecurityInterceptor();
-        requestInjection(se);
-        securityInterceptor = new TestingInterceptor(se);
+        AuthMethodInterceptorFactory amf = new AuthMethodInterceptorFactory();
+        requestInjection(amf);
+        authMethodInterceptor = new TestingInterceptor(amf);
 
-        bindInterceptor(Matchers.inPackage(Package
-            .getPackage("org.candlepin.resource")),
-            Matchers.any(), securityInterceptor);
+        bindInterceptor(Matchers.inPackage(Package.getPackage("org.candlepin.resource")),
+            new HttpMethodMatcher(), authMethodInterceptor);
 
         bind(CertificateRevocationListTask.class);
         // temporary
@@ -154,11 +154,7 @@ public class CandlepinCommonTestingModule extends CandlepinModule {
             .to(ExpiryDateFunction.class).in(Singleton.class);
     }
 
-    public TestingInterceptor crudInterceptor() {
-        return crudInterceptor;
-    }
-
     public TestingInterceptor securityInterceptor() {
-        return securityInterceptor;
+        return authMethodInterceptor;
     }
 }

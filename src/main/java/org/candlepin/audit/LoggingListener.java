@@ -75,15 +75,17 @@ public class LoggingListener implements EventListener {
 
     @Override
     public void onEvent(Event e) {
-        auditLog.info(String.format(
-            "%s principalType=%s principal=%s target=%s entityId=%s type=%s owner=%s\n",
-            df.format(e.getTimestamp()),
-            e.getPrincipal().getType(),
-            e.getPrincipal().getName(),
-            e.getTarget(),
-            e.getEntityId(),
-            e.getType(),
-            e.getOwnerId()));
+        auditLog.info(
+            "{} principalType={} principal={} target={} entityId={} type={} owner={}\n",
+            new Object[] {
+                df.format(e.getTimestamp()),
+                e.getPrincipal().getType(),
+                e.getPrincipal().getName(),
+                e.getTarget(),
+                e.getEntityId(),
+                e.getType(),
+                e.getOwnerId()}
+        );
         if (verbose) {
             auditLog.info(String.format("==OLD==\n%s\n==NEW==\n%s\n\n", e.getOldEntity(),
                 e.getNewEntity()));
