@@ -214,13 +214,13 @@ public class EntitlementResource {
 
     /**
      * Return the subscription cert for the given id.
-     * 
+     *
      * We can't return CdnInfo at this time, but when the time comes this
      * is the implementation we want to start from. It will require changes
      * to thumbslug.
      * public CdnInfo getEntitlementUpstreamCert
      * will also @Produces(MediaType.APPLICATION_JSON)
-     * 
+     *
      * @param dbid entitlement id.
      * @return the subscription cert for the given id.
      * @httpcode 404

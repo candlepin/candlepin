@@ -533,7 +533,8 @@ public class ConsumerResourceTest {
         ConsumerResource cr = new ConsumerResource(mockedConsumerCurator, null,
             null, null, null, null, null, i18n, null, null, null,
             null, null, null, null, null, null, null, null, mockedComplianceRules,
-            null, null, null, new CandlepinCommonTestConfig(), null, null, null, null);
+            null, null, null, new CandlepinCommonTestConfig(), null, null, null, null,
+            null);
         cr.consumerExists("uuid");
     }
 
@@ -543,7 +544,8 @@ public class ConsumerResourceTest {
         ConsumerResource cr = new ConsumerResource(mockedConsumerCurator, null,
             null, null, null, null, null, i18n, null, null, null,
             null, null, null, null, null, null, null, null, mockedComplianceRules,
-            null, null, null, new CandlepinCommonTestConfig(), null, null, null, null);
+            null, null, null, new CandlepinCommonTestConfig(), null, null, null, null,
+            null);
         cr.consumerExists("uuid");
     }
 
