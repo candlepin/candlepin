@@ -179,11 +179,6 @@ public class ProductResource {
         return toUpdate;
     }
 
-    // Requires security hole since security interceptor will intercept when the method is
-    // called. This is because it is protected. This method is called from other resources,
-    // and therefore it assumes the caller is screened first.
-    // TODO Might be a better way to do this.
-    @SecurityHole(noAuth = true)
     protected boolean performProductUpdates(Product existing, Product incoming) {
         boolean changesMade = false;
 
