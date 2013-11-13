@@ -57,7 +57,9 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.security.cert.X509Certificate;
+import java.util.Enumeration;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.WebApplicationException;
 
 /**
@@ -134,6 +136,13 @@ public class AuthInterceptorTest extends DatabaseTestFixture {
         methodInjector = (StubMethodInjector)
             ResteasyProviderFactory.getInstance().getInjectorFactory()
             .createMethodInjector(null, null);
+
+        HttpServletRequest mockRequest = mock(HttpServletRequest.class);
+        Enumeration e = mock(Enumeration.class);
+        when(e.hasMoreElements()).thenReturn(Boolean.FALSE);
+        when(mockRequest.getHeaderNames()).thenReturn(e);
+        ResteasyProviderFactory.pushContext(HttpServletRequest.class,
+            mockRequest);
     }
 
     @Test(expected = UnauthorizedException.class)

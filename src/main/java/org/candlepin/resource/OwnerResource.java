@@ -72,6 +72,8 @@ import org.candlepin.sync.ImporterException;
 import org.candlepin.sync.Meta;
 import org.candlepin.sync.SyncDataFormatException;
 
+import ch.qos.logback.classic.Level;
+
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
@@ -549,6 +551,41 @@ public class OwnerResource {
             envs = envCurator.listForOwnerByName(owner, envName);
         }
         return envs;
+    }
+
+    @PUT
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{owner_key}/log")
+    public Owner setLogLevel(@PathParam("owner_key") String ownerKey,
+        @QueryParam("level") @DefaultValue("ALL") String level) {
+        Owner owner = findOwner(ownerKey);
+        level = level.toUpperCase();
+
+        List<String> acceptedLevels = new ArrayList<String>();
+        acceptedLevels.add(Level.ALL.toString());
+        acceptedLevels.add(Level.TRACE.toString());
+        acceptedLevels.add(Level.DEBUG.toString());
+        acceptedLevels.add(Level.INFO.toString());
+        acceptedLevels.add(Level.WARN.toString());
+        acceptedLevels.add(Level.ERROR.toString());
+        acceptedLevels.add(Level.OFF.toString());
+
+        if (!acceptedLevels.contains(level)) {
+            throw new BadRequestException(i18n.tr("{0} is not a valid log level", level));
+        }
+
+        owner.setLogLevel(level);
+        ownerCurator.merge(owner);
+        return owner;
+    }
+
+    @DELETE
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{owner_key}/log")
+    public void deleteLogLevel(@PathParam("owner_key") String ownerKey) {
+        Owner owner = findOwner(ownerKey);
+        owner.setLogLevel(null);
+        ownerCurator.merge(owner);
     }
 
     /**

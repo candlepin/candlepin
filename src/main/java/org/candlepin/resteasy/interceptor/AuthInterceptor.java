@@ -45,6 +45,9 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.User;
 import org.candlepin.service.UserServiceAdapter;
+import org.candlepin.servlet.filter.logging.LoggingFilter;
+import org.candlepin.servlet.filter.logging.ServletLogger;
+import org.candlepin.servlet.filter.logging.TeeHttpServletRequest;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
@@ -64,8 +67,11 @@ import org.jboss.resteasy.spi.interception.PreProcessInterceptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 import org.xnap.commons.i18n.I18n;
 
+import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -74,6 +80,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -97,6 +104,7 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
     private UserServiceAdapter userService;
     private List<AuthProvider> providers = new ArrayList<AuthProvider>();
     private I18n i18n;
+    private Marker duplicate;
 
     @SuppressWarnings("rawtypes")
     private final Map<Class, EntityStore> storeMap = new HashMap<Class, EntityStore>();
@@ -113,11 +121,18 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
         this.userService = userService;
         this.deletedConsumerCurator = deletedConsumerCurator;
         this.i18n = i18n;
+        this.duplicate = MarkerFactory.getMarker("DUPLICATE");
 
         createStoreMap();
         setupAuthStrategies();
     }
 
+    /**
+     * Note that this method is called during application deployment and not
+     * every time a method is invoked.
+     *
+     * @return true if the method has an HttpMethod or HttpMethod descendant annotation.
+     */
     @Override
     public boolean accept(Class declaring, Method method) {
         return new HttpMethodMatcher().matches(method);
@@ -188,8 +203,35 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
             method.getMethod());
 
         Principal principal = establishPrincipal(request, method, securityHole);
-        verifyAccess(method.getMethod(), principal, getArguments(request, method),
-            securityHole);
+        try {
+            verifyAccess(method.getMethod(), principal, getArguments(request, method),
+                securityHole);
+        }
+        finally {
+            /* If a turbo filter returns ACCEPT, a logger will return true for
+             * isEnabled for any level.  Since we have a turbo filter that sets
+             * log level on a per org basis, this block will execute if our org
+             * is set to log at debug or below.
+             */
+            if (log.isDebugEnabled()) {
+                /* If the logging filter is debug enabled, we want to mark these
+                 * log statements as duplicates so we can filter them out if we
+                 * want.
+                 */
+                Marker m =
+                    (LoggerFactory.getLogger(LoggingFilter.class).isDebugEnabled()) ?
+                    duplicate : null;
+                try {
+                    TeeHttpServletRequest teeRequest = new TeeHttpServletRequest(
+                        ResteasyProviderFactory.getContextData(HttpServletRequest.class));
+                    log.debug(m, "{}", ServletLogger.logBasicRequestInfo(teeRequest));
+                    log.debug(m, "{}", ServletLogger.logRequest(teeRequest));
+                }
+                catch (IOException e) {
+                    log.info("Couldn't log request information", e);
+                }
+            }
+        }
 
         return null;
     }
@@ -259,9 +301,11 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
 
         // Need to check after examining all parameters to see if we found any:
         boolean foundVerifiedParameters = false;
+        Owner owner = null;
 
-        for (int i = 0; i < method.getParameterAnnotations().length; i++) {
-            for (Annotation a : method.getParameterAnnotations()[i]) {
+        Annotation[][] annotations = method.getParameterAnnotations();
+        for (int i = 0; i < annotations.length; i++) {
+            for (Annotation a : annotations[i]) {
                 if (a instanceof Verify) {
                     foundVerifiedParameters = true;
                     Access requiredAccess = defaultAccess;
@@ -322,7 +366,7 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
                     else {
                         Collection<String> verifyParams = (Collection<String>) argument;
                         log.debug("Verifying " + requiredAccess +
-                            " access to collection of" + verifyType + ": " + verifyParams);
+                            " access to collection of {}: {}", verifyType, verifyParams);
                         // If the request is for a list of items, we'll leave it
                         // up to the requester to determine if something is missing or not.
                         if (verifyParams != null && !verifyParams.isEmpty()) {
@@ -330,26 +374,28 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
                         }
                     }
 
-                    String orgKey = null;
                     for (Object entity : entities) {
                         if (!principal.canAccess(entity, requiredAccess)) {
                             denyAccess(principal, method);
                         }
                         else {
                             // Access granted, grab the org key for logging purposes:
-                            String foundOrgKey = storeMap.get(verifyType).
-                                getOwnerKey((Persisted) entity);
-                            if (foundOrgKey != null) {
-                                if (orgKey != null && foundOrgKey != orgKey) {
+                            Owner o = storeMap.get(verifyType).getOwner((Persisted) entity);
+
+                            if (o != null) {
+                                if (owner != null && !o.equals(owner)) {
                                     log.warn("Found entities from multiple orgs in " +
                                         "one request.");
                                 }
-                                orgKey = foundOrgKey;
+                                owner = o;
                             }
                         }
                     }
-                    if (orgKey != null) {
-                        MDC.put("org", orgKey);
+                    if (owner != null) {
+                        MDC.put("org", owner.getKey());
+                        if (owner.getLogLevel() != null) {
+                            MDC.put("orgLogLevel", owner.getLogLevel());
+                        }
                     }
                 }
             }
@@ -418,7 +464,7 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
     private interface EntityStore<E extends Persisted> {
         E lookup(String key);
         List<E> lookup(Collection<String> keys);
-        String getOwnerKey(E entity);
+        Owner getOwner(E entity);
     }
 
     private class OwnerStore implements EntityStore<Owner> {
@@ -443,8 +489,8 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
         }
 
         @Override
-        public String getOwnerKey(Owner entity) {
-            return entity.getKey();
+        public Owner getOwner(Owner entity) {
+            return entity;
         }
     }
 
@@ -470,8 +516,8 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
         }
 
         @Override
-        public String getOwnerKey(Environment entity) {
-            return entity.getOwner().getKey();
+        public Owner getOwner(Environment entity) {
+            return entity.getOwner();
         }
     }
 
@@ -511,8 +557,8 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
         }
 
         @Override
-        public String getOwnerKey(Consumer entity) {
-            return entity.getOwner().getKey();
+        public Owner getOwner(Consumer entity) {
+            return entity.getOwner();
         }
     }
 
@@ -538,8 +584,8 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
         }
 
         @Override
-        public String getOwnerKey(Entitlement entity) {
-            return entity.getOwner().getKey();
+        public Owner getOwner(Entitlement entity) {
+            return entity.getOwner();
         }
     }
 
@@ -565,8 +611,8 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
         }
 
         @Override
-        public String getOwnerKey(Pool entity) {
-            return entity.getOwner().getKey();
+        public Owner getOwner(Pool entity) {
+            return entity.getOwner();
         }
     }
 
@@ -592,8 +638,8 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
         }
 
         @Override
-        public String getOwnerKey(ActivationKey entity) {
-            return entity.getOwner().getKey();
+        public Owner getOwner(ActivationKey entity) {
+            return entity.getOwner();
         }
     }
 
@@ -619,7 +665,7 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
         }
 
         @Override
-        public String getOwnerKey(Product entity) {
+        public Owner getOwner(Product entity) {
             // Products do not belong to an org:
             return null;
         }
@@ -645,7 +691,7 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
         }
 
         @Override
-        public String getOwnerKey(User entity) {
+        public Owner getOwner(User entity) {
             // Users do not (necessarily) belong to a specific org:
             return null;
         }

@@ -88,6 +88,9 @@ public class Owner extends AbstractHibernateObject implements Serializable,
     @JoinColumn(name = "upstream_id")
     private UpstreamConsumer upstreamConsumer;
 
+    @Column(nullable = true)
+    private String logLevel;
+
     /**
      * Default constructor
      */
@@ -374,5 +377,13 @@ public class Owner extends AbstractHibernateObject implements Serializable,
 
     public void setDefaultServiceLevel(String defaultServiceLevel) {
         this.defaultServiceLevel = defaultServiceLevel;
+    }
+
+    public String getLogLevel() {
+        return logLevel;
+    }
+
+    public void setLogLevel(String logLevel) {
+        this.logLevel = logLevel;
     }
 }
