@@ -1542,6 +1542,7 @@ public class ConsumerResource {
     public List<Entitlement> listEntitlements(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         @QueryParam("product") String productId,
+        @QueryParam("excludecerts") @DefaultValue("false") boolean excludeCerts,
         @Context PageRequest pageRequest) {
 
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);

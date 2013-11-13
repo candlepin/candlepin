@@ -16,14 +16,20 @@ package org.candlepin.model;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
+import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 
+import org.candlepin.jackson.DynamicFilterable;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
 /**
@@ -32,11 +38,17 @@ import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 @MappedSuperclass
 @XmlType(name = "CandlepinObject")
 @JsonIgnoreProperties(ignoreUnknown = true)
-public abstract class AbstractHibernateObject implements Persisted, Serializable {
+public abstract class AbstractHibernateObject implements Persisted,
+        Serializable, DynamicFilterable {
     public static final String DEFAULT_SORT_FIELD = "created";
 
     private Date created;
     private Date updated;
+
+    @Transient
+    private Set<String> filterBlacklist;
+    @Transient
+    private Set<String> filterWhitelist;
 
     @PrePersist
     protected void onCreate() {
@@ -69,5 +81,42 @@ public abstract class AbstractHibernateObject implements Persisted, Serializable
 
     public void setUpdated(Date updated) {
         this.updated = updated;
+    }
+
+    @XmlTransient
+    public boolean isAttributeControlled(String attribute) {
+        return isAttributeAllowed(attribute) || isAttributeFiltered(attribute);
+    }
+
+    @XmlTransient
+    public boolean isAttributeAllowed(String attribute) {
+        return filterWhitelist != null && filterWhitelist.contains(attribute);
+    }
+
+    @XmlTransient
+    public boolean isAttributeFiltered(String attribute) {
+        return filterBlacklist != null && filterBlacklist.contains(attribute);
+    }
+
+    @XmlTransient
+    public void filterAttribute(String attribute) {
+        if (filterBlacklist == null) {
+            filterBlacklist = new HashSet<String>();
+        }
+        if (this.isAttributeAllowed(attribute)) {
+            filterWhitelist.remove(attribute);
+        }
+        filterBlacklist.add(attribute);
+    }
+
+    @XmlTransient
+    public void allowAttribute(String attribute) {
+        if (filterWhitelist == null) {
+            filterWhitelist = new HashSet<String>();
+        }
+        if (this.isAttributeFiltered(attribute)) {
+            filterBlacklist.remove(attribute);
+        }
+        filterWhitelist.add(attribute);
     }
 }

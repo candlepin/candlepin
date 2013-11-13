@@ -14,6 +14,8 @@
  */
 package org.candlepin.jackson;
 
+import org.apache.log4j.Logger;
+import org.candlepin.policy.js.autobind.AutobindRules;
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.JsonStreamContext;
 import org.codehaus.jackson.map.SerializerProvider;
@@ -27,28 +29,40 @@ import org.codehaus.jackson.map.ser.BeanPropertyWriter;
  * object normally.
  */
 public class HateoasBeanPropertyFilter extends JsonBeanPropertyFilter {
+    private static Logger log = Logger.getLogger(HateoasBeanPropertyFilter.class);
 
     @Override
     public void serializeAsField(Object obj, JsonGenerator jsonGenerator,
         SerializerProvider serializerProvider, BeanPropertyWriter writer) throws Exception {
         JsonStreamContext context = jsonGenerator.getOutputContext();
 
-        if ((context.getParent() != null) && (context.getParent().inArray())) {
-            // skip annotated fields if within array:
-            if (!annotationPresent(obj, writer.getName(), HateoasArrayExclude.class)) {
+        boolean cont = true;
+        if (obj instanceof DynamicFilterable) {
+            DynamicFilterable df = (DynamicFilterable) obj;
+            // Continue iff the attributes filter is not overridden
+            cont = !df.isAttributeControlled(writer.getName());
+            if (df.isAttributeAllowed(writer.getName())) {
                 writer.serializeAsField(obj, jsonGenerator, serializerProvider);
             }
         }
-        // Check if we should trigger reduced HATEOAS serialization for a nested object by
-        // looking for the annotation on the fields getter:
-        else if ((context.getParent() != null) && (context.getParent().inObject())) {
-            if (annotationPresent(obj, writer.getName(), HateoasInclude.class)) {
+        if (cont) {
+            if ((context.getParent() != null) && (context.getParent().inArray())) {
+                // skip annotated fields if within array:
+                if (!annotationPresent(obj, writer.getName(), HateoasArrayExclude.class)) {
+                    writer.serializeAsField(obj, jsonGenerator, serializerProvider);
+                }
+            }
+            // Check if we should trigger reduced HATEOAS serialization for a nested object by
+            // looking for the annotation on the fields getter:
+            else if ((context.getParent() != null) && (context.getParent().inObject())) {
+                if (annotationPresent(obj, writer.getName(), HateoasInclude.class)) {
+                    writer.serializeAsField(obj, jsonGenerator, serializerProvider);
+                }
+            }
+            else {
+                // Normal serialization:
                 writer.serializeAsField(obj, jsonGenerator, serializerProvider);
             }
-        }
-        else {
-            // Normal serialization:
-            writer.serializeAsField(obj, jsonGenerator, serializerProvider);
         }
     }
 }
