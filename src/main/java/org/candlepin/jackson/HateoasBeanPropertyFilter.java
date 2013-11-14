@@ -14,8 +14,6 @@
  */
 package org.candlepin.jackson;
 
-import org.apache.log4j.Logger;
-import org.candlepin.policy.js.autobind.AutobindRules;
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.JsonStreamContext;
 import org.codehaus.jackson.map.SerializerProvider;
@@ -29,7 +27,6 @@ import org.codehaus.jackson.map.ser.BeanPropertyWriter;
  * object normally.
  */
 public class HateoasBeanPropertyFilter extends JsonBeanPropertyFilter {
-    private static Logger log = Logger.getLogger(HateoasBeanPropertyFilter.class);
 
     @Override
     public void serializeAsField(Object obj, JsonGenerator jsonGenerator,
