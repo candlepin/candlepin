@@ -80,9 +80,27 @@ module CandlepinMethods
 
   def update_distributor_version(id, dist_name, display_name, capabilities=[])
     dist_version = @cp.update_distributor_version(id, dist_name, display_name, capabilities)
-    @dist_versions << dist_version
-
+    if not @dist_versions.map { |dv| dist_version['id'] }.include?(id)
+        @dist_versions << dist_version
+    end
     return dist_version
+  end
+
+  # Wrapper for ruby API so we can track all content delivery network we created and clean them up.
+  def create_cdn(key, name, url, cert=nil)
+    cdn = @cp.create_cdn(key, name, url, cert)
+    @cdns << cdn
+
+    return cdn
+  end
+
+  def update_cdn(key, name, url, cert=nil)
+    cdn = @cp.update_cdn(key, name, url, cert)
+    if not @cdns.map { |item| cdn['key'] }.include?(key)
+        @cdns << cdn
+    end
+
+    return cdn
   end
 
   def user_client(owner, user_name, readonly=false)
@@ -253,8 +271,9 @@ class Exporter
   # has subscriptions to the product.  The best way to deal with this is to
   # allow the after(:each) block in spec_helper.rb to clean up the import
   # owner and then clean up all the exporters in an after(:all) block.
-  def initialize
+  def initialize(opts={})
     cleanup_before()
+    @opts ||= opts
     @orig_working_dir = Dir.pwd()
     @exports = []
 
@@ -266,11 +285,12 @@ class Exporter
 
     @candlepin_client = consumer_client(owner_client, random_string('test_client'),
         "candlepin", user['username'])
+
   end
 
   def create_candlepin_export
     export = Export.new
-    export.export_filename = @candlepin_client.export_consumer(export.tmp_dir)
+    export.export_filename = @candlepin_client.export_consumer(export.tmp_dir, @opts)
     export.extract()
     @exports << export
     export
@@ -307,9 +327,11 @@ end
 
 class StandardExporter < Exporter
   attr_reader :products
+  attr_reader :cdn_key
 
   def initialize
-    super()
+    @cdn_key = random_string("test-cdn")
+    super({:cdn_key => @cdn_key, :webapp_prefix => "webapp1", :api_url => "api1"})
     @products = {}
     # the before(:each) is not initialized yet, call create_product sans wrapper
     @products[:product1] = create_product(random_string('prod1'), random_string(),
@@ -374,6 +396,10 @@ class StandardExporter < Exporter
 
     # pool3 is special
     @candlepin_client.consume_pool(@pool3.id, {:quantity => 1})
+
+    @cdn = create_cdn(@cdn_key,
+	              "Test CDN",
+	              "https://cdn.test.com")
   end
 
   def create_candlepin_export_update

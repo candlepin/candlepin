@@ -290,15 +290,18 @@ describe 'Candlepin Import', :serial => true do
     consumer = consumer_client(@import_owner_client, 'system6')
     entitlement = consumer.consume_pool(pool.id, {:quantity => 1})[0]
     ent =  @cp.get_subscription_cert_by_ent_id entitlement.id
+    #ent.cdn['key'].should == @cp_export.cdn_key
     cert.should == ent
   end
 
   it 'contains upstream consumer' do
     # this information used to be on /imports but now exists on Owner
+    # checking for api and webapp overrides
     consumer = @candlepin_consumer
     upstream = @cp.get_owner(@import_owner['key'])['upstreamConsumer']
     upstream.uuid.should == consumer['uuid']
-    upstream.include?('apiUrl').should be_true
+    upstream.apiUrl.should == "api1"
+    upstream.webUrl.should == "webapp1"
     upstream.id.should_not be_nil
     upstream.idCert.should_not be_nil
     upstream.name.should == consumer['name']
@@ -313,5 +316,11 @@ describe 'Candlepin Import', :serial => true do
     pool["derivedProductId"].should == @cp_export.products[:derived_product].id
     pool["derivedProvidedProducts"].length.should == 1
     pool["derivedProvidedProducts"][0]["productId"].should == @cp_export.products[:derived_provided_prod].id
+  end
+
+  it 'should put the cdn from the manifest into the created subscriptions' do
+    @cp.list_subscriptions(@import_owner['key']).find_all do |sub|
+        sub['cdn']['key'].should == @cp_export.cdn_key
+    end
   end
 end

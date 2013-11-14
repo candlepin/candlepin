@@ -46,6 +46,11 @@ describe 'Candlepin Export', :serial => true do
     exported_consumer['uuid'].should == @exporter.candlepin_client.uuid
   end
 
+  it 'exports CDN URL' do
+   exported_meta = parse_file(File.join(@cp_export.export_dir, 'meta.json'))
+   exported_meta['cdnKey'].should == @exporter.cdn_key
+  end
+
   it 'should not include consumer json in entitlements' do
     Dir["#{@cp_export.export_dir}/entitlements/*.json"].find_all do |ent|
       parse_file(ent).has_key? 'consumer'

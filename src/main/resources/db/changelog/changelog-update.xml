@@ -36,6 +36,8 @@
     <include file="db/changelog/20130624133949-add-sub-product-dist-version-capability.xml" />
     <include file="db/changelog/20130705140300-add-certv3-capability.xml" />
     <include file="db/changelog/20130717133146-ownerkey-and-displayname-in-deletedconsumer.xml" />
+    <include file="db/changelog/20130715142926-add-cdn-url-to-subscription.xml" />
+    <include file="db/changelog/20130722140547-add-cdn-table.xml" />
     <include file="db/changelog/20130723134939-add-linked-stack-id-to-pool.xml" />
     <include file="db/changelog/20130725093910-add-source-consumer-to-pool.xml" />
     <include file="db/changelog/20130829085043-add-sat-5.6-dist-version.xml" />
@@ -47,5 +49,6 @@
     <include file="db/changelog/20131007121855-add_class_to_jobstatus.xml" />
     <include file="db/changelog/20131025111347-migrate-import-upstream-consumer.xml" />
     <include file="db/changelog/20131025150828-nullable_actkey_pool_version.xml" />
+    <include file="db/changelog/20131101140657-fix-foreign-key-names-subscription-products.xml" />
     <include file="db/changelog/20131106133841-general-purpose-permissions.xml" />
 </databaseChangeLog>

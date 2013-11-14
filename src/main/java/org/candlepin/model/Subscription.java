@@ -69,8 +69,8 @@ public class Subscription extends AbstractHibernateObject {
     private Product derivedProduct;
 
     @ManyToMany(targetEntity = Product.class)
-    @ForeignKey(name = "fk_product_id",
-            inverseName = "fk_subscription_id")
+    @ForeignKey(name = "fk_subscription_id",
+            inverseName = "fk_product_id")
     @JoinTable(name = "cp_subscription_products",
         joinColumns = @JoinColumn(name = "subscription_id"),
         inverseJoinColumns = @JoinColumn(name = "product_id"))
@@ -113,6 +113,10 @@ public class Subscription extends AbstractHibernateObject {
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "certificate_id")
     private SubscriptionsCertificate cert;
+
+    @OneToOne
+    @JoinColumn(name = "cdn_id")
+    private Cdn cdn;
 
     public Subscription() {
     }
@@ -352,5 +356,14 @@ public class Subscription extends AbstractHibernateObject {
     public void setDerivedProvidedProducts(Set<Product> subProvidedProducts) {
         this.derivedProvidedProducts = subProvidedProducts;
     }
+
+    public Cdn getCdn() {
+        return cdn;
+    }
+
+    public void setCdn(Cdn cdn) {
+        this.cdn = cdn;
+    }
+
 
 }
