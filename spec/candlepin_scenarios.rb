@@ -97,7 +97,7 @@ module CandlepinMethods
   def update_cdn(key, name, url, cert=nil)
     cdn = @cp.update_cdn(key, name, url, cert)
     if not @cdns.map { |item| cdn['label'] }.include?(key)
-        @cdns << item
+        @cdns << cdn
     end
 
     return cdn
