@@ -80,7 +80,7 @@ module CandlepinMethods
 
   def update_distributor_version(id, dist_name, display_name, capabilities=[])
     dist_version = @cp.update_distributor_version(id, dist_name, display_name, capabilities)
-    if not @dist_versions.map { |dist_version| dist_version['id'] }.include?(id)
+    if not @dist_versions.map { |dv| dist_version['id'] }.include?(id)
         @dist_versions << dist_version
     end
     return dist_version
@@ -96,8 +96,8 @@ module CandlepinMethods
 
   def update_cdn(key, name, url, cert=nil)
     cdn = @cp.update_cdn(key, name, url, cert)
-    if not @cdns.map { |cdn| cdn['label'] }.include?(key)
-        @cdns << cdn
+    if not @cdns.map { |item| cdn['label'] }.include?(key)
+        @cdns << item
     end
 
     return cdn
