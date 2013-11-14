@@ -29,14 +29,14 @@ public class CdnCurator
     }
 
     /**
-     * Return CDN for the given key.
-     * @param key CDN key
-     * @return CDN whose key matches the given value.
+     * Return CDN for the given label.
+     * @param label CDN label
+     * @return CDN whose label matches the given value.
      */
-    public Cdn lookupByKey(String key) {
+    public Cdn lookupByLabel(String label) {
         return (Cdn) currentSession()
             .createCriteria(Cdn.class)
-            .add(Restrictions.eq("key", key)).uniqueResult();
+            .add(Restrictions.eq("label", label)).uniqueResult();
     }
 
     /**

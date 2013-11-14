@@ -96,7 +96,7 @@ module CandlepinMethods
 
   def update_cdn(key, name, url, cert=nil)
     cdn = @cp.update_cdn(key, name, url, cert)
-    if not @cdns.map { |item| cdn['key'] }.include?(key)
+    if not @cdns.map { |item| cdn['label'] }.include?(key)
         @cdns << cdn
     end
 
@@ -326,11 +326,11 @@ end
 
 class StandardExporter < Exporter
   attr_reader :products
-  attr_reader :cdn_key
+  attr_reader :cdn_label
 
   def initialize
-    @cdn_key = random_string("test-cdn")
-    super({:cdn_key => @cdn_key, :webapp_prefix => "webapp1", :api_url => "api1"})
+    @cdn_label = random_string("test-cdn")
+    super({:cdn_label => @cdn_label, :webapp_prefix => "webapp1", :api_url => "api1"})
     @products = {}
     # the before(:each) is not initialized yet, call create_product sans wrapper
     @products[:product1] = create_product(random_string('prod1'), random_string(),
@@ -396,7 +396,7 @@ class StandardExporter < Exporter
     # pool3 is special
     @candlepin_client.consume_pool(@pool3.id, {:quantity => 1})
 
-    @cdn = create_cdn(@cdn_key,
+    @cdn = create_cdn(@cdn_label,
 	              "Test CDN",
 	              "https://cdn.test.com")
   end

@@ -5,9 +5,9 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
-        
+
     <property name="now" value="NOW()" dbms="mysql"/>
-    
+
     <!--
       On Unix-like systems, MySQL table names are case sensitive, so we need to use all capitals with the Quartz
       tables, because that is how Quartz refers to them.  See http://dev.mysql.com/doc/refman/5.5/en/identifier-case-sensitivity.html
@@ -55,7 +55,7 @@
                 <constraints nullable="false"/>
             </column>
         </createTable>
-    </changeSet>   
+    </changeSet>
      <changeSet author="awood (generated)" id="1379350211813-1" dbms="mysql">
         <createTable tableName="cp_activationkey_pool">
             <column name="id" type="VARCHAR(32)">
@@ -1677,5 +1677,12 @@
             <column name="dist_version_id" value="1004"/>
             <column name="name" value="derived_product"/>
         </insert>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1379350211813-173" dbms="mysql">
+        <comment>Record cdn id in subscription information when specified</comment>
+        <addColumn tableName="cp_subscription">
+            <column name="cdn_id" type="varchar(32)"/>
+        </addColumn>
+        <!-- See http://www.liquibase.org/manual/refactoring_commands -->
     </changeSet>
 </databaseChangeLog>

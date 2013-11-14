@@ -7,15 +7,24 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
 
+    <property name="date.type" value="TIMESTAMP WITHOUT TIME ZONE" dbms="postgresql,oracle"/>
+    <property name="date.type" value="DATETIME" dbms="mysql"/>
+
+    <property name="serial.type" value="BIGINT" dbms="oracle,mysql"/>
+    <property name="serial.type" value="int8" dbms="postgresql"/>
+
+    <property name="cert.type" value="BLOB" dbms="oracle,mysql"/>
+    <property name="cert.type" value="bytea" dbms="postgresql"/>
+
     <changeSet id="20130722140547" author="wpoteat">
         <comment>CDN record</comment>
         <createTable tableName="cp_cdn">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_cdn_pkey"/>
             </column>
-            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
-            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
-            <column name="key" type="VARCHAR(255)">
+            <column name="created" type="${date.type}"/>
+            <column name="updated" type="${date.type}"/>
+            <column name="label" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
             <column name="name" type="VARCHAR(255)">
@@ -30,26 +39,29 @@
         </createTable>
         <!-- See http://www.liquibase.org/manual/refactoring_commands -->
     </changeSet>
+
     <changeSet id="20130722140547-1" author="wpoteat">
-        <createIndex tableName="cp_cdn" indexName="cp_cdn_key_idx">
-            <column name="key"/>
+        <createIndex tableName="cp_cdn" indexName="cp_cdn_label_idx">
+            <column name="label"/>
         </createIndex>
     </changeSet>
-        <changeSet author="wpoteat" id="20130722140547-2">
+
+    <changeSet author="wpoteat" id="20130722140547-2">
         <createTable tableName="cp_cdn_certificate">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_cdn_certificate_pkey"/>
             </column>
-            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
-            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
-            <column name="cert" type="bytea">
+            <column name="created" type="${date.type}"/>
+            <column name="updated" type="${date.type}"/>
+            <column name="cert" type="${cert.type}">
                 <constraints nullable="false"/>
             </column>
-            <column name="privatekey" type="bytea">
+            <column name="privatekey" type="${cert.type}">
                 <constraints nullable="false"/>
             </column>
-            <column name="serial_id" type="int8"/>
+            <column name="serial_id" type="${serial.type}"/>
         </createTable>
     </changeSet>
+
 
 </databaseChangeLog>

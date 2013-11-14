@@ -91,9 +91,9 @@ public class EntitlementImporter {
         subscription.setQuantity(entitlement.getQuantity().longValue());
 
         subscription.setProduct(findProduct(productsById, entitlement.getProductId()));
-        String cdnKey = meta.getCdnKey();
-        if (!StringUtils.isBlank(cdnKey)) {
-            Cdn cdn = cdnCurator.lookupByKey(cdnKey);
+        String cdnLabel = meta.getCdnLabel();
+        if (!StringUtils.isBlank(cdnLabel)) {
+            Cdn cdn = cdnCurator.lookupByLabel(cdnLabel);
             if (cdn != null) {
                 subscription.setCdn(cdn);
             }

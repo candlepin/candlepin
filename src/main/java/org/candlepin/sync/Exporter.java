@@ -585,7 +585,7 @@ public class Exporter {
                 log.debug("Exporting Content Delivery Network" + cdn.getName());
             }
             try {
-                File file = new File(cdnDir.getCanonicalPath(), cdn.getKey() + ".json");
+                File file = new File(cdnDir.getCanonicalPath(), cdn.getLabel() + ".json");
                 writer = new FileWriter(file);
                 cdnExporter.export(mapper, writer, cdn);
             }

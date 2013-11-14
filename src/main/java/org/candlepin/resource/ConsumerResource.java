@@ -1741,7 +1741,7 @@ public class ConsumerResource {
         @Context HttpServletResponse response,
         @PathParam("consumer_uuid")
         @Verify(value = Consumer.class, require = Access.ALL) String consumerUuid,
-        @QueryParam("cdn_key") String cdnKey,
+        @QueryParam("cdn_label") String cdnLabel,
         @QueryParam("webapp_prefix") String webAppPrefix,
         @QueryParam("api_url") String apiUrl) {
 
@@ -1755,10 +1755,10 @@ public class ConsumerResource {
                     consumerUuid, consumer.getType().getLabel()));
         }
 
-        if (!StringUtils.isBlank(cdnKey) &&
-            cdnCurator.lookupByKey(cdnKey) == null) {
+        if (!StringUtils.isBlank(cdnLabel) &&
+            cdnCurator.lookupByLabel(cdnLabel) == null) {
             throw new ForbiddenException(
-                i18n.tr("A CDN with key {0} does not exist on this system.", cdnKey));
+                i18n.tr("A CDN with label {0} does not exist on this system.", cdnLabel));
         }
 
         poolManager.regenerateDirtyEntitlements(
@@ -1766,7 +1766,7 @@ public class ConsumerResource {
 
         File archive;
         try {
-            archive = exporter.getFullExport(consumer, cdnKey, webAppPrefix, apiUrl);
+            archive = exporter.getFullExport(consumer, cdnLabel, webAppPrefix, apiUrl);
             response.addHeader("Content-Disposition", "attachment; filename=" +
                 archive.getName());
 
