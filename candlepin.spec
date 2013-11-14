@@ -31,7 +31,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.8.32
+Version: 0.8.33
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -326,6 +326,11 @@ fi
 
 
 %changelog
+* Thu Nov 14 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.33-1
+- Correct variable (wpoteat@redhat.com)
+- Update for using keyword 'key' as column name (wpoteat@redhat.com)
+- Fix issues with CDN multi-database support. (dgoodwin@redhat.com)
+
 * Thu Nov 14 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.32-1
 - 984090: Fix the foreign key names on cp_subscription_products. (bkearney@redhat.com)
 - 1023187: Events for Rules addition and delete were missing event string. (bkearney@redhat.com)
