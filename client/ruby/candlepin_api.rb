@@ -1003,7 +1003,7 @@ class Candlepin
 
   def create_cdn(key, name, url, cert=nil)
     cdn =  {
-      'key' => key,
+      'label' => key,
       'name' => name,
       'url' => url,
       'certificate' => cert
@@ -1094,7 +1094,7 @@ class Candlepin
     return JSON.parse(response.body) unless response.body.empty?
   end
 
-  
+
 
   protected
 

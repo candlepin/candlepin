@@ -7,7 +7,7 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
 
-    <changeSet id="20130715142926" author="wpoteat">
+    <changeSet id="20130715142926" author="wpoteat" dbms="postgresql,oracle">
         <comment>Record cdn id in subscription information when specified</comment>
         <addColumn tableName="cp_subscription">
             <column name="cdn_id" type="varchar(32)"/>
