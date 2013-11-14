@@ -11,8 +11,8 @@ describe 'Content Delivery Network' do
 
   it 'should allow content delivery network creation' do
     count = @cp.get_cdns.size
-    cdn_key = random_string("test-cdn")
-    cdn = create_cdn(cdn_key,
+    cdn_label = random_string("test-cdn")
+    cdn = create_cdn(cdn_label,
                      "Test CDN",
                      "https://cdn.test.com")
     cdn.id.should_not be nil
@@ -21,12 +21,12 @@ describe 'Content Delivery Network' do
 
   it 'should allow content delivery network update' do
     count = @cp.get_cdns.size
-    cdn_key = random_string("test-cdn")
-    cdn = create_cdn(cdn_key,
+    cdn_label = random_string("test-cdn")
+    cdn = create_cdn(cdn_label,
                      "Test CDN",
                      "https://cdn.test.com")
     cdn_id = cdn.id
-    cdn = update_cdn(cdn_key,
+    cdn = update_cdn(cdn_label,
                      "Test CDN 2",
                      "https://special.cdn.test.com")
     @cp.get_cdns.size.should == count+1
@@ -37,12 +37,12 @@ describe 'Content Delivery Network' do
 
   it 'should allow certificate to be put on CDN on create' do
     count = @cp.get_cdns.size
-    cdn_key = random_string("test-cdn")
+    cdn_label = random_string("test-cdn")
     certificate = {
         'key' => 'test-key',
         'cert' => 'test-cert'
     }
-    cdn = create_cdn(cdn_key,
+    cdn = create_cdn(cdn_label,
                      "Test CDN",
                      "https://cdn.test.com",
                      certificate)
@@ -54,17 +54,17 @@ describe 'Content Delivery Network' do
 
   it 'should allow certificate to be put on CDN on update' do
     count = @cp.get_cdns.size
-    cdn_key = random_string("test-cdn")
+    cdn_label = random_string("test-cdn")
     certificate = {
         'key' => 'test-key',
         'cert' => 'test-cert'
     }
-    cdn = create_cdn(cdn_key,
+    cdn = create_cdn(cdn_label,
                      "Test CDN",
                      "https://cdn.test.com")
     cdn_id = cdn.id
     cdn.id.should_not be nil
-    cdn = update_cdn(cdn_key, nil, nil, certificate)
+    cdn = update_cdn(cdn_label, nil, nil, certificate)
     @cp.get_cdns.size.should == count+1
     cdn.certificate['key'].should == "test-key"
     cdn.certificate['cert'].should == "test-cert"

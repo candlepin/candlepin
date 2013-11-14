@@ -373,7 +373,7 @@ class Candlepin
   def export_consumer(dest_dir, params={})
     path = "/consumers/#{@uuid}/export"
     path += "?" if params
-    path += "cdn_key=#{params[:cdn_key]}&" if params[:cdn_key]
+    path += "cdn_label=#{params[:cdn_label]}&" if params[:cdn_label]
     path += "webapp_prefix=#{params[:webapp_prefix]}&" if params[:webapp_prefix]
     path += "api_url=#{params[:api_url]}&" if params[:api_url]
 
@@ -1001,9 +1001,9 @@ class Candlepin
     get(query)
   end
 
-  def create_cdn(key, name, url, cert=nil)
+  def create_cdn(label, name, url, cert=nil)
     cdn =  {
-      'label' => key,
+      'label' => label,
       'name' => name,
       'url' => url,
       'certificate' => cert
@@ -1011,17 +1011,17 @@ class Candlepin
     post('/cdn', cdn)
   end
 
-  def update_cdn(key, name, url, cert=nil)
+  def update_cdn(label, name, url, cert=nil)
     cdn =  {
       'name' => name,
       'url' => url,
       'certificate' => cert
     }
-    put("/cdn/#{key}", cdn)
+    put("/cdn/#{label}", cdn)
   end
 
-  def delete_cdn(key)
-    delete("/cdn/#{key}")
+  def delete_cdn(label)
+    delete("/cdn/#{label}")
   end
 
   def get_cdns()

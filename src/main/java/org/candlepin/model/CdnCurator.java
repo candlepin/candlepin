@@ -33,7 +33,7 @@ public class CdnCurator
      * @param label CDN label
      * @return CDN whose label matches the given value.
      */
-    public Cdn lookupByKey(String label) {
+    public Cdn lookupByLabel(String label) {
         return (Cdn) currentSession()
             .createCriteria(Cdn.class)
             .add(Restrictions.eq("label", label)).uniqueResult();

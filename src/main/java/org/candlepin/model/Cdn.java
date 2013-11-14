@@ -87,7 +87,7 @@ public class Cdn extends AbstractHibernateObject {
         this.id = id;
     }
 
-    public String getKey() {
+    public String getLabel() {
         return label;
     }
 

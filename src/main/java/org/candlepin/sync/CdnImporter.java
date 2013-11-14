@@ -49,7 +49,7 @@ public class CdnImporter {
     public void store(Set<Cdn> cdnSet) {
         log.debug("Creating/updating cdns");
         for (Cdn cdn : cdnSet) {
-            Cdn existing = curator.lookupByKey(cdn.getKey());
+            Cdn existing = curator.lookupByLabel(cdn.getLabel());
             if (existing == null) {
                 curator.create(cdn);
                 log.debug("Created CDN: " + cdn.getName());
