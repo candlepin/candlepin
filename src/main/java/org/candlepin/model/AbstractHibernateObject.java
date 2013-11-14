@@ -17,7 +17,6 @@ package org.candlepin.model;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import javax.persistence.Column;
@@ -45,10 +44,11 @@ public abstract class AbstractHibernateObject implements Persisted,
     private Date created;
     private Date updated;
 
+    // Attributes for dynamic filtering
     @Transient
-    private Set<String> filterBlacklist;
+    private Set<String> filterList;
     @Transient
-    private Set<String> filterWhitelist;
+    private boolean blacklist;
 
     @PrePersist
     protected void onCreate() {
@@ -84,39 +84,39 @@ public abstract class AbstractHibernateObject implements Persisted,
     }
 
     @XmlTransient
-    public boolean isAttributeControlled(String attribute) {
-        return isAttributeAllowed(attribute) || isAttributeFiltered(attribute);
-    }
-
-    @XmlTransient
-    public boolean isAttributeAllowed(String attribute) {
-        return filterWhitelist != null && filterWhitelist.contains(attribute);
-    }
-
-    @XmlTransient
     public boolean isAttributeFiltered(String attribute) {
-        return filterBlacklist != null && filterBlacklist.contains(attribute);
+        return filterList != null && // Break off early if filterList is null
+            (blacklist && filterList.contains(attribute) ||
+            !blacklist && !filterList.contains(attribute));
     }
 
     @XmlTransient
     public void filterAttribute(String attribute) {
-        if (filterBlacklist == null) {
-            filterBlacklist = new HashSet<String>();
+        if (filterList == null) {
+            //first call decides whether we are using a blacklist or whitelist
+            blacklist = true;
+            filterList = new HashSet<String>();
         }
-        if (this.isAttributeAllowed(attribute)) {
-            filterWhitelist.remove(attribute);
+        // Works differently if we are using blacklist/whitelist
+        if (blacklist) {
+            filterList.add(attribute);
         }
-        filterBlacklist.add(attribute);
+        else {
+            filterList.remove(attribute);
+        }
     }
 
     @XmlTransient
     public void allowAttribute(String attribute) {
-        if (filterWhitelist == null) {
-            filterWhitelist = new HashSet<String>();
+        if (filterList == null) {
+            blacklist = false;
+            filterList = new HashSet<String>();
         }
-        if (this.isAttributeFiltered(attribute)) {
-            filterBlacklist.remove(attribute);
+        if (!blacklist) {
+            filterList.add(attribute);
         }
-        filterWhitelist.add(attribute);
+        else {
+            filterList.remove(attribute);
+        }
     }
 }

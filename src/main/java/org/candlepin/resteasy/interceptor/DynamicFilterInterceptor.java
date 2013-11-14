@@ -37,25 +37,34 @@ import org.jboss.resteasy.spi.interception.PreProcessInterceptor;
  */
 @Provider
 @ServerInterceptor
-public class DynamicFilterInterceptor implements PreProcessInterceptor, PostProcessInterceptor {
+public class DynamicFilterInterceptor implements PreProcessInterceptor,
+        PostProcessInterceptor {
 
-    private static ThreadLocal<Set<String>> blacklist = new ThreadLocal<Set<String>>();
-    private static ThreadLocal<Set<String>> whitelist = new ThreadLocal<Set<String>>();
+    private static ThreadLocal<Set<String>> attributes = new ThreadLocal<Set<String>>();
+    private static ThreadLocal<Boolean> blacklist = new ThreadLocal<Boolean>();
 
     @Override
     public ServerResponse preProcess(HttpRequest request, ResourceMethod method)
         throws Failure, WebApplicationException {
-        blacklist.set(new HashSet<String>());
-        whitelist.set(new HashSet<String>());
+        attributes.set(new HashSet<String>());
         Map<String, List<String>> queryParams = request.getUri().getQueryParameters();
-        if (queryParams.containsKey("exclude")) {
+        boolean containsExcl = queryParams.containsKey("exclude");
+        blacklist.set(containsExcl);
+        boolean containsIncl = queryParams.containsKey("include");
+        if ((containsExcl && containsIncl) ||
+            !(containsExcl || containsIncl)) {
+            // We cannot do both types of filtering simultaneously
+            // Also no point in pro
+            return null;
+        }
+        if (containsExcl) {
             for (String toExclude : queryParams.get("exclude")) {
-                blacklist.get().add(toExclude);
+                attributes.get().add(toExclude);
             }
         }
-        if (queryParams.containsKey("include")) {
+        else if (containsIncl) {
             for (String toInclude : queryParams.get("include")) {
-                whitelist.get().add(toInclude);
+                attributes.get().add(toInclude);
             }
         }
         return null;
@@ -64,10 +73,9 @@ public class DynamicFilterInterceptor implements PreProcessInterceptor, PostProc
     @Override
     public void postProcess(ServerResponse response) {
         Object obj = response.getEntity();
-        int blsize = blacklist.get() != null ? blacklist.get().size() : -1;
         this.addFilters(obj);
     }
-    
+
     private void addFilters(Object obj) {
         if (obj instanceof Collection) {
             Collection<?> collection = (Collection<?>) obj;
@@ -85,13 +93,15 @@ public class DynamicFilterInterceptor implements PreProcessInterceptor, PostProc
         else if (obj instanceof DynamicFilterable) {
             //If the object is dynamically filterable, add filter options
             DynamicFilterable df = (DynamicFilterable) obj;
-            for (String allow : whitelist.get()) {
-                df.allowAttribute(allow);
+            if (blacklist.get()) {
+                for (String filter : attributes.get()) {
+                    df.filterAttribute(filter);
+                }
             }
-            // Apply blacklist second, if attributes are found in both,
-            // this will remove them from the objects whitelist
-            for (String filter : blacklist.get()) {
-                df.filterAttribute(filter);
+            else {
+                for (String allow : attributes.get()) {
+                    df.allowAttribute(allow);
+                }
             }
         }
     }

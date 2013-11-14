@@ -14,13 +14,14 @@
  */
 package org.candlepin.jackson;
 
+import org.codehaus.jackson.map.annotate.JsonFilter;
+
 /**
  * DynamicFilterable
  */
+@JsonFilter("DynamicFilter")
 public interface DynamicFilterable {
-    public boolean isAttributeControlled(String attribute);
-    public boolean isAttributeAllowed(String attribute);
-    public boolean isAttributeFiltered(String attribute);
-    public void filterAttribute(String attribute);
-    public void allowAttribute(String attribute);
+    boolean isAttributeFiltered(String attribute);
+    void filterAttribute(String attribute);
+    void allowAttribute(String attribute);
 }

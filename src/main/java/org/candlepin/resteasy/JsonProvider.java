@@ -19,6 +19,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.ext.Provider;
 
 import org.candlepin.config.Config;
+import org.candlepin.jackson.DynamicPropertyFilter;
 import org.candlepin.jackson.HateoasBeanPropertyFilter;
 import org.codehaus.jackson.jaxrs.Annotations;
 import org.codehaus.jackson.jaxrs.JacksonJsonProvider;
@@ -80,6 +81,14 @@ public class JsonProvider extends JacksonJsonProvider {
             new HateoasBeanPropertyFilter());
         filterProvider = filterProvider.addFilter("OwnerFilter",
             new HateoasBeanPropertyFilter());
+        filterProvider = filterProvider.addFilter("ConsumerFilter",
+            new DynamicPropertyFilter());
+        filterProvider = filterProvider.addFilter("EntitlementFilter",
+            new DynamicPropertyFilter());
+        filterProvider = filterProvider.addFilter("OwnerFilter",
+            new DynamicPropertyFilter());
+        filterProvider = filterProvider.addFilter("DynamicFilter",
+            new DynamicPropertyFilter());
         filterProvider.setFailOnUnknownId(false);
         mapper.setFilters(filterProvider);
 

@@ -88,7 +88,6 @@ import org.candlepin.resource.SubscriptionResource;
 import org.candlepin.resource.UserResource;
 import org.candlepin.resteasy.JsonProvider;
 import org.candlepin.resteasy.interceptor.AuthInterceptor;
-import org.candlepin.resteasy.interceptor.DynamicFilterInterceptor;
 import org.candlepin.resteasy.interceptor.LinkHeaderPostInterceptor;
 import org.candlepin.resteasy.interceptor.PageRequestInterceptor;
 import org.candlepin.resteasy.interceptor.PinsetterAsyncInterceptor;
@@ -195,28 +194,12 @@ public class CandlepinModule extends AbstractModule {
 
 
         bind(I18n.class).toProvider(I18nProvider.class);
-        bind(AuthInterceptor.class);
-        bind(PageRequestInterceptor.class);
-        bind(PinsetterAsyncInterceptor.class);
-        bind(VersionPostInterceptor.class);
-        bind(LinkHeaderPostInterceptor.class);
-        bind(DynamicFilterInterceptor.class);
+        this.configureInterceptors();
         bind(JsonProvider.class);
         bind(EventSink.class).to(EventSinkImpl.class);
-        bind(JobFactory.class).to(GuiceJobFactory.class);
-        bind(JobListener.class).to(PinsetterJobListener.class);
-        bind(PinsetterKernel.class);
-        bind(CertificateRevocationListTask.class);
-        bind(JobCleaner.class);
-        bind(UnpauseJob.class);
-        bind(SweepBarJob.class);
+        this.configurePinsetter();
 
-        bind(Exporter.class);
-        bind(MetaExporter.class);
-        bind(ConsumerTypeExporter.class);
-        bind(ConsumerExporter.class);
-        bind(RulesExporter.class);
-        bind(EntitlementCertExporter.class);
+        this.configureExporter();
 
         // Async Jobs
         bind(RefreshPoolsJob.class);
@@ -228,5 +211,32 @@ public class CandlepinModule extends AbstractModule {
         // flexible end date for identity certificates
         bind(Function.class).annotatedWith(Names.named("endDateGenerator"))
             .to(ExpiryDateFunction.class).in(Singleton.class);
+    }
+
+    private void configureInterceptors() {
+        bind(AuthInterceptor.class);
+        bind(PageRequestInterceptor.class);
+        bind(PinsetterAsyncInterceptor.class);
+        bind(VersionPostInterceptor.class);
+        bind(LinkHeaderPostInterceptor.class);
+    }
+
+    private void configurePinsetter() {
+        bind(JobFactory.class).to(GuiceJobFactory.class);
+        bind(JobListener.class).to(PinsetterJobListener.class);
+        bind(PinsetterKernel.class);
+        bind(CertificateRevocationListTask.class);
+        bind(JobCleaner.class);
+        bind(UnpauseJob.class);
+        bind(SweepBarJob.class);
+    }
+
+    private void configureExporter() {
+        bind(Exporter.class);
+        bind(MetaExporter.class);
+        bind(ConsumerTypeExporter.class);
+        bind(ConsumerExporter.class);
+        bind(RulesExporter.class);
+        bind(EntitlementCertExporter.class);
     }
 }
