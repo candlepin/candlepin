@@ -31,6 +31,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
 import org.candlepin.model.Role;
 import org.candlepin.model.Subscription;
+import org.candlepin.model.User;
 import org.candlepin.resource.OwnerResource;
 import org.candlepin.test.DatabaseTestFixture;
 import org.junit.Before;
@@ -59,8 +60,9 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
         Role ownerAdminRole = createAdminRole(owner);
         roleCurator.create(ownerAdminRole);
 
+        User user = new User("testing user", "pass");
         principal = new UserPrincipal("testing user",
-            new ArrayList<Permission>(permFactory.createPermissions(
+            new ArrayList<Permission>(permFactory.createPermissions(user,
                 ownerAdminRole.getPermissions())), false);
         setupPrincipal(principal);
 

@@ -115,7 +115,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         ownerAdminRole.addUser(someuser);
         roleCurator.create(ownerAdminRole);
 
-        List<Permission> perms = permFactory.createPermissions(
+        List<Permission> perms = permFactory.createPermissions(someuser,
             ownerAdminRole.getPermissions());
         principal = new UserPrincipal(USER_NAME, perms, false);
         setupPrincipal(principal);

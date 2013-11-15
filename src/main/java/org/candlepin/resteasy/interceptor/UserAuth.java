@@ -65,7 +65,7 @@ public abstract class UserAuth implements AuthProvider {
 
             // flatten out the permissions from the combined roles
             for (Role role : user.getRoles()) {
-                permissions.addAll(permissionFactory.createPermissions(
+                permissions.addAll(permissionFactory.createPermissions(user,
                     role.getPermissions()));
             }
 

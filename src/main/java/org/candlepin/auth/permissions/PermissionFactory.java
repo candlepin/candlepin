@@ -19,6 +19,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.candlepin.model.PermissionBlueprint;
+import org.candlepin.model.User;
 
 import com.google.inject.Inject;
 
@@ -33,28 +34,35 @@ public class PermissionFactory {
      */
     public enum PermissionType {
         OWNER,
-        USERS_CONSUMERS
+        USERNAME_CONSUMERS
     }
 
     @Inject
     public PermissionFactory() {
     }
 
-    public List<Permission> createPermissions(Collection<PermissionBlueprint> dbPerms) {
+    public List<Permission> createPermissions(User user,
+        Collection<PermissionBlueprint> dbPerms) {
         List<Permission> perms = new LinkedList<Permission>();
         for (PermissionBlueprint hint : dbPerms) {
-            perms.add(createPermission(hint));
+            perms.add(createPermission(user, hint));
         }
         return perms;
     }
 
-    public Permission createPermission(PermissionBlueprint permBp) {
+    public Permission createPermission(User user, PermissionBlueprint permBp) {
         switch (permBp.getType()) {
         // TODO: what if an entity isn't found?
             case OWNER:
                 Permission p = new OwnerPermission(permBp.getOwner(),
                     permBp.getAccess());
                 return p;
+
+            case USERNAME_CONSUMERS:
+                Permission usernamePerm = new UsersConsumersPermission(user,
+                    permBp.getOwner(), permBp.getAccess());
+                return usernamePerm;
+
             default:
                 return null; // TODO
         }
