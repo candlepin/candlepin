@@ -557,7 +557,7 @@ public class OwnerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/log")
     public Owner setLogLevel(@PathParam("owner_key") String ownerKey,
-        @QueryParam("level") @DefaultValue("ALL") String level) {
+        @QueryParam("level") @DefaultValue("DEBUG") String level) {
         Owner owner = findOwner(ownerKey);
         level = level.toUpperCase();
 
