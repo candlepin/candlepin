@@ -23,6 +23,8 @@ import java.util.Set;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.ext.Provider;
 
+import org.apache.log4j.Logger;
+import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.jackson.DynamicFilterable;
 import org.jboss.resteasy.annotations.interception.ServerInterceptor;
 import org.jboss.resteasy.core.ResourceMethod;
@@ -31,6 +33,9 @@ import org.jboss.resteasy.spi.Failure;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.jboss.resteasy.spi.interception.PostProcessInterceptor;
 import org.jboss.resteasy.spi.interception.PreProcessInterceptor;
+import org.xnap.commons.i18n.I18n;
+
+import com.google.inject.Inject;
 
 /**
  * DynamicFilterInterceptor
@@ -39,9 +44,17 @@ import org.jboss.resteasy.spi.interception.PreProcessInterceptor;
 @ServerInterceptor
 public class DynamicFilterInterceptor implements PreProcessInterceptor,
         PostProcessInterceptor {
+    private static Logger log = Logger.getLogger(DynamicFilterInterceptor.class);
 
     private static ThreadLocal<Set<String>> attributes = new ThreadLocal<Set<String>>();
     private static ThreadLocal<Boolean> blacklist = new ThreadLocal<Boolean>();
+    
+    private I18n i18n;
+
+    @Inject
+    public DynamicFilterInterceptor(I18n i18n) {
+        this.i18n = i18n;
+    }
 
     @Override
     public ServerResponse preProcess(HttpRequest request, ResourceMethod method)
@@ -49,13 +62,14 @@ public class DynamicFilterInterceptor implements PreProcessInterceptor,
         attributes.set(new HashSet<String>());
         Map<String, List<String>> queryParams = request.getUri().getQueryParameters();
         boolean containsExcl = queryParams.containsKey("exclude");
-        blacklist.set(containsExcl);
         boolean containsIncl = queryParams.containsKey("include");
-        if ((containsExcl && containsIncl) ||
-            !(containsExcl || containsIncl)) {
-            // We cannot do both types of filtering simultaneously
-            // Also no point in pro
-            return null;
+        // We wait the list to be a blacklist by default when neither include
+        // nor exclude is provided, so we don't accidentally filter anything
+        blacklist.set(!containsIncl);
+        // Cannot do both types of filtering together
+        if (containsExcl && containsIncl) {
+            throw new BadRequestException(
+                i18n.tr("Cannot use 'include' and 'exclude' parameters together"));
         }
         if (containsExcl) {
             for (String toExclude : queryParams.get("exclude")) {
@@ -73,7 +87,9 @@ public class DynamicFilterInterceptor implements PreProcessInterceptor,
     @Override
     public void postProcess(ServerResponse response) {
         Object obj = response.getEntity();
-        this.addFilters(obj);
+        if (!attributes.get().isEmpty()) {
+            this.addFilters(obj);
+        }
     }
 
     private void addFilters(Object obj) {
@@ -93,6 +109,7 @@ public class DynamicFilterInterceptor implements PreProcessInterceptor,
         else if (obj instanceof DynamicFilterable) {
             //If the object is dynamically filterable, add filter options
             DynamicFilterable df = (DynamicFilterable) obj;
+            df.setBlacklist(blacklist.get());
             if (blacklist.get()) {
                 for (String filter : attributes.get()) {
                     df.filterAttribute(filter);

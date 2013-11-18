@@ -22,6 +22,10 @@ import org.codehaus.jackson.map.annotate.JsonFilter;
 @JsonFilter("DynamicFilter")
 public interface DynamicFilterable {
     boolean isAttributeFiltered(String attribute);
+    /**
+     * @param blacklist whether to use a blacklist or whitelist
+     */
+    void setBlacklist(boolean blacklist);
     void filterAttribute(String attribute);
     void allowAttribute(String attribute);
 }

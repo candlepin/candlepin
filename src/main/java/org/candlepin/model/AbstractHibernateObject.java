@@ -48,7 +48,7 @@ public abstract class AbstractHibernateObject implements Persisted,
     @Transient
     private Set<String> filterList;
     @Transient
-    private boolean blacklist;
+    private boolean blacklist = false;
 
     @PrePersist
     protected void onCreate() {
@@ -81,6 +81,12 @@ public abstract class AbstractHibernateObject implements Persisted,
 
     public void setUpdated(Date updated) {
         this.updated = updated;
+    }
+
+    @XmlTransient
+    public void setBlacklist(boolean blacklist) {
+        this.blacklist = blacklist;
+        this.filterList = new HashSet<String>();
     }
 
     @XmlTransient
