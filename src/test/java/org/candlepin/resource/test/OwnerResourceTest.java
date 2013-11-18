@@ -856,4 +856,25 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertNotNull(results);
         assertEquals(1, results.size());
     }
+
+    @Test
+    public void testSetAndDeleteOwnerLogLevel() {
+        Owner owner = new Owner("Test Owner", "test");
+        ownerCurator.create(owner);
+        ownerResource.setLogLevel(owner.getKey(), "ALL");
+
+        owner = ownerCurator.lookupByKey(owner.getKey());
+        assertEquals(owner.getLogLevel(), "ALL");
+
+        ownerResource.deleteLogLevel(owner.getKey());
+        owner = ownerCurator.lookupByKey(owner.getKey());
+        assertNull(owner.getLogLevel());
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void testSetBadLogLevel() {
+        Owner owner = new Owner("Test Owner", "test");
+        ownerCurator.create(owner);
+        ownerResource.setLogLevel(owner.getKey(), "THISLEVELISBAD");
+    }
 }
