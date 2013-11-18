@@ -16,28 +16,24 @@ package org.candlepin.guice;
 
 import com.google.inject.matcher.AbstractMatcher;
 
-import java.lang.reflect.Method;
+import org.jboss.resteasy.util.IsHttpMethod;
 
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.HEAD;
-import javax.ws.rs.HttpMethod;
-import javax.ws.rs.OPTIONS;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
+import java.lang.reflect.Method;
+import java.util.Set;
 
 /**
- * HttpMethodMatcher
+ * This class is used to see whether or not we should apply our security
+ * Intercepter to a method.  In actuality, this class is a bit of a no-op
+ * in the real application because RestEasy uses IsHttpMethod to pick up the
+ * ResourceMethods that it will handle.  However, we need this matcher for testing
+ * because we test with a AOP method intercepter which we don't want to apply
+ * to just plain public/protected methods.  Also note that this matcher runs
+ * on application deployment and not on every request.
  */
 public class HttpMethodMatcher extends AbstractMatcher<Method> {
     @Override
-    public boolean matches(Method t) {
-        return t.isAnnotationPresent(GET.class) ||
-            t.isAnnotationPresent(PUT.class) ||
-            t.isAnnotationPresent(DELETE.class) ||
-            t.isAnnotationPresent(POST.class) ||
-            t.isAnnotationPresent(HEAD.class) ||
-            t.isAnnotationPresent(OPTIONS.class) ||
-            t.isAnnotationPresent(HttpMethod.class);
+    public boolean matches(Method m) {
+        Set<String> verbs = IsHttpMethod.getHttpMethods(m);
+        return verbs != null && !verbs.isEmpty();
     }
 }
