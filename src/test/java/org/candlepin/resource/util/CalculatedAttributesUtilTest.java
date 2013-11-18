@@ -25,8 +25,8 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
-import org.candlepin.policy.js.pooltype.PoolType;
-import org.candlepin.policy.js.pooltype.PoolTypeRules;
+import org.candlepin.policy.js.pooltype.PoolComplianceType;
+import org.candlepin.policy.js.pooltype.PoolComplianceTypeRules;
 import org.candlepin.policy.js.quantity.QuantityRules;
 import org.candlepin.policy.js.quantity.SuggestedQuantity;
 import org.candlepin.test.DatabaseTestFixture;
@@ -54,7 +54,7 @@ public class CalculatedAttributesUtilTest extends DatabaseTestFixture {
     private Consumer consumer;
 
     @Mock private QuantityRules quantityRules;
-    @Mock private PoolTypeRules poolTypeRules;
+    @Mock private PoolComplianceTypeRules poolTypeRules;
     private I18n i18n;
 
     @Before
@@ -88,7 +88,7 @@ public class CalculatedAttributesUtilTest extends DatabaseTestFixture {
             any(Consumer.class), any(Date.class))).
             thenReturn(suggested);
 
-        PoolType pt = new PoolType();
+        PoolComplianceType pt = new PoolComplianceType();
         pt.setRawPoolType("unknown");
         pt.translatePoolType(i18n);
         when(poolTypeRules.getPoolType(any(Pool.class))).
@@ -99,9 +99,9 @@ public class CalculatedAttributesUtilTest extends DatabaseTestFixture {
             attrUtil.buildCalculatedAttributes(pool1, consumer, date);
         assertTrue(attrs.containsKey("suggested_quantity"));
         verify(quantityRules).getSuggestedQuantity(pool1, consumer, date);
-        assertTrue(attrs.containsKey("pool_type"));
+        assertTrue(attrs.containsKey("compliance_type"));
         verify(poolTypeRules).getPoolType(pool1);
-        assertEquals("Other", attrs.get("pool_type"));
+        assertEquals("Other", attrs.get("compliance_type"));
     }
 
     @Test
@@ -121,7 +121,7 @@ public class CalculatedAttributesUtilTest extends DatabaseTestFixture {
             thenReturn(suggested);
 
         when(poolTypeRules.getPoolType(any(Pool.class))).
-            thenReturn(new PoolType());
+            thenReturn(new PoolComplianceType());
 
         Date date = new Date();
         Map<String, String> attrs =

@@ -22,7 +22,7 @@ import org.xnap.commons.i18n.I18n;
  * A class for holding and translating the
  * response from PoolTypeRules.
  */
-public class PoolType {
+public class PoolComplianceType {
 
     private String rawPoolType;
     private String poolType;

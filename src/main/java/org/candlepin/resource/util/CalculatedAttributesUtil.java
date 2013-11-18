@@ -16,8 +16,8 @@ package org.candlepin.resource.util;
 
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Pool;
-import org.candlepin.policy.js.pooltype.PoolType;
-import org.candlepin.policy.js.pooltype.PoolTypeRules;
+import org.candlepin.policy.js.pooltype.PoolComplianceType;
+import org.candlepin.policy.js.pooltype.PoolComplianceTypeRules;
 import org.candlepin.policy.js.quantity.QuantityRules;
 import org.candlepin.policy.js.quantity.SuggestedQuantity;
 import org.xnap.commons.i18n.I18n;
@@ -34,12 +34,12 @@ import java.util.Map;
 public class CalculatedAttributesUtil {
 
     private QuantityRules quantityRules;
-    private PoolTypeRules poolTypeRules;
+    private PoolComplianceTypeRules poolTypeRules;
     private I18n i18n;
 
     @Inject
     public CalculatedAttributesUtil(QuantityRules quantityRules,
-            PoolTypeRules poolTypeRules, I18n i18n) {
+            PoolComplianceTypeRules poolTypeRules, I18n i18n) {
         this.quantityRules = quantityRules;
         this.poolTypeRules = poolTypeRules;
         this.i18n = i18n;
@@ -48,9 +48,9 @@ public class CalculatedAttributesUtil {
     public Map<String, String> buildCalculatedAttributes(Pool p, Consumer c, Date date) {
         Map<String, String> attrMap = new HashMap<String, String>();
 
-        PoolType type = poolTypeRules.getPoolType(p);
+        PoolComplianceType type = poolTypeRules.getPoolType(p);
         type.translatePoolType(i18n);
-        attrMap.put("pool_type", type.getPoolType());
+        attrMap.put("compliance_type", type.getPoolType());
 
         if (c == null) {
             return attrMap;

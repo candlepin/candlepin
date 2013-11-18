@@ -29,7 +29,7 @@ import org.xnap.commons.i18n.I18nFactory;
  * Test translation of raw pool types from rules.js
  * into more readable types.
  */
-public class PoolTypeTest {
+public class PoolComplianceTypeTest {
 
     private I18n i18n;
 
@@ -42,31 +42,31 @@ public class PoolTypeTest {
 
     @Test
     public void standardTypeTest() {
-        PoolType pt = createPoolType("standard");
+        PoolComplianceType pt = createPoolType("standard");
         assertEquals("Standard", pt.getPoolType());
     }
 
     @Test
     public void stackableTypeTest() {
-        PoolType pt = createPoolType("stackable");
+        PoolComplianceType pt = createPoolType("stackable");
         assertEquals("Stackable", pt.getPoolType());
     }
 
     @Test
     public void unknownTypeTest() {
-        PoolType pt = createPoolType("unknown");
+        PoolComplianceType pt = createPoolType("unknown");
         assertEquals("Other", pt.getPoolType());
     }
 
     @Test
     public void uniqueStackableTypeTest() {
-        PoolType pt = createPoolType("unique stackable");
+        PoolComplianceType pt = createPoolType("unique stackable");
         assertEquals("Stackable only with other subscriptions", pt.getPoolType());
     }
 
     @Test
     public void multientTypeTest() {
-        PoolType pt = createPoolType("multi entitlement");
+        PoolComplianceType pt = createPoolType("multi entitlement");
         assertEquals("Multi-Entitleable", pt.getPoolType());
     }
 
@@ -76,7 +76,7 @@ public class PoolTypeTest {
      */
     @Test
     public void defaultTypeTest() {
-        PoolType pt = createPoolType("not a real pool type");
+        PoolComplianceType pt = createPoolType("not a real pool type");
         assertEquals("not a real pool type", pt.getPoolType());
     }
 
@@ -84,8 +84,8 @@ public class PoolTypeTest {
      * Creates a PoolType, as would be returned from
      * PoolTypeRules, and translates it.
      */
-    private PoolType createPoolType(String rawType) {
-        PoolType result = new PoolType();
+    private PoolComplianceType createPoolType(String rawType) {
+        PoolComplianceType result = new PoolComplianceType();
         result.setRawPoolType(rawType);
         result.translatePoolType(i18n);
         return result;

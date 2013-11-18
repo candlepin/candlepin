@@ -133,7 +133,7 @@ describe 'Entitlements' do
     box.consume_product(@super_awesome.id)
     ents = box.list_entitlements()
     ents.should have(1).things
-    ents[0]['pool']['calculatedAttributes']['pool_type'].should == 'Standard'
+    ents[0]['pool']['calculatedAttributes']['compliance_type'].should == 'Standard'
   end
   private
 

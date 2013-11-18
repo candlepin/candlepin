@@ -36,9 +36,9 @@ import org.mockito.MockitoAnnotations;
  * untranslated pool type responses from poolType
  * rules
  */
-public class PoolTypeRulesTest {
+public class PoolComplianceTypeRulesTest {
 
-    private PoolTypeRules poolTypeRules;
+    private PoolComplianceTypeRules poolTypeRules;
 
     @Mock private EntitlementCurator entCurator;
     @Mock private RulesCurator rulesCuratorMock;
@@ -54,7 +54,7 @@ public class PoolTypeRulesTest {
         when(rulesCuratorMock.getUpdated()).thenReturn(new Date());
         when(rulesCuratorMock.getRules()).thenReturn(rules);
         provider = new JsRunnerProvider(rulesCuratorMock);
-        poolTypeRules = new PoolTypeRules(provider.get());
+        poolTypeRules = new PoolComplianceTypeRules(provider.get());
     }
 
     /*
@@ -64,7 +64,7 @@ public class PoolTypeRulesTest {
     @Test
     public void testStandardPool() {
         Pool p = new Pool();
-        PoolType pt = poolTypeRules.getPoolType(p);
+        PoolComplianceType pt = poolTypeRules.getPoolType(p);
         assertEquals("standard", pt.getRawPoolType());
     }
 
@@ -73,7 +73,7 @@ public class PoolTypeRulesTest {
         Pool p = new Pool();
         p.setProductAttribute("stacking_id", "5", "test");
         p.setProductAttribute("multi-entitlement", "yes", "test");
-        PoolType pt = poolTypeRules.getPoolType(p);
+        PoolComplianceType pt = poolTypeRules.getPoolType(p);
         assertEquals("stackable", pt.getRawPoolType());
     }
 
@@ -85,7 +85,7 @@ public class PoolTypeRulesTest {
     public void testUniqueStackablePool() {
         Pool p = new Pool();
         p.setProductAttribute("stacking_id", "5", "test");
-        PoolType pt = poolTypeRules.getPoolType(p);
+        PoolComplianceType pt = poolTypeRules.getPoolType(p);
         assertEquals("unique stackable", pt.getRawPoolType());
     }
 
@@ -95,7 +95,7 @@ public class PoolTypeRulesTest {
         p.setProductAttribute("stacking_id", "5", "test");
         p.setProductAttribute("multi-entitlement", "yes", "test");
         p.setProductAttribute("instance_multiplier", "2", "test");
-        PoolType pt = poolTypeRules.getPoolType(p);
+        PoolComplianceType pt = poolTypeRules.getPoolType(p);
         assertEquals("instance based", pt.getRawPoolType());
     }
 
@@ -107,7 +107,7 @@ public class PoolTypeRulesTest {
     public void testUnknownPool() {
         Pool p = new Pool();
         p.setProductAttribute("instance_multiplier", "2", "test");
-        PoolType pt = poolTypeRules.getPoolType(p);
+        PoolComplianceType pt = poolTypeRules.getPoolType(p);
         assertEquals("unknown", pt.getRawPoolType());
     }
 }

@@ -29,28 +29,28 @@ import com.google.inject.Inject;
  * of pool we are considering in order to display
  * for a consumer.
  */
-public class PoolTypeRules {
+public class PoolComplianceTypeRules {
 
     private JsRunner jsRules;
     private RulesObjectMapper mapper;
-    private static Logger log = Logger.getLogger(PoolTypeRules.class);
+    private static Logger log = Logger.getLogger(PoolComplianceTypeRules.class);
 
     @Inject
-    public PoolTypeRules(JsRunner jsRules) {
+    public PoolComplianceTypeRules(JsRunner jsRules) {
         this.jsRules = jsRules;
 
         mapper = RulesObjectMapper.instance();
         jsRules.init("pool_type_name_space");
     }
 
-    public PoolType getPoolType(Pool p) {
+    public PoolComplianceType getPoolType(Pool p) {
         JsonJsContext args = new JsonJsContext(mapper);
 
         args.put("pool", p);
         args.put("log", log, false);
 
         String json = jsRules.runJsFunction(String.class, "get_pool_type", args);
-        PoolType dto = mapper.toObject(json, PoolType.class);
+        PoolComplianceType dto = mapper.toObject(json, PoolComplianceType.class);
         return dto;
     }
 }
