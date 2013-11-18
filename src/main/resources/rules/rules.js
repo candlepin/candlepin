@@ -2736,19 +2736,23 @@ var PoolType = {
         var multiEnt = Quantity.allows_multi_entitlement(pool);
         var isInstanceBased = pool.hasProductAttribute(INSTANCE_ATTRIBUTE);
         if (isInstanceBased) {
-            return "instance based";
+            if (multiEnt && hasStacking) {
+                return "instance based";
+            }
         }
-        else if (hasStacking && multiEnt) {
-            return "stackable";
-        }
-        else if (!hasStacking && multiEnt) {
-            return "multi entitlement";
-        }
-        else if (hasStacking && !multiEnt) {
-            return "unique stackable";
-        }
-        else if (!hasStacking && !multiEnt && !isInstanceBased) {
-            return "standard";
+        else {
+            if (hasStacking && multiEnt) {
+                return "stackable";
+            }
+            else if (!hasStacking && multiEnt) {
+                return "multi entitlement";
+            }
+            else if (hasStacking && !multiEnt) {
+                return "unique stackable";
+            }
+            else if (!hasStacking && !multiEnt) {
+                return "standard";
+            }
         }
         return "unknown";
     },

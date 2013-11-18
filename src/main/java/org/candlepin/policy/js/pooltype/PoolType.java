@@ -18,6 +18,9 @@ import org.xnap.commons.i18n.I18n;
 
 /**
  * PoolType
+ *
+ * A class for holding and translating the
+ * response from PoolTypeRules.
  */
 public class PoolType {
 
@@ -44,7 +47,7 @@ public class PoolType {
         if (rawType == null ||
                 rawType.equals("") ||
                 rawType.equals("unknown")) {
-            return i18n.tr("Unknown");
+            return i18n.tr("Other");
         }
         if (rawType.equals("instance based")) {
             return i18n.tr("Instance Based");

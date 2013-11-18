@@ -24,8 +24,13 @@ import com.google.inject.Inject;
 
 /**
  * PoolTypeRules
+ *
+ * A class to use the rules to determine the type
+ * of pool we are considering in order to display
+ * for a consumer.
  */
 public class PoolTypeRules {
+
     private JsRunner jsRules;
     private RulesObjectMapper mapper;
     private static Logger log = Logger.getLogger(PoolTypeRules.class);

@@ -101,7 +101,7 @@ public class CalculatedAttributesUtilTest extends DatabaseTestFixture {
         verify(quantityRules).getSuggestedQuantity(pool1, consumer, date);
         assertTrue(attrs.containsKey("pool_type"));
         verify(poolTypeRules).getPoolType(pool1);
-        assertEquals("Unknown", attrs.get("pool_type"));
+        assertEquals("Other", attrs.get("pool_type"));
     }
 
     @Test
