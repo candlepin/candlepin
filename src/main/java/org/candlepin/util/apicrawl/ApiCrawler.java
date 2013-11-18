@@ -23,6 +23,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import javax.ws.rs.DELETE;
+import javax.ws.rs.HEAD;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -57,6 +58,7 @@ public class ApiCrawler {
         httpClasses.add(POST.class);
         httpClasses.add(PUT.class);
         httpClasses.add(DELETE.class);
+        httpClasses.add(HEAD.class);
 
         // jackson schema generation in the 1.x series breaks when you have a cycle in your
         // schema graph (ie, owner defines a parent owner. even though they aren't the same
