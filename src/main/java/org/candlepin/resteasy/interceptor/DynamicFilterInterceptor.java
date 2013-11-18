@@ -14,6 +14,7 @@
  */
 package org.candlepin.resteasy.interceptor;
 
+import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -39,6 +40,14 @@ import com.google.inject.Inject;
 
 /**
  * DynamicFilterInterceptor
+ *
+ * A class to intercept api calls, and filter the json response based
+ * on "include" and "exclude" parameter arrays.
+ *
+ * If an attribute name is mistyped, we want to continue gracefully
+ * with no messages.  It is important in order to preserve compatibility.
+ *
+ * This supports subtypes, ex: ?exclude=owner.href
  */
 @Provider
 @ServerInterceptor
@@ -48,7 +57,7 @@ public class DynamicFilterInterceptor implements PreProcessInterceptor,
 
     private static ThreadLocal<Set<String>> attributes = new ThreadLocal<Set<String>>();
     private static ThreadLocal<Boolean> blacklist = new ThreadLocal<Boolean>();
-    
+
     private I18n i18n;
 
     @Inject
@@ -88,38 +97,77 @@ public class DynamicFilterInterceptor implements PreProcessInterceptor,
     public void postProcess(ServerResponse response) {
         Object obj = response.getEntity();
         if (!attributes.get().isEmpty()) {
-            this.addFilters(obj);
+            this.addFilters(obj, attributes.get());
         }
     }
 
-    private void addFilters(Object obj) {
+    private void addFilters(Object obj, Set<String> attributes) {
         if (obj instanceof Collection) {
             Collection<?> collection = (Collection<?>) obj;
             for (Object o : collection) {
-                addFilters(o);
+                addFilters(o, attributes);
             }
         }
         if (obj instanceof Map) {
             Map<?, ?> map = (Map<?, ?>) obj;
             for (Object o : map.keySet()) {
-                addFilters(o);
-                addFilters(map.get(o));
+                addFilters(o, attributes);
+                addFilters(map.get(o), attributes);
             }
         }
         else if (obj instanceof DynamicFilterable) {
             //If the object is dynamically filterable, add filter options
             DynamicFilterable df = (DynamicFilterable) obj;
             df.setBlacklist(blacklist.get());
-            if (blacklist.get()) {
-                for (String filter : attributes.get()) {
-                    df.filterAttribute(filter);
-                }
-            }
-            else {
-                for (String allow : attributes.get()) {
-                    df.allowAttribute(allow);
+            for (String attr : attributes) {
+                if (addFiltersSubObject(obj, attr)) {
+                    if (blacklist.get()) {
+                        df.filterAttribute(attr);
+                    }
+                    else {
+                        df.allowAttribute(attr);
+                    }
                 }
             }
         }
+    }
+
+    /*
+     * This method is used for attributes in encapsulated classes.
+     *
+     * Returns true if the attribute was not handled for encapsulated classes
+     * This method always allows the local attribute if there is an encapsulated
+     * class, even if it is not valid/serialized.
+     */
+    private boolean addFiltersSubObject(Object obj, String attr) {
+        boolean proceed = true;
+        int index = attr.indexOf('.');
+        if (index != -1 && index != attr.length() - 1) {
+            DynamicFilterable df = (DynamicFilterable) obj;
+            String localAttr = attr.substring(0, index);
+            df.allowAttribute(localAttr);
+            proceed = false;
+            String subAttrs = attr.substring(index + 1);
+            try {
+                // "is" getter should only be used for booleans.
+                // here we only care about objects.
+                String getterName = "get" + localAttr.substring(0, 1).toUpperCase();
+                if (localAttr.length() > 1) {
+                    getterName += localAttr.substring(1);
+                }
+                Method getter = obj.getClass().getMethod(getterName, new Class[] {});
+                Object result = getter.invoke(obj);
+                Set<String> sublist = new HashSet<String>();
+                sublist.add(subAttrs);
+                addFilters(result, sublist);
+            }
+            catch (Exception e) {
+                // This doesn't need to be more sever than a debug log because
+                // it may be hit with a bad filter option.  Probably not worth
+                // the time to log the entire exception either.
+                log.debug("failed to set filters on sub-object " + e.getMessage());
+            }
+        }
+        return proceed;
     }
 }

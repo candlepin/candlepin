@@ -85,8 +85,10 @@ public abstract class AbstractHibernateObject implements Persisted,
 
     @XmlTransient
     public void setBlacklist(boolean blacklist) {
-        this.blacklist = blacklist;
-        this.filterList = new HashSet<String>();
+        if (this.blacklist != blacklist || this.filterList == null) {
+            this.blacklist = blacklist;
+            this.filterList = new HashSet<String>();
+        }
     }
 
     @XmlTransient
