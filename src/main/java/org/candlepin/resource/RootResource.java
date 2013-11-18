@@ -59,6 +59,7 @@ public class RootResource {
         RESOURCE_CLASSES.add(UserResource.class);
         RESOURCE_CLASSES.add(AtomFeedResource.class);
         RESOURCE_CLASSES.add(CertificateSerialResource.class);
+        RESOURCE_CLASSES.add(CdnResource.class);
         RESOURCE_CLASSES.add(ConsumerResource.class);
         RESOURCE_CLASSES.add(ConsumerTypeResource.class);
         RESOURCE_CLASSES.add(ContentResource.class);
