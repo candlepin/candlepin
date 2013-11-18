@@ -16,22 +16,29 @@ package org.candlepin.jackson;
 
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.map.SerializerProvider;
-import org.codehaus.jackson.map.ser.BeanPropertyFilter;
 import org.codehaus.jackson.map.ser.BeanPropertyWriter;
 
 /**
  * DynamicPropertyFilter
  */
-public class DynamicPropertyFilter implements BeanPropertyFilter {
+public class DynamicPropertyFilter extends JsonBeanPropertyFilter {
+
+    public boolean isSerializable(Object obj, JsonGenerator jsonGenerator,
+        SerializerProvider serializerProvider, BeanPropertyWriter writer) {
+        if (obj instanceof DynamicFilterable) {
+            DynamicFilterable df = (DynamicFilterable) obj;
+            if (!df.isAttributeFiltered(writer.getName())) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     @Override
     public void serializeAsField(Object obj, JsonGenerator jsonGenerator,
         SerializerProvider serializerProvider, BeanPropertyWriter writer) throws Exception {
-        if (obj instanceof DynamicFilterable) {
-            DynamicFilterable df = (DynamicFilterable) obj;
-            if (!df.isAttributeFiltered(writer.getName())) {
-                writer.serializeAsField(obj, jsonGenerator, serializerProvider);
-            }
+        if (isSerializable(obj, jsonGenerator, serializerProvider, writer)) {
+            writer.serializeAsField(obj, jsonGenerator, serializerProvider);
         }
     }
 }

@@ -81,12 +81,6 @@ public class JsonProvider extends JacksonJsonProvider {
             new HateoasBeanPropertyFilter());
         filterProvider = filterProvider.addFilter("OwnerFilter",
             new HateoasBeanPropertyFilter());
-        filterProvider = filterProvider.addFilter("ConsumerFilter",
-            new DynamicPropertyFilter());
-        filterProvider = filterProvider.addFilter("EntitlementFilter",
-            new DynamicPropertyFilter());
-        filterProvider = filterProvider.addFilter("OwnerFilter",
-            new DynamicPropertyFilter());
         filterProvider = filterProvider.addFilter("DynamicFilter",
             new DynamicPropertyFilter());
         filterProvider.setFailOnUnknownId(false);
