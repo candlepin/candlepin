@@ -25,7 +25,7 @@ import org.slf4j.Marker;
 
 /**
  * This filter accepts events based on whether the log event is greater than
- * or equal to the level of the key parameter in the MDC on whether the
+ * or equal to the level of the key parameter in the MDC and on whether the
  * originating logger is a child of the topLogger parameter.
  */
 public class LoggerAndMDCFilter extends MatchingFilter {
