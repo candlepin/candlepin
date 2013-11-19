@@ -118,14 +118,14 @@ public class DynamicFilterInterceptor implements PreProcessInterceptor,
         else if (obj instanceof DynamicFilterable) {
             //If the object is dynamically filterable, add filter options
             DynamicFilterable df = (DynamicFilterable) obj;
-            df.setBlacklist(blacklist.get());
+            df.setExcluding(blacklist.get());
             for (String attr : attributes) {
                 if (addFiltersSubObject(obj, attr)) {
                     if (blacklist.get()) {
-                        df.filterAttribute(attr);
+                        df.excludeAttribute(attr);
                     }
                     else {
-                        df.allowAttribute(attr);
+                        df.includeAttribute(attr);
                     }
                 }
             }
@@ -145,7 +145,7 @@ public class DynamicFilterInterceptor implements PreProcessInterceptor,
         if (index != -1 && index != attr.length() - 1) {
             DynamicFilterable df = (DynamicFilterable) obj;
             String localAttr = attr.substring(0, index);
-            df.allowAttribute(localAttr);
+            df.includeAttribute(localAttr);
             proceed = false;
             String subAttrs = attr.substring(index + 1);
             try {

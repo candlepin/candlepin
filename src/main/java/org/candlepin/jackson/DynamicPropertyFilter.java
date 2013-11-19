@@ -20,6 +20,9 @@ import org.codehaus.jackson.map.ser.BeanPropertyWriter;
 
 /**
  * DynamicPropertyFilter
+ *
+ * Class to filter objects on a per-object basis, based upon
+ * query parameters.
  */
 public class DynamicPropertyFilter extends JsonBeanPropertyFilter {
 

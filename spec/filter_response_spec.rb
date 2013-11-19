@@ -24,8 +24,8 @@ describe 'Response JSON Filtering' do
   end
 
   it "should allow a single filter" do
-    consumer_full = @cp.get("/consumers/"+@consumer1.uuid)
-    consumer_filtered = @cp.get("/consumers/"+@consumer1.uuid+"?exclude=href")
+    consumer_full = @cp.get("/consumers/#{@consumer1.uuid}")
+    consumer_filtered = @cp.get("/consumers/#{@consumer1.uuid}?exclude=href")
     newdict = hash_diff(consumer_full, consumer_filtered)
     # There should only be one changed key
     newdict.keys.size.should == 1
@@ -34,8 +34,8 @@ describe 'Response JSON Filtering' do
   end
 
   it "should allow a multiple filters" do
-    consumer_full = @cp.get("/consumers/"+@consumer1.uuid)
-    consumer_filtered = @cp.get("/consumers/"+@consumer1.uuid+"?exclude=href&exclude=facts")
+    consumer_full = @cp.get("/consumers/#{@consumer1.uuid}")
+    consumer_filtered = @cp.get("/consumers/#{@consumer1.uuid}?exclude=href&exclude=facts")
     newdict = hash_diff(consumer_full, consumer_filtered)
     # There should only be one changed key
     newdict.keys.size.should == 2
@@ -45,14 +45,14 @@ describe 'Response JSON Filtering' do
   end
 
   it "should allow a single include" do
-    consumer_filtered = @cp.get("/consumers/"+@consumer1.uuid+"?include=href")
+    consumer_filtered = @cp.get("/consumers/#{@consumer1.uuid}?include=href")
     consumer_filtered.keys.size.should == 1
     # there should be only href in the new response
     consumer_filtered["href"].should_not == nil
   end
 
   it "should allow multiple includes" do
-    consumer_filtered = @cp.get("/consumers/"+@consumer1.uuid+"?include=href&include=facts")
+    consumer_filtered = @cp.get("/consumers/#{@consumer1.uuid}?include=href&include=facts")
     consumer_filtered.keys.size.should == 2
     # there should be only href or facts in the new response
     consumer_filtered["href"].should_not == nil
@@ -60,7 +60,7 @@ describe 'Response JSON Filtering' do
   end
 
   it 'should allow filters on encapsulated objects' do
-    consumer_filtered = @cp.get("/consumers/"+@consumer1.uuid+"?include=id&include=owner.id")
+    consumer_filtered = @cp.get("/consumers/#{@consumer1.uuid}?include=id&include=owner.id")
     consumer_filtered.keys.size.should == 2
     consumer_filtered["id"].should_not == nil
     consumer_filtered["owner"].keys.size.should == 1

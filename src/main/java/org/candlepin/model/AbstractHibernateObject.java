@@ -48,7 +48,7 @@ public abstract class AbstractHibernateObject implements Persisted,
     @Transient
     private Set<String> filterList;
     @Transient
-    private boolean blacklist = false;
+    private boolean excluding = true;
 
     @PrePersist
     protected void onCreate() {
@@ -84,9 +84,9 @@ public abstract class AbstractHibernateObject implements Persisted,
     }
 
     @XmlTransient
-    public void setBlacklist(boolean blacklist) {
-        if (this.blacklist != blacklist || this.filterList == null) {
-            this.blacklist = blacklist;
+    public void setExcluding(boolean excluding) {
+        if (this.excluding != excluding || this.filterList == null) {
+            this.excluding = excluding;
             this.filterList = new HashSet<String>();
         }
     }
@@ -94,19 +94,19 @@ public abstract class AbstractHibernateObject implements Persisted,
     @XmlTransient
     public boolean isAttributeFiltered(String attribute) {
         return filterList != null && // Break off early if filterList is null
-            (blacklist && filterList.contains(attribute) ||
-            !blacklist && !filterList.contains(attribute));
+            (excluding && filterList.contains(attribute) ||
+            !excluding && !filterList.contains(attribute));
     }
 
     @XmlTransient
-    public void filterAttribute(String attribute) {
+    public void excludeAttribute(String attribute) {
         if (filterList == null) {
             //first call decides whether we are using a blacklist or whitelist
-            blacklist = true;
+            excluding = true;
             filterList = new HashSet<String>();
         }
         // Works differently if we are using blacklist/whitelist
-        if (blacklist) {
+        if (excluding) {
             filterList.add(attribute);
         }
         else {
@@ -115,12 +115,12 @@ public abstract class AbstractHibernateObject implements Persisted,
     }
 
     @XmlTransient
-    public void allowAttribute(String attribute) {
+    public void includeAttribute(String attribute) {
         if (filterList == null) {
-            blacklist = false;
+            excluding = false;
             filterList = new HashSet<String>();
         }
-        if (!blacklist) {
+        if (!excluding) {
             filterList.add(attribute);
         }
         else {
