@@ -21,7 +21,8 @@ import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.map.SerializerProvider;
 import org.codehaus.jackson.map.ser.BeanPropertyWriter;
@@ -34,7 +35,7 @@ import org.codehaus.jackson.map.ser.BeanPropertyWriter;
  */
 public class DynamicPropertyFilter extends CheckableBeanPropertyFilter {
 
-    private static Logger log = Logger.getLogger(DynamicPropertyFilter.class);
+    private static Logger log = LoggerFactory.getLogger(DynamicPropertyFilter.class);
 
     private static ThreadLocal<Set<String>> attributes = new ThreadLocal<Set<String>>();
     private static ThreadLocal<Boolean> excluding = new ThreadLocal<Boolean>();
