@@ -24,7 +24,7 @@ import java.lang.reflect.Method;
 /**
  * JsonBeanPropertyFilter
  */
-public abstract class JsonBeanPropertyFilter implements BeanPropertyFilter {
+public abstract class JsonBeanPropertyFilter extends CheckableBeanPropertyFilter {
 
     private static Logger log = LoggerFactory.getLogger(JsonBeanPropertyFilter.class);
 

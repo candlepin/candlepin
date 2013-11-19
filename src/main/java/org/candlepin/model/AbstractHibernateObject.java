@@ -16,19 +16,14 @@ package org.candlepin.model;
 
 import java.io.Serializable;
 import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
-import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 
-import org.candlepin.jackson.DynamicFilterable;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
 /**
@@ -37,18 +32,11 @@ import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 @MappedSuperclass
 @XmlType(name = "CandlepinObject")
 @JsonIgnoreProperties(ignoreUnknown = true)
-public abstract class AbstractHibernateObject implements Persisted,
-        Serializable, DynamicFilterable {
+public abstract class AbstractHibernateObject implements Persisted, Serializable {
     public static final String DEFAULT_SORT_FIELD = "created";
 
     private Date created;
     private Date updated;
-
-    // Attributes for dynamic filtering
-    @Transient
-    private Set<String> filterList;
-    @Transient
-    private boolean excluding = true;
 
     @PrePersist
     protected void onCreate() {
@@ -81,50 +69,5 @@ public abstract class AbstractHibernateObject implements Persisted,
 
     public void setUpdated(Date updated) {
         this.updated = updated;
-    }
-
-    @XmlTransient
-    public void setExcluding(boolean excluding) {
-        if (this.excluding != excluding || this.filterList == null) {
-            this.excluding = excluding;
-            this.filterList = new HashSet<String>();
-        }
-    }
-
-    @XmlTransient
-    public boolean isAttributeFiltered(String attribute) {
-        return filterList != null && // Break off early if filterList is null
-            (excluding && filterList.contains(attribute) ||
-            !excluding && !filterList.contains(attribute));
-    }
-
-    @XmlTransient
-    public void excludeAttribute(String attribute) {
-        if (filterList == null) {
-            //first call decides whether we are using a blacklist or whitelist
-            excluding = true;
-            filterList = new HashSet<String>();
-        }
-        // Works differently if we are using blacklist/whitelist
-        if (excluding) {
-            filterList.add(attribute);
-        }
-        else {
-            filterList.remove(attribute);
-        }
-    }
-
-    @XmlTransient
-    public void includeAttribute(String attribute) {
-        if (filterList == null) {
-            excluding = false;
-            filterList = new HashSet<String>();
-        }
-        if (!excluding) {
-            filterList.add(attribute);
-        }
-        else {
-            filterList.remove(attribute);
-        }
     }
 }

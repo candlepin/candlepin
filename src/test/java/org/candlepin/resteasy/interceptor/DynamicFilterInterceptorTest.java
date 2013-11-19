@@ -18,11 +18,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
-import java.io.Serializable;
 import java.util.Locale;
 
-import org.candlepin.jackson.DynamicFilterable;
-import org.candlepin.model.AbstractHibernateObject;
 import org.candlepin.pinsetter.core.PinsetterKernel;
 import org.jboss.resteasy.core.ResourceMethod;
 import org.jboss.resteasy.core.ServerResponse;
@@ -65,13 +62,13 @@ public class DynamicFilterInterceptorTest {
         interceptor.preProcess(req, rmethod);
 
         ServerResponse resp = new ServerResponse();
-        DynamicFilterable df = new DynamicFilterableForTesting("first", "second");
+        ClassForFilterTesting df = new ClassForFilterTesting("first", "second");
         resp.setEntity(df);
         interceptor.postProcess(resp);
-        assertFalse(df.isAttributeFiltered("attributeOne"));
-        assertFalse(df.isAttributeFiltered("attributeTwo"));
-        assertFalse(df.isAttributeFiltered("otherObjectOne"));
-        assertFalse(df.isAttributeFiltered("otherObjectTwo"));
+        assertFalse(DynamicFilterInterceptor.isAttributeExcluded("attributeOne", df));
+        assertFalse(DynamicFilterInterceptor.isAttributeExcluded("attributeTwo", df));
+        assertFalse(DynamicFilterInterceptor.isAttributeExcluded("otherObjectOne", df));
+        assertFalse(DynamicFilterInterceptor.isAttributeExcluded("otherObjectTwo", df));
     }
 
     @Test
@@ -81,13 +78,13 @@ public class DynamicFilterInterceptorTest {
         interceptor.preProcess(req, rmethod);
 
         ServerResponse resp = new ServerResponse();
-        DynamicFilterable df = new DynamicFilterableForTesting("first", "second");
+        ClassForFilterTesting df = new ClassForFilterTesting("first", "second");
         resp.setEntity(df);
         interceptor.postProcess(resp);
-        assertFalse(df.isAttributeFiltered("attributeOne"));
-        assertTrue(df.isAttributeFiltered("attributeTwo"));
-        assertFalse(df.isAttributeFiltered("otherObjectOne"));
-        assertFalse(df.isAttributeFiltered("otherObjectTwo"));
+        assertFalse(DynamicFilterInterceptor.isAttributeExcluded("attributeOne", df));
+        assertTrue(DynamicFilterInterceptor.isAttributeExcluded("attributeTwo", df));
+        assertFalse(DynamicFilterInterceptor.isAttributeExcluded("otherObjectOne", df));
+        assertFalse(DynamicFilterInterceptor.isAttributeExcluded("otherObjectTwo", df));
     }
 
     @Test
@@ -98,13 +95,13 @@ public class DynamicFilterInterceptorTest {
         interceptor.preProcess(req, rmethod);
 
         ServerResponse resp = new ServerResponse();
-        DynamicFilterable df = new DynamicFilterableForTesting("first", "second");
+        ClassForFilterTesting df = new ClassForFilterTesting("first", "second");
         resp.setEntity(df);
         interceptor.postProcess(resp);
-        assertFalse(df.isAttributeFiltered("attributeOne"));
-        assertTrue(df.isAttributeFiltered("attributeTwo"));
-        assertTrue(df.isAttributeFiltered("otherObjectOne"));
-        assertFalse(df.isAttributeFiltered("otherObjectTwo"));
+        assertFalse(DynamicFilterInterceptor.isAttributeExcluded("attributeOne", df));
+        assertTrue(DynamicFilterInterceptor.isAttributeExcluded("attributeTwo", df));
+        assertTrue(DynamicFilterInterceptor.isAttributeExcluded("otherObjectOne", df));
+        assertFalse(DynamicFilterInterceptor.isAttributeExcluded("otherObjectTwo", df));
     }
 
     @Test
@@ -115,19 +112,19 @@ public class DynamicFilterInterceptorTest {
         interceptor.preProcess(req, rmethod);
 
         ServerResponse resp = new ServerResponse();
-        DynamicFilterableForTesting df =
-            new DynamicFilterableForTesting("first", "second");
-        DynamicFilterableForTesting innerdf =
-            new DynamicFilterableForTesting("third", "fourth");
+        ClassForFilterTesting df =
+            new ClassForFilterTesting("first", "second");
+        ClassForFilterTesting innerdf =
+            new ClassForFilterTesting("third", "fourth");
         df.setOtherObjectOne(innerdf);
         resp.setEntity(df);
         interceptor.postProcess(resp);
-        assertFalse(df.isAttributeFiltered("attributeOne"));
-        assertTrue(df.isAttributeFiltered("attributeTwo"));
-        assertFalse(df.isAttributeFiltered("otherObjectOne"));
-        assertFalse(df.isAttributeFiltered("otherObjectTwo"));
-        assertTrue(innerdf.isAttributeFiltered("attributeOne"));
-        assertFalse(innerdf.isAttributeFiltered("attributeTwo"));
+        assertFalse(DynamicFilterInterceptor.isAttributeExcluded("attributeOne", df));
+        assertTrue(DynamicFilterInterceptor.isAttributeExcluded("attributeTwo", df));
+        assertFalse(DynamicFilterInterceptor.isAttributeExcluded("otherObjectOne", df));
+        assertFalse(DynamicFilterInterceptor.isAttributeExcluded("otherObjectTwo", df));
+        assertTrue(DynamicFilterInterceptor.isAttributeExcluded("attributeOne", innerdf));
+        assertFalse(DynamicFilterInterceptor.isAttributeExcluded("attributeTwo", innerdf));
     }
 
     @Test
@@ -137,13 +134,13 @@ public class DynamicFilterInterceptorTest {
         interceptor.preProcess(req, rmethod);
 
         ServerResponse resp = new ServerResponse();
-        DynamicFilterable df = new DynamicFilterableForTesting("first", "second");
+        ClassForFilterTesting df = new ClassForFilterTesting("first", "second");
         resp.setEntity(df);
         interceptor.postProcess(resp);
-        assertTrue(df.isAttributeFiltered("attributeOne"));
-        assertFalse(df.isAttributeFiltered("attributeTwo"));
-        assertTrue(df.isAttributeFiltered("otherObjectOne"));
-        assertTrue(df.isAttributeFiltered("otherObjectTwo"));
+        assertTrue(DynamicFilterInterceptor.isAttributeExcluded("attributeOne", df));
+        assertFalse(DynamicFilterInterceptor.isAttributeExcluded("attributeTwo", df));
+        assertTrue(DynamicFilterInterceptor.isAttributeExcluded("otherObjectOne", df));
+        assertTrue(DynamicFilterInterceptor.isAttributeExcluded("otherObjectTwo", df));
     }
 
     @Test
@@ -154,13 +151,13 @@ public class DynamicFilterInterceptorTest {
         interceptor.preProcess(req, rmethod);
 
         ServerResponse resp = new ServerResponse();
-        DynamicFilterable df = new DynamicFilterableForTesting("first", "second");
+        ClassForFilterTesting df = new ClassForFilterTesting("first", "second");
         resp.setEntity(df);
         interceptor.postProcess(resp);
-        assertTrue(df.isAttributeFiltered("attributeOne"));
-        assertFalse(df.isAttributeFiltered("attributeTwo"));
-        assertFalse(df.isAttributeFiltered("otherObjectOne"));
-        assertTrue(df.isAttributeFiltered("otherObjectTwo"));
+        assertTrue(DynamicFilterInterceptor.isAttributeExcluded("attributeOne", df));
+        assertFalse(DynamicFilterInterceptor.isAttributeExcluded("attributeTwo", df));
+        assertFalse(DynamicFilterInterceptor.isAttributeExcluded("otherObjectOne", df));
+        assertTrue(DynamicFilterInterceptor.isAttributeExcluded("otherObjectTwo", df));
     }
 
     @Test
@@ -171,29 +168,29 @@ public class DynamicFilterInterceptorTest {
         interceptor.preProcess(req, rmethod);
 
         ServerResponse resp = new ServerResponse();
-        DynamicFilterableForTesting df =
-            new DynamicFilterableForTesting("first", "second");
-        DynamicFilterableForTesting innerdf =
-            new DynamicFilterableForTesting("third", "fourth");
+        ClassForFilterTesting df =
+            new ClassForFilterTesting("first", "second");
+        ClassForFilterTesting innerdf =
+            new ClassForFilterTesting("third", "fourth");
         df.setOtherObjectOne(innerdf);
         resp.setEntity(df);
         interceptor.postProcess(resp);
-        assertTrue(df.isAttributeFiltered("attributeOne"));
-        assertFalse(df.isAttributeFiltered("attributeTwo"));
-        assertFalse(df.isAttributeFiltered("otherObjectOne"));
-        assertTrue(df.isAttributeFiltered("otherObjectTwo"));
-        assertFalse(innerdf.isAttributeFiltered("attributeOne"));
-        assertTrue(innerdf.isAttributeFiltered("attributeTwo"));
+        assertTrue(DynamicFilterInterceptor.isAttributeExcluded("attributeOne", df));
+        assertFalse(DynamicFilterInterceptor.isAttributeExcluded("attributeTwo", df));
+        assertFalse(DynamicFilterInterceptor.isAttributeExcluded("otherObjectOne", df));
+        assertTrue(DynamicFilterInterceptor.isAttributeExcluded("otherObjectTwo", df));
+        assertFalse(DynamicFilterInterceptor.isAttributeExcluded("attributeOne", innerdf));
+        assertTrue(DynamicFilterInterceptor.isAttributeExcluded("attributeTwo", innerdf));
     }
 
-    private class DynamicFilterableForTesting extends AbstractHibernateObject {
+    private class ClassForFilterTesting {
 
         private String attributeOne;
         private String attributeTwo;
-        private DynamicFilterableForTesting otherObjectOne;
-        private DynamicFilterableForTesting otherObjectTwo;
+        private ClassForFilterTesting otherObjectOne;
+        private ClassForFilterTesting otherObjectTwo;
 
-        public DynamicFilterableForTesting(String s1, String s2) {
+        public ClassForFilterTesting(String s1, String s2) {
             this.setAttributeOne(s1);
             this.setAttributeTwo(s2);
         }
@@ -214,25 +211,20 @@ public class DynamicFilterInterceptorTest {
             this.attributeTwo = attributeTwo;
         }
 
-        public DynamicFilterableForTesting getOtherObjectOne() {
+        public ClassForFilterTesting getOtherObjectOne() {
             return otherObjectOne;
         }
 
-        public void setOtherObjectOne(DynamicFilterableForTesting otherObjectOne) {
+        public void setOtherObjectOne(ClassForFilterTesting otherObjectOne) {
             this.otherObjectOne = otherObjectOne;
         }
 
-        public DynamicFilterableForTesting getOtherObjectTwo() {
+        public ClassForFilterTesting getOtherObjectTwo() {
             return otherObjectTwo;
         }
 
-        public void setOtherObjectTwo(DynamicFilterableForTesting otherObjectTwo) {
+        public void setOtherObjectTwo(ClassForFilterTesting otherObjectTwo) {
             this.otherObjectTwo = otherObjectTwo;
-        }
-
-        @Override
-        public Serializable getId() {
-            return null;
         }
     }
 }

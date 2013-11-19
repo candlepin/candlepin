@@ -16,6 +16,7 @@ package org.candlepin.resteasy.interceptor;
 
 import java.lang.reflect.Method;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -26,7 +27,6 @@ import javax.ws.rs.ext.Provider;
 
 import org.apache.log4j.Logger;
 import org.candlepin.exceptions.BadRequestException;
-import org.candlepin.jackson.DynamicFilterable;
 import org.jboss.resteasy.annotations.interception.ServerInterceptor;
 import org.jboss.resteasy.core.ResourceMethod;
 import org.jboss.resteasy.core.ServerResponse;
@@ -56,7 +56,9 @@ public class DynamicFilterInterceptor implements PreProcessInterceptor,
     private static Logger log = Logger.getLogger(DynamicFilterInterceptor.class);
 
     private static ThreadLocal<Set<String>> attributes = new ThreadLocal<Set<String>>();
-    private static ThreadLocal<Boolean> blacklist = new ThreadLocal<Boolean>();
+    private static ThreadLocal<Boolean> excluding = new ThreadLocal<Boolean>();
+    private static ThreadLocal<Map<Object, Set<String>>> filterMappings
+        = new ThreadLocal<Map<Object, Set<String>>>();
 
     private I18n i18n;
 
@@ -74,7 +76,7 @@ public class DynamicFilterInterceptor implements PreProcessInterceptor,
         boolean containsIncl = queryParams.containsKey("include");
         // We wait the list to be a blacklist by default when neither include
         // nor exclude is provided, so we don't accidentally filter anything
-        blacklist.set(!containsIncl);
+        excluding.set(!containsIncl);
         // Cannot do both types of filtering together
         if (containsExcl && containsIncl) {
             throw new BadRequestException(
@@ -96,7 +98,8 @@ public class DynamicFilterInterceptor implements PreProcessInterceptor,
     @Override
     public void postProcess(ServerResponse response) {
         Object obj = response.getEntity();
-        if (!attributes.get().isEmpty()) {
+        if (!getAttributes().isEmpty()) {
+            filterMappings.set(new HashMap<Object, Set<String>>());
             this.addFilters(obj, attributes.get());
         }
     }
@@ -115,18 +118,10 @@ public class DynamicFilterInterceptor implements PreProcessInterceptor,
                 addFilters(map.get(o), attributes);
             }
         }
-        else if (obj instanceof DynamicFilterable) {
-            //If the object is dynamically filterable, add filter options
-            DynamicFilterable df = (DynamicFilterable) obj;
-            df.setExcluding(blacklist.get());
+        else {
             for (String attr : attributes) {
                 if (addFiltersSubObject(obj, attr)) {
-                    if (blacklist.get()) {
-                        df.excludeAttribute(attr);
-                    }
-                    else {
-                        df.includeAttribute(attr);
-                    }
+                    addAttributeMapping(obj, attr);
                 }
             }
         }
@@ -143,9 +138,8 @@ public class DynamicFilterInterceptor implements PreProcessInterceptor,
         boolean proceed = true;
         int index = attr.indexOf('.');
         if (index != -1 && index != attr.length() - 1) {
-            DynamicFilterable df = (DynamicFilterable) obj;
             String localAttr = attr.substring(0, index);
-            df.includeAttribute(localAttr);
+            allowAttribute(obj, localAttr);
             proceed = false;
             String subAttrs = attr.substring(index + 1);
             try {
@@ -169,5 +163,62 @@ public class DynamicFilterInterceptor implements PreProcessInterceptor,
             }
         }
         return proceed;
+    }
+
+    private static Set<String> getAttributes() {
+        return attributes.get();
+    }
+
+    private static boolean getExcluding() {
+        return excluding.get();
+    }
+
+    private static Map<Object, Set<String>> getFilterMappings() {
+        return filterMappings.get();
+    }
+
+    private static void allowAttribute(Object obj, String attr) {
+        Map<Object, Set<String>> mapping = getFilterMappings();
+        if (getExcluding()) {
+            if (mapping.containsKey(obj)) {
+                mapping.get(obj).remove(attr);
+            }
+        }
+        else {
+            if (!mapping.containsKey(obj) || !mapping.get(obj).contains(obj)) {
+                addAttributeMapping(obj, attr);
+            }
+        }
+    }
+
+    private static void addAttributeMapping(Object obj, String attr) {
+        Map<Object, Set<String>> mapping = getFilterMappings();
+        if (!mapping.containsKey(obj)) {
+            mapping.put(obj, new HashSet<String>());
+        }
+        mapping.get(obj).add(attr);
+    }
+
+    public static boolean isAttributeExcluded(String attribute, Object obj) {
+        if (getAttributes() == null || getFilterMappings() == null) {
+            return false;
+        }
+        if (getExcluding()) {
+            if (!getFilterMappings().containsKey(obj)) {
+                return false;
+            }
+            else {
+                return getFilterMappings().get(obj).contains(attribute);
+            }
+        }
+        else {
+            // whitelist
+            if (!getFilterMappings().containsKey(obj)) {
+                return true;
+            }
+            else {
+                return !getFilterMappings().get(obj).contains(attribute);
+            }
+        }
     }
 }

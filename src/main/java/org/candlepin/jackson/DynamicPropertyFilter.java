@@ -14,6 +14,7 @@
  */
 package org.candlepin.jackson;
 
+import org.candlepin.resteasy.interceptor.DynamicFilterInterceptor;
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.map.SerializerProvider;
 import org.codehaus.jackson.map.ser.BeanPropertyWriter;
@@ -24,24 +25,10 @@ import org.codehaus.jackson.map.ser.BeanPropertyWriter;
  * Class to filter objects on a per-object basis, based upon
  * query parameters.
  */
-public class DynamicPropertyFilter extends JsonBeanPropertyFilter {
+public class DynamicPropertyFilter extends CheckableBeanPropertyFilter {
 
     public boolean isSerializable(Object obj, JsonGenerator jsonGenerator,
         SerializerProvider serializerProvider, BeanPropertyWriter writer) {
-        if (obj instanceof DynamicFilterable) {
-            DynamicFilterable df = (DynamicFilterable) obj;
-            if (!df.isAttributeFiltered(writer.getName())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    @Override
-    public void serializeAsField(Object obj, JsonGenerator jsonGenerator,
-        SerializerProvider serializerProvider, BeanPropertyWriter writer) throws Exception {
-        if (isSerializable(obj, jsonGenerator, serializerProvider, writer)) {
-            writer.serializeAsField(obj, jsonGenerator, serializerProvider);
-        }
+        return !DynamicFilterInterceptor.isAttributeExcluded(writer.getName(), obj);
     }
 }

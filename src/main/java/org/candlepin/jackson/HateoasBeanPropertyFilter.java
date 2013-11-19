@@ -26,14 +26,10 @@ import org.codehaus.jackson.map.ser.BeanPropertyWriter;
  * will be included in the resulting JSON. Otherwise we will serialize the
  * object normally.
  */
-public class HateoasBeanPropertyFilter extends DynamicPropertyFilter {
+public class HateoasBeanPropertyFilter extends JsonBeanPropertyFilter {
 
-    @Override
     public boolean isSerializable(Object obj, JsonGenerator jsonGenerator,
         SerializerProvider serializerProvider, BeanPropertyWriter writer) {
-        if (!super.isSerializable(obj, jsonGenerator, serializerProvider, writer)) {
-            return false;
-        }
         JsonStreamContext context = jsonGenerator.getOutputContext();
 
         if ((context.getParent() != null) && (context.getParent().inArray())) {
