@@ -17,7 +17,6 @@ package org.candlepin.guice;
 import org.candlepin.audit.EventSink;
 import org.candlepin.audit.EventSinkImpl;
 import org.candlepin.auth.Principal;
-import org.candlepin.auth.interceptor.SecurityInterceptor;
 import org.candlepin.config.Config;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.CrlGenerator;
@@ -47,8 +46,8 @@ import org.candlepin.pinsetter.core.PinsetterKernel;
 import org.candlepin.pinsetter.tasks.CertificateRevocationListTask;
 import org.candlepin.pinsetter.tasks.EntitlerJob;
 import org.candlepin.pinsetter.tasks.JobCleaner;
-import org.candlepin.pinsetter.tasks.SweepBarJob;
 import org.candlepin.pinsetter.tasks.RefreshPoolsJob;
+import org.candlepin.pinsetter.tasks.SweepBarJob;
 import org.candlepin.pinsetter.tasks.UnpauseJob;
 import org.candlepin.pki.PKIReader;
 import org.candlepin.pki.PKIUtility;
@@ -105,17 +104,16 @@ import org.candlepin.util.DateSource;
 import org.candlepin.util.DateSourceImpl;
 import org.candlepin.util.ExpiryDateFunction;
 import org.candlepin.util.X509ExtensionUtil;
-import org.quartz.JobListener;
-import org.quartz.spi.JobFactory;
-import org.xnap.commons.i18n.I18n;
 
 import com.google.common.base.Function;
 import com.google.inject.AbstractModule;
 import com.google.inject.Singleton;
-import com.google.inject.matcher.Matcher;
-import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Names;
 import com.google.inject.persist.jpa.JpaPersistModule;
+
+import org.quartz.JobListener;
+import org.quartz.spi.JobFactory;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * CandlepinProductionConfiguration
@@ -224,15 +222,6 @@ public class CandlepinModule extends AbstractModule {
 
         //UeberCerts
         bind(UeberCertificateGenerator.class);
-
-        // The order in which interceptors are bound is important!
-        // We need role enforcement to be executed before access control
-        Matcher resourcePkgMatcher = Matchers.inPackage(Package.getPackage(
-            "org.candlepin.resource"));
-        SecurityInterceptor securityEnforcer = new SecurityInterceptor();
-        requestInjection(securityEnforcer);
-        bindInterceptor(resourcePkgMatcher,
-                Matchers.any(), securityEnforcer);
 
         // flexible end date for identity certificates
         bind(Function.class).annotatedWith(Names.named("endDateGenerator"))

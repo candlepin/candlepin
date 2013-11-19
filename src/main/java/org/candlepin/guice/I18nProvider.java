@@ -14,19 +14,20 @@
  */
 package org.candlepin.guice;
 
-import java.util.Locale;
-import java.util.concurrent.ConcurrentHashMap;
-
-import javax.servlet.http.HttpServletRequest;
-
-import org.apache.log4j.Logger;
-import org.xnap.commons.i18n.I18n;
-import org.xnap.commons.i18n.I18nFactory;
-
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Provider;
 import com.google.inject.ProvisionException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.xnap.commons.i18n.I18n;
+import org.xnap.commons.i18n.I18nFactory;
+
+import java.util.Locale;
+import java.util.concurrent.ConcurrentHashMap;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * I18nProvider
@@ -36,7 +37,7 @@ public class I18nProvider implements Provider<I18n> {
 
     public static final String BASENAME = "org.candlepin.i18n.Messages";
 
-    private static Logger log = Logger.getLogger(I18nProvider.class);
+    private static Logger log = LoggerFactory.getLogger(I18nProvider.class);
 
     private static ConcurrentHashMap<Locale, I18n>
     cache = new ConcurrentHashMap<Locale, I18n>();

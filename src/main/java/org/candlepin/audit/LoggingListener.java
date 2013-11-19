@@ -14,23 +14,32 @@
  */
 package org.candlepin.audit;
 
+import org.candlepin.config.Config;
+import org.candlepin.config.ConfigProperties;
+
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.FileAppender;
+
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.TimeZone;
 
-import org.apache.log4j.FileAppender;
-import org.apache.log4j.PatternLayout;
-import org.apache.log4j.Logger;
-import org.candlepin.config.Config;
-import org.candlepin.config.ConfigProperties;
-
 /**
  * LoggingListener
+ *
+ * Since we are actually adjusting logging configuration, we have to access the
+ * underlying logger implementation instead of going through slf4j.
+ *
+ * See http://slf4j.org/faq.html#when
  */
 public class LoggingListener implements EventListener {
-    private static Logger auditLog =
-        Logger.getLogger(LoggingListener.class.getCanonicalName() + ".AuditLog");
+    private static Logger auditLog;
 
     private boolean verbose;
 
@@ -39,10 +48,23 @@ public class LoggingListener implements EventListener {
     public LoggingListener() throws IOException {
         Config config = new Config();
 
-        auditLog.addAppender(new FileAppender(new PatternLayout("%m"),
-            config.getString(ConfigProperties.AUDIT_LOG_FILE)));
+        LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
+        auditLog = lc.getLogger(LoggingListener.class.getCanonicalName() + ".AuditLog");
+
+        PatternLayoutEncoder encoder = new PatternLayoutEncoder();
+        encoder.setContext(lc);
+        encoder.setPattern("%m");
+        encoder.start();
+
+        FileAppender<ILoggingEvent> appender = new FileAppender<ILoggingEvent>();
+        appender.setFile(config.getString(ConfigProperties.AUDIT_LOG_FILE));
+        appender.setEncoder(encoder);
+        appender.setName("AUDITLOG");
+        appender.setContext(lc);
+        appender.start();
+
         // Keep these messages in audit.log only
-        auditLog.setAdditivity(false);
+        auditLog.setAdditive(false);
 
         verbose = config.getBoolean(ConfigProperties.AUDIT_LOG_VERBOSE);
         TimeZone tz = TimeZone.getDefault();
@@ -53,15 +75,17 @@ public class LoggingListener implements EventListener {
 
     @Override
     public void onEvent(Event e) {
-        auditLog.info(String.format(
-            "%s principalType=%s principal=%s target=%s entityId=%s type=%s owner=%s\n",
-            df.format(e.getTimestamp()),
-            e.getPrincipal().getType(),
-            e.getPrincipal().getName(),
-            e.getTarget(),
-            e.getEntityId(),
-            e.getType(),
-            e.getOwnerId()));
+        auditLog.info(
+            "{} principalType={} principal={} target={} entityId={} type={} owner={}\n",
+            new Object[] {
+                df.format(e.getTimestamp()),
+                e.getPrincipal().getType(),
+                e.getPrincipal().getName(),
+                e.getTarget(),
+                e.getEntityId(),
+                e.getType(),
+                e.getOwnerId()}
+        );
         if (verbose) {
             auditLog.info(String.format("==OLD==\n%s\n==NEW==\n%s\n\n", e.getOldEntity(),
                 e.getNewEntity()));

@@ -36,9 +36,9 @@ import javax.servlet.http.HttpServletRequest;
 
 
 /**
- * LoggingRequestWrapper
+ * TeeHttpServletRequestTest
  */
-public class LoggingRequestWrapperTest {
+public class TeeHttpServletRequestTest {
     @Mock private HttpServletRequest request;
 
     @Before
@@ -56,12 +56,12 @@ public class LoggingRequestWrapperTest {
             }
         });
 
-        LoggingRequestWrapper lrw = new LoggingRequestWrapper(request);
-        assertNotNull(lrw);
-        assertEquals(Util.toBase64("this is my body".getBytes()), lrw.getBody());
-        assertNotNull(lrw.getInputStream());
-        assertEquals("this is my body", readData(lrw.getInputStream()));
-        assertEquals("this is my body", readData(lrw.getReader()));
+        TeeHttpServletRequest tee = new TeeHttpServletRequest(request);
+        assertNotNull(tee);
+        assertEquals(Util.toBase64("this is my body".getBytes()), tee.getBody());
+        assertNotNull(tee.getInputStream());
+        assertEquals("this is my body", readData(tee.getInputStream()));
+        assertEquals("this is my body", readData(tee.getReader()));
 
     }
 

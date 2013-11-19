@@ -14,16 +14,6 @@
  */
 package org.candlepin.resteasy.interceptor;
 
-import java.io.IOException;
-import com.google.inject.Injector;
-import java.net.URISyntaxException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Properties;
-
-import javax.ws.rs.core.Response;
-
 import net.oauth.OAuthAccessor;
 import net.oauth.OAuthConsumer;
 import net.oauth.OAuthException;
@@ -33,17 +23,29 @@ import net.oauth.OAuthValidator;
 import net.oauth.SimpleOAuthValidator;
 import net.oauth.signature.OAuthSignatureMethod;
 
-import org.apache.log4j.Logger;
 import org.candlepin.auth.Principal;
 import org.candlepin.config.Config;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.CandlepinException;
 import org.candlepin.exceptions.IseException;
 import org.candlepin.exceptions.UnauthorizedException;
-import org.jboss.resteasy.spi.HttpRequest;
-import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
+import com.google.inject.Injector;
+
+import org.jboss.resteasy.spi.HttpRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.xnap.commons.i18n.I18n;
+
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Properties;
+
+import javax.ws.rs.core.Response;
 
 /**
  * Uses two legged OAuth. If it succeeds, then it pulls the username off of a
@@ -55,7 +57,7 @@ public class OAuth implements AuthProvider {
     protected static final OAuthValidator VALIDATOR = new SimpleOAuthValidator();
     protected static final String SIGNATURE_TYPE = "HMAC-SHA1";
 
-    private static Logger log = Logger.getLogger(OAuth.class);;
+    private static Logger log = LoggerFactory.getLogger(OAuth.class);;
     private Config config;
     private TrustedUserAuth userAuth;
     private TrustedConsumerAuth consumerAuth;

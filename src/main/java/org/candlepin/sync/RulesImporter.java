@@ -14,10 +14,6 @@
  */
 package org.candlepin.sync;
 
-import java.io.IOException;
-import java.io.Reader;
-
-import org.apache.log4j.Logger;
 import org.candlepin.audit.EventSink;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
@@ -25,11 +21,17 @@ import org.candlepin.util.VersionUtil;
 
 import com.google.inject.Inject;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.io.Reader;
+
 /**
  * RulesImporter
  */
 public class RulesImporter {
-    private static Logger log = Logger.getLogger(RulesImporter.class);
+    private static Logger log = LoggerFactory.getLogger(RulesImporter.class);
 
     private RulesCurator curator;
     private EventSink sink;

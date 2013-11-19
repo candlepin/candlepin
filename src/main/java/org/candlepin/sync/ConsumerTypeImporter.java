@@ -14,20 +14,22 @@
  */
 package org.candlepin.sync;
 
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerTypeCurator;
+
+import org.codehaus.jackson.map.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.io.Reader;
 import java.util.Set;
-
-import org.apache.log4j.Logger;
-import org.candlepin.model.ConsumerType;
-import org.candlepin.model.ConsumerTypeCurator;
-import org.codehaus.jackson.map.ObjectMapper;
 
 /**
  * ConsumerTypeImporter
  */
 public class ConsumerTypeImporter {
-    private static Logger log = Logger.getLogger(ConsumerTypeImporter.class);
+    private static Logger log = LoggerFactory.getLogger(ConsumerTypeImporter.class);
 
     private ConsumerTypeCurator curator;
 

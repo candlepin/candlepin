@@ -14,10 +14,6 @@
  */
 package org.candlepin.service.impl.stub;
 
-import java.io.IOException;
-import java.security.GeneralSecurityException;
-
-import org.apache.log4j.Logger;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Entitlement;
@@ -29,6 +25,12 @@ import org.candlepin.service.BaseEntitlementCertServiceAdapter;
 
 import com.google.inject.Inject;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.security.GeneralSecurityException;
+
 /**
  * StubEntitlementCertServiceAdapter
  *
@@ -36,7 +38,8 @@ import com.google.inject.Inject;
  */
 public class StubEntitlementCertServiceAdapter extends BaseEntitlementCertServiceAdapter {
 
-    private static Logger log = Logger.getLogger(StubEntitlementCertServiceAdapter.class);
+    private static Logger log =
+        LoggerFactory.getLogger(StubEntitlementCertServiceAdapter.class);
     private CertificateSerialCurator serialCurator;
 
     @Inject

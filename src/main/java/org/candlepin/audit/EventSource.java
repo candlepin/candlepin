@@ -14,7 +14,8 @@
  */
 package org.candlepin.audit;
 
-import org.apache.log4j.Logger;
+import com.google.inject.Inject;
+
 import org.codehaus.jackson.map.ObjectMapper;
 import org.hornetq.api.core.HornetQException;
 import org.hornetq.api.core.TransportConfiguration;
@@ -23,14 +24,14 @@ import org.hornetq.api.core.client.ClientSession;
 import org.hornetq.api.core.client.ClientSessionFactory;
 import org.hornetq.api.core.client.HornetQClient;
 import org.hornetq.core.remoting.impl.invm.InVMConnectorFactory;
-
-import com.google.inject.Inject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * EventSource
  */
 public class EventSource {
-    private static  Logger log = Logger.getLogger(HornetqContextListener.class);
+    private static  Logger log = LoggerFactory.getLogger(HornetqContextListener.class);
     static final String QUEUE_ADDRESS = "event";
     private ClientSession session;
     private ObjectMapper mapper;
@@ -89,7 +90,7 @@ public class EventSource {
             consumer.setMessageHandler(new ListenerWrapper(listener, mapper));
         }
         catch (HornetQException e) {
-            log.fatal("Unable to register listener :" + listener, e);
+            log.error("Unable to register listener :" + listener, e);
         }
     }
 }

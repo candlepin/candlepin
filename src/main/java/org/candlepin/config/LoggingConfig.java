@@ -14,17 +14,24 @@
  */
 package org.candlepin.config;
 
-import java.util.Map;
-import java.util.Map.Entry;
-
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.LoggerContext;
 
 import com.google.inject.Inject;
+
+import org.slf4j.LoggerFactory;
+
+import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * Sets the log4j logging levels dynamically based on values from the candlepin.conf file.
  * This removes the need to crack the log4j.properties file.
+ *
+ * Since we are actually adjusting logging configuration, we have to access the
+ * underlying logger implementation instead of going through slf4j.
+ *
+ * See http://slf4j.org/faq.html#when
  */
 public class LoggingConfig {
 
@@ -36,10 +43,11 @@ public class LoggingConfig {
     }
 
     public void configure(Config config) {
+        LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
         Map<String, String> logLevels = config.configurationWithPrefix(PREFIX);
         for (Entry<String, String> entry : logLevels.entrySet()) {
             String key = entry.getKey().replace(PREFIX, "");
-            Logger.getLogger(key).setLevel(Level.toLevel(entry.getValue()));
+            lc.getLogger(key).setLevel(Level.toLevel(entry.getValue()));
         }
     }
 }

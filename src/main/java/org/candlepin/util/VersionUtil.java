@@ -14,7 +14,8 @@
  */
 package org.candlepin.util;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,7 +27,7 @@ import java.util.Properties;
  * VersionUtil
  */
 public class VersionUtil {
-    private static Logger log = Logger.getLogger(VersionUtil.class);
+    private static Logger log = LoggerFactory.getLogger(VersionUtil.class);
 
     public static final String VERSION_HEADER = "X-Candlepin-Version";
 

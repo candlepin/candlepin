@@ -14,10 +14,6 @@
  */
 package org.candlepin.audit;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import org.apache.log4j.Logger;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.ActivationKey;
@@ -26,6 +22,10 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Rules;
 import org.candlepin.model.Subscription;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+
 import org.codehaus.jackson.map.ObjectMapper;
 import org.hornetq.api.core.HornetQException;
 import org.hornetq.api.core.TransportConfiguration;
@@ -36,13 +36,15 @@ import org.hornetq.api.core.client.ClientSessionFactory;
 import org.hornetq.api.core.client.HornetQClient;
 import org.hornetq.api.core.client.ServerLocator;
 import org.hornetq.core.remoting.impl.invm.InVMConnectorFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 /**
  * EventSink - Reliably dispatches events to all configured listeners.
  */
 @Singleton
 public class EventSinkImpl implements EventSink {
 
-    private static Logger log = Logger.getLogger(EventSinkImpl.class);
+    private static Logger log = LoggerFactory.getLogger(EventSinkImpl.class);
     private EventFactory eventFactory;
     private ClientSessionFactory factory;
     private ClientSession clientSession;

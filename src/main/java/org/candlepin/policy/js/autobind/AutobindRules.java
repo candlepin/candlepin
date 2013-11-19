@@ -14,15 +14,6 @@
  */
 package org.candlepin.policy.js.autobind;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-
-import org.apache.log4j.Logger;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
@@ -35,9 +26,20 @@ import org.candlepin.policy.js.RuleExecutionException;
 import org.candlepin.policy.js.RulesObjectMapper;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.util.X509ExtensionUtil;
-import org.mozilla.javascript.RhinoException;
 
 import com.google.inject.Inject;
+
+import org.mozilla.javascript.RhinoException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 /**
  * AutobindRules
@@ -49,7 +51,7 @@ public class AutobindRules {
     protected static final String SELECT_POOL_FUNCTION = "select_pools";
 
     private JsRunner jsRules;
-    private static Logger log = Logger.getLogger(AutobindRules.class);
+    private static Logger log = LoggerFactory.getLogger(AutobindRules.class);
     private ProductCache productCache;
     private RulesObjectMapper mapper;
 

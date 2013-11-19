@@ -14,6 +14,32 @@
  */
 package org.candlepin.util;
 
+import org.candlepin.config.Config;
+import org.candlepin.json.model.Content;
+import org.candlepin.json.model.EntitlementBody;
+import org.candlepin.json.model.Order;
+import org.candlepin.json.model.Service;
+import org.candlepin.json.model.Subscription;
+import org.candlepin.model.Consumer;
+import org.candlepin.model.Entitlement;
+import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.EnvironmentContent;
+import org.candlepin.model.Pool;
+import org.candlepin.model.Product;
+import org.candlepin.model.ProductContent;
+import org.candlepin.pki.X509ByteExtensionWrapper;
+import org.candlepin.pki.X509ExtensionWrapper;
+
+import com.google.common.collect.Collections2;
+import com.google.inject.Inject;
+
+import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
+import org.codehaus.jackson.annotate.JsonMethod;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -33,36 +59,12 @@ import java.util.zip.DeflaterOutputStream;
 import java.util.zip.Inflater;
 import java.util.zip.InflaterOutputStream;
 
-import org.apache.log4j.Logger;
-import org.candlepin.config.Config;
-import org.candlepin.json.model.Content;
-import org.candlepin.json.model.EntitlementBody;
-import org.candlepin.json.model.Order;
-import org.candlepin.json.model.Service;
-import org.candlepin.json.model.Subscription;
-import org.candlepin.model.Consumer;
-import org.candlepin.model.Entitlement;
-import org.candlepin.model.EntitlementCurator;
-import org.candlepin.model.EnvironmentContent;
-import org.candlepin.model.Pool;
-import org.candlepin.model.Product;
-import org.candlepin.model.ProductContent;
-import org.candlepin.pki.X509ByteExtensionWrapper;
-import org.candlepin.pki.X509ExtensionWrapper;
-import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-import org.codehaus.jackson.annotate.JsonMethod;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-
-import com.google.common.collect.Collections2;
-import com.google.inject.Inject;
-
 /**
  * X509ExtensionUtil
  */
 public class X509V3ExtensionUtil extends X509Util{
 
-    private static Logger log = Logger.getLogger(X509V3ExtensionUtil.class);
+    private static Logger log = LoggerFactory.getLogger(X509V3ExtensionUtil.class);
     private Config config;
     private EntitlementCurator entCurator;
     private String thisVersion = "3.2";
@@ -500,7 +502,7 @@ public class X509V3ExtensionUtil extends X509Util{
             nodeRep.append(cp.getConnection().getId());
             nodeRep.append("} ]");
         }
-        log.debug(nodeRep);
+        log.debug("{}", nodeRep);
         for (NodePair cp : pn.getChildren()) {
             printTree(cp.getConnection(), tab + 1);
         }
@@ -523,7 +525,7 @@ public class X509V3ExtensionUtil extends X509Util{
         nodeRep.append(hn.getValue());
         nodeRep.append("]");
 
-        log.debug(nodeRep);
+        log.debug("{}", nodeRep);
         if (hn.getLeft() != null) {
             printTrie(hn.getLeft(), tab + 1);
         }
@@ -682,7 +684,7 @@ public class X509V3ExtensionUtil extends X509Util{
             }
         }
         if (treeDebug) {
-            log.debug(result);
+            log.debug("{}", result);
         }
         return result;
     }
@@ -757,7 +759,7 @@ public class X509V3ExtensionUtil extends X509Util{
             ByteArrayInputStream bais = new ByteArrayInputStream(result);
             int value = bais.read();
             while (value != -1) {
-                log.debug(value);
+                log.debug(String.valueOf(value));
                 value = bais.read();
             }
         }

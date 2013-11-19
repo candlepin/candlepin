@@ -14,23 +14,6 @@
  */
 package org.candlepin.resource;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-
-import org.apache.log4j.Logger;
 import org.candlepin.auth.interceptor.SecurityHole;
 import org.candlepin.auth.interceptor.Verify;
 import org.candlepin.exceptions.BadRequestException;
@@ -47,10 +30,29 @@ import org.candlepin.model.StatisticCurator;
 import org.candlepin.pinsetter.tasks.RefreshPoolsForProductJob;
 import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.service.ProductServiceAdapter;
-import org.quartz.JobDetail;
-import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
+
+import org.quartz.JobDetail;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.xnap.commons.i18n.I18n;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MediaType;
 
 /**
  * API Gateway into /product
@@ -60,7 +62,7 @@ import com.google.inject.Inject;
 @Path("/products")
 public class ProductResource {
 
-    private static Logger log = Logger.getLogger(ProductResource.class);
+    private static Logger log = LoggerFactory.getLogger(ProductResource.class);
     private ProductServiceAdapter prodAdapter;
     private ContentCurator contentCurator;
     private StatisticCurator statisticCurator;
@@ -177,11 +179,6 @@ public class ProductResource {
         return toUpdate;
     }
 
-    // Requires security hole since security interceptor will intercept when the method is
-    // called. This is because it is protected. This method is called from other resources,
-    // and therefore it assumes the caller is screened first.
-    // TODO Might be a better way to do this.
-    @SecurityHole(noAuth = true)
     protected boolean performProductUpdates(Product existing, Product incoming) {
         boolean changesMade = false;
 

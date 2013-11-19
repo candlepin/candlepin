@@ -24,7 +24,8 @@ import org.candlepin.config.ConfigProperties;
 
 import com.google.inject.Inject;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -47,7 +48,7 @@ import javax.ws.rs.core.MediaType;
 @Path("/")
 public class RootResource {
 
-    private static Logger log = Logger.getLogger(RootResource.class);
+    private static Logger log = LoggerFactory.getLogger(RootResource.class);
     public static final List<Class> RESOURCE_CLASSES;
     public static final Map<String, Method> PSEUDO_RESOURCES;
     private Config config;
@@ -102,7 +103,6 @@ public class RootResource {
         this.config = config;
     }
 
-    @SecurityHole(noAuth = true, anon = true)
     protected List<Link> createLinks() {
         // Hidden resources will be omitted from the supported list we send to the clients:
         List<String> hideResources = Arrays.asList(config.getString(
@@ -122,7 +122,6 @@ public class RootResource {
         return newLinks;
     }
 
-    @SecurityHole(noAuth = true, anon = true)
     protected Link methodLink(String rel, Method m) {
         Path resource = m.getDeclaringClass().getAnnotation(Path.class);
         Path method = m.getAnnotation(Path.class);
@@ -134,7 +133,6 @@ public class RootResource {
         return new Link(rel, href);
     }
 
-    @SecurityHole(noAuth = true, anon = true)
     protected Link resourceLink(Class clazz) {
         Path a = (Path) clazz.getAnnotation(Path.class);
         String href = a.value();

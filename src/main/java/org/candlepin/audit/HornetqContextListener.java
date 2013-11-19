@@ -14,12 +14,12 @@
  */
 package org.candlepin.audit;
 
+import org.candlepin.config.Config;
+import org.candlepin.config.ConfigProperties;
+
 import com.google.common.collect.Lists;
 import com.google.inject.Injector;
 
-import org.apache.log4j.Logger;
-import org.candlepin.config.Config;
-import org.candlepin.config.ConfigProperties;
 import org.hornetq.api.core.HornetQException;
 import org.hornetq.api.core.SimpleString;
 import org.hornetq.api.core.TransportConfiguration;
@@ -34,6 +34,8 @@ import org.hornetq.core.remoting.impl.invm.InVMConnectorFactory;
 import org.hornetq.core.server.HornetQServer;
 import org.hornetq.core.server.JournalType;
 import org.hornetq.core.server.impl.HornetQServerImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.HashSet;
@@ -45,7 +47,7 @@ import java.util.List;
  */
 public class HornetqContextListener {
 
-    private static  Logger log = Logger.getLogger(HornetqContextListener.class);
+    private static  Logger log = LoggerFactory.getLogger(HornetqContextListener.class);
 
     private HornetQServer hornetqServer;
     private EventSource eventSource;

@@ -14,19 +14,21 @@
  */
 package org.candlepin.guice;
 
+import org.candlepin.config.Config;
+
+import com.google.inject.Module;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
-import java.util.Map.Entry;
-
-import org.apache.log4j.Logger;
-import org.candlepin.config.Config;
-
-import com.google.inject.Module;
 
 /**
  * CustomizableModules
@@ -34,7 +36,7 @@ import com.google.inject.Module;
 public class CustomizableModules {
 
     public static final String MODULE_CONFIG_PREFIX = "module.config";
-    private static Logger log = Logger.getLogger(CustomizableModules.class);
+    private static Logger log = LoggerFactory.getLogger(CustomizableModules.class);
 
     /**
      * @return returns the set of modules to use.

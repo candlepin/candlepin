@@ -14,9 +14,16 @@
  */
 package org.candlepin.pki.impl;
 
+import org.candlepin.pki.PKIReader;
+import org.candlepin.pki.PKIUtility;
+import org.candlepin.pki.SubjectKeyIdentifierWriter;
+import org.candlepin.pki.X509ByteExtensionWrapper;
+import org.candlepin.pki.X509CRLEntryWrapper;
+import org.candlepin.pki.X509ExtensionWrapper;
+import org.candlepin.util.Util;
+
 import com.google.inject.Inject;
 
-import org.apache.log4j.Logger;
 import org.bouncycastle.asn1.ASN1InputStream;
 import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.DERUTF8String;
@@ -34,13 +41,8 @@ import org.bouncycastle.openssl.PEMWriter;
 import org.bouncycastle.x509.X509V2CRLGenerator;
 import org.bouncycastle.x509.X509V3CertificateGenerator;
 import org.bouncycastle.x509.extension.AuthorityKeyIdentifierStructure;
-import org.candlepin.pki.PKIReader;
-import org.candlepin.pki.PKIUtility;
-import org.candlepin.pki.SubjectKeyIdentifierWriter;
-import org.candlepin.pki.X509ByteExtensionWrapper;
-import org.candlepin.pki.X509CRLEntryWrapper;
-import org.candlepin.pki.X509ExtensionWrapper;
-import org.candlepin.util.Util;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -87,7 +89,7 @@ import javax.security.auth.x500.X500Principal;
  */
 @SuppressWarnings("deprecation")
 public class BouncyCastlePKIUtility extends PKIUtility {
-    private static Logger log = Logger.getLogger(BouncyCastlePKIUtility.class);
+    private static Logger log = LoggerFactory.getLogger(BouncyCastlePKIUtility.class);
 
     @Inject
     public BouncyCastlePKIUtility(PKIReader reader,

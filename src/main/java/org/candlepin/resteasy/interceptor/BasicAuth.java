@@ -14,25 +14,27 @@
  */
 package org.candlepin.resteasy.interceptor;
 
-import org.apache.commons.codec.binary.Base64;
-import org.apache.log4j.Logger;
 import org.candlepin.auth.Principal;
 import org.candlepin.exceptions.CandlepinException;
 import org.candlepin.exceptions.ServiceUnavailableException;
+import org.candlepin.exceptions.UnauthorizedException;
 import org.candlepin.service.UserServiceAdapter;
-import org.jboss.resteasy.spi.HttpRequest;
-import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import org.candlepin.exceptions.UnauthorizedException;
+
+import org.apache.commons.codec.binary.Base64;
+import org.jboss.resteasy.spi.HttpRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * BasicAuth
  */
 class BasicAuth extends UserAuth {
 
-    private static Logger log = Logger.getLogger(BasicAuth.class);
+    private static Logger log = LoggerFactory.getLogger(BasicAuth.class);
 
     @Inject
     BasicAuth(UserServiceAdapter userServiceAdapter, Injector injector) {

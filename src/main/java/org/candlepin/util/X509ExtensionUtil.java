@@ -14,14 +14,6 @@
  */
 package org.candlepin.util;
 
-import java.text.SimpleDateFormat;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import org.apache.log4j.Logger;
 import org.candlepin.config.Config;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
@@ -33,12 +25,22 @@ import org.candlepin.pki.X509ExtensionWrapper;
 
 import com.google.inject.Inject;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.text.SimpleDateFormat;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 /**
  * X509ExtensionUtil for V1 Certificates
  */
 public class X509ExtensionUtil  extends X509Util{
 
-    private static Logger log = Logger.getLogger(X509ExtensionUtil.class);
+    private static Logger log = LoggerFactory.getLogger(X509ExtensionUtil.class);
     private Config config;
 
     // If we're generating a cert with more content sets than this limit, we will error

@@ -14,19 +14,6 @@
  */
 package org.candlepin.controller;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-
-import org.apache.log4j.Logger;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
@@ -71,13 +58,28 @@ import org.candlepin.version.CertVersionConflictException;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+
 /**
  * PoolManager
  */
 public class CandlepinPoolManager implements PoolManager {
 
     private PoolCurator poolCurator;
-    private static Logger log = Logger.getLogger(CandlepinPoolManager.class);
+    private static Logger log = LoggerFactory.getLogger(CandlepinPoolManager.class);
 
     private SubscriptionServiceAdapter subAdapter;
     private EventSink sink;

@@ -14,10 +14,11 @@
  */
 package org.candlepin.hibernate;
 
-import org.apache.log4j.Logger;
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.type.StringType;
 import org.hibernate.type.Type;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 
@@ -27,7 +28,7 @@ import java.io.Serializable;
  * as null and we want to mimic the same behavior on PostgreSQL.
  */
 public class EmptyStringInterceptor extends EmptyInterceptor {
-    private static Logger log = Logger.getLogger(EmptyStringInterceptor.class);
+    private static Logger log = LoggerFactory.getLogger(EmptyStringInterceptor.class);
 
     @Override
     public boolean onFlushDirty(Object entity, Serializable id,

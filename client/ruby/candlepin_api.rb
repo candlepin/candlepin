@@ -192,6 +192,16 @@ class Candlepin
     put("/owners/#{owner_key}", owner)
   end
 
+  def set_owner_log_level(owner_key, log_level=nil)
+    uri = "/owners/#{owner_key}/log"
+    uri << "?level=#{log_level}" if log_level
+    put uri
+  end
+
+  def delete_owner_log_level(owner_key)
+    delete "/owners/#{owner_key}/log"
+  end
+
   def generate_ueber_cert(owner_key)
     uri = "/owners/#{owner_key}/uebercert"
     post uri
