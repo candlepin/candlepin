@@ -18,8 +18,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
-import java.util.Locale;
-
 import org.candlepin.pinsetter.core.PinsetterKernel;
 import org.jboss.resteasy.core.ResourceMethod;
 import org.jboss.resteasy.core.ServerResponse;
@@ -30,8 +28,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.xnap.commons.i18n.I18n;
-import org.xnap.commons.i18n.I18nFactory;
 
 /**
  * DynamicFilterInterceptorTest
@@ -43,15 +39,11 @@ public class DynamicFilterInterceptorTest {
     @Mock private PinsetterKernel pinsetterKernel;
 
     private DynamicFilterInterceptor interceptor;
-    private I18n i18n;
     private ResourceMethod rmethod;
 
     @Before
     public void init() {
-        Locale locale = new Locale("en_US");
-        i18n = I18nFactory.getI18n(getClass(), "org.candlepin.i18n.Messages", locale,
-            I18nFactory.FALLBACK);
-        this.interceptor = new DynamicFilterInterceptor(i18n);
+        this.interceptor = new DynamicFilterInterceptor();
         rmethod = mock(ResourceMethod.class);
     }
 

@@ -16,8 +16,8 @@ package org.candlepin.resteasy.interceptor;
 
 import java.lang.reflect.Method;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -26,7 +26,6 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.ext.Provider;
 
 import org.apache.log4j.Logger;
-import org.candlepin.exceptions.BadRequestException;
 import org.jboss.resteasy.annotations.interception.ServerInterceptor;
 import org.jboss.resteasy.core.ResourceMethod;
 import org.jboss.resteasy.core.ServerResponse;
@@ -34,9 +33,6 @@ import org.jboss.resteasy.spi.Failure;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.jboss.resteasy.spi.interception.PostProcessInterceptor;
 import org.jboss.resteasy.spi.interception.PreProcessInterceptor;
-import org.xnap.commons.i18n.I18n;
-
-import com.google.inject.Inject;
 
 /**
  * DynamicFilterInterceptor
@@ -60,13 +56,6 @@ public class DynamicFilterInterceptor implements PreProcessInterceptor,
     private static ThreadLocal<Map<Object, Set<String>>> filterMappings
         = new ThreadLocal<Map<Object, Set<String>>>();
 
-    private I18n i18n;
-
-    @Inject
-    public DynamicFilterInterceptor(I18n i18n) {
-        this.i18n = i18n;
-    }
-
     @Override
     public ServerResponse preProcess(HttpRequest request, ResourceMethod method)
         throws Failure, WebApplicationException {
@@ -79,8 +68,7 @@ public class DynamicFilterInterceptor implements PreProcessInterceptor,
         excluding.set(!containsIncl);
         // Cannot do both types of filtering together
         if (containsExcl && containsIncl) {
-            throw new BadRequestException(
-                i18n.tr("Cannot use 'include' and 'exclude' parameters together"));
+            return null;
         }
         if (containsExcl) {
             for (String toExclude : queryParams.get("exclude")) {
@@ -99,7 +87,10 @@ public class DynamicFilterInterceptor implements PreProcessInterceptor,
     public void postProcess(ServerResponse response) {
         Object obj = response.getEntity();
         if (!getAttributes().isEmpty()) {
-            filterMappings.set(new HashMap<Object, Set<String>>());
+            // Using an identity hash map, which takes advantage of
+            // System.identityHashCode(ob) (memory location) because
+            // abstract hibernate objects hashCode function can cause NPE
+            filterMappings.set(new IdentityHashMap<Object, Set<String>>());
             this.addFilters(obj, attributes.get());
         }
     }
@@ -200,25 +191,17 @@ public class DynamicFilterInterceptor implements PreProcessInterceptor,
     }
 
     public static boolean isAttributeExcluded(String attribute, Object obj) {
-        if (getAttributes() == null || getFilterMappings() == null) {
+        // If the object isn't mapped, or attributes have not been setup
+        if (getAttributes() == null ||
+                getFilterMappings() == null ||
+                obj == null ||
+                !getFilterMappings().containsKey(obj)) {
             return false;
         }
         if (getExcluding()) {
-            if (!getFilterMappings().containsKey(obj)) {
-                return false;
-            }
-            else {
-                return getFilterMappings().get(obj).contains(attribute);
-            }
+            return getFilterMappings().get(obj).contains(attribute);
         }
-        else {
-            // whitelist
-            if (!getFilterMappings().containsKey(obj)) {
-                return true;
-            }
-            else {
-                return !getFilterMappings().get(obj).contains(attribute);
-            }
-        }
+        // In the case that we're including:
+        return !getFilterMappings().get(obj).contains(attribute);
     }
 }

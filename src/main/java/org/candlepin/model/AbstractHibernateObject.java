@@ -25,6 +25,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+import org.codehaus.jackson.map.annotate.JsonFilter;
 
 /**
  * Abstract class for hibernate entities
@@ -32,6 +33,7 @@ import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 @MappedSuperclass
 @XmlType(name = "CandlepinObject")
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonFilter("DefaultFilter")
 public abstract class AbstractHibernateObject implements Persisted, Serializable {
     public static final String DEFAULT_SORT_FIELD = "created";
 
