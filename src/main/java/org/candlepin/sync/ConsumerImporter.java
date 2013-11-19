@@ -14,7 +14,6 @@
  */
 package org.candlepin.sync;
 
-import org.apache.log4j.Logger;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.IdentityCertificate;
@@ -22,7 +21,10 @@ import org.candlepin.model.IdentityCertificateCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.UpstreamConsumer;
+
 import org.codehaus.jackson.map.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.io.IOException;
@@ -32,7 +34,7 @@ import java.io.Reader;
  * ConsumerImporter
  */
 public class ConsumerImporter {
-    private static Logger log = Logger.getLogger(ConsumerImporter.class);
+    private static Logger log = LoggerFactory.getLogger(ConsumerImporter.class);
 
     private OwnerCurator curator;
     private IdentityCertificateCurator idCertCurator;

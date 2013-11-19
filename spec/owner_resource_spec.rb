@@ -312,4 +312,23 @@ describe 'Owner Resource' do
     c = @cp.get_consumer(system.uuid)
     c['entitlementCount'].should == 1
   end
+
+  it 'should allow admin users to set org debug mode' do
+    owner = create_owner(random_string("debug_owner"))
+    @cp.set_owner_log_level(owner['key'])
+
+    owner = @cp.get_owner(owner['key'])
+    owner['logLevel'].should == "DEBUG"
+
+    @cp.delete_owner_log_level(owner['key'])
+    owner = @cp.get_owner(owner['key'])
+    owner['logLevel'].should be_nil
+  end
+
+  it 'should not allow setting bad log levels' do
+    owner = create_owner(random_string("debug_owner"))
+    lambda do
+      @cp.set_owner_log_level(owner['key'], "THISLEVELISBAD")
+    end.should raise_exception(RestClient::BadRequest)
+  end
 end

@@ -31,7 +31,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.8.31
+Version: 0.8.33
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -72,7 +72,7 @@ BuildRequires: google-collections >= 0:1.0
 BuildRequires: resteasy >= 0:2.3.1
 BuildRequires: hornetq >= 0:2.2.11
 BuildRequires: google-guice >= 0:3.0
-BuildRequires: log4j
+BuildRequires: logback-classic
 BuildRequires: jakarta-commons-lang
 BuildRequires: jakarta-commons-io
 BuildRequires: apache-commons-codec
@@ -130,7 +130,7 @@ Requires: codehaus-jackson-jaxrs
 Requires: hornetq >= 0:2.2.11
 Requires: netty
 Requires: oauth
-Requires: log4j
+Requires: logback-classic
 Requires: glassfish-jaxb
 Requires: scannotation
 Requires: slf4j >= 0:1.6.1
@@ -326,6 +326,33 @@ fi
 
 
 %changelog
+* Thu Nov 14 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.33-1
+- Correct variable (wpoteat@redhat.com)
+- Update for using keyword 'key' as column name (wpoteat@redhat.com)
+- Fix issues with CDN multi-database support. (dgoodwin@redhat.com)
+
+* Thu Nov 14 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.32-1
+- 984090: Fix the foreign key names on cp_subscription_products. (bkearney@redhat.com)
+- 1023187: Events for Rules addition and delete were missing event string. (bkearney@redhat.com)
+- 1024115: Apicrawl should use the test log4j configuration (bkearney@redhat.com)
+- 1025044: fix cores pre-entitlement calculation (ckozak@redhat.com)
+- 1026422: Check pool attribute for virt_only as well as product attributes (ckozak@redhat.com)
+- Updated translations. (dgoodwin@redhat.com)
+- Regenerated test certs with 1024 keys (mstead@redhat.com)
+- fix jenkins spec tests (jesusr@redhat.com)
+- fixed broken ConsumerResourceTest and checkstyle (ckozak@redhat.com)
+- Update of migrate script to make sql oracle and mysql friendly (wpoteat@redhat.com)
+- Add CDN to Manifest Export REST query (wpoteat@redhat.com)
+- Set Liquibase log level emulate 2.0.5 behavior. (awood@redhat.com)
+- Add missing attribute in foreignKeyConstraintExists element.  (awood@redhat.com)
+- add order number to imported subscriptions. (jesusr@redhat.com)
+- Added consumers/uuid/exists (ckozak@redhat.com)
+- fixed bad changes to liquibase scripts, created a new changeset for them (ckozak@redhat.com)
+- Reduce the line length to fix the style checks (bkearney@redhat.com)
+
+* Tue Nov 05 2013 Alex Wood <awood@redhat.com> 0.8.31-2
+- Add logback-classic dependency
+
 * Tue Oct 29 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.31-1
 - Moved the foreign key constraint from new table on creation (wpoteat@redhat.com)
 

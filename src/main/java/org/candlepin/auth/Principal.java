@@ -14,12 +14,14 @@
  */
 package org.candlepin.auth;
 
-import org.apache.log4j.Logger;
 import org.candlepin.auth.permissions.Permission;
 import org.candlepin.util.Util;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Restrictions;
 
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -31,7 +33,7 @@ import java.util.List;
  */
 public abstract class Principal implements Serializable {
 
-    private static Logger log = Logger.getLogger(Principal.class);
+    private static Logger log = LoggerFactory.getLogger(Principal.class);
     protected List<Permission> permissions = new ArrayList<Permission>();
 
     public abstract String getType();

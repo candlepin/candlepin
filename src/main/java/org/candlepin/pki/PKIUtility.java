@@ -14,6 +14,9 @@
  */
 package org.candlepin.pki;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -42,13 +45,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.log4j.Logger;
-
 /**
  * PKIUtility
  */
 public abstract class PKIUtility {
-    private static Logger log = Logger.getLogger(PKIUtility.class);
+    private static Logger log = LoggerFactory.getLogger(PKIUtility.class);
 
     // TODO : configurable?
     private static final int RSA_KEY_SIZE = 2048;

@@ -45,7 +45,7 @@ public class MetaExporterTest {
         meta.setCreated(now);
         meta.setPrincipalName("myUsername");
         meta.setWebAppPrefix("webapp_prefix");
-        meta.setCdnKey("test-cdn");
+        meta.setCdnLabel("test-cdn");
 
         metaEx.export(mapper, writer, meta);
 
@@ -53,7 +53,7 @@ public class MetaExporterTest {
         json.append("{\"version\":\"0.1.0\",\"created\":\"").append(nowString);
         json.append("\",\"principalName\":\"myUsername\",");
         json.append("\"webAppPrefix\":\"webapp_prefix\",");
-        json.append("\"cdnKey\":\"test-cdn\"}");
+        json.append("\"cdnLabel\":\"test-cdn\"}");
         assertTrue(TestUtil.isJsonEqual(json.toString(), writer.toString()));
     }
 

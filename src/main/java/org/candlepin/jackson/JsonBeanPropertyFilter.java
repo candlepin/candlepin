@@ -14,18 +14,19 @@
  */
 package org.candlepin.jackson;
 
+import org.codehaus.jackson.map.ser.BeanPropertyFilter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-
-import org.apache.log4j.Logger;
-import org.codehaus.jackson.map.ser.BeanPropertyFilter;
 
 /**
  * JsonBeanPropertyFilter
  */
 public abstract class JsonBeanPropertyFilter implements BeanPropertyFilter {
 
-    private static Logger log = Logger.getLogger(JsonBeanPropertyFilter.class);
+    private static Logger log = LoggerFactory.getLogger(JsonBeanPropertyFilter.class);
 
     protected Boolean annotationPresent(Object obj, String propertyName,
         Class<? extends Annotation> clazz) {

@@ -14,6 +14,20 @@
  */
 package org.candlepin.resource;
 
+import org.candlepin.audit.EventSink;
+import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.exceptions.ServiceUnavailableException;
+import org.candlepin.model.CuratorException;
+import org.candlepin.model.Rules;
+import org.candlepin.model.RulesCurator;
+
+import com.google.inject.Inject;
+
+import org.apache.commons.codec.binary.Base64;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.xnap.commons.i18n.I18n;
+
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -24,24 +38,12 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.apache.commons.codec.binary.Base64;
-import org.apache.log4j.Logger;
-import org.candlepin.audit.EventSink;
-import org.candlepin.exceptions.BadRequestException;
-import org.candlepin.exceptions.ServiceUnavailableException;
-import org.candlepin.model.CuratorException;
-import org.candlepin.model.Rules;
-import org.candlepin.model.RulesCurator;
-import org.xnap.commons.i18n.I18n;
-
-import com.google.inject.Inject;
-
 /**
  * Rules API entry path
  */
 @Path("/rules")
 public class RulesResource {
-    private static Logger log = Logger.getLogger(RulesResource.class);
+    private static Logger log = LoggerFactory.getLogger(RulesResource.class);
     private RulesCurator rulesCurator;
     private I18n i18n;
     private EventSink sink;

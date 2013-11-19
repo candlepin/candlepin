@@ -14,24 +14,26 @@
  */
 package org.candlepin.pinsetter.tasks;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import org.apache.log4j.Logger;
 import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.PinsetterException;
 import org.candlepin.pinsetter.core.PinsetterKernel;
 import org.candlepin.pinsetter.core.model.JobStatus;
+
+import com.google.inject.Inject;
+import com.google.inject.persist.UnitOfWork;
+
 import org.hibernate.HibernateException;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.quartz.JobKey;
 import org.quartz.SchedulerException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.google.inject.Inject;
-import com.google.inject.persist.UnitOfWork;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * CancelJobJob
@@ -39,7 +41,7 @@ import com.google.inject.persist.UnitOfWork;
 @DisallowConcurrentExecution
 public class CancelJobJob extends KingpinJob {
 
-    private static Logger log = Logger.getLogger(CancelJobJob.class);
+    private static Logger log = LoggerFactory.getLogger(CancelJobJob.class);
     public static final String DEFAULT_SCHEDULE = "0/5 * * * * ?"; //every five seconds
     private JobCurator jobCurator;
     private PinsetterKernel pinsetterKernel;

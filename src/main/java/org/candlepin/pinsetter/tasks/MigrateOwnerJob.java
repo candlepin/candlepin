@@ -40,12 +40,13 @@ import com.google.inject.persist.UnitOfWork;
 import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.jboss.resteasy.client.ClientResponse;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -64,7 +65,7 @@ import javax.ws.rs.core.Response.Status;
  * migration has occurred.
  */
 public class MigrateOwnerJob extends KingpinJob {
-    private static Logger log = Logger.getLogger(MigrateOwnerJob.class);
+    private static Logger log = LoggerFactory.getLogger(MigrateOwnerJob.class);
 
     private OwnerCurator ownerCurator;
     private PoolCurator poolCurator;

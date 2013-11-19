@@ -19,8 +19,9 @@ import org.candlepin.model.StatisticCurator;
 
 import com.google.inject.Inject;
 
-import org.apache.log4j.Logger;
 import org.hibernate.HibernateException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import javax.ws.rs.PUT;
@@ -31,7 +32,7 @@ import javax.ws.rs.Path;
  */
 @Path("/statistics/generate")
 public class StatisticResource {
-    private static Logger log = Logger.getLogger(StatisticResource.class);
+    private static Logger log = LoggerFactory.getLogger(StatisticResource.class);
     private StatisticCurator statisticCurator;
     private I18n i18n;
 

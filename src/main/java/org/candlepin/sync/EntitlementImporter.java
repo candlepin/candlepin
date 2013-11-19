@@ -14,19 +14,7 @@
  */
 package org.candlepin.sync;
 
-import java.io.IOException;
-import java.io.Reader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventSink;
 import org.candlepin.model.CertificateSerial;
@@ -42,14 +30,28 @@ import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.model.SubscriptionsCertificate;
+
 import org.codehaus.jackson.map.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
+
+import java.io.IOException;
+import java.io.Reader;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * EntitlementImporter - turn an upstream Entitlement into a local subscription
  */
 public class EntitlementImporter {
-    private static Logger log = Logger.getLogger(EntitlementImporter.class);
+    private static Logger log = LoggerFactory.getLogger(EntitlementImporter.class);
 
     private SubscriptionCurator subscriptionCurator;
     private CertificateSerialCurator csCurator;
@@ -91,9 +93,9 @@ public class EntitlementImporter {
         subscription.setQuantity(entitlement.getQuantity().longValue());
 
         subscription.setProduct(findProduct(productsById, entitlement.getProductId()));
-        String cdnKey = meta.getCdnKey();
-        if (!StringUtils.isBlank(cdnKey)) {
-            Cdn cdn = cdnCurator.lookupByKey(cdnKey);
+        String cdnLabel = meta.getCdnLabel();
+        if (!StringUtils.isBlank(cdnLabel)) {
+            Cdn cdn = cdnCurator.lookupByLabel(cdnLabel);
             if (cdn != null) {
                 subscription.setCdn(cdn);
             }

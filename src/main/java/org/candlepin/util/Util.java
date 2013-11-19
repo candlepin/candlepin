@@ -14,6 +14,16 @@
  */
 package org.candlepin.util;
 
+import org.candlepin.model.CuratorException;
+
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.collections.Closure;
+import org.apache.commons.collections.ClosureUtils;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -36,14 +46,6 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
 
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.collections.Closure;
-import org.apache.commons.collections.ClosureUtils;
-import org.apache.log4j.Logger;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.candlepin.model.CuratorException;
-
 /**
  * Genuinely random utilities.
  */
@@ -53,7 +55,7 @@ public class Util {
      *
      */
     public static final String UTC_STR = "UTC";
-    private static Logger log = Logger.getLogger(Util.class);
+    private static Logger log = LoggerFactory.getLogger(Util.class);
     private static ObjectMapper mapper = new ObjectMapper();
 
     private Util() {

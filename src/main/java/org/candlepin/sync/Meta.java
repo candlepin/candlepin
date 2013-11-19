@@ -24,7 +24,7 @@ public class Meta {
     private Date created;
     private String principalName;
     private String webAppPrefix;
-    private String cdnKey;
+    private String cdnLabel;
 
     public Meta() {
         this("0.0.0", new Date(), "", null, null);
@@ -32,7 +32,7 @@ public class Meta {
 
     public Meta(String version, Date creation,
                 String userName, String webAppPrefix,
-                String cdnKey) {
+                String cdnLabel) {
         this.version = version;
         this.created = creation;
 
@@ -46,11 +46,11 @@ public class Meta {
 
         this.principalName = userName;
         this.webAppPrefix = webAppPrefix;
-        this.cdnKey = cdnKey;
+        this.cdnLabel = cdnLabel;
     }
 
-    public String getCdnKey() {
-        return cdnKey;
+    public String getCdnLabel() {
+        return cdnLabel;
     }
 
     public String getVersion() {
@@ -85,7 +85,7 @@ public class Meta {
         this.webAppPrefix = prefix;
     }
 
-    public void setCdnKey(String cdnKey) {
-        this.cdnKey = cdnKey;
+    public void setCdnLabel(String cdnLabel) {
+        this.cdnLabel = cdnLabel;
     }
 }

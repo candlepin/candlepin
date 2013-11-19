@@ -39,7 +39,7 @@ JACKSON = [group('jackson-core-lgpl',
                  :version => '1.9.2')]
 SUN_JAXB = 'com.sun.xml.bind:jaxb-impl:jar:2.1.12'
 JUNIT = ['junit:junit:jar:4.5', 'org.mockito:mockito-all:jar:1.8.5']
-LOG4J = 'log4j:log4j:jar:1.2.14'
+LOGBACK = [group('logback-core', 'logback-classic', :under => 'ch.qos.logback', :version => '1.0.13')]
 HIBERNATE = ['org.hibernate:hibernate-core:jar:3.3.2.GA',
              'org.hibernate:hibernate-annotations:jar:3.4.0.GA',
              'org.hibernate:hibernate-commons-annotations:jar:3.3.0.ga',
@@ -53,8 +53,7 @@ HIBERNATE = ['org.hibernate:hibernate-core:jar:3.3.2.GA',
              'cglib:cglib:jar:2.2',
              'javassist:javassist:jar:3.9.0.GA',
              'javax.transaction:jta:jar:1.1',
-             'org.slf4j:slf4j-api:jar:1.5.8',
-             'org.slf4j:slf4j-log4j12:jar:1.4.2',
+             'org.slf4j:slf4j-api:jar:1.6.1',
              'org.freemarker:freemarker:jar:2.3.15',
              'c3p0:c3p0:jar:0.9.0',
              'dom4j:dom4j:jar:1.6.1']
@@ -183,7 +182,7 @@ define "candlepin" do
   #
   compile.options.target = '1.6'
   compile.options.source = '1.6'
-  compile_classpath = [COMMONS, RESTEASY, LOG4J, HIBERNATE, BOUNCYCASTLE,
+  compile_classpath = [COMMONS, RESTEASY, LOGBACK, HIBERNATE, BOUNCYCASTLE,
     GUICE, JACKSON, QUARTZ, GETTEXT_COMMONS, HORNETQ, SUN_JAXB, MIME4J, OAUTH, RHINO, COLLECTIONS]
   compile.with compile_classpath
   compile.with LOGDRIVER if use_logdriver
@@ -205,9 +204,7 @@ define "candlepin" do
   # the other dependencies are gotten from compile.classpath automagically
   test.with HSQLDB, JUNIT, generate
   test.with LOGDRIVER if use_logdriver
-  # tell log4j to use a different config file during unit tests
-  # this avoids log4j using the config from guice-persist
-  test.using :java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError', '-Dlog4j.configuration=log4j.properties' ]
+  test.using :java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ]
 
 
   #
@@ -352,8 +349,8 @@ define "candlepin" do
 
         ant.taskdef :name=>'schema',
           :classname=>'org.hibernate.tool.ant.HibernateToolTask',
-          #:classpath=>Buildr.artifacts([HIBERNATE, HSQLDB, DB, COMMONS, LOG4J, RESTEASY, JACKSON, QUARTZ]).each(&:invoke).map(&:name).join(File::PATH_SEPARATOR)
-          :classpath=>Buildr.artifacts([HIBERNATE, COMMONS, LOG4J, QUARTZ]).each(&:invoke).map(&:name).join(File::PATH_SEPARATOR)
+          #:classpath=>Buildr.artifacts([HIBERNATE, HSQLDB, DB, COMMONS, LOGBACK, RESTEASY, JACKSON, QUARTZ]).each(&:invoke).map(&:name).join(File::PATH_SEPARATOR)
+          :classpath=>Buildr.artifacts([HIBERNATE, COMMONS, LOGBACK, QUARTZ]).each(&:invoke).map(&:name).join(File::PATH_SEPARATOR)
 
         ant.schema :destdir=>'target/schema' do
           ant.classpath :path=>_('target/classes')

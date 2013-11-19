@@ -29,15 +29,18 @@ import org.candlepin.model.RulesCurator;
 import org.candlepin.model.Status;
 import org.candlepin.resource.StatusResource;
 
-import org.apache.log4j.Appender;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.apache.log4j.spi.LoggingEvent;
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.spi.LoggingEvent;
+import ch.qos.logback.core.Appender;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.PrintStream;
@@ -107,7 +110,8 @@ public class StatusResourceTest {
     @Test
     public void simulateVersionFilter() throws Exception {
         // setup logger to see if we actually log anything
-        Logger srLogger = Logger.getLogger(StatusResource.class);
+        LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
+        Logger srLogger = lc.getLogger(StatusResource.class);
         Appender mockapp = mock(Appender.class);
         srLogger.addAppender(mockapp);
         srLogger.setLevel(Level.DEBUG);

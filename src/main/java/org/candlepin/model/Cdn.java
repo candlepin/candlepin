@@ -36,7 +36,7 @@ import org.hibernate.annotations.GenericGenerator;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_cdn",
-    uniqueConstraints = {@UniqueConstraint(columnNames = {"key"})})
+    uniqueConstraints = {@UniqueConstraint(columnNames = {"label"})})
 public class Cdn extends AbstractHibernateObject {
 
     @Id
@@ -46,7 +46,7 @@ public class Cdn extends AbstractHibernateObject {
     private String id;
 
     @Column(nullable = false)
-    private String key;
+    private String label;
 
     @Column(nullable = false)
     private String name;
@@ -62,9 +62,9 @@ public class Cdn extends AbstractHibernateObject {
         this(null, null, null, null);
     }
 
-    public Cdn(String key, String name, String url,
+    public Cdn(String label, String name, String url,
         CdnCertificate cert) {
-        this.key = key;
+        this.label = label;
         this.name = name;
         this.url = url;
         this.cert = cert;
@@ -87,12 +87,12 @@ public class Cdn extends AbstractHibernateObject {
         this.id = id;
     }
 
-    public String getKey() {
-        return key;
+    public String getLabel() {
+        return label;
     }
 
-    public void setKey(String key) {
-        this.key = key;
+    public void setLabel(String label) {
+        this.label = label;
     }
 
     public String getName() {

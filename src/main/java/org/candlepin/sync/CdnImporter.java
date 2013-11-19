@@ -14,20 +14,22 @@
  */
 package org.candlepin.sync;
 
+import org.candlepin.model.Cdn;
+import org.candlepin.model.CdnCurator;
+
+import org.codehaus.jackson.map.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.io.Reader;
 import java.util.Set;
-
-import org.apache.log4j.Logger;
-import org.candlepin.model.Cdn;
-import org.candlepin.model.CdnCurator;
-import org.codehaus.jackson.map.ObjectMapper;
 
 /**
  * DistributorVersionImporter
  */
 public class CdnImporter {
-    private static Logger log = Logger.getLogger(CdnImporter.class);
+    private static Logger log =  LoggerFactory.getLogger(CdnImporter.class);
 
     private CdnCurator curator;
 
@@ -49,7 +51,7 @@ public class CdnImporter {
     public void store(Set<Cdn> cdnSet) {
         log.debug("Creating/updating cdns");
         for (Cdn cdn : cdnSet) {
-            Cdn existing = curator.lookupByKey(cdn.getKey());
+            Cdn existing = curator.lookupByLabel(cdn.getLabel());
             if (existing == null) {
                 curator.create(cdn);
                 log.debug("Created CDN: " + cdn.getName());

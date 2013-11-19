@@ -14,13 +14,15 @@
  */
 package org.candlepin.policy.js.override;
 
-import org.apache.log4j.Logger;
 import org.candlepin.model.Consumer;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsonJsContext;
 import org.candlepin.policy.js.RulesObjectMapper;
 
 import com.google.inject.Inject;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * OverrideRules
@@ -31,7 +33,7 @@ public class OverrideRules {
 
     private JsRunner jsRules;
     private RulesObjectMapper mapper;
-    private static Logger log = Logger.getLogger(OverrideRules.class);
+    private static Logger log = LoggerFactory.getLogger(OverrideRules.class);
 
     @Inject
     public OverrideRules(JsRunner jsRules) {

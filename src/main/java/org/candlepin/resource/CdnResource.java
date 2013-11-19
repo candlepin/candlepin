@@ -69,10 +69,10 @@ public class CdnResource {
      * @httpcode 200
      */
     @DELETE
-    @Path("/{key}")
-    public void delete(@PathParam("key") String key,
+    @Path("/{label}")
+    public void delete(@PathParam("label") String label,
         @Context Principal principal) {
-        Cdn cdn = curator.lookupByKey(key);
+        Cdn cdn = curator.lookupByLabel(label);
         if (cdn != null) {
             curator.delete(cdn);
         }
@@ -87,11 +87,11 @@ public class CdnResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Cdn create(Cdn cdn,
         @Context Principal principal) {
-        Cdn existing = curator.lookupByKey(cdn.getKey());
+        Cdn existing = curator.lookupByLabel(cdn.getLabel());
         if (existing != null) {
             throw new BadRequestException(
-                i18n.tr("A CDN with the key {0}" +
-                        "already exists", cdn.getKey()));
+                i18n.tr("A CDN with the label {0}" +
+                        "already exists", cdn.getLabel()));
         }
         return curator.create(cdn);
     }
@@ -103,11 +103,11 @@ public class CdnResource {
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("/{key}")
-    public Cdn update(@PathParam("key") String key,
+    @Path("/{label}")
+    public Cdn update(@PathParam("label") String label,
         Cdn cdn,
         @Context Principal principal) {
-        Cdn existing = verifyAndLookupCdn(key);
+        Cdn existing = verifyAndLookupCdn(label);
         if (!StringUtils.isBlank(cdn.getName())) {
             existing.setName(cdn.getName());
         }
@@ -121,12 +121,12 @@ public class CdnResource {
         return existing;
     }
 
-    private Cdn verifyAndLookupCdn(String key) {
-        Cdn cdn = curator.lookupByKey(key);
+    private Cdn verifyAndLookupCdn(String label) {
+        Cdn cdn = curator.lookupByLabel(label);
 
         if (cdn == null) {
             throw new NotFoundException(i18n.tr("No such content delivery network: {0}",
-                key));
+                label));
         }
         return cdn;
     }

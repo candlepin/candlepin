@@ -14,7 +14,6 @@
  */
 package org.candlepin.policy.js;
 
-import org.apache.log4j.Logger;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
 import org.mozilla.javascript.RhinoException;
@@ -22,13 +21,15 @@ import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
 import org.mozilla.javascript.Undefined;
 import org.mozilla.javascript.Wrapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * JsRunner - Responsible for running the javascript rules methods in all namespaces.
  * Used by the various "Rules" classes.
  */
 public class JsRunner {
-    private static Logger log = Logger.getLogger(JsRunner.class);
+    private static Logger log = LoggerFactory.getLogger(JsRunner.class);
 
     private Object rulesNameSpace;
     private String namespace;

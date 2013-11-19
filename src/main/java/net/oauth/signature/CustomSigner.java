@@ -14,9 +14,10 @@
  */
 package net.oauth.signature;
 
-import org.apache.log4j.Logger;
-
 import net.oauth.OAuthException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * CustomerSigner class overrides the default signature verification
@@ -24,7 +25,7 @@ import net.oauth.OAuthException;
  */
 public class CustomSigner extends HMAC_SHA1 {
 
-    private static Logger log = Logger.getLogger(CustomSigner.class);
+    private static Logger log = LoggerFactory.getLogger(CustomSigner.class);
 
     /**
      * Does nothing but make this method public

@@ -25,12 +25,13 @@ import org.candlepin.model.DeletedConsumer;
 import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.resource.dto.HypervisorCheckInResult;
-import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,7 +51,7 @@ import javax.ws.rs.core.MediaType;
  */
 @Path("/hypervisors")
 public class HypervisorResource {
-    private static Logger log = Logger.getLogger(HypervisorResource.class);
+    private static Logger log = LoggerFactory.getLogger(HypervisorResource.class);
     private ConsumerCurator consumerCurator;
     private ConsumerResource consumerResource;
     private DeletedConsumerCurator deletedConsumerCurator;
