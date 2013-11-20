@@ -22,7 +22,6 @@ import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.OptimisticLockException;
 
-import org.apache.log4j.Logger;
 import org.candlepin.auth.Principal;
 import org.candlepin.exceptions.ConcurrentModificationException;
 import org.candlepin.guice.PrincipalProvider;
@@ -38,6 +37,8 @@ import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.impl.CriteriaImpl;
 import org.hibernate.transform.ResultTransformer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
@@ -57,7 +58,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     private final Class<E> entityType;
     private int batchSize = 30;
     @Inject private PrincipalProvider principalProvider;
-    private static Logger log = Logger.getLogger(AbstractHibernateCurator.class);
+    private static Logger log = LoggerFactory.getLogger(AbstractHibernateCurator.class);
 
     protected AbstractHibernateCurator(Class<E> entityType) {
         //entityType = (Class<E>) ((ParameterizedType)
