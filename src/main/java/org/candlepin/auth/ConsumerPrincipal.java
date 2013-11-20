@@ -39,6 +39,10 @@ public class ConsumerPrincipal extends Principal {
         addPermission(new OwnerPermission(consumer.getOwner(),
                     Access.READ_POOLS));
 
+        // Allow consumers to view their owner's subscriptions:
+        addPermission(new OwnerPermission(consumer.getOwner(),
+                    Access.READ_SUBSCRIPTIONS));
+
         // Allow consumers to view their owner's service levels:
         addPermission(new ConsumerServiceLevelsPermission(consumer));
     }
