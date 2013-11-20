@@ -14,13 +14,6 @@
  */
 package org.candlepin.service.impl;
 
-import java.util.Date;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-
-import org.apache.log4j.Logger;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.exceptions.ServiceUnavailableException;
@@ -31,9 +24,18 @@ import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.service.SubscriptionServiceAdapter;
-import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.xnap.commons.i18n.I18n;
+
+import java.util.Date;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 
 /**
  * default SubscriptionAdapter implementation
@@ -41,7 +43,8 @@ import com.google.inject.Inject;
 public class DefaultSubscriptionServiceAdapter implements
         SubscriptionServiceAdapter {
 
-    private static Logger log = Logger.getLogger(DefaultSubscriptionServiceAdapter.class);
+    private static Logger log =
+        LoggerFactory.getLogger(DefaultSubscriptionServiceAdapter.class);
     private SubscriptionCurator subCurator;
     private String activationPrefix;
     private I18n i18n;

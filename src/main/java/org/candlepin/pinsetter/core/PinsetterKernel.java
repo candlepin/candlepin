@@ -34,7 +34,6 @@ import org.candlepin.util.Util;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.apache.log4j.Logger;
 import org.quartz.CronTrigger;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
@@ -48,6 +47,8 @@ import org.quartz.impl.JobDetailImpl;
 import org.quartz.impl.StdSchedulerFactory;
 import org.quartz.impl.matchers.GroupMatcher;
 import org.quartz.spi.JobFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -68,7 +69,7 @@ public class PinsetterKernel {
     public static final String CRON_GROUP = "cron group";
     public static final String SINGLE_JOB_GROUP = "async group";
 
-    private static Logger log = Logger.getLogger(PinsetterKernel.class);
+    private static Logger log = LoggerFactory.getLogger(PinsetterKernel.class);
 
     private Scheduler scheduler;
     private Config config;

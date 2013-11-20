@@ -14,11 +14,12 @@
  */
 package org.candlepin.audit;
 
-import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.hornetq.api.core.HornetQException;
 import org.hornetq.api.core.client.ClientMessage;
 import org.hornetq.api.core.client.MessageHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * ListnerWrapper
@@ -26,7 +27,7 @@ import org.hornetq.api.core.client.MessageHandler;
 public class ListenerWrapper implements MessageHandler {
 
     private EventListener listener;
-    private static Logger log = Logger.getLogger(ListenerWrapper.class);
+    private static Logger log = LoggerFactory.getLogger(ListenerWrapper.class);
     private ObjectMapper mapper;
     public ListenerWrapper(EventListener listener, ObjectMapper mapper) {
         this.listener = listener;
@@ -45,14 +46,14 @@ public class ListenerWrapper implements MessageHandler {
             listener.onEvent(event);
         }
         catch (Exception e1) {
-            log.fatal("Unable to deserialize event object from msg: " + body, e1);
+            log.error("Unable to deserialize event object from msg: " + body, e1);
         }
 
         try {
             msg.acknowledge();
         }
         catch (HornetQException e) {
-            log.fatal("Unable to ack msg", e);
+            log.error("Unable to ack msg", e);
         }
     }
 

@@ -14,6 +14,11 @@
  */
 package org.candlepin.config;
 
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -27,17 +32,14 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.log4j.Logger;
-
 /**
  * EncryptedValueConfigurationParser
  */
 public abstract class EncryptedValueConfigurationParser extends
     ConfigurationParser {
     private String passphrase = null;
-    private static Logger log = Logger.getLogger(EncryptedValueConfigurationParser.class);
+    private static Logger log =
+        LoggerFactory.getLogger(EncryptedValueConfigurationParser.class);
 
     public EncryptedValueConfigurationParser(Config config) {
         String secretFile = config

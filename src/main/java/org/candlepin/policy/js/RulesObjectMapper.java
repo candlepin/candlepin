@@ -14,11 +14,8 @@
  */
 package org.candlepin.policy.js;
 
-import java.util.Map;
-import java.util.Map.Entry;
-
-import org.apache.log4j.Logger;
 import org.candlepin.exceptions.IseException;
+
 import org.codehaus.jackson.map.AnnotationIntrospector;
 import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -27,6 +24,11 @@ import org.codehaus.jackson.map.ser.impl.SimpleBeanPropertyFilter;
 import org.codehaus.jackson.map.ser.impl.SimpleFilterProvider;
 import org.codehaus.jackson.node.ObjectNode;
 import org.codehaus.jackson.xc.JaxbAnnotationIntrospector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * RulesObjectMapper
@@ -45,7 +47,7 @@ import org.codehaus.jackson.xc.JaxbAnnotationIntrospector;
  */
 public class RulesObjectMapper {
 
-    private static Logger log = Logger.getLogger(RulesObjectMapper.class);
+    private static Logger log = LoggerFactory.getLogger(RulesObjectMapper.class);
 
     private static class InstanceHolder {
         public static final RulesObjectMapper INSTANCE = new RulesObjectMapper();

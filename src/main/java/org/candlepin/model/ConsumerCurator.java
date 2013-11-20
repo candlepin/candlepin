@@ -23,12 +23,13 @@ import org.candlepin.paging.PageRequest;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
-import org.apache.log4j.Logger;
 import org.hibernate.Query;
 import org.hibernate.ReplicationMode;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -50,7 +51,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     @Inject private DeletedConsumerCurator deletedConsumerCurator;
     @Inject private Config config;
     private static final int NAME_LENGTH = 250;
-    private static Logger log = Logger.getLogger(ConsumerCurator.class);
+    private static Logger log = LoggerFactory.getLogger(ConsumerCurator.class);
 
     protected ConsumerCurator() {
         super(Consumer.class);

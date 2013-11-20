@@ -16,14 +16,13 @@ package org.candlepin.pinsetter.tasks;
 
 import static org.quartz.impl.matchers.NameMatcher.jobNameEquals;
 
-import javax.persistence.EntityExistsException;
-import javax.persistence.PersistenceException;
-
-import org.apache.log4j.Logger;
-import org.apache.log4j.MDC;
 import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.PinsetterJobListener;
 import org.candlepin.pinsetter.core.model.JobStatus;
+
+import com.google.inject.Inject;
+import com.google.inject.persist.UnitOfWork;
+
 import org.quartz.Job;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
@@ -31,9 +30,12 @@ import org.quartz.JobExecutionException;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
-import com.google.inject.Inject;
-import com.google.inject.persist.UnitOfWork;
+import javax.persistence.EntityExistsException;
+import javax.persistence.PersistenceException;
 
 /**
  * KingpinJob replaces TransactionalPinsetterJob, which encapsulated
@@ -43,7 +45,7 @@ import com.google.inject.persist.UnitOfWork;
  */
 public abstract class KingpinJob implements Job {
 
-    protected static Logger log = Logger.getLogger(KingpinJob.class);
+    protected static Logger log = LoggerFactory.getLogger(KingpinJob.class);
     protected UnitOfWork unitOfWork;
     protected static String prefix = "job";
 

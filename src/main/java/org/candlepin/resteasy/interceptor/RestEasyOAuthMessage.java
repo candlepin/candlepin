@@ -14,6 +14,13 @@
  */
 package org.candlepin.resteasy.interceptor;
 
+import net.oauth.OAuth;
+import net.oauth.OAuthMessage;
+
+import org.jboss.resteasy.spi.HttpRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -22,12 +29,6 @@ import java.util.Map;
 
 import javax.ws.rs.core.MediaType;
 
-import org.apache.log4j.Logger;
-import org.jboss.resteasy.spi.HttpRequest;
-
-import net.oauth.OAuthMessage;
-import net.oauth.OAuth;
-
 
 /**
  * Creates a valid OAuth message off of the fake
@@ -35,7 +36,7 @@ import net.oauth.OAuth;
  */
 public class RestEasyOAuthMessage extends OAuthMessage{
 
-    private static Logger log = Logger.getLogger(RestEasyOAuthMessage.class);
+    private static Logger log = LoggerFactory.getLogger(RestEasyOAuthMessage.class);
 
     public RestEasyOAuthMessage(HttpRequest request) {
         super(request.getHttpMethod(),

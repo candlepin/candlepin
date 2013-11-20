@@ -23,7 +23,6 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.persist.Transactional;
 
-import org.apache.log4j.Logger;
 import org.hibernate.Criteria;
 import org.hibernate.Filter;
 import org.hibernate.LockMode;
@@ -35,6 +34,8 @@ import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.impl.FilterImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -50,7 +51,7 @@ import java.util.TreeSet;
  */
 public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
-    private static Logger log = Logger.getLogger(PoolCurator.class);
+    private static Logger log = LoggerFactory.getLogger(PoolCurator.class);
     private CriteriaRules poolCriteria;
     @Inject
     protected Injector injector;

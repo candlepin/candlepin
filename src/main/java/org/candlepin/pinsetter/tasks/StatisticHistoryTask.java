@@ -19,10 +19,11 @@ import org.candlepin.model.StatisticCurator;
 import com.google.inject.Inject;
 import com.google.inject.persist.UnitOfWork;
 
-import org.apache.log4j.Logger;
 import org.hibernate.HibernateException;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * StatisticHistoryTask.
@@ -34,7 +35,7 @@ public class StatisticHistoryTask extends KingpinJob {
 
     private StatisticCurator statCurator;
 
-    private static Logger log = Logger.getLogger(StatisticHistoryTask.class);
+    private static Logger log = LoggerFactory.getLogger(StatisticHistoryTask.class);
 
     /**
      * Instantiates a new statistic generation.

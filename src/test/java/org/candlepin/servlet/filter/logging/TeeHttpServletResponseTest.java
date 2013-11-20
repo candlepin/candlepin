@@ -31,9 +31,9 @@ import javax.servlet.http.HttpServletResponse;
 
 
 /**
- * LoggingResponseWrapperTest
+ * TeeHttpServletResponseTest
  */
-public class LoggingResponseWrapperTest {
+public class TeeHttpServletResponseTest {
 
     @Mock private HttpServletResponse resp;
 
@@ -53,15 +53,15 @@ public class LoggingResponseWrapperTest {
             }
         }).when(resp).getOutputStream();
 
-        LoggingResponseWrapper lrw = new LoggingResponseWrapper(resp);
-        assertNotNull(lrw);
+        TeeHttpServletResponse tee = new TeeHttpServletResponse(resp);
+        assertNotNull(tee);
 
-        assertNotNull(lrw.getOutputStream());
-        lrw.getOutputStream().write("this is my body".getBytes());
+        assertNotNull(tee.getOutputStream());
+        tee.getOutputStream().write("this is my body".getBytes());
 
-        assertEquals("this is my body", lrw.getResponseBody());
+        assertEquals("this is my body", tee.getBody());
         assertEquals("this is my body", sw.getBuffer().toString());
 
-        assertNotNull(lrw.getWriter());
+        assertNotNull(tee.getWriter());
     }
 }

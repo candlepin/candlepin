@@ -14,6 +14,21 @@
  */
 package org.candlepin.resource;
 
+import org.candlepin.auth.interceptor.Verify;
+import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.Subscription;
+import org.candlepin.model.SubscriptionsCertificate;
+import org.candlepin.service.SubscriptionServiceAdapter;
+
+import com.google.inject.Inject;
+
+import org.jboss.resteasy.annotations.providers.jaxb.DoNotUseJAXBProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.xnap.commons.i18n.I18n;
+
 import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
@@ -28,19 +43,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
-import org.apache.log4j.Logger;
-import org.candlepin.auth.interceptor.Verify;
-import org.candlepin.exceptions.BadRequestException;
-import org.candlepin.model.Consumer;
-import org.candlepin.model.ConsumerCurator;
-import org.candlepin.model.Subscription;
-import org.candlepin.model.SubscriptionsCertificate;
-import org.candlepin.service.SubscriptionServiceAdapter;
-import org.jboss.resteasy.annotations.providers.jaxb.DoNotUseJAXBProvider;
-import org.xnap.commons.i18n.I18n;
-
-import com.google.inject.Inject;
-
 /**
  * SubscriptionResource
  */
@@ -48,7 +50,7 @@ import com.google.inject.Inject;
 @Path("/subscriptions")
 @Consumes(MediaType.APPLICATION_JSON)
 public class SubscriptionResource {
-    private static Logger log = Logger.getLogger(SubscriptionResource.class);
+    private static Logger log = LoggerFactory.getLogger(SubscriptionResource.class);
 
     private SubscriptionServiceAdapter subService;
     private ConsumerCurator consumerCurator;

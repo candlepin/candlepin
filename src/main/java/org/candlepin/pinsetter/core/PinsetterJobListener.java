@@ -14,7 +14,6 @@
  */
 package org.candlepin.pinsetter.core;
 
-import org.apache.log4j.Logger;
 import org.candlepin.auth.Principal;
 import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.model.JobStatus;
@@ -31,6 +30,8 @@ import org.quartz.JobExecutionException;
 import org.quartz.JobKey;
 import org.quartz.JobListener;
 import org.quartz.SchedulerException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This component receives events around job status and performs actions to
@@ -38,7 +39,7 @@ import org.quartz.SchedulerException;
  * record the status of the job for later retreival.
  */
 public class PinsetterJobListener implements JobListener {
-    private static Logger log = Logger.getLogger(PinsetterJobListener.class);
+    private static Logger log = LoggerFactory.getLogger(PinsetterJobListener.class);
 
     public static final String LISTENER_NAME = "Pinsetter Job Listener";
     public static final String PRINCIPAL_KEY = "principal_key";

@@ -14,6 +14,18 @@
  */
 package org.candlepin.resource;
 
+import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.exceptions.NotFoundException;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerTypeCurator;
+
+import com.google.inject.Inject;
+
+import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.xnap.commons.i18n.I18n;
+
 import java.util.List;
 
 import javax.ws.rs.Consumes;
@@ -26,22 +38,12 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import org.apache.log4j.Logger;
-import org.candlepin.exceptions.BadRequestException;
-import org.candlepin.exceptions.NotFoundException;
-import org.candlepin.model.ConsumerType;
-import org.candlepin.model.ConsumerTypeCurator;
-import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
-import org.xnap.commons.i18n.I18n;
-
-import com.google.inject.Inject;
-
 /**
  * Access Path for consumer types
  */
 @Path("/consumertypes")
 public class ConsumerTypeResource {
-    private static Logger log = Logger.getLogger(ConsumerTypeResource.class);
+    private static Logger log = LoggerFactory.getLogger(ConsumerTypeResource.class);
     private ConsumerTypeCurator consumerTypeCurator;
     private I18n i18n;
 

@@ -14,21 +14,22 @@
  */
 package org.candlepin.model;
 
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
-
-import org.apache.log4j.Logger;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.CriteriaSpecification;
 import org.hibernate.criterion.Restrictions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Subscription manager.
  */
 public class SubscriptionCurator extends AbstractHibernateCurator<Subscription> {
 
-    private static Logger log = Logger.getLogger(SubscriptionCurator.class);
+    private static Logger log = LoggerFactory.getLogger(SubscriptionCurator.class);
 
     protected SubscriptionCurator() {
         super(Subscription.class);

@@ -14,27 +14,29 @@
  */
 package org.candlepin.audit;
 
-import java.io.IOException;
-import java.io.Reader;
-import java.io.StringReader;
+import org.candlepin.model.Pool;
+import org.candlepin.service.SubscriptionServiceAdapter;
 
-import org.apache.log4j.Logger;
+import com.google.inject.Inject;
+
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.AnnotationIntrospector;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.introspect.JacksonAnnotationIntrospector;
 import org.codehaus.jackson.xc.JaxbAnnotationIntrospector;
-import org.candlepin.model.Pool;
-import org.candlepin.service.SubscriptionServiceAdapter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.google.inject.Inject;
+import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
 
 /**
  * ActivationListener
  */
 public class ActivationListener implements EventListener {
-    private static Logger log = Logger.getLogger(ActivationListener.class);
+    private static Logger log = LoggerFactory.getLogger(ActivationListener.class);
     private SubscriptionServiceAdapter subscriptionService;
     private ObjectMapper mapper;
 

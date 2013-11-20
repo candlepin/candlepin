@@ -32,12 +32,12 @@
     guice-throwingproviders hibernate-annotations hibernate-commons-annotations
     hibernate-core hibernate-entitymanager hornetq/hornetq-core
     hornetq/hornetq-core-client javassist javax.inject jaxb-impl
-    jboss-logging jpa_1_0_api jta log4j netty oauth oauth-provider
+    jboss-logging jpa_1_0_api jta netty oauth oauth-provider
     postgresql-jdbc resteasy/resteasy-atom-provider
     resteasy/resteasy-guice resteasy/resteasy-jaxb-provider
     resteasy/resteasy-jaxrs resteasy/jaxrs-api
     resteasy/resteasy-multipart-provider scannotation servlet
-    slf4j-api slf4j-log4j12" />
+    slf4j-api logback-classic logback-core" />
 
   <macrodef name="grepfromspec">
     <attribute name="text" />

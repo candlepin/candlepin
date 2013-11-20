@@ -25,6 +25,19 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.spi.LoggingEvent;
+import ch.qos.logback.core.Appender;
+
+import org.apache.commons.codec.binary.Base64;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
@@ -41,16 +54,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 
-import org.apache.commons.codec.binary.Base64;
-import org.apache.log4j.Appender;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.apache.log4j.spi.LoggingEvent;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.mockito.ArgumentCaptor;
-
 /**
  * Test Class for the Util class
  */
@@ -61,7 +64,8 @@ public class UtilTest {
 
     @Before
     public void init() {
-        utilLogger = Logger.getLogger(Util.class);
+        LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
+        utilLogger = lc.getLogger(Util.class);
         mockapp = mock(Appender.class);
         utilLogger.addAppender(mockapp);
         utilLogger.setLevel(Level.DEBUG);

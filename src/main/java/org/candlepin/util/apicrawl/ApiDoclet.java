@@ -14,6 +14,7 @@
  */
 package org.candlepin.util.apicrawl;
 
+//import com.sun.javadoc.AnnotationDesc;
 import com.sun.javadoc.ClassDoc;
 import com.sun.javadoc.DocErrorReporter;
 import com.sun.javadoc.MethodDoc;
@@ -93,9 +94,12 @@ public class ApiDoclet {
         List<RestMethod> methods = new ArrayList<RestMethod>();
 
         for (ClassDoc classDoc : root.classes()) {
-            for (MethodDoc methodDoc : classDoc.methods()) {
-                if (methodDoc.isPublic()) {
-                    methods.add(new RestMethod(methodDoc));
+            // only look at public methods on Resource classes
+            if (classDoc.qualifiedName().endsWith("Resource")) {
+                for (MethodDoc methodDoc : classDoc.methods()) {
+                    if (methodDoc.isPublic()) {
+                        methods.add(new RestMethod(methodDoc));
+                    }
                 }
             }
         }

@@ -16,13 +16,12 @@ package org.candlepin.resteasy.interceptor;
 
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.paging.PageRequest;
 import org.candlepin.paging.Page;
+import org.candlepin.paging.PageRequest;
 import org.candlepin.paging.Paginate;
 
 import com.google.inject.Inject;
 
-import org.apache.log4j.Logger;
 import org.jboss.resteasy.annotations.interception.Precedence;
 import org.jboss.resteasy.annotations.interception.ServerInterceptor;
 import org.jboss.resteasy.core.ServerResponse;
@@ -31,6 +30,8 @@ import org.jboss.resteasy.spi.LinkHeader;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.jboss.resteasy.spi.interception.AcceptedByMethod;
 import org.jboss.resteasy.spi.interception.PostProcessInterceptor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
@@ -50,7 +51,7 @@ import javax.ws.rs.ext.Provider;
 @ServerInterceptor
 @Precedence("HEADER_DECORATOR")
 public class LinkHeaderPostInterceptor implements PostProcessInterceptor, AcceptedByMethod {
-    private static Logger log = Logger.getLogger(LinkHeaderPostInterceptor.class);
+    private static Logger log = LoggerFactory.getLogger(LinkHeaderPostInterceptor.class);
     public static final String LINK_HEADER = "Link";
 
     private Config config;

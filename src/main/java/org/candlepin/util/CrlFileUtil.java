@@ -19,7 +19,8 @@ import org.candlepin.pki.PKIUtility;
 import com.google.inject.Inject;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -34,7 +35,7 @@ import java.security.cert.X509CRL;
  * CrlFileUtil
  */
 public class CrlFileUtil {
-    private static Logger log = Logger.getLogger(CrlFileUtil.class);
+    private static Logger log = LoggerFactory.getLogger(CrlFileUtil.class);
     private PKIUtility pkiUtility;
 
     @Inject

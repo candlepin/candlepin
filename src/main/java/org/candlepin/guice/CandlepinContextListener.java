@@ -14,14 +14,15 @@
  */
 package org.candlepin.guice;
 
-import java.lang.reflect.Type;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Locale;
+import org.candlepin.audit.HornetqContextListener;
+import org.candlepin.logging.LoggerContextListener;
+import org.candlepin.pinsetter.core.PinsetterContextListener;
 
-import javax.servlet.ServletContext;
-import javax.servlet.ServletContextEvent;
-import javax.ws.rs.ext.Provider;
+import com.google.inject.Binding;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Module;
+import com.google.inject.util.Modules;
 
 import org.jboss.resteasy.plugins.guice.GuiceResourceFactory;
 import org.jboss.resteasy.plugins.guice.GuiceResteasyBootstrapServletContextListener;
@@ -31,14 +32,14 @@ import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.jboss.resteasy.util.GetRestful;
 import org.xnap.commons.i18n.I18nManager;
 
-import com.google.inject.Binding;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Module;
-import com.google.inject.util.Modules;
+import java.lang.reflect.Type;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
 
-import org.candlepin.audit.HornetqContextListener;
-import org.candlepin.pinsetter.core.PinsetterContextListener;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletContextEvent;
+import javax.ws.rs.ext.Provider;
 
 /**
  * Customized Candlepin version of
@@ -54,6 +55,8 @@ public class CandlepinContextListener extends
         GuiceResteasyBootstrapServletContextListener {
     private HornetqContextListener hornetqListener;
     private PinsetterContextListener pinsetterListener;
+    private LoggerContextListener loggerListener;
+
     private Injector injector;
     // a bit of application-initialization code. Not sure if this is the
     // best spot for it.
@@ -88,6 +91,8 @@ public class CandlepinContextListener extends
     public void contextDestroyed(ServletContextEvent event) {
         hornetqListener.contextDestroyed();
         pinsetterListener.contextDestroyed();
+        loggerListener = injector.getInstance(LoggerContextListener.class);
+        loggerListener.contextDestroyed();
     }
 
     /**

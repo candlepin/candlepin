@@ -19,7 +19,8 @@ import org.candlepin.util.VersionUtil;
 
 import com.google.inject.persist.Transactional;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.InputStream;
@@ -32,7 +33,7 @@ import java.util.List;
  * RulesCurator
  */
 public class RulesCurator extends AbstractHibernateCurator<Rules> {
-    private static Logger log = Logger.getLogger(RulesCurator.class);
+    private static Logger log = LoggerFactory.getLogger(RulesCurator.class);
     public static final String DEFAULT_RULES_FILE = "/rules/rules.js";
 
     /*

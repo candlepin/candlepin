@@ -20,15 +20,18 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.apache.log4j.Appender;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.apache.log4j.spi.LoggingEvent;
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.spi.LoggingEvent;
+import ch.qos.logback.core.Appender;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -61,7 +64,8 @@ public class LoggingFilterTest {
         filter = new LoggingFilter();
 
         // prepare logger
-        filterlogger = Logger.getLogger(LoggingFilter.class);
+        LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
+        filterlogger = lc.getLogger(LoggingFilter.class);
         mockapp = mock(Appender.class);
         filterlogger.addAppender(mockapp);
         filterlogger.setLevel(Level.DEBUG);

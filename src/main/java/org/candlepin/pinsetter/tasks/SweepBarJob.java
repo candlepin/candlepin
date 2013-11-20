@@ -14,20 +14,22 @@
  */
 package org.candlepin.pinsetter.tasks;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-
-import org.apache.log4j.Logger;
 import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.PinsetterKernel;
+
+import com.google.inject.Inject;
+import com.google.inject.persist.UnitOfWork;
+
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.quartz.JobKey;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.google.inject.Inject;
-import com.google.inject.persist.UnitOfWork;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 
 /**
  * PinsetterSweepBarJob
@@ -50,7 +52,7 @@ import com.google.inject.persist.UnitOfWork;
 @DisallowConcurrentExecution
 public class SweepBarJob extends KingpinJob {
 
-    private static Logger log = Logger.getLogger(SweepBarJob.class);
+    private static Logger log = LoggerFactory.getLogger(SweepBarJob.class);
     public static final String DEFAULT_SCHEDULE = "0 0/5 * * * ?"; //every five minutes
 
     private JobCurator jobCurator;

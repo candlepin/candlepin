@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <contextName>candlepin</contextName>
+
+    <turboFilter class="org.candlepin.logging.LoggerAndMDCFilter">
+        <key>orgLogLevel</key>
+        <topLogger>org.candlepin</topLogger>
+        <OnMatch>ACCEPT</OnMatch>
+    </turboFilter>
+
+    <appender name="CandlepinAppender" class="ch.qos.logback.core.FileAppender">
+        <file>/var/log/candlepin/candlepin.log</file>
+        <encoder>
+            <pattern>%d{ISO8601} [%X{requestType}=%X{requestUuid}, org=%X{org}] %-5p %c - %m%n</pattern>
+        </encoder>
+        <!-- The LoggingFilter is invoked before we know the org, so to make sure we print the request
+             with the org, the AuthInterceptor reprints the request.  The statements that do this
+             reprinting are marked as DUPLICATE.  Uncomment the below to suppress duplicates.  Note
+             that we do not want to suppress duplicates in production because it is unlikely the
+             LoggingFilter will be set to DEBUG level there.  -->
+        <!--
+        <filter class="ch.qos.logback.core.filter.EvaluatorFilter">
+            <evaluator class="ch.qos.logback.classic.boolex.OnMarkerEvaluator">
+                <marker>DUPLICATE</marker>
+            </evaluator>
+            <OnMatch>DENY</OnMatch>
+        </filter>
+        -->
+    </appender>
+
+    <appender name="ErrorAppender" class="ch.qos.logback.core.FileAppender">
+        <file>/var/log/candlepin/error.log</file>
+        <encoder>
+            <pattern>%d{ISO8601} [%X{requestType}=%X{requestUuid}, org=%X{org}] %-5p %c - %m%n</pattern>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>WARN</level>
+        </filter>
+    </appender>
+
+    <logger name="org.candlepin" level="INFO"/>
+
+    <root level="WARN">
+        <appender-ref ref="CandlepinAppender" />
+        <appender-ref ref="ErrorAppender" />
+    </root>
+</configuration>

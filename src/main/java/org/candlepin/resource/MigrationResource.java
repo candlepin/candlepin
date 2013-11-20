@@ -19,8 +19,9 @@ import org.candlepin.pinsetter.tasks.MigrateOwnerJob;
 
 import com.google.inject.Inject;
 
-import org.apache.log4j.Logger;
 import org.quartz.JobDetail;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import javax.ws.rs.DefaultValue;
@@ -35,7 +36,7 @@ import javax.ws.rs.core.MediaType;
  */
 @Path("/migrations")
 public class MigrationResource {
-    private static Logger log = Logger.getLogger(MigrationResource.class);
+    private static Logger log = LoggerFactory.getLogger(MigrationResource.class);
     public static final String OWNER = "owner";
 
     private I18n i18n;

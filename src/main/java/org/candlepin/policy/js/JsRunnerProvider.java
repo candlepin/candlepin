@@ -14,24 +14,25 @@
  */
 package org.candlepin.policy.js;
 
-import java.util.Date;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-import org.apache.log4j.Logger;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SystemPrincipal;
 import org.candlepin.model.RulesCurator;
+
+import com.google.inject.Inject;
+import com.google.inject.Provider;
+
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.ContextFactory;
 import org.mozilla.javascript.Script;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-
-import com.google.inject.Inject;
-import com.google.inject.Provider;
+import java.util.Date;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Reads/compiles our javascript rules and the standard js objects only
@@ -39,7 +40,7 @@ import com.google.inject.Provider;
  * lightweight execution scopes per thread/request.
  */
 public class JsRunnerProvider implements Provider<JsRunner> {
-    private static Logger log = Logger.getLogger(JsRunnerProvider.class);
+    private static Logger log = LoggerFactory.getLogger(JsRunnerProvider.class);
 
     private RulesCurator rulesCurator;
 

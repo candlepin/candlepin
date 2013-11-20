@@ -14,10 +14,6 @@
  */
 package org.candlepin.policy.js.entitlement;
 
-import java.util.List;
-import java.util.Set;
-
-import org.apache.log4j.Logger;
 import org.candlepin.config.Config;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -30,9 +26,14 @@ import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsonJsContext;
 import org.candlepin.policy.js.ProductCache;
 import org.candlepin.util.DateSource;
-import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
+
+import org.slf4j.LoggerFactory;
+import org.xnap.commons.i18n.I18n;
+
+import java.util.List;
+import java.util.Set;
 
 /**
  * Enforces entitlement rules for normal (non-manifest) consumers.
@@ -55,7 +56,7 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
         this.consumerCurator = consumerCurator;
         this.poolCurator = poolCurator;
 
-        log = Logger.getLogger(EntitlementRules.class);
+        log = LoggerFactory.getLogger(EntitlementRules.class);
     }
 
     @Override

@@ -14,13 +14,15 @@
  */
 package org.candlepin.pinsetter.tasks;
 
+import org.candlepin.controller.PoolManager;
+
 import com.google.inject.Inject;
 import com.google.inject.persist.UnitOfWork;
 
-import org.apache.log4j.Logger;
-import org.candlepin.controller.PoolManager;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * ExpiredPoolsJob: Runs periodically throughout the day to look for any pools past their
@@ -37,7 +39,7 @@ public class ExpiredPoolsJob extends KingpinJob {
 
     private PoolManager poolManager;
 
-    private static Logger log = Logger.getLogger(ExpiredPoolsJob.class);
+    private static Logger log = LoggerFactory.getLogger(ExpiredPoolsJob.class);
 
     @Inject
     public ExpiredPoolsJob(PoolManager poolManager, UnitOfWork unitOfWork) {

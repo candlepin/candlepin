@@ -14,20 +14,22 @@
  */
 package org.candlepin.sync;
 
+import org.candlepin.model.Cdn;
+import org.candlepin.model.CdnCurator;
+
+import org.codehaus.jackson.map.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.io.Reader;
 import java.util.Set;
-
-import org.apache.log4j.Logger;
-import org.candlepin.model.Cdn;
-import org.candlepin.model.CdnCurator;
-import org.codehaus.jackson.map.ObjectMapper;
 
 /**
  * DistributorVersionImporter
  */
 public class CdnImporter {
-    private static Logger log = Logger.getLogger(CdnImporter.class);
+    private static Logger log =  LoggerFactory.getLogger(CdnImporter.class);
 
     private CdnCurator curator;
 

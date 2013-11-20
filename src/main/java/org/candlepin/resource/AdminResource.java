@@ -14,12 +14,9 @@
  */
 package org.candlepin.resource;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
-
-import org.apache.log4j.Logger;
+import org.candlepin.auth.Principal;
+import org.candlepin.auth.SystemPrincipal;
+import org.candlepin.auth.interceptor.SecurityHole;
 import org.candlepin.model.User;
 import org.candlepin.model.UserCurator;
 import org.candlepin.service.UserServiceAdapter;
@@ -27,10 +24,14 @@ import org.candlepin.service.impl.DefaultUserServiceAdapter;
 
 import com.google.inject.Inject;
 
-import org.candlepin.auth.Principal;
-import org.candlepin.auth.SystemPrincipal;
-import org.candlepin.auth.interceptor.SecurityHole;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 
 /**
  * Candlepin server administration REST calls.
@@ -38,7 +39,7 @@ import org.jboss.resteasy.spi.ResteasyProviderFactory;
 @Path("/admin")
 public class AdminResource {
 
-    private static Logger log = Logger.getLogger(AdminResource.class);
+    private static Logger log = LoggerFactory.getLogger(AdminResource.class);
 
     private UserServiceAdapter userService;
     private UserCurator userCurator;

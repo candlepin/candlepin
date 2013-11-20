@@ -14,13 +14,15 @@
  */
 package org.candlepin.audit;
 
-import org.apache.log4j.Logger;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SystemPrincipal;
 import org.candlepin.model.EventCurator;
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
 import com.google.inject.Inject;
+
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * DatabaseListener
@@ -28,7 +30,7 @@ import com.google.inject.Inject;
 public class DatabaseListener implements EventListener {
 
     private EventCurator eventCurator;
-    private static Logger log = Logger.getLogger(DatabaseListener.class);
+    private static Logger log = LoggerFactory.getLogger(DatabaseListener.class);
 
     @Inject
     public DatabaseListener(EventCurator eventCurator) {
