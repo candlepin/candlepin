@@ -778,7 +778,7 @@ public class OwnerResource {
     @Path("{owner_key}/subscriptions")
     public List<Subscription> getSubscriptions(
         @PathParam("owner_key") @Verify(value = Owner.class,
-            require = Access.READ_SUBSCRIPTIONS) String ownerKey) {
+            subResource = SubResource.SUBSCRIPTIONS) String ownerKey) {
         Owner o = findOwner(ownerKey);
         return subService.getSubscriptions(o);
     }
