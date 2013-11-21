@@ -264,7 +264,7 @@ public class ConsumerInstalledProductEnricher {
             return false;
         }
         // Non-stackable entitlement may not be valid according to the rules file.
-        else if (!complianceRules.isEntitlementCompliant(this.consumer, ent)) {
+        else if (!complianceRules.isEntitlementCompliant(this.consumer, ent, date)) {
             return false;
         }
 
