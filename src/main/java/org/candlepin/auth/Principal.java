@@ -45,15 +45,15 @@ public abstract class Principal implements Serializable {
     }
 
     public boolean canAccess(Object target, SubResource subResource, Access access) {
-        log.debug(this.getClass().getName() + " principal checking for access to: " +
-            target);
+        log.debug("{} principal checking for access to target: {} sub-resource: {}",
+            new Object [] {this.getClass().getName(), target, subResource});
 
         if (hasFullAccess()) {
             return true;
         }
 
         for (Permission permission : permissions) {
-            log.debug(" perm class: " + permission.getClass().getName());
+            log.debug(" checking permission: {}", permission.getClass().getName());
             if (permission.canAccess(target, subResource, access)) {
                 log.debug("  permission granted");
                 // if any of the principal's permissions allows access, then
