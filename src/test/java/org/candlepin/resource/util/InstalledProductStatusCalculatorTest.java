@@ -18,6 +18,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
@@ -103,7 +104,7 @@ public class InstalledProductStatusCalculatorTest {
         c.addEntitlement(mockEntitlement(c, PRODUCT_1, entRange, PRODUCT_1));
 
         List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, now);
         ConsumerInstalledProductEnricher calculator =
@@ -129,7 +130,7 @@ public class InstalledProductStatusCalculatorTest {
         c.addEntitlement(mockEntitlement(c, PRODUCT_1, range1, PRODUCT_1));
 
         List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, now);
         ConsumerInstalledProductEnricher calculator =
@@ -155,7 +156,7 @@ public class InstalledProductStatusCalculatorTest {
         c.addEntitlement(mockEntitlement(c, PRODUCT_1, range1, PRODUCT_1));
 
         List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, now);
         ConsumerInstalledProductEnricher calculator =
@@ -177,7 +178,7 @@ public class InstalledProductStatusCalculatorTest {
         DateRange range2 = rangeRelativeToDate(now, -1, 4);
         c.addEntitlement(mockEntitlement(c, PRODUCT_1, range2, PRODUCT_1));
         List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
         ComplianceStatus status = compliance.getStatus(c, now);
         status.addNonCompliantProduct(PRODUCT_1);
         ConsumerInstalledProduct cip = new ConsumerInstalledProduct();
@@ -203,7 +204,7 @@ public class InstalledProductStatusCalculatorTest {
         DateRange range2 = rangeRelativeToDate(now, -1, 4);
         c.addEntitlement(mockEntitlement(c, PRODUCT_1, range2, PRODUCT_1));
         List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
         ComplianceStatus status = compliance.getStatus(c, now);
         status.addNonCompliantProduct(PRODUCT_1);
         ConsumerInstalledProduct cip = new ConsumerInstalledProduct();
@@ -237,7 +238,7 @@ public class InstalledProductStatusCalculatorTest {
         c.addEntitlement(mockEntitlement(c, PRODUCT_1, future, PRODUCT_1));
 
         List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, now);
         ConsumerInstalledProductEnricher calculator =
@@ -265,7 +266,7 @@ public class InstalledProductStatusCalculatorTest {
         c.addEntitlement(mockEntitlement(c, PRODUCT_1, future, PRODUCT_1));
 
         List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, now);
         ConsumerInstalledProductEnricher calculator =
@@ -289,7 +290,7 @@ public class InstalledProductStatusCalculatorTest {
         c.addEntitlement(mockEntitlement(c, PRODUCT_1, range1, PRODUCT_1));
 
         List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, now);
         ConsumerInstalledProductEnricher calculator =
@@ -313,7 +314,7 @@ public class InstalledProductStatusCalculatorTest {
         c.addEntitlement(mockEntitlement(c, PRODUCT_1, range1, PRODUCT_1));
 
         List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, now);
         ConsumerInstalledProductEnricher calculator =
@@ -337,7 +338,7 @@ public class InstalledProductStatusCalculatorTest {
         c.addEntitlement(mockEntitlement(c, PRODUCT_1, range1, PRODUCT_1));
 
         List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, now);
         ConsumerInstalledProductEnricher calculator =
@@ -361,7 +362,7 @@ public class InstalledProductStatusCalculatorTest {
         c.addEntitlement(mockEntitlement(c, PRODUCT_1, range1, PRODUCT_1));
 
         List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, now);
         ConsumerInstalledProductEnricher calculator =
@@ -383,7 +384,7 @@ public class InstalledProductStatusCalculatorTest {
         c.addEntitlement(mockEntitlement(c, PRODUCT_1, range1, PRODUCT_1));
 
         List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, now);
         ConsumerInstalledProductEnricher calculator =
@@ -404,7 +405,7 @@ public class InstalledProductStatusCalculatorTest {
         c.addEntitlement(mockEntitlement(c, PRODUCT_1, range1, PRODUCT_1));
 
         List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, now);
         ConsumerInstalledProductEnricher calculator =
@@ -427,7 +428,7 @@ public class InstalledProductStatusCalculatorTest {
             PRODUCT_1));
 
         List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, now);
         ConsumerInstalledProductEnricher calculator =
@@ -454,7 +455,7 @@ public class InstalledProductStatusCalculatorTest {
             PRODUCT_1));
 
         List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, now);
         ConsumerInstalledProductEnricher calculator =
@@ -481,7 +482,7 @@ public class InstalledProductStatusCalculatorTest {
             PRODUCT_1));
 
         List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, now);
         ConsumerInstalledProductEnricher calculator =
@@ -512,7 +513,7 @@ public class InstalledProductStatusCalculatorTest {
             PRODUCT_1));
 
         List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, now);
         ConsumerInstalledProductEnricher calculator =
@@ -544,7 +545,7 @@ public class InstalledProductStatusCalculatorTest {
             PRODUCT_1));
 
         List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, now);
         ConsumerInstalledProductEnricher calculator =
@@ -570,7 +571,7 @@ public class InstalledProductStatusCalculatorTest {
             PRODUCT_1));
 
         List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, now);
         ConsumerInstalledProductEnricher calculator =
@@ -601,7 +602,7 @@ public class InstalledProductStatusCalculatorTest {
             PRODUCT_1));
 
         List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, now);
         ConsumerInstalledProductEnricher calculator =
@@ -624,7 +625,7 @@ public class InstalledProductStatusCalculatorTest {
         c.addEntitlement(mockStackedEntitlement(c, range2, STACK_ID_1, PRODUCT_1, 1,
             PRODUCT_1));
         List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
         ComplianceStatus status = compliance.getStatus(c, now);
         assertEquals("partial", status.getStatus());
         assertTrue(status.getPartialStacks().containsKey(STACK_ID_1));
@@ -647,7 +648,7 @@ public class InstalledProductStatusCalculatorTest {
             PRODUCT_1));
 
         List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, now);
         ConsumerInstalledProductEnricher calculator =
@@ -674,7 +675,7 @@ public class InstalledProductStatusCalculatorTest {
         c.addEntitlement(mockEntitlement(c, PRODUCT_1, range3, PRODUCT_1));
 
         List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, now);
         ConsumerInstalledProductEnricher calculator =
@@ -701,7 +702,7 @@ public class InstalledProductStatusCalculatorTest {
         c.addEntitlement(mockEntitlement(c, PRODUCT_1, range2, PRODUCT_1));
 
         List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, now);
         ConsumerInstalledProductEnricher calculator =
@@ -765,5 +766,10 @@ public class InstalledProductStatusCalculatorTest {
         cal.add(Calendar.MONTH, endMonths);
         Date end = cal.getTime();
         return new DateRange(start, end);
+    }
+
+    private void mockEntCurator(Consumer c, List<Entitlement> ents) {
+        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(ents);
     }
 }

@@ -195,7 +195,7 @@ public class ComplianceRulesTest {
         Consumer c = mockConsumer(PRODUCT_1, PRODUCT_2);
         List<Entitlement> ents = new LinkedList<Entitlement>();
         ents.add(mockEntitlement(c, "Awesome Product", PRODUCT_1, PRODUCT_2));
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
         return c;
     }
 
@@ -214,7 +214,7 @@ public class ComplianceRulesTest {
         Consumer c = mockConsumer(PRODUCT_1, PRODUCT_2);
         List<Entitlement> ents = new LinkedList<Entitlement>();
         ents.add(mockEntitlement(c, "Awesome Product", PRODUCT_1));
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
 
@@ -254,7 +254,7 @@ public class ComplianceRulesTest {
         ents.add(mockEntitlement(c, "Awesome Product", PRODUCT_2));
         ents.get(1).getPool().addProductAttribute(new ProductPoolAttribute("arch",
             "x86_64", "Awesome Product"));
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
 
@@ -278,7 +278,7 @@ public class ComplianceRulesTest {
         ents.add(mockEntitlement(c, "Awesome Product", PRODUCT_2));
         ents.get(1).getPool().addProductAttribute(new ProductPoolAttribute("arch",
             "x86_64", "Awesome Product"));
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
 
@@ -303,7 +303,7 @@ public class ComplianceRulesTest {
         ents.get(0).getPool().addProductAttribute(new ProductPoolAttribute("sockets",
             "4", PRODUCT_1));
         ents.get(0).setQuantity(1000); // quantity makes no difference outside stacking
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
 
@@ -335,7 +335,7 @@ public class ComplianceRulesTest {
         ents.add(mockEntitlement(c, "Awesome Product", PRODUCT_1));
         ents.get(1).getPool().addProductAttribute(new ProductPoolAttribute("sockets",
             "10", PRODUCT_1));
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
 
@@ -367,7 +367,7 @@ public class ComplianceRulesTest {
         ents.add(mockEntitlement(c, "Awesome Product", PRODUCT_1));
         ents.get(1).getPool().addProductAttribute(new ProductPoolAttribute("sockets",
             "6", PRODUCT_1));
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
 
@@ -391,7 +391,7 @@ public class ComplianceRulesTest {
         ents.add(mockEntitlement(c, "Awesome Product", PRODUCT_1));
         ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product",
             PRODUCT_1));
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
 
@@ -428,7 +428,7 @@ public class ComplianceRulesTest {
             ProductPoolAttribute("arch", "PPC64", "Awesome Product"));
         ents.get(4).getPool().addProductAttribute(new
             ProductPoolAttribute("arch", "PPC64", "Awesome Product"));
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status =
             compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
@@ -449,7 +449,7 @@ public class ComplianceRulesTest {
 
         ents.add(mockEntitlement(c, "Awesome Product", PRODUCT_1));
 
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
 
@@ -471,7 +471,7 @@ public class ComplianceRulesTest {
         ents.get(0).getPool().addProductAttribute(new ProductPoolAttribute("sockets",
             "0", PRODUCT_1));
 
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
 
@@ -492,7 +492,7 @@ public class ComplianceRulesTest {
         // One entitlement that only provides four sockets:
         ents.add(mockEntitlement(c, "Awesome Product", PRODUCT_1));
 
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
 
@@ -517,7 +517,7 @@ public class ComplianceRulesTest {
             PRODUCT_1, PRODUCT_2));
         ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product",
             PRODUCT_1, PRODUCT_2));
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
 
@@ -553,7 +553,7 @@ public class ComplianceRulesTest {
             new ProductPoolAttribute("arch", "x86_64", "Awesome Product"));
         ents.get(3).getPool().addProductAttribute(
             new ProductPoolAttribute("arch", "x86_64", "Awesome Product"));
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
 
@@ -580,7 +580,7 @@ public class ComplianceRulesTest {
             PRODUCT_1, PRODUCT_2));
         ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product",
             PRODUCT_1, PRODUCT_2));
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
 
@@ -616,7 +616,7 @@ public class ComplianceRulesTest {
             PRODUCT_1, PRODUCT_2));
         ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product",
             PRODUCT_1, PRODUCT_2));
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
 
@@ -641,7 +641,7 @@ public class ComplianceRulesTest {
             PRODUCT_1, PRODUCT_2));
         ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product",
             PRODUCT_1, PRODUCT_2));
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
 
@@ -663,7 +663,7 @@ public class ComplianceRulesTest {
             PRODUCT_1, PRODUCT_2));
         ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product",
             PRODUCT_1, PRODUCT_3));
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
 
@@ -694,7 +694,7 @@ public class ComplianceRulesTest {
             PRODUCT_2));
         ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product",
             PRODUCT_2));
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
 
@@ -733,7 +733,7 @@ public class ComplianceRulesTest {
             PRODUCT_1));
         ents.add(mockStackedEntitlement(c, STACK_ID_2, "Awesome Product 2",
             PRODUCT_1));
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
 
@@ -777,8 +777,7 @@ public class ComplianceRulesTest {
         Entitlement ent3 = mockEntitlement(consumer, "Provides Product 2 Past Ent1",
             start, TestUtil.createDate(2005, 7, 18), PRODUCT_2);
 
-        when(entCurator.listByConsumer(eq(consumer))).thenReturn(Arrays.asList(ent1,
-            ent2, ent3));
+        mockEntCurator(consumer, Arrays.asList(ent1, ent2, ent3));
 
         // Set up entitlements at specific dates.
 //        Date statusDate = TestUtil.createDate(2005, 6, 14);
@@ -819,7 +818,7 @@ public class ComplianceRulesTest {
             PRODUCT_1, PRODUCT_2));
         ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product",
             PRODUCT_1, PRODUCT_2));
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         Date expectedOnDate = TestUtil.createDate(2011, 8, 30);
         ComplianceStatus status = compliance.getStatus(c, expectedOnDate);
@@ -843,8 +842,7 @@ public class ComplianceRulesTest {
             start, TestUtil.createDate(2005, 6, 22), PRODUCT_1);
 
         // Set up entitlements at specific dates.
-        when(entCurator.listByConsumer(eq(consumer))).thenReturn(
-            Arrays.asList(expired, ent));
+        mockEntCurator(consumer, Arrays.asList(expired, ent));
 
         Date expectedDate = addSecond(ent.getEndDate());
         ComplianceStatus status = compliance.getStatus(consumer, start);
@@ -855,7 +853,7 @@ public class ComplianceRulesTest {
     public void statusGreenWhenConsumerHasNoInstalledProducts() {
         Consumer c = mockConsumer();
         List<Entitlement> ents = new LinkedList<Entitlement>();
-        when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(ents);
+        mockEntCurator(c, ents);
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
         assertEquals(ComplianceStatus.GREEN, status.getStatus());
     }
@@ -873,7 +871,7 @@ public class ComplianceRulesTest {
         List<Entitlement> ents = new LinkedList<Entitlement>();
 
         ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product", PRODUCT_1));
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
         assertEquals(1, status.getPartiallyCompliantProducts().size());
@@ -892,7 +890,7 @@ public class ComplianceRulesTest {
         Consumer c = mockConsumer(PRODUCT_1, PRODUCT_2);
         List<Entitlement> ents = new LinkedList<Entitlement>();
         ents.add(mockEntitlement(c, "Awesome Product", PRODUCT_1));
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
         assertEquals(1, status.getCompliantProducts().size());
@@ -906,7 +904,7 @@ public class ComplianceRulesTest {
         List<Entitlement> ents = new LinkedList<Entitlement>();
 
         ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product", PRODUCT_1));
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
         assertEquals(1, status.getPartiallyCompliantProducts().size());
@@ -920,7 +918,7 @@ public class ComplianceRulesTest {
         List<Entitlement> ents = new LinkedList<Entitlement>();
         ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product", PRODUCT_1));
         ents.add(mockEntitlement(c, "Another Product", PRODUCT_3));
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
         assertEquals(1, status.getPartiallyCompliantProducts().size());
@@ -1000,7 +998,7 @@ public class ComplianceRulesTest {
             new ProductPoolAttribute("arch", "x86_64", "Awesome Product"));
         ents.get(3).getPool().addProductAttribute(
             new ProductPoolAttribute("arch", "PPC64", "Awesome Product"));
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
 
@@ -1021,7 +1019,7 @@ public class ComplianceRulesTest {
 
         Entitlement ent = mockEntitlement(c, PRODUCT_1);
         ent.getPool().setProductAttribute("cores", "32", PRODUCT_1);
-        when(entCurator.listByConsumer(eq(c))).thenReturn(Arrays.asList(ent));
+        mockEntCurator(c, Arrays.asList(ent));
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
 
         assertEquals(0, status.getNonCompliantProducts().size());
@@ -1038,7 +1036,7 @@ public class ComplianceRulesTest {
 
         Entitlement ent = mockEntitlement(c, PRODUCT_1);
         ent.getPool().setProductAttribute("cores", "4", PRODUCT_1);
-        when(entCurator.listByConsumer(eq(c))).thenReturn(Arrays.asList(ent));
+        mockEntCurator(c, Arrays.asList(ent));
 
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
         assertEquals(0, status.getNonCompliantProducts().size());
@@ -1060,7 +1058,7 @@ public class ComplianceRulesTest {
         Entitlement ent2 = mockBaseStackedEntitlement(c, STACK_ID_1, PRODUCT_2, PRODUCT_3);
         ent2.getPool().setProductAttribute("cores", "32", PRODUCT_2);
 
-        when(entCurator.listByConsumer(eq(c))).thenReturn(Arrays.asList(ent1, ent2));
+        mockEntCurator(c, Arrays.asList(ent1, ent2));
 
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
         assertEquals(0, status.getNonCompliantProducts().size());
@@ -1083,7 +1081,7 @@ public class ComplianceRulesTest {
         // Mock consumer has 8 sockets by default.
         ent2.getPool().setProductAttribute("cores", "1", PRODUCT_1);
 
-        when(entCurator.listByConsumer(eq(c))).thenReturn(Arrays.asList(ent1, ent2));
+        mockEntCurator(c, Arrays.asList(ent1, ent2));
 
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
         assertEquals(0, status.getNonCompliantProducts().size());
@@ -1105,7 +1103,7 @@ public class ComplianceRulesTest {
         ent1.getPool().setProductAttribute("cores", "32", PRODUCT_1);
         ent1.getPool().setProductAttribute("sockets", "4", PRODUCT_1);
 
-        when(entCurator.listByConsumer(eq(c))).thenReturn(Arrays.asList(ent1));
+        mockEntCurator(c, Arrays.asList(ent1));
 
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
         assertEquals(0, status.getNonCompliantProducts().size());
@@ -1130,7 +1128,7 @@ public class ComplianceRulesTest {
         ent2.getPool().setProductAttribute("cores", "8", PRODUCT_2);
         ent2.getPool().setProductAttribute("sockets", "2", PRODUCT_2);
 
-        when(entCurator.listByConsumer(eq(c))).thenReturn(Arrays.asList(ent1, ent2));
+        mockEntCurator(c, Arrays.asList(ent1, ent2));
 
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
         assertEquals(0, status.getNonCompliantProducts().size());
@@ -1153,7 +1151,7 @@ public class ComplianceRulesTest {
         Entitlement ent2 = mockBaseStackedEntitlement(c, STACK_ID_1, PRODUCT_2, PRODUCT_3);
         ent2.getPool().setProductAttribute("cores", "32", PRODUCT_2);
 
-        when(entCurator.listByConsumer(eq(c))).thenReturn(Arrays.asList(ent1, ent2));
+        mockEntCurator(c, Arrays.asList(ent1, ent2));
 
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
         assertEquals(0, status.getNonCompliantProducts().size());
@@ -1176,7 +1174,7 @@ public class ComplianceRulesTest {
         Entitlement ent2 = mockBaseStackedEntitlement(c, STACK_ID_1, PRODUCT_2, PRODUCT_3);
         ent2.getPool().setProductAttribute("cores", "8", PRODUCT_2);
 
-        when(entCurator.listByConsumer(eq(c))).thenReturn(Arrays.asList(ent1, ent2));
+        mockEntCurator(c, Arrays.asList(ent1, ent2));
 
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
         assertEquals(0, status.getNonCompliantProducts().size());
@@ -1199,7 +1197,7 @@ public class ComplianceRulesTest {
         Entitlement ent2 = mockBaseStackedEntitlement(c, STACK_ID_1, PRODUCT_2, PRODUCT_3);
         ent2.getPool().setProductAttribute("cores", "4", PRODUCT_2);
 
-        when(entCurator.listByConsumer(eq(c))).thenReturn(Arrays.asList(ent1, ent2));
+        mockEntCurator(c, Arrays.asList(ent1, ent2));
 
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
         assertEquals(0, status.getNonCompliantProducts().size());
@@ -1221,7 +1219,7 @@ public class ComplianceRulesTest {
         Entitlement ent2 = mockBaseStackedEntitlement(c, STACK_ID_1, PRODUCT_2, PRODUCT_3);
         ent2.getPool().setProductAttribute("ram", "4", PRODUCT_2);
 
-        when(entCurator.listByConsumer(eq(c))).thenReturn(Arrays.asList(ent1, ent2));
+        mockEntCurator(c, Arrays.asList(ent1, ent2));
 
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
         assertEquals(ComplianceStatus.GREEN, status.getStatus());
@@ -1244,7 +1242,7 @@ public class ComplianceRulesTest {
         // Mock consumer has 8 sockets by default.
         ent2.getPool().setProductAttribute("ram", "1", PRODUCT_1);
 
-        when(entCurator.listByConsumer(eq(c))).thenReturn(Arrays.asList(ent1, ent2));
+        mockEntCurator(c, Arrays.asList(ent1, ent2));
 
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
         assertEquals(ComplianceStatus.YELLOW, status.getStatus());
@@ -1261,7 +1259,7 @@ public class ComplianceRulesTest {
         ents.add(mockInstanceEntitlement(c, STACK_ID_1, "2", "Awesome Product",
             PRODUCT_1, PRODUCT_2));
         ents.get(0).setQuantity(8);
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
 
@@ -1284,7 +1282,7 @@ public class ComplianceRulesTest {
             PRODUCT_1, PRODUCT_2));
         ents.get(0).setQuantity(6);
         ents.get(1).setQuantity(2);
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
 
@@ -1304,7 +1302,7 @@ public class ComplianceRulesTest {
         ents.add(mockInstanceEntitlement(c, STACK_ID_1, "2", "Awesome Product",
             PRODUCT_1, PRODUCT_2));
         ents.get(0).setQuantity(7);
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
 
@@ -1324,7 +1322,7 @@ public class ComplianceRulesTest {
         ents.add(mockInstanceEntitlement(c, STACK_ID_1, "2", "Awesome Product",
             PRODUCT_1, PRODUCT_2));
         ents.get(0).setQuantity(1);
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
 
@@ -1345,7 +1343,7 @@ public class ComplianceRulesTest {
         ents.add(mockHostRestrictedEntitlement(c, STACK_ID_1, "Awesome Product",
             PRODUCT_1, PRODUCT_2));
         ents.get(0).setQuantity(1);
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
 
@@ -1390,7 +1388,7 @@ public class ComplianceRulesTest {
         ent.getPool().setProductAttribute("cores", "32", PRODUCT_1);
         ent.getPool().setProductAttribute("guest_limit", "8", PRODUCT_1);
 
-        when(entCurator.listByConsumer(eq(c))).thenReturn(Arrays.asList(ent));
+        mockEntCurator(c, Arrays.asList(ent));
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
 
         assertEquals(0, status.getNonCompliantProducts().size());
@@ -1411,7 +1409,7 @@ public class ComplianceRulesTest {
         ent.getPool().setProductAttribute("cores", "32", PRODUCT_1);
         ent.getPool().setProductAttribute("guest_limit", "4", PRODUCT_1);
 
-        when(entCurator.listByConsumer(eq(c))).thenReturn(Arrays.asList(ent));
+        mockEntCurator(c, Arrays.asList(ent));
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
 
         assertEquals(0, status.getNonCompliantProducts().size());
@@ -1440,7 +1438,7 @@ public class ComplianceRulesTest {
         for (Entitlement ent : ents) {
             ent.getPool().setProductAttribute("guest_limit", "4", PRODUCT_1);
         }
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
 
@@ -1474,7 +1472,7 @@ public class ComplianceRulesTest {
         for (Entitlement ent : ents) {
             ent.getPool().setProductAttribute("guest_limit", "4", PRODUCT_1);
         }
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
 
@@ -1508,7 +1506,7 @@ public class ComplianceRulesTest {
         for (Entitlement ent : ents) {
             ent.getPool().setProductAttribute("guest_limit", "8", PRODUCT_1);
         }
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
 
@@ -1542,7 +1540,7 @@ public class ComplianceRulesTest {
             ent.getPool().setProductAttribute("guest_limit", "1", PRODUCT_1);
         }
         ents.get(0).getPool().setProductAttribute("guest_limit", "5", PRODUCT_1);
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
 
@@ -1576,7 +1574,7 @@ public class ComplianceRulesTest {
             ent.getPool().setProductAttribute("guest_limit", "1", PRODUCT_1);
         }
         ents.get(0).getPool().setProductAttribute("guest_limit", "-1", PRODUCT_1);
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
 
@@ -1609,7 +1607,7 @@ public class ComplianceRulesTest {
         for (Entitlement ent : ents) {
             ent.getPool().setProductAttribute("guest_limit", "-1", PRODUCT_1);
         }
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
 
@@ -1640,7 +1638,7 @@ public class ComplianceRulesTest {
             PRODUCT_1, PRODUCT_2);
         mockServerEntitlement.getPool().setProductAttribute("guest_limit", "4", PRODUCT_1);
         ents.add(mockServerEntitlement);
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         // Before we add the hypervisor, this product shouldn't be compliant
         ComplianceStatus status =
@@ -1689,7 +1687,7 @@ public class ComplianceRulesTest {
             .setProductAttribute("guest_limit", "-1", PRODUCT_1);
         ents.add(mockHypervisorEntitlement);
 
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
         // Now that we've added the hypervisor,
         // the base guest_limit of 4 should be overridden
         assertTrue(compliance.isEntitlementCompliant(c, mockServerEntitlement));
@@ -1708,9 +1706,40 @@ public class ComplianceRulesTest {
         mockServerEntitlement.getPool().setProductAttribute("guest_limit", "4", PRODUCT_1);
         ents.add(mockServerEntitlement);
 
-        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        mockEntCurator(c, ents);
 
         // The guest limit has not been modified, should not be compliant.
         assertFalse(compliance.isEntitlementCompliant(c, mockServerEntitlement));
+    }
+
+    @Test
+    public void isStackFullyCompliantOverriddenVirtLimit() {
+        Consumer c = mockConsumer(PRODUCT_1, PRODUCT_2);
+        for (int i = 0; i < 5; i++) {
+            c.addGuestId(new GuestId("" + i, c, true));
+        }
+        List<Entitlement> ents = new LinkedList<Entitlement>();
+
+        Entitlement mockServerEntitlement = mockStackedEntitlement(c, "mockServerStack",
+            PRODUCT_1, PRODUCT_2);
+        mockServerEntitlement.getPool().setProductAttribute("guest_limit", "4", PRODUCT_1);
+        mockServerEntitlement.getPool().setProductAttribute("sockets", "2", PRODUCT_1);
+        mockServerEntitlement.setQuantity(4);
+        ents.add(mockServerEntitlement);
+
+        Entitlement mockHypervisorEntitlement = mockEntitlement(c,
+            "Awesome Enterprise Hypervisor", PRODUCT_1, PRODUCT_2);
+        mockHypervisorEntitlement.getPool()
+            .setProductAttribute("guest_limit", "-1", PRODUCT_1);
+        ents.add(mockHypervisorEntitlement);
+
+        // Now that we've added the hypervisor,
+        // the base guest_limit of 4 should be overridden
+        assertTrue(compliance.isStackCompliant(c, "mockServerStack", ents));
+    }
+
+    private void mockEntCurator(Consumer c, List<Entitlement> ents) {
+        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(ents);
     }
 }

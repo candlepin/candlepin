@@ -69,7 +69,7 @@ public class ComplianceRules {
             return new ComplianceStatus(date);
         }
 
-        List<Entitlement> ents = entCurator.listByConsumer(c);
+        List<Entitlement> ents = entCurator.listByConsumerAndDate(c, date);
 
         JsonJsContext args = new JsonJsContext(mapper);
         args.put("consumer", c);
@@ -102,7 +102,7 @@ public class ComplianceRules {
     }
 
     public boolean isEntitlementCompliant(Consumer consumer, Entitlement ent) {
-        List<Entitlement> ents = entCurator.listByConsumer(consumer);
+        List<Entitlement> ents = entCurator.listByConsumerAndDate(consumer, new Date());
 
         JsonJsContext args = new JsonJsContext(mapper);
         args.put("consumer", consumer);
