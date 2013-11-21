@@ -18,12 +18,13 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
-import org.candlepin.jackson.DynamicPropertyFilter;
+import org.candlepin.jackson.DynamicFilterData;
 import org.candlepin.pinsetter.core.PinsetterKernel;
 import org.jboss.resteasy.core.ResourceMethod;
 import org.jboss.resteasy.core.ServerResponse;
 import org.jboss.resteasy.mock.MockHttpRequest;
 import org.jboss.resteasy.spi.HttpRequest;
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -58,10 +59,12 @@ public class DynamicFilterInterceptorTest {
         ClassForFilterTesting df = new ClassForFilterTesting("first", "second");
         resp.setEntity(df);
         interceptor.postProcess(resp);
-        assertFalse(DynamicPropertyFilter.isAttributeExcluded("attributeOne", df));
-        assertFalse(DynamicPropertyFilter.isAttributeExcluded("attributeTwo", df));
-        assertFalse(DynamicPropertyFilter.isAttributeExcluded("otherObjectOne", df));
-        assertFalse(DynamicPropertyFilter.isAttributeExcluded("otherObjectTwo", df));
+        DynamicFilterData filterData =
+            ResteasyProviderFactory.getContextData(DynamicFilterData.class);
+        assertFalse(filterData.isAttributeExcluded("attributeOne", df));
+        assertFalse(filterData.isAttributeExcluded("attributeTwo", df));
+        assertFalse(filterData.isAttributeExcluded("otherObjectOne", df));
+        assertFalse(filterData.isAttributeExcluded("otherObjectTwo", df));
     }
 
     @Test
@@ -74,10 +77,12 @@ public class DynamicFilterInterceptorTest {
         ClassForFilterTesting df = new ClassForFilterTesting("first", "second");
         resp.setEntity(df);
         interceptor.postProcess(resp);
-        assertFalse(DynamicPropertyFilter.isAttributeExcluded("attributeOne", df));
-        assertTrue(DynamicPropertyFilter.isAttributeExcluded("attributeTwo", df));
-        assertFalse(DynamicPropertyFilter.isAttributeExcluded("otherObjectOne", df));
-        assertFalse(DynamicPropertyFilter.isAttributeExcluded("otherObjectTwo", df));
+        DynamicFilterData filterData =
+            ResteasyProviderFactory.getContextData(DynamicFilterData.class);
+        assertFalse(filterData.isAttributeExcluded("attributeOne", df));
+        assertTrue(filterData.isAttributeExcluded("attributeTwo", df));
+        assertFalse(filterData.isAttributeExcluded("otherObjectOne", df));
+        assertFalse(filterData.isAttributeExcluded("otherObjectTwo", df));
     }
 
     @Test
@@ -91,10 +96,12 @@ public class DynamicFilterInterceptorTest {
         ClassForFilterTesting df = new ClassForFilterTesting("first", "second");
         resp.setEntity(df);
         interceptor.postProcess(resp);
-        assertFalse(DynamicPropertyFilter.isAttributeExcluded("attributeOne", df));
-        assertTrue(DynamicPropertyFilter.isAttributeExcluded("attributeTwo", df));
-        assertTrue(DynamicPropertyFilter.isAttributeExcluded("otherObjectOne", df));
-        assertFalse(DynamicPropertyFilter.isAttributeExcluded("otherObjectTwo", df));
+        DynamicFilterData filterData =
+            ResteasyProviderFactory.getContextData(DynamicFilterData.class);
+        assertFalse(filterData.isAttributeExcluded("attributeOne", df));
+        assertTrue(filterData.isAttributeExcluded("attributeTwo", df));
+        assertTrue(filterData.isAttributeExcluded("otherObjectOne", df));
+        assertFalse(filterData.isAttributeExcluded("otherObjectTwo", df));
     }
 
     @Test
@@ -112,12 +119,14 @@ public class DynamicFilterInterceptorTest {
         df.setOtherObjectOne(innerdf);
         resp.setEntity(df);
         interceptor.postProcess(resp);
-        assertFalse(DynamicPropertyFilter.isAttributeExcluded("attributeOne", df));
-        assertTrue(DynamicPropertyFilter.isAttributeExcluded("attributeTwo", df));
-        assertFalse(DynamicPropertyFilter.isAttributeExcluded("otherObjectOne", df));
-        assertFalse(DynamicPropertyFilter.isAttributeExcluded("otherObjectTwo", df));
-        assertTrue(DynamicPropertyFilter.isAttributeExcluded("attributeOne", innerdf));
-        assertFalse(DynamicPropertyFilter.isAttributeExcluded("attributeTwo", innerdf));
+        DynamicFilterData filterData =
+            ResteasyProviderFactory.getContextData(DynamicFilterData.class);
+        assertFalse(filterData.isAttributeExcluded("attributeOne", df));
+        assertTrue(filterData.isAttributeExcluded("attributeTwo", df));
+        assertFalse(filterData.isAttributeExcluded("otherObjectOne", df));
+        assertFalse(filterData.isAttributeExcluded("otherObjectTwo", df));
+        assertTrue(filterData.isAttributeExcluded("attributeOne", innerdf));
+        assertFalse(filterData.isAttributeExcluded("attributeTwo", innerdf));
     }
 
     @Test
@@ -130,10 +139,12 @@ public class DynamicFilterInterceptorTest {
         ClassForFilterTesting df = new ClassForFilterTesting("first", "second");
         resp.setEntity(df);
         interceptor.postProcess(resp);
-        assertTrue(DynamicPropertyFilter.isAttributeExcluded("attributeOne", df));
-        assertFalse(DynamicPropertyFilter.isAttributeExcluded("attributeTwo", df));
-        assertTrue(DynamicPropertyFilter.isAttributeExcluded("otherObjectOne", df));
-        assertTrue(DynamicPropertyFilter.isAttributeExcluded("otherObjectTwo", df));
+        DynamicFilterData filterData =
+            ResteasyProviderFactory.getContextData(DynamicFilterData.class);
+        assertTrue(filterData.isAttributeExcluded("attributeOne", df));
+        assertFalse(filterData.isAttributeExcluded("attributeTwo", df));
+        assertTrue(filterData.isAttributeExcluded("otherObjectOne", df));
+        assertTrue(filterData.isAttributeExcluded("otherObjectTwo", df));
     }
 
     @Test
@@ -147,10 +158,12 @@ public class DynamicFilterInterceptorTest {
         ClassForFilterTesting df = new ClassForFilterTesting("first", "second");
         resp.setEntity(df);
         interceptor.postProcess(resp);
-        assertTrue(DynamicPropertyFilter.isAttributeExcluded("attributeOne", df));
-        assertFalse(DynamicPropertyFilter.isAttributeExcluded("attributeTwo", df));
-        assertFalse(DynamicPropertyFilter.isAttributeExcluded("otherObjectOne", df));
-        assertTrue(DynamicPropertyFilter.isAttributeExcluded("otherObjectTwo", df));
+        DynamicFilterData filterData =
+            ResteasyProviderFactory.getContextData(DynamicFilterData.class);
+        assertTrue(filterData.isAttributeExcluded("attributeOne", df));
+        assertFalse(filterData.isAttributeExcluded("attributeTwo", df));
+        assertFalse(filterData.isAttributeExcluded("otherObjectOne", df));
+        assertTrue(filterData.isAttributeExcluded("otherObjectTwo", df));
     }
 
     @Test
@@ -168,12 +181,14 @@ public class DynamicFilterInterceptorTest {
         df.setOtherObjectOne(innerdf);
         resp.setEntity(df);
         interceptor.postProcess(resp);
-        assertTrue(DynamicPropertyFilter.isAttributeExcluded("attributeOne", df));
-        assertFalse(DynamicPropertyFilter.isAttributeExcluded("attributeTwo", df));
-        assertFalse(DynamicPropertyFilter.isAttributeExcluded("otherObjectOne", df));
-        assertTrue(DynamicPropertyFilter.isAttributeExcluded("otherObjectTwo", df));
-        assertFalse(DynamicPropertyFilter.isAttributeExcluded("attributeOne", innerdf));
-        assertTrue(DynamicPropertyFilter.isAttributeExcluded("attributeTwo", innerdf));
+        DynamicFilterData filterData =
+            ResteasyProviderFactory.getContextData(DynamicFilterData.class);
+        assertTrue(filterData.isAttributeExcluded("attributeOne", df));
+        assertFalse(filterData.isAttributeExcluded("attributeTwo", df));
+        assertFalse(filterData.isAttributeExcluded("otherObjectOne", df));
+        assertTrue(filterData.isAttributeExcluded("otherObjectTwo", df));
+        assertFalse(filterData.isAttributeExcluded("attributeOne", innerdf));
+        assertTrue(filterData.isAttributeExcluded("attributeTwo", innerdf));
     }
 
     public class ClassForFilterTesting {

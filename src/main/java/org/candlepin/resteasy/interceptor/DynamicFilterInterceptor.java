@@ -14,19 +14,19 @@
  */
 package org.candlepin.resteasy.interceptor;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.ext.Provider;
 
-import org.candlepin.jackson.DynamicPropertyFilter;
+import org.candlepin.jackson.DynamicFilterData;
 import org.jboss.resteasy.annotations.interception.ServerInterceptor;
 import org.jboss.resteasy.core.ResourceMethod;
 import org.jboss.resteasy.core.ServerResponse;
 import org.jboss.resteasy.spi.Failure;
 import org.jboss.resteasy.spi.HttpRequest;
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.jboss.resteasy.spi.interception.PostProcessInterceptor;
 import org.jboss.resteasy.spi.interception.PreProcessInterceptor;
 
@@ -56,26 +56,29 @@ public class DynamicFilterInterceptor implements PreProcessInterceptor,
         if (containsExcl && containsIncl) {
             return null;
         }
-        DynamicPropertyFilter.setAttributes(new HashSet<String>());
         // We wait the list to be a blacklist by default when neither include
         // nor exclude is provided, so we don't accidentally filter anything
-        DynamicPropertyFilter.setExcluding(!containsIncl);
+        DynamicFilterData filterData = new DynamicFilterData(!containsIncl);
+
         if (containsExcl) {
             for (String toExclude : queryParams.get("exclude")) {
-                DynamicPropertyFilter.getAttributes().add(toExclude);
+                filterData.addAttribute(toExclude);
             }
         }
         else if (containsIncl) {
             for (String toInclude : queryParams.get("include")) {
-                DynamicPropertyFilter.getAttributes().add(toInclude);
+                filterData.addAttribute(toInclude);
             }
         }
+        ResteasyProviderFactory.pushContext(DynamicFilterData.class, filterData);
         return null;
     }
 
     @Override
     public void postProcess(ServerResponse response) {
+        DynamicFilterData filterData =
+            ResteasyProviderFactory.getContextData(DynamicFilterData.class);
         Object obj = response.getEntity();
-        DynamicPropertyFilter.setupFilters(obj);
+        filterData.setupFilters(obj);
     }
 }
