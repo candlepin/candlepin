@@ -15,6 +15,7 @@
 package org.candlepin.auth.permissions;
 
 import org.candlepin.auth.Access;
+import org.candlepin.auth.SubResource;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
 import org.hibernate.criterion.Criterion;
@@ -37,7 +38,8 @@ public class ConsumerPermission extends TypedPermission<Consumer> {
     }
 
     @Override
-    public boolean canAccessTarget(Consumer target, Access action) {
+    public boolean canAccessTarget(Consumer target, SubResource subResource,
+        Access action) {
         return this.consumer.getUuid().equals(target.getUuid());
     }
 

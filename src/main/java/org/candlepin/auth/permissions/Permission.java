@@ -15,6 +15,7 @@
 package org.candlepin.auth.permissions;
 
 import org.candlepin.auth.Access;
+import org.candlepin.auth.SubResource;
 import org.candlepin.model.Owner;
 import org.hibernate.criterion.Criterion;
 
@@ -23,7 +24,7 @@ import org.hibernate.criterion.Criterion;
  */
 public interface Permission {
 
-    boolean canAccess(Object target, Access access);
+    boolean canAccess(Object target, SubResource subResource, Access access);
 
     /**
      * Permissions have the ability to add restrictions to a hibernate query. This allows

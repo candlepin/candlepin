@@ -15,6 +15,7 @@
 package org.candlepin.auth.permissions;
 
 import org.candlepin.auth.Access;
+import org.candlepin.auth.SubResource;
 import org.candlepin.model.Owner;
 import org.candlepin.model.User;
 import org.hibernate.criterion.Criterion;
@@ -37,7 +38,8 @@ public class UserUserPermission extends TypedPermission<User> {
     }
 
     @Override
-    public boolean canAccessTarget(User target, Access action) {
+    public boolean canAccessTarget(User target, SubResource subResource,
+        Access action) {
         return target.getUsername().equals(username);
     }
 

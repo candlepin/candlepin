@@ -21,6 +21,7 @@ import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.NoAuthPrincipal;
 import org.candlepin.auth.Principal;
+import org.candlepin.auth.SubResource;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.interceptor.SecurityHole;
 import org.candlepin.auth.interceptor.Verify;
@@ -658,7 +659,8 @@ public class ConsumerResource {
 
         // When registering person consumers we need to be sure the username
         // has some association with the owner the consumer is destined for:
-        if (!principal.canAccess(owner, Access.ALL) && !principal.hasFullAccess()) {
+        if (!principal.canAccess(owner, SubResource.NONE, Access.ALL) &&
+            !principal.hasFullAccess()) {
             throw new ForbiddenException(i18n.tr(
                 "User ''{0}'' has no roles for organization ''{1}''",
                 user.getUsername(), owner.getKey()));
@@ -705,7 +707,7 @@ public class ConsumerResource {
 
         // Check permissions for current principal on the owner:
         if ((principal instanceof UserPrincipal) &&
-            !principal.canAccess(owner, Access.ALL)) {
+            !principal.canAccess(owner, SubResource.NONE, Access.ALL)) {
 
             throw new ForbiddenException(i18n.tr(
                 "User ''{0}'' cannot access organization ''{1}''.",

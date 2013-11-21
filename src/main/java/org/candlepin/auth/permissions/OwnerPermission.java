@@ -17,6 +17,7 @@ package org.candlepin.auth.permissions;
 import java.io.Serializable;
 
 import org.candlepin.auth.Access;
+import org.candlepin.auth.SubResource;
 import org.candlepin.model.Owned;
 import org.candlepin.model.Owner;
 import org.hibernate.criterion.Criterion;
@@ -38,7 +39,8 @@ public class OwnerPermission implements Permission, Serializable {
     }
 
     @Override
-    public boolean canAccess(Object target, Access requiredAccess) {
+    public boolean canAccess(Object target, SubResource subResource,
+        Access requiredAccess) {
         if (target instanceof Owned) {
             // First make sure the owner matches:
             if (owner.getKey().equals(((Owned) target).getOwner().getKey()) &&

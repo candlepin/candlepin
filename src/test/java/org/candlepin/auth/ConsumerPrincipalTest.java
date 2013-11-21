@@ -90,7 +90,7 @@ public class ConsumerPrincipalTest {
     public void accessToConsumer() {
         Consumer c = mock(Consumer.class);
         when(c.getUuid()).thenReturn("consumer-uuid");
-        assertTrue(principal.canAccess(consumer, Access.ALL));
+        assertTrue(principal.canAccess(consumer, SubResource.NONE, Access.ALL));
     }
 
     @Test
@@ -100,7 +100,7 @@ public class ConsumerPrincipalTest {
         Entitlement e = mock(Entitlement.class);
         when(e.getConsumer()).thenReturn(c);
 
-        assertTrue(principal.canAccess(e, Access.ALL));
+        assertTrue(principal.canAccess(e, SubResource.NONE, Access.ALL));
     }
 
     @Test
@@ -113,6 +113,6 @@ public class ConsumerPrincipalTest {
 
         when(consumer.getOwner()).thenReturn(o);
 
-        assertTrue(principal.canAccess(p, Access.ALL));
+        assertTrue(principal.canAccess(p, SubResource.NONE, Access.ALL));
     }
 }

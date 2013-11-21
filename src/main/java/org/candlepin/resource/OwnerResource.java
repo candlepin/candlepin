@@ -20,6 +20,7 @@ import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
+import org.candlepin.auth.SubResource;
 import org.candlepin.auth.interceptor.Verify;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.exceptions.BadRequestException;
@@ -443,7 +444,7 @@ public class OwnerResource {
     @Path("{owner_key}/servicelevels")
     public Set<String> ownerServiceLevels(
         @PathParam("owner_key") @Verify(value = Owner.class,
-            require = Access.READ_SERVICE_LEVELS) String ownerKey) {
+        subResource = SubResource.SERVICE_LEVELS) String ownerKey) {
         Owner owner = findOwner(ownerKey);
 
         return poolManager.retrieveServiceLevelsForOwner(owner, false);
@@ -663,7 +664,7 @@ public class OwnerResource {
     @Paginate
     public List<Pool> getPools(
         @PathParam("owner_key")
-            @Verify(value = Owner.class, require = Access.READ_POOLS) String ownerKey,
+            @Verify(value = Owner.class, subResource = SubResource.POOLS) String ownerKey,
         @QueryParam("consumer") String consumerUuid,
         @QueryParam("product") String productId,
         @QueryParam("listall") @DefaultValue("false") boolean listAll,
@@ -691,7 +692,7 @@ public class OwnerResource {
                     "Consumer specified does not belong to owner on path");
             }
 
-            if (!principal.canAccess(c, Access.READ_ONLY)) {
+            if (!principal.canAccess(c, SubResource.NONE, Access.READ_ONLY)) {
                 throw new ForbiddenException(i18n.tr("User {0} cannot access consumer {1}",
                     principal.getPrincipalName(), c.getUuid()));
             }

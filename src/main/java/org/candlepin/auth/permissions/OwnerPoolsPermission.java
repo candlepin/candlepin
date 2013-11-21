@@ -16,46 +16,37 @@ package org.candlepin.auth.permissions;
 
 import org.candlepin.auth.Access;
 import org.candlepin.auth.SubResource;
-import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
-import org.candlepin.model.User;
 import org.hibernate.criterion.Criterion;
-import org.hibernate.criterion.Restrictions;
 
 /**
- * A permission allowing a user access to consumers in their org only if they were the ones
- * to register them, as determined by the username on the consumer.
- *
- * Access can be used to determine if this is READ_ONLY or ALL access.
+ * Grants access to view an owner's pools, as well as their backing subscriptions.
  */
-public class UsersConsumersPermission extends TypedPermission<Consumer> {
+public class OwnerPoolsPermission extends TypedPermission<Owner> {
 
-    private User user;
     private Owner owner;
 
-    public UsersConsumersPermission(User u, Owner o, Access a) {
-        this.user = u;
-        this.owner = o;
-        this.access = a;
+    public OwnerPoolsPermission(Owner owner) {
+        this.owner = owner;
+        this.access = Access.READ_ONLY;
     }
 
     @Override
-    public Class<Consumer> getTargetType() {
-        return Consumer.class;
+    public Class<Owner> getTargetType() {
+        return Owner.class;
     }
 
     @Override
-    public boolean canAccessTarget(Consumer target, SubResource subResource,
+    public boolean canAccessTarget(Owner target, SubResource subResource,
         Access action) {
-        return target.getOwner().getKey().equals(owner.getKey()) &&
-            target.getUsername().equals(user.getUsername()) && providesAccess(action);
+        return target.getKey().equals(owner.getKey()) &&
+            (subResource.equals(SubResource.POOLS) ||
+                subResource.equals(SubResource.SUBSCRIPTIONS)) &&
+                    providesAccess(action);
     }
 
     @Override
     public Criterion getCriteriaRestrictions(Class entityClass) {
-        if (entityClass.equals(Consumer.class)) {
-            return Restrictions.eq("username", user.getUsername());
-        }
         return null;
     }
 
@@ -63,4 +54,6 @@ public class UsersConsumersPermission extends TypedPermission<Consumer> {
     public Owner getOwner() {
         return owner;
     }
+
+
 }

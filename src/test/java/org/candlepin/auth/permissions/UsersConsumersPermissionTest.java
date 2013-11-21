@@ -18,6 +18,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import org.candlepin.auth.Access;
+import org.candlepin.auth.SubResource;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
 import org.candlepin.model.User;
@@ -42,30 +43,30 @@ public class UsersConsumersPermissionTest {
     @Test
     public void allowsUsersConsumersReadOnly() {
         Consumer c = new Consumer("consumer", username, owner, null);
-        assertTrue(readOnlyPerm.canAccess(c, Access.READ_ONLY));
-        assertFalse(readOnlyPerm.canAccess(c, Access.ALL));
+        assertTrue(readOnlyPerm.canAccess(c, SubResource.NONE, Access.READ_ONLY));
+        assertFalse(readOnlyPerm.canAccess(c, SubResource.NONE, Access.ALL));
     }
 
     @Test
     public void allowsUsersConsumersWrite() {
         Consumer c = new Consumer("consumer", username, owner, null);
-        assertTrue(writePerm.canAccess(c, Access.ALL));
-        assertTrue(writePerm.canAccess(c, Access.READ_ONLY));
+        assertTrue(writePerm.canAccess(c, SubResource.NONE, Access.ALL));
+        assertTrue(writePerm.canAccess(c, SubResource.NONE, Access.READ_ONLY));
     }
 
     @Test
     public void blocksConsumersInOtherOrgDespiteSameUsername() {
         Owner other = new Owner("ownerkey2", "My Org 2");
         Consumer c = new Consumer("consumer", username, other, null);
-        assertFalse(readOnlyPerm.canAccess(c, Access.READ_ONLY));
-        assertFalse(readOnlyPerm.canAccess(c, Access.ALL));
+        assertFalse(readOnlyPerm.canAccess(c, SubResource.NONE, Access.READ_ONLY));
+        assertFalse(readOnlyPerm.canAccess(c, SubResource.NONE, Access.ALL));
     }
 
     @Test
     public void blocksOwnerConsumers() {
         Consumer c = new Consumer("consumer", "somebodyelse", owner, null);
-        assertFalse(readOnlyPerm.canAccess(c, Access.READ_ONLY));
-        assertFalse(readOnlyPerm.canAccess(c, Access.ALL));
+        assertFalse(readOnlyPerm.canAccess(c, SubResource.NONE, Access.READ_ONLY));
+        assertFalse(readOnlyPerm.canAccess(c, SubResource.NONE, Access.ALL));
     }
 
 }

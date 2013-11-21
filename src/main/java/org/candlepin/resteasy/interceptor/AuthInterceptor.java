@@ -18,6 +18,7 @@ import org.candlepin.auth.Access;
 import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.NoAuthPrincipal;
 import org.candlepin.auth.Principal;
+import org.candlepin.auth.SubResource;
 import org.candlepin.auth.interceptor.SecurityHole;
 import org.candlepin.auth.interceptor.Verify;
 import org.candlepin.config.Config;
@@ -315,6 +316,7 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
                     if (((Verify) a).require() != Access.NONE) {
                         requiredAccess = ((Verify) a).require();
                     }
+                    SubResource subResource = ((Verify) a).subResource();
 
                     // Use the correct curator (in storeMap) to look up the actual
                     // entity with the annotated argument
@@ -375,7 +377,7 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
                     }
 
                     for (Object entity : entities) {
-                        if (!principal.canAccess(entity, requiredAccess)) {
+                        if (!principal.canAccess(entity, subResource, requiredAccess)) {
                             denyAccess(principal, method);
                         }
                         else {

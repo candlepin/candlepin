@@ -15,6 +15,7 @@
 package org.candlepin.auth.permissions;
 
 import org.candlepin.auth.Access;
+import org.candlepin.auth.SubResource;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
@@ -38,9 +39,13 @@ public class ConsumerPoolPermission extends TypedPermission<Pool> {
     }
 
     @Override
-    public boolean canAccessTarget(Pool target, Access action) {
+    public boolean canAccessTarget(Pool target, SubResource subResource,
+        Access action) {
         // should we mess with username restrictions here?
-        return target.getOwner().getKey().equals(consumer.getOwner().getKey());
+        // Don't allow access to any sub-resources, this is just to view the pools
+        // themselves, not their entitlements for example.
+        return (subResource.equals(SubResource.NONE) &&
+            target.getOwner().getKey().equals(consumer.getOwner().getKey()));
     }
 
     @Override

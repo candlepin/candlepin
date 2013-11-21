@@ -42,7 +42,7 @@ public class SystemPrincipalTest {
     @Test
     public void canAccessEntities() {
         Entitlement e = mock(Entitlement.class);
-        assertTrue(principal.canAccess(e, Access.ALL));
+        assertTrue(principal.canAccess(e, SubResource.NONE, Access.ALL));
     }
 
     @Test

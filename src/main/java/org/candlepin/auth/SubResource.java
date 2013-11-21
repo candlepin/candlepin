@@ -15,10 +15,14 @@
 package org.candlepin.auth;
 
 /**
- * Enumeration of the access rights used in the Candlepin permission model.
+ * Enumeration of the sub-targets used in the Candlepin permission model.
  * @see AuthInterceptor
  */
-public enum Access {
-    // TODO: NONE - kind of a hack for Verify to have a default access type...
-    NONE, ALL, READ_ONLY, READ_SUBSCRIPTIONS;
+public enum SubResource {
+    NONE,
+    ENTITLEMENTS, // pool or consumer entitlements
+    CONSUMERS, // org consumers
+    POOLS, // org pools
+    SUBSCRIPTIONS, // org subscriptions
+    SERVICE_LEVELS; // org service levels
 }

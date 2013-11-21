@@ -618,6 +618,13 @@ class Candlepin
     return results
   end
 
+  def list_pool_entitlements(pool_id, params={})
+    path = "/pools/#{pool_id}/entitlements"
+    results = get(path)
+    return results
+  end
+
+
   def list_rules()
     get_text("/rules")
   end

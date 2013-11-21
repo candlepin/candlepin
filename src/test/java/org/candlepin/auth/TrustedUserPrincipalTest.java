@@ -61,10 +61,10 @@ public class TrustedUserPrincipalTest {
     public void access() {
         Consumer c = mock(Consumer.class);
         Pool p = mock(Pool.class);
-        assertTrue(principal.canAccess(c, Access.ALL));
-        assertTrue(principal.canAccess(null, Access.NONE));
-        assertTrue(principal.canAccess(p, Access.ALL));
-        assertTrue(principal.canAccess("always true", Access.READ_ONLY));
+        assertTrue(principal.canAccess(c, SubResource.NONE, Access.ALL));
+        assertTrue(principal.canAccess(null, SubResource.NONE, Access.NONE));
+        assertTrue(principal.canAccess(p, SubResource.NONE, Access.ALL));
+        assertTrue(principal.canAccess("always true", SubResource.NONE, Access.READ_ONLY));
     }
 
     @Test

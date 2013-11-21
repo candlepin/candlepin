@@ -21,6 +21,27 @@ describe 'Pool Resource' do
     p['type'].should == 'NORMAL'
   end
 
+  it 'does not let consumers view pool entitlements' do
+    owner1 = create_owner random_string('test_owner')
+    owner1_client = user_client(owner1, random_string('testuser'))
+
+    product = create_product
+    @cp.create_subscription(owner1['key'], product.id, 10)
+    @cp.refresh_pools(owner1['key'])
+
+    pool = owner1_client.list_pools(:owner => owner1.id).first
+
+    consumer_client = consumer_client(owner1_client, random_string('testsystem'))
+
+    # This should work fine:
+    owner1_client.list_pool_entitlements(pool['id'])
+
+    # This shouldn't:
+    lambda do
+      consumer_client.list_pool_entitlements(pool['id'])
+    end.should raise_exception(RestClient::Forbidden)
+  end
+
   it 'does not let consumers view another owners pool' do
     owner1 = create_owner random_string('test_owner')
     owner1_client = user_client(owner1, random_string('testuser'))

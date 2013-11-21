@@ -14,7 +14,6 @@
  */
 package org.candlepin.resource;
 
-import org.candlepin.auth.Access;
 import org.candlepin.auth.interceptor.Verify;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.exceptions.BadRequestException;
@@ -124,8 +123,7 @@ public class ActivationKeyResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Pool addPoolToKey(
         @PathParam("activation_key_id") @Verify(ActivationKey.class) String activationKeyId,
-        @PathParam("pool_id")
-        @Verify(value = Pool.class, require = Access.READ_POOLS) String poolId,
+        @PathParam("pool_id") @Verify(Pool.class) String poolId,
         @QueryParam("quantity") Long quantity) {
 
         if (quantity != null && quantity < 1) {
@@ -180,7 +178,7 @@ public class ActivationKeyResource {
     public Pool removePoolFromKey(
         @PathParam("activation_key_id") @Verify(ActivationKey.class) String activationKeyId,
         @PathParam("pool_id")
-        @Verify(value = Pool.class, require = Access.READ_POOLS) String poolId) {
+        @Verify(Pool.class) String poolId) {
         ActivationKey key = findKey(activationKeyId);
         Pool pool = findPool(poolId);
         key.removePool(pool);

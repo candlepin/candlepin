@@ -18,8 +18,6 @@ import org.candlepin.auth.permissions.Permission;
 import org.candlepin.util.Util;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Restrictions;
-
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +42,7 @@ public abstract class Principal implements Serializable {
         this.permissions.add(permission);
     }
 
-    public boolean canAccess(Object target, Access access) {
+    public boolean canAccess(Object target, SubResource subResource, Access access) {
         log.debug(this.getClass().getName() + " principal checking for access to: " +
             target);
 
@@ -54,7 +52,7 @@ public abstract class Principal implements Serializable {
 
         for (Permission permission : permissions) {
             log.debug(" perm class: " + permission.getClass().getName());
-            if (permission.canAccess(target, access)) {
+            if (permission.canAccess(target, subResource, access)) {
                 log.debug("  permission granted");
                 // if any of the principal's permissions allows access, then
                 // we are good to go
