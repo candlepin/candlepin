@@ -52,8 +52,10 @@ public class DynamicFilterInterceptor implements PreProcessInterceptor,
         Map<String, List<String>> queryParams = request.getUri().getQueryParameters();
         boolean containsExcl = queryParams.containsKey("exclude");
         boolean containsIncl = queryParams.containsKey("include");
-        // Cannot do both types of filtering together
-        if (containsExcl && containsIncl) {
+        // Cannot do both types of filtering together,
+        // no point in continuing if neither are present
+        if ((containsExcl && containsIncl) ||
+            !(containsExcl || containsIncl)) {
             return null;
         }
         // We wait the list to be a blacklist by default when neither include
@@ -78,7 +80,9 @@ public class DynamicFilterInterceptor implements PreProcessInterceptor,
     public void postProcess(ServerResponse response) {
         DynamicFilterData filterData =
             ResteasyProviderFactory.getContextData(DynamicFilterData.class);
-        Object obj = response.getEntity();
-        filterData.setupFilters(obj);
+        if (filterData != null) {
+            Object obj = response.getEntity();
+            filterData.setupFilters(obj);
+        }
     }
 }

@@ -31,6 +31,10 @@ public class DynamicPropertyFilter extends CheckableBeanPropertyFilter {
         SerializerProvider serializerProvider, BeanPropertyWriter writer) {
         DynamicFilterData filterData =
             ResteasyProviderFactory.getContextData(DynamicFilterData.class);
-        return !filterData.isAttributeExcluded(writer.getName(), obj);
+        if (filterData != null) {
+            return !filterData.isAttributeExcluded(writer.getName(), obj);
+        }
+        // Allow serialization by default
+        return true;
     }
 }

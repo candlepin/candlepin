@@ -15,6 +15,7 @@
 package org.candlepin.resteasy.interceptor;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
@@ -61,10 +62,7 @@ public class DynamicFilterInterceptorTest {
         interceptor.postProcess(resp);
         DynamicFilterData filterData =
             ResteasyProviderFactory.getContextData(DynamicFilterData.class);
-        assertFalse(filterData.isAttributeExcluded("attributeOne", df));
-        assertFalse(filterData.isAttributeExcluded("attributeTwo", df));
-        assertFalse(filterData.isAttributeExcluded("otherObjectOne", df));
-        assertFalse(filterData.isAttributeExcluded("otherObjectTwo", df));
+        assertNull(filterData);
     }
 
     @Test
