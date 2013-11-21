@@ -18,6 +18,7 @@ import java.io.Serializable;
 
 import org.candlepin.auth.Access;
 import org.candlepin.auth.SubResource;
+import org.candlepin.model.Consumer;
 import org.candlepin.model.Owned;
 import org.candlepin.model.Owner;
 import org.hibernate.criterion.Criterion;
@@ -69,6 +70,14 @@ public class OwnerPermission implements Permission, Serializable {
         if (entityClass.equals(Owner.class)) {
             return Restrictions.eq("key", owner.getKey());
         }
+
+        // Because this can be combined with a UsernameConsumersPermission, we need to add
+        // a filter that will re-introduce consumers hidden by the other permission when
+        // or'd together.
+        if (entityClass.equals(Consumer.class)) {
+            return Restrictions.eq("owner", owner);
+        }
+
         // TODO: Since this is not a typed permission, it would be good to do some
         // filtering for other classes here as well;
         return null;

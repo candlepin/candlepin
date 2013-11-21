@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+e -*- coding: utf-8 -*-
 require 'spec_helper'
 require 'candlepin_scenarios'
 

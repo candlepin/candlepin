@@ -25,13 +25,12 @@ import org.hibernate.criterion.Restrictions;
 /**
  * A permission allowing a user access to consumers in their org only if they were the ones
  * to register them, as determined by the username on the consumer.
- *
- * Access can be used to determine if this is READ_ONLY or ALL access.
  */
-public class UsersConsumersPermission extends TypedPermission<Consumer> {
+public class UsersConsumersPermission implements Permission {
 
     private User user;
     private Owner owner;
+    private Access access;
 
     public UsersConsumersPermission(User u, Owner o, Access a) {
         this.user = u;
@@ -39,16 +38,35 @@ public class UsersConsumersPermission extends TypedPermission<Consumer> {
         this.access = a;
     }
 
-    @Override
-    public Class<Consumer> getTargetType() {
-        return Consumer.class;
-    }
 
     @Override
-    public boolean canAccessTarget(Consumer target, SubResource subResource,
-        Access action) {
-        return target.getOwner().getKey().equals(owner.getKey()) &&
-            target.getUsername().equals(user.getUsername()) && providesAccess(action);
+    public boolean canAccess(Object target, SubResource subResource, Access action) {
+        if (target.getClass().equals(Consumer.class)) {
+            return ((Consumer) target).getOwner().getKey().equals(owner.getKey()) &&
+                ((Consumer) target).getUsername().equals(user.getUsername()) &&
+                providesAccess(action);
+        }
+
+        if (target.getClass().equals(Owner.class) &&
+            subResource.equals(SubResource.CONSUMERS) &&
+            (action.equals(Access.CREATE) || action.equals(Access.READ_ONLY))) {
+            return true;
+        }
+
+
+        return false;
+    }
+
+    /**
+     * Return true if this permission provides the requested access type.
+     * If we have ALL, assume a match, otherwise do an explicit comparison.
+     *
+     * @return true if we provide the given access level.
+     */
+    public boolean providesAccess(Access requiredAccess) {
+        // TODO: more this and all it's copies onto Access:
+        return (this.access == Access.ALL || this.access == requiredAccess ||
+            (this.access == Access.CREATE && requiredAccess == Access.READ_ONLY));
     }
 
     @Override

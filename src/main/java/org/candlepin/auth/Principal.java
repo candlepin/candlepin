@@ -45,8 +45,8 @@ public abstract class Principal implements Serializable {
     }
 
     public boolean canAccess(Object target, SubResource subResource, Access access) {
-        log.debug("{} principal checking for access to target: {} sub-resource: {}",
-            new Object [] {this.getClass().getName(), target, subResource});
+        log.debug("{} principal checking for {} access to target: {} sub-resource: {}",
+            new Object [] {this.getClass().getName(), access, target, subResource});
 
         if (hasFullAccess()) {
             return true;

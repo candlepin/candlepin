@@ -20,5 +20,5 @@ package org.candlepin.auth;
  */
 public enum Access {
     // TODO: NONE - kind of a hack for Verify to have a default access type...
-    NONE, ALL, READ_ONLY;
+    NONE, ALL, READ_ONLY, CREATE;
 }

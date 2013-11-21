@@ -452,8 +452,12 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
         // If we had write or delete access types, that would go here,
         // and we'd only break on the access.all type.
         for (Annotation annotation : method.getAnnotations()) {
+            if (annotation instanceof POST) {
+                minimumLevel = Access.CREATE;
+            }
+
+            // TODO: add Acces update and delete as needed here.
             if (annotation instanceof PUT ||
-                annotation instanceof POST ||
                 annotation instanceof DELETE) {
                 minimumLevel = Access.ALL;
                 break;

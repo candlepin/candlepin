@@ -12,9 +12,7 @@ describe 'System admins' do
       :access => 'ALL',
     }]
     @username = random_string 'user'
-    @user_cp = user_client(@owner, @username)
-    sysadmin_role = @cp.create_role(random_string('testrole'), perms)
-    @cp.add_role_user(sysadmin_role['id'], @username)
+    @user_cp = user_client_with_perms(@owner, @username, 'password', perms)
 
     # Registered by our system admin:
     @consumer1 = @user_cp.register("someconsumer", :system, nil, {},
@@ -54,10 +52,48 @@ describe 'System admins' do
       @user_cp.unregister(@consumer2['uuid'])
     end.should raise_exception(RestClient::ResourceNotFound)
   end
+
+  def create_pool
+    product = create_product
+    sub = @cp.create_subscription(@owner['key'], product.id)
+    @cp.refresh_pools(@owner['key'])
+    pool = @consumer1.list_pools(
+      {:owner => @owner['id'], :product => product['id']}).first
+  end
+
+  it "can create entitlements only for their systems" do
+    pool = create_pool()
+    ent = @user_cp.consume_pool(pool['id'], {:uuid => @consumer1['uuid']})
+    lambda do
+      @user_cp.consume_pool(pool['id'], {:uuid => @consumer2['uuid']})
+    end.should raise_exception(RestClient::ResourceNotFound)
+  end
+
+  it "can view only their system's entitlements" do
+    pool = create_pool()
+    ent = @user_cp.consume_pool(pool['id'], {:uuid => @consumer1['uuid']})
+    ent2 = @cp.consume_pool(pool['id'], {:uuid => @consumer2['uuid']})
+
+    # These should work:
+    @user_cp.get_entitlement(ent['id'])['id'].should == ent['id']
+    @user_cp.list_entitlements({:uuid => @consumer1['uuid']}).size.should == 1
+
+    # These should not:
+    lambda do
+      @user_cp.get_entitlement(ent2['id'])
+    end.should raise_exception(RestClient::ResourceNotFound)
+
+    lambda do
+      @user_cp.list_entitlements({:uuid => @consumer2['uuid']})
+    end.should raise_exception(RestClient::ResourceNotFound)
+  end
+
+  it "can only unsubscribe their system's entitlements" do
+  end
 end
 
 # Testing users who can manage systems they registered, as well as view all other systems:
-describe 'Read-only system admins' do
+describe 'System admins with read-only on org' do
   include CandlepinMethods
 
   before(:each) do
@@ -75,9 +111,7 @@ describe 'Read-only system admins' do
       },
     ]
     @username = random_string 'user'
-    @user_cp = user_client(@owner, @username)
-    sysadmin_role = @cp.create_role(random_string('testrole'), perms)
-    @cp.add_role_user(sysadmin_role['id'], @username)
+    @user_cp = user_client_with_perms(@owner, @username, 'password', perms)
 
     # Registered by our system admin:
     @consumer1 = @user_cp.register("someconsumer", :system, nil, {},

@@ -405,7 +405,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         securityInterceptor.enable();
 
-        ownerResource.ownerConsumers(owner.getKey(), null, null,
+        ownerResource.listConsumers(owner.getKey(), null, null,
             new ArrayList<String>(), null);
     }
 
@@ -421,7 +421,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         setupPrincipal(owner, Access.ALL);
         securityInterceptor.enable();
 
-        ownerResource.ownerConsumers(owner.getKey(), "username", "type", uuids,
+        ownerResource.listConsumers(owner.getKey(), "username", "type", uuids,
             new PageRequest());
     }
 
@@ -443,7 +443,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         setupPrincipal(owner, Access.ALL);
         securityInterceptor.enable();
 
-        ownerResource.ownerConsumers(owner.getKey(), null, null, uuids, null);
+        ownerResource.listConsumers(owner.getKey(), null, null, uuids, null);
     }
 
     @Test
@@ -463,7 +463,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         setupPrincipal(owner, Access.ALL);
         securityInterceptor.enable();
 
-        List<Consumer> results = ownerResource.ownerConsumers(owner.getKey(), null,
+        List<Consumer> results = ownerResource.listConsumers(owner.getKey(), null,
             null, uuids, null);
         assertEquals(2, results.size());
     }

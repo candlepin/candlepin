@@ -63,6 +63,19 @@ public class ConsumerCuratorPermissionsTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void testListForOwnerEditMineViewAllPermissionFiltering() {
+        User u = setupEditMyConsumersViewAllPrincipal();
+
+        Consumer c1 = new Consumer("c1", u.getUsername(), owner, consumerType);
+        consumerCurator.create(c1);
+        Consumer c2 = new Consumer("c2", "anotheruser", owner, consumerType);
+        consumerCurator.create(c2);
+
+        List<Consumer> results = consumerCurator.listByOwner(owner);
+        assertEquals(2, results.size());
+    }
+
+    @Test
     public void testFindByUuidPermissionFiltering() {
         User u = setupOnlyMyConsumersPrincipal();
 
@@ -84,4 +97,13 @@ public class ConsumerCuratorPermissionsTest extends DatabaseTestFixture {
         return u;
     }
 
+    private User setupEditMyConsumersViewAllPrincipal() {
+        Set<Permission> perms = new HashSet<Permission>();
+        User u = new User("fakeuser", "dontcare");
+        perms.add(new UsersConsumersPermission(u, owner, Access.ALL));
+        perms.add(new OwnerPermission(owner, Access.READ_ONLY));
+        Principal p = new UserPrincipal(u.getUsername(), perms, false);
+        setupPrincipal(p);
+        return u;
+    }
 }

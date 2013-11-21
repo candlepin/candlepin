@@ -602,8 +602,9 @@ public class OwnerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/consumers")
     @Paginate
-    public List<Consumer> ownerConsumers(
-        @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
+    public List<Consumer> listConsumers(
+        @PathParam("owner_key")
+        @Verify(value = Owner.class, subResource = SubResource.CONSUMERS) String ownerKey,
         @QueryParam("username") String userName,
         @QueryParam("type") String typeLabel,
         @QueryParam("uuid") @Verify(value = Consumer.class, nullable = true)

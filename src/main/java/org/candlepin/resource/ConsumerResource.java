@@ -707,7 +707,7 @@ public class ConsumerResource {
 
         // Check permissions for current principal on the owner:
         if ((principal instanceof UserPrincipal) &&
-            !principal.canAccess(owner, SubResource.NONE, Access.ALL)) {
+            !principal.canAccess(owner, SubResource.CONSUMERS, Access.CREATE)) {
 
             throw new ForbiddenException(i18n.tr(
                 "User ''{0}'' cannot access organization ''{1}''.",
