@@ -31,6 +31,8 @@ import java.util.List;
  */
 public abstract class Principal implements Serializable {
 
+    private static final long serialVersionUID = 907789978604269132L;
+
     private static Logger log = LoggerFactory.getLogger(Principal.class);
     protected List<Permission> permissions = new ArrayList<Permission>();
 
