@@ -954,7 +954,7 @@ public class ComplianceRulesTest {
         c.setFact("cpu.cpu_socket(s)", "2");
 
         Entitlement ent = mockEntitlement(c, PRODUCT_1);
-        assertTrue(compliance.isEntitlementCompliant(c, ent));
+        assertTrue(compliance.isEntitlementCompliant(c, ent, new Date()));
     }
 
     @Test
@@ -964,7 +964,7 @@ public class ComplianceRulesTest {
 
         Entitlement ent = mockEntitlement(c, PRODUCT_1);
         ent.getPool().setProductAttribute("sockets", "4", PRODUCT_1);
-        assertTrue(compliance.isEntitlementCompliant(c, ent));
+        assertTrue(compliance.isEntitlementCompliant(c, ent, new Date()));
     }
 
     @Test
@@ -974,7 +974,7 @@ public class ComplianceRulesTest {
 
         Entitlement ent = mockEntitlement(c, PRODUCT_1);
         ent.getPool().setProductAttribute("sockets", "4", PRODUCT_1);
-        assertFalse(compliance.isEntitlementCompliant(c, ent));
+        assertFalse(compliance.isEntitlementCompliant(c, ent, new Date()));
     }
 
     @Test
@@ -1690,7 +1690,7 @@ public class ComplianceRulesTest {
         mockEntCurator(c, ents);
         // Now that we've added the hypervisor,
         // the base guest_limit of 4 should be overridden
-        assertTrue(compliance.isEntitlementCompliant(c, mockServerEntitlement));
+        assertTrue(compliance.isEntitlementCompliant(c, mockServerEntitlement, new Date()));
     }
 
     @Test
@@ -1709,7 +1709,8 @@ public class ComplianceRulesTest {
         mockEntCurator(c, ents);
 
         // The guest limit has not been modified, should not be compliant.
-        assertFalse(compliance.isEntitlementCompliant(c, mockServerEntitlement));
+        assertFalse(compliance.isEntitlementCompliant(c,
+            mockServerEntitlement, new Date()));
     }
 
     @Test

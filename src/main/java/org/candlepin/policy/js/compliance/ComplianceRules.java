@@ -101,8 +101,8 @@ public class ComplianceRules {
         return jsRules.runJsFunction(Boolean.class, "is_stack_compliant", args);
     }
 
-    public boolean isEntitlementCompliant(Consumer consumer, Entitlement ent) {
-        List<Entitlement> ents = entCurator.listByConsumerAndDate(consumer, new Date());
+    public boolean isEntitlementCompliant(Consumer consumer, Entitlement ent, Date onDate) {
+        List<Entitlement> ents = entCurator.listByConsumerAndDate(consumer, onDate);
 
         JsonJsContext args = new JsonJsContext(mapper);
         args.put("consumer", consumer);
