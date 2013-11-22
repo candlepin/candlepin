@@ -34,11 +34,17 @@ public class ConsumerPrincipalTest {
 
     private ConsumerPrincipal principal;
     private Consumer consumer;
+    private Owner o;
 
     @Before
     public void init() {
+        o = mock(Owner.class);
+        when(o.getKey()).thenReturn("donaldduck");
+
         consumer = mock(Consumer.class);
         when(consumer.getUuid()).thenReturn("consumer-uuid");
+        when(consumer.getOwner()).thenReturn(o);
+
         principal = new ConsumerPrincipal(consumer);
     }
     @Test
@@ -104,15 +110,33 @@ public class ConsumerPrincipalTest {
     }
 
     @Test
-    public void accessToConsumerPool() {
-        Owner o = mock(Owner.class);
-        when(o.getKey()).thenReturn("donaldduck");
-
+    public void accessToPools() {
         Pool p = mock(Pool.class);
         when(p.getOwner()).thenReturn(o);
 
         when(consumer.getOwner()).thenReturn(o);
 
-        assertTrue(principal.canAccess(p, SubResource.NONE, Access.ALL));
+        assertTrue(principal.canAccess(p, SubResource.ENTITLEMENTS, Access.CREATE));
+    }
+
+    @Test
+    public void accessToBindToPool() {
+        Pool p = mock(Pool.class);
+        when(p.getOwner()).thenReturn(o);
+
+        when(consumer.getOwner()).thenReturn(o);
+
+        assertTrue(principal.canAccess(p, SubResource.ENTITLEMENTS, Access.CREATE));
+        assertFalse(principal.canAccess(p, SubResource.ENTITLEMENTS, Access.READ_ONLY));
+    }
+
+    @Test
+    public void noAaccessToListEntitlementsInPool() {
+        Pool p = mock(Pool.class);
+        when(p.getOwner()).thenReturn(o);
+
+        when(consumer.getOwner()).thenReturn(o);
+
+        assertFalse(principal.canAccess(p, SubResource.ENTITLEMENTS, Access.READ_ONLY));
     }
 }

@@ -17,6 +17,7 @@ package org.candlepin.auth.permissions;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.SubResource;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.User;
 import org.hibernate.criterion.Criterion;
@@ -25,6 +26,11 @@ import org.hibernate.criterion.Restrictions;
 /**
  * A permission allowing a user access to consumers in their org only if they were the ones
  * to register them, as determined by the username on the consumer.
+ *
+ * Assumes the user has full access to those consumers including creation, update,
+ * and deletion.
+ *
+ * Allows the user to create and manage entitlements for the consumer as well.
  */
 public class UsersConsumersPermission implements Permission {
 
@@ -58,6 +64,14 @@ public class UsersConsumersPermission implements Permission {
             return true;
         }
 
+        // Must allow the user to manage their system's entitlements.
+        if (target.getClass().equals(Entitlement.class)) {
+            Entitlement ent = (Entitlement) target;
+            if (ent.getConsumer().getUsername().equals(user.getUsername()) &&
+                ent.getOwner().getKey().equals(owner.getKey())) {
+                return true;
+            }
+        }
 
         return false;
     }

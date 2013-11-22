@@ -6,11 +6,20 @@ describe 'System admins' do
 
   before(:each) do
     @owner = create_owner(random_string('test'))
-    perms = [{
-      :type => 'USERNAME_CONSUMERS',
-      :owner => {:key => @owner['key']},
-      :access => 'ALL',
-    }]
+    perms = [
+      {
+        :type => 'USERNAME_CONSUMERS',
+        :owner => {:key => @owner['key']},
+      },
+      {
+        :type => 'OWNER_POOLS',
+        :owner => {:key => @owner['key']},
+      },
+      {
+        :type => 'ATTACH',
+        :owner => {:key => @owner['key']},
+      }
+    ]
     @username = random_string 'user'
     @user_cp = user_client_with_perms(@owner, @username, 'password', perms)
 
@@ -55,15 +64,16 @@ describe 'System admins' do
 
   def create_pool
     product = create_product
-    sub = @cp.create_subscription(@owner['key'], product.id)
+    sub = @cp.create_subscription(@owner['key'], product.id, 10)
     @cp.refresh_pools(@owner['key'])
-    pool = @consumer1.list_pools(
-      {:owner => @owner['id'], :product => product['id']}).first
+    pool = @user_cp.list_owner_pools(@owner['key'],
+      {:product => product['id']}).first
+    return pool
   end
 
   it "can create entitlements only for their systems" do
     pool = create_pool()
-    ent = @user_cp.consume_pool(pool['id'], {:uuid => @consumer1['uuid']})
+    @user_cp.consume_pool(pool['id'], {:uuid => @consumer1['uuid']})
     lambda do
       @user_cp.consume_pool(pool['id'], {:uuid => @consumer2['uuid']})
     end.should raise_exception(RestClient::ResourceNotFound)
@@ -71,8 +81,8 @@ describe 'System admins' do
 
   it "can view only their system's entitlements" do
     pool = create_pool()
-    ent = @user_cp.consume_pool(pool['id'], {:uuid => @consumer1['uuid']})
-    ent2 = @cp.consume_pool(pool['id'], {:uuid => @consumer2['uuid']})
+    ent = @user_cp.consume_pool(pool['id'], {:uuid => @consumer1['uuid']})[0]
+    ent2 = @cp.consume_pool(pool['id'], {:uuid => @consumer2['uuid']})[0]
 
     # These should work:
     @user_cp.get_entitlement(ent['id'])['id'].should == ent['id']
@@ -81,7 +91,7 @@ describe 'System admins' do
     # These should not:
     lambda do
       @user_cp.get_entitlement(ent2['id'])
-    end.should raise_exception(RestClient::ResourceNotFound)
+    end.should raise_exception(RestClient::Forbidden)
 
     lambda do
       @user_cp.list_entitlements({:uuid => @consumer2['uuid']})
@@ -89,6 +99,17 @@ describe 'System admins' do
   end
 
   it "can only unsubscribe their system's entitlements" do
+    pool = create_pool()
+    ent = @user_cp.consume_pool(pool['id'], {:uuid => @consumer1['uuid']})[0]
+    ent2 = @cp.consume_pool(pool['id'], {:uuid => @consumer2['uuid']})[0]
+
+    @user_cp.unbind_entitlement(ent['id'], {:uuid => @consumer1['uuid']})
+
+    # Technically being unable to view consumer2 causes this before we even
+    # verify the entitlement.
+    lambda do
+      @user_cp.unbind_entitlement(ent2['id'], :uuid => @consumer2['uuid'])
+    end.should raise_exception(RestClient::ResourceNotFound)
   end
 end
 
@@ -109,6 +130,10 @@ describe 'System admins with read-only on org' do
         :owner => {:key => @owner['key']},
         :access => 'READ_ONLY'
       },
+      {
+        :type => 'ATTACH',
+        :owner => {:key => @owner['key']},
+      }
     ]
     @username = random_string 'user'
     @user_cp = user_client_with_perms(@owner, @username, 'password', perms)
@@ -120,6 +145,16 @@ describe 'System admins with read-only on org' do
     # Registered by somebody else:
     @consumer2 = @cp.register("someconsumer2", :system, nil, {},
       'admin', @owner['key'])
+  end
+
+  # TODO: duplicated with above:
+  def create_pool
+    product = create_product
+    sub = @cp.create_subscription(@owner['key'], product.id, 10)
+    @cp.refresh_pools(@owner['key'])
+    pool = @user_cp.list_owner_pools(@owner['key'],
+      {:product => product['id']}).first
+    return pool
   end
 
   it 'can see all systems in org' do
@@ -135,12 +170,10 @@ describe 'System admins with read-only on org' do
   end
 
   it 'can list pools for all systems in org' do
-    pools = @user_cp.list_pools({:consumer => @consumer1['uuid']})
-    lambda do
-      @user_cp.list_pools({:consumer => @consumer1['uuid']})
-    end.should raise_exception(RestClient::ResourceNotFound)
+    # Both of these should be allowed:
+    @user_cp.list_owner_pools(@owner['key'], {:consumer => @consumer1['uuid']})
+    @user_cp.list_owner_pools(@owner['key'], {:consumer => @consumer2['uuid']})
   end
-
 
   it 'can only unregister their systems' do
     # Should succeed:
@@ -148,6 +181,40 @@ describe 'System admins with read-only on org' do
 
     lambda do
       @user_cp.unregister(@consumer2['uuid'])
+    end.should raise_exception(RestClient::Forbidden)
+  end
+
+  it "can create entitlements only for their systems" do
+    pool = create_pool()
+    @user_cp.consume_pool(pool['id'], {:uuid => @consumer1['uuid']})
+    lambda do
+      @user_cp.consume_pool(pool['id'], {:uuid => @consumer2['uuid']})
+    end.should raise_exception(RestClient::Forbidden)
+  end
+
+  it "can view entitlements for other systems in the org" do
+    pool = create_pool()
+    ent = @user_cp.consume_pool(pool['id'], {:uuid => @consumer1['uuid']})[0]
+    ent2 = @cp.consume_pool(pool['id'], {:uuid => @consumer2['uuid']})[0]
+
+    @user_cp.get_entitlement(ent['id'])['id'].should == ent['id']
+    @user_cp.list_entitlements({:uuid => @consumer1['uuid']}).size.should == 1
+
+    @user_cp.get_entitlement(ent2['id'])['id'].should == ent2['id']
+    @user_cp.list_entitlements({:uuid => @consumer2['uuid']}).size.should == 1
+  end
+
+  it "can only unsubscribe their system's entitlements" do
+    pool = create_pool()
+    ent = @user_cp.consume_pool(pool['id'], {:uuid => @consumer1['uuid']})[0]
+    ent2 = @cp.consume_pool(pool['id'], {:uuid => @consumer2['uuid']})[0]
+
+    @user_cp.unbind_entitlement(ent['id'], {:uuid => @consumer1['uuid']})
+
+    # Technically being unable to view consumer2 causes this before we even
+    # verify the entitlement.
+    lambda do
+      @user_cp.unbind_entitlement(ent2['id'], :uuid => @consumer2['uuid'])
     end.should raise_exception(RestClient::Forbidden)
   end
 end

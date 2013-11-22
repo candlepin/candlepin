@@ -663,7 +663,7 @@ public class OwnerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/pools")
     @Paginate
-    public List<Pool> getPools(
+    public List<Pool> listPools(
         @PathParam("owner_key")
             @Verify(value = Owner.class, subResource = SubResource.POOLS) String ownerKey,
         @QueryParam("consumer") String consumerUuid,

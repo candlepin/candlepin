@@ -20,6 +20,7 @@ import static org.junit.Assert.assertTrue;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.SubResource;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.User;
 import org.junit.Before;
@@ -47,13 +48,13 @@ public class UsersConsumersPermissionTest {
     }
 
     @Test
-    public void allowsAccessToRegisterOrgConsumers() {
+    public void allowsRegisterOrgConsumers() {
         Consumer c = new Consumer("consumer", username, owner, null);
         assertTrue(perm.canAccess(owner, SubResource.CONSUMERS, Access.CREATE));
     }
 
     @Test
-    public void allowsAccessToListOrgConsumers() {
+    public void allowsListOrgConsumers() {
         Consumer c = new Consumer("consumer", username, owner, null);
         assertTrue(perm.canAccess(owner, SubResource.CONSUMERS, Access.READ_ONLY));
     }
@@ -85,6 +86,24 @@ public class UsersConsumersPermissionTest {
         Consumer c = new Consumer("consumer", "somebodyelse", owner, null);
         assertFalse(perm.canAccess(c, SubResource.NONE, Access.READ_ONLY));
         assertFalse(perm.canAccess(c, SubResource.NONE, Access.ALL));
+    }
+
+    @Test
+    public void allowsUsernameConsumersUnbind() {
+        Consumer c = new Consumer("consumer", username, owner, null);
+        Entitlement e = new Entitlement();
+        e.setOwner(owner);
+        e.setConsumer(c);
+        assertTrue(perm.canAccess(e, SubResource.NONE, Access.ALL));
+    }
+
+    @Test
+    public void blocksOtherUsernameConsumersUnbind() {
+        Consumer c = new Consumer("consumer", "somebodyelse", owner, null);
+        Entitlement e = new Entitlement();
+        e.setOwner(owner);
+        e.setConsumer(c);
+        assertFalse(perm.canAccess(e, SubResource.NONE, Access.ALL));
     }
 
 }

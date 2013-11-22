@@ -16,21 +16,22 @@ package org.candlepin.auth.permissions;
 
 import org.candlepin.auth.Access;
 import org.candlepin.auth.SubResource;
-import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Restrictions;
 
 /**
+ * Allows viewing and attaching a subscription for a specific pool in an org.
  *
+ * Must be combined with another permission to list all pools in the org.
  */
-public class ConsumerPoolPermission extends TypedPermission<Pool> {
+public class AttachPermission extends TypedPermission<Pool> {
 
-    private Consumer consumer;
+    private Owner owner;
 
-    public ConsumerPoolPermission(Consumer consumer) {
-        this.consumer = consumer;
+    public AttachPermission(Owner owner) {
+        this.owner = owner;
     }
 
     @Override
@@ -41,24 +42,33 @@ public class ConsumerPoolPermission extends TypedPermission<Pool> {
     @Override
     public boolean canAccessTarget(Pool target, SubResource subResource,
         Access required) {
-        // should we mess with username restrictions here?
-        // Don't allow access to any sub-resources, this is just to view the pools
-        // themselves, not their entitlements for example.
-        return (subResource.equals(SubResource.NONE) &&
-            target.getOwner().getKey().equals(consumer.getOwner().getKey()));
+
+        // Allow viewing a specific pool:
+        if (subResource.equals(SubResource.NONE) && Access.READ_ONLY.equals(required)) {
+            return target.getOwner().getKey().equals(owner.getKey());
+        }
+
+        // Allow subscribing to a pool:
+        else if (subResource.equals(SubResource.ENTITLEMENTS) &&
+            Access.CREATE.equals(required)) {
+            return target.getOwner().getKey().equals(owner.getKey());
+        }
+
+        return false;
     }
 
     @Override
     public Criterion getCriteriaRestrictions(Class entityClass) {
         if (entityClass.equals(Pool.class)) {
-            return Restrictions.eq("owner", consumer.getOwner());
+            return Restrictions.eq("owner", owner);
         }
+
         return null;
     }
 
     @Override
     public Owner getOwner() {
-        return consumer.getOwner();
+        return owner;
     }
 
 

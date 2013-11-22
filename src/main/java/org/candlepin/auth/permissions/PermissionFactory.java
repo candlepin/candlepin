@@ -34,7 +34,10 @@ public class PermissionFactory {
      */
     public enum PermissionType {
         OWNER,
-        USERNAME_CONSUMERS
+        OWNER_POOLS,
+        USERNAME_CONSUMERS,
+        USERNAME_CONSUMERS_ENTITLEMENTS,
+        ATTACH
     }
 
     @Inject
@@ -62,6 +65,14 @@ public class PermissionFactory {
                 Permission usernamePerm = new UsersConsumersPermission(user,
                     permBp.getOwner());
                 return usernamePerm;
+
+            case OWNER_POOLS:
+                Permission ownerPools = new OwnerPoolsPermission(permBp.getOwner());
+                return ownerPools;
+
+            case ATTACH:
+                Permission attach = new AttachPermission(permBp.getOwner());
+                return attach;
 
             default:
                 return null; // TODO
