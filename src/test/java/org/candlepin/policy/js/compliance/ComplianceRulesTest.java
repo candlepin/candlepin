@@ -1356,4 +1356,25 @@ public class ComplianceRulesTest {
         assertTrue(status.getCompliantProducts().keySet().contains(PRODUCT_2));
     }
 
+    /*
+     * Testing behaviour from a (possibly) temporary hack where we skip compliance
+     * calculation for distributor consumers, as these should never have installed products
+     * and status in general is not really applicable to them.
+     *
+     * This test may need to be removed if we restore calculation for distributors at some
+     * point.
+     */
+    @Test
+    public void distributorStatusAlwaysGreen() {
+        Consumer c = mockConsumerWithTwoProductsAndNoEntitlements();
+        c.setType(new ConsumerType(ConsumerType.ConsumerTypeEnum.CANDLEPIN));
+
+        ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
+
+        assertEquals(0, status.getNonCompliantProducts().size());
+        assertEquals(0, status.getPartiallyCompliantProducts().size());
+        assertEquals(ComplianceStatus.GREEN, status.getStatus());
+    }
+
+
 }
