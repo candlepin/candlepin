@@ -127,6 +127,14 @@ describe 'Entitlements' do
     pool = find_pool @instance_based
     @system.consume_pool(pool.id, {:quantity => 2})
   end
+
+  it 'should have pool type calculated attribute' do
+    box = consumer_client(@user, 'random_box', :candlepin, nil, 'cpu.cpu_socket(s)' => 8)
+    box.consume_product(@super_awesome.id)
+    ents = box.list_entitlements()
+    ents.should have(1).things
+    ents[0]['pool']['calculatedAttributes']['compliance_type'].should == 'Standard'
+  end
   private
 
   def find_pool(product, consumer=nil)

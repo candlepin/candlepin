@@ -155,7 +155,9 @@ describe 'Pool Resource' do
     user = user_client(owner, random_string('billy'))
     system = consumer_client(user, 'system')
 
-    @cp.get_pool(pool.id, system.uuid)['calculatedAttributes']['suggested_quantity'].should == "1"
+    pool = @cp.get_pool(pool.id, system.uuid)
+    pool['calculatedAttributes']['suggested_quantity'].should == "1"
+    pool['calculatedAttributes']['compliance_type'].should == "Standard"
   end
 
 end

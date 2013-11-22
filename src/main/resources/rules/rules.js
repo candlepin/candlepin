@@ -1,4 +1,4 @@
-// Version: 4.4
+// Version: 4.5
 
 /*
  * Default Candlepin rule set.
@@ -28,6 +28,10 @@ function quantity_name_space() {
 
 function override_name_space() {
     return Override;
+}
+
+function pool_type_name_space() {
+    return PoolType;
 }
 
 // consumer types
@@ -2706,6 +2710,59 @@ var Quantity = {
             return CoverageCalculator.getQuantityToCoverStack(stackTracker, pool, consumer);
         }
         return 1;
+    }
+}
+
+/**
+ * Namespace for determining the human readable type of pool we are dealing with
+ * for display in the client.
+ */
+var PoolType = {
+
+    get_pool_type_context: function() {
+        context = JSON.parse(json_context);
+        context.pool = createPool(context.pool);
+        return context;
+    },
+
+    /*
+     * Currently, the result list can only have length zero or one,
+     * however it is possible we will need more in the future.
+     * For example stackable and non-stackable instance based
+     * subscriptions.
+     */
+    get_arg_pool_type: function(pool) {
+        var hasStacking = pool.hasProductAttribute("stacking_id");
+        var multiEnt = Quantity.allows_multi_entitlement(pool);
+        var isInstanceBased = pool.hasProductAttribute(INSTANCE_ATTRIBUTE);
+        if (isInstanceBased) {
+            if (multiEnt && hasStacking) {
+                return "instance based";
+            }
+        }
+        else {
+            if (hasStacking && multiEnt) {
+                return "stackable";
+            }
+            else if (!hasStacking && multiEnt) {
+                return "multi entitlement";
+            }
+            else if (hasStacking && !multiEnt) {
+                return "unique stackable";
+            }
+            else if (!hasStacking && !multiEnt) {
+                return "standard";
+            }
+        }
+        return "unknown";
+    },
+
+    get_pool_type: function() {
+        var context = PoolType.get_pool_type_context();
+        var result = {
+            rawPoolType: this.get_arg_pool_type(context.pool)
+        };
+        return JSON.stringify(result);
     }
 }
 

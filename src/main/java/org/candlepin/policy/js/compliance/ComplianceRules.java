@@ -31,7 +31,7 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * Compliance
+ * ComplianceRules
  *
  * A class used to check consumer compliance status.
  */

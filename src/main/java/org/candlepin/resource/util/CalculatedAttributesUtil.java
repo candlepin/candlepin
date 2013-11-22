@@ -16,8 +16,11 @@ package org.candlepin.resource.util;
 
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Pool;
+import org.candlepin.policy.js.pooltype.PoolComplianceType;
+import org.candlepin.policy.js.pooltype.PoolComplianceTypeRules;
 import org.candlepin.policy.js.quantity.QuantityRules;
 import org.candlepin.policy.js.quantity.SuggestedQuantity;
+import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
 
@@ -29,15 +32,25 @@ import java.util.Map;
  * CalculatedAttributesUtil
  */
 public class CalculatedAttributesUtil {
+
     private QuantityRules quantityRules;
+    private PoolComplianceTypeRules poolTypeRules;
+    private I18n i18n;
 
     @Inject
-    public CalculatedAttributesUtil(QuantityRules quantityRules) {
+    public CalculatedAttributesUtil(QuantityRules quantityRules,
+            PoolComplianceTypeRules poolTypeRules, I18n i18n) {
         this.quantityRules = quantityRules;
+        this.poolTypeRules = poolTypeRules;
+        this.i18n = i18n;
     }
 
     public Map<String, String> buildCalculatedAttributes(Pool p, Consumer c, Date date) {
         Map<String, String> attrMap = new HashMap<String, String>();
+
+        PoolComplianceType type = poolTypeRules.getPoolType(p);
+        type.translatePoolType(i18n);
+        attrMap.put("compliance_type", type.getPoolType());
 
         if (c == null) {
             return attrMap;

@@ -80,6 +80,7 @@ import org.candlepin.policy.js.consumer.ConsumerRules;
 import org.candlepin.policy.js.override.OverrideRules;
 import org.candlepin.policy.js.quantity.QuantityRules;
 import org.candlepin.policy.js.quantity.SuggestedQuantity;
+import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ConsumerInstalledProductEnricher;
 import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.service.EntitlementCertServiceAdapter;
@@ -172,6 +173,7 @@ public class ConsumerResource {
     private Config config;
     private QuantityRules quantityRules;
     private OverrideRules overrideRules;
+    private CalculatedAttributesUtil calculatedAttributesUtil;
 
     @Inject
     public ConsumerResource(ConsumerCurator consumerCurator,
@@ -192,7 +194,7 @@ public class ConsumerResource {
         Config config, QuantityRules quantityRules,
         ConsumerContentOverrideCurator consumerContentOverrideCurator,
         ContentCurator contentCurator, OverrideRules overrideRules,
-        CdnCurator cdnCurator) {
+        CdnCurator cdnCurator, CalculatedAttributesUtil calculatedAttributesUtil) {
 
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -226,6 +228,7 @@ public class ConsumerResource {
         this.quantityRules = quantityRules;
         this.consumerContentOverrideCurator = consumerContentOverrideCurator;
         this.overrideRules = overrideRules;
+        this.calculatedAttributesUtil = calculatedAttributesUtil;
     }
 
     /**
@@ -1563,6 +1566,9 @@ public class ConsumerResource {
         ResteasyProviderFactory.pushContext(Page.class, entitlementsPage);
 
         List<Entitlement> returnedEntitlements = entitlementsPage.getPageData();
+        for (Entitlement ent : returnedEntitlements) {
+            addCalculatedAttributes(ent);
+        }
         poolManager.regenerateDirtyEntitlements(returnedEntitlements);
 
         return returnedEntitlements;
@@ -2108,5 +2114,12 @@ public class ConsumerResource {
         //It's possible that increment is greater than the number available
         //but whatever we do here, the bind will fail
         return quantity;
+    }
+
+    private void addCalculatedAttributes(Entitlement ent) {
+        // With no consumer/date, this will not build suggested quantity
+        Map<String, String> calculatedAttributes =
+            calculatedAttributesUtil.buildCalculatedAttributes(ent.getPool(), null, null);
+        ent.getPool().setCalculatedAttributes(calculatedAttributes);
     }
 }
