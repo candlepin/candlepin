@@ -14,11 +14,12 @@
  */
 package org.candlepin.policy.js.pooltype;
 
-import org.apache.log4j.Logger;
 import org.candlepin.model.Pool;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsonJsContext;
 import org.candlepin.policy.js.RulesObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 
@@ -33,7 +34,7 @@ public class PoolComplianceTypeRules {
 
     private JsRunner jsRules;
     private RulesObjectMapper mapper;
-    private static Logger log = Logger.getLogger(PoolComplianceTypeRules.class);
+    private static Logger log = LoggerFactory.getLogger(PoolComplianceTypeRules.class);
 
     @Inject
     public PoolComplianceTypeRules(JsRunner jsRules) {
