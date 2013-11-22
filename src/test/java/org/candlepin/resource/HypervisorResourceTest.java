@@ -143,7 +143,7 @@ public class HypervisorResourceTest {
 
         when(consumerCurator.findByUuid(eq("test-host"))).thenReturn(null);
         when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
-        when(principal.canAccess(eq(owner), eq(SubResource.NONE), eq(Access.ALL))).
+        when(principal.canAccess(eq(owner), eq(SubResource.CONSUMERS), eq(Access.CREATE))).
             thenReturn(true);
         when(consumerTypeCurator.lookupByLabel(
             eq(ConsumerTypeEnum.HYPERVISOR.getLabel()))).thenReturn(hypervisorType);

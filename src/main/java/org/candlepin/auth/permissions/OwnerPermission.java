@@ -45,7 +45,7 @@ public class OwnerPermission implements Permission, Serializable {
         if (target instanceof Owned) {
             // First make sure the owner matches:
             if (owner.getKey().equals(((Owned) target).getOwner().getKey()) &&
-                providesAccess(requiredAccess)) {
+                access.provides(requiredAccess)) {
                 return true;
             }
         }
@@ -53,16 +53,6 @@ public class OwnerPermission implements Permission, Serializable {
         // If asked to verify access to an object that does not implement Owned,
         // as far as this permission goes, we probably have to deny access.
         return false;
-    }
-
-    /**
-     * Return true if this permission provides the requested access type.
-     * If we have ALL, assume a match, otherwise do an explicit comparison.
-     *
-     * @return true if we provide the given access level.
-     */
-    public boolean providesAccess(Access requiredAccess) {
-        return (this.access == Access.ALL || this.access == requiredAccess);
     }
 
     @Override

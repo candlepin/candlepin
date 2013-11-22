@@ -37,6 +37,7 @@ import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.ActivationKey;
 import org.candlepin.model.ActivationKeyCurator;
@@ -484,7 +485,8 @@ public class ConsumerResourceTest {
         when(c.getType()).thenReturn(cType);
         when(c.getName()).thenReturn("testConsumer");
         when(ctc.lookupByLabel(eq("person"))).thenReturn(cType);
-        when(up.canAccess(eq(o), eq(SubResource.NONE), eq(Access.ALL))).thenReturn(true);
+        when(up.canAccess(eq(o), eq(SubResource.CONSUMERS), eq(Access.CREATE))).
+            thenReturn(true);
         // usa.findByLogin() will return null by default no need for a when
 
         ConsumerResource cr = new ConsumerResource(null, ctc,

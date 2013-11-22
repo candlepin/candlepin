@@ -40,7 +40,7 @@ public class ConsumerPoolPermission extends TypedPermission<Pool> {
 
     @Override
     public boolean canAccessTarget(Pool target, SubResource subResource,
-        Access action) {
+        Access required) {
         // should we mess with username restrictions here?
         // Don't allow access to any sub-resources, this is just to view the pools
         // themselves, not their entitlements for example.

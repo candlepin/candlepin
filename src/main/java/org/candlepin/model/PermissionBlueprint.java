@@ -115,17 +115,6 @@ public class PermissionBlueprint extends AbstractHibernateObject {
         this.type = type;
     }
 
-    /**
-     * Return true if this permission provides the requested access type.
-     * If we have ALL, assume a match, otherwise do an explicit comparison.
-     *
-     * @return true if we provide the given access level.
-     */
-    // TODO: duplicated with owner permission
-    public boolean providesAccess(Access requiredAccess) {
-        return (this.access == Access.ALL || this.access == requiredAccess);
-    }
-
     public Owner getOwner() {
         return owner;
     }

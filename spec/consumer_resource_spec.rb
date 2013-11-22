@@ -263,7 +263,7 @@ describe 'Consumer Resource' do
 
     lambda do
       green_ralph.regenerate_identity_certificate(system1.uuid)
-    end.should raise_exception(RestClient::Forbidden)
+    end.should raise_exception(RestClient::ResourceNotFound)
   end
 
   it 'should allow consumer to bind to products supporting multiple architectures' do

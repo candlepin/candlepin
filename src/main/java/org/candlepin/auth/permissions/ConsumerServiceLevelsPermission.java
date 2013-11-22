@@ -41,9 +41,9 @@ public class ConsumerServiceLevelsPermission extends TypedPermission<Owner> {
     }
 
     @Override
-    public boolean canAccessTarget(Owner target, SubResource subResource, Access action) {
+    public boolean canAccessTarget(Owner target, SubResource subResource, Access required) {
         return target.getKey().equals(consumer.getOwner().getKey()) &&
-            subResource.equals(SubResource.SERVICE_LEVELS) && providesAccess(action);
+            subResource.equals(SubResource.SERVICE_LEVELS) && access.provides(required);
     }
 
     @Override

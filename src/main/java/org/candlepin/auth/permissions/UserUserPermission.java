@@ -39,7 +39,7 @@ public class UserUserPermission extends TypedPermission<User> {
 
     @Override
     public boolean canAccessTarget(User target, SubResource subResource,
-        Access action) {
+        Access required) {
         return target.getUsername().equals(username);
     }
 

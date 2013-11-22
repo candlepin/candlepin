@@ -27,8 +27,7 @@ import org.junit.Test;
 
 public class UsersConsumersPermissionTest {
 
-    private UsersConsumersPermission readOnlyPerm;
-    private UsersConsumersPermission writePerm;
+    private UsersConsumersPermission perm;
     private Owner owner;
     private final String username = "bill";
 
@@ -36,37 +35,56 @@ public class UsersConsumersPermissionTest {
     public void init() {
         User u = new User(username, "dontcare");
         owner = new Owner("ownerkey", "My Org");
-        readOnlyPerm = new UsersConsumersPermission(u, owner, Access.READ_ONLY);
-        writePerm = new UsersConsumersPermission(u, owner, Access.ALL);
+        perm = new UsersConsumersPermission(u, owner);
     }
 
     @Test
-    public void allowsUsersConsumersReadOnly() {
+    public void allowsUsernameConsumersModification() {
         Consumer c = new Consumer("consumer", username, owner, null);
-        assertTrue(readOnlyPerm.canAccess(c, SubResource.NONE, Access.READ_ONLY));
-        assertFalse(readOnlyPerm.canAccess(c, SubResource.NONE, Access.ALL));
+        assertTrue(perm.canAccess(c, SubResource.NONE, Access.ALL));
+        assertTrue(perm.canAccess(c, SubResource.NONE, Access.CREATE));
+        assertTrue(perm.canAccess(c, SubResource.NONE, Access.READ_ONLY));
     }
 
     @Test
-    public void allowsUsersConsumersWrite() {
+    public void allowsAccessToRegisterOrgConsumers() {
         Consumer c = new Consumer("consumer", username, owner, null);
-        assertTrue(writePerm.canAccess(c, SubResource.NONE, Access.ALL));
-        assertTrue(writePerm.canAccess(c, SubResource.NONE, Access.READ_ONLY));
+        assertTrue(perm.canAccess(owner, SubResource.CONSUMERS, Access.CREATE));
+    }
+
+    @Test
+    public void allowsAccessToListOrgConsumers() {
+        Consumer c = new Consumer("consumer", username, owner, null);
+        assertTrue(perm.canAccess(owner, SubResource.CONSUMERS, Access.READ_ONLY));
+    }
+
+    @Test
+    public void blocksAccessToOrgPools() {
+        // Such a user probably has an owner permission which allows this, but this
+        // permission should not grant it itself:
+        assertFalse(perm.canAccess(owner, SubResource.POOLS, Access.READ_ONLY));
+    }
+
+    @Test
+    public void blocksAccessToOrg() {
+        assertFalse(perm.canAccess(owner, SubResource.NONE, Access.READ_ONLY));
+        assertFalse(perm.canAccess(owner, SubResource.NONE, Access.ALL));
+        assertFalse(perm.canAccess(owner, SubResource.NONE, Access.CREATE));
     }
 
     @Test
     public void blocksConsumersInOtherOrgDespiteSameUsername() {
         Owner other = new Owner("ownerkey2", "My Org 2");
         Consumer c = new Consumer("consumer", username, other, null);
-        assertFalse(readOnlyPerm.canAccess(c, SubResource.NONE, Access.READ_ONLY));
-        assertFalse(readOnlyPerm.canAccess(c, SubResource.NONE, Access.ALL));
+        assertFalse(perm.canAccess(c, SubResource.NONE, Access.READ_ONLY));
+        assertFalse(perm.canAccess(c, SubResource.NONE, Access.ALL));
     }
 
     @Test
-    public void blocksOwnerConsumers() {
+    public void blocksOtherUsernameConsumers() {
         Consumer c = new Consumer("consumer", "somebodyelse", owner, null);
-        assertFalse(readOnlyPerm.canAccess(c, SubResource.NONE, Access.READ_ONLY));
-        assertFalse(readOnlyPerm.canAccess(c, SubResource.NONE, Access.ALL));
+        assertFalse(perm.canAccess(c, SubResource.NONE, Access.READ_ONLY));
+        assertFalse(perm.canAccess(c, SubResource.NONE, Access.ALL));
     }
 
 }

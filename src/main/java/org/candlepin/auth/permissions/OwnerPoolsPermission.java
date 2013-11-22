@@ -38,11 +38,11 @@ public class OwnerPoolsPermission extends TypedPermission<Owner> {
 
     @Override
     public boolean canAccessTarget(Owner target, SubResource subResource,
-        Access action) {
+        Access required) {
         return target.getKey().equals(owner.getKey()) &&
             (subResource.equals(SubResource.POOLS) ||
                 subResource.equals(SubResource.SUBSCRIPTIONS)) &&
-                    providesAccess(action);
+                    access.provides(required);
     }
 
     @Override

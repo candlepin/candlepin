@@ -406,7 +406,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
                 null).size());
     }
 
-    @Test(expected = ForbiddenException.class)
+    @Test(expected = NotFoundException.class)
     public void testCannotGetAnotherOwnersConsumersCerts() {
         Consumer evilConsumer = TestUtil.createConsumer(standardSystemType,
             owner);
@@ -477,7 +477,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         consumerResource.listEntitlements(consumer.getUuid(), null, null);
     }
 
-    @Test(expected = ForbiddenException.class)
+    @Test(expected = NotFoundException.class)
     public void ownerShouldNotSeeOtherOwnerEntitlements() {
         consumerResource.bind(consumer.getUuid(), pool.getId().toString(),
             null, 1, null, null, false, null);

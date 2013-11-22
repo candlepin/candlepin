@@ -141,7 +141,7 @@ public class User extends AbstractHibernateObject {
         for (Role role : getRoles()) {
             for (PermissionBlueprint p : role.getPermissions()) {
                 if (p.getType().equals(PermissionType.OWNER) &&
-                    p.providesAccess(accessLevel)) {
+                    p.getAccess().provides(accessLevel)) {
                     owners.add(p.getOwner());
                 }
             }

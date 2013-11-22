@@ -34,22 +34,12 @@ public abstract class TypedPermission<T> implements Permission, Serializable {
         Access action);
 
     @Override
-    public boolean canAccess(Object target, SubResource subResource, Access action) {
+    public boolean canAccess(Object target, SubResource subResource, Access required) {
         if (this.getTargetType().isInstance(target)) {
-            return canAccessTarget((T) target, subResource, action);
+            return canAccessTarget((T) target, subResource, required);
         }
 
         return false;
-    }
-
-    /**
-     * Return true if this permission provides the requested access type.
-     * If we have ALL, assume a match, otherwise do an explicit comparison.
-     *
-     * @return true if we provide the given access level.
-     */
-    public boolean providesAccess(Access requiredAccess) {
-        return (this.access == Access.ALL || this.access == requiredAccess);
     }
 
 }

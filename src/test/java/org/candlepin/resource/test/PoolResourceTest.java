@@ -177,7 +177,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
             eq(passConsumer), any(Date.class));
     }
 
-    @Test(expected = ForbiddenException.class)
+    @Test(expected = NotFoundException.class)
     public void testCannotListPoolsForConsumerInAnotherOwner() {
         List<Pool> pools = poolResource.list(null, failConsumer.getUuid(),
             product1.getId(), false, null, adminPrincipal, null);
@@ -281,7 +281,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
         assertTrue(p.getCalculatedAttributes().isEmpty());
     }
 
-    @Test(expected = ForbiddenException.class)
+    @Test(expected = NotFoundException.class)
     public void testUnauthorizedUserRequestingPool() {
         Owner owner2 = createOwner();
         ownerCurator.create(owner2);

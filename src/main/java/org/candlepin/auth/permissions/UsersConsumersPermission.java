@@ -30,43 +30,36 @@ public class UsersConsumersPermission implements Permission {
 
     private User user;
     private Owner owner;
-    private Access access;
 
-    public UsersConsumersPermission(User u, Owner o, Access a) {
+    public UsersConsumersPermission(User u, Owner o) {
         this.user = u;
         this.owner = o;
-        this.access = a;
     }
 
 
     @Override
-    public boolean canAccess(Object target, SubResource subResource, Access action) {
+    public boolean canAccess(Object target, SubResource subResource, Access required) {
+
+        // Implied full access to the relevant Consumers:
         if (target.getClass().equals(Consumer.class)) {
             return ((Consumer) target).getOwner().getKey().equals(owner.getKey()) &&
                 ((Consumer) target).getUsername().equals(user.getUsername()) &&
-                providesAccess(action);
+                Access.ALL.provides(required);
         }
 
+        // TODO: Should this be broken out into two typed permissions, one for Consumer,
+        // one for Owner + subresource of consumers?
+
+        // Implied create access to the owner's consumers collection, which includes
+        // read as well:
         if (target.getClass().equals(Owner.class) &&
             subResource.equals(SubResource.CONSUMERS) &&
-            (action.equals(Access.CREATE) || action.equals(Access.READ_ONLY))) {
+            Access.CREATE.provides(required)) {
             return true;
         }
 
 
         return false;
-    }
-
-    /**
-     * Return true if this permission provides the requested access type.
-     * If we have ALL, assume a match, otherwise do an explicit comparison.
-     *
-     * @return true if we provide the given access level.
-     */
-    public boolean providesAccess(Access requiredAccess) {
-        // TODO: more this and all it's copies onto Access:
-        return (this.access == Access.ALL || this.access == requiredAccess ||
-            (this.access == Access.CREATE && requiredAccess == Access.READ_ONLY));
     }
 
     @Override
