@@ -205,7 +205,10 @@ define "candlepin" do
   test.with HSQLDB, JUNIT, generate
   test.with LOGDRIVER if use_logdriver
   test.using :java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ]
-
+  if not nopo.nil?
+    # Exclude tests that require translations if we aren't generating the po files
+    test.exclude '*I18nProviderTest'
+  end
 
   #
   # javadoc projects
