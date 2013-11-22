@@ -278,14 +278,23 @@ describe 'Candlepin Import', :serial => true do
 
   it "should store the subscription upstream entitlement cert" do
     sublist = @cp.list_subscriptions(@import_owner['key'])
-    cert = @cp.get_subscription_cert sublist.first.id
+    # we only want the product that maps to a normal pool
+    # i.e. no virt, no multipliers, etc.
+    # this is to fix a intermittent test failures when trying
+    # to bind to a virt_only or other weird pool
+    sub = sublist.find_all {
+      |s| s.product.id.start_with?("prod2")
+    }
+    # use sub.first.id because find_all returns an array, but there
+    # can only be one, HIGHLANDER!
+    cert = @cp.get_subscription_cert sub.first.id
     cert[0..26].should == "-----BEGIN CERTIFICATE-----"
     cert.include?("-----BEGIN RSA PRIVATE KEY-----").should == true
 
     # while were here, lets access the upstream cert via entitlement id
     pools =  @import_owner_client.list_pools({:owner => @import_owner['id']})
     pool = pools.find_all {
-      |p| p.subscriptionId == sublist.first.id && p.subscriptionSubKey == "master"
+      |p| p.subscriptionId == sub.first.id && p.subscriptionSubKey == "master"
     }[0]
     consumer = consumer_client(@import_owner_client, 'system6')
     entitlement = consumer.consume_pool(pool.id, {:quantity => 1})[0]
