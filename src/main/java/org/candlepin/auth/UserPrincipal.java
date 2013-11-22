@@ -35,7 +35,6 @@ public class UserPrincipal extends Principal {
      *
      * @param username
      */
-
     public UserPrincipal(String username, Collection<Permission> permissions,
         Boolean admin) {
         this.username = username;
