@@ -14,20 +14,13 @@
  */
 package org.candlepin.resteasy.interceptor;
 
-import java.util.List;
-
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.service.UserServiceAdapter;
 
 import com.google.inject.Injector;
 
-import java.util.ArrayList;
-
-import org.candlepin.auth.permissions.Permission;
-import org.candlepin.auth.permissions.PermissionFactory;
 import org.candlepin.exceptions.BadRequestException;
-import org.candlepin.model.Role;
 import org.candlepin.model.User;
 import org.xnap.commons.i18n.I18n;
 
@@ -39,13 +32,11 @@ public abstract class UserAuth implements AuthProvider {
     protected UserServiceAdapter userServiceAdapter;
     protected Injector injector;
     protected I18n i18n;
-    protected PermissionFactory permissionFactory;
 
     public UserAuth(UserServiceAdapter userServiceAdapter, Injector injector) {
         this.userServiceAdapter = userServiceAdapter;
         this.injector = injector;
         this.i18n = this.injector.getInstance(I18n.class);
-        this.permissionFactory = this.injector.getInstance(PermissionFactory.class);
     }
 
     /**
@@ -61,15 +52,7 @@ public abstract class UserAuth implements AuthProvider {
             return new UserPrincipal(username, null, true);
         }
         else {
-            List<Permission> permissions = new ArrayList<Permission>();
-
-            // flatten out the permissions from the combined roles
-            for (Role role : user.getRoles()) {
-                permissions.addAll(permissionFactory.createPermissions(user,
-                    role.getPermissions()));
-            }
-
-            Principal principal = new UserPrincipal(username, permissions, false);
+            Principal principal = new UserPrincipal(username, user.getPermissions(), false);
 
             return principal;
         }

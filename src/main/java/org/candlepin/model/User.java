@@ -24,12 +24,15 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 import org.candlepin.auth.Access;
+import org.candlepin.auth.permissions.Permission;
+import org.candlepin.auth.permissions.PermissionFactory;
 import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
 import org.candlepin.util.Util;
 import org.hibernate.annotations.GenericGenerator;
@@ -61,8 +64,19 @@ public class User extends AbstractHibernateObject {
 
     private boolean superAdmin;
 
+    /*
+     * Users are also used as a return value from a UserServiceAdapter, which does not
+     * necessarily mean they are stored in our database. We allow permissions to be added
+     * to the user for this situation, so other adapters do not have to fake roles and
+     * permission blueprints. See getPermissions for behaviour when a user has both roles
+     * and permissions.
+     */
+    @Transient
+    private Set<Permission> permissions;
+
     public User() {
         this.roles = new HashSet<Role>();
+        this.permissions = new HashSet<Permission>();
     }
 
     public User(String login, String password) {
@@ -172,16 +186,26 @@ public class User extends AbstractHibernateObject {
     }
 
     /**
-     * Iterates user's roles and returns all unique permissions.
-     * @return all of this user's unique permissions.
+     * Full list of permissions for this user.
+     *
+     * Includes those from roles stored in the database, as well as those explicitly added
+     * by the user service adapter.
+     *
+     * @return full list of permissions for this user.
      */
     @XmlTransient
-    public Set<PermissionBlueprint> getPermissions() {
-        Set<PermissionBlueprint> perms = new HashSet<PermissionBlueprint>();
+    public Set<Permission> getPermissions() {
+        PermissionFactory permFactory = new PermissionFactory();
+        Set<Permission> perms = new HashSet<Permission>();
         for (Role r : getRoles()) {
-            perms.addAll(r.getPermissions());
+            perms.addAll(permFactory.createPermissions(this, r.getPermissions()));
         }
+        perms.addAll(this.permissions);
         return perms;
+    }
+
+    public void addPermissions(Permission permission) {
+        this.permissions.add(permission);
     }
 
     /**
