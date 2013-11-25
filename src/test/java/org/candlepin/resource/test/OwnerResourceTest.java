@@ -79,6 +79,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.ws.rs.core.MultivaluedMap;
 /**
@@ -421,7 +422,10 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         setupPrincipal(owner, Access.ALL);
         securityInterceptor.enable();
 
-        ownerResource.ownerConsumers(owner.getKey(), "username", "type", uuids,
+        Set<String> types = new HashSet<String>();
+        types.add("type");
+
+        ownerResource.ownerConsumers(owner.getKey(), "username", types, uuids,
             new PageRequest());
     }
 

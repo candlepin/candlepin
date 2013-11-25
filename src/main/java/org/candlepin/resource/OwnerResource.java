@@ -14,6 +14,7 @@
  */
 package org.candlepin.resource;
 
+import org.apache.commons.lang.StringUtils;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventAdapter;
 import org.candlepin.audit.EventFactory;
@@ -604,7 +605,7 @@ public class OwnerResource {
     public List<Consumer> ownerConsumers(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
         @QueryParam("username") String userName,
-        @QueryParam("type") String typeLabel,
+        @QueryParam("type") Set<String> typeLabels,
         @QueryParam("uuid") @Verify(value = Consumer.class, nullable = true)
             List<String> uuids,
         @Context PageRequest pageRequest) {
@@ -612,23 +613,24 @@ public class OwnerResource {
         Owner owner = findOwner(ownerKey);
 
         if (uuids == null || uuids.isEmpty()) {
-            ConsumerType type = null;
+            List<ConsumerType> types = null;
 
-            if (typeLabel != null) {
-                type = lookupConsumerType(typeLabel);
+            if (typeLabels != null && !typeLabels.isEmpty()) {
+                types = lookupConsumerTypes(typeLabels);
             }
 
             // We don't look up the user and warn if it doesn't exist here to not
             // give away usernames
             Page<List<Consumer>> p = consumerCurator.listByUsernameAndType(userName,
-                type, owner, pageRequest);
+                types, owner, pageRequest);
 
             // Store the page for the LinkHeaderPostInterceptor
             ResteasyProviderFactory.pushContext(Page.class, p);
             return p.getPageData();
         }
         else {
-            if (userName != null || typeLabel != null || pageRequest != null) {
+            if (userName != null || (typeLabels != null && !typeLabels.isEmpty()) ||
+                    pageRequest != null) {
                 throw new BadRequestException(
                     i18n.tr("Cannot specify other query parameters with consumer IDs."));
             }
@@ -637,14 +639,21 @@ public class OwnerResource {
         }
     }
 
-    private ConsumerType lookupConsumerType(String label) {
-        ConsumerType type = consumerTypeCurator.lookupByLabel(label);
-
-        if (type == null) {
-            throw new BadRequestException(i18n.tr("No such unit type: {0}",
-                label));
+    private List<ConsumerType> lookupConsumerTypes(Set<String> labels) {
+        List<ConsumerType> types = consumerTypeCurator.lookupByLabels(labels);
+        // Since the type labels are unique, our sizes must match.
+        if (labels.size() != types.size()) {
+            List<String> invalidLabels = new ArrayList<String>(labels);
+            for (ConsumerType type : types) {
+                String label = type.getLabel();
+                if (labels.contains(label)) {
+                    invalidLabels.remove(label);
+                }
+            }
+            throw new BadRequestException(i18n.tr("No such unit type(s): {0}",
+                StringUtils.join(invalidLabels, ", ")));
         }
-        return type;
+        return types;
     }
 
 

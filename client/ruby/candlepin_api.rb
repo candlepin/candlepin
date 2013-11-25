@@ -651,8 +651,11 @@ class Candlepin
     get(query)
   end
 
-  def list_owner_consumers(owner_key)
+  def list_owner_consumers(owner_key, consumer_types=[])
     query = "/owners/#{owner_key}/consumers"
+    if !consumer_types.empty?
+        query += "?type=" + consumer_types.join("&type=")
+    end
     get(query)
   end
 

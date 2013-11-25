@@ -14,6 +14,9 @@
  */
 package org.candlepin.model;
 
+import java.util.Collection;
+import java.util.List;
+
 import org.hibernate.criterion.Restrictions;
 
 /**
@@ -36,5 +39,16 @@ public class ConsumerTypeCurator extends AbstractHibernateCurator<ConsumerType> 
         return (ConsumerType) currentSession().createCriteria(
             ConsumerType.class).add(Restrictions.eq("label", label))
             .uniqueResult();
+    }
+
+    /**
+     * look up consumer types by their labels
+     * @param labels
+     * @return all types matching the specified labels;
+     */
+    @SuppressWarnings("unchecked")
+    public List<ConsumerType> lookupByLabels(Collection<String> labels) {
+        return (List<ConsumerType>) currentSession().createCriteria(ConsumerType.class)
+            .add(Restrictions.in("label", labels)).list();
     }
 }
