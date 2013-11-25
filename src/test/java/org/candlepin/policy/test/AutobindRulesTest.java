@@ -24,9 +24,11 @@ import static org.mockito.Mockito.when;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.candlepin.config.Config;
@@ -78,6 +80,7 @@ public class AutobindRulesTest {
     private String productId = "a-product";
 
     private static final String HIGHEST_QUANTITY_PRODUCT = "QUANTITY001";
+    private Map<String, String> activeGuestAttrs;
 
     @Before
     public void createEnforcer() throws Exception {
@@ -101,6 +104,9 @@ public class AutobindRulesTest {
         consumer = new Consumer("test consumer", "test user", owner,
             new ConsumerType(ConsumerTypeEnum.SYSTEM));
         compliance = new ComplianceStatus();
+        activeGuestAttrs = new HashMap<String, String>();
+        activeGuestAttrs.put("virtWhoType", "libvirt");
+        activeGuestAttrs.put("active", "1");
     }
 
 
@@ -741,7 +747,7 @@ public class AutobindRulesTest {
     public void guestLimitAutobindNeitherAttached() {
         consumer.setFact("cpu.cpu_socket(s)", "8");
         for (int i = 0; i < 5; i++) {
-            consumer.addGuestId(new GuestId("" + i, consumer, true));
+            consumer.addGuestId(new GuestId("" + i, consumer, activeGuestAttrs));
         }
         Product server = mockStackingProduct(productId, "some server", "stackid1", "2");
         server.setAttribute("guest_limit", "4");
@@ -773,7 +779,7 @@ public class AutobindRulesTest {
     public void guestLimitAutobindServerAttached() {
         consumer.setFact("cpu.cpu_socket(s)", "8");
         for (int i = 0; i < 5; i++) {
-            consumer.addGuestId(new GuestId("" + i, consumer, true));
+            consumer.addGuestId(new GuestId("" + i, consumer, activeGuestAttrs));
         }
 
         Product server =
@@ -818,7 +824,7 @@ public class AutobindRulesTest {
     public void guestLimitAutobindServerAttachedNonStackable() {
         consumer.setFact("cpu.cpu_socket(s)", "2");
         for (int i = 0; i < 5; i++) {
-            consumer.addGuestId(new GuestId("" + i, consumer, true));
+            consumer.addGuestId(new GuestId("" + i, consumer, activeGuestAttrs));
         }
 
         Product server =

@@ -37,7 +37,9 @@ import org.mockito.MockitoAnnotations;
 import java.io.InputStream;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -489,8 +491,11 @@ public class QuantityRulesTest {
     @Test
     public void testInsufficientGuestLimit() {
         consumer.setFact(SOCKET_FACT, "8");
+        Map<String, String> guestAttrs = new HashMap<String, String>();
+        guestAttrs.put("virtWhoType", "libvirt");
+        guestAttrs.put("active", "1");
         for (int i = 0; i < 5; i++) {
-            consumer.addGuestId(new GuestId("" + i, consumer, true));
+            consumer.addGuestId(new GuestId("" + i, consumer, guestAttrs));
         }
         pool.setProductAttribute(GUEST_LIMIT_ATTRIBUTE, "4", product.getId());
         pool.setProductAttribute(SOCKET_ATTRIBUTE, "2", product.getId());

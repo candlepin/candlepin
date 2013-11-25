@@ -321,7 +321,9 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
     @cp.refresh_pools(@owner['key'])
     @host1_client.update_consumer({:installedProducts => [{'productId' => @very_virt_limit_product.id,
       'productName' => @very_virt_limit_product.name}]})
-    @host1_client.update_consumer({:guestIds => [{'guestId' => @uuid1, 'active' => true}, {'guestId' => @uuid2, 'active' => true}]});
+    @host1_client.update_consumer({:guestIds => [
+        {'guestId' => @uuid1, 'attributes' => {'active' => '1', 'virtWhoType'=> 'libvirt'}},
+        {'guestId' => @uuid2, 'attributes' => {'active' => '1', 'virtWhoType'=> 'libvirt'}}]});
     @host1_client.get_consumer_guests.length.should == 2
     @host1_client.list_entitlements.length.should == 1
     @host1_client.consume_product()
@@ -340,7 +342,9 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
     @cp.refresh_pools(@owner['key'])
     @host1_client.update_consumer({:installedProducts => [{'productId' => @not_so_virt_limit_product.id,
       'productName' => @not_so_virt_limit_product.name}]})
-    @host1_client.update_consumer({:guestIds => [{'guestId' => @uuid1, 'active' => true}, {'guestId' => @uuid2, 'active' => true}]});
+    @host1_client.update_consumer({:guestIds => [
+        {'guestId' => @uuid1, 'attributes' => {'active' => '1', 'virtWhoType'=> 'libvirt'}},
+        {'guestId' => @uuid2, 'attributes' => {'active' => '1', 'virtWhoType'=> 'libvirt'}}]});
     @host1_client.list_entitlements.length.should == 1
     @host1_client.consume_product()
     # Should not have any more entitlements

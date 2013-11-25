@@ -27,10 +27,12 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
@@ -78,6 +80,8 @@ public class ComplianceRulesTest {
     private I18n i18n;
     private JsRunnerProvider provider;
 
+    private Map<String, String> activeGuestAttrs;
+
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
@@ -94,6 +98,9 @@ public class ComplianceRulesTest {
         compliance = new ComplianceRules(provider.get(),
             entCurator, new StatusReasonMessageGenerator(i18n));
         owner = new Owner("test");
+        activeGuestAttrs = new HashMap<String, String>();
+        activeGuestAttrs.put("virtWhoType", "libvirt");
+        activeGuestAttrs.put("active", "1");
     }
 
     /*
@@ -1381,7 +1388,7 @@ public class ComplianceRulesTest {
         Consumer c = mockConsumer(new String[]{ PRODUCT_1 });
         c.setFact("cpu.core(s)_per_socket", "4");
         for (int i = 0; i < 5; i++) {
-            c.addGuestId(new GuestId("" + i, c, true));
+            c.addGuestId(new GuestId("" + i, c, activeGuestAttrs));
         }
 
         Entitlement ent = mockEntitlement(c, PRODUCT_1);
@@ -1402,7 +1409,7 @@ public class ComplianceRulesTest {
         Consumer c = mockConsumer(new String[]{ PRODUCT_1 });
         c.setFact("cpu.core(s)_per_socket", "4");
         for (int i = 0; i < 5; i++) {
-            c.addGuestId(new GuestId("" + i, c, true));
+            c.addGuestId(new GuestId("" + i, c, activeGuestAttrs));
         }
 
         Entitlement ent = mockEntitlement(c, PRODUCT_1);
@@ -1423,7 +1430,7 @@ public class ComplianceRulesTest {
     public void partiallyCompliantVirtLimitStack() {
         Consumer c = mockConsumer(PRODUCT_1, PRODUCT_2);
         for (int i = 0; i < 5; i++) {
-            c.addGuestId(new GuestId("" + i, c, true));
+            c.addGuestId(new GuestId("" + i, c, activeGuestAttrs));
         }
         List<Entitlement> ents = new LinkedList<Entitlement>();
 
@@ -1457,7 +1464,7 @@ public class ComplianceRulesTest {
     public void fullyCompliantVirtLimitStackWithInactiveGuests() {
         Consumer c = mockConsumer(PRODUCT_1, PRODUCT_2);
         for (int i = 0; i < 5; i++) {
-            c.addGuestId(new GuestId("" + i, c, false));
+            c.addGuestId(new GuestId("" + i, c));
         }
         List<Entitlement> ents = new LinkedList<Entitlement>();
 
@@ -1491,7 +1498,7 @@ public class ComplianceRulesTest {
     public void fullyCompliantVirtLimitStack() {
         Consumer c = mockConsumer(PRODUCT_1, PRODUCT_2);
         for (int i = 0; i < 5; i++) {
-            c.addGuestId(new GuestId("" + i, c, true));
+            c.addGuestId(new GuestId("" + i, c, activeGuestAttrs));
         }
         List<Entitlement> ents = new LinkedList<Entitlement>();
 
@@ -1524,7 +1531,7 @@ public class ComplianceRulesTest {
     public void fullyCompliantVirtLimitStackVaryingLimits() {
         Consumer c = mockConsumer(PRODUCT_1, PRODUCT_2);
         for (int i = 0; i < 5; i++) {
-            c.addGuestId(new GuestId("" + i, c, true));
+            c.addGuestId(new GuestId("" + i, c, activeGuestAttrs));
         }
         List<Entitlement> ents = new LinkedList<Entitlement>();
 
@@ -1558,7 +1565,7 @@ public class ComplianceRulesTest {
     public void fullyCompliantVirtLimitStackWithUnlimited() {
         Consumer c = mockConsumer(PRODUCT_1, PRODUCT_2);
         for (int i = 0; i < 5; i++) {
-            c.addGuestId(new GuestId("" + i, c, true));
+            c.addGuestId(new GuestId("" + i, c, activeGuestAttrs));
         }
         List<Entitlement> ents = new LinkedList<Entitlement>();
 
@@ -1592,7 +1599,7 @@ public class ComplianceRulesTest {
     public void fullyCompliantVirtLimitStackAllUnlimited() {
         Consumer c = mockConsumer(PRODUCT_1, PRODUCT_2);
         for (int i = 0; i < 5; i++) {
-            c.addGuestId(new GuestId("" + i, c, true));
+            c.addGuestId(new GuestId("" + i, c, activeGuestAttrs));
         }
         List<Entitlement> ents = new LinkedList<Entitlement>();
 
@@ -1630,7 +1637,7 @@ public class ComplianceRulesTest {
     public void fullyCompliantOverriddenVirtLimit() {
         Consumer c = mockConsumer(PRODUCT_1, PRODUCT_2);
         for (int i = 0; i < 5; i++) {
-            c.addGuestId(new GuestId("" + i, c, true));
+            c.addGuestId(new GuestId("" + i, c, activeGuestAttrs));
         }
         List<Entitlement> ents = new LinkedList<Entitlement>();
 
@@ -1672,7 +1679,7 @@ public class ComplianceRulesTest {
     public void isEntFullyCompliantOverriddenVirtLimit() {
         Consumer c = mockConsumer(PRODUCT_1, PRODUCT_2);
         for (int i = 0; i < 5; i++) {
-            c.addGuestId(new GuestId("" + i, c, true));
+            c.addGuestId(new GuestId("" + i, c, activeGuestAttrs));
         }
         List<Entitlement> ents = new LinkedList<Entitlement>();
 
@@ -1697,7 +1704,7 @@ public class ComplianceRulesTest {
     public void isEntPartiallyCompliantNonOverriddenVirtLimit() {
         Consumer c = mockConsumer(PRODUCT_1, PRODUCT_2);
         for (int i = 0; i < 5; i++) {
-            c.addGuestId(new GuestId("" + i, c, true));
+            c.addGuestId(new GuestId("" + i, c, activeGuestAttrs));
         }
         List<Entitlement> ents = new LinkedList<Entitlement>();
 
@@ -1717,7 +1724,7 @@ public class ComplianceRulesTest {
     public void isStackFullyCompliantOverriddenVirtLimit() {
         Consumer c = mockConsumer(PRODUCT_1, PRODUCT_2);
         for (int i = 0; i < 5; i++) {
-            c.addGuestId(new GuestId("" + i, c, true));
+            c.addGuestId(new GuestId("" + i, c, activeGuestAttrs));
         }
         List<Entitlement> ents = new LinkedList<Entitlement>();
 
