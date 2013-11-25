@@ -61,7 +61,7 @@ public class PermissionBlueprint extends AbstractHibernateObject {
     @Index(name = "cp_permission_role_fk_idx")
     private Role role;
 
-    @Column(name = "access")
+    @Column(name = "access_level")
     private Access access;
 
     @Column(name = "permission_type")
