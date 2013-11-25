@@ -421,8 +421,7 @@ var FactValueCalculator = {
             var activeGuestCount = 0;
             for (var guestIdx = 0; guestIdx < consumer.guestIds.length; guestIdx++) {
                 var guest = consumer.guestIds[guestIdx];
-                // We can remove "active" in guest after rules rev to 5.0
-                if ("active" in guest && guest.active) {
+                if (Utils.isGuestActive(guest)) {
                     activeGuestCount++;
                 }
             }
@@ -2689,6 +2688,22 @@ var Utils = {
         }
 
         return 0;
+    },
+
+    /**
+     * Determine if a guest is considered active for purposes
+     * of compliance (guest_limit).  Right now we only check
+     * qemu/kvm hypervisor, and only when active is "1".
+     * Active can also be 0 (inactive) or -1 (error)
+     */
+    isGuestActive: function(guest) {
+        if ("attributes" in guest &&
+                "virtWhoType" in guest.attributes &&
+                guest.attributes.virtWhoType == "libvirt" &&
+                "active" in guest.attributes) {
+                    return guest.attributes.active == "1";
+                }
+        return false;
     },
 
     /**
