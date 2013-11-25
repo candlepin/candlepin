@@ -62,6 +62,7 @@ public class PermissionBlueprint extends AbstractHibernateObject {
     private Role role;
 
     @Column(name = "access_level")
+    @Enumerated(EnumType.STRING)
     private Access access;
 
     @Column(name = "permission_type")

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <changeSet id="20131125163340" author="dgoodwin">
+        <comment>Change column from int to string.</comment>
+        <modifyDataType
+            tableName="cp_permission"
+            columnName="access_level"
+            newDataType="VARCHAR(32)"/>
+    </changeSet>
+
+    <changeSet id="20131125163340-1" author="dgoodwin">
+        <comment>Update the positional int values to strings.</comment>
+        <update
+            tableName="cp_permission">
+          <column name="access_level" type="VARCHAR(32)" value="ALL"/>
+          <where>access_level = '1'</where>
+        </update>
+      </changeSet>
+
+    <changeSet id="20131125163340-2" author="dgoodwin">
+        <comment>Repeat for READ_ONLY access.</comment>
+        <update
+            tableName="cp_permission">
+          <column name="access_level" type="VARCHAR(32)" value="READ_ONLY"/>
+          <where>access_level = '2'</where>
+        </update>
+      </changeSet>
+
+</databaseChangeLog>
