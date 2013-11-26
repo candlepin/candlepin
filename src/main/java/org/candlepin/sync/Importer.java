@@ -620,41 +620,53 @@ public class Importer {
         throws IOException, ImportExtractionException {
         log.debug("Extracting archive to: " + tempDir.getAbsolutePath());
         byte[] buf = new byte[1024];
-        ZipInputStream zipinputstream = new ZipInputStream(new FileInputStream(exportFile));
-        ZipEntry zipentry = zipinputstream.getNextEntry();
 
-        if (zipentry == null) {
-            throw new ImportExtractionException(i18n.tr("The archive {0} is not " +
-                "a properly compressed file or is empty", exportFile.getName()));
+        ZipInputStream zipinputstream = null;
+
+        try {
+            zipinputstream = new ZipInputStream(new FileInputStream(exportFile));
+            ZipEntry zipentry = zipinputstream.getNextEntry();
+
+            if (zipentry == null) {
+                throw new ImportExtractionException(i18n.tr("The archive {0} is not " +
+                    "a properly compressed file or is empty", exportFile.getName()));
+            }
+
+            while (zipentry != null) {
+                //for each entry to be extracted
+                String entryName = zipentry.getName();
+                if (log.isDebugEnabled()) {
+                    log.debug("entryname " + entryName);
+                }
+                File newFile = new File(entryName);
+                String directory = newFile.getParent();
+                if (directory != null) {
+                    new File(tempDir, directory).mkdirs();
+                }
+
+                FileOutputStream fileoutputstream = null;
+                try {
+                    fileoutputstream = new FileOutputStream(new File(tempDir, entryName));
+                    int n;
+                    while ((n = zipinputstream.read(buf, 0, 1024)) > -1) {
+                        fileoutputstream.write(buf, 0, n);
+                    }
+                }
+                finally {
+                    if (fileoutputstream != null) {
+                        fileoutputstream.close();
+                    }
+                }
+
+                zipinputstream.closeEntry();
+                zipentry = zipinputstream.getNextEntry();
+            }
         }
-
-        while (zipentry != null) {
-            //for each entry to be extracted
-            String entryName = zipentry.getName();
-            if (log.isDebugEnabled()) {
-                log.debug("entryname " + entryName);
+        finally {
+            if (zipinputstream != null) {
+                zipinputstream.close();
             }
-            FileOutputStream fileoutputstream;
-            File newFile = new File(entryName);
-            String directory = newFile.getParent();
-            if (directory != null) {
-                new File(tempDir, directory).mkdirs();
-            }
-
-            fileoutputstream = new FileOutputStream(new File(tempDir, entryName));
-
-            int n;
-            while ((n = zipinputstream.read(buf, 0, 1024)) > -1) {
-                fileoutputstream.write(buf, 0, n);
-            }
-
-            fileoutputstream.close();
-            zipinputstream.closeEntry();
-            zipentry = zipinputstream.getNextEntry();
-
         }
-
-        zipinputstream.close();
 
         return new File(tempDir.getAbsolutePath(), "export");
     }
