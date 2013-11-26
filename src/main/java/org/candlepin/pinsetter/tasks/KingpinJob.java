@@ -45,7 +45,7 @@ import javax.persistence.PersistenceException;
  */
 public abstract class KingpinJob implements Job {
 
-    protected static Logger log = LoggerFactory.getLogger(KingpinJob.class);
+    private static Logger log = LoggerFactory.getLogger(KingpinJob.class);
     protected UnitOfWork unitOfWork;
     protected static String prefix = "job";
 
