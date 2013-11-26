@@ -295,7 +295,7 @@ public class EntitlementResource {
      *
      * CdnInfo represents a container for subscription entitlement and cdn
      */
-    public class CdnInfo implements Serializable {
+    public static class CdnInfo implements Serializable {
         private Cdn cdn;
         private String subCert;
 
