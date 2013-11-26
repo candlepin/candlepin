@@ -528,7 +528,7 @@ public class Importer {
             }
             else {
                 log.warn("Extra file found in upstream_consumer directory: " +
-                    (uc != null ? uc.getName() : "null"));
+                    uc.getName());
             }
         }
 
