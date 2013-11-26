@@ -55,7 +55,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.Reader;
 import java.security.cert.CertificateException;
 import java.util.HashMap;
@@ -237,7 +236,6 @@ public class Importer {
         ConflictOverrides overrides)
         throws ImporterException {
         File tmpDir = null;
-        InputStream exportStream = null;
         Map<String, Object> result = new HashMap<String, Object>();
         try {
             tmpDir = new SyncUtils(config).makeTempDir("import");
@@ -329,14 +327,6 @@ public class Importer {
                 }
                 catch (IOException e) {
                     log.error("Failed to delete extracted export", e);
-                }
-            }
-            if (exportStream != null) {
-                try {
-                    exportStream.close();
-                }
-                catch (Exception e) {
-                    // nothing we can do.
                 }
             }
         }
