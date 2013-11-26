@@ -2724,8 +2724,7 @@ var Override = {
     get_allow_override: function() {
         var blacklist = ['name','label','baseurl']
         var context = Override.get_override_context();
-        var name = context.name;
-        return blacklist.indexOf(name) > 0;
+        return Utils.inArray(blacklist, context.name);
     }
 }
 
