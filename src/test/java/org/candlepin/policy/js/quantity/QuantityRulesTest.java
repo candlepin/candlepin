@@ -20,6 +20,7 @@ import static org.mockito.Mockito.when;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
+import org.candlepin.model.GuestId;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
@@ -28,7 +29,6 @@ import org.candlepin.model.RulesCurator;
 import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -37,7 +37,9 @@ import org.mockito.MockitoAnnotations;
 import java.io.InputStream;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -51,6 +53,7 @@ public class QuantityRulesTest {
     private static final String CORES_ATTRIBUTE = "cores";
     private static final String CORES_FACT = "cpu.core(s)_per_socket";
     private static final String IS_VIRT = "virt.is_guest";
+    private static final String GUEST_LIMIT_ATTRIBUTE = "guest_limit";
 
     private Consumer consumer;
     private Pool pool;
@@ -477,6 +480,26 @@ public class QuantityRulesTest {
         consumer.addEntitlement(toAdd);
 
         // Ensure the 2 attached entitlements do not cause the suggested quantity to change
+        SuggestedQuantity suggested =
+            quantityRules.getSuggestedQuantity(pool, consumer, new Date());
+        assertEquals(new Long(4), suggested.getSuggested());
+    }
+
+    /*
+     * Guest limit should not have any bearing on the suggested quantity
+     */
+    @Test
+    public void testInsufficientGuestLimit() {
+        consumer.setFact(SOCKET_FACT, "8");
+        Map<String, String> guestAttrs = new HashMap<String, String>();
+        guestAttrs.put("virtWhoType", "libvirt");
+        guestAttrs.put("active", "1");
+        for (int i = 0; i < 5; i++) {
+            consumer.addGuestId(new GuestId("" + i, consumer, guestAttrs));
+        }
+        pool.setProductAttribute(GUEST_LIMIT_ATTRIBUTE, "4", product.getId());
+        pool.setProductAttribute(SOCKET_ATTRIBUTE, "2", product.getId());
+        pool.setQuantity(new Long(-1));
         SuggestedQuantity suggested =
             quantityRules.getSuggestedQuantity(pool, consumer, new Date());
         assertEquals(new Long(4), suggested.getSuggested());

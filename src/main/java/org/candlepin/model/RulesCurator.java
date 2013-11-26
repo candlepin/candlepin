@@ -40,7 +40,7 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
      * Current rules API major version number. (the x in x.y) If a rules file does not
      * match this major version number exactly, we do not import the rules.
      */
-    public static final int RULES_API_VERSION = 4;
+    public static final int RULES_API_VERSION = 5;
 
     protected RulesCurator() {
         super(Rules.class);

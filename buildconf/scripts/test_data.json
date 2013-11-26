@@ -550,6 +550,17 @@
             ]
         },
         {
+            "name": "Awesome Hypervisor Bits",
+            "id": "98121",
+            "version": "6.1",
+            "attributes": {
+                "sockets": 2,
+                "warning_period": 30
+            },
+            "content": [
+            ]
+        },
+        {
             "name": "Awesome OS Instance Server Bits",
             "id": "32060",
             "version": "6.1",
@@ -1266,6 +1277,36 @@
             "attributes": {
                 "virt_limit": 4,
                 "multi-entitlement": "yes"
+            }
+        },
+        {
+            "name": "Awesome OS Stackable guest limit 4",
+            "id": "awesomeos-guestlimit-4-stackable",
+            "version": "6.1",
+            "type": "MKT",
+            "provided_products": [
+                "37060"
+            ],
+            "attributes": {
+                "virt_limit": 4,
+                "guest_limit": 4,
+                "multi-entitlement": "yes",
+                "stacking_id": "aos-4virt-stackable"
+            }
+        },
+        {
+            "name": "Awesome OS Super Hypervisor",
+            "id": "awesomeos-super-hypervisor",
+            "version": "6.1",
+            "type": "MKT",
+            "provided_products": [
+                "98121"
+            ],
+            "attributes": {
+                "virt_limit": "4",
+                "guest_limit": "-1",
+                "multi-entitlement": "yes",
+                "stacking_id": "aos-hypervisor-st"
             }
         },
         {
