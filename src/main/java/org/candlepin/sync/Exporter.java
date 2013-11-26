@@ -285,15 +285,22 @@ public class Exporter {
             file.getAbsolutePath().substring(charsToDropFromName));
         out.putNextEntry(new ZipEntry(
             file.getAbsolutePath().substring(charsToDropFromName)));
-        FileInputStream in = new FileInputStream(file);
+        FileInputStream in = null;
+        try {
+            in = new FileInputStream(file);
 
-        byte [] buf = new byte[1024];
-        int len;
-        while ((len = in.read(buf)) > 0) {
-            out.write(buf, 0, len);
+            byte [] buf = new byte[1024];
+            int len;
+            while ((len = in.read(buf)) > 0) {
+                out.write(buf, 0, len);
+            }
+            out.closeEntry();
         }
-        out.closeEntry();
-        in.close();
+        finally {
+            if (in != null) {
+                in.close();
+            }
+        }
     }
 
     private void addSignatureToArchive(ZipOutputStream out, byte[] signature)
@@ -308,12 +315,19 @@ public class Exporter {
     private void exportMeta(File baseDir, String cdnKey)
         throws IOException {
         File file = new File(baseDir.getCanonicalPath(), "meta.json");
-        FileWriter writer = new FileWriter(file);
-        Meta m = new Meta(getVersion(), new Date(),
-            principalProvider.get().getPrincipalName(),
-            null, cdnKey);
-        meta.export(mapper, writer, m);
-        writer.close();
+        FileWriter writer = null;
+        try {
+            writer = new FileWriter(file);
+            Meta m = new Meta(getVersion(), new Date(),
+                principalProvider.get().getPrincipalName(),
+                null, cdnKey);
+            meta.export(mapper, writer, m);
+        }
+        finally {
+            if (writer != null) {
+                writer.close();
+            }
+        }
     }
 
     private String getPrefixWebUrl(String override) {
@@ -347,10 +361,17 @@ public class Exporter {
         String apiUrl)
         throws IOException {
         File file = new File(baseDir.getCanonicalPath(), "consumer.json");
-        FileWriter writer = new FileWriter(file);
-        this.consumerExporter.export(mapper, writer, consumer,
-            getPrefixWebUrl(webAppPrefix), getPrefixApiUrl(apiUrl));
-        writer.close();
+        FileWriter writer = null;
+        try {
+            writer = new FileWriter(file);
+            this.consumerExporter.export(mapper, writer, consumer,
+                getPrefixWebUrl(webAppPrefix), getPrefixApiUrl(apiUrl));
+        }
+        finally {
+            if (writer != null) {
+                writer.close();
+            }
+        }
     }
 
     private void exportEntitlementsCerts(File baseDir,
@@ -375,9 +396,16 @@ public class Exporter {
                 log.debug("Exporting entitlement certificate: " + cert.getSerial());
                 File file = new File(entCertDir.getCanonicalPath(),
                     cert.getSerial().getId() + ".pem");
-                FileWriter writer = new FileWriter(file);
-                entCert.export(writer, cert);
-                writer.close();
+                FileWriter writer = null;
+                try {
+                    writer = new FileWriter(file);
+                    entCert.export(writer, cert);
+                }
+                finally {
+                    if (writer != null) {
+                        writer.close();
+                    }
+                }
             }
         }
     }
@@ -488,9 +516,16 @@ public class Exporter {
             String path = productDir.getCanonicalPath();
             String productId = product.getId();
             File file = new File(path, productId + ".json");
-            FileWriter writer = new FileWriter(file);
-            productExporter.export(mapper, writer, product);
-            writer.close();
+            FileWriter writer = null;
+            try {
+                writer = new FileWriter(file);
+                productExporter.export(mapper, writer, product);
+            }
+            finally {
+                if (writer != null) {
+                    writer.close();
+                }
+            }
 
             // Real products have a numeric id.
             if (StringUtils.isNumeric(product.getId())) {
@@ -515,9 +550,16 @@ public class Exporter {
 
         for (ConsumerType type : consumerTypeCurator.listAll()) {
             File file = new File(typeDir.getCanonicalPath(), type.getLabel() + ".json");
-            FileWriter writer = new FileWriter(file);
-            consumerType.export(mapper, writer, type);
-            writer.close();
+            FileWriter writer = null;
+            try {
+                writer = new FileWriter(file);
+                consumerType.export(mapper, writer, type);
+            }
+            finally {
+                if (writer != null) {
+                    writer.close();
+                }
+            }
         }
     }
 
@@ -527,9 +569,16 @@ public class Exporter {
         File newRulesDir = new File(baseDir.getCanonicalPath(), "rules2");
         newRulesDir.mkdir();
         File newRulesFile = new File(newRulesDir.getCanonicalPath(), "rules.js");
-        FileWriter writer = new FileWriter(newRulesFile);
-        rules.export(writer);
-        writer.close();
+        FileWriter writer = null;
+        try {
+            writer = new FileWriter(newRulesFile);
+            rules.export(writer);
+        }
+        finally {
+            if (writer != null) {
+                writer.close();
+            }
+        }
 
         exportLegacyRules(baseDir);
     }
