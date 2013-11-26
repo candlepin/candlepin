@@ -18,6 +18,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
@@ -448,6 +449,26 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         securityInterceptor.enable();
 
         ownerResource.ownerConsumers(owner.getKey(), null, null, uuids, null);
+    }
+
+    /**
+     * I'm generally not a fan of testing this way, but in this case
+     * I want to check that the exception message that is returned
+     * correctly concats the invalid type name.
+     */
+    @Test
+    public void failWhenListingByBadConsumerType() {
+        Set<String> types = new HashSet<String>();
+        types.add("unknown");
+        try {
+            ownerResource.ownerConsumers(owner.getKey(), null, types,
+                new ArrayList<String>(), null);
+            fail("Should have thrown a BadRequestException.");
+        }
+        catch (BadRequestException bre) {
+            assertEquals("No such unit type(s): unknown",
+                bre.getMessage());
+        }
     }
 
     @Test
