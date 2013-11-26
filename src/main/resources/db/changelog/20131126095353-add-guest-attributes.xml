@@ -7,7 +7,7 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
 
-    <changeSet id="20130913143758" author="ckozak">
+    <changeSet id="20131126095353" author="ckozak">
         <comment>Added a table for guest attributes</comment>
 
         <createTable tableName="cp_consumer_guests_attributes">
@@ -36,5 +36,6 @@
         	referencedColumnNames="id"
         	referencedTableName="cp_consumer_guests"
         	referencedTableSchemaName="public"/>
-	</changeSet>
+    </changeSet>
+
 </databaseChangeLog>
