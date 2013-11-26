@@ -58,4 +58,5 @@ public class ConsumerServiceLevelsPermission extends TypedPermission<Owner> {
     public Owner getOwner() {
         return consumer.getOwner();
     }
+
 }

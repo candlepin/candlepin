@@ -56,4 +56,5 @@ public class UserUserPermission extends TypedPermission<User> {
         // This permission is not specific to any owner.
         return null;
     }
+
 }

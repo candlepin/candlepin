@@ -29,7 +29,6 @@ import org.hibernate.LockMode;
 import org.hibernate.Query;
 import org.hibernate.ReplicationMode;
 import org.hibernate.criterion.Criterion;
-import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
@@ -189,7 +188,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             log.debug("   product: " + productId);
         }
 
-        DetachedCriteria crit = createSecureDetachedCriteria();
+        Criteria crit = createSecureCriteria();
         if (activeOnly) {
             crit.add(Restrictions.eq("activeSubscription", Boolean.TRUE));
         }
@@ -264,7 +263,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     @Transactional
     public List<Pool> listPoolsRestrictedToUser(String username) {
         return listByCriteria(
-            DetachedCriteria.forClass(Pool.class)
+            currentSession().createCriteria(Pool.class)
                 .add(Restrictions.eq("restrictedToUsername", username)));
     }
 

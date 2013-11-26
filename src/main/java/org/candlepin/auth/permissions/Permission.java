@@ -27,12 +27,21 @@ public interface Permission {
     boolean canAccess(Object target, SubResource subResource, Access access);
 
     /**
-     * Permissions have the ability to add restrictions to a hibernate query. This allows
-     * us to do things like limit the results from a database query based on the principal,
-     * while still allowing the database to do the filtering and use pagination.
+     * Permissions have the ability to add restrictions to a hibernate queries which use
+     * {@link AbstractHibernateCurator#createSecureCriteria createSecureCriteria}.
+     *
+     * This allows us to do things like limit the results from a database query based
+     * on the principal, while still allowing the database to do the filtering and
+     * use pagination.
+     *
+     * While you can just return null here in many cases, it is often a good idea to
+     * explicitly include the objects you know you will be accessing with this permission.
+     * The results of this method are or'd together for all permissions on the principal,
+     * which could cause something to be hidden from you because another permission
+     * filtered it out, but you specified nothing.
+     *
      * @param entityClass Type of object being queried.
-     * @return Restrictions to be added to the criteria. This is handled
-     * in the abstract hibernate curator.
+     * @return The modified Criteria query to be run.
      */
     Criterion getCriteriaRestrictions(Class entityClass);
 

@@ -74,7 +74,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
 
     public Page<List<Entitlement>> listByConsumer(Consumer consumer,
         PageRequest pageRequest) {
-        DetachedCriteria query = DetachedCriteria.forClass(Entitlement.class)
+        Criteria query = createSecureCriteria()
             .add(Restrictions.eq("consumer", consumer));
         return listByCriteria(query, pageRequest);
     }
@@ -123,7 +123,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     }
 
     public List<Entitlement> listByOwner(Owner owner) {
-        DetachedCriteria query = DetachedCriteria.forClass(Entitlement.class)
+        Criteria query = currentSession().createCriteria(Entitlement.class)
             .add(Restrictions.eq("owner", owner));
 
         return listByCriteria(query);
@@ -281,7 +281,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     @Transactional
     public Page<List<Entitlement>> listByConsumerAndProduct(Consumer consumer,
         String productId, PageRequest pageRequest) {
-        DetachedCriteria query = DetachedCriteria.forClass(Entitlement.class)
+        Criteria query = createSecureCriteria()
             .add(Restrictions.eq("consumer", consumer));
 
         Page<List<Entitlement>> page = listByCriteria(query, pageRequest, true);

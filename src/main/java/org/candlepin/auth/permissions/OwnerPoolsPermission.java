@@ -55,5 +55,4 @@ public class OwnerPoolsPermission extends TypedPermission<Owner> {
         return owner;
     }
 
-
 }

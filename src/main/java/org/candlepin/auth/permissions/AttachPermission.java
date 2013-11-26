@@ -71,5 +71,4 @@ public class AttachPermission extends TypedPermission<Pool> {
         return owner;
     }
 
-
 }

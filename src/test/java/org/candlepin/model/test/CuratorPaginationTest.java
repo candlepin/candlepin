@@ -21,8 +21,8 @@ import org.candlepin.model.Owner;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.test.DatabaseTestFixture;
-
-import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.Criteria;
+import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
 import org.junit.Before;
 import org.junit.Test;
@@ -44,6 +44,8 @@ import java.util.List;
  */
 public class CuratorPaginationTest extends DatabaseTestFixture {
 
+    private Session session;
+
     @Before
     public void setUp() {
         for (int i = 0; i < 10; i++) {
@@ -52,6 +54,8 @@ public class CuratorPaginationTest extends DatabaseTestFixture {
             o.setKey(String.valueOf(i));
             ownerCurator.create(o);
         }
+
+        session = (Session) entityManager().getDelegate();
     }
 
     @Test
@@ -84,14 +88,14 @@ public class CuratorPaginationTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testPagingWithDetachedCriteria() {
+    public void testPagingWithCriteria() {
         PageRequest pageRequest = new PageRequest();
         pageRequest.setSortBy("key");
         pageRequest.setOrder(PageRequest.Order.ASCENDING);
         pageRequest.setPage(1);
         pageRequest.setPerPage(2);
 
-        DetachedCriteria criteria = DetachedCriteria.forClass(Owner.class).
+        Criteria criteria = session.createCriteria(Owner.class).
             add(Restrictions.gt("key", "5"));
 
         Page<List<Owner>> p = ownerCurator.listByCriteria(criteria, pageRequest);
@@ -106,8 +110,8 @@ public class CuratorPaginationTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testNoPagingWithDetachedCriteria() {
-        DetachedCriteria criteria = DetachedCriteria.forClass(Owner.class).
+    public void testNoPagingWithCriteria() {
+        Criteria criteria = session.createCriteria(Owner.class).
             add(Restrictions.gt("key", "5"));
 
         Page<List<Owner>> p = ownerCurator.listByCriteria(criteria, null);
@@ -137,7 +141,7 @@ public class CuratorPaginationTest extends DatabaseTestFixture {
         pageRequest.setPage(1);
         pageRequest.setPerPage(2);
 
-        DetachedCriteria criteria = DetachedCriteria.forClass(Owner.class).
+        Criteria criteria = session.createCriteria(Owner.class).
             add(Restrictions.gt("key", "5"));
 
         /* Since we are telling listByCriteria that we are doing post-filtering

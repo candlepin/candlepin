@@ -63,7 +63,7 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
     @Transactional
     public List<Owner> lookupByKeys(Collection<String> keys) {
         return listByCriteria(
-            createSecureDetachedCriteria().add(Restrictions.in("key", keys)));
+            createSecureCriteria().add(Restrictions.in("key", keys)));
     }
 
     public Owner lookupWithUpstreamUuid(String upstreamUuid) {

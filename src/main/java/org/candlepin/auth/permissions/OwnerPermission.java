@@ -67,9 +67,6 @@ public class OwnerPermission implements Permission, Serializable {
         if (entityClass.equals(Consumer.class)) {
             return Restrictions.eq("owner", owner);
         }
-
-        // TODO: Since this is not a typed permission, it would be good to do some
-        // filtering for other classes here as well;
         return null;
     }
 
@@ -77,4 +74,5 @@ public class OwnerPermission implements Permission, Serializable {
     public Owner getOwner() {
         return owner;
     }
+
 }

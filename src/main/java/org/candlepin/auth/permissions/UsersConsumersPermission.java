@@ -88,4 +88,5 @@ public class UsersConsumersPermission implements Permission {
     public Owner getOwner() {
         return owner;
     }
+
 }

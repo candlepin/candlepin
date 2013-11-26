@@ -23,6 +23,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.OptimisticLockException;
 
 import org.candlepin.auth.Principal;
+import org.candlepin.auth.permissions.Permission;
 import org.candlepin.exceptions.ConcurrentModificationException;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.paging.Page;
@@ -30,7 +31,6 @@ import org.candlepin.paging.PageRequest;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.criterion.Criterion;
-import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projection;
 import org.hibernate.criterion.Projections;
@@ -102,12 +102,12 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      * @return all entities for a particular type.
      */
     public List<E> listAll() {
-        return listByCriteria(createSecureDetachedCriteria());
+        return listByCriteria(createSecureCriteria());
     }
 
     public List<E> listAllByIds(Collection<? extends Serializable> ids) {
         return listByCriteria(
-            createSecureDetachedCriteria().add(Restrictions.in("id", ids)));
+            createSecureCriteria().add(Restrictions.in("id", ids)));
     }
 
     @SuppressWarnings("unchecked")
@@ -188,13 +188,13 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
 
     @SuppressWarnings("unchecked")
     @Transactional
-    public List<E> listByCriteria(DetachedCriteria query) {
-        return query.getExecutableCriteria(currentSession()).list();
+    public List<E> listByCriteria(Criteria query) {
+        return query.list();
     }
 
     @SuppressWarnings("unchecked")
     @Transactional
-    public Page<List<E>> listByCriteria(DetachedCriteria query,
+    public Page<List<E>> listByCriteria(Criteria query,
         PageRequest pageRequest, boolean postFilter) {
         Page<List<E>> resultsPage;
         if (postFilter) {
@@ -220,63 +220,62 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     }
 
     /**
-     * Checks if the current principal has any permisisons which wish to restrict the
-     * results of a query for the entity we're dealing with.
-     * @return Criteria restrictions from principal's permissions.
+     * Gives the permissions a chance to add aliases and then restrictions to the query.
+     * Uses an "or" so a principal could carry permissions for multiple owners
+     * (for example), but still have their results filtered without one of the perms
+     * hiding the results from the other.
+     *
+     * @return Criteria Final criteria query with all filters applied.
      */
     protected Criteria createSecureCriteria() {
-        Principal p = principalProvider.get();
+        Principal principal = principalProvider.get();
         Criteria query = currentSession().createCriteria(entityType);
 
         /*
          * There are situations where consumer queries are run before there is a principal,
          * i.e. during authentication when we're looking up the consumer itself.
          */
-        if (p == null) {
+        if (principal == null) {
             return query;
         }
 
-        Criterion permissionCrit = p.getCriteriaRestrictions(entityType);
-        if (permissionCrit != null && log.isDebugEnabled()) {
-            log.debug("Got criteria restrictions from permissions for " +
-                entityType + ": " + permissionCrit);
+
+        // Admins do not need query filtering enabled.
+        if (principal.hasFullAccess()) {
+            return query;
         }
 
-        if (permissionCrit != null) {
-            query.add(permissionCrit);
-        }
-        return query;
-    }
+        Criterion finalCriterion = null;
+        for (Permission perm : principal.getPermissions()) {
 
-    /**
-     * Checks if the current principal has any permisisons which wish to restrict the
-     * results of a query for the entity we're dealing with.
-     * @return Criteria restrictions from principal's permissions.
-     */
-    protected DetachedCriteria createSecureDetachedCriteria() {
-        Principal p = principalProvider.get();
-        DetachedCriteria query = DetachedCriteria.forClass(entityType);
-        Criterion permissionCrit = p.getCriteriaRestrictions(entityType);
-        if (permissionCrit != null && log.isDebugEnabled()) {
-            log.debug("Got criteria restrictions from permissions for " +
-                entityType + ": " + permissionCrit);
+            Criterion crit = perm.getCriteriaRestrictions(entityType);
+            if (crit != null) {
+                log.debug("Got criteria restrictions from permissions {} for {}: {}",
+                    new Object [] {perm, entityType, crit});
+                if (finalCriterion == null) {
+                    finalCriterion = crit;
+                }
+                else {
+                    finalCriterion = Restrictions.or(finalCriterion, crit);
+                }
+            }
         }
 
-        if (permissionCrit != null) {
-            query.add(permissionCrit);
+        if (finalCriterion != null) {
+            query.add(finalCriterion);
         }
+
         return query;
     }
 
     @SuppressWarnings("unchecked")
     @Transactional
-    public Page<List<E>> listByCriteria(DetachedCriteria query,
+    public Page<List<E>> listByCriteria(Criteria c,
         PageRequest pageRequest) {
         Page<List<E>> page = new Page<List<E>>();
 
         if (pageRequest != null) {
             // see https://forum.hibernate.org/viewtopic.php?t=974802
-            Criteria c = query.getExecutableCriteria(currentSession());
 
             // Save original Projection and ResultTransformer
             CriteriaImpl cImpl = (CriteriaImpl) c;
@@ -294,16 +293,10 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
             page.setPageRequest(pageRequest);
         }
         else {
-            page.setPageData(listByCriteria(query));
+            page.setPageData(listByCriteria(c));
         }
 
         return page;
-    }
-
-    @SuppressWarnings("unchecked")
-    @Transactional
-    public E getByCriteria(DetachedCriteria query) {
-        return (E) query.getExecutableCriteria(currentSession()).uniqueResult();
     }
 
     /**

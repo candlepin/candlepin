@@ -23,9 +23,9 @@ import org.candlepin.paging.PageRequest;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
+import org.hibernate.Criteria;
 import org.hibernate.Query;
 import org.hibernate.ReplicationMode;
-import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
@@ -200,12 +200,13 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     @Transactional
     public List<Consumer> findByUuids(Collection<String> uuids) {
         return listByCriteria(
-            DetachedCriteria.forClass(Consumer.class).add(Restrictions.in("uuid", uuids)));
+            currentSession().createCriteria(Consumer.class).add(
+                Restrictions.in("uuid", uuids)));
     }
 
     @Transactional
     public List<Consumer> findByUuidsAndOwner(Collection<String> uuids, Owner owner) {
-        DetachedCriteria criteria = DetachedCriteria.forClass(Consumer.class);
+        Criteria criteria = currentSession().createCriteria(Consumer.class);
         criteria.add(Restrictions.eq("owner", owner));
         criteria.add(Restrictions.in("uuid", uuids));
         return listByCriteria(criteria);
@@ -239,7 +240,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     public Page<List<Consumer>> listByUsernameAndType(String userName,
         ConsumerType type, Owner owner, PageRequest pageRequest) {
 
-        DetachedCriteria criteria = createSecureDetachedCriteria();
+        Criteria criteria = createSecureCriteria();
 
         if (userName != null) {
             criteria.add(Restrictions.eq("username", userName));

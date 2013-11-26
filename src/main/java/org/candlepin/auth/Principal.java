@@ -16,14 +16,11 @@ package org.candlepin.auth;
 
 import org.candlepin.auth.permissions.Permission;
 import org.candlepin.util.Util;
-import org.hibernate.criterion.Criterion;
-import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -39,6 +36,10 @@ public abstract class Principal implements Serializable {
     public abstract String getType();
 
     public abstract boolean hasFullAccess();
+
+    public List<Permission> getPermissions() {
+        return permissions;
+    }
 
     protected void addPermission(Permission permission) {
         this.permissions.add(permission);
@@ -84,38 +85,6 @@ public abstract class Principal implements Serializable {
     @Override
     public String toString() {
         return Util.toJson(this.getData());
-    }
-
-    /**
-     * Assembles all criteria from all permissions. We use an *or* for this, so a principal
-     * could carry permissions for multiple owners (for example), but still have their
-     * results filtered without one of the perms hiding the results from the other.
-     *
-     * @param entityClass Type of object we're querying.
-     * @return All criterion from all permissions or'd together.
-     */
-    public Criterion getCriteriaRestrictions(Class entityClass) {
-        Criterion finalCriterion = null;
-
-        // Admins do not need query filtering enabled.
-        if (hasFullAccess()) {
-            return finalCriterion;
-        }
-
-        List<Criterion> filters = new LinkedList<Criterion>();
-        for (Permission p : permissions) {
-            Criterion crit = p.getCriteriaRestrictions(entityClass);
-            if (crit != null) {
-                if (finalCriterion == null) {
-                    finalCriterion = crit;
-                }
-                else {
-                    finalCriterion = Restrictions.or(finalCriterion, crit);
-                }
-                filters.add(crit);
-            }
-        }
-        return finalCriterion;
     }
 
 }
