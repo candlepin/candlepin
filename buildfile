@@ -53,7 +53,7 @@ HIBERNATE = ['org.hibernate:hibernate-core:jar:3.3.2.GA',
              'cglib:cglib:jar:2.2',
              'javassist:javassist:jar:3.9.0.GA',
              'javax.transaction:jta:jar:1.1',
-             'org.slf4j:slf4j-api:jar:1.6.1',
+             'org.slf4j:slf4j-api:jar:1.7.5',
              'org.freemarker:freemarker:jar:2.3.15',
              'c3p0:c3p0:jar:0.9.0',
              'dom4j:dom4j:jar:1.6.1']
