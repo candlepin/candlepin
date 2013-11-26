@@ -2027,7 +2027,7 @@ public class ConsumerResource {
                 invalidOverrides.add(entry.getName());
             }
         }
-        if (invalidOverrides.size() > 0) {
+        if (!invalidOverrides.isEmpty()) {
             String error = i18n.tr("Not allowed to override values for: {0}",
                 StringUtils.join(invalidOverrides, ", "));
             throw new BadRequestException(error);
