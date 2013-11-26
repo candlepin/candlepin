@@ -229,22 +229,22 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      * Search for Consumers with fields matching those provided.
      *
      * @param userName the username to match, or null to ignore
-     * @param type the type to match, or null to ignore
+     * @param types the types to match, or null/empty to ignore
      * @param owner Optional owner to filter on, pass null to skip.
      * @return a list of matching Consumers
      */
     @SuppressWarnings("unchecked")
     @Transactional
     public Page<List<Consumer>> listByUsernameAndType(String userName,
-        ConsumerType type, Owner owner, PageRequest pageRequest) {
+        List<ConsumerType> types, Owner owner, PageRequest pageRequest) {
 
         DetachedCriteria criteria = DetachedCriteria.forClass(Consumer.class);
 
         if (userName != null) {
             criteria.add(Restrictions.eq("username", userName));
         }
-        if (type != null) {
-            criteria.add(Restrictions.eq("type", type));
+        if (types != null && !types.isEmpty()) {
+            criteria.add(Restrictions.in("type", types));
         }
         if (owner != null) {
             criteria.add(Restrictions.eq("owner", owner));

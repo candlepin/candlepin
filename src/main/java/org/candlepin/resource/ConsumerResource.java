@@ -250,10 +250,10 @@ public class ConsumerResource {
         @Context PageRequest pageRequest) {
 
         if (uuids == null || uuids.isEmpty()) {
-            ConsumerType type = null;
+            List<ConsumerType> types = new ArrayList<ConsumerType>();
 
             if (typeLabel != null) {
-                type = lookupConsumerType(typeLabel);
+                types.add(lookupConsumerType(typeLabel));
             }
 
             Owner owner = null;
@@ -270,7 +270,7 @@ public class ConsumerResource {
             // We don't look up the user and warn if it doesn't exist here to not
             // give away usernames
             Page<List<Consumer>> p = consumerCurator.listByUsernameAndType(userName,
-                type, owner, pageRequest);
+                types, owner, pageRequest);
 
             // Store the page for the LinkHeaderPostInterceptor
             ResteasyProviderFactory.pushContext(Page.class, p);

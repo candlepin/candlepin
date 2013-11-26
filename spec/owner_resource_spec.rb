@@ -331,4 +331,36 @@ describe 'Owner Resource' do
       @cp.set_owner_log_level(owner['key'], "THISLEVELISBAD")
     end.should raise_exception(RestClient::BadRequest)
   end
+  
+  it 'should allow consumer lookup by consumer types' do
+    owner = create_owner random_string("type-owner")
+    owner_admin = user_client(owner, random_string('type-owner-user'))
+    
+    system1 = owner_admin.register("system1-consumer")
+    system2 = owner_admin.register("system2-consumer")
+    hypervisor = owner_admin.register("hypervisor-consumer", type=:hypervisor)
+    distributor = owner_admin.register("distributor-consumer", type=:candlepin)
+   
+    systems = owner_admin.list_owner_consumers(owner['key'], types=["system"])
+    systems.length.should == 2
+    systems.each { |consumer| consumer['type']['label'].should == "system" }
+    
+    hypervisors = owner_admin.list_owner_consumers(owner['key'], types=["hypervisor"])
+    hypervisors.length.should == 1
+    hypervisors.each { |consumer| consumer['type']['label'].should == "hypervisor" }
+    
+    distributors = owner_admin.list_owner_consumers(owner['key'], types=["candlepin"])
+    distributors.length.should == 1
+    distributors.each { |consumer| consumer['type']['label'].should == "candlepin" }
+    
+    # Now that we have our counts we can do a lookup for multiple types
+    consumers = owner_admin.list_owner_consumers(owner['key'], types=["hypervisor", "candlepin"])
+    consumers.length.should == 2
+    found = []
+    consumers.each { |consumer| found << consumer['type']['label']}
+    found.length.should == 2
+    found.delete("hypervisor").should_not be_nil
+    found.delete("candlepin").should_not be_nil
+  end
+  
 end
