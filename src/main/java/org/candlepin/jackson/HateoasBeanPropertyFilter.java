@@ -28,27 +28,27 @@ import org.codehaus.jackson.map.ser.BeanPropertyWriter;
  */
 public class HateoasBeanPropertyFilter extends JsonBeanPropertyFilter {
 
-    @Override
-    public void serializeAsField(Object obj, JsonGenerator jsonGenerator,
-        SerializerProvider serializerProvider, BeanPropertyWriter writer) throws Exception {
+    public boolean isSerializable(Object obj, JsonGenerator jsonGenerator,
+        SerializerProvider serializerProvider, BeanPropertyWriter writer) {
         JsonStreamContext context = jsonGenerator.getOutputContext();
 
         if ((context.getParent() != null) && (context.getParent().inArray())) {
             // skip annotated fields if within array:
             if (!annotationPresent(obj, writer.getName(), HateoasArrayExclude.class)) {
-                writer.serializeAsField(obj, jsonGenerator, serializerProvider);
+                return true;
             }
         }
         // Check if we should trigger reduced HATEOAS serialization for a nested object by
         // looking for the annotation on the fields getter:
         else if ((context.getParent() != null) && (context.getParent().inObject())) {
             if (annotationPresent(obj, writer.getName(), HateoasInclude.class)) {
-                writer.serializeAsField(obj, jsonGenerator, serializerProvider);
+                return true;
             }
         }
         else {
             // Normal serialization:
-            writer.serializeAsField(obj, jsonGenerator, serializerProvider);
+            return true;
         }
+        return false;
     }
 }

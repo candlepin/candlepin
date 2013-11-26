@@ -14,7 +14,6 @@
  */
 package org.candlepin.jackson;
 
-import org.codehaus.jackson.map.ser.BeanPropertyFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,7 +23,7 @@ import java.lang.reflect.Method;
 /**
  * JsonBeanPropertyFilter
  */
-public abstract class JsonBeanPropertyFilter implements BeanPropertyFilter {
+public abstract class JsonBeanPropertyFilter extends CheckableBeanPropertyFilter {
 
     private static Logger log = LoggerFactory.getLogger(JsonBeanPropertyFilter.class);
 
