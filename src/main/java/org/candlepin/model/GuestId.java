@@ -18,6 +18,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.candlepin.jackson.HateoasArrayExclude;
+import org.candlepin.jackson.HateoasInclude;
+import org.codehaus.jackson.map.annotate.JsonFilter;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CollectionOfElements;
 import org.hibernate.annotations.ForeignKey;
@@ -48,6 +51,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_consumer_guests")
+@JsonFilter("GuestFilter")
 public class GuestId extends AbstractHibernateObject {
 
     @Id
@@ -93,6 +97,7 @@ public class GuestId extends AbstractHibernateObject {
         this.setAttributes(attributes);
     }
 
+    @HateoasInclude
     public String getGuestId() {
         return guestId;
     }
@@ -101,6 +106,7 @@ public class GuestId extends AbstractHibernateObject {
         this.guestId = guestId;
     }
 
+    @HateoasInclude
     public String getId() {
         return id;
     }
@@ -122,6 +128,7 @@ public class GuestId extends AbstractHibernateObject {
         this.attributes = attributes;
     }
 
+    @HateoasArrayExclude
     public Map<String, String> getAttributes() {
         return attributes;
     }
