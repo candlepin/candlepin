@@ -529,25 +529,31 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     public void delete(Pool entity) {
         Pool toDelete = find(entity.getId());
 
-        ProductPoolAttributeCurator ppac = injector
-                                   .getInstance(ProductPoolAttributeCurator.class);
-        List<ProductPoolAttribute> ppa = currentSession()
-                                          .createCriteria(ProductPoolAttribute.class)
-                                          .add(Restrictions.eq("pool", entity)).list();
-        for (ProductPoolAttribute att : ppa) {
-            ppac.delete(att);
-        }
-        entity.getProductAttributes().clear();
-        entity.getDerivedProductAttributes().clear();
+//        ProductPoolAttributeCurator ppac = injector
+//                                   .getInstance(ProductPoolAttributeCurator.class);
+//        List<ProductPoolAttribute> ppa = currentSession()
+//                                          .createCriteria(ProductPoolAttribute.class)
+//                                          .add(Restrictions.eq("pool", entity)).list();
+//        for (ProductPoolAttribute att : ppa) {
+//            ppac.delete(att);
+//        }
+//        currentSession().createQuery(
+//            "delete from ProductPoolAttribute where pool = :pool").
+//            setEntity("pool", entity).executeUpdate();
+//        entity.getProductAttributes().clear();
+//        entity.getDerivedProductAttributes().clear();
 
-        PoolAttributeCurator pac = injector.getInstance(PoolAttributeCurator.class);
-        List<PoolAttribute> pa = currentSession()
-                                          .createCriteria(PoolAttribute.class)
-                                          .add(Restrictions.eq("pool", entity)).list();
-        for (PoolAttribute att : pa) {
-            pac.delete(att);
-        }
-        entity.getAttributes().clear();
+//        PoolAttributeCurator pac = injector.getInstance(PoolAttributeCurator.class);
+//        List<PoolAttribute> pa = currentSession()
+//                                          .createCriteria(PoolAttribute.class)
+//                                          .add(Restrictions.eq("pool", entity)).list();
+//        for (PoolAttribute att : pa) {
+//            pac.delete(att);
+//        }
+//        currentSession().createQuery(
+//            "delete from PoolAttribute where pool = :pool").
+//            setEntity("pool", entity).executeUpdate();
+//        entity.getAttributes().clear();
 
         if (toDelete != null) {
             currentSession().delete(toDelete);
