@@ -146,7 +146,7 @@ function create_var_cache_candlepin
 
 function autoconf
 {
-  buildr -e $1 erb $2
+  buildr -s -e $1 erb $2
 
   red='\e[0;31m'
   NC='\e[0m' # No Color
@@ -316,3 +316,7 @@ echo "Initializing Candlepin..."
 wget --no-check-certificate -qO- https://localhost:8443/candlepin/admin/init
 
 upload_products
+
+if [ "$NOTIFY" == "1" ] && which notify-send &> /dev/null; then
+    notify-send -i info -t 2000 "Deployment complete!"
+fi

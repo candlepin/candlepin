@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.candlepin.model.Entitlement;
+import org.codehaus.jackson.map.annotate.JsonFilter;
 
 /**
  * ComplianceStatus
@@ -28,6 +29,7 @@ import org.candlepin.model.Entitlement;
  * Represents the compliance status for a given consumer. Carries information
  * about which products are fully entitled, not entitled, or partially entitled. (stacked)
  */
+@JsonFilter("ComplianceFilter")
 public class ComplianceStatus {
     public static final String GREEN = "valid";
     public static final String YELLOW = "partial";

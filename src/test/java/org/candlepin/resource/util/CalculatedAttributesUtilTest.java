@@ -25,6 +25,8 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
+import org.candlepin.policy.js.pooltype.PoolComplianceType;
+import org.candlepin.policy.js.pooltype.PoolComplianceTypeRules;
 import org.candlepin.policy.js.quantity.QuantityRules;
 import org.candlepin.policy.js.quantity.SuggestedQuantity;
 import org.candlepin.test.DatabaseTestFixture;
@@ -33,8 +35,11 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.xnap.commons.i18n.I18n;
+import org.xnap.commons.i18n.I18nFactory;
 
 import java.util.Date;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -49,6 +54,8 @@ public class CalculatedAttributesUtilTest extends DatabaseTestFixture {
     private Consumer consumer;
 
     @Mock private QuantityRules quantityRules;
+    @Mock private PoolComplianceTypeRules poolTypeRules;
+    private I18n i18n;
 
     @Before
     public void setUp() throws Exception {
@@ -63,7 +70,11 @@ public class CalculatedAttributesUtilTest extends DatabaseTestFixture {
         pool1 = createPoolAndSub(owner1, product1, 500L,
             TestUtil.createDate(2000, 1, 1), TestUtil.createDate(3000, 1, 1));
 
-        attrUtil = new CalculatedAttributesUtil(quantityRules);
+        Locale locale = new Locale("en_US");
+        i18n = I18nFactory.getI18n(getClass(), "org.candlepin.i18n.Messages", locale,
+            I18nFactory.FALLBACK);
+
+        attrUtil = new CalculatedAttributesUtil(quantityRules, poolTypeRules, i18n);
 
         consumer = createConsumer(owner1);
     }
@@ -77,11 +88,20 @@ public class CalculatedAttributesUtilTest extends DatabaseTestFixture {
             any(Consumer.class), any(Date.class))).
             thenReturn(suggested);
 
+        PoolComplianceType pt = new PoolComplianceType();
+        pt.setRawPoolType("unknown");
+        pt.translatePoolType(i18n);
+        when(poolTypeRules.getPoolType(any(Pool.class))).
+            thenReturn(pt);
+
         Date date = new Date();
         Map<String, String> attrs =
             attrUtil.buildCalculatedAttributes(pool1, consumer, date);
         assertTrue(attrs.containsKey("suggested_quantity"));
         verify(quantityRules).getSuggestedQuantity(pool1, consumer, date);
+        assertTrue(attrs.containsKey("compliance_type"));
+        verify(poolTypeRules).getPoolType(pool1);
+        assertEquals("Other", attrs.get("compliance_type"));
     }
 
     @Test
@@ -99,6 +119,9 @@ public class CalculatedAttributesUtilTest extends DatabaseTestFixture {
         when(quantityRules.getSuggestedQuantity(any(Pool.class),
             any(Consumer.class), any(Date.class))).
             thenReturn(suggested);
+
+        when(poolTypeRules.getPoolType(any(Pool.class))).
+            thenReturn(new PoolComplianceType());
 
         Date date = new Date();
         Map<String, String> attrs =

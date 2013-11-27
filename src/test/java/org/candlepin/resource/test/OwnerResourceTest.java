@@ -18,6 +18,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
@@ -79,6 +80,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.ws.rs.core.MultivaluedMap;
 /**
@@ -421,7 +423,10 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         setupPrincipal(owner, Access.ALL);
         securityInterceptor.enable();
 
-        ownerResource.listConsumers(owner.getKey(), "username", "type", uuids,
+        Set<String> types = new HashSet<String>();
+        types.add("type");
+
+        ownerResource.listConsumers(owner.getKey(), "username", types, uuids,
             new PageRequest());
     }
 
@@ -444,6 +449,26 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         assertEquals(1,
             ownerResource.listConsumers(owner.getKey(), null, null, uuids, null).size());
+    }
+
+    /**
+     * I'm generally not a fan of testing this way, but in this case
+     * I want to check that the exception message that is returned
+     * correctly concats the invalid type name.
+     */
+    @Test
+    public void failWhenListingByBadConsumerType() {
+        Set<String> types = new HashSet<String>();
+        types.add("unknown");
+        try {
+            ownerResource.listConsumers(owner.getKey(), null, types,
+                new ArrayList<String>(), null);
+            fail("Should have thrown a BadRequestException.");
+        }
+        catch (BadRequestException bre) {
+            assertEquals("No such unit type(s): unknown",
+                bre.getMessage());
+        }
     }
 
     @Test
