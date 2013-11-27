@@ -21,21 +21,19 @@
         </createTable>
 
         <addPrimaryKey columnNames="cp_consumer_guest_id, mapkey"
-        	constraintName="cp_consumer_guest_attribute_pkey"
+        	constraintName="cp_consumer_guest_attr_pkey"
         	tableName="cp_consumer_guests_attributes"/>
 
         <addForeignKeyConstraint
         	baseColumnNames="cp_consumer_guest_id"
         	baseTableName="cp_consumer_guests_attributes"
-        	baseTableSchemaName="public"
         	constraintName="fk_guest_attribute"
         	deferrable="false"
         	initiallyDeferred="false"
         	onDelete="NO ACTION"
         	onUpdate="NO ACTION"
         	referencedColumnNames="id"
-        	referencedTableName="cp_consumer_guests"
-        	referencedTableSchemaName="public"/>
+        	referencedTableName="cp_consumer_guests"/>
     </changeSet>
 
 </databaseChangeLog>
