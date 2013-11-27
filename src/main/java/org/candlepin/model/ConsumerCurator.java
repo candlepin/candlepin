@@ -200,8 +200,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     @Transactional
     public List<Consumer> findByUuids(Collection<String> uuids) {
         return listByCriteria(
-            currentSession().createCriteria(Consumer.class).add(
-                Restrictions.in("uuid", uuids)));
+            createSecureCriteria().add(Restrictions.in("uuid", uuids)));
     }
 
     @Transactional

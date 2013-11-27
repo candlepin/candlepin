@@ -425,7 +425,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             new PageRequest());
     }
 
-    @Test(expected = ForbiddenException.class)
     public void consumerCannotListConsumersFromAnotherOwner() {
         Consumer c = TestUtil.createConsumer(owner);
         consumerTypeCurator.create(c.getType());
@@ -443,7 +442,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         setupPrincipal(owner, Access.ALL);
         securityInterceptor.enable();
 
-        ownerResource.listConsumers(owner.getKey(), null, null, uuids, null);
+        assertEquals(1,
+            ownerResource.listConsumers(owner.getKey(), null, null, uuids, null).size());
     }
 
     @Test

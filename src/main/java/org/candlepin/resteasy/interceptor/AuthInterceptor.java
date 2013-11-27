@@ -512,7 +512,7 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
         @Override
         public Environment lookup(String key) {
             initialize();
-            return envCurator.find(key);
+            return envCurator.secureFind(key);
         }
 
         @Override
@@ -580,7 +580,7 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
         @Override
         public Entitlement lookup(String key) {
             initialize();
-            return entitlementCurator.find(key);
+            return entitlementCurator.secureFind(key);
         }
 
         @Override
@@ -607,7 +607,7 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
         @Override
         public Pool lookup(String key) {
             initialize();
-            return poolCurator.find(key);
+            return poolCurator.secureFind(key);
         }
 
         @Override
@@ -634,7 +634,7 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
         @Override
         public ActivationKey lookup(String key) {
             initialize();
-            return activationKeyCurator.find(key);
+            return activationKeyCurator.secureFind(key);
         }
 
         @Override
@@ -661,7 +661,7 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
         @Override
         public Product lookup(String key) {
             initialize();
-            return productCurator.find(key);
+            return productCurator.secureFind(key);
         }
 
         @Override

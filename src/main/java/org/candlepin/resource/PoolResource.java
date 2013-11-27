@@ -153,7 +153,7 @@ public class PoolResource {
             }
         }
         if (ownerId != null) {
-            o = ownerCurator.find(ownerId);
+            o = ownerCurator.secureFind(ownerId);
             if (o == null) {
                 throw new NotFoundException(i18n.tr("owner: {0}", ownerId));
             }

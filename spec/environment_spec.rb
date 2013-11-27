@@ -47,17 +47,17 @@ describe 'Environments' do
 
     lambda {
       foreign_admin.get_environment(@env['id'])
-    }.should raise_exception(RestClient::Forbidden)
+    }.should raise_exception(RestClient::ResourceNotFound)
 
     lambda {
       foreign_admin.delete_environment(@env['id'])
-    }.should raise_exception(RestClient::Forbidden)
+    }.should raise_exception(RestClient::ResourceNotFound)
 
     lambda {
       content = create_content
       foreign_admin.promote_content(@env['id'],
         [{:contentId => content['id']}])
-    }.should raise_exception(RestClient::Forbidden)
+    }.should raise_exception(RestClient::ResourceNotFound)
   end
 
   it 'can be searched by environment name' do

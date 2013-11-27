@@ -89,6 +89,20 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     }
 
     /**
+     * Same as {@link find} but allows permissions on the current principal to inject
+     * filters into the query before it is run. Primarily useful in authentication when
+     * we want to verify access to an entity specified in the URL, but not reveal if
+     * the entity exists or not if you don't have permissions to see it at all.
+     *
+     * @param id db id of entity to be found.
+     * @return entity matching given id, or null otherwise.
+     */
+    @Transactional
+    public E secureFind(Serializable id) {
+        return id == null ? null : secureGet(entityType, id);
+    }
+
+    /**
      * @param entity to be created.
      * @return newly created entity
      */
@@ -321,6 +335,12 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     @Transactional
     public E merge(E entity) {
         return getEntityManager().merge(entity);
+    }
+
+    @Transactional
+    protected final <T> T secureGet(Class<T> clazz, Serializable id) {
+        return clazz.cast(createSecureCriteria().
+            add(Restrictions.idEq(id)).uniqueResult());
     }
 
     @Transactional

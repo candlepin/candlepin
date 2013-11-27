@@ -57,7 +57,7 @@ describe 'Pool Resource' do
     consumer_client = consumer_client(owner1_client, random_string('testsystem'))
     lambda {
       consumer_client.get_pool(pool.id)
-    }.should raise_exception(RestClient::Forbidden)
+    }.should raise_exception(RestClient::ResourceNotFound)
   end
 
   it 'does not let owner admins view another owners pool' do
@@ -74,7 +74,7 @@ describe 'Pool Resource' do
 
     lambda {
       owner1_client.get_pool(pool.id)
-    }.should raise_exception(RestClient::Forbidden)
+    }.should raise_exception(RestClient::ResourceNotFound)
   end
 
   it 'should not return expired pools' do

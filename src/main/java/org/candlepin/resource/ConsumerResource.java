@@ -708,10 +708,10 @@ public class ConsumerResource {
         // Check permissions for current principal on the owner:
         if ((principal instanceof UserPrincipal) &&
             !principal.canAccess(owner, SubResource.CONSUMERS, Access.CREATE)) {
-
-            throw new ForbiddenException(i18n.tr(
-                "User ''{0}'' cannot access organization ''{1}''.",
-                principal.getPrincipalName(), owner.getKey()));
+            log.warn("User {} does not have access to create consumers in org {}",
+                principal.getPrincipalName(), owner.getKey());
+            throw new NotFoundException(i18n.tr(
+                "owner with key: {0} was not found.", owner.getKey()));
         }
 
         return owner;
@@ -1100,6 +1100,7 @@ public class ConsumerResource {
         // we need to create a list of entitlements to delete before actually
         // deleting, otherwise we are tampering with the loop iterator (BZ #786730)
         Set<Entitlement> deletableGuestEntitlements = new HashSet<Entitlement>();
+        log.debug("Revoking {} entitlements not matching host: {}", guest, host);
         for (Entitlement entitlement : guest.getEntitlements()) {
             Pool pool = entitlement.getPool();
 

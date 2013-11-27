@@ -18,7 +18,7 @@ describe 'Role Resource' do
     @cp.list_roles().map { |i| i['name'] }.should include(role_name)
   end
 
-  it 'should not expose roles to other owners' do
+  it 'should not allow org admins to list all roles' do
       lambda do
         @user_cp.list_roles()
       end.should raise_exception(RestClient::Forbidden)

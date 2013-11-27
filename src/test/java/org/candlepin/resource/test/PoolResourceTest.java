@@ -160,7 +160,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
         assertEquals(1, pools.size());
     }
 
-    @Test(expected = ForbiddenException.class)
+    @Test(expected = NotFoundException.class)
     public void testCannotListPoolsInAnotherOwner() {
         List<Pool> pools = poolResource.list(owner2.getId(), null, product2.getId(),
             false, null, adminPrincipal, null);
@@ -219,7 +219,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
             null, adminPrincipal, null).size());
     }
 
-    @Test(expected = ForbiddenException.class)
+    @Test(expected = NotFoundException.class)
     public void ownerAdminCannotListAnotherOwnersPools() {
         List<Pool> pools = poolResource.list(owner1.getId(), null, null, false, null,
             adminPrincipal, null);
@@ -240,7 +240,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
         poolResource.list(null, passConsumer.getUuid(), null, false, null, p, null);
     }
 
-    @Test(expected = ForbiddenException.class)
+    @Test(expected = NotFoundException.class)
     public void consumerCannotListPoolsForAnotherOwner() {
         Principal p = setupPrincipal(new ConsumerPrincipal(foreignConsumer));
         securityInterceptor.enable();

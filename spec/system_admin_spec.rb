@@ -179,6 +179,8 @@ describe 'System admins with read-only on org' do
     # Should succeed:
     @user_cp.unregister(@consumer1['uuid'])
 
+    # We expect forbidden here because this user can actually *see*
+    # the system, it just can't delete it:
     lambda do
       @user_cp.unregister(@consumer2['uuid'])
     end.should raise_exception(RestClient::Forbidden)

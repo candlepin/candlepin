@@ -115,7 +115,7 @@ describe 'Owner Resource' do
     #and this will fail
     lambda do
       ro_owner_client.register('systemFoo')
-    end.should raise_exception(RestClient::Forbidden)
+    end.should raise_exception(RestClient::ResourceNotFound)
   end
 
   it "does not let the owner key get updated" do

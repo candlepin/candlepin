@@ -18,9 +18,12 @@ import java.io.Serializable;
 
 import org.candlepin.auth.Access;
 import org.candlepin.auth.SubResource;
+import org.candlepin.model.ActivationKey;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.Environment;
 import org.candlepin.model.Owned;
 import org.candlepin.model.Owner;
+import org.candlepin.model.Pool;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Restrictions;
 
@@ -64,9 +67,22 @@ public class OwnerPermission implements Permission, Serializable {
         // Because this can be combined with a UsernameConsumersPermission, we need to add
         // a filter that will re-introduce consumers hidden by the other permission when
         // or'd together.
-        if (entityClass.equals(Consumer.class)) {
+        else if (entityClass.equals(Consumer.class)) {
             return Restrictions.eq("owner", owner);
         }
+
+        else if (entityClass.equals(Pool.class)) {
+            return Restrictions.eq("owner", owner);
+        }
+
+        else if (entityClass.equals(ActivationKey.class)) {
+            return Restrictions.eq("owner", owner);
+        }
+
+        else if (entityClass.equals(Environment.class)) {
+            return Restrictions.eq("owner", owner);
+        }
+
         return null;
     }
 
