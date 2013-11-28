@@ -29,7 +29,7 @@ import org.hibernate.criterion.Restrictions;
 
 /**
  * A permission represents an owner to be accessed in some fashion, and a verb which
- * the permissions is granting.
+ * the permission is granting.
  */
 public class OwnerPermission implements Permission, Serializable {
 
@@ -63,22 +63,15 @@ public class OwnerPermission implements Permission, Serializable {
         if (entityClass.equals(Owner.class)) {
             return Restrictions.eq("key", owner.getKey());
         }
-
-        // Because this can be combined with a UsernameConsumersPermission, we need to add
-        // a filter that will re-introduce consumers hidden by the other permission when
-        // or'd together.
         else if (entityClass.equals(Consumer.class)) {
             return Restrictions.eq("owner", owner);
         }
-
         else if (entityClass.equals(Pool.class)) {
             return Restrictions.eq("owner", owner);
         }
-
         else if (entityClass.equals(ActivationKey.class)) {
             return Restrictions.eq("owner", owner);
         }
-
         else if (entityClass.equals(Environment.class)) {
             return Restrictions.eq("owner", owner);
         }

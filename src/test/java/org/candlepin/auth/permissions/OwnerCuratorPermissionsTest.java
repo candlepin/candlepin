@@ -51,7 +51,7 @@ public class OwnerCuratorPermissionsTest extends DatabaseTestFixture {
         // Setup a principal with access to org 1 and 2, but not 3.
         Set<Permission> perms = new HashSet<Permission>();
         User u = new User("fakeuser", "dontcare");
-        perms.add(new UsersConsumersPermission(u, owner1));
+        perms.add(new UsernameConsumersPermission(u, owner1));
         perms.add(new OwnerPermission(owner1, Access.ALL));
         perms.add(new OwnerPermission(owner2, Access.READ_ONLY)); // just read for org 2
         principal = new UserPrincipal(u.getUsername(), perms, false);

@@ -62,7 +62,7 @@ public class PermissionFactory {
                 return p;
 
             case USERNAME_CONSUMERS:
-                Permission usernamePerm = new UsersConsumersPermission(user,
+                Permission usernamePerm = new UsernameConsumersPermission(user,
                     permBp.getOwner());
                 return usernamePerm;
 

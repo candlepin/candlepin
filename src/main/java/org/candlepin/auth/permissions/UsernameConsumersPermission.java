@@ -32,12 +32,12 @@ import org.hibernate.criterion.Restrictions;
  *
  * Allows the user to create and manage entitlements for the consumer as well.
  */
-public class UsersConsumersPermission implements Permission {
+public class UsernameConsumersPermission implements Permission {
 
     private User user;
     private Owner owner;
 
-    public UsersConsumersPermission(User u, Owner o) {
+    public UsernameConsumersPermission(User u, Owner o) {
         this.user = u;
         this.owner = o;
     }

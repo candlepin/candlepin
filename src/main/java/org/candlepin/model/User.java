@@ -142,9 +142,7 @@ public class User extends AbstractHibernateObject {
     /**
      * Looks up permissions to find associated owners. We return any owner we find
      * on a permission, regardless of permission type or access level. You can use this
-     * API call to list the owners a user should be able to see / use in some capacity.
-     *
-     * This can be a handy entrypoint as it can sometimes be difficult to locate the
+     * API call to list the owners a user should be able to see or use in some capacity.
      *
      * @return associated owners
      */

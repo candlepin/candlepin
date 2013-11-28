@@ -26,9 +26,9 @@ import org.candlepin.model.User;
 import org.junit.Before;
 import org.junit.Test;
 
-public class UsersConsumersPermissionTest {
+public class UsernameConsumersPermissionTest {
 
-    private UsersConsumersPermission perm;
+    private UsernameConsumersPermission perm;
     private Owner owner;
     private final String username = "bill";
 
@@ -36,7 +36,7 @@ public class UsersConsumersPermissionTest {
     public void init() {
         User u = new User(username, "dontcare");
         owner = new Owner("ownerkey", "My Org");
-        perm = new UsersConsumersPermission(u, owner);
+        perm = new UsernameConsumersPermission(u, owner);
     }
 
     @Test

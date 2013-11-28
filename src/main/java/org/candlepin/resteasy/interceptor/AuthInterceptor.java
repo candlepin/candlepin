@@ -456,7 +456,7 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
                 minimumLevel = Access.CREATE;
             }
 
-            // TODO: add Acces update and delete as needed here.
+            // May want to split out UPDATE here someday if it becomes useful.
             if (annotation instanceof PUT ||
                 annotation instanceof DELETE) {
                 minimumLevel = Access.ALL;
