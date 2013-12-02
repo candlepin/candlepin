@@ -41,6 +41,7 @@ import org.xnap.commons.i18n.I18n;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -238,10 +239,10 @@ public class ProductResource {
     public Product addBatchContent(@PathParam("product_uuid") String pid,
                               Map<String, Boolean> contentMap) {
         Product product = prodAdapter.getProductById(pid);
-        for (String contentId : contentMap.keySet()) {
-            Content content = contentCurator.find(contentId);
+        for (Entry<String, Boolean> entry : contentMap.entrySet()) {
+            Content content = contentCurator.find(entry.getKey());
             ProductContent productContent = new ProductContent(product, content,
-                contentMap.get(contentId));
+                entry.getValue());
             product.getProductContent().add(productContent);
         }
         return prodAdapter.getProductById((product.getId()));

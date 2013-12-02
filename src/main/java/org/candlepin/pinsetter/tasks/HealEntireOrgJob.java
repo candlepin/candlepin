@@ -30,6 +30,8 @@ import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.UnitOfWork;
@@ -38,7 +40,7 @@ import com.google.inject.persist.UnitOfWork;
  * HealEntireOrgJob
  */
 public class HealEntireOrgJob extends UniqueByOwnerJob {
-
+    private static Logger log = LoggerFactory.getLogger(HealEntireOrgJob.class);
     protected OwnerCurator ownerCurator;
     protected Entitler entitler;
     protected ConsumerCurator consumerCurator;

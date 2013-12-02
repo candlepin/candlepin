@@ -38,6 +38,7 @@ import org.xnap.commons.i18n.I18n;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -341,7 +342,9 @@ public class EntitlementImporter {
      * descending quantity sort on Subscriptions
      */
 
-    public static class QuantityComparator implements Comparator<Subscription> {
+    public static class QuantityComparator implements
+        Comparator<Subscription>, Serializable {
+
         @Override
         public int compare(Subscription s1, Subscription s2) {
             return s2.getQuantity().compareTo(s1.getQuantity());

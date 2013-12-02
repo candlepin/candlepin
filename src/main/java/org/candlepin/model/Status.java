@@ -22,7 +22,6 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.candlepin.model.Rules.RulesSourceEnum;
-import org.candlepin.util.ManagerCapability;
 
 /**
  * Status
@@ -37,7 +36,8 @@ public class Status {
     private String release;
     private boolean standalone;
     private Date timeUTC;
-    private String[] managerCapabilities;
+    private String[] managerCapabilities = {"cores", "ram", "instance_multiplier",
+        "derived_product", "cert_v3"};
 
     private RulesSourceEnum rulesSource;
 
@@ -58,7 +58,6 @@ public class Status {
         this.timeUTC = new Date();
         this.rulesVersion = rulesVersion;
         this.setRulesSource(rulesSource);
-        this.managerCapabilities = ManagerCapability.getCapabilityList();
     }
 
     public boolean getResult() {

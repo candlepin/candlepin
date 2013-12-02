@@ -20,6 +20,8 @@ import org.quartz.JobDetail;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.inject.persist.UnitOfWork;
 
@@ -30,6 +32,7 @@ import com.google.inject.persist.UnitOfWork;
  * jobs will be given the status of the waiting job.
  */
 public abstract class UniqueByOwnerJob extends KingpinJob {
+    private static Logger log = LoggerFactory.getLogger(UniqueByOwnerJob.class);
 
     public UniqueByOwnerJob(UnitOfWork unitOfWork) {
         super(unitOfWork);
