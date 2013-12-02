@@ -48,6 +48,7 @@ public class DynamicFilterInterceptorTest {
     public void init() {
         this.interceptor = new DynamicFilterInterceptor();
         rmethod = mock(ResourceMethod.class);
+        ResteasyProviderFactory.popContextData(DynamicFilterData.class);
     }
 
     @Test
