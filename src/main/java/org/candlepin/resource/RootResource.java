@@ -83,6 +83,7 @@ public class RootResource {
         RESOURCE_CLASSES.add(RootResource.class);
         RESOURCE_CLASSES.add(DistributorVersionResource.class);
         RESOURCE_CLASSES.add(DeletedConsumerResource.class);
+        RESOURCE_CLASSES.add(GuestIdResource.class);
 
         PSEUDO_RESOURCES = new HashMap<String, Method>();
         try {

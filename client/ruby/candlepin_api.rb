@@ -131,6 +131,36 @@ class Candlepin
     put("#{path}/#{uuid}", consumer)
   end
 
+  def update_guestids(guestIds)
+    path = "/consumers/#{@uuid}/guestids"
+    put(path, guestIds)
+  end
+
+  def update_guestid(guest)
+    path = "/consumers/#{@uuid}/guestids/#{guest[:guestId]}"
+    put(path, guest)
+  end
+
+  def delete_guestid(guestuuid, unregister = false)
+    path = "/consumers/#{@uuid}/guestids/#{guestuuid}"
+    if unregister
+        path << "?unregister=true"
+    end
+    delete(path)
+  end
+
+  def get_guestids()
+    path = "/consumers/#{@uuid}/guestids"
+    results = get(path)
+    return results
+  end
+
+  def get_guestid(guestuuid)
+    path = "/consumers/#{@uuid}/guestids/#{guestuuid}"
+    result = get(path)
+    return result
+  end
+
   def update_entitlement(params)
     entitlement = {
         :id => params[:id]
