@@ -62,8 +62,10 @@ ORACLE = ['com.oracle:ojdbc6:jar:11.2.0', 'org.quartz-scheduler:quartz-oracle:ja
 COMMONS = ['commons-codec:commons-codec:jar:1.4',
            'commons-collections:commons-collections:jar:3.1',
            'commons-io:commons-io:jar:1.3.2',
-           'commons-logging:commons-logging:jar:1.1.1',
            'commons-lang:commons-lang:jar:2.5']
+# Artifacts that bridge other logging frameworks to slf4j. Mime4j uses
+# JCL for example.
+SLF4J_BRIDGES = ['org.slf4j:jcl-over-slf4j:jar:1.7.5']
 HSQLDB = ['hsqldb:hsqldb:jar:1.8.0.10']
 GETTEXT_COMMONS = 'org.xnap.commons:gettext-commons:jar:0.9.6'
 
@@ -182,7 +184,7 @@ define "candlepin" do
   #
   compile.options.target = '1.6'
   compile.options.source = '1.6'
-  compile_classpath = [COMMONS, RESTEASY, LOGBACK, HIBERNATE, BOUNCYCASTLE,
+  compile_classpath = [COMMONS, SLF4J_BRIDGES, RESTEASY, LOGBACK, HIBERNATE, BOUNCYCASTLE,
     GUICE, JACKSON, QUARTZ, GETTEXT_COMMONS, HORNETQ, SUN_JAXB, MIME4J, OAUTH, RHINO, COLLECTIONS]
   compile.with compile_classpath
   compile.with LOGDRIVER if use_logdriver
