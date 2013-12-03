@@ -30,6 +30,8 @@ import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Asynchronous job for refreshing the entitlement pools for specific
@@ -37,6 +39,7 @@ import org.quartz.JobExecutionException;
  */
 public class RefreshPoolsJob extends UniqueByOwnerJob {
 
+    private static Logger log = LoggerFactory.getLogger(RefreshPoolsJob.class);
     private OwnerCurator ownerCurator;
     private PoolManager poolManager;
 

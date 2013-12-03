@@ -159,17 +159,21 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         gConsumer2.getFacts().put("virt.uuid", "test-guest-1");
         consumerCurator.create(gConsumer2);
 
-        hConsumer1.addGuestId(new GuestId("test-guest-1"));
+        GuestId hGuest1 = new GuestId("test-guest-1");
+        hConsumer1.addGuestId(hGuest1);
+        consumerCurator.update(hConsumer1);
+
         // Uppercase the guest ID reported by host 2 just to make sure the casing is
         // working properly here too:
-        hConsumer2.addGuestId(new GuestId("TEST-GUEST-1"));
-        consumerCurator.update(hConsumer1);
+        GuestId hGuest2 = new GuestId("TEST-GUEST-1");
+        hConsumer2.addGuestId(hGuest2);
         consumerCurator.update(hConsumer2);
 
         List<Consumer> guests1 = consumerCurator.getGuests(hConsumer1);
         List<Consumer> guests2 = consumerCurator.getGuests(hConsumer2);
-        assertTrue(guests1.size() == 0);
-        assertTrue(guests2.size() == 1);
+        assertTrue(hGuest1.getUpdated().before(hGuest2.getUpdated()));
+        assertEquals(0, guests1.size());
+        assertEquals(1, guests2.size());
         assertEquals("guestConsumer2", guests2.get(0).getName());
     }
 
@@ -177,6 +181,75 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     public void noHostRegistered() {
         Consumer host = consumerCurator.getHost("system-uuid-for-guest");
         assertTrue(host == null);
+    }
+
+    @Test
+    public void oneHostRegistered() {
+        Consumer host = new Consumer("hostConsumer", "testUser", owner, ct);
+        consumerCurator.create(host);
+
+        Consumer gConsumer1 = new Consumer("guestConsumer1", "testUser", owner, ct);
+        gConsumer1.getFacts().put("virt.uuid", "daf0fe10-956b-7b4e-b7dc-b383ce681ba8");
+        consumerCurator.create(gConsumer1);
+
+        host.addGuestId(new GuestId("DAF0FE10-956B-7B4E-B7DC-B383CE681BA8"));
+        consumerCurator.update(host);
+
+        Consumer guestHost = consumerCurator.getHost(
+            "daf0fe10-956b-7b4e-b7dc-b383ce681ba8");
+        assertEquals(host, guestHost);
+    }
+
+    @Test
+    public void twoHostsRegisteredPickSecond() {
+        Consumer host1 = new Consumer("hostConsumer", "testUser", owner, ct);
+        consumerCurator.create(host1);
+
+        Consumer host2 = new Consumer("hostConsumer2", "testUser2", owner, ct);
+        consumerCurator.create(host2);
+
+        Consumer gConsumer1 = new Consumer("guestConsumer1", "testUser", owner, ct);
+        gConsumer1.getFacts().put("virt.uuid", "daf0fe10-956b-7b4e-b7dc-b383ce681ba8");
+        consumerCurator.create(gConsumer1);
+
+        GuestId host1Guest = new GuestId("DAF0FE10-956B-7B4E-B7DC-B383CE681BA8");
+        host1.addGuestId(host1Guest);
+        consumerCurator.update(host1);
+
+        GuestId host2Guest = new GuestId("DAF0FE10-956B-7B4E-B7DC-B383CE681BA8");
+        host2.addGuestId(host2Guest);
+        consumerCurator.update(host2);
+
+        Consumer guestHost = consumerCurator.getHost(
+            "daf0fe10-956b-7b4e-b7dc-b383ce681ba8");
+        assertTrue(host1Guest.getUpdated().before(host2Guest.getUpdated()));
+        assertEquals(host2.getUuid(), guestHost.getUuid());
+    }
+
+    @Test
+    public void twoHostsRegisteredPickFirst() {
+        Consumer host1 = new Consumer("hostConsumer", "testUser", owner, ct);
+        consumerCurator.create(host1);
+
+        Consumer host2 = new Consumer("hostConsumer2", "testUser2", owner, ct);
+        consumerCurator.create(host2);
+
+        Consumer gConsumer1 = new Consumer("guestConsumer1", "testUser", owner, ct);
+        gConsumer1.getFacts().put("virt.uuid", "daf0fe10-956b-7b4e-b7dc-b383ce681ba8");
+        consumerCurator.create(gConsumer1);
+
+        GuestId host2Guest = new GuestId("DAF0FE10-956B-7B4E-B7DC-B383CE681BA8");
+        host2.addGuestId(host2Guest);
+        consumerCurator.update(host2);
+
+        GuestId host1Guest = new GuestId("DAF0FE10-956B-7B4E-B7DC-B383CE681BA8");
+        host1.addGuestId(host1Guest);
+        consumerCurator.update(host1);
+
+        Consumer guestHost = consumerCurator.getHost(
+            "daf0fe10-956b-7b4e-b7dc-b383ce681ba8");
+        assertTrue(host1Guest.getUpdated().after(host2Guest.getUpdated()));
+        assertEquals(host1.getUuid(), guestHost.getUuid());
     }
 
     @Test

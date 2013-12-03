@@ -19,6 +19,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -87,21 +88,21 @@ public class DynamicFilterData {
         mapping.get(obj).add(attr);
     }
 
-    private void addFilters(Object obj, Set<String> attributes) {
+    private void addFilters(Object obj, Set<String> attrs) {
         if (obj instanceof Collection) {
             Collection<?> collection = (Collection<?>) obj;
             for (Object o : collection) {
-                addFilters(o, attributes);
+                addFilters(o, attrs);
             }
         }
         if (obj instanceof Map) {
             Map<?, ?> map = (Map<?, ?>) obj;
-            for (Object o : map.keySet()) {
-                addFilters(map.get(o), attributes);
+            for (Entry<?, ?> entry : map.entrySet()) {
+                addFilters(entry.getValue(), attrs);
             }
         }
         else {
-            for (String attr : attributes) {
+            for (String attr : attrs) {
                 if (addFiltersSubObject(obj, attr)) {
                     addAttributeMapping(obj, attr);
                 }

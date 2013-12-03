@@ -29,6 +29,8 @@ import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -37,6 +39,7 @@ import java.util.List;
  */
 public class EntitlerJob extends KingpinJob {
 
+    private static Logger log = LoggerFactory.getLogger(EntitlerJob.class);
     protected Entitler entitler;
     protected ConsumerCurator consumerCurator;
 

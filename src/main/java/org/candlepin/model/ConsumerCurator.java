@@ -26,6 +26,7 @@ import com.google.inject.persist.Transactional;
 import org.hibernate.Criteria;
 import org.hibernate.Query;
 import org.hibernate.ReplicationMode;
+import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
@@ -376,24 +377,13 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      */
     @Transactional
     public Consumer getHost(String guestId) {
-
-        // TODO: could the query do the work for us here? sort on updated time, limit to 1.
-        // Avoids any potential (albeit unlikely) hibernate issues where we mistakenly
-        // load a bunch of data.
-        List<GuestId> consumers = currentSession()
+        return (Consumer) currentSession()
             .createCriteria(GuestId.class)
             .add(Restrictions.eq("guestId", guestId).ignoreCase())
-            .list();
-        Consumer newest = null;
-        if (consumers != null) {
-            for (GuestId cg : consumers) {
-                if (newest == null ||
-                    cg.getUpdated().getTime() > newest.getUpdated().getTime()) {
-                    newest = cg.getConsumer();
-                }
-            }
-        }
-        return newest;
+            .addOrder(Order.desc("updated"))
+            .setMaxResults(1)
+            .setProjection(Projections.property("consumer"))
+            .uniqueResult();
     }
 
     /**
