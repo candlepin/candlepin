@@ -89,10 +89,6 @@ public class RootResource {
             Method contentOverrideMethod =
                 ConsumerResource.class.getMethod("getContentOverrideList", String.class);
             PSEUDO_RESOURCES.put("content_overrides", contentOverrideMethod);
-
-            Method guestIdMethod =
-                ConsumerResource.class.getMethod("getGuests", String.class);
-            PSEUDO_RESOURCES.put("guest_limit", guestIdMethod);
         }
         catch (NoSuchMethodException e) {
             // If the method name changes, throwing this will abort deployment.

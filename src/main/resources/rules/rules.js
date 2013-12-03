@@ -205,6 +205,10 @@ function createPool(pool) {
     return pool;
 }
 
+/*
+ * Creates an object that represents the entitlement that would be created
+ * by a given pool.  Uses the maximum quantity available.
+ */
 function get_mock_ent_for_pool(pool, consumer) {
     return {
         pool: pool,
@@ -440,6 +444,15 @@ var FactValueCalculator = {
     }
 };
 
+/*
+ * This Attribute Calculator works similarly to others, except that it is
+ * specific to global attributes such as guest_limit.  It needs to check
+ * every attached entitlement on the system, as a stackTracker needs to
+ * check every entitlement in the stack.
+ *
+ * TODO: Cache this value when possible. It's only O(n), but we can avoid
+ * some unnecessary work
+ */
 var GlobalAttributeCalculator = {
     calculators: {
         default: function (prodAttr, entitlements) {
