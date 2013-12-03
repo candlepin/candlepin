@@ -2014,7 +2014,7 @@ public class ConsumerResource {
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         List<ConsumerContentOverride> entries) {
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
-        List<String> errors = new ArrayList<String>();
+        Set<String> invalidOverrides = new HashSet<String>();
         for (ConsumerContentOverride entry : entries) {
             if (overrideRules.canOverrideForConsumer(consumer, entry.getName())) {
                 ConsumerContentOverride cco = consumerContentOverrideCurator.retrieve(
@@ -2030,13 +2030,13 @@ public class ConsumerResource {
                 }
             }
             else {
-                errors.add(i18n.tr(
-                    "The value for name ''{0}'' is not allowed to be overridden.",
-                    entry.getName()));
+                invalidOverrides.add(entry.getName());
             }
         }
-        if (errors.size() > 0) {
-            throw new BadRequestException(errors.toString());
+        if (!invalidOverrides.isEmpty()) {
+            String error = i18n.tr("Not allowed to override values for: {0}",
+                StringUtils.join(invalidOverrides, ", "));
+            throw new BadRequestException(error);
         }
         return consumerContentOverrideCurator.getList(consumer);
     }
