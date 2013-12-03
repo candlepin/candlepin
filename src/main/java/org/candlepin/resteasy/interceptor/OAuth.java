@@ -87,7 +87,6 @@ public class OAuth implements AuthProvider {
     public Principal getPrincipal(HttpRequest request) {
         Principal principal = null;
 
-        log.debug("Checking for oauth authentication");
         try {
             if (AuthUtil.getHeader(request, "Authorization").contains("oauth")) {
                 OAuthMessage requestMessage = new RestEasyOAuthMessage(request);
@@ -98,6 +97,7 @@ public class OAuth implements AuthProvider {
 
                 // If we got here, it is a valid oauth message.
                 // Figure out which kind of principal we should create, based on header
+                log.debug("Using OAuth");
                 if (!AuthUtil.getHeader(request, TrustedUserAuth.USER_HEADER).equals("")) {
                     principal = userAuth.getPrincipal(request);
                 }

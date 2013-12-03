@@ -32,7 +32,7 @@ describe 'Owner Resource' do
     # Should be rejected listing another owner's service levels:
     lambda do
       consumer_client.list_owner_service_levels(owner2['key'])
-    end.should raise_exception(RestClient::Forbidden)
+    end.should raise_exception(RestClient::ResourceNotFound)
   end
 
   it 'should allow a client to create an owner with parent' do
@@ -115,7 +115,7 @@ describe 'Owner Resource' do
     #and this will fail
     lambda do
       ro_owner_client.register('systemFoo')
-    end.should raise_exception(RestClient::Forbidden)
+    end.should raise_exception(RestClient::ResourceNotFound)
   end
 
   it "does not let the owner key get updated" do

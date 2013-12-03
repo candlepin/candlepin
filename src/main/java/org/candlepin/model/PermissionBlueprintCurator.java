@@ -12,32 +12,24 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.auth.permissions;
+package org.candlepin.model;
 
-import org.candlepin.auth.Access;
-import org.candlepin.model.Consumer;
-import org.candlepin.model.Pool;
+import java.util.List;
+
+import org.hibernate.criterion.Restrictions;
 
 /**
- *
+ * PermissionBlueprintCurator
  */
-public class ConsumerPoolPermission extends TypedPermission<Pool> {
+public class PermissionBlueprintCurator extends
+    AbstractHibernateCurator<PermissionBlueprint> {
 
-    private Consumer consumer;
-
-    public ConsumerPoolPermission(Consumer consumer) {
-        this.consumer = consumer;
+    protected PermissionBlueprintCurator() {
+        super(PermissionBlueprint.class);
     }
 
-    @Override
-    public Class<Pool> getTargetType() {
-        return Pool.class;
+    public List<PermissionBlueprint> findByOwner(Owner owner) {
+        return currentSession().createCriteria(PermissionBlueprint.class)
+            .add(Restrictions.eq("owner", owner)).list();
     }
-
-    @Override
-    public boolean canAccessTarget(Pool target, Access action) {
-        // should we mess with username restrictions here?
-        return target.getOwner().getKey().equals(consumer.getOwner().getKey());
-    }
-
 }

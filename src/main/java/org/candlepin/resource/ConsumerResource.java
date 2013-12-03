@@ -21,6 +21,7 @@ import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.NoAuthPrincipal;
 import org.candlepin.auth.Principal;
+import org.candlepin.auth.SubResource;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.interceptor.SecurityHole;
 import org.candlepin.auth.interceptor.Verify;
@@ -421,7 +422,7 @@ public class ConsumerResource {
                     i18n.tr("System name cannot contain most special characters."));
             }
 
-            verifyPersonConsumer(consumer, type, owner, userName);
+            verifyPersonConsumer(consumer, type, owner, userName, principal);
         }
 
         if (type.isType(ConsumerTypeEnum.SYSTEM) &&
@@ -485,7 +486,6 @@ public class ConsumerResource {
         }
         catch (Exception e) {
             log.error("Problem creating unit:", e);
-            e.printStackTrace();
             throw new BadRequestException(i18n.tr(
                 "Problem creating unit {0}", consumer));
         }
@@ -644,7 +644,7 @@ public class ConsumerResource {
     }
 
     private void verifyPersonConsumer(Consumer consumer, ConsumerType type,
-        Owner owner, String username) {
+        Owner owner, String username, Principal principal) {
 
         User user = null;
         try {
@@ -662,7 +662,8 @@ public class ConsumerResource {
 
         // When registering person consumers we need to be sure the username
         // has some association with the owner the consumer is destined for:
-        if (!user.hasOwnerAccess(owner, Access.ALL) && !user.isSuperAdmin()) {
+        if (!principal.canAccess(owner, SubResource.NONE, Access.ALL) &&
+            !principal.hasFullAccess()) {
             throw new ForbiddenException(i18n.tr(
                 "User ''{0}'' has no roles for organization ''{1}''",
                 user.getUsername(), owner.getKey()));
@@ -709,11 +710,11 @@ public class ConsumerResource {
 
         // Check permissions for current principal on the owner:
         if ((principal instanceof UserPrincipal) &&
-            !principal.canAccess(owner, Access.ALL)) {
-
-            throw new ForbiddenException(i18n.tr(
-                "User ''{0}'' cannot access organization ''{1}''.",
-                principal.getPrincipalName(), owner.getKey()));
+            !principal.canAccess(owner, SubResource.CONSUMERS, Access.CREATE)) {
+            log.warn("User {} does not have access to create consumers in org {}",
+                principal.getPrincipalName(), owner.getKey());
+            throw new NotFoundException(i18n.tr(
+                "owner with key: {0} was not found.", owner.getKey()));
         }
 
         return owner;
@@ -1102,6 +1103,7 @@ public class ConsumerResource {
         // we need to create a list of entitlements to delete before actually
         // deleting, otherwise we are tampering with the loop iterator (BZ #786730)
         Set<Entitlement> deletableGuestEntitlements = new HashSet<Entitlement>();
+        log.debug("Revoking {} entitlements not matching host: {}", guest, host);
         for (Entitlement entitlement : guest.getEntitlements()) {
             Pool pool = entitlement.getPool();
 
@@ -1352,7 +1354,8 @@ public class ConsumerResource {
     @Path("/{consumer_uuid}/entitlements")
     public Response bind(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
-        @QueryParam("pool") @Verify(value = Pool.class, nullable = true)
+        @QueryParam("pool") @Verify(value = Pool.class, nullable = true,
+            subResource = SubResource.ENTITLEMENTS)
                 String poolIdString,
         @QueryParam("product") String[] productIds,
         @QueryParam("quantity") Integer quantity,
@@ -1635,7 +1638,8 @@ public class ConsumerResource {
     @Path("/{consumer_uuid}/entitlements/{dbid}")
     public void unbind(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
-        @PathParam("dbid") String dbid, @Context Principal principal) {
+        @PathParam("dbid") @Verify(Entitlement.class) String dbid,
+        @Context Principal principal) {
 
         verifyAndLookupConsumer(consumerUuid);
 

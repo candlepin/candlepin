@@ -108,6 +108,16 @@ module CandlepinMethods
     Candlepin.new(user_name, 'password')
   end
 
+  def user_client_with_perms(owner, username, password, perms)
+    user = @cp.create_user(username, password)
+    @users << user
+
+    role = @cp.create_role(random_string('testrole'), perms)
+    @cp.add_role_user(role['id'], @username)
+
+    return Candlepin.new(username, password)
+  end
+
   # Creates the given user, with access to a role giving them full permissions
   # in the given owner:
   def create_user(owner, username, password, readonly=false)
@@ -127,6 +137,7 @@ module CandlepinMethods
   def create_role(name, owner_key, access_type)
     name ||= random_string 'test_role'
     perms = [{
+      :type => "OWNER",
       :owner => {:key => owner_key},
       :access => access_type,
     }]
@@ -223,7 +234,7 @@ class Export
   attr_reader :tmp_dir
   attr_reader :export_dir
   attr_accessor :export_filename
-  
+
   def initialize
     @tmp_dir = File.join(Dir.tmpdir, random_string('candlepin-rspec'))
     Dir.mkdir(@tmp_dir)

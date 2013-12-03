@@ -22,10 +22,9 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.auth.permissions.OwnerPermission;
 import org.candlepin.auth.permissions.Permission;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerPermission;
-
 import org.junit.Before;
 import org.junit.Test;
 

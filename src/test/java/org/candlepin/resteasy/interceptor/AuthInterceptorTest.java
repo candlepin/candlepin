@@ -25,6 +25,7 @@ import org.candlepin.auth.NoAuthPrincipal;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.interceptor.SecurityHole;
+import org.candlepin.auth.permissions.PermissionFactory;
 import org.candlepin.auth.interceptor.Verify;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.Config;
@@ -72,6 +73,7 @@ public class AuthInterceptorTest extends DatabaseTestFixture {
     private Config config;
     private UserServiceAdapter usa;
     private DeletedConsumerCurator dcc;
+    private PermissionFactory permFactory;
 
     private StubMethodInjector methodInjector;
 
@@ -128,6 +130,7 @@ public class AuthInterceptorTest extends DatabaseTestFixture {
         config = new CandlepinCommonTestConfig();
         usa = mock(UserServiceAdapter.class);
         dcc = mock(DeletedConsumerCurator.class);
+        permFactory = mock(PermissionFactory.class);
         interceptor = new AuthInterceptor(config, usa,
             consumerCurator, dcc, injector, i18n);
 
@@ -307,6 +310,8 @@ public class AuthInterceptorTest extends DatabaseTestFixture {
     private static class AuthInterceptorTestModule extends AbstractModule {
         @Override
         protected void configure() {
+            PermissionFactory factory = mock(PermissionFactory.class);
+            bind(PermissionFactory.class).toInstance(factory);
             ConsumerCurator mockCc = mock(ConsumerCurator.class);
             bind(ConsumerCurator.class).toInstance(mockCc);
         }

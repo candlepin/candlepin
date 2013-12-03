@@ -14,12 +14,12 @@
  */
 package org.candlepin.auth;
 
+import org.candlepin.auth.permissions.AttachPermission;
 import org.candlepin.auth.permissions.ConsumerEntitlementPermission;
 import org.candlepin.auth.permissions.ConsumerPermission;
-import org.candlepin.auth.permissions.ConsumerPoolPermission;
 import org.candlepin.auth.permissions.ConsumerServiceLevelsPermission;
+import org.candlepin.auth.permissions.OwnerPoolsPermission;
 import org.candlepin.model.Consumer;
-import org.candlepin.model.OwnerPermission;
 
 /**
  *
@@ -32,16 +32,15 @@ public class ConsumerPrincipal extends Principal {
         this.consumer = consumer;
 
         addPermission(new ConsumerPermission(consumer));
+
+        // Allow consumers to attach entitlements:
+        addPermission(new AttachPermission(consumer.getOwner()));
+
+        // Allow consumers to view and manage their entitlements:
         addPermission(new ConsumerEntitlementPermission(consumer));
-        addPermission(new ConsumerPoolPermission(consumer));
 
-        // Allow consumers to view their owner's pools:
-        addPermission(new OwnerPermission(consumer.getOwner(),
-                    Access.READ_POOLS));
-
-        // Allow consumers to view their owner's subscriptions:
-        addPermission(new OwnerPermission(consumer.getOwner(),
-                    Access.READ_SUBSCRIPTIONS));
+        // Allow consumers to list their owner's pools and subscriptions:
+        addPermission(new OwnerPoolsPermission(consumer.getOwner()));
 
         // Allow consumers to view their owner's service levels:
         addPermission(new ConsumerServiceLevelsPermission(consumer));

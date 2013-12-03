@@ -15,8 +15,11 @@
 package org.candlepin.auth.permissions;
 
 import org.candlepin.auth.Access;
+import org.candlepin.auth.SubResource;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
+import org.hibernate.criterion.Criterion;
+import org.hibernate.criterion.Restrictions;
 
 /**
  * Permission allowing consumers to view their owner's service levels.
@@ -29,6 +32,7 @@ public class ConsumerServiceLevelsPermission extends TypedPermission<Owner> {
 
     public ConsumerServiceLevelsPermission(Consumer consumer) {
         this.consumer = consumer;
+        this.access = Access.READ_ONLY;
     }
 
     @Override
@@ -37,8 +41,22 @@ public class ConsumerServiceLevelsPermission extends TypedPermission<Owner> {
     }
 
     @Override
-    public boolean canAccessTarget(Owner target, Access action) {
+    public boolean canAccessTarget(Owner target, SubResource subResource, Access required) {
         return target.getKey().equals(consumer.getOwner().getKey()) &&
-            action.equals(Access.READ_SERVICE_LEVELS);
+            subResource.equals(SubResource.SERVICE_LEVELS) && access.provides(required);
     }
+
+    @Override
+    public Criterion getCriteriaRestrictions(Class entityClass) {
+        if (entityClass.equals(Owner.class)) {
+            return Restrictions.eq("key", consumer.getOwner().getKey());
+        }
+        return null;
+    }
+
+    @Override
+    public Owner getOwner() {
+        return consumer.getOwner();
+    }
+
 }

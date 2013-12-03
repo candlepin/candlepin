@@ -26,10 +26,12 @@ import java.util.Set;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
+import org.candlepin.auth.permissions.OwnerPermission;
 import org.candlepin.auth.permissions.Permission;
+import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerPermission;
+import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.Role;
 import org.candlepin.model.User;
 import org.candlepin.resource.UserResource;
@@ -85,18 +87,21 @@ public class UserResourceTest extends DatabaseTestFixture {
 
         Owner owner1 = createOwner();
         Owner owner2 = createOwner();
+
         Role owner1Role = new Role(owner1.getKey() + " role");
         Role owner2Role = new Role(owner2.getKey() + " role");
-        owner1Role.addPermission(new OwnerPermission(owner1, Access.ALL));
-        owner2Role.addPermission(new OwnerPermission(owner2, Access.READ_ONLY));
+        owner1Role.addPermission(new PermissionBlueprint(PermissionType.OWNER, owner1,
+            Access.ALL));
+        owner1Role.addPermission(new PermissionBlueprint(PermissionType.OWNER, owner2,
+            Access.READ_ONLY));
         owner1Role.addUser(user);
         owner2Role.addUser(user);
         roleCurator.create(owner1Role);
         roleCurator.create(owner2Role);
 
         Set<Permission> perms = new HashSet<Permission>();
-        perms.addAll(owner1Role.getPermissions());
-        perms.addAll(owner2Role.getPermissions());
+        perms.add(new OwnerPermission(owner1, Access.ALL));
+        perms.add(new OwnerPermission(owner2, Access.READ_ONLY));
         Principal userPrincipal = new UserPrincipal(user.getUsername(), perms, false);
 
         // Requesting the list of owners for this user should assume ALL, and not

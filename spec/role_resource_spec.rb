@@ -18,7 +18,7 @@ describe 'Role Resource' do
     @cp.list_roles().map { |i| i['name'] }.should include(role_name)
   end
 
-  it 'should not expose roles to other owners' do
+  it 'should not allow org admins to list all roles' do
       lambda do
         @user_cp.list_roles()
       end.should raise_exception(RestClient::Forbidden)
@@ -42,6 +42,7 @@ describe 'Role Resource' do
 
   it 'should delete roles' do
     perms = [{
+      :type => 'OWNER',
       :owner => {:key => @test_owner['key']},
       :access => 'ALL',
     }]
@@ -70,6 +71,7 @@ describe 'Role Resource' do
   it 'should add a new permission to a role, then delete the original permission' do
 
     perms = [{
+      :type => 'OWNER',
       :owner => {:key => @test_owner['key']},
       :access => 'ALL',
     }]
@@ -77,6 +79,7 @@ describe 'Role Resource' do
     role_perm = new_role.permissions[0]
 
     perm = {
+      :type => 'OWNER',
       :owner => @test_owner['key'],
       :access => 'READ_ONLY',
     }

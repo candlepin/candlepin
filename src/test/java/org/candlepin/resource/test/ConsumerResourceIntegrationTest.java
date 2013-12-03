@@ -34,10 +34,12 @@ import org.candlepin.auth.Access;
 import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
+import org.candlepin.auth.permissions.OwnerPermission;
 import org.candlepin.auth.permissions.Permission;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.ForbiddenException;
+import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
@@ -45,7 +47,6 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerPermission;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
@@ -114,8 +115,9 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         ownerAdminRole.addUser(someuser);
         roleCurator.create(ownerAdminRole);
 
-        principal = new UserPrincipal(USER_NAME,
-                new ArrayList<Permission>(ownerAdminRole.getPermissions()), false);
+        List<Permission> perms = permFactory.createPermissions(someuser,
+            ownerAdminRole.getPermissions());
+        principal = new UserPrincipal(USER_NAME, perms, false);
         setupPrincipal(principal);
 
         consumer = TestUtil.createConsumer(standardSystemType, owner);
@@ -329,7 +331,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
             consumerResource.listEntitlements(consumer.getUuid(), null, null).size());
     }
 
-    @Test(expected = ForbiddenException.class)
+    @Test(expected = NotFoundException.class)
     public void testCannotGetAnotherConsumersCerts() {
         consumerResource.bind(consumer.getUuid(), pool.getId().toString(),
             null, 1, null, null, false, null);
@@ -365,7 +367,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
                 null).size());
     }
 
-    @Test(expected = ForbiddenException.class)
+    @Test(expected = NotFoundException.class)
     public void canNotDeleteConsumerOtherThanSelf() {
         Consumer evilConsumer = TestUtil.createConsumer(standardSystemType,
             owner);
@@ -404,7 +406,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
                 null).size());
     }
 
-    @Test(expected = ForbiddenException.class)
+    @Test(expected = NotFoundException.class)
     public void testCannotGetAnotherOwnersConsumersCerts() {
         Consumer evilConsumer = TestUtil.createConsumer(standardSystemType,
             owner);
@@ -456,7 +458,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
             consumerResource.listEntitlements(consumer.getUuid(), null, null).size());
     }
 
-    @Test(expected = ForbiddenException.class)
+    @Test(expected = NotFoundException.class)
     public void consumerShouldNotSeeAnotherConsumersEntitlements() {
         Consumer evilConsumer = TestUtil.createConsumer(standardSystemType,
             owner);
@@ -475,7 +477,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         consumerResource.listEntitlements(consumer.getUuid(), null, null);
     }
 
-    @Test(expected = ForbiddenException.class)
+    @Test(expected = NotFoundException.class)
     public void ownerShouldNotSeeOtherOwnerEntitlements() {
         consumerResource.bind(consumer.getUuid(), pool.getId().toString(),
             null, 1, null, null, false, null);
@@ -527,6 +529,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
         Principal emailuser = TestUtil.createPrincipal(username, owner,
             Access.ALL);
+        setupPrincipal(emailuser);
 
         Consumer personal = TestUtil.createConsumer(personType, owner);
         personal.setName(((UserPrincipal) emailuser).getUsername());

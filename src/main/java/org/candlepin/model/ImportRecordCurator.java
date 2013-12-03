@@ -15,7 +15,8 @@
 package org.candlepin.model;
 
 import java.util.List;
-import org.hibernate.criterion.DetachedCriteria;
+
+import org.hibernate.Criteria;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
 
@@ -36,7 +37,7 @@ public class ImportRecordCurator extends AbstractHibernateCurator<ImportRecord> 
      * @return the import records
      */
     public List<ImportRecord> findRecords(Owner owner) {
-        DetachedCriteria query = DetachedCriteria.forClass(ImportRecord.class);
+        Criteria query = currentSession().createCriteria(ImportRecord.class);
         query.add(Restrictions.eq("owner", owner)).addOrder(Order.desc("created"));
 
         return this.listByCriteria(query);

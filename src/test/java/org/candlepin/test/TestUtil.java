@@ -26,6 +26,7 @@ import java.util.Set;
 import org.apache.commons.codec.binary.Base64;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.UserPrincipal;
+import org.candlepin.auth.permissions.OwnerPermission;
 import org.candlepin.auth.permissions.Permission;
 import org.candlepin.model.ActivationKey;
 import org.candlepin.model.ActivationKeyPool;
@@ -37,7 +38,6 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerPermission;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
@@ -63,6 +63,10 @@ public class TestUtil {
 
     public static Consumer createConsumer(ConsumerType type, Owner owner) {
         return new Consumer("TestConsumer" + randomInt(), "User", owner, type);
+    }
+
+    public static Consumer createConsumer(ConsumerType type, Owner owner, String username) {
+        return new Consumer("TestConsumer" + randomInt(), username, owner, type);
     }
 
     /**

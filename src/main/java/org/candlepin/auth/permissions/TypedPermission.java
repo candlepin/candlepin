@@ -15,6 +15,7 @@
 package org.candlepin.auth.permissions;
 
 import org.candlepin.auth.Access;
+import org.candlepin.auth.SubResource;
 
 import java.io.Serializable;
 
@@ -25,18 +26,20 @@ import java.io.Serializable;
  */
 public abstract class TypedPermission<T> implements Permission, Serializable {
 
+    protected Access access;
+
     public abstract Class<T> getTargetType();
 
-    public abstract boolean canAccessTarget(T target, Access action);
+    public abstract boolean canAccessTarget(T target, SubResource subResource,
+        Access action);
 
     @Override
-    public boolean canAccess(Object target, Access access) {
+    public boolean canAccess(Object target, SubResource subResource, Access required) {
         if (this.getTargetType().isInstance(target)) {
-            return canAccessTarget((T) target, access);
+            return canAccessTarget((T) target, subResource, required);
         }
 
         return false;
     }
-
 
 }

@@ -18,8 +18,8 @@ import org.candlepin.auth.Access;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.OwnerPermission;
-import org.candlepin.model.OwnerPermissionCurator;
+import org.candlepin.model.PermissionBlueprint;
+import org.candlepin.model.PermissionBlueprintCurator;
 import org.candlepin.model.Role;
 import org.candlepin.model.User;
 import org.candlepin.service.UserServiceAdapter;
@@ -52,12 +52,12 @@ public class RoleResource {
 
     private UserServiceAdapter userService;
     private OwnerCurator ownerCurator;
-    private OwnerPermissionCurator permissionCurator;
+    private PermissionBlueprintCurator permissionCurator;
     private I18n i18n;
 
     @Inject
     public RoleResource(UserServiceAdapter userService, OwnerCurator ownerCurator,
-        OwnerPermissionCurator permCurator, I18n i18n) {
+        PermissionBlueprintCurator permCurator, I18n i18n) {
         this.userService = userService;
         this.ownerCurator = ownerCurator;
         this.i18n = i18n;
@@ -75,7 +75,7 @@ public class RoleResource {
     public Role createRole(Role role) {
 
         // Attach actual owner objects to each incoming permission:
-        for (OwnerPermission p : role.getPermissions()) {
+        for (PermissionBlueprint p : role.getPermissions()) {
             Owner temp = p.getOwner();
             Owner actual = ownerCurator.lookupByKey(temp.getKey());
             if (actual == null) {
@@ -127,10 +127,9 @@ public class RoleResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Role addRolePermission(@PathParam("role_id") String roleId,
-        OwnerPermission permission) {
+        PermissionBlueprint permission) {
 
         Role existingRole = lookupRole(roleId);
-
 
         // Don't allow NONE permissions to be created, this is currently just for
         // internal use:
@@ -160,10 +159,10 @@ public class RoleResource {
                                       @PathParam("perm_id") String permissionId) {
 
         Role existingRole = lookupRole(roleId);
-        Set<OwnerPermission> picks = new HashSet<OwnerPermission>();
+        Set<PermissionBlueprint> picks = new HashSet<PermissionBlueprint>();
         boolean found = true;
-        OwnerPermission toRemove = null;
-        for (OwnerPermission op : existingRole.getPermissions()) {
+        PermissionBlueprint toRemove = null;
+        for (PermissionBlueprint op : existingRole.getPermissions()) {
             if (!op.getId().equals(permissionId)) {
                 picks.add(op);
             }

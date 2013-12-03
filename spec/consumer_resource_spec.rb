@@ -27,7 +27,7 @@ describe 'Consumer Resource' do
     pool = @consumer1.list_pools({:owner => @owner1['id']}).first
     lambda {
       @consumer2.consume_pool(pool.id, {:quantity => 1}).size.should == 1
-    }.should raise_exception(RestClient::Forbidden)
+    }.should raise_exception(RestClient::ResourceNotFound)
   end
 
   it "should expose a consumer's event atom feed" do
@@ -39,7 +39,7 @@ describe 'Consumer Resource' do
     # Consumer 2 should not be able to see consumer 1's feed:
     lambda {
       @consumer2.list_consumer_events_atom(@consumer1.uuid)
-    }.should raise_exception(RestClient::Forbidden)
+    }.should raise_exception(RestClient::ResourceNotFound)
   end
 
   it "should expose a consumer's events" do
@@ -55,7 +55,7 @@ describe 'Consumer Resource' do
     # Consumer 2 should not be able to see consumer 1's feed:
     lambda {
       @consumer2.list_consumer_events(@consumer1.uuid)
-    }.should raise_exception(RestClient::Forbidden)
+    }.should raise_exception(RestClient::ResourceNotFound)
   end
 
   it 'should receive paged data back when requested' do
@@ -92,10 +92,10 @@ describe 'Consumer Resource' do
     results.has_key?(@consumer1.uuid).should == true
   end
 
-  it 'should forbid listing compliances that user does not own' do
-    lambda {
-      results = @user1.get_compliance_list([@consumer1.uuid, @consumer2.uuid])
-    }.should raise_exception(RestClient::Forbidden)
+  it 'should filter compliances the user does not own' do
+    results = @user1.get_compliance_list([@consumer1.uuid, @consumer2.uuid])
+    results.size.should == 1
+    results[@consumer1.uuid].should_not be_nil
   end
 
   it 'should return a 410 for deleted consumers' do
@@ -184,7 +184,7 @@ describe 'Consumer Resource' do
     lambda do
       consumer_client(user2, random_string("consumer1"), 'person',
                       username)
-    end.should raise_exception(RestClient::Forbidden)
+    end.should raise_exception(RestClient::ResourceNotFound)
   end
 
 
@@ -235,7 +235,7 @@ describe 'Consumer Resource' do
 
     lambda do
       consumer1.get_consumer(consumer2.uuid)
-    end.should raise_exception(RestClient::Forbidden)
+    end.should raise_exception(RestClient::ResourceNotFound)
   end
 
   it "does not let an owner register with UUID of another owner's consumer" do
@@ -263,7 +263,7 @@ describe 'Consumer Resource' do
 
     lambda do
       green_ralph.regenerate_identity_certificate(system1.uuid)
-    end.should raise_exception(RestClient::Forbidden)
+    end.should raise_exception(RestClient::ResourceNotFound)
   end
 
   it 'should allow consumer to bind to products supporting multiple architectures' do

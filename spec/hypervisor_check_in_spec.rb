@@ -53,7 +53,7 @@ describe 'Hypervisor Resource', :type => :virt do
     mapping = get_host_guest_mapping(@expected_host, ['g1', 'g2'])
     result = @user.hypervisor_check_in(@owner['key'], mapping)
     # Should only  have a result entry for updated.
-    result.created.size.should ==0 
+    result.created.size.should ==0
     result.updated.size.should == 1
     result.unchanged.size.should == 0
     result.failedUpdate.size.should == 0
@@ -65,7 +65,7 @@ describe 'Hypervisor Resource', :type => :virt do
     mapping = get_host_guest_mapping(@expected_host, @expected_guest_ids)
     result = @user.hypervisor_check_in(@owner['key'], mapping)
     # Should only  have a result entry for unchanged.
-    result.created.size.should ==0 
+    result.created.size.should ==0
     result.updated.size.should == 0
     result.unchanged.size.should == 1
     result.failedUpdate.size.should == 0
@@ -84,7 +84,7 @@ describe 'Hypervisor Resource', :type => :virt do
     result = @user.hypervisor_check_in(@owner['key'], mapping)
     result.created.size.should == 0
     result.updated.size.should == 0
-    result.unchanged.size.should == 1 
+    result.unchanged.size.should == 1
     result.failedUpdate.size.should == 0
     # verify our unchanged consumer is correct.
     result.unchanged[0].uuid.should == consumer_uuid

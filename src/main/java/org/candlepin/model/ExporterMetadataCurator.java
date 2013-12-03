@@ -16,7 +16,7 @@ package org.candlepin.model;
 
 import com.google.inject.Inject;
 
-import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
 /**
@@ -30,16 +30,16 @@ public class ExporterMetadataCurator extends AbstractHibernateCurator<ExporterMe
     }
 
     public ExporterMetadata lookupByType(String type) {
-        DetachedCriteria query = DetachedCriteria.forClass(ExporterMetadata.class);
+        Criteria query = currentSession().createCriteria(ExporterMetadata.class);
         query.add(Restrictions.eq("type", type));
-        return getByCriteria(query);
+        return (ExporterMetadata) query.uniqueResult();
     }
 
     public ExporterMetadata lookupByTypeAndOwner(String type, Owner owner) {
-        DetachedCriteria query = DetachedCriteria.forClass(ExporterMetadata.class);
+        Criteria query = currentSession().createCriteria(ExporterMetadata.class);
         query.add(Restrictions.eq("type", type));
         query.add(Restrictions.eq("owner", owner));
-        return getByCriteria(query);
+        return (ExporterMetadata) query.uniqueResult();
     }
 
 }

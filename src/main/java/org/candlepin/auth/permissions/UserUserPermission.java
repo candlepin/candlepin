@@ -15,7 +15,11 @@
 package org.candlepin.auth.permissions;
 
 import org.candlepin.auth.Access;
+import org.candlepin.auth.SubResource;
+import org.candlepin.model.Owner;
 import org.candlepin.model.User;
+import org.hibernate.criterion.Criterion;
+import org.hibernate.criterion.Restrictions;
 
 /**
  * A permission granting an authenticated user permission to view itself.
@@ -34,7 +38,23 @@ public class UserUserPermission extends TypedPermission<User> {
     }
 
     @Override
-    public boolean canAccessTarget(User target, Access action) {
+    public boolean canAccessTarget(User target, SubResource subResource,
+        Access required) {
         return target.getUsername().equals(username);
     }
+
+    @Override
+    public Criterion getCriteriaRestrictions(Class entityClass) {
+        if (entityClass.equals(User.class)) {
+            return Restrictions.eq("username", username);
+        }
+        return null;
+    }
+
+    @Override
+    public Owner getOwner() {
+        // This permission is not specific to any owner.
+        return null;
+    }
+
 }

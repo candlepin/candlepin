@@ -20,6 +20,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import org.candlepin.auth.Access;
+import org.candlepin.auth.SubResource;
 
 /**
  * Annotation for specifying RESTful parameters that represent some protected
@@ -34,4 +35,6 @@ public @interface Verify {
     Access require() default Access.NONE;
 
     boolean nullable() default false;
+
+    SubResource subResource() default SubResource.NONE;
 }

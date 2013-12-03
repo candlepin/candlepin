@@ -74,7 +74,7 @@ public class TrustedUserPrincipal extends Principal {
     }
 
     @Override
-    public boolean canAccess(Object target, Access access) {
+    public boolean canAccess(Object target, SubResource subResource, Access access) {
         return true;
     }
 

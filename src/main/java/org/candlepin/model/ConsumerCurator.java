@@ -23,9 +23,9 @@ import org.candlepin.paging.PageRequest;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
+import org.hibernate.Criteria;
 import org.hibernate.Query;
 import org.hibernate.ReplicationMode;
-import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
@@ -51,6 +51,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     @Inject private ConsumerTypeCurator consumerTypeCurator;
     @Inject private DeletedConsumerCurator deletedConsumerCurator;
     @Inject private Config config;
+
     private static final int NAME_LENGTH = 250;
     private static Logger log = LoggerFactory.getLogger(ConsumerCurator.class);
 
@@ -131,7 +132,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      */
     @Transactional
     public Consumer findByName(Owner o, String name) {
-        return (Consumer) currentSession().createCriteria(Consumer.class)
+        return (Consumer) createSecureCriteria()
             .add(Restrictions.eq("name", name))
             .add(Restrictions.eq("owner", o))
             .uniqueResult();
@@ -161,7 +162,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         Query q = currentSession().createSQLQuery(sql);
         q.setParameter("uuid", uuid.toLowerCase());
         q.setParameter("ownerid", ownerId);
-        List<String> options = (List<String>) q.list();
+        List<String> options = q.list();
 
         if (options != null && options.size() != 0) {
             result = this.find(options.get(0));
@@ -181,7 +182,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     public Consumer findByUser(User user) {
         ConsumerType person = consumerTypeCurator
             .lookupByLabel(ConsumerType.ConsumerTypeEnum.PERSON.getLabel());
-        return (Consumer) currentSession().createCriteria(Consumer.class)
+        return (Consumer) createSecureCriteria()
             .add(Restrictions.eq("username", user.getUsername()))
             .add(Restrictions.eq("type", person)).uniqueResult();
     }
@@ -200,12 +201,12 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     @Transactional
     public List<Consumer> findByUuids(Collection<String> uuids) {
         return listByCriteria(
-            DetachedCriteria.forClass(Consumer.class).add(Restrictions.in("uuid", uuids)));
+            createSecureCriteria().add(Restrictions.in("uuid", uuids)));
     }
 
     @Transactional
     public List<Consumer> findByUuidsAndOwner(Collection<String> uuids, Owner owner) {
-        DetachedCriteria criteria = DetachedCriteria.forClass(Consumer.class);
+        Criteria criteria = currentSession().createCriteria(Consumer.class);
         criteria.add(Restrictions.eq("owner", owner));
         criteria.add(Restrictions.in("uuid", uuids));
         return listByCriteria(criteria);
@@ -215,14 +216,14 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     // to bypass the authentication. Do not call it!
     // TODO: Come up with a better way to do this!
     public Consumer getConsumer(String uuid) {
-        return (Consumer) currentSession().createCriteria(Consumer.class)
+        return (Consumer) createSecureCriteria()
             .add(Restrictions.eq("uuid", uuid)).uniqueResult();
     }
 
     @SuppressWarnings("unchecked")
     @Transactional
     public List<Consumer> listByOwner(Owner owner) {
-        return currentSession().createCriteria(Consumer.class)
+        return createSecureCriteria()
             .add(Restrictions.eq("owner", owner)).list();
     }
 
@@ -239,7 +240,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     public Page<List<Consumer>> listByUsernameAndType(String userName,
         List<ConsumerType> types, Owner owner, PageRequest pageRequest) {
 
-        DetachedCriteria criteria = DetachedCriteria.forClass(Consumer.class);
+        Criteria criteria = createSecureCriteria();
 
         if (userName != null) {
             criteria.add(Restrictions.eq("username", userName));
@@ -419,8 +420,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     }
 
     public boolean doesConsumerExist(String uuid) {
-        int result = (Integer) currentSession()
-            .createCriteria(Consumer.class)
+        int result = (Integer) createSecureCriteria()
             .add(Restrictions.eq("uuid", uuid))
             .setProjection(Projections.count("id"))
             .uniqueResult();

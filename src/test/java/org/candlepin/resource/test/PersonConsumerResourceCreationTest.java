@@ -17,10 +17,11 @@ package org.candlepin.resource.test;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.auth.Access;
+import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerPermission;
+import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.Role;
 import org.candlepin.model.User;
 import org.junit.Test;
@@ -38,7 +39,8 @@ public class PersonConsumerResourceCreationTest extends
         // create an owner, a ownerperm, and roles for the user we prodive
         // as coming from userService
         owner = new Owner("test_owner");
-        OwnerPermission p = new OwnerPermission(owner, Access.ALL);
+        PermissionBlueprint p = new PermissionBlueprint(PermissionType.OWNER, owner,
+            Access.ALL);
         User user = new User("anyuser", "");
         role = new Role();
         role.addPermission(p);

@@ -349,6 +349,7 @@
             "name": "admin-all",
             "permissions": [
                 {
+                    "type": "OWNER",
                     "owner": "admin",
                     "access": "ALL"
                 }
@@ -362,6 +363,7 @@
             "name": "admin-ro",
             "permissions": [
                 {
+                    "type": "OWNER",
                     "owner": "admin",
                     "access": "READ_ONLY"
                 }
@@ -374,6 +376,7 @@
             "name": "snowwhite-all",
             "permissions": [
                 {
+                    "type": "OWNER",
                     "owner": "snowwhite",
                     "access": "ALL"
                 }
@@ -388,6 +391,7 @@
             "name": "snowwhite-ro",
             "permissions": [
                 {
+                    "type": "OWNER",
                     "owner": "snowwhite",
                     "access": "READ_ONLY"
                 }
@@ -404,6 +408,7 @@
             "name": "donaldduck-all",
             "permissions": [
                 {
+                    "type": "OWNER",
                     "owner": "donaldduck",
                     "access": "ALL"
             }
@@ -417,6 +422,7 @@
             "name": "donaldduck-ro",
             "permissions": [
                 {
+                    "type": "OWNER",
                     "owner": "donaldduck",
                     "access": "READ_ONLY"
                 }
@@ -429,10 +435,12 @@
             "name": "donaldduck-all-snowwhite-ro",
             "permissions": [
                 {
+                    "type": "OWNER",
                     "owner": "donaldduck",
                     "access": "ALL"
                 },
                 {
+                    "type": "OWNER",
                     "owner": "snowwhite",
                     "access": "READ_ONLY"
                 }
@@ -445,10 +453,12 @@
             "name": "donaldduck-ro-snowwhite-all",
             "permissions": [
                 {
+                    "type": "OWNER",
                     "owner": "donaldduck",
                     "access": "READ_ONLY"
                 },
                 {
+                    "type": "OWNER",
                     "owner": "snowwhite",
                     "access": "ALL"
                 }
@@ -461,14 +471,17 @@
             "name": "donaldduck-ro-snowwhite-ro-admin-ro",
             "permissions": [
                 {
+                    "type": "OWNER",
                     "owner": "donaldduck",
                     "access": "READ_ONLY"
                 },
                 {
+                    "type": "OWNER",
                     "owner": "admin",
                     "access": "READ_ONLY"
                 },
                 {
+                    "type": "OWNER",
                     "owner": "snowwhite",
                     "access": "READ_ONLY"
                 }

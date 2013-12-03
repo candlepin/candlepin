@@ -30,6 +30,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
+import org.candlepin.auth.SubResource;
 import org.candlepin.auth.interceptor.SecurityHole;
 import org.candlepin.auth.interceptor.Verify;
 import org.candlepin.controller.PoolManager;
@@ -142,7 +143,7 @@ public class PoolResource {
             }
 
             // Now that we have a consumer, check that this principal can access it:
-            if (!principal.canAccess(c, Access.READ_ONLY)) {
+            if (!principal.canAccess(c, SubResource.NONE, Access.READ_ONLY)) {
                 throw new ForbiddenException(i18n.tr("User {0} cannot access unit {1}",
                     principal.getPrincipalName(), consumerUuid));
             }
@@ -152,12 +153,12 @@ public class PoolResource {
             }
         }
         if (ownerId != null) {
-            o = ownerCurator.find(ownerId);
+            o = ownerCurator.secureFind(ownerId);
             if (o == null) {
                 throw new NotFoundException(i18n.tr("owner: {0}", ownerId));
             }
             // Now that we have an owner, check that this principal can access it:
-            if (!principal.canAccess(o, Access.READ_POOLS)) {
+            if (!principal.canAccess(o, SubResource.POOLS, Access.READ_ONLY)) {
                 throw new ForbiddenException(i18n.tr("User {0} cannot access owner {1}",
                     principal.getPrincipalName(), o.getKey()));
             }
@@ -213,7 +214,7 @@ public class PoolResource {
                     consumerUuid));
             }
 
-            if (!principal.canAccess(c, Access.READ_ONLY)) {
+            if (!principal.canAccess(c, SubResource.NONE, Access.READ_ONLY)) {
                 throw new ForbiddenException(i18n.tr("User {0} cannot access consumer {1}",
                     principal.getPrincipalName(), c.getUuid()));
             }
@@ -282,7 +283,8 @@ public class PoolResource {
     @Path("{pool_id}/entitlements")
     @Produces(MediaType.APPLICATION_JSON)
     public List<Entitlement> getPoolEntitlements(@PathParam("pool_id")
-                            @Verify(Pool.class) String id,
+                            @Verify(value = Pool.class,
+                                subResource = SubResource.ENTITLEMENTS) String id,
                             @Context Principal principal) {
 
         Pool pool = poolManager.find(id);
@@ -292,16 +294,9 @@ public class PoolResource {
                 "Subscription Pool with ID ''{0}'' could not be found.", id));
         }
 
-        Owner o = pool.getOwner();
-        if (principal.canAccess(o, Access.READ_POOLS)) {
-            List<Entitlement> entitlements = new ArrayList<Entitlement>();
-            entitlements.addAll(pool.getEntitlements());
-            return entitlements;
-        }
-        else {
-            throw new ForbiddenException(i18n.tr("User {0} cannot access owner {1}",
-                principal.getPrincipalName(), o.getKey()));
-        }
+        List<Entitlement> entitlements = new ArrayList<Entitlement>();
+        entitlements.addAll(pool.getEntitlements());
+        return entitlements;
     }
 
     /**

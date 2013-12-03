@@ -25,7 +25,9 @@ import org.candlepin.auth.NoAuthPrincipal;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.TrustedUserPrincipal;
 import org.candlepin.auth.UserPrincipal;
+import org.candlepin.auth.permissions.OwnerPermission;
 import org.candlepin.auth.permissions.Permission;
+import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.exceptions.BadRequestException;
@@ -41,7 +43,7 @@ import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.OwnerPermission;
+import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.Release;
 import org.candlepin.model.Role;
 import org.candlepin.model.User;
@@ -51,7 +53,6 @@ import org.candlepin.resource.ConsumerResource;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
-
 import org.apache.commons.lang.StringUtils;
 import org.junit.Assert;
 import org.junit.Before;
@@ -123,7 +124,8 @@ public class ConsumerResourceCreationTest {
 
         owner = new Owner("test_owner");
         user = new User(USER, "");
-        OwnerPermission p = new OwnerPermission(owner, Access.ALL);
+        PermissionBlueprint p = new PermissionBlueprint(PermissionType.OWNER, owner,
+            Access.ALL);
         role = new Role();
         role.addPermission(p);
         role.addUser(user);
@@ -170,7 +172,7 @@ public class ConsumerResourceCreationTest {
 
     protected Consumer createConsumer(String consumerName) {
         Collection<Permission> perms = new HashSet<Permission>();
-        perms.addAll(role.getPermissions());
+        perms.add(new OwnerPermission(owner, Access.ALL));
         Principal principal = new UserPrincipal(USER, perms, false);
 
         List<String> empty = Collections.emptyList();

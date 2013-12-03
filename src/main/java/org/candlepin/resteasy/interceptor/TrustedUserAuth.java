@@ -18,6 +18,8 @@ import org.candlepin.auth.Principal;
 import org.candlepin.auth.TrustedUserPrincipal;
 import org.candlepin.service.UserServiceAdapter;
 import org.jboss.resteasy.spi.HttpRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -29,6 +31,9 @@ import com.google.inject.Injector;
 class TrustedUserAuth extends UserAuth {
 
     public static final String USER_HEADER = "cp-user";
+    public static final String LOOKUP_PERMISSIONS_HEADER = "cp-lookup-permissions";
+
+    private static Logger log = LoggerFactory.getLogger(TrustedUserAuth.class);
 
     @Inject
     TrustedUserAuth(UserServiceAdapter userServiceAdaper, Injector injector) {
@@ -37,13 +42,21 @@ class TrustedUserAuth extends UserAuth {
 
     public Principal getPrincipal(HttpRequest request) {
 
-        Principal principal = null;
         String username = AuthUtil.getHeader(request, USER_HEADER);
-
-        if (username != null && username.length() > 0) {
-            principal = new TrustedUserPrincipal(username);
+        if (username == null || username.isEmpty()) {
+            // Nothing we can do here:
+            log.debug("No username header provided, returning null principal.");
+            return null;
         }
 
-        return principal;
+        // Check if we should ask the user service for this user and their permissions:
+        String lookupPermsHeader = AuthUtil.getHeader(request,  LOOKUP_PERMISSIONS_HEADER);
+        if (lookupPermsHeader != null && lookupPermsHeader.equals("true")) {
+            log.debug("Looking up user permissions from user service.");
+            return createPrincipal(username);
+        }
+
+        log.debug("Returning full trusted user principal.");
+        return new TrustedUserPrincipal(username);
     }
 }

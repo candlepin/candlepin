@@ -18,6 +18,7 @@ import org.candlepin.auth.Access;
 import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.NoAuthPrincipal;
 import org.candlepin.auth.Principal;
+import org.candlepin.auth.SubResource;
 import org.candlepin.auth.interceptor.SecurityHole;
 import org.candlepin.auth.interceptor.Verify;
 import org.candlepin.config.Config;
@@ -315,6 +316,7 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
                     if (((Verify) a).require() != Access.NONE) {
                         requiredAccess = ((Verify) a).require();
                     }
+                    SubResource subResource = ((Verify) a).subResource();
 
                     // Use the correct curator (in storeMap) to look up the actual
                     // entity with the annotated argument
@@ -375,7 +377,7 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
                     }
 
                     for (Object entity : entities) {
-                        if (!principal.canAccess(entity, requiredAccess)) {
+                        if (!principal.canAccess(entity, subResource, requiredAccess)) {
                             denyAccess(principal, method);
                         }
                         else {
@@ -450,8 +452,12 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
         // If we had write or delete access types, that would go here,
         // and we'd only break on the access.all type.
         for (Annotation annotation : method.getAnnotations()) {
+            if (annotation instanceof POST) {
+                minimumLevel = Access.CREATE;
+            }
+
+            // May want to split out UPDATE here someday if it becomes useful.
             if (annotation instanceof PUT ||
-                annotation instanceof POST ||
                 annotation instanceof DELETE) {
                 minimumLevel = Access.ALL;
                 break;
@@ -506,7 +512,7 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
         @Override
         public Environment lookup(String key) {
             initialize();
-            return envCurator.find(key);
+            return envCurator.secureFind(key);
         }
 
         @Override
@@ -574,7 +580,7 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
         @Override
         public Entitlement lookup(String key) {
             initialize();
-            return entitlementCurator.find(key);
+            return entitlementCurator.secureFind(key);
         }
 
         @Override
@@ -601,7 +607,7 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
         @Override
         public Pool lookup(String key) {
             initialize();
-            return poolCurator.find(key);
+            return poolCurator.secureFind(key);
         }
 
         @Override
@@ -628,7 +634,7 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
         @Override
         public ActivationKey lookup(String key) {
             initialize();
-            return activationKeyCurator.find(key);
+            return activationKeyCurator.secureFind(key);
         }
 
         @Override
@@ -655,7 +661,7 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
         @Override
         public Product lookup(String key) {
             initialize();
-            return productCurator.find(key);
+            return productCurator.secureFind(key);
         }
 
         @Override

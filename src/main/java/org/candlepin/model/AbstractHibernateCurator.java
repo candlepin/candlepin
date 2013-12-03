@@ -22,18 +22,23 @@ import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.OptimisticLockException;
 
+import org.candlepin.auth.Principal;
+import org.candlepin.auth.permissions.Permission;
 import org.candlepin.exceptions.ConcurrentModificationException;
+import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
-import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projection;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.impl.CriteriaImpl;
 import org.hibernate.transform.ResultTransformer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
@@ -52,6 +57,8 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     @Inject protected I18n i18n;
     private final Class<E> entityType;
     private int batchSize = 30;
+    @Inject private PrincipalProvider principalProvider;
+    private static Logger log = LoggerFactory.getLogger(AbstractHibernateCurator.class);
 
     protected AbstractHibernateCurator(Class<E> entityType) {
         //entityType = (Class<E>) ((ParameterizedType)
@@ -82,6 +89,20 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     }
 
     /**
+     * Same as {@link find} but allows permissions on the current principal to inject
+     * filters into the query before it is run. Primarily useful in authentication when
+     * we want to verify access to an entity specified in the URL, but not reveal if
+     * the entity exists or not if you don't have permissions to see it at all.
+     *
+     * @param id db id of entity to be found.
+     * @return entity matching given id, or null otherwise.
+     */
+    @Transactional
+    public E secureFind(Serializable id) {
+        return id == null ? null : secureGet(entityType, id);
+    }
+
+    /**
      * @param entity to be created.
      * @return newly created entity
      */
@@ -95,12 +116,12 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      * @return all entities for a particular type.
      */
     public List<E> listAll() {
-        return listByCriteria(DetachedCriteria.forClass(entityType));
+        return listByCriteria(createSecureCriteria());
     }
 
     public List<E> listAllByIds(Collection<? extends Serializable> ids) {
         return listByCriteria(
-            DetachedCriteria.forClass(entityType).add(Restrictions.in("id", ids)));
+            createSecureCriteria().add(Restrictions.in("id", ids)));
     }
 
     @SuppressWarnings("unchecked")
@@ -135,10 +156,10 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         Page<List<E>> page = new Page<List<E>>();
 
         if (pageRequest != null) {
-            Criteria count = currentSession().createCriteria(entityType);
+            Criteria count = createSecureCriteria();
             page.setMaxRecords(findRowCount(count));
 
-            Criteria c = currentSession().createCriteria(entityType);
+            Criteria c = createSecureCriteria();
             page.setPageData(loadPageData(c, pageRequest));
             page.setPageRequest(pageRequest);
         }
@@ -181,13 +202,13 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
 
     @SuppressWarnings("unchecked")
     @Transactional
-    public List<E> listByCriteria(DetachedCriteria query) {
-        return query.getExecutableCriteria(currentSession()).list();
+    public List<E> listByCriteria(Criteria query) {
+        return query.list();
     }
 
     @SuppressWarnings("unchecked")
     @Transactional
-    public Page<List<E>> listByCriteria(DetachedCriteria query,
+    public Page<List<E>> listByCriteria(Criteria query,
         PageRequest pageRequest, boolean postFilter) {
         Page<List<E>> resultsPage;
         if (postFilter) {
@@ -212,15 +233,63 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         return resultsPage;
     }
 
+    /**
+     * Gives the permissions a chance to add aliases and then restrictions to the query.
+     * Uses an "or" so a principal could carry permissions for multiple owners
+     * (for example), but still have their results filtered without one of the perms
+     * hiding the results from the other.
+     *
+     * @return Criteria Final criteria query with all filters applied.
+     */
+    protected Criteria createSecureCriteria() {
+        Principal principal = principalProvider.get();
+        Criteria query = currentSession().createCriteria(entityType);
+
+        /*
+         * There are situations where consumer queries are run before there is a principal,
+         * i.e. during authentication when we're looking up the consumer itself.
+         */
+        if (principal == null) {
+            return query;
+        }
+
+
+        // Admins do not need query filtering enabled.
+        if (principal.hasFullAccess()) {
+            return query;
+        }
+
+        Criterion finalCriterion = null;
+        for (Permission perm : principal.getPermissions()) {
+
+            Criterion crit = perm.getCriteriaRestrictions(entityType);
+            if (crit != null) {
+                log.debug("Got criteria restrictions from permissions {} for {}: {}",
+                    new Object [] {perm, entityType, crit});
+                if (finalCriterion == null) {
+                    finalCriterion = crit;
+                }
+                else {
+                    finalCriterion = Restrictions.or(finalCriterion, crit);
+                }
+            }
+        }
+
+        if (finalCriterion != null) {
+            query.add(finalCriterion);
+        }
+
+        return query;
+    }
+
     @SuppressWarnings("unchecked")
     @Transactional
-    public Page<List<E>> listByCriteria(DetachedCriteria query,
+    public Page<List<E>> listByCriteria(Criteria c,
         PageRequest pageRequest) {
         Page<List<E>> page = new Page<List<E>>();
 
         if (pageRequest != null) {
             // see https://forum.hibernate.org/viewtopic.php?t=974802
-            Criteria c = query.getExecutableCriteria(currentSession());
 
             // Save original Projection and ResultTransformer
             CriteriaImpl cImpl = (CriteriaImpl) c;
@@ -238,16 +307,10 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
             page.setPageRequest(pageRequest);
         }
         else {
-            page.setPageData(listByCriteria(query));
+            page.setPageData(listByCriteria(c));
         }
 
         return page;
-    }
-
-    @SuppressWarnings("unchecked")
-    @Transactional
-    public E getByCriteria(DetachedCriteria query) {
-        return (E) query.getExecutableCriteria(currentSession()).uniqueResult();
     }
 
     /**
@@ -272,6 +335,12 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     @Transactional
     public E merge(E entity) {
         return getEntityManager().merge(entity);
+    }
+
+    @Transactional
+    protected final <T> T secureGet(Class<T> clazz, Serializable id) {
+        return clazz.cast(createSecureCriteria().
+            add(Restrictions.idEq(id)).uniqueResult());
     }
 
     @Transactional

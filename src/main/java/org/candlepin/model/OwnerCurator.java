@@ -55,7 +55,7 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
      */
     @Transactional
     public Owner lookupByKey(String key) {
-        return (Owner) currentSession().createCriteria(Owner.class)
+        return (Owner) createSecureCriteria()
             .add(Restrictions.eq("key", key))
             .uniqueResult();
     }
@@ -63,11 +63,11 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
     @Transactional
     public List<Owner> lookupByKeys(Collection<String> keys) {
         return listByCriteria(
-            DetachedCriteria.forClass(Owner.class).add(Restrictions.in("key", keys)));
+            createSecureCriteria().add(Restrictions.in("key", keys)));
     }
 
     public Owner lookupWithUpstreamUuid(String upstreamUuid) {
-        return (Owner) currentSession().createCriteria(Owner.class)
+        return (Owner) createSecureCriteria()
             .createCriteria("upstreamConsumer")
             .add(Restrictions.eq("uuid", upstreamUuid))
             .uniqueResult();
@@ -79,6 +79,7 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
      * @return a list of owners
      */
     public List<Owner> lookupOwnersByActiveProduct(List<String> productIds) {
+        // NOTE: only used by superadmin API calls, no permissions filtering needed here.
         DetachedCriteria poolIdQuery =
             DetachedCriteria.forClass(ProvidedProduct.class, "pp");
         poolIdQuery.add(Restrictions.in("pp.productId", productIds))

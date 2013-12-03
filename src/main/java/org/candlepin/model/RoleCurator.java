@@ -19,7 +19,7 @@ import java.util.List;
 import org.hibernate.criterion.Restrictions;
 
 /**
- * PermissionCurator
+ * RoleCurator
  */
 public class RoleCurator extends AbstractHibernateCurator<Role> {
 

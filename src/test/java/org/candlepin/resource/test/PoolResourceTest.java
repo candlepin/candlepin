@@ -160,7 +160,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
         assertEquals(1, pools.size());
     }
 
-    @Test(expected = ForbiddenException.class)
+    @Test(expected = NotFoundException.class)
     public void testCannotListPoolsInAnotherOwner() {
         List<Pool> pools = poolResource.list(owner2.getId(), null, product2.getId(),
             false, null, adminPrincipal, null);
@@ -177,7 +177,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
             eq(passConsumer), any(Date.class));
     }
 
-    @Test(expected = ForbiddenException.class)
+    @Test(expected = NotFoundException.class)
     public void testCannotListPoolsForConsumerInAnotherOwner() {
         List<Pool> pools = poolResource.list(null, failConsumer.getUuid(),
             product1.getId(), false, null, adminPrincipal, null);
@@ -219,7 +219,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
             null, adminPrincipal, null).size());
     }
 
-    @Test(expected = ForbiddenException.class)
+    @Test(expected = NotFoundException.class)
     public void ownerAdminCannotListAnotherOwnersPools() {
         List<Pool> pools = poolResource.list(owner1.getId(), null, null, false, null,
             adminPrincipal, null);
@@ -232,7 +232,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
     }
 
 
-    @Test(expected = ForbiddenException.class)
+    @Test(expected = NotFoundException.class)
     public void testConsumerCannotListPoolsForAnotherOwnersConsumer() {
         Principal p = setupPrincipal(new ConsumerPrincipal(foreignConsumer));
         securityInterceptor.enable();
@@ -240,7 +240,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
         poolResource.list(null, passConsumer.getUuid(), null, false, null, p, null);
     }
 
-    @Test(expected = ForbiddenException.class)
+    @Test(expected = NotFoundException.class)
     public void consumerCannotListPoolsForAnotherOwner() {
         Principal p = setupPrincipal(new ConsumerPrincipal(foreignConsumer));
         securityInterceptor.enable();
@@ -281,7 +281,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
         assertTrue(p.getCalculatedAttributes().isEmpty());
     }
 
-    @Test(expected = ForbiddenException.class)
+    @Test(expected = NotFoundException.class)
     public void testUnauthorizedUserRequestingPool() {
         Owner owner2 = createOwner();
         ownerCurator.create(owner2);
@@ -303,13 +303,5 @@ public class PoolResourceTest extends DatabaseTestFixture {
     @Test(expected = NotFoundException.class)
     public void testUnknownConsumerRequestingEntitlements() {
         poolResource.getPoolEntitlements("xyzzy", adminPrincipal);
-    }
-
-    @Test(expected = ForbiddenException.class)
-    public void testUnauthorizedUserRequestingPoolEntitlements() {
-        Owner owner2 = createOwner();
-        ownerCurator.create(owner2);
-        poolResource.getPoolEntitlements(pool1.getId(),
-            setupPrincipal(owner2, Access.NONE));
     }
 }

@@ -30,6 +30,7 @@ import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.NoAuthPrincipal;
+import org.candlepin.auth.SubResource;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.controller.CandlepinPoolManager;
@@ -486,7 +487,8 @@ public class ConsumerResourceTest {
         when(c.getType()).thenReturn(cType);
         when(c.getName()).thenReturn("testConsumer");
         when(ctc.lookupByLabel(eq("person"))).thenReturn(cType);
-        when(up.canAccess(eq(o), eq(Access.ALL))).thenReturn(true);
+        when(up.canAccess(eq(o), eq(SubResource.CONSUMERS), eq(Access.CREATE))).
+            thenReturn(true);
         // usa.findByLogin() will return null by default no need for a when
 
         ConsumerResource cr = new ConsumerResource(null, ctc,

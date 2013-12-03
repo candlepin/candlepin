@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 require 'spec_helper'
 require 'candlepin_scenarios'
 
@@ -88,7 +87,7 @@ describe 'Consumer Resource Content' do
       gone &= override.contentLabel != "content2.label"
     end
     gone.should == true
-    
+
     # delete by consumer
     del_override = create_content_override()
     @cp.delete_content_overrides(@consumer1.uuid, [del_override])
@@ -109,7 +108,7 @@ describe 'Consumer Resource Content' do
       found |= override.name == "field2"
     end
     found.should == true
-   
+
      # delete by repo
     del_override = create_content_override("content4.label")
     @cp.delete_content_overrides(@consumer1.uuid, [del_override])
@@ -118,7 +117,7 @@ describe 'Consumer Resource Content' do
       found |= override.contentLabel == "content4.label"
     end
     found.should == true
-    
+
     # delete by consumer
     del_override = create_content_override()
     @cp.delete_content_overrides(@consumer1.uuid, [del_override])
@@ -140,7 +139,7 @@ describe 'Consumer Resource Content' do
     lambda do
       @cp.add_content_overrides(@consumer1.uuid, overrides)
     end.should raise_exception(RestClient::BadRequest)
-    @cp.get_content_overrides(@consumer1.uuid).size.should == 0    
+    @cp.get_content_overrides(@consumer1.uuid).size.should == 0
   end
 
 

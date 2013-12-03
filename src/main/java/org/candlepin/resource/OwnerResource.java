@@ -21,6 +21,7 @@ import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
+import org.candlepin.auth.SubResource;
 import org.candlepin.auth.interceptor.Verify;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.exceptions.BadRequestException;
@@ -50,8 +51,8 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerInfo;
 import org.candlepin.model.OwnerInfoCurator;
-import org.candlepin.model.OwnerPermission;
-import org.candlepin.model.OwnerPermissionCurator;
+import org.candlepin.model.PermissionBlueprint;
+import org.candlepin.model.PermissionBlueprintCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Statistic;
 import org.candlepin.model.StatisticCurator;
@@ -136,7 +137,7 @@ public class OwnerResource {
     private Importer importer;
     private ExporterMetadataCurator exportCurator;
     private ImportRecordCurator importRecordCurator;
-    private OwnerPermissionCurator permissionCurator;
+    private PermissionBlueprintCurator permissionCurator;
     private PoolManager poolManager;
     private ConsumerTypeCurator consumerTypeCurator;
     private EntitlementCertificateCurator entitlementCertCurator;
@@ -160,7 +161,7 @@ public class OwnerResource {
         OwnerInfoCurator ownerInfoCurator,
         ImportRecordCurator importRecordCurator,
         SubscriptionServiceAdapter subService,
-        OwnerPermissionCurator permCurator,
+        PermissionBlueprintCurator permCurator,
         ConsumerTypeCurator consumerTypeCurator,
         EntitlementCertificateCurator entitlementCertCurator,
         EntitlementCurator entitlementCurator,
@@ -360,7 +361,7 @@ public class OwnerResource {
             importRecordCurator.delete(record);
         }
 
-        for (OwnerPermission perm : permissionCurator.findByOwner(owner)) {
+        for (PermissionBlueprint perm : permissionCurator.findByOwner(owner)) {
             log.info("Deleting permission: " + perm.getAccess());
             perm.getRole().getPermissions().remove(perm);
             permissionCurator.delete(perm);
@@ -444,7 +445,7 @@ public class OwnerResource {
     @Path("{owner_key}/servicelevels")
     public Set<String> ownerServiceLevels(
         @PathParam("owner_key") @Verify(value = Owner.class,
-            require = Access.READ_SERVICE_LEVELS) String ownerKey) {
+        subResource = SubResource.SERVICE_LEVELS) String ownerKey) {
         Owner owner = findOwner(ownerKey);
 
         return poolManager.retrieveServiceLevelsForOwner(owner, false);
@@ -602,8 +603,9 @@ public class OwnerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/consumers")
     @Paginate
-    public List<Consumer> ownerConsumers(
-        @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
+    public List<Consumer> listConsumers(
+        @PathParam("owner_key")
+        @Verify(value = Owner.class, subResource = SubResource.CONSUMERS) String ownerKey,
         @QueryParam("username") String userName,
         @QueryParam("type") Set<String> typeLabels,
         @QueryParam("uuid") @Verify(value = Consumer.class, nullable = true)
@@ -670,9 +672,9 @@ public class OwnerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/pools")
     @Paginate
-    public List<Pool> getPools(
+    public List<Pool> listPools(
         @PathParam("owner_key")
-            @Verify(value = Owner.class, require = Access.READ_POOLS) String ownerKey,
+            @Verify(value = Owner.class, subResource = SubResource.POOLS) String ownerKey,
         @QueryParam("consumer") String consumerUuid,
         @QueryParam("product") String productId,
         @QueryParam("listall") @DefaultValue("false") boolean listAll,
@@ -700,7 +702,7 @@ public class OwnerResource {
                     "Consumer specified does not belong to owner on path");
             }
 
-            if (!principal.canAccess(c, Access.READ_ONLY)) {
+            if (!principal.canAccess(c, SubResource.NONE, Access.READ_ONLY)) {
                 throw new ForbiddenException(i18n.tr("User {0} cannot access consumer {1}",
                     principal.getPrincipalName(), c.getUuid()));
             }
@@ -786,7 +788,7 @@ public class OwnerResource {
     @Path("{owner_key}/subscriptions")
     public List<Subscription> getSubscriptions(
         @PathParam("owner_key") @Verify(value = Owner.class,
-            require = Access.READ_SUBSCRIPTIONS) String ownerKey) {
+            subResource = SubResource.SUBSCRIPTIONS) String ownerKey) {
         Owner o = findOwner(ownerKey);
         return subService.getSubscriptions(o);
     }

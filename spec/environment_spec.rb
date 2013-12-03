@@ -34,7 +34,7 @@ describe 'Environments' do
     lambda {
       env = foreign_admin.create_environment(@owner['key'], 'testenv2',
         "My test env 2")
-    }.should raise_exception(RestClient::Forbidden)
+    }.should raise_exception(RestClient::ResourceNotFound)
   end
 
   it 'cannot be accessed by foreign owner admin' do
@@ -43,21 +43,21 @@ describe 'Environments' do
 
     lambda {
       foreign_admin.list_environments(@owner['key'])
-    }.should raise_exception(RestClient::Forbidden)
+    }.should raise_exception(RestClient::ResourceNotFound)
 
     lambda {
       foreign_admin.get_environment(@env['id'])
-    }.should raise_exception(RestClient::Forbidden)
+    }.should raise_exception(RestClient::ResourceNotFound)
 
     lambda {
       foreign_admin.delete_environment(@env['id'])
-    }.should raise_exception(RestClient::Forbidden)
+    }.should raise_exception(RestClient::ResourceNotFound)
 
     lambda {
       content = create_content
       foreign_admin.promote_content(@env['id'],
         [{:contentId => content['id']}])
-    }.should raise_exception(RestClient::Forbidden)
+    }.should raise_exception(RestClient::ResourceNotFound)
   end
 
   it 'can be searched by environment name' do

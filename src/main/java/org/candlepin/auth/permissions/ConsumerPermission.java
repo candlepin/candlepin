@@ -15,7 +15,11 @@
 package org.candlepin.auth.permissions;
 
 import org.candlepin.auth.Access;
+import org.candlepin.auth.SubResource;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.Owner;
+import org.hibernate.criterion.Criterion;
+import org.hibernate.criterion.Restrictions;
 
 /**
  *
@@ -34,8 +38,22 @@ public class ConsumerPermission extends TypedPermission<Consumer> {
     }
 
     @Override
-    public boolean canAccessTarget(Consumer target, Access action) {
+    public boolean canAccessTarget(Consumer target, SubResource subResource,
+        Access required) {
         return this.consumer.getUuid().equals(target.getUuid());
+    }
+
+    @Override
+    public Criterion getCriteriaRestrictions(Class entityClass) {
+        if (entityClass.equals(Consumer.class)) {
+            return Restrictions.idEq(consumer.getId());
+        }
+        return null;
+    }
+
+    @Override
+    public Owner getOwner() {
+        return consumer.getOwner();
     }
 
 }

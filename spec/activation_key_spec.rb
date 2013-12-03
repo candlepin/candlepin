@@ -44,7 +44,7 @@ describe 'Activation Keys' do
 
     lambda {
       @mallory_client.update_activation_key(@activation_key)
-    }.should raise_exception(RestClient::Forbidden)
+    }.should raise_exception(RestClient::ResourceNotFound)
 
   end
 
@@ -60,7 +60,7 @@ describe 'Activation Keys' do
   it 'should not allow wrong owner to delete activation keys' do
     lambda {
       @mallory_client.delete_activation_key(@activation_key['id'])
-    }.should raise_exception(RestClient::Forbidden)
+    }.should raise_exception(RestClient::ResourceNotFound)
   end
 
   it 'should allow pools to be added and removed to activation keys' do
@@ -81,7 +81,7 @@ describe 'Activation Keys' do
 
     lambda {
       @mallory_client.add_pool_to_key(@activation_key['id'], @pool['id'])
-    }.should raise_exception(RestClient::Forbidden)
+    }.should raise_exception(RestClient::ResourceNotFound)
 
   end
 

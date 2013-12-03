@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <changeSet id="20131125163340" author="dgoodwin">
+        <comment>Add new column for converted strings.</comment>
+        <addColumn tableName="cp_permission">
+            <column name="access_level_new" type="VARCHAR(32)"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="20131125163340-1" author="dgoodwin">
+        <comment>Convert access level ALL.</comment>
+        <update
+            tableName="cp_permission">
+          <column name="access_level_new" type="VARCHAR(32)" value="ALL"/>
+          <where>access_level = '1'</where>
+        </update>
+     </changeSet>
+
+    <changeSet id="20131125163340-2" author="dgoodwin">
+        <comment>Convert access level READ_ONLY.</comment>
+        <update
+            tableName="cp_permission">
+          <column name="access_level_new" type="VARCHAR(32)" value="READ_ONLY"/>
+          <where>access_level = '2'</where>
+        </update>
+     </changeSet>
+
+    <changeSet id="20131125163340-3" author="dgoodwin">
+        <comment>Drop the old column.</comment>
+        <dropColumn tableName="cp_permission" columnName="access_level"/>
+     </changeSet>
+
+    <changeSet id="20131125163340-4" author="dgoodwin">
+        <comment>Convert access level READ_ONLY.</comment>
+        <renameColumn tableName="cp_permission" oldColumnName="access_level_new" newColumnName="access_level" columnDataType="VARCHAR(32)"/>
+     </changeSet>
+
+</databaseChangeLog>

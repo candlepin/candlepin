@@ -16,9 +16,25 @@ package org.candlepin.auth;
 
 /**
  * Enumeration of the access rights used in the Candlepin permission model.
- * @see SecurityInterceptor
+ * @see AuthInterceptor
  */
 public enum Access {
     // TODO: NONE - kind of a hack for Verify to have a default access type...
-    NONE, ALL, READ_ONLY, READ_POOLS, READ_SERVICE_LEVELS, READ_SUBSCRIPTIONS;
+    NONE(0),
+    READ_ONLY(1),
+    CREATE(2),
+    ALL(5);
+
+    private int level;
+    private Access(int level) {
+        this.level = level;
+    }
+
+    public int getLevel() {
+        return level;
+    }
+
+    public boolean provides(Access desiredAccess) {
+        return this.getLevel() >= desiredAccess.getLevel();
+    }
 }

@@ -62,6 +62,7 @@ describe 'User Resource' do
 
     #make a new role, add a permission
     new_perm = [{
+      :type => 'OWNER',
       :owner => {:key => @test_owner['key']},
       :access => 'READ_ONLY',
     }]

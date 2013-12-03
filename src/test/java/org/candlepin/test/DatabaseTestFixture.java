@@ -30,7 +30,10 @@ import org.candlepin.TestingInterceptor;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
+import org.candlepin.auth.permissions.OwnerPermission;
 import org.candlepin.auth.permissions.Permission;
+import org.candlepin.auth.permissions.PermissionFactory;
+import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.guice.CandlepinSingletonScope;
 import org.candlepin.guice.TestPrincipalProviderSetter;
@@ -53,8 +56,8 @@ import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.EventCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.OwnerPermission;
-import org.candlepin.model.OwnerPermissionCurator;
+import org.candlepin.model.PermissionBlueprint;
+import org.candlepin.model.PermissionBlueprintCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolAttributeCurator;
 import org.candlepin.model.PoolCurator;
@@ -130,7 +133,7 @@ public class DatabaseTestFixture {
     protected HttpServletRequest httpServletRequest;
     protected EntitlementCertificateCurator entCertCurator;
     protected CertificateSerialCurator certSerialCurator;
-    protected OwnerPermissionCurator permissionCurator;
+    protected PermissionBlueprintCurator permissionCurator;
     protected RoleCurator roleCurator;
     protected EnvironmentCurator envCurator;
     protected I18n i18n;
@@ -141,6 +144,7 @@ public class DatabaseTestFixture {
     protected UniqueIdGenerator uniqueIdGenerator;
     protected UeberCertificateGenerator ueberCertGenerator;
     protected CandlepinSingletonScope cpSingletonScope;
+    protected PermissionFactory permFactory;
 
     @Before
     public void init() {
@@ -173,7 +177,7 @@ public class DatabaseTestFixture {
             .getInstance(ProductCertificateCurator.class);
         consumerCurator = injector.getInstance(ConsumerCurator.class);
         eventCurator = injector.getInstance(EventCurator.class);
-        permissionCurator = injector.getInstance(OwnerPermissionCurator.class);
+        permissionCurator = injector.getInstance(PermissionBlueprintCurator.class);
         roleCurator = injector.getInstance(RoleCurator.class);
 
         consumerTypeCurator = injector.getInstance(ConsumerTypeCurator.class);
@@ -208,6 +212,7 @@ public class DatabaseTestFixture {
         i18n = injector.getInstance(I18n.class);
         uniqueIdGenerator = injector.getInstance(UniqueIdGenerator.class);
         ueberCertGenerator = injector.getInstance(UeberCertificateGenerator.class);
+        permFactory = injector.getInstance(PermissionFactory.class);
 
         securityInterceptor = testingModule.securityInterceptor();
 
@@ -218,6 +223,9 @@ public class DatabaseTestFixture {
 
     @After
     public void shutdown() {
+        // We are using a singleton for the principal in tests. Make sure we clear it out
+        // after every test. TestPrincipalProvider controls the default behavior.
+        TestPrincipalProviderSetter.get().setPrincipal(null);
         try {
             injector.getInstance(PersistFilter.class).destroy();
 
@@ -363,7 +371,8 @@ public class DatabaseTestFixture {
     }
 
     public Role createAdminRole(Owner owner) {
-        OwnerPermission p = new OwnerPermission(owner, Access.ALL);
+        PermissionBlueprint p = new PermissionBlueprint(PermissionType.OWNER, owner,
+            Access.ALL);
         Role role = new Role("testrole" + TestUtil.randomInt());
         role.addPermission(p);
         return role;

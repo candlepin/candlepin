@@ -31,6 +31,7 @@ import org.candlepin.auth.Access;
 import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
+import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
@@ -48,7 +49,7 @@ import org.candlepin.model.ImportRecord;
 import org.candlepin.model.ImportRecordCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.OwnerPermission;
+import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.Role;
@@ -62,7 +63,6 @@ import org.candlepin.sync.Importer;
 import org.candlepin.sync.ImporterException;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
-
 import org.jboss.resteasy.plugins.providers.atom.Entry;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
@@ -283,7 +283,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         securityInterceptor.enable();
 
-        ownerResource.getPools(owner.getKey(), null, null, false, null, principal, null);
+        ownerResource.listPools(owner.getKey(), null, null, false, null, principal, null);
     }
 
     @Test
@@ -297,12 +297,12 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         poolCurator.create(pool1);
         poolCurator.create(pool2);
 
-        List<Pool> pools = ownerResource.getPools(owner.getKey(),
+        List<Pool> pools = ownerResource.listPools(owner.getKey(),
             null, null, true, null, principal, null);
         assertEquals(2, pools.size());
     }
 
-    @Test(expected = ForbiddenException.class)
+    @Test(expected = NotFoundException.class)
     public void ownerAdminCannotAccessAnotherOwnersPools() {
         Owner evilOwner = new Owner("evilowner");
         ownerCurator.create(evilOwner);
@@ -318,7 +318,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         securityInterceptor.enable();
 
         // Filtering should just cause this to return no results:
-        ownerResource.getPools(owner.getKey(), null, null, true, null, principal, null);
+        ownerResource.listPools(owner.getKey(), null, null, true, null, principal, null);
     }
 
     @Test(expected = ForbiddenException.class)
@@ -370,7 +370,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertEquals(e1.getTimestamp(), entry.getPublished());
     }
 
-    @Test(expected = ForbiddenException.class)
+    @Test(expected = NotFoundException.class)
     public void ownerCannotAccessAnotherOwnersAtomFeed() {
         Owner owner2 = new Owner("anotherOwner");
         ownerCurator.create(owner2);
@@ -407,7 +407,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         securityInterceptor.enable();
 
-        ownerResource.ownerConsumers(owner.getKey(), null, null,
+        ownerResource.listConsumers(owner.getKey(), null, null,
             new ArrayList<String>(), null);
     }
 
@@ -426,11 +426,10 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Set<String> types = new HashSet<String>();
         types.add("type");
 
-        ownerResource.ownerConsumers(owner.getKey(), "username", types, uuids,
+        ownerResource.listConsumers(owner.getKey(), "username", types, uuids,
             new PageRequest());
     }
 
-    @Test(expected = ForbiddenException.class)
     public void consumerCannotListConsumersFromAnotherOwner() {
         Consumer c = TestUtil.createConsumer(owner);
         consumerTypeCurator.create(c.getType());
@@ -448,7 +447,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         setupPrincipal(owner, Access.ALL);
         securityInterceptor.enable();
 
-        ownerResource.ownerConsumers(owner.getKey(), null, null, uuids, null);
+        assertEquals(1,
+            ownerResource.listConsumers(owner.getKey(), null, null, uuids, null).size());
     }
 
     /**
@@ -461,7 +461,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Set<String> types = new HashSet<String>();
         types.add("unknown");
         try {
-            ownerResource.ownerConsumers(owner.getKey(), null, types,
+            ownerResource.listConsumers(owner.getKey(), null, types,
                 new ArrayList<String>(), null);
             fail("Should have thrown a BadRequestException.");
         }
@@ -488,7 +488,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         setupPrincipal(owner, Access.ALL);
         securityInterceptor.enable();
 
-        List<Consumer> results = ownerResource.ownerConsumers(owner.getKey(), null,
+        List<Consumer> results = ownerResource.listConsumers(owner.getKey(), null,
             null, uuids, null);
         assertEquals(2, results.size());
     }
@@ -502,7 +502,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         securityInterceptor.enable();
 
-        ownerResource.getPools(owner.getKey(), null, null, false, null, principal, null);
+        ownerResource.listPools(owner.getKey(), null, null, false, null, principal, null);
     }
 
     @Test
@@ -519,14 +519,14 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Principal principal = setupPrincipal(new ConsumerPrincipal(c));
         securityInterceptor.enable();
 
-        List<Pool> pools = ownerResource.getPools(owner.getKey(), c.getUuid(),
+        List<Pool> pools = ownerResource.listPools(owner.getKey(), c.getUuid(),
             p.getId(), true, null, principal, null);
         assertEquals(1, pools.size());
         Pool returnedPool = pools.get(0);
         assertNotNull(returnedPool.getCalculatedAttributes());
     }
 
-    @Test(expected = ForbiddenException.class)
+    @Test(expected = NotFoundException.class)
     public void testConsumerListPoolsCannotAccessOtherConsumer() {
         Product p = TestUtil.createProduct();
         productCurator.create(p);
@@ -542,7 +542,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Owner owner2 = createOwner();
         ownerCurator.create(owner2);
 
-        ownerResource.getPools(owner.getKey(), c.getUuid(),
+        ownerResource.listPools(owner.getKey(), c.getUuid(),
             p.getId(), true, null, setupPrincipal(owner2, Access.NONE), null);
     }
 
@@ -667,7 +667,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void cleanupWithOutstandingPermissions() {
-        OwnerPermission p = new OwnerPermission(owner, Access.ALL);
+        PermissionBlueprint p = new PermissionBlueprint(PermissionType.OWNER, owner,
+            Access.ALL);
         Role r = new Role("rolename");
         r.addPermission(p);
         roleCurator.create(r);
