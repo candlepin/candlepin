@@ -83,6 +83,8 @@ public class RootResource {
         addResource(DistributorVersionResource.class);
         addResource(DeletedConsumerResource.class);
         addResource(GuestIdResource.class);
+        // I'm not sure if we need to label this one
+        addResource(ConsumerEntitlementResource.class, "consumer_entitlements");
         try {
             addResource(ConsumerResource.class.getMethod(
                 "getContentOverrideList", String.class));

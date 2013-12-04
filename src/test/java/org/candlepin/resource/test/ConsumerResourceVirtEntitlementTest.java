@@ -36,7 +36,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.Subscription;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
-import org.candlepin.resource.ConsumerResource;
+import org.candlepin.resource.ConsumerEntitlementResource;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.junit.Before;
@@ -58,7 +58,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
     private List<Pool> limitPools;
     private List<Pool> unlimitPools;
 
-    private ConsumerResource consumerResource;
+    private ConsumerEntitlementResource consumerEntitlementResource;
     private PoolManager poolManager;
     private Owner owner;
 
@@ -69,7 +69,8 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
 
     @Before
     public void setUp() {
-        consumerResource = injector.getInstance(ConsumerResource.class);
+        consumerEntitlementResource =
+            injector.getInstance(ConsumerEntitlementResource.class);
         poolManager = injector.getInstance(CandlepinPoolManager.class);
 
         manifestType = consumerTypeCurator.create(
@@ -135,9 +136,9 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
             // bonus pools have the attribute pool_derived
             if (null != p.getAttributeValue("pool_derived")) {
                 // consume 2 times so one can get revoked later.
-                consumerResource.bind(guestConsumer.getUuid(), p.getId(), null,
+                consumerEntitlementResource.bind(guestConsumer.getUuid(), p.getId(), null,
                     10, null, null, false, null);
-                consumerResource.bind(guestConsumer.getUuid(), p.getId(), null,
+                consumerEntitlementResource.bind(guestConsumer.getUuid(), p.getId(), null,
                     10, null, null, false, null);
                 // ensure the correct # consumed from the bonus pool
                 assertTrue(p.getConsumed() == 20);
@@ -150,24 +151,24 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
             }
         }
         // manifest consume from the physical pool and then check bonus pool quantities
-        consumerResource.bind(manifestConsumer.getUuid(), parentPool.getId(), null, 7, null,
-            null, false, null);
+        consumerEntitlementResource.bind(manifestConsumer.getUuid(),
+            parentPool.getId(), null, 7, null, null, false, null);
         for (Pool p : subscribedTo) {
             assertTrue(p.getConsumed() == 20);
             assertTrue(p.getQuantity() == 30);
         }
         // manifest consume from the physical pool and then check bonus pool quantities.
         //   Should result in a revocation of one of the 10 count entitlements.
-        consumerResource.bind(manifestConsumer.getUuid(), parentPool.getId(), null, 2, null,
-            null, false, null);
+        consumerEntitlementResource.bind(manifestConsumer.getUuid(),
+            parentPool.getId(), null, 2, null, null, false, null);
         for (Pool p : subscribedTo) {
             assertTrue(p.getConsumed() == 10);
             assertTrue(p.getQuantity() == 10);
         }
         // system consume from the physical pool and then check bonus pool quantities.
         //   Should result in no change in the entitlements for the guest.
-        consumerResource.bind(systemConsumer.getUuid(), parentPool.getId(), null, 1, null,
-            null, false, null);
+        consumerEntitlementResource.bind(systemConsumer.getUuid(),
+            parentPool.getId(), null, 1, null, null, false, null);
         for (Pool p : subscribedTo) {
             assertTrue(p.getConsumed() == 10);
             assertTrue(p.getQuantity() == 10);
@@ -188,9 +189,9 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
             // bonus pools have the attribute pool_derived
             if (null != p.getAttributeValue("pool_derived")) {
                 // consume 2 times so they can get revoked separately.
-                consumerResource.bind(guestConsumer.getUuid(), p.getId(), null,
+                consumerEntitlementResource.bind(guestConsumer.getUuid(), p.getId(), null,
                     10, null, null, false, null);
-                consumerResource.bind(guestConsumer.getUuid(), p.getId(), null,
+                consumerEntitlementResource.bind(guestConsumer.getUuid(), p.getId(), null,
                     10, null, null, false, null);
                 assertTrue(p.getConsumed() == 20);
                 assertTrue(p.getQuantity() == -1);
@@ -205,16 +206,16 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
             }
         }
         // Incomplete consumption of physical pool leaves unlimited pool unchanged.
-        consumerResource.bind(manifestConsumer.getUuid(), parentPool.getId(), null, 7, null,
-            null, false, null);
+        consumerEntitlementResource.bind(manifestConsumer.getUuid(),
+            parentPool.getId(), null, 7, null, null, false, null);
         for (Pool p : subscribedTo) {
             assertTrue(p.getConsumed() == 20);
             assertTrue(p.getQuantity() == -1);
         }
         // Full consumption of physical pool causes revocation of bonus pool entitlements
         //   and quantity change to 0
-        consumerResource.bind(manifestConsumer.getUuid(), parentPool.getId(), null, 3, null,
-            null, false, null);
+        consumerEntitlementResource.bind(manifestConsumer.getUuid(),
+            parentPool.getId(), null, 3, null, null, false, null);
         for (Pool p : subscribedTo) {
             assertEquals(new Long(0), p.getConsumed());
             assertTrue(p.getQuantity() == 0);

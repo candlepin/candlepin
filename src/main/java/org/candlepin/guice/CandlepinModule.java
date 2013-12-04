@@ -63,6 +63,7 @@ import org.candlepin.resource.ActivationKeyResource;
 import org.candlepin.resource.AdminResource;
 import org.candlepin.resource.AtomFeedResource;
 import org.candlepin.resource.CertificateSerialResource;
+import org.candlepin.resource.ConsumerEntitlementResource;
 import org.candlepin.resource.ConsumerResource;
 import org.candlepin.resource.ConsumerTypeResource;
 import org.candlepin.resource.CdnResource;
@@ -194,7 +195,7 @@ public class CandlepinModule extends AbstractModule {
         bind(DeletedConsumerResource.class);
         bind(CdnResource.class);
         bind(GuestIdResource.class);
-
+        bind(ConsumerEntitlementResource.class);
 
         bind(I18n.class).toProvider(I18nProvider.class);
         this.configureInterceptors();

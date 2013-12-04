@@ -19,7 +19,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
@@ -34,7 +33,6 @@ import org.candlepin.auth.SubResource;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.controller.CandlepinPoolManager;
-import org.candlepin.controller.Entitler;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
@@ -44,7 +42,6 @@ import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialDto;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
-import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
@@ -60,7 +57,6 @@ import org.candlepin.model.Subscription;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.resource.ConsumerResource;
-import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
@@ -82,11 +78,9 @@ import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * ConsumerResourceTest
@@ -123,8 +117,8 @@ public class ConsumerResourceTest {
 
         when(mockedEntitlementCertServiceAdapter.listForConsumer(consumer))
             .thenReturn(certificates);
-        when(mockedConsumerCurator.findByUuid(consumer.getUuid())).thenReturn(
-            consumer);
+        when(mockedConsumerCurator.verifyAndLookupConsumer(
+            consumer.getUuid())).thenReturn(consumer);
         when(mockedEntitlementCurator.listByConsumer(consumer)).thenReturn(
             new ArrayList<Entitlement>());
 
@@ -197,8 +191,8 @@ public class ConsumerResourceTest {
     public void testRegenerateEntitlementCertificateWithValidConsumer() {
         Consumer consumer = createConsumer();
 
-        when(mockedConsumerCurator.findByUuid(consumer.getUuid())).thenReturn(
-            consumer);
+        when(mockedConsumerCurator.verifyAndLookupConsumer(
+            consumer.getUuid())).thenReturn(consumer);
 
         CandlepinPoolManager mgr = mock(CandlepinPoolManager.class);
         ConsumerResource cr = new ConsumerResource(mockedConsumerCurator, null,
@@ -227,8 +221,8 @@ public class ConsumerResourceTest {
         IdentityCertificate ic = consumer.getIdCert();
         assertNotNull(ic);
 
-        when(mockedConsumerCurator.findByUuid(consumer.getUuid())).thenReturn(
-            consumer);
+        when(mockedConsumerCurator.verifyAndLookupConsumer(
+            consumer.getUuid())).thenReturn(consumer);
         when(mockedIdSvc.regenerateIdentityCert(consumer)).thenReturn(
             createIdCert());
 
@@ -266,8 +260,8 @@ public class ConsumerResourceTest {
         consumer.setIdCert(createIdCert());
         BigInteger origserial = consumer.getIdCert().getSerial().getSerial();
 
-        when(mockedConsumerCurator.findByUuid(consumer.getUuid())).thenReturn(
-            consumer);
+        when(mockedConsumerCurator.verifyAndLookupConsumer(
+            consumer.getUuid())).thenReturn(consumer);
         when(mockedIdSvc.regenerateIdentityCert(consumer)).thenReturn(
             createIdCert());
 
@@ -292,8 +286,8 @@ public class ConsumerResourceTest {
         consumer.setIdCert(createIdCert(TestUtil.createDate(2025, 6, 9)));
         BigInteger origserial = consumer.getIdCert().getSerial().getSerial();
 
-        when(mockedConsumerCurator.findByUuid(consumer.getUuid())).thenReturn(
-            consumer);
+        when(mockedConsumerCurator.verifyAndLookupConsumer(
+            consumer.getUuid())).thenReturn(consumer);
 
         ConsumerResource cr = new ConsumerResource(mockedConsumerCurator, null,
             null, ssa, null, null, null, null, null, null, null, null, null, null,
@@ -332,59 +326,6 @@ public class ConsumerResourceTest {
         cr.create(c, nap, null, "testOwner", "testKey");
     }
 
-    @Test
-    public void testProductNoPool() {
-        try {
-            Consumer c = mock(Consumer.class);
-            Owner o = mock(Owner.class);
-            SubscriptionServiceAdapter sa = mock(SubscriptionServiceAdapter.class);
-            Entitler e = mock(Entitler.class);
-            ConsumerCurator cc = mock(ConsumerCurator.class);
-            String[] prodIds = {"notthere"};
-
-            when(c.getOwner()).thenReturn(o);
-            when(sa.hasUnacceptedSubscriptionTerms(eq(o))).thenReturn(false);
-            when(cc.findByUuid(eq("fakeConsumer"))).thenReturn(c);
-            when(e.bindByProducts(eq(prodIds), eq(c), eq((Date) null)))
-                .thenThrow(new RuntimeException());
-
-            ConsumerResource cr = new ConsumerResource(cc, null,
-                null, sa, null, null, null, i18n, null, null, null, null, null,
-                null, null, null, null, null, e, null, null, null, null,
-                new CandlepinCommonTestConfig(), null, null, null, null, null, null);
-            cr.bind("fakeConsumer", null, prodIds, null, null, null, false, null);
-        }
-        catch (Throwable t) {
-            fail("Runtime exception should be caught in ConsumerResource.bind");
-        }
-    }
-
-    @Test
-    public void futureHealing() {
-        Consumer c = mock(Consumer.class);
-        Owner o = mock(Owner.class);
-        SubscriptionServiceAdapter sa = mock(SubscriptionServiceAdapter.class);
-        Entitler e = mock(Entitler.class);
-        ConsumerCurator cc = mock(ConsumerCurator.class);
-        ConsumerInstalledProduct cip = mock(ConsumerInstalledProduct.class);
-        Set<ConsumerInstalledProduct> products = new HashSet<ConsumerInstalledProduct>();
-        products.add(cip);
-
-        when(c.getOwner()).thenReturn(o);
-        when(cip.getProductId()).thenReturn("product-foo");
-        when(sa.hasUnacceptedSubscriptionTerms(eq(o))).thenReturn(false);
-        when(cc.findByUuid(eq("fakeConsumer"))).thenReturn(c);
-
-        ConsumerResource cr = new ConsumerResource(cc, null, null, sa,
-            null, null, null, null, null, null, null, null, null, null,
-            null, null, null, null, e, null, null, null, null,
-            new CandlepinCommonTestConfig(), null, null, null, null, null, null);
-        String dtStr = "2011-09-26T18:10:50.184081+00:00";
-        Date dt = ResourceDateParser.parseDateString(dtStr);
-        cr.bind("fakeConsumer", null, null, null, null, null, false, dtStr);
-        verify(e).bindByProducts(eq((String []) null), eq(c), eq(dt));
-    }
-
     @Test(expected = NotFoundException.class)
     public void unbindByInvalidSerialShouldFail() {
         Consumer consumer = createConsumer();
@@ -401,60 +342,6 @@ public class ConsumerResourceTest {
 
         consumerResource.unbindBySerial("fake uuid",
             Long.valueOf(1234L));
-    }
-
-    @Test(expected = NotFoundException.class)
-    public void unbindBySerialWithInvalidUuidShouldFail() {
-        ConsumerCurator consumerCurator = mock(ConsumerCurator.class);
-        when(consumerCurator.findByUuid(eq("fake uuid"))).thenReturn(null);
-
-        ConsumerResource consumerResource = new ConsumerResource(consumerCurator, null,
-            null, null, null, null, null, i18n, null, null, null, null,
-            null, null, null, null, null, null, null, null, null, null,
-            null, new CandlepinCommonTestConfig(), null, null, null, null, null, null);
-
-        consumerResource.unbindBySerial("fake uuid",
-            Long.valueOf(1234L));
-    }
-
-    @Test(expected = BadRequestException.class)
-    public void testBindMultipleParams() throws Exception {
-        ConsumerCurator consumerCurator = mock(ConsumerCurator.class);
-        ConsumerResource consumerResource = new ConsumerResource(consumerCurator, null,
-            null, null, null, null, null, i18n, null, null, null,
-            null, null, null, null, null, null, null, null, null, null, null,
-            null, new CandlepinCommonTestConfig(), null, null, null, null, null, null);
-
-        consumerResource.bind("fake uuid", "fake pool uuid",
-            new String[]{"12232"}, 1, null, null, false, null);
-    }
-
-
-    @Test(expected = NotFoundException.class)
-    public void testBindByPoolBadConsumerUuid() throws Exception {
-        ConsumerCurator consumerCurator = mock(ConsumerCurator.class);
-        ConsumerResource consumerResource = new ConsumerResource(consumerCurator, null,
-            null, null, null, null, null, i18n, null, null, null,
-            null, null, null, null, null, null, null, null, null, null, null,
-            null, new CandlepinCommonTestConfig(), null, null, null, null, null, null);
-
-        consumerResource.bind("notarealuuid", "fake pool uuid", null, null, null,
-            null, false, null);
-    }
-
-    /**
-     * Basic test. If invalid id is given, should throw
-     * {@link NotFoundException}
-     */
-    @Test(expected = NotFoundException.class)
-    public void testRegenerateEntitlementCertificatesWithInvalidConsumerId() {
-        ConsumerCurator consumerCurator = mock(ConsumerCurator.class);
-        ConsumerResource consumerResource = new ConsumerResource(consumerCurator, null,
-            null, null, null, null, null, i18n, null, null, null,
-            null, null, null, null, null, null, null, null, null, null, null,
-            null, new CandlepinCommonTestConfig(), null, null, null, null, null, null);
-
-        consumerResource.regenerateEntitlementCertificates("xyz", null, true);
     }
 
     private Consumer createConsumer() {

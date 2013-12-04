@@ -21,15 +21,18 @@ import java.util.Locale;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Principal;
+import org.candlepin.controller.PoolManager;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
+import org.candlepin.model.Entitlement;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.GuestIdCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.candlepin.model.Pool;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.resource.ConsumerResource;
@@ -72,6 +75,9 @@ public class GuestIdResourceTest {
     @Mock
     private EventSink sink;
 
+    @Mock
+    private PoolManager poolManager;
+
     private GuestIdResource guestIdResource;
 
     private Consumer consumer;
@@ -85,7 +91,7 @@ public class GuestIdResourceTest {
         ct = new ConsumerType(ConsumerTypeEnum.SYSTEM);
         consumer = new Consumer("consumer", "test", owner, ct);
         guestIdResource = new GuestIdResource(guestIdCurator,
-            consumerCurator, consumerResource, i18n, eventFactory, sink);
+            consumerCurator, consumerResource, i18n, eventFactory, sink, poolManager);
         when(consumerCurator.findByUuid(consumer.getUuid())).thenReturn(consumer);
     }
 
@@ -191,14 +197,22 @@ public class GuestIdResourceTest {
         guestIdResource.deleteGuest(consumer.getUuid(),
             guest.getGuestId(), false, null);
         Mockito.verify(guestIdCurator, Mockito.times(1)).delete(eq(guest));
-        Mockito.verify(consumerResource, Mockito.never())
-            .revokeGuestEntitlementsNotMatchingHost(eq(consumer), any(Consumer.class));
     }
 
     @Test
     public void updateGuestRevokeHostSpecific() {
         Consumer guestConsumer =
             new Consumer("guest_consumer", "guest_consumer", owner, ct);
+
+        // Set up a host limited entitlement which should be revoked
+        Pool pool = new Pool();
+        pool.setAttribute("virt_only", "true");
+        pool.setAttribute("requires_host", "old_host");
+        Entitlement badHostSpecificEntitlement = new Entitlement();
+        badHostSpecificEntitlement.setPool(pool);
+
+        guestConsumer.addEntitlement(badHostSpecificEntitlement);
+
         GuestId originalGuest = new GuestId("guest-id", guestConsumer);
         GuestId guest = new GuestId("guest-id");
 
@@ -211,9 +225,7 @@ public class GuestIdResourceTest {
             guest.getGuestId(), guest);
 
         Mockito.verify(guestIdCurator, Mockito.times(1)).merge(eq(guest));
-        Mockito.verify(consumerResource, Mockito.times(1))
-            .revokeGuestEntitlementsNotMatchingHost(any(Consumer.class),
-                any(Consumer.class));
+        Mockito.verify(poolManager).revokeEntitlement(eq(badHostSpecificEntitlement));
     }
 
     @Test
@@ -228,8 +240,6 @@ public class GuestIdResourceTest {
         guestIdResource.deleteGuest(consumer.getUuid(),
             guest.getGuestId(), true, null);
         Mockito.verify(guestIdCurator, Mockito.times(1)).delete(eq(guest));
-        Mockito.verify(consumerResource, Mockito.never())
-            .revokeGuestEntitlementsNotMatchingHost(eq(consumer), eq(guestConsumer));
         Mockito.verify(consumerResource, Mockito.times(1))
             .deleteConsumer(eq(guestConsumer.getUuid()), any(Principal.class));
     }
@@ -247,8 +257,6 @@ public class GuestIdResourceTest {
         guestIdResource.deleteGuest(consumer.getUuid(),
             guest.getGuestId(), true, null);
         Mockito.verify(guestIdCurator, Mockito.times(1)).delete(eq(guest));
-        Mockito.verify(consumerResource, Mockito.never())
-            .revokeGuestEntitlementsNotMatchingHost(eq(consumer), any(Consumer.class));
     }
 
     private Page<List<GuestId>> buildPaginatedGuestIdList(List<GuestId> guests) {
@@ -273,9 +281,6 @@ public class GuestIdResourceTest {
 
         public boolean performConsumerUpdates(Consumer updated, Consumer toUpdate) {
             return true;
-        }
-
-        public void revokeGuestEntitlementsNotMatchingHost(Consumer host, Consumer guest) {
         }
     }
 }
