@@ -77,6 +77,11 @@ public class StatusReasonMessageGenerator {
                 reason.getAttributes().get("covered"),
                 reason.getAttributes().get("has")));
         }
+        else if (reason.getKey().equals("GUEST_LIMIT")) {
+            reason.setMessage(i18n.tr("Only covers {0} of {1} virtual guests.",
+                reason.getAttributes().get("covered"),
+                reason.getAttributes().get("has")));
+        }
         else { //default fallback
             reason.setMessage(i18n.tr("{2} COVERAGE PROBLEM.  Covers {0} of {1}",
                 reason.getAttributes().get("covered"),

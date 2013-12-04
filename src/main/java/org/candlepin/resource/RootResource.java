@@ -85,11 +85,10 @@ public class RootResource {
         RESOURCE_CLASSES.add(DeletedConsumerResource.class);
 
         PSEUDO_RESOURCES = new HashMap<String, Method>();
-        Method m;
         try {
-            m = ConsumerResource.class.getMethod("getContentOverrideList",
-                String.class);
-            PSEUDO_RESOURCES.put("content_overrides", m);
+            Method contentOverrideMethod =
+                ConsumerResource.class.getMethod("getContentOverrideList", String.class);
+            PSEUDO_RESOURCES.put("content_overrides", contentOverrideMethod);
         }
         catch (NoSuchMethodException e) {
             // If the method name changes, throwing this will abort deployment.

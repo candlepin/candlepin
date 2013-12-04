@@ -30,6 +30,7 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
@@ -132,6 +133,8 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "consumer", fetch = FetchType.LAZY)
     private Set<Entitlement> entitlements;
 
+    @JoinTable(name = "cp_consumer_facts",
+        joinColumns = @JoinColumn(name = "cp_consumer_id"))
     @MapKeyManyToMany(targetEntity = String.class)
     @CollectionOfElements(targetElement = String.class)
     @Cascade({org.hibernate.annotations.CascadeType.ALL})

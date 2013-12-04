@@ -14,16 +14,26 @@
  */
 package org.candlepin.model;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.candlepin.jackson.HateoasArrayExclude;
+import org.candlepin.jackson.HateoasInclude;
+import org.codehaus.jackson.map.annotate.JsonFilter;
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.CollectionOfElements;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Index;
+import org.hibernate.annotations.MapKeyManyToMany;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -41,6 +51,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_consumer_guests")
+@JsonFilter("GuestFilter")
 public class GuestId extends AbstractHibernateObject {
 
     @Id
@@ -59,18 +70,34 @@ public class GuestId extends AbstractHibernateObject {
     @Index(name = "cp_consumerguest_consumer_fk_idx")
     private Consumer consumer;
 
+    @JoinTable(name = "cp_consumer_guests_attributes",
+        joinColumns = @JoinColumn(name = "cp_consumer_guest_id"))
+    @MapKeyManyToMany(targetEntity = String.class)
+    @CollectionOfElements(targetElement = String.class)
+    @Cascade({org.hibernate.annotations.CascadeType.ALL})
+    private Map<String, String> attributes;
+
     public GuestId() {
+        attributes = new HashMap<String, String>();
     }
 
     public GuestId(String guestId) {
+        this();
         this.guestId = guestId;
     }
 
     public GuestId(String guestId, Consumer consumer) {
-        this.guestId = guestId;
+        this(guestId);
         this.consumer = consumer;
     }
 
+    public GuestId(String guestId, Consumer consumer,
+            Map<String, String> attributes) {
+        this(guestId, consumer);
+        this.setAttributes(attributes);
+    }
+
+    @HateoasInclude
     public String getGuestId() {
         return guestId;
     }
@@ -79,6 +106,7 @@ public class GuestId extends AbstractHibernateObject {
         this.guestId = guestId;
     }
 
+    @HateoasInclude
     public String getId() {
         return id;
     }
@@ -94,6 +122,15 @@ public class GuestId extends AbstractHibernateObject {
 
     public void setConsumer(Consumer consumer) {
         this.consumer = consumer;
+    }
+
+    public void setAttributes(Map<String, String> attributes) {
+        this.attributes = attributes;
+    }
+
+    @HateoasArrayExclude
+    public Map<String, String> getAttributes() {
+        return attributes;
     }
 
     @Override

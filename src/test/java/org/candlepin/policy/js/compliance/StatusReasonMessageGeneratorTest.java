@@ -107,6 +107,16 @@ public class StatusReasonMessageGeneratorTest {
     }
 
     @Test
+    public void testVirtLimitMessage() {
+        ComplianceReason reason = buildReason("GUEST_LIMIT",
+            buildGeneralAttributes("8", "4"));
+        generator.setMessage(consumer, reason, new Date());
+        assertEquals(
+            "Only covers 4 of 8 virtual guests.",
+            reason.getMessage());
+    }
+
+    @Test
     public void testCoresMessage() {
         ComplianceReason reason = buildReason("CORES", buildGeneralAttributes("8", "4"));
         generator.setMessage(consumer, reason, new Date());

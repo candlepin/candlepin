@@ -37,7 +37,7 @@ public class Status {
     private boolean standalone;
     private Date timeUTC;
     private String[] managerCapabilities = {"cores", "ram", "instance_multiplier",
-        "derived_product", "cert_v3"};
+        "derived_product", "cert_v3", "guest_limit"};
 
     private RulesSourceEnum rulesSource;
 
