@@ -18,6 +18,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 
+import org.candlepin.audit.EventFactory;
+import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Principal;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
@@ -64,6 +66,12 @@ public class GuestIdResourceTest {
     @Mock
     private ConsumerResourceForTesting consumerResource;
 
+    @Mock
+    private EventFactory eventFactory;
+
+    @Mock
+    private EventSink sink;
+
     private GuestIdResource guestIdResource;
 
     private Consumer consumer;
@@ -77,7 +85,7 @@ public class GuestIdResourceTest {
         ct = new ConsumerType(ConsumerTypeEnum.SYSTEM);
         consumer = new Consumer("consumer", "test", owner, ct);
         guestIdResource = new GuestIdResource(guestIdCurator,
-            consumerCurator, consumerResource, i18n);
+            consumerCurator, consumerResource, i18n, eventFactory, sink);
         when(consumerCurator.findByUuid(consumer.getUuid())).thenReturn(consumer);
     }
 
@@ -151,7 +159,7 @@ public class GuestIdResourceTest {
         GuestId guest = new GuestId("some_guest");
         guestIdResource.updateGuest(consumer.getUuid(), guest.getGuestId(), guest);
         assertEquals(consumer, guest.getConsumer());
-        Mockito.verify(guestIdCurator, Mockito.times(1)).update(eq(guest));
+        Mockito.verify(guestIdCurator, Mockito.times(1)).merge(eq(guest));
     }
 
     @Test(expected = BadRequestException.class)
@@ -170,7 +178,7 @@ public class GuestIdResourceTest {
         guestIdResource.updateGuest(consumer.getUuid(), "some_id", guest);
         assertEquals(consumer, guest.getConsumer());
         assertEquals("some_id", guest.getGuestId());
-        Mockito.verify(guestIdCurator, Mockito.times(1)).update(eq(guest));
+        Mockito.verify(guestIdCurator, Mockito.times(1)).merge(eq(guest));
     }
 
     @Test
@@ -188,26 +196,31 @@ public class GuestIdResourceTest {
     }
 
     @Test
-    public void deleteGuestRevokeHostSpecific() {
+    public void updateGuestRevokeHostSpecific() {
         Consumer guestConsumer =
             new Consumer("guest_consumer", "guest_consumer", owner, ct);
+        GuestId originalGuest = new GuestId("guest-id", guestConsumer);
         GuestId guest = new GuestId("guest-id");
-        when(guestIdCurator.findByConsumerAndId(eq(consumer),
-            eq(guest.getGuestId()))).thenReturn(guest);
-        when(consumerCurator.findByVirtUuid(guest.getGuestId(),
-            consumer.getOwner().getId())).thenReturn(guestConsumer);
-        guestIdResource.deleteGuest(consumer.getUuid(),
-            guest.getGuestId(), false, null);
-        Mockito.verify(guestIdCurator, Mockito.times(1)).delete(eq(guest));
+
+        when(guestIdCurator.findByGuestId(
+            eq(guest.getGuestId()))).thenReturn(originalGuest);
+        when(consumerCurator.findByVirtUuid(eq(guest.getGuestId()),
+            eq(owner.getId()))).thenReturn(guestConsumer);
+
+        guestIdResource.updateGuest(consumer.getUuid(),
+            guest.getGuestId(), guest);
+
+        Mockito.verify(guestIdCurator, Mockito.times(1)).merge(eq(guest));
         Mockito.verify(consumerResource, Mockito.times(1))
-            .revokeGuestEntitlementsNotMatchingHost(any(Consumer.class), eq(guestConsumer));
+            .revokeGuestEntitlementsNotMatchingHost(any(Consumer.class),
+                any(Consumer.class));
     }
 
     @Test
     public void deleteGuestAndUnregister() {
         Consumer guestConsumer =
             new Consumer("guest_consumer", "guest_consumer", owner, ct);
-        GuestId guest = new GuestId("guest-id");
+        GuestId guest = new GuestId("guest-id", consumer);
         when(guestIdCurator.findByConsumerAndId(eq(consumer),
             eq(guest.getGuestId()))).thenReturn(guest);
         when(consumerCurator.findByVirtUuid(guest.getGuestId(),
@@ -226,7 +239,7 @@ public class GuestIdResourceTest {
      */
     @Test
     public void deleteGuestNotFound() {
-        GuestId guest = new GuestId("guest-id");
+        GuestId guest = new GuestId("guest-id", consumer);
         when(guestIdCurator.findByConsumerAndId(eq(consumer),
             eq(guest.getGuestId()))).thenReturn(guest);
         when(consumerCurator.findByVirtUuid(guest.getGuestId(),

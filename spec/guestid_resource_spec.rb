@@ -138,9 +138,87 @@ describe 'GuestId Resource' do
     guestList[0]['uuid'].should == guest_consumer1['uuid']
   end
 
-  it 'should allow a single guest to be deleted and revokes host-limited ents' do
+  it 'should allow a single guest to be deleted' do
     uuid1 = random_string('system.uuid')
     guests = [{'guestId' => uuid1}]
+    user_cp = user_client(@owner1, random_string('test-user'))
+    host_consumer = user_cp.register(random_string('host'), :system, nil,
+      {}, nil, @owner1['key'], [], [])
+    consumer_client = Candlepin.new(username=nil, password=nil,
+      cert=host_consumer['idCert']['cert'],
+      key=host_consumer['idCert']['key'])
+    consumer_client.update_guestids(guests)
+    consumer_client.get_guestids().length.should == 1
+    consumer_client.delete_guestid(guests[0]['guestId'])
+    consumer_client.get_guestids().length.should == 0
+  end
+
+  it 'should allow a single guest to be updated and revokes host-limited ents' do
+    uuid1 = random_string('system.uuid')
+    guests = [{:guestId => uuid1}]
+
+    user_cp = user_client(@owner1, random_string('test-user'))
+    host_consumer = user_cp.register(random_string('host'), :system, nil,
+      {}, nil, @owner1['key'], [], [])
+    new_host_consumer = user_cp.register(random_string('host'), :system, nil,
+      {}, nil, @owner1['key'], [], [])
+    guest_consumer = user_cp.register(random_string('guest'), :system, nil,
+      {'virt.uuid' => uuid1, 'virt.is_guest' => 'true'}, nil, @owner1['key'], [], [])
+    # Create a product/subscription 
+    super_awesome = create_product(nil, random_string('super_awesome'),
+                            :attributes => { "virt_limit" => "10" })
+    sub = @cp.create_subscription(@owner1['key'], super_awesome.id, 20)
+    @cp.refresh_pools(@owner1['key'])
+    
+    consumer_client = Candlepin.new(username=nil, password=nil,
+        cert=host_consumer['idCert']['cert'],
+        key=host_consumer['idCert']['key'])
+    new_consumer_client = Candlepin.new(username=nil, password=nil,
+        cert=new_host_consumer['idCert']['cert'],
+        key=new_host_consumer['idCert']['key'])
+    guest_client = Candlepin.new(username=nil, password=nil,
+        cert=guest_consumer['idCert']['cert'],
+        key=guest_consumer['idCert']['key'])
+    consumer_client.update_guestids(guests)
+    pools = consumer_client.list_pools :consumer => host_consumer['uuid']
+    pools.length.should == 1
+    consumer_client.consume_pool(pools[0]['id'], {:quantity => 1})
+
+    @cp.refresh_pools(@owner1['key'])
+    pools = guest_client.list_pools :consumer => guest_consumer['uuid']
+
+    # The original pool and the new host limited pool should be available
+    pools.length.should == 2
+
+    # Get the guest pool
+    guest_pool = pools.find_all { |i| !i['sourceEntitlement'].nil? }[0]
+
+    # Make sure the required host is actually the host
+    requires_host = guest_pool['attributes'].find_all {
+      |i| i['name'] == 'requires_host' }[0]
+    requires_host['value'].should == host_consumer['uuid']
+
+    # Consume the host limited pool
+    guest_client.consume_pool(guest_pool['id'], {:quantity => 1})
+
+    # Should have a host with 1 registered guest
+    guestList = @cp.get_consumer_guests(host_consumer['uuid'])
+    guestList.length.should == 1
+    guestList[0]['uuid'].should == guest_consumer['uuid']
+
+    guest_client.list_entitlements().length.should == 1
+    # Updating to a new host should remove host specific entitlements
+    new_consumer_client.update_guestid(guests[0])
+
+    consumer_client.get_guestids().length.should == 0
+    new_consumer_client.get_guestids().length.should == 1
+    # The guests host limited entitlement should be gone
+    guest_client.list_entitlements().length.should == 0
+  end
+
+  it 'should allow a single guest to be updated and not revoke host-limited ents' do
+    uuid1 = random_string('system.uuid')
+    guests = [{:guestId => uuid1}]
 
     user_cp = user_client(@owner1, random_string('test-user'))
     host_consumer = user_cp.register(random_string('host'), :system, nil,
@@ -187,14 +265,13 @@ describe 'GuestId Resource' do
     guestList[0]['uuid'].should == guest_consumer['uuid']
 
     guest_client.list_entitlements().length.should == 1
-    # Delete should remove host specific pools
-    consumer_client.delete_guestid(guests[0]['guestId'])
+    # Updating to the same host shouldn't revoke entitlements
+    consumer_client.update_guestid({:guestId => uuid1,
+      :attributes => {"some attr" => "crazy new value"}})
 
-    consumer_client.get_guestids().length.should == 0
-    # The guests host limited entitlement should be gone
-    guest_client.list_entitlements().length.should == 0
+    consumer_client.get_guestids().length.should == 1
+    guest_client.list_entitlements().length.should == 1
   end
-
   it 'should not allow a consumer to unregister another consumer durring guest deletion' do
     uuid1 = random_string('system.uuid')
     guests = [{'guestId' => uuid1}]

@@ -19,7 +19,6 @@ import java.util.List;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.hibernate.Criteria;
-import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,15 +53,10 @@ public class GuestIdCurator extends AbstractHibernateCurator<GuestId> {
             .uniqueResult();
     }
 
-    public void update(GuestId guest) {
-        String id = (String) this.currentSession().createCriteria(GuestId.class)
-            .add(Restrictions.eq("consumer", guest.getConsumer()))
-            .add(Restrictions.eq("guestId", guest.getGuestId()).ignoreCase())
-            .setProjection(Projections.id())
+    public GuestId findByGuestId(String guestUuid) {
+        return (GuestId) this.currentSession().createCriteria(GuestId.class)
+            .add(Restrictions.eq("guestId", guestUuid).ignoreCase())
             .setMaxResults(1)
             .uniqueResult();
-        // if id is null, we're no worse off
-        guest.setId(id);
-        this.merge(guest);
     }
 }

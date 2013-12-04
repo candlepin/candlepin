@@ -27,6 +27,8 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
+import org.candlepin.audit.EventFactory;
+import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SubResource;
@@ -48,7 +50,7 @@ import org.xnap.commons.i18n.I18n;
 import com.google.inject.Inject;
 
 /**
- * GuestIdResource
+ * API Gateway for registered consumers guests
  */
 @Path("/consumers/{consumer_uuid}/guestids")
 public class GuestIdResource {
@@ -59,19 +61,25 @@ public class GuestIdResource {
     private ConsumerCurator consumerCurator;
     private ConsumerResource consumerResource;
     private I18n i18n;
+    private EventSink sink;
+    private EventFactory eventFactory;
 
     @Inject
     public GuestIdResource(GuestIdCurator guestIdCurator,
             ConsumerCurator consumerCurator, ConsumerResource consumerResource,
-            I18n i18n) {
+            I18n i18n, EventFactory eventFactory, EventSink sink) {
         this.guestIdCurator = guestIdCurator;
         this.consumerCurator = consumerCurator;
         this.consumerResource = consumerResource;
         this.i18n = i18n;
+        this.eventFactory = eventFactory;
+        this.sink = sink;
     }
 
     /**
-     * @return virt guest data for the given host.
+     * List all of a Consumers Guests
+     *
+     * @return list of all of a Consumers Guests
      * @httpcode 400
      * @httpcode 404
      * @httpcode 200
@@ -90,6 +98,13 @@ public class GuestIdResource {
         return result;
     }
 
+    /**
+     * Look up a single guest by its consumer and guestuuid
+     *
+     * @param consumerUuid consumer who owns or hosts the guest in question
+     * @param guestId guest virtual uuid
+     * @return data on a single guest
+     */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{guest_id}")
@@ -126,6 +141,14 @@ public class GuestIdResource {
         }
     }
 
+    /**
+     * Update a single guest with new data and attributes.  Allows virt-who
+     * to avoid uploading an entire list of guests
+     *
+     * @param consumerUuid consumer who owns or hosts the guest in question
+     * @param guestId guest virtual uuid
+     * @param updated updated guest data to use
+     */
     @PUT
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{guest_id}")
@@ -151,7 +174,13 @@ public class GuestIdResource {
         // between verify and here, but it's possible.
         if (consumer != null) {
             updated.setConsumer(consumer);
-            guestIdCurator.update(updated);
+            GuestId toUpdate = guestIdCurator.findByGuestId(guestId);
+            // If this guest has a consumer, we want to remove host-specific entitlements
+            if (toUpdate != null) {
+                revokeBadHostRestrictedEnts(toUpdate, consumer);
+                updated.setId(toUpdate.getId());
+            }
+            guestIdCurator.merge(updated);
         }
         else {
             throw new NotFoundException(i18n.tr(
@@ -159,6 +188,13 @@ public class GuestIdResource {
         }
     }
 
+    /**
+     * Delete the Guest
+     *
+     * @param consumerUuid consumer who owns or hosts the guest in question
+     * @param guestId guest virtual uuid
+     * @param unregister Optionally unregister the guests consumer if it exists
+     */
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{guest_id}")
@@ -172,30 +208,10 @@ public class GuestIdResource {
         GuestId toDelete = validateGuestId(
             guestIdCurator.findByConsumerAndId(consumer, guestId), guestId);
 
-        // If there is a registered consumer on this guest
-        // we should revoke host specific entitlements
-        Consumer guestConsumer = consumerCurator.findByVirtUuid(guestId,
-            consumer.getOwner().getId());
-        if (guestConsumer != null) {
-            if (unregister) {
-                if ((principal == null) ||
-                        principal.canAccess(guestConsumer, SubResource.NONE, Access.ALL)) {
-                    consumerResource.deleteConsumer(guestConsumer.getUuid(), principal);
-                }
-                else {
-                    throw new ForbiddenException(i18n.tr(
-                        "Cannot unregister {0} {1} because: {2}",
-                        guestConsumer.getType().getLabel(), guestConsumer.getName(),
-                        i18n.tr("Invalid Credentials")));
-                }
-            }
-            else {
-                // new Consumer has no uuid because we want to
-                // remove all host limited subscriptions
-                consumerResource.revokeGuestEntitlementsNotMatchingHost(new Consumer(),
-                    guestConsumer);
-            }
+        if (unregister) {
+            unregisterConsumer(toDelete, principal);
         }
+        sink.sendEvent(eventFactory.guestIdDeleted(consumer, toDelete));
         guestIdCurator.delete(toDelete);
     }
 
@@ -205,5 +221,35 @@ public class GuestIdResource {
                 "Guest with uuid {0} could not be found.", guestUuid));
         }
         return guest;
+    }
+
+    private void revokeBadHostRestrictedEnts(GuestId toUpdate, Consumer consumer) {
+        // If there is a registered consumer on this guest
+        // we should revoke host specific entitlements
+        Consumer guestConsumer = consumerCurator.findByVirtUuid(toUpdate.getGuestId(),
+            toUpdate.getConsumer().getOwner().getId());
+        if (guestConsumer != null && !guestConsumer.equals(consumer)) {
+            // new Consumer has no uuid because we want to
+            // remove all host limited subscriptions
+            consumerResource.revokeGuestEntitlementsNotMatchingHost(consumer,
+                guestConsumer);
+        }
+    }
+
+    private void unregisterConsumer(GuestId guest, Principal principal) {
+        Consumer guestConsumer = consumerCurator.findByVirtUuid(guest.getGuestId(),
+            guest.getConsumer().getOwner().getId());
+        if (guestConsumer != null) {
+            if ((principal == null) ||
+                    principal.canAccess(guestConsumer, SubResource.NONE, Access.ALL)) {
+                consumerResource.deleteConsumer(guestConsumer.getUuid(), principal);
+            }
+            else {
+                throw new ForbiddenException(i18n.tr(
+                    "Cannot unregister {0} {1} because: {2}",
+                    guestConsumer.getType().getLabel(), guestConsumer.getName(),
+                    i18n.tr("Invalid Credentials")));
+            }
+        }
     }
 }

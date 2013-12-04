@@ -18,9 +18,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
@@ -109,43 +107,5 @@ public class GuestIdCuratorTest extends DatabaseTestFixture {
 
         GuestId result = curator.findByConsumerAndId(consumer, "1");
         assertEquals(new GuestId("1"), result);
-    }
-
-    @Test
-    public void updateCreatesNew() {
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        consumerCurator.create(consumer);
-
-        assertEquals(0, consumer.getGuestIds().size());
-
-        GuestId newGuest = new GuestId("10", consumer);
-        curator.update(newGuest);
-
-        // This should make our consumers guestIds less stale
-        curator.listByConsumer(consumer);
-        consumerCurator.refresh(consumer);
-
-        assertTrue(consumer.getGuestIds().contains(newGuest));
-    }
-
-    @Test
-    public void updateModifiesAttributes() {
-        Map<String, String> originalAttributes = new HashMap<String, String>();
-        originalAttributes.put("some_attr", "some_value");
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        GuestId originalGuest = new GuestId("guestId", consumer, originalAttributes);
-        consumer.addGuestId(originalGuest);
-        consumerCurator.create(consumer);
-
-        Map<String, String> newAttributes = new HashMap<String, String>();
-        originalAttributes.put("some_attr", "other_value");
-        originalAttributes.put("new_attr", "other_value");
-        originalGuest.setAttributes(newAttributes);
-
-        curator.update(originalGuest);
-
-        assertEquals(1, consumer.getGuestIds().size());
-        assertEquals(newAttributes, curator.findByConsumerAndId(consumer,
-            originalGuest.getGuestId()).getAttributes());
     }
 }
