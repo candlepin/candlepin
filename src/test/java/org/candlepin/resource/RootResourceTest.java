@@ -80,7 +80,7 @@ public class RootResourceTest {
 
     @Test
     public void getResourceEntry() {
-        Link result = rootResource.resourceLink(FooResource.class);
+        Link result = rootResource.resourceLink(FooResource.class, null);
         assertEquals("foo", result.getRel());
         assertEquals("/foo", result.getHref());
     }
