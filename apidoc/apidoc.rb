@@ -29,6 +29,9 @@ apistruct = JSON.load(api_file)
 resources = {}
 apistruct.each do |method|
   url = method['url']
+  if url.nil?
+      next
+  end
   resource = '/' + (url.split('/')[1] || '')
   
   resources[resource] ||= {:page => resource, :methods => []}
