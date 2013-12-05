@@ -128,7 +128,7 @@ public class ConsumerResourceUpdateTest {
         consumer.setUuid(uuid);
         consumer.setOwner(owner);
         // go ahead and patch the curator to match it
-        when(this.consumerCurator.findByUuid(uuid)).thenReturn(consumer);
+        when(this.consumerCurator.verifyAndLookupConsumer(uuid)).thenReturn(consumer);
         return consumer;
     }
 
@@ -282,7 +282,7 @@ public class ConsumerResourceUpdateTest {
         Consumer existing = createConsumerWithGuests(existingGuests);
         existing.setUuid(uuid);
 
-        when(this.consumerCurator.findByUuid(uuid)).thenReturn(existing);
+        when(this.consumerCurator.verifyAndLookupConsumer(uuid)).thenReturn(existing);
 
         // Create a consumer with 1 new guest.
         Consumer updated = createConsumerWithGuests("Guest 2");
@@ -299,7 +299,7 @@ public class ConsumerResourceUpdateTest {
         Consumer existing = createConsumerWithGuests(guests);
         existing.setUuid(uuid);
 
-        when(this.consumerCurator.findByUuid(uuid)).thenReturn(existing);
+        when(this.consumerCurator.verifyAndLookupConsumer(uuid)).thenReturn(existing);
 
         Consumer updated = new Consumer();
         this.resource.updateConsumer(existing.getUuid(), updated);
@@ -313,7 +313,7 @@ public class ConsumerResourceUpdateTest {
         Consumer existing = createConsumerWithGuests(guests);
         existing.setUuid(uuid);
 
-        when(this.consumerCurator.findByUuid(uuid)).thenReturn(existing);
+        when(this.consumerCurator.verifyAndLookupConsumer(uuid)).thenReturn(existing);
 
         Consumer updated = new Consumer();
         updated.setGuestIds(new ArrayList<GuestId>());
@@ -327,7 +327,7 @@ public class ConsumerResourceUpdateTest {
         Consumer existing = createConsumerWithGuests(new String[0]);
         existing.setUuid(uuid);
 
-        when(this.consumerCurator.findByUuid(uuid)).thenReturn(existing);
+        when(this.consumerCurator.verifyAndLookupConsumer(uuid)).thenReturn(existing);
 
         // Create a consumer with 1 new guest.
         Consumer updated = createConsumerWithGuests("Guest 1");
@@ -346,7 +346,7 @@ public class ConsumerResourceUpdateTest {
         Consumer existing = createConsumerWithGuests("Guest 1", "Guest 2");
         existing.setUuid(uuid);
 
-        when(this.consumerCurator.findByUuid(uuid)).thenReturn(existing);
+        when(this.consumerCurator.verifyAndLookupConsumer(uuid)).thenReturn(existing);
 
         // Create a consumer with one less guest id.
         Consumer updated = createConsumerWithGuests("Guest 2");
@@ -365,7 +365,7 @@ public class ConsumerResourceUpdateTest {
         Consumer existing = createConsumerWithGuests("Guest 1", "Guest 2");
         existing.setUuid(uuid);
 
-        when(this.consumerCurator.findByUuid(uuid)).thenReturn(existing);
+        when(this.consumerCurator.verifyAndLookupConsumer(uuid)).thenReturn(existing);
 
         Consumer updated = createConsumerWithGuests("Guest 1", "Guest 2");
         updated.setUuid(uuid);
@@ -384,7 +384,7 @@ public class ConsumerResourceUpdateTest {
         Consumer existing = createConsumerWithGuests("aaa123", "bbb123");
         existing.setUuid(uuid);
 
-        when(this.consumerCurator.findByUuid(uuid)).thenReturn(existing);
+        when(this.consumerCurator.verifyAndLookupConsumer(uuid)).thenReturn(existing);
 
         // flip case on one ID, should be treated as no change
         Consumer updated = createConsumerWithGuests("aaa123", "BBB123");
@@ -420,11 +420,11 @@ public class ConsumerResourceUpdateTest {
             existingHost.getOwner().getId())).thenReturn(guest1);
         // Ensure that the guests host is the existing.
         when(consumerCurator.getHost("Guest 1")).thenReturn(existingHost);
-        when(consumerCurator.findByUuid("Guest 1")).thenReturn(guest1);
+        when(consumerCurator.verifyAndLookupConsumer("Guest 1")).thenReturn(guest1);
 
         Consumer existingMigratedTo = createConsumerWithGuests();
         existingMigratedTo.setUuid("MIGRATED_TO");
-        when(this.consumerCurator.findByUuid(existingMigratedTo.getUuid()))
+        when(this.consumerCurator.verifyAndLookupConsumer(existingMigratedTo.getUuid()))
             .thenReturn(existingMigratedTo);
 
         this.resource.updateConsumer(existingMigratedTo.getUuid(),
@@ -457,7 +457,7 @@ public class ConsumerResourceUpdateTest {
 
         Consumer existingMigratedTo = createConsumerWithGuests("Guest 1");
         existingMigratedTo.setUuid("MIGRATED_TO");
-        when(this.consumerCurator.findByUuid(existingMigratedTo.getUuid()))
+        when(this.consumerCurator.verifyAndLookupConsumer(existingMigratedTo.getUuid()))
             .thenReturn(existingMigratedTo);
 
         this.resource.updateConsumer(existingMigratedTo.getUuid(),
@@ -472,7 +472,7 @@ public class ConsumerResourceUpdateTest {
         Consumer host = createConsumerWithGuests();
         host.setUuid(uuid);
 
-        when(this.consumerCurator.findByUuid(uuid)).thenReturn(host);
+        when(this.consumerCurator.verifyAndLookupConsumer(uuid)).thenReturn(host);
 
         Consumer updatedHost = createConsumerWithGuests("Guest 1");
         updatedHost.setUuid(uuid);
@@ -501,7 +501,7 @@ public class ConsumerResourceUpdateTest {
         Consumer host = createConsumerWithGuests("Guest 1");
         host.setUuid(uuid);
 
-        when(this.consumerCurator.findByUuid(uuid)).thenReturn(host);
+        when(this.consumerCurator.verifyAndLookupConsumer(uuid)).thenReturn(host);
 
         Consumer updatedHost = createConsumerWithGuests("Guest 1");
         updatedHost.setUuid(uuid);
@@ -530,7 +530,7 @@ public class ConsumerResourceUpdateTest {
         Consumer host = createConsumerWithGuests("Guest 1", "Guest 2");
         host.setUuid(uuid);
 
-        when(this.consumerCurator.findByUuid(uuid)).thenReturn(host);
+        when(this.consumerCurator.verifyAndLookupConsumer(uuid)).thenReturn(host);
 
         Consumer updatedHost = createConsumerWithGuests("Guest 2");
         updatedHost.setUuid(uuid);
@@ -558,7 +558,7 @@ public class ConsumerResourceUpdateTest {
         Consumer host = createConsumerWithGuests("Guest 1");
         host.setUuid(uuid);
 
-        when(this.consumerCurator.findByUuid(uuid)).thenReturn(host);
+        when(this.consumerCurator.verifyAndLookupConsumer(uuid)).thenReturn(host);
 
         Consumer updatedHost = createConsumerWithGuests("Guest 1");
         updatedHost.setUuid(uuid);
@@ -586,7 +586,7 @@ public class ConsumerResourceUpdateTest {
         Consumer host = createConsumerWithGuests("Guest 1", "Guest 2");
         host.setUuid(uuid);
 
-        when(this.consumerCurator.findByUuid(uuid)).thenReturn(host);
+        when(this.consumerCurator.verifyAndLookupConsumer(uuid)).thenReturn(host);
 
         Consumer updatedHost = createConsumerWithGuests("Guest 1");
         updatedHost.setUuid(uuid);
@@ -665,7 +665,8 @@ public class ConsumerResourceUpdateTest {
         Consumer existing = new Consumer();
         existing.setUuid(updated.getUuid());
 
-        when(consumerCurator.findByUuid(existing.getUuid())).thenReturn(existing);
+        when(consumerCurator.verifyAndLookupConsumer(
+            existing.getUuid())).thenReturn(existing);
         when(environmentCurator.find(changedEnvironment.getId())).thenReturn(null);
 
         resource.updateConsumer(existing.getUuid(), updated);

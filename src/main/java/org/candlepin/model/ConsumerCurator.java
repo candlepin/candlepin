@@ -17,6 +17,7 @@ package org.candlepin.model;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 
@@ -425,5 +426,15 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             .setProjection(Projections.count("id"))
             .uniqueResult();
         return result != 0;
+    }
+
+    public Consumer verifyAndLookupConsumer(String consumerUuid) {
+        Consumer consumer = this.findByUuid(consumerUuid);
+
+        if (consumer == null) {
+            throw new NotFoundException(i18n.tr(
+                "Unit with ID ''{0}'' could not be found.", consumerUuid));
+        }
+        return consumer;
     }
 }

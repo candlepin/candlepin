@@ -22,7 +22,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
-import org.candlepin.resource.ConsumerResource;
+import org.candlepin.resource.ConsumerEntitlementResource;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestDateUtil;
 import org.candlepin.test.TestUtil;
@@ -34,20 +34,21 @@ import org.junit.Before;
 import org.junit.Test;
 
 /**
- * ConsumerResourceEntitlementRulesTest
+ * ConsumerEntitlementResourceEntitlementRulesTest
  */
-public class ConsumerResourceEntitlementRulesTest extends DatabaseTestFixture {
+public class ConsumerEntitlementResourceEntitlementRulesTest extends DatabaseTestFixture {
     private ConsumerType standardSystemType;
     private Consumer consumer;
     private Product product;
     private Pool pool;
 
-    private ConsumerResource consumerResource;
+    private ConsumerEntitlementResource consumerEntitlementResource;
     private Owner owner;
 
     @Before
     public void setUp() {
-        consumerResource = injector.getInstance(ConsumerResource.class);
+        consumerEntitlementResource =
+            injector.getInstance(ConsumerEntitlementResource.class);
 
         standardSystemType = consumerTypeCurator.create(
                 new ConsumerType("standard-system"));
@@ -71,21 +72,21 @@ public class ConsumerResourceEntitlementRulesTest extends DatabaseTestFixture {
         for (int i = 0; i < pool.getQuantity(); i++) {
             Consumer c = TestUtil.createConsumer(consumer.getType(), owner);
             consumerCurator.create(c);
-            consumerResource.bind(c.getUuid(), pool.getId(),
+            consumerEntitlementResource.bind(c.getUuid(), pool.getId(),
                 null, 1, null, null, false, null);
         }
 
         // Now for the 11th:
         Consumer c = TestUtil.createConsumer(consumer.getType(), owner);
         consumerCurator.create(c);
-        consumerResource.bind(c.getUuid(), pool.getId(), null, 1, null, null,
+        consumerEntitlementResource.bind(c.getUuid(), pool.getId(), null, 1, null, null,
             false, null);
     }
 
     @Test(expected = RuntimeException.class)
     public void testEntitlementsHaveExpired() {
         dateSource.currentDate(TestDateUtil.date(2030, 1, 13));
-        consumerResource.bind(consumer.getUuid(), pool.getId(), null,
+        consumerEntitlementResource.bind(consumer.getUuid(), pool.getId(), null,
             null, null, null, false, null);
     }
 

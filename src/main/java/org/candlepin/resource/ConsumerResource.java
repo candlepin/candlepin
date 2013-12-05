@@ -65,22 +65,17 @@ import org.candlepin.model.GuestId;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.Pool;
-import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.Release;
 import org.candlepin.model.User;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.paging.Paginate;
-import org.candlepin.pinsetter.tasks.EntitleByProductsJob;
-import org.candlepin.pinsetter.tasks.EntitlerJob;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.consumer.ConsumerRules;
 import org.candlepin.policy.js.override.OverrideRules;
 import org.candlepin.policy.js.quantity.QuantityRules;
-import org.candlepin.policy.js.quantity.SuggestedQuantity;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ConsumerInstalledProductEnricher;
 import org.candlepin.resource.util.ResourceDateParser;
@@ -91,8 +86,8 @@ import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.sync.ExportCreationException;
 import org.candlepin.sync.Exporter;
+import org.candlepin.util.ConsumerResourcesUtil;
 import org.candlepin.util.Util;
-import org.candlepin.version.CertVersionConflictException;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -101,7 +96,6 @@ import org.apache.commons.lang.StringUtils;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
-import org.quartz.JobDetail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -134,7 +128,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 
 /**
  * API Gateway for Consumers
@@ -174,7 +167,7 @@ public class ConsumerResource {
     private Config config;
     private QuantityRules quantityRules;
     private OverrideRules overrideRules;
-    private CalculatedAttributesUtil calculatedAttributesUtil;
+    private ConsumerResourcesUtil consumerResourcesUtil;
 
     @Inject
     public ConsumerResource(ConsumerCurator consumerCurator,
@@ -229,7 +222,7 @@ public class ConsumerResource {
         this.quantityRules = quantityRules;
         this.consumerContentOverrideCurator = consumerContentOverrideCurator;
         this.overrideRules = overrideRules;
-        this.calculatedAttributesUtil = calculatedAttributesUtil;
+        this.consumerResourcesUtil = new ConsumerResourcesUtil(poolManager, i18n);
     }
 
     /**
@@ -320,7 +313,7 @@ public class ConsumerResource {
     @Path("{consumer_uuid}")
     public Consumer getConsumer(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid) {
-        Consumer consumer = verifyAndLookupConsumer(uuid);
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(uuid);
 
         if (consumer != null) {
             IdentityCertificate idcert = consumer.getIdCert();
@@ -459,7 +452,7 @@ public class ConsumerResource {
             }
         }
 
-        checkServiceLevel(owner, consumer.getServiceLevel());
+        consumerResourcesUtil.checkServiceLevel(owner, consumer.getServiceLevel());
 
         try {
             consumer = consumerCurator.create(consumer);
@@ -499,7 +492,7 @@ public class ConsumerResource {
                 String poolId = Util.assertNotNull(akp.getPool().getId(),
                     i18n.tr("Pool ID must be provided"));
                 int quantity = (akp.getQuantity() == null) ?
-                    getQuantityToBind(akp.getPool(), consumer) :
+                    quantityRules.getQuantityToBind(akp.getPool(), consumer) :
                     akp.getQuantity().intValue();
                 entitlements = entitler.bindByPool(poolId, consumer, quantity);
                 // Trigger events:
@@ -594,23 +587,6 @@ public class ConsumerResource {
             // this is a bouncycastle restriction
             throw new BadRequestException(
                 i18n.tr("System name cannot begin with # character"));
-        }
-    }
-
-    private void checkServiceLevel(Owner owner, String serviceLevel)
-        throws BadRequestException {
-        if (serviceLevel != null &&
-            !serviceLevel.trim().equals("")) {
-            for (String level : poolManager.retrieveServiceLevelsForOwner(owner, false)) {
-                if (serviceLevel.equalsIgnoreCase(level)) {
-                    return;
-                }
-            }
-            throw new BadRequestException(
-                i18n.tr(
-                    "Service level ''{0}'' is not available " +
-                    "to units of organization {1}.",
-                    serviceLevel, owner.getKey()));
         }
     }
 
@@ -794,7 +770,7 @@ public class ConsumerResource {
     public void updateConsumer(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid,
         Consumer consumer) {
-        Consumer toUpdate = verifyAndLookupConsumer(uuid);
+        Consumer toUpdate = consumerCurator.verifyAndLookupConsumer(uuid);
 
         if (performConsumerUpdates(consumer, toUpdate)) {
             consumerCurator.update(toUpdate);
@@ -844,7 +820,7 @@ public class ConsumerResource {
             if (log.isDebugEnabled()) {
                 log.debug("   Updating consumer service level setting.");
             }
-            checkServiceLevel(toUpdate.getOwner(), level);
+            consumerResourcesUtil.checkServiceLevel(toUpdate.getOwner(), level);
             toUpdate.setServiceLevel(level);
             changesMade = true;
         }
@@ -1031,30 +1007,15 @@ public class ConsumerResource {
                         "invalidated host-specific entitlements related to host: " +
                         host.getName());
 
-                revokeGuestEntitlementsNotMatchingHost(existing, guest);
-                // commented out per mkhusid (see 768872, around comment #41)
-                /*
-                // now autosubscribe to the new host. We bypass bind() since we
-                // are being invoked via the host, not the guest.
-
-                // only attempt this if there are installed products, otherwise there
-                // is nothing to bind to
-                if (guest.getInstalledProducts() == null ||
-                    guest.getInstalledProducts().isEmpty()) {
-                    log.debug("No installed products for guest, unable to autosubscribe");
-                }
-                else {
-                    log.debug("Autosubscribing migrated guest.");
-                    List<Entitlement> entitlements =  entitler.bindByProducts(
-                                                                    null, guest, null);
-                    entitler.sendEvents(entitlements);
-                }*/
+                consumerResourcesUtil.revokeGuestEntitlementsNotMatchingHost(
+                    existing, guest);
             }
             else if (host == null) {
                 // now check for any entitlements that may have come from another host
                 // that properly reported the guest consumer as going away,
                 // and revoke those.
-                revokeGuestEntitlementsNotMatchingHost(existing, guest);
+                consumerResourcesUtil.revokeGuestEntitlementsNotMatchingHost(
+                    existing, guest);
             }
         }
 
@@ -1099,49 +1060,6 @@ public class ConsumerResource {
         return removedGuests;
     }
 
-    protected void revokeGuestEntitlementsNotMatchingHost(Consumer host, Consumer guest) {
-        // we need to create a list of entitlements to delete before actually
-        // deleting, otherwise we are tampering with the loop iterator (BZ #786730)
-        Set<Entitlement> deletableGuestEntitlements = new HashSet<Entitlement>();
-        log.debug("Revoking {} entitlements not matching host: {}", guest, host);
-        for (Entitlement entitlement : guest.getEntitlements()) {
-            Pool pool = entitlement.getPool();
-
-            // If there is no host required, do not revoke the entitlement.
-            if (!pool.hasAttribute("requires_host")) {
-                continue;
-            }
-
-            String requiredHost = getRequiredHost(pool);
-            if (isVirtOnly(pool) && !requiredHost.equals(host.getUuid())) {
-                log.warn("Removing entitlement " + entitlement.getProductId() +
-                    " from guest " + guest.getName());
-                deletableGuestEntitlements.add(entitlement);
-            }
-            else {
-                log.info("Entitlement " + entitlement.getProductId() +
-                         " on " + guest.getName() +
-                         " is still valid, and will not be removed.");
-            }
-        }
-        // perform the entitlement revocation
-        for (Entitlement entitlement : deletableGuestEntitlements) {
-            poolManager.revokeEntitlement(entitlement);
-        }
-
-    }
-
-    private String getRequiredHost(Pool pool) {
-        return pool.hasAttribute("requires_host") ?
-            pool.getAttributeValue("requires_host") : "";
-    }
-
-    private boolean isVirtOnly(Pool pool) {
-        String virtOnly = pool.hasAttribute("virt_only") ?
-            pool.getAttributeValue("virt_only") : "false";
-        return virtOnly.equalsIgnoreCase("true") || virtOnly.equals("1");
-    }
-
     /**
      * delete the consumer.
      *
@@ -1160,7 +1078,7 @@ public class ConsumerResource {
         if (log.isDebugEnabled()) {
             log.debug("deleting  consumer_uuid" + uuid);
         }
-        Consumer toDelete = verifyAndLookupConsumer(uuid);
+        Consumer toDelete = consumerCurator.verifyAndLookupConsumer(uuid);
         try {
             this.poolManager.revokeAllEntitlements(toDelete);
         }
@@ -1197,7 +1115,7 @@ public class ConsumerResource {
         if (log.isDebugEnabled()) {
             log.debug("Getting client certificates for consumer: " + consumerUuid);
         }
-        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         poolManager.regenerateDirtyEntitlements(
             entitlementCurator.listByConsumer(consumer));
 
@@ -1233,7 +1151,7 @@ public class ConsumerResource {
             log.debug("Getting client certificate zip file for consumer: " +
                 consumerUuid);
         }
-        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         poolManager.regenerateDirtyEntitlements(
             entitlementCurator.listByConsumer(consumer));
 
@@ -1285,6 +1203,16 @@ public class ConsumerResource {
         return keys;
     }
 
+    private Entitlement verifyAndLookupEntitlement(String entitlementId) {
+        Entitlement entitlement = entitlementCurator.find(entitlementId);
+
+        if (entitlement == null) {
+            throw new NotFoundException(i18n.tr(
+                "Entitlement with ID ''{0}'' could not be found.", entitlementId));
+        }
+        return entitlement;
+    }
+
     /**
      * Return the client certificate metadatthat a for the given consumer. This
      * is a small subset of data clients can use to determine which certificates
@@ -1306,7 +1234,7 @@ public class ConsumerResource {
             log.debug("Getting client certificate serials for consumer: " +
                 consumerUuid);
         }
-        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         poolManager.regenerateDirtyEntitlements(
             entitlementCurator.listByConsumer(consumer));
 
@@ -1320,264 +1248,6 @@ public class ConsumerResource {
     }
 
     /**
-     * Request an entitlement.
-     *
-     * If a pool ID is specified, we know we're binding to that exact pool. Specifying
-     * an entitle date in this case makes no sense and will throw an error.
-     *
-     * If a list of product IDs are specified, we attempt to auto-bind to subscriptions
-     * which will provide those products. An optional date can be specified allowing
-     * the consumer to get compliant for some date in the future. If no date is specified
-     * we assume the current date.
-     *
-     * If neither a pool nor an ID is specified, this is a healing request. The path
-     * is similar to the bind by products, but in this case we use the installed products
-     * on the consumer, and their current compliant status, to determine which product IDs
-     * should be requested. The entitle date is used the same as with bind by products.
-     *
-     * @param consumerUuid Consumer identifier to be entitled
-     * @param poolIdString Entitlement pool id.
-     * @param email email address.
-     * @param emailLocale locale for email address.
-     * @param async True if bind should be asynchronous, defaults to false.
-     * @param entitleDateStr specific date to entitle by.
-     * @return Response with a list of entitlements or if async is true, a
-     *         JobDetail.
-     * @httpcode 400
-     * @httpcode 403
-     * @httpcode 404
-     * @httpcode 200
-     */
-    @POST
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("/{consumer_uuid}/entitlements")
-    public Response bind(
-        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
-        @QueryParam("pool") @Verify(value = Pool.class, nullable = true,
-            subResource = SubResource.ENTITLEMENTS)
-                String poolIdString,
-        @QueryParam("product") String[] productIds,
-        @QueryParam("quantity") Integer quantity,
-        @QueryParam("email") String email,
-        @QueryParam("email_locale") String emailLocale,
-        @QueryParam("async") @DefaultValue("false") boolean async,
-        @QueryParam("entitle_date") String entitleDateStr) {
-
-        // Check that only one query param was set:
-        if (poolIdString != null && productIds != null && productIds.length > 0) {
-            throw new BadRequestException(
-                i18n.tr("Cannot bind by multiple parameters."));
-        }
-
-        if (poolIdString == null && quantity != null) {
-            throw new BadRequestException(
-                i18n.tr("Cannot specify a quantity when auto-binding."));
-        }
-
-        // doesn't make sense to bind by pool and a date.
-        if (poolIdString != null && entitleDateStr != null) {
-            throw new BadRequestException(
-                i18n.tr("Cannot bind by multiple parameters."));
-        }
-
-        // TODO: really should do this in a before we get to this call
-        // so the method takes in a real Date object and not just a String.
-        Date entitleDate = null;
-        if (entitleDateStr != null) {
-            entitleDate = ResourceDateParser.parseDateString(entitleDateStr);
-        }
-
-        // Verify consumer exists:
-        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
-
-        log.debug("Consumer (post verify): " + consumer);
-        try {
-            // I hate double negatives, but if they have accepted all
-            // terms, we want comeToTerms to be true.
-            if (subAdapter.hasUnacceptedSubscriptionTerms(consumer.getOwner())) {
-                return Response.serverError().build();
-            }
-        }
-        catch (CandlepinException e) {
-            if (log.isDebugEnabled()) {
-                log.debug(e.getMessage());
-            }
-            throw e;
-        }
-
-        if (poolIdString != null && quantity == null) {
-            Pool pool = poolManager.find(poolIdString);
-            if (pool != null) {
-                quantity = getQuantityToBind(pool, consumer);
-            }
-            else {
-                quantity = 1;
-            }
-        }
-        //
-        // HANDLE ASYNC
-        //
-        if (async) {
-            JobDetail detail = null;
-
-            if (poolIdString != null) {
-                detail = EntitlerJob.bindByPool(poolIdString, consumerUuid, quantity);
-            }
-            else {
-                detail = EntitleByProductsJob.bindByProducts(productIds,
-                        consumerUuid, entitleDate);
-            }
-
-            // events will be triggered by the job
-            return Response.status(Response.Status.OK)
-                .type(MediaType.APPLICATION_JSON).entity(detail).build();
-        }
-
-
-        //
-        // otherwise we do what we do today.
-        //
-        List<Entitlement> entitlements = null;
-
-        if (poolIdString != null) {
-            entitlements = entitler.bindByPool(poolIdString, consumer, quantity);
-        }
-        else {
-            try {
-                entitlements = entitler.bindByProducts(productIds, consumer, entitleDate);
-            }
-            catch (ForbiddenException fe) {
-                throw fe;
-            }
-            catch (CertVersionConflictException cvce) {
-                throw cvce;
-            }
-            catch (RuntimeException re) {
-                log.warn("Unable to attach a subscription for a product that " +
-                    "has no pool: " + re.getMessage());
-            }
-        }
-
-        // Trigger events:
-        entitler.sendEvents(entitlements);
-
-        return Response.status(Response.Status.OK)
-            .type(MediaType.APPLICATION_JSON).entity(entitlements).build();
-    }
-
-    /**
-     * Request a list of pools and quantities that would result in an actual auto-bind.
-     *
-     * This is a dry run of an autobind. It allows the client to see what would be the
-     * result of an autobind without executing it. It can only do this for the prevously
-     * established list of installed products for the consumer
-     *
-     * If a service level is included in the request, then that level will override the
-     * one stored on the consumer. If no service level is included then the existing
-     * one will be used.
-     *
-     * @param consumerUuid Consumer identifier to be entitled
-     * @param serviceLevel String service level override to be used for run
-     * @return Response with a list of PoolQuantities containing the pool and number.
-     * @httpcode 400
-     * @httpcode 403
-     * @httpcode 404
-     * @httpcode 200
-     */
-    @GET
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("/{consumer_uuid}/entitlements/dry-run")
-    public List<PoolQuantity> dryBind(
-        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
-        @QueryParam("service_level") String serviceLevel) {
-
-        // Verify consumer exists:
-        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
-
-        List<PoolQuantity> dryRunPools = new ArrayList<PoolQuantity>();
-
-        try {
-            checkServiceLevel(consumer.getOwner(), serviceLevel);
-            dryRunPools = entitler.getDryRun(consumer, serviceLevel);
-        }
-        catch (ForbiddenException fe) {
-            return dryRunPools;
-        }
-        catch (BadRequestException bre) {
-            throw bre;
-        }
-        catch (RuntimeException re) {
-            return dryRunPools;
-        }
-
-        return dryRunPools;
-    }
-
-    private Consumer verifyAndLookupConsumer(String consumerUuid) {
-        Consumer consumer = consumerCurator.findByUuid(consumerUuid);
-
-        if (consumer == null) {
-            throw new NotFoundException(i18n.tr(
-                "Unit with ID ''{0}'' could not be found.", consumerUuid));
-        }
-        return consumer;
-    }
-
-    private Entitlement verifyAndLookupEntitlement(String entitlementId) {
-        Entitlement entitlement = entitlementCurator.find(entitlementId);
-
-        if (entitlement == null) {
-            throw new NotFoundException(i18n.tr(
-                "Entitlement with ID ''{0}'' could not be found.", entitlementId));
-        }
-        return entitlement;
-    }
-
-    /**
-     * @return a list of Entitlement objects
-     * @httpcode 400
-     * @httpcode 404
-     * @httpcode 200
-     */
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("/{consumer_uuid}/entitlements")
-    @Paginate
-    public List<Entitlement> listEntitlements(
-        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
-        @QueryParam("product") String productId,
-        @Context PageRequest pageRequest) {
-
-        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
-        Page<List<Entitlement>> entitlementsPage;
-        if (productId != null) {
-            Product p = productAdapter.getProductById(productId);
-            if (p == null) {
-                throw new BadRequestException(i18n.tr(
-                    "Product with ID ''{0}'' could not be found.", productId));
-            }
-            entitlementsPage = entitlementCurator.listByConsumerAndProduct(consumer,
-                productId, pageRequest);
-        }
-        else {
-            entitlementsPage = entitlementCurator.listByConsumer(consumer, pageRequest);
-        }
-
-        // Store the page for the LinkHeaderPostInterceptor
-        ResteasyProviderFactory.pushContext(Page.class, entitlementsPage);
-
-        List<Entitlement> returnedEntitlements = entitlementsPage.getPageData();
-        for (Entitlement ent : returnedEntitlements) {
-            addCalculatedAttributes(ent);
-        }
-        poolManager.regenerateDirtyEntitlements(returnedEntitlements);
-
-        return returnedEntitlements;
-    }
-
-    /**
      * @return an Owner
      * @httpcode 404
      * @httpcode 200
@@ -1588,7 +1258,7 @@ public class ConsumerResource {
     public Owner getOwner(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
 
-        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         return consumer.getOwner();
     }
 
@@ -1608,7 +1278,7 @@ public class ConsumerResource {
 
         // FIXME: just a stub, needs CertifcateService (and/or a
         // CertificateCurator) to lookup by serialNumber
-        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
 
         if (consumer == null) {
             throw new NotFoundException(i18n.tr(
@@ -1641,7 +1311,7 @@ public class ConsumerResource {
         @PathParam("dbid") @Verify(Entitlement.class) String dbid,
         @Context Principal principal) {
 
-        verifyAndLookupConsumer(consumerUuid);
+        consumerCurator.verifyAndLookupConsumer(consumerUuid);
 
         Entitlement toDelete = entitlementCurator.find(dbid);
         if (toDelete != null) {
@@ -1664,7 +1334,7 @@ public class ConsumerResource {
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         @PathParam("serial") Long serial) {
 
-        verifyAndLookupConsumer(consumerUuid);
+        consumerCurator.verifyAndLookupConsumer(consumerUuid);
         Entitlement toDelete = entitlementCurator
             .findByCertificateSerial(serial);
 
@@ -1687,7 +1357,7 @@ public class ConsumerResource {
     @Path("{consumer_uuid}/events")
     public List<Event> getConsumerEvents(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
-        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         List<Event> events = this.eventCurator.listMostRecent(FEED_LIMIT,
             consumer);
         if (events != null) {
@@ -1707,7 +1377,7 @@ public class ConsumerResource {
     public Feed getConsumerAtomFeed(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
         String path = String.format("/consumers/%s/atom", consumerUuid);
-        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         Feed feed = this.eventAdapter.toFeed(
             this.eventCurator.listMostRecent(FEED_LIMIT, consumer), path);
         feed.setTitle("Event feed for consumer " + consumer.getUuid());
@@ -1729,7 +1399,7 @@ public class ConsumerResource {
             poolManager.regenerateCertificatesOf(e, false, lazyRegen);
         }
         else {
-            Consumer c = verifyAndLookupConsumer(consumerUuid);
+            Consumer c = consumerCurator.verifyAndLookupConsumer(consumerUuid);
             poolManager.regenerateEntitlementCertificates(c, lazyRegen);
         }
     }
@@ -1752,7 +1422,7 @@ public class ConsumerResource {
         @QueryParam("webapp_prefix") String webAppPrefix,
         @QueryParam("api_url") String apiUrl) {
 
-        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         if (consumer.getType() == null ||
             !consumer.getType().isManifest()) {
             throw new ForbiddenException(
@@ -1801,7 +1471,7 @@ public class ConsumerResource {
     public Consumer regenerateIdentityCertificates(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid) {
 
-        Consumer c = verifyAndLookupConsumer(uuid);
+        Consumer c = consumerCurator.verifyAndLookupConsumer(uuid);
 
         IdentityCertificate ic = generateIdCert(c, true);
         c.setIdCert(ic);
@@ -1871,7 +1541,7 @@ public class ConsumerResource {
     @Path("/{consumer_uuid}/guests")
     public List<Consumer> getGuests(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
-        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         return consumerCurator.getGuests(consumer);
     }
 
@@ -1885,7 +1555,7 @@ public class ConsumerResource {
     @Path("/{consumer_uuid}/host")
     public Consumer getHost(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
-        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         if (consumer.getFact("virt.uuid") == null ||
             consumer.getFact("virt.uuid").trim().equals("")) {
             throw new BadRequestException(i18n.tr(
@@ -1900,7 +1570,7 @@ public class ConsumerResource {
     @Path("/{consumer_uuid}/release")
     public Release getRelease(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
-        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         if (consumer.getReleaseVer() != null) {
             return consumer.getReleaseVer();
         }
@@ -1923,7 +1593,7 @@ public class ConsumerResource {
     public ComplianceStatus getComplianceStatus(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid,
         @QueryParam("on_date") String onDate) {
-        Consumer consumer = verifyAndLookupConsumer(uuid);
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(uuid);
         Date date = onDate == null ?
             Calendar.getInstance().getTime() :
                 ResourceDateParser.parseDateString(onDate);
@@ -2017,7 +1687,7 @@ public class ConsumerResource {
     public List<ConsumerContentOverride> addContentOverrides(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         List<ConsumerContentOverride> entries) {
-        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         Set<String> invalidOverrides = new HashSet<String>();
         for (ConsumerContentOverride entry : entries) {
             if (overrideRules.canOverrideForConsumer(consumer, entry.getName())) {
@@ -2062,7 +1732,7 @@ public class ConsumerResource {
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         List<ConsumerContentOverride> entries) {
 
-        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         if (entries.size() == 0) {
             consumerContentOverrideCurator.removeByConsumer(consumer);
         }
@@ -2101,29 +1771,7 @@ public class ConsumerResource {
     @Path("{consumer_uuid}/content_overrides")
     public List<ConsumerContentOverride> getContentOverrideList(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
-        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         return consumerContentOverrideCurator.getList(consumer);
-    }
-
-    private int getQuantityToBind(Pool pool, Consumer consumer) {
-        Date now = new Date();
-        // If the pool is being attached in the future, calculate
-        // suggested quantity on the start date
-        Date onDate = now.before(pool.getStartDate()) ?
-            pool.getStartDate() : now;
-        SuggestedQuantity suggested = quantityRules.getSuggestedQuantity(pool,
-            consumer, onDate);
-        int quantity = Math.max(suggested.getIncrement().intValue(),
-            suggested.getSuggested().intValue());
-        //It's possible that increment is greater than the number available
-        //but whatever we do here, the bind will fail
-        return quantity;
-    }
-
-    private void addCalculatedAttributes(Entitlement ent) {
-        // With no consumer/date, this will not build suggested quantity
-        Map<String, String> calculatedAttributes =
-            calculatedAttributesUtil.buildCalculatedAttributes(ent.getPool(), null, null);
-        ent.getPool().setCalculatedAttributes(calculatedAttributes);
     }
 }

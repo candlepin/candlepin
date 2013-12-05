@@ -66,4 +66,27 @@ public class QuantityRules {
         SuggestedQuantity dto = mapper.toObject(json, SuggestedQuantity.class);
         return dto;
     }
+
+    /**
+     * Gets a non-zero quantity to bind when no quantity has been
+     * specified
+     *
+     * @param pool to get quantity for
+     * @param consumer consumer theoretically consuming the pool
+     * @return quantity to bind
+     */
+    public int getQuantityToBind(Pool pool, Consumer consumer) {
+        Date now = new Date();
+        // If the pool is being attached in the future, calculate
+        // suggested quantity on the start date
+        Date onDate = now.before(pool.getStartDate()) ?
+            pool.getStartDate() : now;
+        SuggestedQuantity suggested = this.getSuggestedQuantity(pool,
+            consumer, onDate);
+        int quantity = Math.max(suggested.getIncrement().intValue(),
+            suggested.getSuggested().intValue());
+        //It's possible that increment is greater than the number available
+        //but whatever we do here, the bind will fail
+        return quantity;
+    }
 }

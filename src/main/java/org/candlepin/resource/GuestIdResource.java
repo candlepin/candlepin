@@ -33,6 +33,7 @@ import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SubResource;
 import org.candlepin.auth.interceptor.Verify;
+import org.candlepin.controller.PoolManager;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.exceptions.NotFoundException;
@@ -42,6 +43,7 @@ import org.candlepin.model.GuestId;
 import org.candlepin.model.GuestIdCurator;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
+import org.candlepin.util.ConsumerResourcesUtil;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,17 +65,20 @@ public class GuestIdResource {
     private I18n i18n;
     private EventSink sink;
     private EventFactory eventFactory;
+    private ConsumerResourcesUtil consumerResourcesUtil;
 
     @Inject
     public GuestIdResource(GuestIdCurator guestIdCurator,
             ConsumerCurator consumerCurator, ConsumerResource consumerResource,
-            I18n i18n, EventFactory eventFactory, EventSink sink) {
+            I18n i18n, EventFactory eventFactory, EventSink sink,
+            PoolManager poolManager) {
         this.guestIdCurator = guestIdCurator;
         this.consumerCurator = consumerCurator;
         this.consumerResource = consumerResource;
         this.i18n = i18n;
         this.eventFactory = eventFactory;
         this.sink = sink;
+        this.consumerResourcesUtil = new ConsumerResourcesUtil(poolManager, i18n);
     }
 
     /**
@@ -231,7 +236,7 @@ public class GuestIdResource {
         if (guestConsumer != null && !guestConsumer.equals(consumer)) {
             // new Consumer has no uuid because we want to
             // remove all host limited subscriptions
-            consumerResource.revokeGuestEntitlementsNotMatchingHost(consumer,
+            consumerResourcesUtil.revokeGuestEntitlementsNotMatchingHost(consumer,
                 guestConsumer);
         }
     }
