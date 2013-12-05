@@ -303,7 +303,7 @@ public class ConsumerResource {
         @PathParam("consumer_uuid") String uuid) {
         if (!consumerCurator.doesConsumerExist(uuid)) {
             throw new NotFoundException(i18n.tr(
-                "Consumer with id {1} could not be found.", uuid));
+                "Consumer with id {0} could not be found.", uuid));
         }
     }
 
@@ -1099,7 +1099,7 @@ public class ConsumerResource {
         return removedGuests;
     }
 
-    private void revokeGuestEntitlementsNotMatchingHost(Consumer host, Consumer guest) {
+    protected void revokeGuestEntitlementsNotMatchingHost(Consumer host, Consumer guest) {
         // we need to create a list of entitlements to delete before actually
         // deleting, otherwise we are tampering with the loop iterator (BZ #786730)
         Set<Entitlement> deletableGuestEntitlements = new HashSet<Entitlement>();

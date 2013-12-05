@@ -77,8 +77,11 @@ public class ApiCrawler {
 
     public void run() throws IOException {
         List<RestApiCall> allApiCalls = new LinkedList<RestApiCall>();
-        for (Class c : RootResource.RESOURCE_CLASSES) {
-            allApiCalls.addAll(processClass(c));
+        for (Object o : RootResource.RESOURCE_CLASSES.keySet()) {
+            if (o instanceof Class) {
+                Class c = (Class) o;
+                allApiCalls.addAll(processClass(c));
+            }
         }
 
         // we need a different mapper to write the output, one without our

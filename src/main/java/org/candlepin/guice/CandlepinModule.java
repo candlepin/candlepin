@@ -73,6 +73,7 @@ import org.candlepin.resource.DistributorVersionResource;
 import org.candlepin.resource.EntitlementResource;
 import org.candlepin.resource.EnvironmentResource;
 import org.candlepin.resource.EventResource;
+import org.candlepin.resource.GuestIdResource;
 import org.candlepin.resource.HypervisorResource;
 import org.candlepin.resource.JobResource;
 import org.candlepin.resource.MigrationResource;
@@ -192,6 +193,7 @@ public class CandlepinModule extends AbstractModule {
         bind(DistributorVersionResource.class);
         bind(DeletedConsumerResource.class);
         bind(CdnResource.class);
+        bind(GuestIdResource.class);
 
 
         bind(I18n.class).toProvider(I18nProvider.class);
