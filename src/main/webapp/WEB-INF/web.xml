@@ -1,9 +1,9 @@
-<web-app xmlns= "http://java.sun.com/xml/ns/j2ee"
-     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-     xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd"
-     version="2.4">
+<web-app xmlns="http://java.sun.com/xml/ns/j2ee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd"
+    version="2.4">
 
     <display-name>Candlepin</display-name>
+
     <filter>
         <filter-name>Guice Filter</filter-name>
         <filter-class>com.google.inject.servlet.GuiceFilter</filter-class>
@@ -14,13 +14,30 @@
     </filter-mapping>
 
     <listener>
-      <listener-class>
-        org.candlepin.guice.CandlepinContextListener
-      </listener-class>
+        <listener-class>
+            org.candlepin.guice.CandlepinContextListener
+        </listener-class>
     </listener>
 
-  <login-config>
-    <auth-method>CLIENT-CERT</auth-method>
-    <realm-name>candlepin</realm-name>
-  </login-config>
+    <context-param>
+        <!--
+            RestEasy tries to dynamically determine what to use for logging in its
+            org.jboss.resteasy.logging.Logger class.  It chooses between commons-logging,
+            log4j, and slf4j by looking for implementation specific classes on the
+            class loader.  Unfortunately, since it looks for Log4j first and Log4j is
+            bundled with Tomcat, its always going to use Log4j even when not appropriate.
+            Consequently, we have to specify SLF4J ourselves.
+
+            For more reading on class loaders and logging see http://articles.qos.ch/classloader.html
+
+            Also see http://docs.jboss.org/resteasy/docs/2.3.1.GA/userguide/html/Installation_Configuration.html#RESTEasyLogging
+         -->
+        <param-name>resteasy.logger.type</param-name>
+        <param-value>SLF4J</param-value>
+    </context-param>
+
+    <login-config>
+        <auth-method>CLIENT-CERT</auth-method>
+        <realm-name>candlepin</realm-name>
+    </login-config>
 </web-app>
