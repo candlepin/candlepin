@@ -172,7 +172,8 @@ define "candlepin" do
     mkdir_p dir.to_s
     sources.each do |source|
       locale = source.match("\/([^/]*)?\.po$")[1]
-      if nopo.nil? #we do this inside the loop, in order to still create a stub "generate" var
+      #we do this inside the loop, in order to create a stub "generate" var
+      if nopo.nil? || nopo.split(/,\s*/).include?(locale)
         sh "msgfmt --java -r org.candlepin.i18n.Messages -d #{dir} -l #{locale} #{source}"
       end
     end
