@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 
 CERTS_HOME=/etc/candlepin/certs
 UPSTREAM_CERTS_HOME=$CERTS_HOME/upstream
@@ -8,6 +8,14 @@ CA_REDHAT_CERT=conf/candlepin-redhat-ca.crt
 CA_UPSTREAM_CERT=$UPSTREAM_CERTS_HOME/candlepin-redhat-ca.crt
 CA_PUB_KEY=$CERTS_HOME/candlepin-ca-pub.key
 CA_CERT=$CERTS_HOME/candlepin-ca.crt
+CA_CERT_P7=$CA_CERT.p7
+# for mod_ssl testing
+SERVER_KEY_PASSWORD=$CERTS_HOME/candlepin-server-password.txt
+SERVER_KEY=$CERTS_HOME/candlepin-server.key
+SERVER_KEY_FULL=$SERVER_KEY.orig
+SERVER_CERT=$CERTS_HOME/candlepin-server.crt
+SERVER_CERT_REQ=$SERVER_CERT.req
+SERVER_CERT_P7=$SERVER_CERT.p7
 KEYSTORE=$CERTS_HOME/keystore
 
 while getopts ":f" opt; do
@@ -41,13 +49,74 @@ if [ -f $CA_KEY ] && [ -f $CA_CERT ] && [ "$FORCECERT" != "1" ]; then
 else
     echo "Creating CA private key password"
     sudo su -c "echo $RANDOM > $CA_KEY_PASSWORD"
+
     echo "Creating CA private key"
     sudo openssl genrsa -out $CA_KEY -passout "file:$CA_KEY_PASSWORD" 1024
+
     echo "Creating CA public key"
     sudo openssl rsa -pubout -in $CA_KEY -out $CA_PUB_KEY
+
     echo "Creating CA certificate"
-    sudo openssl req -new -x509 -days 365 -key $CA_KEY -out $CA_CERT -subj "/CN=$HOSTNAME/C=US/L=Raleigh/"
-    sudo openssl pkcs12 -export -in $CA_CERT -inkey $CA_KEY -out $KEYSTORE -name tomcat -CAfile $CA_CERT -caname root -chain -password pass:password
+    sudo openssl req -new -x509 -days 365 -key $CA_KEY -out $CA_CERT -subj \
+        "/O=candlepinproject.org/OU=Candlepin CA/"
+
+    echo "Creating server certs and keystores"
+    echo "Creating server private key password"
+    sudo su -c "echo $RANDOM > $SERVER_KEY_PASSWORD"
+
+    echo "Creating server cert private key"
+    sudo openssl genrsa -out $SERVER_KEY -passout "file:$SERVER_KEY_PASSWORD" 1024
+    sudo cp $SERVER_KEY $SERVER_KEY_FULL
+
+    echo "Creating server cert signing request"
+    sudo openssl req -new -key $SERVER_KEY_FULL -out $SERVER_CERT_REQ \
+        -subj "/CN=$HOSTNAME/O=candlepinproject.org/OU=Candlepin Server" -keyout $
+
+    sudo openssl rsa -in $SERVER_KEY_FULL -out $SERVER_KEY
+
+    echo "Creating server cert, signing with CA key"
+    #sudo openssl ca -in $SERVER_CERT_REQ -cert $CA_CERT -keyfile $CA_KEY -out $SERVER_CERT
+    sudo openssl x509 -req -days 365 -in $SERVER_CERT_REQ -CA $CA_CERT -CAkey $CA_KEY \
+        -CAcreateserial -out $SERVER_CERT 
+
+    echo "Adding the CA cert to tomcats keystore, and create a pkcs keystore"
+    #sudo openssl pkcs12 -export -in $CA_CERT -inkey $CA_KEY -out $KEYSTORE \
+    sudo openssl pkcs12 -export -in $CA_CERT -inkey $CA_KEY -out $KEYSTORE \
+        -name "candlepin-ca" -CAfile $CA_CERT -caname "candlepin-ca" -chain -password pass:password 
+    #sudo keytool -import -trustcacerts -alias "sensible-name-for-ca" -file CAcert.crt -keystore $JAVA_HOME/lib/security/cacerts 
+
+    #echo "Create a keystore"
+    #sudo keytool -genkey -alias tomcat -keystore $KEYSTORE
+
+    echo "convert ca cert to pkcs7"
+    sudo openssl crl2pkcs7 -nocrl -certfile $CA_CERT \
+      -out $CA_CERT_P7
+
+    echo "import pk7 ca cert into keystore"
+    #sudo keytool -importcert -trustcacerts -v -v -v -keystore $KEYSTORE \
+    #    -storepass password  -file $CA_CERT_P7 -storetype pkcs12 -alias "candlepin-ca"
+
+    echo "convert server cert pkcs12 to pkcs7 for import to keystore"
+    # import again as an intmt cert?
+    # convert server-cert to pkc7 so we can import to candlepin keystore?
+    sudo openssl crl2pkcs7  -nocrl -certfile $SERVER_CERT \
+      -out $SERVER_CERT_P7 -certfile $CA_CERT_P7
+
+     echo "import pk7 server cert into candlepin keystore"
+     # import pck7 version into keystore?
+     sudo keytool -importcert -trustcacerts -v -v -v -keystore $KEYSTORE \
+        -storepass password  -file $SERVER_CERT_P7 -storetype pkcs12 -alias "candlepin-ca"
+
+    # think we need keystore for this
+    echo "Adding the server cert to tomcats keystore"
+#    sudo openssl pkcs12 -export -in $SERVER_CERT -inkey $SERVER_KEY_FULL -out $KEYSTORE \
+#        -name tomcat -CAfile $CA_CERT -caname "Candlepin CA" -password pass:password
+
+
+    #echo "Creating a server cert $SERVER_CERT"
+    #sudo openssl x509 -req -nodes -days 365 -newkey rsa:1024  \
+    #    -keyout $SERVER_CERT -out $SERVER_CERT -subj "/CN=$HOSTNAME/O=candlepin server/OU=my candlepin server"
+    
     sudo cp $CA_REDHAT_CERT $CA_UPSTREAM_CERT
     sudo chmod a+r $KEYSTORE
 fi
