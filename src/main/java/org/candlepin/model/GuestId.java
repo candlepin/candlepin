@@ -17,29 +17,29 @@ package org.candlepin.model;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.candlepin.jackson.HateoasArrayExclude;
-import org.candlepin.jackson.HateoasInclude;
-import org.codehaus.jackson.map.annotate.JsonFilter;
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.CollectionOfElements;
-import org.hibernate.annotations.ForeignKey;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Index;
-import org.hibernate.annotations.MapKeyManyToMany;
-
+import javax.persistence.CollectionTable;
 import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
+import javax.persistence.MapKeyColumn;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+
+import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.candlepin.jackson.HateoasArrayExclude;
+import org.candlepin.jackson.HateoasInclude;
+import org.codehaus.jackson.map.annotate.JsonFilter;
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.ForeignKey;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Index;
 
 /**
  * Represents a guest ID running on a virt host consumer.
@@ -70,10 +70,11 @@ public class GuestId extends AbstractHibernateObject {
     @Index(name = "cp_consumerguest_consumer_fk_idx")
     private Consumer consumer;
 
-    @JoinTable(name = "cp_consumer_guests_attributes",
-        joinColumns = @JoinColumn(name = "cp_consumer_guest_id"))
-    @MapKeyManyToMany(targetEntity = String.class)
-    @CollectionOfElements(targetElement = String.class)
+    @ElementCollection
+    @CollectionTable(name = "cp_consumer_guests_attributes",
+                     joinColumns = @JoinColumn(name = "cp_consumer_guest_id"))
+    @MapKeyColumn(name = "mapkey")
+    @Column(name = "element")
     @Cascade({org.hibernate.annotations.CascadeType.ALL})
     private Map<String, String> attributes;
 

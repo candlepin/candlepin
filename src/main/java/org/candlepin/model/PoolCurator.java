@@ -32,7 +32,7 @@ import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.impl.FilterImpl;
+import org.hibernate.internal.FilterImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

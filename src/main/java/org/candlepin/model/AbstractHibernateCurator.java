@@ -35,7 +35,7 @@ import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projection;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.impl.CriteriaImpl;
+import org.hibernate.internal.CriteriaImpl;
 import org.hibernate.transform.ResultTransformer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -197,7 +197,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
 
     private Integer findRowCount(Criteria c) {
         c.setProjection(Projections.rowCount());
-        return (Integer) c.uniqueResult();
+        return ((Long) c.uniqueResult()).intValue();
     }
 
     @SuppressWarnings("unchecked")

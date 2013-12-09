@@ -60,7 +60,7 @@ public abstract class UniqueByOwnerJob extends KingpinJob {
     }
 
     public static boolean isSchedulable(JobCurator jobCurator, JobStatus status) {
-        int running = jobCurator.findNumRunningByOwnerAndClass(
+        long running = jobCurator.findNumRunningByOwnerAndClass(
             status.getTargetId(), status.getJobClass());
         return running == 0;  //We can start the job if there are 0 like it running
     }

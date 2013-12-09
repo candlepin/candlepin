@@ -131,9 +131,9 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
         .add(Restrictions.eq("state", JobState.WAITING)).list();
     }
 
-    public int findNumRunningByOwnerAndClass(
+    public long findNumRunningByOwnerAndClass(
             String ownerKey, Class<? extends KingpinJob> jobClass) {
-        return (Integer) this.currentSession().createCriteria(JobStatus.class)
+        return (Long) this.currentSession().createCriteria(JobStatus.class)
             .add(Restrictions.eq("state", JobState.RUNNING))
             .add(Restrictions.eq("targetId", ownerKey))
             .add(Restrictions.eq("jobClass", jobClass))

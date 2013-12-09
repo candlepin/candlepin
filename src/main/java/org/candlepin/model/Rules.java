@@ -25,7 +25,6 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.Lob;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
@@ -49,9 +48,8 @@ public class Rules extends AbstractHibernateObject {
     @Column(length = 32)
     private String id;
 
-    @Lob
     @Basic(fetch = FetchType.LAZY)
-    @Column(name = "rules_blob")
+    @Column(name = "rules_blob", length = 4194304)
     private String rules;
 
     @Transient

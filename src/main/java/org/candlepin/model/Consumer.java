@@ -24,14 +24,16 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import javax.persistence.CascadeType;
+import javax.persistence.CollectionTable;
 import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
+import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
@@ -46,12 +48,10 @@ import org.candlepin.jackson.HateoasInclude;
 import org.candlepin.util.Util;
 import org.codehaus.jackson.map.annotate.JsonFilter;
 import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.CollectionOfElements;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Index;
-import org.hibernate.annotations.MapKeyManyToMany;
 import org.hibernate.annotations.Type;
 
 /**
@@ -133,10 +133,11 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "consumer", fetch = FetchType.LAZY)
     private Set<Entitlement> entitlements;
 
-    @JoinTable(name = "cp_consumer_facts",
-        joinColumns = @JoinColumn(name = "cp_consumer_id"))
-    @MapKeyManyToMany(targetEntity = String.class)
-    @CollectionOfElements(targetElement = String.class)
+    @ElementCollection
+    @CollectionTable(name = "cp_consumer_facts",
+                     joinColumns = @JoinColumn(name = "cp_consumer_id"))
+    @MapKeyColumn(name = "mapkey")
+    @Column(name = "element")
     @Cascade({org.hibernate.annotations.CascadeType.ALL})
     private Map<String, String> facts;
 

@@ -18,6 +18,7 @@ import com.google.inject.Inject;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.hornetq.api.core.HornetQException;
+import org.hornetq.api.core.HornetQExceptionType;
 import org.hornetq.api.core.TransportConfiguration;
 import org.hornetq.api.core.client.ClientConsumer;
 import org.hornetq.api.core.client.ClientSession;
@@ -81,7 +82,7 @@ public class EventSource {
             catch (HornetQException e) {
                 // if the queue exists already we already created it in a previous run,
                 // so that's fine.
-                if (e.getCode() != HornetQException.QUEUE_EXISTS) {
+                if (e.getType() != HornetQExceptionType.QUEUE_EXISTS) {
                     throw e;
                 }
             }

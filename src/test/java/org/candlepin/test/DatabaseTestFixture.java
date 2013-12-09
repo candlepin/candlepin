@@ -14,8 +14,6 @@
  */
 package org.candlepin.test;
 
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
@@ -83,7 +81,6 @@ import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.util.DateSource;
-import org.hibernate.ejb.HibernateEntityManagerImplementor;
 import org.junit.After;
 import org.junit.Before;
 import org.xnap.commons.i18n.I18n;
@@ -228,20 +225,12 @@ public class DatabaseTestFixture {
         TestPrincipalProviderSetter.get().setPrincipal(null);
         try {
             injector.getInstance(PersistFilter.class).destroy();
-
-            HibernateEntityManagerImplementor hem =
-                (HibernateEntityManagerImplementor) entityManager();
-            Connection connection = hem.getSession().connection();
-            try {
-                connection.createStatement().execute("SHUTDOWN");
+            if (entityManager().isOpen()) {
+                entityManager().close();
             }
-            catch (SQLException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+            if (emf.isOpen()) {
+                emf.close();
             }
-
-            entityManager().close();
-            emf.close();
         }
         finally {
             cpSingletonScope.exit();

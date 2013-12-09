@@ -420,7 +420,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     }
 
     public boolean doesConsumerExist(String uuid) {
-        int result = (Integer) createSecureCriteria()
+        long result = (Long) createSecureCriteria()
             .add(Restrictions.eq("uuid", uuid))
             .setProjection(Projections.count("id"))
             .uniqueResult();

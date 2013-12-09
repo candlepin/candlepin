@@ -23,20 +23,20 @@
 
   <!-- List of jars we expect to install from /usr/share/java in a regular build. -->
   <property name="jar.deps" value="antlr aopalliance apache-mime4j bcprov-jdk16 c3p0
-    cglib codehaus-jackson/jackson-core-lgpl codehaus-jackson/jackson-jaxrs
+    sisu-cglib/cglib codehaus-jackson/jackson-core-lgpl codehaus-jackson/jackson-jaxrs
     codehaus-jackson/jackson-mapper-lgpl codehaus-jackson/jackson-xc
     commons-codec commons-collections
     commons-httpclient commons-io commons-lang
     dom4j gettext-commons google-collections guice
     guice-assistedinject guice-multibindings guice-persist guice-servlet
-    guice-throwingproviders hibernate-annotations hibernate-commons-annotations
-    hibernate-core hibernate-entitymanager hornetq/hornetq-core
-    hornetq/hornetq-core-client javassist javax.inject jaxb-impl
-    jboss-logging jpa_1_0_api jta netty oauth oauth-provider
+    guice-throwingproviders hibernate-commons-annotations
+    hibernate4-core hibernate4-entitymanager hornetq-commons hornetq-server
+    hornetq-core-client hornetq-journal javassist javax.inject jaxb-impl
+    jboss-logging hibernate-jpa-2.0-api jta log4j netty oauth oauth-provider
     postgresql-jdbc resteasy/resteasy-atom-provider
     resteasy/resteasy-guice resteasy/resteasy-jaxb-provider
     resteasy/resteasy-jaxrs resteasy/jaxrs-api
-    resteasy/resteasy-multipart-provider scannotation servlet
+    resteasy/resteasy-multipart-provider scannotation servlet javamail/mail
     slf4j-api logback-classic logback-core jcl-over-slf4j" />
 
   <macrodef name="grepfromspec">
