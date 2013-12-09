@@ -14,9 +14,8 @@
  */
 package org.candlepin.sync;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
-
-import org.codehaus.jackson.map.ObjectMapper;
 
 import java.io.IOException;
 import java.io.Writer;

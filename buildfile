@@ -30,13 +30,15 @@ RESTEASY = [group('jaxrs-api',
 MIME4J = [group('apache-mime4j',
                 :under => 'org.apache.james',
                 :version => '0.6')]
-
-JACKSON = [group('jackson-core-lgpl',
-                 'jackson-mapper-lgpl',
-                 'jackson-jaxrs',
-                 'jackson-xc',
-                 :under => 'org.codehaus.jackson',
-                 :version => '1.9.2')]
+JACKSON_NS = "com.fasterxml.jackson"
+JACKSON_VERSION = "2.3.0"
+JACKSON = ["#{JACKSON_NS}.core:jackson-annotations:jar:#{JACKSON_VERSION}",
+            "#{JACKSON_NS}.core:jackson-core:jar:#{JACKSON_VERSION}",
+            "#{JACKSON_NS}.core:jackson-databind:jar:#{JACKSON_VERSION}",
+            "#{JACKSON_NS}.jaxrs:jackson-jaxrs-json-provider:jar:#{JACKSON_VERSION}",
+            "#{JACKSON_NS}.jaxrs:jackson-jaxrs-base:jar:#{JACKSON_VERSION}",
+            "#{JACKSON_NS}.module:jackson-module-jsonSchema:jar:#{JACKSON_VERSION}",
+            "#{JACKSON_NS}.module:jackson-module-jaxb-annotations:jar:#{JACKSON_VERSION}"]
 SUN_JAXB = 'com.sun.xml.bind:jaxb-impl:jar:2.1.12'
 JUNIT = ['junit:junit:jar:4.5', 'org.mockito:mockito-all:jar:1.8.5']
 LOGBACK = [group('logback-core', 'logback-classic', :under => 'ch.qos.logback', :version => '1.0.13')]

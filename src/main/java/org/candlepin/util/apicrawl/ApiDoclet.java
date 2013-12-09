@@ -15,18 +15,20 @@
 package org.candlepin.util.apicrawl;
 
 //import com.sun.javadoc.AnnotationDesc;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.javadoc.ClassDoc;
 import com.sun.javadoc.DocErrorReporter;
 import com.sun.javadoc.MethodDoc;
 import com.sun.javadoc.RootDoc;
 import com.sun.javadoc.Tag;
+
+import org.apache.commons.lang.StringUtils;
+
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import org.apache.commons.lang.StringUtils;
-import org.codehaus.jackson.map.ObjectMapper;
 
 /**
  *

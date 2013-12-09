@@ -15,11 +15,11 @@
 
 package org.candlepin.model;
 
+import com.fasterxml.jackson.annotation.JsonFilter;
+
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.Table;
-
-import org.codehaus.jackson.map.annotate.JsonFilter;
 
 /**
  * See Attributes interface for documentation.

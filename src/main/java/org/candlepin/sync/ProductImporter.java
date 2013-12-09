@@ -14,11 +14,6 @@
  */
 package org.candlepin.sync;
 
-import java.io.IOException;
-import java.io.Reader;
-import java.util.Set;
-
-import org.apache.commons.lang.StringUtils;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Product;
@@ -26,9 +21,15 @@ import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.util.Util;
-import org.codehaus.jackson.map.ObjectMapper;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Sets;
+
+import org.apache.commons.lang.StringUtils;
+
+import java.io.IOException;
+import java.io.Reader;
+import java.util.Set;
 
 /**
  * ProductImporter

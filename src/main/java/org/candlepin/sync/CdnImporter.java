@@ -17,7 +17,8 @@ package org.candlepin.sync;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCurator;
 
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

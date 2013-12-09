@@ -14,20 +14,22 @@
  */
 package org.candlepin.sync;
 
-import java.io.File;
-import java.io.IOException;
-
-import org.codehaus.jackson.map.AnnotationIntrospector;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.SerializationConfig;
-import org.codehaus.jackson.map.DeserializationConfig;
-import org.codehaus.jackson.map.introspect.JacksonAnnotationIntrospector;
-import org.codehaus.jackson.map.ser.impl.SimpleBeanPropertyFilter;
-import org.codehaus.jackson.map.ser.impl.SimpleFilterProvider;
-import org.codehaus.jackson.xc.JaxbAnnotationIntrospector;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.exceptions.IseException;
+
+import com.fasterxml.jackson.databind.AnnotationIntrospector;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.introspect.AnnotationIntrospectorPair;
+import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
+import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
+import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
+import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
+
+import java.io.File;
+import java.io.IOException;
 
 /**
  * SyncUtils
@@ -46,11 +48,12 @@ class SyncUtils {
     static ObjectMapper getObjectMapper(Config config) {
         ObjectMapper mapper = new ObjectMapper();
         AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
-        AnnotationIntrospector secondary = new JaxbAnnotationIntrospector();
-        AnnotationIntrospector pair = new AnnotationIntrospector.Pair(primary, secondary);
+        AnnotationIntrospector secondary =
+            new JaxbAnnotationIntrospector(mapper.getTypeFactory());
+        AnnotationIntrospector pair = new AnnotationIntrospectorPair(primary, secondary);
 
         mapper.setAnnotationIntrospector(pair);
-        mapper.configure(SerializationConfig.Feature.WRITE_DATES_AS_TIMESTAMPS, false);
+        mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
 
         // Filter specific things we do not want exported:
         SimpleFilterProvider filterProvider = new SimpleFilterProvider();
@@ -60,7 +63,7 @@ class SyncUtils {
         mapper.setFilters(filterProvider);
 
         if (config != null) {
-            mapper.configure(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES,
+            mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
                 config.failOnUnknownImportProperties());
         }
 

@@ -14,13 +14,12 @@
  */
 package org.candlepin.sync;
 
-import org.apache.commons.lang.StringUtils;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventSink;
-import org.candlepin.model.CertificateSerial;
-import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCurator;
+import org.candlepin.model.CertificateSerial;
+import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.DerivedProvidedProduct;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
@@ -31,7 +30,9 @@ import org.candlepin.model.Subscription;
 import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.model.SubscriptionsCertificate;
 
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;

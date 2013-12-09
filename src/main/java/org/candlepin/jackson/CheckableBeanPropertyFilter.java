@@ -14,10 +14,11 @@
  */
 package org.candlepin.jackson;
 
-import org.codehaus.jackson.JsonGenerator;
-import org.codehaus.jackson.map.SerializerProvider;
-import org.codehaus.jackson.map.ser.BeanPropertyFilter;
-import org.codehaus.jackson.map.ser.BeanPropertyWriter;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.ser.BeanPropertyWriter;
+import com.fasterxml.jackson.databind.ser.PropertyWriter;
+import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 
 /**
  * CheckableBeanPropertyFilter
@@ -26,7 +27,7 @@ import org.codehaus.jackson.map.ser.BeanPropertyWriter;
  * we can combine them properly, and change the behavior of
  * multiple stacked filters.
  */
-public abstract class CheckableBeanPropertyFilter implements BeanPropertyFilter {
+public abstract class CheckableBeanPropertyFilter extends SimpleBeanPropertyFilter {
 
     /**
      * Lets us know if the filter can allow the current attribute
@@ -41,13 +42,31 @@ public abstract class CheckableBeanPropertyFilter implements BeanPropertyFilter 
      * @return whether or not the object can be serialized
      */
     public abstract boolean isSerializable(Object obj, JsonGenerator jsonGenerator,
-        SerializerProvider serializerProvider, BeanPropertyWriter writer);
+        SerializerProvider serializerProvider, PropertyWriter writer);
 
     @Override
     public void serializeAsField(Object obj, JsonGenerator jsonGenerator,
-        SerializerProvider serializerProvider, BeanPropertyWriter writer) throws Exception {
+        SerializerProvider serializerProvider, PropertyWriter writer) throws Exception {
         if (isSerializable(obj, jsonGenerator, serializerProvider, writer)) {
             writer.serializeAsField(obj, jsonGenerator, serializerProvider);
         }
+    }
+
+    @Override
+    public void serializeAsElement(Object obj, JsonGenerator jsonGenerator,
+        SerializerProvider serializerProvider, PropertyWriter writer) throws Exception {
+        if (isSerializable(obj, jsonGenerator, serializerProvider, writer)) {
+            writer.serializeAsElement(obj, jsonGenerator, serializerProvider);
+        }
+    }
+
+    @Override
+    protected boolean include(PropertyWriter writer) {
+        return true;
+    }
+
+    @Override
+    protected boolean include(BeanPropertyWriter writer) {
+        return true;
     }
 }

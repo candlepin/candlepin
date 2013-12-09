@@ -25,8 +25,9 @@ import org.candlepin.model.Product;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.junit.Test;
 
 import java.util.Set;
@@ -123,7 +124,7 @@ public class OwnerTest extends DatabaseTestFixture {
 //        AnnotationIntrospector secondary = new JaxbAnnotationIntrospector();
 //        AnnotationIntrospector pair = new AnnotationIntrospector.Pair(primary, secondary);
 //
-        mapper.getSerializationConfig().addMixInAnnotations(Consumer.class, MixIn.class);
+        mapper.getSerializationConfig().findMixInClassFor(Consumer.class);
 //        mapper.getSerializationConfig().setAnnotationIntrospector(pair);
 //        mapper.getDeserializationConfig().setAnnotationIntrospector(pair);
 //        mapper.getSerializationConfig().set(

@@ -14,13 +14,13 @@
  */
 package org.candlepin.sync;
 
-import java.io.IOException;
-import java.io.Writer;
-
-import org.codehaus.jackson.map.ObjectMapper;
 import org.candlepin.model.ConsumerType;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
+
+import java.io.IOException;
+import java.io.Writer;
 
 /**
  * ConsumerTypeExporter

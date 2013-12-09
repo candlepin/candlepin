@@ -14,14 +14,15 @@
  */
 package org.candlepin.policy.js.compliance;
 
+import org.candlepin.model.Entitlement;
+
+import com.fasterxml.jackson.annotation.JsonFilter;
+
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
-import org.candlepin.model.Entitlement;
-import org.codehaus.jackson.map.annotate.JsonFilter;
 
 /**
  * ComplianceStatus

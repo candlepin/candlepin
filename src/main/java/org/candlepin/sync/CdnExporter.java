@@ -14,11 +14,12 @@
  */
 package org.candlepin.sync;
 
+import org.candlepin.model.Cdn;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.io.IOException;
 import java.io.Writer;
-
-import org.candlepin.model.Cdn;
-import org.codehaus.jackson.map.ObjectMapper;
 
 /**
  * CdnExporter

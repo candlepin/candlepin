@@ -14,26 +14,28 @@
  */
 package org.candlepin.resteasy;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.Produces;
-import javax.ws.rs.ext.Provider;
-
 import org.candlepin.config.Config;
 import org.candlepin.jackson.DynamicPropertyFilter;
 import org.candlepin.jackson.HateoasBeanPropertyFilter;
 import org.candlepin.jackson.MultiFilter;
-import org.codehaus.jackson.jaxrs.Annotations;
-import org.codehaus.jackson.jaxrs.JacksonJsonProvider;
-import org.codehaus.jackson.map.AnnotationIntrospector;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.SerializationConfig;
-import org.codehaus.jackson.map.introspect.JacksonAnnotationIntrospector;
-import org.codehaus.jackson.map.ser.impl.SimpleFilterProvider;
-import org.codehaus.jackson.xc.JaxbAnnotationIntrospector;
+
+import com.fasterxml.jackson.databind.AnnotationIntrospector;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.introspect.AnnotationIntrospectorPair;
+import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
+import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
+import com.fasterxml.jackson.jaxrs.cfg.Annotations;
+import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
+import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
+import com.google.inject.Inject;
+
 import org.jboss.resteasy.plugins.providers.RegisterBuiltin;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
-import com.google.inject.Inject;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.Produces;
+import javax.ws.rs.ext.Provider;
 
 /**
  * JsonProvider
@@ -69,10 +71,10 @@ public class JsonProvider extends JacksonJsonProvider {
     }
 
     private void configureHateoasObjectMapper(ObjectMapper mapper, boolean indentJson) {
-        mapper.configure(SerializationConfig.Feature.WRITE_DATES_AS_TIMESTAMPS, false);
+        mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
 
         if (indentJson) {
-            mapper.configure(SerializationConfig.Feature.INDENT_OUTPUT, true);
+            mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
         }
 
         SimpleFilterProvider filterProvider = new SimpleFilterProvider();
@@ -89,8 +91,9 @@ public class JsonProvider extends JacksonJsonProvider {
         mapper.setFilters(filterProvider);
 
         AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
-        AnnotationIntrospector secondary = new JaxbAnnotationIntrospector();
-        AnnotationIntrospector pair = new AnnotationIntrospector.Pair(primary, secondary);
+        AnnotationIntrospector secondary =
+            new JaxbAnnotationIntrospector(mapper.getTypeFactory());
+        AnnotationIntrospector pair = new AnnotationIntrospectorPair(primary, secondary);
         mapper.setAnnotationIntrospector(pair);
     }
 }

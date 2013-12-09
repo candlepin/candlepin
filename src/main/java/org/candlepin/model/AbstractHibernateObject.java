@@ -14,6 +14,9 @@
  */
 package org.candlepin.model;
 
+import com.fasterxml.jackson.annotation.JsonFilter;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import java.io.Serializable;
 import java.util.Date;
 
@@ -23,9 +26,6 @@ import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
-
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.map.annotate.JsonFilter;
 
 /**
  * Abstract class for hibernate entities
