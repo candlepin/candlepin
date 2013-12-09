@@ -37,7 +37,7 @@
     resteasy/resteasy-guice resteasy/resteasy-jaxb-provider
     resteasy/resteasy-jaxrs resteasy/jaxrs-api
     resteasy/resteasy-multipart-provider scannotation servlet
-    slf4j-api logback-classic logback-core" />
+    slf4j-api logback-classic logback-core jcl-over-slf4j" />
 
   <macrodef name="grepfromspec">
     <attribute name="text" />

@@ -90,6 +90,7 @@ BuildRequires: glassfish-jaxb
 BuildRequires: jms >= 0:1.1
 BuildRequires: oauth
 BuildRequires: slf4j-api >= 0:1.7.5
+BuildRequires: jcl-over-slf4j >= 0:1.7.5
 
 # needed to setup runtime deps, not for compilation
 BuildRequires: c3p0
