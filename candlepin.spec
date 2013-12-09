@@ -31,7 +31,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.8.33
+Version: 0.8.34
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -328,6 +328,22 @@ fi
 
 
 %changelog
+* Mon Dec 09 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.34-1
+- 1030604: Single error message when adding blacklisted overrides (mstead@redhat.com)
+- 1030644: performance fix for distributors with lots of ents. (dgoodwin@redhat.com)
+- Updated translations. (dgoodwin@redhat.com)
+- Set RestEasy to use SLF4J. (awood@redhat.com)
+- Replace commons-logging with jcl-over-slf4j. (awood@redhat.com)
+- Switch logging implementation to logback. (awood@redhat.com)
+- Switch to slf4j. (awood@redhat.com)
+- Upgrade to SLF4J 1.7.5. (awood@redhat.com)
+- fixed guest consumer entitlement revocation (ckozak@redhat.com)
+- Refactored permissions model (dgoodwin@redhat.com)
+- Add guest_limit attribute to compliance (ckozak@redhat.com)
+- findbugs: various fixes (jesusr@redhat.com)
+- Bumping rules minor version (mstead@redhat.com)
+- Fixed issue with checking override black list (mstead@redhat.com)
+
 * Thu Nov 14 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.33-1
 - Correct variable (wpoteat@redhat.com)
 - Update for using keyword 'key' as column name (wpoteat@redhat.com)
