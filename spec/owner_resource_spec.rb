@@ -381,3 +381,48 @@ describe 'Owner Resource' do
   end
   
 end
+
+describe 'Owner Resource Pool Filter Tests' do
+
+  include CandlepinMethods
+  
+  before(:each) do
+    @owner = create_owner(random_string("test_owner"))
+    @product1 = create_product(random_string("prod-1"),
+      random_string("Product1"),
+      {
+        :attributes => {:support_level => 'VIP'}
+      }
+    )
+    
+    @product2 = create_product(random_string("prod-2"),
+      random_string("Product2"),
+      {
+        :attributes => {
+            :support_level => 'Supurb',
+            :cores => '4'
+        }
+      }
+    )
+
+    @cp.create_subscription(@owner['key'], @product1.id, 10)
+    @cp.create_subscription(@owner['key'], @product2.id, 10)
+    
+    @cp.refresh_pools(@owner['key'])
+    pools = @cp.list_owner_pools(@owner['key'])
+    pools.length.should == 2
+  end
+  
+  it "lets owners filter pools by single filter" do
+    pools = @cp.list_owner_pools(@owner['key'], {}, ["support_level:VIP"])
+    pools.length.should == 1
+    pools[0].productId.should == @product1.id
+  end
+  
+  it "lets owners filter pools by multiple filter" do
+    pools = @cp.list_owner_pools(@owner['key'], {}, ["support_level:Supurb", "cores:4"])
+    pools.length.should == 1
+    pools[0].productId.should == @product2.id
+  end
+  
+end

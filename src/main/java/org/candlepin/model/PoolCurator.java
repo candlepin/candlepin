@@ -145,7 +145,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     public List<Pool> listAvailableEntitlementPools(Consumer c, Owner o,
             String productId, Date activeOn, boolean activeOnly) {
         return listAvailableEntitlementPools(c, o, productId, activeOn, activeOnly,
-            null, false).getPageData();
+            new FilterBuilder(), null, false).getPageData();
     }
 
     @SuppressWarnings("unchecked")
@@ -171,6 +171,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @param activeOn Indicates to return only pools valid on this date.
      *        Set to null for no date filtering.
      * @param activeOnly if true, only active entitlements are included.
+     * @param filters filter builder with set filters to apply to the criteria.
      * @param pageRequest used to specify paging criteria.
      * @param postFilter if you plan on filtering the list in java
      * @return List of entitlement pools.
@@ -178,8 +179,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     @SuppressWarnings("unchecked")
     @Transactional
     public Page<List<Pool>> listAvailableEntitlementPools(Consumer c, Owner o,
-            String productId, Date activeOn, boolean activeOnly, PageRequest pageRequest,
-            boolean postFilter) {
+            String productId, Date activeOn, boolean activeOnly, FilterBuilder filters,
+            PageRequest pageRequest, boolean postFilter) {
         if (o == null && c != null) {
             o = c.getOwner();
         }
@@ -229,8 +230,12 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 Restrictions.eq("providedProduct.productId", productId)));
         }
 
-        Page<List<Pool>> resultsPage = listByCriteria(crit, pageRequest, postFilter);
-        return resultsPage;
+        // Append any specified filters
+        if (filters != null) {
+            filters.applyTo(crit);
+        }
+
+        return listByCriteria(crit, pageRequest, postFilter);
     }
 
     @Transactional

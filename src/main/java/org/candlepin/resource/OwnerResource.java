@@ -14,6 +14,31 @@
  */
 package org.candlepin.resource;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.StringTokenizer;
+
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+
 import org.apache.commons.lang.StringUtils;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventAdapter;
@@ -44,6 +69,7 @@ import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.EventCurator;
 import org.candlepin.model.ExporterMetadata;
 import org.candlepin.model.ExporterMetadataCurator;
+import org.candlepin.model.FilterBuilder;
 import org.candlepin.model.ImportRecord;
 import org.candlepin.model.ImportRecordCurator;
 import org.candlepin.model.ImportUpstreamConsumer;
@@ -67,18 +93,14 @@ import org.candlepin.pinsetter.tasks.HealEntireOrgJob;
 import org.candlepin.pinsetter.tasks.RefreshPoolsJob;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ResourceDateParser;
+import org.candlepin.resteasy.parameter.KeyValueParameter;
+import org.candlepin.resteasy.parameter.CandlepinParam;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.sync.ConflictOverrides;
 import org.candlepin.sync.Importer;
 import org.candlepin.sync.ImporterException;
 import org.candlepin.sync.Meta;
 import org.candlepin.sync.SyncDataFormatException;
-
-import ch.qos.logback.classic.Level;
-
-import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
-
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
@@ -90,30 +112,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.StringTokenizer;
+import ch.qos.logback.classic.Level;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
+import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
 
 /**
  * Owner Resource
@@ -679,6 +681,8 @@ public class OwnerResource {
         @QueryParam("product") String productId,
         @QueryParam("listall") @DefaultValue("false") boolean listAll,
         @QueryParam("activeon") String activeOn,
+        @QueryParam("attribute") @CandlepinParam(type = KeyValueParameter.class)
+            List<KeyValueParameter> attrFilters,
         @Context Principal principal,
         @Context PageRequest pageRequest) {
 
@@ -708,8 +712,14 @@ public class OwnerResource {
             }
         }
 
+        // Process the filters passed for the attributes
+        FilterBuilder poolFilters = new FilterBuilder();
+        for (KeyValueParameter filterParam : attrFilters) {
+            poolFilters.addAttributeFilter(filterParam.key(), filterParam.value());
+        }
+
         Page<List<Pool>> page = poolManager.listAvailableEntitlementPools(c, owner,
-            productId, activeOnDate, true, listAll, pageRequest);
+            productId, activeOnDate, true, listAll, poolFilters, pageRequest);
         List<Pool> poolList = page.getPageData();
 
         if (c != null) {

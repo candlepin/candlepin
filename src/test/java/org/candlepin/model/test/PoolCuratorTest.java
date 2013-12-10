@@ -19,6 +19,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -30,6 +31,7 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.Entitlement;
+import org.candlepin.model.FilterBuilder;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
@@ -113,6 +115,235 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             poolCurator.listAvailableEntitlementPools(consumer, consumer.getOwner(),
                 (String) null, null, true);
         assertEquals(1, results.size());
+    }
+
+    @Test
+    public void availablePoolsCanBeFilteredByProductPoolAttribute() throws Exception {
+        Date activeDate = TestUtil.createDate(2000, 3, 2);
+
+        Pool pool1 = createPoolAndSub(owner, product, 100L,
+            activeDate, TestUtil.createDate(2005, 3, 2));
+        poolCurator.create(pool1);
+
+        Product product2 = TestUtil.createProduct();
+        product2.addAttribute(new ProductAttribute("cores", "8"));
+        productCurator.create(product2);
+
+        Pool pool2 = createPoolAndSub(owner, product2, 100L,
+            activeDate, TestUtil.createDate(2005, 3, 2));
+        poolCurator.create(pool2);
+
+        PageRequest req = new PageRequest();
+        req.setPage(1);
+        req.setPerPage(10);
+        req.setOrder(PageRequest.Order.ASCENDING);
+        req.setSortBy("id");
+
+        FilterBuilder filters = new FilterBuilder();
+        filters.addAttributeFilter("cores", "8");
+
+        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
+            null, owner, null, activeDate, false, filters,
+            req, false);
+        List<Pool> results = page.getPageData();
+        assertEquals(1, results.size());
+        assertEquals(pool2.getId(), results.get(0).getId());
+    }
+
+    @Test
+    public void availablePoolsCanBeFilteredByPoolAttribute() throws Exception {
+        Date activeDate = TestUtil.createDate(2000, 3, 2);
+
+        Pool pool1 = createPoolAndSub(owner, product, 100L,
+            activeDate, TestUtil.createDate(2005, 3, 2));
+        poolCurator.create(pool1);
+
+        Pool pool2 = createPoolAndSub(owner, product, 100L,
+            activeDate, TestUtil.createDate(2005, 3, 2));
+        pool2.setAttribute("virt_only", "true");
+        poolCurator.create(pool2);
+
+        PageRequest req = new PageRequest();
+        req.setPage(1);
+        req.setPerPage(10);
+        req.setOrder(PageRequest.Order.ASCENDING);
+        req.setSortBy("id");
+
+        FilterBuilder filters = new FilterBuilder();
+        filters.addAttributeFilter("virt_only", "true");
+
+        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
+            null, owner, null, activeDate, false, filters,
+            req, false);
+        List<Pool> results = page.getPageData();
+        assertEquals(1, results.size());
+        assertEquals(pool2.getId(), results.get(0).getId());
+    }
+
+    @Test
+    public void availablePoolsCanBeFilteredByBothPoolAndProductPoolAttribute()
+        throws Exception {
+        Date activeDate = TestUtil.createDate(2000, 3, 2);
+
+        Pool pool1 = createPoolAndSub(owner, product, 100L,
+            activeDate, TestUtil.createDate(2005, 3, 2));
+        poolCurator.create(pool1);
+
+        Product product2 = TestUtil.createProduct();
+        product2.addAttribute(new ProductAttribute("cores", "4"));
+        productCurator.create(product2);
+
+        Pool pool2 = createPoolAndSub(owner, product2, 100L,
+            activeDate, TestUtil.createDate(2005, 3, 2));
+        pool2.setAttribute("virt_only", "true");
+        poolCurator.create(pool2);
+
+        PageRequest req = new PageRequest();
+        req.setPage(1);
+        req.setPerPage(10);
+        req.setOrder(PageRequest.Order.ASCENDING);
+        req.setSortBy("id");
+
+        FilterBuilder filters = new FilterBuilder();
+        filters.addAttributeFilter("virt_only", "true");
+        filters.addAttributeFilter("cores", "4");
+
+        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
+            null, owner, null, activeDate, false, filters,
+            req, false);
+        List<Pool> results = page.getPageData();
+        assertEquals(1, results.size());
+        assertEquals(pool2.getId(), results.get(0).getId());
+    }
+
+    @Test
+    public void availablePoolsCanFilterByEmptyValueAttribute() throws Exception {
+        Date activeDate = TestUtil.createDate(2000, 3, 2);
+
+        Pool pool1 = createPoolAndSub(owner, product, 100L,
+            activeDate, TestUtil.createDate(2005, 3, 2));
+        poolCurator.create(pool1);
+
+        Product product2 = TestUtil.createProduct();
+        product2.addAttribute(new ProductAttribute("empty-attr", ""));
+        productCurator.create(product2);
+
+        Pool pool2 = createPoolAndSub(owner, product2, 100L,
+            activeDate, TestUtil.createDate(2005, 3, 2));
+        poolCurator.create(pool2);
+
+        PageRequest req = new PageRequest();
+        req.setPage(1);
+        req.setPerPage(10);
+        req.setOrder(PageRequest.Order.ASCENDING);
+        req.setSortBy("id");
+
+        FilterBuilder filters = new FilterBuilder();
+        filters.addAttributeFilter("empty-attr", "");
+
+        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
+            null, owner, null, activeDate, false, filters,
+            req, false);
+        List<Pool> results = page.getPageData();
+        assertEquals(1, results.size());
+        assertEquals(pool2.getId(), results.get(0).getId());
+    }
+
+    @Test
+    public void attributeFilterValuesAreNotCaseSensitive() {
+        Product product1 = TestUtil.createProduct();
+        product1.addAttribute(new ProductAttribute("A", "foo"));
+        product1.addAttribute(new ProductAttribute("B", "bar"));
+        productCurator.create(product1);
+
+        Date activeDate = TestUtil.createDate(2000, 3, 2);
+
+        Pool pool = createPoolAndSub(owner, product1, 100L,
+            activeDate, TestUtil.createDate(2005, 3, 2));
+        poolCurator.create(pool);
+
+        PageRequest req = new PageRequest();
+        req.setPage(1);
+        req.setPerPage(10);
+        req.setOrder(PageRequest.Order.ASCENDING);
+        req.setSortBy("id");
+
+        FilterBuilder filters = new FilterBuilder();
+        filters.addAttributeFilter("A", "FOO");
+
+        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
+            null, owner, null, activeDate, false, filters,
+            req, false);
+        List<Pool> results = page.getPageData();
+        assertEquals(1, results.size());
+        assertEquals(pool, results.get(0));
+    }
+
+    /**
+     * When filtering pools by product/pool attributes, filters specified with
+     * the same attribute name are ANDed, and different attributes are ORed.
+     *
+     * For example applying the following filters:
+     *
+     * A1:foo, A1:bar, A2:biz
+     *
+     * will result in matches on the values of:
+     * (A1 == foo OR A1 == bar) AND A2 == biz
+     *
+     * Another important note is that product attributes are
+     * ORed with Pool attributes for each attribute specified.
+     */
+    @Test
+    public void testAttributeFilterLogic() {
+
+        Product product1 = TestUtil.createProduct();
+        product1.addAttribute(new ProductAttribute("A", "foo"));
+        product1.addAttribute(new ProductAttribute("B", "bar"));
+        productCurator.create(product1);
+
+        Product product2 = TestUtil.createProduct();
+        product2.addAttribute(new ProductAttribute("A", "foo"));
+        product2.addAttribute(new ProductAttribute("B", "zoo"));
+        productCurator.create(product2);
+
+        Product product3 = TestUtil.createProduct();
+        product3.addAttribute(new ProductAttribute("A", "biz"));
+        product3.addAttribute(new ProductAttribute("B", "zoo"));
+        productCurator.create(product3);
+
+        Date activeDate = TestUtil.createDate(2000, 3, 2);
+
+        Pool pool1 = createPoolAndSub(owner, product1, 100L,
+            activeDate, TestUtil.createDate(2005, 3, 2));
+        poolCurator.create(pool1);
+
+        Pool pool2 = createPoolAndSub(owner, product2, 100L,
+            activeDate, TestUtil.createDate(2005, 3, 2));
+        poolCurator.create(pool2);
+
+        Pool pool3 = createPoolAndSub(owner, product3, 100L,
+            activeDate, TestUtil.createDate(2005, 3, 2));
+        poolCurator.create(pool3);
+
+        PageRequest req = new PageRequest();
+        req.setPage(1);
+        req.setPerPage(10);
+        req.setOrder(PageRequest.Order.ASCENDING);
+        req.setSortBy("id");
+
+        FilterBuilder filters = new FilterBuilder();
+        filters.addAttributeFilter("A", "foo");
+        filters.addAttributeFilter("A", "biz");
+        filters.addAttributeFilter("B", "zoo");
+
+        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
+            null, owner, null, activeDate, false, filters,
+            req, false);
+        List<Pool> results = page.getPageData();
+        assertEquals(2, results.size());
+
+        Pool[] expected = new Pool[]{ pool2, pool3 };
+        results.containsAll(Arrays.asList(expected));
     }
 
     @Test
@@ -347,7 +578,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testCorrectPagingWhenItemsAreFiltered() {
+    public void testCorrectPagingWhenItemsAreFilteredByProductId() {
         for (int i = 0; i < 50; i++) {
             Pool pool = TestUtil.createPool(owner, product);
             pool.setStartDate(TestUtil.createDate(2011, 1, 2));
@@ -373,7 +604,8 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         Date activeOn = TestUtil.createDate(2011, 2, 2);
         Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
-            null, owner, product.getId(), activeOn, false, req, false);
+            null, owner, product.getId(), activeOn, false, new FilterBuilder(),
+            req, false);
         assertEquals(Integer.valueOf(50), page.getMaxRecords());
 
         List<Pool> pools = page.getPageData();
@@ -406,7 +638,8 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         Date activeOn = TestUtil.createDate(2011, 2, 2);
         Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
-            null, owner, product.getId(), activeOn, false, req, false);
+            null, owner, product.getId(), activeOn, false, new FilterBuilder(),
+            req, false);
         assertEquals(Integer.valueOf(5), page.getMaxRecords());
         assertEquals(5, page.getPageData().size());
     }
@@ -426,7 +659,8 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         Date activeOn = TestUtil.createDate(2011, 2, 2);
         Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
-            null, owner, product.getId(), activeOn, false, req, false);
+            null, owner, product.getId(), activeOn, false, new FilterBuilder(),
+            req, false);
         assertEquals(Integer.valueOf(5), page.getMaxRecords());
         assertEquals(0, page.getPageData().size());
     }
@@ -446,7 +680,8 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         Date activeOn = TestUtil.createDate(2011, 2, 2);
         Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
-            null, owner, product.getId(), activeOn, false, req, false);
+            null, owner, product.getId(), activeOn, false, new FilterBuilder(),
+            req, false);
         assertEquals(Integer.valueOf(5), page.getMaxRecords());
         assertEquals(1, page.getPageData().size());
     }
@@ -469,7 +704,8 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         Date activeOn = TestUtil.createDate(2011, 2, 2);
         Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
-            null, owner, product.getId(), activeOn, false, req, false);
+            null, owner, product.getId(), activeOn, false, new FilterBuilder(),
+            req, false);
         assertEquals(Integer.valueOf(0), page.getMaxRecords());
         assertEquals(0, page.getPageData().size());
     }
