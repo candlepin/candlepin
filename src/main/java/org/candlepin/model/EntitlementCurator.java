@@ -75,20 +75,16 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     public Page<List<Entitlement>> listByConsumer(Consumer consumer,
         PageRequest pageRequest) {
         Criteria query = createSecureCriteria()
-            .add(Restrictions.eq("consumer", consumer));
+            .createAlias("pool", "p")
+            .add(Restrictions.eq("consumer", consumer))
+            // Never show a consumer expired entitlements
+            .add(Restrictions.ge("p.endDate", new Date()));
         return listByCriteria(query, pageRequest);
     }
 
     public List<Entitlement> listByConsumer(Consumer consumer) {
         Page<List<Entitlement>> p = listByConsumer(consumer, null);
-        List<Entitlement> ents = p.getPageData();
-        //Don't show entitlements that are expired
-        for (int i = ents.size() - 1; i >= 0; i--) {
-            if (ents.get(i).getEndDate().before(new Date())) {
-                ents.remove(i);
-            }
-        }
-        return ents;
+        return p.getPageData();
     }
 
     public List<Entitlement> listByEnvironment(Environment environment) {
