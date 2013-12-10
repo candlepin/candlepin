@@ -432,4 +432,27 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         assertEquals(5, page.getPageData().size());
     }
 
+    @Test
+    public void listByConsumerExpired() {
+        List<Entitlement> ents = entitlementCurator.listByConsumer(consumer);
+        // Should be 2 entitlements already
+        assertEquals(2, ents.size());
+
+        Product product = TestUtil.createProduct();
+        productCurator.create(product);
+        // expired pool
+        Pool pool = createPoolAndSub(owner, product, 1L,
+            createDate(2000, 1, 1), createDate(2000, 2, 2));
+        poolCurator.create(pool);
+        for (int i = 0; i < 2; i++) {
+            EntitlementCertificate cert =
+                createEntitlementCertificate("key", "certificate");
+            Entitlement ent = createEntitlement(owner, consumer, pool, cert);
+            entitlementCurator.create(ent);
+        }
+
+        // Do not show the expired entitlements, size should be the same as before
+        assertEquals(2, ents.size());
+    }
+
 }

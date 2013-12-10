@@ -227,27 +227,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 Restrictions.eq("providedProduct.productId", productId)));
         }
 
-        Page<List<Pool>> resultsPage = listByCriteria(crit, pageRequest, true);
-        List<Pool> results = resultsPage.getPageData();
-
-        if (results == null) {
-            log.debug("no results");
-            resultsPage.setPageData(new ArrayList<Pool>());
-            return resultsPage;
-        }
-
-        if (log.isDebugEnabled()) {
-            log.debug("Loaded " + results.size() + " pools from database.");
-        }
-
-        // Set maxRecords once we are done filtering
-        resultsPage.setMaxRecords(results.size());
-
-        if (pageRequest != null && pageRequest.isPaging()) {
-            results = takeSubList(pageRequest, results);
-        }
-
-        resultsPage.setPageData(results);
+        Page<List<Pool>> resultsPage = listByCriteria(crit, pageRequest);
         return resultsPage;
     }
 

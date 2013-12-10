@@ -164,7 +164,9 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
             page.setPageRequest(pageRequest);
         }
         else {
-            page.setPageData(listAll());
+            List<E> pageData = listAll();
+            page.setMaxRecords(pageData.size());
+            page.setPageData(pageData);
         }
 
         return page;
@@ -307,7 +309,9 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
             page.setPageRequest(pageRequest);
         }
         else {
-            page.setPageData(listByCriteria(c));
+            List<E> pageData = listByCriteria(c);
+            page.setMaxRecords(pageData.size());
+            page.setPageData(pageData);
         }
 
         return page;
