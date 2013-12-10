@@ -48,6 +48,11 @@ public class Rules extends AbstractHibernateObject {
     @Column(length = 32)
     private String id;
 
+    /**
+     * Length of field is required by hypersonic in the unit tests only
+     * This is enough to cover current rules, plus some.
+     * 4194304 bytes = 4 MB
+     */
     @Basic(fetch = FetchType.LAZY)
     @Column(name = "rules_blob", length = 4194304)
     private String rules;
