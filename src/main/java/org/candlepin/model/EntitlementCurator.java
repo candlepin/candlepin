@@ -23,6 +23,7 @@ import com.google.inject.persist.Transactional;
 
 import org.hibernate.Criteria;
 import org.hibernate.ReplicationMode;
+import org.hibernate.criterion.CriteriaSpecification;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Property;
@@ -278,28 +279,16 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     public Page<List<Entitlement>> listByConsumerAndProduct(Consumer consumer,
         String productId, PageRequest pageRequest) {
         Criteria query = createSecureCriteria()
-            .add(Restrictions.eq("consumer", consumer));
+            .add(Restrictions.eq("consumer", consumer))
+            .createAlias("pool", "p")
+            .createAlias("p.providedProducts", "pp",
+                CriteriaSpecification.LEFT_JOIN)
+            // Never show a consumer expired entitlements
+            .add(Restrictions.ge("p.endDate", new Date()))
+            .add(Restrictions.or(Restrictions.eq("p.productId", productId),
+                Restrictions.eq("pp.productId", productId)));
 
-        Page<List<Entitlement>> page = listByCriteria(query, pageRequest, true);
-        List<Entitlement> results = page.getPageData();
-
-        // TODO: Possible to do this via hibernate query? No luck on first attempt
-        // with criteria query.
-        List<Entitlement> filtered = new LinkedList<Entitlement>();
-        for (Entitlement e : results) {
-            if (e.getProductId().equals(productId)) {
-                filtered.add(e);
-            }
-        }
-
-        page.setMaxRecords(filtered.size());
-
-        if (pageRequest != null && pageRequest.isPaging()) {
-            page.setPageData(takeSubList(pageRequest, filtered));
-        }
-        else {
-            page.setPageData(filtered);
-        }
+        Page<List<Entitlement>> page = listByCriteria(query, pageRequest);
 
         return page;
     }
