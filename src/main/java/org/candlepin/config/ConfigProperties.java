@@ -177,9 +177,9 @@ public class ConfigProperties {
 
                 this.put(SYNC_WORK_DIR, "/var/cache/candlepin/sync");
                 this.put(CONSUMER_FACTS_MATCHER, ".*");
-                this.put(TRUSTED_AUTHENTICATION, "true");
+                this.put(TRUSTED_AUTHENTICATION, "false");
                 this.put(SSL_AUTHENTICATION, "true");
-                this.put(OAUTH_AUTHENTICATION, "true");
+                this.put(OAUTH_AUTHENTICATION, "false");
                 this.put(BASIC_AUTHENTICATION, "true");
 
                 // By default, environments should be hidden so clients do not need to
