@@ -17,10 +17,12 @@ package org.candlepin.model;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.persistence.CollectionTable;
 import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import javax.persistence.JoinTable;
+import javax.persistence.JoinColumn;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -29,7 +31,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.candlepin.service.UniqueIdGenerator;
-import org.hibernate.annotations.CollectionOfElements;
 import org.hibernate.annotations.Type;
 
 /**
@@ -79,8 +80,10 @@ public class Content extends AbstractHibernateObject {
     @Column(nullable = true)
     private Long metadataExpire;
 
-    @CollectionOfElements(targetElement = String.class)
-    @JoinTable(name = "cp_content_modified_products")
+    @ElementCollection
+    @CollectionTable(name = "cp_content_modified_products",
+                     joinColumns = @JoinColumn(name = "cp_content_id"))
+    @Column(name = "element")
     private Set<String> modifiedProductIds = new HashSet<String>();
 
     @Column(nullable = true)

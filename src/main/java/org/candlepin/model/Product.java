@@ -17,11 +17,12 @@ package org.candlepin.model;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.persistence.CollectionTable;
 import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
@@ -31,7 +32,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.CollectionOfElements;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 
@@ -72,21 +72,25 @@ public class Product extends AbstractHibernateObject implements Linkable {
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN })
     private Set<ProductAttribute> attributes;
 
-    @CollectionOfElements
-    @JoinTable(name = "cp_product_content", joinColumns = @JoinColumn(name = "product_id"))
+    @ElementCollection
+    @CollectionTable(name = "cp_product_content",
+                     joinColumns = @JoinColumn(name = "product_id"))
+    @Column(name = "element")
     @LazyCollection(LazyCollectionOption.EXTRA) // allows .size() without loading all data
     private Set<ProductContent> productContent;
 
     @ManyToMany(mappedBy = "providedProducts")
     private Set<Subscription> subscriptions;
 
-    @CollectionOfElements(targetElement = String.class)
-    @JoinTable(name = "cp_product_dependent_products")
+    @ElementCollection
+    @CollectionTable(name = "cp_product_dependent_products",
+                     joinColumns = @JoinColumn(name = "cp_product_id"))
+    @Column(name = "element")
     private Set<String> dependentProductIds;
 
-    @CollectionOfElements(targetElement = String.class)
-    @JoinTable(name = "cp_product_reliance",
-    joinColumns = @JoinColumn(name = "parent_product_id"))
+    @ElementCollection
+    @CollectionTable(name = "cp_product_reliance",
+                     joinColumns = @JoinColumn(name = "parent_product_id"))
     @Column(name = "child_product_id")
     private Set<String> reliantProductIds;
 

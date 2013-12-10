@@ -25,7 +25,6 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.Lob;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
@@ -49,9 +48,13 @@ public class Rules extends AbstractHibernateObject {
     @Column(length = 32)
     private String id;
 
-    @Lob
+    /**
+     * Length of field is required by hypersonic in the unit tests only
+     * This is enough to cover current rules, plus some.
+     * 4194304 bytes = 4 MB
+     */
     @Basic(fetch = FetchType.LAZY)
-    @Column(name = "rules_blob")
+    @Column(name = "rules_blob", length = 4194304)
     private String rules;
 
     @Transient

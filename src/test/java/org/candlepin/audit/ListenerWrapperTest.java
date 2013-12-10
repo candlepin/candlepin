@@ -23,12 +23,13 @@ import static org.mockito.Mockito.when;
 
 import java.io.StringWriter;
 
+import org.candlepin.auth.PrincipalData;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.candlepin.auth.PrincipalData;
 import org.hornetq.api.core.HornetQBuffer;
 import org.hornetq.api.core.HornetQBuffers;
 import org.hornetq.api.core.HornetQException;
+import org.hornetq.api.core.HornetQExceptionType;
 import org.hornetq.api.core.client.ClientMessage;
 import org.junit.Before;
 import org.junit.Test;
@@ -69,7 +70,7 @@ public class ListenerWrapperTest {
     public void whenMsgAcknowledgeThrowsExceptionThenOnMessageShouldntFail()
         throws Exception {
         doReturn(eventJson()).when(hornetQBuffer).readString();
-        doThrow(new HornetQException(HornetQException.DISCONNECTED,
+        doThrow(new HornetQException(HornetQExceptionType.DISCONNECTED,
             "Induced exception for junit testing"))
             .when(mockClientMessage).acknowledge();
         this.listenerWrapper.onMessage(mockClientMessage);

@@ -63,7 +63,7 @@ public class OwnerInfoCurator {
                 .add(Restrictions.eq("owner", owner))
                 .add(Restrictions.eq("type", type));
             c.setProjection(Projections.rowCount());
-            int consumers = (Integer) c.uniqueResult();
+            int consumers = ((Long) c.uniqueResult()).intValue();
 
             c = currentSession().createCriteria(Entitlement.class)
                 .setProjection(Projections.sum("quantity"))
@@ -75,7 +75,7 @@ public class OwnerInfoCurator {
             Object result = c.uniqueResult();
             int entitlements = 0;
             if (result != null) {
-                entitlements = (Integer) result;
+                entitlements = ((Long) result).intValue();
             }
             info.addTypeTotal(type, consumers, entitlements);
 

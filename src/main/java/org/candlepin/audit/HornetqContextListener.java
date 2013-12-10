@@ -81,7 +81,7 @@ public class HornetqContextListener {
             config.setAcceptorConfigurations(transports);
 
             // alter the default pass to silence log output
-            config.setClustered(false);
+            config.setClusterUser(null);
             config.setClusterPassword(null);
 
             // in vm, who needs security?

@@ -27,6 +27,7 @@ import static org.mockito.Mockito.when;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.hornetq.api.core.HornetQException;
+import org.hornetq.api.core.HornetQExceptionType;
 import org.hornetq.api.core.client.ClientConsumer;
 import org.hornetq.api.core.client.ClientSession;
 import org.hornetq.api.core.client.ClientSessionFactory;
@@ -79,7 +80,7 @@ public class EventSourceTest {
     @Test
     public void shouldNotThrowExceptionWhenQueueCreationFails() throws Exception {
         EventSource eventSource = createEventSourceStubbedWithFactoryCreation();
-        doThrow(new HornetQException(HornetQException.ADDRESS_DOES_NOT_EXIST))
+        doThrow(new HornetQException(HornetQExceptionType.QUEUE_DOES_NOT_EXIST))
             .when(clientSession).createQueue(anyString(), anyString());
         EventListener eventListener = mock(EventListener.class);
         eventSource.registerListener(eventListener);
@@ -109,7 +110,7 @@ public class EventSourceTest {
         ClientConsumer mockCC = mock(ClientConsumer.class);
         when(clientSession.createConsumer(anyString()))
             .thenReturn(mockCC);
-        doThrow(new HornetQException(HornetQException.QUEUE_EXISTS))
+        doThrow(new HornetQException(HornetQExceptionType.QUEUE_EXISTS))
             .when(clientSession).createQueue(anyString(), anyString());
         EventListener eventListener = mock(EventListener.class);
         //invoke

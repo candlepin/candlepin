@@ -187,7 +187,7 @@ public class JobCuratorTest extends DatabaseTestFixture {
         newJobStatus().state(JobStatus.JobState.RUNNING)
             .jobClass(HealEntireOrgJob.class)
             .owner("my_owner").create();
-        int result = curator.findNumRunningByOwnerAndClass("my_owner",
+        long result = curator.findNumRunningByOwnerAndClass("my_owner",
             RefreshPoolsJob.class);
         assertEquals(1, result);
     }
