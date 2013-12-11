@@ -31,7 +31,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.0
+Version: 0.9.1
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -339,6 +339,17 @@ fi
 
 
 %changelog
+* Wed Dec 11 2013 jesus m. rodriguez <jesusr@redhat.com> 0.9.1-1
+- bump candlepin-deps to include hibernate4, change brew tag, package version (jesusr@redhat.com)
+- Update jars and related code for Hibernate version 4.2.5 (wpoteat@redhat.com)
+- Comment addition for field to explain number and need. (wpoteat@redhat.com)
+- Remove post filtering where possible (ckozak@redhat.com)
+- Dont list expired ents or ent certs (ckozak@redhat.com)
+- Let hibernate filter pools for product ID (ckozak@redhat.com)
+- Add jcl-over-slf4j to replace commons-logging. (awood@redhat.com)
+- Modify buildfile to allow msgfmt to run for specific locales.  (awood@redhat.com)
+- Fix apidoc generation (alikins@redhat.com)
+
 * Mon Dec 09 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.34-1
 - 1030604: Single error message when adding blacklisted overrides (mstead@redhat.com)
 - 1030644: performance fix for distributors with lots of ents. (dgoodwin@redhat.com)
