@@ -20,7 +20,13 @@ SERVER_CERT_BASE=$CERTS_HOME/candlepin-server
 SERVER_CERT=$SERVER_CERT_BASE.crt
 SERVER_CERT_CSR=$SERVER_CERT_BASE.csr
 SERVER_CERT_P7=$SERVER_CERT_BASE.p7
+
 KEYSTORE=$CERTS_HOME/keystore
+STORETYPE="JKS"
+KEYSTORE_PASS=password
+# these need to be the same, see
+# http://tomcat.apache.org/tomcat-6.0-doc/ssl-howto.html
+KEY_PASS=$KEYSTORE_PASS
 
 while getopts ":f" opt; do
     case $opt in
@@ -66,7 +72,7 @@ else
     echo
     echo "Creating CA csr"
     sudo openssl req -config /etc/pki/tls/openssl.cnf -new -days 365 -key $CA_KEY -out $CA_CERT_CSR \
-       -subj "/O=candlepinproject.org/OU=Candlepin CA/" \
+       -subj "/OU=Candlepin CA/O=candlepinproject.org/" \
        -extensions v3_ca
 
     echo
@@ -89,58 +95,90 @@ else
     echo
     echo "Creating server cert signing request"
     sudo openssl req -new -key $SERVER_KEY_FULL -out $SERVER_CERT_CSR \
-        -subj "/CN=$HOSTNAME/O=candlepinproject.org/OU=Candlepin Server/" -nodes
-
+        -subj "/CN=$HOSTNAME/O=candlepinproject.org/" -nodes \
+        -config /etc/pki/tls/openssl.cnf -extensions v3_req
     sudo openssl rsa -in $SERVER_KEY_FULL -out $SERVER_KEY
 
     echo
     echo "Creating server cert, signing with CA key"
     #sudo openssl ca -in $SERVER_CERT_REQ -cert $CA_CERT -keyfile $CA_KEY -out $SERVER_CERT
     sudo openssl x509 -req -days 365 -in $SERVER_CERT_CSR -CA $CA_CERT -CAkey $CA_KEY \
-        -CAcreateserial -out $SERVER_CERT
+        -CAcreateserial -out $SERVER_CERT \
+        -extfile /etc/pki/tls/openssl.cnf -extensions usr_cert
 
     echo
     echo "Verifying cert"
     sudo openssl verify -purpose sslserver -CAfile $CA_CERT $SERVER_CERT
 
+     echo
+     echo "import $SERVER_CERT server cert into candlepin keystore"
+     # import pck7 version into keystore?
+#     sudo keytool -importcert -trustcacerts -v -v -v -keystore $KEYSTORE \
+#        -storepass $KEYSTORE_PASS  -file $SERVER_CERT  -alias "tomcat" \
+#        -keypass $KEY_PASS -storetype $STORETYPE
     echo
+    
+    
     echo "Adding the CA cert to tomcats keystore, and create a pkcs keystore"
     #sudo openssl pkcs12 -export -in $CA_CERT -inkey $CA_KEY -out $KEYSTORE \
     #sudo openssl pkcs12 -export -noiter -nomaciter -in $CA_CERT -inkey $CA_KEY -out $KEYSTORE \
     #    -name "candlepin-ca" -CAfile $CA_CERT -caname root -chain 
-    sudo openssl pkcs12 -export -in $SERVER_CERT -inkey $SERVER_KEY -out $KEYSTORE \
-        -CAfile $CA_CERT -name "tomcat" -certfile $CA_CERT  -password pass:password -chain -caname root
-    #sudo keytool -import -trustcacerts -alias "sensible-name-for-ca" -file CAcert.crt -keystore $JAVA_HOME/lib/security/cacerts 
+    #sudo openssl pkcs12 -export -in $SERVER_CERT -inkey $SERVER_KEY -out $KEYSTORE \
+    #    -CAfile $CA_CERT -name "tomcat" -certfile $CA_CERT  -password pass:password -chain -caname root
+    #sudo keytool -import -trustcacerts -alias "candlepin-ca" -file CAcert.crt -keystore $JAVA_HOME/lib/security/cacerts 
 
-    #echo "Create a keystore"
-    #sudo keytool -genkey -alias tomcat -keystore $KEYSTORE
+    echo "Create a keystore"
+   sudo keytool -genkey -keystore $KEYSTORE \
+        -dname "CN=$HOSTNAME , OU=Candlepin Server, O=candlepinproject.org" \
+        -keypass $KEY_PASS \
+        -storepass $KEYSTORE_PASS \
+        -keyalg RSA \
+        -alias "tomcat" -storetype $STORETYPE
+
+    echo "CA CERT $CA_CERT"
+    sudo keytool -printcert -v -file $CA_CERT
+
+    echo 
+    echo "SERVER CERT $SERVER_CERT"
+    sudo keytool -printcert -v -file $SERVER_CERT
+
+
 
     echo
     echo "convert ca cert to pkcs7"
-    sudo openssl crl2pkcs7 -nocrl -certfile $CA_CERT \
-      -out $CA_CERT_P7
+#    sudo openssl crl2pkcs7 -nocrl -certfile $CA_CERT \
+#      -out $CA_CERT_P7
 
     echo
-    echo "import pk7 ca cert into keystore"
-#    sudo keytool -importcert -v -v -v -keystore $KEYSTORE \
-#        -storepass password -file $CA_CERT_P7 -storetype pkcs12 -alias tomcat
+    echo "import $CA_CERT ca cert into keystore"
+    sudo keytool -importcert -v -v -v -keystore $KEYSTORE \
+        -storepass $KEYSTORE_PASS -file $CA_CERT  -alias serverCA \
+        -keypass $KEY_PASS -storetype $STORETYPE -trustcacerts 
 
     echo
-    echo "convert server cert pkcs12 to pkcs7 for import to keystore"
+    echo "keystore "
+    sudo keytool -list -v -keystore $KEYSTORE -storepass $KEYSTORE_PASS \
+        -storetype $STORETYPE
+    #echo "convert server cert pkcs12 to pkcs7 for import to keystore"
     # import again as an intmt cert?
     # convert server-cert to pkc7 so we can import to candlepin keystore?
-#    sudo openssl crl2pkcs7  -nocrl -certfile $SERVER_CERT \
-#      -out $SERVER_CERT_P7 -certfile $CA_CERT_P7
+ #   sudo openssl crl2pkcs7  -nocrl -certfile $SERVER_CERT \
+ #     -out $SERVER_CERT_P7 -certfile $CA_CERT_P7
 
-     echo
-     echo "import pk7 server cert into candlepin keystore"
-     # import pck7 version into keystore?
-#     sudo keytool -importcert -trustcacerts -v -v -v -keystore $KEYSTORE #\
-#        -storepass password  -file $SERVER_CERT_P7 -storetype pkcs12 -alias "tomcat"
+    echo "Create a server cert signing request based on keystore"
+    sudo keytool -certreq -v -alias "tomcat" -keystore $KEYSTORE -storepass $KEYSTORE_PASS -file $SERVER_CERT_CSR
+
+    echo "Sign the server cert with the CA cert/key $CA_CERT/$CA_KEY"
+    sudo openssl x509 -req -in $SERVER_CERT_CSR -CA $CA_CERT -CAkey $CA_KEY -CAcreateserial -out $SERVER_CERT -days 365
+
+    echo "Import the signed server cert $SERVER_CERT into keystore $KEYSTORE"
+    sudo keytool -importcert -trustcacerts -v -v -v -keystore $KEYSTORE \
+        -storepass $KEYSTORE_PASS  -file $SERVER_CERT  -alias "tomcat" \
+        -keypass $KEY_PASS -storetype $STORETYPE
 
     # think we need keystore for this
-    echo
-    echo "Adding the server cert to tomcats keystore"
+#    echo
+#    echo "Adding the server cert to tomcats keystore"
 #    sudo openssl pkcs12 -export -in $SERVER_CERT -inkey $SERVER_KEY_FULL -out $KEYSTORE \
 #        -name tomcat -CAfile $CA_CERT -caname "Candlepin CA" -password pass:password
 
