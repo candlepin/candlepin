@@ -2574,7 +2574,8 @@ var Quantity = {
             increment: 1
         };
 
-        if (!Quantity.allows_multi_entitlement(pool)) {
+        // Distributors increment is always 1, suggested is irrelevant
+        if (!Quantity.allows_multi_entitlement(pool) || consumer.type.manifest) {
             return JSON.stringify(result);
         }
 
