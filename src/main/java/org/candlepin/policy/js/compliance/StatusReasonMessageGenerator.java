@@ -55,35 +55,40 @@ public class StatusReasonMessageGenerator {
             reason.getAttributes().put("name", marketingName);
         }
         if (reason.getKey().equals("NOTCOVERED")) {
-            reason.setMessage(i18n.tr("Not covered by a valid subscription."));
+            reason.setMessage(i18n.tr("Not supported by a valid subscription."));
         }
         else if (reason.getKey().equals("ARCH")) {
-            reason.setMessage(i18n.tr("Covers architecture {0} but the system is {1}.",
+            reason.setMessage(i18n.tr("Supports architecture {0} but the system is {1}.",
                 reason.getAttributes().get("covered"),
                 reason.getAttributes().get("has")));
         }
         else if (reason.getKey().equals("SOCKETS")) {
-            reason.setMessage(i18n.tr("Only covers {0} of {1} sockets.",
+            reason.setMessage(i18n.tr("Only supports {0} of {1} sockets.",
                 reason.getAttributes().get("covered"),
                 reason.getAttributes().get("has")));
         }
         else if (reason.getKey().equals("CORES")) {
-            reason.setMessage(i18n.tr("Only covers {0} of {1} cores.",
+            reason.setMessage(i18n.tr("Only supports {0} of {1} cores.",
                 reason.getAttributes().get("covered"),
                 reason.getAttributes().get("has")));
         }
         else if (reason.getKey().equals("RAM")) {
-            reason.setMessage(i18n.tr("Only covers {0}GB of {1}GB of RAM.",
+            reason.setMessage(i18n.tr("Only supports {0}GB of {1}GB of RAM.",
                 reason.getAttributes().get("covered"),
                 reason.getAttributes().get("has")));
         }
         else if (reason.getKey().equals("GUEST_LIMIT")) {
-            reason.setMessage(i18n.tr("Only covers {0} of {1} virtual guests.",
+            reason.setMessage(i18n.tr("Only supports {0} of {1} virtual guests.",
+                reason.getAttributes().get("covered"),
+                reason.getAttributes().get("has")));
+        }
+        else if (reason.getKey().equals("VCPUS")) {
+            reason.setMessage(i18n.tr("Only supports {0} of {1} virtual cpus.",
                 reason.getAttributes().get("covered"),
                 reason.getAttributes().get("has")));
         }
         else { //default fallback
-            reason.setMessage(i18n.tr("{2} COVERAGE PROBLEM.  Covers {0} of {1}",
+            reason.setMessage(i18n.tr("{2} COVERAGE PROBLEM.  Supports {0} of {1}",
                 reason.getAttributes().get("covered"),
                 reason.getAttributes().get("has"), reason.getKey()));
         }

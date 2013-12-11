@@ -1746,6 +1746,93 @@ public class ComplianceRulesTest {
         assertTrue(compliance.isStackCompliant(c, "mockServerStack", ents));
     }
 
+    /*
+     * A 4 socket guest should be covered with 1/4 the "sockets"
+     */
+    @Test
+    public void virtualWithSocketsAttrs() {
+        Consumer c = mockConsumer(PRODUCT_1);
+        c.setFact("virt.is_guest", "true");
+        c.setFact("cpu.cpu_socket(s)", "4");
+        List<Entitlement> ents = new LinkedList<Entitlement>();
+        Entitlement mockEntitlement = mockEntitlement(c, "Awesome OS server", PRODUCT_1);
+        mockEntitlement.getPool().setProductAttribute("sockets", "1", PRODUCT_1);
+        ents.add(mockEntitlement);
+        ents.get(0).setQuantity(1);
+        mockEntCurator(c, ents);
+
+        ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
+
+        assertEquals(ComplianceStatus.GREEN, status.getStatus());
+        assertEquals(0, status.getNonCompliantProducts().size());
+        assertEquals(0, status.getPartiallyCompliantProducts().size());
+
+        assertEquals(1, status.getCompliantProducts().size());
+        assertTrue(status.getCompliantProducts().keySet().contains(PRODUCT_1));
+    }
+
+    @Test
+    public void virtualWithInsufficientSocketsAttrs() {
+        Consumer c = mockConsumer(PRODUCT_1);
+        c.setFact("virt.is_guest", "true");
+        c.setFact("cpu.cpu_socket(s)", "6");
+        List<Entitlement> ents = new LinkedList<Entitlement>();
+        Entitlement mockEntitlement = mockEntitlement(c, PRODUCT_1);
+        mockEntitlement.getPool().setProductAttribute("sockets", "1", PRODUCT_1);
+        ents.add(mockEntitlement);
+        ents.get(0).setQuantity(1);
+        mockEntCurator(c, ents);
+
+        ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
+
+        assertEquals(ComplianceStatus.YELLOW, status.getStatus());
+        assertEquals(0, status.getNonCompliantProducts().size());
+        assertEquals(1, status.getPartiallyCompliantProducts().size());
+        assertEquals(1, status.getReasons().size());
+        assertEquals("VCPUS", status.getReasons().iterator().next().getKey());
+    }
+
+    @Test
+    public void virtualWithVcpuAttr() {
+        Consumer c = mockConsumer(PRODUCT_1);
+        c.setFact("virt.is_guest", "true");
+        c.setFact("cpu.cpu_socket(s)", "4");
+        List<Entitlement> ents = new LinkedList<Entitlement>();
+        Entitlement mockEntitlement = mockEntitlement(c, PRODUCT_1);
+        mockEntitlement.getPool().setProductAttribute("vcpus", "4", PRODUCT_1);
+        ents.add(mockEntitlement);
+        ents.get(0).setQuantity(1);
+        mockEntCurator(c, ents);
+
+        ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
+
+        assertEquals(ComplianceStatus.GREEN, status.getStatus());
+        assertEquals(0, status.getNonCompliantProducts().size());
+        assertEquals(0, status.getPartiallyCompliantProducts().size());
+        assertEquals(1, status.getCompliantProducts().size());
+    }
+
+    @Test
+    public void virtualWithInsufficientVcpuAttr() {
+        Consumer c = mockConsumer(PRODUCT_1);
+        c.setFact("virt.is_guest", "true");
+        c.setFact("cpu.cpu_socket(s)", "4");
+        List<Entitlement> ents = new LinkedList<Entitlement>();
+        Entitlement mockEntitlement = mockEntitlement(c, "Awesome OS server", PRODUCT_1);
+        mockEntitlement.getPool().setProductAttribute("vcpus", "1", PRODUCT_1);
+        ents.add(mockEntitlement);
+        ents.get(0).setQuantity(1);
+        mockEntCurator(c, ents);
+
+        ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
+
+        assertEquals(ComplianceStatus.YELLOW, status.getStatus());
+        assertEquals(0, status.getNonCompliantProducts().size());
+        assertEquals(1, status.getPartiallyCompliantProducts().size());
+        assertEquals(1, status.getReasons().size());
+        assertEquals("VCPUS", status.getReasons().iterator().next().getKey());
+    }
+
     private void mockEntCurator(Consumer c, List<Entitlement> ents) {
         when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
         when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(ents);

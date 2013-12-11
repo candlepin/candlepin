@@ -71,7 +71,7 @@ public class StatusReasonMessageGeneratorTest {
         ComplianceReason reason = buildReason("SOCKETS", buildGeneralAttributes("8", "4"));
         generator.setMessage(consumer, reason, new Date());
         assertEquals(
-            "Only covers 4 of 8 sockets.",
+            "Only supports 4 of 8 sockets.",
             reason.getMessage());
     }
 
@@ -80,7 +80,7 @@ public class StatusReasonMessageGeneratorTest {
         ComplianceReason reason = buildReason("SOCKETS", buildStackedAttributes("8", "4"));
         generator.setMessage(consumer, reason, new Date());
         String message = reason.getMessage();
-        assertEquals("Only covers 4 of 8 sockets.", message);
+        assertEquals("Only supports 4 of 8 sockets.", message);
         String[] names = reason.getAttributes().get("name").split("/");
         Arrays.sort(names);
         assertEquals("Stack Subscription One", names[0]);
@@ -93,7 +93,7 @@ public class StatusReasonMessageGeneratorTest {
             buildGeneralAttributes("x86_64", "ppc64"));
         generator.setMessage(consumer, reason, new Date());
         assertEquals(
-            "Covers architecture ppc64 but" +
+            "Supports architecture ppc64 but" +
             " the system is x86_64.", reason.getMessage());
     }
 
@@ -102,7 +102,7 @@ public class StatusReasonMessageGeneratorTest {
         ComplianceReason reason = buildReason("RAM", buildGeneralAttributes("8", "4"));
         generator.setMessage(consumer, reason, new Date());
         assertEquals(
-            "Only covers 4GB of 8GB of RAM.",
+            "Only supports 4GB of 8GB of RAM.",
             reason.getMessage());
     }
 
@@ -112,7 +112,17 @@ public class StatusReasonMessageGeneratorTest {
             buildGeneralAttributes("8", "4"));
         generator.setMessage(consumer, reason, new Date());
         assertEquals(
-            "Only covers 4 of 8 virtual guests.",
+            "Only supports 4 of 8 virtual guests.",
+            reason.getMessage());
+    }
+
+    @Test
+    public void testVcpuMessage() {
+        ComplianceReason reason = buildReason("VCPUS",
+            buildGeneralAttributes("8", "4"));
+        generator.setMessage(consumer, reason, new Date());
+        assertEquals(
+            "Only supports 4 of 8 virtual cpus.",
             reason.getMessage());
     }
 
@@ -121,7 +131,7 @@ public class StatusReasonMessageGeneratorTest {
         ComplianceReason reason = buildReason("CORES", buildGeneralAttributes("8", "4"));
         generator.setMessage(consumer, reason, new Date());
         assertEquals(
-            "Only covers 4 of 8 cores.",
+            "Only supports 4 of 8 cores.",
             reason.getMessage());
     }
 
@@ -132,7 +142,7 @@ public class StatusReasonMessageGeneratorTest {
         generator.setMessage(consumer, reason, new Date());
         assertEquals(
             "NOT_A_KEY COVERAGE PROBLEM.  " +
-            "Covers 4 of 8", reason.getMessage());
+            "Supports 4 of 8", reason.getMessage());
     }
 
     @Test
@@ -145,7 +155,7 @@ public class StatusReasonMessageGeneratorTest {
         installed.setProductName("NonCovered Product");
         consumer.addInstalledProduct(installed);
         generator.setMessage(consumer, reason, new Date());
-        assertEquals("Not covered by a valid subscription.", reason.getMessage());
+        assertEquals("Not supported by a valid subscription.", reason.getMessage());
     }
 
     private ComplianceReason buildReason(String key, Map<String, String> attributes) {
