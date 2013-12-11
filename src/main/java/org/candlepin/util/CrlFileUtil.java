@@ -17,6 +17,7 @@ package org.candlepin.util;
 import org.candlepin.pki.PKIUtility;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
@@ -30,13 +31,17 @@ import java.security.cert.CRLException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509CRL;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * CrlFileUtil
  */
+@Singleton
 public class CrlFileUtil {
     private static Logger log = LoggerFactory.getLogger(CrlFileUtil.class);
-    private PKIUtility pkiUtility;
+    private final PKIUtility pkiUtility;
+    private final ReadWriteLock lock = new ReentrantReadWriteLock(true);
 
     @Inject
     public CrlFileUtil(PKIUtility pkiUtility) {
@@ -56,13 +61,14 @@ public class CrlFileUtil {
         throws CRLException, CertificateException, IOException {
 
         FileInputStream in = null;
+        lock.readLock().lock();
         try {
             if (file.exists() && file.length() > 0) {
-                log.info("CRL File: " + file + " exists. Loading the old CRL");
+                log.info("CRL File: {} exists. Loading the old CRL", file);
                 in = new FileInputStream(file);
             }
             else {
-                log.info("CRL File: " + file + " either does not exist or is empty.");
+                log.info("CRL File: {} either does not exist or is empty.", file);
             }
             X509CRL x509crl = null;
             if (in != null) {
@@ -79,10 +85,11 @@ public class CrlFileUtil {
                 }
                 catch (IOException e) {
                     log.error(
-                        "exception when closing a CRL file: " + file.getAbsolutePath());
+                        "exception when closing a CRL file: {}", file.getAbsolutePath());
                     // we tried, we failed. better luck next time!
                 }
             }
+            lock.readLock().unlock();
         }
     }
 
@@ -91,7 +98,7 @@ public class CrlFileUtil {
 
         byte[] encoded = pkiUtility.getPemEncoded(crl);
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
-
+        lock.writeLock().lock();
         try {
             stream.write(encoded);
             log.info("Completed generating CRL. Writing it to disk");
@@ -104,9 +111,10 @@ public class CrlFileUtil {
                 }
                 catch (IOException e) {
                     log.error(
-                        "exception when closing a CRL file: " + file.getAbsolutePath());
+                        "exception when closing a CRL file: {}", file.getAbsolutePath());
                 }
             }
+            lock.writeLock().unlock();
         }
 
         return encoded;
