@@ -40,6 +40,7 @@ public class LoggerAndMDCFilterTest {
         context = new LoggerContext();
         context.start();
         filter = new LoggerAndMDCFilter();
+        filter.setContext(context);
 
         filter.setKey("foo");
         filter.setTopLogger("org.candlepin");
@@ -58,6 +59,7 @@ public class LoggerAndMDCFilterTest {
     @Test
     public void testDecideWithUnStartedFilter() {
         filter = new LoggerAndMDCFilter();
+        filter.setContext(context);
         Logger logger = context.getLogger("org.candlepin.foo");
         assertEquals(FilterReply.NEUTRAL,
             filter.decide(null, logger, Level.DEBUG, null, null, null));
@@ -102,6 +104,7 @@ public class LoggerAndMDCFilterTest {
     @Test
     public void testStart() {
         filter = new LoggerAndMDCFilter();
+        filter.setContext(context);
         filter.start();
         assertFalse(filter.isStarted());
 
