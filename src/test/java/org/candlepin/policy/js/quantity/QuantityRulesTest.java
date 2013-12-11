@@ -504,4 +504,22 @@ public class QuantityRulesTest {
             quantityRules.getSuggestedQuantity(pool, consumer, new Date());
         assertEquals(new Long(4), suggested.getSuggested());
     }
+
+    /*
+     * Distributors should always get suggested=1, increment=1
+     */
+    @Test
+    public void testInstanceBasedOnDistributor() {
+        Consumer dist = TestUtil.createConsumer(owner);
+        dist.getType().setManifest(true);
+        dist.setFact(IS_VIRT, "false");
+        dist.setFact(SOCKET_FACT, "4");
+        pool.setProductAttribute(SOCKET_ATTRIBUTE, "2", product.getId());
+        pool.setProductAttribute(INSTANCE_ATTRIBUTE, "2", product.getId());
+
+        SuggestedQuantity suggested =
+            quantityRules.getSuggestedQuantity(pool, dist, new Date());
+        assertEquals(new Long(1), suggested.getSuggested());
+        assertEquals(new Long(1), suggested.getIncrement());
+    }
 }
