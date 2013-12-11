@@ -75,6 +75,7 @@ else
 
     echo
     echo "Creating CA csr"
+    # this openssl.cnf is
     sudo openssl req -config /etc/pki/tls/openssl.cnf -new -days 365 -key $CA_KEY -out $CA_CERT_CSR \
        -subj "/OU=Candlepin CA/O=candlepinproject.org/" \
        -extensions v3_ca
@@ -83,16 +84,17 @@ else
     echo "Creating CA certificate"
 #    sudo openssl req -new -x509 -days 365 -key $CA_KEY -out $CA_CERT -subj \
 #        "/O=candlepinproject.org/OU=Candlepin CA/"
+    # this openssl.cnf is tweak to let us use lets DN info for our CA cert and signing requests
     sudo openssl x509 -extfile /etc/pki/tls/openssl.cnf -extensions v3_ca \
         -trustout -signkey $CA_KEY -days 365 -req -in $CA_CERT_CSR -out $CA_CERT
 
     echo
-    echo "Creating server certs and keystores"
-    echo "Creating server private key password"
+    echo "Creating apache server certs"
+    echo "Creating apache server private key password"
     sudo su -c "echo $RANDOM > $SERVER_KEY_PASSWORD"
 
     echo
-    echo "Creating server cert private key"
+    echo "Creating apache server cert private key"
     sudo openssl genrsa -out $SERVER_KEY -passout "file:$SERVER_KEY_PASSWORD" 1024
     sudo cp $SERVER_KEY $SERVER_KEY_FULL
 
@@ -111,7 +113,7 @@ else
         -extfile /etc/pki/tls/openssl.cnf -extensions usr_cert
 
     echo
-    echo "Verifying cert"
+    echo "Verifying apache server cert"
     sudo openssl verify -purpose sslserver -CAfile $CA_CERT $SERVER_CERT
 
 #     echo
@@ -131,7 +133,7 @@ else
     #    -CAfile $CA_CERT -name "tomcat" -certfile $CA_CERT  -password pass:password -chain -caname root
     #sudo keytool -import -trustcacerts -alias "candlepin-ca" -file CAcert.crt -keystore $JAVA_HOME/lib/security/cacerts 
 
-    echo "Create a keystore"
+    echo "Create a keystore for tomcat"
     sudo keytool -genkey -keystore $KEYSTORE \
         -dname "CN=$HOSTNAME , OU=Candlepin Server, O=candlepinproject.org" \
         -keypass $KEY_PASS \
@@ -148,7 +150,7 @@ else
 
 
     echo
-    echo "import $CA_CERT ca cert into keystore"
+    echo "import $CA_CERT ca cert into tomcat keystore"
     sudo keytool -importcert -v -v -v -keystore $KEYSTORE \
         -storepass $KEYSTORE_PASS -file $CA_CERT  -alias serverCA \
         -keypass $KEY_PASS -storetype $STORETYPE -trustcacerts 
