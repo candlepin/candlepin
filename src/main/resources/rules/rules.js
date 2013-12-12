@@ -2308,19 +2308,13 @@ var Compliance = {
     },
 
     getSortedEndDates: function(entitlements) {
-        var sorter = function(date1, date2) {
-            var e1End = new Date(e1.endDate);
-            var e2End = new Date(e2.endDate);
-            return Utils.date_compare(e1End, e2End);
-        };
-
         var dates = [];
         for (var k = 0; k < entitlements.length; k++) {
             var ent = entitlements[k];
 
             dates.push(new Date(ent.endDate));
         }
-        dates.sort(function(d1, d2) { Utils.date_compare(d1, d2) });
+        dates.sort(function(d1, d2) { return Utils.date_compare(d1, d2) });
         return dates;
     },
 
@@ -2502,19 +2496,43 @@ var Compliance = {
      * and entitlements.
      */
     determineCompliantUntilDate: function(consumer, entitlements, startDate, log) {
-        var initialEntitlements = Compliance.filterEntitlementsByDate(entitlements, startDate);
+        var installedProducts = [];
+        if (consumer.installedProducts === null || consumer.installedProducts.length == 0) {
+            return null;
+        }
+
+        for (var i = 0; i < consumer.installedProducts.length; i++) {
+            var productId =  consumer.installedProducts[i].productId;
+            installedProducts.push(productId);
+        }
+
+        // TODO: pull out all entitlements that provide or
+        // stack with entitlements that provide installed products.
+        // For now I don't think that's necessary
+        var entitlementsProvidingProducts = [];
+        for (var i = 0; i < entitlements.length; i++) {
+            var ent = entitlements[i];
+            for (var j = 0; j < installedProducts.length; j++) {
+                var productId = installedProducts[j];
+                if (ent.pool.provides(productId)) {
+                    entitlementsProvidingProducts.push(ent);
+                    break;
+                }
+            }
+        }
 
         // Get all end dates from current entitlements sorted ascending.
-        var dates = Compliance.getSortedEndDates(initialEntitlements);
+        var dates = Compliance.getSortedEndDates(entitlementsProvidingProducts);
 
+        var lastDate = startDate;
         for (var k = 0; k < dates.length; k++) {
             var dateToCheck = dates[k];
 
-
-            // Ignore past dates.
-            if (dateToCheck < startDate) {
+            // Ignore past dates and duplicates
+            if (Utils.date_compare(dateToCheck, lastDate) != 1) {
                 continue;
             }
+            lastDate = dateToCheck;
 
             // Need to check if we are still compliant after the end date,
             // so we add one second.

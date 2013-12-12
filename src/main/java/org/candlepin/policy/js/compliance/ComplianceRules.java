@@ -63,12 +63,6 @@ public class ComplianceRules {
      */
     public ComplianceStatus getStatus(Consumer c, Date date) {
 
-        if (c.getType().isManifest()) {
-            // We don't care about status for manifest consumer and they can have a LOT
-            // of entitlements. Skip it.
-            return new ComplianceStatus(date);
-        }
-
         List<Entitlement> ents = entCurator.listByConsumerAndDate(c, date);
 
         JsonJsContext args = new JsonJsContext(mapper);
