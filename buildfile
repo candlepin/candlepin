@@ -224,11 +224,34 @@ define "candlepin" do
   doc.using :tag => 'httpcode:m:HTTP Code:'
 
   # NOTE: changes here must also be made in build.xml!
+  candlepin_path = "org/candlepin"
+  compiled_cp_path = "#{compile.target}/#{candlepin_path}"
 
-  package(:jar, :id=>'candlepin-api').clean.include 'target/classes/org/candlepin/auth','target/classes/org/candlepin/config','target/classes/org/candlepin/service','target/classes/org/candlepin/model','target/classes/org/candlepin/pki', 'target/classes/org/candlepin/exceptions', 'target/classes/org/candlepin/util', 'target/classes/org/candlepin/jackson', 'target/classes/org/candlepin/resteasy', 'target/classes/org/candlepin/paging', :path=>"org/candlepin/"
-  package(:jar, :id=>"candlepin-certgen").clean.include 'target/classes/org/candlepin/config', 'target/classes/org/candlepin/jackson', 'target/classes/org/candlepin/model', 'target/classes/org/candlepin/pki', 'target/classes/org/candlepin/util', 'target/classes/org/candlepin/service','target/classes/org/candlepin/pinsetter','target/classes/org/candlepin/exceptions', :path=>'org/candlepin'
-  package(:war, :id=>"candlepin").libs += artifacts(HSQLDB)
-  package(:war, :id=>"candlepin").classes << generate
+  # The apicrawl package is only used for generating documentation so there is no
+  # need to ship it.  Ideally, we'd put apicrawl in its own buildr project but I
+  # kept getting complaints about circular dependencies.
+  package(:jar, :id=>'candlepin-api').tap do |jar|
+    jar.clean
+    pkgs = %w{auth config exceptions jackson model paging pki resteasy service util}.map { |pkg| "#{compiled_cp_path}/#{pkg}" }
+    p = jar.path(candlepin_path)
+    p.include(pkgs).exclude("#{compiled_cp_path}/util/apicrawl")
+  end
+
+  package(:jar, :id=>"candlepin-certgen").tap do |jar|
+    jar.clean
+    pkgs = %w{config exceptions jackson model pinsetter pki service util}.map { |pkg| "#{compiled_cp_path}/#{pkg}" }
+    p = jar.path(candlepin_path)
+    p.include(pkgs).exclude("#{compiled_cp_path}/util/apicrawl")
+  end
+
+  package(:war, :id=>"candlepin").tap do |war|
+    war.libs += artifacts(HSQLDB)
+    war.classes.clear
+    war.classes = [generate, resources.target]
+    web_inf = war.path('WEB-INF/classes')
+    web_inf.include("#{compile.target}/net")
+    web_inf.path(candlepin_path).include("#{compiled_cp_path}/**").exclude("#{compiled_cp_path}/util/apicrawl")
+  end
 
   desc 'Print a list of dependencies'
   task :antdeps do

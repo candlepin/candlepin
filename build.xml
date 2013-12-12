@@ -123,6 +123,7 @@
         <path location="${src.main.dir}" />
         <path location="${res.main.dir}" />
       </src>
+      <exclude name="org/candlepin/util/apicrawl/**"/>
       <classpath>
         <fileset dir="${dist.lib.dir}">
           <include name="**/*.jar" />
