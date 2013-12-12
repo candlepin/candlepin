@@ -49,7 +49,7 @@ var PROD_ARCHITECTURE_SEPARATOR = ",";
 
 // Product attribute names
 var SOCKETS_ATTRIBUTE = "sockets";
-var VCPUS_ATTRIBUTE = "vcpus";
+var VCPUS_ATTRIBUTE = "vcpu";
 var CORES_ATTRIBUTE = "cores";
 var ARCH_ATTRIBUTE = "arch";
 var RAM_ATTRIBUTE = "ram";

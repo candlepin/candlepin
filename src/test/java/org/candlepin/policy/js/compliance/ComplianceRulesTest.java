@@ -1789,7 +1789,7 @@ public class ComplianceRulesTest {
         assertEquals(0, status.getNonCompliantProducts().size());
         assertEquals(1, status.getPartiallyCompliantProducts().size());
         assertEquals(1, status.getReasons().size());
-        assertEquals("VCPUS", status.getReasons().iterator().next().getKey());
+        assertEquals("VCPU", status.getReasons().iterator().next().getKey());
     }
 
     @Test
@@ -1799,7 +1799,7 @@ public class ComplianceRulesTest {
         c.setFact("cpu.cpu_socket(s)", "4");
         List<Entitlement> ents = new LinkedList<Entitlement>();
         Entitlement mockEntitlement = mockEntitlement(c, PRODUCT_1);
-        mockEntitlement.getPool().setProductAttribute("vcpus", "4", PRODUCT_1);
+        mockEntitlement.getPool().setProductAttribute("vcpu", "4", PRODUCT_1);
         ents.add(mockEntitlement);
         ents.get(0).setQuantity(1);
         mockEntCurator(c, ents);
@@ -1819,7 +1819,7 @@ public class ComplianceRulesTest {
         c.setFact("cpu.cpu_socket(s)", "4");
         List<Entitlement> ents = new LinkedList<Entitlement>();
         Entitlement mockEntitlement = mockEntitlement(c, "Awesome OS server", PRODUCT_1);
-        mockEntitlement.getPool().setProductAttribute("vcpus", "1", PRODUCT_1);
+        mockEntitlement.getPool().setProductAttribute("vcpu", "1", PRODUCT_1);
         ents.add(mockEntitlement);
         ents.get(0).setQuantity(1);
         mockEntCurator(c, ents);
@@ -1830,7 +1830,7 @@ public class ComplianceRulesTest {
         assertEquals(0, status.getNonCompliantProducts().size());
         assertEquals(1, status.getPartiallyCompliantProducts().size());
         assertEquals(1, status.getReasons().size());
-        assertEquals("VCPUS", status.getReasons().iterator().next().getKey());
+        assertEquals("VCPU", status.getReasons().iterator().next().getKey());
     }
 
     private void mockEntCurator(Consumer c, List<Entitlement> ents) {

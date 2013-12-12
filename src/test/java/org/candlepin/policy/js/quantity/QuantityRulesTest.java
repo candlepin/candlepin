@@ -54,7 +54,7 @@ public class QuantityRulesTest {
     private static final String CORES_FACT = "cpu.core(s)_per_socket";
     private static final String IS_VIRT = "virt.is_guest";
     private static final String GUEST_LIMIT_ATTRIBUTE = "guest_limit";
-    private static final String VCPU_ATTRIBUTE = "vcpus";
+    private static final String VCPU_ATTRIBUTE = "vcpu";
 
     private Consumer consumer;
     private Pool pool;

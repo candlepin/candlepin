@@ -82,7 +82,7 @@ public class StatusReasonMessageGenerator {
                 reason.getAttributes().get("covered"),
                 reason.getAttributes().get("has")));
         }
-        else if (reason.getKey().equals("VCPUS")) {
+        else if (reason.getKey().equals("VCPU")) {
             reason.setMessage(i18n.tr("Only supports {0} of {1} virtual cpus.",
                 reason.getAttributes().get("covered"),
                 reason.getAttributes().get("has")));

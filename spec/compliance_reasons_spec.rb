@@ -409,6 +409,16 @@ describe 'Stacking Compliance Reasons' do
                  :stacking_id => @stack_id})
     @stackable_sub_1 = @cp.create_subscription(@owner['key'], @stackable_product_1.id, 10)
 
+    @stackable_product_2 = create_product(nil, random_string("Stackable"), :attributes =>
+                {:version => '1.2',
+                 :vcpu => '4',
+                 :arch => 'x86_64',
+                 :support_level => 'standard',
+                 :support_type => 'excellent',
+                 :'multi-entitlement' => 'yes',
+                 :stacking_id => @stack_id})
+    @stackable_sub_2 = @cp.create_subscription(@owner['key'], @stackable_product_2.id, 10)
+
     @not_covered_product = create_product(nil, random_string("Not Covered Product"), :attributes =>
                 {:version => '6.4',
                  :sockets => 2,
@@ -536,7 +546,84 @@ describe 'Stacking Compliance Reasons' do
                                                         'has' => expected_has,
                                                         'name' => @stackable_product_1.name})
   end
+
+  it 'report stack does not cover guest vcpu with sockets attr' do
+    system = consumer_client(@user, random_string('system1'), :system, nil,
+                {'system.certificate_version' => '3.2',
+                 'uname.machine' => 'x86_64',
+                 'memory.memtotal' => '4194304',
+                 'cpu.cpu_socket(s)' => '20',
+                 'virt.is_guest' => 'True'})
+    installed = [
+        {'productId' => @stackable_product_1.id, 'productName' => @stackable_product_1.name}
+    ]
+    system.update_consumer({:installedProducts => installed})
+
+    pool = find_pool(@owner.id, @stackable_sub_1.id)
+    pool.should_not == nil
+
+    entitlements = system.consume_pool(pool.id, {:quantity => 2})
+    entitlements.should_not == nil
+    entitlements.size.should == 1
+    entitlement = entitlements[0]
+    entitlement.quantity.should == 2
+
+    compliance_status = @cp.get_compliance(consumer_id=system.uuid)
+    compliance_status['status'].should == 'partial'
+    compliance_status['compliant'].should == false
+    compliance_status.should have_key('reasons')
+
+    expected_has = "20"
+    expected_covered = "16"
+    expected_message = "Only supports %s of %s virtual cpus." % [expected_covered,
+                                                             expected_has]
+
+    reasons = compliance_status['reasons']
+    reasons.size.should == 1
+    assert_reason(reasons[0], 'VCPU', expected_message, {'stack_id' => @stack_id,
+                                                        'covered' => expected_covered,
+                                                        'has' => expected_has,
+                                                        'name' => @stackable_product_1.name})
+  end
   
+  it 'report stack does not cover guest vcpu with vcpu attr' do
+    system = consumer_client(@user, random_string('system1'), :system, nil,
+                {'system.certificate_version' => '3.2',
+                 'uname.machine' => 'x86_64',
+                 'memory.memtotal' => '4194304',
+                 'cpu.cpu_socket(s)' => '12',
+                 'virt.is_guest' => 'True'})
+    installed = [
+        {'productId' => @stackable_product_2.id, 'productName' => @stackable_product_2.name}
+    ]
+    system.update_consumer({:installedProducts => installed})
+    
+    pool = find_pool(@owner.id, @stackable_sub_2.id)
+    pool.should_not == nil
+
+    entitlements = system.consume_pool(pool.id, {:quantity => 2})
+    entitlements.should_not == nil
+    entitlements.size.should == 1
+    entitlement = entitlements[0]
+    entitlement.quantity.should == 2
+
+    compliance_status = @cp.get_compliance(consumer_id=system.uuid)
+    compliance_status['status'].should == 'partial'
+    compliance_status['compliant'].should == false
+    compliance_status.should have_key('reasons')
+    
+    expected_has = "12"
+    expected_covered = "8"
+    expected_message = "Only supports %s of %s virtual cpus." % [expected_covered,
+                                                             expected_has]
+
+    reasons = compliance_status['reasons']
+    reasons.size.should == 1
+    assert_reason(reasons[0], 'VCPU', expected_message, {'stack_id' => @stack_id,
+                                                        'covered' => expected_covered,
+                                                        'has' => expected_has,
+                                                        'name' => @stackable_product_2.name})
+  end
   it 'report stack does not cover cores' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
                 {'system.certificate_version' => '3.2',

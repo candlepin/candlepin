@@ -118,7 +118,7 @@ public class StatusReasonMessageGeneratorTest {
 
     @Test
     public void testVcpuMessage() {
-        ComplianceReason reason = buildReason("VCPUS",
+        ComplianceReason reason = buildReason("VCPU",
             buildGeneralAttributes("8", "4"));
         generator.setMessage(consumer, reason, new Date());
         assertEquals(
