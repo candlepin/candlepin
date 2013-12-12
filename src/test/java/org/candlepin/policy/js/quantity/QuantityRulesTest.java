@@ -54,6 +54,7 @@ public class QuantityRulesTest {
     private static final String CORES_FACT = "cpu.core(s)_per_socket";
     private static final String IS_VIRT = "virt.is_guest";
     private static final String GUEST_LIMIT_ATTRIBUTE = "guest_limit";
+    private static final String VCPU_ATTRIBUTE = "vcpu";
 
     private Consumer consumer;
     private Pool pool;
@@ -168,10 +169,20 @@ public class QuantityRulesTest {
     public void testVirtUsesSocketsIfVcpuDoesNotExist() {
         consumer.setFact(IS_VIRT, "true");
         consumer.setFact(SOCKET_FACT, "4");
-        pool.setProductAttribute(SOCKET_ATTRIBUTE, "2", product.getId());
+        pool.setProductAttribute(SOCKET_ATTRIBUTE, "1", product.getId());
         SuggestedQuantity suggested =
             quantityRules.getSuggestedQuantity(pool, consumer, new Date());
-        assertEquals(new Long(2), suggested.getSuggested());
+        assertEquals(new Long(1), suggested.getSuggested());
+    }
+
+    @Test
+    public void testVirtUsesVcpuIfExist() {
+        consumer.setFact(IS_VIRT, "true");
+        consumer.setFact(SOCKET_FACT, "4");
+        pool.setProductAttribute(VCPU_ATTRIBUTE, "1", product.getId());
+        SuggestedQuantity suggested =
+            quantityRules.getSuggestedQuantity(pool, consumer, new Date());
+        assertEquals(new Long(4), suggested.getSuggested());
     }
 
     @Test

@@ -1,4 +1,4 @@
-// Version: 5.0
+// Version: 5.1
 
 /*
  * Default Candlepin rule set.
@@ -49,6 +49,7 @@ var PROD_ARCHITECTURE_SEPARATOR = ",";
 
 // Product attribute names
 var SOCKETS_ATTRIBUTE = "sockets";
+var VCPUS_ATTRIBUTE = "vcpu";
 var CORES_ATTRIBUTE = "cores";
 var ARCH_ATTRIBUTE = "arch";
 var RAM_ATTRIBUTE = "ram";
@@ -131,7 +132,7 @@ var GLOBAL_STACKABLE_ATTRIBUTES = [
  * Model object related functions.
  */
 
-function createPool(pool) {
+function createPool(pool, isGuest) {
 
     pool.product_list = [];
 
@@ -202,6 +203,34 @@ function createPool(pool) {
         }
         return this.product_list;
     };
+
+    pool.setProductAttribute = function (attrName, attrValue) {
+        attributeSets = [this.productAttributes, this.attributes];
+        for (var i = 0; i < attributeSets.length; i++) {
+            var attrs = attributeSets[i];
+            for (var k = 0; k < attrs.length; k++) {
+                var attr = attrs[k];
+                if (attrName == attr.name) {
+                    attr.value = attrValue;
+                    return;
+                }
+            }
+        }
+        this.productAttributes.push({name: attrName, value: attrValue});
+    };
+
+    if (isGuest && !pool.hasProductAttribute("converted_vcpus")) {
+        if (pool.hasProductAttribute(VCPUS_ATTRIBUTE)) {
+            pool.setProductAttribute(SOCKETS_ATTRIBUTE, pool.getProductAttribute(VCPUS_ATTRIBUTE));
+        } else if (pool.hasProductAttribute(SOCKETS_ATTRIBUTE)) {
+            var sockets = pool.getProductAttribute(SOCKETS_ATTRIBUTE);
+            var vcpus = "" + (parseInt(sockets) * 4);
+            pool.setProductAttribute(SOCKETS_ATTRIBUTE, vcpus);
+        }
+        // This marks the pool as having been converted, otherwise we can run into trouble
+        // multiplying sockets again
+        pool.setProductAttribute("converted_vcpus", "true");
+    }
     return pool;
 }
 
@@ -1215,7 +1244,7 @@ var Entitlement = {
         context = JSON.parse(json_context);
 
         if ("pool" in context) {
-            context.pool = createPool(context.pool);
+            context.pool = createPool(context.pool, Utils.isGuest(context.consumer));
         }
 
         context.hasEntitlement = function(poolId) {
@@ -1859,19 +1888,20 @@ var Autobind = {
                               "partiallyCompliantProducts",
                               "compliantProducts"];
 
+        var isGuest = Utils.isGuest(context.consumer);
         for (var i = 0; i < createPoolsFor.length; i++) {
             var nextMapAttrName = createPoolsFor[i];
             var nextMap = compliance[nextMapAttrName];
             for (var key in nextMap) {
                 var ents = nextMap[key];
                 for (var entIdx = 0; entIdx < ents.length; entIdx++) {
-                    ents[entIdx].pool = createPool(ents[entIdx].pool);
+                    ents[entIdx].pool = createPool(ents[entIdx].pool, isGuest);
                 }
             }
         }
 
         for (var i = 0; i < context.pools.length; i++) {
-            context.pools[i] = createPool(context.pools[i]);
+            context.pools[i] = createPool(context.pools[i], isGuest);
             var pool = context.pools[i];
             if (pool.quantity == -1) {
                 // In the unlimited case, we need at most the number required to cover the system
@@ -2247,13 +2277,14 @@ var Compliance = {
         context = JSON.parse(json_context);
         context.ondate = new Date(context.ondate);
 
+        var isGuest = Utils.isGuest(context.consumer);
         // Add some methods to the various Pool objects:
         for (var k = 0; k < ((context.entitlements) ? context.entitlements.length : 0); k++) {
             var e = context.entitlements[k];
-            e.pool = createPool(e.pool);
+            e.pool = createPool(e.pool, isGuest);
         }
         if ("entitlement" in context) {
-            context.entitlement.pool = createPool(context.entitlement.pool);
+            context.entitlement.pool = createPool(context.entitlement.pool, isGuest);
         }
 
         return context;
@@ -2274,6 +2305,15 @@ var Compliance = {
             }
         }
         compStatus.compliantUntil = compliantUntil;
+        // transform sockets into vcpus for users.
+        if (Utils.isGuest(context.consumer)) {
+            for (var i=0; i < compStatus.reasons.length; i++) {
+                var reason = compStatus.reasons[i];
+                if (reason["key"] == SOCKETS_ATTRIBUTE.toUpperCase()) {
+                    reason["key"] = VCPUS_ATTRIBUTE.toUpperCase();
+                }
+            }
+        }
         var output = JSON.stringify(compStatus);
         return output;
     },
@@ -2553,11 +2593,11 @@ var Compliance = {
 var Quantity = {
     get_quantity_context: function() {
         context = JSON.parse(json_context);
-        context.pool = createPool(context.pool);
+        context.pool = createPool(context.pool, Utils.isGuest(context.consumer));
         if ("validEntitlements" in context) {
             for (var i = 0; i < context.validEntitlements.length; i++) {
                 var e = context.validEntitlements[i];
-                e.pool = createPool(e.pool);
+                e.pool = createPool(e.pool, Utils.isGuest(context.consumer));
             }
         }
         return context;
@@ -2626,7 +2666,8 @@ var PoolType = {
 
     get_pool_type_context: function() {
         context = JSON.parse(json_context);
-        context.pool = createPool(context.pool);
+        // Doesn't matter if the consumer is a guest at this point
+        context.pool = createPool(context.pool, false);
         return context;
     },
 
@@ -2798,7 +2839,7 @@ var Utils = {
     },
 
     isGuest: function(consumer) {
-        if (!consumer.facts['virt.is_guest']) {
+        if (consumer.facts === null || !consumer.facts['virt.is_guest']) {
             return false;
         }
 
