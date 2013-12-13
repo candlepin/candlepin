@@ -23,8 +23,9 @@
 
   <!-- List of jars we expect to install from /usr/share/java in a regular build. -->
   <property name="jar.deps" value="antlr aopalliance apache-mime4j bcprov-jdk16 c3p0
-    sisu-cglib/cglib codehaus-jackson/jackson-core-lgpl codehaus-jackson/jackson-jaxrs
-    codehaus-jackson/jackson-mapper-lgpl codehaus-jackson/jackson-xc
+    sisu-cglib/cglib jackson-annotations jackson-core jackson-databind
+    jackson-jaxrs-providers/jackson-jaxrs-json-provider jackson-module-jaxb-annotations
+    jackson-jaxrs-providers/jackson-jaxrs-base
     commons-codec commons-collections
     commons-httpclient commons-io commons-lang
     dom4j gettext-commons google-collections guice
