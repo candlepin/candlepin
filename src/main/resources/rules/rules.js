@@ -57,30 +57,13 @@ var REQUIRES_HOST_ATTRIBUTE = "requires_host";
 var VIRT_ONLY = "virt_only";
 var POOL_DERIVED = "pool_derived";
 var GUEST_LIMIT_ATTRIBUTE = "guest_limit";
+var VCPU_ATTRIBUTE = "vcpu";
 
 // caller types
 var BEST_POOLS_CALLER = "best_pools";
 var BIND_CALLER = "bind";
 var LIST_POOLS_CALLER = "list_pools";
 var UNKNOWN_CALLER = "unknown";
-
-/**
- *  These product attributes are considered when
- *  determiningToAdd coverage of a consumer. Adding an
- *  attribute here, tells the CoverageCalculator
- *  to enforce the attribute.
- *
- *  NOTE: If you add an attribute to here, you MUST
- *        map it to a corresponding fact in
- *        ATTRIBUTES_TO_CONSUMER_FACTS.
- */
-var ATTRIBUTES_AFFECTING_COVERAGE = [
-    ARCH_ATTRIBUTE,
-    SOCKETS_ATTRIBUTE,
-    CORES_ATTRIBUTE,
-    RAM_ATTRIBUTE,
-    GUEST_LIMIT_ATTRIBUTE
-];
 
 /**
  * A FactValueCalculator allows the rules to determine which
@@ -99,6 +82,7 @@ ATTRIBUTES_TO_CONSUMER_FACTS[SOCKETS_ATTRIBUTE] = SOCKET_FACT;
 ATTRIBUTES_TO_CONSUMER_FACTS[CORES_ATTRIBUTE] = CORES_FACT;
 ATTRIBUTES_TO_CONSUMER_FACTS[ARCH_ATTRIBUTE] = ARCH_FACT;
 ATTRIBUTES_TO_CONSUMER_FACTS[RAM_ATTRIBUTE] = RAM_FACT;
+ATTRIBUTES_TO_CONSUMER_FACTS[VCPU_ATTRIBUTE] = CORES_FACT;
 
 /**
  *  These product attributes are considered when determining
@@ -109,13 +93,22 @@ ATTRIBUTES_TO_CONSUMER_FACTS[RAM_ATTRIBUTE] = RAM_FACT;
  *        ATTRIBUTES_AFFECTING_COVERAGE so that the
  *        CoverageCalculator knows to enforce it.
  */
-var STACKABLE_ATTRIBUTES = [
+var PHYSICAL_STACKABLE_ATTRIBUTES = [
     SOCKETS_ATTRIBUTE,
     CORES_ATTRIBUTE,
     RAM_ATTRIBUTE,
     ARCH_ATTRIBUTE,
     GUEST_LIMIT_ATTRIBUTE
 ];
+
+var VIRT_STACKABLE_ATTRIBUTES = [
+    VCPU_ATTRIBUTE,
+    RAM_ATTRIBUTE,
+    ARCH_ATTRIBUTE,
+    GUEST_LIMIT_ATTRIBUTE
+];
+
+var STACKABLE_ATTRIBUTES = PHYSICAL_STACKABLE_ATTRIBUTES;
 
 /**
  * These product attributes are considered by grouping them
@@ -416,6 +409,10 @@ var FactValueCalculator = {
             var cores = consumerCoresPerSocket * consumerSockets;
             log.debug("Consumer has " + cores + " cores.");
             return cores;
+        },
+
+        vcpu: function (prodAttr, consumer) {
+            return FactValueCalculator.getFact(CORES_ATTRIBUTE, consumer);
         },
 
         guest_limit: function (prodAttr, consumer) {
@@ -753,8 +750,8 @@ var CoverageCalculator = {
     getValues: function (source, sourceContainsAttributeValueFunctionName, getValueFromSourceFunctionName,
                          consumer, instanceMultiplier, entitlements) {
         var values = {};
-        for (var attrIdx in ATTRIBUTES_AFFECTING_COVERAGE) {
-            var nextAttr = ATTRIBUTES_AFFECTING_COVERAGE[attrIdx];
+        for (var attrIdx in STACKABLE_ATTRIBUTES) {
+            var nextAttr = STACKABLE_ATTRIBUTES[attrIdx];
             if (source[sourceContainsAttributeValueFunctionName](nextAttr)) {
                 values[nextAttr] = this.adjustCoverage(nextAttr, consumer,
                                                        source[getValueFromSourceFunctionName](nextAttr),
@@ -798,8 +795,8 @@ var CoverageCalculator = {
     getCoverageForSource: function (sourceData, consumer, conditions) {
         var coverageCount = 0;
         var reasons = [];
-        for (var attrIdx in ATTRIBUTES_AFFECTING_COVERAGE) {
-            var attr = ATTRIBUTES_AFFECTING_COVERAGE[attrIdx];
+        for (var attrIdx in STACKABLE_ATTRIBUTES) {
+            var attr = STACKABLE_ATTRIBUTES[attrIdx];
 
             // if the value doesn't exist we do not enforce it.
             if ( !(attr in sourceData.values) ) {
@@ -818,7 +815,7 @@ var CoverageCalculator = {
             }
         }
 
-        var percentage = coverageCount / ATTRIBUTES_AFFECTING_COVERAGE.length;
+        var percentage = coverageCount / STACKABLE_ATTRIBUTES.length;
         var coverage = {
             covered: percentage == 1,
             percentage: percentage,
@@ -1191,7 +1188,8 @@ var Entitlement = {
             "virt_limit:1:virt_limit," +
             "requires_host:1:requires_host," +
             "instance_multiplier:1:instance_multiplier," +
-            "guest_limit:1:guest_limit";
+            "guest_limit:1:guest_limit," +
+            "vcpu:1:vcpu";
     },
 
     ValidationResult: function () {
@@ -1216,6 +1214,10 @@ var Entitlement = {
 
         if ("pool" in context) {
             context.pool = createPool(context.pool);
+        }
+
+        if (Utils.isGuest(context.consumer)) {
+            STACKABLE_ATTRIBUTES = VIRT_STACKABLE_ATTRIBUTES;
         }
 
         context.hasEntitlement = function(poolId) {
@@ -1323,6 +1325,40 @@ var Entitlement = {
     pre_guest_limit: function() {
     },
 
+    pre_vcpu: function() {
+        var result = Entitlement.ValidationResult();
+        context = Entitlement.get_attribute_context();
+
+        var consumer = context.consumer;
+        var pool = context.pool;
+        var caller = context.caller;
+
+        if (!consumer.type.manifest) {
+            if (Utils.isGuest(consumer)) {
+                var consumerCores = FactValueCalculator.getFact(VCPU_ATTRIBUTE, consumer);
+                if (consumerCores && !pool.getProductAttribute("stacking_id")) {
+                    var poolCores = parseInt(pool.getProductAttribute(VCPU_ATTRIBUTE));
+                    if (poolCores > 0 && poolCores < consumerCores) {
+                        result.addWarning("rulewarning.unsupported.number.of.vcpus");
+                    }
+                }
+            }
+        }
+        else {
+            // Check if the consumer is capable of cores, because that's basically what we're checking
+            if (!Utils.isCapable(consumer, CORES_ATTRIBUTE)) {
+                if (BEST_POOLS_CALLER == caller ||
+                    BIND_CALLER == caller) {
+                    result.addError("rulefailed.vcpus.unsupported.by.consumer");
+                }
+                else {
+                    result.addWarning("rulewarning.vcpus.unsupported.by.consumer");
+                }
+            }
+        }
+        return JSON.stringify(result);
+    },
+
     pre_architecture: function() {
         var result = Entitlement.ValidationResult();
         context = Entitlement.get_attribute_context();
@@ -1345,7 +1381,7 @@ var Entitlement = {
         var consumer = context.consumer;
         var pool = context.pool;
 
-        if (consumer.type.manifest) {
+        if (consumer.type.manifest || Utils.isGuest(consumer)) {
             return JSON.stringify(result);
         }
 
@@ -1369,11 +1405,13 @@ var Entitlement = {
         var caller = context.caller;
 
         if (!consumer.type.manifest) {
-            var consumerCores = FactValueCalculator.getFact(CORES_ATTRIBUTE, consumer);
-            if (consumerCores && !pool.getProductAttribute("stacking_id")) {
-                var poolCores = parseInt(pool.getProductAttribute(CORES_ATTRIBUTE));
-                if (poolCores > 0 && poolCores < consumerCores) {
-                    result.addWarning("rulewarning.unsupported.number.of.cores");
+            if (!Utils.isGuest(consumer)) {
+                var consumerCores = FactValueCalculator.getFact(CORES_ATTRIBUTE, consumer);
+                if (consumerCores && !pool.getProductAttribute("stacking_id")) {
+                    var poolCores = parseInt(pool.getProductAttribute(CORES_ATTRIBUTE));
+                    if (poolCores > 0 && poolCores < consumerCores) {
+                        result.addWarning("rulewarning.unsupported.number.of.cores");
+                    }
                 }
             }
         }
@@ -1850,6 +1888,10 @@ var Autobind = {
     create_autobind_context: function() {
         var context = JSON.parse(json_context);
 
+        if (Utils.isGuest(context.consumer)) {
+            STACKABLE_ATTRIBUTES = VIRT_STACKABLE_ATTRIBUTES;
+        }
+
         // Also need to convert all pools reported in compliance.
         var compliance = context.compliance;
 
@@ -2256,6 +2298,10 @@ var Compliance = {
             context.entitlement.pool = createPool(context.entitlement.pool);
         }
 
+        if (Utils.isGuest(context.consumer)) {
+            STACKABLE_ATTRIBUTES = VIRT_STACKABLE_ATTRIBUTES;
+        }
+
         return context;
     },
 
@@ -2560,6 +2606,9 @@ var Quantity = {
                 e.pool = createPool(e.pool);
             }
         }
+        if (Utils.isGuest(context.consumer)) {
+            STACKABLE_ATTRIBUTES = VIRT_STACKABLE_ATTRIBUTES;
+        }
         return context;
     },
 
@@ -2798,7 +2847,7 @@ var Utils = {
     },
 
     isGuest: function(consumer) {
-        if (!consumer.facts['virt.is_guest']) {
+        if (consumer === null || consumer.facts === null || !consumer.facts['virt.is_guest']) {
             return false;
         }
 
