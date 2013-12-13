@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 
 CERTS_HOME=/etc/candlepin/certs
 UPSTREAM_CERTS_HOME=$CERTS_HOME/upstream
@@ -32,7 +32,6 @@ KEYSTORE_PASS=password
 # http://tomcat.apache.org/tomcat-6.0-doc/ssl-howto.html
 KEY_PASS=$KEYSTORE_PASS
 
-OPENSSL_CONF=/etc/pki/tls/openssl.cnf
 CANDLEPIN_CA_ALIAS="candlepin-ca"
 CANDLEPIN_CA_SUBJ="/OU=Candlepin CA/O=candlepinproject.org/"
 
@@ -62,6 +61,9 @@ if [ ! -d $UPSTREAM_CERTS_HOME ]; then
 fi
 
 HOSTNAME=${HOSTNAME:-$(hostname)}
+
+
+OPENSSL_CONF=${OPENSSL_CONF:-/etc/pki/tls/openssl.cnf}
 
 if [ -f $CA_KEY ] && [ -f $CA_CERT ] && [ "$FORCECERT" != "1" ]; then
     echo "Certificates are already present."
