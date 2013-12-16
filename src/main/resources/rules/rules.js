@@ -108,8 +108,6 @@ var VIRT_STACKABLE_ATTRIBUTES = [
     GUEST_LIMIT_ATTRIBUTE
 ];
 
-var STACKABLE_ATTRIBUTES = PHYSICAL_STACKABLE_ATTRIBUTES;
-
 /**
  * These product attributes are considered by grouping them
  * with the same attribute on all other subscriptions on
@@ -119,6 +117,17 @@ var GLOBAL_STACKABLE_ATTRIBUTES = [
     GUEST_LIMIT_ATTRIBUTE
 ];
 
+/*
+ * Depending on the consumer, different attributes may
+ * affect compliance.
+ */
+function getComplianceAttributes(consumer) {
+    // Currently we only differentiate between physical/virtual
+    if (Utils.isGuest(consumer)) {
+        return VIRT_STACKABLE_ATTRIBUTES;
+    }
+    return PHYSICAL_STACKABLE_ATTRIBUTES;
+}
 
 /*
  * Model object related functions.
@@ -344,15 +353,6 @@ function getPoolQuantity(pool, attributeName) {
         }
     }
     return null;
-}
-
-
-function get_pool_sockets(pool) {
-    return getPoolQuantity(pool, SOCKETS_ATTRIBUTE);
-}
-
-function getPoolCores(pool) {
-    return getPoolQuantity(pool, CORES_ATTRIBUTE);
 }
 
 /**
@@ -750,8 +750,9 @@ var CoverageCalculator = {
     getValues: function (source, sourceContainsAttributeValueFunctionName, getValueFromSourceFunctionName,
                          consumer, instanceMultiplier, entitlements) {
         var values = {};
-        for (var attrIdx in STACKABLE_ATTRIBUTES) {
-            var nextAttr = STACKABLE_ATTRIBUTES[attrIdx];
+        var complianceAttributes = getComplianceAttributes(consumer);
+        for (var attrIdx in complianceAttributes) {
+            var nextAttr = complianceAttributes[attrIdx];
             if (source[sourceContainsAttributeValueFunctionName](nextAttr)) {
                 values[nextAttr] = this.adjustCoverage(nextAttr, consumer,
                                                        source[getValueFromSourceFunctionName](nextAttr),
@@ -795,8 +796,9 @@ var CoverageCalculator = {
     getCoverageForSource: function (sourceData, consumer, conditions) {
         var coverageCount = 0;
         var reasons = [];
-        for (var attrIdx in STACKABLE_ATTRIBUTES) {
-            var attr = STACKABLE_ATTRIBUTES[attrIdx];
+        var complianceAttributes = getComplianceAttributes(consumer);
+        for (var attrIdx in complianceAttributes) {
+            var attr = complianceAttributes[attrIdx];
 
             // if the value doesn't exist we do not enforce it.
             if ( !(attr in sourceData.values) ) {
@@ -815,7 +817,7 @@ var CoverageCalculator = {
             }
         }
 
-        var percentage = coverageCount / STACKABLE_ATTRIBUTES.length;
+        var percentage = coverageCount / complianceAttributes.length;
         var coverage = {
             covered: percentage == 1,
             percentage: percentage,
@@ -845,8 +847,9 @@ var CoverageCalculator = {
         // attributes are being enforced.
         var maxQuantity = stackTracker.empty ? 1 : 0;
 
-        for (var attrIdx in STACKABLE_ATTRIBUTES) {
-            var attr = STACKABLE_ATTRIBUTES[attrIdx];
+        var complianceAttributes = getComplianceAttributes(consumer);
+        for (var attrIdx in complianceAttributes) {
+            var attr = complianceAttributes[attrIdx];
 
             // if the attribute does not affect the quantity,
             // we can skip it.
@@ -1070,8 +1073,9 @@ function createStackTracker(consumer, stackId) {
                 this.hostRestricted = pool.getAttribute(REQUIRES_HOST_ATTRIBUTE);
             }
 
-            for (var attrIdx in STACKABLE_ATTRIBUTES) {
-                var nextAttr = STACKABLE_ATTRIBUTES[attrIdx];
+            var complianceAttributes = getComplianceAttributes(this.consumer);
+            for (var attrIdx in complianceAttributes) {
+                var nextAttr = complianceAttributes[attrIdx];
                 var poolValue = pool.getProductAttribute(nextAttr);
                 if (poolValue !== null) {
                     var stackValue = this.enforces(nextAttr) ? this.getAccumulatedValue(nextAttr) : null;
@@ -1214,10 +1218,6 @@ var Entitlement = {
 
         if ("pool" in context) {
             context.pool = createPool(context.pool);
-        }
-
-        if (Utils.isGuest(context.consumer)) {
-            STACKABLE_ATTRIBUTES = VIRT_STACKABLE_ATTRIBUTES;
         }
 
         context.hasEntitlement = function(poolId) {
@@ -1670,8 +1670,9 @@ var Autobind = {
             get_attribute_sets: function(pools) {
                 var stack_attributes = [];
                 // get unique list of additive stack attributes
-                for (var attrIdx in STACKABLE_ATTRIBUTES) {
-                    var attr = STACKABLE_ATTRIBUTES[attrIdx];
+                var complianceAttributes = getComplianceAttributes(this.consumer);
+                for (var attrIdx in complianceAttributes) {
+                    var attr = complianceAttributes[attrIdx];
                     if (attr != ARCH_ATTRIBUTE) {
                         // Only check attributes that the pools actually use
                         for (var poolIdx = 0; poolIdx < pools.length; poolIdx++) {
@@ -1887,10 +1888,6 @@ var Autobind = {
 
     create_autobind_context: function() {
         var context = JSON.parse(json_context);
-
-        if (Utils.isGuest(context.consumer)) {
-            STACKABLE_ATTRIBUTES = VIRT_STACKABLE_ATTRIBUTES;
-        }
 
         // Also need to convert all pools reported in compliance.
         var compliance = context.compliance;
@@ -2297,11 +2294,6 @@ var Compliance = {
         if ("entitlement" in context) {
             context.entitlement.pool = createPool(context.entitlement.pool);
         }
-
-        if (Utils.isGuest(context.consumer)) {
-            STACKABLE_ATTRIBUTES = VIRT_STACKABLE_ATTRIBUTES;
-        }
-
         return context;
     },
 
@@ -2605,9 +2597,6 @@ var Quantity = {
                 var e = context.validEntitlements[i];
                 e.pool = createPool(e.pool);
             }
-        }
-        if (Utils.isGuest(context.consumer)) {
-            STACKABLE_ATTRIBUTES = VIRT_STACKABLE_ATTRIBUTES;
         }
         return context;
     },
