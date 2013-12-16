@@ -31,7 +31,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.8.28.4
+Version: 0.8.28.5
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -323,6 +323,9 @@ fi
 
 
 %changelog
+* Mon Dec 16 2013 Devan Goodwin <dgoodwin@rm-rf.ca> 0.8.28.5-1
+- Revert recent slf4j rpm changes for this hotfix. (dgoodwin@redhat.com)
+
 * Wed Dec 11 2013 Devan Goodwin <dgoodwin@rm-rf.ca> 0.8.28.4-1
 - Update requires for new build of slf4j. (awood@redhat.com)
 
