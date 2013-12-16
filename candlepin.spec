@@ -31,7 +31,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.8.26
+Version: 0.8.26.0
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -323,6 +323,9 @@ fi
 
 
 %changelog
+* Mon Dec 16 2013 Devan Goodwin <dgoodwin@rm-rf.ca> 0.8.26.0-1
+- Turn off oauth and trusted auth by default. (alikins@redhat.com)
+
 * Fri Sep 06 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.26-1
 - 1004780: truncate result string to fit in db (jesusr@redhat.com)
 - 1002946: Fix entitlement dates not being updated when pool dates change.  (dgoodwin@redhat.com)
