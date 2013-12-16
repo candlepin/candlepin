@@ -1,4 +1,4 @@
-// Version: 5.0
+// Version: 5.1
 
 /*
  * Default Candlepin rule set.
@@ -88,12 +88,8 @@ ATTRIBUTES_TO_CONSUMER_FACTS[VCPU_ATTRIBUTE] = CORES_FACT;
  *  These product attributes are considered when determining
  *  coverage of a consumer by a stack. Add an attribute here
  *  to enable stacking on the product attribute.
- *
- *  NOTE: If adding an attribute, be sure to also add it to
- *        ATTRIBUTES_AFFECTING_COVERAGE so that the
- *        CoverageCalculator knows to enforce it.
  */
-var PHYSICAL_STACKABLE_ATTRIBUTES = [
+var PHYSICAL_ATTRIBUTES = [
     SOCKETS_ATTRIBUTE,
     CORES_ATTRIBUTE,
     RAM_ATTRIBUTE,
@@ -101,7 +97,7 @@ var PHYSICAL_STACKABLE_ATTRIBUTES = [
     GUEST_LIMIT_ATTRIBUTE
 ];
 
-var VIRT_STACKABLE_ATTRIBUTES = [
+var VIRT_ATTRIBUTES = [
     VCPU_ATTRIBUTE,
     RAM_ATTRIBUTE,
     ARCH_ATTRIBUTE,
@@ -113,7 +109,7 @@ var VIRT_STACKABLE_ATTRIBUTES = [
  * with the same attribute on all other subscriptions on
  * the system.
  */
-var GLOBAL_STACKABLE_ATTRIBUTES = [
+var GLOBAL_ATTRIBUTES = [
     GUEST_LIMIT_ATTRIBUTE
 ];
 
@@ -124,9 +120,9 @@ var GLOBAL_STACKABLE_ATTRIBUTES = [
 function getComplianceAttributes(consumer) {
     // Currently we only differentiate between physical/virtual
     if (Utils.isGuest(consumer)) {
-        return VIRT_STACKABLE_ATTRIBUTES;
+        return VIRT_ATTRIBUTES;
     }
-    return PHYSICAL_STACKABLE_ATTRIBUTES;
+    return PHYSICAL_ATTRIBUTES;
 }
 
 /*
@@ -652,7 +648,7 @@ var CoverageCalculator = {
      *      Return: actual value covered
      */
     adjustCoverage: function(attribute, consumer, attributeValue, instanceMultiplier, entitlements) {
-        if (Utils.inArray(GLOBAL_STACKABLE_ATTRIBUTES, attribute)) {
+        if (Utils.inArray(GLOBAL_ATTRIBUTES, attribute)) {
             attributeValue = GlobalAttributeCalculator.getValue(attribute, entitlements);
         }
 
@@ -788,7 +784,8 @@ var CoverageCalculator = {
      *     reasons: The reasons why the source does not cover the consumer.
      *
      *  The supplied conditions are checked to determine coverage. Only
-     *  attribute values defined in ATTRIBUTES_AFFECTING_COVERAGE are checked.
+     *  attribute values defined in getComplianceAttributes() for the given
+     *  consumer are checked.
      *
      *  If an attribute value is not found in the sourceValues, it is considered
      *  to be covered.
