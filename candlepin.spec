@@ -90,7 +90,6 @@ BuildRequires: glassfish-jaxb
 BuildRequires: jms >= 0:1.1
 BuildRequires: oauth
 BuildRequires: slf4j-api >= 0:1.6.1
-BuildRequires: slf4j-log4j12 >= 0:1.6.1
 
 # needed to setup runtime deps, not for compilation
 BuildRequires: c3p0
@@ -134,8 +133,7 @@ Requires: oauth
 Requires: log4j
 Requires: glassfish-jaxb
 Requires: scannotation
-Requires: slf4j-api >= 0:1.6.1
-Requires: slf4j-log4j12 >= 0:1.6.1
+Requires: slf4j >= 0:1.6.1
 Requires: jakarta-commons-lang
 Requires: jakarta-commons-io
 Requires: apache-commons-codec
