@@ -786,25 +786,62 @@ public class ComplianceRulesTest {
 
         mockEntCurator(consumer, Arrays.asList(ent1, ent2, ent3));
 
-        // Set up entitlements at specific dates.
-//        Date statusDate = TestUtil.createDate(2005, 6, 14);
-//        when(entCurator.listByConsumerAndDate(eq(consumer),
-//            eq(statusDate))).thenReturn(Arrays.asList(ent1, ent3));
-//
-//        when(entCurator.listByConsumerAndDate(eq(consumer),
-//            eq(addSecond(ent1.getEndDate())))).thenReturn(Arrays.asList(ent2, ent3));
-//
-//        when(entCurator.listByConsumerAndDate(eq(consumer),
-//            eq(addSecond(ent2.getEndDate())))).thenReturn(
-//                Arrays.asList(new Entitlement[0]));
-//
-//        Date expectedDate = addSecond(ent3.getEndDate());
-//        when(entCurator.listByConsumerAndDate(eq(consumer),
-//            eq(expectedDate))).thenReturn(Arrays.asList(ent2));
-
         Date statusDate = TestUtil.createDate(2005, 6, 14);
         Date expectedDate = addSecond(ent3.getEndDate());
         ComplianceStatus status = compliance.getStatus(consumer, statusDate);
+        assertEquals(expectedDate, status.getCompliantUntil());
+    }
+
+    @Test
+    public void compliantUntilDateUsesFutureEntitlements() {
+        Consumer consumer = mockConsumer(PRODUCT_1, PRODUCT_2);
+
+        Date start = TestUtil.createDate(2005, 6, 12);
+
+        List<Entitlement> ents = new LinkedList<Entitlement>();
+        int iterations = 5;
+        int interval = 1000;
+        for (int i = 0; i < interval * iterations; i += interval) {
+            ents.add(mockEntitlement(consumer, "Provides Product 1 For Short Period",
+                new Date(start.getTime() + i),
+                new Date(start.getTime() + i + interval), PRODUCT_1));
+            ents.add(mockEntitlement(consumer, "Provides Product 2 For Short Period",
+                new Date(start.getTime() + i),
+                new Date(start.getTime() + i + interval), PRODUCT_2));
+        }
+
+        mockEntCurator(consumer, ents);
+
+        Date expectedDate = addSecond(
+            new Date(start.getTime() + interval * (iterations - 1) + interval));
+        ComplianceStatus status = compliance.getStatus(consumer, start);
+        assertEquals("valid", status.getStatus());
+        assertEquals(expectedDate, status.getCompliantUntil());
+    }
+
+    @Test
+    public void compliantUntilReturnsNullIfNoProductsInstalled() {
+        Consumer consumer = mockConsumer();
+
+        Date start = TestUtil.createDate(2005, 6, 12);
+
+        List<Entitlement> ents = new LinkedList<Entitlement>();
+        int iterations = 5;
+        int interval = 1000;
+        for (int i = 0; i < interval * iterations; i += interval) {
+            ents.add(mockEntitlement(consumer, "Provides Product 1 For Short Period",
+                new Date(start.getTime() + i),
+                new Date(start.getTime() + i + interval), PRODUCT_1));
+            ents.add(mockEntitlement(consumer, "Provides Product 2 For Short Period",
+                new Date(start.getTime() + i),
+                new Date(start.getTime() + i + interval), PRODUCT_2));
+        }
+
+        mockEntCurator(consumer, ents);
+
+        Date expectedDate = null;
+        ComplianceStatus status = compliance.getStatus(consumer, start);
+        assertEquals("valid", status.getStatus());
         assertEquals(expectedDate, status.getCompliantUntil());
     }
 
@@ -1361,26 +1398,6 @@ public class ComplianceRulesTest {
         assertEquals(2, status.getCompliantProducts().size());
         assertTrue(status.getCompliantProducts().keySet().contains(PRODUCT_1));
         assertTrue(status.getCompliantProducts().keySet().contains(PRODUCT_2));
-    }
-
-    /*
-     * Testing behaviour from a (possibly) temporary hack where we skip compliance
-     * calculation for distributor consumers, as these should never have installed products
-     * and status in general is not really applicable to them.
-     *
-     * This test may need to be removed if we restore calculation for distributors at some
-     * point.
-     */
-    @Test
-    public void distributorStatusAlwaysGreen() {
-        Consumer c = mockConsumerWithTwoProductsAndNoEntitlements();
-        c.setType(new ConsumerType(ConsumerType.ConsumerTypeEnum.CANDLEPIN));
-
-        ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
-
-        assertEquals(0, status.getNonCompliantProducts().size());
-        assertEquals(0, status.getPartiallyCompliantProducts().size());
-        assertEquals(ComplianceStatus.GREEN, status.getStatus());
     }
 
     @Test
