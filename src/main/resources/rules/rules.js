@@ -1341,18 +1341,9 @@ var Entitlement = {
                 }
             }
         }
-        else {
-            // Check if the consumer is capable of cores, because that's basically what we're checking
-            if (!Utils.isCapable(consumer, CORES_ATTRIBUTE)) {
-                if (BEST_POOLS_CALLER == caller ||
-                    BIND_CALLER == caller) {
-                    result.addError("rulefailed.vcpus.unsupported.by.consumer");
-                }
-                else {
-                    result.addWarning("rulewarning.vcpus.unsupported.by.consumer");
-                }
-            }
-        }
+        // Don't check if the manifest consumer is capable,
+        // this attribute has existed for a while
+        // now, we have just never checked it before
         return JSON.stringify(result);
     },
 
