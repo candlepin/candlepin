@@ -51,6 +51,7 @@ public class QuantityRulesTest {
     private static final String INSTANCE_ATTRIBUTE = "instance_multiplier";
     private static final String SOCKET_FACT = "cpu.cpu_socket(s)";
     private static final String CORES_ATTRIBUTE = "cores";
+    private static final String VCPU_ATTRIBUTE = "vcpu";
     private static final String CORES_FACT = "cpu.core(s)_per_socket";
     private static final String IS_VIRT = "virt.is_guest";
     private static final String GUEST_LIMIT_ATTRIBUTE = "guest_limit";
@@ -158,24 +159,24 @@ public class QuantityRulesTest {
     public void testVirtDefaultToNumCpusByVcpuCount() {
         consumer.setFact(IS_VIRT, "true");
         consumer.setFact(CORES_FACT, "8");
-        pool.setProductAttribute(CORES_ATTRIBUTE, "4", product.getId());
+        pool.setProductAttribute(VCPU_ATTRIBUTE, "4", product.getId());
         SuggestedQuantity suggested =
             quantityRules.getSuggestedQuantity(pool, consumer, new Date());
         assertEquals(new Long(2), suggested.getSuggested());
     }
 
     @Test
-    public void testVirtUsesSocketsIfVcpuDoesNotExist() {
+    public void testVirtIgnoresSockets() {
         consumer.setFact(IS_VIRT, "true");
         consumer.setFact(SOCKET_FACT, "4");
         pool.setProductAttribute(SOCKET_ATTRIBUTE, "2", product.getId());
         SuggestedQuantity suggested =
             quantityRules.getSuggestedQuantity(pool, consumer, new Date());
-        assertEquals(new Long(2), suggested.getSuggested());
+        assertEquals(new Long(1), suggested.getSuggested());
     }
 
     @Test
-    public void testVirtUses1IfNoSocketsAndNoVcpu() {
+    public void testVirtUses1IfNoVcpu() {
         consumer.setFact(IS_VIRT, "true");
         consumer.setFact(SOCKET_FACT, "4");
         consumer.setFact(CORES_FACT, "8");
@@ -188,7 +189,7 @@ public class QuantityRulesTest {
     public void testVirtRoundsUp() {
         consumer.setFact(IS_VIRT, "true");
         consumer.setFact(CORES_FACT, "8");
-        pool.setProductAttribute(CORES_ATTRIBUTE, "6", product.getId());
+        pool.setProductAttribute(VCPU_ATTRIBUTE, "6", product.getId());
         SuggestedQuantity suggested =
             quantityRules.getSuggestedQuantity(pool, consumer, new Date());
         assertEquals(new Long(2), suggested.getSuggested());
@@ -198,7 +199,7 @@ public class QuantityRulesTest {
     public void testVirtAccountsForCurrentlyConsumed() {
         consumer.setFact(IS_VIRT, "true");
         consumer.setFact(CORES_FACT, "4");
-        pool.setProductAttribute(CORES_ATTRIBUTE, "1", product.getId());
+        pool.setProductAttribute(VCPU_ATTRIBUTE, "1", product.getId());
 
         Entitlement e = createValidEntitlement(pool);
         e.setQuantity(2);

@@ -1,4 +1,4 @@
-// Version: 5.0
+// Version: 5.2
 
 /*
  * Default Candlepin rule set.
@@ -57,30 +57,13 @@ var REQUIRES_HOST_ATTRIBUTE = "requires_host";
 var VIRT_ONLY = "virt_only";
 var POOL_DERIVED = "pool_derived";
 var GUEST_LIMIT_ATTRIBUTE = "guest_limit";
+var VCPU_ATTRIBUTE = "vcpu";
 
 // caller types
 var BEST_POOLS_CALLER = "best_pools";
 var BIND_CALLER = "bind";
 var LIST_POOLS_CALLER = "list_pools";
 var UNKNOWN_CALLER = "unknown";
-
-/**
- *  These product attributes are considered when
- *  determiningToAdd coverage of a consumer. Adding an
- *  attribute here, tells the CoverageCalculator
- *  to enforce the attribute.
- *
- *  NOTE: If you add an attribute to here, you MUST
- *        map it to a corresponding fact in
- *        ATTRIBUTES_TO_CONSUMER_FACTS.
- */
-var ATTRIBUTES_AFFECTING_COVERAGE = [
-    ARCH_ATTRIBUTE,
-    SOCKETS_ATTRIBUTE,
-    CORES_ATTRIBUTE,
-    RAM_ATTRIBUTE,
-    GUEST_LIMIT_ATTRIBUTE
-];
 
 /**
  * A FactValueCalculator allows the rules to determine which
@@ -99,19 +82,23 @@ ATTRIBUTES_TO_CONSUMER_FACTS[SOCKETS_ATTRIBUTE] = SOCKET_FACT;
 ATTRIBUTES_TO_CONSUMER_FACTS[CORES_ATTRIBUTE] = CORES_FACT;
 ATTRIBUTES_TO_CONSUMER_FACTS[ARCH_ATTRIBUTE] = ARCH_FACT;
 ATTRIBUTES_TO_CONSUMER_FACTS[RAM_ATTRIBUTE] = RAM_FACT;
+ATTRIBUTES_TO_CONSUMER_FACTS[VCPU_ATTRIBUTE] = CORES_FACT;
 
 /**
  *  These product attributes are considered when determining
  *  coverage of a consumer by a stack. Add an attribute here
  *  to enable stacking on the product attribute.
- *
- *  NOTE: If adding an attribute, be sure to also add it to
- *        ATTRIBUTES_AFFECTING_COVERAGE so that the
- *        CoverageCalculator knows to enforce it.
  */
-var STACKABLE_ATTRIBUTES = [
+var PHYSICAL_ATTRIBUTES = [
     SOCKETS_ATTRIBUTE,
     CORES_ATTRIBUTE,
+    RAM_ATTRIBUTE,
+    ARCH_ATTRIBUTE,
+    GUEST_LIMIT_ATTRIBUTE
+];
+
+var VIRT_ATTRIBUTES = [
+    VCPU_ATTRIBUTE,
     RAM_ATTRIBUTE,
     ARCH_ATTRIBUTE,
     GUEST_LIMIT_ATTRIBUTE
@@ -122,10 +109,21 @@ var STACKABLE_ATTRIBUTES = [
  * with the same attribute on all other subscriptions on
  * the system.
  */
-var GLOBAL_STACKABLE_ATTRIBUTES = [
+var GLOBAL_ATTRIBUTES = [
     GUEST_LIMIT_ATTRIBUTE
 ];
 
+/*
+ * Depending on the consumer, different attributes may
+ * affect compliance.
+ */
+function getComplianceAttributes(consumer) {
+    // Currently we only differentiate between physical/virtual
+    if (Utils.isGuest(consumer)) {
+        return VIRT_ATTRIBUTES;
+    }
+    return PHYSICAL_ATTRIBUTES;
+}
 
 /*
  * Model object related functions.
@@ -353,15 +351,6 @@ function getPoolQuantity(pool, attributeName) {
     return null;
 }
 
-
-function get_pool_sockets(pool) {
-    return getPoolQuantity(pool, SOCKETS_ATTRIBUTE);
-}
-
-function getPoolCores(pool) {
-    return getPoolQuantity(pool, CORES_ATTRIBUTE);
-}
-
 /**
  * A FactValueCalculator allows the rules to determine which
  * consumer fact is associated with a particular product
@@ -416,6 +405,10 @@ var FactValueCalculator = {
             var cores = consumerCoresPerSocket * consumerSockets;
             log.debug("Consumer has " + cores + " cores.");
             return cores;
+        },
+
+        vcpu: function (prodAttr, consumer) {
+            return FactValueCalculator.getFact(CORES_ATTRIBUTE, consumer);
         },
 
         guest_limit: function (prodAttr, consumer) {
@@ -655,7 +648,7 @@ var CoverageCalculator = {
      *      Return: actual value covered
      */
     adjustCoverage: function(attribute, consumer, attributeValue, instanceMultiplier, entitlements) {
-        if (Utils.inArray(GLOBAL_STACKABLE_ATTRIBUTES, attribute)) {
+        if (Utils.inArray(GLOBAL_ATTRIBUTES, attribute)) {
             attributeValue = GlobalAttributeCalculator.getValue(attribute, entitlements);
         }
 
@@ -753,8 +746,9 @@ var CoverageCalculator = {
     getValues: function (source, sourceContainsAttributeValueFunctionName, getValueFromSourceFunctionName,
                          consumer, instanceMultiplier, entitlements) {
         var values = {};
-        for (var attrIdx in ATTRIBUTES_AFFECTING_COVERAGE) {
-            var nextAttr = ATTRIBUTES_AFFECTING_COVERAGE[attrIdx];
+        var complianceAttributes = getComplianceAttributes(consumer);
+        for (var attrIdx in complianceAttributes) {
+            var nextAttr = complianceAttributes[attrIdx];
             if (source[sourceContainsAttributeValueFunctionName](nextAttr)) {
                 values[nextAttr] = this.adjustCoverage(nextAttr, consumer,
                                                        source[getValueFromSourceFunctionName](nextAttr),
@@ -790,7 +784,8 @@ var CoverageCalculator = {
      *     reasons: The reasons why the source does not cover the consumer.
      *
      *  The supplied conditions are checked to determine coverage. Only
-     *  attribute values defined in ATTRIBUTES_AFFECTING_COVERAGE are checked.
+     *  attribute values defined in getComplianceAttributes() for the given
+     *  consumer are checked.
      *
      *  If an attribute value is not found in the sourceValues, it is considered
      *  to be covered.
@@ -798,8 +793,9 @@ var CoverageCalculator = {
     getCoverageForSource: function (sourceData, consumer, conditions) {
         var coverageCount = 0;
         var reasons = [];
-        for (var attrIdx in ATTRIBUTES_AFFECTING_COVERAGE) {
-            var attr = ATTRIBUTES_AFFECTING_COVERAGE[attrIdx];
+        var complianceAttributes = getComplianceAttributes(consumer);
+        for (var attrIdx in complianceAttributes) {
+            var attr = complianceAttributes[attrIdx];
 
             // if the value doesn't exist we do not enforce it.
             if ( !(attr in sourceData.values) ) {
@@ -818,7 +814,7 @@ var CoverageCalculator = {
             }
         }
 
-        var percentage = coverageCount / ATTRIBUTES_AFFECTING_COVERAGE.length;
+        var percentage = coverageCount / complianceAttributes.length;
         var coverage = {
             covered: percentage == 1,
             percentage: percentage,
@@ -848,8 +844,9 @@ var CoverageCalculator = {
         // attributes are being enforced.
         var maxQuantity = stackTracker.empty ? 1 : 0;
 
-        for (var attrIdx in STACKABLE_ATTRIBUTES) {
-            var attr = STACKABLE_ATTRIBUTES[attrIdx];
+        var complianceAttributes = getComplianceAttributes(consumer);
+        for (var attrIdx in complianceAttributes) {
+            var attr = complianceAttributes[attrIdx];
 
             // if the attribute does not affect the quantity,
             // we can skip it.
@@ -1073,8 +1070,9 @@ function createStackTracker(consumer, stackId) {
                 this.hostRestricted = pool.getAttribute(REQUIRES_HOST_ATTRIBUTE);
             }
 
-            for (var attrIdx in STACKABLE_ATTRIBUTES) {
-                var nextAttr = STACKABLE_ATTRIBUTES[attrIdx];
+            var complianceAttributes = getComplianceAttributes(this.consumer);
+            for (var attrIdx in complianceAttributes) {
+                var nextAttr = complianceAttributes[attrIdx];
                 var poolValue = pool.getProductAttribute(nextAttr);
                 if (poolValue !== null) {
                     var stackValue = this.enforces(nextAttr) ? this.getAccumulatedValue(nextAttr) : null;
@@ -1191,7 +1189,8 @@ var Entitlement = {
             "virt_limit:1:virt_limit," +
             "requires_host:1:requires_host," +
             "instance_multiplier:1:instance_multiplier," +
-            "guest_limit:1:guest_limit";
+            "guest_limit:1:guest_limit," +
+            "vcpu:1:vcpu";
     },
 
     ValidationResult: function () {
@@ -1323,6 +1322,31 @@ var Entitlement = {
     pre_guest_limit: function() {
     },
 
+    pre_vcpu: function() {
+        var result = Entitlement.ValidationResult();
+        context = Entitlement.get_attribute_context();
+
+        var consumer = context.consumer;
+        var pool = context.pool;
+        var caller = context.caller;
+
+        if (!consumer.type.manifest) {
+            if (Utils.isGuest(consumer)) {
+                var consumerCores = FactValueCalculator.getFact(VCPU_ATTRIBUTE, consumer);
+                if (consumerCores && !pool.getProductAttribute("stacking_id")) {
+                    var poolCores = parseInt(pool.getProductAttribute(VCPU_ATTRIBUTE));
+                    if (poolCores > 0 && poolCores < consumerCores) {
+                        result.addWarning("rulewarning.unsupported.number.of.vcpus");
+                    }
+                }
+            }
+        }
+        // Don't check if the manifest consumer is capable,
+        // this attribute has existed for a while
+        // now, we have just never checked it before
+        return JSON.stringify(result);
+    },
+
     pre_architecture: function() {
         var result = Entitlement.ValidationResult();
         context = Entitlement.get_attribute_context();
@@ -1345,7 +1369,7 @@ var Entitlement = {
         var consumer = context.consumer;
         var pool = context.pool;
 
-        if (consumer.type.manifest) {
+        if (consumer.type.manifest || Utils.isGuest(consumer)) {
             return JSON.stringify(result);
         }
 
@@ -1369,11 +1393,13 @@ var Entitlement = {
         var caller = context.caller;
 
         if (!consumer.type.manifest) {
-            var consumerCores = FactValueCalculator.getFact(CORES_ATTRIBUTE, consumer);
-            if (consumerCores && !pool.getProductAttribute("stacking_id")) {
-                var poolCores = parseInt(pool.getProductAttribute(CORES_ATTRIBUTE));
-                if (poolCores > 0 && poolCores < consumerCores) {
-                    result.addWarning("rulewarning.unsupported.number.of.cores");
+            if (!Utils.isGuest(consumer)) {
+                var consumerCores = FactValueCalculator.getFact(CORES_ATTRIBUTE, consumer);
+                if (consumerCores && !pool.getProductAttribute("stacking_id")) {
+                    var poolCores = parseInt(pool.getProductAttribute(CORES_ATTRIBUTE));
+                    if (poolCores > 0 && poolCores < consumerCores) {
+                        result.addWarning("rulewarning.unsupported.number.of.cores");
+                    }
                 }
             }
         }
@@ -1632,8 +1658,9 @@ var Autobind = {
             get_attribute_sets: function(pools) {
                 var stack_attributes = [];
                 // get unique list of additive stack attributes
-                for (var attrIdx in STACKABLE_ATTRIBUTES) {
-                    var attr = STACKABLE_ATTRIBUTES[attrIdx];
+                var complianceAttributes = getComplianceAttributes(this.consumer);
+                for (var attrIdx in complianceAttributes) {
+                    var attr = complianceAttributes[attrIdx];
                     if (attr != ARCH_ATTRIBUTE) {
                         // Only check attributes that the pools actually use
                         for (var poolIdx = 0; poolIdx < pools.length; poolIdx++) {
@@ -2255,7 +2282,6 @@ var Compliance = {
         if ("entitlement" in context) {
             context.entitlement.pool = createPool(context.entitlement.pool);
         }
-
         return context;
     },
 
@@ -2816,7 +2842,7 @@ var Utils = {
     },
 
     isGuest: function(consumer) {
-        if (!consumer.facts['virt.is_guest']) {
+        if (consumer === null || consumer.facts === null || !consumer.facts['virt.is_guest']) {
             return false;
         }
 

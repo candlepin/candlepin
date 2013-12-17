@@ -1763,6 +1763,81 @@ public class ComplianceRulesTest {
         assertTrue(compliance.isStackCompliant(c, "mockServerStack", ents));
     }
 
+    @Test
+    public void virtualSingleEntOnlyUsesVcpuAndRam() {
+        Consumer c = mockConsumer(PRODUCT_1);
+        c.setFact("virt.is_guest", "true");
+        c.setFact("cpu.core(s)_per_socket", "8");
+        c.setFact("cpu.cpu_socket(s)", "10");
+        c.setFact("memory.memtotal", "8000000"); // 8GB RAM
+
+        List<Entitlement> ents = new LinkedList<Entitlement>();
+        Entitlement ent = mockEntitlement(c, "Awesome Product",
+            PRODUCT_1);
+        ent.getPool().setProductAttribute("cores", "1", PRODUCT_1);
+        ent.getPool().setProductAttribute("ram", "1", PRODUCT_1);
+        ent.getPool().setProductAttribute("sockets", "1", PRODUCT_1);
+        ent.getPool().setProductAttribute("vcpu", "1", PRODUCT_1);
+        ents.add(ent);
+        ents.get(0).setQuantity(1);
+        mockEntCurator(c, ents);
+
+        ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
+
+        assertEquals(ComplianceStatus.YELLOW, status.getStatus());
+        assertEquals(0, status.getNonCompliantProducts().size());
+        assertEquals(1, status.getPartiallyCompliantProducts().size());
+        assertEquals(0, status.getCompliantProducts().size());
+        assertTrue(status.getPartiallyCompliantProducts().keySet().contains(PRODUCT_1));
+
+        // We should be partial because of ram and vcpus, nothing else
+        assertEquals(2, status.getReasons().size());
+        List<String> reasonKeys = new LinkedList<String>();
+        for (ComplianceReason r : status.getReasons()) {
+            reasonKeys.add(r.getKey());
+        }
+        assertTrue(reasonKeys.contains("RAM"));
+        assertTrue(reasonKeys.contains("VCPU"));
+    }
+
+    @Test
+    public void virtualStackedOnlyUsesVcpuAndRam() {
+        Consumer c = mockConsumer(PRODUCT_1, PRODUCT_2);
+        c.setFact("virt.is_guest", "true");
+        c.setFact("cpu.core(s)_per_socket", "8");
+        c.setFact("cpu.cpu_socket(s)", "10");
+        c.setFact("memory.memtotal", "8000000"); // 8GB RAM
+
+        List<Entitlement> ents = new LinkedList<Entitlement>();
+        Entitlement ent = mockBaseStackedEntitlement(c, STACK_ID_1, "2", "Awesome Product",
+            PRODUCT_1, PRODUCT_2);
+        ent.getPool().setProductAttribute("cores", "1", PRODUCT_1);
+        ent.getPool().setProductAttribute("ram", "1", PRODUCT_1);
+        ent.getPool().setProductAttribute("sockets", "1", PRODUCT_1);
+        ent.getPool().setProductAttribute("vcpu", "1", PRODUCT_1);
+        ents.add(ent);
+        ents.get(0).setQuantity(1);
+        mockEntCurator(c, ents);
+
+        ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
+
+        assertEquals(ComplianceStatus.YELLOW, status.getStatus());
+        assertEquals(0, status.getNonCompliantProducts().size());
+        assertEquals(2, status.getPartiallyCompliantProducts().size());
+        assertEquals(0, status.getCompliantProducts().size());
+        assertTrue(status.getPartiallyCompliantProducts().keySet().contains(PRODUCT_1));
+        assertTrue(status.getPartiallyCompliantProducts().keySet().contains(PRODUCT_2));
+
+        // We should be partial because of ram and vcpus, nothing else
+        assertEquals(2, status.getReasons().size());
+        List<String> reasonKeys = new LinkedList<String>();
+        for (ComplianceReason r : status.getReasons()) {
+            reasonKeys.add(r.getKey());
+        }
+        assertTrue(reasonKeys.contains("RAM"));
+        assertTrue(reasonKeys.contains("VCPU"));
+    }
+
     private void mockEntCurator(Consumer c, List<Entitlement> ents) {
         when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
         when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(ents);

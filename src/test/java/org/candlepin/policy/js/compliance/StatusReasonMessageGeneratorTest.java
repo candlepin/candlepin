@@ -126,6 +126,15 @@ public class StatusReasonMessageGeneratorTest {
     }
 
     @Test
+    public void testVcpuMessage() {
+        ComplianceReason reason = buildReason("VCPU", buildGeneralAttributes("8", "4"));
+        generator.setMessage(consumer, reason, new Date());
+        assertEquals(
+            "Only covers 4 of 8 vCPUs.",
+            reason.getMessage());
+    }
+
+    @Test
     public void testDefaultMessage() {
         ComplianceReason reason = buildReason("NOT_A_KEY",
             buildGeneralAttributes("8", "4"));
