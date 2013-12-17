@@ -19,6 +19,19 @@ describe 'vCPU Limiting' do
                  :support_type => 'excellent',})
     @vcpu_sub = @cp.create_subscription(@owner['key'], @vcpu_product.id, 10, [], '1888', '1234')
 
+    @vcpu_stackable_prod = create_product(nil, random_string("Product2"), :attributes =>
+                {:version => '6.4',
+                 :vcpu => 8,
+                 :cores => 2,
+                 :sockets => 1,
+                 :warning_period => 15,
+                 :management_enabled => true,
+                 :support_level => 'standard',
+                 :support_type => 'excellent',
+                 :'multi-entitlement' => 'yes',
+                 :stacking_id => '12344321'})
+    @vcpu_stackable_sub = @cp.create_subscription(@owner['key'], @vcpu_stackable_prod.id, 10, [], '1888', '1234')
+
     # Refresh pools so that the subscription pools will be available to the test systems.
     @cp.refresh_pools(@owner['key'])
 
@@ -72,7 +85,7 @@ describe 'vCPU Limiting' do
     compliance_status.reasons[0]['key'].should == 'VCPU'
   end
 
-  it 'can heal when vcpu limited' do
+  it 'can heal single entitlement when vcpu limited' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
                 {'system.certificate_version' => '3.2',
                  # Simulate 8 cores as would be returned from system fact
@@ -86,6 +99,23 @@ describe 'vCPU Limiting' do
     # Perform healing
     ents = system.consume_product()
     ents.size.should == 1
+  end
+
+  it 'can heal correct quantity when vcpu limited' do
+    system = consumer_client(@user, random_string('system1'), :system, nil,
+                {'system.certificate_version' => '3.2',
+                 # Simulate 32 cores as would be returned from system fact
+                 'cpu.core(s)_per_socket' => '32',
+                 'virt.is_guest' => 'true'})
+    installed = [
+        {'productId' => @vcpu_stackable_prod.id, 'productName' => @vcpu_stackable_prod.name}
+    ]
+    system.update_consumer({:installedProducts => installed})
+
+    # Perform healing
+    ents = system.consume_product()
+    ents.size.should == 1
+    ents[0].quantity.should == 4
   end
 
   it 'will not heal when system vcpu is not covered by any entitlements' do
