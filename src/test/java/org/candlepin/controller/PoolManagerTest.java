@@ -171,7 +171,7 @@ public class PoolManagerTest {
         when(
             mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
                 any(Owner.class), anyString(), any(Date.class),
-                anyBoolean(), any(PageRequest.class))).thenReturn(page);
+                anyBoolean(), any(PageRequest.class), anyBoolean())).thenReturn(page);
         this.manager.getRefresher().add(getOwner()).run();
         verify(this.manager).deletePool(same(p));
     }
@@ -199,7 +199,7 @@ public class PoolManagerTest {
         when(
             mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
                 any(Owner.class), anyString(), any(Date.class),
-                anyBoolean(), any(PageRequest.class))).thenReturn(page);
+                anyBoolean(), any(PageRequest.class), anyBoolean())).thenReturn(page);
         this.manager.getRefresher().add(getOwner()).run();
         verify(this.manager).deletePool(same(p));
     }
@@ -227,7 +227,7 @@ public class PoolManagerTest {
         when(
             mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
                 any(Owner.class), anyString(), any(Date.class),
-                anyBoolean(), any(PageRequest.class))).thenReturn(page);
+                anyBoolean(), any(PageRequest.class), anyBoolean())).thenReturn(page);
         this.manager.getRefresher().add(getOwner()).run();
         verify(this.manager, never()).deletePool(same(p));
     }
@@ -255,7 +255,7 @@ public class PoolManagerTest {
         when(
             mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
                 any(Owner.class), anyString(), any(Date.class),
-                anyBoolean(), any(PageRequest.class))).thenReturn(page);
+                anyBoolean(), any(PageRequest.class), anyBoolean())).thenReturn(page);
         this.manager.getRefresher().add(getOwner()).run();
         verify(this.manager, never()).deletePool(same(p));
     }
@@ -279,7 +279,7 @@ public class PoolManagerTest {
         when(
             mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
                 any(Owner.class), anyString(), any(Date.class),
-                anyBoolean(), any(PageRequest.class))).thenReturn(page);
+                anyBoolean(), any(PageRequest.class), anyBoolean())).thenReturn(page);
 
         this.manager.getRefresher().add(getOwner()).run();
         ArgumentCaptor<List> poolCaptor = ArgumentCaptor.forClass(List.class);
@@ -304,7 +304,7 @@ public class PoolManagerTest {
         when(
             mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
                 any(Owner.class), anyString(), any(Date.class),
-                anyBoolean(), any(PageRequest.class))).thenReturn(page);
+                anyBoolean(), any(PageRequest.class), anyBoolean())).thenReturn(page);
 
         List<Pool> newPools = new LinkedList<Pool>();
         Pool p = TestUtil.createPool(s.getProduct());
@@ -339,7 +339,7 @@ public class PoolManagerTest {
         when(
             mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
                 any(Owner.class), anyString(), any(Date.class),
-                anyBoolean(), any(PageRequest.class))).thenReturn(page);
+                anyBoolean(), any(PageRequest.class), anyBoolean())).thenReturn(page);
 
         List<PoolUpdate> updates = new LinkedList();
         PoolUpdate u = new PoolUpdate(p);
@@ -476,7 +476,7 @@ public class PoolManagerTest {
         when(page.getPageData()).thenReturn(pools);
         when(mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
             any(Owner.class), any(String.class), eq(now), anyBoolean(),
-            any(PageRequest.class))).thenReturn(page);
+            any(PageRequest.class), anyBoolean())).thenReturn(page);
         when(mockPoolCurator.lockAndLoad(any(Pool.class))).thenReturn(pool1);
         when(enforcerMock.preEntitlement(any(Consumer.class), any(Pool.class), anyInt(),
             any(CallerType.class))).thenReturn(result);
@@ -532,7 +532,7 @@ public class PoolManagerTest {
 
         when(mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
             any(Owner.class), anyString(), any(Date.class),
-            anyBoolean(), any(PageRequest.class))).thenReturn(page);
+            anyBoolean(), any(PageRequest.class), anyBoolean())).thenReturn(page);
 
         List<Entitlement> poolEntitlements = Util.newList();
         Entitlement ent = TestUtil.createEntitlement();
@@ -625,7 +625,7 @@ public class PoolManagerTest {
 
         when(mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
             any(Owner.class), anyString(), eq(now),
-            anyBoolean(), any(PageRequest.class))).thenReturn(page);
+            anyBoolean(), any(PageRequest.class), anyBoolean())).thenReturn(page);
 
         when(mockPoolCurator.lockAndLoad(any(Pool.class))).thenReturn(pool1);
         when(enforcerMock.preEntitlement(any(Consumer.class), any(Pool.class), anyInt(),

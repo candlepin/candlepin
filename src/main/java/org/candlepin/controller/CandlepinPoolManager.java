@@ -1274,8 +1274,9 @@ public class CandlepinPoolManager implements PoolManager {
     public Page<List<Pool>> listAvailableEntitlementPools(Consumer consumer,
         Owner owner, String productId, Date activeOn, boolean activeOnly,
         boolean includeWarnings, PageRequest pageRequest) {
+        boolean postFilter = consumer != null; // Only postfilter if we have to
         Page<List<Pool>> page = this.poolCurator.listAvailableEntitlementPools(consumer,
-            owner, productId, activeOn, activeOnly, pageRequest);
+            owner, productId, activeOn, activeOnly, pageRequest, postFilter);
         if (consumer == null) {
             return page;
         }

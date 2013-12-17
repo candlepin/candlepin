@@ -373,7 +373,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         Date activeOn = TestUtil.createDate(2011, 2, 2);
         Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
-            null, owner, product.getId(), activeOn, false, req);
+            null, owner, product.getId(), activeOn, false, req, false);
         assertEquals(Integer.valueOf(50), page.getMaxRecords());
 
         List<Pool> pools = page.getPageData();
@@ -406,7 +406,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         Date activeOn = TestUtil.createDate(2011, 2, 2);
         Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
-            null, owner, product.getId(), activeOn, false, req);
+            null, owner, product.getId(), activeOn, false, req, false);
         assertEquals(Integer.valueOf(5), page.getMaxRecords());
         assertEquals(5, page.getPageData().size());
     }
@@ -426,7 +426,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         Date activeOn = TestUtil.createDate(2011, 2, 2);
         Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
-            null, owner, product.getId(), activeOn, false, req);
+            null, owner, product.getId(), activeOn, false, req, false);
         assertEquals(Integer.valueOf(5), page.getMaxRecords());
         assertEquals(0, page.getPageData().size());
     }
@@ -446,7 +446,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         Date activeOn = TestUtil.createDate(2011, 2, 2);
         Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
-            null, owner, product.getId(), activeOn, false, req);
+            null, owner, product.getId(), activeOn, false, req, false);
         assertEquals(Integer.valueOf(5), page.getMaxRecords());
         assertEquals(1, page.getPageData().size());
     }
@@ -469,7 +469,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         Date activeOn = TestUtil.createDate(2011, 2, 2);
         Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
-            null, owner, product.getId(), activeOn, false, req);
+            null, owner, product.getId(), activeOn, false, req, false);
         assertEquals(Integer.valueOf(0), page.getMaxRecords());
         assertEquals(0, page.getPageData().size());
     }
