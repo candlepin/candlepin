@@ -68,6 +68,8 @@ describe 'vCPU Limiting' do
     compliance_status['compliant'].should == false
     partially_compliant_products = compliance_status['partiallyCompliantProducts']
     partially_compliant_products.should have_key(@vcpu_product.id)
+    compliance_status.reasons.length.should == 1
+    compliance_status.reasons[0]['key'].should == 'VCPU'
   end
 
   it 'can heal when vcpu limited' do
