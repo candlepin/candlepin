@@ -28,6 +28,7 @@ import org.hibernate.Filter;
 import org.hibernate.LockMode;
 import org.hibernate.Query;
 import org.hibernate.ReplicationMode;
+import org.hibernate.criterion.CriteriaSpecification;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
@@ -144,7 +145,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     public List<Pool> listAvailableEntitlementPools(Consumer c, Owner o,
             String productId, Date activeOn, boolean activeOnly) {
         return listAvailableEntitlementPools(c, o, productId, activeOn, activeOnly,
-            null).getPageData();
+            null, false).getPageData();
     }
 
     @SuppressWarnings("unchecked")
@@ -171,12 +172,14 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      *        Set to null for no date filtering.
      * @param activeOnly if true, only active entitlements are included.
      * @param pageRequest used to specify paging criteria.
+     * @param postFilter if you plan on filtering the list in java
      * @return List of entitlement pools.
      */
     @SuppressWarnings("unchecked")
     @Transactional
     public Page<List<Pool>> listAvailableEntitlementPools(Consumer c, Owner o,
-            String productId, Date activeOn, boolean activeOnly, PageRequest pageRequest) {
+            String productId, Date activeOn, boolean activeOnly, PageRequest pageRequest,
+            boolean postFilter) {
         if (o == null && c != null) {
             o = c.getOwner();
         }
@@ -218,45 +221,15 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             crit.add(Restrictions.ge("endDate", activeOn));
         }
 
-        Page<List<Pool>> resultsPage = listByCriteria(crit, pageRequest, true);
-        List<Pool> results = resultsPage.getPageData();
-
-        if (results == null) {
-            log.debug("no results");
-            resultsPage.setPageData(new ArrayList<Pool>());
-            return resultsPage;
-        }
-
-        if (log.isDebugEnabled()) {
-            log.debug("Loaded " + results.size() + " pools from database.");
-        }
-
-        // crit.add(Restrictions.or(Restrictions.eq("productId", productId),
-        // Restrictions.in("", results)))
-        // Filter for product we want:
         if (productId != null) {
-            List<Pool> newResults = new LinkedList<Pool>();
-            for (Pool p : results) {
-                // Provides will check if the products are a direct match, or if the
-                // desired product is provided by the product this pool is for:
-                if (p.provides(productId)) {
-                    newResults.add(p);
-                    if (log.isDebugEnabled()) {
-                        log.debug("Pool provides " + productId + ": " + p);
-                    }
-                }
-            }
-            results = newResults;
+            crit.createAlias("providedProducts", "providedProduct",
+                CriteriaSpecification.LEFT_JOIN);
+
+            crit.add(Restrictions.or(Restrictions.eq("productId", productId),
+                Restrictions.eq("providedProduct.productId", productId)));
         }
 
-        // Set maxRecords once we are done filtering
-        resultsPage.setMaxRecords(results.size());
-
-        if (pageRequest != null && pageRequest.isPaging()) {
-            results = takeSubList(pageRequest, results);
-        }
-
-        resultsPage.setPageData(results);
+        Page<List<Pool>> resultsPage = listByCriteria(crit, pageRequest, postFilter);
         return resultsPage;
     }
 
