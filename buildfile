@@ -104,6 +104,8 @@ SCHEMASPY = 'net.sourceforge:schemaSpy:jar:4.1.1'
 
 RHINO = 'org.mozilla:rhino:jar:1.7R3'
 
+# required by LOGDRIVER
+LOG4J_BRIDGE = 'org.slf4j:log4j-over-slf4j:jar:1.7.5'
 LOGDRIVER = 'logdriver:logdriver:jar:1.0'
 
 #############################################################################
@@ -136,6 +138,7 @@ if not use_pmd.nil?
 end
 
 use_logdriver = ENV['logdriver']
+puts use_logdriver
 
 #############################################################################
 # PROJECT BUILD
@@ -192,7 +195,7 @@ define "candlepin" do
   compile_classpath = [COMMONS, SLF4J_BRIDGES, RESTEASY, LOGBACK, HIBERNATE, BOUNCYCASTLE,
     GUICE, JACKSON, QUARTZ, GETTEXT_COMMONS, HORNETQ, SUN_JAXB, MIME4J, OAUTH, RHINO, COLLECTIONS]
   compile.with compile_classpath
-  compile.with LOGDRIVER if use_logdriver
+  compile.with LOGDRIVER, LOG4J_BRIDGE if use_logdriver
   if Buildr.environment == 'oracle'
     compile.with ORACLE
   else
@@ -210,7 +213,7 @@ define "candlepin" do
 
   # the other dependencies are gotten from compile.classpath automagically
   test.with HSQLDB, JUNIT, generate
-  test.with LOGDRIVER if use_logdriver
+  test.with LOGDRIVER, LOG4J_BRIDGE if use_logdriver
   test.using :java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ]
 
   #
