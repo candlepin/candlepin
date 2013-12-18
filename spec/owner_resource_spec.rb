@@ -74,6 +74,23 @@ describe 'Owner Resource' do
     (pools[0].id <=> pools[1].id).should == -1
   end
 
+  it "lets owners list pools in pages for a consumer" do
+    owner = create_owner random_string("test_owner1")
+    user = user_client(owner, random_string("bob"))
+    system = consumer_client(user, "system")
+    product = create_product
+    (1..4).each do |i|
+      @cp.create_subscription(owner['key'], product.id, 10)
+    end
+    @cp.refresh_pools(owner['key'])
+    # Make sure there are 4 available pools
+    @cp.list_owner_pools(owner['key'], {:consumer => system.uuid}).length.should == 4
+    # Get page 2, per bz 1038273
+    pools = @cp.list_owner_pools(owner['key'], {:page => 2, :per_page => 2, :sort_by => "id", :order => "asc", :consumer => system.uuid})
+    pools.length.should == 2
+    (pools[0].id <=> pools[1].id).should == -1
+  end
+
   it "lets owners be created and refreshed at the same time" do
     owner_key = random_string("new_owner1")
     @cp.refresh_pools(owner_key, false, true)

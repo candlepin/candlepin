@@ -145,7 +145,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     public List<Pool> listAvailableEntitlementPools(Consumer c, Owner o,
             String productId, Date activeOn, boolean activeOnly) {
         return listAvailableEntitlementPools(c, o, productId, activeOn, activeOnly,
-            null).getPageData();
+            null, false).getPageData();
     }
 
     @SuppressWarnings("unchecked")
@@ -172,12 +172,14 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      *        Set to null for no date filtering.
      * @param activeOnly if true, only active entitlements are included.
      * @param pageRequest used to specify paging criteria.
+     * @param postFilter if you plan on filtering the list in java
      * @return List of entitlement pools.
      */
     @SuppressWarnings("unchecked")
     @Transactional
     public Page<List<Pool>> listAvailableEntitlementPools(Consumer c, Owner o,
-            String productId, Date activeOn, boolean activeOnly, PageRequest pageRequest) {
+            String productId, Date activeOn, boolean activeOnly, PageRequest pageRequest,
+            boolean postFilter) {
         if (o == null && c != null) {
             o = c.getOwner();
         }
@@ -227,7 +229,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 Restrictions.eq("providedProduct.productId", productId)));
         }
 
-        Page<List<Pool>> resultsPage = listByCriteria(crit, pageRequest);
+        Page<List<Pool>> resultsPage = listByCriteria(crit, pageRequest, postFilter);
         return resultsPage;
     }
 
