@@ -190,6 +190,7 @@ public class ComplianceRulesTest {
         Entitlement ent = this.mockBaseStackedEntitlement(consumer, stackId, productId,
             providedProductIds);
         ent.getPool().setProductAttribute("sockets", "2", productId);
+        ent.getPool().setProductAttribute("vcpu", "1", productId);
         ent.getPool().setAttribute("requires_host", "SOMEUUID");
         return ent;
     }
@@ -1383,6 +1384,7 @@ public class ComplianceRulesTest {
     public void hostRestrictedVirtualGreen() {
         Consumer c = mockConsumer(PRODUCT_1, PRODUCT_2);
         c.setFact("virt.is_guest", "true");
+        c.setFact("cpu.core(s)_per_socket", "20");
         List<Entitlement> ents = new LinkedList<Entitlement>();
         ents.add(mockHostRestrictedEntitlement(c, STACK_ID_1, "Awesome Product",
             PRODUCT_1, PRODUCT_2));
