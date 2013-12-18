@@ -22,6 +22,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -40,6 +41,7 @@ import org.candlepin.model.Content;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.test.DatabaseTestFixture;
+import org.candlepin.test.TestUtil;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 import org.junit.Before;
@@ -417,7 +419,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
     }
 
     private Product createTestProduct() {
-        Product p = new Product("testProductId", "Test Product");
+        Product p = TestUtil.createProduct("testProductId", "Test Product");
 
         ProductAttribute a1 = new ProductAttribute("a1", "a1");
         p.addAttribute(a1);
@@ -640,4 +642,26 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         assertEquals(0, p.getProductContent().size());
     }
 
+    @Test
+    public void listByIds() {
+        List<Product> products = new ArrayList<Product>();
+        List<String> pids = new ArrayList<String>();
+        for (int i = 0; i < 5; i++) {
+            Product p = TestUtil.createProduct();
+            productCurator.create(p);
+            products.add(p);
+            pids.add(p.getId());
+        }
+
+        // ok get first 3 items to lookup
+        List<Product> returned = productCurator.listAllByIds(pids.subList(0, 3));
+        assertEquals(3, returned.size());
+
+        // verify the first 3 were actually returned, and only those 3.
+        assertTrue(returned.contains(products.get(0)));
+        assertTrue(returned.contains(products.get(1)));
+        assertTrue(returned.contains(products.get(2)));
+        assertFalse(returned.contains(products.get(3)));
+        assertFalse(returned.contains(products.get(4)));
+    }
 }

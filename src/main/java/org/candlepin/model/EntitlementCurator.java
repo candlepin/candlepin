@@ -258,19 +258,12 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             prodIdsToCheck.add(pp.getProductId());
         }
 
-        for (String prodId : prodIdsToCheck) {
-            Product p = productAdapter.getProductById(prodId);
-            if (null == p) {
-                String msg = i18n.tr("No product found for product ID {0}", prodId);
-                log.error("No product found for product id " + prodId);
-                throw new CuratorException(msg);
-            }
-            else {
-                if (p.modifies(modifiedProductId)) {
-                    return true;
-                }
+        for (Product p : productAdapter.getProductsByIds(prodIdsToCheck)) {
+            if (p.modifies(modifiedProductId)) {
+                return true;
             }
         }
+
         return false;
     }
 

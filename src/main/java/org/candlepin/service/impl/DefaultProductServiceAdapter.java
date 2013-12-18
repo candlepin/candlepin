@@ -38,6 +38,7 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.cert.X509Certificate;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -192,5 +193,10 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
     public void removeRely(String productId, String relyId) {
         Product product = prodCurator.find(productId);
         prodCurator.removeRely(product, relyId);
+    }
+
+    @Override
+    public List<Product> getProductsByIds(Collection<String> ids) {
+        return prodCurator.listAllByIds(ids);
     }
 }

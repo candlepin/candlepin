@@ -17,6 +17,7 @@ package org.candlepin.service;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -34,6 +35,13 @@ public interface ProductServiceAdapter {
      * @return specific product
      */
     Product getProductById(String id);
+
+    /**
+     * Query a list of products matching the given id.
+     * @param ids list of product ids
+     * @return list of products matching the given id
+     */
+    List<Product> getProductsByIds(Collection<String> ids);
 
     /**
      * List all Products
