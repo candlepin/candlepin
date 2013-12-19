@@ -1,4 +1,4 @@
-// Version: 5.2
+// Version: 5.3
 
 /*
  * Default Candlepin rule set.
@@ -102,6 +102,15 @@ var VIRT_ATTRIBUTES = [
     RAM_ATTRIBUTE,
     ARCH_ATTRIBUTE,
     GUEST_LIMIT_ATTRIBUTE
+];
+
+/**
+ * These product attributes will not be considered on
+ * pools that are host restricted/
+ */
+var UNCHECKED_WHEN_HOST_RESTRICTED = [
+    RAM_ATTRIBUTE,
+    VCPU_ATTRIBUTE
 ];
 
 /**
@@ -975,16 +984,10 @@ function createStackTracker(consumer, stackId) {
          *  an accumulated value set.
          */
         enforces: function(attribute) {
-            // Guests are not subjected to socket stacking rules for instance based subs:
-            if (attribute == SOCKETS_ATTRIBUTE && this.instanceMultiplier &&
-                Utils.isGuest(this.consumer)) {
-                log.debug("Not enforcing " + attribute + ": guest / instance based sub");
-                return false;
-            }
-
-            // Guests are not subjected to CPU/RAM/Core stacking rules if
-            // using a host-restricted sub-pool:
-            if (this.hostRestricted && Utils.isGuest(this.consumer)) {
+            // Guests are not subjected to Sockets/RAM/Cores/Vcpus limitations if
+            // using a host-restricted sub-pool.
+            if (this.hostRestricted !== null && Utils.isGuest(this.consumer) &&
+                    contains(UNCHECKED_WHEN_HOST_RESTRICTED, attribute)) {
                 log.debug("Not enforcing " + attribute + ": guest / host restricted pool");
                 return false;
             }

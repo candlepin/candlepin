@@ -79,7 +79,7 @@ RSpec.configure do |config|
     @uuid1 = random_string('system.uuid')
     @uuid2 = random_string('system.uuid')
     @guest1 = @user.register(random_string('guest'), :system, nil,
-      {'virt.uuid' => @uuid1, 'virt.is_guest' => 'true'}, nil, nil, [], [])
+      {'virt.uuid' => @uuid1, 'virt.is_guest' => 'true', 'uname.machine' => 'x86_64'}, nil, nil, [], [])
     @guest1_client = Candlepin.new(username=nil, password=nil,
         cert=@guest1['idCert']['cert'],
         key=@guest1['idCert']['key'])

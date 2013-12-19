@@ -70,6 +70,44 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
     pools.should have(2).things
   end
 
+  it 'should check arch matches and guest_limit enforced on restricted subpools' do
+    # Make sure that guest_limit and arch are still imposed
+    # upon host restricted subpools
+    stack_id = random_string('test-stack-id')
+    arch_virt_product = create_product(nil, nil,
+      :attributes => {
+        :virt_limit => 3,
+        :guest_limit => 1,
+        :arch => 'ppc64',
+        :'multi-entitlement' => 'yes',
+        :stacking_id => stack_id,
+      })
+    arch_virt_sub = @cp.create_subscription(@owner['key'], arch_virt_product.id, 10)
+    @cp.refresh_pools(@owner['key'])
+    arch_virt_pools = @user.list_pools(:owner => @owner.id, :product => arch_virt_product.id)
+    arch_virt_pool = arch_virt_pools[0]
+
+    host1_ent = @host1_client.consume_pool(arch_virt_pool['id'], {:quantity => 1})[0]
+    @cp.refresh_pools(@owner['key'])
+
+    # Find the host-restricted pool:
+    pools = @guest1_client.list_pools :consumer => @guest1['uuid'], :listall => true, :product => arch_virt_product.id
+    pools.should have(2).things
+    # Find the correct host-restricted subpool
+    guest_pool_with_arch = pools.find_all { |i| !i['sourceConsumer'].nil? }[0]
+    guest_pool_with_arch.should_not == nil
+
+    @guest1_client.update_consumer({:guestIds => [
+        {'guestId' => 'testing2', 'attributes' => {'active' => '1', 'virtWhoType'=> 'libvirt'}},
+        {'guestId' => 'testing1', 'attributes' => {'active' => '1', 'virtWhoType'=> 'libvirt'}}]})
+    @guest1_client.consume_pool(guest_pool_with_arch['id'], {:quantity => 1})
+    compliance = @cp.get_compliance(consumer_id=@guest1_client.uuid)
+    compliance.reasons.length.should == 2
+    reasonKeys = compliance.reasons.map {|r| r['key']}
+    (reasonKeys.include? 'GUEST_LIMIT').should == true
+    (reasonKeys.include? 'ARCH').should == true
+  end
+
   it 'should revoke guest entitlements when host unbinds' do
     # Guest 1 should be able to use the pool:
     @guest1_client.consume_pool(@guest_pool['id'], {:quantity => 1})
