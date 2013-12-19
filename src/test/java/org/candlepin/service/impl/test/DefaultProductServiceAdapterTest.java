@@ -82,6 +82,14 @@ public class DefaultProductServiceAdapterTest {
     }
 
     @Test
+    public void productsByIds() {
+        List<String> ids = new ArrayList<String>();
+        ids.add(someid);
+        dpsa.getProductsByIds(ids);
+        verify(pc).listAllByIds(eq(ids));
+    }
+
+    @Test
     public void getProducts() {
         List<Product> prods = new ArrayList<Product>();
         prods.add(mock(Product.class));
