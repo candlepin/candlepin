@@ -56,6 +56,10 @@ class DbSetup(object):
     def create(self):
         raise NotImplementedError("Implemented by subclasses")
 
+    def initialize_schema(self):
+        print("Loading candlepin schema")
+        self._run_liquibase("db/changelog/changelog-create.xml")
+
     def drop(self):
         raise NotImplementedError("Implemented by subclasses")
 
@@ -126,9 +130,6 @@ class OracleSetup(DbSetup):
         out = self._runSql('grant dba to %s;' % self.username)
         print out
 
-        print("Loading candlepin schema")
-        self._run_liquibase("db/changelog/changelog-create.xml")
-
     def drop(self):
         print("Dropping candlepin database")
         out = self._runSql('drop user %s cascade;' % self.username)
@@ -155,9 +156,6 @@ class PostgresqlSetup(DbSetup):
         elif status > 0:
             error_out(command, status, output)
 
-        print("Loading candlepin schema")
-        self._run_liquibase("db/changelog/changelog-create.xml")
-
     def drop(self):
         print("Dropping candlepin database")
         command = "dropdb -U %s %s" % (self.username, self.db)
@@ -173,6 +171,10 @@ if __name__ == "__main__":
     parser.add_option("--create",
             dest="create", action="store_true", default=False,
             help="create the Candlepin database")
+    parser.add_option("--schema-only",
+            dest="schema_only", action="store_true", default=False,
+            help="assumes database is already created by another tool and"
+                 "applies schema to database; used with --create")
     parser.add_option("--update",
             dest="update", action="store_true", default=False,
             help="update the Candlepin database")
@@ -219,6 +221,14 @@ if __name__ == "__main__":
         print("ERROR: Please specify --create or --update.")
         sys.exit(1)
 
+    if options.schema_only and not options.create:
+        print("ERROR: --schema-only must only be specified with --create.")
+        sys.exit(1)
+
+    if options.drop and options.schema_only:
+        print("ERROR: --drop can not be used with --schema-only")
+        sys.exit(1)
+
     if options.oracle:
         dbsetup = OracleSetup(options.dbuser, options.dbpassword, options.db,
                 options.community, options.oracle_user, options.oracle_password)
@@ -228,6 +238,8 @@ if __name__ == "__main__":
     if options.create:
         if options.drop:
             dbsetup.drop()
-        dbsetup.create()
+        if not options.schema_only:
+            dbsetup.create()
+        dbsetup.initialize_schema()
     if options.update:
         dbsetup.update()

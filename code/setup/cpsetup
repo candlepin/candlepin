@@ -221,6 +221,9 @@ def main(argv):
     parser.add_option("-d", "--database",
                   dest="db", default="candlepin",
                   help="the database to use")
+    parser.add_option("--schema-only",
+                  action="store_true", dest="schema_only", default=False,
+                  help="database already exists, only load the schema.")
     parser.add_option("-w", "--webapp-prefix",
                   dest="webapp_prefix",
                   help="the web application prefix to use for export origin [host:port/prefix]")
@@ -251,17 +254,21 @@ def main(argv):
     tsetup.fix_perms()
     tsetup.stop()
 
-    # Call the cpdb script to create the candlepin database. This will fail
-    # if the database already exists, protecting us from accidentally wiping
-    # it out if cpsetup is re-run.
+    # Call the cpdb script to create the candlepin database. Database creation will be
+    # skipped if it already exists. The --schema-only option can be used if the database
+    # is expected to have been created by an external script, and only the schema is to
+    # be applied.
     script_dir = os.path.dirname(__file__)
     cpdb_script = os.path.join(script_dir, "cpdb")
     command = "%s --create -u %s --database %s --password %s" % (cpdb_script,
         options.dbuser, options.db, options.password)
+
+    if options.schema_only:
+        command = " ".join([command, "--schema-only"])
+
     if options.oracle:
         command = " ".join([command, "--oracle --oracle-user %s --oracle-password %s" %
             (options.oracle_user, options.oracle_password)])
-
     run_command(command)
 
     if not options.skipdbcfg:
