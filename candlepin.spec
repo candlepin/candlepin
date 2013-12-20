@@ -103,6 +103,7 @@ BuildRequires: scannotation
 BuildRequires: postgresql-jdbc
 BuildRequires: servlet
 BuildRequires: gettext-commons
+BuildRequires: jta
 
 # resteasy multipart requires this at runtime
 BuildRequires: apache-mime4j
@@ -155,7 +156,7 @@ Requires: gettext-commons
 Requires: javamail
 Requires: javassist >= 3.12.0
 Requires: commons-collections >= 3.1
-
+Requires: jta
 %endif
 %define __jar_repack %{nil}
 
