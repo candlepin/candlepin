@@ -75,13 +75,13 @@ GETTEXT_COMMONS = 'org.xnap.commons:gettext-commons:jar:0.9.6'
 
 BOUNCYCASTLE = group('bcprov-jdk16', :under=>'org.bouncycastle', :version=>'1.46')
 
+SERVLET = 'javax.servlet:servlet-api:jar:2.5'
 GUICE =  [group('guice-assistedinject', 'guice-multibindings',
                 'guice-servlet', 'guice-throwingproviders', 'guice-persist',
                 :under=>'com.google.inject.extensions', :version=>'3.0'),
            'com.google.inject:guice:jar:3.0',
            'aopalliance:aopalliance:jar:1.0',
-           'javax.inject:javax.inject:jar:1',
-           'javax.servlet:servlet-api:jar:2.5']
+           'javax.inject:javax.inject:jar:1']
 
 COLLECTIONS = 'com.google.collections:google-collections:jar:1.0'
 
@@ -109,6 +109,11 @@ RHINO = 'org.mozilla:rhino:jar:1.7R3'
 # required by LOGDRIVER
 LOG4J_BRIDGE = 'org.slf4j:log4j-over-slf4j:jar:1.7.5'
 LOGDRIVER = 'logdriver:logdriver:jar:1.0'
+
+# servlet-api is provided by the servlet container and Tomcat won't
+# even load servlet API classes seen in WEB-INF/lib.  See section 9.7.2 of
+# Servlet Spec 2.4 and http://stackoverflow.com/questions/15601469
+PROVIDED = [SERVLET]
 
 #############################################################################
 # REPOSITORIES
@@ -195,7 +200,8 @@ define "candlepin" do
   compile.options.target = '1.6'
   compile.options.source = '1.6'
   compile_classpath = [COMMONS, SLF4J_BRIDGES, RESTEASY, LOGBACK, HIBERNATE, BOUNCYCASTLE,
-    GUICE, JACKSON, QUARTZ, GETTEXT_COMMONS, HORNETQ, SUN_JAXB, MIME4J, OAUTH, RHINO, COLLECTIONS]
+    GUICE, JACKSON, QUARTZ, GETTEXT_COMMONS, HORNETQ, SUN_JAXB, MIME4J, OAUTH, RHINO, COLLECTIONS,
+    PROVIDED]
   compile.with compile_classpath
   compile.with LOGDRIVER, LOG4J_BRIDGE if use_logdriver
   if Buildr.environment == 'oracle'
@@ -246,6 +252,7 @@ define "candlepin" do
 
   package(:war, :id=>"candlepin").tap do |war|
     war.libs += artifacts(HSQLDB)
+    war.libs -= artifacts(PROVIDED)
     war.classes.clear
     war.classes = [generate, resources.target]
     web_inf = war.path('WEB-INF/classes')

@@ -218,6 +218,7 @@
       </classes>
       <classes dir="${target.dir}/generated-source" />
       <lib dir="${dist.lib.dir}">
+        <exclude name="**/servlet.jar" />
         <!-- can be removed once candlepin-deps is dead -->
         <exclude name="**/emma*.jar" />
         <exclude name="**/hamcrest*.jar" />
