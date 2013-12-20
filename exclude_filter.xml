@@ -1,8 +1,5 @@
 <FindBugsFilter>
   <Match>
-    <Not>
-      <Bug pattern="EI_EXPOSE_REP" />
-      <Bug pattern="EI_EXPOSE_REP2" />
-    </Not>
+    <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2" />
   </Match>
 </FindBugsFilter>
