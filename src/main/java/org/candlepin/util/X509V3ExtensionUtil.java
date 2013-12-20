@@ -1039,6 +1039,10 @@ public class X509V3ExtensionUtil extends X509Util{
     }
 
     private void makeURLs(PathNode root, List<String> urls, StringBuffer aPath) {
+        if (root == null) {
+            // if no PathNode, we just bail. No need to cause an NPE.
+            return;
+        }
         if (root.getChildren().size() == 0) {
             urls.add(aPath.toString());
         }
