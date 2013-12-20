@@ -52,6 +52,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.zip.Deflater;
@@ -623,9 +624,10 @@ public class X509V3ExtensionUtil extends X509Util{
         Map<String, Integer> segments =  new HashMap<String, Integer>();
         Set<PathNode> nodes =  new HashSet<PathNode>();
         buildSegments(segments, nodes, parent);
-        for (String part : segments.keySet()) {
+        for (Entry<String, Integer> entry : segments.entrySet()) {
+            String part = entry.getKey();
             if (!part.equals("")) {
-                int count = segments.get(part);
+                int count = entry.getValue();
                 if (parts.size() == 0) {
                     parts.add(part);
                 }
