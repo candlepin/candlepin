@@ -91,7 +91,7 @@ BuildRequires: jackson-module-jaxb-annotations >= %{jackson_version}
 BuildRequires: jakarta-commons-httpclient
 BuildRequires: hibernate-jpa-2.0-api >= 1.0.1
 BuildRequires: netty
-BuildRequires: glassfish-jaxb
+BuildRequires: jaxb-impl
 BuildRequires: jms >= 0:1.1
 BuildRequires: oauth
 BuildRequires: slf4j-api >= 0:1.7.5
@@ -140,7 +140,7 @@ Requires: hornetq >= 0:2.3.5
 Requires: netty
 Requires: oauth
 Requires: logback-classic
-Requires: glassfish-jaxb
+Requires: jaxb-impl
 Requires: scannotation
 Requires: slf4j-api >= 0:1.7.5
 # apache-mime4j uses commons-logging, so we have to provide a slf4j bridge
