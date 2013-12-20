@@ -1351,7 +1351,6 @@
             "attributes": {
                 "virt_limit": 4,
                 "guest_limit": 4,
-                "arch": 'x86_64',
                 "multi-entitlement": "yes",
                 "stacking_id": "aos-4virt-stackable"
             }
