@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'candlepin_scenarios'
 require 'openssl'
 
-describe 'Certificate Revocation List' do
+describe 'Certificate Revocation List', :serial => true do
 
   include CandlepinMethods
 
