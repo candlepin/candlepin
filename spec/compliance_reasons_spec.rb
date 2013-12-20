@@ -57,7 +57,7 @@ describe 'Single Entitlement Compliance Reasons' do
     reasons = compliance_status['reasons']
     reasons.size.should == 1
     
-    expected_message = "Not covered by a valid subscription."
+    expected_message = "Not supported by a valid subscription."
     assert_reason(reasons[0], "NOTCOVERED", expected_message, {"product_id" => @product1.id,
                                                                 "name" => @product1.name})
   end
@@ -86,7 +86,7 @@ describe 'Single Entitlement Compliance Reasons' do
 
     expected_has = "16"
     expected_covered = "8"
-    expected_message = "Only covers %sGB of %sGB of RAM." % [expected_covered,
+    expected_message = "Only supports %sGB of %sGB of RAM." % [expected_covered,
                                                            expected_has]
 
     reasons = compliance_status['reasons']
@@ -123,7 +123,7 @@ describe 'Single Entitlement Compliance Reasons' do
 
     expected_has = "16"
     expected_covered = "8"
-    expected_message = "Only covers %sGB of %sGB of RAM." % [expected_covered,
+    expected_message = "Only supports %sGB of %sGB of RAM." % [expected_covered,
                                                            expected_has]
 
     reasons = compliance_status['reasons']
@@ -161,7 +161,7 @@ describe 'Single Entitlement Compliance Reasons' do
     compliance_status['compliant'].should == false
     compliance_status.should have_key('reasons')
 
-    expected_message = "Not covered by a valid subscription."
+    expected_message = "Not supported by a valid subscription."
 
     reasons = compliance_status['reasons']
     reasons.size.should == 1
@@ -198,7 +198,7 @@ describe 'Single Entitlement Compliance Reasons' do
 
     expected_has = "12"
     expected_covered = "2"
-    expected_message = "Only covers %s of %s sockets." % [expected_covered,
+    expected_message = "Only supports %s of %s sockets." % [expected_covered,
                                                            expected_has]
 
     reasons = compliance_status['reasons']
@@ -237,7 +237,7 @@ describe 'Single Entitlement Compliance Reasons' do
 
     expected_has = "24"
     expected_covered = "22"
-    expected_message = "Only covers %s of %s cores." % [expected_covered,
+    expected_message = "Only supports %s of %s cores." % [expected_covered,
                                                            expected_has]
 
     reasons = compliance_status['reasons']
@@ -274,7 +274,7 @@ describe 'Single Entitlement Compliance Reasons' do
 
     expected_has = "ppc64"
     expected_covered = "x86_64"
-    expected_message = "Covers architecture %s but the system is %s." % [expected_covered,
+    expected_message = "Supports architecture %s but the system is %s." % [expected_covered,
                                                                            expected_has]
 
     reasons = compliance_status['reasons']
@@ -321,7 +321,7 @@ describe 'Single Entitlement Compliance Reasons' do
 
     expected_has = "ppc64"
     expected_covered = "x86_64"
-    expected_message = "Covers architecture %s but the system is %s." % [expected_covered,
+    expected_message = "Supports architecture %s but the system is %s." % [expected_covered,
                                                                            expected_has]
     reason_expectations["ARCH"] = {
             "key" => "ARCH",
@@ -338,7 +338,7 @@ describe 'Single Entitlement Compliance Reasons' do
     
     expected_has = "16"
     expected_covered = "8"
-    expected_message = "Only covers %sGB of %sGB of RAM." % [expected_covered,
+    expected_message = "Only supports %sGB of %sGB of RAM." % [expected_covered,
                                                               expected_has]
     reason_expectations["RAM"] = {
             "key" => "RAM",
@@ -353,7 +353,7 @@ describe 'Single Entitlement Compliance Reasons' do
 
     expected_has = "20"
     expected_covered = "2"
-    expected_message = "Only covers %s of %s sockets." % [expected_covered,
+    expected_message = "Only supports %s of %s sockets." % [expected_covered,
                                                               expected_has]
     reason_expectations["SOCKETS"] = {
             "key" => "SOCKETS",
@@ -368,7 +368,7 @@ describe 'Single Entitlement Compliance Reasons' do
     
     expected_has = "240"
     expected_covered = "22"
-    expected_message = "Only covers %s of %s cores." % [expected_covered,
+    expected_message = "Only supports %s of %s cores." % [expected_covered,
                                                               expected_has]
     reason_expectations["CORES"] = {
             "key" => "CORES",
@@ -453,7 +453,7 @@ describe 'Stacking Compliance Reasons' do
     
     expected_has = "16"
     expected_covered = "8"
-    expected_message = "Only covers %sGB of %sGB of RAM." % [expected_covered,
+    expected_message = "Only supports %sGB of %sGB of RAM." % [expected_covered,
                                                                 expected_has]
 
     reasons = compliance_status['reasons']
@@ -489,7 +489,7 @@ describe 'Stacking Compliance Reasons' do
     
     expected_has = "16"
     expected_covered = "8"
-    expected_message = "Only covers %sGB of %sGB of RAM." % [expected_covered,
+    expected_message = "Only supports %sGB of %sGB of RAM." % [expected_covered,
                                                                 expected_has]
 
     reasons = compliance_status['reasons']
@@ -527,7 +527,7 @@ describe 'Stacking Compliance Reasons' do
     
     expected_has = "6"
     expected_covered = "4"
-    expected_message = "Only covers %s of %s sockets." % [expected_covered,
+    expected_message = "Only supports %s of %s sockets." % [expected_covered,
                                                              expected_has]
 
     reasons = compliance_status['reasons']
@@ -567,7 +567,7 @@ describe 'Stacking Compliance Reasons' do
     
     expected_has = "30"
     expected_covered = "20"
-    expected_message = "Only covers %s of %s cores." % [expected_covered,
+    expected_message = "Only supports %s of %s cores." % [expected_covered,
                                                            expected_has]
 
     reasons = compliance_status['reasons']
@@ -608,7 +608,7 @@ describe 'Stacking Compliance Reasons' do
     
     expected_has = "30"
     expected_covered = "16"
-    expected_message = "Only covers %s of %s vCPUs." % [expected_covered,
+    expected_message = "Only supports %s of %s vCPUs." % [expected_covered,
                                                            expected_has]
 
     reasons = compliance_status['reasons']
@@ -648,7 +648,7 @@ describe 'Stacking Compliance Reasons' do
     
     expected_has = "ppc64"
     expected_covered = "x86_64"
-    expected_message = "Covers architecture %s but the system is %s." % [expected_covered,
+    expected_message = "Supports architecture %s but the system is %s." % [expected_covered,
                                                                            expected_has]
 
     reasons = compliance_status['reasons']
@@ -685,7 +685,7 @@ describe 'Stacking Compliance Reasons' do
     compliance_status['compliant'].should == false
     compliance_status.should have_key('reasons')
     
-    expected_message = "Not covered by a valid subscription."
+    expected_message = "Not supported by a valid subscription."
 
     reasons = compliance_status['reasons']
     reasons.size.should == 1
@@ -726,7 +726,7 @@ describe 'Stacking Compliance Reasons' do
     
     expected_has = "ppc64"
     expected_covered = "x86_64"
-    expected_message = "Covers architecture %s but the system is %s." % [expected_covered,
+    expected_message = "Supports architecture %s but the system is %s." % [expected_covered,
                                                                             expected_has]
 
     reason_expectations["ARCH"] = {
@@ -742,7 +742,7 @@ describe 'Stacking Compliance Reasons' do
     
     expected_has = "16"
     expected_covered = "8"
-    expected_message = "Only covers %sGB of %sGB of RAM." % [expected_covered,
+    expected_message = "Only supports %sGB of %sGB of RAM." % [expected_covered,
                                                                 expected_has]
     reason_expectations["RAM"] = {
             "key" => "RAM",
@@ -757,7 +757,7 @@ describe 'Stacking Compliance Reasons' do
     
     expected_has = "20"
     expected_covered = "4"
-    expected_message = "Only covers %s of %s sockets." % [expected_covered,
+    expected_message = "Only supports %s of %s sockets." % [expected_covered,
                                                            expected_has]
     reason_expectations["SOCKETS"] = {
             "key" => "SOCKETS",
@@ -772,7 +772,7 @@ describe 'Stacking Compliance Reasons' do
     
     expected_has = "240"
     expected_covered = "20"
-    expected_message = "Only covers %s of %s cores." % [expected_covered,
+    expected_message = "Only supports %s of %s cores." % [expected_covered,
                                                            expected_has]
     reason_expectations["CORES"] = {
             "key" => "CORES",
