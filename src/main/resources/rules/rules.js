@@ -685,20 +685,6 @@ var CoverageCalculator = {
 
     /**
      *  Determines the amount of consumer coverage provided by the specified
-     *  entitlement.
-     */
-    getEntitlementCoverage: function(entitlement, consumer, entitlements) {
-        var poolValues = this.getValues(entitlement.pool, "hasProductAttribute", "getProductAttribute",
-                                        consumer, entitlement.pool.getProductAttribute(INSTANCE_ATTRIBUTE), entitlements);
-        var sourceData = this.buildSourceData("ENTITLEMENT", entitlement.id,
-                                              poolValues, entitlement.pool.getProductAttribute(INSTANCE_ATTRIBUTE));
-        var coverage = this.getCoverageForSource(sourceData, consumer, this.getDefaultConditions());
-        log.debug("Entitlement covered: " + coverage.percentage);
-        return coverage;
-    },
-
-    /**
-     *  Determines the amount of consumer coverage provided by the specified
      *  stack.
      */
     getStackCoverage: function(stackTracker, consumer, entitlements) {
@@ -730,7 +716,9 @@ var CoverageCalculator = {
             return null;
         };
 
-        var sourceData = this.buildSourceData("STACK", stackTracker.stackId,
+        var sourceType = stackTracker.stackId === null ? "ENTITLEMENT" : "STACK";
+        var sourceId = stackTracker.stackId === null ? stackTracker.entitlementIds[0] : stackTracker.stackId;
+        var sourceData = this.buildSourceData(sourceType, sourceId,
                                               stackValues,
                                               stackTracker.instanceMultiplier);
         var coverage = this.getCoverageForSource(sourceData, consumer, conditions);
@@ -1107,7 +1095,14 @@ function createStackTracker(consumer, stackId) {
             // added to the stack so that our accumulated values do not
             // get out of whack.
             this.entitlementIds.push(ent.id);
-            this.updateAccumulatedFromPool(ent.pool, ent.quantity);
+
+            // If quantity is > 1 but the entitlement is not stacked
+            // only calculate compliance for quantity 1
+            var quantity = ent.quantity;
+            if (!is_stacked(ent) && ent.quantity > 1) {
+                quantity = 1;
+            }
+            this.updateAccumulatedFromPool(ent.pool, quantity);
         }
 
     };
@@ -1571,7 +1566,7 @@ var Autobind = {
                     return false;
                 }
 
-                if (!this.stackable && CoverageCalculator.getEntitlementCoverage(all_ents[0], this.consumer, all_ents).covered) {
+                if (!this.stackable && Compliance.getEntitlementCoverage(this.consumer, all_ents[0], all_ents).covered) {
                     return true;
                 }
                 else if (!this.stackable) {
@@ -1835,7 +1830,7 @@ var Autobind = {
                                 break;
                             }
                         } else {
-                            if (CoverageCalculator.getEntitlementCoverage(current_ent, this.consumer, ents.concat(this.attached_ents)).covered) {
+                            if (Compliance.getEntitlementCoverage(this.consumer, current_ent, ents.concat(this.attached_ents)).covered) {
                                 result.put(pool.id, j);
                                 break;
                             }
@@ -2319,10 +2314,8 @@ var Compliance = {
     },
 
     is_ent_compliant: function () {
-        // TODO MS: Look into whether or not we will ever need
-        //      to enrich Installed Product data with reasons.
         var context = Compliance.get_status_context();
-        var coverage = CoverageCalculator.getEntitlementCoverage(context.entitlement, context.consumer, context.entitlements);
+        var coverage = Compliance.getEntitlementCoverage(context.consumer, context.entitlement, context.entitlements);
         return coverage.covered;
     },
 
@@ -2469,7 +2462,7 @@ var Compliance = {
             // If we have no installed products and the entitlement
             // is partially covered, we want the system to be partial.
             if (relevant_pids.length == 0 && !ent_is_stacked) {
-                var entCoverage = CoverageCalculator.getEntitlementCoverage(e, consumer, entitlementsOnDate);
+                var entCoverage = Compliance.getEntitlementCoverage(consumer, e, entitlementsOnDate);
                 if (!entCoverage.covered) {
                     compStatus.add_reasons(entCoverage.reasons);
                 }
@@ -2483,7 +2476,7 @@ var Compliance = {
                     continue;
                 }
 
-                var entCoverage = CoverageCalculator.getEntitlementCoverage(e, consumer, entitlementsOnDate);
+                var entCoverage = Compliance.getEntitlementCoverage(consumer, e, entitlementsOnDate);
                 if (!entCoverage.covered && !ent_is_stacked) {
                     log.debug("    partially compliant (non-stacked): " + relevant_pid);
                     compStatus.add_partial_product(relevant_pid, e);
@@ -2597,6 +2590,13 @@ var Compliance = {
                 }
             }
         }
+        return CoverageCalculator.getStackCoverage(stackTracker, consumer, ents);
+    },
+
+    getEntitlementCoverage: function(consumer, entitlement, ents) {
+        log.debug("Checking compliance for entitlement: " + entitlement.id);
+        var stackTracker = createStackTracker(consumer, null);
+        stackTracker.updateAccumulatedFromEnt(entitlement);
         return CoverageCalculator.getStackCoverage(stackTracker, consumer, ents);
     }
 }
