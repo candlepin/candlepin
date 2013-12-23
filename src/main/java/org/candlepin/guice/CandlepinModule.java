@@ -63,6 +63,7 @@ import org.candlepin.resource.ActivationKeyResource;
 import org.candlepin.resource.AdminResource;
 import org.candlepin.resource.AtomFeedResource;
 import org.candlepin.resource.CertificateSerialResource;
+import org.candlepin.resource.ConsumerContentOverrideResource;
 import org.candlepin.resource.ConsumerResource;
 import org.candlepin.resource.ConsumerTypeResource;
 import org.candlepin.resource.CdnResource;
@@ -140,6 +141,7 @@ public class CandlepinModule extends AbstractModule {
         bind(X509ExtensionUtil.class);
         bind(CrlGenerator.class);
         bind(ConsumerResource.class);
+        bind(ConsumerContentOverrideResource.class);
         bind(HypervisorResource.class);
         bind(ConsumerTypeResource.class);
         bind(ContentResource.class);

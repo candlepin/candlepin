@@ -16,6 +16,7 @@ package org.candlepin.model.test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
@@ -27,6 +28,7 @@ import java.util.Map;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
@@ -449,5 +451,37 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         consumer = consumerCurator.create(consumer);
         boolean result = consumerCurator.doesConsumerExist("1");
         assertTrue(result);
+    }
+
+    @Test
+    public void testFindByUuid() {
+        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        consumer.setUuid("1");
+        consumer = consumerCurator.create(consumer);
+
+        Consumer result = consumerCurator.findByUuid("1");
+        assertEquals(result, consumer);
+    }
+
+    @Test
+    public void testFindByUuidDoesntMatch() {
+        Consumer result = consumerCurator.findByUuid("1");
+        assertNull(result);
+    }
+
+    @Test
+    public void testVerifyAndLookupConsumer() {
+        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        consumer.setUuid("1");
+        consumer = consumerCurator.create(consumer);
+
+        Consumer result = consumerCurator.verifyAndLookupConsumer("1");
+        assertEquals(result, consumer);
+    }
+
+    @Test(expected = NotFoundException.class)
+    public void testVerifyAndLookupConsumerDoesntMatch() {
+        Consumer result = consumerCurator.verifyAndLookupConsumer("1");
+        assertNull(result);
     }
 }
