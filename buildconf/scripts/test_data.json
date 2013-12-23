@@ -794,6 +794,24 @@
             }
         },
         {
+            "name": "Awesome OS Instance Based one socket",
+            "id": "awesomeos-onesocketib",
+            "type": "MKT",
+            "provided_products": [
+                "32060"
+            ],
+            "attributes": {
+                "instance_multiplier": 2,
+                "sockets": 1,
+                "virt_limit": 1,
+                "host_limited": "true",
+                "stacking_id": 15,
+                "multi-entitlement": "yes",
+                "support_level" : "Standard",
+                "support_type" : "L1-L3"
+            }
+        },
+        {
             "name": "Awesome OS Premium Architecture Bits",
             "id": "37062",
             "version": "6.1",
