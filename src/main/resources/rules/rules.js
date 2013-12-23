@@ -58,6 +58,7 @@ var VIRT_ONLY = "virt_only";
 var POOL_DERIVED = "pool_derived";
 var GUEST_LIMIT_ATTRIBUTE = "guest_limit";
 var VCPU_ATTRIBUTE = "vcpu";
+var MULTI_ENTITLEMENT_ATTRIBUTE = "multi-entitlement";
 
 // caller types
 var BEST_POOLS_CALLER = "best_pools";
@@ -291,7 +292,7 @@ function hasNoProductOverlap(combination) {
             log.debug("product overlap: " + productId);
             if (!contains(seen_product_ids, productId)) {
                 seen_product_ids.push(productId);
-            } else if (pool.getProductAttribute("multi-entitlement") != "yes") {
+            } else if (!Utils.isMultiEnt(pool)) {
                 return false;
             }
         }
@@ -306,7 +307,7 @@ function hasNoInstalledOverlap(pool, compliance) {
     for (var i = 0 ; i < products.length ; i++) {
         var productId = products[i];
         log.debug("installed overlap: " + productId);
-        if (pool.getProductAttribute("multi-entitlement") != "yes" &&
+        if (!Utils.isMultiEnt(pool) &&
             Object.hasOwnProperty(compliance.compliantProducts, productId)) {
             return false;
         }
@@ -1515,12 +1516,11 @@ var Entitlement = {
             return JSON.stringify(result);
         }
 
-        var isMultiEntitlement = pool.getProductAttribute("multi-entitlement");
-        if (context.hasEntitlement(pool.id) && isMultiEntitlement != "yes") {
+        if (context.hasEntitlement(pool.id) && !Utils.isMultiEnt(pool)) {
             result.addError("rulefailed.consumer.already.has.product");
         }
 
-        if (context.quantity > 1 && isMultiEntitlement != "yes") {
+        if (context.quantity > 1 && !Utils.isMultiEnt(pool)) {
             result.addError("rulefailed.pool.does.not.support.multi-entitlement");
         }
 
@@ -1910,7 +1910,7 @@ var Autobind = {
                 pool.currently_available = pool.quantity - pool.consumed;
             }
             // If the pool is not multi-entitlable, only one may be used
-            if (pool.currently_available > 0 && !Quantity.allows_multi_entitlement(pool)) {
+            if (pool.currently_available > 0 && !Utils.isMultiEnt(pool)) {
                 pool.currently_available = 1;
             }
         }
@@ -2626,7 +2626,7 @@ var Quantity = {
         };
 
         // Distributors increment is always 1, suggested is irrelevant
-        if (!Quantity.allows_multi_entitlement(pool) || consumer.type.manifest) {
+        if (!Utils.isMultiEnt(pool) || consumer.type.manifest) {
             return JSON.stringify(result);
         }
 
@@ -2654,14 +2654,8 @@ var Quantity = {
         return JSON.stringify(result);
     },
 
-    allows_multi_entitlement: function(pool) {
-        return pool.hasProductAttribute("multi-entitlement") &&
-            Utils.equalsIgnoreCase(pool.getProductAttribute("multi-entitlement"),
-            "yes");
-    },
-
     get_suggested_pool_quantity: function(pool, consumer, entitlements) {
-        if (Quantity.allows_multi_entitlement(pool) && pool.hasProductAttribute("stacking_id")) {
+        if (Utils.isMultiEnt(pool) && pool.hasProductAttribute("stacking_id")) {
             var stackTracker = createStackTrackerFromPool(pool, consumer);
             return CoverageCalculator.getQuantityToCoverStack(stackTracker, pool, consumer, entitlements);
         }
@@ -2689,7 +2683,7 @@ var PoolType = {
      */
     get_arg_pool_type: function(pool) {
         var hasStacking = pool.hasProductAttribute("stacking_id");
-        var multiEnt = Quantity.allows_multi_entitlement(pool);
+        var multiEnt = Utils.isMultiEnt(pool);
         var isInstanceBased = pool.hasProductAttribute(INSTANCE_ATTRIBUTE);
         if (isInstanceBased) {
             if (multiEnt && hasStacking) {
@@ -2849,13 +2843,13 @@ var Utils = {
     },
 
     isGuest: function(consumer) {
-        if (consumer === null || consumer.facts === null || !consumer.facts['virt.is_guest']) {
+        if (consumer === null || consumer.facts === null || !consumer.facts[IS_VIRT_GUEST_FACT]) {
             return false;
         }
 
-        log.debug(consumer.facts['virt.is_guest']);
-        log.debug("is guest? " + Utils.equalsIgnoreCase('true', consumer.facts['virt.is_guest']));
-        return Utils.equalsIgnoreCase('true', consumer.facts['virt.is_guest']);
+        log.debug(consumer.facts[IS_VIRT_GUEST_FACT]);
+        log.debug("is guest? " + Utils.equalsIgnoreCase('true', consumer.facts[IS_VIRT_GUEST_FACT]));
+        return Utils.equalsIgnoreCase('true', consumer.facts[IS_VIRT_GUEST_FACT]);
     },
 
     isCapable: function(consumer, capability) {
@@ -2869,5 +2863,9 @@ var Utils = {
             }
         }
         return isCapable;
+    },
+
+    isMultiEnt: function(pool) {
+        return Utils.equalsIgnoreCase(pool.getProductAttribute(MULTI_ENTITLEMENT_ATTRIBUTE), "yes");
     }
 }
