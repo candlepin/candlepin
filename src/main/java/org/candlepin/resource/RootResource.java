@@ -83,15 +83,7 @@ public class RootResource {
         addResource(DistributorVersionResource.class);
         addResource(DeletedConsumerResource.class);
         addResource(GuestIdResource.class);
-        try {
-            addResource(ConsumerResource.class.getMethod(
-                "getContentOverrideList", String.class));
-        }
-        catch (NoSuchMethodException e) {
-            // If the method name changes, throwing this will abort deployment.
-            throw new IllegalStateException(
-                "Can not find method to introspect!", e);
-        }
+        addResource(ConsumerContentOverrideResource.class);
     }
 
     @Inject

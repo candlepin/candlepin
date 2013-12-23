@@ -41,8 +41,6 @@ import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerialDto;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCapability;
-import org.candlepin.model.ConsumerContentOverride;
-import org.candlepin.model.ConsumerContentOverrideCurator;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
@@ -78,7 +76,6 @@ import org.candlepin.pinsetter.tasks.EntitlerJob;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.consumer.ConsumerRules;
-import org.candlepin.policy.js.override.OverrideRules;
 import org.candlepin.policy.js.quantity.QuantityRules;
 import org.candlepin.policy.js.quantity.SuggestedQuantity;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
@@ -145,7 +142,6 @@ public class ConsumerResource {
     private Pattern consumerPersonNamePattern;
 
     private static Logger log = LoggerFactory.getLogger(ConsumerResource.class);
-    private ConsumerContentOverrideCurator consumerContentOverrideCurator;
     private ConsumerCurator consumerCurator;
     private ConsumerTypeCurator consumerTypeCurator;
     private ProductServiceAdapter productAdapter;
@@ -173,7 +169,6 @@ public class ConsumerResource {
     private CdnCurator cdnCurator;
     private Config config;
     private QuantityRules quantityRules;
-    private OverrideRules overrideRules;
     private CalculatedAttributesUtil calculatedAttributesUtil;
 
     @Inject
@@ -193,8 +188,7 @@ public class ConsumerResource {
         EnvironmentCurator environmentCurator,
         DistributorVersionCurator distributorVersionCurator,
         Config config, QuantityRules quantityRules,
-        ConsumerContentOverrideCurator consumerContentOverrideCurator,
-        ContentCurator contentCurator, OverrideRules overrideRules,
+        ContentCurator contentCurator,
         CdnCurator cdnCurator, CalculatedAttributesUtil calculatedAttributesUtil) {
 
         this.consumerCurator = consumerCurator;
@@ -227,8 +221,6 @@ public class ConsumerResource {
             ConfigProperties.CONSUMER_SYSTEM_NAME_PATTERN));
         this.config = config;
         this.quantityRules = quantityRules;
-        this.consumerContentOverrideCurator = consumerContentOverrideCurator;
-        this.overrideRules = overrideRules;
         this.calculatedAttributesUtil = calculatedAttributesUtil;
     }
 
@@ -320,7 +312,7 @@ public class ConsumerResource {
     @Path("{consumer_uuid}")
     public Consumer getConsumer(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid) {
-        Consumer consumer = verifyAndLookupConsumer(uuid);
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(uuid);
 
         if (consumer != null) {
             IdentityCertificate idcert = consumer.getIdCert();
@@ -794,7 +786,7 @@ public class ConsumerResource {
     public void updateConsumer(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid,
         Consumer consumer) {
-        Consumer toUpdate = verifyAndLookupConsumer(uuid);
+        Consumer toUpdate = consumerCurator.verifyAndLookupConsumer(uuid);
 
         if (performConsumerUpdates(consumer, toUpdate)) {
             consumerCurator.update(toUpdate);
@@ -1160,7 +1152,7 @@ public class ConsumerResource {
         if (log.isDebugEnabled()) {
             log.debug("deleting  consumer_uuid" + uuid);
         }
-        Consumer toDelete = verifyAndLookupConsumer(uuid);
+        Consumer toDelete = consumerCurator.verifyAndLookupConsumer(uuid);
         try {
             this.poolManager.revokeAllEntitlements(toDelete);
         }
@@ -1197,7 +1189,7 @@ public class ConsumerResource {
         if (log.isDebugEnabled()) {
             log.debug("Getting client certificates for consumer: " + consumerUuid);
         }
-        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         poolManager.regenerateDirtyEntitlements(
             entitlementCurator.listByConsumer(consumer));
 
@@ -1233,7 +1225,7 @@ public class ConsumerResource {
             log.debug("Getting client certificate zip file for consumer: " +
                 consumerUuid);
         }
-        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         poolManager.regenerateDirtyEntitlements(
             entitlementCurator.listByConsumer(consumer));
 
@@ -1306,7 +1298,7 @@ public class ConsumerResource {
             log.debug("Getting client certificate serials for consumer: " +
                 consumerUuid);
         }
-        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         poolManager.regenerateDirtyEntitlements(
             entitlementCurator.listByConsumer(consumer));
 
@@ -1389,7 +1381,7 @@ public class ConsumerResource {
         }
 
         // Verify consumer exists:
-        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
 
         log.debug("Consumer (post verify): " + consumer);
         try {
@@ -1494,7 +1486,7 @@ public class ConsumerResource {
         @QueryParam("service_level") String serviceLevel) {
 
         // Verify consumer exists:
-        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
 
         List<PoolQuantity> dryRunPools = new ArrayList<PoolQuantity>();
 
@@ -1513,16 +1505,6 @@ public class ConsumerResource {
         }
 
         return dryRunPools;
-    }
-
-    private Consumer verifyAndLookupConsumer(String consumerUuid) {
-        Consumer consumer = consumerCurator.findByUuid(consumerUuid);
-
-        if (consumer == null) {
-            throw new NotFoundException(i18n.tr(
-                "Unit with ID ''{0}'' could not be found.", consumerUuid));
-        }
-        return consumer;
     }
 
     private Entitlement verifyAndLookupEntitlement(String entitlementId) {
@@ -1550,7 +1532,7 @@ public class ConsumerResource {
         @QueryParam("product") String productId,
         @Context PageRequest pageRequest) {
 
-        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         Page<List<Entitlement>> entitlementsPage;
         if (productId != null) {
             Product p = productAdapter.getProductById(productId);
@@ -1588,7 +1570,7 @@ public class ConsumerResource {
     public Owner getOwner(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
 
-        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         return consumer.getOwner();
     }
 
@@ -1608,7 +1590,7 @@ public class ConsumerResource {
 
         // FIXME: just a stub, needs CertifcateService (and/or a
         // CertificateCurator) to lookup by serialNumber
-        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
 
         if (consumer == null) {
             throw new NotFoundException(i18n.tr(
@@ -1641,7 +1623,7 @@ public class ConsumerResource {
         @PathParam("dbid") @Verify(Entitlement.class) String dbid,
         @Context Principal principal) {
 
-        verifyAndLookupConsumer(consumerUuid);
+        consumerCurator.verifyAndLookupConsumer(consumerUuid);
 
         Entitlement toDelete = entitlementCurator.find(dbid);
         if (toDelete != null) {
@@ -1664,7 +1646,7 @@ public class ConsumerResource {
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         @PathParam("serial") Long serial) {
 
-        verifyAndLookupConsumer(consumerUuid);
+        consumerCurator.verifyAndLookupConsumer(consumerUuid);
         Entitlement toDelete = entitlementCurator
             .findByCertificateSerial(serial);
 
@@ -1687,7 +1669,7 @@ public class ConsumerResource {
     @Path("{consumer_uuid}/events")
     public List<Event> getConsumerEvents(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
-        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         List<Event> events = this.eventCurator.listMostRecent(FEED_LIMIT,
             consumer);
         if (events != null) {
@@ -1707,7 +1689,7 @@ public class ConsumerResource {
     public Feed getConsumerAtomFeed(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
         String path = String.format("/consumers/%s/atom", consumerUuid);
-        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         Feed feed = this.eventAdapter.toFeed(
             this.eventCurator.listMostRecent(FEED_LIMIT, consumer), path);
         feed.setTitle("Event feed for consumer " + consumer.getUuid());
@@ -1729,7 +1711,7 @@ public class ConsumerResource {
             poolManager.regenerateCertificatesOf(e, false, lazyRegen);
         }
         else {
-            Consumer c = verifyAndLookupConsumer(consumerUuid);
+            Consumer c = consumerCurator.verifyAndLookupConsumer(consumerUuid);
             poolManager.regenerateEntitlementCertificates(c, lazyRegen);
         }
     }
@@ -1752,7 +1734,7 @@ public class ConsumerResource {
         @QueryParam("webapp_prefix") String webAppPrefix,
         @QueryParam("api_url") String apiUrl) {
 
-        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         if (consumer.getType() == null ||
             !consumer.getType().isManifest()) {
             throw new ForbiddenException(
@@ -1801,7 +1783,7 @@ public class ConsumerResource {
     public Consumer regenerateIdentityCertificates(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid) {
 
-        Consumer c = verifyAndLookupConsumer(uuid);
+        Consumer c = consumerCurator.verifyAndLookupConsumer(uuid);
 
         IdentityCertificate ic = generateIdCert(c, true);
         c.setIdCert(ic);
@@ -1871,7 +1853,7 @@ public class ConsumerResource {
     @Path("/{consumer_uuid}/guests")
     public List<Consumer> getGuests(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
-        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         return consumerCurator.getGuests(consumer);
     }
 
@@ -1885,7 +1867,7 @@ public class ConsumerResource {
     @Path("/{consumer_uuid}/host")
     public Consumer getHost(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
-        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         if (consumer.getFact("virt.uuid") == null ||
             consumer.getFact("virt.uuid").trim().equals("")) {
             throw new BadRequestException(i18n.tr(
@@ -1900,7 +1882,7 @@ public class ConsumerResource {
     @Path("/{consumer_uuid}/release")
     public Release getRelease(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
-        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         if (consumer.getReleaseVer() != null) {
             return consumer.getReleaseVer();
         }
@@ -1923,7 +1905,7 @@ public class ConsumerResource {
     public ComplianceStatus getComplianceStatus(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid,
         @QueryParam("on_date") String onDate) {
-        Consumer consumer = verifyAndLookupConsumer(uuid);
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(uuid);
         Date date = onDate == null ?
             Calendar.getInstance().getTime() :
                 ResourceDateParser.parseDateString(onDate);
@@ -1999,110 +1981,6 @@ public class ConsumerResource {
                 "Deletion record for hypervisor ''{0}'' not found.", uuid));
         }
         deletedConsumerCurator.delete(dc);
-    }
-
-    /*
-    * Add override for content set
-    *
-    * @param uuid
-    *
-    * @httpcode 404
-    * @httpcode 200
-    */
-    @PUT
-    @Path("{consumer_uuid}/content_overrides")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @Transactional
-    public List<ConsumerContentOverride> addContentOverrides(
-        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
-        List<ConsumerContentOverride> entries) {
-        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
-        Set<String> invalidOverrides = new HashSet<String>();
-        for (ConsumerContentOverride entry : entries) {
-            if (overrideRules.canOverrideForConsumer(consumer, entry.getName())) {
-                ConsumerContentOverride cco = consumerContentOverrideCurator.retrieve(
-                    consumer, entry.getContentLabel(), entry.getName());
-                if (cco != null) {
-                    cco.setValue(entry.getValue());
-                    cco.setUpdated(null);
-                    consumerContentOverrideCurator.merge(cco);
-                }
-                else {
-                    entry.setConsumer(consumer);
-                    consumerContentOverrideCurator.create(entry);
-                }
-            }
-            else {
-                invalidOverrides.add(entry.getName());
-            }
-        }
-        if (!invalidOverrides.isEmpty()) {
-            String error = i18n.tr("Not allowed to override values for: {0}",
-                StringUtils.join(invalidOverrides, ", "));
-            throw new BadRequestException(error);
-        }
-        return consumerContentOverrideCurator.getList(consumer);
-    }
-
-    /*
-    * Remove override based on included criteria
-    *
-    * @param uuid
-    *
-    * @httpcode 404
-    * @httpcode 200
-    */
-    @DELETE
-    @Path("{consumer_uuid}/content_overrides")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @Transactional
-    public List<ConsumerContentOverride> deleteContentOverrides(
-        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
-        List<ConsumerContentOverride> entries) {
-
-        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
-        if (entries.size() == 0) {
-            consumerContentOverrideCurator.removeByConsumer(consumer);
-        }
-        else {
-            for (ConsumerContentOverride entry : entries) {
-                String label = entry.getContentLabel();
-                if (StringUtils.isBlank(label)) {
-                    consumerContentOverrideCurator.removeByConsumer(consumer);
-                }
-                else {
-                    String name = entry.getName();
-                    if (StringUtils.isBlank(name)) {
-                        consumerContentOverrideCurator.removeByContentLabel(
-                            consumer, entry.getContentLabel());
-                    }
-                    else {
-                        consumerContentOverrideCurator.removeByName(consumer,
-                            entry.getContentLabel(), name);
-                    }
-                }
-            }
-        }
-        return consumerContentOverrideCurator.getList(consumer);
-    }
-
-    /*
-    * Get the list of content set overrides for this consumer
-    *
-    * @param uuid
-    *
-    * @httpcode 404
-    * @httpcode 200
-    */
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("{consumer_uuid}/content_overrides")
-    public List<ConsumerContentOverride> getContentOverrideList(
-        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
-        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
-        return consumerContentOverrideCurator.getList(consumer);
     }
 
     private int getQuantityToBind(Pool pool, Consumer consumer) {
