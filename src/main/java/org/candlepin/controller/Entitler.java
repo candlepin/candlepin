@@ -141,8 +141,9 @@ public class Entitler {
                     multip = pool.getProductAttribute("instance_multiplier").getValue();
                 }
                 msg = i18n.tr(
-                    "Quantity ''{0}'' is not a multiple of instance multiplier ''{1}''",
-                    quantity, multip);
+                    "Subscription ''{0}'' must be attached using a quantity" +
+                    " evenly divisible by {1}",
+                    pool.getProductName(), multip);
             }
             else if (error.equals("rulefailed.instance.unsupported.by.consumer")) {
                 msg = i18n.tr("Unit does not support instance based calculation " +
