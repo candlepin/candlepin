@@ -35,6 +35,8 @@ import org.candlepin.model.ConsumerContentOverride;
 import org.candlepin.model.ConsumerContentOverrideCurator;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.policy.js.override.OverrideRules;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
@@ -43,8 +45,11 @@ import com.google.inject.persist.Transactional;
 /**
  * API Gateway for Consumers Content Overrides
  */
-@Path("{consumer_uuid}/content_overrides")
+@Path("/consumers/{consumer_uuid}/content_overrides")
 public class ConsumerContentOverrideResource {
+
+    private static Logger log = LoggerFactory.getLogger(
+        ConsumerContentOverrideResource.class);
 
     private ConsumerContentOverrideCurator consumerContentOverrideCurator;
     private ConsumerCurator consumerCurator;
@@ -85,6 +90,8 @@ public class ConsumerContentOverrideResource {
             if (overrideRules.canOverrideForConsumer(consumer, entry.getName())) {
                 ConsumerContentOverride cco = consumerContentOverrideCurator.retrieve(
                     consumer, entry.getContentLabel(), entry.getName());
+                // Make sure we aren't overflowing columns
+                validateLength(entry);
                 if (cco != null) {
                     cco.setValue(entry.getValue());
                     cco.setUpdated(null);
@@ -165,5 +172,23 @@ public class ConsumerContentOverrideResource {
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         return consumerContentOverrideCurator.getList(consumer);
+    }
+
+    /*
+     * If the name/value is longer than 255 characters, the database will throw
+     * exceptions.  There is no reason that we should need overrides with lengths
+     * this long.
+     *
+     * TODO: Can we read the column name from the database?  That would be
+     * a bit more futureproof.
+     */
+    private void validateLength(ConsumerContentOverride entry) {
+        int colLength = 255;
+        if (entry.getName().length() > colLength ||
+                entry.getValue().length() > colLength) {
+            throw new BadRequestException(i18n.tr(
+                "Name and value of the override must not exceede {0} characters.",
+                colLength));
+        }
     }
 }
