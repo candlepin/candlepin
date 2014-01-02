@@ -574,33 +574,32 @@ var CoverageCalculator = {
             /**
              *  Checks to make sure that the architecture matches that of the consumer.
              */
-            arch: function (sourceData, prodAttr, consumer) {
-                var context = Entitlement.get_attribute_context();
-
-                var supportedArchs = prodAttr in sourceData.values ? sourceData.values[prodAttr] : "";
+            arch: function (stackTracker, prodAttr, consumer) {
+                var supportedArchs = stackTracker.enforces(prodAttr) ? stackTracker.getAccumulatedValue(prodAttr) : [];
                 var consumerArch = ARCH_FACT in consumer.facts ?
                     consumer.facts[ARCH_FACT] : null;
 
-                var covered = architectureMatches(supportedArchs, consumerArch, consumer.type.label);
-                log.debug("  System architecture covered: " + covered);
-
-                var reason = null;
-                if (!covered) {
-                    reason = StatusReasonGenerator.buildReason(prodAttr.toUpperCase(),
-                                                               sourceData.type,
-                                                               sourceData.id,
-                                                               consumerArch,
-                                                               supportedArchs);
+                for (var archStringIdx in supportedArchs) {
+                    var archString = supportedArchs[archStringIdx];
+                    if (!architectureMatches(archString, consumerArch, consumer.type.label)) {
+                        log.debug("  System architecture not covered by: " + archString);
+                        return StatusReasonGenerator.buildReason(prodAttr.toUpperCase(),
+                                                             stackTracker.type,
+                                                             stackTracker.id,
+                                                             consumerArch,
+                                                             archString);
+                    }
                 }
-                return reason;
+                log.debug("  System architecture is covered.");
+                return null;
             },
 
             /**
              * Same int compare as the default, except -1 is unlimited
              */
-            guest_limit: function (sourceData, prodAttr, consumer) {
+            guest_limit: function (stackTracker, prodAttr, consumer) {
                 var consumerQuantity = FactValueCalculator.getFact(prodAttr, consumer);
-                var sourceValue = sourceData.values[prodAttr];
+                var sourceValue = stackTracker.getAccumulatedValue(prodAttr);
 
                 var covered = (sourceValue == -1) || (parseInt(sourceValue) >= consumerQuantity);
                 log.debug("  System's " + prodAttr + " covered: " + covered);
@@ -608,8 +607,8 @@ var CoverageCalculator = {
                 var reason = null;
                 if (!covered) {
                     reason = StatusReasonGenerator.buildReason(prodAttr.toUpperCase(),
-                            sourceData.type,
-                            sourceData.id,
+                            stackTracker.type,
+                            stackTracker.id,
                             consumerQuantity,
                             sourceValue);
                 }
@@ -624,9 +623,9 @@ var CoverageCalculator = {
              *  NOTE: If comparing non integer attributes, a special condition should
              *        be added to handle that case.
              */
-            default: function(sourceData, prodAttr, consumer) {
+            default: function(stackTracker, prodAttr, consumer) {
                 var consumerQuantity = FactValueCalculator.getFact(prodAttr, consumer);
-                var sourceValue = sourceData.values[prodAttr];
+                var sourceValue = stackTracker.getAccumulatedValue(prodAttr);
 
                 // We assume that the value coming back is an int right now.
                 var covered = parseInt(sourceValue) >= consumerQuantity;
@@ -635,8 +634,8 @@ var CoverageCalculator = {
                 var reason = null;
                 if (!covered) {
                     reason = StatusReasonGenerator.buildReason(prodAttr.toUpperCase(),
-                                                               sourceData.type,
-                                                               sourceData.id,
+                                                               stackTracker.type,
+                                                               stackTracker.id,
                                                                consumerQuantity,
                                                                sourceValue);
                 }
@@ -670,77 +669,21 @@ var CoverageCalculator = {
      */
     getStackCoverage: function(stackTracker, consumer, entitlements) {
         log.debug("Coverage calculator is checking stack coverage...");
-        var stackValues = this.getValues(stackTracker, "enforces", "getAccumulatedValue",
-                                         consumer, entitlements);
         var conditions = this.getDefaultConditions();
 
-        /**
-         *  NOTE: Extend default conditions here for stacks, if required.
-         */
-        conditions.arch = function (sourceData, prodAttr, consumer) {
-            var supportedArchs = prodAttr in sourceData.values ? sourceData.values[prodAttr] : [];
-            var consumerArch = ARCH_FACT in consumer.facts ?
-                consumer.facts[ARCH_FACT] : null;
-
-            for (var archStringIdx in supportedArchs) {
-                var archString = supportedArchs[archStringIdx];
-                if (!architectureMatches(archString, consumerArch, consumer.type.label)) {
-                    log.debug("  System architecture not covered by: " + archString);
-                    return StatusReasonGenerator.buildReason(prodAttr.toUpperCase(),
-                                                             sourceData.type,
-                                                             sourceData.id,
-                                                             consumerArch,
-                                                             archString);
-                }
-            }
-            log.debug("  System architecture is covered.");
-            return null;
-        };
-
-        var sourceType = stackTracker.stackId === null ? "ENTITLEMENT" : "STACK";
-        var sourceId = stackTracker.stackId === null ? stackTracker.entitlementIds[0] : stackTracker.stackId;
-        var sourceData = this.buildSourceData(sourceType, sourceId, stackValues);
-        var coverage = this.getCoverageForSource(sourceData, consumer, conditions);
-        log.debug("Stack coverage: " + coverage.percentage);
-        return coverage;
-    },
-
-    /**
-     *  Returns the product attribute values that the source object will cover.
-     *  The values are returned as an object which maps each attribute to its value.
-     *
-     *  This function is very dynamic in nature:
-     *      source:
-     *            Can be any JS object but must define both functions below.
-     *      sourceContainsAttributeValueFunctionName:
-     *            Name of the source's function that checks if the specified attribute exists.
-     *      getValueFromSourceFunctionName:
-     *            Name of the source's function that fetchs the value of the specified attribute.
-     */
-    getValues: function (source, sourceContainsAttributeValueFunctionName, getValueFromSourceFunctionName,
-                         consumer, entitlements) {
-        var values = {};
         var complianceAttributes = getComplianceAttributes(consumer);
         for (var attrIdx in complianceAttributes) {
             var nextAttr = complianceAttributes[attrIdx];
-            if (source[sourceContainsAttributeValueFunctionName](nextAttr)) {
-                values[nextAttr] = this.adjustCoverage(nextAttr, consumer,
-                                                       source[getValueFromSourceFunctionName](nextAttr),
-                                                       entitlements);
+            if (stackTracker.enforces(nextAttr)) {
+                stackTracker.setAccumulatedValue(nextAttr, this.adjustCoverage(nextAttr,
+                            consumer,
+                            stackTracker.getAccumulatedValue(nextAttr),
+                            entitlements));
             }
         }
-        return values;
-    },
-
-    /**
-     * Builds the source data required for checking coverage of a source.
-     */
-    buildSourceData: function(sourceType, sourceId, sourceValues) {
-        return {
-            type: sourceType,
-            id: sourceId,
-            values: sourceValues,
-        };
+        var coverage = this.getCoverageForTracker(stackTracker, consumer, conditions);
+        log.debug("Stack coverage: " + coverage.percentage);
+        return coverage;
     },
 
     /**
@@ -759,7 +702,7 @@ var CoverageCalculator = {
      *  If an attribute value is not found in the sourceValues, it is considered
      *  to be covered.
      */
-    getCoverageForSource: function (sourceData, consumer, conditions) {
+    getCoverageForTracker: function (stackTracker, consumer, conditions) {
         var coverageCount = 0;
         var reasons = [];
         var complianceAttributes = getComplianceAttributes(consumer);
@@ -767,14 +710,14 @@ var CoverageCalculator = {
             var attr = complianceAttributes[attrIdx];
 
             // if the value doesn't exist we do not enforce it.
-            if ( !(attr in sourceData.values) ) {
+            if ( !stackTracker.enforces(attr) ) {
                 coverageCount++;
                 continue;
             }
 
             // Make sure it covers the consumer's values
             var condition = attr in conditions ? conditions[attr] : conditions["default"];
-            var reason = condition(sourceData, attr, consumer);
+            var reason = condition(stackTracker, attr, consumer);
 
             if (!reason) {
                 coverageCount++;
@@ -896,9 +839,10 @@ var CoverageCalculator = {
  *   will provide 4 sockets and 4GB of ram. A stack tracker tracks
  *   these accumulated values as entitlements are added.
  */
-function createStackTracker(consumer, stackId) {
+function createStackTracker(consumer, id) {
     return {
-        stackId: stackId,
+        id: id,
+        type: id == null ? "ENTITLEMENT" : "STACK",
         consumer: consumer,
 
         // The IDs of entitlements that have been added to this tracker.
@@ -1056,6 +1000,9 @@ function createStackTracker(consumer, stackId) {
          */
         updateAccumulatedFromEnt: function(ent) {
             log.debug("Updating stack tracker's values from entitlement.");
+            if (this.type == "ENTITLEMENT" && this.entitlementIds.length == 0) {
+                this.id = ent.id;
+            }
             if (ent.id in this.entitlementIds) {
                 // This entitlement was already added.
                 return;
