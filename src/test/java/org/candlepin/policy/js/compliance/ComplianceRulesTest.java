@@ -1318,6 +1318,28 @@ public class ComplianceRulesTest {
     }
 
     @Test
+    public void singleSocketInstanceBasedPhysicalGreen() {
+        Consumer c = mockConsumer(PRODUCT_1, PRODUCT_2);
+        c.setFact("cpu.cpu_socket(s)", "1");
+        List<Entitlement> ents = new LinkedList<Entitlement>();
+        ents.add(mockInstanceEntitlement(c, STACK_ID_1, "2", "Awesome Product",
+            PRODUCT_1, PRODUCT_2));
+        ents.get(0).getPool().setProductAttribute("sockets", "1", PRODUCT_1);
+        ents.get(0).setQuantity(2);
+        mockEntCurator(c, ents);
+
+        ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
+
+        assertEquals(ComplianceStatus.GREEN, status.getStatus());
+        assertEquals(0, status.getNonCompliantProducts().size());
+        assertEquals(0, status.getPartiallyCompliantProducts().size());
+
+        assertEquals(2, status.getCompliantProducts().size());
+        assertTrue(status.getCompliantProducts().keySet().contains(PRODUCT_1));
+        assertTrue(status.getCompliantProducts().keySet().contains(PRODUCT_2));
+    }
+
+    @Test
     public void instanceBasedPhysicalStackedGreen() {
         Consumer c = mockConsumer(PRODUCT_1, PRODUCT_2);
         List<Entitlement> ents = new LinkedList<Entitlement>();

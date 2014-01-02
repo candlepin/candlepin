@@ -250,6 +250,32 @@ public class QuantityRulesTest {
     }
 
     @Test
+    public void testInstanceBasedOnSingleSocketPhysical() {
+        consumer.setFact(IS_VIRT, "false");
+        consumer.setFact(SOCKET_FACT, "1");
+        pool.setProductAttribute(SOCKET_ATTRIBUTE, "2", product.getId());
+        pool.setProductAttribute(INSTANCE_ATTRIBUTE, "2", product.getId());
+
+        SuggestedQuantity suggested =
+            quantityRules.getSuggestedQuantity(pool, consumer, new Date());
+        assertEquals(new Long(2), suggested.getSuggested());
+        assertEquals(new Long(2), suggested.getIncrement());
+    }
+
+    @Test
+    public void testSingleSocketInstanceBasedOnPhysical() {
+        consumer.setFact(IS_VIRT, "false");
+        consumer.setFact(SOCKET_FACT, "1");
+        pool.setProductAttribute(SOCKET_ATTRIBUTE, "1", product.getId());
+        pool.setProductAttribute(INSTANCE_ATTRIBUTE, "2", product.getId());
+
+        SuggestedQuantity suggested =
+            quantityRules.getSuggestedQuantity(pool, consumer, new Date());
+        assertEquals(new Long(2), suggested.getSuggested());
+        assertEquals(new Long(2), suggested.getIncrement());
+    }
+
+    @Test
     public void testInstanceBasedOnPhysicalNotEnoughAvailable() {
         consumer.setFact(IS_VIRT, "false");
         consumer.setFact(SOCKET_FACT, "40"); // lots of ents required

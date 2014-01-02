@@ -1,4 +1,4 @@
-// Version: 5.3
+// Version: 5.4
 
 /*
  * Default Candlepin rule set.
@@ -676,8 +676,6 @@ var CoverageCalculator = {
             log.debug("  Physical system using instance based subscription.");
             initialValue = attributeValue; // just so we can log accurately
             attributeValue = attributeValue / instanceMultiplier;
-            // Round uneven multiples down:
-            attributeValue = attributeValue - (attributeValue % instanceMultiplier);
 
             log.debug("  Adjusting sockets covered from: " +
                       initialValue + " to: " + attributeValue);
@@ -891,12 +889,18 @@ var CoverageCalculator = {
             // the consumers fact.
             var amountRequiredFromPool = 0;
             var coveredCounter = currentCovered;
+            var increment = 1;
+            // We don't need to worry about checking if we're on a guest, virt guests
+            // no longer use sockets
+            if (attr == SOCKETS_ATTRIBUTE && stackTracker.instanceMultiplier) {
+                increment = stackTracker.instanceMultiplier;
+            }
             while (CoverageCalculator
                    .adjustCoverage(attr, consumer, coveredCounter,
                                    stackTracker.instanceMultiplier,
                                    entitlements) <
                                    consumerQuantity) {
-                amountRequiredFromPool++;
+                amountRequiredFromPool += increment;
                 coveredCounter = currentCovered + (amountRequiredFromPool * prodAttrValue);
             }
 
@@ -1066,7 +1070,7 @@ function createStackTracker(consumer, stackId) {
 
             // Store instance multiplier if we spot it:
             if (pool.getProductAttribute(INSTANCE_ATTRIBUTE)) {
-                this.instanceMultiplier = pool.getProductAttribute(INSTANCE_ATTRIBUTE);
+                this.instanceMultiplier = parseInt(pool.getProductAttribute(INSTANCE_ATTRIBUTE));
             }
 
             if (pool.getAttribute(REQUIRES_HOST_ATTRIBUTE)) {
