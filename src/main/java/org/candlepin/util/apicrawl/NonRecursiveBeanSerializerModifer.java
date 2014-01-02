@@ -14,15 +14,17 @@
  */
 package org.candlepin.util.apicrawl;
 
+import org.candlepin.util.Util;
+
+import com.fasterxml.jackson.databind.BeanDescription;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationConfig;
+import com.fasterxml.jackson.databind.ser.BeanSerializer;
+import com.fasterxml.jackson.databind.ser.BeanSerializerModifier;
+
 import java.lang.reflect.Type;
 import java.util.Set;
-
-import org.candlepin.util.Util;
-import org.codehaus.jackson.map.JsonSerializer;
-import org.codehaus.jackson.map.SerializationConfig;
-import org.codehaus.jackson.map.introspect.BasicBeanDescription;
-import org.codehaus.jackson.map.ser.BeanSerializer;
-import org.codehaus.jackson.map.ser.BeanSerializerModifier;
 
 /**
  * NonRecursiveBeanSerializerModifer
@@ -30,9 +32,11 @@ import org.codehaus.jackson.map.ser.BeanSerializerModifier;
 class NonRecursiveBeanSerializerModifer extends BeanSerializerModifier {
 
     private Set<Type> seenClasses;
+    private ObjectMapper mapper;
 
-    NonRecursiveBeanSerializerModifer() {
+    NonRecursiveBeanSerializerModifer(ObjectMapper mapper) {
         seenClasses = Util.newSet();
+        this.mapper = mapper;
     }
 
     void resetSeen() {
@@ -41,9 +45,10 @@ class NonRecursiveBeanSerializerModifer extends BeanSerializerModifier {
 
     @Override
     public JsonSerializer<?> modifySerializer(SerializationConfig config,
-        BasicBeanDescription beanDesc, JsonSerializer<?> serializer) {
+        BeanDescription beanDesc, JsonSerializer<?> serializer) {
         if (serializer instanceof BeanSerializer) {
-            return new NonRecursiveBeanSerializer((BeanSerializer) serializer, seenClasses);
+            return new NonRecursiveBeanSerializer(mapper, (BeanSerializer) serializer,
+                seenClasses);
         }
         return serializer;
     }

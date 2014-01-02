@@ -14,6 +14,19 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.jackson.HateoasArrayExclude;
+import org.candlepin.jackson.HateoasInclude;
+import org.candlepin.util.Util;
+
+import com.fasterxml.jackson.annotation.JsonFilter;
+
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.ForeignKey;
+import org.hibernate.annotations.Formula;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Index;
+import org.hibernate.annotations.Type;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -42,17 +55,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-
-import org.candlepin.jackson.HateoasArrayExclude;
-import org.candlepin.jackson.HateoasInclude;
-import org.candlepin.util.Util;
-import org.codehaus.jackson.map.annotate.JsonFilter;
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.ForeignKey;
-import org.hibernate.annotations.Formula;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Index;
-import org.hibernate.annotations.Type;
 
 /**
  * A Consumer is the entity that uses a given Entitlement. It can be a user,

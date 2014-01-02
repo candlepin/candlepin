@@ -14,13 +14,13 @@
  */
 package org.candlepin.model;
 
+import com.fasterxml.jackson.annotation.JsonFilter;
+
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
-
-import org.codehaus.jackson.map.annotate.JsonFilter;
 
 /**
  * Represents a derived product provided by a Pool. These are used when a

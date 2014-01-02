@@ -14,9 +14,10 @@
  */
 package org.candlepin.jackson;
 
-import org.codehaus.jackson.JsonGenerator;
-import org.codehaus.jackson.map.SerializerProvider;
-import org.codehaus.jackson.map.ser.BeanPropertyWriter;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.ser.PropertyWriter;
+
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
 /**
@@ -28,12 +29,13 @@ import org.jboss.resteasy.spi.ResteasyProviderFactory;
 public class DynamicPropertyFilter extends CheckableBeanPropertyFilter {
 
     public boolean isSerializable(Object obj, JsonGenerator jsonGenerator,
-        SerializerProvider serializerProvider, BeanPropertyWriter writer) {
+        SerializerProvider serializerProvider, PropertyWriter writer) {
         DynamicFilterData filterData =
             ResteasyProviderFactory.getContextData(DynamicFilterData.class);
         if (filterData != null) {
             return !filterData.isAttributeExcluded(writer.getName(), obj);
         }
+
         // Allow serialization by default
         return true;
     }

@@ -22,6 +22,42 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.auth.Principal;
+import org.candlepin.config.CandlepinCommonTestConfig;
+import org.candlepin.config.Config;
+import org.candlepin.config.ConfigProperties;
+import org.candlepin.guice.PrincipalProvider;
+import org.candlepin.model.CdnCurator;
+import org.candlepin.model.CertificateSerial;
+import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.DerivedProvidedProduct;
+import org.candlepin.model.DistributorVersion;
+import org.candlepin.model.DistributorVersionCapability;
+import org.candlepin.model.DistributorVersionCurator;
+import org.candlepin.model.Entitlement;
+import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.IdentityCertificate;
+import org.candlepin.model.KeyPair;
+import org.candlepin.model.Pool;
+import org.candlepin.model.Product;
+import org.candlepin.model.ProductCertificate;
+import org.candlepin.model.ProvidedProduct;
+import org.candlepin.model.Rules;
+import org.candlepin.model.RulesCurator;
+import org.candlepin.pki.PKIUtility;
+import org.candlepin.policy.js.export.ExportRules;
+import org.candlepin.service.EntitlementCertServiceAdapter;
+import org.candlepin.service.ProductServiceAdapter;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import org.apache.commons.io.FileUtils;
+import org.junit.Before;
+import org.junit.Test;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -42,40 +78,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
-
-import org.apache.commons.io.FileUtils;
-import org.candlepin.auth.Principal;
-import org.candlepin.config.CandlepinCommonTestConfig;
-import org.candlepin.config.Config;
-import org.candlepin.config.ConfigProperties;
-import org.candlepin.guice.PrincipalProvider;
-import org.candlepin.model.CertificateSerial;
-import org.candlepin.model.Consumer;
-import org.candlepin.model.ConsumerType;
-import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
-import org.candlepin.model.ConsumerTypeCurator;
-import org.candlepin.model.CdnCurator;
-import org.candlepin.model.DerivedProvidedProduct;
-import org.candlepin.model.DistributorVersion;
-import org.candlepin.model.DistributorVersionCapability;
-import org.candlepin.model.DistributorVersionCurator;
-import org.candlepin.model.Entitlement;
-import org.candlepin.model.EntitlementCurator;
-import org.candlepin.model.IdentityCertificate;
-import org.candlepin.model.KeyPair;
-import org.candlepin.model.Pool;
-import org.candlepin.model.Product;
-import org.candlepin.model.ProductCertificate;
-import org.candlepin.model.ProvidedProduct;
-import org.candlepin.model.Rules;
-import org.candlepin.model.RulesCurator;
-import org.candlepin.pki.PKIUtility;
-import org.candlepin.policy.js.export.ExportRules;
-import org.candlepin.service.EntitlementCertServiceAdapter;
-import org.candlepin.service.ProductServiceAdapter;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.junit.Before;
-import org.junit.Test;
 
 
 /**

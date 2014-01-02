@@ -14,10 +14,10 @@
  */
 package org.candlepin.jackson;
 
-import org.codehaus.jackson.JsonGenerator;
-import org.codehaus.jackson.JsonStreamContext;
-import org.codehaus.jackson.map.SerializerProvider;
-import org.codehaus.jackson.map.ser.BeanPropertyWriter;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonStreamContext;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.ser.PropertyWriter;
 
 /**
  * HateoasBeanPropertyFilter: This is a Jackson filter which first checks if we
@@ -29,7 +29,7 @@ import org.codehaus.jackson.map.ser.BeanPropertyWriter;
 public class HateoasBeanPropertyFilter extends JsonBeanPropertyFilter {
 
     public boolean isSerializable(Object obj, JsonGenerator jsonGenerator,
-        SerializerProvider serializerProvider, BeanPropertyWriter writer) {
+        SerializerProvider serializerProvider, PropertyWriter writer) {
         JsonStreamContext context = jsonGenerator.getOutputContext();
 
         if ((context.getParent() != null) && (context.getParent().inArray())) {

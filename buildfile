@@ -30,13 +30,15 @@ RESTEASY = [group('jaxrs-api',
 MIME4J = [group('apache-mime4j',
                 :under => 'org.apache.james',
                 :version => '0.6')]
-
-JACKSON = [group('jackson-core-lgpl',
-                 'jackson-mapper-lgpl',
-                 'jackson-jaxrs',
-                 'jackson-xc',
-                 :under => 'org.codehaus.jackson',
-                 :version => '1.9.2')]
+JACKSON_NS = "com.fasterxml.jackson"
+JACKSON_VERSION = "2.3.0"
+JACKSON = ["#{JACKSON_NS}.core:jackson-annotations:jar:#{JACKSON_VERSION}",
+            "#{JACKSON_NS}.core:jackson-core:jar:#{JACKSON_VERSION}",
+            "#{JACKSON_NS}.core:jackson-databind:jar:#{JACKSON_VERSION}",
+            "#{JACKSON_NS}.jaxrs:jackson-jaxrs-json-provider:jar:#{JACKSON_VERSION}",
+            "#{JACKSON_NS}.jaxrs:jackson-jaxrs-base:jar:#{JACKSON_VERSION}",
+            "#{JACKSON_NS}.module:jackson-module-jsonSchema:jar:#{JACKSON_VERSION}",
+            "#{JACKSON_NS}.module:jackson-module-jaxb-annotations:jar:#{JACKSON_VERSION}"]
 SUN_JAXB = 'com.sun.xml.bind:jaxb-impl:jar:2.1.12'
 JUNIT = ['junit:junit:jar:4.5', 'org.mockito:mockito-all:jar:1.8.5']
 LOGBACK = [group('logback-core', 'logback-classic', :under => 'ch.qos.logback', :version => '1.0.13')]
@@ -222,11 +224,34 @@ define "candlepin" do
   doc.using :tag => 'httpcode:m:HTTP Code:'
 
   # NOTE: changes here must also be made in build.xml!
+  candlepin_path = "org/candlepin"
+  compiled_cp_path = "#{compile.target}/#{candlepin_path}"
 
-  package(:jar, :id=>'candlepin-api').clean.include 'target/classes/org/candlepin/auth','target/classes/org/candlepin/config','target/classes/org/candlepin/service','target/classes/org/candlepin/model','target/classes/org/candlepin/pki', 'target/classes/org/candlepin/exceptions', 'target/classes/org/candlepin/util', 'target/classes/org/candlepin/jackson', 'target/classes/org/candlepin/resteasy', 'target/classes/org/candlepin/paging', :path=>"org/candlepin/"
-  package(:jar, :id=>"candlepin-certgen").clean.include 'target/classes/org/candlepin/config', 'target/classes/org/candlepin/jackson', 'target/classes/org/candlepin/model', 'target/classes/org/candlepin/pki', 'target/classes/org/candlepin/util', 'target/classes/org/candlepin/service','target/classes/org/candlepin/pinsetter','target/classes/org/candlepin/exceptions', :path=>'org/candlepin'
-  package(:war, :id=>"candlepin").libs += artifacts(HSQLDB)
-  package(:war, :id=>"candlepin").classes << generate
+  # The apicrawl package is only used for generating documentation so there is no
+  # need to ship it.  Ideally, we'd put apicrawl in its own buildr project but I
+  # kept getting complaints about circular dependencies.
+  package(:jar, :id=>'candlepin-api').tap do |jar|
+    jar.clean
+    pkgs = %w{auth config exceptions jackson model paging pki resteasy service util}.map { |pkg| "#{compiled_cp_path}/#{pkg}" }
+    p = jar.path(candlepin_path)
+    p.include(pkgs).exclude("#{compiled_cp_path}/util/apicrawl")
+  end
+
+  package(:jar, :id=>"candlepin-certgen").tap do |jar|
+    jar.clean
+    pkgs = %w{config exceptions jackson model pinsetter pki service util}.map { |pkg| "#{compiled_cp_path}/#{pkg}" }
+    p = jar.path(candlepin_path)
+    p.include(pkgs).exclude("#{compiled_cp_path}/util/apicrawl")
+  end
+
+  package(:war, :id=>"candlepin").tap do |war|
+    war.libs += artifacts(HSQLDB)
+    war.classes.clear
+    war.classes = [generate, resources.target]
+    web_inf = war.path('WEB-INF/classes')
+    web_inf.include("#{compile.target}/net")
+    web_inf.path(candlepin_path).include("#{compiled_cp_path}/**").exclude("#{compiled_cp_path}/util/apicrawl")
+  end
 
   desc 'Print a list of dependencies'
   task :antdeps do

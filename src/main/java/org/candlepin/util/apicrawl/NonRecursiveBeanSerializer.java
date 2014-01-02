@@ -14,14 +14,15 @@
  */
 package org.candlepin.util.apicrawl;
 
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.jsonschema.JsonSchema;
+import com.fasterxml.jackson.databind.ser.BeanSerializer;
+
 import java.lang.reflect.Type;
 import java.util.Set;
-
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.JsonMappingException;
-import org.codehaus.jackson.map.SerializerProvider;
-import org.codehaus.jackson.map.ser.BeanSerializer;
-import org.codehaus.jackson.schema.JsonSchema;
 
 /**
  * NonRecursiveBeanSerializer
@@ -31,8 +32,9 @@ public class NonRecursiveBeanSerializer extends BeanSerializer {
     private BeanSerializer wrapped;
     private Set<Type> seenClasses;
 
-    NonRecursiveBeanSerializer(BeanSerializer wrapped, Set<Type> seenClasses) {
-        super(BeanSerializer.createDummy(wrapped.handledType()));
+    NonRecursiveBeanSerializer(ObjectMapper mapper, BeanSerializer wrapped,
+        Set<Type> seenClasses) {
+        super(BeanSerializer.createDummy(mapper.constructType(wrapped.handledType())));
         this.wrapped = wrapped;
         this.seenClasses = seenClasses;
     }

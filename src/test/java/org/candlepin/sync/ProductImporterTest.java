@@ -17,9 +17,22 @@ package org.candlepin.sync;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.times;
+
+import org.candlepin.config.Config;
+import org.candlepin.model.Content;
+import org.candlepin.model.ContentCurator;
+import org.candlepin.model.Product;
+import org.candlepin.model.ProductContent;
+import org.candlepin.model.ProductCurator;
+import org.candlepin.test.TestUtil;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import org.junit.Before;
+import org.junit.Test;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -29,17 +42,6 @@ import java.io.Writer;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
-
-import org.candlepin.config.Config;
-import org.candlepin.model.Content;
-import org.candlepin.model.ContentCurator;
-import org.candlepin.model.Product;
-import org.candlepin.model.ProductContent;
-import org.candlepin.model.ProductCurator;
-import org.candlepin.test.TestUtil;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.junit.Before;
-import org.junit.Test;
 /**
  * ProductImporterTest
  */

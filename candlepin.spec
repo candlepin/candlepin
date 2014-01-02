@@ -79,17 +79,19 @@ BuildRequires: logback-classic
 BuildRequires: jakarta-commons-lang
 BuildRequires: jakarta-commons-io
 BuildRequires: apache-commons-codec
-BuildRequires: codehaus-jackson >= 0:1.9.2
+
+%global jackson_version 0:2.3.0
+BuildRequires: jackson-annotations >= %{jackson_version}
+BuildRequires: jackson-core >= %{jackson_version}
+BuildRequires: jackson-databind >= %{jackson_version}
+BuildRequires: jackson-jaxrs-json-provider >= %{jackson_version}
+BuildRequires: jackson-module-jaxb-annotations >= %{jackson_version}
 
 # Configure Datasources
-BuildRequires: codehaus-jackson-core-lgpl
-BuildRequires: codehaus-jackson-mapper-lgpl
-BuildRequires: codehaus-jackson-xc
-BuildRequires: codehaus-jackson-jaxrs
 BuildRequires: jakarta-commons-httpclient
 BuildRequires: hibernate-jpa-2.0-api >= 1.0.1
 BuildRequires: netty
-BuildRequires: glassfish-jaxb
+BuildRequires: jaxb-impl
 BuildRequires: jms >= 0:1.1
 BuildRequires: oauth
 BuildRequires: slf4j-api >= 0:1.7.5
@@ -101,6 +103,7 @@ BuildRequires: scannotation
 BuildRequires: postgresql-jdbc
 BuildRequires: servlet
 BuildRequires: gettext-commons
+BuildRequires: jta
 
 # resteasy multipart requires this at runtime
 BuildRequires: apache-mime4j
@@ -129,16 +132,16 @@ Requires: candlepin-scl
 Requires: c3p0 >= 0:0.9.1.2
 Requires: resteasy >= 0:2.3.1
 Requires: google-guice >= 0:3.0
-Requires: codehaus-jackson >= 0:1.9.2
-Requires: codehaus-jackson-xc
-Requires: codehaus-jackson-core-lgpl
-Requires: codehaus-jackson-mapper-lgpl
-Requires: codehaus-jackson-jaxrs
+Requires: jackson-annotations >= %{jackson_version}
+Requires: jackson-core >= %{jackson_version}
+Requires: jackson-databind >= %{jackson_version}
+Requires: jackson-jaxrs-json-provider >= %{jackson_version}
+Requires: jackson-module-jaxb-annotations >= %{jackson_version}
 Requires: hornetq >= 0:2.3.5
 Requires: netty
 Requires: oauth
 Requires: logback-classic
-Requires: glassfish-jaxb
+Requires: jaxb-impl
 Requires: scannotation
 Requires: slf4j-api >= 0:1.7.5
 # apache-mime4j uses commons-logging, so we have to provide a slf4j bridge
@@ -153,7 +156,7 @@ Requires: gettext-commons
 Requires: javamail
 Requires: javassist >= 3.12.0
 Requires: commons-collections >= 3.1
-
+Requires: jta
 %endif
 %define __jar_repack %{nil}
 

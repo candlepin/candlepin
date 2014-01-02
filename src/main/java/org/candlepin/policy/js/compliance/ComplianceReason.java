@@ -14,12 +14,12 @@
  */
 package org.candlepin.policy.js.compliance;
 
+import com.fasterxml.jackson.annotation.JsonFilter;
+
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.xml.bind.annotation.XmlTransient;
-
-import org.codehaus.jackson.map.annotate.JsonFilter;
 
 /**
  * ComplianceReason

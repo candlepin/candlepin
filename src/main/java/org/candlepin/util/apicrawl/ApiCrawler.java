@@ -14,6 +14,16 @@
  */
 package org.candlepin.util.apicrawl;
 
+import org.candlepin.auth.interceptor.Verify;
+import org.candlepin.config.Config;
+import org.candlepin.resource.RootResource;
+import org.candlepin.resteasy.JsonProvider;
+
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.module.jsonSchema.JsonSchema;
+import com.fasterxml.jackson.module.jsonSchema.JsonSchemaGenerator;
+
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -23,23 +33,14 @@ import java.util.LinkedList;
 import java.util.List;
 
 import javax.ws.rs.DELETE;
-import javax.ws.rs.HEAD;
 import javax.ws.rs.GET;
+import javax.ws.rs.HEAD;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-
-import org.codehaus.jackson.map.JsonMappingException;
-
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.schema.JsonSchema;
-import org.candlepin.auth.interceptor.Verify;
-import org.candlepin.config.Config;
-import org.candlepin.resource.RootResource;
-import org.candlepin.resteasy.JsonProvider;
 
 /**
  * ApiCrawler - Uses Java Reflection API to crawl the classes in our resources
@@ -71,7 +72,7 @@ public class ApiCrawler {
         // return type.
         //
         // for more info, see http://jira.codehaus.org/browse/JACKSON-439
-        dontRecurse = new NonRecursiveModule();
+        dontRecurse = new NonRecursiveModule(mapper);
         mapper.registerModule(dontRecurse);
     }
 
@@ -195,7 +196,8 @@ public class ApiCrawler {
         if (returnType.equals(Void.TYPE)) {
             return null;
         }
-        return mapper.generateJsonSchema(method.getReturnType());
+        JsonSchemaGenerator generator = new JsonSchemaGenerator(mapper);
+        return generator.generateSchema(method.getReturnType());
     }
 
     private static String getQualifiedName(Method method) {

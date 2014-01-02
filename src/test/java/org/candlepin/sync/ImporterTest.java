@@ -27,6 +27,36 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.config.CandlepinCommonTestConfig;
+import org.candlepin.config.Config;
+import org.candlepin.config.ConfigProperties;
+import org.candlepin.model.CertificateSerialCurator;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.DistributorVersion;
+import org.candlepin.model.DistributorVersionCurator;
+import org.candlepin.model.ExporterMetadata;
+import org.candlepin.model.ExporterMetadataCurator;
+import org.candlepin.model.IdentityCertificateCurator;
+import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
+import org.candlepin.pki.PKIUtility;
+import org.candlepin.pki.impl.BouncyCastlePKIUtility;
+import org.candlepin.pki.impl.DefaultSubjectKeyIdentifierWriter;
+import org.candlepin.sync.Importer.ImportFile;
+
+import com.fasterxml.jackson.core.JsonGenerationException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.xnap.commons.i18n.I18n;
+import org.xnap.commons.i18n.I18nFactory;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -45,34 +75,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
-
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.candlepin.config.CandlepinCommonTestConfig;
-import org.candlepin.config.Config;
-import org.candlepin.config.ConfigProperties;
-import org.candlepin.model.ConsumerType;
-import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
-import org.candlepin.model.CertificateSerialCurator;
-import org.candlepin.model.ConsumerTypeCurator;
-import org.candlepin.model.DistributorVersion;
-import org.candlepin.model.DistributorVersionCurator;
-import org.candlepin.model.ExporterMetadata;
-import org.candlepin.model.ExporterMetadataCurator;
-import org.candlepin.model.IdentityCertificateCurator;
-import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerCurator;
-import org.candlepin.pki.PKIUtility;
-import org.candlepin.pki.impl.BouncyCastlePKIUtility;
-import org.candlepin.pki.impl.DefaultSubjectKeyIdentifierWriter;
-import org.candlepin.sync.Importer.ImportFile;
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.map.JsonMappingException;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.xnap.commons.i18n.I18n;
-import org.xnap.commons.i18n.I18nFactory;
 
 /**
  * ImporterTest

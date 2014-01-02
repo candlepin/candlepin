@@ -16,14 +16,16 @@ package org.candlepin.policy.js;
 
 import org.candlepin.exceptions.IseException;
 
-import org.codehaus.jackson.map.AnnotationIntrospector;
-import org.codehaus.jackson.map.DeserializationConfig;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.introspect.JacksonAnnotationIntrospector;
-import org.codehaus.jackson.map.ser.impl.SimpleBeanPropertyFilter;
-import org.codehaus.jackson.map.ser.impl.SimpleFilterProvider;
-import org.codehaus.jackson.node.ObjectNode;
-import org.codehaus.jackson.xc.JaxbAnnotationIntrospector;
+import com.fasterxml.jackson.databind.AnnotationIntrospector;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.introspect.AnnotationIntrospectorPair;
+import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
+import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
+import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,12 +81,13 @@ public class RulesObjectMapper {
         // Very important for deployments so new rules files can return additional
         // properties that this current server doesn't know how to serialize, but still
         // shouldn't fail on.
-        this.mapper.configure(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES,
+        this.mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
             false);
 
         AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
-        AnnotationIntrospector secondary = new JaxbAnnotationIntrospector();
-        AnnotationIntrospector pair = new AnnotationIntrospector.Pair(primary, secondary);
+        AnnotationIntrospector secondary = new JaxbAnnotationIntrospector(
+            mapper.getTypeFactory());
+        AnnotationIntrospector pair = new AnnotationIntrospectorPair(primary, secondary);
         this.mapper.setAnnotationIntrospector(pair);
     }
 

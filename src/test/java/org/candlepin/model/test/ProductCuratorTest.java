@@ -22,6 +22,22 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import org.candlepin.config.CandlepinCommonTestConfig;
+import org.candlepin.config.Config;
+import org.candlepin.config.ConfigProperties;
+import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.model.Content;
+import org.candlepin.model.Product;
+import org.candlepin.model.ProductAttribute;
+import org.candlepin.test.DatabaseTestFixture;
+import org.candlepin.test.TestUtil;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import org.junit.Before;
+import org.junit.Test;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -32,20 +48,6 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.PersistenceException;
-
-import org.candlepin.config.CandlepinCommonTestConfig;
-import org.candlepin.config.Config;
-import org.candlepin.config.ConfigProperties;
-import org.candlepin.exceptions.BadRequestException;
-import org.candlepin.model.Content;
-import org.candlepin.model.Product;
-import org.candlepin.model.ProductAttribute;
-import org.candlepin.test.DatabaseTestFixture;
-import org.candlepin.test.TestUtil;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.type.TypeReference;
-import org.junit.Before;
-import org.junit.Test;
 
 public class ProductCuratorTest extends DatabaseTestFixture {
 

@@ -14,6 +14,17 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.jackson.HateoasArrayExclude;
+import org.candlepin.jackson.HateoasInclude;
+
+import com.fasterxml.jackson.annotation.JsonFilter;
+
+import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.ForeignKey;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Index;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,14 +43,6 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.candlepin.jackson.HateoasArrayExclude;
-import org.candlepin.jackson.HateoasInclude;
-import org.codehaus.jackson.map.annotate.JsonFilter;
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.ForeignKey;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Index;
 
 /**
  * Represents a guest ID running on a virt host consumer.

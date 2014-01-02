@@ -16,7 +16,9 @@ package org.candlepin.model;
 
 import org.candlepin.jackson.HateoasInclude;
 import org.candlepin.resteasy.InfoProperty;
-import org.codehaus.jackson.map.annotate.JsonFilter;
+
+import com.fasterxml.jackson.annotation.JsonFilter;
+
 import org.hibernate.annotations.GenericGenerator;
 
 import java.io.Serializable;

@@ -23,10 +23,10 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Rules;
 import org.candlepin.model.Subscription;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.codehaus.jackson.map.ObjectMapper;
 import org.hornetq.api.core.HornetQException;
 import org.hornetq.api.core.TransportConfiguration;
 import org.hornetq.api.core.client.ClientMessage;

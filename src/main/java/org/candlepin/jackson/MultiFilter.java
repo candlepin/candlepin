@@ -14,12 +14,12 @@
  */
 package org.candlepin.jackson;
 
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.ser.PropertyWriter;
+
 import java.util.HashSet;
 import java.util.Set;
-
-import org.codehaus.jackson.JsonGenerator;
-import org.codehaus.jackson.map.SerializerProvider;
-import org.codehaus.jackson.map.ser.BeanPropertyWriter;
 
 /**
  * MultiFilter
@@ -60,7 +60,7 @@ public class MultiFilter extends CheckableBeanPropertyFilter {
      */
     @Override
     public boolean isSerializable(Object obj, JsonGenerator jsonGenerator,
-        SerializerProvider serializerProvider, BeanPropertyWriter writer) {
+        SerializerProvider serializerProvider, PropertyWriter writer) {
         for (CheckableBeanPropertyFilter filter : filters) {
             if (!filter.isSerializable(obj, jsonGenerator, serializerProvider, writer)) {
                 return false;

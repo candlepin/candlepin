@@ -16,14 +16,16 @@ package org.candlepin.sync;
 
 import static org.junit.Assert.assertTrue;
 
+import org.candlepin.config.Config;
+import org.candlepin.model.Product;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import org.junit.Test;
+
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.HashMap;
-
-import org.codehaus.jackson.map.ObjectMapper;
-import org.candlepin.config.Config;
-import org.candlepin.model.Product;
-import org.junit.Test;
 
 /**
  * ProductExporterTest

@@ -14,18 +14,22 @@
  */
 package org.candlepin.resteasy;
 
-import javax.ws.rs.core.MediaType;
-import junit.framework.Assert;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.SerializationConfig;
-import org.codehaus.jackson.map.SerializationConfig.Feature;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.config.Config;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationConfig;
+import com.fasterxml.jackson.databind.SerializationFeature;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+
+import javax.ws.rs.core.MediaType;
+
+import junit.framework.Assert;
 
 @RunWith(MockitoJUnitRunner.class)
 public class JsonProviderTest {
@@ -38,7 +42,7 @@ public class JsonProviderTest {
 
         JsonProvider provider = new JsonProvider(config);
         boolean indentEnabled = isEnabled(provider,
-                SerializationConfig.Feature.INDENT_OUTPUT);
+                SerializationFeature.INDENT_OUTPUT);
 
         Assert.assertFalse(indentEnabled);
     }
@@ -49,7 +53,7 @@ public class JsonProviderTest {
 
         JsonProvider provider = new JsonProvider(config);
         boolean indentEnabled = isEnabled(provider,
-                SerializationConfig.Feature.INDENT_OUTPUT);
+                SerializationFeature.INDENT_OUTPUT);
 
         Assert.assertTrue(indentEnabled);
     }
@@ -60,13 +64,13 @@ public class JsonProviderTest {
         JsonProvider provider = new JsonProvider(config);
 
         boolean datesAsTimestamps = isEnabled(provider,
-                SerializationConfig.Feature.WRITE_DATES_AS_TIMESTAMPS);
+                SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
         Assert.assertFalse(datesAsTimestamps);
     }
 
 
-    private boolean isEnabled(JsonProvider provider, Feature feature) {
+    private boolean isEnabled(JsonProvider provider, SerializationFeature feature) {
         ObjectMapper mapper = provider.locateMapper(Object.class,
                 MediaType.APPLICATION_JSON_TYPE);
         SerializationConfig sConfig = mapper.getSerializationConfig();

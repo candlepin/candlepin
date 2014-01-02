@@ -16,7 +16,9 @@ package org.candlepin.model;
 
 import org.candlepin.jackson.HateoasArrayExclude;
 import org.candlepin.jackson.HateoasInclude;
-import org.codehaus.jackson.map.annotate.JsonFilter;
+
+import com.fasterxml.jackson.annotation.JsonFilter;
+
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
 

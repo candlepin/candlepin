@@ -14,11 +14,11 @@
  */
 package org.candlepin.model;
 
+import com.fasterxml.jackson.annotation.JsonFilter;
+
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
-
-import org.codehaus.jackson.map.annotate.JsonFilter;
 
 /**
  * DerivedProductPoolAttribute

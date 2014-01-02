@@ -14,8 +14,9 @@
  */
 package org.candlepin.util.apicrawl;
 
-import org.codehaus.jackson.Version;
-import org.codehaus.jackson.map.Module;
+import com.fasterxml.jackson.core.Version;
+import com.fasterxml.jackson.databind.Module;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * NonRecursingModule
@@ -24,9 +25,9 @@ class NonRecursiveModule extends Module {
 
     private NonRecursiveBeanSerializerModifer modifier;
 
-    NonRecursiveModule() {
+    NonRecursiveModule(ObjectMapper mapper) {
         super();
-        modifier = new NonRecursiveBeanSerializerModifer();
+        modifier = new NonRecursiveBeanSerializerModifer(mapper);
     }
 
     @Override
@@ -41,7 +42,7 @@ class NonRecursiveModule extends Module {
 
     @Override
     public Version version() {
-        return new Version(1, 0, 0, null);
+        return new Version(1, 0, 0, null, "org.candlepin", "");
     }
 
     void resetSeen() {
