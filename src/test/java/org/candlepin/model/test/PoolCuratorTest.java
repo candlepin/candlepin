@@ -343,7 +343,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         assertEquals(2, results.size());
 
         Pool[] expected = new Pool[]{ pool2, pool3 };
-        results.containsAll(Arrays.asList(expected));
+        assertTrue(results.containsAll(Arrays.asList(expected)));
     }
 
     @Test
