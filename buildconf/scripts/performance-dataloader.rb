@@ -11,7 +11,13 @@
 # A number of fake systems are then registered with installed
 # products, and then an autobind is performed for each.
 
-require  "../../client/ruby/candlepin_api"
+begin
+  require 'backports/1.9.1/kernel/require_relative'
+rescue LoadError
+  require 'rubygems'
+  require 'backports/1.9.1/kernel/require_relative'
+end
+require_relative "../../client/ruby/candlepin_api"
 require 'pp'
 require 'benchmark'
 require 'optparse'
