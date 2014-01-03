@@ -281,7 +281,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
     /**
      * When filtering pools by product/pool attributes, filters specified with
-     * the same attribute name are ANDed, and different attributes are ORed.
+     * the same attribute name are ORed, and different attributes are ANDed.
      *
      * For example applying the following filters:
      *
