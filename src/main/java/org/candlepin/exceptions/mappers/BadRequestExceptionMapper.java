@@ -14,12 +14,6 @@
  */
 package org.candlepin.exceptions.mappers;
 
-import org.candlepin.exceptions.ExceptionMessage;
-import org.candlepin.util.VersionUtil;
-
-import org.apache.commons.lang.StringUtils;
-import org.jboss.resteasy.spi.BadRequestException;
-
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -29,6 +23,12 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
+
+import org.apache.commons.lang.StringUtils;
+import org.candlepin.exceptions.ExceptionMessage;
+import org.candlepin.exceptions.CandlepinParamterParseException;
+import org.candlepin.util.VersionUtil;
+import org.jboss.resteasy.spi.BadRequestException;
 
 /**
  * BadRequestExceptionMapper maps the RESTEasy BadRequestException
@@ -51,9 +51,20 @@ public class BadRequestExceptionMapper extends CandlepinExceptionMapper
         ResponseBuilder bldr = Response.status(Status.BAD_REQUEST).type(
             determineBestMediaType()).header(VersionUtil.VERSION_HEADER,
                 map.get("version") + "-" + map.get("release"));
-        String msg = exception.getMessage();
-        if (StringUtils.isNotEmpty(msg)) {
-            bldr.entity(new ExceptionMessage(extractIllegalValue(msg)));
+
+        Throwable cause = exception.getCause();
+        if (cause instanceof CandlepinParamterParseException) {
+            String msg = i18n.tr("Invalid format for query parameter {0}. " +
+                "Expected format: {1}",
+                ((CandlepinParamterParseException) cause).getParamName(),
+                ((CandlepinParamterParseException) cause).getExpectedFormat());
+            bldr.entity(new ExceptionMessage(msg));
+        }
+        else {
+            String msg = exception.getMessage();
+            if (StringUtils.isNotEmpty(msg)) {
+                bldr.entity(new ExceptionMessage(extractIllegalValue(msg)));
+            }
         }
         return bldr.build();
     }

@@ -40,6 +40,7 @@ import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Entitlement;
+import org.candlepin.model.FilterBuilder;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
@@ -173,7 +174,7 @@ public class PoolResource {
         }
 
         Page<List<Pool>> page = poolManager.listAvailableEntitlementPools(c, o, productId,
-            activeOnDate, true, listAll, pageRequest);
+            activeOnDate, true, listAll, new FilterBuilder(), pageRequest);
         List<Pool> poolList = page.getPageData();
 
         if (c != null) {

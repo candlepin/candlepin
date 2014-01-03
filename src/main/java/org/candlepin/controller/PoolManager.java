@@ -17,6 +17,7 @@ package org.candlepin.controller;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Environment;
+import org.candlepin.model.FilterBuilder;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
@@ -154,12 +155,13 @@ public interface PoolManager {
      * @param activeOnly if true, only active entitlements are included.
      * @param includeWarnings When filtering by consumer, include pools that
      *        triggered a rule warning. (errors will still be excluded)
+     * @param filterBuilder builds and applies all filters when looking up pools.
      * @param pageRequest used to determine if results paging is required.
      * @return List of entitlement pools.
      */
     Page<List<Pool>> listAvailableEntitlementPools(Consumer consumer, Owner owner,
         String productId, Date activeOn, boolean activeOnly, boolean includeWarnings,
-        PageRequest pageRequest);
+        FilterBuilder filterBuilder, PageRequest pageRequest);
 
     /**
      *  Get the available service levels for consumers for this owner. Exempt

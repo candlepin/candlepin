@@ -368,7 +368,7 @@ class Candlepin
     return results
   end
 
-  def list_owner_pools(owner_key, params = {})
+  def list_owner_pools(owner_key, params = {}, attribute_filters=[])
     path = "/owners/#{owner_key}/pools?"
     path << "consumer=#{params[:consumer]}&" if params[:consumer]
     path << "product=#{params[:product]}&" if params[:product]
@@ -377,6 +377,13 @@ class Candlepin
     path << "per_page=#{params[:per_page]}&" if params[:per_page]
     path << "order=#{params[:order]}&" if params[:order]
     path << "sort_by=#{params[:sort_by]}&" if params[:sort_by]
+    
+    # Attribute filters are specified in the following format:
+    #    {attributeName}:{attributeValue}
+    attribute_filters.each do |filter|
+        path << "attribute=%s&" % [filter]
+    end
+    
     results = get(path)
     return results
   end

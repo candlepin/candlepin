@@ -58,6 +58,9 @@ import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.resource.OwnerResource;
+import org.candlepin.resteasy.parameter.CandlepinParam;
+import org.candlepin.resteasy.parameter.CandlepinParameterUnmarshaller;
+import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.sync.ConflictOverrides;
 import org.candlepin.sync.Importer;
 import org.candlepin.sync.ImporterException;
@@ -74,6 +77,7 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -82,6 +86,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MultivaluedMap;
 /**
  * OwnerResourceTest
@@ -283,7 +288,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         securityInterceptor.enable();
 
-        ownerResource.listPools(owner.getKey(), null, null, false, null, principal, null);
+        ownerResource.listPools(owner.getKey(), null, null, false, null,
+            new ArrayList<KeyValueParameter>(), principal, null);
     }
 
     @Test
@@ -298,8 +304,40 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         poolCurator.create(pool2);
 
         List<Pool> pools = ownerResource.listPools(owner.getKey(),
-            null, null, true, null, principal, null);
+            null, null, true, null, new ArrayList<KeyValueParameter>(), principal, null);
         assertEquals(2, pools.size());
+    }
+
+    @Test
+    public void testCanFilterPoolsByAttribute() throws Exception {
+        Principal principal = setupPrincipal(owner, Access.ALL);
+
+        Product p = TestUtil.createProduct();
+        productCurator.create(p);
+        Pool pool1 = TestUtil.createPool(owner, p);
+        pool1.setAttribute("virt_only", "true");
+        poolCurator.create(pool1);
+
+        Product p2 = TestUtil.createProduct();
+        p2.setAttribute("cores", "12");
+        Pool pool2 = TestUtil.createPool(owner, p2);
+        poolCurator.create(pool2);
+
+        List<KeyValueParameter> params = new ArrayList<KeyValueParameter>();
+        params.add(createKeyValueParam("cores", "12"));
+
+        List<Pool> pools = ownerResource.listPools(owner.getKey(), null, null, true,
+            null, params, principal, null);
+        assertEquals(1, pools.size());
+        assertEquals(pool2, pools.get(0));
+
+        params.clear();
+        params.add(createKeyValueParam("virt_only", "true"));
+
+        pools = ownerResource.listPools(owner.getKey(), null, null, true,
+            null, params, principal, null);
+        assertEquals(1, pools.size());
+        assertEquals(pool1, pools.get(0));
     }
 
     @Test(expected = NotFoundException.class)
@@ -318,7 +356,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         securityInterceptor.enable();
 
         // Filtering should just cause this to return no results:
-        ownerResource.listPools(owner.getKey(), null, null, true, null, principal, null);
+        ownerResource.listPools(owner.getKey(), null, null, true, null,
+            new ArrayList<KeyValueParameter>(), principal, null);
     }
 
     @Test(expected = ForbiddenException.class)
@@ -494,18 +533,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void consumerCanListPools() {
-        Consumer c = TestUtil.createConsumer(owner);
-        consumerTypeCurator.create(c.getType());
-        consumerCurator.create(c);
-        Principal principal = setupPrincipal(new ConsumerPrincipal(c));
-
-        securityInterceptor.enable();
-
-        ownerResource.listPools(owner.getKey(), null, null, false, null, principal, null);
-    }
-
-    @Test
     public void consumerListPoolsGetCalculatedAttributes() {
         Product p = TestUtil.createProduct();
         productCurator.create(p);
@@ -520,7 +547,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         securityInterceptor.enable();
 
         List<Pool> pools = ownerResource.listPools(owner.getKey(), c.getUuid(),
-            p.getId(), true, null, principal, null);
+            p.getId(), true, null, new ArrayList<KeyValueParameter>(), principal, null);
         assertEquals(1, pools.size());
         Pool returnedPool = pools.get(0);
         assertNotNull(returnedPool.getCalculatedAttributes());
@@ -543,7 +570,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         ownerCurator.create(owner2);
 
         ownerResource.listPools(owner.getKey(), c.getUuid(),
-            p.getId(), true, null, setupPrincipal(owner2, Access.NONE), null);
+            p.getId(), true, null, new ArrayList<KeyValueParameter>(),
+            setupPrincipal(owner2, Access.NONE), null);
     }
 
     @Test
@@ -902,5 +930,19 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Owner owner = new Owner("Test Owner", "test");
         ownerCurator.create(owner);
         ownerResource.setLogLevel(owner.getKey(), "THISLEVELISBAD");
+    }
+
+    @QueryParam("test-attr") @CandlepinParam(type = KeyValueParameter.class)
+    private KeyValueParameter createKeyValueParam(String key, String val) throws Exception {
+        // Can't create the KeyValueParam directly as the parse method
+        // is package protected -- create one via the unmarshaller so we don't have to
+        // change the visibility of the parse method.
+        Annotation[] annotations = this.getClass()
+            .getDeclaredMethod("createKeyValueParam", String.class, String.class)
+            .getAnnotations();
+        CandlepinParameterUnmarshaller unmarshaller =
+            new CandlepinParameterUnmarshaller();
+        unmarshaller.setAnnotations(annotations);
+        return (KeyValueParameter) unmarshaller.fromString(key + ":" + val);
     }
 }
