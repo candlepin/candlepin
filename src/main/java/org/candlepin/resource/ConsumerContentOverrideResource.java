@@ -187,7 +187,7 @@ public class ConsumerContentOverrideResource {
         if (entry.getName().length() > colLength ||
                 entry.getValue().length() > colLength) {
             throw new BadRequestException(i18n.tr(
-                "Name and value of the override must not exceede {0} characters.",
+                "Name and value of the override must not exceed {0} characters.",
                 colLength));
         }
     }
