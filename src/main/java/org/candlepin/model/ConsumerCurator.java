@@ -65,7 +65,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     public Consumer create(Consumer entity) {
         entity.ensureUUID();
         if (entity.getFacts() != null) {
-            entity.setFacts(filterAndVerifyFacts(entity.getFacts()));
+            entity.setFacts(filterAndVerifyFacts(entity));
         }
         validate(entity);
         return super.create(entity);
@@ -271,7 +271,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         // TODO: Are any of these read-only?
         existingConsumer.setEntitlements(entitlementCurator
             .bulkUpdate(updatedConsumer.getEntitlements()));
-        Map<String, String> newFacts = filterAndVerifyFacts(updatedConsumer.getFacts());
+        Map<String, String> newFacts = filterAndVerifyFacts(updatedConsumer);
         if (factsChanged(newFacts, existingConsumer.getFacts())) {
             existingConsumer.setFacts(newFacts);
         }
@@ -314,7 +314,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      * @param facts
      * @return the list of facts filtered by the fact filter regex config
      */
-    private Map<String, String> filterAndVerifyFacts(Map<String, String> factsIn) {
+    private Map<String, String> filterAndVerifyFacts(Consumer consumer) {
+        Map<String, String> factsIn = consumer.getFacts();
         Map<String, String> facts = new HashMap<String, String>();
         String factMatch = config.getString(ConfigProperties.CONSUMER_FACTS_MATCHER);
         List<String> intFacts = config.getStringList(
@@ -332,6 +333,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
                     }
                     catch (NumberFormatException nfe) {
                         log.error("The fact " + entry.getKey() +
+                            " for consumer " + consumer.getUuid() +
                             " must be an integer instead of " + entry.getValue() +
                             ". " + "No value will exist for that fact.");
                         continue;
