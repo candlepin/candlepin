@@ -131,6 +131,14 @@ describe 'Consumer Resource Content' do
       @cp.add_content_overrides(@consumer1.uuid, overrides)
     end.should raise_exception(RestClient::BadRequest)
   end
+  
+  it "should reject changes for blacklisted attributes regardless of case" do
+    overrides = []
+    overrides << create_content_override("content1.label", "BaseURL", "its a no-no")
+    lambda do
+      @cp.add_content_overrides(@consumer1.uuid, overrides)
+    end.should raise_exception(RestClient::BadRequest)
+  end
 
   it "should reject all changes if any blacklisted attributes exist" do
     overrides = []
