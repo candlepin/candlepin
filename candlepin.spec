@@ -31,7 +31,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.8.34.0
+Version: 0.8.34.1
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -329,6 +329,11 @@ fi
 
 
 %changelog
+* Tue Jan 07 2014 jesus m. rodriguez <jesusr@redhat.com> 0.8.34.1-1
+- 1038273: correctly paginate when listing pools by consumer (ckozak@redhat.com)
+- Added spec test that exposes the pool pagination issue (ckozak@redhat.com)
+- Add jcl-over-slf4j to replace commons-logging. (awood@redhat.com)
+
 * Mon Dec 09 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.34-1
 - 1030604: Single error message when adding blacklisted overrides (mstead@redhat.com)
 - 1030644: performance fix for distributors with lots of ents. (dgoodwin@redhat.com)
