@@ -195,6 +195,16 @@ public class ComplianceRulesTest {
         return ent;
     }
 
+    private Entitlement mockNonStackedHostRestrictedEntitlement(Consumer consumer,
+        String stackId, String productId, String ... providedProductIds) {
+        Entitlement ent = this.mockEntitlement(consumer, productId,
+            providedProductIds);
+        ent.getPool().setProductAttribute("sockets", "2", productId);
+        ent.getPool().setProductAttribute("vcpu", "1", productId);
+        ent.getPool().setAttribute("requires_host", "SOMEUUID");
+        return ent;
+    }
+
     private Consumer mockConsumerWithTwoProductsAndNoEntitlements() {
         return mockConsumer(PRODUCT_1, PRODUCT_2);
     }
@@ -1411,6 +1421,33 @@ public class ComplianceRulesTest {
         ents.add(mockHostRestrictedEntitlement(c, STACK_ID_1, "Awesome Product",
             PRODUCT_1, PRODUCT_2));
         ents.get(0).setQuantity(1);
+        mockEntCurator(c, ents);
+
+        ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
+
+        assertEquals(ComplianceStatus.GREEN, status.getStatus());
+        assertEquals(0, status.getNonCompliantProducts().size());
+        assertEquals(0, status.getPartiallyCompliantProducts().size());
+
+        assertEquals(2, status.getCompliantProducts().size());
+        assertTrue(status.getCompliantProducts().keySet().contains(PRODUCT_1));
+        assertTrue(status.getCompliantProducts().keySet().contains(PRODUCT_2));
+    }
+
+    /*
+     * We should not run compliance on host restricted subscriptions,
+     * even if they aren't stackable
+     */
+    @Test
+    public void hostNonStackedRestrictedVirtualGreen() {
+        Consumer c = mockConsumer(PRODUCT_1, PRODUCT_2);
+        c.setFact("virt.is_guest", "true");
+        c.setFact("cpu.core(s)_per_socket", "20");
+        List<Entitlement> ents = new LinkedList<Entitlement>();
+        ents.add(mockNonStackedHostRestrictedEntitlement(c, "Awesome Product",
+            PRODUCT_1, PRODUCT_2));
+        ents.get(0).setQuantity(1);
+        ents.get(0).getPool().setProductAttribute("vcpu", "1", PRODUCT_1);
         mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
