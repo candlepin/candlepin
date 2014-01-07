@@ -18,6 +18,8 @@ import java.util.List;
 
 import org.hibernate.criterion.Restrictions;
 
+import com.google.inject.persist.Transactional;
+
 /**
  * ConsumerContentOverrideCurator
  */
@@ -40,7 +42,7 @@ public class ConsumerContentOverrideCurator
             .createCriteria(ConsumerContentOverride.class)
             .add(Restrictions.eq("consumer", consumer))
             .add(Restrictions.eq("contentLabel", contentLabel))
-            .add(Restrictions.eq("name", name)).list();
+            .add(Restrictions.eq("name", name).ignoreCase()).list();
         for (ConsumerContentOverride cco : overrides) {
             delete(cco);
         }
@@ -71,10 +73,39 @@ public class ConsumerContentOverrideCurator
             .createCriteria(ConsumerContentOverride.class)
             .add(Restrictions.eq("consumer", consumer))
             .add(Restrictions.eq("contentLabel", contentLabel))
-            .add(Restrictions.eq("name", name)).list();
+            .add(Restrictions.eq("name", name).ignoreCase()).list();
         if (overrides.size() == 0) {
             return null;
         }
         return overrides.get(0);
+    }
+
+    /* (non-Javadoc)
+     * @see org.candlepin.model.AbstractHibernateCurator#create(
+     *      org.candlepin.model.Persisted)
+     */
+    @Override
+    @Transactional
+    public ConsumerContentOverride create(ConsumerContentOverride override) {
+        sanitize(override);
+        return super.create(override);
+    }
+
+    /* (non-Javadoc)
+     * @see org.candlepin.model.AbstractHibernateCurator#merge(
+     *     org.candlepin.model.Persisted)
+     */
+    @Override
+    @Transactional
+    public ConsumerContentOverride merge(ConsumerContentOverride override) {
+        sanitize(override);
+        return super.merge(override);
+    }
+
+    private void sanitize(ConsumerContentOverride override) {
+        // Always make sure that the name is lowercase.
+        if (override.getName() != null && !override.getName().isEmpty()) {
+            override.setName(override.getName().toLowerCase());
+        }
     }
 }

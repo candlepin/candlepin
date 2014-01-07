@@ -142,6 +142,31 @@ describe 'Consumer Resource Content' do
     @cp.get_content_overrides(@consumer1.uuid).size.should == 0
   end
 
+  it "should not create a new override for a property with same name but different case" do
+    overrides = []
+    overrides << create_content_override("my-content", "my-field", "my-value")
+    returner = @cp.add_content_overrides(@consumer1.uuid, overrides)
+    returner.size.should == 1
+    
+    overrides[0]["name"] = "MY-FIELD"
+    overrides[0]["value"] = "changed-value"
+    returner = @cp.add_content_overrides(@consumer1.uuid, overrides)
+    # make sure its an update not another add
+    returner.size.should == 1
+    returner[0]['name'].should == 'my-field'
+    returner[0]['value'].should == 'changed-value'
+  end
+
+  it "last property wins when overrides with duplicate names are specified" do
+    overrides = []
+    overrides << create_content_override("my-content", "my-field", "my-value")
+    overrides << create_content_override("my-content", "my-field", "my-changed-value")
+    overrides.size.should == 2
+    returner = @cp.add_content_overrides(@consumer1.uuid, overrides)
+    returner.size.should == 1
+    returner[0]["name"].should == "my-field"
+    returner[0]["value"].should == "my-changed-value"
+  end
 
   def create_content_override(contentlabel=nil, name=nil, value=nil)
     content = {
