@@ -748,85 +748,48 @@ var CoverageCalculator = {
         // make the stack valid. Stacking multiple instances of 'arch'
         // does nothing (there is no quantity).
         var stackableAttrsNotAffectingQuantity = [ARCH_ATTRIBUTE, GUEST_LIMIT_ATTRIBUTE];
+        var complianceAttributes = getComplianceAttributes(consumer);
+        var complianceAttributesToUse = [];
+
+        for (var attrIdx in complianceAttributes) {
+            var attr = complianceAttributes[attrIdx];
+            if (!Utils.inArray(stackableAttrsNotAffectingQuantity, attr) && pool.hasProductAttribute(attr)) {
+                complianceAttributesToUse.push(attr);
+            } else {
+                log.debug("  Skipping " + attr + " because it does not affect the quantity or is not enforced");
+            }
+        }
 
         log.debug("Determining number of entitlements to cover consumer...");
 
-        // If the stack is empty, we can assume at least one is needed. This is to
-        // work around situations where the coverage comes back as 100% because no
-        // attributes are being enforced.
-        var maxQuantity = complianceTracker.empty ? 1 : 0;
+        var increment = (pool.hasProductAttribute(INSTANCE_ATTRIBUTE) && !Utils.isGuest(consumer)) ? parseInt(pool.getProductAttribute(INSTANCE_ATTRIBUTE)): 1;
 
-        var complianceAttributes = getComplianceAttributes(consumer);
-        for (var attrIdx in complianceAttributes) {
-            var attr = complianceAttributes[attrIdx];
-
-            // if the attribute does not affect the quantity,
-            // we can skip it.
-            if (Utils.inArray(stackableAttrsNotAffectingQuantity, attr)) {
-                log.debug("  Skipping " + attr + " because it does not affect the quantity.");
-                continue;
+        var covered = false;
+        var quantity = 0;
+        var startedEmpty = complianceTracker.empty;
+        do {
+            if (startedEmpty || quantity != 0) {
+                // If the stack is empty, we can assume at least one is needed. This is to
+                // work around situations where the coverage comes back as 100% because no
+                // attributes are being enforced.
+                complianceTracker.updateAccumulatedFromPool(pool, increment);
+                quantity += increment;
             }
-
-            // No need to check this attr if it
-            // is not being enforced by the stack.
-            if (!complianceTracker.enforces(attr)) {
-                log.debug("  Skipping " + attr + " because it is not being enforced.");
-                continue;
+            startedEmpty = true;
+            var coverage = CoverageCalculator.getStackCoverage(complianceTracker, consumer, entitlements);
+            covered = true;
+            for (var i = 0; i < coverage.reasons.length; i++) {
+                var attribute = coverage.reasons[i]["key"].toLowerCase();
+                if (Utils.inArray(complianceAttributesToUse, attribute)) {
+                    covered = false;
+                }
             }
+        // Loop while the stack isn't covered for all the stackable attributes we're checking
+        // and there is enough available quantity for the next iteration
+        } while (!covered && ((quantity + increment <= pool.quantity - pool.consumed) || pool.quantity == -1));
 
-            log.debug("  Checking quantity required for " + attr);
-
-            var prodAttrValue = pool.getProductAttribute(attr);
-            if (!prodAttrValue) {
-                log.debug("  Skipping " + attr + ". Pool does not cover attribute.");
-                continue;
-            }
-            log.debug("    Quantity provided by pool: " + prodAttrValue);
-
-            var currentCovered = complianceTracker.getAccumulatedValue(attr);
-            log.debug("    Quantity currently covered by stack: " + currentCovered);
-
-            var consumerQuantity = parseInt(FactValueCalculator.getFact(attr, consumer));
-
-            log.debug("    Quantity to be covered on consumer: " + consumerQuantity);
-
-            // Figure out the max required from the pool to cover
-            // the consumers fact.
-            var amountRequiredFromPool = 0;
-            var coveredCounter = currentCovered;
-            var increment = 1;
-            // We don't need to worry about checking if we're on a guest, virt guests
-            // no longer use sockets
-            if (attr == SOCKETS_ATTRIBUTE && pool.hasProductAttribute(INSTANCE_ATTRIBUTE)) {
-                increment = pool.getProductAttribute(INSTANCE_ATTRIBUTE);
-            }
-            while (CoverageCalculator
-                   .adjustCoverage(attr, consumer, coveredCounter,
-                                   entitlements) <
-                                   consumerQuantity) {
-                amountRequiredFromPool += increment;
-                coveredCounter = currentCovered + (amountRequiredFromPool * prodAttrValue / increment);
-            }
-
-            if (maxQuantity < amountRequiredFromPool) {
-                maxQuantity = amountRequiredFromPool;
-            }
-
-            // Don't try to take more than the pool has available:
-            if (maxQuantity > pool.quantity - pool.consumed && pool.quantity != -1) {
-                maxQuantity = pool.quantity - pool.consumed;
-            }
-
-            // Adjust the suggested quantity if necessary:
-            if (pool.hasProductAttribute(INSTANCE_ATTRIBUTE) && !Utils.isGuest(consumer)) {
-                // Make sure we never recommend something that isn't a multiple of
-                // instance multiplier:
-                maxQuantity = maxQuantity - (maxQuantity % parseInt(pool.getProductAttribute(INSTANCE_ATTRIBUTE)));
-            }
-
-        }
-        log.debug("Quantity required to cover consumer: " + maxQuantity);
-        return maxQuantity;
+        log.debug("Quantity required to cover consumer: " + quantity);
+        return quantity;
     }
 };
 
@@ -945,7 +908,9 @@ function createComplianceTracker(consumer, id) {
                 sockets: function (currentStackValue, poolValue, pool, quantity) {
                     var stackValue = currentStackValue | 0;
                     var increment = parseInt(pool.getProductAttribute(INSTANCE_ATTRIBUTE)) || 1;
-                    stackValue = stackValue + ((parseInt(poolValue) * quantity) / increment);
+                    // use lowest quantity evenly divisible by the instance multiplier
+                    var adjustedQuantity = quantity - (quantity % increment);
+                    stackValue = stackValue + ((parseInt(poolValue) * adjustedQuantity) / increment);
                     return stackValue;
                 },
 

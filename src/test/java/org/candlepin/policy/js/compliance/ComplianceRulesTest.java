@@ -1389,6 +1389,13 @@ public class ComplianceRulesTest {
         assertEquals(2, status.getPartiallyCompliantProducts().size());
         assertTrue(status.getPartiallyCompliantProducts().keySet().contains(PRODUCT_1));
         assertTrue(status.getPartiallyCompliantProducts().keySet().contains(PRODUCT_2));
+
+        // Should be covered for 6 of 8 sockets, not 7 because the quantity is
+        // adjusted for sockets to a multiple of the instance multiplier
+        assertEquals(1, status.getReasons().size());
+        ComplianceReason reason = status.getReasons().iterator().next();
+        assertEquals("SOCKETS", reason.getKey());
+        assertEquals("6", reason.getAttributes().get("covered"));
     }
 
     @Test
