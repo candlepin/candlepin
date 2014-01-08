@@ -97,8 +97,10 @@ public class ProductResource {
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Product> list() {
-        return prodAdapter.getProducts();
+    public List<Product> list(@QueryParam("product_uuid") List<String> productUuids) {
+        return productUuids.isEmpty() ?
+            prodAdapter.getProducts() :
+            prodAdapter.getProductsByIds(productUuids);
     }
 
     /**

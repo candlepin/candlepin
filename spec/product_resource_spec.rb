@@ -173,5 +173,29 @@ describe 'Product Resource' do
                           {:relies_on => [prod1_id]})
     end.should raise_exception(RestClient::BadRequest)
   end
+
+  it 'lists all products in bulk fetch' do
+    prod1_id = random_string("test_id")
+    prod2_id = random_string("test_id")
+    prod3_id = random_string("test_id")
+    prod1 = create_product(prod1_id, random_string("test_name"))
+    prod2 = create_product(prod2_id, random_string("test_name"))
+    prod3 = create_product(prod3_id, random_string("test_name"))
+    all_products = @cp.list_products()
+    all_products.size.should > 2
+
+    # Pick two products to use in a bulk get
+    first_prod_id = all_products[0]['id']
+    second_prod_id = all_products[1]['id']
+    prod_ids_to_get = [first_prod_id, second_prod_id]
+
+    # Get 2 products
+    bulk_get_products = @cp.list_products(prod_ids_to_get)
+    bulk_get_products.size.should == 2
+
+    # Make sure it got the correct ones
+    prod_ids_to_get.index(bulk_get_products[0]['id']).should_not == nil
+    prod_ids_to_get.index(bulk_get_products[1]['id']).should_not == nil
+  end
 end
 

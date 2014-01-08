@@ -450,8 +450,14 @@ class Candlepin
     post("/owners/#{owner_key}/entitlements")
   end
 
-  def list_products
-    get("/products")
+  def list_products(product_uuids=nil)
+    method = "/products?"
+    if product_uuids
+      product_uuids.each { |uuid|
+        method << "&product_uuid=" << uuid
+      }
+    end
+    get(method)
   end
 
   def create_content(name, id, label, type, vendor,
