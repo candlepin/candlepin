@@ -16,6 +16,7 @@ package org.candlepin.model;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
@@ -100,6 +101,13 @@ public class ConsumerContentOverrideCuratorTest extends DatabaseTestFixture {
         assertEquals("test-repo", found.getContentLabel());
         assertEquals("gpgcheck", found.getName());
         assertEquals("1", found.getValue());
+    }
+
+    @Test
+    public void testRetrieveByNameDoesntExist() {
+        ConsumerContentOverride found =
+            consumerContentOverrideCurator.retrieve(consumer, "not-a-repo", "gpgcheck");
+        assertNull(found);
     }
 
     @Test
