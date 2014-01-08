@@ -69,15 +69,12 @@ public class ConsumerContentOverrideCurator
 
     public ConsumerContentOverride retrieve(Consumer consumer, String contentLabel,
         String name) {
-        List<ConsumerContentOverride> overrides = currentSession()
+        return (ConsumerContentOverride) currentSession()
             .createCriteria(ConsumerContentOverride.class)
             .add(Restrictions.eq("consumer", consumer))
             .add(Restrictions.eq("contentLabel", contentLabel))
-            .add(Restrictions.eq("name", name).ignoreCase()).list();
-        if (overrides.size() == 0) {
-            return null;
-        }
-        return overrides.get(0);
+            .add(Restrictions.eq("name", name).ignoreCase())
+            .setMaxResults(1).uniqueResult();
     }
 
     /* (non-Javadoc)
