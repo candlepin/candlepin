@@ -8,9 +8,16 @@
 # watch the progress bar in terminal 2 (green dot for consumed ent, red N for not)
 # watch the details in terminal 1
 
-require "../../client/ruby/candlepin_api"
+begin
+  require 'backports/1.9.1/kernel/require_relative'
+rescue LoadError
+  require 'rubygems'
+  require 'backports/1.9.1/kernel/require_relative'
+end
+require_relative "../../client/ruby/candlepin_api"
 require 'pp'
 require 'optparse'
+require 'thread'
 
 CP_SERVER = "localhost"
 CP_PORT = 8443

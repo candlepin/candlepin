@@ -6,7 +6,13 @@
 #
 # None of the above will be cleaned up.
 
-require  "../../client/ruby/candlepin_api"
+begin
+  require 'backports/1.9.1/kernel/require_relative'
+rescue LoadError
+  require 'rubygems'
+  require 'backports/1.9.1/kernel/require_relative'
+end
+require_relative "../../client/ruby/candlepin_api"
 require 'pp'
 
 ADMIN_USERNAME = "admin"

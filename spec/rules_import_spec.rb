@@ -1,6 +1,5 @@
 require 'spec_helper'
 require 'candlepin_scenarios'
-require 'candlepin_api'
 require 'pp'
 require 'base64'
 

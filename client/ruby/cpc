@@ -1,8 +1,14 @@
 #!/usr/bin/env ruby
 $VERBOSE = nil
 
+begin
+  require 'backports/1.9.1/kernel/require_relative'
+rescue LoadError
+  require 'rubygems'
+  require 'backports/1.9.1/kernel/require_relative'
+end
 require 'pp'
-require './candlepin_api'
+require_relative 'candlepin_api'
 require 'optparse'
 
 # Wrapper class for the base Candlepin lib that

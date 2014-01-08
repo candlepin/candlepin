@@ -1,8 +1,12 @@
+begin
+  require 'rest_client'
+rescue LoadError
+  require 'rubygems'
+  require 'rest_client'
+end
 require 'base64'
 require 'openssl'
 require 'date'
-require 'rubygems'
-require 'rest_client'
 require 'json'
 require 'uri'
 require 'pp'

@@ -6,3 +6,4 @@ gem 'rest-client'
 gem 'oauth'
 gem 'iconv'
 gem 'parallel_tests'
+gem 'backports', :require => false

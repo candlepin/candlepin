@@ -3,6 +3,7 @@ GEM
   specs:
     atoulme-Antwrap (0.7.2)
       rjb (>= 1.0.3)
+    backports (3.4.0)
     builder (2.1.2)
     buildr (1.4.7)
       atoulme-Antwrap (~> 0.7.2)
@@ -60,6 +61,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  backports
   buildr (= 1.4.7)
   iconv
   oauth
