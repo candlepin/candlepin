@@ -2649,7 +2649,9 @@ var Override = {
     get_allow_override: function() {
         var blacklist = ['name','label','baseurl']
         var context = Override.get_override_context();
-        return Utils.inArray(blacklist, context.name);
+        
+        var check = context.name ? context.name.toLowerCase() : "";
+        return Utils.inArray(blacklist, check);
     }
 }
 
