@@ -908,7 +908,9 @@ function createComplianceTracker(consumer, id) {
                 sockets: function (currentStackValue, poolValue, pool, quantity) {
                     var stackValue = currentStackValue | 0;
                     var increment = parseInt(pool.getProductAttribute(INSTANCE_ATTRIBUTE)) || 1;
-                    stackValue = stackValue + ((parseInt(poolValue) * quantity) / increment);
+                    // use lowest quantity evenly divisible by the instance multiplier
+                    var adjustedQuantity = quantity - (quantity % increment);
+                    stackValue = stackValue + ((parseInt(poolValue) * adjustedQuantity) / increment);
                     return stackValue;
                 },
 
