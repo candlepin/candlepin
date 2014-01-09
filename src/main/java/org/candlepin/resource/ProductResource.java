@@ -92,15 +92,16 @@ public class ProductResource {
     /**
      * returns the list of Products available.
      *
+     * @param productIds if specified, the list of product ids to return product info for
      * @return the list of available products.
      * @httpcode 200
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Product> list(@QueryParam("product_uuid") List<String> productUuids) {
-        return productUuids.isEmpty() ?
+    public List<Product> list(@QueryParam("product") List<String> productIds) {
+        return productIds.isEmpty() ?
             prodAdapter.getProducts() :
-            prodAdapter.getProductsByIds(productUuids);
+            prodAdapter.getProductsByIds(productIds);
     }
 
     /**

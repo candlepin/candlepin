@@ -454,7 +454,7 @@ class Candlepin
     method = "/products?"
     if product_uuids
       product_uuids.each { |uuid|
-        method << "&product_uuid=" << uuid
+        method << "&product=" << uuid
       }
     end
     get(method)
