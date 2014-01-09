@@ -287,8 +287,8 @@ public class EntitlementImporter {
             // if the upstream pool id is null,
             // this must be a locally controlled sub.
             if (subscription.getUpstreamPoolId() != null) {
-                // if the existing sub does not have the ent id yet,
-                //  just assign a placeholder to differentiate.
+                // if the existing sub does not have the entitlement id yet,
+                // just assign a placeholder to differentiate.
                 if (subscription.getUpstreamEntitlementId() == null ||
                     subscription.getUpstreamEntitlementId().trim().equals("")) {
                     subscription.setUpstreamEntitlementId("" + idx++);

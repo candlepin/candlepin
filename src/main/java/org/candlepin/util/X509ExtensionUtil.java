@@ -179,9 +179,7 @@ public class X509ExtensionUtil  extends X509Util{
 
         // XXX need to deal with non hash style IDs
         String productOid = productCertOid + "." + product.getId();
-        // 10.10.10 is the product hash, arbitrary number atm
-        // replace ith approriate hash for product, we can maybe get away with
-        // faking this
+
         toReturn.add(new X509ExtensionWrapper(productOid + "." +
             OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_NAME_KEY), false, product
             .getName()));
@@ -201,12 +199,6 @@ public class X509ExtensionUtil  extends X509Util{
         toReturn.add(new X509ExtensionWrapper(productOid + "." +
             OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_BRAND_TYPE_KEY), false, brandType));
 
-        // XXX include provides here (after defined in attributes)
-
-        // dummy provides i used for testing
-        // toReturn.add(new X509ExtensionWrapper(productOid + "." +
-        // OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_PROVIDES_KEY), false,
-        // new DERUTF8String("TAG1,TAG2,TAG3")));
         return toReturn;
     }
 

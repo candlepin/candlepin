@@ -39,7 +39,7 @@ public class Arch {
      * Returns a Set of the comma separated arch name Strings
      *
      * @return Set of arch names, or an empty set if value is
-     *         empty string, or if the 'arch' attribute doesnt
+     *         empty string, or if the 'arch' attribute doesn't
      *         exist
      */
     public static Set<String> parseArches(String arches) {

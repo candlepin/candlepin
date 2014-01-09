@@ -378,10 +378,10 @@ public class X509V3ExtensionUtil extends X509Util{
             content.setArches(archesList);
 
             // Check if we should override the enabled flag due to setting on promoted
-            // content:
+            // content
             Boolean enabled = pc.getEnabled();
             if ((consumer.getEnvironment() != null) && enableEnvironmentFiltering) {
-                // we know content has been promoted at this point:
+                // we know content has been promoted at this point
                 Boolean enabledOverride = promotedContent.get(
                     pc.getContent().getId()).getEnabled();
                 if (enabledOverride != null) {
@@ -394,12 +394,12 @@ public class X509V3ExtensionUtil extends X509Util{
                 content.setEnabled(enabled);
             }
 
-            // Include metadata expiry if specified on the content:
+            // Include metadata expiry if specified on the content
             if (pc.getContent().getMetadataExpire() != null) {
                 content.setMetadataExpire(pc.getContent().getMetadataExpire());
             }
 
-            // Include required tags if specified on the content set:
+            // Include required tags if specified on the content set
             String requiredTags = pc.getContent().getRequiredTags();
             if ((requiredTags != null) && !requiredTags.equals("")) {
                 StringTokenizer st = new StringTokenizer(requiredTags, ",");
@@ -432,7 +432,7 @@ public class X509V3ExtensionUtil extends X509Util{
                 include = false;
                 Set<String> prodIds = pc.getContent().getModifiedProductIds();
                 // If consumer has an entitlement to just one of the modified products,
-                // we will include this content set:
+                // we will include this content set
                 for (String prodId : prodIds) {
                     Set<Entitlement> entsProviding = entCurator.listProviding(
                         ent.getConsumer(), prodId, ent.getStartDate(), ent.getEndDate());

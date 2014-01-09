@@ -29,7 +29,7 @@ import com.google.inject.persist.UnitOfWork;
 
 /**
  * CandlepinPersistFilter Custom servlet filter for guice-persist that doesn't
- * initialize the persistance service
+ * initialize the persistence service
  */
 @Singleton
 public class CandlepinPersistFilter implements Filter {

@@ -52,7 +52,7 @@ public class CriteriaRules  {
     }
 
     /**
-     * Create a List of jpa criterion that can filter out pools that are not
+     * Create a List of JPA criterion that can filter out pools that are not
      * applicable to consumer. Helps to scale down large numbers of pools
      * specifically with virt_limit subscriptions.
      *
@@ -62,7 +62,7 @@ public class CriteriaRules  {
     public List<Criterion> availableEntitlementCriteria(Consumer consumer) {
 
         // avoid passing in a consumerCurator just to get the host
-        // consumer uuid
+        // consumer UUID
         Consumer hostConsumer = null;
         if (consumer.getFact("virt.uuid") != null) {
             hostConsumer = consumerCurator.getHost(consumer.getFact("virt.uuid"));
@@ -96,7 +96,7 @@ public class CriteriaRules  {
                     noVirtOnlyPoolAttr));
 
             // same criteria but for PoolProduct attributes
-            // not sure if this should be two seperate criteria, or if it's
+            // not sure if this should be two separate criteria, or if it's
             // worth it to combine in some clever fashion
             DetachedCriteria noVirtOnlyProductAttr =
                 DetachedCriteria.forClass(

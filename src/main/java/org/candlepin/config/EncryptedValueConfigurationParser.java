@@ -78,7 +78,7 @@ public abstract class EncryptedValueConfigurationParser extends
     public abstract String getPrefix();
 
     public Properties parseConfig(Map<String, String> inputConfiguration) {
-        // pull out properties that we know might be crypted passwds
+        // pull out properties that we know might be crypted passwords
         // unencrypt them, and update the properties with the new versions
         // do this here so DbBasicAuthConfigParser and JPAConfigParser
         // will do it. Split it to a sub method so sub classes can
@@ -113,11 +113,11 @@ public abstract class EncryptedValueConfigurationParser extends
         return toEnc;
     }
 
-    /* encrypt config valud, such as a password */
+    /* encrypt config value, such as a password */
     public String decryptValue(String toDecrypt, String passphrase) {
         log.info("decrypt called");
         if (!toDecrypt.startsWith("$1$")) {
-            // this is not an ecnrypted password, just return it
+            // this is not an encrypted password, just return it
             log.debug("this is not an encrypted string");
             return toDecrypt;
         }
@@ -144,7 +144,6 @@ public abstract class EncryptedValueConfigurationParser extends
             cipher.init(Cipher.DECRYPT_MODE, spec,
                 new IvParameterSpec(iv.getBytes(), 0, 16));
 
-            log.info("gh10");
             // NOTE: the encrypted password is stored hex base64
             byte[] b64bytes = Base64.decodeBase64(toDecrypt);
             String plaintext = new String(cipher.doFinal(b64bytes));
@@ -162,7 +161,7 @@ public abstract class EncryptedValueConfigurationParser extends
      */
     public String getPassphrase() {
         // read /etc/katello/secure/passphrase and use it's contents as
-        // passpharse
+        // passphrase
         log.info("getPassphrase: " + passphrase);
         return passphrase;
     }

@@ -59,7 +59,7 @@ import javax.ws.rs.core.Response.Status;
 /**
  * MigrateOwnerJob is an async job that will extract the owner and its data
  * from another Candlepin instance. The job is passed an owner key identifying
- * the owner to be migrated, an uri pointing to the Candlepin instance where
+ * the owner to be migrated, an URI pointing to the Candlepin instance where
  * the owner to be migrated currently exists, and finally an optional delete
  * flag that indicates whether the original owner should be deleted once
  * migration has occurred.
@@ -350,7 +350,7 @@ public class MigrateOwnerJob extends KingpinJob {
      * @param key owner key who should be migrated.
      * @param uri URI of the Candlepin instance where owner will be pulled.
      * @param delete true if owner should be deleted from the Candlepin
-     * instance pointed by the uri.
+     * instance pointed by the URI.
      * @return JobDetail containing the information needed by the asynchronous
      * job to handle the migration of the given owner (key).
      */

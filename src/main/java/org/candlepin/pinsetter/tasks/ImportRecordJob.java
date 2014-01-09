@@ -48,9 +48,9 @@ public class ImportRecordJob extends KingpinJob {
     }
 
     // TODO:  This seems pretty slow... I'm sure there is a fancy JPA
-    //        query that can do this, but I am a little hesitance to get
+    //        query that can do this, but I am a little hesitant to get
     //        really fancy with sub-selects as they are not supported by
-    //        add databases.
+    //        all databases.
     @Override
     public void toExecute(JobExecutionContext jec) throws JobExecutionException {
         for (Owner owner : this.ownerCurator.listAll()) {

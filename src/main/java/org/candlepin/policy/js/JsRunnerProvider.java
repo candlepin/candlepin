@@ -36,7 +36,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Reads/compiles our javascript rules and the standard js objects only
- * once across the jvm lifetime (and whenever the rules require a recompile), and creates
+ * once across the JVM lifetime (and whenever the rules require a recompile), and creates
  * lightweight execution scopes per thread/request.
  */
 public class JsRunnerProvider implements Provider<JsRunner> {

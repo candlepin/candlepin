@@ -106,7 +106,7 @@ public abstract class X509Util {
     }
 
     /**
-     * Creates a Content url from the prefix and the path
+     * Creates a Content URL from the prefix and the path
      * @param contentPrefix to prepend to the path
      * @param pc the product content
      * @return the complete content path
@@ -114,7 +114,7 @@ public abstract class X509Util {
     public String createFullContentPath(String contentPrefix, ProductContent pc) {
         String prefix = "/";
         String contentPath = pc.getContent().getContentUrl();
-        // Allow for the case wherethe content url is a true url.
+        // Allow for the case where the content URL is a true URL.
         // If that is true, then return it as is.
         if (contentPath.startsWith("http://") ||
             contentPath.startsWith("file://") ||

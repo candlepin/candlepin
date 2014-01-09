@@ -48,8 +48,7 @@ public class ProductImporter {
         throws IOException {
         final Product importedProduct = mapper.readValue(reader, Product.class);
         // Make sure the ID's are null, otherwise Hibernate thinks these are
-        // detached
-        // entities.
+        // detached entities.
         for (ProductAttribute a : importedProduct.getAttributes()) {
             a.setId(null);
         }
@@ -64,13 +63,12 @@ public class ProductImporter {
 
     public void store(Set<Product> products) {
         for (Product importedProduct : products) {
-            // Handling the storing/updating of Content here. This is
-            // technically a
+            // Handling the storing/updating of Content here. This is technically a
             // disjoint entity, but really only makes sense in the concept of
             // products.
-            // Downside, if multiple products reference the same content, it
-            // will be
-            // updated multiple times during the import.
+            //
+            // The downside is if multiple products reference the same content, it
+            // will be updated multiple times during the import.
             for (ProductContent content : importedProduct.getProductContent()) {
                 // BZ 990113 error occurs because incoming content data has
                 //  no value for Vendor. Will place one to avoid DB issues.

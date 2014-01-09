@@ -214,7 +214,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
         "and cons.type_id = ctype.id and ctype.manifest = 'Y')")
     private Long exported;
 
-    // TODO: May not still be needed, iirc a temporary hack for client.
+    // TODO: May not still be needed, IIRC a temporary hack for client.
     private String productName;
 
     private String derivedProductName;
@@ -311,8 +311,8 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
      * @param consumed set the activate uses.
      */
     public void setConsumed(Long consumed) {
-        // Even tho this is calculated at DB fetch time, we allow
-        // setting it for changes in a single txn
+        // Even though this is calculated at DB fetch time, we allow
+        // setting it for changes in a single transaction
         this.consumed = consumed;
     }
 
@@ -327,8 +327,8 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
      * @param exported set the activate uses.
      */
     public void setExported(Long exported) {
-        // Even tho this is calculated at DB fetch time, we allow
-        // setting it for changes in a single txn
+        // Even though this is calculated at DB fetch time, we allow
+        // setting it for changes in a single transaction
         this.exported = exported;
     }
 

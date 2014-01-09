@@ -31,7 +31,7 @@ public class CertificateSerialCurator extends AbstractHibernateCurator<Certifica
 
     /**
      * @return list of certificate serials which are revoked but not yet collected
-     * and put into crl
+     * and put into CRL
      */
     @SuppressWarnings("unchecked")
     public List<CertificateSerial> retrieveTobeCollectedSerials() {
@@ -68,7 +68,7 @@ public class CertificateSerialCurator extends AbstractHibernateCurator<Certifica
             return null;
         }
 
-        // convert ids to Longs for the query
+        // convert IDs to Longs for the query
         Long[] lids = new Long[ids.length];
         for (int i = 0; i < ids.length; i++) {
             lids[i] = Long.valueOf(ids[i]);

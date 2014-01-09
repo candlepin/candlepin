@@ -109,7 +109,7 @@ public class RpmVersionComparator implements Comparator<String>, Serializable {
             b2 = e2;
         }
         /* this catches the case where all numeric and alpha segments have */
-        /* compared identically but the segment sepparating characters were */
+        /* compared identically but the segment separating characters were */
         /* different */
         if (b1 == str1.length() && b2 == str2.length()) {
             return 0;

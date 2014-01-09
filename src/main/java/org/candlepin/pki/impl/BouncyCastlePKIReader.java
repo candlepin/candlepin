@@ -203,7 +203,7 @@ public class BouncyCastlePKIReader implements PKIReader, PasswordFinder {
      * Reads the {@link KeyPair} from the CA's private key file specified in the
      * candlepin config.
      *
-     * @return private key for the cacert
+     * @return private key for the CA cert
      */
     @Override
     public PrivateKey getCaKey() throws IOException, GeneralSecurityException {

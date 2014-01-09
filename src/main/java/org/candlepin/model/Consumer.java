@@ -96,7 +96,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     @Type(type = "org.candlepin.hibernate.EmptyStringUserType")
     private String serviceLevel;
 
-    // for selecting Y/Z strean
+    // for selecting Y/Z stream
     @Column(length = 255, nullable =  true)
     private String releaseVer;
 
@@ -193,7 +193,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     }
 
     /**
-     * @return the Consumer's uuid
+     * @return the Consumer's UUID
      */
     @HateoasInclude
     public String getUuid() {
@@ -207,7 +207,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     }
 
     /**
-     * @param uuid the uuid of this consumer.
+     * @param uuid the UUID of this consumer.
      */
     public void setUuid(String uuid) {
         this.uuid = uuid;

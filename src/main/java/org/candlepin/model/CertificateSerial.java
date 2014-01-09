@@ -39,13 +39,13 @@ public class CertificateSerial extends AbstractHibernateObject {
         strategy = "org.candlepin.util.SerialNumberGenerator")
     private Long id;
 
-    /**Flag which indicates whether the certificate is revoked */
+    // Flag which indicates whether the certificate is revoked
     private boolean revoked;
 
-    /** Set to true if this serial is already a part of the crl*/
+    // Set to true if this serial is already a part of the CRL
     private boolean collected;
 
-    /** The expiration. */
+    // The expiration.
     private Date expiration;
 
     /**

@@ -21,7 +21,7 @@ import java.lang.annotation.Target;
 
 /**
  * HateoasArrayIgnoreField: Annotation used with our HateoasBeanPropertyFilter.
- * Applied to object fields that we want to skip serialization for if we're withing the
+ * Applied to object fields that we want to skip serialization for if we're within the
  * context of an array.
  */
 @Retention(RetentionPolicy.RUNTIME)

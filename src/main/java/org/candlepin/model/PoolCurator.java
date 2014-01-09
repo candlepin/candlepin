@@ -290,7 +290,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     }
 
     /**
-     * Attempts to find pools which are oversubscribed after the creation or modification
+     * Attempts to find pools which are over subscribed after the creation or modification
      * of the given entitlement.
      *
      * To do this we search for only the pools related to the subscription ID which
@@ -298,7 +298,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      *
      * 1. Bonus pool (not derived from any entitlement) after a bind. (in cases such as
      * exporting to downstream)
-     * 2. A derived pool whose source entitlment just had it's quantity reduced.
+     * 2. A derived pool whose source entitlement just had it's quantity reduced.
      *
      * This has to be done carefully to avoid potential performance problems with
      * virt_bonus on-site subscriptions where one pool is created per physical
@@ -398,7 +398,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @param consumerFilter
      */
     private void enableIfPrevEnabled(Filter consumerFilter) {
-        //if filter was previously enabled, restore it.
+        // if filter was previously enabled, restore it.
         if (consumerFilter != null) {
             FilterImpl filterImpl = (FilterImpl) consumerFilter;
             Filter filter = currentSession().enableFilter(CONSUMER_FILTER);
@@ -456,7 +456,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
         // Use case insensitive comparison here, since we treat
         // Premium the same as PREMIUM or premium, to make it easier for users to specify
-        // a level on the cli. However, use the original case, since Premium is more
+        // a level on the CLI. However, use the original case, since Premium is more
         // attractive than PREMIUM.
         Set<String> slaSet = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
         Set<String> exemptSlaSet = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);

@@ -73,7 +73,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
     @Transactional
     public void delete(Consumer entity) {
-        // save off the ids before we delete
+        // save off the IDs before we delete
         DeletedConsumer dc = new DeletedConsumer(entity.getUuid(),
             entity.getOwner().getId(), entity.getOwner().getKey(),
             entity.getOwner().getDisplayName());
@@ -96,7 +96,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     }
 
     protected void validate(Consumer entity) {
-        // #TODO Look at generic validation framework
+        // TODO: Look at generic validation framework
         if ((entity.getName() != null) &&
             (entity.getName().length() >= NAME_LENGTH)) {
             throw new BadRequestException(i18n.tr(
@@ -143,7 +143,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      * Lookup consumer by its virt.uuid.
      *
      * In some cases the hypervisor will report UUIDs with uppercase, while the guest will
-     * report lowercase. As such we do case insenitive comparison when looking these up.
+     * report lowercase. As such we do case insensitive comparison when looking these up.
      *
      * @param uuid consumer virt.uuid to find
      * @return Consumer whose name matches the given virt.uuid, null otherwise.
@@ -189,10 +189,10 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     }
 
     /**
-     * Lookup the Consumer by its uuid.
+     * Lookup the Consumer by its UUID.
      *
-     * @param uuid Consumer uuid sought.
-     * @return Consumer whose uuid matches the given value, or null otherwise.
+     * @param uuid Consumer UUID sought.
+     * @return Consumer whose UUID matches the given value, or null otherwise.
      */
     @Transactional
     public Consumer findByUuid(String uuid) {
@@ -372,7 +372,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      * As multiple hosts could have reported the same guest ID, we find the newest
      * and assume this is the authoritative host for the guest.
      *
-     * This search needs to be case insenitive as some hypervisors report uppercase
+     * This search needs to be case insensitive as some hypervisors report uppercase
      * guest UUIDs, when the guest itself will report lowercase.
      *
      * @param guestId a virtual guest ID (not a consumer UUID)

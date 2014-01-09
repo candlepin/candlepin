@@ -63,7 +63,7 @@ public class HealEntireOrgJob extends UniqueByOwnerJob {
             Date entitleDate = (Date) map.get("entitle_date");
             List<String> uuids = ownerCurator.getConsumerUuids(ownerId);
             for (String uuid : uuids) {
-                // Do not send in product ids.  CandlepinPoolManager will take care
+                // Do not send in product IDs.  CandlepinPoolManager will take care
                 // of looking up the non or partially compliant products to bind.
                 try {
                     Consumer consumer = consumerCurator.getConsumer(uuid);
