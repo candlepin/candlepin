@@ -46,6 +46,7 @@ import org.candlepin.pinsetter.core.PinsetterKernel;
 import org.candlepin.pinsetter.tasks.CertificateRevocationListTask;
 import org.candlepin.pinsetter.tasks.EntitlerJob;
 import org.candlepin.pinsetter.tasks.JobCleaner;
+import org.candlepin.pinsetter.tasks.ExportCleaner;
 import org.candlepin.pinsetter.tasks.RefreshPoolsJob;
 import org.candlepin.pinsetter.tasks.SweepBarJob;
 import org.candlepin.pinsetter.tasks.UnpauseJob;
@@ -233,6 +234,7 @@ public class CandlepinModule extends AbstractModule {
         bind(PinsetterKernel.class);
         bind(CertificateRevocationListTask.class);
         bind(JobCleaner.class);
+        bind(ExportCleaner.class);
         bind(UnpauseJob.class);
         bind(SweepBarJob.class);
     }
