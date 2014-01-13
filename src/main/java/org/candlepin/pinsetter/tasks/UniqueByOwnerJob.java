@@ -42,7 +42,7 @@ public abstract class UniqueByOwnerJob extends KingpinJob {
     public static JobStatus scheduleJob(JobCurator jobCurator,
         Scheduler scheduler, JobDetail detail,
         Trigger trigger) throws SchedulerException {
-        JobStatus result = jobCurator.getLatestByClassAndOwner(
+        JobStatus result = jobCurator.getByClassAndOwner(
             detail.getJobDataMap().getString(JobStatus.TARGET_ID),
             (Class<? extends KingpinJob>) detail.getJobClass());
         if (result == null) {

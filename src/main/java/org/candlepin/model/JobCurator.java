@@ -21,11 +21,10 @@ import org.candlepin.pinsetter.core.model.JobStatus.JobState;
 import org.candlepin.pinsetter.core.model.JobStatus.TargetType;
 import org.candlepin.pinsetter.tasks.KingpinJob;
 import org.hibernate.Query;
-import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.criterion.Subqueries;
 
 import java.util.Date;
 import java.util.LinkedList;
@@ -141,23 +140,17 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
             .uniqueResult();
     }
 
-    public JobStatus getLatestByClassAndOwner(
+    public JobStatus getByClassAndOwner(
             String ownerKey, Class<? extends KingpinJob> jobClass) {
-        DetachedCriteria maxCreated = DetachedCriteria.forClass(JobStatus.class)
-            .add(Restrictions.ne("state", JobState.FINISHED))
-            .add(Restrictions.ne("state", JobState.FAILED))
-            .add(Restrictions.ne("state", JobState.CANCELED))
-            .add(Restrictions.eq("targetId", ownerKey))
-            .add(Restrictions.eq("jobClass", jobClass))
-            .setProjection(Projections.max("created"));
 
         return (JobStatus) this.currentSession().createCriteria(JobStatus.class)
-            .add(Subqueries.propertyIn("created", maxCreated))
+            .addOrder(Order.desc("created"))
             .add(Restrictions.ne("state", JobState.FINISHED))
             .add(Restrictions.ne("state", JobState.FAILED))
             .add(Restrictions.ne("state", JobState.CANCELED))
             .add(Restrictions.eq("targetId", ownerKey))
             .add(Restrictions.eq("jobClass", jobClass))
+            .setMaxResults(1)
             .uniqueResult();
     }
 
