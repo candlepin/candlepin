@@ -2,7 +2,7 @@
 $VERBOSE = nil
 
 require 'pp'
-require './candlepin_api'
+require File.expand_path('candlepin_api', File.dirname(__FILE__))
 require 'optparse'
 
 # Wrapper class for the base Candlepin lib that
