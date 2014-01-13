@@ -35,5 +35,6 @@ public class JobCleanerTest {
         JobCleaner cleaner = new JobCleaner(curator, null);
         cleaner.execute(null);
         verify(curator).cleanUpOldJobs(any(Date.class));
+        verify(curator).cleanupFailedJobs(any(Date.class));
     }
 }
