@@ -54,4 +54,5 @@
     <include file="db/changelog/20131113000723-add-owner-log-level.xml" />
     <include file="db/changelog/20131125163340-fix-permission-access-enum.xml" />
     <include file="db/changelog/20131126095353-add-guest-attributes.xml" />
+    <include file="db/changelog/20140114145843-add-jobquery-index.xml" />
 </databaseChangeLog>
