@@ -170,7 +170,7 @@ public class PinsetterKernel {
                     log.debug("Scheduling " + jobImpl);
                 }
 
-                // Find all existing cron triggers matching this job impl:
+                // Find all existing cron triggers matching this job impl
                 List<CronTrigger> existingCronTriggers = new LinkedList<CronTrigger>();
                 if (jobKeys != null) {
                     for (JobKey key : jobKeys) {
@@ -226,7 +226,7 @@ public class PinsetterKernel {
         String jobImpl, List<CronTrigger> existingCronTriggers, String schedule)
         throws SchedulerException {
 
-        // If trigger already exists with same schedule, nothing to do:
+        // If trigger already exists with same schedule, nothing to do
         if (existingCronTriggers.size() == 1 &&
             existingCronTriggers.get(0).getCronExpression().equals(schedule)) {
             return;
@@ -254,7 +254,7 @@ public class PinsetterKernel {
     /**
      * Shuts down the application
      *
-     * @throws PinsetterException if ther was a scheduling error in shutdown
+     * @throws PinsetterException if there was a scheduling error in shutdown
      */
     public void shutdown() throws PinsetterException {
         try {

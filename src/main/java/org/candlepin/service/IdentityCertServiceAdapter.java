@@ -50,7 +50,7 @@ public interface IdentityCertServiceAdapter {
         throws GeneralSecurityException, IOException;
 
     /**
-     * Deletes the certificate assocaited with the consumer
+     * Deletes the certificate associated with the consumer
      * @param consumer
      */
     void deleteIdentityCert(Consumer consumer);

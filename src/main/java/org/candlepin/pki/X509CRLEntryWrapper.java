@@ -25,7 +25,7 @@ public class X509CRLEntryWrapper {
     private Date revocationDate;
 
     /**
-     * Instantiates a new simple crl entry.
+     * Instantiates a new simple CRL entry.
      *
      * @param serialNumber the serial number
      * @param revocationDate the revocation date

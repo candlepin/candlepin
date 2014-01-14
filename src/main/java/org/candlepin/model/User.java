@@ -68,7 +68,7 @@ public class User extends AbstractHibernateObject {
      * Users are also used as a return value from a UserServiceAdapter, which does not
      * necessarily mean they are stored in our database. We allow permissions to be added
      * to the user for this situation, so other adapters do not have to fake roles and
-     * permission blueprints. See getPermissions for behaviour when a user has both roles
+     * permission blueprints. See getPermissions for behavior when a user has both roles
      * and permissions.
      */
     @Transient

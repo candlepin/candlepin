@@ -30,7 +30,7 @@ import com.google.inject.Inject;
 
 /**
  * A {@link UserServiceAdapter} implementation backed by a {@link UserCurator}
- * for user creation and persistance.
+ * for user creation and persistence.
  */
 public class DefaultUserServiceAdapter implements UserServiceAdapter {
 

@@ -18,7 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * implements the oid structure found here
+ * implements the OID structure found here
  * https://docspace.corp.redhat.com/clearspace/docs/DOC-30244
  *
  * @author jomara
@@ -105,7 +105,7 @@ public final class OIDUtil {
     public static final Map<String, String> CF_REPO_TYPE = new HashMap<String, String>();
 
     static {
-        // load toplevel namespaces
+        // load top level namespaces
         TOPLEVEL_NAMESPACES.put(PRODUCT_CERT_NAMESPACE_KEY, "1");
         TOPLEVEL_NAMESPACES.put(CHANNEL_FAMILY_NAMESPACE_KEY, "2");
         TOPLEVEL_NAMESPACES.put(ROLE_ENT_NAMESPACE_KEY, "3");
@@ -114,10 +114,10 @@ public final class OIDUtil {
         TOPLEVEL_NAMESPACES.put(ENTITLEMENT_VERSION_KEY, "6");
         TOPLEVEL_NAMESPACES.put(ENTITLEMENT_DATA_KEY, "7");
 
-        // system oids
+        // system OIDs
         SYSTEM_OIDS.put(UUID_KEY, "1");
         SYSTEM_OIDS.put(HOST_UUID_KEY, "2");
-        // order oids
+        // order OIDs
         ORDER_OIDS.put(ORDER_NAME_KEY, "1");
         ORDER_OIDS.put(ORDER_NUMBER_KEY, "2");
         ORDER_OIDS.put(ORDER_SKU_KEY, "3");
@@ -137,19 +137,19 @@ public final class OIDUtil {
         ORDER_OIDS.put(ORDER_STACKING_ID, "17");
         ORDER_OIDS.put(ORDER_VIRT_ONLY_KEY, "18");
 
-        // load order product oids
+        // load order product OIDs
         ORDER_PRODUCT_OIDS.put(OP_NAME_KEY, "1");
         ORDER_PRODUCT_OIDS.put(OP_VERSION_KEY, "2");
         ORDER_PRODUCT_OIDS.put(OP_ARCH_KEY, "3");
         ORDER_PRODUCT_OIDS.put(OP_PROVIDES_KEY, "4");
         ORDER_PRODUCT_OIDS.put(OP_BRAND_TYPE_KEY, "5");
 
-        // role entitlement oids
+        // role entitlement OIDs
         ROLE_ENTITLEMENT_OIDS.put(ROLE_NAME_KEY, "1");
         ROLE_ENTITLEMENT_OIDS.put(ROLE_LABEL_KEY, "2");
         ROLE_ENTITLEMENT_OIDS.put(ROLE_QUANTITY_KEY, "3");
 
-        // channel family oids
+        // channel family OIDs
         CHANNEL_FAMILY_OIDS.put(CF_NAME_KEY, "1");
         CHANNEL_FAMILY_OIDS.put(CF_LABEL_KEY, "2");
         CHANNEL_FAMILY_OIDS.put(CF_PHYS_QUANTITY_KEY, "3");

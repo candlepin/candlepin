@@ -205,7 +205,7 @@ public class DefaultEntitlementCertServiceAdapter extends
     /**
      * @param ent
      * @param useContentPrefix
-    * @return
+     * @return
      * @throws IOException
      */
     private String getContentPrefix(Entitlement ent, boolean useContentPrefix)

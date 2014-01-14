@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
 /**
  * This component receives events around job status and performs actions to
  * allow for the job in question to run outside of a request scope, as well as
- * record the status of the job for later retreival.
+ * record the status of the job for later retrieval.
  */
 public class PinsetterJobListener implements JobListener {
     private static Logger log = LoggerFactory.getLogger(PinsetterJobListener.class);
@@ -46,7 +46,7 @@ public class PinsetterJobListener implements JobListener {
 
     private JobCurator curator;
 
-    // this is a seperate unitOfWork and units of work from the actual pinsetter
+    // this is a separate unitOfWork and units of work from the actual pinsetter
     // job because we want to tie this closer to the quartz execution, rather than
     // job execution.
     private UnitOfWork unitOfWork;

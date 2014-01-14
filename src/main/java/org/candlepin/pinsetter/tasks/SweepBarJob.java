@@ -45,7 +45,7 @@ import java.util.Set;
  * not impossible in most cases for this state to be hit.
  *
  * This will most often occur when a clustered candlepin
- * is restarted, quartz jobs are volitile, and will be
+ * is restarted, quartz jobs are volatile, and will be
  * removed, however cp_jobs (JobStatus) will not reflect
  * changes.
  */

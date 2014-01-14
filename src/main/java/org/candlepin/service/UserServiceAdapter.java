@@ -33,7 +33,7 @@ public interface UserServiceAdapter {
      */
     boolean validateUser(String username, String password) throws Exception;
 
-    // User Lifecylce
+    // User life cycle
     User createUser(User user);
 
     User updateUser(User user);

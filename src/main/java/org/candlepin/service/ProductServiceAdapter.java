@@ -37,9 +37,9 @@ public interface ProductServiceAdapter {
     Product getProductById(String id);
 
     /**
-     * Query a list of products matching the given id.
+     * Query a list of products matching the given string IDs.
      * @param ids list of product ids
-     * @return list of products matching the given id
+     * @return list of products matching the given string IDs
      */
     List<Product> getProductsByIds(Collection<String> ids);
 

@@ -69,7 +69,7 @@ public abstract class KingpinJob implements Job {
 
         /*
          * Execute our 'real' job inside a custom unit of work scope, instead
-         * of the guice provided one, which is http request scoped.
+         * of the guice provided one, which is HTTP request scoped.
          */
         startUnitOfWork();
         try {
@@ -82,7 +82,7 @@ public abstract class KingpinJob implements Job {
             // one job attempts to update a pool that was already updated
             // all 3 of these conditions will cause some form of JPA/hibernate
             // exception to bubble up.  the exception seems to vary based on the
-            // underlying db, so just catch the toplevel  exception. We then
+            // underlying db, so just catch the top level exception. We then
             // throw an exception that will let pinsetter/quartz know  that
             // there was a race condition detected, and get it to reschedule
             // the job. the other job will have completed successfully, and
@@ -163,7 +163,7 @@ public abstract class KingpinJob implements Job {
             }
             catch (IllegalStateException e) {
                 log.debug("Unit of work is already closed, doing nothing");
-                //If there is no active unit of work, there is no reason to close it
+                // If there is no active unit of work, there is no reason to close it
             }
         }
     }

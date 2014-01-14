@@ -85,6 +85,7 @@ public class FilterBuilder {
         DetachedCriteria attrMatch = DetachedCriteria.forClass(
             entityClass, "attr");
         attrMatch.add(Restrictions.eq("name", attributeName));
+
         // It would be nice to be able to use an 'in' restriction here, but
         // hibernate does not support ignoring case with its 'in' restriction.
         // We could probably roll our own, but would involve duplicating some

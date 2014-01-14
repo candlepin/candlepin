@@ -69,10 +69,10 @@ public abstract class PKIUtility {
         throws GeneralSecurityException, IOException;
 
     /**
-     * Generate crl.
+     * Generate CRL.
      *
      * @param entries the entries
-     * @return the x509 crl
+     * @return the x509 CRL
      */
     public abstract X509CRL createX509CRL(List<X509CRLEntryWrapper> entries,
         BigInteger crlNumber);

@@ -106,7 +106,7 @@ public class RefreshPoolsJob extends UniqueByOwnerJob {
             .withIdentity("refresh_pools_" + Util.generateUUID())
             .requestRecovery(true) // recover the job upon restarts
             .usingJobData(map)
-            .storeDurably(true) //required if we have to postpone the job
+            .storeDurably(true) // required if we have to postpone the job
             .build();
 
         return detail;

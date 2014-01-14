@@ -75,7 +75,7 @@ public class ImportUpstreamConsumer extends AbstractHibernateObject {
     }
 
     /**
-     * @return the Consumer's uuid
+     * @return the Consumer's UUID
      */
     @HateoasInclude
     public String getUuid() {
@@ -83,7 +83,7 @@ public class ImportUpstreamConsumer extends AbstractHibernateObject {
     }
 
     /**
-     * @param uuid the uuid of this consumer.
+     * @param uuid the UUID of this consumer.
      */
     public void setUuid(String uuid) {
         this.uuid = uuid;
@@ -150,7 +150,7 @@ public class ImportUpstreamConsumer extends AbstractHibernateObject {
     }
 
     /**
-     * @return Prefix for web url
+     * @return Prefix for web URL
      */
     public String getWebUrl() {
         return prefixUrlWeb;
@@ -165,7 +165,7 @@ public class ImportUpstreamConsumer extends AbstractHibernateObject {
 
     /**
      *
-     * @return the api url
+     * @return the API URL
      */
     public String getApiUrl() {
         return prefixUrlApi;

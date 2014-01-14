@@ -147,7 +147,7 @@ public class BouncyCastlePKIUtility extends PKIUtility {
 
         if (extensions != null) {
             for (X509ExtensionWrapper wrapper : extensions) {
-                // Bounceycastle hates null values. So, set them to blank
+                // Bouncycastle hates null values. So, set them to blank
                 // if they are null
                 String value = wrapper.getValue() == null ? "" :  wrapper.getValue();
                 certGen.addExtension(wrapper.getOid(), wrapper.isCritical(),
@@ -157,7 +157,7 @@ public class BouncyCastlePKIUtility extends PKIUtility {
 
         if (byteExtensions != null) {
             for (X509ByteExtensionWrapper wrapper : byteExtensions) {
-                // Bounceycastle hates null values. So, set them to blank
+                // Bouncycastle hates null values. So, set them to blank
                 // if they are null
                 byte[] value = wrapper.getValue() == null ? new byte[0] :
                     wrapper.getValue();
@@ -180,7 +180,7 @@ public class BouncyCastlePKIUtility extends PKIUtility {
             generator.setThisUpdate(new Date());
             generator.setNextUpdate(Util.tomorrow());
             generator.setSignatureAlgorithm(SIGNATURE_ALGO);
-            //add all the crl entries.
+            // add all the CRL entries.
             for (X509CRLEntryWrapper entry : entries) {
                 generator.addCRLEntry(entry.getSerialNumber(), entry.getRevocationDate(),
                     CRLReason.privilegeWithdrawn);

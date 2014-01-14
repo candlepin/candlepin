@@ -68,7 +68,7 @@ public class Content extends AbstractHibernateObject {
     @Column(nullable = true)
     private String requiredTags;
 
-    // for selecting Y/Z strean
+    // for selecting Y/Z stream
     @Column(nullable =  true)
     private String releaseVer;
 
@@ -267,7 +267,7 @@ public class Content extends AbstractHibernateObject {
 
     /**
      * @param from Content object to copy properties from.
-     * @return current Content object with updated properites
+     * @return current Content object with updated properties
      */
     public Content copyProperties(Content from) {
         setType(from.getType());

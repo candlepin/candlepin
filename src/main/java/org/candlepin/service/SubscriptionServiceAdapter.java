@@ -112,7 +112,7 @@ public interface SubscriptionServiceAdapter {
      * Can this consumer activate a subscription?
      *
      * @param consumer
-     * @return <code>true</code> iff this consumer can activate a subscription
+     * @return <code>true</code> if and only if this consumer can activate a subscription
      */
     boolean canActivateSubscription(Consumer consumer);
 
