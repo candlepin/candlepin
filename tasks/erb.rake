@@ -2,6 +2,17 @@ require 'erb'
 require 'ostruct'
 require 'yaml'
 
+# Maintain Ruby 1.8 compatibility. Code taken from backports gem.
+unless Kernel.method_defined? :define_singleton_method
+  module Kernel
+    def define_singleton_method(*args, &block)
+      class << self
+        self
+      end.send(:define_method, *args, &block)
+    end
+  end
+end
+
 module ErbRenderer
   class << self
     def render(yaml, filename, project)
@@ -57,7 +68,7 @@ module ErbRenderer
 
       begin
         @yaml = full_yaml.fetch(output_file)
-      rescue KeyError
+      rescue IndexError
         warn("#{File.basename(project.erb.yaml)} does not have any data for #{output_file}!")
       end
 
