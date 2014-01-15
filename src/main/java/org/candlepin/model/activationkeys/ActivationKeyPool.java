@@ -12,8 +12,10 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.model;
+package org.candlepin.model.activationkeys;
 
+import org.candlepin.model.AbstractHibernateObject;
+import org.candlepin.model.Pool;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Index;

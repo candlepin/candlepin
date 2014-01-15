@@ -17,7 +17,6 @@ package org.candlepin.audit;
 import org.candlepin.auth.Principal;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.jackson.HateoasBeanPropertyFilter;
-import org.candlepin.model.ActivationKey;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.GuestId;
@@ -25,6 +24,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Rules;
 import org.candlepin.model.Subscription;
+import org.candlepin.model.activationkeys.ActivationKey;
 
 import com.fasterxml.jackson.databind.AnnotationIntrospector;
 import com.fasterxml.jackson.databind.ObjectMapper;

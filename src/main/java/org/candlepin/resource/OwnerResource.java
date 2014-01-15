@@ -54,8 +54,6 @@ import org.candlepin.exceptions.CandlepinException;
 import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.exceptions.IseException;
 import org.candlepin.exceptions.NotFoundException;
-import org.candlepin.model.ActivationKey;
-import org.candlepin.model.ActivationKeyCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
@@ -86,6 +84,8 @@ import org.candlepin.model.Subscription;
 import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.model.UeberCertificateGenerator;
 import org.candlepin.model.UpstreamConsumer;
+import org.candlepin.model.activationkeys.ActivationKey;
+import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.paging.Paginate;
@@ -101,6 +101,7 @@ import org.candlepin.sync.Importer;
 import org.candlepin.sync.ImporterException;
 import org.candlepin.sync.Meta;
 import org.candlepin.sync.SyncDataFormatException;
+import org.candlepin.util.ContentOverrideValidator;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
@@ -147,6 +148,7 @@ public class OwnerResource {
     private UeberCertificateGenerator ueberCertGenerator;
     private EnvironmentCurator envCurator;
     private CalculatedAttributesUtil calculatedAttributesUtil;
+    private ContentOverrideValidator contentOverrideValidator;
 
     private static final int FEED_LIMIT = 1000;
 
@@ -168,7 +170,8 @@ public class OwnerResource {
         EntitlementCertificateCurator entitlementCertCurator,
         EntitlementCurator entitlementCurator,
         UeberCertificateGenerator ueberCertGenerator,
-        EnvironmentCurator envCurator, CalculatedAttributesUtil calculatedAttributesUtil) {
+        EnvironmentCurator envCurator, CalculatedAttributesUtil calculatedAttributesUtil,
+        ContentOverrideValidator contentOverrideValidator) {
 
         this.ownerCurator = ownerCurator;
         this.ownerInfoCurator = ownerInfoCurator;
@@ -193,6 +196,7 @@ public class OwnerResource {
         this.ueberCertGenerator = ueberCertGenerator;
         this.envCurator = envCurator;
         this.calculatedAttributesUtil = calculatedAttributesUtil;
+        this.contentOverrideValidator = contentOverrideValidator;
     }
 
     /**
@@ -508,6 +512,10 @@ public class OwnerResource {
             throw new BadRequestException(
                 i18n.tr("The activation key name ''{0}'' is already in use for owner {1}",
                     activationKey.getName(), ownerKey));
+        }
+
+        if (activationKey.getContentOverrides() != null) {
+            contentOverrideValidator.validate(activationKey.getContentOverrides());
         }
 
         ActivationKey newKey = activationKeyCurator.create(activationKey);

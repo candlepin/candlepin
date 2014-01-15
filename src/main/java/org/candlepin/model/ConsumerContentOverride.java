@@ -14,20 +14,12 @@
  */
 package org.candlepin.model;
 
-import java.util.Date;
-
-import javax.persistence.Column;
+import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlTransient;
-
-import org.hibernate.annotations.ForeignKey;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Index;
 
 /**
  * ConsumerContentOverride
@@ -35,27 +27,12 @@ import org.hibernate.annotations.Index;
  * Represents an override to a value for a specific content set and named field.
  */
 @Entity
-@Table(name = "cp_consumer_content_override")
-public class ConsumerContentOverride extends AbstractHibernateObject {
+@DiscriminatorValue("consumer")
+public class ConsumerContentOverride extends ContentOverride {
 
-    @Id
-    @GeneratedValue(generator = "system-uuid")
-    @GenericGenerator(name = "system-uuid", strategy = "uuid")
-    @Column(length = 32)
-    private String id;
-
-    @ManyToOne
-    @ForeignKey(name = "fk_consumer_content_consumer")
-    @JoinColumn(nullable = false)
-    @Index(name = "cp_cnsmr_cntnt_cnsmr_fk_idx")
+    @JoinColumn(name = "parent_id", referencedColumnName = "id", nullable = false)
+    @ManyToOne(targetEntity = Consumer.class, fetch = FetchType.LAZY)
     private Consumer consumer;
-
-    @Column(name = "content_label")
-    private String contentLabel;
-
-    private String name;
-
-    private String value;
 
     public ConsumerContentOverride() {
 
@@ -63,27 +40,8 @@ public class ConsumerContentOverride extends AbstractHibernateObject {
 
     public ConsumerContentOverride(Consumer consumer,
         String contentLabel, String name, String value) {
+        super(contentLabel, name, value);
         this.setConsumer(consumer);
-        this.setContentLabel(contentLabel);
-        this.setName(name);
-        this.setValue(value);
-    }
-
-    @XmlTransient
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public void setContentLabel(String contentLabel) {
-        this.contentLabel = contentLabel;
-    }
-
-    public String getContentLabel() {
-        return contentLabel;
     }
 
     public void setConsumer(Consumer consumer) {
@@ -95,45 +53,19 @@ public class ConsumerContentOverride extends AbstractHibernateObject {
         return consumer;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setValue(String value) {
-        this.value = value;
-    }
-
-    public String getValue() {
-        return value;
-    }
-
-    @XmlTransient
-    public Date getCreated() {
-        return super.getCreated();
-    }
-
-    @XmlTransient
-    public Date getUpdated() {
-        return super.getUpdated();
-    }
-
     public String toString() {
         StringBuffer result = new StringBuffer();
         result.append("[consumer=");
         result.append(consumer.getUuid());
         result.append(", ");
         result.append("content=");
-        result.append(contentLabel);
+        result.append(this.getContentLabel());
         result.append(", ");
         result.append("name=");
-        result.append(name);
+        result.append(this.getName());
         result.append(", ");
         result.append("value=");
-        result.append(value);
+        result.append(this.getValue());
         return result.toString();
     }
 

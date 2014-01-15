@@ -14,6 +14,8 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.model.activationkeys.ActivationKey;
+import org.candlepin.model.activationkeys.ActivationKeyPool;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.policy.criteria.CriteriaRules;

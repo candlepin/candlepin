@@ -17,11 +17,12 @@ package org.candlepin.resource;
 import org.candlepin.auth.interceptor.Verify;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.exceptions.BadRequestException;
-import org.candlepin.model.ActivationKey;
-import org.candlepin.model.ActivationKeyCurator;
-import org.candlepin.model.ActivationKeyPool;
 import org.candlepin.model.Pool;
 import org.candlepin.model.ProductPoolAttribute;
+import org.candlepin.model.Release;
+import org.candlepin.model.activationkeys.ActivationKey;
+import org.candlepin.model.activationkeys.ActivationKeyCurator;
+import org.candlepin.model.activationkeys.ActivationKeyPool;
 
 import com.google.inject.Inject;
 
@@ -33,6 +34,7 @@ import org.xnap.commons.i18n.I18n;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -72,7 +74,7 @@ public class ActivationKeyResource {
     public ActivationKey getActivationKey(
         @PathParam("activation_key_id")
         @Verify(ActivationKey.class) String activationKeyId) {
-        ActivationKey key = findKey(activationKeyId);
+        ActivationKey key = activationKeyCurator.verifyAndLookupKey(activationKeyId);
 
         return key;
     }
@@ -87,7 +89,7 @@ public class ActivationKeyResource {
     @Produces(MediaType.APPLICATION_JSON)
     public List<Pool> getActivationKeyPools(
         @PathParam("activation_key_id") String activationKeyId) {
-        ActivationKey key = findKey(activationKeyId);
+        ActivationKey key = activationKeyCurator.verifyAndLookupKey(activationKeyId);
         List<Pool> pools = new ArrayList<Pool>();
         for (ActivationKeyPool akp : key.getPools()) {
             pools.add(akp.getPool());
@@ -106,7 +108,7 @@ public class ActivationKeyResource {
     public ActivationKey updateActivationKey(
         @PathParam("activation_key_id") @Verify(ActivationKey.class) String activationKeyId,
         ActivationKey key) {
-        ActivationKey toUpdate = findKey(activationKeyId);
+        ActivationKey toUpdate = activationKeyCurator.verifyAndLookupKey(activationKeyId);
         toUpdate.setName(key.getName());
         activationKeyCurator.merge(toUpdate);
 
@@ -130,7 +132,7 @@ public class ActivationKeyResource {
             throw new BadRequestException(
                 i18n.tr("The quantity must be greater than 0"));
         }
-        ActivationKey key = findKey(activationKeyId);
+        ActivationKey key = activationKeyCurator.verifyAndLookupKey(activationKeyId);
         Pool pool = findPool(poolId);
 
         if (pool.getAttributeValue("requires_consumer_type") != null &&
@@ -179,7 +181,7 @@ public class ActivationKeyResource {
         @PathParam("activation_key_id") @Verify(ActivationKey.class) String activationKeyId,
         @PathParam("pool_id")
         @Verify(Pool.class) String poolId) {
-        ActivationKey key = findKey(activationKeyId);
+        ActivationKey key = activationKeyCurator.verifyAndLookupKey(activationKeyId);
         Pool pool = findPool(poolId);
         key.removePool(pool);
         activationKeyCurator.update(key);
@@ -207,23 +209,110 @@ public class ActivationKeyResource {
     public void deleteActivationKey(
         @PathParam("activation_key_id")
         @Verify(ActivationKey.class) String activationKeyId) {
-        ActivationKey key = findKey(activationKeyId);
+        ActivationKey key = activationKeyCurator.verifyAndLookupKey(activationKeyId);
 
         log.debug("Deleting info " + activationKeyId);
 
         activationKeyCurator.delete(key);
     }
 
-    private ActivationKey findKey(String activationKeyId) {
-        ActivationKey key = activationKeyCurator
-        .find(activationKeyId);
+    /**
+     * @param activationKeyId
+     * @return repo overrides attached to this activation key
+     */
+    /*@GET
+    @Path("{activation_key_id}/content_overrides")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Set<ActivationKeyContentOverride> getOverridesForKey(
+            @PathParam("activation_key_id")
+            @Verify(ActivationKey.class) String activationKeyId) {
+        ActivationKey key = activationKeyCurator.verifyAndLookupKey(activationKeyId);
+        return key.getContentOverrides();
+    }*/
 
-        if (key == null) {
-            throw new BadRequestException(
-                i18n.tr("ActivationKey with id {0} could not be found.",
-                    activationKeyId));
+    /**
+     * Add or update activation key content overrides
+     *
+     * @return all ActivationKeyContentOverrides associated with the key
+     * @httpcode 400
+     * @httpcode 200
+     */
+    /*@PUT
+    @Path("{activation_key_id}/content_overrides")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Set<ActivationKeyContentOverride> addOverridesToKey(
+            @PathParam("activation_key_id")
+            @Verify(ActivationKey.class) String activationKeyId,
+            List<ActivationKeyContentOverride> overrides) {
+        contentOverrideValidator.validate(overrides);
+        ActivationKey key = activationKeyCurator.verifyAndLookupKey(activationKeyId);
+        key.addContentOverrides(overrides);
+        activationKeyCurator.update(key);
+        return key.getContentOverrides();
+    }*/
+
+    /**
+     * @return an ActivationKeyContentOverride
+     * @httpcode 400
+     * @httpcode 200
+     */
+    /*@DELETE
+    @Path("{activation_key_id}/content_overrides/{content_override_id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public ActivationKeyContentOverride removeOverrideFromKey(
+            @PathParam("activation_key_id")
+                @Verify(ActivationKey.class) String activationKeyId,
+            @PathParam("content_override_id") String actKeyOverride) {
+        ActivationKey key = activationKeyCurator.verifyAndLookupKey(activationKeyId);
+        ActivationKeyContentOverride removed = key.removeContentOverride(actKeyOverride);
+        if (removed == null) {
+            throw new NotFoundException(i18n.tr(
+                "Override with ID ''{0}'' could not be found", actKeyOverride));
         }
-        return key;
+        activationKeyCurator.update(key);
+        return removed;
+    }*/
+
+    /**
+     * @httpcode 400
+     * @httpcode 200
+     */
+    /*@DELETE
+    @Path("{activation_key_id}/content_overrides")
+    @Produces(MediaType.APPLICATION_JSON)
+    public void removeAllOverridesFromKey(
+            @PathParam("activation_key_id")
+                @Verify(ActivationKey.class) String activationKeyId) {
+        ActivationKey key = activationKeyCurator.verifyAndLookupKey(activationKeyId);
+        key.removeAllContentOverrides();
+        activationKeyCurator.update(key);
+    }*/
+
+    @GET
+    @Path("{activation_key_id}/release")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Release getReleaseVersion(
+            @PathParam("activation_key_id")
+                @Verify(ActivationKey.class) String activationKeyId) {
+        ActivationKey key = activationKeyCurator.verifyAndLookupKey(activationKeyId);
+        if (key.getReleaseVer() != null) {
+            return key.getReleaseVer();
+        }
+        return new Release("");
+    }
+
+    @POST
+    @Path("{activation_key_id}/release")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Release setReleaseVersion(@PathParam("activation_key_id")
+            @Verify(ActivationKey.class) String activationKeyId,
+            Release release) {
+        ActivationKey key = activationKeyCurator.verifyAndLookupKey(activationKeyId);
+        key.setReleaseVer(release);
+        activationKeyCurator.merge(key);
+        return release;
     }
 
     private Pool findPool(String poolId) {

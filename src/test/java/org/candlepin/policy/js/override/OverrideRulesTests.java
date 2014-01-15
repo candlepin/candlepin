@@ -21,11 +21,9 @@ import static org.mockito.Mockito.when;
 import java.io.InputStream;
 import java.util.Date;
 
-import org.candlepin.model.Consumer;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.policy.js.JsRunnerProvider;
-import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 import org.junit.Before;
 import org.junit.Test;
@@ -58,9 +56,8 @@ public class OverrideRulesTests {
 
     @Test
     public void canOverrideNonBlacklistedProperty() {
-        Consumer consumer = TestUtil.createConsumer();
         assertTrue("gpgcheck should not be black listed.",
-            this.overrideRules.canOverrideForConsumer(consumer, "gpgcheck"));
+            this.overrideRules.canOverrideForConsumer("gpgcheck"));
     }
 
     @Test
@@ -79,8 +76,7 @@ public class OverrideRulesTests {
     }
 
     void checkBlackList(String overrideName) {
-        Consumer consumer = TestUtil.createConsumer();
         assertFalse(overrideName + " should be blacklisted.",
-            this.overrideRules.canOverrideForConsumer(consumer, overrideName));
+            this.overrideRules.canOverrideForConsumer(overrideName));
     }
 }

@@ -60,6 +60,7 @@ import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
 import org.candlepin.policy.js.pool.PoolRules;
+import org.candlepin.resource.ActivationKeyContentOverrideResource;
 import org.candlepin.resource.ActivationKeyResource;
 import org.candlepin.resource.AdminResource;
 import org.candlepin.resource.AtomFeedResource;
@@ -143,6 +144,7 @@ public class CandlepinModule extends AbstractModule {
         bind(CrlGenerator.class);
         bind(ConsumerResource.class);
         bind(ConsumerContentOverrideResource.class);
+        bind(ActivationKeyContentOverrideResource.class);
         bind(HypervisorResource.class);
         bind(ConsumerTypeResource.class);
         bind(ContentResource.class);

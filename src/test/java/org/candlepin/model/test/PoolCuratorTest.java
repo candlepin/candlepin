@@ -26,10 +26,10 @@ import java.util.List;
 import java.util.Set;
 
 import org.candlepin.auth.NoAuthPrincipal;
-import org.candlepin.model.ActivationKey;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.FilterBuilder;
 import org.candlepin.model.Owner;

@@ -34,9 +34,6 @@ import org.candlepin.exceptions.CandlepinException;
 import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.exceptions.IseException;
 import org.candlepin.exceptions.NotFoundException;
-import org.candlepin.model.ActivationKey;
-import org.candlepin.model.ActivationKeyCurator;
-import org.candlepin.model.ActivationKeyPool;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerialDto;
 import org.candlepin.model.Consumer;
@@ -45,6 +42,12 @@ import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.candlepin.model.activationkeys.ActivationKey;
+import org.candlepin.model.activationkeys.ActivationKeyContentOverride;
+import org.candlepin.model.activationkeys.ActivationKeyCurator;
+import org.candlepin.model.activationkeys.ActivationKeyPool;
+import org.candlepin.model.ConsumerContentOverride;
+import org.candlepin.model.ConsumerContentOverrideCurator;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.DeleteResult;
@@ -170,6 +173,7 @@ public class ConsumerResource {
     private Config config;
     private QuantityRules quantityRules;
     private CalculatedAttributesUtil calculatedAttributesUtil;
+    private ConsumerContentOverrideCurator consumerContentOverrideCurator;
 
     @Inject
     public ConsumerResource(ConsumerCurator consumerCurator,
@@ -189,7 +193,8 @@ public class ConsumerResource {
         DistributorVersionCurator distributorVersionCurator,
         Config config, QuantityRules quantityRules,
         ContentCurator contentCurator,
-        CdnCurator cdnCurator, CalculatedAttributesUtil calculatedAttributesUtil) {
+        CdnCurator cdnCurator, CalculatedAttributesUtil calculatedAttributesUtil,
+        ConsumerContentOverrideCurator consumerContentOverrideCurator) {
 
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -222,6 +227,7 @@ public class ConsumerResource {
         this.config = config;
         this.quantityRules = quantityRules;
         this.calculatedAttributesUtil = calculatedAttributesUtil;
+        this.consumerContentOverrideCurator = consumerContentOverrideCurator;
     }
 
     /**
@@ -486,17 +492,40 @@ public class ConsumerResource {
     private void handleActivationKeys(Consumer consumer, List<ActivationKey> keys) {
         // Process activation keys.
         for (ActivationKey ak : keys) {
-            for (ActivationKeyPool akp : ak.getPools()) {
-                List<Entitlement> entitlements = null;
-                String poolId = Util.assertNotNull(akp.getPool().getId(),
-                    i18n.tr("Pool ID must be provided"));
-                int quantity = (akp.getQuantity() == null) ?
-                    getQuantityToBind(akp.getPool(), consumer) :
-                    akp.getQuantity().intValue();
-                entitlements = entitler.bindByPool(poolId, consumer, quantity);
-                // Trigger events:
-                entitler.sendEvents(entitlements);
-            }
+            handleActivationKeyPools(consumer, ak.getPools());
+            handleActivationKeyOverrides(consumer, ak.getContentOverrides());
+            handleActivationKeyRelease(consumer, ak.getReleaseVer());
+        }
+    }
+
+    private void handleActivationKeyPools(Consumer consumer,
+            Set<ActivationKeyPool> activationPools) {
+        for (ActivationKeyPool akp : activationPools) {
+            List<Entitlement> entitlements = null;
+            String poolId = Util.assertNotNull(akp.getPool().getId(),
+                i18n.tr("Pool ID must be provided"));
+            int quantity = (akp.getQuantity() == null) ?
+                getQuantityToBind(akp.getPool(), consumer) :
+                akp.getQuantity().intValue();
+            entitlements = entitler.bindByPool(poolId, consumer, quantity);
+            // Trigger events:
+            entitler.sendEvents(entitlements);
+        }
+    }
+
+    private void handleActivationKeyOverrides(Consumer consumer,
+            Set<ActivationKeyContentOverride> overrides) {
+        for (ActivationKeyContentOverride akco : overrides) {
+            ConsumerContentOverride consumerOverride =
+                akco.buildConsumerContentOverride(consumer);
+            this.consumerContentOverrideCurator.addOrUpdate(consumer, consumerOverride);
+        }
+    }
+
+    private void handleActivationKeyRelease(Consumer consumer, Release release) {
+        String relVerString = release.getReleaseVer();
+        if (relVerString != null && !relVerString.isEmpty()) {
+            consumer.setReleaseVer(release);
         }
     }
 
