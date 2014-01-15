@@ -31,7 +31,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.8.34.1
+Version: 0.8.34.2
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -329,6 +329,10 @@ fi
 
 
 %changelog
+* Wed Jan 15 2014 jesus m. rodriguez <jesusr@redhat.com> 0.8.34.2-1
+- Optimize uniqueByOwner job query, delete old failed jobs (ckozak@redhat.com)
+- Add index for JobStatus getByClassAndOwner (ckozak@redhat.com)
+
 * Tue Jan 07 2014 jesus m. rodriguez <jesusr@redhat.com> 0.8.34.1-1
 - 1038273: correctly paginate when listing pools by consumer (ckozak@redhat.com)
 - Added spec test that exposes the pool pagination issue (ckozak@redhat.com)
