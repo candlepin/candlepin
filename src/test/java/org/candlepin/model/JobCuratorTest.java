@@ -219,7 +219,7 @@ public class JobCuratorTest extends DatabaseTestFixture {
         newJobStatus().state(JobStatus.JobState.FINISHED)
             .jobClass(HealEntireOrgJob.class)
             .owner("my_owner").create();
-        JobStatus result = curator.getLatestByClassAndOwner("my_owner",
+        JobStatus result = curator.getByClassAndOwner("my_owner",
             HealEntireOrgJob.class);
         assertEquals(expected, result);
     }
