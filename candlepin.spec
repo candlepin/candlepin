@@ -31,7 +31,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.1
+Version: 0.9.2
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -342,6 +342,74 @@ fi
 
 
 %changelog
+* Wed Jan 15 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.2-1
+- 1030007: Add uuid to error log when required int fact is not an int (ckozak@redhat.com)
+- 1033583: add messaging when override name/value are too long (ckozak@redhat.com)
+- 1033365: Added cleaner instance multiplier exception message (ckozak@redhat.com)
+- 1038273: correctly paginate when listing pools by consumer (ckozak@redhat.com)
+- 1034375: Force content override name property to lowercase (mstead@redhat.com)
+- 1037665: /var/cache/candlepin seemingly not being cleaned up (wpoteat@redhat.com)
+- 1044574: Added --schema-only option to cpsetup/cpdb (mstead@redhat.com)
+- 1046158: Fixed instance based compliance calculation (ckozak@redhat.com)
+- 1049001: fix typo in "exceed" (ckozak@redhat.com)
+- Add index for JobStatus getByClassAndOwner (ckozak@redhat.com)
+- Optimize uniqueByOwner job query, delete old failed jobs (ckozak@redhat.com)
+- Updated translations. (dgoodwin@redhat.com)
+- Change the erb rake task for Ruby 1.8 compatibility. (awood@redhat.com)
+- Spelling, formatting, grammar, etc cleanups. (alikins@redhat.com)
+- Allow CPC to run from anywhere. (awood@redhat.com)
+- Rest that OverrideCurator.retrieve returns null when none exist (ckozak@redhat.com)
+- Clean up ConsumerContentOverrideCurator.retrieve (ckozak@redhat.com)
+- Add bulk fetch to products (ckozak@redhat.com)
+- Use multiples of instance multiplier for sockets quantity (ckozak@redhat.com)
+- Refactor suggested quantity calculation (ckozak@redhat.com)
+- Update to Buildr 1.4.15. (awood@redhat.com)
+- Rename stack tracker to compliance tracker (ckozak@redhat.com)
+- Added unit test for new behavior (ckozak@redhat.com)
+- rev rules version (ckozak@redhat.com)
+- remove sourceData (ckozak@redhat.com)
+- removing unnecessary code (ckozak@redhat.com)
+- Add utility method to check for multient (ckozak@redhat.com)
+- Use stack compliance logic for all entitlements (ckozak@redhat.com)
+- Remove servlet-api from the war file. (awood@redhat.com)
+- Added missing assertTrue to test (mstead@redhat.com)
+- Fixed AND/OR related comment (mstead@redhat.com)
+- Split out content overrides to a separate resource class (ckozak@redhat.com)
+- Add missing dependency on JTA. (awood@redhat.com)
+- Move from glassfish-jaxb to jaxb-impl. (awood@redhat.com)
+- Use Jackson 2 in the RPM. (awood@redhat.com)
+- Remove ApiCrawl classes from published artifacts. (awood@redhat.com)
+- Upgrade to Jackson 2.3.0 (awood@redhat.com)
+- Modify compliance message strings (ckozak@redhat.com)
+- Run CRL spec tests in serial. (awood@redhat.com)
+- findbugs: ignore REC_CATCH_EXCEPTION (jesusr@redhat.com)
+- findbugs: WMI_WRONG_MAP_ITERATOR (jesusr@redhat.com)
+- findbugs: NP_NULL_PARAM_DEREF (jesusr@redhat.com)
+- allow the other bugs to be reported (jesusr@redhat.com)
+- Fix test data so we can deploy (ckozak@redhat.com)
+- findbugs: exclude EI_EXPOSE_REP(2) errors (jesusr@redhat.com)
+- Support filtering Pools by attribute (mstead@redhat.com)
+- increase bind performance (jesusr@redhat.com)
+- include log4j-bridge so logdriver works again (jesusr@redhat.com)
+- Host restricted subscriptions should still do some compliance (ckozak@redhat.com)
+- Added the vcpu attribute to every subscription with sockets (ckozak@redhat.com)
+- Added spec test that exposes the pool pagination issue (ckozak@redhat.com)
+- Do not check capabilities for the vcpu attribute (ckozak@redhat.com)
+- Added vcpu managerCapability (ckozak@redhat.com)
+- added test for stackable vcpu subscription healing (ckozak@redhat.com)
+- add specificity to 'vcpu should be partial' spec test (ckozak@redhat.com)
+- rev rules version to 5.2 (ckozak@redhat.com)
+- Added vcpu spec tests (ckozak@redhat.com)
+- updated rules.js version, var names, and comments (ckozak@redhat.com)
+- clean up implementation (ckozak@redhat.com)
+- Implement vcpu product attribute. (ckozak@redhat.com)
+- Only use entitlements that provide products for compliantUntil (ckozak@redhat.com)
+- update branch (jesusr@redhat.com)
+- Reduce concurrency issues with the CRL file. (awood@redhat.com)
+- Set the logging context when creating the LoggerAndMDCFilter.  (awood@redhat.com)
+- setup release branch (jesusr@redhat.com)
+- Return suggested/increment 1/1 for distributors (ckozak@redhat.com)
+
 * Wed Dec 11 2013 jesus m. rodriguez <jesusr@redhat.com> 0.9.1-1
 - bump candlepin-deps to include hibernate4, change brew tag, package version (jesusr@redhat.com)
 - Update jars and related code for Hibernate version 4.2.5 (wpoteat@redhat.com)
