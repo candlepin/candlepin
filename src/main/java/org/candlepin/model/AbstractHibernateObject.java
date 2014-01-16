@@ -54,7 +54,7 @@ public abstract class AbstractHibernateObject implements Persisted, Serializable
     }
 
     @XmlElement
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = false)
     public Date getCreated() {
         return created;
     }
@@ -64,7 +64,7 @@ public abstract class AbstractHibernateObject implements Persisted, Serializable
     }
 
     @XmlElement
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = false)
     public Date getUpdated() {
         return updated;
     }
