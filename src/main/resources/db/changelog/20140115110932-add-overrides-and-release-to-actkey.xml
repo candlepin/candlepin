@@ -7,31 +7,25 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
     <changeSet author="ckozak" id="20140115110932-00">
-        <comment>dd new activation key features.</comment>
+        <comment>Add new activation key features.</comment>
         <addColumn tableName="cp_consumer_content_override">
-            <column name="dtype" type="varchar(30)"/>
+            <column name="key_id" type="varchar(32)"/>
         </addColumn>
-        <update tableName="cp_consumer_content_override">
-            <column name="dtype" value="consumer"/>
-        </update>
+        <addForeignKeyConstraint baseColumnNames="key_id" baseTableName="cp_consumer_content_override" constraintName="fk_content_override_key" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_activation_key" referencesUniqueColumn="false"/>
+        
+        <dropNotNullConstraint
+            columnDataType="varchar(32)"
+            columnName="consumer_id"
+            tableName="cp_consumer_content_override"/>
     </changeSet>
 
     <changeSet id="20140115110932-01" author="ckozak">
         <comment>Rename column</comment>
-
-        <dropForeignKeyConstraint baseTableName="cp_consumer_content_override" constraintName="fk_consumer_content_consumer"/>
         <dropUniqueConstraint tableName="cp_consumer_content_override" constraintName="cp_consumer_content_ukey" />
-		<addUniqueConstraint columnNames="consumer_id, content_label, name, dtype" constraintName="cp_consumer_content_ukey" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_consumer_content_override"/>
+		<addUniqueConstraint columnNames="consumer_id, key_id, content_label, name" constraintName="cp_consumer_content_ukey" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_consumer_content_override"/>
     </changeSet>
 
 	<changeSet author="ckozak" id="20140115110932-02">
-    	<renameColumn tableName="cp_consumer_content_override"
-        	columnDataType="varchar(32)"
-        	newColumnName="parent_id"
-        	oldColumnName="consumer_id" />
-	</changeSet>
-
-	<changeSet author="ckozak" id="20140115110932-03">
         <addColumn tableName="cp_activation_key">
             <column name="releasever" type="varchar(255)"/>
         </addColumn>

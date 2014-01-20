@@ -16,10 +16,12 @@ package org.candlepin.model;
 
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.xml.bind.annotation.XmlTransient;
+
+import org.hibernate.annotations.ForeignKey;
+import org.hibernate.annotations.Index;
 
 /**
  * ConsumerContentOverride
@@ -30,8 +32,10 @@ import javax.xml.bind.annotation.XmlTransient;
 @DiscriminatorValue("consumer")
 public class ConsumerContentOverride extends ContentOverride {
 
-    @JoinColumn(name = "parent_id", referencedColumnName = "id", nullable = false)
-    @ManyToOne(targetEntity = Consumer.class, fetch = FetchType.LAZY)
+    @ManyToOne
+    @ForeignKey(name = "fk_consumer_content_consumer")
+    @JoinColumn(nullable = true)
+    @Index(name = "cp_cnsmr_cntnt_cnsmr_fk_idx")
     private Consumer consumer;
 
     public ConsumerContentOverride() {

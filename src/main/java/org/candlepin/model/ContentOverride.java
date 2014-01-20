@@ -15,8 +15,6 @@
 package org.candlepin.model;
 
 import javax.persistence.Column;
-import javax.persistence.DiscriminatorColumn;
-import javax.persistence.DiscriminatorType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -25,6 +23,7 @@ import javax.persistence.InheritanceType;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlTransient;
 
+import org.hibernate.annotations.DiscriminatorFormula;
 import org.hibernate.annotations.GenericGenerator;
 
 /**
@@ -34,7 +33,7 @@ import org.hibernate.annotations.GenericGenerator;
 @Entity
 @Table(name = "cp_consumer_content_override")
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-@DiscriminatorColumn(name = "dtype", discriminatorType = DiscriminatorType.STRING)
+@DiscriminatorFormula("case when key_id is null then 'consumer' ELSE 'activation_key' end")
 public class ContentOverride extends AbstractHibernateObject {
 
     @Id
