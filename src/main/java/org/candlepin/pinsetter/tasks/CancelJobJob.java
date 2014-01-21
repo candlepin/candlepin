@@ -36,7 +36,8 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * CancelJobJob
+ * CancelJobJob attempts to cancel the jobs in Quartz for the jobs whose
+ * status is JobStatus.CANCEL.
  */
 @DisallowConcurrentExecution
 public class CancelJobJob extends KingpinJob {

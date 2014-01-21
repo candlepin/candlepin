@@ -25,7 +25,8 @@ import com.google.inject.Inject;
 import com.google.inject.persist.UnitOfWork;
 
 /**
- * JobCleaner
+ * JobCleaner removes finished jobs older than yesterday, and failed
+ * jobs from 4 days ago.
  */
 public class JobCleaner extends KingpinJob {
 

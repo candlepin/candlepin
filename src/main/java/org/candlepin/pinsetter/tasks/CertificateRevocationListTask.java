@@ -34,7 +34,9 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509CRL;
 
 /**
- * CertificateRevocationListTask.
+ * CertificateRevocationListTask synchronizes the CRL with the DB, we add newly
+ * revoked certificates, and remove expired certificates from the file. The job
+ * then writes the CRL file.
  */
 public class CertificateRevocationListTask extends KingpinJob {
 

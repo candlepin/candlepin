@@ -26,7 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * StatisticHistoryTask.
+ * StatisticHistoryTask calculates the statistics for an owner.
  */
 public class StatisticHistoryTask extends KingpinJob {
 

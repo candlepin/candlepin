@@ -27,7 +27,8 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
 /**
- *
+ * Deletes all but the oldest N records, defined by the
+ * DEFAULT_KEEP variable.
  */
 public class ImportRecordJob extends KingpinJob {
 
