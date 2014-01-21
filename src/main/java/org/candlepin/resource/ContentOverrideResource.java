@@ -65,7 +65,8 @@ public abstract class ContentOverrideResource<T extends ContentOverride,
     /**
      * Add override for content set
      *
-     * @param uuid
+     * @param info context to get the parent id
+     * @param entries overrides to add or update
      *
      * @return list of active overrides
      * @httpcode 404
@@ -91,7 +92,8 @@ public abstract class ContentOverrideResource<T extends ContentOverride,
     /**
      * Remove override based on included criteria
      *
-     * @param uuid
+     * @param info context to get the parent id
+     * @param entries overrides to remove to remove
      *
      * @return list of active overrides
      * @httpcode 404
@@ -134,9 +136,9 @@ public abstract class ContentOverrideResource<T extends ContentOverride,
     }
 
     /**
-     * Get the list of content set overrides for this consumer
+     * Get the list of content set overrides for this consumer or activation key
      *
-     * @param uuid
+     * @param info context to get the parent id
      *
      * @return list of active overrides
      * @httpcode 404
