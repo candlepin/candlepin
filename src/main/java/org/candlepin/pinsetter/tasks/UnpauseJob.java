@@ -77,7 +77,7 @@ public class UnpauseJob extends KingpinJob {
                 }
             }
             catch (Exception e) {
-                log.debug("Failed to schedule waiting job: " + j.getId(), e);
+                log.error("Failed to schedule waiting job: " + j.getId(), e);
             }
         }
     }
