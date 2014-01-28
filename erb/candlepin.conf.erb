@@ -30,7 +30,10 @@ candlepin.auth.oauth.consumer.thumbslug.secret=thumbslug-secret
 
 candlepin.importer.fail_on_unknown=<%= fail_on_unknown || false %>
 candlepin.pretty_print=<%= cp_pretty_print || true %>
-candlepin.hidden_resources=<%= hidden_resources || "" %>
+
+<%- if hidden_resources -%>
+candlepin.hidden_resources=<%= hidden_resources %>
+<%- end -%>
 
 # uncomment to enable debug logging in candlepin.log:
 #log4j.logger.org.candlepin=DEBUG
