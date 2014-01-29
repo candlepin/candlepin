@@ -31,7 +31,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.8.34.2
+Version: 0.8.34.3
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -329,6 +329,9 @@ fi
 
 
 %changelog
+* Wed Jan 29 2014 Devan Goodwin <dgoodwin@rm-rf.ca> 0.8.34.3-1
+- 1058877: Get user owners correctly (ckozak@redhat.com)
+
 * Wed Jan 15 2014 jesus m. rodriguez <jesusr@redhat.com> 0.8.34.2-1
 - Optimize uniqueByOwner job query, delete old failed jobs (ckozak@redhat.com)
 - Add index for JobStatus getByClassAndOwner (ckozak@redhat.com)
