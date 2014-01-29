@@ -1,100 +1,217 @@
-#!/usr/bin/python
-import os.path
+#! /usr/bin/env python
+
+import abc
+import libxml2
 import os
-import re
 import shutil
+import logging
 
-from sys import argv, exit
+from optparse import OptionParser
+from contextlib import contextmanager
 
-https_connector_configuration = """
-<Connector port="8443" protocol="HTTP/1.1" SSLEnabled="true"
-           maxThreads="150" scheme="https" secure="true"
-           clientAuth="want" SSLProtocol="TLS"
-           keystoreFile="conf/keystore"
-           truststoreFile="conf/keystore"
-           keystorePass="password"
-           keystoreType="PKCS12"
-           ciphers="SSL_RSA_WITH_3DES_EDE_CBC_SHA,TLS_RSA_WITH_AES_256_CBC_SHA,
-                    TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA,TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA,
-                    TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA,TLS_ECDH_RSA_WITH_AES_128_CBC_SHA,
-                    TLS_ECDH_RSA_WITH_AES_256_CBC_SHA,TLS_ECDH_anon_WITH_3DES_EDE_CBC_SHA,
-                    TLS_ECDH_anon_WITH_AES_128_CBC_SHA,TLS_ECDH_anon_WITH_AES_256_CBC_SHA"
-           truststorePass="password" />"""
-
-existing_https_connector_pattern = '<Connector port="8443".*?/>'
-commentedout_https_connector_pattern = '<!--\s*?\n*?<Connector port="8443".*?-->'
-
-access_log_pattern = """<Valve className="org.apache.catalina.valves.AccessLogValve".*?/>"""
-commentedout_access_log_pattern = """<!--\s*?\n*?<Valve className="org.apache.catalina.valves.AccessLogValve".*?-->"""
-
-# apache http "combined" format (using subman version header added to user agent), plus request time and request uuid
-access_log_configuration = """<Valve className="org.apache.catalina.valves.AccessLogValve" directory="/var/log/candlepin/"
-prefix="access" rotatable="false" suffix=".log"
-pattern='%h %l %u %t "%r" %s %b "" "%{user-agent}i sm/%{x-subscription-manager-version}i" "req_time=%T,req=%{requestUuid}r"' resolveHosts="false"/>"""
-
-end_of_host_section_pattern = """\s*?</Host>"""
+logging.basicConfig(level=logging.INFO, format="%(levelname)-7s %(message)s")
+logger = logging.getLogger('update_server_xml')
 
 
-def replace_current_https_connector(an_original):
-    compiled_regex = re.compile(existing_https_connector_pattern, re.DOTALL)
-    return compiled_regex.sub(https_connector_configuration, an_original)
+@contextmanager
+def open_xml(filename):
+    """libxml2 does not handle cleaning up memory automatically. This
+    context manager will take care of XML documents."""
+    doc = libxml2.parseFile(filename)
+    yield doc
+    doc.freeDoc()
 
 
-def replace_commented_out_https_connector(an_original):
-    compiled_regex = re.compile(commentedout_https_connector_pattern, re.DOTALL)
-    return compiled_regex.sub(https_connector_configuration, an_original)
+class AbstractBaseEditor(object):
+    __metaclass__ = abc.ABCMeta
+
+    def __init__(self, doc):
+        self.doc = doc
+
+    @abc.abstractproperty
+    def insertion_xpath(self):
+        """The XPath expression to find the parent of the element you wish to edit.
+        This is necessary because we need to check if the element to edit already exists
+        under the parent."""
+        pass
+
+    @abc.abstractproperty
+    def search_xpath(self):
+        """The XPath expression to find the element you wish to edit.
+        Should be relative to insertion_xpath."""
+        pass
+
+    @abc.abstractproperty
+    def element(self):
+        pass
+
+    @abc.abstractproperty
+    def attributes(self):
+        pass
+
+    def _add_attributes(self, node, attributes):
+        # attributes is a list of 2-tuples formated like (attribute, value)
+        for k, v in attributes:
+            logger.debug("Setting %s to %s on %s" % (k, v, node.name))
+            node.setProp(k, v)
+
+    def _is_different(self, node):
+        current_attributes = {}
+        for property in node.properties:
+            if property.type == "attribute":
+                current_attributes[property.name] = property.content
+        return node.name != self.element or current_attributes != dict(self.attributes)
+
+    def _update(self, existing_nodes):
+        different_nodes = filter(self._is_different, existing_nodes)
+        for match in different_nodes:
+            logger.info("Editing %s on line %s" % (match.name, match.lineNo()))
+            for property in match.properties:
+                if property.type == "attribute":
+                    property.unlinkNode()
+                    property.freeNode()
+
+            self._add_attributes(match, self.attributes)
+
+    def _create(self, parent):
+        logger.info("Creating %s under %s on line %s" % (self.element, parent.name, parent.lineNo()))
+        new_element = libxml2.newNode(self.element)
+        self._add_attributes(new_element, self.attributes)
+        first_child = parent.firstElementChild()
+        if first_child:
+            # Insert the new node at the top so the output doesn't look like rubbish
+            first_child.addPrevSibling(new_element)
+            # Add a new line at the end of the new element
+            first_child.addPrevSibling(libxml2.newText("\n\n"))
+        else:
+            parent.addChild(new_element)
+            parent.addChild(libxml2.newText("\n\n"))
+
+    def insert(self):
+        insertion_points = self.doc.xpathEval(self.insertion_xpath)
+        for parent in insertion_points:
+            existing_nodes = parent.xpathEval(self.search_xpath)
+            logger.debug("Found %d nodes matching %s under %s" %
+                    (len(existing_nodes), self.search_xpath, self.insertion_xpath))
+            if existing_nodes:
+                self._update(existing_nodes)
+            else:
+                self._create(parent)
 
 
-def replace_current_access_valve(an_original):
-    compiled_regex = re.compile(access_log_pattern, re.DOTALL)
-    return compiled_regex.sub(access_log_configuration, an_original)
+class SslContextEditor(AbstractBaseEditor):
+    def __init__(self, *args, **kwargs):
+        super(SslContextEditor, self).__init__(*args, **kwargs)
+        self.port = "8443"
+
+    @property
+    def insertion_xpath(self):
+        return "/Server/Service"
+
+    @property
+    def search_xpath(self):
+        return "./Connector[@port='%s']" % self.port
+
+    @property
+    def element(self):
+        return "Connector"
+
+    @property
+    def attributes(self):
+        ciphers = ",".join([
+            "SSL_RSA_WITH_3DES_EDE_CBC_SHA,TLS_RSA_WITH_AES_256_CBC_SHA",
+            "TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA,TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA",
+            "TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA,TLS_ECDH_RSA_WITH_AES_128_CBC_SHA",
+            "TLS_ECDH_RSA_WITH_AES_256_CBC_SHA,TLS_ECDH_anon_WITH_3DES_EDE_CBC_SHA",
+            "TLS_ECDH_anon_WITH_AES_128_CBC_SHA,TLS_ECDH_anon_WITH_AES_256_CBC_SHA",
+        ])
+
+        # This is a list of tuples instead of a dict so we can preserve the attribute
+        # ordering.  OrderedDict didn't get added until 2.7.
+        return [
+            ("port", self.port),
+            ("protocol", "HTTP/1.1"),
+            ("SSLEnabled", "true"),
+            ("maxThreads", "150"),
+            ("scheme", "https"),
+            ("secure", "true"),
+            ("clientAuth", "want"),
+            ("SSLProtocol", "TLS"),
+            ("keystoreFile", "conf/keystore"),
+            ("truststoreFile", "conf/keystore"),
+            ("keystorePass", "password"),
+            ("keystoreType", "PKCS12"),
+            ("ciphers", ciphers),
+            ("truststorePass", "password"),
+        ]
 
 
-def replace_commented_out_access_valve(an_original):
-    compiled_regex = re.compile(commentedout_access_log_pattern, re.DOTALL)
-    return compiled_regex.sub(access_log_configuration, an_original)
+class AccessValveEditor(AbstractBaseEditor):
+    def __init__(self, *args, **kwargs):
+        super(AccessValveEditor, self).__init__(*args, **kwargs)
+        self.access_valve_class = "org.apache.catalina.valves.AccessLogValve"
+
+    @property
+    def insertion_xpath(self):
+        return "/Server/Service/Engine/Host"
+
+    @property
+    def search_xpath(self):
+        return "./Valve[@className='%s']" % self.access_valve_class
+
+    @property
+    def element(self):
+        return "Valve"
+
+    @property
+    def attributes(self):
+        return [
+            ("className", self.access_valve_class),
+            ("directory", "/var/log/candlepin/"),
+            ("prefix", "access"),
+            ("rotatable", "false"),
+            ("suffix", ".log"),
+            ("pattern", '%h %l %u %t "%r" %s %b "" "%{user-agent}i sm/%{x-subscription-manager-version}i" "req_time=%T,req=%{requestUuid}r"'),
+            ("resolveHosts", "false"),
+        ]
 
 
-def add_access_valve(an_original):
-    compiled_regex = re.compile(end_of_host_section_pattern, re.DOTALL)
-    return compiled_regex.sub("\n" + access_log_configuration + "\n</Host>\n", an_original)
+def parse_options():
+    usage = "usage: %prog TOMCAT_CONF_DIRECTORY"
+    parser = OptionParser(usage=usage)
+    parser.add_option("--stdout", action="store_true", default=False,
+            help="print results to stdout instead of writing to files.")
+    parser.add_option("--debug", action="store_true", default=False,
+            help="print debug output")
 
-
-def update_tomcat_config(conf_dir):
-    print "Updating tomcat configuration in %s..." % conf_dir
-    original_config = open(os.path.join(conf_dir, "server.xml"), "r").read()
-
-    if re.search(commentedout_https_connector_pattern, original_config, re.DOTALL):
-        updated_config = replace_commented_out_https_connector(original_config)
-    else:
-        updated_config = replace_current_https_connector(original_config)
-
-    if re.search(commentedout_access_log_pattern, original_config, re.DOTALL):
-        updated_config = replace_commented_out_access_valve(original_config)
-    elif re.search(access_log_pattern, original_config, re.DOTALL):
-        updated_config = replace_current_access_valve(original_config)
-    else:
-        updated_config = add_access_valve(original_config)
-
-    config_file = open(os.path.join(conf_dir, "server.xml"), "w")
-    config_file.write(updated_config)
-    file.close
+    (options, args) = parser.parse_args()
+    if len(args) != 1:
+        parser.error("You must provide a Tomcat configuration directory")
+    return (options, args)
 
 
 def make_backup_config(conf_dir):
-    print "Backing up current server.xml ..."
+    logger.info("Backing up current server.xml")
     shutil.copy(os.path.join(conf_dir, "server.xml"), os.path.join(conf_dir, "server.xml.original"))
 
 
 def main():
-    if len(argv) != 2:
-        print "Usage: python %s <conf directory of tomcat installation>" % argv[0]
-        exit(1)
+    (options, args) = parse_options()
+    if options.debug:
+        logger.setLevel(logging.DEBUG)
+    conf_dir = args[0]
+    make_backup_config(conf_dir)
+    xml_file = os.path.join(conf_dir, "server.xml")
+    logger.debug("Opening %s" % xml_file)
+    with open_xml(xml_file) as doc:
+        SslContextEditor(doc).insert()
+        AccessValveEditor(doc).insert()
 
-    make_backup_config(argv[1])
-    update_tomcat_config(argv[1])
+        if options.stdout:
+            print doc.serialize()
+        else:
+            doc.saveFile(xml_file)
 
-    print "done!"
 
-if __name__=="__main__":
+if __name__ == "__main__":
     main()
