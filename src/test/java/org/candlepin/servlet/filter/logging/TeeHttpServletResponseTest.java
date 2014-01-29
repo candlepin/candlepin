@@ -15,8 +15,9 @@
 package org.candlepin.servlet.filter.logging;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.when;
+
+import org.candlepin.util.Util;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -25,9 +26,12 @@ import org.mockito.MockitoAnnotations;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.core.MediaType;
 
 
 /**
@@ -38,30 +42,42 @@ public class TeeHttpServletResponseTest {
     @Mock private HttpServletResponse resp;
 
     @Before
-    public void setUp() {
+    public void setUp() throws IOException {
         MockitoAnnotations.initMocks(this);
-    }
-
-    @Test
-    public void testLoggin() throws IOException {
-
         final StringWriter sw = new StringWriter();
-
-        doReturn(new ServletOutputStream() {
+        when(resp.getOutputStream()).thenReturn(new ServletOutputStream() {
             public void write(int b) throws IOException {
                 sw.write(b);
             }
-        }).when(resp).getOutputStream();
+        });
+    }
 
+    @Test
+    public void getBodyTest() throws IOException {
         TeeHttpServletResponse tee = new TeeHttpServletResponse(resp);
-        assertNotNull(tee);
-
-        assertNotNull(tee.getOutputStream());
         tee.getOutputStream().write("this is my body".getBytes());
 
-        assertEquals("this is my body", tee.getBody());
-        assertEquals("this is my body", sw.getBuffer().toString());
+        // Map content types to whether they should be logged as text or base64 encoded
+        Map<String, Boolean> types = new HashMap<String, Boolean>();
+        types.put(MediaType.APPLICATION_JSON, true);
+        types.put(MediaType.APPLICATION_ATOM_XML, true);
+        types.put(MediaType.TEXT_PLAIN, true);
+        types.put(MediaType.TEXT_HTML, true);
+        types.put(MediaType.TEXT_XML, true);
+        types.put(MediaType.APPLICATION_FORM_URLENCODED, true);
+        types.put(MediaType.APPLICATION_OCTET_STREAM, false);
+        types.put("multipart/form-data", false);
+        types.put("application/zip", false);
 
-        assertNotNull(tee.getWriter());
+        for (String type : types.keySet()) {
+            when(resp.getContentType()).thenReturn(type);
+            if (types.get(type)) {
+                assertEquals(type + " failed!", "this is my body", tee.getBody());
+            }
+            else {
+                assertEquals(type + " failed!", Util.toBase64("this is my body".getBytes()),
+                    tee.getBody());
+            }
+        }
     }
 }

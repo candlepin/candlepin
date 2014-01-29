@@ -14,6 +14,10 @@
  */
 package org.candlepin.servlet.filter.logging;
 
+import org.candlepin.util.Util;
+
+import org.apache.commons.lang.StringUtils;
+
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
@@ -89,7 +93,15 @@ public class TeeHttpServletResponse extends HttpServletResponseWrapper
     @Override
     public String getBody() {
         byte[] buff = getOutputBuffer();
-        return (buff == null) ? null : new String(getOutputBuffer());
+
+        if (buff != null) {
+            if (ServletLogger.showAsText(getContentType())) {
+                return new String(buff);
+            }
+            return StringUtils.abbreviate(Util.toBase64(buff), 100);
+        }
+
+        return "";
     }
 
     @Override

@@ -17,6 +17,7 @@ package org.candlepin.servlet.filter.logging;
 import org.candlepin.util.Util;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -27,14 +28,13 @@ import java.io.InputStreamReader;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
-import javax.ws.rs.core.MediaType;
 
 /**
  * This class gives us a new ServletInputStream every time we call getInputStream()
  * so we can read a request body more than once.
  */
 public class TeeHttpServletRequest extends HttpServletRequestWrapper implements BodyLogger {
-    private final byte [] body;
+    private final byte[] body;
 
     public TeeHttpServletRequest(HttpServletRequest request) throws IOException {
         super(request);
@@ -65,9 +65,9 @@ public class TeeHttpServletRequest extends HttpServletRequestWrapper implements 
 
     @Override
     public String getBody() {
-        if (MediaType.APPLICATION_JSON.equals(getContentType())) {
+        if (ServletLogger.showAsText(getContentType())) {
             return new String(body);
         }
-        return Util.toBase64(body);
+        return StringUtils.abbreviate(Util.toBase64(body), 100);
     }
 }

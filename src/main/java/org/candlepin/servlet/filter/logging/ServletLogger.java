@@ -14,11 +14,13 @@
  */
 package org.candlepin.servlet.filter.logging;
 
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.MediaType;
 
 /**
  * ServletLogger
@@ -66,14 +68,8 @@ public class ServletLogger {
 
     public static StringBuilder logBody(String type, BodyLogger bodyLogger) {
         StringBuilder builder = new StringBuilder();
-
-        // Don't log file download responses, they make a mess of the log:
-        if ((bodyLogger.getContentType() == null ||
-            (!bodyLogger.getContentType().equals("application/x-download") &&
-            !bodyLogger.getContentType().equals("application/zip")))) {
-            builder.append("====").append(type).append(" Body====\n");
-            builder.append(bodyLogger.getBody());
-        }
+        builder.append("====").append(type).append(" Body====\n");
+        builder.append(bodyLogger.getBody());
         return builder;
     }
 
@@ -95,5 +91,17 @@ public class ServletLogger {
                 .append(resp.getStatus())
                 .append(", content-type=\"").append(resp.getContentType())
                 .append("\", time=").append(duration).append("ms");
+    }
+
+    public static boolean showAsText(String contentType) {
+        String[] textTypes = {
+            MediaType.APPLICATION_JSON,
+            MediaType.APPLICATION_ATOM_XML,
+            MediaType.TEXT_PLAIN,
+            MediaType.TEXT_XML,
+            MediaType.TEXT_HTML,
+            MediaType.APPLICATION_FORM_URLENCODED
+        };
+        return Arrays.asList(textTypes).contains(contentType);
     }
 }
