@@ -157,6 +157,10 @@ public class Entitler {
                 msg = i18n.tr("Unit does not support RAM calculation " +
                     "required by pool ''{0}''", pool.getId());
             }
+            else if (error.equals("rulefailed.derivedproduct.unsupported.by.consumer")) {
+                msg = i18n.tr("Unit does not support derived products data " +
+                    "required by pool ''{0}''", pool.getId());
+            }
             else {
                 msg = i18n.tr("Unable to attach pool with ID ''{0}''.: {1}.",
                     pool.getId().toString(), error);

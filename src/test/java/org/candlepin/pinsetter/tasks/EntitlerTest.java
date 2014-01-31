@@ -193,6 +193,19 @@ public class EntitlerTest {
         }
     }
 
+    @Test
+    public void consumerDoesntSupportDerived() {
+        String expected = "Unit does not support derived products " +
+            "data required by pool 'pool10'";
+        try {
+            bindByPoolErrorTest("rulefailed.derivedproduct.unsupported.by.consumer");
+            fail();
+        }
+        catch (ForbiddenException e) {
+            assertEquals(expected, e.getMessage());
+        }
+    }
+
     private void bindByPoolErrorTest(String msg) {
         try {
             String poolid = "pool10";
