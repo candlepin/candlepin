@@ -1,12 +1,13 @@
 # hedda <hedda@fedoraproject.org>, 2012. #zanata
 # hedda <hedda@fedoraproject.org>, 2013. #zanata
 # rgromans <rgromans@redhat.com>, 2013. #zanata
+# rgromans <rgromans@redhat.com>, 2014. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-06-27 12:35-0400\n"
-"PO-Revision-Date: 2013-09-17 11:49-0400\n"
+"PO-Revision-Date: 2014-01-16 11:39-0500\n"
 "Last-Translator: rgromans <rgromans@redhat.com>\n"
 "Language-Team: German (Germany)\n"
 "MIME-Version: 1.0\n"
@@ -14,7 +15,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Language: de-DE\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
-"X-Generator: Zanata 3.0.3\n"
+"X-Generator: Zanata 3.2.3\n"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author hedda
@@ -199,22 +200,23 @@ msgstr "{0} löschte die Gast-ID {1}"
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:162
 #, java-format
 msgid "{0} updated the rules in the databse to version {1}"
-msgstr ""
+msgstr "{0} aktualisierte die Regeln in der Datenbank auf Version {1}"
 
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:164
 #, java-format
 msgid "{0} removed the rules from the database"
-msgstr ""
+msgstr "{0} entfernte die Rgeln von der Datenbank"
 
 #: src/main/java/org/candlepin/resource/ConsumerContentOverrideResource.java:110
 #, java-format
 msgid "Not allowed to override values for: {0}"
-msgstr ""
+msgstr "Nicht erlaubt Werte zu überschreiben für: {0}"
 
 #: src/main/java/org/candlepin/resource/ConsumerContentOverrideResource.java:190
 #, java-format
 msgid "Name and value of the override must not exceed {0} characters."
 msgstr ""
+"Name und Wert der Überschreibung darf nicht mehr als {0} Zeichen lang sein"
 
 #: src/main/java/org/candlepin/resource/UserResource.java:141
 #, java-format
@@ -281,7 +283,7 @@ msgstr "Kann nicht andere Suchparameter mit Verbraucher-IDs angeben."
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:298
 #, java-format
 msgid "Consumer with id {0} could not be found."
-msgstr ""
+msgstr "Verbraucher mit ID {0} konnte nicht gefunden werden."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author hedda
@@ -342,8 +344,8 @@ msgstr "Systemname darf nicht mit einem #-Zeichen beginnen"
 #, java-format
 msgid "Service level ''{0}'' is not available to units of organization {1}."
 msgstr ""
-"Service-Level \"{0}\" ist nicht für Einheiten der Organisation {1} "
-"verfügbar."
+"Service-Level \"{0}\" ist nicht für Einheiten der Organisation {1} verfügbar."
+""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author hedda
@@ -472,7 +474,7 @@ msgstr ""
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1750
 #, java-format
 msgid "A CDN with label {0} does not exist on this system."
-msgstr ""
+msgstr "Ein CDN mit Label {0} existiert nicht auf diesem System."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -587,17 +589,17 @@ msgstr "Pool mit ID {0} konnte nicht gefunden werden."
 #: src/main/java/org/candlepin/resource/GuestIdResource.java:168
 #, java-format
 msgid "Guest ID in json \"{0}\" does not match path guest ID \"{1}\""
-msgstr ""
+msgstr "Gast ID in json \"{0}\" passt nicht zusammen mit Pfad der Gast ID \"{1}\""
 
 #: src/main/java/org/candlepin/resource/GuestIdResource.java:187
 #, java-format
 msgid "Consumer with uuid {0} could not be found."
-msgstr ""
+msgstr "Verbraucher mit UUID {0} konnte nicht gefunden werden."
 
 #: src/main/java/org/candlepin/resource/GuestIdResource.java:221
 #, java-format
 msgid "Guest with uuid {0} could not be found."
-msgstr ""
+msgstr "Gast mit UUID {0} konnte nicht gefunden werden."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -690,8 +692,8 @@ msgid ""
 "The activation key name ''{0}'' must be alphanumeric or include the "
 "characters '-' or '_'"
 msgstr ""
-"Der Aktivierungs-Schlüssel Name ''{0}''darf nur alphanumerische Zeichen oder"
-" '-' oder '_' enthalten"
+"Der Aktivierungs-Schlüssel Name ''{0}''darf nur alphanumerische Zeichen oder "
+"'-' oder '_' enthalten"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:509
 #, java-format
@@ -703,12 +705,12 @@ msgstr ""
 #: src/main/java/org/candlepin/resource/OwnerResource.java:578
 #, java-format
 msgid "{0} is not a valid log level"
-msgstr ""
+msgstr "{0} ist keine gültige Protokoll-Ebene"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:657
 #, java-format
 msgid "No such unit type(s): {0}"
-msgstr ""
+msgstr "Keine solchen Einheiten-Typen: {0}"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:700
 #: src/main/java/org/candlepin/resource/PoolResource.java:142
@@ -849,6 +851,8 @@ msgstr "Aufgabe bereits abgebrochen"
 #: src/main/java/org/candlepin/resource/JobResource.java:200
 msgid "cannot cancel a job that is not in CREATED or WAITING state"
 msgstr ""
+"Aufgabe, die sich nicht im CREATED- oder WAITING-Status befindet, kann nicht "
+"abgebrochen werden"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author hedda
@@ -887,12 +891,12 @@ msgstr "Einheiten-Typ mit ID {0} konnte nicht gefunden werden."
 #: src/main/java/org/candlepin/resource/CdnResource.java:93
 #, java-format
 msgid "A CDN with the label {0}already exists"
-msgstr ""
+msgstr "Ein CDN mit Label {0} existiert bereits"
 
 #: src/main/java/org/candlepin/resource/CdnResource.java:128
 #, java-format
 msgid "No such content delivery network: {0}"
-msgstr ""
+msgstr "Kein solches Content Delivery Network (CDN): {0}"
 
 #: src/main/java/org/candlepin/resource/DistributorVersionResource.java:104
 #, java-format
@@ -906,42 +910,42 @@ msgstr "Keine solche Distributor Version: {0}"
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:58
 msgid "Not supported by a valid subscription."
-msgstr ""
+msgstr "Nicht von einer gültigen Subskription unterstützt."
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:61
 #, java-format
 msgid "Supports architecture {0} but the system is {1}."
-msgstr ""
+msgstr "Architektur {0} unterstützt aber das System ist {1}."
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:66
 #, java-format
 msgid "Only supports {0} of {1} sockets."
-msgstr ""
+msgstr "Unterstützt nur {0} von {1} Sockets."
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:71
 #, java-format
 msgid "Only supports {0} of {1} cores."
-msgstr ""
+msgstr "Unterstützt nur {0} von {1} Kernen."
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:76
 #, java-format
 msgid "Only supports {0}GB of {1}GB of RAM."
-msgstr ""
+msgstr "Unterstützt nur {0}GB von {1}GB RAM."
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:81
 #, java-format
 msgid "Only supports {0} of {1} virtual guests."
-msgstr ""
+msgstr "Unterstützt nur {0} von {1 } virtuellen Gästen."
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:86
 #, java-format
 msgid "Only supports {0} of {1} vCPUs."
-msgstr ""
+msgstr "Unterstützt nur {0} von {1} vCPUs."
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:91
 #, java-format
 msgid "{2} COVERAGE PROBLEM.  Supports {0} of {1}"
-msgstr ""
+msgstr "{2} ABDECKUNGS PROBLEM.  Unterstützt {0} von {1}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author hedda
@@ -964,27 +968,27 @@ msgstr "Subskriptionen für {0} abgelaufen am: {1}"
 
 #: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:50
 msgid "Other"
-msgstr ""
+msgstr "Andere"
 
 #: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:53
 msgid "Instance Based"
-msgstr ""
+msgstr "Instanz bezogen"
 
 #: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:56
 msgid "Stackable"
-msgstr ""
+msgstr "Stapolbar"
 
 #: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:59
 msgid "Multi-Entitleable"
-msgstr ""
+msgstr "Mehrfach-Berechtigungen"
 
 #: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:62
 msgid "Standard"
-msgstr ""
+msgstr "Standard"
 
 #: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:65
 msgid "Stackable only with other subscriptions"
-msgstr ""
+msgstr "Nur mit anderen Subskriptionen stapelbar"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -1003,7 +1007,7 @@ msgstr "Laufzeitfehler {0} bei {1}.{2}:{3}"
 #: src/main/java/org/candlepin/exceptions/mappers/BadRequestExceptionMapper.java:57
 #, java-format
 msgid "Invalid format for query parameter {0}. Expected format: {1}"
-msgstr ""
+msgstr "Ungültiges Format für Query-Parameter {0}. Erwartetes Format: {1}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -1102,8 +1106,8 @@ msgstr ""
 msgid ""
 "Owner has already imported from another subscription management application."
 msgstr ""
-"Besitzer hat bereits von einer anderen Subskriptions-Verwaltungs Applikation"
-" importiert."
+"Besitzer hat bereits von einer anderen Subskriptions-Verwaltungs Applikation "
+"importiert."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author hedda
@@ -1181,20 +1185,20 @@ msgstr "Fehler beim Abrufen des oauth Einheiten-Schlüssels"
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
-"to address this problem. See kbase "
-"https://access.redhat.com/knowledge/node/129003 for more information."
+"to address this problem. See kbase https://access.redhat.com/knowledge/node/"
+"129003 for more information."
 msgstr ""
 "Zu viele Inhaltssets für Zertifikat {0}. Möglicherweise ist ein neuerer "
-"Client verfügbar, der dieses Problem beseitigt. Siehe Wissensdatenbank "
-"https://access.redhat.com/knowledge/node/129003 für weitere informationen."
+"Client verfügbar, der dieses Problem beseitigt. Siehe Wissensdatenbank https:"
+"//access.redhat.com/knowledge/node/129003 für weitere informationen."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author hedda
 #: src/main/java/org/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java:148
 msgid "Standalone candlepin does not support redeeming a subscription."
 msgstr ""
-"Standalone-Candlepin unterstützt nicht das Zurückerlangen von "
-"Subskriptionen."
+"Standalone-Candlepin unterstützt nicht das Zurückerlangen von Subskriptionen."
+""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author hedda
@@ -1206,8 +1210,8 @@ msgstr "Subskriptionspool {0} existiert nicht."
 #: src/main/java/org/candlepin/controller/Entitler.java:109
 #, java-format
 msgid ""
-"This unit has already had the subscription matching pool ID ''{0}'' "
-"attached."
+"This unit has already had the subscription matching pool ID ''{0}'' attached."
+""
 msgstr ""
 "An dieser Einheit wurde bereits die zur Subskription passende Pool ID "
 "''{0}'' angebracht."
@@ -1253,6 +1257,8 @@ msgid ""
 "Subscription ''{0}'' must be attached using a quantity evenly divisible by "
 "{1}"
 msgstr ""
+"Subskription \"{0}\" muss mit einer ohne Rest durch {1} teilbaren Menge "
+"angebracht werden"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:149
 #, java-format
@@ -1301,8 +1307,8 @@ msgstr ""
 #, java-format
 msgid "Unable to adjust quantity for the entitlement with id ''{0}'': {1}"
 msgstr ""
-"Anzahl konnte für die Berechtigung mit der ID ''{0}'' nicht angepasst "
-"werden: {1}"
+"Anzahl konnte für die Berechtigung mit der ID ''{0}'' nicht angepasst werden:"
+" {1}"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:276
 #, java-format
@@ -1381,6 +1387,7 @@ msgstr ""
 #: src/main/java/org/candlepin/model/AbstractHibernateCurator.java:418
 msgid "Request failed due to concurrent modification, please re-try."
 msgstr ""
+"Antrag durch gleichzeitige Änderung gescheitert, bitte nochmals versuchen."
 
 #: src/main/java/org/candlepin/model/UeberCertificateGenerator.java:122
 #, java-format

@@ -13,7 +13,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Language: ta-IN\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
-"X-Generator: Zanata 3.0.3\n"
+"X-Generator: Zanata 3.2.3\n"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ifelix
@@ -1162,12 +1162,12 @@ msgstr ""
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
-"to address this problem. See kbase "
-"https://access.redhat.com/knowledge/node/129003 for more information."
+"to address this problem. See kbase https://access.redhat.com/knowledge/node/"
+"129003 for more information."
 msgstr ""
 "சான்றிதழ் {0} க்கு மிக அதிக உள்ளடக்கத் தொகுப்புகள். இந்தச் சிக்கலைச் சரி "
-"செய்ய புதிய கிளையன்ட் கிடைக்கக்கூடும். மேலும் விவரங்களுக்கு kbase "
-"https://access.redhat.com/knowledge/node/129003 ஐப் பார்க்கவும்."
+"செய்ய புதிய கிளையன்ட் கிடைக்கக்கூடும். மேலும் விவரங்களுக்கு kbase https://"
+"access.redhat.com/knowledge/node/129003 ஐப் பார்க்கவும்."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ifelix
@@ -1186,8 +1186,8 @@ msgstr "சந்தாபடுத்தல் பூல் {0} இல்லை
 #: src/main/java/org/candlepin/controller/Entitler.java:109
 #, java-format
 msgid ""
-"This unit has already had the subscription matching pool ID ''{0}'' "
-"attached."
+"This unit has already had the subscription matching pool ID ''{0}'' attached."
+""
 msgstr ""
 
 #: src/main/java/org/candlepin/controller/Entitler.java:114

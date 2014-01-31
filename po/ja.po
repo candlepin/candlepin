@@ -3,12 +3,13 @@
 # noriko <noriko@fedoraproject.org>, 2012. #zanata
 # kmoriguc <kmoriguc@redhat.com>, 2013. #zanata
 # noriko <noriko@fedoraproject.org>, 2013. #zanata
+# noriko <noriko@fedoraproject.org>, 2014. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-06-27 12:35-0400\n"
-"PO-Revision-Date: 2013-09-17 08:38-0400\n"
+"PO-Revision-Date: 2014-01-19 09:52-0500\n"
 "Last-Translator: noriko <noriko@fedoraproject.org>\n"
 "Language-Team: Japanese\n"
 "MIME-Version: 1.0\n"
@@ -16,7 +17,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Language: ja\n"
 "Plural-Forms: nplurals=1; plural=0\n"
-"X-Generator: Zanata 3.0.3\n"
+"X-Generator: Zanata 3.2.3\n"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author khasida
@@ -201,22 +202,22 @@ msgstr "{0} はゲスト id {1} を削除しました"
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:162
 #, java-format
 msgid "{0} updated the rules in the databse to version {1}"
-msgstr ""
+msgstr "{0} によりバージョン {1} に対するデータベース内のルールが更新されました"
 
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:164
 #, java-format
 msgid "{0} removed the rules from the database"
-msgstr ""
+msgstr "{0} によりデータベースのルールが削除されました"
 
 #: src/main/java/org/candlepin/resource/ConsumerContentOverrideResource.java:110
 #, java-format
 msgid "Not allowed to override values for: {0}"
-msgstr ""
+msgstr "次の値の無効化は許可されていません: {0}"
 
 #: src/main/java/org/candlepin/resource/ConsumerContentOverrideResource.java:190
 #, java-format
 msgid "Name and value of the override must not exceed {0} characters."
-msgstr ""
+msgstr "上書きする場合の名前と値が {0} 文字を超えないようにしてください。"
 
 #: src/main/java/org/candlepin/resource/UserResource.java:141
 #, java-format
@@ -283,7 +284,7 @@ msgstr "コンシューマ ID で他のクエリパラメーターを特定で�
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:298
 #, java-format
 msgid "Consumer with id {0} could not be found."
-msgstr ""
+msgstr "ID が {0} のコンシューマは見つかりませんでした。"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author khasida
@@ -461,7 +462,7 @@ msgstr "ユニット {0} はエクスポートできません。タイプ ''{1}'
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1750
 #, java-format
 msgid "A CDN with label {0} does not exist on this system."
-msgstr ""
+msgstr "ラベルが {0} の CDN はこのシステムには存在しません。"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -566,17 +567,17 @@ msgstr "id {0} のプールは見つかりませんでした。"
 #: src/main/java/org/candlepin/resource/GuestIdResource.java:168
 #, java-format
 msgid "Guest ID in json \"{0}\" does not match path guest ID \"{1}\""
-msgstr ""
+msgstr " json \"{0}\" のゲスト ID がパスゲスト ID \"{1}\" と一致しません"
 
 #: src/main/java/org/candlepin/resource/GuestIdResource.java:187
 #, java-format
 msgid "Consumer with uuid {0} could not be found."
-msgstr ""
+msgstr "UUID が {0} のコンシューマは見つかりませんでした。"
 
 #: src/main/java/org/candlepin/resource/GuestIdResource.java:221
 #, java-format
 msgid "Guest with uuid {0} could not be found."
-msgstr ""
+msgstr "UUID が {0} のゲストは見つかりませんでした。"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -676,12 +677,12 @@ msgstr "アクティベーションキー名「{0}」はすでに所有者 {1} �
 #: src/main/java/org/candlepin/resource/OwnerResource.java:578
 #, java-format
 msgid "{0} is not a valid log level"
-msgstr ""
+msgstr "{0} は有効なログレベルではありません"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:657
 #, java-format
 msgid "No such unit type(s): {0}"
-msgstr ""
+msgstr "そのようなユニットタイプはありません: {0}"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:700
 #: src/main/java/org/candlepin/resource/PoolResource.java:142
@@ -816,7 +817,7 @@ msgstr "ジョブはすでに取り消されています"
 
 #: src/main/java/org/candlepin/resource/JobResource.java:200
 msgid "cannot cancel a job that is not in CREATED or WAITING state"
-msgstr ""
+msgstr "作成済みまたは待機中の状態ではないジョブは取り消しできません"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author noriko
@@ -855,12 +856,12 @@ msgstr "ID {0} のユニットタイプは見つかりませんでした。"
 #: src/main/java/org/candlepin/resource/CdnResource.java:93
 #, java-format
 msgid "A CDN with the label {0}already exists"
-msgstr ""
+msgstr "ラベルが {0} の CDN はすでに存在しています"
 
 #: src/main/java/org/candlepin/resource/CdnResource.java:128
 #, java-format
 msgid "No such content delivery network: {0}"
-msgstr ""
+msgstr "そのようなコンテンツ配信ネットワークはありません: {0}"
 
 #: src/main/java/org/candlepin/resource/DistributorVersionResource.java:104
 #, java-format
@@ -874,49 +875,49 @@ msgstr "そのようなディストリビューションバージョンはあり
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:58
 msgid "Not supported by a valid subscription."
-msgstr ""
+msgstr "有効なサブスクリプションでサポートされていません"
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:61
 #, java-format
 msgid "Supports architecture {0} but the system is {1}."
-msgstr ""
+msgstr "アーキテクチャ {0} はサポートしていますが、システムは {1} になります。"
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:66
 #, java-format
 msgid "Only supports {0} of {1} sockets."
-msgstr ""
+msgstr "合計ソケット数 {1} のうちサポートされるのは {0} ソケットのみになります。"
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:71
 #, java-format
 msgid "Only supports {0} of {1} cores."
-msgstr ""
+msgstr "合計コア数 {1} のうちサポートされるのは {0} コアのみになります。"
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:76
 #, java-format
 msgid "Only supports {0}GB of {1}GB of RAM."
-msgstr ""
+msgstr "合計 RAM 数 {1}GB のうちサポートされるのは {0}GB の RAM のみになります。"
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:81
 #, java-format
 msgid "Only supports {0} of {1} virtual guests."
-msgstr ""
+msgstr "合計仮想ゲスト数 {1} のうちサポートされるのは {0} ゲストのみになります。"
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:86
 #, java-format
 msgid "Only supports {0} of {1} vCPUs."
-msgstr ""
+msgstr "合計 vCPU 数 {1} のうちサポートされるのは {0} vCPU のみになります。"
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:91
 #, java-format
 msgid "{2} COVERAGE PROBLEM.  Supports {0} of {1}"
-msgstr ""
+msgstr "{2} 適用範囲に問題があります。 合計 {1} のうちサポートされるのは {0} です。"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author khasida
 #: src/main/java/org/candlepin/policy/js/entitlement/AbstractEntitlementRules.java:134
 #, java-format
 msgid "''{0}'' Should contain name, priority and at least one attribute"
-msgstr "''{0}'' は名前、優先度、及び少なくとも１つの属性を含む必要があります"
+msgstr "''{0}'' には名前、優先度、及び少なくとも１つの属性を持たせてください"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -931,27 +932,27 @@ msgstr "{0} のサブスクリプションの有効期限: {1}"
 
 #: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:50
 msgid "Other"
-msgstr ""
+msgstr "その他"
 
 #: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:53
 msgid "Instance Based"
-msgstr ""
+msgstr "インスタンスベース"
 
 #: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:56
 msgid "Stackable"
-msgstr ""
+msgstr "スタック可能"
 
 #: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:59
 msgid "Multi-Entitleable"
-msgstr ""
+msgstr "複数エンタイトルメントの付与が可能"
 
 #: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:62
 msgid "Standard"
-msgstr ""
+msgstr "標準"
 
 #: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:65
 msgid "Stackable only with other subscriptions"
-msgstr ""
+msgstr "他のサブスクリプションとのみスタック可能"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -970,7 +971,7 @@ msgstr "{1}.{2}:{3} にランタイムエラー {0}  "
 #: src/main/java/org/candlepin/exceptions/mappers/BadRequestExceptionMapper.java:57
 #, java-format
 msgid "Invalid format for query parameter {0}. Expected format: {1}"
-msgstr ""
+msgstr "クエリーパラメータ {0} には無効な形式です。期待形式: [1}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -1143,8 +1144,8 @@ msgstr "oauth ユニットキーの取得でエラー"
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
-"to address this problem. See kbase "
-"https://access.redhat.com/knowledge/node/129003 for more information."
+"to address this problem. See kbase https://access.redhat.com/knowledge/node/"
+"129003 for more information."
 msgstr ""
 "証明書 {0} のコンテンツセットが多すぎます。  新しいクライアントの場合はこの問題に対処できる場合があります。 "
 "詳細についてはナレッジベースを参照してください (https://access.redhat.com/knowledge/node/129003)。"
@@ -1165,8 +1166,8 @@ msgstr "サブスクリプションプール {0} は存在しません"
 #: src/main/java/org/candlepin/controller/Entitler.java:109
 #, java-format
 msgid ""
-"This unit has already had the subscription matching pool ID ''{0}'' "
-"attached."
+"This unit has already had the subscription matching pool ID ''{0}'' attached."
+""
 msgstr "このユニットには既に ID ''{0}'' がアタッチされたプールに一致するサブスクリプションがあります。"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:114
@@ -1207,7 +1208,7 @@ msgstr "プールは仮想ゲストに制限されています: ''{0}''"
 msgid ""
 "Subscription ''{0}'' must be attached using a quantity evenly divisible by "
 "{1}"
-msgstr ""
+msgstr "サブスクリプション ''{0}'' は {1} で割り切れる数で割り当てを行ってください"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:149
 #, java-format
@@ -1314,7 +1315,7 @@ msgstr "UUID {0} のシステムは仮想ゲストです。ゲストはありま
 
 #: src/main/java/org/candlepin/model/AbstractHibernateCurator.java:418
 msgid "Request failed due to concurrent modification, please re-try."
-msgstr ""
+msgstr "変更が同時に行われたため要求は失敗しました、やり直してください。"
 
 #: src/main/java/org/candlepin/model/UeberCertificateGenerator.java:122
 #, java-format

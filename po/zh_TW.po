@@ -2,20 +2,21 @@
 # tchuang <tchuang@redhat.com>, 2012. #zanata
 # Chester Cheng <ccheng@redhat.com>, 2013. #zanata
 # tchuang <tchuang@redhat.com>, 2013. #zanata
+# Chester Cheng <ccheng@redhat.com>, 2014. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-06-27 12:35-0400\n"
-"PO-Revision-Date: 2013-09-17 08:13-0400\n"
-"Last-Translator: tchuang <tchuang@redhat.com>\n"
+"PO-Revision-Date: 2014-01-16 07:52-0500\n"
+"Last-Translator: Chester Cheng <ccheng@redhat.com>\n"
 "Language-Team: Chinese (Traditional, Taiwan)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: zh-Hant-TW\n"
 "Plural-Forms: nplurals=1; plural=0\n"
-"X-Generator: Zanata 3.0.3\n"
+"X-Generator: Zanata 3.2.3\n"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author snowlet
@@ -200,22 +201,22 @@ msgstr "{0} 刪除了客座 ID {1}"
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:162
 #, java-format
 msgid "{0} updated the rules in the databse to version {1}"
-msgstr ""
+msgstr "{0} 更新了資料庫中的規則至版本 {1}"
 
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:164
 #, java-format
 msgid "{0} removed the rules from the database"
-msgstr ""
+msgstr "{0} 移除了資料庫中的規則"
 
 #: src/main/java/org/candlepin/resource/ConsumerContentOverrideResource.java:110
 #, java-format
 msgid "Not allowed to override values for: {0}"
-msgstr ""
+msgstr "不允許覆蓋以下資料：{0}"
 
 #: src/main/java/org/candlepin/resource/ConsumerContentOverrideResource.java:190
 #, java-format
 msgid "Name and value of the override must not exceed {0} characters."
-msgstr ""
+msgstr "覆寫的名稱與值不能超過 {0} 個字元。"
 
 #: src/main/java/org/candlepin/resource/UserResource.java:141
 #, java-format
@@ -282,7 +283,7 @@ msgstr "無法使用消耗者 ID 指定其它查詢參數。"
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:298
 #, java-format
 msgid "Consumer with id {0} could not be found."
-msgstr ""
+msgstr "找不到 id 為 {0} 的消耗者。"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author snowlet
@@ -460,7 +461,7 @@ msgstr "無法匯出單位 {0}。無法建立單位類型為「{1}」的清單�
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1750
 #, java-format
 msgid "A CDN with label {0} does not exist on this system."
-msgstr ""
+msgstr "本系統不存在標籤為 {0} 的 CDN。"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -565,17 +566,17 @@ msgstr "找不到 id 為 {0} 的集區。"
 #: src/main/java/org/candlepin/resource/GuestIdResource.java:168
 #, java-format
 msgid "Guest ID in json \"{0}\" does not match path guest ID \"{1}\""
-msgstr ""
+msgstr "json \"{0}\" 中的客座端 ID 與路徑客座端 ID \"{1}\" 不相符"
 
 #: src/main/java/org/candlepin/resource/GuestIdResource.java:187
 #, java-format
 msgid "Consumer with uuid {0} could not be found."
-msgstr ""
+msgstr "找不到 uuid 為 {0} 的消耗者。"
 
 #: src/main/java/org/candlepin/resource/GuestIdResource.java:221
 #, java-format
 msgid "Guest with uuid {0} could not be found."
-msgstr ""
+msgstr "找不到 uuid 為 {0} 的客座端。"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -675,12 +676,12 @@ msgstr "啟動金鑰名稱 \"{0}\" 已被擁有者 {1} 所使用"
 #: src/main/java/org/candlepin/resource/OwnerResource.java:578
 #, java-format
 msgid "{0} is not a valid log level"
-msgstr ""
+msgstr "{0} 並非有效的日誌等級"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:657
 #, java-format
 msgid "No such unit type(s): {0}"
-msgstr ""
+msgstr "沒有此種單位類型：{0}"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:700
 #: src/main/java/org/candlepin/resource/PoolResource.java:142
@@ -815,7 +816,7 @@ msgstr "工作已取消"
 
 #: src/main/java/org/candlepin/resource/JobResource.java:200
 msgid "cannot cancel a job that is not in CREATED or WAITING state"
-msgstr ""
+msgstr "無法取消並非處於 CREATED 或 WAITING 狀態的工作"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author tchuang
@@ -854,12 +855,12 @@ msgstr "找不到 id 為 {0} 的單位類型。"
 #: src/main/java/org/candlepin/resource/CdnResource.java:93
 #, java-format
 msgid "A CDN with the label {0}already exists"
-msgstr ""
+msgstr "標籤為 {0} 的 CDN 已經存在"
 
 #: src/main/java/org/candlepin/resource/CdnResource.java:128
 #, java-format
 msgid "No such content delivery network: {0}"
-msgstr ""
+msgstr "無此內容發送往路：{0}"
 
 #: src/main/java/org/candlepin/resource/DistributorVersionResource.java:104
 #, java-format
@@ -873,42 +874,42 @@ msgstr "沒有散佈版本：{0}"
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:58
 msgid "Not supported by a valid subscription."
-msgstr ""
+msgstr "不受到有效的訂閱支援。"
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:61
 #, java-format
 msgid "Supports architecture {0} but the system is {1}."
-msgstr ""
+msgstr "支援架構 {0} 但系統是 {1}。"
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:66
 #, java-format
 msgid "Only supports {0} of {1} sockets."
-msgstr ""
+msgstr "只支援 {1} 個 socket 中的 {0} 個。"
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:71
 #, java-format
 msgid "Only supports {0} of {1} cores."
-msgstr ""
+msgstr "只支援 {1} 個核心中的 {0} 個。"
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:76
 #, java-format
 msgid "Only supports {0}GB of {1}GB of RAM."
-msgstr ""
+msgstr "只支援 {1}GB 記憶體中的 {0}GB。"
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:81
 #, java-format
 msgid "Only supports {0} of {1} virtual guests."
-msgstr ""
+msgstr "只支援 {1} 個虛擬客座端中的 {0} 個。"
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:86
 #, java-format
 msgid "Only supports {0} of {1} vCPUs."
-msgstr ""
+msgstr "只支援 {1} 個 vCPU 中的 {0} 個。"
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:91
 #, java-format
 msgid "{2} COVERAGE PROBLEM.  Supports {0} of {1}"
-msgstr ""
+msgstr "{2} 涵蓋問題。支援了 {1} 個中的 {0} 個"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author snowlet
@@ -930,27 +931,27 @@ msgstr "{0} 訂閱已於 {1} 過期"
 
 #: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:50
 msgid "Other"
-msgstr ""
+msgstr "其它"
 
 #: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:53
 msgid "Instance Based"
-msgstr ""
+msgstr "以 Instance 為基礎"
 
 #: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:56
 msgid "Stackable"
-msgstr ""
+msgstr "可堆疊"
 
 #: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:59
 msgid "Multi-Entitleable"
-msgstr ""
+msgstr "多重權利"
 
 #: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:62
 msgid "Standard"
-msgstr ""
+msgstr "標準"
 
 #: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:65
 msgid "Stackable only with other subscriptions"
-msgstr ""
+msgstr "只有與其它訂閱合用時才可堆疊"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -969,7 +970,7 @@ msgstr "Runtime 錯誤 {0} 於 {1}.{2}:{3}"
 #: src/main/java/org/candlepin/exceptions/mappers/BadRequestExceptionMapper.java:57
 #, java-format
 msgid "Invalid format for query parameter {0}. Expected format: {1}"
-msgstr ""
+msgstr "查詢參數 {0} 的規格不符。預期的格式為 {1}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -1142,11 +1143,11 @@ msgstr "嘗試取得 oauth 單位金鑰時發生了錯誤"
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
-"to address this problem. See kbase "
-"https://access.redhat.com/knowledge/node/129003 for more information."
+"to address this problem. See kbase https://access.redhat.com/knowledge/node/"
+"129003 for more information."
 msgstr ""
-"憑證 {0} 擁有過多的內容集。您可使用更新的客戶端來解決此問題。欲取得更多相關資訊，請查看 kbase "
-"https://access.redhat.com/knowledge/node/129003。"
+"憑證 {0} 擁有過多的內容集。您可使用更新的客戶端來解決此問題。欲取得更多相關資訊，請查看 kbase https://access.redhat."
+"com/knowledge/node/129003。"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author snowlet
@@ -1164,8 +1165,8 @@ msgstr "訂閱集區 {0} 不存在。"
 #: src/main/java/org/candlepin/controller/Entitler.java:109
 #, java-format
 msgid ""
-"This unit has already had the subscription matching pool ID ''{0}'' "
-"attached."
+"This unit has already had the subscription matching pool ID ''{0}'' attached."
+""
 msgstr "這單位已經有訂閱相符集區 ID「{0}」相連。"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:114
@@ -1206,7 +1207,7 @@ msgstr "集區受限無法供虛擬客座使用：''{0}''。"
 msgid ""
 "Subscription ''{0}'' must be attached using a quantity evenly divisible by "
 "{1}"
-msgstr ""
+msgstr "訂閱 ''{0}'' 必須使用能被 {1} 整除的數量來連接"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:149
 #, java-format
@@ -1313,7 +1314,7 @@ msgstr "系統（UUID {0}）是虛擬客座端，不具有客座端。"
 
 #: src/main/java/org/candlepin/model/AbstractHibernateCurator.java:418
 msgid "Request failed due to concurrent modification, please re-try."
-msgstr ""
+msgstr "因為同步修改導致需求失敗，請再試一次。"
 
 #: src/main/java/org/candlepin/model/UeberCertificateGenerator.java:122
 #, java-format

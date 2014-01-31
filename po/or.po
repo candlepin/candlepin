@@ -1,11 +1,12 @@
 # mgiri <mgiri@fedoraproject.org>, 2012. #zanata
 # mgiri <mgiri@fedoraproject.org>, 2013. #zanata
+# mgiri <mgiri@fedoraproject.org>, 2014. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-06-27 12:35-0400\n"
-"PO-Revision-Date: 2013-08-26 03:50-0400\n"
+"PO-Revision-Date: 2014-01-17 05:49-0500\n"
 "Last-Translator: mgiri <mgiri@fedoraproject.org>\n"
 "Language-Team: Oriya\n"
 "MIME-Version: 1.0\n"
@@ -13,7 +14,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Language: or\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
-"X-Generator: Zanata 3.0.3\n"
+"X-Generator: Zanata 3.2.3\n"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author mgiri
@@ -198,22 +199,22 @@ msgstr "{0} ଅତିଥି id {1} କୁ ଅପସାରଣ କରିଥାଏ"
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:162
 #, java-format
 msgid "{0} updated the rules in the databse to version {1}"
-msgstr ""
+msgstr "{0} ତଥ୍ୟାଧାରରେ ନିୟମାବଳୀକୁ ସଂସ୍କରଣ {1} କୁ ଅଦ୍ୟତିତ କରିଅଛି"
 
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:164
 #, java-format
 msgid "{0} removed the rules from the database"
-msgstr ""
+msgstr "{0} ତଥ୍ୟାଧାରରୁ ନିୟମାବଳୀକୁ ବାହାର କରିଛି"
 
 #: src/main/java/org/candlepin/resource/ConsumerContentOverrideResource.java:110
 #, java-format
 msgid "Not allowed to override values for: {0}"
-msgstr ""
+msgstr "ଏହା ପାଇଁ ମୂଲ୍ୟଗୁଡ଼ିକୁ ନବଲିଖନ କରିବା ଅନୁମୋଦିତ ନୁହଁ: {0}"
 
 #: src/main/java/org/candlepin/resource/ConsumerContentOverrideResource.java:190
 #, java-format
 msgid "Name and value of the override must not exceed {0} characters."
-msgstr ""
+msgstr "ନବଲିଖନର ନାମ ଏବଂ ମୂଲ୍ୟ {0} ଅକ୍ଷରରୁ ଅଧିକ ହେବା ଉଚିତ ନୁହଁ।"
 
 #: src/main/java/org/candlepin/resource/UserResource.java:141
 #, java-format
@@ -281,7 +282,7 @@ msgstr ""
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:298
 #, java-format
 msgid "Consumer with id {0} could not be found."
-msgstr ""
+msgstr "id {0} ବିଶିଷ୍ଟ ଗ୍ରାହକ ମିଳିଲା ନାହିଁ।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author mgiri
@@ -463,7 +464,7 @@ msgstr ""
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1750
 #, java-format
 msgid "A CDN with label {0} does not exist on this system."
-msgstr ""
+msgstr "ନାମପଟି {0} ସହିତ ଗୋଟିଏ CDN ଏହି ତନ୍ତ୍ରରେ ଅବସ୍ଥିତ ନାହିଁ।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -574,17 +575,17 @@ msgstr "id {0} ବିଶିଷ୍ଟ ସମୂହ ମିଳିଲା ନାହ�
 #: src/main/java/org/candlepin/resource/GuestIdResource.java:168
 #, java-format
 msgid "Guest ID in json \"{0}\" does not match path guest ID \"{1}\""
-msgstr ""
+msgstr "json \"{0}\" ରେ ଅତିଥି ID ପଥ ଅତିଥି ID \"{1}\" ସହିତ ମେଳ ଖାଇନଥାଏ"
 
 #: src/main/java/org/candlepin/resource/GuestIdResource.java:187
 #, java-format
 msgid "Consumer with uuid {0} could not be found."
-msgstr ""
+msgstr "uuid {0} ବିଶିଷ୍ଟ ଗ୍ରାହକ ମିଳିଲା ନାହିଁ।"
 
 #: src/main/java/org/candlepin/resource/GuestIdResource.java:221
 #, java-format
 msgid "Guest with uuid {0} could not be found."
-msgstr ""
+msgstr "uuid {0} ବିଶିଷ୍ଟ ଅତିଥି ମିଳିଲା ନାହିଁ।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -688,12 +689,12 @@ msgstr "ସକ୍ରିୟଣ କି ନାମ ''{0}'' ମାଲିକ {1} ପ�
 #: src/main/java/org/candlepin/resource/OwnerResource.java:578
 #, java-format
 msgid "{0} is not a valid log level"
-msgstr ""
+msgstr "{0} ଟି ଗୋଟିଏ ବୈଧ ଲଗ ଫାଇଲ ନୁହଁ"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:657
 #, java-format
 msgid "No such unit type(s): {0}"
-msgstr ""
+msgstr "ଏପରି କୌଣସି ଏକକ ପ୍ରକାର ନାହିଁ: {0}"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:700
 #: src/main/java/org/candlepin/resource/PoolResource.java:142
@@ -830,6 +831,8 @@ msgstr "କାର୍ଯ୍ୟଟି ପୂର୍ବରୁ ବାତିଲ ହୋ
 #: src/main/java/org/candlepin/resource/JobResource.java:200
 msgid "cannot cancel a job that is not in CREATED or WAITING state"
 msgstr ""
+"ଯେଉଁ କାର୍ଯ୍ୟଟି CREATED କିମ୍ବା WAITING ସ୍ଥିତିରେ ନାହିଁ ତାହାକୁ ବାତିଲ କରିପାରିବେ "
+"ନାହିଁ"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author mgiri
@@ -868,12 +871,12 @@ msgstr "id {0} ବିଶିଷ୍ଟ ଏକକ ପ୍ରକାର ମିଳି�
 #: src/main/java/org/candlepin/resource/CdnResource.java:93
 #, java-format
 msgid "A CDN with the label {0}already exists"
-msgstr ""
+msgstr "ନାମପଟି {0} ବିଶିଷ୍ଟ କୌଣସି CDN ପୂର୍ବରୁ ଅବସ୍ଥିତ ନାହିଁ"
 
 #: src/main/java/org/candlepin/resource/CdnResource.java:128
 #, java-format
 msgid "No such content delivery network: {0}"
-msgstr ""
+msgstr "ଏପରି କୌଣସି ବିଷୟବସ୍ତୁ ପ୍ରେରଣ ନେଟୱର୍କ ନାହିଁ: {0}"
 
 #: src/main/java/org/candlepin/resource/DistributorVersionResource.java:104
 #, java-format
@@ -887,42 +890,42 @@ msgstr "ଏପରି କୌଣସି ବଣ୍ଟନ ସଂସ୍କରଣ ନ�
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:58
 msgid "Not supported by a valid subscription."
-msgstr ""
+msgstr "ବୈଧ ସଦସ୍ଯତା ଦ୍ୱାରା ସହାୟତା ପ୍ରାପ୍ତ ନୁହଁ।"
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:61
 #, java-format
 msgid "Supports architecture {0} but the system is {1}."
-msgstr ""
+msgstr "ସଂରଚନା {0} କୁ ସହାୟତା କରିଥାଏ କିନ୍ତୁ ତନ୍ତ୍ର ହେଉଛି {1}."
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:66
 #, java-format
 msgid "Only supports {0} of {1} sockets."
-msgstr ""
+msgstr "କେବଳ {0} ସକେଟର {1} କୁ ଧାରଣ କରିଥାଏ।"
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:71
 #, java-format
 msgid "Only supports {0} of {1} cores."
-msgstr ""
+msgstr "କେବଳ {0} ମୂଳର {1} କୁ ଧାରଣ କରିଥାଏ।"
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:76
 #, java-format
 msgid "Only supports {0}GB of {1}GB of RAM."
-msgstr ""
+msgstr "{1}GB RAM ର କେବଳ {0}GB କୁ ସହାୟତା କରିଥାଏ।"
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:81
 #, java-format
 msgid "Only supports {0} of {1} virtual guests."
-msgstr ""
+msgstr "କେବଳ {1} ଆଭାସୀ ଅତିଥିମାନଙ୍କର {0} କୁ ସହାୟତା କରିଥାଏ।"
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:86
 #, java-format
 msgid "Only supports {0} of {1} vCPUs."
-msgstr ""
+msgstr "କେବଳ {0} vCPU ଗୁଡ଼ିକର {1} କୁ ଧାରଣ କରିଥାଏ।"
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:91
 #, java-format
 msgid "{2} COVERAGE PROBLEM.  Supports {0} of {1}"
-msgstr ""
+msgstr "{2} ଧାରଣ ସମସ୍ୟା। {1} ର  {0} କୁ ଧାରଣ କରିଥାଏ।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author mgiri
@@ -944,27 +947,27 @@ msgstr "{0} ପାଇଁ ସଦସ୍ୟତାଗୁଡ଼ିକର ସମୟ: {
 
 #: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:50
 msgid "Other"
-msgstr ""
+msgstr "ଅନ୍ଯାନ୍ଯ"
 
 #: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:53
 msgid "Instance Based"
-msgstr ""
+msgstr "ପରିସ୍ଥିତି ଆଧାରିତ"
 
 #: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:56
 msgid "Stackable"
-msgstr ""
+msgstr "ଷ୍ଟାକ ଯୋଗ୍ଯ"
 
 #: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:59
 msgid "Multi-Entitleable"
-msgstr ""
+msgstr "ଏକାଧିକ ଅଧିକାରଯୋଗ୍ୟ"
 
 #: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:62
 msgid "Standard"
-msgstr ""
+msgstr "ମାନକ"
 
 #: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:65
 msgid "Stackable only with other subscriptions"
-msgstr ""
+msgstr "ଅନ୍ୟାନ୍ୟ ସଦସ୍ୟତାଗୁଡ଼ିକ ସହିତ କେବଳ ଷ୍ଟାକ ଯୋଗ୍ଯ"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -983,7 +986,7 @@ msgstr "ଚାଲୁଥିବା ସମୟର ତ୍ରୁଟି {0}  {1}.{2}:{3
 #: src/main/java/org/candlepin/exceptions/mappers/BadRequestExceptionMapper.java:57
 #, java-format
 msgid "Invalid format for query parameter {0}. Expected format: {1}"
-msgstr ""
+msgstr "ପ୍ରଶ୍ନ ପ୍ରାଚଳ {0} ପାଇଁ ଅବୈଧ ଶୈଳୀ। ଆଶାକରାଯାଇଥିବା ଶୈଳୀ: {1}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -1160,12 +1163,12 @@ msgstr "oauth ଏକକ କି ପାଇବାରେ ତ୍ରୁଟି"
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
-"to address this problem. See kbase "
-"https://access.redhat.com/knowledge/node/129003 for more information."
+"to address this problem. See kbase https://access.redhat.com/knowledge/node/"
+"129003 for more information."
 msgstr ""
 "ପ୍ରମାଣପତ୍ର {0} ପାଇଁ ଅତ୍ୟଧିକ ବିଷୟବସ୍ତୁ ସେଟ ଅଛି। ଏକ ନୂତନ କ୍ଲାଏଣ୍ଟ ହୁଏତଃ ଏହି "
-"ସମସ୍ୟାକୁ ଖବର କରିବା ପାଇଁ ଉପଲବ୍ଧ ଥାଇପାରେ। ଅଧିକ ସୂଚନା ପାଇଁ kbase "
-"https://access.redhat.com/knowledge/node/129003 କୁ ଦେଖନ୍ତୁ।"
+"ସମସ୍ୟାକୁ ଖବର କରିବା ପାଇଁ ଉପଲବ୍ଧ ଥାଇପାରେ। ଅଧିକ ସୂଚନା ପାଇଁ kbase https://access."
+"redhat.com/knowledge/node/129003 କୁ ଦେଖନ୍ତୁ।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author mgiri
@@ -1183,8 +1186,8 @@ msgstr "ସଦସ୍ୟତା ପୁଲ {0} ଅବସ୍ଥିତ ନାହି�
 #: src/main/java/org/candlepin/controller/Entitler.java:109
 #, java-format
 msgid ""
-"This unit has already had the subscription matching pool ID ''{0}'' "
-"attached."
+"This unit has already had the subscription matching pool ID ''{0}'' attached."
+""
 msgstr "ଏହି ଏକକରେ ପୂର୍ବରୁ ସଂଲଗ୍ନ ପୁଲ ID ''{0}'' ସହିତ ମେଳ ଖାଉଥିବା ସଦସ୍ୟତା ଅଛି।"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:114
@@ -1228,6 +1231,8 @@ msgid ""
 "Subscription ''{0}'' must be attached using a quantity evenly divisible by "
 "{1}"
 msgstr ""
+"ସଦସ୍ୟତା ''{0}'' ନିଶ୍ଚିତ ଭାବରେ {1} ଦ୍ୱାରା ବିଭାଜିତ ଗୋଟିଏ ପରିମାଣ ବ୍ୟବହାର କରି "
+"ସଂଲଗ୍ନ କରାଯାଇଥାଏ"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:149
 #, java-format
@@ -1324,8 +1329,8 @@ msgstr "ଏହି ''{0}'' ଗୁଣଟି ନିଶ୍ଚିତ ଭାବରେ 
 msgid ""
 "You cannot create a circular reference for products that ''{0}'' relies on."
 msgstr ""
-"''{0}'' ଉପରେ ନିର୍ଭର କରୁଥିବା ଉତ୍ପାଦନଗୁଡ଼ିକ ପାଇଁ ଆପଣ କେନ୍ଦ୍ରିୟ ସନ୍ଦର୍ଭ ନିର୍ମାଣ"
-" କରିପାରିବେ ନାହିଁ।"
+"''{0}'' ଉପରେ ନିର୍ଭର କରୁଥିବା ଉତ୍ପାଦନଗୁଡ଼ିକ ପାଇଁ ଆପଣ କେନ୍ଦ୍ରିୟ ସନ୍ଦର୍ଭ ନିର୍ମାଣ "
+"କରିପାରିବେ ନାହିଁ।"
 
 #: src/main/java/org/candlepin/model/ConsumerCurator.java:103
 #, java-format
@@ -1339,7 +1344,7 @@ msgstr "UUID {0} ବିଶିଷ୍ଟ ତନ୍ତ୍ରଟି ଗୋଟିଏ 
 
 #: src/main/java/org/candlepin/model/AbstractHibernateCurator.java:418
 msgid "Request failed due to concurrent modification, please re-try."
-msgstr ""
+msgstr "ଲଗାତାର ପରିବର୍ତ୍ତନ ହେତୁ ଅନୁରୋଧ ବିଫଳ ହୋଇଛି, ଦୟାକରି ପୁଣି ଚେଷ୍ଟା କରନ୍ତୁ।"
 
 #: src/main/java/org/candlepin/model/UeberCertificateGenerator.java:122
 #, java-format

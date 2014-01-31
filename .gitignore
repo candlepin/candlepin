@@ -46,3 +46,4 @@ buildconf/scripts/import_products_ipa.json
 buildconf/scripts/import_products.json
 custom.yaml
 website/apidoc
+po/.zanata-cache

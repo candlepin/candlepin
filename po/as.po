@@ -1,11 +1,12 @@
 # ngoswami <ngoswami@fedoraproject.org>, 2012. #zanata
 # ngoswami <ngoswami@fedoraproject.org>, 2013. #zanata
+# ngoswami <ngoswami@fedoraproject.org>, 2014. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2014-01-14 16:24-0400\n"
-"PO-Revision-Date: 2013-08-26 09:38-0400\n"
+"PO-Revision-Date: 2014-01-15 08:26-0500\n"
 "Last-Translator: ngoswami <ngoswami@fedoraproject.org>\n"
 "Language-Team: Assamese\n"
 "MIME-Version: 1.0\n"
@@ -13,7 +14,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Language: as\n"
 "Plural-Forms: \n"
-"X-Generator: Zanata 3.0.3\n"
+"X-Generator: Zanata 3.2.3\n"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ngoswami
@@ -198,22 +199,22 @@ msgstr "{0} এ অতিথি আইডি {1} মচি পেলালে"
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:162
 #, java-format
 msgid "{0} updated the rules in the databse to version {1}"
-msgstr ""
+msgstr "{0} এ ডাটাবেইচৰ নিয়মসমূহ সংস্কৰণ {1} ত আপডেইট কৰিলে"
 
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:164
 #, java-format
 msgid "{0} removed the rules from the database"
-msgstr ""
+msgstr "{0} এ নিয়মসমূহ ডাটাবেইচৰ পৰা আতৰাই দিলে"
 
 #: src/main/java/org/candlepin/resource/ConsumerContentOverrideResource.java:110
 #, java-format
 msgid "Not allowed to override values for: {0}"
-msgstr ""
+msgstr "মানসমূহ অভাৰৰাইড কৰিব নোৱাৰি: {0}"
 
 #: src/main/java/org/candlepin/resource/ConsumerContentOverrideResource.java:190
 #, java-format
 msgid "Name and value of the override must not exceed {0} characters."
-msgstr ""
+msgstr "অভাৰৰাইডৰ নাম আৰু মান {0} আখৰৰ অধিক হব নোৱাৰিব।"
 
 #: src/main/java/org/candlepin/resource/UserResource.java:141
 #, java-format
@@ -280,7 +281,7 @@ msgstr "উপভোক্তা IDs ৰ সৈতে অন্য প্ৰশ�
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:298
 #, java-format
 msgid "Consumer with id {0} could not be found."
-msgstr ""
+msgstr "আইডি {0} ৰ সৈতে উপভোক্তা পোৱা নগল।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ngoswami
@@ -464,7 +465,7 @@ msgstr ""
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1750
 #, java-format
 msgid "A CDN with label {0} does not exist on this system."
-msgstr ""
+msgstr "লেবেল {0} ৰ সৈতে এটা CDN এই চিস্টেমত নাই।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -581,17 +582,17 @@ msgstr "আইডি {0} ৰ সৈতে পুল পোৱা নগল।"
 #: src/main/java/org/candlepin/resource/GuestIdResource.java:168
 #, java-format
 msgid "Guest ID in json \"{0}\" does not match path guest ID \"{1}\""
-msgstr ""
+msgstr "json \"{0}\" ৰ অতিথি ID পথৰ অতিথি ID \"{1}\" ৰ সৈতে মিল নাখায়"
 
 #: src/main/java/org/candlepin/resource/GuestIdResource.java:187
 #, java-format
 msgid "Consumer with uuid {0} could not be found."
-msgstr ""
+msgstr "uuid {0} ৰ সৈতে উপভোক্তা পোৱা নগল।"
 
 #: src/main/java/org/candlepin/resource/GuestIdResource.java:221
 #, java-format
 msgid "Guest with uuid {0} could not be found."
-msgstr ""
+msgstr "uuid {0} ৰ সৈতে অতিথি পোৱা নগল।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -692,17 +693,17 @@ msgstr ""
 #: src/main/java/org/candlepin/resource/OwnerResource.java:509
 #, java-format
 msgid "The activation key name ''{0}'' is already in use for owner {1}"
-msgstr "সক্ৰিয়কৰণ কি' নাম ''{0}'' ইতিমধ্যে গৰাকী {1} ৰ বাবে ব্যৱহৃত"
+msgstr "সক্ৰিয়কৰণ কি নাম ''{0}'' ইতিমধ্যে গৰাকী {1} ৰ বাবে ব্যৱহৃত"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:578
 #, java-format
 msgid "{0} is not a valid log level"
-msgstr ""
+msgstr "{0} এটা বৈধ লগ স্তৰ নহয়"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:657
 #, java-format
 msgid "No such unit type(s): {0}"
-msgstr ""
+msgstr "এই ধৰণৰ কোনো একক ধৰণ(সমূহ) নাই: {0}"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:700
 #: src/main/java/org/candlepin/resource/PoolResource.java:142
@@ -841,7 +842,7 @@ msgstr "কাৰ্য্য ইতিমধ্যে বাতিল কৰা
 
 #: src/main/java/org/candlepin/resource/JobResource.java:200
 msgid "cannot cancel a job that is not in CREATED or WAITING state"
-msgstr ""
+msgstr "এটা সৃষ্টিত অথবা অপেক্ষাৰত অৱস্থাত থকা এটা কাৰ্য্য বাতিল কৰিব নোৱাৰি"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ngoswami
@@ -880,12 +881,12 @@ msgstr "আইডি {0} ৰ সৈতে একক ধৰণ পোৱা ন�
 #: src/main/java/org/candlepin/resource/CdnResource.java:93
 #, java-format
 msgid "A CDN with the label {0}already exists"
-msgstr ""
+msgstr "লেবেল {0} ৰ সৈতে এটা CDN ইতিমধ্যে অস্তিত্ববান"
 
 #: src/main/java/org/candlepin/resource/CdnResource.java:128
 #, java-format
 msgid "No such content delivery network: {0}"
-msgstr ""
+msgstr "এই ধৰণৰ কোনো সমল প্ৰেৰণ নেটৱাৰ্ক নাই: {0}"
 
 #: src/main/java/org/candlepin/resource/DistributorVersionResource.java:104
 #, java-format
@@ -899,42 +900,42 @@ msgstr "এনে কোনো বিতৰণকাৰী সংস্কৰণ
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:58
 msgid "Not supported by a valid subscription."
-msgstr ""
+msgstr "এটা বৈধ স্বাক্ষৰণ দ্বাৰা সমৰ্থিত নহয়।"
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:61
 #, java-format
 msgid "Supports architecture {0} but the system is {1}."
-msgstr ""
+msgstr "স্থাপত্য {0} ক সমৰ্থন কৰে কিন্তু চিস্টেম হল {1}।"
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:66
 #, java-format
 msgid "Only supports {0} of {1} sockets."
-msgstr ""
+msgstr "কেৱল {1} চকেটসমূহৰ {0} ক সমৰ্থন কৰে।"
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:71
 #, java-format
 msgid "Only supports {0} of {1} cores."
-msgstr ""
+msgstr "কেৱল {1} কেন্দ্ৰসমূহৰ {0} ক সমৰ্থন কৰে।"
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:76
 #, java-format
 msgid "Only supports {0}GB of {1}GB of RAM."
-msgstr ""
+msgstr "কেৱল {1}GB RAM ৰ {0}GB ক সমৰ্থন কৰে।"
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:81
 #, java-format
 msgid "Only supports {0} of {1} virtual guests."
-msgstr ""
+msgstr "কেৱল {1} ভাৰছুৱেল অতিথিসমূহৰ {0} ক সমৰ্থন কৰে।"
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:86
 #, java-format
 msgid "Only supports {0} of {1} vCPUs."
-msgstr ""
+msgstr "কেৱল {1} vCPUs ৰ {0} ক সমৰ্থন কৰে।"
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:91
 #, java-format
 msgid "{2} COVERAGE PROBLEM.  Supports {0} of {1}"
-msgstr ""
+msgstr "{2} অন্তৰ্ভুক্তকৰণ সমস্যা। {1} ৰ {0} ক সমৰ্থন কৰে"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ngoswami
@@ -957,27 +958,27 @@ msgstr "{0} ৰ বাবে স্বাক্ষৰণসমূহৰ অৱ�
 
 #: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:50
 msgid "Other"
-msgstr ""
+msgstr "অন্য"
 
 #: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:53
 msgid "Instance Based"
-msgstr ""
+msgstr "উদাহৰণ ভিত্তিয়"
 
 #: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:56
 msgid "Stackable"
-msgstr ""
+msgstr "স্টেকেবুল"
 
 #: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:59
 msgid "Multi-Entitleable"
-msgstr ""
+msgstr "বহু-অনুজ্ঞাযোগ্য"
 
 #: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:62
 msgid "Standard"
-msgstr ""
+msgstr "প্ৰামাণিক"
 
 #: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:65
 msgid "Stackable only with other subscriptions"
-msgstr ""
+msgstr "কেৱল অন্য স্বাক্ষৰণসমূহৰ সৈতে স্টেক কৰিব পাৰি"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -996,7 +997,7 @@ msgstr "{1}.{2}:{3} ত ৰানটাইম ত্ৰুটি {0}"
 #: src/main/java/org/candlepin/exceptions/mappers/BadRequestExceptionMapper.java:57
 #, java-format
 msgid "Invalid format for query parameter {0}. Expected format: {1}"
-msgstr ""
+msgstr "প্ৰশ্ন প্ৰাচল {0} ৰ বাবে অবৈধ বিন্যাস। প্ৰত্যাশিত বিন্যাস: {1}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -1174,12 +1175,12 @@ msgstr "oauth একক কি' প্ৰাপ্ত কৰিবলে ত্�
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
-"to address this problem. See kbase "
-"https://access.redhat.com/knowledge/node/129003 for more information."
+"to address this problem. See kbase https://access.redhat.com/knowledge/node/"
+"129003 for more information."
 msgstr ""
-"প্ৰমাণপত্ৰ {0} ৰ বাবে অত্যাধিক সমল সংহতি। এই সমস্যাক চাবলে এটা নতুন ক্লাএন্ট"
-" উপলব্ধ থাকিব পাৰে। অধিক তথ্যৰ বাবে kbase "
-"https://access.redhat.com/knowledge/node/129003 চাওক।"
+"প্ৰমাণপত্ৰ {0} ৰ বাবে অত্যাধিক সমল সংহতি। এই সমস্যাক চাবলে এটা নতুন ক্লাএন্ট "
+"উপলব্ধ থাকিব পাৰে। অধিক তথ্যৰ বাবে kbase https://access.redhat.com/knowledge/"
+"node/129003 চাওক।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ngoswami
@@ -1197,8 +1198,8 @@ msgstr "স্বাক্ষৰণ পুল {0} অস্তিত্ববা
 #: src/main/java/org/candlepin/controller/Entitler.java:109
 #, java-format
 msgid ""
-"This unit has already had the subscription matching pool ID ''{0}'' "
-"attached."
+"This unit has already had the subscription matching pool ID ''{0}'' attached."
+""
 msgstr "এই এককৰ ইতিমধ্যে স্বাক্ষৰণ মিল খোৱা পুল ID ''{0}'' সংলগ্ন আছে।"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:114
@@ -1240,6 +1241,8 @@ msgid ""
 "Subscription ''{0}'' must be attached using a quantity evenly divisible by "
 "{1}"
 msgstr ""
+"স্বাক্ষৰণ \"{0}\" ক {1} দ্বাৰা হৰণ কৰিব পৰা এটা পৰিমাণ ব্যৱহাৰ কৰি সংলঘ্ন "
+"কৰিব লাগিব"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:149
 #, java-format
@@ -1348,7 +1351,7 @@ msgstr "UUID {0} ৰ সৈতে চিস্টেম এটা ভাৰছ�
 
 #: src/main/java/org/candlepin/model/AbstractHibernateCurator.java:418
 msgid "Request failed due to concurrent modification, please re-try."
-msgstr ""
+msgstr "সংগামী পৰিবৰ্তনৰ বাবে অনুৰোধ ব্যৰ্থ হল, অনুগ্ৰহ কৰি পুনৰ চেষ্টা কৰক।"
 
 #: src/main/java/org/candlepin/model/UeberCertificateGenerator.java:122
 #, java-format

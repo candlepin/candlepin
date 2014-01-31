@@ -1,19 +1,21 @@
 # ypoyarko <ypoyarko@redhat.com>, 2012. #zanata
 # ypoyarko <ypoyarko@redhat.com>, 2013. #zanata
+# ypoyarko <ypoyarko@redhat.com>, 2014. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-06-27 12:35-0400\n"
-"PO-Revision-Date: 2013-09-18 01:22-0400\n"
+"PO-Revision-Date: 2014-01-16 07:06-0500\n"
 "Last-Translator: ypoyarko <ypoyarko@redhat.com>\n"
 "Language-Team: Russian\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: ru\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)\n"
-"X-Generator: Zanata 3.0.3\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
+"n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)\n"
+"X-Generator: Zanata 3.2.3\n"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ypoyarko
@@ -198,22 +200,24 @@ msgstr "{0} удалил ID гостя {1}"
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:162
 #, java-format
 msgid "{0} updated the rules in the databse to version {1}"
-msgstr ""
+msgstr "{0} обновил правила в базе данных до версии {1}"
 
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:164
 #, java-format
 msgid "{0} removed the rules from the database"
-msgstr ""
+msgstr "{0} удалил правила из базы данных"
 
 #: src/main/java/org/candlepin/resource/ConsumerContentOverrideResource.java:110
 #, java-format
 msgid "Not allowed to override values for: {0}"
-msgstr ""
+msgstr "Не разрешается переопределять значения для {0}."
 
 #: src/main/java/org/candlepin/resource/ConsumerContentOverrideResource.java:190
 #, java-format
 msgid "Name and value of the override must not exceed {0} characters."
 msgstr ""
+"Максимально допустимое число знаков для имени и значения переопределения: "
+"{0}"
 
 #: src/main/java/org/candlepin/resource/UserResource.java:141
 #, java-format
@@ -280,7 +284,7 @@ msgstr "ID клиента не может использоваться с дру
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:298
 #, java-format
 msgid "Consumer with id {0} could not be found."
-msgstr ""
+msgstr "Клиент с ID {0} не найден. "
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ypoyarko
@@ -461,7 +465,7 @@ msgstr ""
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1750
 #, java-format
 msgid "A CDN with label {0} does not exist on this system."
-msgstr ""
+msgstr "CDN {0} нет в системе."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -569,17 +573,17 @@ msgstr "Не найден пул {0}."
 #: src/main/java/org/candlepin/resource/GuestIdResource.java:168
 #, java-format
 msgid "Guest ID in json \"{0}\" does not match path guest ID \"{1}\""
-msgstr ""
+msgstr "ID гостя в json \"{0}\" не соответствует ID path guest ID \"{1}\""
 
 #: src/main/java/org/candlepin/resource/GuestIdResource.java:187
 #, java-format
 msgid "Consumer with uuid {0} could not be found."
-msgstr ""
+msgstr "Клиент с UUID {0} не найден."
 
 #: src/main/java/org/candlepin/resource/GuestIdResource.java:221
 #, java-format
 msgid "Guest with uuid {0} could not be found."
-msgstr ""
+msgstr "Гость UUID {0} не найден."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -679,12 +683,12 @@ msgstr "Имя ключа «{0}» уже используется владель
 #: src/main/java/org/candlepin/resource/OwnerResource.java:578
 #, java-format
 msgid "{0} is not a valid log level"
-msgstr ""
+msgstr "Недопустимый уровень журнала: {0}"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:657
 #, java-format
 msgid "No such unit type(s): {0}"
-msgstr ""
+msgstr "Нет таких типов: {0}"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:700
 #: src/main/java/org/candlepin/resource/PoolResource.java:142
@@ -819,7 +823,7 @@ msgstr "задание уже отменено"
 
 #: src/main/java/org/candlepin/resource/JobResource.java:200
 msgid "cannot cancel a job that is not in CREATED or WAITING state"
-msgstr ""
+msgstr "только задания в состоянии CREATED и WAITING могут быть отменены"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ypoyarko
@@ -858,12 +862,12 @@ msgstr "Не найден тип с ID {0}"
 #: src/main/java/org/candlepin/resource/CdnResource.java:93
 #, java-format
 msgid "A CDN with the label {0}already exists"
-msgstr ""
+msgstr "CDN {0} уже существует"
 
 #: src/main/java/org/candlepin/resource/CdnResource.java:128
 #, java-format
 msgid "No such content delivery network: {0}"
-msgstr ""
+msgstr "Нет сети доставки содержимого: {0}"
 
 #: src/main/java/org/candlepin/resource/DistributorVersionResource.java:104
 #, java-format
@@ -877,42 +881,42 @@ msgstr "Нет версии дистрибьютора: {0}"
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:58
 msgid "Not supported by a valid subscription."
-msgstr ""
+msgstr "Не поддерживается действительными подписками."
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:61
 #, java-format
 msgid "Supports architecture {0} but the system is {1}."
-msgstr ""
+msgstr "Поддерживается архитектура {0}; архитектура системы — {1}."
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:66
 #, java-format
 msgid "Only supports {0} of {1} sockets."
-msgstr ""
+msgstr "Поддерживается {0} из {1} сокетов."
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:71
 #, java-format
 msgid "Only supports {0} of {1} cores."
-msgstr ""
+msgstr "Поддерживается {0} из {1} ядер."
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:76
 #, java-format
 msgid "Only supports {0}GB of {1}GB of RAM."
-msgstr ""
+msgstr "Поддерживается {0} ГБ из {1} ГБ ОЗУ."
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:81
 #, java-format
 msgid "Only supports {0} of {1} virtual guests."
-msgstr ""
+msgstr "Поддерживается {0} из {1} виртуальных систем."
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:86
 #, java-format
 msgid "Only supports {0} of {1} vCPUs."
-msgstr ""
+msgstr "Поддерживается {0} из {1} виртуальных процессоров."
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:91
 #, java-format
 msgid "{2} COVERAGE PROBLEM.  Supports {0} of {1}"
-msgstr ""
+msgstr "Конфликт покрытия {2}: поддерживает {0} из {1}."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ypoyarko
@@ -934,27 +938,27 @@ msgstr "Срок действия подписок для {0} истек {1}"
 
 #: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:50
 msgid "Other"
-msgstr ""
+msgstr "Другие"
 
 #: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:53
 msgid "Instance Based"
-msgstr ""
+msgstr "На основе экземпляров"
 
 #: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:56
 msgid "Stackable"
-msgstr ""
+msgstr "Составное"
 
 #: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:59
 msgid "Multi-Entitleable"
-msgstr ""
+msgstr "Множественные полномочия"
 
 #: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:62
 msgid "Standard"
-msgstr ""
+msgstr "Стандартные"
 
 #: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:65
 msgid "Stackable only with other subscriptions"
-msgstr ""
+msgstr "Используется с другими подписками"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -973,7 +977,7 @@ msgstr "Ошибка выполнения {0} в {1}.{2}:{3}"
 #: src/main/java/org/candlepin/exceptions/mappers/BadRequestExceptionMapper.java:57
 #, java-format
 msgid "Invalid format for query parameter {0}. Expected format: {1}"
-msgstr ""
+msgstr "Неверный формат параметра запроса {0}. Допускается: {1}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -1149,8 +1153,8 @@ msgstr "Ошибка при получении ключа OAuth"
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
-"to address this problem. See kbase "
-"https://access.redhat.com/knowledge/node/129003 for more information."
+"to address this problem. See kbase https://access.redhat.com/knowledge/node/"
+"129003 for more information."
 msgstr ""
 "Слишком много наборов содержимого для сертификата {0}. Обновление клиента "
 "может это исправить (см. https://access.redhat.com/knowledge/node/129003)."
@@ -1171,8 +1175,8 @@ msgstr "{0} не существует."
 #: src/main/java/org/candlepin/controller/Entitler.java:109
 #, java-format
 msgid ""
-"This unit has already had the subscription matching pool ID ''{0}'' "
-"attached."
+"This unit has already had the subscription matching pool ID ''{0}'' attached."
+""
 msgstr "Этой группе уже сопоставлен ID пула «{0}»."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:114
@@ -1213,7 +1217,7 @@ msgstr "Пул доступен только виртуальным гостям
 msgid ""
 "Subscription ''{0}'' must be attached using a quantity evenly divisible by "
 "{1}"
-msgstr ""
+msgstr "Число подписок «{0}» должно быть кратно {1}."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:149
 #, java-format
@@ -1326,6 +1330,7 @@ msgstr "Система с UUID {0} является виртуальным го�
 #: src/main/java/org/candlepin/model/AbstractHibernateCurator.java:418
 msgid "Request failed due to concurrent modification, please re-try."
 msgstr ""
+"Запрос не обработан, так как изменения уже применяются. Повторите попытку. "
 
 #: src/main/java/org/candlepin/model/UeberCertificateGenerator.java:122
 #, java-format

@@ -1,11 +1,12 @@
 # rajesh <rajesh@fedoraproject.org>, 2012. #zanata
 # rajesh <rajesh@fedoraproject.org>, 2013. #zanata
+# rajesh <rajesh@fedoraproject.org>, 2014. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-06-27 12:35-0400\n"
-"PO-Revision-Date: 2013-09-19 08:41-0400\n"
+"PO-Revision-Date: 2014-01-17 03:25-0500\n"
 "Last-Translator: rajesh <rajesh@fedoraproject.org>\n"
 "Language-Team: Hindi\n"
 "MIME-Version: 1.0\n"
@@ -13,7 +14,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Language: hi\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
-"X-Generator: Zanata 3.0.3\n"
+"X-Generator: Zanata 3.2.3\n"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author rajesh
@@ -198,22 +199,22 @@ msgstr "{0} ने अतिथि आईडी {1} मिटाया"
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:162
 #, java-format
 msgid "{0} updated the rules in the databse to version {1}"
-msgstr ""
+msgstr "{0} ने {1} संस्करण में डेटाबेस में नियमों को अद्यतन किया"
 
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:164
 #, java-format
 msgid "{0} removed the rules from the database"
-msgstr ""
+msgstr "{0} ने डेटाबेस से नियमों को हटाया"
 
 #: src/main/java/org/candlepin/resource/ConsumerContentOverrideResource.java:110
 #, java-format
 msgid "Not allowed to override values for: {0}"
-msgstr ""
+msgstr "इसके लिए मानों के अधिरोहन के लिए स्वीकृत नहीं: {0}"
 
 #: src/main/java/org/candlepin/resource/ConsumerContentOverrideResource.java:190
 #, java-format
 msgid "Name and value of the override must not exceed {0} characters."
-msgstr ""
+msgstr "ओवरराइड का नाम और मान {0} वर्ण से अधिक नहीं होना चाहिए."
 
 #: src/main/java/org/candlepin/resource/UserResource.java:141
 #, java-format
@@ -280,7 +281,7 @@ msgstr "ग्राहक ID के साथ अन्य प्रश्न �
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:298
 #, java-format
 msgid "Consumer with id {0} could not be found."
-msgstr ""
+msgstr "आईडी {0} के साथ ग्राहक नहीं मिला."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author rajesh
@@ -462,7 +463,7 @@ msgstr ""
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1750
 #, java-format
 msgid "A CDN with label {0} does not exist on this system."
-msgstr ""
+msgstr "{0} लेबल से साथ सीडीएन इस तंत्र पर मौजूद नहीं है."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -572,17 +573,17 @@ msgstr "id {0} सहित पुल नहीं मिल सका."
 #: src/main/java/org/candlepin/resource/GuestIdResource.java:168
 #, java-format
 msgid "Guest ID in json \"{0}\" does not match path guest ID \"{1}\""
-msgstr ""
+msgstr "json \"{0}\" में अतिथि आईडी पथ अतिथि आईडी \"{1}\" से मेल नहीं खाता है"
 
 #: src/main/java/org/candlepin/resource/GuestIdResource.java:187
 #, java-format
 msgid "Consumer with uuid {0} could not be found."
-msgstr ""
+msgstr "uuid {0} के साथ ग्राहक नहीं मिला."
 
 #: src/main/java/org/candlepin/resource/GuestIdResource.java:221
 #, java-format
 msgid "Guest with uuid {0} could not be found."
-msgstr ""
+msgstr "uuid {0} के साथ अतिथि नहीं मिल सका."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -683,12 +684,12 @@ msgstr "सक्रियकरण कुँजी नाम ''{0}'' स्व�
 #: src/main/java/org/candlepin/resource/OwnerResource.java:578
 #, java-format
 msgid "{0} is not a valid log level"
-msgstr ""
+msgstr "{0} एक मान्य लॉग स्तर नहीं है"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:657
 #, java-format
 msgid "No such unit type(s): {0}"
-msgstr ""
+msgstr "इस प्रकार का कोई इकाई नहीं: {0}"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:700
 #: src/main/java/org/candlepin/resource/PoolResource.java:142
@@ -810,8 +811,8 @@ msgstr "ID ''{0}'' के लिए एंटाइटेलमेंट नह�
 msgid ""
 "You must specify exactly one of owner key, unit UUID, or principal name."
 msgstr ""
-"आपको स्वामी कुँजी, इकाई UUID, या प्रधान नाम में से एक को जरूर निर्दिष्ट करना"
-" चाहिए."
+"आपको स्वामी कुँजी, इकाई UUID, या प्रधान नाम में से एक को जरूर निर्दिष्ट करना "
+"चाहिए."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author rajesh
@@ -826,6 +827,8 @@ msgstr "कार्य पहले से रद्द"
 #: src/main/java/org/candlepin/resource/JobResource.java:200
 msgid "cannot cancel a job that is not in CREATED or WAITING state"
 msgstr ""
+"एक कार्य को रद्द नहीं कर सकता है जो कि बनाए गए या प्रतीक्षारत स्थिति में "
+"नहीं है"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author rajesh
@@ -864,12 +867,12 @@ msgstr "आईडी {0} के साथ इकाई प्रकार नह
 #: src/main/java/org/candlepin/resource/CdnResource.java:93
 #, java-format
 msgid "A CDN with the label {0}already exists"
-msgstr ""
+msgstr "लेबल {0} के साथ सीडीएन पहले से मौजूद है"
 
 #: src/main/java/org/candlepin/resource/CdnResource.java:128
 #, java-format
 msgid "No such content delivery network: {0}"
-msgstr ""
+msgstr "कोई कंटेंट डिलिवरी संजाल नहीं: {0}"
 
 #: src/main/java/org/candlepin/resource/DistributorVersionResource.java:104
 #, java-format
@@ -883,42 +886,42 @@ msgstr "कोई ऐसा वितरक संस्करण नहीं: 
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:58
 msgid "Not supported by a valid subscription."
-msgstr ""
+msgstr "किसी वैध सदस्यता के द्वारा समर्थित नहीं."
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:61
 #, java-format
 msgid "Supports architecture {0} but the system is {1}."
-msgstr ""
+msgstr "{0} आर्किटेक्चकर का समर्थन करता है लेकिन तंत्र {1} है."
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:66
 #, java-format
 msgid "Only supports {0} of {1} sockets."
-msgstr ""
+msgstr "केवल {0} साकेट का समर्थन करता है,  {1} में से"
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:71
 #, java-format
 msgid "Only supports {0} of {1} cores."
-msgstr ""
+msgstr "केवल {0} कोर का समर्थन करता है,  {1} में से"
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:76
 #, java-format
 msgid "Only supports {0}GB of {1}GB of RAM."
-msgstr ""
+msgstr "केवल {0}GB रैम का समर्थन करता है, {1}GB में."
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:81
 #, java-format
 msgid "Only supports {0} of {1} virtual guests."
-msgstr ""
+msgstr "केवल {0} आभासी अतिथि का समर्थन करता है, {1} में."
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:86
 #, java-format
 msgid "Only supports {0} of {1} vCPUs."
-msgstr ""
+msgstr "केवल {0} vCPU का समर्थन करता है, {1} में."
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:91
 #, java-format
 msgid "{2} COVERAGE PROBLEM.  Supports {0} of {1}"
-msgstr ""
+msgstr "{2} कवरेज समस्या.  {0} का समर्थन करता है, {1} में."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author rajesh
@@ -940,27 +943,27 @@ msgstr "{0} के लिए सदस्यता इस समय खत्म
 
 #: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:50
 msgid "Other"
-msgstr ""
+msgstr "अन्य"
 
 #: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:53
 msgid "Instance Based"
-msgstr ""
+msgstr "उदाहरण आधारित"
 
 #: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:56
 msgid "Stackable"
-msgstr ""
+msgstr "स्टैकयोग्य"
 
 #: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:59
 msgid "Multi-Entitleable"
-msgstr ""
+msgstr "बहु-एंटाइटेबल"
 
 #: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:62
 msgid "Standard"
-msgstr ""
+msgstr "मानक"
 
 #: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:65
 msgid "Stackable only with other subscriptions"
-msgstr ""
+msgstr "केवल अन्य सदस्यता के साथ स्टैक करने योग्य"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -979,7 +982,7 @@ msgstr "रनटाइम त्रुटि {0}, {1}.{2}:{3} पर"
 #: src/main/java/org/candlepin/exceptions/mappers/BadRequestExceptionMapper.java:57
 #, java-format
 msgid "Invalid format for query parameter {0}. Expected format: {1}"
-msgstr ""
+msgstr "क्वेरी पैरामीटर {0} के लिए अमान्य प्रारूप. प्रत्याशित प्रारूप: {1}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -1071,8 +1074,8 @@ msgid ""
 "This subscription management application has already been imported by "
 "another owner."
 msgstr ""
-"यह सदस्यता प्रबंधन अनुप्रयोग पहले से दूसरे स्वामी द्वारा आयातित किया जा चुका"
-" है."
+"यह सदस्यता प्रबंधन अनुप्रयोग पहले से दूसरे स्वामी द्वारा आयातित किया जा चुका "
+"है."
 
 #: src/main/java/org/candlepin/sync/ConsumerImporter.java:85
 msgid ""
@@ -1154,8 +1157,8 @@ msgstr "oauth इकाई कुंजी पाने में त्रु�
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
-"to address this problem. See kbase "
-"https://access.redhat.com/knowledge/node/129003 for more information."
+"to address this problem. See kbase https://access.redhat.com/knowledge/node/"
+"129003 for more information."
 msgstr ""
 "प्रमाणपत्र {0} के लिए कई सामग्री सेट. एक नव्यतर क्लाइंट को इस समस्या को "
 "संबोधित करने के लिए जरूर उपलब्ध रहना चाहिए. अधिक सूचना के लिए केबस देखें "
@@ -1177,8 +1180,8 @@ msgstr "सदस्यता पूल {0} मौजूद नहीं है.
 #: src/main/java/org/candlepin/controller/Entitler.java:109
 #, java-format
 msgid ""
-"This unit has already had the subscription matching pool ID ''{0}'' "
-"attached."
+"This unit has already had the subscription matching pool ID ''{0}'' attached."
+""
 msgstr "इस इकाई के पास सदस्यता मैचिंग पुल ID ''{0}'' पहले से संलग्न है."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:114
@@ -1222,6 +1225,8 @@ msgid ""
 "Subscription ''{0}'' must be attached using a quantity evenly divisible by "
 "{1}"
 msgstr ""
+"''{0}'' सदस्यता को जरूर संलग्न किया जाना चाहिए ऐसी मात्रा के साथ जो {1} से "
+"समान रूप से विभाज्य हो"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:149
 #, java-format
@@ -1334,7 +1339,7 @@ msgstr "UUID {0} के साथ तंत्र एक आभासी अत�
 
 #: src/main/java/org/candlepin/model/AbstractHibernateCurator.java:418
 msgid "Request failed due to concurrent modification, please re-try."
-msgstr ""
+msgstr "एक ही समय में बदलाव के चलते आग्रह विफल, कृपया फिर कोशिश करें."
 
 #: src/main/java/org/candlepin/model/UeberCertificateGenerator.java:122
 #, java-format
