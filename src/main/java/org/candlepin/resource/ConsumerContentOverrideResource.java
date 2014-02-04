@@ -21,6 +21,8 @@ import org.candlepin.model.ConsumerContentOverride;
 import org.candlepin.model.ConsumerContentOverrideCurator;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.util.ContentOverrideValidator;
+import org.xnap.commons.i18n.I18n;
+
 import com.google.inject.Inject;
 
 /**
@@ -37,8 +39,9 @@ public class ConsumerContentOverrideResource extends
     public ConsumerContentOverrideResource(
             ConsumerContentOverrideCurator consumerContentOverrideCurator,
             ConsumerCurator consumerCurator,
-            ContentOverrideValidator contentOverrideValidator) {
-        super(consumerContentOverrideCurator, contentOverrideValidator, "consumer_uuid");
+            ContentOverrideValidator contentOverrideValidator, I18n i18n) {
+        super(consumerContentOverrideCurator, contentOverrideValidator,
+            i18n, "consumer_uuid");
         this.consumerCurator = consumerCurator;
     }
 

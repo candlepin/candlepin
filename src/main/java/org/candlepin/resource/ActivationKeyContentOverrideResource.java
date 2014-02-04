@@ -21,6 +21,7 @@ import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyContentOverrideCurator;
 import org.candlepin.model.activationkeys.ActivationKeyContentOverride;
 import org.candlepin.util.ContentOverrideValidator;
+import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
 
@@ -44,8 +45,8 @@ public class ActivationKeyContentOverrideResource extends
     public ActivationKeyContentOverrideResource(
         ActivationKeyContentOverrideCurator contentOverrideCurator,
         ActivationKeyCurator activationKeyCurator,
-        ContentOverrideValidator contentOverrideValidator) {
-        super(contentOverrideCurator, contentOverrideValidator, "activation_key_id");
+        ContentOverrideValidator contentOverrideValidator, I18n i18n) {
+        super(contentOverrideCurator, contentOverrideValidator, i18n, "activation_key_id");
         this.activationKeyCurator = activationKeyCurator;
     }
 

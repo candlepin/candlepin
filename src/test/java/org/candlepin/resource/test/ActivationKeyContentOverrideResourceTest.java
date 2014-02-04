@@ -16,6 +16,7 @@ package org.candlepin.resource.test;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 
@@ -26,6 +27,9 @@ import java.util.List;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriInfo;
 
+import org.candlepin.auth.Access;
+import org.candlepin.auth.Principal;
+import org.candlepin.auth.SubResource;
 import org.candlepin.model.ContentOverride;
 import org.candlepin.model.Owner;
 import org.candlepin.model.activationkeys.ActivationKey;
@@ -41,6 +45,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * ActivationKeyContentOverrideResourceTest
@@ -63,6 +68,12 @@ public class ActivationKeyContentOverrideResourceTest {
     @Mock
     private ContentOverrideValidator contentOverrideValidator;
 
+    @Mock
+    private Principal principal;
+
+    @Mock
+    private I18n i18n;
+
     @Before
     public void setUp() throws URISyntaxException {
         key = new ActivationKey("actkey", owner);
@@ -71,8 +82,10 @@ public class ActivationKeyContentOverrideResourceTest {
         mvm.add("activation_key_id", key.getId());
         when(context.getPathParameters()).thenReturn(mvm);
         akcor = new ActivationKeyContentOverrideResource(
-            activationKeyContentOverrideCurator, akc, contentOverrideValidator);
+            activationKeyContentOverrideCurator, akc, contentOverrideValidator, i18n);
         when(akc.verifyAndLookupKey(eq(key.getId()))).thenReturn(key);
+        when(principal.canAccess(any(Object.class), any(SubResource.class),
+            any(Access.class))).thenReturn(true);
     }
 
     @Test
@@ -84,7 +97,8 @@ public class ActivationKeyContentOverrideResourceTest {
         overrides.add(override);
 
         when(activationKeyContentOverrideCurator.getList(eq(key))).thenReturn(overrides);
-        List<ActivationKeyContentOverride> res = akcor.getContentOverrideList(context);
+        List<ActivationKeyContentOverride> res =
+            akcor.getContentOverrideList(context, principal);
 
         assertEquals(overrides, res);
     }
@@ -96,7 +110,7 @@ public class ActivationKeyContentOverrideResourceTest {
 
         List<ContentOverride> toDelete = new LinkedList<ContentOverride>();
         toDelete.add(override);
-        akcor.deleteContentOverrides(context, toDelete);
+        akcor.deleteContentOverrides(context, principal, toDelete);
         verify(activationKeyContentOverrideCurator, Mockito.times(1))
             .removeByName(eq(key), eq(override.getContentLabel()), eq(override.getName()));
     }
@@ -104,7 +118,7 @@ public class ActivationKeyContentOverrideResourceTest {
     @Test
     public void testActivationKeyRemoveAllOverrides() {
         List<ContentOverride> toDelete = new LinkedList<ContentOverride>();
-        akcor.deleteContentOverrides(context, toDelete);
+        akcor.deleteContentOverrides(context, principal, toDelete);
         verify(activationKeyContentOverrideCurator, Mockito.times(1))
             .removeByParent(eq(key));
     }
@@ -120,7 +134,7 @@ public class ActivationKeyContentOverrideResourceTest {
         toAdd.add(override);
         toAdd.add(otherOverride);
 
-        akcor.addContentOverrides(context, toAdd);
+        akcor.addContentOverrides(context, principal, toAdd);
         verify(activationKeyContentOverrideCurator, Mockito.times(1))
             .addOrUpdate(eq(key), eq(override));
         verify(activationKeyContentOverrideCurator, Mockito.times(1))
@@ -131,7 +145,7 @@ public class ActivationKeyContentOverrideResourceTest {
     public void testActivationKeyOverrideValidationIsRun() {
         List<ContentOverride> newOverrides = new LinkedList<ContentOverride>();
         newOverrides.add(new ActivationKeyContentOverride(key, "x", "baseurl", "x"));
-        akcor.addContentOverrides(context, newOverrides);
+        akcor.addContentOverrides(context, principal, newOverrides);
         verify(contentOverrideValidator, Mockito.times(1)).validate(eq(newOverrides));
     }
 }

@@ -26,6 +26,9 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.auth.Access;
+import org.candlepin.auth.Principal;
+import org.candlepin.auth.SubResource;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerContentOverride;
@@ -68,6 +71,9 @@ public class ConsumerContentOverrideResourceTest {
     @Mock
     private OverrideRules overrideRules;
 
+    @Mock
+    private Principal principal;
+
     private UriInfo context;
 
     @Before
@@ -86,7 +92,9 @@ public class ConsumerContentOverrideResourceTest {
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         contentOverrideValidator = new ContentOverrideValidator(i18n, overrideRules);
         resource = new ConsumerContentOverrideResource(consumerContentOverrideCurator,
-            consumerCurator, contentOverrideValidator);
+            consumerCurator, contentOverrideValidator, i18n);
+        when(principal.canAccess(any(Object.class), any(SubResource.class),
+            any(Access.class))).thenReturn(true);
     }
 
     @Test
@@ -95,7 +103,7 @@ public class ConsumerContentOverrideResourceTest {
         ConsumerContentOverride toAdd = new ConsumerContentOverride(consumer, "label",
             "overridename", "overridevalue");
         entries.add(toAdd);
-        resource.addContentOverrides(context, entries);
+        resource.addContentOverrides(context, principal, entries);
         Mockito.verify(consumerContentOverrideCurator,
             Mockito.times(1)).addOrUpdate(consumer, toAdd);
     }
@@ -106,7 +114,7 @@ public class ConsumerContentOverrideResourceTest {
         ConsumerContentOverride toAdd = new ConsumerContentOverride(consumer, "label",
             buildLongString(), "overridevalue");
         entries.add(toAdd);
-        resource.addContentOverrides(context, entries);
+        resource.addContentOverrides(context, principal, entries);
     }
 
     @Test(expected = BadRequestException.class)
@@ -115,7 +123,7 @@ public class ConsumerContentOverrideResourceTest {
         ConsumerContentOverride toAdd = new ConsumerContentOverride(consumer, "label",
             "overridename", buildLongString());
         entries.add(toAdd);
-        resource.addContentOverrides(context, entries);
+        resource.addContentOverrides(context, principal, entries);
     }
 
     private String buildLongString() {

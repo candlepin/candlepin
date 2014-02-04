@@ -26,11 +26,16 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.lang.StringUtils;
+import org.candlepin.auth.Access;
+import org.candlepin.auth.Principal;
+import org.candlepin.auth.SubResource;
 import org.candlepin.auth.interceptor.SecurityHole;
+import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.model.AbstractHibernateObject;
 import org.candlepin.model.ContentOverride;
 import org.candlepin.model.ContentOverrideCurator;
 import org.candlepin.util.ContentOverrideValidator;
+import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.persist.Transactional;
 
@@ -48,13 +53,15 @@ public abstract class ContentOverrideResource<T extends ContentOverride,
     private Curator contentOverrideCurator;
     private ContentOverrideValidator contentOverrideValidator;
     private String parentPath;
+    private I18n i18n;
 
     public ContentOverrideResource(Curator contentOverrideCurator,
             ContentOverrideValidator contentOverrideValidator,
-            String parentPath) {
+            I18n i18n, String parentPath) {
         this.contentOverrideCurator = contentOverrideCurator;
         this.contentOverrideValidator = contentOverrideValidator;
         this.parentPath = parentPath;
+        this.i18n = i18n;
     }
 
     protected abstract Parent findParentById(String parentId);
@@ -80,10 +87,11 @@ public abstract class ContentOverrideResource<T extends ContentOverride,
     @SecurityHole
     public List<T> addContentOverrides(
         @Context UriInfo info,
+        @Context Principal principal,
         List<ContentOverride> entries) {
         String parentId = info.getPathParameters().getFirst(this.getParentPath());
 
-        Parent parent = this.findParentById(parentId);
+        Parent parent = this.verifyAndGetParent(parentId, principal, Access.ALL);
         contentOverrideValidator.validate(entries);
         for (ContentOverride entry : entries) {
             contentOverrideCurator.addOrUpdate(parent, entry);
@@ -108,11 +116,12 @@ public abstract class ContentOverrideResource<T extends ContentOverride,
     @SecurityHole
     public List<T> deleteContentOverrides(
         @Context UriInfo info,
+        @Context Principal principal,
         List<ContentOverride> entries) {
 
         String parentId = info.getPathParameters().getFirst(this.getParentPath());
 
-        Parent parent = this.findParentById(parentId);
+        Parent parent = this.verifyAndGetParent(parentId, principal, Access.ALL);
         if (entries.size() == 0) {
             contentOverrideCurator.removeByParent(parent);
         }
@@ -151,9 +160,21 @@ public abstract class ContentOverrideResource<T extends ContentOverride,
     @Produces(MediaType.APPLICATION_JSON)
     @SecurityHole
     public List<T> getContentOverrideList(
-        @Context UriInfo info) {
+        @Context UriInfo info,
+        @Context Principal principal) {
         String parentId = info.getPathParameters().getFirst(this.getParentPath());
-        Parent parent = this.findParentById(parentId);
+        Parent parent = this.verifyAndGetParent(parentId, principal, Access.READ_ONLY);
         return contentOverrideCurator.getList(parent);
+    }
+
+    private Parent verifyAndGetParent(String parentId, Principal principal, Access access) {
+        // Throws exception if criteria block the id
+        Parent result = this.findParentById(parentId);
+        // Now that we know it exists, verify access level
+        if (!principal.canAccess(result, SubResource.NONE, access)) {
+            String error = "Insufficient permissions";
+            throw new ForbiddenException(i18n.tr(error));
+        }
+        return result;
     }
 }
