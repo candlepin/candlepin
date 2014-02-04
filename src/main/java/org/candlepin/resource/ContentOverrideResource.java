@@ -26,6 +26,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.lang.StringUtils;
+import org.candlepin.auth.interceptor.SecurityHole;
 import org.candlepin.model.AbstractHibernateObject;
 import org.candlepin.model.ContentOverride;
 import org.candlepin.model.ContentOverrideCurator;
@@ -76,6 +77,7 @@ public abstract class ContentOverrideResource<T extends ContentOverride,
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Transactional
+    @SecurityHole
     public List<T> addContentOverrides(
         @Context UriInfo info,
         List<ContentOverride> entries) {
@@ -103,6 +105,7 @@ public abstract class ContentOverrideResource<T extends ContentOverride,
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Transactional
+    @SecurityHole
     public List<T> deleteContentOverrides(
         @Context UriInfo info,
         List<ContentOverride> entries) {
@@ -146,6 +149,7 @@ public abstract class ContentOverrideResource<T extends ContentOverride,
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
+    @SecurityHole
     public List<T> getContentOverrideList(
         @Context UriInfo info) {
         String parentId = info.getPathParameters().getFirst(this.getParentPath());
