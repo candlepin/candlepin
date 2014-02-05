@@ -871,6 +871,26 @@ class Candlepin
     return delete("/activation_keys/#{key_id}/pools/#{pool_id}")
   end
 
+  def add_content_overrides_to_key(key_id, overrides)
+      return put("/activation_keys/#{key_id}/content_overrides", overrides)
+  end
+
+  def remove_activation_key_overrides(key_id, overrides)
+      return delete("/activation_keys/#{key_id}/content_overrides", overrides)
+  end
+
+  def get_content_overrides_for_key(key_id)
+      return get("/activation_keys/#{key_id}/content_overrides")
+  end
+
+  def set_activation_key_release(key_id, release)
+      return post("/activation_keys/#{key_id}/release", release)
+  end
+
+  def get_activation_key_release(key_id)
+      return get("/activation_keys/#{key_id}/release")
+  end
+
   def list_certificates(serials = [])
     path = "/consumers/#{@uuid}/certificates"
     path += "?serials=" + serials.join(",") if serials.length > 0

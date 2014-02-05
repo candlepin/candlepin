@@ -35,8 +35,6 @@ import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.guice.CandlepinSingletonScope;
 import org.candlepin.guice.TestPrincipalProviderSetter;
-import org.candlepin.model.ActivationKey;
-import org.candlepin.model.ActivationKeyCurator;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Consumer;
@@ -76,6 +74,9 @@ import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.model.SubscriptionsCertificateCurator;
 import org.candlepin.model.UeberCertificateGenerator;
 import org.candlepin.model.UserCurator;
+import org.candlepin.model.activationkeys.ActivationKey;
+import org.candlepin.model.activationkeys.ActivationKeyContentOverrideCurator;
+import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
@@ -142,6 +143,7 @@ public class DatabaseTestFixture {
     protected UeberCertificateGenerator ueberCertGenerator;
     protected CandlepinSingletonScope cpSingletonScope;
     protected PermissionFactory permFactory;
+    protected ActivationKeyContentOverrideCurator activationKeyContentOverrideCurator;
 
     @Before
     public void init() {
@@ -180,6 +182,8 @@ public class DatabaseTestFixture {
         consumerTypeCurator = injector.getInstance(ConsumerTypeCurator.class);
         consumerContentOverrideCurator = injector.getInstance(
             ConsumerContentOverrideCurator.class);
+        activationKeyContentOverrideCurator = injector.getInstance(
+            ActivationKeyContentOverrideCurator.class);
         certificateCurator = injector
             .getInstance(SubscriptionsCertificateCurator.class);
         poolCurator = injector.getInstance(PoolCurator.class);

@@ -39,8 +39,6 @@ import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.exceptions.IseException;
 import org.candlepin.exceptions.NotFoundException;
-import org.candlepin.model.ActivationKey;
-import org.candlepin.model.ActivationKeyCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.ExporterMetadata;
@@ -56,6 +54,8 @@ import org.candlepin.model.Role;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.model.UpstreamConsumer;
+import org.candlepin.model.activationkeys.ActivationKey;
+import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.resource.OwnerResource;
 import org.candlepin.resteasy.parameter.CandlepinParam;
@@ -66,6 +66,7 @@ import org.candlepin.sync.Importer;
 import org.candlepin.sync.ImporterException;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
+import org.candlepin.util.ContentOverrideValidator;
 import org.jboss.resteasy.plugins.providers.atom.Entry;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
@@ -102,6 +103,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     private EventFactory eventFactory;
     private CandlepinCommonTestConfig config;
     private ImportRecordCurator importRecordCurator;
+    private ContentOverrideValidator contentOverrideValidator;
 
     @Before
     public void setUp() {
@@ -116,6 +118,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         this.config = (CandlepinCommonTestConfig) injector
             .getInstance(Config.class);
         importRecordCurator = injector.getInstance(ImportRecordCurator.class);
+        contentOverrideValidator = injector.getInstance(ContentOverrideValidator.class);
     }
 
     @Test
@@ -726,7 +729,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerResource or = new OwnerResource(oc,
             null, akc, null, null, i18n, null, null, null,
             null, null, null, null, null, null, null,
-            null, null, null, null, null, null, null);
+            null, null, null, null, null, null, null, contentOverrideValidator);
         or.createActivationKey("testOwner", ak);
     }
 
@@ -803,7 +806,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerResource thisOwnerResource = new OwnerResource(ownerCurator, null,
             null, null, null, i18n, es, null, null, null, importer, null, null,
             null, importRecordCurator, null, null, null, null, null,
-            null, null, null);
+            null, null, null, contentOverrideValidator);
 
         MultipartInput input = mock(MultipartInput.class);
         InputPart part = mock(InputPart.class);
@@ -838,7 +841,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerResource thisOwnerResource = new OwnerResource(ownerCurator, sc,
             null, null, null, i18n, es, null, null, null, null, null, ec,
             null, importRecordCurator, null, null, null, null, null,
-            null, null, null);
+            null, null, null, contentOverrideValidator);
 
         ExporterMetadata metadata = new ExporterMetadata();
         when(ec.lookupByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, owner))
@@ -861,7 +864,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerResource thisOwnerResource = new OwnerResource(ownerCurator, null,
             null, null, null, i18n, es, null, null, null, importer, null, null,
             null, importRecordCurator, null, null, null, null, null,
-            null, null, null);
+            null, null, null, contentOverrideValidator);
 
         MultipartInput input = mock(MultipartInput.class);
         InputPart part = mock(InputPart.class);
@@ -901,7 +904,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Owner owner = mock(Owner.class);
         OwnerResource ownerres = new OwnerResource(oc, null,
             null, null, null, i18n, null, null, null, null, null, null, null,
-            null, null, null, null, null, null, null, null, null, null);
+            null, null, null, null, null, null, null, null, null, null,
+            contentOverrideValidator);
 
         when(oc.lookupByKey(eq("admin"))).thenReturn(owner);
         when(owner.getUpstreamConsumer()).thenReturn(upstream);

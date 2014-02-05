@@ -12,10 +12,13 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.model;
+package org.candlepin.model.activationkeys;
 
 import java.util.List;
 
+import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.model.AbstractHibernateCurator;
+import org.candlepin.model.Owner;
 import org.hibernate.criterion.Restrictions;
 
 import com.google.inject.persist.Transactional;
@@ -47,4 +50,14 @@ public class ActivationKeyCurator extends AbstractHibernateCurator<ActivationKey
             .uniqueResult();
     }
 
+    public ActivationKey verifyAndLookupKey(String activationKeyId) {
+        ActivationKey key = this.secureFind(activationKeyId);
+
+        if (key == null) {
+            throw new BadRequestException(
+                i18n.tr("ActivationKey with id {0} could not be found.",
+                    activationKeyId));
+        }
+        return key;
+    }
 }

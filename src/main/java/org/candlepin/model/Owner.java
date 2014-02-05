@@ -15,6 +15,7 @@
 package org.candlepin.model;
 
 import org.candlepin.jackson.HateoasInclude;
+import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.resteasy.InfoProperty;
 
 import com.fasterxml.jackson.annotation.JsonFilter;

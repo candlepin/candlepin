@@ -85,4 +85,44 @@ describe 'Activation Keys' do
 
   end
 
+  it 'should allow overrides to be added to keys' do
+    override = {"name" => "somename", "value" => "somval", "contentLabel" => "somelabel"}
+    @cp.add_content_overrides_to_key(@activation_key['id'], [override])
+    overrides = @cp.get_content_overrides_for_key(@activation_key['id'])
+    overrides.length.should == 1
+    overrides[0]['name'].should == override['name']
+    overrides[0]['contentLabel'].should == override['contentLabel']
+    overrides[0]['value'].should == override['value']
+  end
+
+  it 'should allow overrides to be removed from keys' do
+    override = {"name" => "somename", "value" => "somval", "contentLabel" => "somelabel"}
+    @cp.add_content_overrides_to_key(@activation_key['id'], [override])
+    overrides = @cp.get_content_overrides_for_key(@activation_key['id'])
+    overrides.length.should == 1
+    @cp.remove_activation_key_overrides(@activation_key['id'], [override])
+    overrides = @cp.get_content_overrides_for_key(@activation_key['id'])
+    overrides.length.should == 0
+  end
+
+  it 'should verify override name is valid' do
+    # name baseurl is invalid to override
+    override = {"name" => "baseurl", "value" => "somval", "contentLabel" => "somelabel"}
+    lambda {
+      @cp.add_content_overrides_to_key(@activation_key['id'], [override])
+    }.should raise_exception(RestClient::BadRequest)
+  end
+
+  it 'should verify override name is below 256 length' do
+    # Should reject values too large for the databse
+    override = {"name" => "a" * 256, "value" => "somval", "contentLabel" => "somelabel"}
+    lambda {
+      @cp.add_content_overrides_to_key(@activation_key['id'], [override])
+    }.should raise_exception(RestClient::BadRequest)
+  end
+
+  it 'should allow release to be set on keys' do
+    @cp.set_activation_key_release(@activation_key['id'], "Some Release")
+    @cp.get_activation_key_release(@activation_key['id'])['releaseVer'].should == "Some Release"
+  end
 end

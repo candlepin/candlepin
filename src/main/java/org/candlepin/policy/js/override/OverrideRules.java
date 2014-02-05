@@ -14,7 +14,6 @@
  */
 package org.candlepin.policy.js.override;
 
-import org.candlepin.model.Consumer;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsonJsContext;
 import org.candlepin.policy.js.RulesObjectMapper;
@@ -43,10 +42,9 @@ public class OverrideRules {
         jsRules.init("override_name_space");
     }
 
-    public boolean canOverrideForConsumer(Consumer c, String name) {
+    public boolean canOverrideForConsumer(String name) {
         JsonJsContext args = new JsonJsContext(mapper);
 
-        args.put("consumer", c);
         args.put("name", name);
         args.put("log", log, false);
 

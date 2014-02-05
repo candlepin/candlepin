@@ -33,9 +33,8 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.exceptions.NotFoundException;
-import org.candlepin.model.ActivationKey;
-import org.candlepin.model.ActivationKeyCurator;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerContentOverrideCurator;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
@@ -47,6 +46,8 @@ import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.Release;
 import org.candlepin.model.Role;
 import org.candlepin.model.User;
+import org.candlepin.model.activationkeys.ActivationKey;
+import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.resource.ConsumerResource;
@@ -97,6 +98,7 @@ public class ConsumerResourceCreationTest {
     @Mock private ActivationKeyCurator activationKeyCurator;
     @Mock private ComplianceRules complianceRules;
     @Mock private DeletedConsumerCurator deletedConsumerCurator;
+    @Mock private ConsumerContentOverrideCurator consumerContentOverrideCurator;
 
     private I18n i18n;
 
@@ -118,7 +120,8 @@ public class ConsumerResourceCreationTest {
             this.userService, null, null, null, this.ownerCurator,
             this.activationKeyCurator,
             null, this.complianceRules, this.deletedConsumerCurator,
-            null, null, this.config, null, null, null, null);
+            null, null, this.config, null, null, null, null,
+            consumerContentOverrideCurator);
 
         this.system = initSystem();
 

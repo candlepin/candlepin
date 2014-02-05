@@ -18,19 +18,29 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.UriInfo;
+
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.auth.Access;
+import org.candlepin.auth.Principal;
+import org.candlepin.auth.SubResource;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerContentOverride;
 import org.candlepin.model.ConsumerContentOverrideCurator;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ContentOverride;
 import org.candlepin.model.Owner;
 import org.candlepin.policy.js.override.OverrideRules;
 import org.candlepin.resource.ConsumerContentOverrideResource;
+import org.candlepin.util.ContentOverrideValidator;
+import org.jboss.resteasy.specimpl.MultivaluedMapImpl;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -56,48 +66,64 @@ public class ConsumerContentOverrideResourceTest {
     @Mock
     private ConsumerContentOverrideCurator consumerContentOverrideCurator;
 
+    private ContentOverrideValidator contentOverrideValidator;
+
     @Mock
     private OverrideRules overrideRules;
+
+    @Mock
+    private Principal principal;
+
+    private UriInfo context;
 
     @Before
     public void setUp() {
         consumer = new Consumer("test-consumer", "test-user", new Owner(
             "Test Owner"), new ConsumerType("test-consumer-type-"));
+        MultivaluedMap<String, String> mvm = new MultivaluedMapImpl<String, String>();
+        mvm.add("consumer_uuid", consumer.getUuid());
+        context = mock(UriInfo.class);
+        when(context.getPathParameters()).thenReturn(mvm);
+
         when(consumerCurator.verifyAndLookupConsumer(
             eq(consumer.getUuid()))).thenReturn(consumer);
-        when(overrideRules.canOverrideForConsumer(any(Consumer.class),
+        when(overrideRules.canOverrideForConsumer(
             any(String.class))).thenReturn(true);
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
+        contentOverrideValidator = new ContentOverrideValidator(i18n, overrideRules);
         resource = new ConsumerContentOverrideResource(consumerContentOverrideCurator,
-            consumerCurator, overrideRules, i18n);
+            consumerCurator, contentOverrideValidator, i18n);
+        when(principal.canAccess(any(Object.class), any(SubResource.class),
+            any(Access.class))).thenReturn(true);
     }
 
     @Test
     public void testAddOverride() {
-        List<ConsumerContentOverride> entries = new LinkedList<ConsumerContentOverride>();
+        List<ContentOverride> entries = new LinkedList<ContentOverride>();
         ConsumerContentOverride toAdd = new ConsumerContentOverride(consumer, "label",
             "overridename", "overridevalue");
         entries.add(toAdd);
-        resource.addContentOverrides(consumer.getUuid(), entries);
-        Mockito.verify(consumerContentOverrideCurator, Mockito.times(1)).create(toAdd);
+        resource.addContentOverrides(context, principal, entries);
+        Mockito.verify(consumerContentOverrideCurator,
+            Mockito.times(1)).addOrUpdate(consumer, toAdd);
     }
 
     @Test(expected = BadRequestException.class)
     public void testAddOverrideLongName() {
-        List<ConsumerContentOverride> entries = new LinkedList<ConsumerContentOverride>();
+        List<ContentOverride> entries = new LinkedList<ContentOverride>();
         ConsumerContentOverride toAdd = new ConsumerContentOverride(consumer, "label",
             buildLongString(), "overridevalue");
         entries.add(toAdd);
-        resource.addContentOverrides(consumer.getUuid(), entries);
+        resource.addContentOverrides(context, principal, entries);
     }
 
     @Test(expected = BadRequestException.class)
     public void testAddOverrideLongValue() {
-        List<ConsumerContentOverride> entries = new LinkedList<ConsumerContentOverride>();
+        List<ContentOverride> entries = new LinkedList<ContentOverride>();
         ConsumerContentOverride toAdd = new ConsumerContentOverride(consumer, "label",
             "overridename", buildLongString());
         entries.add(toAdd);
-        resource.addContentOverrides(consumer.getUuid(), entries);
+        resource.addContentOverrides(context, principal, entries);
     }
 
     private String buildLongString() {

@@ -354,6 +354,74 @@ describe 'Consumer Resource' do
     @cp.get_pool(pool1.id).consumed.should == 3
   end
 
+  it 'should allow a consumer to register with activation keys with content overrides' do
+    owner = create_owner random_string('owner')
+
+    user1 = user_client(owner, random_string("user1"))
+
+    # Connect without any credentials:
+    client = Candlepin.new
+
+    key1 = @cp.create_activation_key(owner['key'], 'key1')
+
+    override = {"name" => "somename", "value" => "someval", "contentLabel" => "somelabel"}
+    @cp.add_content_overrides_to_key(key1['id'], [override])
+
+    consumer = client.register(random_string('machine1'), :system, nil, {}, nil,
+      owner['key'], ["key1"])
+    consumer.uuid.should_not be_nil
+
+    consumer_overrides = @cp.get_content_overrides(consumer['uuid'])
+    consumer_overrides.length.should == 1
+    consumer_overrides[0]['name'].should == "somename"
+    consumer_overrides[0]['value'].should == "someval"
+    consumer_overrides[0]['contentLabel'].should == "somelabel"
+  end
+
+  it 'should allow a consumer to register with activation keys with release' do
+    owner = create_owner random_string('owner')
+
+    user1 = user_client(owner, random_string("user1"))
+
+    # Connect without any credentials:
+    client = Candlepin.new
+
+    key1 = @cp.create_activation_key(owner['key'], 'key1')
+
+    @cp.set_activation_key_release(key1['id'], "Registration Release")
+
+    consumer = client.register(random_string('machine1'), :system, nil, {}, nil,
+      owner['key'], ["key1"])
+    consumer.uuid.should_not be_nil
+
+    consumer.releaseVer.releaseVer.should == "Registration Release"
+  end
+
+  it 'should allow a consumer to register with multiple activation keys with same content override names' do
+    owner = create_owner random_string('owner')
+
+    user1 = user_client(owner, random_string("user1"))
+
+    # Connect without any credentials:
+    client = Candlepin.new
+
+    key1 = @cp.create_activation_key(owner['key'], 'key1')
+    key2 = @cp.create_activation_key(owner['key'], 'key2')
+
+    override1 = {"name" => "somename", "value" => "someval", "contentLabel" => "somelabel"}
+    override2 = {"name" => "somename", "value" => "otherval", "contentLabel" => "somelabel"}
+    @cp.add_content_overrides_to_key(key1['id'], [override1, override2])
+
+    consumer = client.register(random_string('machine1'), :system, nil, {}, nil,
+      owner['key'], ["key2", "key1"])
+    consumer.uuid.should_not be_nil
+
+    consumer_overrides = @cp.get_content_overrides(consumer['uuid'])
+    consumer_overrides.length.should == 1
+    # The order doesn't appear to be preserved, so we dont know which override will be applied
+    # We really just don't want an exception
+  end
+
   it 'should allow a consumer to register with activation keys with null quantity' do
     owner = create_owner random_string('owner')
 

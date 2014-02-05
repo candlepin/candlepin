@@ -18,12 +18,12 @@ import java.io.Serializable;
 
 import org.candlepin.auth.Access;
 import org.candlepin.auth.SubResource;
-import org.candlepin.model.ActivationKey;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Environment;
 import org.candlepin.model.Owned;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
+import org.candlepin.model.activationkeys.ActivationKey;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Restrictions;
 

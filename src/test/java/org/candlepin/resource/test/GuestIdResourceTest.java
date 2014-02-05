@@ -268,7 +268,7 @@ public class GuestIdResourceTest {
             super(null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null,
-                null, null, null, null);
+                null, null, null, null, null);
         }
 
         public boolean performConsumerUpdates(Consumer updated, Consumer toUpdate) {
