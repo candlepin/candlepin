@@ -29,7 +29,10 @@ import org.xnap.commons.i18n.I18n;
 import com.google.inject.Inject;
 
 /**
- * ContentOverrideValidator
+ * ContentOverrideValidator utility class used to validate
+ * ContentOverride and its subclasses.  Includes column length
+ * checking and overrideRules to check against blacklisted
+ * name overrides
  */
 public class ContentOverrideValidator {
 

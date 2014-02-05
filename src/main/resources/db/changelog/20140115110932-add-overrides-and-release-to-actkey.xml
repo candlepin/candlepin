@@ -33,4 +33,9 @@
             <column name="releasever" type="varchar(255)"/>
         </addColumn>
     </changeSet>
+
+    <changeSet author="ckozak" id="20140115110932-03">
+        <renameTable newTableName="cp_content_override"
+            oldTableName="cp_consumer_content_override"/>
+    </changeSet>
 </databaseChangeLog>

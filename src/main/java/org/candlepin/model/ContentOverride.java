@@ -31,7 +31,7 @@ import org.hibernate.annotations.GenericGenerator;
  * different override types, consumer and activation key for now
  */
 @Entity
-@Table(name = "cp_consumer_content_override")
+@Table(name = "cp_content_override")
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorFormula("case when key_id is null then 'consumer' ELSE 'activation_key' end")
 public class ContentOverride extends AbstractHibernateObject {
