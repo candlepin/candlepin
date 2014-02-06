@@ -31,7 +31,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.2
+Version: 0.9.3
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -342,6 +342,30 @@ fi
 
 
 %changelog
+* Thu Feb 06 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.3-1
+- 1046962: Satellite cert generation gets error (wpoteat@redhat.com)
+- 1058877: Get user owners correctly (ckozak@redhat.com)
+- wrong table name (jesusr@redhat.com)
+- symlink hibernate4-c3p0 jar (jesusr@redhat.com)
+- Expand to longtext column type for rules in mysql. (dgoodwin@redhat.com)
+- Fix mysql timestamps with liquibase >= 3.1. (dgoodwin@redhat.com)
+- javadoc. rename cp_consumer_content_override cp_content_override (ckozak@redhat.com)
+- Added principal based security to match verify (ckozak@redhat.com)
+- Add security hole where we validity ourselves (ckozak@redhat.com)
+- remove commented code (ckozak@redhat.com)
+- Bring the latest strings in from zanata (bkearney@redhat.com)
+- fix liquibase script for mysql (ckozak@redhat.com)
+- updated some comments to reflect new abstract behavior (ckozak@redhat.com)
+- use separate columns for different types of contentoverride (ckozak@redhat.com)
+- add overrides to activation keys (ckozak@redhat.com)
+- Truncate binary data when logging request/response bodies. (awood@redhat.com)
+- Added unit tests for new user.getOwners logic (ckozak@redhat.com)
+- Don't print hidden_resources if none are defined in the YAML.  (awood@redhat.com)
+- update the class javadoc to describe the job's purpose. (jesusr@redhat.com)
+- Log as error instead of debug (ckozak@redhat.com)
+- Use XPath and libxml2 to modify Tomcat's server.xml (awood@redhat.com)
+- I have no idea why these were marked unique (ckozak@redhat.com)
+
 * Wed Jan 15 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.2-1
 - 1030007: Add uuid to error log when required int fact is not an int (ckozak@redhat.com)
 - 1033583: add messaging when override name/value are too long (ckozak@redhat.com)
