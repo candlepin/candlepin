@@ -11,8 +11,8 @@
         <comment>MySQL databases may have incorrect created/updated columns of type timestamp when they should have datetime. Original changeset is corrected for new databases, this changeset will attempt to correct it on all. The change is safe even if the database already has the correct type.</comment>
         <modifyDataType tableName="cp_import_upstream_consumer" columnName="created" newDataType="DATETIME"/>
         <modifyDataType tableName="cp_import_upstream_consumer" columnName="updated" newDataType="DATETIME"/>
-        <modifyDataType tableName="cp_consumer_content_override" columnName="created" newDataType="DATETIME"/>
-        <modifyDataType tableName="cp_consumer_content_override" columnName="updated" newDataType="DATETIME"/>
+        <modifyDataType tableName="cp_content_override" columnName="created" newDataType="DATETIME"/>
+        <modifyDataType tableName="cp_content_override" columnName="updated" newDataType="DATETIME"/>
     </changeSet>
 
 </databaseChangeLog>
