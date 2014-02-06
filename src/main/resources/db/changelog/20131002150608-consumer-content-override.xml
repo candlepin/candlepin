@@ -7,7 +7,12 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
 
+    <property name="timestamp.type" value="TIMESTAMP WITHOUT TIME ZONE" dbms="oracle"/>
+    <property name="timestamp.type" value="TIMESTAMP WITHOUT TIME ZONE" dbms="postgresql"/>
+    <property name="timestamp.type" value="DATETIME" dbms="mysql"/>
+
     <changeSet id="20131002150608" author="wpoteat">
+        <validCheckSum>7:bef3100eb209f06cd08332a032e87c3f</validCheckSum>
         <comment>Consumer content overrides</comment>
         <createTable tableName="cp_consumer_content_override">
             <column name="id" type="VARCHAR(32)">
@@ -25,8 +30,8 @@
             <column name="value" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
-            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
-            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="created" type="${timestamp.type}"/>
+            <column name="updated" type="${timestamp.type}"/>
         </createTable>
     </changeSet>
     <changeSet author="wpoteat" id="20131002150608-01">
@@ -35,6 +40,6 @@
     <changeSet author="wpoteat" id="20131002150608-02">
         <addUniqueConstraint columnNames="consumer_id, content_label, name" constraintName="cp_consumer_content_ukey" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_consumer_content_override"/>
     </changeSet>
-    
+
 
 </databaseChangeLog>
