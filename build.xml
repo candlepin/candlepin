@@ -31,7 +31,7 @@
     dom4j gettext-commons google-collections guice
     guice-assistedinject guice-multibindings guice-persist guice-servlet
     guice-throwingproviders hibernate-commons-annotations
-    hibernate4-core hibernate4-entitymanager hornetq-commons hornetq-server
+    hibernate4-core hibernate4-c3p0 hibernate4-entitymanager hornetq-commons hornetq-server
     hornetq-core-client hornetq-journal javassist javax.inject jaxb-impl
     jboss-logging hibernate-jpa-2.0-api jta log4j netty oauth oauth-provider
     postgresql-jdbc resteasy/resteasy-atom-provider
