@@ -70,6 +70,19 @@ public class CandlepinExceptionMapperTest {
         assertTrue(em.getDisplayMessage().startsWith("Runtime Error " + re.getMessage()));
     }
 
+    @Test
+    public void handleArrayIndexException() {
+        NoStackException nostack = new NoStackException("no stack trace", null);
+        Response r = cem.getDefaultBuilder(nostack, null,
+            MediaType.APPLICATION_JSON_TYPE).build();
+        ExceptionMessage em = (ExceptionMessage) r.getEntity();
+
+        assertEquals(Status.INTERNAL_SERVER_ERROR.getStatusCode(), r.getStatus());
+        assertEquals("Runtime Error no stack trace", em.getDisplayMessage());
+        assertEquals(MediaType.APPLICATION_JSON_TYPE,
+            r.getMetadata().get("Content-Type").get(0));
+    }
+
     public static class MapperTestModule extends AbstractModule {
 
         @Override
@@ -79,5 +92,11 @@ public class CandlepinExceptionMapperTest {
             bind(HttpServletRequest.class).toInstance(mock(HttpServletRequest.class));
         }
 
+    }
+
+    public static class NoStackException extends Throwable {
+        public NoStackException(String message, Throwable cause) {
+            super(message, cause, true, false);
+        }
     }
 }
