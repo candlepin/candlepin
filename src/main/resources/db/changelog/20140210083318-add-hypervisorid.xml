@@ -10,7 +10,7 @@
     <property name="timestamp.type" value="TIMESTAMP WITHOUT TIME ZONE" dbms="postgresql"/>
     <property name="timestamp.type" value="DATETIME" dbms="mysql"/>
 
-    <changeSet id="20140210083318" author="ckozak">
+    <changeSet id="20140210083318-0" author="ckozak">
         <comment>Add hypervisorId</comment>
         <createTable tableName="cp_consumer_hypervisor">
             <column name="id" type="VARCHAR(32)">
@@ -33,4 +33,18 @@
         <addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="cp_consumer_hypervisor" constraintName="fk_hypervisor_owner" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" referencesUniqueColumn="true"/>
     </changeSet>
 
+    <changeSet id="20140210083318-1" author="ckozak">
+    	<comment>Create hypervisorId rows for existing hypervisors</comment>
+        <sql>
+            INSERT INTO cp_consumer_hypervisor (id, consumer_id, hypervisor_id, owner_id, created, updated)
+            SELECT c.id, c.id, LOWER(c.uuid), c.owner_id, c.created, c.updated
+            FROM cp_consumer AS c
+            INNER JOIN cp_consumer_type AS ct
+            ON c.type_id = ct.id
+            LEFT OUTER JOIN cp_consumer_hypervisor AS ch
+            ON c.id = ch.consumer_id
+            WHERE ct.label = 'hypervisor'
+            AND ch.id is NULL;
+        </sql>
+    </changeSet>
 </databaseChangeLog>
