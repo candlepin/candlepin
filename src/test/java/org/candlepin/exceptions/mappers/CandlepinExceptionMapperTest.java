@@ -17,6 +17,7 @@ package org.candlepin.exceptions.mappers;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.exceptions.ExceptionMessage;
 import org.candlepin.guice.I18nProvider;
@@ -72,7 +73,17 @@ public class CandlepinExceptionMapperTest {
 
     @Test
     public void handleArrayIndexException() {
-        NoStackException nostack = new NoStackException("no stack trace", null);
+        // Java 7 has a nice constructor where you can pass in false to not
+        // fill in the stacktrace, but Java 6 does not have such a facility.
+        // No amount of combination of creating Throwable without a stack
+        // trace was working. We're resorting to using a mock version which
+        // works great and is exactly the behavior we want.
+
+        Throwable nostack = mock(Throwable.class);
+        when(nostack.getMessage()).thenReturn("no stack trace");
+        // simulate Java 7 on a Java 6 vm
+        when(nostack.getStackTrace()).thenReturn(null);
+
         Response r = cem.getDefaultBuilder(nostack, null,
             MediaType.APPLICATION_JSON_TYPE).build();
         ExceptionMessage em = (ExceptionMessage) r.getEntity();
@@ -92,11 +103,5 @@ public class CandlepinExceptionMapperTest {
             bind(HttpServletRequest.class).toInstance(mock(HttpServletRequest.class));
         }
 
-    }
-
-    public static class NoStackException extends Throwable {
-        public NoStackException(String message, Throwable cause) {
-            super(message, cause, true, false);
-        }
     }
 }
