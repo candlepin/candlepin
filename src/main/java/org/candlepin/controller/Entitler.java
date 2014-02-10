@@ -241,9 +241,8 @@ public class Entitler {
         // If the consumer is a guest, and has a host, try to heal the host first
         if (consumer.hasFact("virt.uuid")) {
             String guestUuid = consumer.getFact("virt.uuid");
-            Consumer host = consumerCurator.getHost(guestUuid);
-            if (host != null && consumer.getOwner().equals(host.getOwner()) &&
-                    (force || host.isAutoheal())) {
+            Consumer host = consumerCurator.getHost(guestUuid, consumer.getOwner());
+            if (host != null && (force || host.isAutoheal())) {
                 log.info("Attempting to heal host machine with UUID " +
                     host.getUuid() + " for guest with UUID " + consumer.getUuid());
                 try {

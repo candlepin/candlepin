@@ -70,7 +70,7 @@ public class RulesObjectMapper {
         filterProvider = filterProvider.addFilter("ProvidedProductFilter",
             SimpleBeanPropertyFilter.serializeAllExcept("created", "updated"));
         filterProvider = filterProvider.addFilter("ConsumerFilter",
-            SimpleBeanPropertyFilter.serializeAllExcept("idCert"));
+            SimpleBeanPropertyFilter.serializeAllExcept("idCert", "hypervisorId"));
         filterProvider = filterProvider.addFilter("EntitlementFilter",
             SimpleBeanPropertyFilter.serializeAllExcept("certificates", "consumer"));
         filterProvider = filterProvider.addFilter("OwnerFilter",
