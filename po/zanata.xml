@@ -22,7 +22,7 @@
         <locale>pa</locale>
         <locale map-from="pt_BR">pt-BR</locale>
         <locale>ru</locale>
-        <locale map-from="ta_IN">ta</locale>
+        <locale map-from="ta">ta-IN</locale>
         <locale>te</locale>
         <locale map-from="zh_CN">zh-Hans-CN</locale>
         <locale map-from="zh_TW">zh-Hant-TW</locale>
