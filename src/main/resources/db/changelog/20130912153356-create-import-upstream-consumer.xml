@@ -6,7 +6,12 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
+    <property name="timestamp.type" value="TIMESTAMP WITHOUT TIME ZONE" dbms="oracle"/>
+    <property name="timestamp.type" value="TIMESTAMP WITHOUT TIME ZONE" dbms="postgresql"/>
+    <property name="timestamp.type" value="DATETIME" dbms="mysql"/>
+
     <changeSet id="20130912153356" author="wpoteat">
+        <validCheckSum>7:69e9ff14c6d2da8962d4870401700340</validCheckSum>
         <createTable tableName="cp_import_upstream_consumer">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_imp_upstream_cnsmr_pkey"/>
@@ -17,8 +22,8 @@
             <column name="name" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
-            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
-            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="created" type="${timestamp.type}"/>
+            <column name="updated" type="${timestamp.type}"/>
             <column name="owner_id" type="VARCHAR(32)">
                 <constraints nullable="false"/>
             </column>
@@ -32,6 +37,6 @@
     <changeSet id="20130912153356-2" author="wpoteat">
         <addForeignKeyConstraint baseColumnNames="type_id" baseTableName="cp_import_upstream_consumer" constraintName="fk_import_upstream_cnsmr_type" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer_type" referencesUniqueColumn="false"/>
     </changeSet>
-    
+
 
 </databaseChangeLog>

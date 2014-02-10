@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+
+    <changeSet id="20140205152431" author="dgoodwin" dbms="mysql">
+        <comment>MySQL databases may have incorrect created/updated columns of type timestamp when they should have datetime. Original changeset is corrected for new databases, this changeset will attempt to correct it on all. The change is safe even if the database already has the correct type.</comment>
+        <modifyDataType tableName="cp_import_upstream_consumer" columnName="created" newDataType="DATETIME"/>
+        <modifyDataType tableName="cp_import_upstream_consumer" columnName="updated" newDataType="DATETIME"/>
+        <modifyDataType tableName="cp_content_override" columnName="created" newDataType="DATETIME"/>
+        <modifyDataType tableName="cp_content_override" columnName="updated" newDataType="DATETIME"/>
+    </changeSet>
+
+</databaseChangeLog>

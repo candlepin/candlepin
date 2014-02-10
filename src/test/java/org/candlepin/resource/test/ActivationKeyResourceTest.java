@@ -17,7 +17,6 @@ package org.candlepin.resource.test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -29,19 +28,18 @@ import java.util.Set;
 
 import org.candlepin.controller.PoolManager;
 import org.candlepin.exceptions.BadRequestException;
-import org.candlepin.model.ActivationKey;
-import org.candlepin.model.ActivationKeyCurator;
-import org.candlepin.model.ActivationKeyPool;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductPoolAttribute;
+import org.candlepin.model.activationkeys.ActivationKey;
+import org.candlepin.model.activationkeys.ActivationKeyCurator;
+import org.candlepin.model.activationkeys.ActivationKeyPool;
 import org.candlepin.resource.ActivationKeyResource;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.junit.Before;
 import org.junit.Test;
-
 /**
  * SubscriptionTokenResourceTest
  */
@@ -55,7 +53,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
             .getInstance(ActivationKeyResource.class);
     }
 
-    @Test
+    @Test(expected = BadRequestException.class)
     public void testCreateReadDelete() {
         ActivationKey key = new ActivationKey();
         Owner owner = createOwner();
@@ -71,25 +69,12 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         key = activationKeyResource.getActivationKey(key.getId());
         assertEquals("JarJarBinks", key.getName());
         activationKeyResource.deleteActivationKey(key.getId());
-        try {
-            key = activationKeyResource.getActivationKey(key.getId());
-        }
-        catch (BadRequestException e) {
-            // expected, return
-            return;
-        }
-        fail("No exception was thrown");
+        key = activationKeyResource.getActivationKey(key.getId());
     }
 
-    @Test
+    @Test(expected = BadRequestException.class)
     public void testInvalidTokenIdOnDelete() {
-        try {
-            activationKeyResource.deleteActivationKey("JarJarBinks");
-        }
-        catch (BadRequestException e) {
-            // this is expected.
-        }
-
+        activationKeyResource.deleteActivationKey("JarJarBinks");
     }
 
     @Test
@@ -118,10 +103,11 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         Pool p = mock(Pool.class);
         PoolManager poolManager = mock(PoolManager.class);
 
-        when(akc.find(eq("testKey"))).thenReturn(ak);
+        when(akc.verifyAndLookupKey(eq("testKey"))).thenReturn(ak);
         when(poolManager.find(eq("testPool"))).thenReturn(p);
 
-        ActivationKeyResource akr = new ActivationKeyResource(akc, i18n, poolManager);
+        ActivationKeyResource akr = new ActivationKeyResource(
+            akc, i18n, poolManager);
         akr.addPoolToKey("testKey", "testPool", 2L);
     }
 
@@ -133,13 +119,14 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         PoolManager poolManager = mock(PoolManager.class);
         ProductPoolAttribute ppa = mock(ProductPoolAttribute.class);
 
-        when(akc.find(eq("testKey"))).thenReturn(ak);
+        when(akc.verifyAndLookupKey(eq("testKey"))).thenReturn(ak);
         when(poolManager.find(eq("testPool"))).thenReturn(p);
         when(p.getProductAttribute(eq("multi-entitlement"))).thenReturn(ppa);
         when(ppa.getValue()).thenReturn("yes");
         when(p.getQuantity()).thenReturn(10L);
 
-        ActivationKeyResource akr = new ActivationKeyResource(akc, i18n, poolManager);
+        ActivationKeyResource akr = new ActivationKeyResource(
+            akc, i18n, poolManager);
         akr.addPoolToKey("testKey", "testPool", -3L);
     }
 
@@ -151,13 +138,14 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         PoolManager poolManager = mock(PoolManager.class);
         ProductPoolAttribute ppa = mock(ProductPoolAttribute.class);
 
-        when(akc.find(eq("testKey"))).thenReturn(ak);
+        when(akc.verifyAndLookupKey(eq("testKey"))).thenReturn(ak);
         when(poolManager.find(eq("testPool"))).thenReturn(p);
         when(p.getProductAttribute(eq("multi-entitlement"))).thenReturn(ppa);
         when(ppa.getValue()).thenReturn("yes");
         when(p.getQuantity()).thenReturn(10L);
 
-        ActivationKeyResource akr = new ActivationKeyResource(akc, i18n, poolManager);
+        ActivationKeyResource akr = new ActivationKeyResource(
+            akc, i18n, poolManager);
         akr.addPoolToKey("testKey", "testPool", 15L);
     }
 
@@ -169,13 +157,14 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         PoolManager poolManager = mock(PoolManager.class);
         ProductPoolAttribute ppa = mock(ProductPoolAttribute.class);
 
-        when(akc.find(eq("testKey"))).thenReturn(ak);
+        when(akc.verifyAndLookupKey(eq("testKey"))).thenReturn(ak);
         when(poolManager.find(eq("testPool"))).thenReturn(p);
         when(p.isUnlimited()).thenReturn(true);
         when(p.getProductAttribute(eq("multi-entitlement"))).thenReturn(ppa);
         when(ppa.getValue()).thenReturn("yes");
 
-        ActivationKeyResource akr = new ActivationKeyResource(akc, i18n, poolManager);
+        ActivationKeyResource akr = new ActivationKeyResource(
+            akc, i18n, poolManager);
         akr.addPoolToKey("testKey", "testPool", 15L);
     }
 
@@ -188,13 +177,14 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         PoolManager poolManager = mock(PoolManager.class);
         ProductPoolAttribute ppa = mock(ProductPoolAttribute.class);
 
-        when(akc.find(eq("testKey"))).thenReturn(ak);
+        when(akc.verifyAndLookupKey(eq("testKey"))).thenReturn(ak);
         when(poolManager.find(eq("testPool"))).thenReturn(p);
         when(p.getProductAttribute(eq("requires_consumer_type"))).thenReturn(ppa);
         when(ppa.getValue()).thenReturn("person");
         when(p.getQuantity()).thenReturn(1L);
 
-        ActivationKeyResource akr = new ActivationKeyResource(akc, i18n, poolManager);
+        ActivationKeyResource akr = new ActivationKeyResource(
+            akc, i18n, poolManager);
         akr.addPoolToKey("testKey", "testPool", 1L);
     }
 
@@ -206,13 +196,14 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         PoolManager poolManager = mock(PoolManager.class);
         ProductPoolAttribute ppa = mock(ProductPoolAttribute.class);
 
-        when(akc.find(eq("testKey"))).thenReturn(ak);
+        when(akc.verifyAndLookupKey(eq("testKey"))).thenReturn(ak);
         when(poolManager.find(eq("testPool"))).thenReturn(p);
         when(p.getProductAttribute(eq("requires_consumer_type"))).thenReturn(ppa);
         when(ppa.getValue()).thenReturn("candlepin");
         when(p.getQuantity()).thenReturn(1L);
 
-        ActivationKeyResource akr = new ActivationKeyResource(akc, i18n, poolManager);
+        ActivationKeyResource akr = new ActivationKeyResource(
+            akc, i18n, poolManager);
         assertNotNull(akr.addPoolToKey("testKey", "testPool", 1L));
     }
 
@@ -224,7 +215,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         Pool p1 = mock(Pool.class);
         Pool p2 = mock(Pool.class);
 
-        when(akc.find(eq("testKey"))).thenReturn(ak);
+        when(akc.verifyAndLookupKey(eq("testKey"))).thenReturn(ak);
         when(poolManager.find(eq("testPool1"))).thenReturn(p1);
         when(poolManager.find(eq("testPool2"))).thenReturn(p2);
         when(p1.getAttributeValue(eq("requires_host"))).thenReturn("host1");
@@ -232,7 +223,8 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         when(p1.getQuantity()).thenReturn(1L);
         when(p2.getQuantity()).thenReturn(1L);
 
-        ActivationKeyResource akr = new ActivationKeyResource(akc, i18n, poolManager);
+        ActivationKeyResource akr = new ActivationKeyResource(
+            akc, i18n, poolManager);
         when(ak.getPools()).thenReturn(new HashSet<ActivationKeyPool>());
         akr.addPoolToKey("testKey", "testPool1", 1L);
         verify(ak).addPool(eq(p1), eq(1L));
@@ -251,7 +243,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         Pool p1 = mock(Pool.class);
         Pool p2 = mock(Pool.class);
 
-        when(akc.find(eq("testKey"))).thenReturn(ak);
+        when(akc.verifyAndLookupKey(eq("testKey"))).thenReturn(ak);
         when(poolManager.find(eq("testPool1"))).thenReturn(p1);
         when(p1.getAttributeValue(eq("requires_host"))).thenReturn("host1");
         when(p1.getQuantity()).thenReturn(1L);
@@ -261,7 +253,8 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         akPools.add(new ActivationKeyPool(ak, p2, 1L));
         when(ak.getPools()).thenReturn(akPools);
 
-        ActivationKeyResource akr = new ActivationKeyResource(akc, i18n, poolManager);
+        ActivationKeyResource akr = new ActivationKeyResource(
+            akc, i18n, poolManager);
         akr.addPoolToKey("testKey", "testPool1", 1L);
     }
 
@@ -273,7 +266,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         Pool p1 = mock(Pool.class);
         Pool p2 = mock(Pool.class);
 
-        when(akc.find(eq("testKey"))).thenReturn(ak);
+        when(akc.verifyAndLookupKey(eq("testKey"))).thenReturn(ak);
         when(poolManager.find(eq("testPool1"))).thenReturn(p1);
         when(poolManager.find(eq("testPool2"))).thenReturn(p2);
         when(p1.getAttributeValue(eq("requires_host"))).thenReturn("host1");
@@ -281,7 +274,8 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         when(p1.getQuantity()).thenReturn(1L);
         when(p2.getQuantity()).thenReturn(1L);
 
-        ActivationKeyResource akr = new ActivationKeyResource(akc, i18n, poolManager);
+        ActivationKeyResource akr = new ActivationKeyResource(
+            akc, i18n, poolManager);
         when(ak.getPools()).thenReturn(new HashSet<ActivationKeyPool>());
         akr.addPoolToKey("testKey", "testPool1", 1L);
         verify(ak).addPool(eq(p1), eq(1L));
@@ -299,10 +293,11 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         Pool p = mock(Pool.class);
         PoolManager poolManager = mock(PoolManager.class);
 
-        when(akc.find(eq("testKey"))).thenReturn(ak);
+        when(akc.verifyAndLookupKey(eq("testKey"))).thenReturn(ak);
         when(poolManager.find(eq("testPool"))).thenReturn(p);
 
-        ActivationKeyResource akr = new ActivationKeyResource(akc, i18n, poolManager);
+        ActivationKeyResource akr = new ActivationKeyResource(
+            akc, i18n, poolManager);
         akr.addPoolToKey("testKey", "testPool", null);
     }
 }

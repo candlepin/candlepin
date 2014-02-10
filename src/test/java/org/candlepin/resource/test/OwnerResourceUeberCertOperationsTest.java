@@ -34,6 +34,7 @@ import org.candlepin.model.Subscription;
 import org.candlepin.model.User;
 import org.candlepin.resource.OwnerResource;
 import org.candlepin.test.DatabaseTestFixture;
+import org.candlepin.util.ContentOverrideValidator;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -52,6 +53,7 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
     private OwnerResource or;
 
     private Principal principal;
+    private ContentOverrideValidator contentOverrideValidator;
 
     @Before
     public void setUp() {
@@ -68,12 +70,13 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
 
         ConsumerType ueberCertType = new ConsumerType(ConsumerTypeEnum.UEBER_CERT);
         consumerTypeCurator.create(ueberCertType);
+        contentOverrideValidator = injector.getInstance(ContentOverrideValidator.class);
 
         or = new OwnerResource(ownerCurator,
             null, null, consumerCurator, null, i18n, null, null, null,
             null, null, poolManager, null, null, null, subAdapter,
             null, consumerTypeCurator, entCertCurator, entitlementCurator,
-            ueberCertGenerator, null, null);
+            ueberCertGenerator, null, null, contentOverrideValidator);
     }
 
     @Test

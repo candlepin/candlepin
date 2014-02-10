@@ -12,8 +12,9 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.model;
+package org.candlepin.model.activationkeys;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -30,6 +31,11 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.candlepin.model.AbstractHibernateObject;
+import org.candlepin.model.Owned;
+import org.candlepin.model.Owner;
+import org.candlepin.model.Pool;
+import org.candlepin.model.Release;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
@@ -64,8 +70,16 @@ public class ActivationKey extends AbstractHibernateObject implements Owned {
     @OneToMany(mappedBy = "key")
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
-
     private Set<ActivationKeyPool> pools = new HashSet<ActivationKeyPool>();
+
+    @OneToMany(targetEntity = ActivationKeyContentOverride.class, mappedBy = "key")
+    @Cascade({org.hibernate.annotations.CascadeType.ALL,
+        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+    private Set<ActivationKeyContentOverride> contentOverrides =
+        new HashSet<ActivationKeyContentOverride>();
+
+    @Column(length = 255, nullable =  true)
+    private String releaseVer;
 
     public ActivationKey() {
     }
@@ -140,5 +154,80 @@ public class ActivationKey extends AbstractHibernateObject implements Owned {
             }
         }
         this.getPools().remove(toRemove);
+    }
+
+    /**
+     * @return the contentOverrides
+     */
+    public Set<ActivationKeyContentOverride> getContentOverrides() {
+        return contentOverrides;
+    }
+
+    /**
+     * @param contentOverrides the contentOverrides to set
+     */
+    public void setContentOverrides(
+            Set<ActivationKeyContentOverride> contentOverrides) {
+        this.contentOverrides.clear();
+        this.addContentOverrides(contentOverrides);
+    }
+
+    public void addContentOverride(ActivationKeyContentOverride override) {
+        this.addOrUpdate(override);
+    }
+
+    public void addContentOverrides(Collection<ActivationKeyContentOverride> overrides) {
+        for (ActivationKeyContentOverride newOverride : overrides) {
+            this.addContentOverride(newOverride);
+        }
+    }
+
+    public ActivationKeyContentOverride removeContentOverride(String overrideId) {
+        ActivationKeyContentOverride toRemove = null;
+
+        for (ActivationKeyContentOverride akco : this.getContentOverrides()) {
+            if (akco.getId().equals(overrideId)) {
+                toRemove = akco;
+                break;
+            }
+        }
+        if (toRemove != null) {
+            this.getContentOverrides().remove(toRemove);
+        }
+        return toRemove;
+    }
+
+    public void removeAllContentOverrides() {
+        this.contentOverrides.clear();
+    }
+
+    /**
+     * @return the releaseVer
+     */
+    public Release getReleaseVer() {
+        return new Release(releaseVer);
+    }
+
+    /**
+     * @param releaseVer the releaseVer to set
+     */
+    public void setReleaseVer(Release releaseVer) {
+        this.releaseVer = releaseVer.getReleaseVer();
+    }
+
+    private void addOrUpdate(ActivationKeyContentOverride override) {
+        boolean found = false;
+        for (ActivationKeyContentOverride existing : this.getContentOverrides()) {
+            if (existing.getContentLabel().equalsIgnoreCase(override.getContentLabel()) &&
+                    existing.getName().equalsIgnoreCase(override.getName())) {
+                existing.setValue(override.getValue());
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            override.setKey(this);
+            this.getContentOverrides().add(override);
+        }
     }
 }

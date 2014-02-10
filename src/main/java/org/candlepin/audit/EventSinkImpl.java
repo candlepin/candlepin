@@ -16,12 +16,12 @@ package org.candlepin.audit;
 
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.model.ActivationKey;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Rules;
 import org.candlepin.model.Subscription;
+import org.candlepin.model.activationkeys.ActivationKey;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <changeSet author="ckozak" id="20140115110932-00">
+        <comment>Add new activation key features.</comment>
+        <addColumn tableName="cp_consumer_content_override">
+            <column name="key_id" type="varchar(32)"/>
+        </addColumn>
+        <addForeignKeyConstraint baseColumnNames="key_id" baseTableName="cp_consumer_content_override" constraintName="fk_content_override_key" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_activation_key" referencesUniqueColumn="false"/>
+
+        <dropNotNullConstraint
+            columnDataType="varchar(32)"
+            columnName="consumer_id"
+            tableName="cp_consumer_content_override"/>
+    </changeSet>
+
+    <changeSet id="20140115110932-01" author="ckozak">
+        <comment>Rename column</comment>
+        <!-- Have to drop and re add this foreign key, it depends on the unique constraint -->
+        <dropForeignKeyConstraint baseTableName="cp_consumer_content_override" constraintName="fk_consumer_content_consumer"/>
+        <dropUniqueConstraint tableName="cp_consumer_content_override" constraintName="cp_consumer_content_ukey" />
+		<addUniqueConstraint columnNames="consumer_id, key_id, content_label, name" constraintName="cp_consumer_content_ukey" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_consumer_content_override"/>
+		<addForeignKeyConstraint baseColumnNames="consumer_id" baseTableName="cp_consumer_content_override" constraintName="fk_consumer_content_consumer" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer" referencesUniqueColumn="false"/>
+    </changeSet>
+
+	<changeSet author="ckozak" id="20140115110932-02">
+        <addColumn tableName="cp_activation_key">
+            <column name="releasever" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="ckozak" id="20140115110932-03">
+        <renameTable newTableName="cp_content_override"
+            oldTableName="cp_consumer_content_override"/>
+    </changeSet>
+</databaseChangeLog>

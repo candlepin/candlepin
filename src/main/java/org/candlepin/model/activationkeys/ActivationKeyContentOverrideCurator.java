@@ -12,22 +12,25 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.model;
+package org.candlepin.model.activationkeys;
+
+import org.candlepin.model.ContentOverride;
+import org.candlepin.model.ContentOverrideCurator;
 
 /**
- * ConsumerContentOverrideCurator
+ * ActivationKeyContentOverrideCurator
  */
-public class ConsumerContentOverrideCurator
-    extends ContentOverrideCurator<ConsumerContentOverride, Consumer> {
+public class ActivationKeyContentOverrideCurator
+    extends ContentOverrideCurator<ActivationKeyContentOverride, ActivationKey> {
 
-    public ConsumerContentOverrideCurator() {
-        super(ConsumerContentOverride.class, "consumer");
+    protected ActivationKeyContentOverrideCurator() {
+        super(ActivationKeyContentOverride.class, "key");
     }
 
     @Override
-    protected ConsumerContentOverride createWithParent(
-        ContentOverride override, Consumer parent) {
-        ConsumerContentOverride newOverride = new ConsumerContentOverride(
+    protected ActivationKeyContentOverride createWithParent(
+        ContentOverride override, ActivationKey parent) {
+        ActivationKeyContentOverride newOverride = new ActivationKeyContentOverride(
             parent, override.getContentLabel(), override.getName(), override.getValue());
         return this.create(newOverride);
     }
