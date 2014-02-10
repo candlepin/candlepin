@@ -87,6 +87,8 @@ public class GuestIdResourceTest {
         guestIdResource = new GuestIdResource(guestIdCurator,
             consumerCurator, consumerResource, i18n, eventFactory, sink);
         when(consumerCurator.findByUuid(consumer.getUuid())).thenReturn(consumer);
+        when(consumerCurator.verifyAndLookupConsumer(
+            consumer.getUuid())).thenReturn(consumer);
     }
 
     @Test
@@ -183,7 +185,7 @@ public class GuestIdResourceTest {
 
     @Test
     public void deleteGuestNoConsumer() {
-        GuestId guest = new GuestId("guest-id");
+        GuestId guest = new GuestId("guest-id", consumer);
         when(guestIdCurator.findByConsumerAndId(eq(consumer),
             eq(guest.getGuestId()))).thenReturn(guest);
         when(consumerCurator.findByVirtUuid(guest.getGuestId(),
@@ -202,8 +204,8 @@ public class GuestIdResourceTest {
         GuestId originalGuest = new GuestId("guest-id", guestConsumer);
         GuestId guest = new GuestId("guest-id");
 
-        when(guestIdCurator.findByGuestId(
-            eq(guest.getGuestId()))).thenReturn(originalGuest);
+        when(guestIdCurator.findByGuestIdAndOrg(
+            eq(guest.getGuestId()), eq(owner))).thenReturn(originalGuest);
         when(consumerCurator.findByVirtUuid(eq(guest.getGuestId()),
             eq(owner.getId()))).thenReturn(guestConsumer);
 

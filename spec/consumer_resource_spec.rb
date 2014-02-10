@@ -252,6 +252,26 @@ describe 'Consumer Resource' do
     end.should raise_exception(RestClient::BadRequest)
   end
 
+  it "should let a consumer register with a hypervisorId" do
+    some_owner = create_owner(random_string('someowner'))
+    client = user_client(some_owner, random_string('bob'))
+    consumer = client.register(random_string('system1'), :system, random_string("someuuid"), {}, random_string("uname"), some_owner['key'], [], [], nil, [], "aBcD")
+    # hypervisorId should always be set to lower case for the database constraint
+    consumer['hypervisorId']['hypervisorId'].should == "abcd"
+  end
+
+  it "should not let a consumer register with a used hypervisorId in same the org" do
+    some_owner = create_owner(random_string('someowner'))
+    client = user_client(some_owner, random_string('bob'))
+    consumer = client.register(random_string('system1'), :system, random_string("someuuid"), {}, random_string("uname"), some_owner['key'], [], [], nil, [], "aBcD")
+    # hypervisorId should always be set to lower case for the database constraint
+    consumer['hypervisorId']['hypervisorId'].should == "abcd"
+
+    lambda do
+      consumer2 = client.register(random_string('system2'), :system, random_string("someuuid"), {}, random_string("uname"), some_owner['key'], [], [], nil, [], "abCd")
+    end.should raise_exception(RestClient::BadRequest)
+  end
+
   it "does not let an owner reregister another owner's consumer" do
     linux_net = create_owner(random_string('linux_net'))
     greenfield = create_owner(random_string('greenfield_consulting'))
@@ -583,6 +603,69 @@ describe 'Consumer Resource' do
     consumer_client.update_consumer({})
     consumer = @cp.get_consumer(consumer['uuid'])
     consumer['autoheal'].should == false
+  end
+
+  it 'should allow a consumer to update their hypervisorId' do
+    user_cp = user_client(@owner1, random_string('billy'))
+    consumer = user_cp.register(random_string('system'), :system, nil,
+      {}, nil, nil, [], [])
+    consumer_client = Candlepin.new(username=nil, password=nil,
+        cert=consumer['idCert']['cert'],
+        key=consumer['idCert']['key'])
+
+    consumer = @cp.get_consumer(consumer['uuid'])
+    consumer['hypervisorId'].should == nil
+
+    consumer_client.update_consumer({:hypervisorId => "123abC"})
+    consumer = @cp.get_consumer(consumer['uuid'])
+    consumer['hypervisorId']['hypervisorId'].should == "123abc"
+
+    # Empty update shouldn't modify the setting:
+    consumer_client.update_consumer({})
+    consumer = @cp.get_consumer(consumer['uuid'])
+    consumer['hypervisorId']['hypervisorId'].should == "123abc"
+  end
+
+  it 'should not allow a consumer to update their hypervisorId to one in use by owner' do
+    user_cp = user_client(@owner1, random_string('billy'))
+    consumer = user_cp.register(random_string('system'), :system, nil,
+      {}, nil, nil, [], [])
+    consumer1 = user_cp.register(random_string('system'), :system, nil,
+      {}, nil, nil, [], [], nil, [], "hYpervisor")
+    consumer_client = Candlepin.new(username=nil, password=nil,
+        cert=consumer['idCert']['cert'],
+        key=consumer['idCert']['key'])
+
+    consumer1 =  @cp.get_consumer(consumer1['uuid'])
+    consumer1['hypervisorId']['hypervisorId'].should == "hypervisor"
+
+    consumer = @cp.get_consumer(consumer['uuid'])
+    consumer['hypervisorId'].should == nil
+
+    lambda do
+      consumer_client.update_consumer({:hypervisorId => "hypervisor"})
+    end.should raise_exception(RestClient::BadRequest)
+  end
+
+  it 'should allow a consumer to unset their hypervisorId' do
+    user_cp = user_client(@owner1, random_string('billy'))
+    consumer = user_cp.register(random_string('system'), :system, nil,
+      {}, nil, nil, [], [])
+    consumer_client = Candlepin.new(username=nil, password=nil,
+        cert=consumer['idCert']['cert'],
+        key=consumer['idCert']['key'])
+
+    consumer = @cp.get_consumer(consumer['uuid'])
+    consumer['hypervisorId'].should == nil
+
+    consumer_client.update_consumer({:hypervisorId => "123abC"})
+    consumer = @cp.get_consumer(consumer['uuid'])
+    consumer['hypervisorId']['hypervisorId'].should == "123abc"
+
+    # Empty update shouldn't modify the setting:
+    consumer_client.update_consumer({:hypervisorId => ""})
+    consumer = @cp.get_consumer(consumer['uuid'])
+    consumer['hypervisorId'].should == nil
   end
 
   it 'should allow a consumer to update their service level' do

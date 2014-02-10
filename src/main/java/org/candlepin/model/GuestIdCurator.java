@@ -53,9 +53,11 @@ public class GuestIdCurator extends AbstractHibernateCurator<GuestId> {
             .uniqueResult();
     }
 
-    public GuestId findByGuestId(String guestUuid) {
+    public GuestId findByGuestIdAndOrg(String guestUuid, Owner owner) {
         return (GuestId) this.currentSession().createCriteria(GuestId.class)
             .add(Restrictions.eq("guestId", guestUuid).ignoreCase())
+            .createAlias("consumer", "gconsumer")
+            .add(Restrictions.eq("gconsumer.owner", owner))
             .setMaxResults(1)
             .uniqueResult();
     }

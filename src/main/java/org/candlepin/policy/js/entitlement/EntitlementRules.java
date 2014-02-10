@@ -104,7 +104,8 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
         // consumer.
         if (consumer.hasFact("virt.uuid")) {
             String guestUuid = consumer.getFact("virt.uuid");
-            context.put("hostConsumer", consumerCurator.getHost(guestUuid));
+            context.put("hostConsumer",
+                consumerCurator.getHost(guestUuid, consumer.getOwner()));
         }
 
         // Add all non-serializable objects to the context.

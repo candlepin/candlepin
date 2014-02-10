@@ -27,6 +27,7 @@ import com.google.inject.persist.Transactional;
 import org.hibernate.Criteria;
 import org.hibernate.Query;
 import org.hibernate.ReplicationMode;
+import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
@@ -38,6 +39,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -379,20 +381,18 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      * @return host consumer who most recently reported the given guestId (if any)
      */
     @Transactional
-    public Consumer getHost(String guestId) {
+    public Consumer getHost(String guestId, Owner owner) {
         return (Consumer) currentSession()
             .createCriteria(GuestId.class)
             .add(Restrictions.eq("guestId", guestId).ignoreCase())
+            .createAlias("consumer", "gconsumer")
+            .add(Restrictions.eq("gconsumer.owner", owner))
             .addOrder(Order.desc("updated"))
             .setMaxResults(1)
             .setProjection(Projections.property("consumer"))
             .uniqueResult();
     }
 
-    public Consumer getConsumerInsecure(String uuid) {
-        return (Consumer) currentSession().createCriteria(Consumer.class)
-            .add(Restrictions.eq("uuid", uuid)).uniqueResult();
-    }
     /**
      * Get guest consumers for a host consumer.
      *
@@ -414,7 +414,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             for (GuestId cg : consumerGuests) {
                 // Check if this is the most recent host to report the guest by asking
                 // for the consumer's current host and comparing it to ourselves.
-                if (consumer.equals(getHost(cg.getGuestId()))) {
+                if (consumer.equals(getHost(cg.getGuestId(), consumer.getOwner()))) {
                     Consumer guest = findByVirtUuid(cg.getGuestId(),
                         consumer.getOwner().getId());
                     if (guest != null) {
@@ -424,6 +424,66 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             }
         }
         return guests;
+    }
+
+    /**
+     * This is an insecure query, because we need to know whether or not the
+     * consumer exists
+     *
+     * We do not require that the hypervisor be consumerType hypervisor
+     * because we need to allow regular consumers to be given
+     * HypervisorIds to be updated via hypervisorResource
+     *
+     * @param hypervisorId Unique identifier of the hypervisor
+     * @param owner Org namespace to search
+     * @return Consumer that matches the given
+     */
+    @Transactional
+    public Consumer getHypervisor(String hypervisorId, Owner owner) {
+        return (Consumer) currentSession().createCriteria(Consumer.class)
+            .add(Restrictions.eq("owner", owner))
+            .createAlias("hypervisorId", "hvsr")
+            .add(Restrictions.eq("hvsr.hypervisorId", hypervisorId).ignoreCase())
+            .setMaxResults(1)
+            .uniqueResult();
+    }
+
+    /**
+     * @param hypervisorIds list of unique hypervisor identifiers
+     * @param ownerKey Org namespace to search
+     * @return Consumer that matches the given
+     */
+    @SuppressWarnings("unchecked")
+    @Transactional
+    public List<Consumer> getHypervisorsBulk(List<String> hypervisorIds, String ownerKey) {
+        if (hypervisorIds == null || hypervisorIds.isEmpty()) {
+            return new LinkedList<Consumer>();
+        }
+        return createSecureCriteria()
+            .createAlias("owner", "o")
+            .add(Restrictions.eq("o.key", ownerKey))
+            .createAlias("hypervisorId", "hvsr")
+            .add(getHypervisorIdRestriction(hypervisorIds))
+            .list();
+    }
+
+    private Criterion getHypervisorIdRestriction(Collection<String> hypervisorIds) {
+        List<Criterion> ors = new LinkedList<Criterion>();
+        for (String hypervisorId : hypervisorIds) {
+            ors.add(Restrictions.eq("hvsr.hypervisorId", hypervisorId).ignoreCase());
+        }
+        return Restrictions.or(ors.toArray(new Criterion[0]));
+    }
+
+    @SuppressWarnings("unchecked")
+    @Transactional
+    public List<Consumer> getHypervisorsForOwner(String ownerKey) {
+        return createSecureCriteria()
+            .createAlias("owner", "o")
+            .add(Restrictions.eq("o.key", ownerKey))
+            .createAlias("hypervisorId", "hvsr")
+            .add(Restrictions.isNotNull("hvsr.hypervisorId"))
+            .list();
     }
 
     public boolean doesConsumerExist(String uuid) {

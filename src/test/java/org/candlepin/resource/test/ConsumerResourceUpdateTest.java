@@ -420,7 +420,8 @@ public class ConsumerResourceUpdateTest {
         when(consumerCurator.findByVirtUuid("Guest 1",
             existingHost.getOwner().getId())).thenReturn(guest1);
         // Ensure that the guests host is the existing.
-        when(consumerCurator.getHost("Guest 1")).thenReturn(existingHost);
+        when(consumerCurator.getHost("Guest 1",
+            existingHost.getOwner())).thenReturn(existingHost);
         when(consumerCurator.findByUuid("Guest 1")).thenReturn(guest1);
 
         Consumer existingMigratedTo = createConsumerWithGuests();
@@ -454,7 +455,8 @@ public class ConsumerResourceUpdateTest {
         when(consumerCurator.findByVirtUuid("Guest 1",
             existingHost.getOwner().getId())).thenReturn(guest1);
         // Ensure that the guests host is the existing.
-        when(consumerCurator.getHost("Guest 1")).thenReturn(existingHost);
+        when(consumerCurator.getHost("Guest 1",
+            existingHost.getOwner())).thenReturn(existingHost);
 
         Consumer existingMigratedTo = createConsumerWithGuests("Guest 1");
         existingMigratedTo.setUuid("MIGRATED_TO");
@@ -490,7 +492,8 @@ public class ConsumerResourceUpdateTest {
             host.getOwner().getId())).thenReturn(guest1);
 
         // Ensure that the guest was not reported by another host.
-        when(consumerCurator.getHost("Guest 1")).thenReturn(null);
+        when(consumerCurator.getHost("Guest 1",
+            host.getOwner())).thenReturn(null);
 
         this.resource.updateConsumer(host.getUuid(), updatedHost);
         verify(poolManager, never()).revokeEntitlement(eq(entitlement));
@@ -519,7 +522,8 @@ public class ConsumerResourceUpdateTest {
             host.getOwner().getId())).thenReturn(guest1);
 
         // Ensure that the guest was already reported by same host.
-        when(consumerCurator.getHost("Guest 1")).thenReturn(host);
+        when(consumerCurator.getHost("Guest 1",
+            host.getOwner())).thenReturn(host);
 
         this.resource.updateConsumer(host.getUuid(), updatedHost);
         verify(poolManager, never()).revokeEntitlement(eq(entitlement));
@@ -574,7 +578,7 @@ public class ConsumerResourceUpdateTest {
 
         when(consumerCurator.findByVirtUuid("Guest 1",
             host.getOwner().getId())).thenReturn(guest1);
-        when(consumerCurator.getHost("Guest 1")).thenReturn(host);
+        when(consumerCurator.getHost("Guest 1", host.getOwner())).thenReturn(host);
 
         this.resource.updateConsumer(host.getUuid(), updatedHost);
 

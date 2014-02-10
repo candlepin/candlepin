@@ -14,7 +14,6 @@
  */
 package org.candlepin.policy.js.entitlement;
 
-import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.policy.ValidationResult;
 
@@ -56,18 +55,5 @@ public class PreUnbindHelper {
      */
     public ValidationResult getResult() {
         return result;
-    }
-
-    /**
-     * Lookup a host consumer for the given guest ID, if one exists. The host may not
-     * be registered to Candlepin.
-     *
-     * @param guestId Virt guest ID to search for a host for.
-     *
-     * @return Consumer
-     */
-    public Consumer getHostConsumer(String guestId) {
-        // TODO: proxy to consumer curator
-        return consumerCurator.getHost(guestId);
     }
 }

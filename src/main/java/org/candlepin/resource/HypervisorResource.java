@@ -18,15 +18,15 @@ import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SubResource;
 import org.candlepin.auth.interceptor.Verify;
-import org.candlepin.exceptions.GoneException;
+import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
-import org.candlepin.model.DeletedConsumer;
-import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.GuestId;
+import org.candlepin.model.HypervisorId;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.resource.dto.HypervisorCheckInResult;
 
 import com.google.inject.Inject;
@@ -42,6 +42,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -57,17 +58,16 @@ public class HypervisorResource {
     private static Logger log = LoggerFactory.getLogger(HypervisorResource.class);
     private ConsumerCurator consumerCurator;
     private ConsumerResource consumerResource;
-    private DeletedConsumerCurator deletedConsumerCurator;
     private I18n i18n;
+    private OwnerCurator ownerCurator;
 
     @Inject
     public HypervisorResource(ConsumerResource consumerResource,
-        ConsumerCurator consumerCurator, DeletedConsumerCurator deletedConsumerCurator,
-        I18n i18n) {
+        ConsumerCurator consumerCurator, I18n i18n, OwnerCurator ownerCurator) {
         this.consumerResource = consumerResource;
         this.consumerCurator = consumerCurator;
-        this.deletedConsumerCurator = deletedConsumerCurator;
         this.i18n = i18n;
+        this.ownerCurator = ownerCurator;
     }
 
     /**
@@ -75,11 +75,18 @@ public class HypervisorResource {
      * guests for each host. This is typically used when a host is unable to
      * register to candlepin via subscription manager.
      *
+     * In situations where consumers already exist it is probably best not to
+     * allow creation of new hypervisor consumers.  Most consumers do not
+     * have a hypervisorId attribute, so that should be added manually
+     * when necessary by the management environment.
      *
      * @param hostGuestMap a mapping of host_id to list of guestIds
      * @param principal
-     * @param ownerKey
-     * @return List<Consumer>
+     * @param ownerKey key of owner to update
+     * @param createMissing specify whether or not to create missing hypervisors.
+     * Default is true.  If false is specified, hypervisorIds that are not found
+     * will result in failed entries in the resulting HypervisorCheckInResult
+     * @return HypervisorCheckInResult
      *
      * @httpcode 202
      * @httpcode 200
@@ -93,59 +100,43 @@ public class HypervisorResource {
         Map<String, List<GuestId>> hostGuestMap, @Context Principal principal,
         @QueryParam("owner") @Verify(value = Owner.class,
             require = Access.READ_ONLY,
-            subResource = SubResource.HYPERVISOR) String ownerKey) {
+            subResource = SubResource.HYPERVISOR) String ownerKey,
+        @QueryParam("create_missing") @DefaultValue("true") boolean createMissing) {
         log.info("Hypervisor check-in by principal: " + principal);
+
+        Owner owner = this.getOwner(ownerKey);
+
         HypervisorCheckInResult result = new HypervisorCheckInResult();
         for (Entry<String, List<GuestId>> hostEntry : hostGuestMap.entrySet()) {
             try {
-                List<GuestId> guestIds = hostEntry.getValue();
                 log.info("Checking virt host: " + hostEntry.getKey());
-                DeletedConsumer deletedHypervisor =
-                    deletedConsumerCurator.findByConsumerUuid(hostEntry.getKey());
-                if (deletedHypervisor != null) {
-                    throw new GoneException(
-                        i18n.tr("Hypervisor {0} has been deleted previously",
-                            hostEntry.getKey(), hostEntry.getKey()));
-                }
 
                 boolean hostConsumerCreated = false;
-                Consumer consumer = consumerCurator.getConsumerInsecure(hostEntry.getKey());
+                // Attempt to find a consumer for the given hypervisorId
+                Consumer consumer =
+                    consumerCurator.getHypervisor(hostEntry.getKey(), owner);
                 if (consumer == null) {
+                    if (!createMissing) {
+                        log.info("Unable to find hypervisor with id " +
+                            hostEntry.getKey() + " in org " + ownerKey);
+                        result.failed(hostEntry.getKey(), i18n.tr(
+                            "Unable to find hypervisor in org ''{0}''", ownerKey));
+                        continue;
+                    }
                     log.info("Registering new host consumer");
                     // Create new consumer
-                    consumer = new Consumer();
-                    consumer.setName(hostEntry.getKey());
-                    consumer.setUuid(hostEntry.getKey());
-                    consumer.setType(new ConsumerType(ConsumerTypeEnum.HYPERVISOR));
-                    consumer.setFact("uname.machine", "x86_64");
-                    consumer.setGuestIds(new ArrayList<GuestId>());
-                    consumer = consumerResource.create(consumer, principal, null, ownerKey,
-                        null);
+                    consumer = createConsumerForHypervisorId(
+                        hostEntry.getKey(), owner, principal);
                     hostConsumerCreated = true;
                 }
 
-                if (!consumer.getOwner().getKey().equals(ownerKey)) {
-                    log.warn("Skipping hypervisor. Already registered in another org, " +
-                             "consumer=" + consumer.getUuid() + ", org=" +
-                             consumer.getOwner().getKey());
-                    result.failed(hostEntry.getKey(),
-                                  "Host was already registered in another Organization.");
-                    continue;
-                }
-
-                Consumer withIds = new Consumer();
-                withIds.setGuestIds(guestIds);
-                boolean guestIdsUpdated =
-                    consumerResource.performConsumerUpdates(withIds, consumer);
-                if (guestIdsUpdated) {
-                    consumerCurator.update(consumer);
-                }
+                boolean guestIdsUpdated = addGuestIds(consumer, hostEntry.getValue());
 
                 // Populate the result with the processed consumer.
                 if (hostConsumerCreated) {
                     result.created(consumer);
                 }
-                else if (guestIdsUpdated && !hostConsumerCreated) {
+                else if (guestIdsUpdated) {
                     result.updated(consumer);
                 }
                 else {
@@ -157,5 +148,52 @@ public class HypervisorResource {
             }
         }
         return result;
+    }
+
+    /*
+     * Get the owner or bust
+     */
+    private Owner getOwner(String ownerKey) {
+        Owner owner = ownerCurator.lookupByKey(ownerKey);
+        if (owner == null) {
+            throw new NotFoundException(i18n.tr(
+                "owner with key: {0} was not found.", ownerKey));
+        }
+        return owner;
+    }
+
+    /*
+     * Add a list of guestIds to the given consumer,
+     * return whether or not there was any change
+     */
+    private boolean addGuestIds(Consumer consumer, List<GuestId> guestIds) {
+        Consumer withIds = new Consumer();
+        withIds.setGuestIds(guestIds);
+        boolean guestIdsUpdated =
+            consumerResource.performConsumerUpdates(withIds, consumer);
+        if (guestIdsUpdated) {
+            consumerCurator.update(consumer);
+        }
+        return guestIdsUpdated;
+    }
+
+    /*
+     * Create a new hypervisor type consumer to represent the incoming hypervisorId
+     */
+    private Consumer createConsumerForHypervisorId(String incHypervisorId,
+            Owner owner, Principal principal) {
+        Consumer consumer = new Consumer();
+        consumer.setName(incHypervisorId);
+        consumer.setType(new ConsumerType(ConsumerTypeEnum.HYPERVISOR));
+        consumer.setFact("uname.machine", "x86_64");
+        consumer.setGuestIds(new ArrayList<GuestId>());
+        consumer.setOwner(owner);
+        // Create HypervisorId
+        HypervisorId hypervisorId =
+            new HypervisorId(consumer, incHypervisorId);
+        consumer.setHypervisorId(hypervisorId);
+        // Create Consumer
+        return consumerResource.create(consumer,
+            principal, null, owner.getKey(), null);
     }
 }
