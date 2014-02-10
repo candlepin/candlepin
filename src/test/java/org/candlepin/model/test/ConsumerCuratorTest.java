@@ -35,6 +35,7 @@ import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.DeletedConsumer;
 import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.GuestId;
+import org.candlepin.model.HypervisorId;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
 import org.candlepin.resource.util.ResourceDateParser;
@@ -43,7 +44,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 /**
- *
+ * ConsumerCuratorTest JUnit tests for Consumer database code
  */
 public class ConsumerCuratorTest extends DatabaseTestFixture {
 
@@ -181,7 +182,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void noHostRegistered() {
-        Consumer host = consumerCurator.getHost("system-uuid-for-guest");
+        Consumer host = consumerCurator.getHost("system-uuid-for-guest", owner);
         assertTrue(host == null);
     }
 
@@ -198,7 +199,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         consumerCurator.update(host);
 
         Consumer guestHost = consumerCurator.getHost(
-            "daf0fe10-956b-7b4e-b7dc-b383ce681ba8");
+            "daf0fe10-956b-7b4e-b7dc-b383ce681ba8", owner);
         assertEquals(host, guestHost);
     }
 
@@ -223,7 +224,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         consumerCurator.update(host2);
 
         Consumer guestHost = consumerCurator.getHost(
-            "daf0fe10-956b-7b4e-b7dc-b383ce681ba8");
+            "daf0fe10-956b-7b4e-b7dc-b383ce681ba8", owner);
         assertTrue(host1Guest.getUpdated().before(host2Guest.getUpdated()));
         assertEquals(host2.getUuid(), guestHost.getUuid());
     }
@@ -249,7 +250,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         consumerCurator.update(host1);
 
         Consumer guestHost = consumerCurator.getHost(
-            "daf0fe10-956b-7b4e-b7dc-b383ce681ba8");
+            "daf0fe10-956b-7b4e-b7dc-b383ce681ba8", owner);
         assertTrue(host1Guest.getUpdated().after(host2Guest.getUpdated()));
         assertEquals(host1.getUuid(), guestHost.getUuid());
     }
@@ -482,6 +483,30 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     @Test(expected = NotFoundException.class)
     public void testVerifyAndLookupConsumerDoesntMatch() {
         Consumer result = consumerCurator.verifyAndLookupConsumer("1");
+        assertNull(result);
+    }
+
+    @Test
+    public void testGetHypervisor() {
+        String hypervisorid = "hypervisor";
+        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        consumer.setUuid("1");
+        consumer.setHypervisorId(new HypervisorId(hypervisorid));
+        consumer = consumerCurator.create(consumer);
+        Consumer result = consumerCurator.getHypervisor(hypervisorid, owner);
+        assertEquals(consumer, result);
+    }
+
+    @Test
+    public void testGetHypervisorWrongOwner() {
+        Owner otherOwner = new Owner("test-owner-other", "Test Other Owner");
+        otherOwner = ownerCurator.create(otherOwner);
+        String hypervisorid = "hypervisor";
+        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        consumer.setUuid("1");
+        consumer.setHypervisorId(new HypervisorId(hypervisorid));
+        consumer = consumerCurator.create(consumer);
+        Consumer result = consumerCurator.getHypervisor(hypervisorid, otherOwner);
         assertNull(result);
     }
 }

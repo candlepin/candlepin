@@ -1017,7 +1017,8 @@ public class ConsumerResource {
 
         // Check guests that are existing/added.
         for (GuestId guestId : incoming.getGuestIds()) {
-            Consumer host = consumerCurator.getHost(guestId.getGuestId());
+            Consumer host = consumerCurator.getHost(
+                guestId.getGuestId(), existing.getOwner());
             Consumer guest = consumerCurator.findByVirtUuid(guestId.getGuestId(),
                 existing.getOwner().getId());
 
@@ -1053,23 +1054,6 @@ public class ConsumerResource {
                         host.getName());
 
                 revokeGuestEntitlementsNotMatchingHost(existing, guest);
-                // commented out per mkhusid (see 768872, around comment #41)
-                /*
-                // now autosubscribe to the new host. We bypass bind() since we
-                // are being invoked via the host, not the guest.
-
-                // only attempt this if there are installed products, otherwise there
-                // is nothing to bind to
-                if (guest.getInstalledProducts() == null ||
-                    guest.getInstalledProducts().isEmpty()) {
-                    log.debug("No installed products for guest, unable to autosubscribe");
-                }
-                else {
-                    log.debug("Autosubscribing migrated guest.");
-                    List<Entitlement> entitlements =  entitler.bindByProducts(
-                                                                    null, guest, null);
-                    entitler.sendEvents(entitlements);
-                }*/
             }
             else if (host == null) {
                 // now check for any entitlements that may have come from another host
@@ -1903,7 +1887,7 @@ public class ConsumerResource {
                 "The system with UUID {0} is not a virtual guest.",
                 consumer.getUuid()));
         }
-        return consumerCurator.getHost(consumer.getFact("virt.uuid"));
+        return consumerCurator.getHost(consumer.getFact("virt.uuid"), consumer.getOwner());
     }
 
     @GET

@@ -120,7 +120,7 @@ public class HypervisorResourceTest {
             null, null, null, null, null);
 
         hypervisorResource = new HypervisorResource(consumerResource,
-            consumerCurator, this.deletedConsumerCurator, i18n);
+            consumerCurator, i18n, ownerCurator);
 
         // Ensure that we get the consumer that was passed in back from the create call.
         when(consumerCurator.create(any(Consumer.class))).thenAnswer(new Answer<Object>() {
@@ -131,6 +131,8 @@ public class HypervisorResourceTest {
         });
         when(complianceRules.getStatus(any(Consumer.class), any(Date.class)))
             .thenReturn(new ComplianceStatus(new Date()));
+
+        when(ownerCurator.lookupByKey(any(String.class))).thenReturn(new Owner());
     }
 
     @Test
@@ -141,7 +143,8 @@ public class HypervisorResourceTest {
         hostGuestMap.put("test-host", Arrays.asList(new GuestId("GUEST_A"),
             new GuestId("GUEST_B")));
 
-        when(consumerCurator.findByUuid(eq("test-host"))).thenReturn(null);
+        when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
+        when(consumerCurator.getHypervisor(eq("test-host"), eq(owner))).thenReturn(null);
         when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
         when(principal.canAccess(eq(owner), eq(SubResource.CONSUMERS), eq(Access.CREATE))).
             thenReturn(true);
@@ -157,7 +160,7 @@ public class HypervisorResourceTest {
         assertEquals(1, created.size());
 
         Consumer c1 = created.iterator().next();
-        assertEquals("test-host", c1.getUuid());
+        assertEquals("test-host", c1.getHypervisorId().getHypervisorId());
         assertEquals(2, c1.getGuestIds().size());
         assertEquals("GUEST_A", c1.getGuestIds().get(0).getGuestId());
         assertEquals("GUEST_B", c1.getGuestIds().get(1).getGuestId());
@@ -179,7 +182,10 @@ public class HypervisorResourceTest {
         existing.setOwner(o);
         existing.addGuestId(new GuestId("GUEST_A"));
 
-        when(consumerCurator.findByUuid(eq("test-host"))).thenReturn(existing);
+        when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
+        // Force update
+        when(consumerCurator.getHypervisor(eq("test-host"),
+            eq(owner))).thenReturn(existing);
 
         HypervisorCheckInResult result = hypervisorResource.hypervisorCheckIn(hostGuestMap,
             principal, owner.getKey());
@@ -202,12 +208,15 @@ public class HypervisorResourceTest {
             new GuestId("GUEST_B")));
 
         // Force create.
-        when(consumerCurator.findByUuid(eq(expectedHostVirtId))).thenReturn(null);
+        when(consumerCurator.getHypervisor(eq(expectedHostVirtId),
+            eq(owner))).thenReturn(null);
 
         String expectedMessage = "Forced Exception.";
         RuntimeException exception = new RuntimeException(expectedMessage);
         // Simulate failure  when checking the owner
-        when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenThrow(exception);
+        when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
+        when(consumerCurator.getHypervisor(eq(expectedHostVirtId),
+            eq(owner))).thenThrow(exception);
 
         HypervisorCheckInResult result = hypervisorResource.hypervisorCheckIn(hostGuestMap,
             principal, owner.getKey());
@@ -230,13 +239,17 @@ public class HypervisorResourceTest {
         existing.setUuid(expectedHostVirtId);
         existing.addGuestId(new GuestId("GUEST_A"));
 
+        when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
+
         // Force update
-        when(consumerCurator.findByUuid(eq(expectedHostVirtId))).thenReturn(existing);
+        when(consumerCurator.getHypervisor(eq(expectedHostVirtId),
+            eq(owner))).thenReturn(existing);
 
         String expectedMessage = "Forced Exception.";
         RuntimeException exception = new RuntimeException(expectedMessage);
         // Simulate failure  when checking the owner
-        when(consumerCurator.getHost(any(String.class))).thenThrow(exception);
+        when(consumerCurator.getHost(any(String.class),
+            any(Owner.class))).thenThrow(exception);
 
         HypervisorCheckInResult result = hypervisorResource.hypervisorCheckIn(hostGuestMap,
             principal, owner.getKey());

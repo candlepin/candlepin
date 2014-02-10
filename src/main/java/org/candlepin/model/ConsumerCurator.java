@@ -379,10 +379,12 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      * @return host consumer who most recently reported the given guestId (if any)
      */
     @Transactional
-    public Consumer getHost(String guestId) {
+    public Consumer getHost(String guestId, Owner owner) {
         return (Consumer) currentSession()
             .createCriteria(GuestId.class)
             .add(Restrictions.eq("guestId", guestId).ignoreCase())
+            .createAlias("consumer", "gconsumer")
+            .add(Restrictions.eq("gconsumer.owner", owner))
             .addOrder(Order.desc("updated"))
             .setMaxResults(1)
             .setProjection(Projections.property("consumer"))
@@ -410,7 +412,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             for (GuestId cg : consumerGuests) {
                 // Check if this is the most recent host to report the guest by asking
                 // for the consumer's current host and comparing it to ourselves.
-                if (consumer.equals(getHost(cg.getGuestId()))) {
+                if (consumer.equals(getHost(cg.getGuestId(), consumer.getOwner()))) {
                     Consumer guest = findByVirtUuid(cg.getGuestId(),
                         consumer.getOwner().getId());
                     if (guest != null) {
@@ -420,6 +422,18 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             }
         }
         return guests;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Transactional
+    public Consumer getHypervisor(String hypervisorId, Owner owner) {
+        // TODO: Can we move to secure criteria here?
+        return (Consumer) currentSession().createCriteria(Consumer.class)
+            .add(Restrictions.eq("owner", owner))
+            .createAlias("hypervisorId", "hvsr")
+            .add(Restrictions.eq("hvsr.hypervisorId", hypervisorId).ignoreCase())
+            .setMaxResults(1)
+            .uniqueResult();
     }
 
     public boolean doesConsumerExist(String uuid) {

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <property name="timestamp.type" value="TIMESTAMP WITHOUT TIME ZONE" dbms="oracle"/>
+    <property name="timestamp.type" value="TIMESTAMP WITHOUT TIME ZONE" dbms="postgresql"/>
+    <property name="timestamp.type" value="DATETIME" dbms="mysql"/>
+
+    <changeSet id="20140210083318-0" author="ckozak">
+        <comment>Add hypervisorId</comment>
+        <createTable tableName="cp_consumer_hypervisor">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_consumer_hypervisor_pkey"/>
+            </column>
+            <column name="consumer_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="hypervisor_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="owner_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="${timestamp.type}"/>
+            <column name="updated" type="${timestamp.type}"/>
+        </createTable>
+        <addUniqueConstraint columnNames="hypervisor_id, owner_id" constraintName="cp_consumer_hypervisor_ukey" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_consumer_hypervisor"/>
+        <addForeignKeyConstraint baseColumnNames="consumer_id" baseTableName="cp_consumer_hypervisor" constraintName="fk_hypervisor_consumer" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer" referencesUniqueColumn="true"/>
+        <addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="cp_consumer_hypervisor" constraintName="fk_hypervisor_owner" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" referencesUniqueColumn="true"/>
+    </changeSet>
+
+    <changeSet id="20140210083318-1" author="ckozak">
+    	<comment>Create hypervisorId rows for existing hypervisors</comment>
+        <sql>
+            INSERT INTO cp_consumer_hypervisor (id, consumer_id, hypervisor_id, owner_id, created, updated)
+            SELECT c.id, c.id, LOWER(c.uuid), c.owner_id, c.created, c.updated
+            FROM cp_consumer AS c
+            INNER JOIN cp_consumer_type AS ct
+            ON c.type_id = ct.id
+            LEFT OUTER JOIN cp_consumer_hypervisor AS ch
+            ON c.id = ch.consumer_id
+            WHERE ct.label = 'hypervisor'
+            AND ch.id is NULL;
+        </sql>
+    </changeSet>
+</databaseChangeLog>

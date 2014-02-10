@@ -157,6 +157,17 @@ public class GuestIdResource {
             @PathParam("guest_id") String guestId,
             GuestId updated) {
 
+        // I'm not sure this can happen
+        if (guestId == null || guestId.isEmpty()) {
+            throw new BadRequestException(
+                i18n.tr("Please supply a valid guest id"));
+        }
+
+        if (updated == null) {
+            // If they're not sending attributes, we can get the guestId from the url
+            updated = new GuestId(guestId);
+        }
+
         // Allow the id to be left out in this case, we can use the path param
         if (updated.getGuestId() == null) {
             updated.setGuestId(guestId);
@@ -169,23 +180,16 @@ public class GuestIdResource {
                     updated.getGuestId(), guestId));
         }
 
-        Consumer consumer = consumerCurator.findByUuid(consumerUuid);
-        // This is very unlikely, consumer must have been deleted
-        // between verify and here, but it's possible.
-        if (consumer != null) {
-            updated.setConsumer(consumer);
-            GuestId toUpdate = guestIdCurator.findByGuestId(guestId);
-            // If this guest has a consumer, we want to remove host-specific entitlements
-            if (toUpdate != null) {
-                revokeBadHostRestrictedEnts(toUpdate, consumer);
-                updated.setId(toUpdate.getId());
-            }
-            guestIdCurator.merge(updated);
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
+        updated.setConsumer(consumer);
+        GuestId toUpdate =
+            guestIdCurator.findByGuestIdAndOrg(guestId, consumer.getOwner());
+        // If this guest has a consumer, we want to remove host-specific entitlements
+        if (toUpdate != null) {
+            revokeBadHostRestrictedEnts(toUpdate, consumer);
+            updated.setId(toUpdate.getId());
         }
-        else {
-            throw new NotFoundException(i18n.tr(
-                "Consumer with uuid {0} could not be found.", consumerUuid));
-        }
+        guestIdCurator.merge(updated);
     }
 
     /**
@@ -204,12 +208,15 @@ public class GuestIdResource {
             @QueryParam("unregister") @DefaultValue("false") boolean unregister,
             @Context Principal principal) {
 
-        Consumer consumer = consumerCurator.findByUuid(consumerUuid);
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         GuestId toDelete = validateGuestId(
             guestIdCurator.findByConsumerAndId(consumer, guestId), guestId);
 
         if (unregister) {
             unregisterConsumer(toDelete, principal);
+        }
+        else {
+            revokeBadHostRestrictedEnts(toDelete, consumer);
         }
         sink.sendEvent(eventFactory.guestIdDeleted(consumer, toDelete));
         guestIdCurator.delete(toDelete);

@@ -16,14 +16,15 @@ package org.candlepin.resource;
 
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.interceptor.SecurityHole;
-import org.candlepin.exceptions.GoneException;
+import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
-import org.candlepin.model.DeletedConsumer;
-import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.GuestId;
+import org.candlepin.model.HypervisorId;
+import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.resource.dto.HypervisorCheckInResult;
 
 import com.google.inject.Inject;
@@ -54,17 +55,16 @@ public class HypervisorResource {
     private static Logger log = LoggerFactory.getLogger(HypervisorResource.class);
     private ConsumerCurator consumerCurator;
     private ConsumerResource consumerResource;
-    private DeletedConsumerCurator deletedConsumerCurator;
     private I18n i18n;
+    private OwnerCurator ownerCurator;
 
     @Inject
     public HypervisorResource(ConsumerResource consumerResource,
-        ConsumerCurator consumerCurator, DeletedConsumerCurator deletedConsumerCurator,
-        I18n i18n) {
+        ConsumerCurator consumerCurator, I18n i18n, OwnerCurator ownerCurator) {
         this.consumerResource = consumerResource;
         this.consumerCurator = consumerCurator;
-        this.deletedConsumerCurator = deletedConsumerCurator;
         this.i18n = i18n;
+        this.ownerCurator = ownerCurator;
     }
 
     /**
@@ -91,31 +91,37 @@ public class HypervisorResource {
     public HypervisorCheckInResult hypervisorCheckIn(
         Map<String, List<GuestId>> hostGuestMap, @Context Principal principal,
         @QueryParam("owner") String ownerKey) {
+
+        Owner owner = ownerCurator.lookupByKey(ownerKey);
+        if (owner == null) {
+            throw new NotFoundException(i18n.tr(
+                "owner with key: {0} was not found.", ownerKey));
+        }
+
         HypervisorCheckInResult result = new HypervisorCheckInResult();
         for (Entry<String, List<GuestId>> hostEntry : hostGuestMap.entrySet()) {
             try {
                 log.info("Attempting to register host: " + hostEntry.getKey());
                 List<GuestId> guestIds = hostEntry.getValue();
-                DeletedConsumer deletedHypervisor =
-                    deletedConsumerCurator.findByConsumerUuid(hostEntry.getKey());
-                if (deletedHypervisor != null) {
-                    throw new GoneException(
-                        i18n.tr("Hypervisor {0} has been deleted previously",
-                            hostEntry.getKey(), hostEntry.getKey()));
-                }
 
                 boolean hostConsumerCreated = false;
-                Consumer consumer = consumerCurator.findByUuid(hostEntry.getKey());
+                Consumer consumer =
+                    consumerCurator.getHypervisor(hostEntry.getKey(), owner);
                 if (consumer == null) {
                     // Create new consumer
                     consumer = new Consumer();
                     consumer.setName(hostEntry.getKey());
-                    consumer.setUuid(hostEntry.getKey());
                     consumer.setType(new ConsumerType(ConsumerTypeEnum.HYPERVISOR));
                     consumer.setFact("uname.machine", "x86_64");
                     consumer.setGuestIds(new ArrayList<GuestId>());
-                    consumer = consumerResource.create(consumer, principal, null, ownerKey,
-                        null);
+                    consumer.setOwner(owner);
+                    // Create HypervisorId
+                    HypervisorId hypervisorId =
+                        new HypervisorId(consumer, hostEntry.getKey());
+                    consumer.setHypervisorId(hypervisorId);
+                    // Create Consumer
+                    consumer = consumerResource.create(consumer,
+                        principal, null, ownerKey, null);
                     hostConsumerCreated = true;
                 }
 
