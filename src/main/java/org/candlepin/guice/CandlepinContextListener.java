@@ -15,8 +15,13 @@
 package org.candlepin.guice;
 
 import org.candlepin.audit.HornetqContextListener;
+import org.candlepin.audit.AMQPBusPublisher;
+import org.candlepin.audit.HornetqContextListener;
+import org.candlepin.config.Config;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.logging.LoggerContextListener;
 import org.candlepin.pinsetter.core.PinsetterContextListener;
+import org.candlepin.util.Util;
 
 import com.google.inject.Binding;
 import com.google.inject.Guice;
@@ -104,6 +109,15 @@ public class CandlepinContextListener extends
         pinsetterListener.contextDestroyed();
         loggerListener = injector.getInstance(LoggerContextListener.class);
         loggerListener.contextDestroyed();
+
+        Config config = injector.getInstance(Config.class);
+        //if amqp is enabled, close all connections.
+        if (config.getBoolean(ConfigProperties.AMQP_INTEGRATION_ENABLED)) {
+            Util.closeSafely(injector.getInstance(AMQPBusPublisher.class),
+                "AMQPBusPublisher");
+            Util.closeSafely(injector.getInstance(AMQPBusPubProvider.class),
+                "AMQPBusPubProvider");
+        }
     }
 
     /**

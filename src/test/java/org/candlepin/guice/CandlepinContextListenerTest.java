@@ -20,19 +20,15 @@ import static org.mockito.Mockito.atMost;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
-
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-
-import javax.servlet.ServletContext;
-import javax.servlet.ServletContextEvent;
 
 import org.candlepin.CandlepinCommonTestingModule;
 import org.candlepin.CandlepinNonServletEnvironmentTestingModule;
+import org.candlepin.audit.AMQPBusPublisher;
 import org.candlepin.audit.HornetqContextListener;
 import org.candlepin.config.Config;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.pinsetter.core.PinsetterContextListener;
 import org.jboss.resteasy.spi.Registry;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
@@ -43,6 +39,14 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.ServletContext;
+import javax.servlet.ServletContextEvent;
+
 /**
  * CandlepinContextListenerTest
  */
@@ -51,6 +55,8 @@ public class CandlepinContextListenerTest {
     private CandlepinContextListener listener;
     private HornetqContextListener hqlistener;
     private PinsetterContextListener pinlistener;
+    private AMQPBusPublisher buspublisher;
+    private AMQPBusPubProvider busprovider;
     private ServletContextEvent evt;
 
     @Before
@@ -58,6 +64,8 @@ public class CandlepinContextListenerTest {
         config = new Config(new HashMap<String, String>());
         hqlistener = mock(HornetqContextListener.class);
         pinlistener = mock(PinsetterContextListener.class);
+        buspublisher = mock(AMQPBusPublisher.class);
+        busprovider = mock(AMQPBusPubProvider.class);
         // for testing we override the getModules so we can
         // insert our mock versions of listeners to verify
         // they are getting invoked properly.
@@ -114,6 +122,38 @@ public class CandlepinContextListenerTest {
         verifyNoMoreInteractions(evt); // destroy shoudln't use it
         verify(hqlistener).contextDestroyed();
         verify(pinlistener).contextDestroyed();
+        verifyZeroInteractions(busprovider);
+        verifyZeroInteractions(buspublisher);
+    }
+
+    /**
+     * creates a config with the given property set to the value.
+     * @param prop property to be configured
+     * @param value the value property should be set to
+     */
+    private void createConfig(final String prop, final String value) {
+        createConfig(
+            new HashMap<String, String>() {
+                {
+                    put(prop, value);
+                }
+            });
+    }
+
+    private void createConfig(Map<String, String> map) {
+        config = new Config(map);
+    }
+
+    @Test
+    public void ensureAMQPClosedProperly() {
+        createConfig(ConfigProperties.AMQP_INTEGRATION_ENABLED, "true");
+        prepareForInitialization();
+        listener.contextInitialized(evt);
+
+        // test & verify
+        listener.contextDestroyed(evt);
+        verify(busprovider).close();
+        verify(buspublisher).close();
     }
 
     public class TestModule extends AbstractModule {
@@ -122,6 +162,8 @@ public class CandlepinContextListenerTest {
         protected void configure() {
             bind(PinsetterContextListener.class).toInstance(pinlistener);
             bind(HornetqContextListener.class).toInstance(hqlistener);
+            bind(AMQPBusPublisher.class).toInstance(buspublisher);
+            bind(AMQPBusPubProvider.class).toInstance(busprovider);
         }
     }
 }

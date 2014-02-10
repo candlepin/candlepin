@@ -20,6 +20,8 @@ import javax.validation.MessageInterpolator;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 
+import org.candlepin.audit.AMQPBusEventAdapter;
+import org.candlepin.audit.AMQPBusPublisher;
 import org.candlepin.audit.EventSink;
 import org.candlepin.audit.EventSinkImpl;
 import org.candlepin.auth.Principal;
@@ -239,6 +241,8 @@ public class CandlepinModule extends AbstractModule {
         // flexible end date for identity certificates
         bind(Function.class).annotatedWith(Names.named("endDateGenerator"))
             .to(ExpiryDateFunction.class).in(Singleton.class);
+
+        this.configureAmqp();
     }
 
     @Provides @Named("ValidationProperties")
@@ -282,5 +286,14 @@ public class CandlepinModule extends AbstractModule {
         bind(ConsumerExporter.class);
         bind(RulesExporter.class);
         bind(EntitlementCertExporter.class);
+    }
+
+    private void configureAmqp() {
+        // AMQP stuff:
+        bind(Function.class).annotatedWith(Names.named("abc"))
+                .to(AMQPBusEventAdapter.class).in(Singleton.class);
+        // for lazy loading:
+        bind(AMQPBusPublisher.class).toProvider(AMQPBusPubProvider.class)
+                .in(Singleton.class);
     }
 }
