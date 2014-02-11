@@ -17,6 +17,7 @@ package org.candlepin.exceptions.mappers;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.exceptions.ExceptionMessage;
 import org.candlepin.guice.I18nProvider;
@@ -68,6 +69,29 @@ public class CandlepinExceptionMapperTest {
         assertEquals(MediaType.APPLICATION_ATOM_XML_TYPE,
             r.getMetadata().get("Content-Type").get(0));
         assertTrue(em.getDisplayMessage().startsWith("Runtime Error " + re.getMessage()));
+    }
+
+    @Test
+    public void handleArrayIndexException() {
+        // Java 7 has a nice constructor where you can pass in false to not
+        // fill in the stacktrace, but Java 6 does not have such a facility.
+        // No amount of combination of creating Throwable without a stack
+        // trace was working. We're resorting to using a mock version which
+        // works great and is exactly the behavior we want.
+
+        Throwable nostack = mock(Throwable.class);
+        when(nostack.getMessage()).thenReturn("no stack trace");
+        // simulate Java 7 on a Java 6 vm
+        when(nostack.getStackTrace()).thenReturn(null);
+
+        Response r = cem.getDefaultBuilder(nostack, null,
+            MediaType.APPLICATION_JSON_TYPE).build();
+        ExceptionMessage em = (ExceptionMessage) r.getEntity();
+
+        assertEquals(Status.INTERNAL_SERVER_ERROR.getStatusCode(), r.getStatus());
+        assertEquals("Runtime Error no stack trace", em.getDisplayMessage());
+        assertEquals(MediaType.APPLICATION_JSON_TYPE,
+            r.getMetadata().get("Content-Type").get(0));
     }
 
     public static class MapperTestModule extends AbstractModule {

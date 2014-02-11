@@ -92,13 +92,26 @@ public class CandlepinExceptionMapper {
         while (cause.getCause() != null) {
             cause = cause.getCause();
         }
+
+        String message = "";
+
         StackTraceElement[] stes = cause.getStackTrace();
-        StackTraceElement ele = stes[0];
-        int line = ele.getLineNumber();
-        String method = ele.getMethodName();
-        String clazz = ele.getClassName();
-        String message = i18n.tr("Runtime Error {0} at {1}.{2}:{3}",
-            exception.getMessage(), clazz, method, line);
+
+        // 1051215: the exception may not have a stacktrace, rare but could
+        // happen which breaks things.
+        if (stes != null && stes.length > 0) {
+            StackTraceElement ele = stes[0];
+            int line = ele.getLineNumber();
+            String method = ele.getMethodName();
+            String clazz = ele.getClassName();
+            message = i18n.tr("Runtime Error {0} at {1}.{2}:{3}",
+                exception.getMessage(), clazz, method, line);
+        }
+        else {
+            // just use the exception message
+            message = i18n.tr("Runtime Error {0}", exception.getMessage());
+        }
+
         log.error(message, exception);
         if (status == null) {
             status = Status.INTERNAL_SERVER_ERROR;
