@@ -16,6 +16,7 @@ package org.candlepin.auth;
 
 import org.candlepin.auth.permissions.AttachPermission;
 import org.candlepin.auth.permissions.ConsumerEntitlementPermission;
+import org.candlepin.auth.permissions.ConsumerOrgHypervisorPermission;
 import org.candlepin.auth.permissions.ConsumerPermission;
 import org.candlepin.auth.permissions.ConsumerServiceLevelsPermission;
 import org.candlepin.auth.permissions.OwnerPoolsPermission;
@@ -44,6 +45,9 @@ public class ConsumerPrincipal extends Principal {
 
         // Allow consumers to view their owner's service levels:
         addPermission(new ConsumerServiceLevelsPermission(consumer));
+
+        // Allow consumers to run virt-who hypervisor update
+        addPermission(new ConsumerOrgHypervisorPermission(consumer.getOwner()));
     }
 
     public Consumer getConsumer() {

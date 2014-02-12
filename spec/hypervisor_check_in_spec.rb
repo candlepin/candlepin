@@ -21,12 +21,18 @@ describe 'Hypervisor Resource', :type => :virt do
     @cp.get_consumer_guests(@expected_host).length.should == 2
     @host_client = registered_consumer_client(consumer)
     @host_client.consume_pool(@virt_limit_pool['id'], {:quantity => 1})
+
+    @consumer = consumer_client(@user, random_string("consumer"))
+
+    # For testing some cross-org hypervisor check-ins:
+    @owner2 = create_owner random_string('virt_owner2')
+    @user2 = user_client(@owner2, random_string('virt_user2'))
   end
 
   it 'should add consumer to created when new host id and no guests reported' do
     consumer_uuid = random_string('host')
     mapping = get_host_guest_mapping(consumer_uuid, [])
-    result = @user.hypervisor_check_in(@owner['key'], mapping)
+    result = @consumer.hypervisor_check_in(@owner['key'], mapping)
     # Should only  have a result entry for created.
     result.created.size.should == 1
     result.updated.size.should == 0
@@ -39,7 +45,7 @@ describe 'Hypervisor Resource', :type => :virt do
   it 'should add consumer to created when new host id and guests were reported' do
     consumer_uuid = random_string('host')
     mapping = get_host_guest_mapping(consumer_uuid, ['g1'])
-    result = @user.hypervisor_check_in(@owner['key'], mapping)
+    result = @consumer.hypervisor_check_in(@owner['key'], mapping)
     # Should only  have a result entry for created.
     result.created.size.should == 1
     result.updated.size.should == 0
@@ -51,7 +57,7 @@ describe 'Hypervisor Resource', :type => :virt do
 
   it 'should add consumer to updated when guest ids are updated' do
     mapping = get_host_guest_mapping(@expected_host, ['g1', 'g2'])
-    result = @user.hypervisor_check_in(@owner['key'], mapping)
+    result = @consumer.hypervisor_check_in(@owner['key'], mapping)
     # Should only  have a result entry for updated.
     result.created.size.should ==0
     result.updated.size.should == 1
@@ -63,7 +69,7 @@ describe 'Hypervisor Resource', :type => :virt do
 
   it 'should add consumer to unchanged when same guest ids are sent' do
     mapping = get_host_guest_mapping(@expected_host, @expected_guest_ids)
-    result = @user.hypervisor_check_in(@owner['key'], mapping)
+    result = @consumer.hypervisor_check_in(@owner['key'], mapping)
     # Should only  have a result entry for unchanged.
     result.created.size.should ==0
     result.updated.size.should == 0
@@ -76,12 +82,12 @@ describe 'Hypervisor Resource', :type => :virt do
   it 'should add consumer to unchanged when comparing empty guest id lists' do
     consumer_uuid = random_string('host')
     mapping = get_host_guest_mapping(consumer_uuid, [])
-    result = @user.hypervisor_check_in(@owner['key'], mapping)
+    result = @consumer.hypervisor_check_in(@owner['key'], mapping)
     result.created.size.should == 1
     result.created[0].uuid.should == consumer_uuid
 
     # Do the same update with [] and it should be considered unchanged.
-    result = @user.hypervisor_check_in(@owner['key'], mapping)
+    result = @consumer.hypervisor_check_in(@owner['key'], mapping)
     result.created.size.should == 0
     result.updated.size.should == 0
     result.unchanged.size.should == 1
@@ -95,12 +101,20 @@ describe 'Hypervisor Resource', :type => :virt do
     check_hypervisor_consumer(consumer, @expected_host, @expected_guest_ids)
   end
 
-  it 'should update host guest ids' do
+  it 'should update host guest ids as consumer' do
+    update_guest_ids_test(@consumer)
+  end
+
+  it 'should update host guest ids as user' do
+    update_guest_ids_test(@user)
+  end
+
+  def update_guest_ids_test(client)
     # Update the guest ids
     new_guest_id = 'Guest3'
     updated_guest_ids = [@uuid2, new_guest_id]
     updated_host_guest_mapping = get_host_guest_mapping(@expected_host, updated_guest_ids)
-    results = @user.hypervisor_check_in(@owner['key'], updated_host_guest_mapping)
+    results = client.hypervisor_check_in(@owner['key'], updated_host_guest_mapping)
     # Host consumer already existed, no creation occurred.
     results.created.size.should == 0
     # Ensure that we are returning the updated consumer correctly.
@@ -118,7 +132,7 @@ describe 'Hypervisor Resource', :type => :virt do
 
     # Host stops reporting guest:
     updated_host_guest_mapping = get_host_guest_mapping(@expected_host, [@uuid2])
-    results = @user.hypervisor_check_in(@owner['key'],  updated_host_guest_mapping)
+    results = @consumer.hypervisor_check_in(@owner['key'],  updated_host_guest_mapping)
     results.created.size.should == 0
     results.updated.size.should == 1
 
@@ -130,7 +144,7 @@ describe 'Hypervisor Resource', :type => :virt do
     @host_client.list_entitlements.length.should == 1
     # Host reports no guests.
     host_mapping_no_guests = get_host_guest_mapping(@expected_host, [])
-    results = @user.hypervisor_check_in(@owner['key'],  host_mapping_no_guests)
+    results = @consumer.hypervisor_check_in(@owner['key'],  host_mapping_no_guests)
     results.created.size.should == 0
     results.updated.size.should == 1
     @host_client.list_entitlements.length.should == 1
@@ -144,7 +158,7 @@ describe 'Hypervisor Resource', :type => :virt do
 
     # Host stops reporting guest:
     updated_host_guest_mapping = get_host_guest_mapping(@expected_host, [])
-    results = @user.hypervisor_check_in(@owner['key'],  updated_host_guest_mapping)
+    results = @consumer.hypervisor_check_in(@owner['key'],  updated_host_guest_mapping)
     results.created.size.should == 0
     results.updated.size.should == 1
 
@@ -164,9 +178,9 @@ describe 'Hypervisor Resource', :type => :virt do
 
     deletable_uuid = random_string("string-used-as-a-mock-uuid")
     host_guest_mapping = get_host_guest_mapping(deletable_uuid, [])
-    results = @user.hypervisor_check_in(@owner['key'],  host_guest_mapping)
+    results = @consumer.hypervisor_check_in(@owner['key'],  host_guest_mapping)
     @cp.unregister(deletable_uuid)
-    results = @user.hypervisor_check_in(@owner['key'],  host_guest_mapping)
+    results = @consumer.hypervisor_check_in(@owner['key'],  host_guest_mapping)
     # the update should fail since the consumer got deleted
     results.failedUpdate.size.should == 1
     lambda do
@@ -184,13 +198,13 @@ describe 'Hypervisor Resource', :type => :virt do
     end.should raise_exception(RestClient::Forbidden)
 
     @cp.remove_deletion_record(deletable_uuid)
-    results = @user.hypervisor_check_in(@owner['key'],  host_guest_mapping)
+    results = @consumer.hypervisor_check_in(@owner['key'],  host_guest_mapping)
     results.failedUpdate.size.should == 0
   end
 
   it 'should initialize guest ids to empty when creating new host' do
     host_guest_mapping = get_host_guest_mapping(random_string('new_host'), [])
-    results = @user.hypervisor_check_in(@owner['key'], host_guest_mapping)
+    results = @consumer.hypervisor_check_in(@owner['key'], host_guest_mapping)
     # Host consumer should have been created.
     results.created.size.should == 1
     results.created[0]['guestIds'].should_not == nil
@@ -216,4 +230,52 @@ describe 'Hypervisor Resource', :type => :virt do
     end
   end
 
+  # Tests a scenario where permissions were blocking update:
+  it 'should allow virt-who to update mappings' do
+    virtwho1 = create_virtwho_client(@user)
+    host_guest_mapping = get_host_guest_mapping(random_string('my-host'), ['g1', 'g2'])
+    results = virtwho1.hypervisor_check_in(@owner['key'], host_guest_mapping)
+    results.should_not be_nil
+    results.created.size.should == 1
+
+    results = virtwho1.hypervisor_check_in(@owner['key'], host_guest_mapping)
+    results.should_not be_nil
+    results.unchanged.size.should == 1
+  end
+
+  it 'should block virt-who if owner does not match identity cert' do
+    virtwho1 = create_virtwho_client(@user)
+    host_guest_mapping = get_host_guest_mapping(random_string('my-host'), ['g1', 'g2'])
+    lambda do
+      results = virtwho1.hypervisor_check_in(@owner2['key'], host_guest_mapping)
+    end.should raise_exception(RestClient::ResourceNotFound)
+  end
+
+  it 'checkin fails when host already exists and virtwho consumer in wrong org' do
+    virtwho1 = create_virtwho_client(@user)
+    virtwho2 = create_virtwho_client(@user2)
+
+    host_id = random_string('my-host')
+    host_guest_mapping = get_host_guest_mapping(host_id, ['g1', 'g2'])
+
+    # Two virt-who's reporting the same virt mapping data with different orgs:
+    results = virtwho1.hypervisor_check_in(@owner['key'], host_guest_mapping)
+    results.should_not be_nil
+    results.created.size.should == 1
+
+    results = virtwho2.hypervisor_check_in(@owner2['key'], host_guest_mapping)
+    results.should_not be_nil
+    results.failedUpdate.should include("#{host_id}: Host was already registered in another Organization.")
+
+  end
+
+  def create_virtwho_client(user)
+    consumer = user.register(random_string("virt-who"), :system, nil, {},
+        nil, nil, [], [{:productId => 'installedprod',
+           :productName => "Installed"}])
+    consumer_api = Candlepin.new(username=nil, password=nil,
+                                  cert=consumer['idCert']['cert'],
+                                  key=consumer['idCert']['key'])
+    return consumer_api
+  end
 end
