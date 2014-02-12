@@ -14,8 +14,10 @@
  */
 package org.candlepin.resource;
 
+import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
-import org.candlepin.auth.interceptor.SecurityHole;
+import org.candlepin.auth.SubResource;
+import org.candlepin.auth.interceptor.Verify;
 import org.candlepin.exceptions.GoneException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -24,6 +26,7 @@ import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.DeletedConsumer;
 import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.GuestId;
+import org.candlepin.model.Owner;
 import org.candlepin.resource.dto.HypervisorCheckInResult;
 
 import com.google.inject.Inject;
@@ -85,17 +88,18 @@ public class HypervisorResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    // FIXME Temporarily open up until auth is figured out.
-    @SecurityHole(noAuth = true)
     @Transactional
     public HypervisorCheckInResult hypervisorCheckIn(
         Map<String, List<GuestId>> hostGuestMap, @Context Principal principal,
-        @QueryParam("owner") String ownerKey) {
+        @QueryParam("owner") @Verify(value = Owner.class,
+            require = Access.READ_ONLY,
+            subResource = SubResource.HYPERVISOR) String ownerKey) {
+        log.info("Hypervisor check-in by principal: " + principal);
         HypervisorCheckInResult result = new HypervisorCheckInResult();
         for (Entry<String, List<GuestId>> hostEntry : hostGuestMap.entrySet()) {
             try {
-                log.info("Attempting to register host: " + hostEntry.getKey());
                 List<GuestId> guestIds = hostEntry.getValue();
+                log.info("Checking virt host: " + hostEntry.getKey());
                 DeletedConsumer deletedHypervisor =
                     deletedConsumerCurator.findByConsumerUuid(hostEntry.getKey());
                 if (deletedHypervisor != null) {
@@ -105,8 +109,9 @@ public class HypervisorResource {
                 }
 
                 boolean hostConsumerCreated = false;
-                Consumer consumer = consumerCurator.findByUuid(hostEntry.getKey());
+                Consumer consumer = consumerCurator.getConsumerInsecure(hostEntry.getKey());
                 if (consumer == null) {
+                    log.info("Registering new host consumer");
                     // Create new consumer
                     consumer = new Consumer();
                     consumer.setName(hostEntry.getKey());
@@ -117,6 +122,15 @@ public class HypervisorResource {
                     consumer = consumerResource.create(consumer, principal, null, ownerKey,
                         null);
                     hostConsumerCreated = true;
+                }
+
+                if (!consumer.getOwner().getKey().equals(ownerKey)) {
+                    log.warn("Skipping hypervisor. Already registered in another org, " +
+                             "consumer=" + consumer.getUuid() + ", org=" +
+                             consumer.getOwner().getKey());
+                    result.failed(hostEntry.getKey(),
+                                  "Host was already registered in another Organization.");
+                    continue;
                 }
 
                 Consumer withIds = new Consumer();

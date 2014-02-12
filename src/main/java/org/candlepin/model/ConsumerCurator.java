@@ -386,6 +386,10 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             .uniqueResult();
     }
 
+    public Consumer getConsumerInsecure(String uuid) {
+        return (Consumer) currentSession().createCriteria(Consumer.class)
+            .add(Restrictions.eq("uuid", uuid)).uniqueResult();
+    }
     /**
      * Get guest consumers for a host consumer.
      *

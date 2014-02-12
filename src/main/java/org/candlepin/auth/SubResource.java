@@ -24,5 +24,6 @@ public enum SubResource {
     CONSUMERS, // org consumers
     POOLS, // org pools
     SUBSCRIPTIONS, // org subscriptions
-    SERVICE_LEVELS; // org service levels
+    SERVICE_LEVELS, // org service levels
+    HYPERVISOR;
 }

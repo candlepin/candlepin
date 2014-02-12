@@ -141,7 +141,7 @@ public class HypervisorResourceTest {
         hostGuestMap.put("test-host", Arrays.asList(new GuestId("GUEST_A"),
             new GuestId("GUEST_B")));
 
-        when(consumerCurator.findByUuid(eq("test-host"))).thenReturn(null);
+        when(consumerCurator.getConsumerInsecure(eq("test-host"))).thenReturn(null);
         when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
         when(principal.canAccess(eq(owner), eq(SubResource.CONSUMERS), eq(Access.CREATE))).
             thenReturn(true);
@@ -167,19 +167,19 @@ public class HypervisorResourceTest {
 
     @Test
     public void hypervisorCheckInUpdatesGuestIdsWhenHostConsumerExists() throws Exception {
-        Owner owner = new Owner("admin");
+        Owner owner = new Owner("owner-id", "Owner Id");
 
         Map<String, List<GuestId>> hostGuestMap = new HashMap<String, List<GuestId>>();
         hostGuestMap.put("test-host", Arrays.asList(new GuestId("GUEST_B")));
 
-        Owner o = new Owner();
+        Owner o = new Owner("owner-id", "Owner ID");
         o.setId("owner-id");
         Consumer existing = new Consumer();
         existing.setUuid("test-host");
         existing.setOwner(o);
         existing.addGuestId(new GuestId("GUEST_A"));
 
-        when(consumerCurator.findByUuid(eq("test-host"))).thenReturn(existing);
+        when(consumerCurator.getConsumerInsecure(eq("test-host"))).thenReturn(existing);
 
         HypervisorCheckInResult result = hypervisorResource.hypervisorCheckIn(hostGuestMap,
             principal, owner.getKey());
@@ -202,7 +202,7 @@ public class HypervisorResourceTest {
             new GuestId("GUEST_B")));
 
         // Force create.
-        when(consumerCurator.findByUuid(eq(expectedHostVirtId))).thenReturn(null);
+        when(consumerCurator.getConsumerInsecure(eq(expectedHostVirtId))).thenReturn(null);
 
         String expectedMessage = "Forced Exception.";
         RuntimeException exception = new RuntimeException(expectedMessage);
@@ -220,7 +220,7 @@ public class HypervisorResourceTest {
 
     @Test
     public void hypervisorCheckInReportsFailureWhenGuestIdUpdateFails() throws Exception {
-        Owner owner = new Owner("admin");
+        Owner owner = new Owner("admin", "Admin");
 
         Map<String, List<GuestId>> hostGuestMap = new HashMap<String, List<GuestId>>();
         String expectedHostVirtId = "test-host";
@@ -228,10 +228,12 @@ public class HypervisorResourceTest {
 
         Consumer existing = new Consumer();
         existing.setUuid(expectedHostVirtId);
+        existing.setOwner(owner);
         existing.addGuestId(new GuestId("GUEST_A"));
 
         // Force update
-        when(consumerCurator.findByUuid(eq(expectedHostVirtId))).thenReturn(existing);
+        when(consumerCurator.getConsumerInsecure(eq(expectedHostVirtId)))
+            .thenReturn(existing);
 
         String expectedMessage = "Forced Exception.";
         RuntimeException exception = new RuntimeException(expectedMessage);
@@ -245,6 +247,30 @@ public class HypervisorResourceTest {
         assertEquals(1, failures.size());
         assertEquals(expectedHostVirtId + ": " + expectedMessage,
             failures.iterator().next());
+    }
+
+    @Test
+    public void hypervisorCheckInWhenHostConsumerExistsDiffOwner() throws Exception {
+        Owner owner = new Owner("admin");
+
+        Map<String, List<GuestId>> hostGuestMap = new HashMap<String, List<GuestId>>();
+        hostGuestMap.put("test-host", Arrays.asList(new GuestId("GUEST_B")));
+
+        Owner o = new Owner("owner-id", "Owner ID");
+        Consumer existing = new Consumer();
+        existing.setUuid("test-host");
+        existing.setOwner(o);
+        existing.addGuestId(new GuestId("GUEST_A"));
+
+        when(consumerCurator.getConsumerInsecure(eq("test-host"))).thenReturn(existing);
+
+        HypervisorCheckInResult result = hypervisorResource.hypervisorCheckIn(hostGuestMap,
+            principal, owner.getKey());
+        Set<String> failed = result.getFailedUpdate();
+        assertEquals(1, failed.size());
+
+        assertEquals("test-host: Host was already registered in another Organization.",
+            failed.iterator().next());
     }
 
 }
