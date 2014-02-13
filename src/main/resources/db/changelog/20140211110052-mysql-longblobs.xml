@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <!-- BLOBs in MySQL can only hold up to 64KB whereas LONGBLOBs hold up to 4GB.
+         See http://dev.mysql.com/doc/refman/5.5/en/storage-requirements.html -->
+    <!-- The sql elements are necessary because of https://liquibase.jira.com/browse/CORE-670 -->
+    <changeSet id="20140211110052-1" author="awood" dbms="mysql">
+        <sql>ALTER TABLE cp_certificate MODIFY cert LONGBLOB NOT NULL</sql>
+        <sql>ALTER TABLE cp_certificate MODIFY privatekey LONGBLOB NOT NULL</sql>
+    </changeSet>
+
+    <changeSet id="20140211110052-2" author="awood" dbms="mysql">
+        <sql>ALTER TABLE cp_ent_certificate MODIFY cert LONGBLOB NOT NULL</sql>
+        <sql>ALTER TABLE cp_ent_certificate MODIFY privatekey LONGBLOB NOT NULL</sql>
+    </changeSet>
+
+    <changeSet id="20140211110052-3" author="awood" dbms="mysql">
+        <sql>ALTER TABLE cp_id_cert MODIFY cert LONGBLOB NOT NULL</sql>
+        <sql>ALTER TABLE cp_id_cert MODIFY privatekey LONGBLOB NOT NULL</sql>
+    </changeSet>
+
+    <changeSet id="20140211110052-4" author="awood" dbms="mysql">
+        <sql>ALTER TABLE cp_product_certificate MODIFY cert LONGBLOB NOT NULL</sql>
+        <sql>ALTER TABLE cp_product_certificate MODIFY privatekey LONGBLOB NOT NULL</sql>
+    </changeSet>
+
+    <changeSet id="20140211110052-5" author="awood" dbms="mysql">
+        <sql>ALTER TABLE cp_cdn_certificate MODIFY cert LONGBLOB NOT NULL</sql>
+        <sql>ALTER TABLE cp_cdn_certificate MODIFY privatekey LONGBLOB NOT NULL</sql>
+    </changeSet>
+
+    <changeSet id="20140211110052-6" author="awood" dbms="mysql">
+        <sql>ALTER TABLE cp_key_pair MODIFY publickey LONGBLOB</sql>
+        <sql>ALTER TABLE cp_key_pair MODIFY privatekey LONGBLOB</sql>
+    </changeSet>
+</databaseChangeLog>
