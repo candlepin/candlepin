@@ -1397,7 +1397,8 @@
                 "37060"
             ],
             "attributes": {
-                "virt_limit": "unlimited"
+                "virt_limit": "unlimited",
+                "physical_only": "true"
             }
         },
         {

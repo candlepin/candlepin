@@ -55,6 +55,7 @@ var RAM_ATTRIBUTE = "ram";
 var INSTANCE_ATTRIBUTE = "instance_multiplier";
 var REQUIRES_HOST_ATTRIBUTE = "requires_host";
 var VIRT_ONLY = "virt_only";
+var PHYSICAL_ONLY = "physical_only";
 var POOL_DERIVED = "pool_derived";
 var GUEST_LIMIT_ATTRIBUTE = "guest_limit";
 var VCPU_ATTRIBUTE = "vcpu";
@@ -1076,7 +1077,8 @@ var Entitlement = {
             "requires_host:1:requires_host," +
             "instance_multiplier:1:instance_multiplier," +
             "guest_limit:1:guest_limit," +
-            "vcpu:1:vcpu";
+            "vcpu:1:vcpu," +
+            "physical_only:1:physical_only";
     },
 
     ValidationResult: function () {
@@ -1149,6 +1151,28 @@ var Entitlement = {
                 }
                 else {
                     result.addWarning("rulewarning.virt.only");
+                }
+            }
+        }
+        return JSON.stringify(result);
+    },
+
+    pre_physical_only: function() {
+        var result = Entitlement.ValidationResult();
+        context = Entitlement.get_attribute_context();
+        var caller = context.caller;
+        var consumer = context.consumer;
+        var physical_pool = Utils.equalsIgnoreCase('true', context.getAttribute(context.pool, PHYSICAL_ONLY));
+        var guest = Utils.isGuest(consumer);
+
+        if (physical_pool) {
+            if (!consumer.type.manifest && guest) {
+                if (BEST_POOLS_CALLER == caller ||
+                    BIND_CALLER == caller) {
+                    result.addError("rulefailed.physical.only");
+                }
+                else {
+                    result.addWarning("rulewarning.physical.only");
                 }
             }
         }

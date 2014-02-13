@@ -592,6 +592,48 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
             result.getErrors().get(0).getResourceKey());
     }
 
+    @Test
+    public void virtOnlyPoolGuestNoHostIsPhysical() {
+        Pool pool = setupVirtOnlyPool();
+
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
+        assertTrue(result.hasWarnings());
+        assertEquals(1, result.getWarnings().size());
+        assertEquals("rulewarning.virt.only",
+            result.getWarnings().get(0).getResourceKey());
+    }
+
+    @Test
+    public void virtOnlyNonHostReqPool() {
+        Pool pool = setupVirtOnlyPool();
+        consumer.setFact("virt.is_guest", "true");
+
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
+        assertFalse(result.hasErrors());
+        assertFalse(result.hasWarnings());
+    }
+
+    @Test
+    public void physOnlyPoolGuestNoHostIsPhysical() {
+        Pool pool = setupPhysOnlyPool();
+
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
+        assertFalse(result.hasErrors());
+        assertFalse(result.hasWarnings());
+    }
+
+    @Test
+    public void physOnlyVirtualConsumer() {
+        Pool pool = setupPhysOnlyPool();
+        consumer.setFact("virt.is_guest", "true");
+
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
+        assertTrue(result.hasWarnings());
+        assertEquals(1, result.getWarnings().size());
+        assertEquals("rulewarning.physical.only",
+            result.getWarnings().get(0).getResourceKey());
+    }
+
     private Pool setupUserRestrictedPool() {
         Product product = new Product(productId, "A user restricted product");
         Pool pool = TestUtil.createPool(owner, product);
@@ -602,10 +644,24 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
     }
 
     private Pool setupHostRestrictedPool(Consumer parent) {
-        Product product = new Product(productId, "A host restricted product");
+        Pool pool = setupVirtOnlyPool();
+        pool.addAttribute(new PoolAttribute("requires_host", parent.getUuid()));
+        return pool;
+    }
+
+    private Pool setupVirtOnlyPool() {
+        Product product = new Product(productId, "virt only product");
         Pool pool = TestUtil.createPool(owner, product);
         pool.addAttribute(new PoolAttribute("virt_only", "true"));
-        pool.addAttribute(new PoolAttribute("requires_host", parent.getUuid()));
+        pool.setId("fakeid" + TestUtil.randomInt());
+        when(this.prodAdapter.getProductById(productId)).thenReturn(product);
+        return pool;
+    }
+
+    private Pool setupPhysOnlyPool() {
+        Product product = new Product(productId, "physical only product");
+        Pool pool = TestUtil.createPool(owner, product);
+        pool.addAttribute(new PoolAttribute("physical_only", "true"));
         pool.setId("fakeid" + TestUtil.randomInt());
         when(this.prodAdapter.getProductById(productId)).thenReturn(product);
         return pool;

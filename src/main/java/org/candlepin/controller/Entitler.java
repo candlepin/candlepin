@@ -135,6 +135,10 @@ public class Entitler {
                 msg = i18n.tr("Pool is restricted to virtual guests: ''{0}''.",
                     pool.getId());
             }
+            else if (error.equals("rulefailed.physical.only")) {
+                msg = i18n.tr("Pool is restricted to physical systems: ''{0}''.",
+                    pool.getId());
+            }
             else if (error.equals("rulefailed.quantity.mismatch")) {
                 String multip = null;
                 if (pool.hasProductAttribute("instance_multiplier")) {

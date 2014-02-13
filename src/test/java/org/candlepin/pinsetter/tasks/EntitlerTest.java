@@ -238,9 +238,28 @@ public class EntitlerTest {
         bindByProductErrorTest("rulefailed.consumer.type.mismatch");
     }
 
-    @Test(expected = ForbiddenException.class)
+    @Test
     public void virtOnly() {
-        bindByProductErrorTest("rulefailed.virt.only");
+        String expected = "Pool is restricted to virtual guests: 'pool10'.";
+        try {
+            bindByPoolErrorTest("rulefailed.virt.only");
+            fail();
+        }
+        catch (ForbiddenException e) {
+            assertEquals(expected, e.getMessage());
+        }
+    }
+
+    @Test
+    public void physicalOnly() {
+        String expected = "Pool is restricted to physical systems: 'pool10'.";
+        try {
+            bindByPoolErrorTest("rulefailed.physical.only");
+            fail();
+        }
+        catch (ForbiddenException e) {
+            assertEquals(expected, e.getMessage());
+        }
     }
 
     @Test(expected = ForbiddenException.class)
