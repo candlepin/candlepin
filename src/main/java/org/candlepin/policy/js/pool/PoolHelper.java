@@ -95,6 +95,7 @@ public class PoolHelper extends AttributeHelper {
             sourceEntitlement.getConsumer().getUuid());
         consumerSpecificPool.setAttribute("pool_derived", "true");
         consumerSpecificPool.setAttribute("virt_only", "true");
+        consumerSpecificPool.setAttribute("physical_only", "false");
 
         this.copyProductAttributesOntoPool(consumerSpecificPool.getProductId(),
             consumerSpecificPool);
