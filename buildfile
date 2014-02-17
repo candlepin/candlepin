@@ -85,7 +85,7 @@ GUICE =  [group('guice-assistedinject', 'guice-multibindings',
            'aopalliance:aopalliance:jar:1.0',
            'javax.inject:javax.inject:jar:1']
 
-COLLECTIONS = 'com.google.collections:google-collections:jar:1.0'
+COLLECTIONS = 'com.google.guava:guava:jar:13.0'
 
 OAUTH= [group('oauth',
               'oauth-provider',
