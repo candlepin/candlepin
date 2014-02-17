@@ -286,6 +286,10 @@ describe 'Owner Resource' do
     levels = consumer_client.list_owner_service_levels(owner['key'])
     levels.size.should == 1
     levels[0].should == 'VIP'
+
+    levels = consumer_client.list_owner_service_levels(owner['key'], true)
+    levels.size.should == 1
+    levels[0].should == 'Layered'
   end
 
   it 'should return calculated attributes' do
