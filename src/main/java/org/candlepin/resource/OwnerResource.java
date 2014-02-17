@@ -451,10 +451,13 @@ public class OwnerResource {
     @Path("{owner_key}/servicelevels")
     public Set<String> ownerServiceLevels(
         @PathParam("owner_key") @Verify(value = Owner.class,
-        subResource = SubResource.SERVICE_LEVELS) String ownerKey) {
+        subResource = SubResource.SERVICE_LEVELS) String ownerKey,
+        @QueryParam("exempt") @DefaultValue("false") String exempt) {
         Owner owner = findOwner(ownerKey);
 
-        return poolManager.retrieveServiceLevelsForOwner(owner, false);
+        // test is on the string "true" and is case insensitive.
+        return poolManager.retrieveServiceLevelsForOwner(owner,
+            Boolean.parseBoolean(exempt));
     }
 
     /**

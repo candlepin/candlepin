@@ -388,8 +388,9 @@ class Candlepin
     return results
   end
 
-  def list_owner_service_levels(owner_key)
+  def list_owner_service_levels(owner_key, exempt=false)
     path = "/owners/#{owner_key}/servicelevels"
+    path << "?exempt=#{exempt}" if exempt
     results = get(path)
 
     return results
