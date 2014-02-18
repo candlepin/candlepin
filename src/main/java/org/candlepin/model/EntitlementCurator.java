@@ -33,9 +33,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -193,80 +195,64 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     public Set<Entitlement> listModifying(Entitlement entitlement) {
         Set<Entitlement> modifying = new HashSet<Entitlement>();
 
-        Consumer consumer = entitlement.getConsumer();
-        Date startDate = entitlement.getStartDate();
-        Date endDate = entitlement.getEndDate();
-
-        modifying.addAll(listModifying(consumer, entitlement.getProductId(),
-                startDate, endDate));
-
-        for (ProvidedProduct product : entitlement.getPool().getProvidedProducts()) {
-            modifying.addAll(listModifying(consumer, product.getProductId(),
-                    startDate, endDate));
+        // Get the map of product Ids to the set of
+        // overlapping entitlements that provide them
+        Map<String, Set<Entitlement>> pidEnts = getOverlappingForModifying(entitlement);
+        if (pidEnts.isEmpty()) {
+            // Empty collections break hibernate queries
+            return modifying;
+        }
+        // Retrieve all products at once from the adapter
+        List<Product> products = productAdapter.getProductsByIds(pidEnts.keySet());
+        for (Product p : products) {
+            boolean modifies = p.modifies(entitlement.getProductId());
+            Iterator<ProvidedProduct> ppit =
+                entitlement.getPool().getProvidedProducts().iterator();
+            // No need to continue checking once we have found a modified product
+            while (!modifies && ppit.hasNext()) {
+                modifies = modifies || p.modifies(ppit.next().getProductId());
+            }
+            if (modifies) {
+                // Return all entitlements for the modified product
+                modifying.addAll(pidEnts.get(p.getId()));
+            }
         }
 
         return modifying;
     }
 
-    public List<Entitlement> listModifying(Consumer consumer, String productId,
-        Date startDate, Date endDate) {
-
-        /*
-         * Essentially the opposite of the above query which searches for entitlement
-         * overlap with a "modifying" entitlement being granted. This query is used to
-         * search for modifying entitlements which overlap with a regular entitlement
-         * being granted. As such the logic is basically reversed.
-         *
-         */
-        Criteria criteria = currentSession().createCriteria(Entitlement.class)
-            .add(Restrictions.eq("consumer", consumer))
-            .createCriteria("pool")
-                .add(Restrictions.or(
-                    Restrictions.and(
-                        Restrictions.ge("startDate", startDate),
-                        Restrictions.le("startDate", endDate)),
-                    Restrictions.or(
-                        Restrictions.and(
-                            Restrictions.ge("endDate", startDate),
-                            Restrictions.le("endDate", endDate)),
-                        Restrictions.and(
-                            Restrictions.le("startDate", startDate),
-                            Restrictions.ge("endDate", endDate)))));
-        List<Entitlement> finalResults = new LinkedList<Entitlement>();
-        List<Entitlement> entsWithOverlap = criteria.list();
-        for (Entitlement existingEnt : entsWithOverlap) {
-            if (modifies(existingEnt, productId)) {
-                finalResults.add(existingEnt);
-            }
-        }
-
-        return finalResults;
-    }
-
-    /**
-     * Checks if the given pool provides any product with a content set which modifies
-     * the given product ID.
-     *
-     * @param ent Entitlement to check.
-     * @param modifiedProductId Product ID we're looking for a modifier to.
-     * @return true if entitlement modifies the given product
+    /*
+     * Add a productId to entitlement mapping, creating the collection if necessary
      */
-    public boolean modifies(Entitlement ent, String modifiedProductId) {
-        Set<String> prodIdsToCheck = new HashSet<String>();
-        prodIdsToCheck.add(ent.getPool().getProductId());
-        for (ProvidedProduct pp : ent.getPool().getProvidedProducts()) {
-            prodIdsToCheck.add(pp.getProductId());
+    private void addProductIdToMap(Map<String, Set<Entitlement>> map,
+            String pid, Entitlement e) {
+        if (!map.containsKey(pid)) {
+            map.put(pid, new HashSet<Entitlement>());
         }
-
-        for (Product p : productAdapter.getProductsByIds(prodIdsToCheck)) {
-            if (p.modifies(modifiedProductId)) {
-                return true;
-            }
-        }
-
-        return false;
+        map.get(pid).add(e);
     }
 
+    /*
+     * Add an entitlement to the productId Entitlement map, using the entitlements
+     * productId as well as those if its provided products.
+     */
+    private void addToMap(Map<String, Set<Entitlement>> map, Entitlement e) {
+        addProductIdToMap(map, e.getProductId(), e);
+        for (ProvidedProduct pp : e.getPool().getProvidedProducts()) {
+            addProductIdToMap(map, pp.getProductId(), e);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public Map<String, Set<Entitlement>> getOverlappingForModifying(Entitlement e) {
+        List<Entitlement> overlapEnts = createModifiesDateFilteringCriteria(
+            e.getConsumer(), e.getStartDate(), e.getEndDate()).list();
+        Map<String, Set<Entitlement>> pidEnts = new HashMap<String, Set<Entitlement>>();
+        for (Entitlement ent : overlapEnts) {
+            addToMap(pidEnts, ent);
+        }
+        return pidEnts;
+    }
 
     @Transactional
     public Page<List<Entitlement>> listByConsumerAndProduct(Consumer consumer,
