@@ -304,11 +304,10 @@ public abstract class AbstractEntitlementRules implements Enforcer {
 
     protected void runPostUnbind(PoolHelper postHelper, Entitlement entitlement) {
         Pool pool = entitlement.getPool();
-        Consumer c = entitlement.getConsumer();
 
-        Map<String, String> attributes = postHelper.getFlattenedAttributes(pool);
-
-        if (attributes.containsKey("virt_limit")) {
+        if (pool.hasAttribute("virt_limit") || pool.hasProductAttribute("virt_limit")) {
+            Map<String, String> attributes = postHelper.getFlattenedAttributes(pool);
+            Consumer c = entitlement.getConsumer();
             postUnbindVirtLimit(postHelper, entitlement, pool, c, attributes);
         }
     }

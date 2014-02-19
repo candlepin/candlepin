@@ -1000,12 +1000,8 @@ public class CandlepinPoolManager implements PoolManager {
         Set<Pool> deletablePools = new HashSet<Pool>();
 
         for (Pool p : poolCurator.listBySourceEntitlement(entitlement)) {
-            Set<Entitlement> deletableEntitlements = new HashSet<Entitlement>();
             for (Entitlement e : p.getEntitlements()) {
-                deletableEntitlements.add(e);
-            }
-            for (Entitlement de : deletableEntitlements) {
-                this.revokeEntitlement(de);
+                this.revokeEntitlement(e);
             }
             deletablePools.add(p);
         }
@@ -1063,10 +1059,14 @@ public class CandlepinPoolManager implements PoolManager {
 
         log.info("Revoked entitlement: " + entitlement.getId());
 
-        // Check consumer's new compliance status and save:
-        ComplianceStatus compliance = complianceRules.getStatus(consumer, new Date());
-        consumer.setEntitlementStatus(compliance.getStatus());
-        consumerCurator.update(consumer);
+        // If we don't care about updating other entitlements based on this one, we probably
+        // don't care about updating compliance either.
+        if (regenModified) {
+            // Check consumer's new compliance status and save:
+            ComplianceStatus compliance = complianceRules.getStatus(consumer, new Date());
+            consumer.setEntitlementStatus(compliance.getStatus());
+            consumerCurator.update(consumer);
+        }
 
         sink.sendEvent(event);
     }
@@ -1087,6 +1087,10 @@ public class CandlepinPoolManager implements PoolManager {
             removeEntitlement(e, false);
             count++;
         }
+        // Rerun compliance after removing all entitlements
+        ComplianceStatus compliance = complianceRules.getStatus(consumer, new Date());
+        consumer.setEntitlementStatus(compliance.getStatus());
+        consumerCurator.update(consumer);
         return count;
     }
 
