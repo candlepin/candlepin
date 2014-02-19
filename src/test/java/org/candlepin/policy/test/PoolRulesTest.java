@@ -641,6 +641,27 @@ public class PoolRulesTest {
     }
 
     @Test
+    public void hostedVirtLimitSubCreateAttributesTest() {
+        when(configMock.standalone()).thenReturn(false);
+        Subscription s = createVirtLimitSub("virtLimitProduct", 10, 10);
+        s.getProduct().setAttribute("physical_only", "true");
+        List<Pool> pools = poolRules.createPools(s);
+
+        // Should be no virt_only bonus pool:
+        assertEquals(2, pools.size());
+
+        int virtOnlyCount = 0;
+        for (Pool pool : pools) {
+            if (pool.hasAttribute("virt_only") &&
+                    pool.attributeEquals("virt_only", "true")) {
+                virtOnlyCount++;
+                assertEquals("false", pool.getAttributeValue("physical_only"));
+            }
+        }
+        assertEquals(1, virtOnlyCount);
+    }
+
+    @Test
     public void standaloneVirtLimitSubCreate() {
         when(configMock.standalone()).thenReturn(true);
         Subscription s = createVirtLimitSub("virtLimitProduct", 10, 10);

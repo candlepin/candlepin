@@ -148,6 +148,7 @@ public class PoolRules {
             HashMap<String, String> virtAttributes = new HashMap<String, String>();
             virtAttributes.put("virt_only", "true");
             virtAttributes.put("pool_derived", "true");
+            virtAttributes.put("physical_only", "false");
             // Make sure the virt pool does not have a virt_limit,
             // otherwise this will recurse infinitely
             virtAttributes.put("virt_limit", "0");

@@ -88,7 +88,7 @@ public class CriteriaRules  {
                 DetachedCriteria.forClass(
                         PoolAttribute.class, "pool_attr")
                     .add(Restrictions.eq("name", "virt_only"))
-                    .add(Restrictions.eq("value", "true"))
+                    .add(Restrictions.eq("value", "true").ignoreCase())
                     .add(Property.forName("this.id")
                             .eqProperty("pool_attr.pool.id"))
                     .setProjection(Projections.property("pool_attr.id"));
@@ -102,7 +102,7 @@ public class CriteriaRules  {
                 DetachedCriteria.forClass(
                         ProductPoolAttribute.class, "prod_attr")
                     .add(Restrictions.eq("name", "virt_only"))
-                    .add(Restrictions.eq("value", "true"))
+                    .add(Restrictions.eq("value", "true").ignoreCase())
                     .add(Property.forName("this.id")
                             .eqProperty("prod_attr.pool.id"))
                     .setProjection(Projections.property("prod_attr.id"));
@@ -122,7 +122,7 @@ public class CriteriaRules  {
                         PoolAttribute.class, "attr")
                         .add(Restrictions.eq("name", "requires_host"))
                         //  Note: looking for pools that are not for this guest
-                        .add(Restrictions.ne("value", hostUuid))
+                        .add(Restrictions.ne("value", hostUuid).ignoreCase())
                         .add(Property.forName("this.id")
                                 .eqProperty("attr.pool.id"))
                                 .setProjection(Projections.property("attr.id"));
