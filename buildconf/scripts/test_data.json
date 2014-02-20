@@ -1397,7 +1397,33 @@
                 "37060"
             ],
             "attributes": {
+                "virt_limit": "unlimited"
+            }
+        },
+        {
+            "name": "Awesome OS physical with unlimited guests",
+            "id": "awesomeos-virt-unlmtd-phys",
+            "version": "6.2",
+            "type": "MKT",
+            "provided_products": [
+                "37060"
+            ],
+            "attributes": {
                 "virt_limit": "unlimited",
+                "physical_only": "true"
+            }
+        },
+        {
+            "name": "Awesome OS Virtual Datacenter",
+            "id": "awesomeos-virt-datacenter",
+            "version": "7.0",
+            "type": "MKT",
+            "provided_products": [
+                "37060"
+            ],
+            "attributes": {
+                "virt_limit": "unlimited",
+                "host_limited": "true",
                 "physical_only": "true"
             }
         },
