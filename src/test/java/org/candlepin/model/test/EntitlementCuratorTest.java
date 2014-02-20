@@ -20,7 +20,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import org.candlepin.model.Consumer;
-import org.candlepin.model.Content;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.Environment;
@@ -37,7 +36,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -194,93 +192,6 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         Set<Entitlement> results = entitlementCurator.listProviding(consumer,
             ent.getPool().getProductId(), pastDate, pastDate);
         assertEquals(0, results.size());
-    }
-
-    private Product createModifyingProduct(String modifiedProductId) {
-        Product modifierProd = TestUtil.createProduct();
-        String randomString = "" + TestUtil.randomInt();
-        Content modContent = new Content(randomString, randomString,
-            randomString, "type", "somebody", "", "", "");
-        Set<String> modifiedProdIds = new HashSet<String>();
-        modifiedProdIds.add(modifiedProductId);
-        modContent.setModifiedProductIds(modifiedProdIds);
-        modifierProd.addContent(modContent);
-        contentCurator.create(modContent);
-        productCurator.create(modifierProd);
-        return modifierProd;
-    }
-
-    private Entitlement setupListModifyingEntitlement() {
-        Date startDate = createDate(2010, 1, 1);
-        Date endDate = createDate(2011, 1, 1);
-
-        Product parentModifierProd = createModifyingProduct(parentProduct.getId());
-        Product childModifierProd = createModifyingProduct(providedProduct1.getId());
-
-        Pool testPool = createPoolAndSub(owner, parentModifierProd, 1L,
-            startDate, endDate);
-
-        // Add some provided products to this pool which also modify something:
-        ProvidedProduct p1 = new ProvidedProduct(childModifierProd.getId(),
-            childModifierProd.getName());
-        p1.setPool(testPool);
-        testPool.addProvidedProduct(p1);
-        poolCurator.create(testPool);
-
-        EntitlementCertificate cert = createEntitlementCertificate("key", "certificate");
-
-        Entitlement ent = createEntitlement(owner, consumer, testPool, cert);
-        entitlementCurator.create(ent);
-
-        return ent;
-    }
-
-    @Test
-    public void listModifying() {
-        Entitlement ent = setupListModifyingEntitlement();
-        List<Entitlement> results = entitlementCurator.listModifying(consumer,
-                parentProduct.getId(), ent.getStartDate(), ent.getEndDate());
-        assertEquals(1, results.size());
-    }
-
-    @Test
-    public void listModifyingProvided() {
-        Entitlement ent = setupListModifyingEntitlement();
-        List<Entitlement> results = entitlementCurator.listModifying(consumer,
-                providedProduct1.getId(), ent.getStartDate(), ent.getEndDate());
-        assertEquals(1, results.size());
-    }
-
-    @Test
-    public void listModifyingNoResults() {
-        Entitlement ent = setupListModifyingEntitlement();
-        List<Entitlement> results = entitlementCurator.listModifying(consumer,
-                "notarealproduct", ent.getStartDate(), ent.getEndDate());
-        assertEquals(0, results.size());
-    }
-
-    @Test
-    public void listModifyingStartDateOverlap() {
-        setupListModifyingEntitlement();
-        List<Entitlement> results = entitlementCurator.listModifying(consumer,
-                parentProduct.getId(), pastDate, overlappingDate);
-        assertEquals(1, results.size());
-    }
-
-    @Test
-    public void listModifyingEndDateOverlap() {
-        setupListModifyingEntitlement();
-        List<Entitlement> results = entitlementCurator.listModifying(consumer,
-                parentProduct.getId(), overlappingDate, futureDate);
-        assertEquals(1, results.size());
-    }
-
-    @Test
-    public void listModifyingTotalOverlap() {
-        setupListModifyingEntitlement();
-        List<Entitlement> results = entitlementCurator.listModifying(consumer,
-                parentProduct.getId(), overlappingDate, overlappingDate);
-        assertEquals(1, results.size());
     }
 
     @Test
