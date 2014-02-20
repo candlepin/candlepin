@@ -758,7 +758,6 @@
             "version": "6.1",
             "type": "MKT",
             "provided_products": [
-                "awesomeos-server",
                 "37065",
                 "37070",
                 "37067",
