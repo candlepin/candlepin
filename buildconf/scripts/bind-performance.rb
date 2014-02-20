@@ -110,3 +110,9 @@ Benchmark.bm (10) do |x|
   end
 end
 
+Benchmark.bm(10) do |d|
+  i = 1
+  d.report("Unbinding all: ") {
+      consumer_cp.revoke_all_entitlements()
+  }
+end
