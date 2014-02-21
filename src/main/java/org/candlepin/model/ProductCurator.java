@@ -14,12 +14,16 @@
  */
 package org.candlepin.model;
 
+import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.exceptions.BadRequestException;
+import org.hibernate.Criteria;
 import org.hibernate.Query;
+import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.xnap.commons.i18n.I18n;
 
@@ -229,5 +233,19 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     public void removeRely(Product prod, String relyId) {
         prod.removeRely(relyId);
         merge(prod);
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<String> getProductIdsWithContent(Collection<String> contentIds) {
+        if (contentIds == null || contentIds.isEmpty()) {
+            return new LinkedList<String>();
+        }
+        return currentSession().createCriteria(Product.class)
+            .createAlias("productContent", "pcontent")
+            .createAlias("pcontent.content", "content")
+            .add(Restrictions.in("content.id", contentIds))
+            .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY)
+            .setProjection(Projections.id())
+            .list();
     }
 }

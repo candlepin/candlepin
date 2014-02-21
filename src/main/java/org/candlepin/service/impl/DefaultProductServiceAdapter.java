@@ -40,6 +40,7 @@ import java.security.cert.X509Certificate;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -198,5 +199,10 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
     @Override
     public List<Product> getProductsByIds(Collection<String> ids) {
         return prodCurator.listAllByIds(ids);
+    }
+
+    @Override
+    public Set<String> getProductsWithContent(Collection<String> contentIds) {
+        return new HashSet<String>(prodCurator.getProductIdsWithContent(contentIds));
     }
 }

@@ -95,4 +95,6 @@ public interface ProductServiceAdapter {
     Set<String> getReliesOn(String productId);
 
     Product mergeProduct(Product prod);
+
+    Set<String> getProductsWithContent(Collection<String> contentId);
 }

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+
+    <changeSet id="20140224154022" author="ckozak">
+        <comment>cascade delete productContent many-to-many when content is removed</comment>
+        <dropForeignKeyConstraint
+            baseTableName="cp_product_content"
+            constraintName="fkce093157574ef825"/>
+
+        <addForeignKeyConstraint
+            baseColumnNames="content_id"
+            baseTableName="cp_product_content"
+            baseTableSchemaName="public"
+            constraintName="fkce093157574ef825"
+            deferrable="false"
+            initiallyDeferred="false"
+            onDelete="CASCADE"
+            onUpdate="NO ACTION"
+            referencedColumnNames="id"
+            referencedTableName="cp_content"
+            referencedTableSchemaName="public"
+            referencesUniqueColumn="false"/>
+    </changeSet>
+
+</databaseChangeLog>

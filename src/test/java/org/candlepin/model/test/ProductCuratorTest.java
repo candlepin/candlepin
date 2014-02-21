@@ -629,11 +629,13 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         productCurator.create(original);
     }
 
+    @Test
     public void testRemoveProductContent() {
         Product p = createTestProduct();
         Content content = new Content("test-content", "test-content",
             "test-content", "yum", "us", "here", "here", "test-arch");
         p.addContent(content);
+        contentCurator.create(content);
         productCurator.create(p);
 
         p = productCurator.find(p.getId());
@@ -665,5 +667,21 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         assertTrue(returned.contains(products.get(2)));
         assertFalse(returned.contains(products.get(3)));
         assertFalse(returned.contains(products.get(4)));
+    }
+
+    @Test
+    public void testGetProductIdFromContentId() {
+        Product p = createTestProduct();
+        Content content = new Content("best-content", "best-content",
+            "best-content", "yum", "us", "here", "here", "test-arch");
+        p.addContent(content);
+        contentCurator.create(content);
+        productCurator.create(p);
+
+        List<String> contentIds = new LinkedList<String>();
+        contentIds.add(content.getId());
+        List<String> productIds = productCurator.getProductIdsWithContent(contentIds);
+        assertEquals(1, productIds.size());
+        assertEquals(p.getId(), productIds.get(0));
     }
 }

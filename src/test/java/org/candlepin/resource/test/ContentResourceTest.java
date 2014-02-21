@@ -23,6 +23,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -36,6 +37,7 @@ import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.resource.ContentResource;
+import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.impl.DefaultUniqueIdGenerator;
 import org.junit.Before;
 import org.junit.Test;
@@ -52,6 +54,7 @@ public class ContentResourceTest {
     private I18n i18n;
     private EnvironmentContentCurator envContentCurator;
     private PoolManager poolManager;
+    private ProductServiceAdapter productAdapter;
 
     @Before
     public void init() {
@@ -59,8 +62,9 @@ public class ContentResourceTest {
         cc = mock(ContentCurator.class);
         envContentCurator = mock(EnvironmentContentCurator.class);
         poolManager = mock(PoolManager.class);
+        productAdapter = mock(ProductServiceAdapter.class);
         cr = new ContentResource(cc, i18n, new DefaultUniqueIdGenerator(),
-            envContentCurator, poolManager);
+            envContentCurator, poolManager, productAdapter);
     }
 
     @Test
@@ -132,13 +136,15 @@ public class ContentResourceTest {
 
         when(cc.find(any(String.class))).thenReturn(content);
         when(cc.createOrUpdate(any(Content.class))).thenReturn(content);
+        when(productAdapter.getProductsWithContent(
+            eq(setFrom(contentId)))).thenReturn(setFrom("productid"));
 
         cr.updateContent(contentId, content);
 
         verify(cc).find(eq(contentId));
         verify(cc).createOrUpdate(eq(content));
-        verify(poolManager).regenerateCertificatesOf(
-            argThat(new SetContaining(listFrom(contentId))), anyBoolean());
+        verify(productAdapter).getProductsWithContent(setFrom(contentId));
+        verify(poolManager).regenerateCertificatesOf(eq("productid"), eq(true));
     }
 
     @Test(expected = NotFoundException.class)
@@ -151,6 +157,12 @@ public class ContentResourceTest {
 
     private <T> List<T> listFrom(T anElement) {
         List<T> l = new ArrayList<T>();
+        l.add(anElement);
+        return l;
+    }
+
+    private <T> Set<T> setFrom(T anElement) {
+        Set<T> l = new HashSet<T>();
         l.add(anElement);
         return l;
     }
