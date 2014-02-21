@@ -24,6 +24,7 @@ jpa.config.hibernate.connection.password=<%= password || profile.password %>
 jpa.config.hibernate.dialect=<%= dialect || profile.dialect %>
 jpa.config.hibernate.show_sql=<%= show_hibernate || false %>
 
+candlepin.auth.trusted.enable=<%= trusted_enable || true %>
 candlepin.auth.oauth.enable=<%= oauth_enable || true %>
 candlepin.auth.oauth.consumer.rspec.secret=rspec-oauth-secret
 candlepin.auth.oauth.consumer.thumbslug.secret=thumbslug-secret
