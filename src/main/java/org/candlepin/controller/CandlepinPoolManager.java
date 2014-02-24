@@ -552,7 +552,9 @@ public class CandlepinPoolManager implements PoolManager {
             if (pool.hasProductAttribute("virt_limit") &&
                     !pool.getProductAttribute("virt_limit").getValue().equals("0")) {
                 for (String productId : productIds) {
-                    if (pool.provides(productId)) {
+                    // If this is a derived pool, we need to see if the derived product
+                    // provides anything for the guest, otherwise we use the parent.
+                    if (pool.providesDerived(productId)) {
                         providesProduct = true;
                         break;
                     }
@@ -585,7 +587,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         List<PoolQuantity> enforced = autobindRules.selectBestPools(host,
             productIds, filteredPools, hostCompliance, serviceLevelOverride,
-            poolCurator.retrieveServiceLevelsForOwner(owner, true));
+            poolCurator.retrieveServiceLevelsForOwner(owner, true), true);
         return enforced;
     }
 
@@ -666,7 +668,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         List<PoolQuantity> enforced = autobindRules.selectBestPools(consumer,
             productIds, filteredPools, compliance, serviceLevelOverride,
-            poolCurator.retrieveServiceLevelsForOwner(owner, true));
+            poolCurator.retrieveServiceLevelsForOwner(owner, true), false);
         return enforced;
     }
 
