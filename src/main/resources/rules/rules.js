@@ -1461,7 +1461,12 @@ var Entitlement = {
 
 var Autobind = {
 
-    // TODO: Need a good description of what an entitlement group is.
+    /*
+     * An entitlement group is an abstraction that allows us to check 
+     * and modify groups of available subscriptions uniformly.  That way we don't
+     * have to know if it's a stack, single entitlement, etc... It is either valid
+     * or not, and provides products.
+     */
     create_entitlement_group: function(stackable, stack_id, installed_ids, consumer, attached_ents, consider_derived) {
         return {
             pools: [],
@@ -1474,9 +1479,9 @@ var Autobind = {
 
             /*
              * Method returns whether or not it is possible for the entitlement
-             * group to be valid.
-             *
-             * TODO: what does valid mean in this context? fully cover the consumer?
+             * group to fully cover the consumer.  If this is stackable, some subset
+             * of entitlements must become fully compliant.  Pools that break compliance
+             * are removed.
              */
             validate: function(context) {
                 var all_ents = this.get_all_ents(this.pools).concat(this.attached_ents);
@@ -1558,8 +1563,13 @@ var Autobind = {
             },
 
             /*
-             * 2^n again, but this time n is the number of stackable attributes that aren't arch. (3)
-             * TODO: method documentation
+             * 2^n again, but this time n is the number of stackable attributes that aren't arch.
+             * This method generates combinations of compliance attributes so that we can attempt
+             * to become compliant without some pools. 
+             *
+             * This avoids parallel stacks where removing
+             * any 1 sockets pool or any 1 cores pool will become incompliant, but removing all of
+             * either one will not.
              */
             get_sets: function(list, max_length) {
                 if (list.length == 0) {
@@ -1578,7 +1588,10 @@ var Autobind = {
 
             /*
              * Generates sets of attributes to attempt to remove
-             * TODO: method documentation, why are we removing attributes
+             *
+             * This avoids parallel stacks where removing
+             * any 1 sockets pool or any 1 cores pool will become incompliant, but removing all of
+             * either one will not.
              */
             get_attribute_sets: function(pools) {
                 var stack_attributes = [];
@@ -1609,7 +1622,9 @@ var Autobind = {
             },
 
             /*
-             * TODO: need explanation reworded here, not sure what this means.
+             * Remove parallel stacks so we aren't essentially binding two stacks
+             * that would be fully compliant on their own
+             *
              * Attempts to remove all pools from a group that enforce each set of stackable attributes, then
              * checks compliance.  This prevents us from suggesting two fully compliant stacks that
              * enforce different attributes
