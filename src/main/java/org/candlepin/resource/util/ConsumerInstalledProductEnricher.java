@@ -367,7 +367,7 @@ public class ConsumerInstalledProductEnricher {
         Set<String> stackIds = new HashSet<String>();
         Map<String, Set<Entitlement>> stackIdMap = new HashMap<String, Set<Entitlement>>();
         for (Entitlement ent : this.consumer.getEntitlements()) {
-            if (ent.getPool().provides(product.getId())) {
+            if (ent.getPool().provides(product.getId(), false)) {
                 productEnts.add(ent);
                 //If this entitlement is stackable,
                 //the whole stack may be required, even if

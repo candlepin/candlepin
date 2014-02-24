@@ -249,6 +249,7 @@ public class Entitler {
                 try {
                     List<Entitlement> hostEntitlements =
                         poolManager.entitleByProductsForHost(consumer, host, entitleDate);
+                    log.debug("Granted host {} entitlements", hostEntitlements.size());
                     sendEvents(hostEntitlements);
                 }
                 catch (Exception e) {

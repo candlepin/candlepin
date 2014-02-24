@@ -1,4 +1,4 @@
-// Version: 5.5
+// Version: 5.6
 
 /*
  * Default Candlepin rule set.
@@ -141,7 +141,10 @@ function getComplianceAttributes(consumer) {
 
 function createPool(pool) {
 
+    // Lazily initialized arrays of provided product IDs. Includes the pool's
+    // main productId.
     pool.product_list = [];
+    pool.derived_product_list = [];
 
     // General function to look for an attribute in the specified
     // attribute collection.
@@ -201,6 +204,7 @@ function createPool(pool) {
         return false;
     };
 
+    // Lazily initialize the list of provided product IDs.
     pool.products = function () {
         if (this.product_list == 0) {
             this.product_list.push(this.productId);
@@ -209,6 +213,35 @@ function createPool(pool) {
             }
         }
         return this.product_list;
+    };
+
+    // Return true if this pool is carrying derived pool information. Watch out
+    // for older servers which didn't send any derived properties in, just in
+    // case. (this is probably impossible to hit due to changes in rule
+    // versioning)
+    pool.hasDerived = function () {
+        if (this.derivedProductId == null) {
+          return false;
+        }
+        return true;
+    }
+
+    // Lazily initialize the list of derived provided product IDs.
+    pool.derivedProducts = function () {
+
+        // Just being overly cautious here, but make sure that if this were requested
+        // on a server that didn't support derived pools, we just return empty results.
+        if (!this.hasDerived()) {
+          return this.derived_product_list;
+        }
+
+        if (this.derived_product_list == 0) {
+            this.derived_product_list.push(this.derivedProductId);
+            for (var k = 0; k < this.derivedProvidedProducts.length; k++) {
+                this.derived_product_list.push(this.derivedProvidedProducts[k].productId);
+            }
+        }
+        return this.derived_product_list;
     };
     return pool;
 }
@@ -1428,7 +1461,8 @@ var Entitlement = {
 
 var Autobind = {
 
-    create_entitlement_group: function(stackable, stack_id, installed_ids, consumer, attached_ents) {
+    // TODO: Need a good description of what an entitlement group is.
+    create_entitlement_group: function(stackable, stack_id, installed_ids, consumer, attached_ents, consider_derived) {
         return {
             pools: [],
             stackable: stackable,
@@ -1436,10 +1470,13 @@ var Autobind = {
             installed: installed_ids,
             consumer: consumer,
             attached_ents: attached_ents,
+            consider_derived: consider_derived,
 
             /*
              * Method returns whether or not it is possible for the entitlement
              * group to be valid.
+             *
+             * TODO: what does valid mean in this context? fully cover the consumer?
              */
             validate: function(context) {
                 var all_ents = this.get_all_ents(this.pools).concat(this.attached_ents);
@@ -1453,6 +1490,7 @@ var Autobind = {
                     return true;
                 }
                 else if (!this.stackable) {
+                    log.debug("Not stackable...");
                     return false;
                 }
                 // At this point, we must be stackable
@@ -1521,6 +1559,7 @@ var Autobind = {
 
             /*
              * 2^n again, but this time n is the number of stackable attributes that aren't arch. (3)
+             * TODO: method documentation
              */
             get_sets: function(list, max_length) {
                 if (list.length == 0) {
@@ -1539,6 +1578,7 @@ var Autobind = {
 
             /*
              * Generates sets of attributes to attempt to remove
+             * TODO: method documentation, why are we removing attributes
              */
             get_attribute_sets: function(pools) {
                 var stack_attributes = [];
@@ -1569,6 +1609,7 @@ var Autobind = {
             },
 
             /*
+             * TODO: need explanation reworded here, not sure what this means.
              * Attempts to remove all pools from a group that enforce each set of stackable attributes, then
              * checks compliance.  This prevents us from suggesting two fully compliant stacks that
              * enforce different attributes
@@ -1631,6 +1672,7 @@ var Autobind = {
 
             /*
              * Remove all pools that aren't necessary for compliance
+             * TODO: needs elaboration
              */
             prune_pools: function() {
                 // We know this group is required at this point,
@@ -1742,11 +1784,19 @@ var Autobind = {
                 return this.get_provided_products_pools(this.pools);
             },
 
-            // use custom pools
+            // Returns list of all provided product IDs from the given array of pools.
             get_provided_products_pools: function(in_pools) {
                 var provided = [];
                 for (var i = 0; i < in_pools.length; i++) {
                     var provided_by_pool = in_pools[i].products();
+
+                    // If we are considering derived provided products, check
+                    // to see if this pool has any and use them instead of the
+                    // regular set if so:
+                    if (this.consider_derived && in_pools[i].hasDerived()) {
+                      provided_by_pool = in_pools[i].derivedProducts();
+                    }
+
                     for (var j = 0; j < provided_by_pool.length; j++) {
                         var provided_id = provided_by_pool[j];
                         if (provided.indexOf(provided_id) == -1 && this.installed.indexOf(provided_id) >= 0) {
@@ -1761,6 +1811,15 @@ var Autobind = {
 
     create_autobind_context: function() {
         var context = JSON.parse(json_context);
+
+        // The considerDerived property indicates if we should look to derived
+        // provided products rather than the usual set. Used in situations where
+        // we're binding a host to things that will unlock pools for it's
+        // guests.
+        // Check for unset property for backward compatability with old servers.
+        if (!context.hasOwnProperty("considerDerived")) {
+            context.considerDerived = false;
+        }
 
         // Also need to convert all pools reported in compliance.
         var compliance = context.compliance;
@@ -1893,7 +1952,7 @@ var Autobind = {
     /*
      * Builds entitlement group objects that allow us to treat stacks and individual entitlements the same
      */
-    build_entitlement_groups: function(valid_pools, installed, consumer, attached_ents) {
+    build_entitlement_groups: function(valid_pools, installed, consumer, attached_ents, consider_derived) {
         var ent_groups = [];
         for (var i = 0; i < valid_pools.length; i++) {
             var pool = valid_pools[i];
@@ -1911,13 +1970,13 @@ var Autobind = {
                 }
                 // If the pool is stackable, and not part of an existing entitlement group, create a new group and add it
                 if (!found) {
-                    var new_ent_group = this.create_entitlement_group(true, stack_id, installed, consumer, attached_ents);
+                    var new_ent_group = this.create_entitlement_group(true, stack_id, installed, consumer, attached_ents, consider_derived);
                     new_ent_group.add_pool(pool);
                     ent_groups.push(new_ent_group);
                 }
             } else {
                 //if the entitlement is not stackable, create a new stack group for it
-                var new_ent_group = this.create_entitlement_group(false, "", installed, consumer, attached_ents);
+                var new_ent_group = this.create_entitlement_group(false, "", installed, consumer, attached_ents, consider_derived);
                 new_ent_group.add_pool(pool);
                 ent_groups.push(new_ent_group);
             }
@@ -1926,7 +1985,7 @@ var Autobind = {
     },
 
     /*
-     * returns the list of productIds that the stack will cover, which the consumer has installed
+     * Returns the list of productIds that the stack will cover, which the consumer requires.
      */
     get_common_products: function(installed, group) {
         var group_installed = group.get_provided_products();
@@ -2064,19 +2123,21 @@ var Autobind = {
 
     select_pools: function() {
         var context = this.create_autobind_context();
+        log.debug("considerDerived = " + context.considerDerived);
 
         var attached_ents = this.get_attached_ents(context.compliance);
 
         var valid_pools = this.get_valid_pools(context);
 
         var installed = context.products;
+        log.debug("Installed products: " + installed);
         //filter compliant products from this list
         for (var prod in context.compliance["compliantProducts"]) {
             if (installed.indexOf(prod) != -1) {
                 installed.splice(installed.indexOf(prod), 1);
             }
         }
-        var ent_groups = this.build_entitlement_groups(valid_pools, installed, context.consumer, attached_ents);
+        var ent_groups = this.build_entitlement_groups(valid_pools, installed, context.consumer, attached_ents, context.considerDerived);
         log.debug("Total ent groups: "+ent_groups.length);
 
         var valid_groups = [];
@@ -2088,9 +2149,11 @@ var Autobind = {
                 log.debug("Group "+ent_group.stack_id+" failed validation.");
             }
         }
+        log.debug("valid ent groups size: " + valid_groups.length);
 
         log.debug("finding best ent groups");
-        var best_groups = this.get_best_entitlement_groups(valid_groups, installed, context.compliance);
+        var best_groups = this.get_best_entitlement_groups(valid_groups, installed, context.compliance,
+                                                           context.considerDerived);
         log.debug("best_groups size: "+best_groups.length);
 
         for (var i = 0; i < best_groups.length; i++) {
@@ -2614,7 +2677,7 @@ var Override = {
     get_allow_override: function() {
         var blacklist = ['name','label','baseurl']
         var context = Override.get_override_context();
-        
+
         var check = context.name ? context.name.toLowerCase() : "";
         return Utils.inArray(blacklist, check);
     }

@@ -67,7 +67,7 @@ public class AutobindRules {
 
     public List<PoolQuantity> selectBestPools(Consumer consumer, String[] productIds,
         List<Pool> pools, ComplianceStatus compliance, String serviceLevelOverride,
-        Set<String> exemptLevels) {
+        Set<String> exemptLevels, boolean considerDerived) {
 
         int poolsBeforeContentFilter = pools.size();
         pools = filterPoolsForV1Certificates(consumer, pools);
@@ -97,6 +97,7 @@ public class AutobindRules {
         args.put("log", log, false);
         args.put("compliance", compliance);
         args.put("exemptList", exemptLevels);
+        args.put("considerDerived", considerDerived);
 
         // Convert the JSON returned into a Map object:
         Map<String, Integer> result = null;

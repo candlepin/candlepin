@@ -566,19 +566,41 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
 
     /**
      * Check if this pool provides the given product ID.
+     *
+     * In some cases if we're looking for a pool that would provide something for a guest
+     * we can pass true for the checkDerived parameter, and if the pool *has* derived
+     * product info on it, we will check this instead. Otherwise, we use the normal product
+     * data.
+     *
      * @param productId
+     * @param checkDerived Should we check derived provided products if they exist.
      * @return true if pool provides this product
      */
-    public Boolean provides(String productId) {
-        // Direct match?
-        if (this.productId.equals(productId)) {
-            return true;
-        }
+    public Boolean provides(String productId, boolean checkDerived) {
 
-        if (providedProducts != null) {
-            for (ProvidedProduct p : providedProducts) {
-                if (p.getProductId().equals(productId)) {
-                    return true;
+        if (checkDerived && this.getDerivedProductId() != null) {
+            if (getDerivedProductId().equals(productId)) {
+                return true;
+            }
+
+            if (getDerivedProvidedProducts() != null) {
+                for (DerivedProvidedProduct p : getDerivedProvidedProducts()) {
+                    if (p.getProductId().equals(productId)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        else {
+            if (this.productId.equals(productId)) {
+                return true;
+            }
+
+            if (providedProducts != null) {
+                for (ProvidedProduct p : providedProducts) {
+                    if (p.getProductId().equals(productId)) {
+                        return true;
+                    }
                 }
             }
         }
