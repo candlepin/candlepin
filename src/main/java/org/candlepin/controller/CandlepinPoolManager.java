@@ -26,7 +26,6 @@ import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCertificateCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Environment;
-import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.FilterBuilder;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
@@ -94,7 +93,6 @@ public class CandlepinPoolManager implements PoolManager {
     private EntitlementCertificateCurator entitlementCertificateCurator;
     private ComplianceRules complianceRules;
     private ProductCache productCache;
-    private EnvironmentCurator envCurator;
     private AutobindRules autobindRules;
 
     /**
@@ -112,7 +110,7 @@ public class CandlepinPoolManager implements PoolManager {
         EventFactory eventFactory, Config config, Enforcer enforcer,
         PoolRules poolRules, EntitlementCurator curator1, ConsumerCurator consumerCurator,
         EntitlementCertificateCurator ecC, ComplianceRules complianceRules,
-        EnvironmentCurator envCurator, AutobindRules autobindRules) {
+        AutobindRules autobindRules) {
 
         this.poolCurator = poolCurator;
         this.subAdapter = subAdapter;
@@ -127,7 +125,6 @@ public class CandlepinPoolManager implements PoolManager {
         this.entitlementCertificateCurator = ecC;
         this.complianceRules = complianceRules;
         this.productCache = productCache;
-        this.envCurator = envCurator;
         this.autobindRules = autobindRules;
     }
 
@@ -891,24 +888,6 @@ public class CandlepinPoolManager implements PoolManager {
         log.info("Found " + entsToRegen.size() + " certificates to regenerate.");
 
         regenerateCertificatesOf(entsToRegen, lazy);
-    }
-
-
-    /**
-     * Used to regenerate certificates affected by a mass content promotion/demotion.
-     *
-     * WARNING: can be quite expensive, currently we must look up all entitlements in the
-     * environment, all provided products for each entitlement, and check if any product
-     * provides any of the modified content set IDs.
-     *
-     * @param affectedContent List of content set IDs promoted/demoted.
-     */
-    @Override
-    @Transactional
-    public void regenerateCertificatesOf(Set<String> affectedContent, boolean lazy) {
-        for (Environment e : envCurator.listWithContent(affectedContent)) {
-            regenerateCertificatesOf(e, affectedContent, lazy);
-        }
     }
 
     /**

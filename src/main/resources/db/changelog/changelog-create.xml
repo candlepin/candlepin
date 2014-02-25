@@ -1151,4 +1151,5 @@
     <include file="db/changelog/20140205152431-fix-mysql-datetimes.xml" />
     <include file="db/changelog/20140206083156-fix-mysql-rules-column-type.xml" />
     <include file="db/changelog/20140211110052-mysql-longblobs.xml" />
+    <include file="db/changelog/20140224154022-cascade-content-deletion.xml" />
 </databaseChangeLog>

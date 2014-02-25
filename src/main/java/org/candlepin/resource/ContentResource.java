@@ -35,6 +35,7 @@ import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.EnvironmentContentCurator;
+import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.UniqueIdGenerator;
 import org.xnap.commons.i18n.I18n;
 
@@ -51,16 +52,18 @@ public class ContentResource {
     private UniqueIdGenerator idGenerator;
     private EnvironmentContentCurator envContentCurator;
     private PoolManager poolManager;
+    private ProductServiceAdapter productAdapter;
 
     @Inject
     public ContentResource(ContentCurator contentCurator, I18n i18n,
         UniqueIdGenerator idGenerator, EnvironmentContentCurator envContentCurator,
-        PoolManager poolManager) {
+        PoolManager poolManager, ProductServiceAdapter productAdapter) {
         this.i18n = i18n;
         this.contentCurator = contentCurator;
         this.idGenerator = idGenerator;
         this.envContentCurator = envContentCurator;
         this.poolManager = poolManager;
+        this.productAdapter = productAdapter;
     }
 
     /**
@@ -149,7 +152,11 @@ public class ContentResource {
         changes.setId(contentId);
         Content updated = contentCurator.createOrUpdate(changes);
         // require regeneration of entitlement certificates of affected consumers
-        poolManager.regenerateCertificatesOf(setFrom(contentId), true);
+        Set<String> affectedProducts =
+            productAdapter.getProductsWithContent(setFrom(contentId));
+        for (String productId : affectedProducts) {
+            poolManager.regenerateCertificatesOf(productId, true);
+        }
 
         return updated;
     }
@@ -167,12 +174,17 @@ public class ContentResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{content_id}")
     public void remove(@PathParam("content_id") String cid) {
+        Set<String> affectedProducts = productAdapter.getProductsWithContent(setFrom(cid));
         Content nuke = getContent(cid);
         contentCurator.delete(nuke);
 
         // Clean up any dangling environment content:
         for (EnvironmentContent ec : envContentCurator.lookupByContent(cid)) {
             envContentCurator.delete(ec);
+        }
+        // Regenerate affected products
+        for (String productId : affectedProducts) {
+            poolManager.regenerateCertificatesOf(productId, true);
         }
     }
 }
