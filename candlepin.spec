@@ -143,7 +143,7 @@ Requires: oauth
 Requires: logback-classic
 Requires: jaxb-impl
 Requires: scannotation
-Requires: slf4j-api >= 0:1.7.5
+Requires: slf4j-api >= 0:1.7.5-4
 # apache-mime4j uses commons-logging, so we have to provide a slf4j bridge
 Requires: jcl-over-slf4j >= 0:1.7.5
 Requires: jakarta-commons-lang
