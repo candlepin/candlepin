@@ -507,6 +507,14 @@ class Candlepin
     delete("/content/#{content_id}")
   end
 
+  def update_content(content_id, updates={})
+    current_content = get_content(content_id)
+    updates.each do |key, value|
+      current_content[key] = value
+    end
+    put("/content/#{content_id}", current_content)
+  end
+
   def add_content_to_product(product_id, content_id, enabled=true)
     post("/products/#{product_id}/content/#{content_id}?enabled=#{enabled}")
   end
