@@ -18,7 +18,7 @@ describe 'Derived Products Should' do
     @uuid = random_string('system.uuid')
 
     @physical_sys = @user.register(random_string('host'), :system, nil,
-      {"cpu.cpu_socket(s)" => 8}, nil, nil, [], installed_prods, nil)
+      {"cpu.cpu_socket(s)" => 8}, nil, nil, [], [], nil)
     @physical_client = Candlepin.new(username=nil, password=nil,
         cert=@physical_sys['idCert']['cert'],
         key=@physical_sys['idCert']['key'])
@@ -65,6 +65,37 @@ describe 'Derived Products Should' do
         key=@distributor['idCert']['key'])
     #@distributor_client.update_consumer(
     #    {:facts => {'@distributor_version' => 'sam-1.3'}})
+  end
+
+  # Complicated scenario, but we wanted to verify that if a derived SKU and an instance based
+  # SKU are available, the guest autobind will have it's host autobind to the derived and
+  # prefer it's virt_only sub-pool to instance based.
+  it 'prefers a host-autobind virt-only sub-pool to instance based pool during guest autobind' do
+    # create instance based subscription:
+    instance_product = create_product(nil, nil, {
+      :attributes => {
+        :instance_multiplier => "2",
+        :stacking_id => "stackme",
+        :sockets => "2",
+        :host_limited => "true",
+        'multi-entitlement' => "yes"
+      }
+    })
+    @sub1 = @cp.create_subscription(@owner['key'], instance_product.id,
+      10, [@eng_product['id']])
+    @cp.refresh_pools(@owner['key'])
+    @guest_client.consume_product
+
+    # Now the host should have an entitlement to the virt pool, and the guest
+    # to it's derived pool.
+    host_ents = @physical_client.list_entitlements
+    host_ents.length.should == 1
+    host_ents[0]['pool']['productId'].should == @datacenter_product['id']
+    guest_ents = @guest_client.list_entitlements
+    guest_ents.length.should == 1
+    guest_ents[0]['pool']['productId'].should == @derived_product['id']
+
+
   end
 
   it 'transfers sub-product data to main pool' do
