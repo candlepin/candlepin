@@ -566,11 +566,11 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
 
     /**
      * Check if this pool provides the given product ID.
+     *
      * @param productId
      * @return true if pool provides this product
      */
     public Boolean provides(String productId) {
-        // Direct match?
         if (this.productId.equals(productId)) {
             return true;
         }
@@ -581,6 +581,36 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
                     return true;
                 }
             }
+        }
+        return false;
+    }
+
+    /**
+     * Check if this pool provides the given product ID as a derived provided product.
+     * Used when we're looking for pools we could give to a host that will create
+     * sub-pools for guest products.
+     *
+     * If derived product ID is not set, we just use the normal set of products.
+     *
+     * @param productId
+     * @return true if pool provides this product
+     */
+    public Boolean providesDerived(String productId) {
+        if (this.getDerivedProductId() != null) {
+            if (getDerivedProductId().equals(productId)) {
+                return true;
+            }
+
+            if (getDerivedProvidedProducts() != null) {
+                for (DerivedProvidedProduct p : getDerivedProvidedProducts()) {
+                    if (p.getProductId().equals(productId)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        else {
+            return provides(productId);
         }
         return false;
     }

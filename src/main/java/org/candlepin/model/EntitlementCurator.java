@@ -145,8 +145,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
                     Restrictions.and(
                         // The dates overlap if our range is completely encapsulated
                         Restrictions.le("startDate", startDate),
-                        Restrictions.ge("endDate", endDate))
-                    ));
+                        Restrictions.ge("endDate", endDate))));
         return criteria;
     }
 
