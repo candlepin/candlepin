@@ -63,6 +63,7 @@ import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.EventCurator;
 import org.candlepin.model.GuestId;
+import org.candlepin.model.HypervisorId;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
@@ -456,6 +457,12 @@ public class ConsumerResource {
                 g.setConsumer(consumer);
             }
         }
+        HypervisorId hvsrId = consumer.getHypervisorId();
+        if (hvsrId != null && hvsrId.getHypervisorId() != null &&
+                !hvsrId.getHypervisorId().isEmpty()) {
+            // If a hypervisorId is supplied, make sure the consumer and owner are correct
+            hvsrId.setConsumer(consumer);
+        }
 
         checkServiceLevel(owner, consumer.getServiceLevel());
 
@@ -818,7 +825,18 @@ public class ConsumerResource {
         Consumer toUpdate = consumerCurator.verifyAndLookupConsumer(uuid);
 
         if (performConsumerUpdates(consumer, toUpdate)) {
-            consumerCurator.update(toUpdate);
+            try {
+                consumerCurator.update(toUpdate);
+            }
+            catch (CandlepinException ce) {
+                // If it is one of ours, rethrow it.
+                throw ce;
+            }
+            catch (Exception e) {
+                log.error("Problem updating unit:", e);
+                throw new BadRequestException(i18n.tr(
+                    "Problem updating unit {0}", consumer));
+            }
         }
     }
 
@@ -837,6 +855,7 @@ public class ConsumerResource {
         changesMade = checkForFactsUpdate(toUpdate, updated) || changesMade;
         changesMade = checkForInstalledProductsUpdate(toUpdate, updated) || changesMade;
         changesMade = checkForGuestsUpdate(toUpdate, updated) || changesMade;
+        changesMade = checkForHypervisorIdUpdate(toUpdate, updated) || changesMade;
 
         // Allow optional setting of the autoheal attribute:
         if (updated.isAutoheal() != null &&
@@ -915,6 +934,30 @@ public class ConsumerResource {
             sink.sendEvent(event);
         }
         return changesMade;
+    }
+
+    private boolean checkForHypervisorIdUpdate(Consumer existing, Consumer incoming) {
+        HypervisorId incomingId = incoming.getHypervisorId();
+        if (incomingId != null) {
+            HypervisorId existingId = existing.getHypervisorId();
+            if (incomingId.getHypervisorId() == null ||
+                    incomingId.getHypervisorId().isEmpty()) {
+                // Allow hypervisorId to be removed
+                existing.setHypervisorId(null);
+            }
+            else {
+                if (existingId != null) {
+                    existingId.setHypervisorId(incomingId.getHypervisorId());
+                }
+                else {
+                    // Safer to build a new clean HypervisorId object
+                    existing.setHypervisorId(
+                        new HypervisorId(incomingId.getHypervisorId()));
+                }
+            }
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -1017,7 +1060,8 @@ public class ConsumerResource {
 
         // Check guests that are existing/added.
         for (GuestId guestId : incoming.getGuestIds()) {
-            Consumer host = consumerCurator.getHost(guestId.getGuestId());
+            Consumer host = consumerCurator.getHost(
+                guestId.getGuestId(), existing.getOwner());
             Consumer guest = consumerCurator.findByVirtUuid(guestId.getGuestId(),
                 existing.getOwner().getId());
 
@@ -1053,23 +1097,6 @@ public class ConsumerResource {
                         host.getName());
 
                 revokeGuestEntitlementsNotMatchingHost(existing, guest);
-                // commented out per mkhusid (see 768872, around comment #41)
-                /*
-                // now autosubscribe to the new host. We bypass bind() since we
-                // are being invoked via the host, not the guest.
-
-                // only attempt this if there are installed products, otherwise there
-                // is nothing to bind to
-                if (guest.getInstalledProducts() == null ||
-                    guest.getInstalledProducts().isEmpty()) {
-                    log.debug("No installed products for guest, unable to autosubscribe");
-                }
-                else {
-                    log.debug("Autosubscribing migrated guest.");
-                    List<Entitlement> entitlements =  entitler.bindByProducts(
-                                                                    null, guest, null);
-                    entitler.sendEvents(entitlements);
-                }*/
             }
             else if (host == null) {
                 // now check for any entitlements that may have come from another host
@@ -1903,7 +1930,7 @@ public class ConsumerResource {
                 "The system with UUID {0} is not a virtual guest.",
                 consumer.getUuid()));
         }
-        return consumerCurator.getHost(consumer.getFact("virt.uuid"));
+        return consumerCurator.getHost(consumer.getFact("virt.uuid"), consumer.getOwner());
     }
 
     @GET

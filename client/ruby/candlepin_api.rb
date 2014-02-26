@@ -68,7 +68,7 @@ class Candlepin
   # TODO: need to switch to a params hash, getting to be too many arguments.
   def register(name, type=:system, uuid=nil, facts={}, username=nil,
               owner_key=nil, activation_keys=[], installedProducts=[],
-              environment=nil, capabilities=[])
+              environment=nil, capabilities=[], hypervisor_id=nil)
     consumer = {
       :type => {:label => type},
       :name => name,
@@ -78,6 +78,8 @@ class Candlepin
     consumer[:capabilities] = capabilities.collect { |name| {'name' => name} } if capabilities
 
     consumer[:uuid] = uuid if not uuid.nil?
+
+    consumer[:hypervisorId] = {:hypervisorId => hypervisor_id} if hypervisor_id
 
     if environment.nil?
       path = get_path("consumers") + "?"
@@ -91,8 +93,11 @@ class Candlepin
     return @consumer
   end
 
-  def hypervisor_check_in(owner, host_guest_mapping={})
+  def hypervisor_check_in(owner, host_guest_mapping={}, create_missing=nil)
     path = get_path("hypervisors") + "?owner=#{owner}"
+    unless create_missing.nil?
+      path << "&create_missing=#{create_missing}"
+    end
     consumers = post(path, host_guest_mapping)
     return consumers
   end
@@ -126,6 +131,7 @@ class Candlepin
     consumer[:autoheal] = params[:autoheal] if params.has_key?(:autoheal)
     consumer[:serviceLevel] = params[:serviceLevel] if params.has_key?(:serviceLevel)
     consumer[:capabilities] = params[:capabilities].collect { |name| {'name' => name} } if params[:capabilities]
+    consumer[:hypervisorId] = {:hypervisorId => params[:hypervisorId]} if params[:hypervisorId]
 
     path = get_path("consumers")
     put("#{path}/#{uuid}", consumer)
@@ -204,6 +210,14 @@ class Candlepin
   # expects an owner key
   def get_owner_info(owner)
     get("/owners/#{owner}/info")
+  end
+
+  def get_owner_hypervisors(owner, hypervisor_ids = [])
+    url = "/owners/#{owner}/hypervisors?"
+    hypervisor_ids.each do |hid|
+      url << "hypervisor_id=#{hid}&"
+    end
+    get(url)
   end
 
   def create_owner(key, params={})

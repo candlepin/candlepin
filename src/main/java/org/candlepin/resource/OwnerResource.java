@@ -1299,6 +1299,18 @@ public class OwnerResource {
         return results;
     }
 
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/{owner_key}/hypervisors")
+    public List<Consumer> getHypervisors(
+        @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
+        @QueryParam("hypervisor_id") List<String> hypervisorIds) {
+        if (hypervisorIds == null || hypervisorIds.isEmpty()) {
+            return consumerCurator.getHypervisorsForOwner(ownerKey);
+        }
+        return consumerCurator.getHypervisorsBulk(hypervisorIds, ownerKey);
+    }
+
     private void recordImportSuccess(Owner owner, Map data,
         ConflictOverrides forcedConflicts, String filename) {
 

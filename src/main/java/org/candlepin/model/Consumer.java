@@ -166,6 +166,11 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
     private Set<ConsumerCapability> capabilities;
 
+    @OneToOne(mappedBy = "consumer", targetEntity = HypervisorId.class)
+    @Cascade({org.hibernate.annotations.CascadeType.ALL,
+        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+    private HypervisorId hypervisorId;
+
     // An instruction for the client to initiate an autoheal request.
     // WARNING: can't initialize to a default value here, we need to be able to see
     // if it was specified on an incoming update, so it must be null if no value came in.
@@ -591,5 +596,22 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
                 cc.setConsumer(this);
             }
         }
+    }
+
+    /**
+     * @return the hypervisorId
+     */
+    public HypervisorId getHypervisorId() {
+        return hypervisorId;
+    }
+
+    /**
+     * @param hypervisorId the hypervisorId to set
+     */
+    public void setHypervisorId(HypervisorId hypervisorId) {
+        if (hypervisorId != null) {
+            hypervisorId.setConsumer(this);
+        }
+        this.hypervisorId = hypervisorId;
     }
 }
