@@ -16,7 +16,6 @@
         <addForeignKeyConstraint
             baseColumnNames="content_id"
             baseTableName="cp_product_content"
-            baseTableSchemaName="public"
             constraintName="fkce093157574ef825"
             deferrable="false"
             initiallyDeferred="false"
@@ -24,7 +23,6 @@
             onUpdate="NO ACTION"
             referencedColumnNames="id"
             referencedTableName="cp_content"
-            referencedTableSchemaName="public"
             referencesUniqueColumn="false"/>
     </changeSet>
 

@@ -30,8 +30,8 @@
         </createTable>
         <addUniqueConstraint columnNames="hypervisor_id, owner_id" constraintName="cp_consumer_hypervisor_ukey" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_consumer_hypervisor"/>
         <addUniqueConstraint columnNames="consumer_id" constraintName="cp_consmr_hyprvsr_consmr_ukey" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_consumer_hypervisor"/>
-        <addForeignKeyConstraint baseColumnNames="consumer_id" baseTableName="cp_consumer_hypervisor" constraintName="fk_hypervisor_consumer" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer" referencesUniqueColumn="true"/>
-        <addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="cp_consumer_hypervisor" constraintName="fk_hypervisor_owner" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" referencesUniqueColumn="true"/>
+        <addForeignKeyConstraint baseColumnNames="consumer_id" baseTableName="cp_consumer_hypervisor" constraintName="fk_hypervisor_consumer" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer" referencesUniqueColumn="false"/>
+        <addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="cp_consumer_hypervisor" constraintName="fk_hypervisor_owner" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" referencesUniqueColumn="false"/>
         <createIndex indexName="idx_hypervisor_owner_fk" tableName="cp_consumer_hypervisor" unique="false">
             <column name="owner_id"/>
         </createIndex>
