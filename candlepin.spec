@@ -31,7 +31,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.3
+Version: 0.9.4
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -342,6 +342,31 @@ fi
 
 
 %changelog
+* Wed Feb 26 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.4-1
+- 1016300: Remove MKT product from provided product list (wpoteat@redhat.com)
+- 1040101: Avoid repeating work and database lookups checking modifies (ckozak@redhat.com)
+- 1051215: prevent an ArrayIndexOutOfBoundsException (jesusr@redhat.com)
+- 1064968: Allow consumers to check in hypervisors (ckozak@redhat.com)
+- 1066088: Expose an option to the servicelevels api to return exempt service levels (wpoteat@redhat.com)
+- Latest strings from zanata. (alikins@redhat.com)
+- older liquibase doesn't support referencesUniqueColumn on liquibase (ckozak@redhat.com)
+- Allow multi-org hypervisors (ckozak@redhat.com)
+- Add spec tests for content modification causing ent regen (ckozak@redhat.com)
+- Fix autobind host during guest autobind for derived pools.  (dgoodwin@redhat.com)
+- regenerate ents when content is modified (ckozak@redhat.com)
+- Require a slf4j package with correct obsoletes directive. (awood@redhat.com)
+- fix style (ckozak@redhat.com)
+- Added default to enable trusted auth to preserve behavior (ckozak@redhat.com)
+- Make createModifiesDateFilteringCriteria more readable (ckozak@redhat.com)
+- Turn off oauth and trusted auth by default. (alikins@redhat.com)
+- modified and added test data for physical_only (ckozak@redhat.com)
+- unbind performance (ckozak@redhat.com)
+- don't allow virt_only pools with physical_only (ckozak@redhat.com)
+- rev rules.js for physical_only (ckozak@redhat.com)
+- Added physical_only attribute (ckozak@redhat.com)
+- Use LONGBLOB for certs in MySQL. (awood@redhat.com)
+- make test work on Java 6 (jesusr@redhat.com)
+
 * Thu Feb 06 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.3-1
 - 1046962: Satellite cert generation gets error (wpoteat@redhat.com)
 - 1058877: Get user owners correctly (ckozak@redhat.com)
