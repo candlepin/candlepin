@@ -197,7 +197,7 @@ describe 'Hypervisor Resource', :type => :virt do
     results.created[0]['guestIds'].should_not == nil
   end
 
-  it 'should support multiple orgs reporting the same cluster' do
+  it 'should not really support multiple orgs reporting the same cluster' do
     owner1 = create_owner(random_string('owner1'))
     owner2 = create_owner(random_string('owner2'))
     user1 = user_client(owner1, random_string('username1'))
@@ -210,11 +210,12 @@ describe 'Hypervisor Resource', :type => :virt do
     results1 = consumer1.hypervisor_check_in(owner1['key'], host_guest_mapping)
     results2 = consumer2.hypervisor_check_in(owner2['key'], host_guest_mapping)
     results1.created.size.should == 1
-    results2.created.size.should == 1
+    results2.created.size.should == 0
     results1.updated.size.should == 0
     results2.updated.size.should == 0
     results1.unchanged.size.should == 0
     results2.unchanged.size.should == 0
+    results2.failedUpdate.size == 1
     # Now check in each org again
     results1 = consumer1.hypervisor_check_in(owner1['key'], host_guest_mapping)
     results2 = consumer2.hypervisor_check_in(owner2['key'], host_guest_mapping)
@@ -224,7 +225,8 @@ describe 'Hypervisor Resource', :type => :virt do
     results1.updated.size.should == 0
     results2.updated.size.should == 0
     results1.unchanged.size.should == 1
-    results2.unchanged.size.should == 1
+    results2.unchanged.size.should == 0
+    results2.failedUpdate.size.should == 1
     # Send modified data for owner 1, but it shouldn't impact owner 2 at all
     new_host_guest_mapping = get_host_guest_mapping(hostname, ["guest1", "guest2", "guest3", "guest4"])
     results1 = consumer1.hypervisor_check_in(owner1['key'], new_host_guest_mapping)
@@ -235,7 +237,8 @@ describe 'Hypervisor Resource', :type => :virt do
     results1.updated.size.should == 1
     results2.updated.size.should == 0
     results1.unchanged.size.should == 0
-    results2.unchanged.size.should == 1
+    results2.unchanged.size.should == 0
+    results2.failedUpdate.size.should == 1
   end
 
   def get_host_guest_mapping(host_uuid, guest_id_list)

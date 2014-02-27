@@ -123,6 +123,14 @@ public class HypervisorResource {
                             "Unable to find hypervisor in org ''{0}''", ownerKey));
                         continue;
                     }
+                    if (consumerCurator.isHypervisorIdUsed(hostEntry.getKey())) {
+                        // If the hypervisorID is being used, we know it is not in this org
+                        log.info("Hypervisor id " + hostEntry.getKey() +
+                            " is in use by another org");
+                        result.failed(hostEntry.getKey(), i18n.tr(
+                            "Hypervisor ''{0}'' is in use by another org", ownerKey));
+                        continue;
+                    }
                     log.info("Registering new host consumer");
                     // Create new consumer
                     consumer = createConsumerForHypervisorId(
