@@ -61,6 +61,7 @@ public class HypervisorId extends AbstractHibernateObject {
     private String id;
 
     @Column(name = "hypervisor_id", nullable = false)
+    @Index(name = "idx_hypervisor_id")
     private String hypervisorId;
 
     @OneToOne
