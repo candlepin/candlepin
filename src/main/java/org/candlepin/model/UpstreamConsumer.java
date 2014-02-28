@@ -46,8 +46,8 @@ public class UpstreamConsumer extends AbstractHibernateObject {
 
     @Id
     @GeneratedValue(generator = "system-uuid")
-    @GenericGenerator(name = "system-uuid", strategy = "uuid")
-    @Column(length = 32)
+    @GenericGenerator(name = "system-uuid", strategy = "uuid2")
+    @Column(length = 37)
     private String id;
 
     @Column(nullable = false, unique = true)
@@ -65,7 +65,7 @@ public class UpstreamConsumer extends AbstractHibernateObject {
     @ForeignKey(name = "fk_upstream_consumer_type")
     private ConsumerType type;
 
-    @Column(name = "owner_id", length = 32, nullable = false)
+    @Column(name = "owner_id", length = 37, nullable = false)
     private String ownerId;
 
     @Column(length = 255, name = "prefix_url_web")

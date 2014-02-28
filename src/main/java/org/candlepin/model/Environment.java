@@ -64,7 +64,7 @@ public class Environment extends AbstractHibernateObject implements Serializable
     private String description;
 
     @Id
-    @Column(length = 32)
+    @Column(length = 37)
     private String id;
 
     @OneToMany(mappedBy = "environment", targetEntity = Consumer.class)

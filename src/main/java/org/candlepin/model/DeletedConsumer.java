@@ -36,8 +36,8 @@ public class DeletedConsumer extends AbstractHibernateObject {
 
     @Id
     @GeneratedValue(generator = "system-uuid")
-    @GenericGenerator(name = "system-uuid", strategy = "uuid")
-    @Column(length = 32)
+    @GenericGenerator(name = "system-uuid", strategy = "uuid2")
+    @Column(length = 37)
     private String id;
 
     /**
@@ -51,7 +51,7 @@ public class DeletedConsumer extends AbstractHibernateObject {
      * using the id instead of actual Owner because the owner could be deleted
      * and we still want to keep this record around.
      */
-    @Column(name = "owner_id", length = 32, nullable = false)
+    @Column(name = "owner_id", length = 37, nullable = false)
     private String ownerId;
 
     @Column(name = "owner_key", length = 255, nullable = false)
