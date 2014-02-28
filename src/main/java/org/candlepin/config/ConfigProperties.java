@@ -149,6 +149,9 @@ public class ConfigProperties {
         "management_enabled," +
         "virt_only";
 
+    public static final String BLOCK_DUPLICATE_HYPERVISOR_IDS =
+        "candlepin.block_duplicate_hypervisor_ids";
+
     public static final Map<String, String> DEFAULT_PROPERTIES =
         new HashMap<String, String>() {
 
@@ -239,6 +242,9 @@ public class ConfigProperties {
                 this.put(LONG_ATTRIBUTES, LONG_ATTRIBUTE_LIST);
                 this.put(NON_NEG_LONG_ATTRIBUTES, NON_NEG_LONG_ATTRIBUTE_LIST);
                 this.put(BOOLEAN_ATTRIBUTES, BOOLEAN_ATTRIBUTE_LIST);
+
+                // Hopefully temporary configuration to block duplicate hypervisorIds
+                this.put(BLOCK_DUPLICATE_HYPERVISOR_IDS, "true");
             }
         };
     public static final String CRL_FILE_PATH = "candlepin.crl.file";

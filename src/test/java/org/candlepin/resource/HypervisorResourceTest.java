@@ -121,7 +121,7 @@ public class HypervisorResourceTest {
             null, null, null, null, null);
 
         hypervisorResource = new HypervisorResource(consumerResource,
-            consumerCurator, i18n, ownerCurator);
+            consumerCurator, i18n, ownerCurator, new CandlepinCommonTestConfig());
 
         // Ensure that we get the consumer that was passed in back from the create call.
         when(consumerCurator.create(any(Consumer.class))).thenAnswer(new Answer<Object>() {

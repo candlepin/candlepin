@@ -18,6 +18,8 @@ import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SubResource;
 import org.candlepin.auth.interceptor.Verify;
+import org.candlepin.config.Config;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -60,14 +62,17 @@ public class HypervisorResource {
     private ConsumerResource consumerResource;
     private I18n i18n;
     private OwnerCurator ownerCurator;
+    private Config config;
 
     @Inject
     public HypervisorResource(ConsumerResource consumerResource,
-        ConsumerCurator consumerCurator, I18n i18n, OwnerCurator ownerCurator) {
+        ConsumerCurator consumerCurator, I18n i18n, OwnerCurator ownerCurator,
+        Config config) {
         this.consumerResource = consumerResource;
         this.consumerCurator = consumerCurator;
         this.i18n = i18n;
         this.ownerCurator = ownerCurator;
+        this.config = config;
     }
 
     /**
@@ -123,7 +128,8 @@ public class HypervisorResource {
                             "Unable to find hypervisor in org ''{0}''", ownerKey));
                         continue;
                     }
-                    if (consumerCurator.isHypervisorIdUsed(hostEntry.getKey())) {
+                    if (this.blockDuplicateHypervisors() &&
+                        consumerCurator.isHypervisorIdUsed(hostEntry.getKey())) {
                         // If the hypervisorID is being used, we know it is not in this org
                         log.info("Hypervisor id " + hostEntry.getKey() +
                             " is in use by another org");
@@ -203,5 +209,9 @@ public class HypervisorResource {
         // Create Consumer
         return consumerResource.create(consumer,
             principal, null, owner.getKey(), null);
+    }
+
+    private boolean blockDuplicateHypervisors() {
+        return config.getBoolean(ConfigProperties.BLOCK_DUPLICATE_HYPERVISOR_IDS);
     }
 }
