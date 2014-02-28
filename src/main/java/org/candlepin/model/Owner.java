@@ -58,8 +58,8 @@ public class Owner extends AbstractHibernateObject implements Serializable,
 
     @Id
     @GeneratedValue(generator = "system-uuid")
-    @GenericGenerator(name = "system-uuid", strategy = "uuid")
-    @Column(length = 32)
+    @GenericGenerator(name = "system-uuid", strategy = "uuid2")
+    @Column(length = 37)
     private String id;
 
     @Column(name = "account", nullable = false, unique = true)
