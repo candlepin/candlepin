@@ -305,7 +305,7 @@
     <!-- <module name="FileLength"/> -->
     <module name="LineLength">
       <property name="ignorePattern" value="import"/>
-      <property name="max" value="92"/>
+      <property name="max" value="110"/>
     </module>
     <module name="MethodLength">
        <property name="tokens" value="METHOD_DEF"/>
