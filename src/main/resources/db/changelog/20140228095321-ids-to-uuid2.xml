@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+
+    <changeSet id="20140228095321" author="wpoteat">
+        <comment>Modify id's to be uuid2</comment>
+        <!-- See http://www.liquibase.org/manual/refactoring_commands -->
+        <!-- ALTER TABLE CP_EVENT ALTER COLUMN ID VARCHAR(37) -->
+        <modifyDataType columnName="id" newDataType="VARCHAR(37)" tableName="cp_event"/>
+
+    <!-- ALTER TABLE CP_POOL_ATTRIBUTE ALTER COLUMN ID VARCHAR(37) -->
+        <modifyDataType columnName="id" newDataType="VARCHAR(37)" tableName="cp_pool_attribute"/>
+    <!-- ALTER TABLE CP_POOL_ATTRIBUTE ALTER COLUMN POOL_ID VARCHAR(37) -->
+        <modifyDataType columnName="pool_id" newDataType="VARCHAR(37)" tableName="cp_pool_attribute"/>
+
+    <!-- ALTER TABLE CP_PRODUCT_POOL_ATTRIBUTE ALTER COLUMN ID VARCHAR(37) -->
+        <modifyDataType columnName="id" newDataType="VARCHAR(37)" tableName="cp_product_pool_attribute"/>
+    <!-- ALTER TABLE CP_PRODUCT_POOL_ATTRIBUTE ALTER COLUMN POOL_ID VARCHAR(37) -->
+        <modifyDataType columnName="pool_id" newDataType="VARCHAR(37)" tableName="cp_product_pool_attribute"/>
+
+    <!-- ALTER TABLE CP_CDN ALTER COLUMN ID VARCHAR(37) -->
+        <modifyDataType columnName="id" newDataType="VARCHAR(37)" tableName="cp_cdn"/>
+    <!-- ALTER TABLE CP_CDN ALTER COLUMN CERTIFICATE_ID VARCHAR(37) -->
+        <modifyDataType columnName="certificate_id" newDataType="VARCHAR(37)" tableName="cp_cdn"/>
+
+    <!-- ALTER TABLE CP_CDN_CERTIFICATE ALTER COLUMN ID VARCHAR(37) -->
+        <modifyDataType columnName="id" newDataType="VARCHAR(37)" tableName="cp_cdn_certificate"/>
+
+    <!-- ALTER TABLE CP_CONSUMER ALTER COLUMN ID VARCHAR(37) -->
+            <modifyDataType columnName="id" newDataType="VARCHAR(37)" tableName="cp_consumer"/>
+    <!-- ALTER TABLE CP_CONSUMER ALTER COLUMN ENVIRONMENT_ID VARCHAR(37) -->
+        <modifyDataType columnName="environment_id" newDataType="VARCHAR(37)" tableName="cp_consumer"/>
+    <!-- ALTER TABLE CP_CONSUMER ALTER COLUMN CONSUMER_IDCERT_ID VARCHAR(37) -->
+        <modifyDataType columnName="consumer_idcert_id" newDataType="VARCHAR(37)" tableName="cp_consumer"/>
+    <!-- ALTER TABLE CP_CONSUMER ALTER COLUMN KEYPAIR_ID VARCHAR(37) -->
+        <modifyDataType columnName="keypair_id" newDataType="VARCHAR(37)" tableName="cp_consumer"/>
+    <!-- ALTER TABLE CP_CONSUMER ALTER COLUMN OWNER_ID VARCHAR(37) -->
+        <modifyDataType columnName="owner_id" newDataType="VARCHAR(37)" tableName="cp_consumer"/>
+    <!-- ALTER TABLE CP_CONSUMER ALTER COLUMN TYPE_ID VARCHAR(37) -->
+        <modifyDataType columnName="type_id" newDataType="VARCHAR(37)" tableName="cp_consumer"/>
+
+    <!-- ALTER TABLE CP_CONSUMER_CAPABILITY ALTER COLUMN ID VARCHAR(37) -->
+        <modifyDataType columnName="id" newDataType="VARCHAR(37)" tableName="cp_consumer_capability"/>
+    <!-- ALTER TABLE CP_CONSUMER_CAPABILITY ALTER COLUMN CONSUMER_ID VARCHAR(37) -->
+        <modifyDataType columnName="consumer_id" newDataType="VARCHAR(37)" tableName="cp_consumer_capability"/>
+
+    <!-- ALTER TABLE CP_CONSUMER_FACTS ALTER COLUMN CP_CONSUMER_ID VARCHAR(37) -->
+        <modifyDataType columnName="cp_consumer_id" newDataType="VARCHAR(37)" tableName="cp_consumer_facts"/>
+
+    <!-- ALTER TABLE CP_INSTALLED_PRODUCTS ALTER COLUMN ID VARCHAR(37) -->
+        <modifyDataType columnName="id" newDataType="VARCHAR(37)" tableName="cp_installed_products"/>
+    <!-- ALTER TABLE CP_INSTALLED_PRODUCTS ALTER COLUMN CONSUMER_ID VARCHAR(37) -->
+        <modifyDataType columnName="consumer_id" newDataType="VARCHAR(37)" tableName="cp_installed_products"/>
+
+    <!-- ALTER TABLE CP_CONSUMER_TYPE ALTER COLUMN ID VARCHAR(37) -->
+        <modifyDataType columnName="id" newDataType="VARCHAR(37)" tableName="cp_consumer_type"/>
+
+    <!-- ALTER TABLE CP_CONTENT_OVERRIDE ALTER COLUMN ID VARCHAR(37) -->
+        <modifyDataType columnName="id" newDataType="VARCHAR(37)" tableName="cp_content_override"/>
+    <!-- ALTER TABLE CP_CONTENT_OVERRIDE ALTER COLUMN CONSUMER_ID VARCHAR(37) -->
+        <modifyDataType columnName="consumer_id" newDataType="VARCHAR(37)" tableName="cp_content_override"/>
+    <!-- ALTER TABLE CP_CONTENT_OVERRIDE ALTER COLUMN KEY_ID VARCHAR(37) -->
+        <modifyDataType columnName="key_id" newDataType="VARCHAR(37)" tableName="cp_content_override"/>
+
+    <!-- ALTER TABLE CP_DELETED_CONSUMERS ALTER COLUMN ID VARCHAR(37) -->
+        <modifyDataType columnName="id" newDataType="VARCHAR(37)" tableName="cp_deleted_consumers"/>
+    <!-- ALTER TABLE CP_DELETED_CONSUMERS ALTER COLUMN OWNER_ID VARCHAR(37) -->
+        <modifyDataType columnName="owner_id" newDataType="VARCHAR(37)" tableName="cp_deleted_consumers"/>
+
+    <!-- ALTER TABLE CP_DIST_VERSION ALTER COLUMN ID VARCHAR(37) -->
+        <modifyDataType columnName="id" newDataType="VARCHAR(37)" tableName="cp_dist_version"/>
+
+    <!-- ALTER TABLE CP_DIST_VERSION_CAPABILITY ALTER COLUMN ID VARCHAR(37) -->
+        <modifyDataType columnName="id" newDataType="VARCHAR(37)" tableName="cp_dist_version_capability"/>
+    <!-- ALTER TABLE CP_DIST_VERSION_CAPABILITY ALTER COLUMN DIST_VERSION_ID VARCHAR(37) -->
+        <modifyDataType columnName="dist_version_id" newDataType="VARCHAR(37)" tableName="cp_dist_version_capability"/>
+
+    <!-- ALTER TABLE CP_ENTITLEMENT ALTER COLUMN ID VARCHAR(37) -->
+        <modifyDataType columnName="id" newDataType="VARCHAR(37)" tableName="cp_entitlement"/>
+    <!-- ALTER TABLE CP_ENTITLEMENT ALTER COLUMN CONSUMER_ID VARCHAR(37) -->
+        <modifyDataType columnName="consumer_id" newDataType="VARCHAR(37)" tableName="cp_entitlement"/>
+    <!-- ALTER TABLE CP_ENTITLEMENT ALTER COLUMN OWNER_ID VARCHAR(37) -->
+        <modifyDataType columnName="owner_id" newDataType="VARCHAR(37)" tableName="cp_entitlement"/>
+    <!-- ALTER TABLE CP_ENTITLEMENT ALTER COLUMN POOL_ID VARCHAR(37) -->
+        <modifyDataType columnName="pool_id" newDataType="VARCHAR(37)" tableName="cp_entitlement"/>
+
+    <!-- ALTER TABLE CP_ENT_CERTIFICATE ALTER COLUMN ID VARCHAR(37) -->
+        <modifyDataType columnName="id" newDataType="VARCHAR(37)" tableName="cp_ent_certificate"/>
+    <!-- ALTER TABLE CP_ENT_CERTIFICATE ALTER COLUMN ENTITLEMENT ID VARCHAR(37) -->
+        <modifyDataType columnName="entitlement_id" newDataType="VARCHAR(37)" tableName="cp_ent_certificate"/>
+
+    <!-- ALTER TABLE CP_ENV_CONTENT ALTER COLUMN ID VARCHAR(37) -->
+        <modifyDataType columnName="id" newDataType="VARCHAR(37)" tableName="cp_env_content"/>
+    <!-- ALTER TABLE CP_ENV_CONTENT ALTER COLUMN ENVIRONMENT_ID VARCHAR(37) -->
+        <modifyDataType columnName="environment_id" newDataType="VARCHAR(37)" tableName="cp_env_content"/>
+
+    <!-- ALTER TABLE CP_ENVIRONMENT ALTER COLUMN ID VARCHAR(37) -->
+        <modifyDataType columnName="id" newDataType="VARCHAR(37)" tableName="cp_environment"/>
+    <!-- ALTER TABLE CP_ENVIRONMENT ALTER COLUMN OWNER_ID VARCHAR(37) -->
+        <modifyDataType columnName="owner_id" newDataType="VARCHAR(37)" tableName="cp_environment"/>
+
+    <!-- ALTER TABLE CP_ENV_CONTENT ALTER COLUMN ID VARCHAR(37) -->
+        <modifyDataType columnName="id" newDataType="VARCHAR(37)" tableName="cp_env_content"/>
+    <!-- ALTER TABLE CP_ENV_CONTENT ALTER COLUMN ENVIRONMENT_ID VARCHAR(37) -->
+        <modifyDataType columnName="environment_id" newDataType="VARCHAR(37)" tableName="cp_env_content"/>
+
+    <!-- ALTER TABLE CP_EXPORT_METADATA ALTER COLUMN ID VARCHAR(37) -->
+        <modifyDataType columnName="id" newDataType="VARCHAR(37)" tableName="cp_export_metadata"/>
+    <!-- ALTER TABLE CP_EXPORT_METADATA ALTER COLUMN OWNER_ID VARCHAR(37) -->
+        <modifyDataType columnName="owner_id" newDataType="VARCHAR(37)" tableName="cp_export_metadata"/>
+
+    <!-- ALTER TABLE CP_CONSUMER_GUESTS ALTER COLUMN ID VARCHAR(37) -->
+        <modifyDataType columnName="id" newDataType="VARCHAR(37)" tableName="cp_consumer_guests"/>
+    <!-- ALTER TABLE CP_CONSUMER_GUESTS ALTER COLUMN CONSUMER_ID VARCHAR(37) -->
+        <modifyDataType columnName="consumer_id" newDataType="VARCHAR(37)" tableName="cp_consumer_guests"/>
+
+    <!-- ALTER TABLE CP_CONSUMER_GUESTS_ATTRIBUTES ALTER COLUMN CP_CONSUMER_GUEST_ID VARCHAR(37) -->
+        <modifyDataType columnName="cp_consumer_guest_id" newDataType="VARCHAR(37)" tableName="cp_consumer_guests_attributes"/>
+
+    <!-- ALTER TABLE CP_CONSUMER_HYPERVISOR ALTER COLUMN ID VARCHAR(37) -->
+        <modifyDataType columnName="id" newDataType="VARCHAR(37)" tableName="cp_consumer_hypervisor"/>
+    <!-- ALTER TABLE CP_CONSUMER_HYPERVISOR ALTER COLUMN CONSUMER_ID VARCHAR(37) -->
+        <modifyDataType columnName="consumer_id" newDataType="VARCHAR(37)" tableName="cp_consumer_hypervisor"/>
+    <!-- ALTER TABLE CP_CONSUMER_HYPERVISOR ALTER COLUMN OWNER_ID VARCHAR(37) -->
+        <modifyDataType columnName="owner_id" newDataType="VARCHAR(37)" tableName="cp_consumer_hypervisor"/>
+
+    <!-- ALTER TABLE CP_ID_CERT ALTER COLUMN ID VARCHAR(37) -->
+        <modifyDataType columnName="id" newDataType="VARCHAR(37)" tableName="cp_id_cert"/>
+
+    <!-- ALTER TABLE CP_IMPORT_RECORD ALTER COLUMN ID VARCHAR(37) -->
+        <modifyDataType columnName="id" newDataType="VARCHAR(37)" tableName="cp_import_record"/>
+    <!-- ALTER TABLE CP_IMPORT_RECORD ALTER COLUMN OWNER_ID VARCHAR(37) -->
+        <modifyDataType columnName="owner_id" newDataType="VARCHAR(37)" tableName="cp_import_record"/>
+    <!-- ALTER TABLE CP_IMPORT_RECORD ALTER COLUMN UPSTREAM_ID VARCHAR(37) -->
+        <modifyDataType columnName="upstream_id" newDataType="VARCHAR(37)" tableName="cp_import_record"/>
+
+    <!-- ALTER TABLE CP_IMPORT_UPSTREAM_CONSUMER ALTER COLUMN ID VARCHAR(37) -->
+        <modifyDataType columnName="id" newDataType="VARCHAR(37)" tableName="cp_import_upstream_consumer"/>
+    <!-- ALTER TABLE CP_IMPORT_UPSTREAM_CONSUMER ALTER COLUMN OWNER_ID VARCHAR(37) -->
+        <modifyDataType columnName="owner_id" newDataType="VARCHAR(37)" tableName="cp_import_upstream_consumer"/>
+    <!-- ALTER TABLE CP_IMPORT_UPSTREAM_CONSUMER ALTER COLUMN TYPE_ID VARCHAR(37) -->
+        <modifyDataType columnName="type_id" newDataType="VARCHAR(37)" tableName="cp_import_upstream_consumer"/>
+
+    <!-- ALTER TABLE CP_KEY_PAIR ALTER COLUMN ID VARCHAR(37) -->
+        <modifyDataType columnName="id" newDataType="VARCHAR(37)" tableName="cp_key_pair"/>
+
+    <!-- ALTER TABLE CP_OWNER ALTER COLUMN ID VARCHAR(37) -->
+        <modifyDataType columnName="id" newDataType="VARCHAR(37)" tableName="cp_owner"/>
+    <!-- ALTER TABLE CP_OWNER ALTER COLUMN UPSTREAM_ID VARCHAR(37) -->
+        <modifyDataType columnName="upstream_id" newDataType="VARCHAR(37)" tableName="cp_owner"/>
+    <!-- ALTER TABLE CP_OWNER ALTER COLUMN PARENT_OWNER VARCHAR(37) -->
+        <modifyDataType columnName="parent_owner" newDataType="VARCHAR(37)" tableName="cp_owner"/>
+
+    <!-- ALTER TABLE CP_PERMISSION ALTER COLUMN ID VARCHAR(37) -->
+        <modifyDataType columnName="id" newDataType="VARCHAR(37)" tableName="cp_permission"/>
+    <!-- ALTER TABLE CP_PERMISSION ALTER COLUMN OWNER_ID VARCHAR(37) -->
+        <modifyDataType columnName="owner_id" newDataType="VARCHAR(37)" tableName="cp_permission"/>
+    <!-- ALTER TABLE CP_PERMISSION ALTER COLUMN ROLE_ID VARCHAR(37) -->
+        <modifyDataType columnName="role_id" newDataType="VARCHAR(37)" tableName="cp_permission"/>
+
+    <!-- ALTER TABLE CP_POOL ALTER COLUMN ID VARCHAR(37) -->
+        <modifyDataType columnName="id" newDataType="VARCHAR(37)" tableName="cp_pool"/>
+    <!-- ALTER TABLE CP_POOL ALTER COLUMN OWNER_ID VARCHAR(37) -->
+        <modifyDataType columnName="owner_id" newDataType="VARCHAR(37)" tableName="cp_pool"/>
+    <!-- ALTER TABLE CP_POOL ALTER COLUMN SOURCEENTITLEMENT_ID VARCHAR(37) -->
+        <modifyDataType columnName="sourceentitlement_id" newDataType="VARCHAR(37)" tableName="cp_pool"/>
+    <!-- ALTER TABLE CP_POOL ALTER COLUMN SOURCECONSUMER_ID VARCHAR(37) -->
+        <modifyDataType columnName="sourceconsumer_id" newDataType="VARCHAR(37)" tableName="cp_pool"/>
+
+    <!-- ALTER TABLE CP_PRODUCT_ATTRIBUTE ALTER COLUMN ID VARCHAR(37) -->
+        <modifyDataType columnName="id" newDataType="VARCHAR(37)" tableName="cp_product_attribute"/>
+
+    <!-- ALTER TABLE CP_PRODUCT_CERTIFICATE ALTER COLUMN ID VARCHAR(37) -->
+        <modifyDataType columnName="id" newDataType="VARCHAR(37)" tableName="cp_product_certificate"/>
+
+    <!-- ALTER TABLE CP_POOL_PRODUCTS ALTER COLUMN ID VARCHAR(37) -->
+        <modifyDataType columnName="id" newDataType="VARCHAR(37)" tableName="cp_pool_products"/>
+    <!-- ALTER TABLE CP_POOL_PRODUCTS ALTER COLUMN POOL_ID VARCHAR(37) -->
+        <modifyDataType columnName="pool_id" newDataType="VARCHAR(37)" tableName="cp_pool_products"/>
+
+    <!-- ALTER TABLE CP_ROLE ALTER COLUMN ID VARCHAR(37) -->
+        <modifyDataType columnName="id" newDataType="VARCHAR(37)" tableName="cp_role"/>
+
+    <!-- ALTER TABLE CP_ROLE_USERS ALTER COLUMN ID VARCHAR(37) -->
+        <modifyDataType columnName="role_id" newDataType="VARCHAR(37)" tableName="cp_role_users"/>
+    <!-- ALTER TABLE CP_ROLE_USERS ALTER COLUMN USER_ID VARCHAR(37) -->
+        <modifyDataType columnName="user_id" newDataType="VARCHAR(37)" tableName="cp_role_users"/>
+
+    <!-- ALTER TABLE CP_RULES ALTER COLUMN ID VARCHAR(37) -->
+        <modifyDataType columnName="id" newDataType="VARCHAR(37)" tableName="cp_rules"/>
+
+    <!-- ALTER TABLE CP_STAT_HISTORY ALTER COLUMN ID VARCHAR(37) -->
+        <modifyDataType columnName="id" newDataType="VARCHAR(37)" tableName="cp_stat_history"/>
+
+    <!-- ALTER TABLE CP_SUBSCRIPTION ALTER COLUMN ID VARCHAR(37) -->
+        <modifyDataType columnName="id" newDataType="VARCHAR(37)" tableName="cp_subscription"/>
+    <!-- ALTER TABLE CP_SUBSCRIPTION ALTER COLUMN CERTIFICATE_ID VARCHAR(37) -->
+        <modifyDataType columnName="certificate_id" newDataType="VARCHAR(37)" tableName="cp_subscription"/>
+    <!-- ALTER TABLE CP_SUBSCRIPTION ALTER COLUMN OWNER_ID VARCHAR(37) -->
+        <modifyDataType columnName="owner_id" newDataType="VARCHAR(37)" tableName="cp_subscription"/>
+    <!-- ALTER TABLE CP_SUBSCRIPTION ALTER COLUMN UPSTREAM_ENTITLEMENT_ID VARCHAR(37) -->
+        <modifyDataType columnName="upstream_entitlement_id" newDataType="VARCHAR(37)" tableName="cp_subscription"/>
+    <!-- ALTER TABLE CP_SUBSCRIPTION ALTER COLUMN CDN_ID VARCHAR(37) -->
+        <modifyDataType columnName="cdn_id" newDataType="VARCHAR(37)" tableName="cp_subscription"/>
+
+    <!-- ALTER TABLE CP_SUBSCRIPTION_PRODUCTS ALTER COLUMN ID VARCHAR(37) -->
+        <modifyDataType columnName="subscription_id" newDataType="VARCHAR(37)" tableName="cp_subscription_products"/>
+
+    <!-- ALTER TABLE CP_SUB_DERIVEDPRODS ALTER COLUMN ID VARCHAR(37) -->
+        <modifyDataType columnName="subscription_id" newDataType="VARCHAR(37)" tableName="cp_sub_derivedprods"/>
+
+    <!-- ALTER TABLE CP_CERTIFICATE ALTER COLUMN ID VARCHAR(37) -->
+        <modifyDataType columnName="id" newDataType="VARCHAR(37)" tableName="cp_certificate"/>
+
+    <!-- ALTER TABLE CP_UPSTREAM_CONSUMER ALTER COLUMN ID VARCHAR(37) -->
+        <modifyDataType columnName="id" newDataType="VARCHAR(37)" tableName="cp_upstream_consumer"/>
+    <!-- ALTER TABLE CP_UPSTREAM_CONSUMER ALTER COLUMN CONSUMER_IDCERT_ID VARCHAR(37) -->
+        <modifyDataType columnName="consumer_idcert_id" newDataType="VARCHAR(37)" tableName="cp_upstream_consumer"/>
+    <!-- ALTER TABLE CP_UPSTREAM_CONSUMER ALTER COLUMN TYPE_ID VARCHAR(37) -->
+        <modifyDataType columnName="type_id" newDataType="VARCHAR(37)" tableName="cp_upstream_consumer"/>
+    <!-- ALTER TABLE CP_UPSTREAM_CONSUMER ALTER COLUMN OWNER_ID VARCHAR(37) -->
+        <modifyDataType columnName="owner_id" newDataType="VARCHAR(37)" tableName="cp_upstream_consumer"/>
+
+    <!-- ALTER TABLE CP_USER ALTER COLUMN ID VARCHAR(37) -->
+        <modifyDataType columnName="id" newDataType="VARCHAR(37)" tableName="cp_user"/>
+
+    <!-- ALTER TABLE CP_ACTIVATION_KEY ALTER COLUMN ID VARCHAR(37) -->
+        <modifyDataType columnName="id" newDataType="VARCHAR(37)" tableName="cp_activation_key"/>
+    <!-- ALTER TABLE CP_ACTIVATION_KEY ALTER COLUMN OWNER_ID VARCHAR(37) -->
+        <modifyDataType columnName="owner_id" newDataType="VARCHAR(37)" tableName="cp_activation_key"/>
+
+    <!-- ALTER TABLE CP_ACTIVATIONKEY_POOL ALTER COLUMN ID VARCHAR(37) -->
+        <modifyDataType columnName="id" newDataType="VARCHAR(37)" tableName="cp_activationkey_pool"/>
+    <!-- ALTER TABLE CP_ACTIVATIONKEY_POOL ALTER COLUMN KEY_ID VARCHAR(37) -->
+        <modifyDataType columnName="key_id" newDataType="VARCHAR(37)" tableName="cp_activationkey_pool"/>
+    <!-- ALTER TABLE CP_ACTIVATIONKEY_POOL ALTER COLUMN POOL_ID VARCHAR(37) -->
+        <modifyDataType columnName="pool_id" newDataType="VARCHAR(37)" tableName="cp_activationkey_pool"/>
+    </changeSet>
+
+</databaseChangeLog>

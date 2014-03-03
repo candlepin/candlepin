@@ -54,8 +54,8 @@ public class ProvidedProduct extends AbstractHibernateObject {
 
     @Id
     @GeneratedValue(generator = "system-uuid")
-    @GenericGenerator(name = "system-uuid", strategy = "uuid")
-    @Column(length = 32)
+    @GenericGenerator(name = "system-uuid", strategy = "uuid2")
+    @Column(length = 37)
     private String id;
 
     @Column(name = "product_id", nullable = false)

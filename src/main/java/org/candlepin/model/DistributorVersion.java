@@ -48,8 +48,8 @@ public class DistributorVersion extends AbstractHibernateObject {
 
     @Id
     @GeneratedValue(generator = "system-uuid")
-    @GenericGenerator(name = "system-uuid", strategy = "uuid")
-    @Column(length = 32)
+    @GenericGenerator(name = "system-uuid", strategy = "uuid2")
+    @Column(length = 37)
     private String id;
 
     @Column(nullable = false, unique = true)
