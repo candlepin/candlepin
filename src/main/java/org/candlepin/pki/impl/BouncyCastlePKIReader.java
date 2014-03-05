@@ -177,7 +177,7 @@ public class BouncyCastlePKIReader implements PKIReader, PasswordFinder {
                 }
 
                 if (caKeyObj instanceof KeyPair) {
-                    KeyPair caKeyPair = (KeyPair) reader.readObject();
+                    KeyPair caKeyPair = (KeyPair) caKeyObj;
                     return caKeyPair.getPrivate();
                 }
                 else if (caKeyObj instanceof PrivateKey) {
