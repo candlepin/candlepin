@@ -15,7 +15,7 @@ describe 'Deleted Consumer Resource' do
     user1 = user_client(owner1, username1)
     consumer1 = consumer_client(user1, consumername1)
     uuid = consumer1.uuid
-    @cp.unregister(consumer1.uuid)
+    consumer1.unregister(consumer1.uuid)
 
     deleted_consumers = @cp.get_deleted_consumers(date=date)
     deleted_consumers.map { |i| i['consumerUuid'] }.should include(uuid)

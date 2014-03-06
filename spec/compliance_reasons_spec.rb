@@ -50,7 +50,7 @@ describe 'Single Entitlement Compliance Reasons' do
     ]
     system.update_consumer({:installedProducts => installed})
 
-    compliance_status = @cp.get_compliance(consumer_id=system.uuid)
+    compliance_status = system.get_compliance(consumer_id=system.uuid)
     compliance_status['status'].should == 'invalid'
     compliance_status['compliant'].should == false
     compliance_status.should have_key('reasons')
@@ -79,7 +79,7 @@ describe 'Single Entitlement Compliance Reasons' do
     entitlements.size.should == 1
     entitlement = entitlements[0]
 
-    compliance_status = @cp.get_compliance(consumer_id=system.uuid)
+    compliance_status = system.get_compliance(consumer_id=system.uuid)
     compliance_status['status'].should == 'partial'
     compliance_status['compliant'].should == false
     compliance_status.should have_key('reasons')
@@ -116,7 +116,7 @@ describe 'Single Entitlement Compliance Reasons' do
     entitlements.size.should == 1
     entitlement = entitlements[0]
 
-    compliance_status = @cp.get_compliance(consumer_id=system.uuid)
+    compliance_status = system.get_compliance(consumer_id=system.uuid)
     compliance_status['status'].should == 'partial'
     compliance_status['compliant'].should == false
     compliance_status.should have_key('reasons')
@@ -155,8 +155,8 @@ describe 'Single Entitlement Compliance Reasons' do
     # One day after endDate
     after_stop_date = (Time.parse(entitlement.endDate) + 24 * 60 * 60).utc.iso8601
 
-    now_compliance_status = @cp.get_compliance(consumer_id=system.uuid)
-    compliance_status = @cp.get_compliance(consumer_id=system.uuid, on_date=after_stop_date)
+    now_compliance_status = system.get_compliance(consumer_id=system.uuid)
+    compliance_status = system.get_compliance(consumer_id=system.uuid, on_date=after_stop_date)
     compliance_status['status'].should == 'invalid'
     compliance_status['compliant'].should == false
     compliance_status.should have_key('reasons')
@@ -191,7 +191,7 @@ describe 'Single Entitlement Compliance Reasons' do
     entitlements.size.should == 1
     entitlement = entitlements[0]
 
-    compliance_status = @cp.get_compliance(consumer_id=system.uuid)
+    compliance_status = system.get_compliance(consumer_id=system.uuid)
     compliance_status['status'].should == 'partial'
     compliance_status['compliant'].should == false
     compliance_status.should have_key('reasons')
@@ -230,7 +230,7 @@ describe 'Single Entitlement Compliance Reasons' do
     entitlements.size.should == 1
     entitlement = entitlements[0]
 
-    compliance_status = @cp.get_compliance(consumer_id=system.uuid)
+    compliance_status = system.get_compliance(consumer_id=system.uuid)
     compliance_status['status'].should == 'partial'
     compliance_status['compliant'].should == false
     compliance_status.should have_key('reasons')
@@ -267,7 +267,7 @@ describe 'Single Entitlement Compliance Reasons' do
     entitlements.size.should == 1
     entitlement = entitlements[0]
 
-    compliance_status = @cp.get_compliance(consumer_id=system.uuid)
+    compliance_status = system.get_compliance(consumer_id=system.uuid)
     compliance_status['status'].should == 'partial'
     compliance_status['compliant'].should == false
     compliance_status.should have_key('reasons')
@@ -306,7 +306,7 @@ describe 'Single Entitlement Compliance Reasons' do
     entitlements.size.should == 1
     entitlement = entitlements[0]
 
-    compliance_status = @cp.get_compliance(consumer_id=system.uuid)
+    compliance_status = system.get_compliance(consumer_id=system.uuid)
     compliance_status['status'].should == 'partial'
     compliance_status['compliant'].should == false
     compliance_status.should have_key('reasons')
@@ -446,7 +446,7 @@ describe 'Stacking Compliance Reasons' do
     entitlement = entitlements[0]
     entitlement.quantity.should == 2
 
-    compliance_status = @cp.get_compliance(consumer_id=system.uuid)
+    compliance_status = system.get_compliance(consumer_id=system.uuid)
     compliance_status['status'].should == 'partial'
     compliance_status['compliant'].should == false
     compliance_status.should have_key('reasons')
@@ -482,7 +482,7 @@ describe 'Stacking Compliance Reasons' do
     entitlement = entitlements[0]
     entitlement.quantity.should == 2
 
-    compliance_status = @cp.get_compliance(consumer_id=system.uuid)
+    compliance_status = system.get_compliance(consumer_id=system.uuid)
     compliance_status['status'].should == 'partial'
     compliance_status['compliant'].should == false
     compliance_status.should have_key('reasons')
@@ -520,7 +520,7 @@ describe 'Stacking Compliance Reasons' do
     entitlement = entitlements[0]
     entitlement.quantity.should == 2
 
-    compliance_status = @cp.get_compliance(consumer_id=system.uuid)
+    compliance_status = system.get_compliance(consumer_id=system.uuid)
     compliance_status['status'].should == 'partial'
     compliance_status['compliant'].should == false
     compliance_status.should have_key('reasons')
@@ -560,7 +560,7 @@ describe 'Stacking Compliance Reasons' do
     entitlement = entitlements[0]
     entitlement.quantity.should == 2
 
-    compliance_status = @cp.get_compliance(consumer_id=system.uuid)
+    compliance_status = system.get_compliance(consumer_id=system.uuid)
     compliance_status['status'].should == 'partial'
     compliance_status['compliant'].should == false
     compliance_status.should have_key('reasons')
@@ -601,7 +601,7 @@ describe 'Stacking Compliance Reasons' do
     entitlement = entitlements[0]
     entitlement.quantity.should == 2
 
-    compliance_status = @cp.get_compliance(consumer_id=system.uuid)
+    compliance_status = system.get_compliance(consumer_id=system.uuid)
     compliance_status['status'].should == 'partial'
     compliance_status['compliant'].should == false
     compliance_status.should have_key('reasons')
@@ -641,7 +641,7 @@ describe 'Stacking Compliance Reasons' do
     entitlement = entitlements[0]
     entitlement.quantity.should == 2
 
-    compliance_status = @cp.get_compliance(consumer_id=system.uuid)
+    compliance_status = system.get_compliance(consumer_id=system.uuid)
     compliance_status['status'].should == 'partial'
     compliance_status['compliant'].should == false
     compliance_status.should have_key('reasons')
@@ -680,7 +680,7 @@ describe 'Stacking Compliance Reasons' do
     entitlement = entitlements[0]
     entitlement.quantity.should == 2
 
-    compliance_status = @cp.get_compliance(consumer_id=system.uuid)
+    compliance_status = system.get_compliance(consumer_id=system.uuid)
     compliance_status['status'].should == 'invalid'
     compliance_status['compliant'].should == false
     compliance_status.should have_key('reasons')
@@ -714,7 +714,7 @@ describe 'Stacking Compliance Reasons' do
     entitlements.size.should == 1
     entitlement = entitlements[0]
 
-    compliance_status = @cp.get_compliance(consumer_id=system.uuid)
+    compliance_status = system.get_compliance(consumer_id=system.uuid)
     compliance_status['status'].should == 'partial'
     compliance_status['compliant'].should == false
     compliance_status.should have_key('reasons')

@@ -3,7 +3,7 @@ require 'candlepin_scenarios'
 
 # This spec tests virt limited products in a standalone Candlepin deployment.
 # (which we assume to be testing against)
-describe 'One Sub Pool Per Stack Feature' do
+describe 'One Sub Pool Per Stack' do
   include CandlepinMethods
   include VirtHelper
 

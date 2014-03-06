@@ -94,7 +94,7 @@ describe 'Entitlement Certificate' do
     new_cert = @system.list_certificates()[0]
     old_cert.serial.id.should_not == new_cert.serial.id
 
-    ent = @cp.get_entitlement(@entitlement.id)
+    ent = @system.get_entitlement(@entitlement.id)
     sub.endDate.should == ent.endDate.to_date
   end
 
@@ -104,7 +104,7 @@ describe 'Entitlement Certificate' do
       prod = create_product(nil, nil, {:attributes => {"multi-entitlement" => "yes"}})
       sub = @cp.create_subscription(@owner['key'], prod.id, 10)
       @cp.refresh_pools(@owner['key'])
-      pool = @cp.list_pools({:owner => @owner['id'], :product => prod['id']})[0]
+      pool = @system.list_pools({:owner => @owner['id'], :product => prod['id']})[0]
 
       @system.consume_pool(pool['id'], {:quantity => 6})
       @system.list_certificates().size.should == 1
@@ -122,7 +122,7 @@ describe 'Entitlement Certificate' do
       prod = create_product(nil, nil, {:attributes => {"multi-entitlement" => "yes"}})
       sub = @cp.create_subscription(@owner['key'], prod.id, 10)
       @cp.refresh_pools(@owner['key'])
-      pool = @cp.list_pools({:owner => @owner['id'], :product => prod['id']})[0]
+      pool = @system.list_pools({:owner => @owner['id'], :product => prod['id']})[0]
 
       for i in 0..4
           @system.consume_pool(pool['id'], {:quantity => 2})

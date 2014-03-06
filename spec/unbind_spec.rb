@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'candlepin_scenarios'
 
-describe 'Unsubscribe' do
+describe 'Unbind' do
   include CandlepinMethods
 
   before(:each) do

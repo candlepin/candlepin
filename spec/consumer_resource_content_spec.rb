@@ -67,7 +67,7 @@ describe 'Consumer Resource Content' do
 
   it "should allow content value override deletion" do
     overrides = create_content_override_set(5, nil, true);
-    returnOverrides = @cp.add_content_overrides(@consumer1.uuid, overrides)
+    returnOverrides = @consumer1.add_content_overrides(@consumer1.uuid, overrides)
     returnOverrides.size.should == 5
 
     # delete by repo and name

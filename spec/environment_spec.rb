@@ -122,7 +122,7 @@ describe 'Environments' do
     @cp.create_subscription(@owner['key'], product['id'], 10)
     @cp.refresh_pools(@owner['key'])
 
-    pools = @cp.list_pools(:owner => @owner['id'], :product => product['id'])
+    pools = consumer_cp.list_pools(:owner => @owner['id'], :product => product['id'])
     ent = consumer_cp.consume_pool(pools[0]['id'], {:quantity => 1})[0]
 
     x509 = OpenSSL::X509::Certificate.new(ent['certificates'][0]['cert'])
@@ -157,7 +157,7 @@ describe 'Environments' do
     @cp.create_subscription(@owner['key'], product['id'], 10)
     @cp.refresh_pools(@owner['key'])
 
-    pools = @cp.list_pools(:owner => @owner['id'], :product => product['id'])
+    pools = consumer_cp.list_pools(:owner => @owner['id'], :product => product['id'])
     ent = consumer_cp.consume_pool(pools[0]['id'], {:quantity => 1})[0]
 
     x509 = OpenSSL::X509::Certificate.new(ent['certificates'][0]['cert'])

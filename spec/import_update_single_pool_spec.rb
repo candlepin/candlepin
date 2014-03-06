@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'candlepin_scenarios'
 
-describe 'Candlepin Import Single Pool Update', :serial => true do
+describe 'Import Single Pool Update', :serial => true do
 
   include CandlepinMethods
 

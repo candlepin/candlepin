@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'candlepin_scenarios'
 
-describe 'Derived Products Should' do
+describe 'Derived Products' do
   include CandlepinMethods
   include SpecUtils
 

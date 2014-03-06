@@ -95,6 +95,7 @@ describe 'Distributor Capability' do
     facts = {
       'distributor_version' => name
     }
+    # leave as superadmin so lastCheckin does not get updated
     @cp.update_consumer({:uuid => consumer['uuid'], :facts => facts})
     consumer = @cp.get_consumer(consumer['uuid'])
     consumer.lastCheckin.should be_nil
@@ -129,7 +130,7 @@ describe 'Distributor Capability' do
                     "omlet maker",
                     "oragmi",
                     "heat vision"]
-    @cp.update_consumer({:uuid => consumer['uuid'], :capabilities => capabilities})
+    consumer_client.update_consumer({:uuid => consumer['uuid'], :capabilities => capabilities})
     consumer = @cp.get_consumer(consumer['uuid'])
     consumer.capabilities.size.should == 6  
   end
@@ -154,7 +155,10 @@ describe 'Distributor Capability' do
     facts = {
       'distributor_version' => name
     }
-    @cp.update_consumer({:uuid => consumer['uuid'], :facts => facts})
+    consumer_client = Candlepin.new(username=nil, password=nil,
+        cert=consumer['idCert']['cert'],
+        key=consumer['idCert']['key'])
+    consumer_client.update_consumer({:uuid => consumer['uuid'], :facts => facts})
     entitlements = @cp.consume_product(@product.id, {:uuid => consumer.uuid})
     entitlements.size.should == 1
   end

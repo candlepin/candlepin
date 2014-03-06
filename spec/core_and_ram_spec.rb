@@ -59,7 +59,7 @@ describe 'Core and RAM Limiting' do
     entitlement = system.consume_pool(pool.id, {:quantity => 1})
     entitlement.should_not == nil
 
-    compliance_status = @cp.get_compliance(consumer_id=system.uuid)
+    compliance_status = system.get_compliance(consumer_id=system.uuid)
     compliance_status['status'].should == 'valid'
     compliance_status['compliant'].should == true
     compliant_products = compliance_status['compliantProducts']
@@ -84,7 +84,7 @@ describe 'Core and RAM Limiting' do
     entitlement = system.consume_pool(pool.id, {:quantity => 1})
     entitlement.should_not == nil
 
-    compliance_status = @cp.get_compliance(consumer_id=system.uuid)
+    compliance_status = system.get_compliance(consumer_id=system.uuid)
     compliance_status['status'].should == 'partial'
     compliance_status['compliant'].should == false
     partially_compliant_products = compliance_status['partiallyCompliantProducts']
@@ -108,7 +108,7 @@ describe 'Core and RAM Limiting' do
     entitlement = system.consume_pool(pool.id, {:quantity => 1})
     entitlement.should_not == nil
 
-    compliance_status = @cp.get_compliance(consumer_id=system.uuid)
+    compliance_status = system.get_compliance(consumer_id=system.uuid)
     compliance_status['status'].should == 'partial'
     compliance_status['compliant'].should == false
     partially_compliant_products = compliance_status['partiallyCompliantProducts']
@@ -132,7 +132,7 @@ describe 'Core and RAM Limiting' do
     entitlement = system.consume_pool(pool.id, {:quantity => 1})
     entitlement.should_not == nil
 
-    compliance_status = @cp.get_compliance(consumer_id=system.uuid)
+    compliance_status = system.get_compliance(consumer_id=system.uuid)
     compliance_status['status'].should == 'partial'
     compliance_status['compliant'].should == false
     partially_compliant_products = compliance_status['partiallyCompliantProducts']
@@ -155,7 +155,7 @@ describe 'Core and RAM Limiting' do
     entitlement.should_not == nil
     entitlement.quantity.should == 2
 
-    compliance_status = @cp.get_compliance(consumer_id=system.uuid)
+    compliance_status = system.get_compliance(consumer_id=system.uuid)
     compliance_status['status'].should == 'valid'
     compliance_status['compliant'].should == true
     compliant_products = compliance_status['compliantProducts']
@@ -180,7 +180,7 @@ describe 'Core and RAM Limiting' do
     entitlement = system.consume_pool(pool.id, {:quantity => 1})
     entitlement.should_not == nil
 
-    compliance_status = @cp.get_compliance(consumer_id=system.uuid)
+    compliance_status = system.get_compliance(consumer_id=system.uuid)
     compliance_status['status'].should == 'partial'
     compliance_status['compliant'].should == false
     partially_compliant_products = compliance_status['partiallyCompliantProducts']
@@ -203,7 +203,7 @@ describe 'Core and RAM Limiting' do
     entitlement.should_not == nil
     entitlement.quantity.should == 2
 
-    compliance_status = @cp.get_compliance(consumer_id=system.uuid)
+    compliance_status = system.get_compliance(consumer_id=system.uuid)
     compliance_status['status'].should == 'valid'
     compliance_status['compliant'].should == true
     compliant_products = compliance_status['compliantProducts']
@@ -244,7 +244,7 @@ describe 'Core and RAM Limiting' do
     system.list_entitlements.each {|ent|  total += ent.quantity}
     total.should == 4
 
-    compliance_status = @cp.get_compliance(consumer_id=system.uuid)
+    compliance_status = system.get_compliance(consumer_id=system.uuid)
     compliance_status['status'].should == 'valid'
     compliance_status['compliant'].should == true
     compliant_products = compliance_status['compliantProducts']
