@@ -18,6 +18,7 @@ import org.candlepin.jackson.HateoasInclude;
 import org.candlepin.util.DateSource;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.ForeignKey;
@@ -42,6 +43,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
@@ -118,13 +120,6 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
     @Column(nullable = true)
     private String subscriptionSubKey;
 
-    /**
-     * Signifies that this pool is a derived pool linked to this stack (only one
-     * sub pool per stack allowed)
-     */
-    @Column(nullable = true)
-    private String sourceStackId;
-
     /** Indicates this pool was created as a result of granting an entitlement.
      * Allows us to know that we need to clean this pool up if that entitlement
      * if ever revoked. */
@@ -135,14 +130,14 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
     private Entitlement sourceEntitlement;
 
     /**
-     * Derived pools belong to a consumer who owns the entitlement(s) which created them.
-     * In cases where a pool is linked to a stack of entitlements, the consumer is only
-     * loosely linked in the database, so instead we will link directly for any derived
-     * pool.
+     * Signifies that this pool is a derived pool linked to this stack (only one
+     * sub pool per stack allowed)
      */
-    @ManyToOne
-    @JoinColumn(nullable = true)
-    private Consumer sourceConsumer;
+    @OneToOne(mappedBy = "derivedPool", targetEntity = SourceStack.class)
+    @Cascade({org.hibernate.annotations.CascadeType.ALL,
+        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+    @XmlTransient
+    private SourceStack sourceStack;
 
     @Column(nullable = false)
     private Long quantity;
@@ -523,12 +518,16 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
         this.subscriptionId = subscriptionId;
     }
 
-    public String getSourceStackId() {
-        return sourceStackId;
+    @XmlTransient
+    public SourceStack getSourceStack() {
+        return sourceStack;
     }
 
-    public void setSourceStackId(String sourceStackId) {
-        this.sourceStackId = sourceStackId;
+    public void setSourceStack(SourceStack sourceStack) {
+        if (sourceStack != null) {
+            sourceStack.setDerivedPool(this);
+        }
+        this.sourceStack = sourceStack;
     }
 
     /**
@@ -823,12 +822,31 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
         this.derivedProductName = subProductName;
     }
 
+    /*
+     * Keeping getSourceConsumer to avoid breaking the api
+     */
+    @JsonProperty("sourceConsumer")
     public Consumer getSourceConsumer() {
-        return sourceConsumer;
+        if (this.getSourceEntitlement() != null) {
+            return this.getSourceEntitlement().getConsumer();
+        }
+
+        if (this.getSourceStack() != null) {
+            return sourceStack.getSourceConsumer();
+        }
+
+        return null;
     }
 
-    public void setSourceConsumer(Consumer sourceConsumer) {
-        this.sourceConsumer = sourceConsumer;
+    /*
+     * Keeping getSourceStackId to avoid breaking the api
+     */
+    @JsonProperty("sourceStackId")
+    public String getSourceStackId() {
+        if (this.getSourceStack() != null) {
+            return this.getSourceStack().getSourceStackId();
+        }
+        return null;
     }
 
     /**
@@ -843,7 +861,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
             if (getSourceEntitlement() != null) {
                 return PoolType.ENTITLEMENT_DERIVED;
             }
-            else if (getSourceStackId() != null) {
+            else if (getSourceStack() != null) {
                 return PoolType.STACK_DERIVED;
             }
             else {

@@ -37,6 +37,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProvidedProduct;
+import org.candlepin.model.SourceStack;
 import org.candlepin.model.Subscription;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
@@ -819,8 +820,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             new HashSet<ProvidedProduct>(), 1L, TestUtil.createDate(2011, 3, 2),
             TestUtil.createDate(2055, 3, 2),
             "", "", "");
-        derivedPool.setSourceStackId(expectedStackId);
-        derivedPool.setSourceConsumer(consumer);
+        derivedPool.setSourceStack(new SourceStack(consumer, expectedStackId));
         derivedPool.setAttribute("requires_host", consumer.getUuid());
 
         poolCurator.create(derivedPool);

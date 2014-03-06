@@ -57,6 +57,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
+import org.candlepin.model.SourceStack;
 import org.candlepin.model.Subscription;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
@@ -187,7 +188,7 @@ public class PoolManagerTest {
 
         // Make it look like a hosted virt bonus pool:
         p.setAttribute("pool_derived", "true");
-        p.setSourceStackId(null);
+        p.setSourceStack(null);
         p.setSourceEntitlement(null);
 
         pools.add(p);
@@ -216,7 +217,7 @@ public class PoolManagerTest {
 
         // Mock a pool with a source entitlement:
         p.setAttribute("pool_derived", "true");
-        p.setSourceStackId(null);
+        p.setSourceStack(null);
         p.setSourceEntitlement(new Entitlement());
 
         pools.add(p);
@@ -245,7 +246,7 @@ public class PoolManagerTest {
 
         // Mock a pool with a source stack ID:
         p.setAttribute("pool_derived", "true");
-        p.setSourceStackId("blah");
+        p.setSourceStack(new SourceStack(new Consumer(), "blah"));
         p.setSourceEntitlement(null);
 
         pools.add(p);
@@ -272,7 +273,7 @@ public class PoolManagerTest {
 
         // Pool has no subscription ID:
         Pool p = TestUtil.createPool(TestUtil.createProduct());
-        p.setSourceStackId("a");
+        p.setSourceStack(new SourceStack(new Consumer(), "a"));
 
         pools.add(p);
         when(mockSubAdapter.getSubscriptions(any(Owner.class))).thenReturn(

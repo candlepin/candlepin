@@ -24,11 +24,8 @@ import com.google.inject.persist.Transactional;
 import org.hibernate.Criteria;
 import org.hibernate.ReplicationMode;
 import org.hibernate.criterion.CriteriaSpecification;
-import org.hibernate.criterion.DetachedCriteria;
-import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.criterion.Subqueries;
+import org.hibernate.sql.JoinType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -308,20 +305,18 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
      * @param stackId the ID of the stack
      * @return the list of entitlements for the consumer that are in the stack.
      */
+    @SuppressWarnings("unchecked")
     public List<Entitlement> findByStackId(Consumer consumer, String stackId) {
-        DetachedCriteria stackCriteria = DetachedCriteria.forClass(
-            ProductPoolAttribute.class, "attr")
-                .add(Restrictions.eq("name", "stacking_id"))
-                .add(Restrictions.eq("value", stackId))
-                .add(Property.forName("ent_pool.id").eqProperty("attr.pool.id"))
-                .setProjection(Projections.property("attr.id"));
-
         Criteria activeNowQuery = currentSession().createCriteria(Entitlement.class)
             .add(Restrictions.eq("consumer", consumer))
-            .createCriteria("pool", "ent_pool")
-                .add(Restrictions.isNull("sourceEntitlement"))
-                .add(Restrictions.isNull("sourceStackId"))
-                .add(Subqueries.exists(stackCriteria));
+            .createAlias("pool", "ent_pool")
+            .createAlias("ent_pool.productAttributes", "attrs")
+            .add(Restrictions.eq("attrs.name", "stacking_id"))
+            .add(Restrictions.eq("attrs.value", stackId))
+            .add(Restrictions.isNull("ent_pool.sourceEntitlement"))
+            .createAlias("ent_pool.sourceStack", "ss",
+                JoinType.LEFT_OUTER_JOIN)
+            .add(Restrictions.isNull("ss.id"));
         return activeNowQuery.list();
     }
 }

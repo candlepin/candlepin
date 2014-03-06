@@ -27,15 +27,16 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProvidedProduct;
+import org.candlepin.model.SourceStack;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
-
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -366,4 +367,79 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         assertEquals(2, ents.size());
     }
 
+    @Test
+    public void findByStackIdTest() {
+        String stackingId = "test_stack_id";
+        Product product = TestUtil.createProduct();
+        product.setAttribute("stacking_id", stackingId);
+        productCurator.create(product);
+
+        Pool pool = createPoolAndSub(owner, product, 1L,
+            dateSource.currentDate(), createDate(2020, 1, 1));
+        poolCurator.create(pool);
+        Entitlement created = bind(consumer, pool);
+
+        List<Entitlement> results = entitlementCurator.findByStackId(consumer, stackingId);
+        assertEquals(1, results.size());
+        assertTrue(results.contains(created));
+    }
+
+    @Test
+    public void findByStackIdMultiTest() {
+        String stackingId = "test_stack_id";
+        Product product = TestUtil.createProduct();
+        product.setAttribute("stacking_id", stackingId);
+        productCurator.create(product);
+
+        int ents = 5;
+        List<Entitlement> createdEntitlements = new LinkedList<Entitlement>();
+        for (int i = 0; i < ents; i++) {
+            Pool pool = createPoolAndSub(owner, product, 1L,
+                dateSource.currentDate(), createDate(2020, 1, 1));
+            poolCurator.create(pool);
+            createdEntitlements.add(bind(consumer, pool));
+        }
+
+        List<Entitlement> results = entitlementCurator.findByStackId(consumer, stackingId);
+        assertEquals(ents, results.size());
+        assertTrue(results.containsAll(createdEntitlements) &&
+            createdEntitlements.containsAll(results));
+    }
+
+    @Test
+    public void findByStackIdMultiTestWithDerived() {
+        String stackingId = "test_stack_id";
+        Product product = TestUtil.createProduct();
+        product.setAttribute("stacking_id", stackingId);
+        productCurator.create(product);
+
+        Consumer otherConsumer = createConsumer(owner);
+        otherConsumer.setEnvironment(environment);
+        consumerCurator.create(otherConsumer);
+
+        List<Entitlement> createdEntitlements = new LinkedList<Entitlement>();
+        for (int i = 0; i < 5; i++) {
+            Pool pool = createPoolAndSub(owner, product, 1L,
+                dateSource.currentDate(), createDate(2020, 1, 1));
+            if (i < 2) {
+                pool.setSourceStack(new SourceStack(otherConsumer, "otherstackid" + i));
+            }
+            else if (i < 4) {
+                pool.setSourceEntitlement(createdEntitlements.get(0));
+            }
+            poolCurator.create(pool);
+            createdEntitlements.add(bind(consumer, pool));
+        }
+
+        List<Entitlement> results = entitlementCurator.findByStackId(consumer, stackingId);
+        assertEquals(1, results.size());
+        assertEquals(createdEntitlements.get(4), results.get(0));
+    }
+
+    private Entitlement bind(Consumer consumer, Pool pool) {
+        EntitlementCertificate cert =
+            createEntitlementCertificate("key", "certificate");
+        Entitlement ent = createEntitlement(owner, consumer, pool, cert);
+        return entitlementCurator.create(ent);
+    }
 }

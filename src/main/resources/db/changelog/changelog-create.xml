@@ -1155,4 +1155,5 @@
     <include file="db/changelog/20140210083318-add-hypervisorid.xml" />
     <include file="db/changelog/20140226200158-add-hypervisorid-index.xml" />
     <include file="db/changelog/20140228095321-ids-to-uuid2.xml" />
+    <include file="db/changelog/20140306150357-constrain-one-subpool-per-stack.xml" />
 </databaseChangeLog>

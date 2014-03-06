@@ -195,13 +195,14 @@ public class PoolRules {
                 continue;
             }
 
-            if (p.getSourceStackId() != null) {
-                Consumer c = p.getSourceConsumer();
+            if (p.getSourceStack() != null) {
+                Consumer c = p.getSourceStack().getSourceConsumer();
                 if (c == null) {
                     log.error("Stack derived pool has no source consumer: " + p.getId());
                 }
                 else {
-                    PoolUpdate update = updatePoolFromStack(p, c, p.getSourceStackId());
+                    PoolUpdate update = updatePoolFromStack(p, c,
+                        p.getSourceStack().getSourceStackId());
                     if (update.changed()) {
                         updates.add(update);
                     }
@@ -290,9 +291,7 @@ public class PoolRules {
             return update;
         }
 
-        pool.setSourceStackId(stackId);
         pool.setSourceEntitlement(null);
-        pool.setSourceConsumer(consumer);
         pool.setSubscriptionId(null);
 
         StackedSubPoolValueAccumulator acc =
