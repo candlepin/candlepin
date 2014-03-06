@@ -15,6 +15,7 @@
 package org.candlepin.resource;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
@@ -120,7 +121,7 @@ public class HypervisorResourceTest {
             null, null, null, null, null);
 
         hypervisorResource = new HypervisorResource(consumerResource,
-            consumerCurator, i18n, ownerCurator);
+            consumerCurator, i18n, ownerCurator, new CandlepinCommonTestConfig());
 
         // Ensure that we get the consumer that was passed in back from the create call.
         when(consumerCurator.create(any(Consumer.class))).thenAnswer(new Answer<Object>() {
@@ -166,6 +167,37 @@ public class HypervisorResourceTest {
         assertEquals("GUEST_B", c1.getGuestIds().get(1).getGuestId());
         assertEquals("x86_64", c1.getFact("uname.machine"));
         assertEquals("hypervisor", c1.getType().getLabel());
+    }
+
+    @Test
+    public void hypervisorCheckInFailsWhenHypervisorIdInUse() throws Exception {
+        Owner owner = new Owner("admin");
+
+        Map<String, List<GuestId>> hostGuestMap = new HashMap<String, List<GuestId>>();
+        hostGuestMap.put("test-host", Arrays.asList(new GuestId("GUEST_A"),
+            new GuestId("GUEST_B")));
+
+        when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
+        when(consumerCurator.getHypervisor(eq("test-host"), eq(owner))).thenReturn(null);
+        when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
+        when(principal.canAccess(eq(owner), eq(SubResource.CONSUMERS), eq(Access.CREATE))).
+            thenReturn(true);
+        when(consumerTypeCurator.lookupByLabel(
+            eq(ConsumerTypeEnum.HYPERVISOR.getLabel()))).thenReturn(hypervisorType);
+        when(idCertService.generateIdentityCert(any(Consumer.class)))
+            .thenReturn(new IdentityCertificate());
+        when(consumerCurator.isHypervisorIdUsed(eq("test-host"))).thenReturn(true);
+
+        HypervisorCheckInResult result = hypervisorResource.hypervisorCheckIn(hostGuestMap,
+            principal, owner.getKey(), true);
+
+        Set<Consumer> created = result.getCreated();
+        assertEquals(0, created.size());
+
+        int failCount = result.getFailedUpdate().size();
+        assertEquals(1, failCount);
+        String failed = result.getFailedUpdate().iterator().next();
+        assertTrue(failed.contains("test-host"));
     }
 
     @Test
