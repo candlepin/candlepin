@@ -486,6 +486,20 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             .list();
     }
 
+    /*
+     * setMaxResults(1) should be more efficient than Projections.rowCount
+     * because we don't care how many rows there are, only whether or not
+     * they exist.
+     */
+    public boolean isHypervisorIdUsed(String hypervisorId) {
+        return currentSession().createCriteria(Consumer.class)
+        .createAlias("hypervisorId", "hvsr")
+        .add(Restrictions.eq("hvsr.hypervisorId", hypervisorId).ignoreCase())
+        .setProjection(Projections.id())
+        .setMaxResults(1)
+        .uniqueResult() != null;
+    }
+
     public boolean doesConsumerExist(String uuid) {
         long result = (Long) createSecureCriteria()
             .add(Restrictions.eq("uuid", uuid))
