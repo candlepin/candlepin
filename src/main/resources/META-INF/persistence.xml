@@ -32,6 +32,7 @@
             <property name="hibernate.connection.password" value=""/>
             <property name="hibernate.show_sql" value="false" />
 
+            <property name="hibernate.connection.provider_class" value="org.hibernate.connection.C3P0ConnectionProvider" />
             <!-- c3p0 connection manager settings -->
             <property name="hibernate.c3p0.min_size" value="5" />
             <property name="hibernate.c3p0.max_size" value="20" />
