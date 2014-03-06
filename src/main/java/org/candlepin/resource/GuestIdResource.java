@@ -215,9 +215,7 @@ public class GuestIdResource {
         if (unregister) {
             unregisterConsumer(toDelete, principal);
         }
-        else {
-            revokeBadHostRestrictedEnts(toDelete, consumer);
-        }
+
         sink.sendEvent(eventFactory.guestIdDeleted(consumer, toDelete));
         guestIdCurator.delete(toDelete);
     }
@@ -230,15 +228,15 @@ public class GuestIdResource {
         return guest;
     }
 
-    private void revokeBadHostRestrictedEnts(GuestId toUpdate, Consumer consumer) {
+    private void revokeBadHostRestrictedEnts(GuestId toUpdate, Consumer newHost) {
         // If there is a registered consumer on this guest
         // we should revoke host specific entitlements
         Consumer guestConsumer = consumerCurator.findByVirtUuid(toUpdate.getGuestId(),
             toUpdate.getConsumer().getOwner().getId());
-        if (guestConsumer != null && !guestConsumer.equals(consumer)) {
+        if (guestConsumer != null && !guestConsumer.equals(newHost)) {
             // new Consumer has no uuid because we want to
             // remove all host limited subscriptions
-            consumerResource.revokeGuestEntitlementsNotMatchingHost(consumer,
+            consumerResource.revokeGuestEntitlementsNotMatchingHost(newHost,
                 guestConsumer);
         }
     }
