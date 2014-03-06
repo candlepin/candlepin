@@ -93,7 +93,7 @@ BuildRequires: hibernate-jpa-2.0-api >= 1.0.1
 BuildRequires: netty
 BuildRequires: jaxb-impl
 BuildRequires: jms >= 0:1.1
-BuildRequires: oauth
+BuildRequires: oauth >= 20100601-4
 BuildRequires: slf4j-api >= 0:1.7.5
 BuildRequires: jcl-over-slf4j >= 0:1.7.5
 
@@ -139,7 +139,7 @@ Requires: jackson-jaxrs-json-provider >= %{jackson_version}
 Requires: jackson-module-jaxb-annotations >= %{jackson_version}
 Requires: hornetq >= 0:2.3.5
 Requires: netty
-Requires: oauth
+Requires: oauth >= 20100601-4
 Requires: logback-classic
 Requires: jaxb-impl
 Requires: scannotation

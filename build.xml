@@ -33,7 +33,7 @@
     guice-throwingproviders hibernate-commons-annotations
     hibernate4-core hibernate4-c3p0 hibernate4-entitymanager hornetq-commons hornetq-server
     hornetq-core-client hornetq-journal javassist javax.inject jaxb-impl
-    jboss-logging hibernate-jpa-2.0-api jta log4j netty oauth oauth-provider
+    jboss-logging hibernate-jpa-2.0-api jta log4j netty oauth/oauth oauth/oauth-provider
     postgresql-jdbc resteasy/resteasy-atom-provider
     resteasy/resteasy-guice resteasy/resteasy-jaxb-provider
     resteasy/resteasy-jaxrs resteasy/jaxrs-api
