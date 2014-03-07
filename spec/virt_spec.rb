@@ -156,6 +156,18 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
     @guest1_client.list_entitlements.length.should == 1
   end
 
+  it 'should not revoke guest entitlements when host removes guest ID through new api' do
+    @guest1_client.consume_pool(@guest_pool['id'], {:quantity => 1})
+    @guest1_client.list_entitlements.length.should == 1
+
+    # Host 1 stops reporting guest:
+    @uuid = @host1['uuid']
+    @host1_client.delete_guestid(@uuid1)
+
+    # Entitlement should not be gone:
+    @guest1_client.list_entitlements.length.should == 1
+  end
+
   it 'should lose entitlement when guest stops and is restarted elsewhere' do
     @guest1_client.consume_pool(@guest_pool['id'], {:quantity => 1})
     @guest1_client.list_entitlements.length.should == 1
