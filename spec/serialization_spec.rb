@@ -47,7 +47,7 @@ describe 'Pool serialization' do
 
 end
 
-describe 'Entitlement serialization' do
+describe 'Entitlement Serialization' do
 
   include CandlepinMethods
 

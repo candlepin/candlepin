@@ -99,7 +99,7 @@ describe 'Consumer Resource' do
   end
 
   it 'should return a 410 for deleted consumers' do
-    @cp.unregister(@consumer1.uuid)
+    @consumer1.unregister(@consumer1.uuid)
     lambda do
       @cp.get_consumer(@consumer1.uuid)
     end.should raise_exception(RestClient::Gone)

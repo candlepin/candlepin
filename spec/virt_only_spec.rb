@@ -46,7 +46,7 @@ describe 'Virt Only Pools' do
     })
 
     entitlement = guest.consume_product(virt_product.id)
-    @cp.get_pool(entitlement.first.pool.id).attributes.each do |att|
+    guest.get_pool(entitlement.first.pool.id).attributes.each do |att|
       found = false
       if att.name == 'virt_only'
         att.value.should == 'true'
@@ -60,7 +60,7 @@ describe 'Virt Only Pools' do
     virt_product = new_product true
     manifest = consumer_client(@user, 'virty', :candlepin, nil, {})
 
-    pools = @cp.list_pools({:consumer => manifest.uuid})
+    pools = manifest.list_pools({:consumer => manifest.uuid})
     pools.size.should == 1
     virtonly = pools[0]['attributes'].find_all {|i| i['name'] == 'virt_only'}[0]
     virtonly['value'].should == 'true'

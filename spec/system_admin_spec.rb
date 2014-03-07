@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'candlepin_scenarios'
 
-describe 'System admins' do
+describe 'System Admins' do
   include CandlepinMethods
 
   before(:each) do

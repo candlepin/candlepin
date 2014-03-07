@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'candlepin_scenarios'
 
-describe 'Candlepin Import Update', :serial => true do
+describe 'Import Update', :serial => true do
 
   include CandlepinMethods
 

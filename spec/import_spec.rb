@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'candlepin_scenarios'
 require 'json'
 
-describe 'Candlepin Import', :serial => true do
+describe 'Import', :serial => true do
 
   include CandlepinMethods
 
@@ -14,7 +14,7 @@ describe 'Candlepin Import', :serial => true do
     @cp_export_file = @cp_export.export_filename
 
     @candlepin_consumer = @cp_export.candlepin_client.get_consumer()
-    @cp.unregister @candlepin_consumer['uuid']
+    @candlepin_consumer.unregister @candlepin_consumer['uuid']
 
     @import_owner = @cp.create_owner(random_string("test_owner"))
     @import_username = random_string("import-user")
