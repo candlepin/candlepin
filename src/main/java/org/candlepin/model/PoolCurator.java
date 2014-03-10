@@ -523,9 +523,10 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      */
     public Pool getSubPoolForStackId(Consumer consumer, String stackId) {
         Criteria getCount = createSecureCriteria()
-            .add(Restrictions.eq("sourceConsumer", consumer))
-            .add(Restrictions.and(Restrictions.isNotNull("sourceStackId"),
-                                  Restrictions.eq("sourceStackId", stackId)));
+            .createAlias("sourceStack", "ss")
+            .add(Restrictions.eq("ss.sourceConsumer", consumer))
+            .add(Restrictions.and(Restrictions.isNotNull("ss.sourceStackId"),
+                                  Restrictions.eq("ss.sourceStackId", stackId)));
         return (Pool) getCount.uniqueResult();
     }
 }

@@ -32,6 +32,7 @@ import org.candlepin.model.ProductPoolAttribute;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.DerivedProductPoolAttribute;
 import org.candlepin.model.DerivedProvidedProduct;
+import org.candlepin.model.SourceStack;
 import org.candlepin.model.Subscription;
 import org.candlepin.policy.js.AttributeHelper;
 import org.candlepin.policy.js.ProductCache;
@@ -274,9 +275,14 @@ public class PoolHelper extends AttributeHelper {
                 new ProvidedProduct(pp.getProductId(), pp.getProductName()));
         }
 
-        if (sourceEntitlement != null) {
-            pool.setSourceEntitlement(sourceEntitlement);
-            pool.setSourceConsumer(sourceEntitlement.getConsumer());
+        if (sourceEntitlement != null && sourceEntitlement.getPool() != null) {
+            if (sourceEntitlement.getPool().isStacked()) {
+                pool.setSourceStack(new SourceStack(sourceEntitlement.getConsumer(),
+                    sourceEntitlement.getPool().getStackId()));
+            }
+            else {
+                pool.setSourceEntitlement(sourceEntitlement);
+            }
         }
 
         // temp - we need a way to specify this on the product

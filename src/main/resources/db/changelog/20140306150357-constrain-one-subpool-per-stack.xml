@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <property name="timestamp.type" value="TIMESTAMP WITHOUT TIME ZONE" dbms="oracle"/>
+    <property name="timestamp.type" value="TIMESTAMP WITHOUT TIME ZONE" dbms="postgresql"/>
+    <property name="timestamp.type" value="DATETIME" dbms="mysql"/>
+
+    <changeSet id="20140306150357-0" author="ckozak">
+        <comment>Constrain one subpool per stack to avoid concurrency problems</comment>
+
+        <createTable tableName="cp_pool_source_stack">
+            <column name="id" type="VARCHAR(37)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_pool_source_stack_pkey"/>
+            </column>
+            <column name="sourceconsumer_id" type="VARCHAR(37)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sourcestackid" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="derivedpool_id" type="VARCHAR(37)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="${timestamp.type}"/>
+            <column name="updated" type="${timestamp.type}"/>
+        </createTable>
+        <addUniqueConstraint columnNames="sourceconsumer_id, sourcestackid" constraintName="cp_pool_source_stack_ukey" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_pool_source_stack"/>
+        <addUniqueConstraint columnNames="derivedpool_id" constraintName="cp_pool_source_stack_pool_ukey" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_pool_source_stack"/>
+
+        <addForeignKeyConstraint baseColumnNames="sourceconsumer_id" baseTableName="cp_pool_source_stack" constraintName="fk_sourcestack_consumer" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer" referencesUniqueColumn="false"/>
+        <addForeignKeyConstraint baseColumnNames="derivedpool_id" baseTableName="cp_pool_source_stack" constraintName="fk_sourcestack_pool" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_pool" referencesUniqueColumn="false"/>   
+    </changeSet>
+
+    <changeSet id="20140306150357-1" author="ckozak" dbms="mysql,postgresql">
+        <comment>Index cp_pool_source_stack.derivedpool_id.  oracle already does this</comment>
+        <createIndex indexName="idx_sourcestack_pool_fk" tableName="cp_pool_source_stack" unique="false">
+            <column name="derivedpool_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20140306150357-2" author="ckozak">
+        <comment>Allow pool deletion.  Add cascading deletes</comment>
+
+        <!-- activation key pool cascade -->
+        <dropForeignKeyConstraint
+            baseTableName="cp_activationkey_pool"
+            constraintName="fk_activation_key_pool_p"/>
+
+        <addForeignKeyConstraint
+            baseColumnNames="pool_id"
+            baseTableName="cp_activationkey_pool"
+            constraintName="fk_activation_key_pool_p"
+            deferrable="false"
+            initiallyDeferred="false"
+            onDelete="CASCADE"
+            onUpdate="NO ACTION"
+            referencedColumnNames="id"
+            referencedTableName="cp_pool"
+            referencesUniqueColumn="false"/>
+
+        <!-- entitlement pool cascade -->
+        <dropForeignKeyConstraint
+            baseTableName="cp_entitlement"
+            constraintName="fk_entitlement_pool"/>
+
+        <addForeignKeyConstraint
+            baseColumnNames="pool_id"
+            baseTableName="cp_entitlement"
+            constraintName="fk_entitlement_pool"
+            deferrable="false"
+            initiallyDeferred="false"
+            onDelete="CASCADE"
+            onUpdate="NO ACTION"
+            referencedColumnNames="id"
+            referencedTableName="cp_pool"
+            referencesUniqueColumn="false"/>
+            
+        <!-- pool attribute cascade -->
+        <dropForeignKeyConstraint
+            baseTableName="cp_pool_attribute"
+            constraintName="fk_pool_id"/>
+
+        <addForeignKeyConstraint
+            baseColumnNames="pool_id"
+            baseTableName="cp_pool_attribute"
+            constraintName="fk_pool_id"
+            deferrable="false"
+            initiallyDeferred="false"
+            onDelete="CASCADE"
+            onUpdate="NO ACTION"
+            referencedColumnNames="id"
+            referencedTableName="cp_pool"
+            referencesUniqueColumn="false"/>
+
+         <!-- entitlement certificate cascade -->
+         <dropForeignKeyConstraint
+            baseTableName="cp_ent_certificate"
+            constraintName="fk_cert_entitlement"/>
+
+        <addForeignKeyConstraint
+            baseColumnNames="entitlement_id"
+            baseTableName="cp_ent_certificate"
+            constraintName="fk_cert_entitlement"
+            deferrable="false"
+            initiallyDeferred="false"
+            onDelete="CASCADE"
+            onUpdate="NO ACTION"
+            referencedColumnNames="id"
+            referencedTableName="cp_entitlement"
+            referencesUniqueColumn="false"/>
+
+        <!-- derived pool cascade, shouldn't be necessary -->
+        <dropForeignKeyConstraint
+            baseTableName="cp_pool"
+            constraintName="fk_pool_source_entitlement"/>
+
+        <addForeignKeyConstraint
+            baseColumnNames="sourceentitlement_id"
+            baseTableName="cp_pool"
+            constraintName="fk_pool_source_entitlement"
+            deferrable="false"
+            initiallyDeferred="false"
+            onDelete="CASCADE"
+            onUpdate="NO ACTION"
+            referencedColumnNames="id"
+            referencedTableName="cp_entitlement"
+            referencesUniqueColumn="false"/>
+    </changeSet>
+
+    <changeSet id="20140306150357-3" author="ckozak">
+        <comment>Remove duplicate pools per stack</comment>
+
+        <!-- Delete all but one of the duplicate bonus pools.  Prefer to keep those with the most granted entitlements -->
+        <sql>
+			DELETE FROM cp_pool WHERE
+			cp_pool.id IN
+			/* Selects all duplicate pool ids from stacks.  We cannot delete them all because we want one subpool per stack, not zero */
+			(SELECT cp_pool.id FROM (SELECT * from cp_pool) cp_pool,
+			    /* Selects all combinations of source stackid and consumer which have created more than one subpool */
+			    (SELECT sourcestackid, sourceconsumer_id FROM cp_pool
+			        WHERE sourcestackid IS NOT NULL
+			        AND sourceconsumer_id IS NOT NULL
+			        GROUP BY sourcestackid, sourceconsumer_id
+			        HAVING count(id) > 1) nested
+			    WHERE nested.sourcestackid = cp_pool.sourcestackid
+			    AND nested.sourceconsumer_id = cp_pool.sourceconsumer_id)
+			AND cp_pool.id NOT IN
+			/* We only want to leave one pool from each source consumer/stackId set */
+			(SELECT max(poolents.id) FROM
+			    /* Select a mapping of pool id to the number of entitlements it is currently granting */
+			    (SELECT cp_pool.id id, count(cp_entitlement.id) entcount, cp_pool.sourcestackid stack, cp_pool.sourceconsumer_id consumer FROM cp_pool
+			        LEFT JOIN cp_entitlement
+			        ON cp_entitlement.pool_id = cp_pool.id,
+			        (SELECT sourcestackid, sourceconsumer_id FROM cp_pool
+			            WHERE sourcestackid IS NOT NULL
+			            AND sourceconsumer_id IS NOT NULL
+			            GROUP BY sourcestackid, sourceconsumer_id
+			            HAVING count(id) > 1) nested
+			        WHERE nested.sourcestackid = cp_pool.sourcestackid
+			        AND nested.sourceconsumer_id = cp_pool.sourceconsumer_id
+			        GROUP BY cp_pool.id, cp_pool.sourcestackid, cp_pool.sourceconsumer_id) poolents
+			    INNER JOIN
+			    /* Select a mapping of source consumer/stack to the maximum number of entitlements from any pools in the group */
+			    (SELECT poolids.stack, poolids.consumer, max(poolids.entcount) maxcount FROM
+			        (SELECT cp_pool.id id, count(cp_entitlement.id) entcount, cp_pool.sourcestackid stack, cp_pool.sourceconsumer_id consumer FROM cp_pool
+			            LEFT JOIN cp_entitlement
+			            ON cp_entitlement.pool_id = cp_pool.id,
+			            (SELECT sourcestackid, sourceconsumer_id FROM cp_pool
+			                WHERE sourcestackid IS NOT NULL
+			                AND sourceconsumer_id IS NOT NULL
+			                GROUP BY sourcestackid, sourceconsumer_id
+			                HAVING count(id) > 1) nested
+			            WHERE nested.sourcestackid = cp_pool.sourcestackid
+			            AND nested.sourceconsumer_id = cp_pool.sourceconsumer_id
+			            GROUP BY cp_pool.id, cp_pool.sourcestackid, cp_pool.sourceconsumer_id) poolids
+			        GROUP BY poolids.stack, poolids.consumer) poolmax
+			    ON poolents.stack = poolmax.stack
+			    /* Join the two subqueries so we can pick a single pool id to keep, with the most (or tied for the most) granted entitlements */
+			    AND poolents.consumer = poolmax.consumer
+			    WHERE poolents.entcount = poolmax.maxcount
+			GROUP BY poolents.consumer, poolents.stack);
+        </sql>
+    </changeSet>
+
+    <changeSet id="20140306150357-4" author="ckozak">
+        <comment>Migrate source stack data to the new table</comment>
+        <sql>
+            INSERT INTO cp_pool_source_stack (id, sourceconsumer_id, sourcestackid, derivedpool_id, created, updated)
+            SELECT cp_pool.id, cp_pool.sourceconsumer_id, cp_pool.sourcestackid, cp_pool.id, cp_pool.created, cp_pool.updated
+            FROM cp_pool
+            WHERE cp_pool.sourcestackid IS NOT NULL
+            AND cp_pool.sourceconsumer_id IS NOT NULL
+        </sql>
+
+        <dropColumn
+            columnName="sourceconsumer_id"
+            tableName="cp_pool"/>
+        <dropColumn
+            columnName="sourcestackid"
+            tableName="cp_pool"/>
+    </changeSet>
+
+    <changeSet id="20140306150357-5" author="ckozak">
+        <comment>Remove some cascades around entitlements</comment>
+
+        <!-- entitlement pool cascade -->
+        <dropForeignKeyConstraint
+            baseTableName="cp_entitlement"
+            constraintName="fk_entitlement_pool"/>
+
+        <addForeignKeyConstraint
+            baseColumnNames="pool_id"
+            baseTableName="cp_entitlement"
+            constraintName="fk_entitlement_pool"
+            deferrable="false"
+            initiallyDeferred="false"
+            onDelete="NO ACTION"
+            onUpdate="NO ACTION"
+            referencedColumnNames="id"
+            referencedTableName="cp_pool"
+            referencesUniqueColumn="false"/>
+
+        <!-- entitlement certificate cascade -->
+        <dropForeignKeyConstraint
+            baseTableName="cp_ent_certificate"
+            constraintName="fk_cert_entitlement"/>
+
+        <addForeignKeyConstraint
+            baseColumnNames="entitlement_id"
+            baseTableName="cp_ent_certificate"
+            constraintName="fk_cert_entitlement"
+            deferrable="false"
+            initiallyDeferred="false"
+            onDelete="NO ACTION"
+            onUpdate="NO ACTION"
+            referencedColumnNames="id"
+            referencedTableName="cp_entitlement"
+            referencesUniqueColumn="false"/>
+
+        <!-- derived pool cascade -->
+        <dropForeignKeyConstraint
+            baseTableName="cp_pool"
+            constraintName="fk_pool_source_entitlement"/>
+
+        <addForeignKeyConstraint
+            baseColumnNames="sourceentitlement_id"
+            baseTableName="cp_pool"
+            constraintName="fk_pool_source_entitlement"
+            deferrable="false"
+            initiallyDeferred="false"
+            onDelete="NO ACTION"
+            onUpdate="NO ACTION"
+            referencedColumnNames="id"
+            referencedTableName="cp_entitlement"
+            referencesUniqueColumn="false"/>
+    </changeSet>
+</databaseChangeLog>
