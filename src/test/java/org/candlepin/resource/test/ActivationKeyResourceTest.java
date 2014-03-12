@@ -59,6 +59,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         Owner owner = createOwner();
         key.setOwner(owner);
         key.setName("dd");
+        key.setServiceLevel("level");
         activationKeyCurator.create(key);
 
         assertNotNull(key.getId());
