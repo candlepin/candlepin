@@ -88,34 +88,35 @@ public class JsRunnerProvider implements Provider<JsRunner> {
      */
     private void compileRules(RulesCurator rulesCurator) {
         scriptLock.writeLock().lock();
-
-        // XXX: we need a principal to access the rules,
-        // but pushing and popping system principal could be a bad idea
-        Principal systemPrincipal = new SystemPrincipal();
-        ResteasyProviderFactory.pushContext(Principal.class, systemPrincipal);
-        // Check to see if we need to recompile. we do this inside the write lock just to
-        // avoid race conditions where we might double compile
-        Date newUpdated = rulesCurator.getUpdated();
-        if (newUpdated.equals(this.updated)) {
-            scriptLock.writeLock().unlock();
-            ResteasyProviderFactory.popContextData(Principal.class);
-            return;
-        }
-
-        log.debug("Recompiling rules with timestamp: " + newUpdated);
-
-        Context context = Context.enter();
-        context.setOptimizationLevel(9);
-        scope = context.initStandardObjects(null, true);
         try {
-            script = context.compileString(rulesCurator.getRules().getRules(), "rules", 1,
-                null);
-            script.exec(context, scope);
-            ((ScriptableObject) scope).sealObject();
-            this.updated = newUpdated;
+            // XXX: we need a principal to access the rules,
+            // but pushing and popping system principal could be a bad idea
+            Principal systemPrincipal = new SystemPrincipal();
+            ResteasyProviderFactory.pushContext(Principal.class, systemPrincipal);
+            // Check to see if we need to recompile. we do this inside the write lock
+            // just to avoid race conditions where we might double compile
+            Date newUpdated = rulesCurator.getUpdated();
+            if (newUpdated.equals(this.updated)) {
+                return;
+            }
+
+            log.debug("Recompiling rules with timestamp: " + newUpdated);
+
+            Context context = Context.enter();
+            context.setOptimizationLevel(9);
+            scope = context.initStandardObjects(null, true);
+            try {
+                script = context.compileString(
+                    rulesCurator.getRules().getRules(), "rules", 1, null);
+                script.exec(context, scope);
+                ((ScriptableObject) scope).sealObject();
+                this.updated = newUpdated;
+            }
+            finally {
+                Context.exit();
+            }
         }
         finally {
-            Context.exit();
             ResteasyProviderFactory.popContextData(Principal.class);
             scriptLock.writeLock().unlock();
         }
