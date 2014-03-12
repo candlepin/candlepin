@@ -75,8 +75,8 @@ public class JsRunnerProvider implements Provider<JsRunner> {
         this.rulesCurator = rulesCurator;
 
         log.debug("Compiling rules for initial load");
-        this.updated = new Date(0L);
-        compileRules(rulesCurator);
+        this.rulesCurator.updateDbRules();
+        this.compileRules(this.rulesCurator);
     }
 
     /**
@@ -127,8 +127,10 @@ public class JsRunnerProvider implements Provider<JsRunner> {
          * Create a new thread/request local javascript scope for the JsRules,
          * based on the preinitialized global one (which contains our js rules).
          */
-        // try and recompile (if needed) first
-        compileRules(this.rulesCurator);
+        // Avoid a write lock if we can
+        if (!rulesCurator.getUpdated().equals(this.updated)) {
+            compileRules(this.rulesCurator);
+        }
         Scriptable rulesScope;
         scriptLock.readLock().lock();
         try {

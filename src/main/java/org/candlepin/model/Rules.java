@@ -22,11 +22,12 @@ import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import javax.persistence.Transient;
 
 import org.candlepin.policy.js.RuleParseException;
 import org.hibernate.annotations.GenericGenerator;
@@ -57,7 +58,8 @@ public class Rules extends AbstractHibernateObject {
     @Column(name = "rules_blob", length = 4194304)
     private String rules;
 
-    @Transient
+    @Enumerated(EnumType.STRING)
+    @Column(name = "rulessource")
     private RulesSourceEnum rulesSource = RulesSourceEnum.UNDEFINED;
 
     @Column(name = "version", nullable = false, length = 20)
