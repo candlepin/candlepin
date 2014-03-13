@@ -510,7 +510,6 @@ public class OwnerResource {
                     "include the characters '-' or '_'", activationKey.getName()));
         }
 
-
         if (activationKeyCurator.lookupForOwner(activationKey.getName(), owner) != null) {
             throw new BadRequestException(
                 i18n.tr("The activation key name ''{0}'' is already in use for owner {1}",
@@ -519,6 +518,16 @@ public class OwnerResource {
 
         if (activationKey.getContentOverrides() != null) {
             contentOverrideValidator.validate(activationKey.getContentOverrides());
+        }
+
+        String serviceLevel = activationKey.getServiceLevel();
+        if (serviceLevel != null &&
+            !poolManager.retrieveServiceLevelsForOwner(owner, false)
+                .contains(serviceLevel)) {
+            throw new BadRequestException(
+                i18n.tr("The activation key service level ''{0}'' " +
+                    "is not available to owner {1}",
+                    serviceLevel, ownerKey));
         }
 
         ActivationKey newKey = activationKeyCurator.create(activationKey);

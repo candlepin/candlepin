@@ -502,6 +502,7 @@ public class ConsumerResource {
             handleActivationKeyPools(consumer, ak.getPools());
             handleActivationKeyOverrides(consumer, ak.getContentOverrides());
             handleActivationKeyRelease(consumer, ak.getReleaseVer());
+            handleActivationKeyServiceLevel(consumer, ak.getServiceLevel(), ak.getOwner());
         }
     }
 
@@ -534,6 +535,18 @@ public class ConsumerResource {
         if (relVerString != null && !relVerString.isEmpty()) {
             consumer.setReleaseVer(release);
         }
+    }
+
+    private void handleActivationKeyServiceLevel(Consumer consumer,
+            String level, Owner owner) {
+        if (!StringUtils.isBlank(level) &&
+            !poolManager.retrieveServiceLevelsForOwner(owner, false).contains(level)) {
+            throw new BadRequestException(
+                i18n.tr("The activation key service level ''{0}'' " +
+                    "is not available to owner {1}",
+                    level, owner.getKey()));
+        }
+        consumer.setServiceLevel(level);
     }
 
     /**

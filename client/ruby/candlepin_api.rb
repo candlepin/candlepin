@@ -836,10 +836,13 @@ class Candlepin
     return get("/owner/#{owner_key}/activation_keys")
   end
 
-  def create_activation_key(owner_key, name)
+  def create_activation_key(owner_key, name, service_level=nil)
     key = {
       :name => name,
     }
+    if service_level
+      key['serviceLevel'] = service_level
+    end
     return post("/owners/#{owner_key}/activation_keys", key)
   end
 

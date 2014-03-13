@@ -110,6 +110,16 @@ public class ActivationKeyResource {
         ActivationKey key) {
         ActivationKey toUpdate = activationKeyCurator.verifyAndLookupKey(activationKeyId);
         toUpdate.setName(key.getName());
+        String serviceLevel = key.getServiceLevel();
+        if (serviceLevel != null &&
+            !poolManager.retrieveServiceLevelsForOwner(toUpdate.getOwner(), false)
+                .contains(serviceLevel)) {
+            throw new BadRequestException(
+                i18n.tr("The activation key service level ''{0}'' " +
+                    "is not available to owner {1}",
+                    serviceLevel, toUpdate.getOwner().getKey()));
+        }
+        toUpdate.setServiceLevel(serviceLevel);
         activationKeyCurator.merge(toUpdate);
 
         return toUpdate;

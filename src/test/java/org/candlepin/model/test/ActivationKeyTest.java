@@ -48,6 +48,7 @@ public class ActivationKeyTest extends DatabaseTestFixture {
         activationKeyCurator.create(key);
         assertNotNull(key.getId());
         assertNotNull(key.getName());
+        assertNotNull(key.getServiceLevel());
         assertEquals(owner, key.getOwner());
     }
 

@@ -125,4 +125,38 @@ describe 'Activation Keys' do
     @cp.set_activation_key_release(@activation_key['id'], "Some Release")
     @cp.get_activation_key_release(@activation_key['id'])['releaseVer'].should == "Some Release"
   end
+
+  it 'should allow service level to be set on keys' do
+    product1 = create_product(random_string('product'),
+                              random_string('product'),
+                              {:attributes => {:support_level => 'VIP'}})
+    sub = @cp.create_subscription(@owner['key'], product1['id'], 30)
+    @cp.refresh_pools(@owner['key'])
+    service_activation_key = @cp.create_activation_key(@owner['key'], random_string('test_token'), 'VIP')
+    service_activation_key['serviceLevel'].should == 'VIP'
+  end
+
+  it 'should allow service level to be updated on keys' do
+    product1 = create_product(random_string('product'),
+                              random_string('product'),
+                              {:attributes => {:support_level => 'VIP'}})
+    product2 = create_product(random_string('product'),
+                              random_string('product'),
+                              {:attributes => {:support_level => 'Ultra-VIP'}})
+    sub1 = @cp.create_subscription(@owner['key'], product1['id'], 30)
+    sub2 = @cp.create_subscription(@owner['key'], product2['id'], 30)
+    @cp.refresh_pools(@owner['key'])
+    service_activation_key = @cp.create_activation_key(@owner['key'], random_string('test_token'), 'VIP')
+    service_activation_key['serviceLevel'].should == 'VIP'
+
+    service_activation_key['serviceLevel'] = 'Ultra-VIP'
+    service_activation_key = @cp.update_activation_key(service_activation_key)
+    service_activation_key['serviceLevel'].should == 'Ultra-VIP'
+  end
+
+  it 'should not allow service level to be set on keys if service level is not available' do
+    lambda {
+      @cp.create_activation_key(@owner['key'], random_string('test_token'), 'Not There')
+    }.should raise_exception(RestClient::BadRequest)
+  end
 end
