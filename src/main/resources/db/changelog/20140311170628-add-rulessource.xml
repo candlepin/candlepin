@@ -16,7 +16,7 @@
 	    <!-- Set the rulessource here -->
 	    <sql>
 	        UPDATE cp_rules
-	        SET rulessource='database'
+	        SET rulessource='DATABASE'
 	    </sql>
     </changeSet>
 </databaseChangeLog>
