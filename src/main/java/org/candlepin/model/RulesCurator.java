@@ -14,8 +14,11 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.util.Util;
 import org.candlepin.util.VersionUtil;
+import org.hibernate.criterion.Order;
+import org.hibernate.criterion.Projections;
 
 import com.google.inject.persist.Transactional;
 
@@ -27,7 +30,6 @@ import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Date;
-import java.util.List;
 
 /**
  * RulesCurator
@@ -54,59 +56,61 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
      */
     @Transactional
     public Rules update(Rules updatedRules) {
-        List<Rules> existingRuleSet = listAll();
-        if (existingRuleSet.isEmpty()) {
-            return create(updatedRules);
+        updatedRules.setRulesSource(Rules.RulesSourceEnum.DATABASE);
+        Rules result = this.create(updatedRules);
+        return result;
+    }
+
+    @Override
+    @Transactional
+    public Rules create(Rules toCreate) {
+        Rules current = getDbRules();
+        if (current != null && !VersionUtil.getRulesVersionCompatibility(
+                current.getVersion(), toCreate.getVersion())) {
+            return current;
         }
-        for (Rules rule : existingRuleSet) {
-            super.delete(rule);
+        return super.create(toCreate);
+    }
+
+    public Rules getDbRules() {
+        return (Rules) this.currentSession().createCriteria(Rules.class)
+        .addOrder(Order.desc("updated"))
+        .setMaxResults(1)
+        .uniqueResult();
+    }
+
+    public void updateDbRules() {
+        Rules dbRules = getDbRules();
+
+        // Load rules from RPM, we need to know it's version before we know which
+        // rules to use:
+        Rules rpmRules = rulesFromFile(getDefaultRulesFile());
+        log.debug("RPM Rules version: " + rpmRules.getVersion());
+
+        if (dbRules == null ||
+            !VersionUtil.getRulesVersionCompatibility(rpmRules.getVersion(),
+                dbRules.getVersion())) {
+            this.resetToRpmRules();
         }
-        create(updatedRules);
-        return updatedRules;
     }
 
     /**
      * @return the rules
      */
     public Rules getRules() {
-        List<Rules> dbRuleSet = listAll();
-        // Load rules from RPM, we need to know it's version before we know which
-        // rules to use:
-        Rules rpmRules = rulesFromFile(getDefaultRulesFile());
-        rpmRules.setRulesSource(Rules.RulesSourceEnum.DEFAULT);
-        log.debug("RPM Rules version: " + rpmRules.getVersion());
-
-        // If there are rules in the database and their version is not less than the
-        // version this server is currently running, we'll use them:
-        if (!dbRuleSet.isEmpty() &&
-            VersionUtil.getRulesVersionCompatibility(rpmRules.getVersion(),
-                dbRuleSet.get(0).getVersion())) {
-            log.debug("Using rules from database, version: " +
-                dbRuleSet.get(0).getVersion());
-            dbRuleSet.get(0).setRulesSource(Rules.RulesSourceEnum.DATABASE);
-            return dbRuleSet.get(0);
+        Rules dbRules = getDbRules();
+        if (dbRules == null) {
+            log.error("There is no rules file in the database, something is very wrong.");
+            throw new NotFoundException(i18n.tr("No rules file found in the database"));
         }
-
-        if (!dbRuleSet.isEmpty()) {
-            log.warn("Ignoring older rules in database, version: " +
-                dbRuleSet.get(0).getVersion());
-        }
-
-        log.debug("Using default rules from RPM.");
-        return rpmRules;
-
+        return dbRules;
     }
 
     private Date getUpdatedFromDB() {
-        @SuppressWarnings("unchecked")
-        List<Date> result = getEntityManager().createQuery("SELECT updated FROM Rules")
-            .getResultList();
-        if (result.size() < 1) {
-            return null;
-        }
-        else {
-            return result.get(0);
-        }
+        return (Date) this.currentSession().createCriteria(Rules.class)
+            .setProjection(Projections.projectionList()
+                .add(Projections.max("updated")))
+                .uniqueResult();
     }
 
     /**
@@ -133,19 +137,22 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
     }
 
     @Transactional
-    public void delete(Rules entity) {
-        List<Rules> existingRuleSet = listAll();
+    public void resetToRpmRules() {
+        currentSession().createQuery("DELETE FROM Rules").executeUpdate();
+        this.create(rulesFromFile(DEFAULT_RULES_FILE));
+    }
 
-        for (Rules rule : existingRuleSet) {
-            super.delete(rule);
-        }
-        create(rulesFromFile(getDefaultRulesFile()));
-
+    @Override
+    @Transactional
+    public void delete(Rules toDelete) {
+        this.resetToRpmRules();
     }
 
     private Rules rulesFromFile(String path) {
         InputStream is = this.getClass().getResourceAsStream(path);
-        return new Rules(Util.readFile(is));
+        Rules result = new Rules(Util.readFile(is));
+        result.setRulesSource(Rules.RulesSourceEnum.DEFAULT);
+        return result;
     }
 
     protected String getDefaultRulesFile() {

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+
+    <changeSet id="20140311170628" author="ckozak">
+        <comment>Add rules source to db</comment>
+        <addColumn tableName="cp_rules">
+            <column name="rulessource" type="varchar(255)"/>
+        </addColumn>
+
+	    <!-- Set the rulessource here -->
+	    <sql>
+	        UPDATE cp_rules
+	        SET rulessource='DATABASE'
+	    </sql>
+    </changeSet>
+</databaseChangeLog>
