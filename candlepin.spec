@@ -31,7 +31,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.4
+Version: 0.9.5
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -342,6 +342,24 @@ fi
 
 
 %changelog
+* Thu Mar 13 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.5-1
+- 1073570: Enforce database constraint on one subpool per stack (ckozak@redhat.com)
+- rulessource in liquibase update should be all caps (ckozak@redhat.com)
+- Optimize storing, reading, and getting the rules (ckozak@redhat.com)
+- Always release rules write lock (ckozak@redhat.com)
+- Fix localization spec test (ckozak@redhat.com)
+- Use 37 length uuid2 for SourceStack (cp_pool_source_stack) (ckozak@redhat.com)
+- Latest translations from zanata (alikins@redhat.com)
+- Use a version of oauth in line with upstream. (awood@redhat.com)
+- Updates for uuid2 (wpoteat@redhat.com)
+- Call Candlepin as consumer where applicable (wpoteat@redhat.com)
+- Do not revoke entitlements when guestid is removed (ckozak@redhat.com)
+- Adding provider class to persistence.xml (wpoteat@redhat.com)
+- Allow resteasy to handle scoping in CandlepinSingletonScope (ckozak@redhat.com)
+- added config option to disable hypervisor_id blocking (ckozak@redhat.com)
+- Index on hypervisor_id for faster hypervisor checkins (ckozak@redhat.com)
+- block hypervisor consumer creation when hypervisor_id is in use (ckozak@redhat.com)
+
 * Wed Feb 26 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.4-1
 - 1016300: Remove MKT product from provided product list (wpoteat@redhat.com)
 - 1040101: Avoid repeating work and database lookups checking modifies (ckozak@redhat.com)
