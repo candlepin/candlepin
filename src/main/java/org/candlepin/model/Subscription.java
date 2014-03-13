@@ -27,12 +27,14 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Index;
@@ -83,6 +85,16 @@ public class Subscription extends AbstractHibernateObject {
         joinColumns = @JoinColumn(name = "subscription_id"),
         inverseJoinColumns = @JoinColumn(name = "product_id"))
     private Set<Product> derivedProvidedProducts = new HashSet<Product>();
+
+    @OneToMany
+    @ForeignKey(name = "fk_branding_id",
+            inverseName = "fk_subscription_id")
+    @JoinTable(name = "cp_sub_branding",
+        joinColumns = @JoinColumn(name = "subscription_id"),
+        inverseJoinColumns = @JoinColumn(name = "branding_id"))
+    @Cascade({org.hibernate.annotations.CascadeType.ALL,
+        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+    private Set<Branding> branding = new HashSet<Branding>();
 
     @Column(nullable = false)
     private Long quantity;
@@ -363,6 +375,14 @@ public class Subscription extends AbstractHibernateObject {
 
     public void setCdn(Cdn cdn) {
         this.cdn = cdn;
+    }
+
+    public Set<Branding> getBranding() {
+        return branding;
+    }
+
+    public void setBranding(Set<Branding> branding) {
+        this.branding = branding;
     }
 
 
