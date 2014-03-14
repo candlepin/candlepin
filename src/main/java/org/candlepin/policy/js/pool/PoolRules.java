@@ -16,6 +16,7 @@ package org.candlepin.policy.js.pool;
 
 import org.candlepin.config.Config;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.model.Branding;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.DerivedProvidedProduct;
 import org.candlepin.model.Entitlement;
@@ -125,6 +126,12 @@ public class PoolRules {
             helper.copySubProductAttributesOntoPool(sub.getDerivedProduct().getId(),
                 newPool);
         }
+
+        for (Branding b : sub.getBranding()) {
+            newPool.getBranding().add(new Branding(b.getProductId(), b.getType(),
+                b.getName()));
+        }
+
         newPool.setSubscriptionId(sub.getId());
         newPool.setSubscriptionSubKey("master");
         ProductAttribute virtAtt = sub.getProduct().getAttribute("virt_only");
@@ -229,9 +236,9 @@ public class PoolRules {
 
             update.setDatesChanged(checkForDateChange(sub.getStartDate(),
                 sub.getEndDate(), existingPool));
+
             update.setQuantityChanged(
                 checkForQuantityChange(sub, existingPool, existingPools, attributes));
-
 
             // Checks product name, ID, and provided products. Attributes are handled
             // separately.
@@ -247,11 +254,14 @@ public class PoolRules {
 
             update.setProductAttributesChanged(checkForProductAttributeChanges(sub,
                 helper, existingPool));
+
             update.setDerivedProductAttributesChanged(
                 checkForSubProductAttributeChanges(sub, helper, existingPool));
 
             update.setOrderChanged(checkForOrderDataChanges(sub, helper,
                 existingPool));
+
+            update.setBrandingChanged(checkForBrandingChanges(sub, existingPool));
 
             // All done, see if we found any changes and return an update object if so:
             if (update.changed()) {
@@ -404,6 +414,39 @@ public class PoolRules {
                 sub.getDerivedProduct().getId(), existingPool);
         }
         return subProdAttrsChanged;
+    }
+
+    private boolean checkForBrandingChanges(Subscription sub, Pool existingPool) {
+        boolean brandingChanged = false;
+
+        if (sub.getBranding().size() != existingPool.getBranding().size()) {
+            brandingChanged = true;
+        }
+        else {
+            for (Branding b : sub.getBranding()) {
+                if (!existingPool.getBranding().contains(b)) {
+                    syncBranding(sub, existingPool);
+                    brandingChanged = true;
+                    break;
+                }
+            }
+        }
+
+        if (brandingChanged) {
+            syncBranding(sub, existingPool);
+        }
+        return brandingChanged;
+    }
+
+    /*
+     * Something has changed, sync the branding.
+     */
+    private void syncBranding(Subscription sub, Pool pool) {
+        pool.getBranding().clear();
+        for (Branding b : sub.getBranding()) {
+            pool.getBranding().add(new Branding(b.getProductId(), b.getType(),
+                b.getName()));
+        }
     }
 
     private Set<ProvidedProduct> getExpectedProvidedProducts(Subscription sub,

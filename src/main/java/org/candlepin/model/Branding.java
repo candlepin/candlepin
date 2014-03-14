@@ -21,6 +21,8 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlTransient;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.hibernate.annotations.GenericGenerator;
 
 /**
@@ -108,4 +110,25 @@ public class Branding extends AbstractHibernateObject {
         this.type = type;
     }
 
+    @Override
+    public boolean equals(Object anObject) {
+        if (this == anObject) {
+            return true;
+        }
+        if (!(anObject instanceof Branding)) {
+            return false;
+        }
+
+        Branding that = (Branding) anObject;
+
+        return new EqualsBuilder().append(this.name, that.name)
+            .append(this.productId, that.productId)
+            .append(this.type, that.type).isEquals();
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder(129, 15).append(this.name)
+            .append(this.productId).append(this.type).toHashCode();
+    }
 }
