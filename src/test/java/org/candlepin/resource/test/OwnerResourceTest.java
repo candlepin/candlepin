@@ -40,6 +40,7 @@ import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.exceptions.IseException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.ExporterMetadata;
 import org.candlepin.model.ExporterMetadataCurator;
@@ -450,11 +451,11 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         securityInterceptor.enable();
 
         ownerResource.listConsumers(owner.getKey(), null, null,
-            new ArrayList<String>(), null);
+            new ArrayList<String>(), null, null, null);
     }
 
-    @Test(expected = BadRequestException.class)
-    public void consumerCannotListConsumersByIdWhenOtherParametersPresent() {
+    @Test
+    public void consumerCanListConsumersByIdWhenOtherParametersPresent() {
         Consumer c = TestUtil.createConsumer(owner);
         consumerTypeCurator.create(c.getType());
         consumerCurator.create(c);
@@ -467,9 +468,12 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         Set<String> types = new HashSet<String>();
         types.add("type");
+        consumerTypeCurator.create(new ConsumerType("type"));
 
-        ownerResource.listConsumers(owner.getKey(), "username", types, uuids,
-            new PageRequest());
+        List<Consumer> results = ownerResource.listConsumers(
+            owner.getKey(), "username", types, uuids, null, null, new PageRequest());
+
+        assertEquals(0, results.size());
     }
 
     public void consumerCannotListConsumersFromAnotherOwner() {
@@ -490,7 +494,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         securityInterceptor.enable();
 
         assertEquals(1,
-            ownerResource.listConsumers(owner.getKey(), null, null, uuids, null).size());
+            ownerResource.listConsumers(owner.getKey(), null, null,
+                uuids, null, null, null).size());
     }
 
     /**
@@ -504,7 +509,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         types.add("unknown");
         try {
             ownerResource.listConsumers(owner.getKey(), null, types,
-                new ArrayList<String>(), null);
+                new ArrayList<String>(), null, null, null);
             fail("Should have thrown a BadRequestException.");
         }
         catch (BadRequestException bre) {
@@ -531,7 +536,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         securityInterceptor.enable();
 
         List<Consumer> results = ownerResource.listConsumers(owner.getKey(), null,
-            null, uuids, null);
+            null, uuids, null, null, null);
         assertEquals(2, results.size());
     }
 

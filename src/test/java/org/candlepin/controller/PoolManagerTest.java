@@ -51,7 +51,7 @@ import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCertificateCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EnvironmentCurator;
-import org.candlepin.model.FilterBuilder;
+import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
@@ -172,7 +172,7 @@ public class PoolManagerTest {
         when(
             mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
                 any(Owner.class), anyString(), any(Date.class),
-                anyBoolean(), any(FilterBuilder.class), any(PageRequest.class),
+                anyBoolean(), any(PoolFilterBuilder.class), any(PageRequest.class),
                 anyBoolean())).thenReturn(page);
         this.manager.getRefresher().add(getOwner()).run();
         verify(this.manager).deletePool(same(p));
@@ -201,7 +201,7 @@ public class PoolManagerTest {
         when(
             mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
                 any(Owner.class), anyString(), any(Date.class),
-                anyBoolean(), any(FilterBuilder.class), any(PageRequest.class),
+                anyBoolean(), any(PoolFilterBuilder.class), any(PageRequest.class),
                 anyBoolean())).thenReturn(page);
         this.manager.getRefresher().add(getOwner()).run();
         verify(this.manager).deletePool(same(p));
@@ -230,7 +230,7 @@ public class PoolManagerTest {
         when(
             mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
                 any(Owner.class), anyString(), any(Date.class),
-                anyBoolean(), any(FilterBuilder.class), any(PageRequest.class),
+                anyBoolean(), any(PoolFilterBuilder.class), any(PageRequest.class),
                 anyBoolean())).thenReturn(page);
         this.manager.getRefresher().add(getOwner()).run();
         verify(this.manager, never()).deletePool(same(p));
@@ -259,7 +259,7 @@ public class PoolManagerTest {
         when(
             mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
                 any(Owner.class), anyString(), any(Date.class),
-                anyBoolean(), any(FilterBuilder.class), any(PageRequest.class),
+                anyBoolean(), any(PoolFilterBuilder.class), any(PageRequest.class),
                 anyBoolean())).thenReturn(page);
         this.manager.getRefresher().add(getOwner()).run();
         verify(this.manager, never()).deletePool(same(p));
@@ -284,7 +284,7 @@ public class PoolManagerTest {
         when(
             mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
                 any(Owner.class), anyString(), any(Date.class),
-                anyBoolean(), any(FilterBuilder.class), any(PageRequest.class),
+                anyBoolean(), any(PoolFilterBuilder.class), any(PageRequest.class),
                 anyBoolean())).thenReturn(page);
 
         this.manager.getRefresher().add(getOwner()).run();
@@ -310,7 +310,7 @@ public class PoolManagerTest {
         when(
             mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
                 any(Owner.class), anyString(), any(Date.class),
-                anyBoolean(), any(FilterBuilder.class), any(PageRequest.class),
+                anyBoolean(), any(PoolFilterBuilder.class), any(PageRequest.class),
                 anyBoolean())).thenReturn(page);
 
         List<Pool> newPools = new LinkedList<Pool>();
@@ -346,7 +346,7 @@ public class PoolManagerTest {
         when(
             mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
                 any(Owner.class), anyString(), any(Date.class),
-                anyBoolean(), any(FilterBuilder.class), any(PageRequest.class),
+                anyBoolean(), any(PoolFilterBuilder.class), any(PageRequest.class),
                 anyBoolean())).thenReturn(page);
 
         List<PoolUpdate> updates = new LinkedList();
@@ -484,7 +484,7 @@ public class PoolManagerTest {
         when(page.getPageData()).thenReturn(pools);
         when(mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
             any(Owner.class), any(String.class), eq(now), anyBoolean(),
-            any(FilterBuilder.class), any(PageRequest.class),
+            any(PoolFilterBuilder.class), any(PageRequest.class),
             anyBoolean())).thenReturn(page);
 
         when(mockPoolCurator.lockAndLoad(any(Pool.class))).thenReturn(pool1);
@@ -542,7 +542,8 @@ public class PoolManagerTest {
 
         when(mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
             any(Owner.class), anyString(), any(Date.class),
-            anyBoolean(), any(FilterBuilder.class), any(PageRequest.class), anyBoolean()))
+            anyBoolean(), any(PoolFilterBuilder.class),
+            any(PageRequest.class), anyBoolean()))
                 .thenReturn(page);
 
         List<Entitlement> poolEntitlements = Util.newList();
@@ -636,7 +637,8 @@ public class PoolManagerTest {
 
         when(mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
             any(Owner.class), anyString(), eq(now),
-            anyBoolean(), any(FilterBuilder.class), any(PageRequest.class), anyBoolean()))
+            anyBoolean(), any(PoolFilterBuilder.class),
+            any(PageRequest.class), anyBoolean()))
                 .thenReturn(page);
 
         when(mockPoolCurator.lockAndLoad(any(Pool.class))).thenReturn(pool1);

@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -426,7 +427,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         setupPrincipal(new ConsumerPrincipal(consumer));
         securityInterceptor.enable();
 
-        consumerResource.list(null, null, null, new ArrayList<String>(), null);
+        consumerResource.list(null, null, null, new ArrayList<String>(), null, null, null);
     }
 
     @Test(expected = BadRequestException.class)
@@ -438,8 +439,8 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         securityInterceptor.enable();
         List<String> uuidList = new ArrayList<String>();
         uuidList.add(consumer.getUuid());
-        consumerResource.list("username", "typeLabel", owner.getKey(), uuidList,
-            new PageRequest());
+        consumerResource.list("username", toSet("typeLabel"), owner.getKey(), uuidList,
+            null, null, new PageRequest());
     }
 
     @Test
@@ -588,5 +589,11 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
             bind(PKIReader.class).to(BouncyCastlePKIReader.class)
                 .asEagerSingleton();
         }
+    }
+
+    private Set<String> toSet(String s) {
+        Set<String> result = new HashSet<String>();
+        result.add(s);
+        return result;
     }
 }

@@ -1194,3 +1194,40 @@ describe 'Consumer Resource' do
     consumer['guestIds'][0]['guestId'].should == 'guest1'
   end
 end
+
+describe 'Consumer Resource Consumer Fact Filter Tests' do
+
+  include CandlepinMethods
+
+  before(:each) do
+    @owner = create_owner(random_string("test_owner"))
+    @owner_client = user_client(@owner, random_string('bill'))
+    @consumer1 = @owner_client.register('c1', :system, nil, {'key' => 'value', 'otherkey' => 'otherval'})
+    @consumer2 = @owner_client.register('c2', :system, nil, {'key' => 'value', 'otherkey' => 'someval'})
+    @consumer3 = @owner_client.register('c3', :system, nil, {'newkey' => 'somevalue'})
+  end
+
+  it 'can filter by facts and nothing else' do
+    consumers = @cp.list_consumers({:facts => ['*key*:*val*']})
+    # Length should be at least the three we have defined, however there could be other rows...
+    consumers.length.should >= 3
+  end
+
+  it 'can filter by facts and uuids' do
+    consumers = @cp.list_consumers({:facts => ['oth*key*:*val'], :uuids => [@consumer1['uuid'], @consumer2['uuid'], @consumer3['uuid']]})
+    consumers.length.should == 2
+    expected_uuids = [@consumer1['uuid'], @consumer2['uuid']]
+    consumers.each do |consumer|
+      expected_uuids.delete(consumer['uuid'])
+    end
+    # We should have found and removed every item in this list
+    expected_uuids.length.should == 0
+  end
+
+  it 'should properly escape values to avoid sql injection' do
+    odd_consumer =  @owner_client.register('c4', :system, nil, {'trolol' => "'); DROP TABLE cp_consumer;"})
+    consumers = @cp.list_consumers({:owner => @owner['key'], :facts => ["trolol:'); DROP TABLE cp_consumer;"]})
+    consumers.length.should == 1
+    consumers[0]['uuid'].should == odd_consumer['uuid']
+  end
+end
