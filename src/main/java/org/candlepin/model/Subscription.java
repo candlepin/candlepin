@@ -87,8 +87,8 @@ public class Subscription extends AbstractHibernateObject {
     private Set<Product> derivedProvidedProducts = new HashSet<Product>();
 
     @OneToMany
-    @ForeignKey(name = "fk_branding_id",
-            inverseName = "fk_subscription_id")
+    @ForeignKey(name = "fk_sub_branding_branding_id",
+            inverseName = "fk_sub_branding_sub_id")
     @JoinTable(name = "cp_sub_branding",
         joinColumns = @JoinColumn(name = "subscription_id"),
         inverseJoinColumns = @JoinColumn(name = "branding_id"))

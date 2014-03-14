@@ -41,6 +41,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
@@ -213,6 +214,16 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
     private String productName;
 
     private String derivedProductName;
+
+    @OneToMany
+    @ForeignKey(name = "fk_pool_branding_branding_id",
+            inverseName = "fk_pool_branding_pool_id")
+    @JoinTable(name = "cp_pool_branding",
+        joinColumns = @JoinColumn(name = "pool_id"),
+        inverseJoinColumns = @JoinColumn(name = "branding_id"))
+    @Cascade({org.hibernate.annotations.CascadeType.ALL,
+        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+    private Set<Branding> branding = new HashSet<Branding>();
 
     @Version
     private int version;
@@ -877,5 +888,13 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
 
     public String getStackId() {
         return getProductAttributeValue("stacking_id");
+    }
+
+    public Set<Branding> getBranding() {
+        return branding;
+    }
+
+    public void setBranding(Set<Branding> branding) {
+        this.branding = branding;
     }
 }

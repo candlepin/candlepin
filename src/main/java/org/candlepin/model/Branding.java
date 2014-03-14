@@ -39,7 +39,7 @@ public class Branding extends AbstractHibernateObject {
 
     @Id
     @GeneratedValue(generator = "system-uuid")
-    @GenericGenerator(name = "system-uuid", strategy = "uuid2")
+    @GenericGenerator(name = "system-uuid", strategy = "uuid")
     @Column(length = 37)
     private String id;
 
