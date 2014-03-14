@@ -327,6 +327,14 @@ describe 'Import', :serial => true do
     pool["derivedProvidedProducts"][0]["productId"].should == @cp_export.products[:derived_provided_prod].id
   end
 
+  it 'should contain branding info' do
+    pool = @cp.list_pools(:owner => @import_owner.id,
+      :product => @cp_export.products[:product1].id)[0]
+    pool['branding'].length.should == 1
+    pool['branding'][0]['productId'].should == @cp_export.products[:eng_product]['id']
+    pool['branding'][0]['name'].should == "Branded Eng Product"
+  end
+
   it 'should put the cdn from the manifest into the created subscriptions' do
     @cp.list_subscriptions(@import_owner['key']).find_all do |sub|
         sub['cdn']['label'].should == @cp_export.cdn_label

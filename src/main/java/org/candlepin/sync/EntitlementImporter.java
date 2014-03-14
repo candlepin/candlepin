@@ -16,6 +16,7 @@ package org.candlepin.sync;
 
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventSink;
+import org.candlepin.model.Branding;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerial;
@@ -93,6 +94,11 @@ public class EntitlementImporter {
         subscription.setOrderNumber(entitlement.getPool().getOrderNumber());
 
         subscription.setQuantity(entitlement.getQuantity().longValue());
+
+        for (Branding b : entitlement.getPool().getBranding()) {
+            subscription.getBranding().add(new Branding(b.getProductId(), b.getType(),
+                b.getName()));
+        }
 
         subscription.setProduct(findProduct(productsById, entitlement.getProductId()));
         String cdnLabel = meta.getCdnLabel();
