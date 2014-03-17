@@ -18,8 +18,17 @@ describe 'Consumer Resource Content' do
     overrides = create_content_override_set(2, @consumer1, false);
     returnOverrides = @consumer1.add_content_overrides(@consumer1.uuid, overrides)
     returnOverrides.size.should == 2
+    results = @consumer1.get_content_overrides(@consumer1.uuid)
+    # MySQL doesn't support milliseconds.  The first value returned has them serialized
+    # from the java Date object, the one from the database is zeroed.
+    [returnOverrides, results].each do |override_list|
+      override_list.each do |override|
+        override.delete('created')
+        override.delete('updated')
+      end
+    end
     # make sure the add content returns the same as the get
-    @consumer1.get_content_overrides(@consumer1.uuid).should =~ returnOverrides
+    results.should =~ returnOverrides
   end
 
   it "should allow content value overrides updates" do
