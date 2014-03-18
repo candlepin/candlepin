@@ -40,7 +40,9 @@ public class FactFilterBuilder extends FilterBuilder {
         StringBuilder sb = new StringBuilder();
         sb.append("{alias}.id in (select cp_consumer_facts.cp_consumer_id " +
             "from cp_consumer_facts " +
-            "where cp_consumer_facts.mapkey like ");
+            // Dependant subquery works better if there are multiple facts
+            "where {alias}.id = cp_consumer_facts.cp_consumer_id " +
+            "and cp_consumer_facts.mapkey like ");
 
         // complete the like statement, with key, more-or-less. Let hibernate escape
         // everything, but transform * to %
