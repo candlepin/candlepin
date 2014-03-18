@@ -47,10 +47,10 @@ public class EventSinkImpl implements EventSink {
     private static Logger log = LoggerFactory.getLogger(EventSinkImpl.class);
     private EventFactory eventFactory;
     private ClientSessionFactory factory;
-    private ClientSession clientSession;
-    private ClientProducer clientProducer;
     private int largeMsgSize;
     private ObjectMapper mapper;
+    private ThreadLocal<ClientSession> sessions = new ThreadLocal<ClientSession>();
+    private ThreadLocal<ClientProducer> producers = new ThreadLocal<ClientProducer>();
 
     @Inject
     public EventSinkImpl(EventFactory eventFactory, ObjectMapper mapper, Config config) {
@@ -60,8 +60,6 @@ public class EventSinkImpl implements EventSink {
             largeMsgSize = config.getInt(ConfigProperties.HORNETQ_LARGE_MSG_SIZE);
 
             factory =  createClientSessionFactory();
-            clientSession = factory.createSession();
-            clientProducer = clientSession.createProducer(EventSource.QUEUE_ADDRESS);
         }
         catch (HornetQException e) {
             throw new RuntimeException(e);
@@ -78,16 +76,44 @@ public class EventSinkImpl implements EventSink {
         return locator.createSessionFactory();
     }
 
+    protected ClientSession getClientSession() {
+        ClientSession session = sessions.get();
+        if (session == null) {
+            try {
+                session = factory.createSession();
+            }
+            catch (HornetQException e) {
+                throw new RuntimeException(e);
+            }
+            sessions.set(session);
+        }
+        return session;
+    }
+
+    protected ClientProducer getClientProducer() {
+        ClientProducer producer = producers.get();
+        if (producer == null) {
+            try {
+                producer = getClientSession().createProducer(EventSource.QUEUE_ADDRESS);
+            }
+            catch (HornetQException e) {
+                throw new RuntimeException(e);
+            }
+            producers.set(producer);
+        }
+        return producer;
+    }
+
     @Override
     public void sendEvent(Event event) {
         if (log.isDebugEnabled()) {
             log.debug("Sending event - " + event);
         }
         try {
-            ClientMessage message = clientSession.createMessage(true);
+            ClientMessage message = getClientSession().createMessage(true);
             String eventString = mapper.writeValueAsString(event);
             message.getBodyBuffer().writeString(eventString);
-            clientProducer.send(message);
+            getClientProducer().send(message);
         }
         catch (Exception e) {
             log.error("Error while trying to send event: " + event, e);
