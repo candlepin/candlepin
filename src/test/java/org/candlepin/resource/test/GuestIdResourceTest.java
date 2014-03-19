@@ -34,6 +34,7 @@ import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.resource.ConsumerResource;
 import org.candlepin.resource.GuestIdResource;
+import org.candlepin.util.ServiceLevelValidator;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -71,6 +72,9 @@ public class GuestIdResourceTest {
 
     @Mock
     private EventSink sink;
+
+    @Mock
+    private ServiceLevelValidator mockedServiceLevelValidator;
 
     private GuestIdResource guestIdResource;
 
@@ -270,7 +274,7 @@ public class GuestIdResourceTest {
             super(null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null,
-                null, null, null, null, null);
+                null, null, null, null, null, mockedServiceLevelValidator);
         }
 
         public boolean performConsumerUpdates(Consumer updated, Consumer toUpdate) {

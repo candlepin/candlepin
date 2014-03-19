@@ -82,6 +82,7 @@ import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.util.DateSource;
+import org.candlepin.util.ServiceLevelValidator;
 import org.junit.After;
 import org.junit.Before;
 import org.xnap.commons.i18n.I18n;
@@ -144,6 +145,7 @@ public class DatabaseTestFixture {
     protected CandlepinSingletonScope cpSingletonScope;
     protected PermissionFactory permFactory;
     protected ActivationKeyContentOverrideCurator activationKeyContentOverrideCurator;
+    protected ServiceLevelValidator serviceLevelValidator;
 
     @Before
     public void init() {
@@ -220,6 +222,7 @@ public class DatabaseTestFixture {
         dateSource = (DateSourceForTesting) injector
             .getInstance(DateSource.class);
         dateSource.currentDate(TestDateUtil.date(2010, 1, 1));
+        serviceLevelValidator = injector.getInstance(ServiceLevelValidator.class);
     }
 
     @After

@@ -54,6 +54,7 @@ import org.candlepin.resource.ConsumerResource;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
+import org.candlepin.util.ServiceLevelValidator;
 import org.apache.commons.lang.StringUtils;
 import org.junit.Assert;
 import org.junit.Before;
@@ -99,6 +100,7 @@ public class ConsumerResourceCreationTest {
     @Mock private ComplianceRules complianceRules;
     @Mock private DeletedConsumerCurator deletedConsumerCurator;
     @Mock private ConsumerContentOverrideCurator consumerContentOverrideCurator;
+    @Mock private ServiceLevelValidator serviceLevelValidator;
 
     private I18n i18n;
 
@@ -121,7 +123,7 @@ public class ConsumerResourceCreationTest {
             this.activationKeyCurator,
             null, this.complianceRules, this.deletedConsumerCurator,
             null, null, this.config, null, null, null, null,
-            consumerContentOverrideCurator);
+            consumerContentOverrideCurator, serviceLevelValidator);
 
         this.system = initSystem();
 

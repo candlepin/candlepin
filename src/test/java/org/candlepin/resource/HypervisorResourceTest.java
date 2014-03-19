@@ -43,6 +43,7 @@ import org.candlepin.resource.dto.HypervisorCheckInResult;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
+import org.candlepin.util.ServiceLevelValidator;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -100,6 +101,9 @@ public class HypervisorResourceTest {
     @Mock
     private DeletedConsumerCurator deletedConsumerCurator;
 
+    @Mock
+    private ServiceLevelValidator mockedServiceLevelValidator;
+
     private ConsumerResource consumerResource;
 
     private I18n i18n;
@@ -118,7 +122,7 @@ public class HypervisorResourceTest {
             this.userService, null, null, null, this.ownerCurator,
             this.activationKeyCurator, null, this.complianceRules,
             this.deletedConsumerCurator, null, null, new CandlepinCommonTestConfig(),
-            null, null, null, null, null);
+            null, null, null, null, null, mockedServiceLevelValidator);
 
         hypervisorResource = new HypervisorResource(consumerResource,
             consumerCurator, i18n, ownerCurator, new CandlepinCommonTestConfig());

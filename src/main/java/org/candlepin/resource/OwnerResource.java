@@ -101,6 +101,7 @@ import org.candlepin.sync.ImporterException;
 import org.candlepin.sync.Meta;
 import org.candlepin.sync.SyncDataFormatException;
 import org.candlepin.util.ContentOverrideValidator;
+import org.candlepin.util.ServiceLevelValidator;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
@@ -148,6 +149,7 @@ public class OwnerResource {
     private EnvironmentCurator envCurator;
     private CalculatedAttributesUtil calculatedAttributesUtil;
     private ContentOverrideValidator contentOverrideValidator;
+    private ServiceLevelValidator serviceLevelValidator;
 
     private static final int FEED_LIMIT = 1000;
 
@@ -170,7 +172,8 @@ public class OwnerResource {
         EntitlementCurator entitlementCurator,
         UeberCertificateGenerator ueberCertGenerator,
         EnvironmentCurator envCurator, CalculatedAttributesUtil calculatedAttributesUtil,
-        ContentOverrideValidator contentOverrideValidator) {
+        ContentOverrideValidator contentOverrideValidator,
+        ServiceLevelValidator serviceLevelValidator) {
 
         this.ownerCurator = ownerCurator;
         this.ownerInfoCurator = ownerInfoCurator;
@@ -196,6 +199,7 @@ public class OwnerResource {
         this.envCurator = envCurator;
         this.calculatedAttributesUtil = calculatedAttributesUtil;
         this.contentOverrideValidator = contentOverrideValidator;
+        this.serviceLevelValidator = serviceLevelValidator;
     }
 
     /**
@@ -509,7 +513,6 @@ public class OwnerResource {
                     "include the characters '-' or '_'", activationKey.getName()));
         }
 
-
         if (activationKeyCurator.lookupForOwner(activationKey.getName(), owner) != null) {
             throw new BadRequestException(
                 i18n.tr("The activation key name ''{0}'' is already in use for owner {1}",
@@ -519,6 +522,8 @@ public class OwnerResource {
         if (activationKey.getContentOverrides() != null) {
             contentOverrideValidator.validate(activationKey.getContentOverrides());
         }
+
+        serviceLevelValidator.validate(owner, activationKey.getServiceLevel());
 
         ActivationKey newKey = activationKeyCurator.create(activationKey);
         sink.emitActivationKeyCreated(newKey);
@@ -840,7 +845,7 @@ public class OwnerResource {
                 toUpdate.setDefaultServiceLevel(null);
             }
             else {
-                checkServiceLevel(toUpdate, owner.getDefaultServiceLevel());
+                serviceLevelValidator.validate(toUpdate, owner.getDefaultServiceLevel());
                 toUpdate.setDefaultServiceLevel(owner.getDefaultServiceLevel());
             }
         }
@@ -849,23 +854,6 @@ public class OwnerResource {
         Event e = eventFactory.ownerModified(owner);
         sink.sendEvent(e);
         return toUpdate;
-    }
-
-    private void checkServiceLevel(Owner owner, String serviceLevel)
-        throws BadRequestException {
-        if (serviceLevel != null &&
-            !serviceLevel.trim().equals("")) {
-            for (String level : poolManager.retrieveServiceLevelsForOwner(owner, false)) {
-                if (serviceLevel.equalsIgnoreCase(level)) {
-                    return;
-                }
-            }
-            throw new BadRequestException(
-                i18n.tr(
-                    "Service level ''{0}'' is not available " +
-                    "to units of organization {1}.",
-                    serviceLevel, owner.getKey()));
-        }
     }
 
     /**

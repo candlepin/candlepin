@@ -23,6 +23,7 @@ import org.candlepin.model.Release;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.model.activationkeys.ActivationKeyPool;
+import org.candlepin.util.ServiceLevelValidator;
 
 import com.google.inject.Inject;
 
@@ -54,13 +55,16 @@ public class ActivationKeyResource {
     private ActivationKeyCurator activationKeyCurator;
     private PoolManager poolManager;
     private I18n i18n;
+    private ServiceLevelValidator serviceLevelValidator;
 
     @Inject
     public ActivationKeyResource(ActivationKeyCurator activationKeyCurator,
-        I18n i18n, PoolManager poolManager) {
+        I18n i18n, PoolManager poolManager,
+        ServiceLevelValidator serviceLevelValidator) {
         this.activationKeyCurator = activationKeyCurator;
         this.i18n = i18n;
         this.poolManager = poolManager;
+        this.serviceLevelValidator = serviceLevelValidator;
     }
 
     /**
@@ -110,6 +114,11 @@ public class ActivationKeyResource {
         ActivationKey key) {
         ActivationKey toUpdate = activationKeyCurator.verifyAndLookupKey(activationKeyId);
         toUpdate.setName(key.getName());
+        String serviceLevel = key.getServiceLevel();
+        if (serviceLevel != null) {
+            serviceLevelValidator.validate(toUpdate.getOwner(), serviceLevel);
+            toUpdate.setServiceLevel(serviceLevel);
+        }
         activationKeyCurator.merge(toUpdate);
 
         return toUpdate;

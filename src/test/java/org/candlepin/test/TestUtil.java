@@ -344,6 +344,7 @@ public class TestUtil {
         ActivationKey key = new ActivationKey();
         key.setOwner(owner);
         key.setName("A Test Key");
+        key.setServiceLevel("TestLevel");
         if (pools != null) {
             Set<ActivationKeyPool> akPools = new HashSet<ActivationKeyPool>();
             for (Pool p : pools) {

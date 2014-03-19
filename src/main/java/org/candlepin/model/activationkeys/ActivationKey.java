@@ -81,6 +81,9 @@ public class ActivationKey extends AbstractHibernateObject implements Owned {
     @Column(length = 255, nullable =  true)
     private String releaseVer;
 
+    @Column(length = 255, nullable =  true)
+    private String serviceLevel;
+
     public ActivationKey() {
     }
 
@@ -213,6 +216,20 @@ public class ActivationKey extends AbstractHibernateObject implements Owned {
      */
     public void setReleaseVer(Release releaseVer) {
         this.releaseVer = releaseVer.getReleaseVer();
+    }
+
+    /**
+     * @return the service level
+     */
+    public String getServiceLevel() {
+        return serviceLevel;
+    }
+
+    /**
+     * @param serviceLevel the service level to set
+     */
+    public void setServiceLevel(String serviceLevel) {
+        this.serviceLevel = serviceLevel;
     }
 
     private void addOrUpdate(ActivationKeyContentOverride override) {
