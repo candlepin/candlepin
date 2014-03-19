@@ -34,46 +34,35 @@ public class Product {
     private String version;
     @JsonProperty("brand_type")
     private String brandType;
+    @JsonProperty("brand_name")
+    private String brandName;
     private List<String> architectures;
     private List<Content> content;
 
-    /**
-     * @param id
-     */
     public void setId(String id) {
         this.id = id;
     }
 
-    /**
-     * @param name
-     */
     public void setName(String name) {
         this.name = name;
     }
 
-    /**
-     * @param version
-     */
     public void setVersion(String version) {
         this.version = version;
     }
 
-    /**
-     * @param isOs
-     */
     public void setBrandType(String brandType) {
         this.brandType = brandType;
     }
-    /**
-     * @param archList
-     */
+
+    public String getBrandType() {
+        return brandType;
+    }
+
     public void setArchitectures(List<String> architectures) {
         this.architectures = architectures;
     }
 
-    /**
-     * @param mapContent
-     */
     public void setContent(List<Content> content) {
         this.content = content;
     }
@@ -81,4 +70,13 @@ public class Product {
     public List<Content> getContent() {
         return this.content;
     }
+
+    public void setBrandName(String brandName) {
+        this.brandName = brandName;
+    }
+
+    public String getBrandName() {
+        return brandName;
+    }
+
 }
