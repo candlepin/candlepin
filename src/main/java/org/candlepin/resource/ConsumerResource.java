@@ -22,6 +22,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -370,11 +371,11 @@ public class ConsumerResource {
         Set<String> keyStrings = splitKeys(activationKeys);
 
         // Only let NoAuth principals through if there are activation keys to consider:
-        if ((principal instanceof NoAuthPrincipal) && (keyStrings.size() == 0)) {
+        if ((principal instanceof NoAuthPrincipal) && keyStrings.isEmpty()) {
             throw new ForbiddenException(i18n.tr("Insufficient permissions"));
         }
 
-        if (keyStrings.size() > 0) {
+        if (!keyStrings.isEmpty()) {
             if (ownerKey == null) {
                 throw new BadRequestException(
                     i18n.tr("Must specify an org to register with activation keys."));
@@ -389,11 +390,9 @@ public class ConsumerResource {
         // Raise an exception if any keys were specified which do not exist
         // for this owner.
         List<ActivationKey> keys = new ArrayList<ActivationKey>();
-        if (keyStrings.size() > 0) {
-            for (String keyString : keyStrings) {
-                ActivationKey key = findKey(keyString, owner);
-                keys.add(key);
-            }
+        for (String keyString : keyStrings) {
+            ActivationKey key = findKey(keyString, owner);
+            keys.add(key);
         }
 
         userName = setUserName(consumer, principal, userName);
@@ -1307,8 +1306,8 @@ public class ConsumerResource {
     }
 
     private Set<String> splitKeys(String activationKeyString) {
-        Set<String> keys = new HashSet<String>();
-        if (activationKeyString != null && !activationKeyString.equals("")) {
+        Set<String> keys = new LinkedHashSet<String>();
+        if (!StringUtils.isBlank(activationKeyString)) {
             for (String s : activationKeyString.split(",")) {
                 keys.add(s);
             }
