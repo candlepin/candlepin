@@ -40,6 +40,14 @@ public class KeyValueParameterTest {
         assertEquals("", param.value());
     }
 
+    @Test
+    public void parameterValueCanContainMultipleColins() {
+        KeyValueParameter param = new KeyValueParameter("testparam", "param:paramValue:c");
+        param.parse();
+        assertEquals("param", param.key());
+        assertEquals("paramValue:c", param.value());
+    }
+
     @Test(expected = CandlepinParamterParseException.class)
     public void parameterValueCanNotBeEmpty() {
         KeyValueParameter param = new KeyValueParameter("testparam", "");
@@ -49,12 +57,6 @@ public class KeyValueParameterTest {
     @Test(expected = CandlepinParamterParseException.class)
     public void parameterValueCanNotBePropertyOnly() {
         KeyValueParameter param = new KeyValueParameter("testparam", "param");
-        param.parse();
-    }
-
-    @Test(expected = CandlepinParamterParseException.class)
-    public void parameterValueCanNotContainMultipleColins() {
-        KeyValueParameter param = new KeyValueParameter("testparam", "param:paramValue:c");
         param.parse();
     }
 

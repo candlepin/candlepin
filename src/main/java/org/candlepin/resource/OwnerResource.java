@@ -39,7 +39,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
-import org.apache.commons.lang.StringUtils;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventAdapter;
 import org.candlepin.audit.EventFactory;
@@ -67,7 +66,7 @@ import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.EventCurator;
 import org.candlepin.model.ExporterMetadata;
 import org.candlepin.model.ExporterMetadataCurator;
-import org.candlepin.model.FilterBuilder;
+import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.ImportRecord;
 import org.candlepin.model.ImportRecordCurator;
 import org.candlepin.model.ImportUpstreamConsumer;
@@ -617,58 +616,29 @@ public class OwnerResource {
     @Path("{owner_key}/consumers")
     @Paginate
     public List<Consumer> listConsumers(
-        @PathParam("owner_key")
-        @Verify(value = Owner.class, subResource = SubResource.CONSUMERS) String ownerKey,
-        @QueryParam("username") String userName,
-        @QueryParam("type") Set<String> typeLabels,
-        @QueryParam("uuid") @Verify(value = Consumer.class, nullable = true)
-            List<String> uuids,
-        @Context PageRequest pageRequest) {
-
+            @PathParam("owner_key")
+            @Verify(value = Owner.class,
+                subResource = SubResource.CONSUMERS) String ownerKey,
+            @QueryParam("username") String userName,
+            @QueryParam("type") Set<String> typeLabels,
+            @QueryParam("uuid") @Verify(value = Consumer.class, nullable = true)
+                List<String> uuids,
+            @QueryParam("hypervisor_id") List<String> hypervisorIds,
+            @QueryParam("fact") @CandlepinParam(type = KeyValueParameter.class)
+                List<KeyValueParameter> attrFilters,
+            @Context PageRequest pageRequest) {
         Owner owner = findOwner(ownerKey);
-
-        if (uuids == null || uuids.isEmpty()) {
-            List<ConsumerType> types = null;
-
-            if (typeLabels != null && !typeLabels.isEmpty()) {
-                types = lookupConsumerTypes(typeLabels);
-            }
-
-            // We don't look up the user and warn if it doesn't exist here to not
-            // give away usernames
-            Page<List<Consumer>> p = consumerCurator.listByUsernameAndType(userName,
-                types, owner, pageRequest);
-
-            // Store the page for the LinkHeaderPostInterceptor
-            ResteasyProviderFactory.pushContext(Page.class, p);
-            return p.getPageData();
+        List<ConsumerType> types = null;
+        if (typeLabels != null && !typeLabels.isEmpty()) {
+            types = consumerTypeCurator.lookupConsumerTypes(typeLabels);
         }
-        else {
-            if (userName != null || (typeLabels != null && !typeLabels.isEmpty()) ||
-                    pageRequest != null) {
-                throw new BadRequestException(
-                    i18n.tr("Cannot specify other query parameters with consumer IDs."));
-            }
 
-            return consumerCurator.findByUuidsAndOwner(uuids, owner);
-        }
-    }
+        Page<List<Consumer>> page = consumerCurator.searchOwnerConsumers(
+            owner, userName, types, uuids, hypervisorIds, attrFilters, pageRequest);
 
-    private List<ConsumerType> lookupConsumerTypes(Set<String> labels) {
-        List<ConsumerType> types = consumerTypeCurator.lookupByLabels(labels);
-        // Since the type labels are unique, our sizes must match.
-        if (labels.size() != types.size()) {
-            List<String> invalidLabels = new ArrayList<String>(labels);
-            for (ConsumerType type : types) {
-                String label = type.getLabel();
-                if (labels.contains(label)) {
-                    invalidLabels.remove(label);
-                }
-            }
-            throw new BadRequestException(i18n.tr("No such unit type(s): {0}",
-                StringUtils.join(invalidLabels, ", ")));
-        }
-        return types;
+        // Store the page for the LinkHeaderPostInterceptor
+        ResteasyProviderFactory.pushContext(Page.class, page);
+        return page.getPageData();
     }
 
 
@@ -724,7 +694,7 @@ public class OwnerResource {
         }
 
         // Process the filters passed for the attributes
-        FilterBuilder poolFilters = new FilterBuilder();
+        PoolFilterBuilder poolFilters = new PoolFilterBuilder();
         for (KeyValueParameter filterParam : attrFilters) {
             poolFilters.addAttributeFilter(filterParam.key(), filterParam.value());
         }

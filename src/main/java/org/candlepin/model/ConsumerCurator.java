@@ -20,6 +20,7 @@ import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
+import org.candlepin.resteasy.parameter.KeyValueParameter;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -516,5 +517,41 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
                 "Unit with ID ''{0}'' could not be found.", consumerUuid));
         }
         return consumer;
+    }
+
+    public Page<List<Consumer>> searchOwnerConsumers(Owner owner, String userName,
+            Collection<ConsumerType> types, List<String> uuids, List<String> hypervisorIds,
+            List<KeyValueParameter> factFilters, PageRequest pageRequest) {
+        Criteria crit = super.createSecureCriteria();
+        if (owner != null) {
+            crit.add(Restrictions.eq("owner", owner));
+        }
+        if (userName != null && !userName.isEmpty()) {
+            crit.add(Restrictions.eq("username", userName));
+        }
+        if (types != null && !types.isEmpty()) {
+            crit.add(Restrictions.in("type", types));
+        }
+        if (uuids != null && !uuids.isEmpty()) {
+            crit.add(Restrictions.in("uuid", uuids));
+        }
+        if (hypervisorIds != null && !hypervisorIds.isEmpty()) {
+            // Cannot use Restrictions.in here because hypervisorId is case insensitive
+            Set<Criterion> ors = new HashSet<Criterion>();
+            for (String hypervisorId : hypervisorIds) {
+                ors.add(Restrictions.eq("hvsr.hypervisorId", hypervisorId).ignoreCase());
+            }
+            crit.createAlias("hypervisorId", "hvsr");
+            crit.add(Restrictions.or(ors.toArray(new Criterion[ors.size()])));
+        }
+        if (factFilters != null && !factFilters.isEmpty()) {
+            // Process the filters passed for the attributes
+            FilterBuilder factFilter = new FactFilterBuilder();
+            for (KeyValueParameter filterParam : factFilters) {
+                factFilter.addAttributeFilter(filterParam.key(), filterParam.value());
+            }
+            factFilter.applyTo(crit);
+        }
+        return this.listByCriteria(crit, pageRequest);
     }
 }

@@ -721,13 +721,17 @@ class Candlepin
     # which is nice for the next person who needs to add an argument to
     # the query.
     query << args[:uuids].map {|uuid| "uuid=#{uuid}&"}.join("") if args[:uuids]
+    query << args[:facts].map {|fact| "fact=#{fact}&"}.join("") if args[:facts]
     get(query)
   end
 
-  def list_owner_consumers(owner_key, consumer_types=[])
-    query = "/owners/#{owner_key}/consumers"
+  def list_owner_consumers(owner_key, consumer_types=[], facts=[])
+    query = "/owners/#{owner_key}/consumers?"
     if !consumer_types.empty?
-        query += "?type=" + consumer_types.join("&type=")
+      query += "&type=" + consumer_types.join("&type=")
+    end
+    facts.each do |fact|
+      query << "&fact=%s" % [fact]
     end
     get(query)
   end

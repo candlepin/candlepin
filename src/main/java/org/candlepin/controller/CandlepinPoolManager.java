@@ -26,7 +26,7 @@ import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCertificateCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Environment;
-import org.candlepin.model.FilterBuilder;
+import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Pool.PoolType;
@@ -134,7 +134,7 @@ public class CandlepinPoolManager implements PoolManager {
         log.debug("Found " + subs.size() + " existing subscriptions.");
 
         List<Pool> pools = this.listAvailableEntitlementPools(null,
-            owner, null, null, false, false, new FilterBuilder(), null).getPageData();
+            owner, null, null, false, false, new PoolFilterBuilder(), null).getPageData();
 
         // Pools with no subscription ID:
         List<Pool> floatingPools = new LinkedList<Pool>();
@@ -503,9 +503,9 @@ public class CandlepinPoolManager implements PoolManager {
 
         List<Pool> allOwnerPools = this.listAvailableEntitlementPools(
             host, owner, (String) null, entitleDate, true, false,
-            new FilterBuilder(), null).getPageData();
+            new PoolFilterBuilder(), null).getPageData();
         List<Pool> allOwnerPoolsForGuest = this.listAvailableEntitlementPools(
-            guest, owner, (String) null, entitleDate, true, false, new FilterBuilder(),
+            guest, owner, (String) null, entitleDate, true, false, new PoolFilterBuilder(),
             null).getPageData();
         for (Entitlement ent : host.getEntitlements()) {
             //filter out pools that are attached, there is no need to
@@ -599,7 +599,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         List<Pool> allOwnerPools = this.listAvailableEntitlementPools(
             consumer, owner, (String) null, entitleDate, true, false,
-            new FilterBuilder(), null).getPageData();
+            new PoolFilterBuilder(), null).getPageData();
         List<Pool> filteredPools = new LinkedList<Pool>();
 
         // We have to check compliance status here so we can replace an empty
@@ -944,7 +944,8 @@ public class CandlepinPoolManager implements PoolManager {
     @Transactional
     public void regenerateCertificatesOf(String productId, boolean lazy) {
         List<Pool> poolsForProduct = this.listAvailableEntitlementPools(null, null,
-            productId, new Date(), false, false, new FilterBuilder(), null).getPageData();
+            productId, new Date(), false, false, new PoolFilterBuilder(), null)
+            .getPageData();
         for (Pool pool : poolsForProduct) {
             regenerateCertificatesOf(pool.getEntitlements(), lazy);
         }
@@ -1262,7 +1263,7 @@ public class CandlepinPoolManager implements PoolManager {
     @Override
     public Page<List<Pool>> listAvailableEntitlementPools(Consumer consumer,
         Owner owner, String productId, Date activeOn, boolean activeOnly,
-        boolean includeWarnings, FilterBuilder filters, PageRequest pageRequest) {
+        boolean includeWarnings, PoolFilterBuilder filters, PageRequest pageRequest) {
         boolean postFilter = consumer != null; // Only postfilter if we have to
         Page<List<Pool>> page = this.poolCurator.listAvailableEntitlementPools(consumer,
             owner, productId, activeOn, activeOnly, filters, pageRequest, postFilter);

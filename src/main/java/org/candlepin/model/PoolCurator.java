@@ -147,7 +147,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     public List<Pool> listAvailableEntitlementPools(Consumer c, Owner o,
             String productId, Date activeOn, boolean activeOnly) {
         return listAvailableEntitlementPools(c, o, productId, activeOn, activeOnly,
-            new FilterBuilder(), null, false).getPageData();
+            new PoolFilterBuilder(), null, false).getPageData();
     }
 
     @SuppressWarnings("unchecked")
@@ -181,7 +181,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     @SuppressWarnings("unchecked")
     @Transactional
     public Page<List<Pool>> listAvailableEntitlementPools(Consumer c, Owner o,
-            String productId, Date activeOn, boolean activeOnly, FilterBuilder filters,
+            String productId, Date activeOn, boolean activeOnly, PoolFilterBuilder filters,
             PageRequest pageRequest, boolean postFilter) {
         if (o == null && c != null) {
             o = c.getOwner();

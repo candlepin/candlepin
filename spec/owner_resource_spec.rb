@@ -428,5 +428,49 @@ describe 'Owner Resource Pool Filter Tests' do
     pools.length.should == 1
     pools[0].productId.should == @product2.id
   end
-  
+
 end
+
+describe 'Owner Resource Consumer Fact Filter Tests' do
+
+  include CandlepinMethods
+
+  before(:each) do
+    @owner = create_owner(random_string("test_owner"))
+    @owner_client = user_client(@owner, random_string('bill'))
+    @consumer1 = @owner_client.register('c1', :system, nil, {'key' => 'value', 'otherkey' => 'otherval'})
+    @consumer2 = @owner_client.register('c2', :system, nil, {'key' => 'value', 'otherkey' => 'someval'})
+    @consumer3 = @owner_client.register('c3', :system, nil, {'newkey' => 'somevalue'})
+  end
+
+  it 'lets owners filter consumers by a single fact' do
+    consumers = @cp.list_owner_consumers(@owner['key'], [], ['key:value'])
+    consumers.length.should == 2
+
+    consumers = @cp.list_owner_consumers(@owner['key'], [], ['newkey:somevalue'])
+    consumers.length.should == 1
+    consumers[0]['uuid'].should == @consumer3['uuid']
+  end
+
+  it 'lets owners filter consumers by multiple facts' do
+    consumers = @cp.list_owner_consumers(@owner['key'], [], ['key:value', 'otherkey:someval'])
+    consumers.length.should == 1
+    consumers[0]['uuid'].should == @consumer2['uuid']
+  end
+
+  it 'lets owners filter consumers by multiple facts same key as OR' do
+    consumers = @cp.list_owner_consumers(@owner['key'], [], ['otherkey:someval', 'otherkey:otherval'])
+    consumers.length.should == 2
+  end
+
+  it 'lets owners filterconsumers by facts with wildcards' do
+    consumers = @cp.list_owner_consumers(@owner['key'], [], ['*key*:*val*'])
+    consumers.length.should == 3
+
+    # Also make sure the value half is checked case insensitively
+    consumers = @cp.list_owner_consumers(@owner['key'], [], ['ot*key:SOme*'])
+    consumers.length.should == 1
+    consumers[0]['uuid'].should == @consumer2['uuid']
+  end
+end
+

@@ -85,6 +85,8 @@ import org.candlepin.policy.js.quantity.SuggestedQuantity;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ConsumerInstalledProductEnricher;
 import org.candlepin.resource.util.ResourceDateParser;
+import org.candlepin.resteasy.parameter.CandlepinParam;
+import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
@@ -244,48 +246,34 @@ public class ConsumerResource {
     @Wrapped(element = "consumers")
     @Paginate
     public List<Consumer> list(@QueryParam("username") String userName,
-        @QueryParam("type") String typeLabel,
+        @QueryParam("type") Set<String> typeLabels,
         @QueryParam("owner") String ownerKey,
         @QueryParam("uuid") List<String> uuids,
+        @QueryParam("hypervisor_id") List<String> hypervisorIds,
+        @QueryParam("fact") @CandlepinParam(type = KeyValueParameter.class)
+            List<KeyValueParameter> attrFilters,
         @Context PageRequest pageRequest) {
 
-        if (uuids == null || uuids.isEmpty()) {
-            List<ConsumerType> types = new ArrayList<ConsumerType>();
-
-            if (typeLabel != null) {
-                types.add(lookupConsumerType(typeLabel));
+        Owner owner = null;
+        if (ownerKey != null) {
+            owner = ownerCurator.lookupByKey(ownerKey);
+            if (owner == null) {
+                throw new NotFoundException(i18n.tr(
+                    "owner with key: {0} was not found.", ownerKey));
             }
-
-            Owner owner = null;
-            if (ownerKey != null) {
-                owner = ownerCurator.lookupByKey(ownerKey);
-
-                if (owner == null) {
-                    throw new NotFoundException(
-                        i18n.tr("Organization with key: {0} was not found.",
-                            ownerKey));
-                }
-            }
-
-            // We don't look up the user and warn if it doesn't exist here to not
-            // give away usernames
-            Page<List<Consumer>> p = consumerCurator.listByUsernameAndType(userName,
-                types, owner, pageRequest);
-
-            // Store the page for the LinkHeaderPostInterceptor
-            ResteasyProviderFactory.pushContext(Page.class, p);
-            return p.getPageData();
         }
-        else {
-            // If you make a request with ids specified along with other parameters, die.
-            if (userName != null || typeLabel != null || ownerKey != null ||
-                pageRequest != null) {
-                throw new BadRequestException(
-                    i18n.tr("Cannot specify other query parameters with consumer IDs."));
-            }
 
-            return consumerCurator.findByUuids(uuids);
+        List<ConsumerType> types = null;
+        if (typeLabels != null && !typeLabels.isEmpty()) {
+            types = consumerTypeCurator.lookupConsumerTypes(typeLabels);
         }
+
+        Page<List<Consumer>> page = consumerCurator.searchOwnerConsumers(
+            owner, userName, types, uuids, hypervisorIds, attrFilters, pageRequest);
+
+        // Store the page for the LinkHeaderPostInterceptor
+        ResteasyProviderFactory.pushContext(Page.class, page);
+        return page.getPageData();
     }
 
     /**

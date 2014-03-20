@@ -17,7 +17,7 @@ package org.candlepin.controller;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Environment;
-import org.candlepin.model.FilterBuilder;
+import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
@@ -159,7 +159,7 @@ public interface PoolManager {
      */
     Page<List<Pool>> listAvailableEntitlementPools(Consumer consumer, Owner owner,
         String productId, Date activeOn, boolean activeOnly, boolean includeWarnings,
-        FilterBuilder filterBuilder, PageRequest pageRequest);
+        PoolFilterBuilder filterBuilder, PageRequest pageRequest);
 
     /**
      *  Get the available service levels for consumers for this owner. Exempt

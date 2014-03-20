@@ -32,7 +32,7 @@ import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.Content;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
-import org.candlepin.model.FilterBuilder;
+import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
@@ -301,7 +301,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     public void testListAllForConsumerIncludesWarnings() {
         Page<List<Pool>> results =
             poolManager.listAvailableEntitlementPools(parentSystem, parentSystem.getOwner(),
-                null, null, true, true, new FilterBuilder(), new PageRequest());
+                null, null, true, true, new PoolFilterBuilder(), new PageRequest());
         assertEquals(4, results.getPageData().size());
 
         Pool pool = createPoolAndSub(o, socketLimitedProduct, 100L,
@@ -310,7 +310,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         parentSystem.setFact("cpu.sockets", "4");
         results = poolManager.listAvailableEntitlementPools(parentSystem,
-            parentSystem.getOwner(), null, null, true, true, new FilterBuilder(),
+            parentSystem.getOwner(), null, null, true, true, new PoolFilterBuilder(),
             new PageRequest());
         // Expect the warnings to be included. Should have one more pool available.
         assertEquals(5, results.getPageData().size());
@@ -323,7 +323,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         Page<List<Pool>> results =
             poolManager.listAvailableEntitlementPools(parentSystem, parentSystem.getOwner(),
-                null, null, true, true, new FilterBuilder(), new PageRequest());
+                null, null, true, true, new PoolFilterBuilder(), new PageRequest());
         assertEquals(4, results.getPageData().size());
 
         // Creating a pool with no entitlements available, which will trigger
@@ -333,7 +333,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         poolCurator.create(pool);
 
         results = poolManager.listAvailableEntitlementPools(parentSystem,
-            parentSystem.getOwner(), null, null, true, true, new FilterBuilder(),
+            parentSystem.getOwner(), null, null, true, true, new PoolFilterBuilder(),
             new PageRequest());
         // Pool in error should not be included. Should have the same number of
         // initial pools.
@@ -344,7 +344,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     public void testListForConsumerExcludesWarnings() {
         Page<List<Pool>> results =
             poolManager.listAvailableEntitlementPools(parentSystem, parentSystem.getOwner(),
-                (String) null, null, true, false, new FilterBuilder(),
+                (String) null, null, true, false, new PoolFilterBuilder(),
                 new PageRequest());
         assertEquals(4, results.getPageData().size());
 
@@ -356,7 +356,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         results = poolManager.listAvailableEntitlementPools(parentSystem,
             parentSystem.getOwner(), (String) null, null, true, false,
-            new FilterBuilder(), new PageRequest());
+            new PoolFilterBuilder(), new PageRequest());
         // Pool in error should not be included. Should have the same number of
         // initial pools.
         assertEquals(4, results.getPageData().size());

@@ -31,7 +31,7 @@ import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.Entitlement;
-import org.candlepin.model.FilterBuilder;
+import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
@@ -140,7 +140,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         req.setOrder(PageRequest.Order.ASCENDING);
         req.setSortBy("id");
 
-        FilterBuilder filters = new FilterBuilder();
+        PoolFilterBuilder filters = new PoolFilterBuilder();
         filters.addAttributeFilter("cores", "8");
 
         Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
@@ -170,7 +170,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         req.setOrder(PageRequest.Order.ASCENDING);
         req.setSortBy("id");
 
-        FilterBuilder filters = new FilterBuilder();
+        PoolFilterBuilder filters = new PoolFilterBuilder();
         filters.addAttributeFilter("virt_only", "true");
 
         Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
@@ -205,7 +205,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         req.setOrder(PageRequest.Order.ASCENDING);
         req.setSortBy("id");
 
-        FilterBuilder filters = new FilterBuilder();
+        PoolFilterBuilder filters = new PoolFilterBuilder();
         filters.addAttributeFilter("virt_only", "true");
         filters.addAttributeFilter("cores", "4");
 
@@ -239,7 +239,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         req.setOrder(PageRequest.Order.ASCENDING);
         req.setSortBy("id");
 
-        FilterBuilder filters = new FilterBuilder();
+        PoolFilterBuilder filters = new PoolFilterBuilder();
         filters.addAttributeFilter("empty-attr", "");
 
         Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
@@ -269,7 +269,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         req.setOrder(PageRequest.Order.ASCENDING);
         req.setSortBy("id");
 
-        FilterBuilder filters = new FilterBuilder();
+        PoolFilterBuilder filters = new PoolFilterBuilder();
         filters.addAttributeFilter("A", "FOO");
 
         Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
@@ -332,7 +332,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         req.setOrder(PageRequest.Order.ASCENDING);
         req.setSortBy("id");
 
-        FilterBuilder filters = new FilterBuilder();
+        PoolFilterBuilder filters = new PoolFilterBuilder();
         filters.addAttributeFilter("A", "foo");
         filters.addAttributeFilter("A", "biz");
         filters.addAttributeFilter("B", "zoo");
@@ -605,7 +605,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         Date activeOn = TestUtil.createDate(2011, 2, 2);
         Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
-            null, owner, product.getId(), activeOn, false, new FilterBuilder(),
+            null, owner, product.getId(), activeOn, false, new PoolFilterBuilder(),
             req, false);
         assertEquals(Integer.valueOf(50), page.getMaxRecords());
 
@@ -639,7 +639,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         Date activeOn = TestUtil.createDate(2011, 2, 2);
         Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
-            null, owner, product.getId(), activeOn, false, new FilterBuilder(),
+            null, owner, product.getId(), activeOn, false, new PoolFilterBuilder(),
             req, false);
         assertEquals(Integer.valueOf(5), page.getMaxRecords());
         assertEquals(5, page.getPageData().size());
@@ -660,7 +660,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         Date activeOn = TestUtil.createDate(2011, 2, 2);
         Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
-            null, owner, product.getId(), activeOn, false, new FilterBuilder(),
+            null, owner, product.getId(), activeOn, false, new PoolFilterBuilder(),
             req, false);
         assertEquals(Integer.valueOf(5), page.getMaxRecords());
         assertEquals(0, page.getPageData().size());
@@ -681,7 +681,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         Date activeOn = TestUtil.createDate(2011, 2, 2);
         Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
-            null, owner, product.getId(), activeOn, false, new FilterBuilder(),
+            null, owner, product.getId(), activeOn, false, new PoolFilterBuilder(),
             req, false);
         assertEquals(Integer.valueOf(5), page.getMaxRecords());
         assertEquals(1, page.getPageData().size());
@@ -705,7 +705,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         Date activeOn = TestUtil.createDate(2011, 2, 2);
         Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
-            null, owner, product.getId(), activeOn, false, new FilterBuilder(),
+            null, owner, product.getId(), activeOn, false, new PoolFilterBuilder(),
             req, false);
         assertEquals(Integer.valueOf(0), page.getMaxRecords());
         assertEquals(0, page.getPageData().size());

@@ -41,13 +41,8 @@ public class KeyValueParameter extends CandlepinParameter {
 
     @Override
     void parse() throws CandlepinParamterParseException {
-        String[] parts = this.paramValue.split(":");
-        if (parts.length == 1 && !this.paramValue.endsWith(":")) {
-            throw new CandlepinParamterParseException(this.paramName,
-                this.paramName + "=name:value");
-        }
-
-        if (parts.length < 1 || parts.length > 2) {
+        String[] parts = this.paramValue.split(":", 2); // Maximum of two parts
+        if (parts.length == 1) {
             throw new CandlepinParamterParseException(this.paramName,
                 this.paramName + "=name:value");
         }
