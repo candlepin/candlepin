@@ -170,12 +170,23 @@ public class BouncyCastlePKIReader implements PKIReader, PasswordFinder {
                     reader = new PEMReader(inStream);
                 }
 
-                KeyPair caKeyPair = (KeyPair) reader.readObject();
-                if (caKeyPair == null) {
+                Object caKeyObj = reader.readObject();
+                if (caKeyObj == null) {
                     throw new GeneralSecurityException(
                         "Reading CA private key failed");
                 }
-                return caKeyPair.getPrivate();
+
+                if (caKeyObj instanceof KeyPair) {
+                    KeyPair caKeyPair = (KeyPair) caKeyObj;
+                    return caKeyPair.getPrivate();
+                }
+                else if (caKeyObj instanceof PrivateKey) {
+                    return (PrivateKey) caKeyObj;
+                }
+                else {
+                    throw new GeneralSecurityException("Unexepected CA key object: " +
+                        caKeyObj.getClass().getName());
+                }
             }
             finally {
                 reader.close();
