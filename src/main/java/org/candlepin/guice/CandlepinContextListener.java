@@ -14,7 +14,6 @@
  */
 package org.candlepin.guice;
 
-import org.candlepin.audit.HornetqContextListener;
 import org.candlepin.audit.AMQPBusPublisher;
 import org.candlepin.audit.HornetqContextListener;
 import org.candlepin.config.Config;
