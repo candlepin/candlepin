@@ -14,16 +14,16 @@
         <comment>Constrain one subpool per stack to avoid concurrency problems</comment>
 
         <createTable tableName="cp_pool_source_stack">
-            <column name="id" type="VARCHAR(37)">
+            <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_pool_source_stack_pkey"/>
             </column>
-            <column name="sourceconsumer_id" type="VARCHAR(37)">
+            <column name="sourceconsumer_id" type="VARCHAR(32)">
                 <constraints nullable="false"/>
             </column>
             <column name="sourcestackid" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
-            <column name="derivedpool_id" type="VARCHAR(37)">
+            <column name="derivedpool_id" type="VARCHAR(32)">
                 <constraints nullable="false"/>
             </column>
             <column name="created" type="${timestamp.type}"/>

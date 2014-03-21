@@ -40,8 +40,8 @@ public class CdnCertificate extends AbstractCertificate {
 
     @Id
     @GeneratedValue(generator = "system-uuid")
-    @GenericGenerator(name = "system-uuid", strategy = "uuid2")
-    @Column(length = 37)
+    @GenericGenerator(name = "system-uuid", strategy = "uuid")
+    @Column(length = 32)
     private String id;
 
     @OneToOne
