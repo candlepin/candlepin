@@ -149,7 +149,6 @@ public class X509V3ExtensionUtilTest {
         assertEquals("OS", certProds.get(0).getBrandType());
     }
 
-    // Testing an edge case:
     @Test
     public void productWithMultipleBrandNames() {
         String engProdId = "1000";
@@ -161,6 +160,10 @@ public class X509V3ExtensionUtilTest {
         pool.getBranding().add(new Branding(engProdId, "OS", brandedName));
         pool.getBranding().add(new Branding(engProdId, "OS", "another brand name"));
         pool.getBranding().add(new Branding(engProdId, "OS", "number 3"));
+        Set<String> possibleBrandNames = new HashSet<String>();
+        for (Branding b : pool.getBranding()) {
+            possibleBrandNames.add(b.getName());
+        }
         Consumer consumer = new Consumer();
         Entitlement e = new Entitlement(pool, consumer, 10);
 
@@ -168,8 +171,12 @@ public class X509V3ExtensionUtilTest {
             new HashMap<String, EnvironmentContent>(),  new Consumer(), e);
 
         assertEquals(1, certProds.size());
-        // Should get the first name we encountered:
-        assertEquals(brandedName, certProds.get(0).getBrandName());
+        // Should get the first name we encountered
+        // but they're in a set so we can't test order
+        String resultBrandName = certProds.get(0).getBrandName();
+        String resultBrandType = certProds.get(0).getBrandType();
+        assertTrue(possibleBrandNames.contains(resultBrandName));
+        assertEquals("OS", resultBrandType);
     }
 
 }

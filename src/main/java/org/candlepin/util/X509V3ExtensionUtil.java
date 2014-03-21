@@ -301,12 +301,9 @@ public class X509V3ExtensionUtil extends X509Util {
             product.getAttributeValue("version") : "";
         toReturn.setVersion(version);
 
-        String brandType = product.hasAttribute("brand_type") ?
-            product.getAttributeValue("brand_type") : "";
-        toReturn.setBrandType(brandType);
-
-        String brandName = getBrandedName(ent.getPool(), product.getId());
-        toReturn.setBrandName(brandName);
+        Branding brand = getBranding(ent.getPool(), product.getId());
+        toReturn.setBrandType(brand.getType());
+        toReturn.setBrandName(brand.getName());
 
         String productArches = product.getAttributeValue("arch");
         Set<String> productArchSet = Arch.parseArches(productArches);
@@ -327,12 +324,12 @@ public class X509V3ExtensionUtil extends X509Util {
      * Return a branding object for the given engineering product ID if one exists for
      * the pool in question.
      */
-    private String getBrandedName(Pool pool, String productId) {
-        String brandName = ""; // default to empty string to match brand type behaviour
+    private Branding getBranding(Pool pool, String productId) {
+        Branding resultBranding = null;
         for (Branding b : pool.getBranding()) {
             if (b.getProductId().equals(productId)) {
-                if (brandName.equals("")) {
-                    brandName = b.getName();
+                if (resultBranding == null) {
+                    resultBranding = b;
                 }
                 else {
                     // Warn, but use the first brand name we encountered:
@@ -342,7 +339,9 @@ public class X509V3ExtensionUtil extends X509Util {
                 }
             }
         }
-        return brandName;
+        // If none exist, use null strings
+        return resultBranding != null ? resultBranding :
+            new Branding(productId, null, null);
     }
 
     /*
