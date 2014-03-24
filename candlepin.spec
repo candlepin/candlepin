@@ -31,7 +31,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.5
+Version: 0.9.6
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -342,6 +342,28 @@ fi
 
 
 %changelog
+* Mon Mar 24 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.6-1
+- use branding type from Branding, not product attrs (ckozak@redhat.com)
+- Add brand name to cert, WIP. (dgoodwin@redhat.com)
+- Import/export for branding. (dgoodwin@redhat.com)
+- Update refresh pools for branding. (dgoodwin@redhat.com)
+- Complete branding db mappings for pool and subscription.  (dgoodwin@redhat.com)
+- Add Branding model to subscriptions. (dgoodwin@redhat.com)
+- Revert "Updates for uuid2" (ckozak@redhat.com)
+- Latest strings from zanata (alikins@redhat.com)
+- Print out the line number and last piece of the logger name for testing (awood@redhat.com)
+- Make Checkstyle allow longer lines. (awood@redhat.com)
+- Remove old Fedoras, add F20. (jmrodri@gmail.com)
+- Fix concurrent hornetq error. (jesusr@redhat.com)
+- Use a dependant subquery for facts (ckozak@redhat.com)
+- Fix failing spec due to mysql cutting off milliseconds (ckozak@redhat.com)
+- Add index to cp_consumer_facts on cp_consumer_id (ckozak@redhat.com)
+- Support colons in the value of KeyValueParameters (ckozak@redhat.com)
+- search consumers by on facts (ckozak@redhat.com)
+- Fix reading PKCS1 server certs. (dgoodwin@redhat.com)
+- Remove use of anon ECDH ciphers in tomcat config, add ECDHE.  (dgoodwin@redhat.com)
+- Support reading PKCS8 CA keys. (dgoodwin@redhat.com)
+
 * Thu Mar 13 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.5-1
 - 1073570: Enforce database constraint on one subpool per stack (ckozak@redhat.com)
 - rulessource in liquibase update should be all caps (ckozak@redhat.com)
