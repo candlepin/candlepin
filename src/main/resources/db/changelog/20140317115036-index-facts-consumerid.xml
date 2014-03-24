@@ -12,7 +12,7 @@
         <createIndex indexName="consumer_fact_consumer_id_idx"
             tableName="cp_consumer_facts"
             unique="false">
-            <column name="cp_consumer_id" type="varchar(37)" />
+            <column name="cp_consumer_id" type="varchar(32)" />
         </createIndex>
     </changeSet>
 

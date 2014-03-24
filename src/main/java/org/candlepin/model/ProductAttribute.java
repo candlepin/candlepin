@@ -41,8 +41,7 @@ public class ProductAttribute extends AbstractHibernateObject implements Attribu
 
     @Id
     @GeneratedValue(generator = "system-uuid")
-    @GenericGenerator(name = "system-uuid", strategy = "uuid2")
-    @Column(length = 37)
+    @GenericGenerator(name = "system-uuid", strategy = "uuid")
     protected String id;
 
     @Column(nullable = false)
