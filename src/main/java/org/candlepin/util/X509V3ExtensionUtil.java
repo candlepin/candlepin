@@ -20,6 +20,7 @@ import org.candlepin.json.model.EntitlementBody;
 import org.candlepin.json.model.Order;
 import org.candlepin.json.model.Service;
 import org.candlepin.json.model.Subscription;
+import org.candlepin.model.Branding;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
@@ -63,7 +64,7 @@ import java.util.zip.InflaterOutputStream;
 /**
  * X509ExtensionUtil
  */
-public class X509V3ExtensionUtil extends X509Util{
+public class X509V3ExtensionUtil extends X509Util {
 
     private static Logger log = LoggerFactory.getLogger(X509V3ExtensionUtil.class);
     private Config config;
@@ -300,9 +301,9 @@ public class X509V3ExtensionUtil extends X509Util{
             product.getAttributeValue("version") : "";
         toReturn.setVersion(version);
 
-        String brandType  = product.hasAttribute("brand_type") ?
-            product.getAttributeValue("brand_type") : "";
-        toReturn.setBrandType(brandType);
+        Branding brand = getBranding(ent.getPool(), product.getId());
+        toReturn.setBrandType(brand.getType());
+        toReturn.setBrandName(brand.getName());
 
         String productArches = product.getAttributeValue("arch");
         Set<String> productArchSet = Arch.parseArches(productArches);
@@ -317,6 +318,30 @@ public class X509V3ExtensionUtil extends X509Util{
             contentPrefix, promotedContent, consumer, product));
 
         return toReturn;
+    }
+
+    /*
+     * Return a branding object for the given engineering product ID if one exists for
+     * the pool in question.
+     */
+    private Branding getBranding(Pool pool, String productId) {
+        Branding resultBranding = null;
+        for (Branding b : pool.getBranding()) {
+            if (b.getProductId().equals(productId)) {
+                if (resultBranding == null) {
+                    resultBranding = b;
+                }
+                else {
+                    // Warn, but use the first brand name we encountered:
+                    log.warn("Found multiple brand names: product={}, contract={}, " +
+                        "owner={}", productId, pool.getContractNumber(),
+                        pool.getOwner().getKey());
+                }
+            }
+        }
+        // If none exist, use null strings
+        return resultBranding != null ? resultBranding :
+            new Branding(productId, null, null);
     }
 
     /*

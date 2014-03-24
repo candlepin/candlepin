@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.candlepin.model.Branding;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
 import org.candlepin.model.Subscription;
@@ -30,7 +31,6 @@ import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.impl.DefaultSubscriptionServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
-
 import org.junit.Before;
 import org.junit.Test;
 
@@ -274,6 +274,29 @@ public class SubscriptionCuratorTest extends DatabaseTestFixture {
         List<Subscription> results = adapter.getSubscriptions(product3);
         assertEquals(1, results.size());
         assertTrue(results.contains(sub2));
+    }
+
+    @Test
+    public void testAddBranding() {
+        s1.getBranding().add(new Branding("8000", "OS", "Awesome OS Branded"));
+        subCurator.merge(s1);
+        Subscription lookedUp = subCurator.find(s1.getId());
+        assertEquals(1, lookedUp.getBranding().size());
+        assertEquals("8000", lookedUp.getBranding().iterator().next().getProductId());
+    }
+
+    @Test
+    public void testRemoveBranding() {
+        s1.getBranding().add(new Branding("8000", "OS", "Awesome OS Branded"));
+        subCurator.merge(s1);
+        Subscription lookedUp = subCurator.find(s1.getId());
+        assertEquals(1, lookedUp.getBranding().size());
+
+        lookedUp.getBranding().clear();
+        subCurator.merge(lookedUp);
+
+        lookedUp = subCurator.find(s1.getId());
+        assertEquals(0, lookedUp.getBranding().size());
     }
 
 }

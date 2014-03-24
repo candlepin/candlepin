@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <property name="timestamp.type" value="TIMESTAMP WITHOUT TIME ZONE" dbms="oracle"/>
+    <property name="timestamp.type" value="TIMESTAMP WITHOUT TIME ZONE" dbms="postgresql"/>
+    <property name="timestamp.type" value="DATETIME" dbms="mysql"/>
+
+    <changeSet id="20140313155734-1" author="dgoodwin">
+        <comment>Create the branding table.</comment>
+        <createTable tableName="cp_branding">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_branding_pkey"/>
+            </column>
+            <column name="created" type="${timestamp.type}"/>
+            <column name="updated" type="${timestamp.type}"/>
+
+            <column name="productid" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="type" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+
+    <changeSet id="20140313155734-2" author="dgoodwin">
+        <comment>Create join table for subscription to branding.</comment>
+        <createTable tableName="cp_sub_branding">
+            <column name="subscription_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="branding_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint
+                baseTableName="cp_sub_branding"
+                baseColumnNames="branding_id"
+                constraintName="fk_sub_branding_branding_id"
+                deferrable="false"
+                initiallyDeferred="false"
+                onDelete="CASCADE"
+                onUpdate="NO ACTION"
+                referencedColumnNames="id"
+                referencedTableName="cp_branding"
+                referencesUniqueColumn="false" />
+        <addForeignKeyConstraint
+                baseTableName="cp_sub_branding"
+                baseColumnNames="subscription_id"
+                constraintName="fk_sub_branding_sub_id"
+                deferrable="false"
+                initiallyDeferred="false"
+                onDelete="NO ACTION"
+                onUpdate="NO ACTION"
+                referencedColumnNames="id"
+                referencedTableName="cp_subscription"
+                referencesUniqueColumn="false" />
+    </changeSet>
+
+    <changeSet id="20140313155734-3" author="dgoodwin">
+        <comment>Create join table for pool to branding.</comment>
+        <createTable tableName="cp_pool_branding">
+            <column name="pool_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="branding_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint
+                baseTableName="cp_pool_branding"
+                baseColumnNames="branding_id"
+                constraintName="fk_pool_branding_branding_id"
+                deferrable="false"
+                initiallyDeferred="false"
+                onDelete="CASCADE"
+                onUpdate="NO ACTION"
+                referencedColumnNames="id"
+                referencedTableName="cp_branding"
+                referencesUniqueColumn="false" />
+        <addForeignKeyConstraint
+                baseTableName="cp_pool_branding"
+                baseColumnNames="pool_id"
+                constraintName="fk_pool_branding_pool_id"
+                deferrable="false"
+                initiallyDeferred="false"
+                onDelete="NO ACTION"
+                onUpdate="NO ACTION"
+                referencedColumnNames="id"
+                referencedTableName="cp_pool"
+                referencesUniqueColumn="false" />
+    </changeSet>
+
+</databaseChangeLog>

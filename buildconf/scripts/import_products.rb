@@ -272,6 +272,16 @@ def create_mkt_product(cp, product, owner_keys)
   contract_number = 0
   # Create a SMALL and a LARGE with the slightly similar begin/end dates.
   owner_keys.each do |owner_key|
+      brandings = []
+      if !provided_products.empty? && product_ret['name'].include?('OS')
+        brandings = [
+          {
+            :productId => provided_products[0],
+            :type => 'OS',
+            :name => 'Branded ' + product_ret['name']
+          }
+        ]
+      end
       subscription = cp.create_subscription(owner_key,
                                             product_ret['id'],
                                             SMALL_SUB_QUANTITY,
@@ -281,7 +291,8 @@ def create_mkt_product(cp, product, owner_keys)
                                             startDate1, endDate1,
                                             {
                                               'derived_product_id' => derived_product_id,
-                                              'derived_provided_products' => derived_provided_products
+                                              'derived_provided_products' => derived_provided_products,
+                                              :branding => brandings
                                             })
       contract_number += 1
       subscription = cp.create_subscription(owner_key,
@@ -293,7 +304,8 @@ def create_mkt_product(cp, product, owner_keys)
                                             startDate1, endDate1,
                                             {
                                               'derived_product_id' => derived_product_id,
-                                              'derived_provided_products' => derived_provided_products
+                                              'derived_provided_products' => derived_provided_products,
+                                              :branding => brandings
                                             })
 
       # Create a subscription for the future:
@@ -304,7 +316,8 @@ def create_mkt_product(cp, product, owner_keys)
                                             startDate2, endDate2,
                                             {
                                               'derived_product_id' => derived_product_id,
-                                              'derived_provided_products' => derived_provided_products
+                                              'derived_provided_products' => derived_provided_products,
+                                              :branding => brandings
                                             })
       contract_number += 1
   end

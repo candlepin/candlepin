@@ -19,13 +19,26 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import org.candlepin.config.Config;
+import org.candlepin.model.Branding;
+import org.candlepin.model.Consumer;
+import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.EnvironmentContent;
+import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.Content;
 import org.candlepin.model.ProductContent;
+import org.candlepin.test.TestUtil;
 import org.candlepin.util.X509V3ExtensionUtil.NodePair;
 import org.candlepin.util.X509V3ExtensionUtil.PathNode;
+import org.junit.Before;
 import org.junit.Test;
 
 
@@ -33,12 +46,20 @@ import org.junit.Test;
  * X509V3ExtensionUtilTest
  */
 public class X509V3ExtensionUtilTest {
+    private Config config;
+    private EntitlementCurator ec;
+    private X509V3ExtensionUtil util;
+
+
+    @Before
+    public void init() {
+        config = mock(Config.class);
+        ec = mock(EntitlementCurator.class);
+        util = new X509V3ExtensionUtil(config, ec);
+    }
 
     @Test
     public void compareToEquals() {
-        Config config = mock(Config.class);
-        EntitlementCurator ec = mock(EntitlementCurator.class);
-        X509V3ExtensionUtil util = new X509V3ExtensionUtil(config, ec);
         PathNode pn = util.new PathNode();
         NodePair np = new NodePair("name", pn);
         NodePair np1 = new NodePair("name", pn);
@@ -48,9 +69,6 @@ public class X509V3ExtensionUtilTest {
 
     @Test(expected = NullPointerException.class)
     public void nullCompareTo() {
-        Config config = mock(Config.class);
-        EntitlementCurator ec = mock(EntitlementCurator.class);
-        X509V3ExtensionUtil util = new X509V3ExtensionUtil(config, ec);
         PathNode pn = util.new PathNode();
         NodePair np = new NodePair("name", pn);
         assertEquals(1, np.compareTo(null));
@@ -58,9 +76,6 @@ public class X509V3ExtensionUtilTest {
 
     @Test
     public void nullEquals() {
-        Config config = mock(Config.class);
-        EntitlementCurator ec = mock(EntitlementCurator.class);
-        X509V3ExtensionUtil util = new X509V3ExtensionUtil(config, ec);
         PathNode pn = util.new PathNode();
         NodePair np = new NodePair("name", pn);
         assertFalse(np.equals(null));
@@ -68,9 +83,6 @@ public class X509V3ExtensionUtilTest {
 
     @Test
     public void otherObjectEquals() {
-        Config config = mock(Config.class);
-        EntitlementCurator ec = mock(EntitlementCurator.class);
-        X509V3ExtensionUtil util = new X509V3ExtensionUtil(config, ec);
         PathNode pn = util.new PathNode();
         NodePair np = new NodePair("name", pn);
         assertFalse(np.equals(pn));
@@ -78,9 +90,6 @@ public class X509V3ExtensionUtilTest {
 
     @Test
     public void notEqualNodes() {
-        Config config = mock(Config.class);
-        EntitlementCurator ec = mock(EntitlementCurator.class);
-        X509V3ExtensionUtil util = new X509V3ExtensionUtil(config, ec);
         PathNode pn = util.new PathNode();
         NodePair np = new NodePair("name", pn);
         NodePair np1 = new NodePair("diff", pn);
@@ -94,9 +103,6 @@ public class X509V3ExtensionUtilTest {
         Content c = new Content();
         c.setContentUrl("/some/path");
         ProductContent pc = new ProductContent(p, c, true);
-        Config config = mock(Config.class);
-        EntitlementCurator ec = mock(EntitlementCurator.class);
-        X509V3ExtensionUtil util = new X509V3ExtensionUtil(config, ec);
 
         assertEquals("/this/is/some/path", util.createFullContentPath("/this/is", pc));
         assertEquals("/this/is/some/path", util.createFullContentPath("/this/is/", pc));
@@ -122,4 +128,55 @@ public class X509V3ExtensionUtilTest {
         c.setContentUrl("file://some/path");
         assertEquals("file://some/path", util.createFullContentPath("/this/is", pc));
     }
+
+    @Test
+    public void productWithBrandName() {
+        String engProdId = "1000";
+        String brandedName = "Branded Eng Product";
+        Product p = new Product(engProdId, "Eng Product 1000");
+        p.setAttribute("brand_type", "OS");
+        Set<Product> prods = new HashSet<Product>(Arrays.asList(p));
+        Pool pool = TestUtil.createPool(new Product("mkt", "MKT SKU"));
+        pool.getBranding().add(new Branding(engProdId, "OS", brandedName));
+        Consumer consumer = new Consumer();
+        Entitlement e = new Entitlement(pool, consumer, 10);
+
+        List<org.candlepin.json.model.Product> certProds = util.createProducts(prods, "",
+            new HashMap<String, EnvironmentContent>(),  new Consumer(), e);
+
+        assertEquals(1, certProds.size());
+        assertEquals(brandedName, certProds.get(0).getBrandName());
+        assertEquals("OS", certProds.get(0).getBrandType());
+    }
+
+    @Test
+    public void productWithMultipleBrandNames() {
+        String engProdId = "1000";
+        String brandedName = "Branded Eng Product";
+        Product p = new Product(engProdId, "Eng Product 1000");
+        p.setAttribute("brand_type", "OS");
+        Set<Product> prods = new HashSet<Product>(Arrays.asList(p));
+        Pool pool = TestUtil.createPool(new Product("mkt", "MKT SKU"));
+        pool.getBranding().add(new Branding(engProdId, "OS", brandedName));
+        pool.getBranding().add(new Branding(engProdId, "OS", "another brand name"));
+        pool.getBranding().add(new Branding(engProdId, "OS", "number 3"));
+        Set<String> possibleBrandNames = new HashSet<String>();
+        for (Branding b : pool.getBranding()) {
+            possibleBrandNames.add(b.getName());
+        }
+        Consumer consumer = new Consumer();
+        Entitlement e = new Entitlement(pool, consumer, 10);
+
+        List<org.candlepin.json.model.Product> certProds = util.createProducts(prods, "",
+            new HashMap<String, EnvironmentContent>(),  new Consumer(), e);
+
+        assertEquals(1, certProds.size());
+        // Should get the first name we encountered
+        // but they're in a set so we can't test order
+        String resultBrandName = certProds.get(0).getBrandName();
+        String resultBrandType = certProds.get(0).getBrandType();
+        assertTrue(possibleBrandNames.contains(resultBrandName));
+        assertEquals("OS", resultBrandType);
+    }
+
 }

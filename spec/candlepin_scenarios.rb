@@ -362,6 +362,9 @@ class StandardExporter < Exporter
     #this is for the update process
     @products[:product_up] = create_product(random_string('product_up'), random_string('product_up'))
 
+    # Create an engineering product:
+    @products[:eng_product] = create_product(rand(10000000).to_s, random_string('engproduct'))
+
     content = create_content({:metadata_expire => 6000,
                               :required_tags => "TAG1,TAG2"})
     arch_content = create_content({:metadata_expire => 6000,
@@ -376,7 +379,16 @@ class StandardExporter < Exporter
 
     end_date = Date.new(2025, 5, 29)
 
-    @cp.create_subscription(@owner['key'], @products[:product1].id, 2, [], '', '12345', '6789', nil, end_date)
+    brandings = [
+      {
+        :productId => @products[:eng_product]['id'],
+        :type => "OS",
+        :name => "Branded Eng Product"
+      }
+    ]
+    @cp.create_subscription(@owner['key'], @products[:product1].id, 2,
+      [@products[:eng_product]['id']], '', '12345', '6789', nil, end_date,
+      {:branding => brandings})
     @cp.create_subscription(@owner['key'], @products[:product2].id, 4, [], '', '12345', '6789', nil, end_date)
     @cp.create_subscription(@owner['key'], @products[:virt_product].id, 10, [], '', '12345', '6789', nil, end_date)
     @cp.create_subscription(@owner['key'], @products[:product3].id, 5, [], '', '12345', '6789', nil, end_date,

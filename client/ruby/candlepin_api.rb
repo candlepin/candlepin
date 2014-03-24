@@ -391,13 +391,13 @@ class Candlepin
     path << "per_page=#{params[:per_page]}&" if params[:per_page]
     path << "order=#{params[:order]}&" if params[:order]
     path << "sort_by=#{params[:sort_by]}&" if params[:sort_by]
-    
+
     # Attribute filters are specified in the following format:
     #    {attributeName}:{attributeValue}
     attribute_filters.each do |filter|
         path << "attribute=%s&" % [filter]
     end
-    
+
     results = get(path)
     return results
   end
@@ -813,6 +813,10 @@ class Candlepin
       'providedProducts' => provided_products.collect { |pid| {'id' => pid} },
       'contractNumber' => contract_number
     }
+
+    if params[:branding]
+      subscription['branding'] = params[:branding]
+    end
 
     if params['derived_product_id']
       subscription['derivedProduct'] = { 'id' => params['derived_product_id'] }

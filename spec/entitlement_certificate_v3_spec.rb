@@ -123,6 +123,8 @@ describe 'Entitlement Certificate V3' do
     json_body['products'][0]['name'].should == @product.name
     json_body['products'][0]['version'].should == '6.4'
     json_body['products'][0]['architectures'].size.should == 2
+    json_body['products'][0]['brand_name'].should == nil
+    json_body['products'][0]['brand_type'].should == nil
     contents = json_body['products'][0]['content']
     reg_ret_content = nil
     arch_ret_content = nil
@@ -159,6 +161,26 @@ describe 'Entitlement Certificate V3' do
     arch_ret_content['arches'].include?('x86_64').should be_true
 
     @system.unbind_entitlement entitlement.id
+  end
+
+  it 'verify branding info is correct in json blob' do
+    product = create_product(nil, nil)
+
+    branding = [{:productId => product['id'],
+        :type => 'Some Type', :name => 'Super Branded Name'}]
+    sub = @cp.create_subscription(@owner['key'], product.id, 10, [],
+        '12345', '6789', 'order1', Date.today - 10, Date.today + 365,
+        {:branding => branding})
+    @cp.refresh_pools(@owner['key'])
+    entitlement = @system.consume_product(product.id)[0]
+    json_body = extract_payload(@system.list_certificates[0]['cert'])
+
+    json_body['subscription']['name'].should == product.name
+    json_body['consumer'].should == @system.get_consumer()['uuid']
+
+    # Verify branding info
+    json_body['products'][0]['brand_name'].should == 'Super Branded Name'
+    json_body['products'][0]['brand_type'].should == 'Some Type'
   end
 
   it 'encoded the content urls' do

@@ -1157,4 +1157,5 @@
     <include file="db/changelog/20140306150357-constrain-one-subpool-per-stack.xml" />
     <include file="db/changelog/20140311170628-add-rulessource.xml" />
     <include file="db/changelog/20140317115036-index-facts-consumerid.xml" />
+    <include file="db/changelog/20140313155734-create-branding.xml" />
 </databaseChangeLog>

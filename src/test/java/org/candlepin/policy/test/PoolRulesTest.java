@@ -35,6 +35,7 @@ import org.candlepin.auth.UserPrincipal;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.model.Branding;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
@@ -206,10 +207,65 @@ public class PoolRulesTest {
     }
 
     @Test
+    public void brandingChanged() {
+        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
+
+        Pool p = TestUtil.copyFromSub(s);
+
+        // Add some branding to the subscription and do an update:
+        Branding b1 = new Branding("8000", "OS", "Awesome OS Branded");
+        Branding b2 = new Branding("8001", "OS", "Awesome OS Branded 2");
+        s.getBranding().add(b1);
+        s.getBranding().add(b2);
+
+        List<Pool> existingPools = Arrays.asList(p);
+        List<PoolUpdate> updates = this.poolRules.updatePools(s, existingPools);
+
+        assertEquals(1, updates.size());
+        PoolUpdate update = updates.get(0);
+
+        assertFalse(update.getProductsChanged());
+        assertFalse(update.getDatesChanged());
+        assertFalse(update.getQuantityChanged());
+
+        assertTrue(update.getBrandingChanged());
+        assertTrue(update.changed());
+
+        assertEquals(2, update.getPool().getBranding().size());
+        assertTrue(update.getPool().getBranding().contains(b1));
+        assertTrue(update.getPool().getBranding().contains(b2));
+    }
+
+    @Test
+    public void brandingDidntChange() {
+        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
+
+        // Add some branding to the subscription and do an update:
+        Branding b1 = new Branding("8000", "OS", "Awesome OS Branded");
+        Branding b2 = new Branding("8001", "OS", "Awesome OS Branded 2");
+        s.getBranding().add(b1);
+        s.getBranding().add(b2);
+
+        when(productAdapterMock.getProductById(s.getProduct().getId()))
+            .thenReturn(s.getProduct());
+
+        // Copy the pool with the branding to begin with:
+        Pool p = TestUtil.copyFromSub(s);
+
+        List<Pool> existingPools = Arrays.asList(p);
+        List<PoolUpdate> updates = this.poolRules.updatePools(s, existingPools);
+
+        assertEquals(0, updates.size());
+    }
+
+    @Test
     public void virtOnlyQuantityChanged() {
         Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
         s.getProduct().addAttribute(new ProductAttribute("virt_limit", "5"));
         s.setQuantity(10L);
+
+        when(productAdapterMock.getProductById(s.getProduct().getId()))
+            .thenReturn(s.getProduct());
 
         // Setup a pool with a single (different) provided product:
         Pool p = TestUtil.copyFromSub(s);
@@ -224,6 +280,7 @@ public class PoolRulesTest {
         PoolUpdate update = updates.get(0);
         assertFalse(update.getProductsChanged());
         assertFalse(update.getDatesChanged());
+        assertFalse(update.getProductAttributesChanged());
         assertTrue(update.getQuantityChanged());
         assertEquals(Long.valueOf(50), update.getPool().getQuantity());
     }
@@ -446,6 +503,27 @@ public class PoolRulesTest {
         assertTrue(resultPool.hasProductAttribute(testAttributeKey));
         assertEquals(expectedAttributeValue,
             resultPool.getProductAttribute(testAttributeKey).getValue());
+    }
+
+    @Test
+    public void brandingCopiedWhenCreatingPools() {
+        Product product = TestUtil.createProduct();
+
+        Subscription sub = TestUtil.createSubscription(owner, product);
+        Branding b1 = new Branding("8000", "OS", "Branded Awesome OS");
+        Branding b2 = new Branding("8001", "OS", "Branded Awesome OS 2");
+        sub.getBranding().add(b1);
+        sub.getBranding().add(b2);
+
+        when(this.productAdapterMock.getProductById(anyString())).thenReturn(product);
+
+        List<Pool> pools = this.poolRules.createPools(sub);
+        assertEquals(1, pools.size());
+
+        Pool resultPool = pools.get(0);
+        assertEquals(2, resultPool.getBranding().size());
+        assertTrue(resultPool.getBranding().contains(b1));
+        assertTrue(resultPool.getBranding().contains(b2));
     }
 
     @Test

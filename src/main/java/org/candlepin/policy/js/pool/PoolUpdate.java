@@ -70,6 +70,11 @@ public class PoolUpdate {
      */
     private Boolean derivedProductAttributesChanged = false;
 
+    /**
+     * True if the brand mapping info on the subscription changed.
+     */
+    private Boolean brandingChanged = false;
+
     public PoolUpdate(Pool p) {
         this.pool = p;
     }
@@ -80,7 +85,8 @@ public class PoolUpdate {
     public boolean changed() {
         return datesChanged || quantityChanged || productsChanged ||
             productAttributesChanged ||
-            orderChanged || derivedProductsChanged || derivedProductAttributesChanged;
+            orderChanged || derivedProductsChanged || derivedProductAttributesChanged ||
+            brandingChanged;
     }
 
     /**
@@ -115,6 +121,9 @@ public class PoolUpdate {
         }
         if (derivedProductAttributesChanged) {
             changes.add("derivedproductattributes");
+        }
+        if (brandingChanged) {
+            changes.add("branding");
         }
         buffer.append(StringUtils.join(changes, " "));
         buffer.append("]");
@@ -187,5 +196,13 @@ public class PoolUpdate {
 
     public void setProductAttributesChanged(Boolean productAttributesChanged) {
         this.productAttributesChanged = productAttributesChanged;
+    }
+
+    public Boolean getBrandingChanged() {
+        return brandingChanged;
+    }
+
+    public void setBrandingChanged(Boolean brandingChanged) {
+        this.brandingChanged = brandingChanged;
     }
 }
