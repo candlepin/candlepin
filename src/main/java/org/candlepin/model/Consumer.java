@@ -92,7 +92,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     @Column(length = 32)
     private String entitlementStatus;
 
-    @Column(length = 32, nullable = true)
+    @Column(length = 255, nullable = true)
     @Type(type = "org.candlepin.hibernate.EmptyStringUserType")
     private String serviceLevel;
 

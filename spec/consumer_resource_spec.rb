@@ -417,6 +417,56 @@ describe 'Consumer Resource' do
     consumer.releaseVer.releaseVer.should == "Registration Release"
   end
 
+  it 'should allow a consumer to register with activation keys with service level' do
+    owner = create_owner random_string('owner')
+
+    user1 = user_client(owner, random_string("user1"))
+    prod1 = create_product(random_string('product1'), random_string('product1'),
+                           :attributes => { :'support_level' => 'VIP'})
+    subs1 = @cp.create_subscription(owner['key'], prod1.id, 10)
+    @cp.refresh_pools(owner['key'])
+
+    # Connect without any credentials:
+    client = Candlepin.new
+
+    key1 = @cp.create_activation_key(owner['key'], 'key1', 'VIP')
+    key2 = @cp.create_activation_key(owner['key'], 'key2')
+
+    @cp.set_activation_key_release(key1['id'], "Registration Release")
+
+    consumer = client.register(random_string('machine1'), :system, nil, {}, nil,
+      owner['key'], ["key1", "key2"])
+    consumer.uuid.should_not be_nil
+
+    consumer.releaseVer.releaseVer.should == "Registration Release"
+    consumer.serviceLevel.should == "VIP"
+  end
+
+  it 'should fail a consumer registration for activation keys with missing service level' do
+    owner = create_owner random_string('owner')
+
+    user1 = user_client(owner, random_string("user1"))
+    prod1 = create_product(random_string('product1'), random_string('product1'),
+                           :attributes => { :'support_level' => 'VIP'})
+    subs1 = @cp.create_subscription(owner['key'], prod1.id, 10)
+    @cp.refresh_pools(owner['key'])
+    # Connect without any credentials:
+    client = Candlepin.new
+
+    key1 = @cp.create_activation_key(owner['key'], 'key1', 'VIP')
+    key2 = @cp.create_activation_key(owner['key'], 'key2')
+
+    @cp.set_activation_key_release(key1['id'], "Registration Release")
+
+    @cp.delete_subscription(subs1.id)
+    @cp.refresh_pools(owner['key'])
+
+    lambda do
+      consumer = client.register(random_string('machine1'), :system, nil, {}, nil,
+        owner['key'], ["key1", "key2"])
+    end.should raise_exception(RestClient::BadRequest)
+  end
+
   it 'should allow a consumer to register with multiple activation keys with same content override names' do
     owner = create_owner random_string('owner')
 

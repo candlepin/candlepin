@@ -64,6 +64,7 @@ import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.test.TestUtil;
+import org.candlepin.util.ServiceLevelValidator;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -89,6 +90,7 @@ public class ConsumerResourceUpdateTest {
     @Mock private Entitler entitler;
     @Mock private DeletedConsumerCurator deletedConsumerCurator;
     @Mock private EnvironmentCurator environmentCurator;
+    @Mock private ServiceLevelValidator serviceLevelValidator;
 
     private I18n i18n;
 
@@ -104,7 +106,8 @@ public class ConsumerResourceUpdateTest {
             this.userService, null, poolManager, null, null,
             this.activationKeyCurator, this.entitler, this.complianceRules,
             this.deletedConsumerCurator, this.environmentCurator, null,
-            new CandlepinCommonTestConfig(), null, null, null, null, null);
+            new CandlepinCommonTestConfig(), null, null, null, null, null,
+            serviceLevelValidator);
 
         when(complianceRules.getStatus(any(Consumer.class), any(Date.class)))
             .thenReturn(new ComplianceStatus(new Date()));

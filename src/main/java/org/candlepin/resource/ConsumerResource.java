@@ -14,6 +14,38 @@
  */
 package org.candlepin.resource;
 
+import java.io.File;
+import java.io.IOException;
+import java.security.GeneralSecurityException;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.HEAD;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
+import org.apache.commons.lang.StringUtils;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventAdapter;
 import org.candlepin.audit.EventFactory;
@@ -38,16 +70,12 @@ import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerialDto;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCapability;
+import org.candlepin.model.ConsumerContentOverride;
+import org.candlepin.model.ConsumerContentOverrideCurator;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
-import org.candlepin.model.activationkeys.ActivationKey;
-import org.candlepin.model.activationkeys.ActivationKeyContentOverride;
-import org.candlepin.model.activationkeys.ActivationKeyCurator;
-import org.candlepin.model.activationkeys.ActivationKeyPool;
-import org.candlepin.model.ConsumerContentOverride;
-import org.candlepin.model.ConsumerContentOverrideCurator;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.DeleteResult;
@@ -72,6 +100,10 @@ import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.Release;
 import org.candlepin.model.User;
+import org.candlepin.model.activationkeys.ActivationKey;
+import org.candlepin.model.activationkeys.ActivationKeyContentOverride;
+import org.candlepin.model.activationkeys.ActivationKeyCurator;
+import org.candlepin.model.activationkeys.ActivationKeyPool;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.paging.Paginate;
@@ -94,13 +126,9 @@ import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.sync.ExportCreationException;
 import org.candlepin.sync.Exporter;
+import org.candlepin.util.ServiceLevelValidator;
 import org.candlepin.util.Util;
 import org.candlepin.version.CertVersionConflictException;
-
-import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
-
-import org.apache.commons.lang.StringUtils;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
@@ -109,35 +137,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
-import java.io.File;
-import java.io.IOException;
-import java.security.GeneralSecurityException;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.regex.Pattern;
-
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.HEAD;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
 
 /**
  * API Gateway for Consumers
@@ -177,6 +178,7 @@ public class ConsumerResource {
     private QuantityRules quantityRules;
     private CalculatedAttributesUtil calculatedAttributesUtil;
     private ConsumerContentOverrideCurator consumerContentOverrideCurator;
+    private ServiceLevelValidator serviceLevelValidator;
 
     @Inject
     public ConsumerResource(ConsumerCurator consumerCurator,
@@ -197,7 +199,8 @@ public class ConsumerResource {
         Config config, QuantityRules quantityRules,
         ContentCurator contentCurator,
         CdnCurator cdnCurator, CalculatedAttributesUtil calculatedAttributesUtil,
-        ConsumerContentOverrideCurator consumerContentOverrideCurator) {
+        ConsumerContentOverrideCurator consumerContentOverrideCurator,
+        ServiceLevelValidator serviceLevelValidator) {
 
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -231,6 +234,7 @@ public class ConsumerResource {
         this.quantityRules = quantityRules;
         this.calculatedAttributesUtil = calculatedAttributesUtil;
         this.consumerContentOverrideCurator = consumerContentOverrideCurator;
+        this.serviceLevelValidator = serviceLevelValidator;
     }
 
     /**
@@ -367,11 +371,11 @@ public class ConsumerResource {
         Set<String> keyStrings = splitKeys(activationKeys);
 
         // Only let NoAuth principals through if there are activation keys to consider:
-        if ((principal instanceof NoAuthPrincipal) && (keyStrings.size() == 0)) {
+        if ((principal instanceof NoAuthPrincipal) && keyStrings.isEmpty()) {
             throw new ForbiddenException(i18n.tr("Insufficient permissions"));
         }
 
-        if (keyStrings.size() > 0) {
+        if (!keyStrings.isEmpty()) {
             if (ownerKey == null) {
                 throw new BadRequestException(
                     i18n.tr("Must specify an org to register with activation keys."));
@@ -386,11 +390,9 @@ public class ConsumerResource {
         // Raise an exception if any keys were specified which do not exist
         // for this owner.
         List<ActivationKey> keys = new ArrayList<ActivationKey>();
-        if (keyStrings.size() > 0) {
-            for (String keyString : keyStrings) {
-                ActivationKey key = findKey(keyString, owner);
-                keys.add(key);
-            }
+        for (String keyString : keyStrings) {
+            ActivationKey key = findKey(keyString, owner);
+            keys.add(key);
         }
 
         userName = setUserName(consumer, principal, userName);
@@ -452,7 +454,7 @@ public class ConsumerResource {
             hvsrId.setConsumer(consumer);
         }
 
-        checkServiceLevel(owner, consumer.getServiceLevel());
+        serviceLevelValidator.validate(owner, consumer.getServiceLevel());
 
         try {
             consumer = consumerCurator.create(consumer);
@@ -490,6 +492,7 @@ public class ConsumerResource {
             handleActivationKeyPools(consumer, ak.getPools());
             handleActivationKeyOverrides(consumer, ak.getContentOverrides());
             handleActivationKeyRelease(consumer, ak.getReleaseVer());
+            handleActivationKeyServiceLevel(consumer, ak.getServiceLevel(), ak.getOwner());
         }
     }
 
@@ -521,6 +524,14 @@ public class ConsumerResource {
         String relVerString = release.getReleaseVer();
         if (relVerString != null && !relVerString.isEmpty()) {
             consumer.setReleaseVer(release);
+        }
+    }
+
+    private void handleActivationKeyServiceLevel(Consumer consumer,
+            String level, Owner owner) {
+        if (!StringUtils.isBlank(level)) {
+            serviceLevelValidator.validate(owner, level);
+            consumer.setServiceLevel(level);
         }
     }
 
@@ -610,23 +621,6 @@ public class ConsumerResource {
             // this is a bouncycastle restriction
             throw new BadRequestException(
                 i18n.tr("System name cannot begin with # character"));
-        }
-    }
-
-    private void checkServiceLevel(Owner owner, String serviceLevel)
-        throws BadRequestException {
-        if (serviceLevel != null &&
-            !serviceLevel.trim().equals("")) {
-            for (String level : poolManager.retrieveServiceLevelsForOwner(owner, false)) {
-                if (serviceLevel.equalsIgnoreCase(level)) {
-                    return;
-                }
-            }
-            throw new BadRequestException(
-                i18n.tr(
-                    "Service level ''{0}'' is not available " +
-                    "to units of organization {1}.",
-                    serviceLevel, owner.getKey()));
         }
     }
 
@@ -872,7 +866,7 @@ public class ConsumerResource {
             if (log.isDebugEnabled()) {
                 log.debug("   Updating consumer service level setting.");
             }
-            checkServiceLevel(toUpdate.getOwner(), level);
+            serviceLevelValidator.validate(toUpdate.getOwner(), level);
             toUpdate.setServiceLevel(level);
             changesMade = true;
         }
@@ -1312,8 +1306,8 @@ public class ConsumerResource {
     }
 
     private Set<String> splitKeys(String activationKeyString) {
-        Set<String> keys = new HashSet<String>();
-        if (activationKeyString != null && !activationKeyString.equals("")) {
+        Set<String> keys = new LinkedHashSet<String>();
+        if (!StringUtils.isBlank(activationKeyString)) {
             for (String s : activationKeyString.split(",")) {
                 keys.add(s);
             }
@@ -1535,7 +1529,7 @@ public class ConsumerResource {
         List<PoolQuantity> dryRunPools = new ArrayList<PoolQuantity>();
 
         try {
-            checkServiceLevel(consumer.getOwner(), serviceLevel);
+            serviceLevelValidator.validate(consumer.getOwner(), serviceLevel);
             dryRunPools = entitler.getDryRun(consumer, serviceLevel);
         }
         catch (ForbiddenException fe) {
