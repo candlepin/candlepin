@@ -22,6 +22,7 @@ import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.PermissionBlueprintCurator;
 import org.candlepin.model.Role;
 import org.candlepin.model.User;
+import org.candlepin.resource.util.ResourceVersion;
 import org.candlepin.service.UserServiceAdapter;
 
 import com.google.inject.Inject;
@@ -48,6 +49,7 @@ import javax.ws.rs.core.MediaType;
  *
  */
 @Path("/roles")
+@ResourceVersion(1)
 public class RoleResource {
 
     private UserServiceAdapter userService;

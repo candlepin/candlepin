@@ -34,6 +34,7 @@ import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.DistributorVersion;
 import org.candlepin.model.DistributorVersionCurator;
+import org.candlepin.resource.util.ResourceVersion;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
@@ -42,6 +43,7 @@ import com.google.inject.Inject;
  * DistributorVersionResource
  */
 @Path("/distributor_versions")
+@ResourceVersion(1)
 public class DistributorVersionResource {
 
     private I18n i18n;

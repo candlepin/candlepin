@@ -23,6 +23,7 @@ import org.candlepin.pinsetter.core.PinsetterException;
 import org.candlepin.pinsetter.core.PinsetterKernel;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.pinsetter.core.model.JobStatus.JobState;
+import org.candlepin.resource.util.ResourceVersion;
 
 import com.google.inject.Inject;
 
@@ -45,6 +46,7 @@ import javax.ws.rs.core.MediaType;
  * JobResource
  */
 @Path("/jobs")
+@ResourceVersion(1)
 public class JobResource {
 
     private JobCurator curator;

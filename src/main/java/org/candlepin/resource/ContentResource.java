@@ -35,6 +35,7 @@ import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.EnvironmentContentCurator;
+import org.candlepin.resource.util.ResourceVersion;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.UniqueIdGenerator;
 import org.xnap.commons.i18n.I18n;
@@ -45,6 +46,7 @@ import com.google.inject.Inject;
  */
 
 @Path("/content")
+@ResourceVersion(1)
 public class ContentResource {
 
     private ContentCurator contentCurator;

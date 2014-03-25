@@ -51,6 +51,7 @@ import org.candlepin.paging.PageRequest;
 import org.candlepin.paging.Paginate;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ResourceDateParser;
+import org.candlepin.resource.util.ResourceVersion;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.xnap.commons.i18n.I18n;
@@ -62,6 +63,7 @@ import com.google.inject.Inject;
  */
 
 @Path("/pools")
+@ResourceVersion(1)
 public class PoolResource {
 
     private ConsumerCurator consumerCurator;

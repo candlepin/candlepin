@@ -24,6 +24,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
+import org.candlepin.resource.util.ResourceVersion;
 
 import com.google.inject.Inject;
 
@@ -31,6 +32,7 @@ import com.google.inject.Inject;
  * CertificateSerialResource
  */
 @Path("/serials")
+@ResourceVersion(1)
 public class CertificateSerialResource {
 
     private CertificateSerialCurator certificateSerialCurator;

@@ -20,6 +20,7 @@ import org.candlepin.exceptions.ServiceUnavailableException;
 import org.candlepin.model.CuratorException;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
+import org.candlepin.resource.util.ResourceVersion;
 
 import com.google.inject.Inject;
 
@@ -42,6 +43,7 @@ import javax.ws.rs.core.Response;
  * Rules API entry path
  */
 @Path("/rules")
+@ResourceVersion(1)
 public class RulesResource {
     private static Logger log = LoggerFactory.getLogger(RulesResource.class);
     private RulesCurator rulesCurator;

@@ -85,6 +85,7 @@ import org.candlepin.policy.js.quantity.SuggestedQuantity;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ConsumerInstalledProductEnricher;
 import org.candlepin.resource.util.ResourceDateParser;
+import org.candlepin.resource.util.ResourceVersion;
 import org.candlepin.resteasy.parameter.CandlepinParam;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.service.EntitlementCertServiceAdapter;
@@ -143,6 +144,7 @@ import javax.ws.rs.core.Response;
  * API Gateway for Consumers
  */
 @Path("/consumers")
+@ResourceVersion(1)
 public class ConsumerResource {
     private Pattern consumerSystemNamePattern;
     private Pattern consumerPersonNamePattern;

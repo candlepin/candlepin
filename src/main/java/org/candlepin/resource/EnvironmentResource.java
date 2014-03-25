@@ -29,6 +29,7 @@ import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.pinsetter.tasks.RegenEnvEntitlementCertsJob;
+import org.candlepin.resource.util.ResourceVersion;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
@@ -58,6 +59,7 @@ import javax.ws.rs.core.MediaType;
  * REST API for managing Environments.
  */
 @Path("/environments")
+@ResourceVersion(1)
 public class EnvironmentResource {
 
     private EnvironmentCurator envCurator;

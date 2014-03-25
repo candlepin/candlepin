@@ -19,6 +19,7 @@ import org.candlepin.auth.SystemPrincipal;
 import org.candlepin.auth.interceptor.SecurityHole;
 import org.candlepin.model.User;
 import org.candlepin.model.UserCurator;
+import org.candlepin.resource.util.ResourceVersion;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.service.impl.DefaultUserServiceAdapter;
 
@@ -37,6 +38,7 @@ import javax.ws.rs.core.MediaType;
  * Candlepin server administration REST calls.
  */
 @Path("/admin")
+@ResourceVersion(1)
 public class AdminResource {
 
     private static Logger log = LoggerFactory.getLogger(AdminResource.class);

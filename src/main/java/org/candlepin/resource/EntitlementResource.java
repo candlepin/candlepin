@@ -46,6 +46,7 @@ import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.paging.Paginate;
 import org.candlepin.pinsetter.tasks.RegenProductEntitlementCertsJob;
+import org.candlepin.resource.util.ResourceVersion;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.util.Util;
@@ -60,6 +61,7 @@ import com.google.inject.Inject;
  * REST api gateway for the User object.
  */
 @Path("/entitlements")
+@ResourceVersion(1)
 public class EntitlementResource {
     private final ConsumerCurator consumerCurator;
     private PoolManager poolManager;

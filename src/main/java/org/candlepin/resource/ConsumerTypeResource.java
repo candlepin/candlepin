@@ -18,6 +18,7 @@ import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.resource.util.ResourceVersion;
 
 import com.google.inject.Inject;
 
@@ -42,6 +43,7 @@ import javax.ws.rs.core.MediaType;
  * Access Path for consumer types
  */
 @Path("/consumertypes")
+@ResourceVersion(1)
 public class ConsumerTypeResource {
     private static Logger log = LoggerFactory.getLogger(ConsumerTypeResource.class);
     private ConsumerTypeCurator consumerTypeCurator;

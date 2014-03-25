@@ -20,6 +20,7 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.SubscriptionsCertificate;
+import org.candlepin.resource.util.ResourceVersion;
 import org.candlepin.service.SubscriptionServiceAdapter;
 
 import com.google.inject.Inject;
@@ -48,6 +49,7 @@ import javax.ws.rs.core.MediaType;
  */
 
 @Path("/subscriptions")
+@ResourceVersion(1)
 @Consumes(MediaType.APPLICATION_JSON)
 public class SubscriptionResource {
     private static Logger log = LoggerFactory.getLogger(SubscriptionResource.class);
