@@ -41,6 +41,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Role;
 import org.candlepin.model.User;
+import org.candlepin.resource.util.ResourceVersion;
 import org.candlepin.service.UserServiceAdapter;
 import org.xnap.commons.i18n.I18n;
 
@@ -50,6 +51,7 @@ import com.google.inject.Inject;
  * UserResource
  */
 @Path("/users")
+@ResourceVersion(1)
 public class UserResource {
 
     private UserServiceAdapter userService;

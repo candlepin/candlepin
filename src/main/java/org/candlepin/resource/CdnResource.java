@@ -33,6 +33,7 @@ import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCurator;
+import org.candlepin.resource.util.ResourceVersion;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
@@ -41,6 +42,7 @@ import com.google.inject.Inject;
  * CdnResource
  */
 @Path("/cdn")
+@ResourceVersion(1)
 public class CdnResource {
 
     private I18n i18n;

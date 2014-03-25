@@ -21,12 +21,14 @@ package org.candlepin.resource;
 import org.candlepin.auth.interceptor.SecurityHole;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.resource.util.ResourceVersion;
 
 import com.google.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -46,6 +48,7 @@ import javax.ws.rs.core.MediaType;
  * permissions of the caller.
  */
 @Path("/")
+@ResourceVersion(1)
 public class RootResource {
 
     private static Logger log = LoggerFactory.getLogger(RootResource.class);
@@ -123,7 +126,7 @@ public class RootResource {
         if (rel == null) {
             rel = generateRel(href);
         }
-        return new Link(rel, href);
+        return new Link(rel, href, getVersion(m, rel));
     }
 
     protected Link classLink(String rel, Class clazz) {
@@ -132,7 +135,36 @@ public class RootResource {
         if (rel == null) {
             rel = generateRel(href);
         }
-        return new Link(rel, href);
+        int version = getVersion(getSupertypeWithVersion(clazz), rel);
+        return new Link(rel, href, version);
+    }
+
+    protected int getVersion(AnnotatedElement element, String rel) {
+        int version = 0;
+        if (element.isAnnotationPresent(ResourceVersion.class)) {
+            version = element.getAnnotation(ResourceVersion.class).value();
+        }
+        else {
+            log.warn("No ResourceVersion exists on resource " + rel);
+        }
+        return version;
+    }
+
+    /*
+     * Returns the given class if it has a ResourceVersion annotation,
+     * otherwise the closest superclass with ResourceVersion.
+     *
+     * If none contain the ResourceVersion, the farthest superclass is
+     * returned.  The class doesn't matter so much as the fact it doesn't
+     * have a ResourceVersion annotation.
+     */
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    protected Class getSupertypeWithVersion(Class clazz) {
+        if (!clazz.isAnnotationPresent(ResourceVersion.class) &&
+                clazz.getSuperclass() != null) {
+            return getSupertypeWithVersion(clazz.getSuperclass());
+        }
+        return clazz;
     }
 
     protected Link resourceLink(Object resource, String rel) {

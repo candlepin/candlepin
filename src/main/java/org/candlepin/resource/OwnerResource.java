@@ -92,6 +92,7 @@ import org.candlepin.pinsetter.tasks.HealEntireOrgJob;
 import org.candlepin.pinsetter.tasks.RefreshPoolsJob;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ResourceDateParser;
+import org.candlepin.resource.util.ResourceVersion;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.resteasy.parameter.CandlepinParam;
 import org.candlepin.service.SubscriptionServiceAdapter;
@@ -121,6 +122,7 @@ import com.google.inject.persist.Transactional;
  * Owner Resource
  */
 @Path("/owners")
+@ResourceVersion(1)
 public class OwnerResource {
 
     private OwnerCurator ownerCurator;

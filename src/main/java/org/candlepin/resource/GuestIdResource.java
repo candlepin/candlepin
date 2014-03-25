@@ -42,6 +42,7 @@ import org.candlepin.model.GuestId;
 import org.candlepin.model.GuestIdCurator;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
+import org.candlepin.resource.util.ResourceVersion;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,6 +54,7 @@ import com.google.inject.Inject;
  * API Gateway for registered consumers guests
  */
 @Path("/consumers/{consumer_uuid}/guestids")
+@ResourceVersion(1)
 public class GuestIdResource {
 
     private static Logger log = LoggerFactory.getLogger(GuestIdResource.class);

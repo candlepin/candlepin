@@ -30,6 +30,7 @@ import org.candlepin.model.HypervisorId;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.resource.dto.HypervisorCheckInResult;
+import org.candlepin.resource.util.ResourceVersion;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -56,6 +57,7 @@ import javax.ws.rs.core.MediaType;
  * HypervisorResource
  */
 @Path("/hypervisors")
+@ResourceVersion(1)
 public class HypervisorResource {
     private static Logger log = LoggerFactory.getLogger(HypervisorResource.class);
     private ConsumerCurator consumerCurator;

@@ -18,6 +18,7 @@ import org.candlepin.audit.Event;
 import org.candlepin.audit.EventAdapter;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.EventCurator;
+import org.candlepin.resource.util.ResourceVersion;
 
 import com.google.inject.Inject;
 
@@ -36,6 +37,7 @@ import javax.ws.rs.core.MediaType;
  * Candlepin Events Resource
  */
 @Path("/events")
+@ResourceVersion(1)
 public class EventResource {
 
     private EventCurator eventCurator;

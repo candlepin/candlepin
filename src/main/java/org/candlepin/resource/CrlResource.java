@@ -23,6 +23,7 @@ import org.candlepin.controller.CrlGenerator;
 import org.candlepin.exceptions.IseException;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
+import org.candlepin.resource.util.ResourceVersion;
 import org.candlepin.util.CrlFileUtil;
 
 import java.io.File;
@@ -44,6 +45,7 @@ import javax.ws.rs.core.MediaType;
  * CrlResource
  */
 @Path("/crl")
+@ResourceVersion(1)
 public class CrlResource {
 
     private CrlGenerator crlGenerator;

@@ -16,6 +16,7 @@ package org.candlepin.resource;
 
 import org.candlepin.exceptions.ServiceUnavailableException;
 import org.candlepin.model.StatisticCurator;
+import org.candlepin.resource.util.ResourceVersion;
 
 import com.google.inject.Inject;
 
@@ -31,6 +32,7 @@ import javax.ws.rs.Path;
  * Rules API entry path
  */
 @Path("/statistics/generate")
+@ResourceVersion(1)
 public class StatisticResource {
     private static Logger log = LoggerFactory.getLogger(StatisticResource.class);
     private StatisticCurator statisticCurator;

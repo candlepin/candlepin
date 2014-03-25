@@ -29,6 +29,7 @@ import org.candlepin.model.Statistic;
 import org.candlepin.model.StatisticCurator;
 import org.candlepin.pinsetter.tasks.RefreshPoolsForProductJob;
 import org.candlepin.resource.util.ResourceDateParser;
+import org.candlepin.resource.util.ResourceVersion;
 import org.candlepin.service.ProductServiceAdapter;
 
 import com.google.inject.Inject;
@@ -61,6 +62,7 @@ import javax.ws.rs.core.MediaType;
  * @version $Rev$
  */
 @Path("/products")
+@ResourceVersion(1)
 public class ProductResource {
 
     private static Logger log = LoggerFactory.getLogger(ProductResource.class);

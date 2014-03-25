@@ -27,10 +27,12 @@ public class Link {
 
     private String rel;
     private String href;
+    private int version;
 
-    public Link(String rel, String href) {
+    public Link(String rel, String href, int version) {
         this.rel = rel;
         this.href = href;
+        this.version = version;
     }
 
     public String getRel() {
@@ -47,6 +49,14 @@ public class Link {
 
     public void setHref(String href) {
         this.href = href;
+    }
+
+    public int getVersion() {
+        return version;
+    }
+
+    public void setVersion(int version) {
+        this.version = version;
     }
 
 }

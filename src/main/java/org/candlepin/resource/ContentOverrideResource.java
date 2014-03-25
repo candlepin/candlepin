@@ -34,6 +34,7 @@ import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.model.AbstractHibernateObject;
 import org.candlepin.model.ContentOverride;
 import org.candlepin.model.ContentOverrideCurator;
+import org.candlepin.resource.util.ResourceVersion;
 import org.candlepin.util.ContentOverrideValidator;
 import org.xnap.commons.i18n.I18n;
 
@@ -46,6 +47,7 @@ import com.google.inject.persist.Transactional;
  * @param <Curator> curator class for the ContentOverride type
  * @param <Parent> parent of the content override, Consumer or ActivationKey for example
  */
+@ResourceVersion(1)
 public abstract class ContentOverrideResource<T extends ContentOverride,
         Curator extends ContentOverrideCurator<T, Parent>,
         Parent extends AbstractHibernateObject> {

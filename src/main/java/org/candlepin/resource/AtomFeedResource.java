@@ -17,6 +17,7 @@ package org.candlepin.resource;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventAdapter;
 import org.candlepin.model.EventCurator;
+import org.candlepin.resource.util.ResourceVersion;
 
 import com.google.inject.Inject;
 
@@ -33,6 +34,7 @@ import javax.ws.rs.core.MediaType;
  * Resource exposing an Atom feed of Candlepin events.
  */
 @Path("/atom")
+@ResourceVersion(1)
 public class AtomFeedResource {
 
     private static final int ATOM_FEED_LIMIT = 1000;

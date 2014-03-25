@@ -25,6 +25,7 @@ import javax.ws.rs.core.MediaType;
 import org.candlepin.model.DeletedConsumer;
 import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.resource.util.ResourceDateParser;
+import org.candlepin.resource.util.ResourceVersion;
 
 import com.google.inject.Inject;
 
@@ -32,6 +33,7 @@ import com.google.inject.Inject;
  * DeletedConsumerResource
  */
 @Path("/deleted_consumers")
+@ResourceVersion(1)
 public class DeletedConsumerResource {
     private DeletedConsumerCurator deletedConsumerCurator;
 

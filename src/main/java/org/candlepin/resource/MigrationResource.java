@@ -16,6 +16,7 @@ package org.candlepin.resource;
 
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.pinsetter.tasks.MigrateOwnerJob;
+import org.candlepin.resource.util.ResourceVersion;
 
 import com.google.inject.Inject;
 
@@ -35,6 +36,7 @@ import javax.ws.rs.core.MediaType;
  * MigrationResource
  */
 @Path("/migrations")
+@ResourceVersion(1)
 public class MigrationResource {
     private static Logger log = LoggerFactory.getLogger(MigrationResource.class);
     public static final String OWNER = "owner";
