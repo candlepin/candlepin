@@ -38,6 +38,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.Subscription;
+import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.policy.EntitlementRefusedException;
@@ -300,8 +301,9 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     @Test
     public void testListAllForConsumerIncludesWarnings() {
         Page<List<Pool>> results =
-            poolManager.listAvailableEntitlementPools(parentSystem, parentSystem.getOwner(),
-                null, null, true, true, new PoolFilterBuilder(), new PageRequest());
+            poolManager.listAvailableEntitlementPools(parentSystem, null,
+                parentSystem.getOwner(), null, null, true, true,
+                new PoolFilterBuilder(), new PageRequest());
         assertEquals(4, results.getPageData().size());
 
         Pool pool = createPoolAndSub(o, socketLimitedProduct, 100L,
@@ -309,7 +311,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         poolCurator.create(pool);
 
         parentSystem.setFact("cpu.sockets", "4");
-        results = poolManager.listAvailableEntitlementPools(parentSystem,
+        results = poolManager.listAvailableEntitlementPools(parentSystem, null,
             parentSystem.getOwner(), null, null, true, true, new PoolFilterBuilder(),
             new PageRequest());
         // Expect the warnings to be included. Should have one more pool available.
@@ -322,8 +324,9 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         productCurator.create(p);
 
         Page<List<Pool>> results =
-            poolManager.listAvailableEntitlementPools(parentSystem, parentSystem.getOwner(),
-                null, null, true, true, new PoolFilterBuilder(), new PageRequest());
+            poolManager.listAvailableEntitlementPools(parentSystem, null,
+                parentSystem.getOwner(), null, null, true, true,
+                new PoolFilterBuilder(), new PageRequest());
         assertEquals(4, results.getPageData().size());
 
         // Creating a pool with no entitlements available, which will trigger
@@ -332,7 +335,36 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
             TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
         poolCurator.create(pool);
 
-        results = poolManager.listAvailableEntitlementPools(parentSystem,
+        results = poolManager.listAvailableEntitlementPools(parentSystem, null,
+            parentSystem.getOwner(), null, null, true, true, new PoolFilterBuilder(),
+            new PageRequest());
+        // Pool in error should not be included. Should have the same number of
+        // initial pools.
+        assertEquals(4, results.getPageData().size());
+    }
+
+    @Test
+    public void testListAllForActKeyExcludesErrors() {
+        Product p = new Product("test-product", "Test Product");
+        productCurator.create(p);
+
+        ActivationKey ak = new ActivationKey();
+        Pool akpool = new Pool();
+        akpool.setAttribute("physical_only", "true");
+        ak.addPool(akpool, 1L);
+        Page<List<Pool>> results =
+            poolManager.listAvailableEntitlementPools(null, ak,
+                parentSystem.getOwner(), null, null, true, true,
+                new PoolFilterBuilder(), new PageRequest());
+        assertEquals(4, results.getPageData().size());
+
+        // Creating a pool with no entitlements available, which will trigger
+        // a rules error:
+        Pool pool = createPoolAndSub(o, p, 0L,
+            TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
+        poolCurator.create(pool);
+
+        results = poolManager.listAvailableEntitlementPools(null, ak,
             parentSystem.getOwner(), null, null, true, true, new PoolFilterBuilder(),
             new PageRequest());
         // Pool in error should not be included. Should have the same number of
@@ -343,9 +375,9 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     @Test
     public void testListForConsumerExcludesWarnings() {
         Page<List<Pool>> results =
-            poolManager.listAvailableEntitlementPools(parentSystem, parentSystem.getOwner(),
-                (String) null, null, true, false, new PoolFilterBuilder(),
-                new PageRequest());
+            poolManager.listAvailableEntitlementPools(parentSystem, null,
+                parentSystem.getOwner(), (String) null, null, true, false,
+                new PoolFilterBuilder(), new PageRequest());
         assertEquals(4, results.getPageData().size());
 
         Pool pool = createPoolAndSub(o, socketLimitedProduct, 100L,
@@ -354,7 +386,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         parentSystem.setFact("cpu.cpu_socket(s)", "4");
 
-        results = poolManager.listAvailableEntitlementPools(parentSystem,
+        results = poolManager.listAvailableEntitlementPools(parentSystem, null,
             parentSystem.getOwner(), (String) null, null, true, false,
             new PoolFilterBuilder(), new PageRequest());
         // Pool in error should not be included. Should have the same number of

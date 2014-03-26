@@ -495,10 +495,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
      */
     @XmlTransient
     public boolean isUnlimited() {
-        if (this.getQuantity() < 0) {
-            return true;
-        }
-        return false;
+        return this.getQuantity() < 0;
     }
 
     /**
@@ -746,6 +743,21 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
 
     public String getProductAttributeValue(String name) {
         return findAttributeValue(this.productAttributes, name);
+    }
+
+    public boolean hasMergedAttribute(String name) {
+        return this.getMergedAttribute(name) != null;
+    }
+
+    /*
+     * Gets either pool or product attributes, not derived attributes
+     */
+    public AbstractPoolAttribute getMergedAttribute(String name) {
+        AbstractPoolAttribute result = findAttribute(this.attributes, name);
+        if (result == null) {
+            result = findAttribute(this.productAttributes, name);
+        }
+        return result;
     }
 
     public DerivedProductPoolAttribute getDerivedProductAttribute(String name) {

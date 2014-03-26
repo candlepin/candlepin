@@ -22,6 +22,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Subscription;
+import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.policy.EntitlementRefusedException;
@@ -157,9 +158,9 @@ public interface PoolManager {
      * @param pageRequest used to determine if results paging is required.
      * @return List of entitlement pools.
      */
-    Page<List<Pool>> listAvailableEntitlementPools(Consumer consumer, Owner owner,
-        String productId, Date activeOn, boolean activeOnly, boolean includeWarnings,
-        PoolFilterBuilder filterBuilder, PageRequest pageRequest);
+    Page<List<Pool>> listAvailableEntitlementPools(Consumer consumer, ActivationKey key,
+        Owner owner, String productId, Date activeOn, boolean activeOnly,
+        boolean includeWarnings, PoolFilterBuilder filterBuilder, PageRequest pageRequest);
 
     /**
      *  Get the available service levels for consumers for this owner. Exempt
