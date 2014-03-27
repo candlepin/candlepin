@@ -292,7 +292,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         securityInterceptor.enable();
 
-        ownerResource.listPools(owner.getKey(), null, null, false, null,
+        ownerResource.listPools(owner.getKey(), null, null, null, false, null,
             new ArrayList<KeyValueParameter>(), principal, null);
     }
 
@@ -308,7 +308,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         poolCurator.create(pool2);
 
         List<Pool> pools = ownerResource.listPools(owner.getKey(),
-            null, null, true, null, new ArrayList<KeyValueParameter>(), principal, null);
+            null, null, null, true, null, new ArrayList<KeyValueParameter>(),
+            principal, null);
         assertEquals(2, pools.size());
     }
 
@@ -330,16 +331,16 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         List<KeyValueParameter> params = new ArrayList<KeyValueParameter>();
         params.add(createKeyValueParam("cores", "12"));
 
-        List<Pool> pools = ownerResource.listPools(owner.getKey(), null, null, true,
-            null, params, principal, null);
+        List<Pool> pools = ownerResource.listPools(owner.getKey(), null,
+            null, null, true, null, params, principal, null);
         assertEquals(1, pools.size());
         assertEquals(pool2, pools.get(0));
 
         params.clear();
         params.add(createKeyValueParam("virt_only", "true"));
 
-        pools = ownerResource.listPools(owner.getKey(), null, null, true,
-            null, params, principal, null);
+        pools = ownerResource.listPools(owner.getKey(), null, null,
+            null, true, null, params, principal, null);
         assertEquals(1, pools.size());
         assertEquals(pool1, pools.get(0));
     }
@@ -360,7 +361,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         securityInterceptor.enable();
 
         // Filtering should just cause this to return no results:
-        ownerResource.listPools(owner.getKey(), null, null, true, null,
+        ownerResource.listPools(owner.getKey(), null, null, null, true, null,
             new ArrayList<KeyValueParameter>(), principal, null);
     }
 
@@ -554,7 +555,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Principal principal = setupPrincipal(new ConsumerPrincipal(c));
         securityInterceptor.enable();
 
-        List<Pool> pools = ownerResource.listPools(owner.getKey(), c.getUuid(),
+        List<Pool> pools = ownerResource.listPools(owner.getKey(), c.getUuid(), null,
             p.getId(), true, null, new ArrayList<KeyValueParameter>(), principal, null);
         assertEquals(1, pools.size());
         Pool returnedPool = pools.get(0);
@@ -577,7 +578,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Owner owner2 = createOwner();
         ownerCurator.create(owner2);
 
-        ownerResource.listPools(owner.getKey(), c.getUuid(),
+        ownerResource.listPools(owner.getKey(), c.getUuid(), null,
             p.getId(), true, null, new ArrayList<KeyValueParameter>(),
             setupPrincipal(owner2, Access.NONE), null);
     }

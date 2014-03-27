@@ -173,8 +173,8 @@ public class PoolResource {
                     principal.getPrincipalName()));
         }
 
-        Page<List<Pool>> page = poolManager.listAvailableEntitlementPools(c, o, productId,
-            activeOnDate, true, listAll, new PoolFilterBuilder(), pageRequest);
+        Page<List<Pool>> page = poolManager.listAvailableEntitlementPools(c, null, o,
+            productId, activeOnDate, true, listAll, new PoolFilterBuilder(), pageRequest);
         List<Pool> poolList = page.getPageData();
 
         if (c != null) {

@@ -63,6 +63,7 @@ import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.ProductCache;
+import org.candlepin.policy.js.activationkey.ActivationKeyRules;
 import org.candlepin.policy.js.autobind.AutobindRules;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
@@ -122,6 +123,9 @@ public class PoolManagerTest {
     @Mock
     private ComplianceRules complianceRules;
 
+    @Mock
+    private ActivationKeyRules activationKeyRules;
+
     private CandlepinPoolManager manager;
     private UserPrincipal principal;
 
@@ -144,7 +148,8 @@ public class PoolManagerTest {
         this.manager = spy(new CandlepinPoolManager(mockPoolCurator, mockSubAdapter,
             productCache, entCertAdapterMock, mockEventSink, eventFactory,
             mockConfig, enforcerMock, poolRulesMock, entitlementCurator,
-            consumerCuratorMock, certCuratorMock, complianceRules, autobindRules));
+            consumerCuratorMock, certCuratorMock, complianceRules, autobindRules,
+            activationKeyRules));
 
         when(entCertAdapterMock.generateEntitlementCert(any(Entitlement.class),
             any(Subscription.class), any(Product.class))).thenReturn(

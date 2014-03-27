@@ -58,6 +58,7 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.Subscription;
+import org.candlepin.policy.js.activationkey.ActivationKeyRules;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.resource.ConsumerResource;
@@ -114,6 +115,8 @@ public class ConsumerResourceTest {
     private ComplianceRules mockedComplianceRules;
     @Mock
     private ServiceLevelValidator mockedServiceLevelValidator;
+    @Mock
+    private ActivationKeyRules mockedActivationKeyRules;
 
     @Before
     public void setUp() {
@@ -167,7 +170,8 @@ public class ConsumerResourceTest {
             mockedSubscriptionServiceAdapter, null,
             mockedEntitlementCertServiceAdapter, null, null,
             new CandlepinCommonTestConfig(), null, null,
-            mockedEntitlementCurator, mockedConsumerCurator, null, null, null);
+            mockedEntitlementCurator, mockedConsumerCurator, null, null, null,
+            mockedActivationKeyRules);
 
         ConsumerResource consumerResource = new ConsumerResource(
             mockedConsumerCurator, null, null, null, mockedEntitlementCurator, null,

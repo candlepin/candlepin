@@ -18,11 +18,11 @@ import org.candlepin.auth.interceptor.Verify;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.model.Pool;
-import org.candlepin.model.ProductPoolAttribute;
 import org.candlepin.model.Release;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.model.activationkeys.ActivationKeyPool;
+import org.candlepin.policy.js.activationkey.ActivationKeyRules;
 import org.candlepin.util.ServiceLevelValidator;
 
 import com.google.inject.Inject;
@@ -56,15 +56,18 @@ public class ActivationKeyResource {
     private PoolManager poolManager;
     private I18n i18n;
     private ServiceLevelValidator serviceLevelValidator;
+    private ActivationKeyRules activationKeyRules;
 
     @Inject
     public ActivationKeyResource(ActivationKeyCurator activationKeyCurator,
         I18n i18n, PoolManager poolManager,
-        ServiceLevelValidator serviceLevelValidator) {
+        ServiceLevelValidator serviceLevelValidator,
+        ActivationKeyRules activationKeyRules) {
         this.activationKeyCurator = activationKeyCurator;
         this.i18n = i18n;
         this.poolManager = poolManager;
         this.serviceLevelValidator = serviceLevelValidator;
+        this.activationKeyRules = activationKeyRules;
     }
 
     /**
@@ -137,42 +140,11 @@ public class ActivationKeyResource {
         @PathParam("pool_id") @Verify(Pool.class) String poolId,
         @QueryParam("quantity") Long quantity) {
 
-        if (quantity != null && quantity < 1) {
-            throw new BadRequestException(
-                i18n.tr("The quantity must be greater than 0"));
-        }
         ActivationKey key = activationKeyCurator.verifyAndLookupKey(activationKeyId);
         Pool pool = findPool(poolId);
 
-        if (pool.getAttributeValue("requires_consumer_type") != null &&
-            pool.getAttributeValue("requires_consumer_type").equals("person") ||
-            pool.getProductAttribute("requires_consumer_type") != null &&
-            pool.getProductAttribute("requires_consumer_type").getValue()
-                  .equals("person")) {
-            throw new BadRequestException(i18n.tr("Cannot add pools that are " +
-                    "restricted to unit type 'person' to activation keys."));
-        }
-        if (quantity != null && quantity > 1) {
-            ProductPoolAttribute ppa = pool.getProductAttribute("multi-entitlement");
-            if (ppa == null || !ppa.getValue().equalsIgnoreCase("yes")) {
-                throw new BadRequestException(
-                    i18n.tr("Error: Only pools with multi-entitlement product" +
-                        " subscriptions can be added to the activation key with" +
-                        " a quantity greater than one."));
-            }
-        }
-        if (quantity != null && (!pool.isUnlimited()) && (quantity > pool.getQuantity())) {
-            throw new BadRequestException(
-                i18n.tr("The quantity must not be greater than the total " +
-                    "allowed for the pool"));
-        }
-        if (isPoolHostRestricted(pool) &&
-            !StringUtils.isBlank(getKeyHostRestriction(key)) &&
-            !getPoolRequiredHost(pool).equals(getKeyHostRestriction(key))) {
-            throw new BadRequestException(
-                i18n.tr("Activation keys can only use host restricted pools from " +
-                    "a single host."));
-        }
+        // Throws a BadRequestException if adding pool to key is a bad idea
+        activationKeyRules.validatePoolForActKey(key, pool, quantity);
         key.addPool(pool, quantity);
         activationKeyCurator.update(key);
         return pool;
