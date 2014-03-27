@@ -5,6 +5,22 @@ describe 'Product Resource' do
 
   include CandlepinMethods
 
+  before do
+    @owner = create_owner random_string('test_owner')
+    @product = create_product random_string('product')
+    @prov_product = create_product random_string('provided_product')
+    @derived_product = create_product random_string('derived_product')
+    @derived_prov_product = create_product random_string('derived_provided_product')
+    
+    @cp.create_subscription(@owner['key'], @product.id,
+      10, [@prov_product.id], '222', '', '', nil, nil,
+      {
+        'derived_product_id' => @derived_product.id,
+        'derived_provided_products' => [@derived_prov_product.id]
+      })
+
+  end
+
   it 'updates individual product fields' do
     prod = create_product(nil, 'tacos', {:multiplier => 2, :dependentProductIds => [2, 4]})
     prod2 = create_product(nil, 'enchiladas', {:multiplier => 4})
@@ -197,5 +213,30 @@ describe 'Product Resource' do
     prod_ids_to_get.index(bulk_get_products[0]['id']).should_not == nil
     prod_ids_to_get.index(bulk_get_products[1]['id']).should_not == nil
   end
+
+  it 'bad request on attempt to delete product attached to sub' do
+    lambda do
+      @cp.delete_product(@product.id)
+    end.should raise_exception(RestClient::BadRequest)
+  end
+
+  it 'bad request on attempt to delete provided product attached to sub' do
+    lambda do
+      @cp.delete_product(@prov_product.id)
+    end.should raise_exception(RestClient::BadRequest)
+  end
+
+  it 'bad request on attempt to delete derived product attached to sub' do
+    lambda do
+      @cp.delete_product(@derived_product.id)
+    end.should raise_exception(RestClient::BadRequest)
+  end
+
+  it 'bad request on attempt to delete derived provided product attached to sub' do
+    lambda do
+      @cp.delete_product(@derived_prov_product.id)
+    end.should raise_exception(RestClient::BadRequest)
+  end
+
 end
 

@@ -27,8 +27,10 @@ import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.model.Content;
+import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
+import org.candlepin.model.Subscription;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
@@ -40,6 +42,7 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -52,6 +55,13 @@ import javax.persistence.PersistenceException;
 public class ProductCuratorTest extends DatabaseTestFixture {
 
     private CandlepinCommonTestConfig config = null;
+
+    private Product product;
+    private Product derivedProduct;
+    private Product providedProduct;
+    private Product derivedProvidedProduct;
+
+    private Subscription sub;
 
     @Before
     public void setUp() {
@@ -66,6 +76,33 @@ public class ProductCuratorTest extends DatabaseTestFixture {
             "product.long_pos_count");
         config.setProperty(ConfigProperties.BOOLEAN_ATTRIBUTES,
             "product.bool_val_str, product.bool_val_num");
+
+        Owner owner = createOwner();
+        ownerCurator.create(owner);
+
+        product = TestUtil.createProduct();
+        productCurator.create(product);
+
+        providedProduct = TestUtil.createProduct();
+        productCurator.create(providedProduct);
+
+        Set<Product> providedProducts = new HashSet<Product>();
+        providedProducts.add(providedProduct);
+
+        derivedProduct = TestUtil.createProduct();
+        productCurator.create(derivedProduct);
+
+        derivedProvidedProduct = TestUtil.createProduct();
+        productCurator.create(derivedProvidedProduct);
+
+        Set<Product> derivedProvidedProducts = new HashSet<Product>();
+        derivedProvidedProducts.add(derivedProvidedProduct);
+
+        sub = new Subscription(owner, product, providedProducts, 16L,
+            TestUtil.createDate(2006, 10, 21), TestUtil.createDate(2020, 1, 1), new Date());
+        sub.setDerivedProduct(derivedProduct);
+        sub.setDerivedProvidedProducts(derivedProvidedProducts);
+        subCurator.create(sub);
     }
 
     @Test
@@ -77,7 +114,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
         List<Product> results = entityManager().createQuery(
                 "select p from Product as p").getResultList();
-        assertEquals(1, results.size());
+        assertEquals(5, results.size());
     }
 
     @Test(expected = PersistenceException.class)
@@ -457,6 +494,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         newAttributes.add(a4);
         modified.setAttributes(newAttributes);
 
+        int initialAttrCount = attributeCurator.listAll().size();
         productCurator.createOrUpdate(modified);
 
         Product lookedUp = productCurator.lookupById(original.getId());
@@ -468,13 +506,8 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
         // TODO: test content merging
 
-        // TODO: test attribute cleanup:
-        List<ProductAttribute> all = attributeCurator.listAll();
-        for (ProductAttribute a : all) {
-            System.out.println(a);
-        }
         // Old attributes should get cleaned up:
-        assertEquals(3, all.size());
+        assertEquals(initialAttrCount, attributeCurator.listAll().size());
     }
 
     @Test
@@ -684,4 +717,32 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         assertEquals(1, productIds.size());
         assertEquals(p.getId(), productIds.get(0));
     }
+
+    @Test
+    public void ensureProductHasSubscription() {
+        assertTrue(productCurator.productHasSubscriptions(product));
+    }
+
+    @Test
+    public void ensureProvidedProductHasSubscription() {
+        assertTrue(productCurator.productHasSubscriptions(providedProduct));
+    }
+
+    @Test
+    public void ensureDerivedProductHasSubscription() {
+        assertTrue(productCurator.productHasSubscriptions(derivedProduct));
+    }
+
+    @Test
+    public void ensureDerivedProvidedProductHasSubscription() {
+        assertTrue(productCurator.productHasSubscriptions(derivedProvidedProduct));
+    }
+
+    @Test
+    public void ensureDoesNotHaveSubscription() {
+        Product doesNotHave = TestUtil.createProduct();
+        productCurator.create(doesNotHave);
+        assertFalse(productCurator.productHasSubscriptions(doesNotHave));
+    }
+
 }
