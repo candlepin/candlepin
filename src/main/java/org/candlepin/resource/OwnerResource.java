@@ -66,7 +66,6 @@ import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.EventCurator;
 import org.candlepin.model.ExporterMetadata;
 import org.candlepin.model.ExporterMetadataCurator;
-import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.ImportRecord;
 import org.candlepin.model.ImportRecordCurator;
 import org.candlepin.model.ImportUpstreamConsumer;
@@ -77,6 +76,7 @@ import org.candlepin.model.OwnerInfoCurator;
 import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.PermissionBlueprintCurator;
 import org.candlepin.model.Pool;
+import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.Statistic;
 import org.candlepin.model.StatisticCurator;
 import org.candlepin.model.Subscription;
@@ -92,8 +92,8 @@ import org.candlepin.pinsetter.tasks.HealEntireOrgJob;
 import org.candlepin.pinsetter.tasks.RefreshPoolsJob;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ResourceDateParser;
-import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.resteasy.parameter.CandlepinParam;
+import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.sync.ConflictOverrides;
 import org.candlepin.sync.Importer;
@@ -524,6 +524,15 @@ public class OwnerResource {
         }
 
         serviceLevelValidator.validate(owner, activationKey.getServiceLevel());
+
+        if (activationKey.getReleaseVer() != null &&
+            activationKey.getReleaseVer().getReleaseVer() != null &&
+                activationKey.getReleaseVer().getReleaseVer().length() >
+            ActivationKey.RELEASE_VERSION_LENGTH) {
+            throw new BadRequestException(i18n.tr(
+                "Release version must not exceed {0} characters",
+                ActivationKey.RELEASE_VERSION_LENGTH));
+        }
 
         ActivationKey newKey = activationKeyCurator.create(activationKey);
         sink.emitActivationKeyCreated(newKey);

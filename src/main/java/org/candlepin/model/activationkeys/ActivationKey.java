@@ -52,6 +52,8 @@ import org.hibernate.annotations.Index;
 )
 public class ActivationKey extends AbstractHibernateObject implements Owned {
 
+    public static final int RELEASE_VERSION_LENGTH = 255;
+
     @Id
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
@@ -78,7 +80,7 @@ public class ActivationKey extends AbstractHibernateObject implements Owned {
     private Set<ActivationKeyContentOverride> contentOverrides =
         new HashSet<ActivationKeyContentOverride>();
 
-    @Column(length = 255, nullable =  true)
+    @Column(length = RELEASE_VERSION_LENGTH, nullable =  true)
     private String releaseVer;
 
     @Column(length = 255, nullable =  true)

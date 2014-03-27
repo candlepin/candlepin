@@ -119,6 +119,16 @@ public class ActivationKeyResource {
             serviceLevelValidator.validate(toUpdate.getOwner(), serviceLevel);
             toUpdate.setServiceLevel(serviceLevel);
         }
+        Release release = key.getReleaseVer();
+        if (release != null && release.getReleaseVer() != null) {
+            if (release.getReleaseVer().length() >
+                    ActivationKey.RELEASE_VERSION_LENGTH) {
+                throw new BadRequestException(i18n.tr(
+                    "Release version must not exceed {0} characters",
+                    ActivationKey.RELEASE_VERSION_LENGTH));
+            }
+            toUpdate.setReleaseVer(key.getReleaseVer());
+        }
         activationKeyCurator.merge(toUpdate);
 
         return toUpdate;
