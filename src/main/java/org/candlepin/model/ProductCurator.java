@@ -22,9 +22,9 @@ import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.exceptions.BadRequestException;
 import org.hibernate.Criteria;
-import org.hibernate.Query;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.sql.JoinType;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
@@ -218,11 +218,16 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     }
 
     public boolean productHasSubscriptions(Product prod) {
-        String poolString = "select id from Subscription s" +
-            " where s.product.id = :prodId";
-        Query poolQuery = currentSession().createQuery(poolString).setString(
-            "prodId", prod.getId());
-        return poolQuery.list().size() > 0;
+        return ((Long) currentSession().createCriteria(Subscription.class)
+            .createAlias("providedProducts", "providedProd", JoinType.LEFT_OUTER_JOIN)
+            .createAlias("derivedProvidedProducts", "derivedProvidedProd", JoinType.LEFT_OUTER_JOIN)
+            .add(Restrictions.or(
+                Restrictions.eq("product", prod),
+                Restrictions.eq("derivedProduct", prod),
+                Restrictions.eq("providedProd.id", prod.getId()),
+                Restrictions.eq("derivedProvidedProd.id", prod.getId())))
+            .setProjection(Projections.count("id"))
+            .uniqueResult()) > 0;
     }
 
     public void addRely(Product prod, String relyId) {
