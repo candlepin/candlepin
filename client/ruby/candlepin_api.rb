@@ -917,14 +917,6 @@ class Candlepin
       return get("/activation_keys/#{key_id}/content_overrides")
   end
 
-  def set_activation_key_release(key_id, release)
-      return post("/activation_keys/#{key_id}/release", release)
-  end
-
-  def get_activation_key_release(key_id)
-      return get("/activation_keys/#{key_id}/release")
-  end
-
   def list_certificates(serials = [])
     path = "/consumers/#{@uuid}/certificates"
     path += "?serials=" + serials.join(",") if serials.length > 0

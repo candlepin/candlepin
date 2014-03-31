@@ -1307,7 +1307,7 @@ public class ConsumerResource {
 
     private Set<String> splitKeys(String activationKeyString) {
         Set<String> keys = new LinkedHashSet<String>();
-        if (!StringUtils.isBlank(activationKeyString)) {
+        if (activationKeyString != null) {
             for (String s : activationKeyString.split(",")) {
                 keys.add(s);
             }
