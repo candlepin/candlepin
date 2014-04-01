@@ -1,4 +1,4 @@
-// Version: 5.7
+// Version: 5.8
 
 /*
  * Default Candlepin rule set.
@@ -1177,7 +1177,16 @@ var ActivationKey = {
         if (quantity !== null && quantity < 1) {
             result.addError("rulefailed.invalid.quantity");
         }
-        if (pool.getAvailable() == 0 || (quantity !== null && !pool.isUnlimited() && quantity > pool.getAvailable())) {
+
+        var minRequiredQuantity = 1;
+        // Instance based quantity
+        if (key.physical_only && pool.hasAttribute(INSTANCE_ATTRIBUTE)) {
+            minRequiredQuantity = parseInt(pool.getAttribute(INSTANCE_ATTRIBUTE));
+        }
+
+        if (!pool.isUnlimited() &&
+                (pool.quantity < minRequiredQuantity ||
+                 (quantity !== null && quantity > pool.quantity))) {
             result.addError("rulefailed.insufficient.quantity");
         }
         if (!Utils.isMultiEnt(pool)) {

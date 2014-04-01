@@ -224,8 +224,12 @@ public class ActivationKeyRulesTest {
         assertEquals(expected, result.getErrors().get(0).getResourceKey());
     }
 
+    /*
+     * the number of available subscriptions shouldn't matter, only
+     * the total number
+     */
     @Test
-    public void testActivationKeyRulesInsufficientQuantity() {
+    public void testActivationKeyRulesSufficientQuantity() {
         ActivationKey key = new ActivationKey();
         Pool pool = genPool();
         pool.setQuantity(5L);
@@ -233,6 +237,26 @@ public class ActivationKeyRulesTest {
 
         // Attempting to overconsume the pool
         ValidationResult result = actKeyRules.runPreActKey(key, pool, new Long(2));
+        assertTrue(result.getWarnings().isEmpty());
+        assertTrue(result.getErrors().isEmpty());
+    }
+
+    /*
+     * Because the key can only be used on physical consumers, null quantity
+     * should be evaluated to two, and there are at most one available.
+     */
+    @Test
+    public void testActivationKeyRulesinSufficientQuantity() {
+        ActivationKey key = new ActivationKey();
+        Pool pool = genPhysOnlyPool();
+        key.addPool(pool, 1L);
+
+        Pool instanceBased = this.genInstanceBased();
+        instanceBased.setQuantity(1L);
+        instanceBased.setConsumed(0L);
+
+        // Attempting to overconsume the pool
+        ValidationResult result = actKeyRules.runPreActKey(key, instanceBased, null);
         assertTrue(result.getWarnings().isEmpty());
         assertEquals(1, result.getErrors().size());
         String expected = "rulefailed.insufficient.quantity";
