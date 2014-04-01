@@ -39,6 +39,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
+import org.apache.commons.lang.StringUtils;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventAdapter;
 import org.candlepin.audit.EventFactory;
@@ -500,7 +501,7 @@ public class OwnerResource {
         Owner owner = findOwner(ownerKey);
         activationKey.setOwner(owner);
 
-        if (activationKey.getName() == null || activationKey.getName().trim().equals("")) {
+        if (StringUtils.isBlank(activationKey.getName())) {
             throw new BadRequestException(
                 i18n.tr("Must provide a name for activation key."));
         }

@@ -408,7 +408,7 @@ describe 'Consumer Resource' do
 
     key1 = @cp.create_activation_key(owner['key'], 'key1')
 
-    @cp.set_activation_key_release(key1['id'], "Registration Release")
+    @cp.update_activation_key({'id' => key1['id'], 'releaseVer' => "Registration Release"})
 
     consumer = client.register(random_string('machine1'), :system, nil, {}, nil,
       owner['key'], ["key1"])
@@ -432,7 +432,7 @@ describe 'Consumer Resource' do
     key1 = @cp.create_activation_key(owner['key'], 'key1', 'VIP')
     key2 = @cp.create_activation_key(owner['key'], 'key2')
 
-    @cp.set_activation_key_release(key1['id'], "Registration Release")
+    @cp.update_activation_key({'id' => key1['id'], 'releaseVer' => "Registration Release"})
 
     consumer = client.register(random_string('machine1'), :system, nil, {}, nil,
       owner['key'], ["key1", "key2"])
@@ -456,7 +456,7 @@ describe 'Consumer Resource' do
     key1 = @cp.create_activation_key(owner['key'], 'key1', 'VIP')
     key2 = @cp.create_activation_key(owner['key'], 'key2')
 
-    @cp.set_activation_key_release(key1['id'], "Registration Release")
+    @cp.update_activation_key({'id' => key1['id'], 'releaseVer' => "Registration Release"})
 
     @cp.delete_subscription(subs1.id)
     @cp.refresh_pools(owner['key'])

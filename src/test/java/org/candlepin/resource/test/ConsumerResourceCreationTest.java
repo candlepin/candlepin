@@ -289,7 +289,11 @@ public class ConsumerResourceCreationTest {
     }
 
     private String createKeysString(List<String> activationKeys) {
-        return StringUtils.join(activationKeys, ',');
+        // Allow empty string through because we accept it for ",foo" etc.
+        if (!activationKeys.isEmpty()) {
+            return StringUtils.join(activationKeys, ',');
+        }
+        return null;
     }
 
     @Test
@@ -297,7 +301,7 @@ public class ConsumerResourceCreationTest {
         // Should be able to register successfully with as a trusted user principal:
         Principal p = new TrustedUserPrincipal("anyuser");
         Consumer consumer = new Consumer("sys.example.com", null, null, system);
-        resource.create(consumer, p, null, owner.getKey(), "");
+        resource.create(consumer, p, null, owner.getKey(), null);
     }
 
     @Test
@@ -343,7 +347,7 @@ public class ConsumerResourceCreationTest {
         Consumer consumer = new Consumer();
         consumer.setType(system);
         consumer.setName("consumername");
-        resource.create(consumer, p, USER, owner.getKey(), "");
+        resource.create(consumer, p, USER, owner.getKey(), null);
     }
 
     @Test
@@ -353,7 +357,7 @@ public class ConsumerResourceCreationTest {
         consumer.setType(system);
         consumer.setName("consumername");
         consumer.setReleaseVer(null);
-        resource.create(consumer, p, USER, owner.getKey(), "");
+        resource.create(consumer, p, USER, owner.getKey(), null);
 
     }
 
@@ -364,7 +368,7 @@ public class ConsumerResourceCreationTest {
         consumer.setType(system);
         consumer.setName("consumername");
         consumer.setReleaseVer(new Release(""));
-        resource.create(consumer, p, USER, owner.getKey(), "");
+        resource.create(consumer, p, USER, owner.getKey(), null);
     }
 
     @Test
@@ -373,7 +377,7 @@ public class ConsumerResourceCreationTest {
         Consumer consumer = new Consumer();
         consumer.setType(system);
         consumer.setName("consumername");
-        resource.create(consumer, p, USER, owner.getKey(), "");
+        resource.create(consumer, p, USER, owner.getKey(), null);
     }
 
     @Test
@@ -382,7 +386,7 @@ public class ConsumerResourceCreationTest {
         Consumer consumer = new Consumer();
         consumer.setType(system);
         consumer.setName("consumername");
-        resource.create(consumer, p, USER, owner.getKey(), "");
+        resource.create(consumer, p, USER, owner.getKey(), null);
         verify(complianceRules).getStatus(eq(consumer), any(Date.class));
     }
 }

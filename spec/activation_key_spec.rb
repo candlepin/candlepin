@@ -122,8 +122,8 @@ describe 'Activation Keys' do
   end
 
   it 'should allow release to be set on keys' do
-    @cp.set_activation_key_release(@activation_key['id'], "Some Release")
-    @cp.get_activation_key_release(@activation_key['id'])['releaseVer'].should == "Some Release"
+    @cp.update_activation_key({'id' => @activation_key['id'], 'releaseVer' => "Some Release"})
+    @cp.get_activation_key(@activation_key['id'])['releaseVer']['releaseVer'].should == "Some Release"
   end
 
   it 'should allow service level to be set on keys' do
