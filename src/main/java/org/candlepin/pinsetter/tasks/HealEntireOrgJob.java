@@ -39,7 +39,7 @@ import com.google.inject.persist.UnitOfWork;
 /**
  * HealEntireOrgJob
  */
-public class HealEntireOrgJob extends UniqueByOwnerJob {
+public class HealEntireOrgJob extends KingpinJob {
     private static Logger log = LoggerFactory.getLogger(HealEntireOrgJob.class);
     protected OwnerCurator ownerCurator;
     protected Entitler entitler;
@@ -95,7 +95,7 @@ public class HealEntireOrgJob extends UniqueByOwnerJob {
         JobDetail detail = newJob(HealEntireOrgJob.class)
             .withIdentity("heal_entire_org_" + Util.generateUUID())
             .usingJobData(map)
-            .storeDurably(true) //required if we have to postpone the job
+            .storeDurably(false)
             .build();
 
         return detail;

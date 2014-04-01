@@ -48,8 +48,6 @@ import org.candlepin.pinsetter.tasks.EntitlerJob;
 import org.candlepin.pinsetter.tasks.JobCleaner;
 import org.candlepin.pinsetter.tasks.ExportCleaner;
 import org.candlepin.pinsetter.tasks.RefreshPoolsJob;
-import org.candlepin.pinsetter.tasks.SweepBarJob;
-import org.candlepin.pinsetter.tasks.UnpauseJob;
 import org.candlepin.pki.PKIReader;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.impl.BouncyCastlePKIReader;
@@ -237,8 +235,6 @@ public class CandlepinModule extends AbstractModule {
         bind(CertificateRevocationListTask.class);
         bind(JobCleaner.class);
         bind(ExportCleaner.class);
-        bind(UnpauseJob.class);
-        bind(SweepBarJob.class);
     }
 
     private void configureExporter() {
