@@ -865,7 +865,7 @@ var CoverageCalculator = {
             }
         // Loop while the stack isn't covered for all the stackable attributes we're checking
         // and there is enough available quantity for the next iteration
-        } while (!covered && ((quantity + increment <= pool.quantity - pool.consumed) || pool.quantity == -1));
+        } while (!covered && ((quantity + increment <= pool.getAvailable()) || pool.isUnlimited()));
 
         log.debug("Quantity required to cover consumer: " + quantity);
         return quantity;
@@ -2065,7 +2065,7 @@ var Autobind = {
                 pool.currently_available = Quantity.get_suggested_pool_quantity(pool, context.consumer, []);
                 // Can use an empty list here because global attributes don't necessarily change quantity
             } else {
-                pool.currently_available = pool.quantity - pool.consumed;
+                pool.currently_available = pool.getAvailable();
             }
             // If the pool is not multi-entitlable, only one may be used
             if (pool.currently_available > 0 && !Utils.isMultiEnt(pool)) {
