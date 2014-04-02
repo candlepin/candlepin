@@ -120,7 +120,7 @@ public abstract class KingpinJob implements Job {
 
         JobStatus status = null;
         try {
-            status = jobCurator.create(new JobStatus(detail, trigger == null));
+            status = jobCurator.create(new JobStatus(detail));
         }
         catch (EntityExistsException e) {
             // status exists, let's update it
