@@ -210,4 +210,10 @@ public class JobStatus extends AbstractHibernateObject {
     public JobKey getJobKey() {
         return new JobKey(this.getId(), this.getGroup());
     }
+
+    public boolean isDone() {
+        return this.state == JobState.CANCELED ||
+            this.state == JobState.FAILED ||
+            this.state == JobState.FINISHED;
+    }
 }

@@ -34,7 +34,7 @@ public class JobCleanerTest {
         JobCurator curator = mock(JobCurator.class);
         JobCleaner cleaner = new JobCleaner(curator, null);
         cleaner.execute(null);
-        verify(curator).cleanUpOldJobs(any(Date.class));
-        verify(curator).cleanupFailedJobs(any(Date.class));
+        verify(curator).cleanUpOldCompletedJobs(any(Date.class));
+        verify(curator).cleanupAllOldJobs(any(Date.class));
     }
 }

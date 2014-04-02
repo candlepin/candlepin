@@ -14,6 +14,8 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.config.Config;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.pinsetter.core.PinsetterKernel;
 import org.candlepin.pinsetter.core.model.JobStatus;
@@ -26,6 +28,9 @@ import org.hibernate.criterion.Projections;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
+import com.google.inject.Inject;
+
+import java.util.Calendar;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -36,8 +41,12 @@ import java.util.Set;
  */
 public class JobCurator extends AbstractHibernateCurator<JobStatus> {
 
-    public JobCurator() {
+    private Config config;
+
+    @Inject
+    public JobCurator(Config config) {
         super(JobStatus.class);
+        this.config = config;
     }
 
     public JobStatus cancel(String jobId) {
@@ -62,20 +71,18 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
         }
     }
 
-    public int cleanupFailedJobs(Date deadline) {
+    public int cleanupAllOldJobs(Date deadline) {
         return this.currentSession().createQuery(
-            "delete from JobStatus where startTime <= :date and " +
-            "state = :failed")
-               .setDate("date", deadline) // Strips time
-               .setInteger("failed", JobState.FAILED.ordinal())
+            "delete from JobStatus where updated <= :date")
+               .setTimestamp("date", deadline)
                .executeUpdate();
     }
 
-    public int cleanUpOldJobs(Date deadLineDt) {
+    public int cleanUpOldCompletedJobs(Date deadLineDt) {
         return this.currentSession().createQuery(
-            "delete from JobStatus where finishTime <= :date and " +
+            "delete from JobStatus where updated <= :date and " +
             "(state = :completed or state = :canceled)")
-               .setDate("date", deadLineDt) // Strips time
+               .setTimestamp("date", deadLineDt)
                .setInteger("completed", JobState.FINISHED.ordinal())
                .setInteger("canceled", JobState.CANCELED.ordinal())
                .executeUpdate();
@@ -133,6 +140,7 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
     public long findNumRunningByOwnerAndClass(
             String ownerKey, Class<? extends KingpinJob> jobClass) {
         return (Long) this.currentSession().createCriteria(JobStatus.class)
+            .add(Restrictions.ge("updated", getBlockingCutoff()))
             .add(Restrictions.eq("state", JobState.RUNNING))
             .add(Restrictions.eq("targetId", ownerKey))
             .add(Restrictions.eq("jobClass", jobClass))
@@ -145,6 +153,7 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
 
         return (JobStatus) this.currentSession().createCriteria(JobStatus.class)
             .addOrder(Order.desc("created"))
+            .add(Restrictions.ge("updated", getBlockingCutoff()))
             .add(Restrictions.ne("state", JobState.FINISHED))
             .add(Restrictions.ne("state", JobState.FAILED))
             .add(Restrictions.ne("state", JobState.CANCELED))
@@ -186,5 +195,12 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
             query.setParameterList("activeIds", activeIds);
         }
         return query.executeUpdate();
+    }
+
+    private Date getBlockingCutoff() {
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.SECOND, -1 * config.getInt(
+            ConfigProperties.PINSETTER_ASYNC_JOB_TIMEOUT));
+        return calendar.getTime();
     }
 }

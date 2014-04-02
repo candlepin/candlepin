@@ -72,6 +72,8 @@ public class ConfigProperties {
     public static final String TASKS = "pinsetter.tasks";
     public static final String DEFAULT_TASKS = "pinsetter.default_tasks";
     public static final String ENABLE_PINSETTER = "candlepin.pinsetter.enable";
+    public static final String PINSETTER_ASYNC_JOB_TIMEOUT =
+        "pinsetter.waiting.timeout.seconds";
 
     private static final String[] DEFAULT_TASK_LIST = new String[]{
         CertificateRevocationListTask.class.getName(),
@@ -245,6 +247,9 @@ public class ConfigProperties {
 
                 // Hopefully temporary configuration to block duplicate hypervisorIds
                 this.put(BLOCK_DUPLICATE_HYPERVISOR_IDS, "true");
+
+                // Default 20 minutes
+                this.put(PINSETTER_ASYNC_JOB_TIMEOUT, Integer.toString(1200));
             }
         };
     public static final String CRL_FILE_PATH = "candlepin.crl.file";
