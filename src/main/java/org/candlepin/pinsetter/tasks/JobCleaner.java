@@ -45,9 +45,9 @@ public class JobCleaner extends KingpinJob {
         // CAUTION: jobCurator uses setDate on the delete query,
         // so all time info is stripped off
         Date deadLineDt = Util.yesterday();
-        this.jobCurator.cleanupFinishedJobs(deadLineDt);
+        this.jobCurator.cleanUpOldCompletedJobs(deadLineDt);
         Date failedJobDeadLineDt = Util.addDaysToDt(-4);
-        this.jobCurator.cleanupOldJobs(failedJobDeadLineDt);
+        this.jobCurator.cleanupAllOldJobs(failedJobDeadLineDt);
     }
 
 }

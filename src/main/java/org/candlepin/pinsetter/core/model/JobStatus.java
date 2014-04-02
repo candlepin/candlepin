@@ -54,7 +54,7 @@ public class JobStatus extends AbstractHibernateObject {
         FINISHED,
         CANCELED,
         FAILED,
-        WAITING; // added late, reordering would be problematic now // unused
+        WAITING; // added late, reordering would be problematic now
     }
 
     /**
@@ -86,9 +86,13 @@ public class JobStatus extends AbstractHibernateObject {
     public JobStatus() { }
 
     public JobStatus(JobDetail jobDetail) {
+        this(jobDetail, false);
+    }
+
+    public JobStatus(JobDetail jobDetail, boolean waiting) {
         this.id = jobDetail.getKey().getName();
         this.jobGroup = jobDetail.getKey().getGroup();
-        this.state = JobState.CREATED;
+        this.state = waiting ? JobState.WAITING : JobState.CREATED;
         this.targetType = getTargetType(jobDetail);
         this.targetId = getTargetId(jobDetail);
         this.principalName = getPrincipalName(jobDetail);
@@ -205,5 +209,11 @@ public class JobStatus extends AbstractHibernateObject {
     @XmlTransient
     public JobKey getJobKey() {
         return new JobKey(this.getId(), this.getGroup());
+    }
+
+    public boolean isDone() {
+        return this.state == JobState.CANCELED ||
+            this.state == JobState.FAILED ||
+            this.state == JobState.FINISHED;
     }
 }

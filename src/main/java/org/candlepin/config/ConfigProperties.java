@@ -25,6 +25,8 @@ import org.candlepin.pinsetter.tasks.ExpiredPoolsJob;
 import org.candlepin.pinsetter.tasks.ExportCleaner;
 import org.candlepin.pinsetter.tasks.ImportRecordJob;
 import org.candlepin.pinsetter.tasks.JobCleaner;
+import org.candlepin.pinsetter.tasks.SweepBarJob;
+import org.candlepin.pinsetter.tasks.UnpauseJob;
 import org.candlepin.pinsetter.tasks.StatisticHistoryTask;
 
 /**
@@ -70,12 +72,15 @@ public class ConfigProperties {
     public static final String TASKS = "pinsetter.tasks";
     public static final String DEFAULT_TASKS = "pinsetter.default_tasks";
     public static final String ENABLE_PINSETTER = "candlepin.pinsetter.enable";
+    public static final String PINSETTER_ASYNC_JOB_TIMEOUT =
+        "pinsetter.waiting.timeout.seconds";
 
     private static final String[] DEFAULT_TASK_LIST = new String[]{
         CertificateRevocationListTask.class.getName(),
         JobCleaner.class.getName(), ImportRecordJob.class.getName(),
         StatisticHistoryTask.class.getName(),
         CancelJobJob.class.getName(), ExpiredPoolsJob.class.getName(),
+        UnpauseJob.class.getName(), SweepBarJob.class.getName(),
         ExportCleaner.class.getName()};
 
     public static final String SYNC_WORK_DIR = "candlepin.sync.work_dir";
@@ -242,6 +247,9 @@ public class ConfigProperties {
 
                 // Hopefully temporary configuration to block duplicate hypervisorIds
                 this.put(BLOCK_DUPLICATE_HYPERVISOR_IDS, "true");
+
+                // Default 20 minutes
+                this.put(PINSETTER_ASYNC_JOB_TIMEOUT, Integer.toString(1200));
             }
         };
     public static final String CRL_FILE_PATH = "candlepin.crl.file";

@@ -18,6 +18,7 @@ import org.candlepin.auth.Principal;
 import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.pinsetter.core.model.JobStatus.JobState;
+import org.candlepin.pinsetter.tasks.UniqueByOwnerJob;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -93,8 +94,23 @@ public class PinsetterJobListener implements JobListener {
             updateJob(context, exception);
         }
         catch (Exception e) {
-            log.error("jobWasExecuted encountered a problem. Usually means " +
-                "there was a problem storing the job status. Job finished ok.", e);
+            if (UniqueByOwnerJob.class.isAssignableFrom(
+                    context.getJobDetail().getJobClass())) {
+                log.error("jobWasExecuted encountered a problem on a blocking job." +
+                    " This can block other jobs.  Marking finished, if possible", e);
+                try {
+                    //This time only update the state so it doesn't block other jobs
+                    curator.cancelNoReturn(context.getJobDetail().getKey().getName());
+                }
+                catch (Exception ex) {
+                    log.error("Failed again to cancel status: " +
+                        context.getJobDetail().getKey().getName(), ex);
+                }
+            }
+            else {
+                log.error("jobWasExecuted encountered a problem. Usually means " +
+                    "there was a problem storing the job status. Job finished ok.", e);
+            }
         }
         finally {
             unitOfWork.end();
@@ -125,17 +141,11 @@ public class PinsetterJobListener implements JobListener {
         }
     }
 
-    /*
-     * All jobs should be durable
-     *
-     * We can probably remove this method
-     */
     private void deleteDetail(JobExecutionContext cx) {
         JobKey key = cx.getJobDetail().getKey();
         if (key.getGroup().equals(PinsetterKernel.SINGLE_JOB_GROUP)) {
             try {
                 cx.getScheduler().deleteJob(key);
-                log.error("deleted jobdetail " + key.getName() + " this should have been marked durable.");
             }
             catch (SchedulerException e1) {
                 // Should fail if the job isn't durable

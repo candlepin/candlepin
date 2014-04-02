@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
  * Asynchronous job for refreshing the entitlement pools for specific
  * {@link Owner}.
  */
-public class RefreshPoolsJob extends KingpinJob {
+public class RefreshPoolsJob extends UniqueByOwnerJob {
 
     private static Logger log = LoggerFactory.getLogger(RefreshPoolsJob.class);
     private OwnerCurator ownerCurator;
@@ -106,7 +106,7 @@ public class RefreshPoolsJob extends KingpinJob {
             .withIdentity("refresh_pools_" + Util.generateUUID())
             .requestRecovery(true) // recover the job upon restarts
             .usingJobData(map)
-            .storeDurably(false)
+            .storeDurably(true) // required if we have to postpone the job
             .build();
 
         return detail;
