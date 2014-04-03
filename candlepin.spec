@@ -31,7 +31,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.7
+Version: 0.9.8
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -345,6 +345,19 @@ fi
 
 
 %changelog
+* Thu Apr 03 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.8-1
+- updated pinsetter with timeout (ckozak@redhat.com)
+- Revert "remove job blocking" (ckozak@redhat.com)
+- remove job blocking (ckozak@redhat.com)
+- take advantage of pool functions for readability (ckozak@redhat.com)
+- Use total quantity to validate pools for activation keys (ckozak@redhat.com)
+- Clean up some recent activation key changes (ckozak@redhat.com)
+- Rev rules version for activation key pool validation (ckozak@redhat.com)
+- Prevent product deletion when referenced by subscriptions (mstead@redhat.com)
+- Create ActivationKeyRules (ckozak@redhat.com)
+- retain activation key order on register (ckozak@redhat.com)
+- Add SLA functionality to Activation Keys. (wpoteat@redhat.com)
+
 * Mon Mar 24 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.7-1
 - remove ant-nodeps from fedora builds. (jesusr@redhat.com)
 
