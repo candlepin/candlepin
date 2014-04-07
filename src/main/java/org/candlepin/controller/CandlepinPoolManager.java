@@ -14,6 +14,7 @@
  */
 package org.candlepin.controller;
 
+import org.apache.commons.lang.StringUtils;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
@@ -146,14 +147,16 @@ public class CandlepinPoolManager implements PoolManager {
         // subscription ID associated with them.
         Map<String, List<Pool>> subToPoolMap = new HashMap<String, List<Pool>>();
         for (Pool p : pools) {
-            if (p.getSubscriptionId() != null) {
+            if (!StringUtils.isBlank(p.getSubscriptionId())) {
                 if (!subToPoolMap.containsKey(p.getSubscriptionId())) {
                     subToPoolMap.put(p.getSubscriptionId(),
                         new LinkedList<Pool>());
                 }
                 subToPoolMap.get(p.getSubscriptionId()).add(p);
             }
-            floatingPools.add(p);
+            else {
+                floatingPools.add(p);
+            }
         }
 
         Set<Entitlement> entitlementsToRegen = Util.newSet();
