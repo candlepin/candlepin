@@ -14,14 +14,15 @@
  */
 package org.candlepin.audit;
 
-import org.candlepin.audit.Event.Target;
-import org.candlepin.audit.Event.Type;
-import org.candlepin.util.Util;
-
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import org.candlepin.audit.Event.Target;
+import org.candlepin.audit.Event.Type;
+import org.candlepin.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,14 +42,16 @@ public class AMQPBusPublisher implements EventListener {
     private Function<Event, String> adapter;
     private TopicSession session;
     private Map<Target, Map<Type, TopicPublisher>> producerMap;
+    private ObjectMapper mapper;
 
     @Inject
     public AMQPBusPublisher(TopicSession session,
             @Named("eventToQpidAdapter")Function<Event, String> amqpbea,
-            Map<Target, Map<Type, TopicPublisher>> producerMap) {
+            Map<Target, Map<Type, TopicPublisher>> producerMap, ObjectMapper omapper) {
         this.session = session;
         this.producerMap = producerMap;
         this.adapter = amqpbea;
+        this.mapper = omapper;
     }
 
 
@@ -60,7 +63,9 @@ public class AMQPBusPublisher implements EventListener {
                 TopicPublisher tp = m.get(e.getType());
                 if (tp != null) {
                     log.debug("Sending event to tp");
-                    tp.send(session.createTextMessage(adapter.apply(e)));
+//                    tp.send(session.createTextMessage(adapter.apply(e)));
+                    tp.send(session.createTextMessage(this.apply(e)));
+
                 }
                 else {
                     log.warn("TopicPublisher is NULL!");
@@ -70,6 +75,9 @@ public class AMQPBusPublisher implements EventListener {
         catch (JMSException ex) {
             log.warn("Unable to send event :" + e + " via AMQPBus", ex);
             // TODO Try recovering session?
+        }
+        catch (JsonProcessingException jpe) {
+            log.warn("Unable to send event :" + jpe + " via AMQPBus", jpe);
         }
     }
 
@@ -83,5 +91,9 @@ public class AMQPBusPublisher implements EventListener {
                     "TopicPublisherOf[%s, %s]", entry.getKey(), tpMap.getKey()));
             }
         }
+    }
+
+    public String apply(Event event) throws JsonProcessingException {
+        return mapper.writeValueAsString(event);
     }
 }

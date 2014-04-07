@@ -14,6 +14,12 @@
  */
 package org.candlepin.guice;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Function;
+import com.google.inject.Inject;
+import com.google.inject.Provider;
+import com.google.inject.name.Named;
+
 import org.candlepin.audit.AMQPBusPublisher;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.Event.Target;
@@ -21,12 +27,6 @@ import org.candlepin.audit.Event.Type;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.util.Util;
-
-import com.google.common.base.Function;
-import com.google.inject.Inject;
-import com.google.inject.Provider;
-import com.google.inject.name.Named;
-
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
@@ -55,6 +55,7 @@ public class AMQPBusPubProvider implements Provider<AMQPBusPublisher> {
     private Function<Event, String> adapter;
     private TopicSession session;
     private static org.slf4j.Logger log = LoggerFactory.getLogger(AMQPBusPubProvider.class);
+    private ObjectMapper mapper;
 
     // external events may not have the same name as the internal events
     private Map<String, String> targetToEvent = new HashMap<String, String>() {
@@ -68,10 +69,12 @@ public class AMQPBusPubProvider implements Provider<AMQPBusPublisher> {
     @SuppressWarnings("unchecked")
     @Inject
     public AMQPBusPubProvider(Config config,
-        @Named("abc") Function adapter) {
+        @Named("abc") Function adapter,
+        ObjectMapper omapper) {
         try {
             configureSslProperties(config);
 
+            this.mapper = omapper;
             this.ctx = new InitialContext(buildConfigurationProperties(config));
             ConnectionFactory connectionFactory = (ConnectionFactory) ctx
                 .lookup("qpidConnectionfactory");
@@ -138,7 +141,7 @@ public class AMQPBusPubProvider implements Provider<AMQPBusPublisher> {
                 storeTopicProducer(typeToTpMap, target);
                 pm.put(target, typeToTpMap);
             }
-            return new AMQPBusPublisher(session, this.adapter, pm);
+            return new AMQPBusPublisher(session, this.adapter, pm, mapper);
         }
         catch (Exception ex) {
             throw new RuntimeException(ex);
