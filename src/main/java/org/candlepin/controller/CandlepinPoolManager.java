@@ -184,8 +184,9 @@ public class CandlepinPoolManager implements PoolManager {
             catch (ConstraintViolationException e) {
                 // This shouldn't cause our entire job to fail. Probably a concurrent
                 // refresh job
-                log.warn("Failed to create or update pool for" +
-                    " subscription " + sub.getId(), e);
+                log.warn("Failed to create or update pool for" + sub + " on " + owner +
+                    " Probably the result of concurrent refreshes, and the pool has " +
+                    "already been created or modified", e);
             }
             finally {
                 subToPoolMap.remove(sub.getId());
@@ -209,8 +210,8 @@ public class CandlepinPoolManager implements PoolManager {
                     }
                     catch (HibernateException e) {
                         // Is there an exception for objs that have already been deleted?
-                        log.error("Failed to delete pool with id " + p.getId() +
-                            " It has probably already been deleted by another refresh", e);
+                        log.error("Failed to delete " + p + " It has probably already " +
+                            "been deleted by another refresh", e);
                     }
                 }
             }
