@@ -16,7 +16,6 @@ package org.candlepin.audit;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Function;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
@@ -39,18 +38,15 @@ import javax.jms.TopicSession;
  */
 public class AMQPBusPublisher implements EventListener {
     private static Logger log = LoggerFactory.getLogger(AMQPBusPublisher.class);
-    private Function<Event, String> adapter;
     private TopicSession session;
     private Map<Target, Map<Type, TopicPublisher>> producerMap;
     private ObjectMapper mapper;
 
     @Inject
     public AMQPBusPublisher(TopicSession session,
-            @Named("eventToQpidAdapter")Function<Event, String> amqpbea,
             Map<Target, Map<Type, TopicPublisher>> producerMap, ObjectMapper omapper) {
         this.session = session;
         this.producerMap = producerMap;
-        this.adapter = amqpbea;
         this.mapper = omapper;
     }
 
@@ -63,7 +59,6 @@ public class AMQPBusPublisher implements EventListener {
                 TopicPublisher tp = m.get(e.getType());
                 if (tp != null) {
                     log.debug("Sending event to tp");
-//                    tp.send(session.createTextMessage(adapter.apply(e)));
                     tp.send(session.createTextMessage(this.apply(e)));
 
                 }

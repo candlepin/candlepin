@@ -289,9 +289,6 @@ public class CandlepinModule extends AbstractModule {
     }
 
     private void configureAmqp() {
-        // AMQP stuff:
-        bind(Function.class).annotatedWith(Names.named("abc"))
-                .to(AMQPBusEventAdapter.class).in(Singleton.class);
         // for lazy loading:
         bind(AMQPBusPublisher.class).toProvider(AMQPBusPubProvider.class)
                 .in(Singleton.class);

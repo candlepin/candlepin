@@ -55,7 +55,6 @@ import org.candlepin.model.Owner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class AMQPConsumerEventsAdapterTest {
-    private AMQPBusEventAdapter adapter;
     @Mock private PrincipalProvider mockPrincipalProvider;
     @Spy private ObjectMapper spiedMapper = new ObjectMapper();
     private ObjectMapper mapper = new ObjectMapper();
@@ -72,7 +71,6 @@ public class AMQPConsumerEventsAdapterTest {
         this.owner = this.principal.getOwners().get(0);
         this.owner.setId(String.valueOf(new Random().nextLong()));
         when(mockPrincipalProvider.get()).thenReturn(this.principal);
-        this.adapter = new AMQPBusEventAdapter(spiedMapper, reader, pkiutil);
     }
 
     @Test
@@ -127,7 +125,7 @@ public class AMQPConsumerEventsAdapterTest {
 
     @SuppressWarnings("unchecked")
     private Map<String, Object> unmarshallEvent(Event event) throws IOException {
-        Map<String, Object> map = unmarshall(this.adapter.apply(event));
+        Map<String, Object> map = unmarshall(this.mapper.writeValueAsString(event));
         return (Map<String, Object>) map.get("event");
     }
 

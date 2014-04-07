@@ -15,7 +15,6 @@
 package org.candlepin.guice;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Function;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.name.Named;
@@ -52,7 +51,6 @@ public class AMQPBusPubProvider implements Provider<AMQPBusPublisher> {
 
     private Context ctx;
     private TopicConnection connection;
-    private Function<Event, String> adapter;
     private TopicSession session;
     private static org.slf4j.Logger log = LoggerFactory.getLogger(AMQPBusPubProvider.class);
     private ObjectMapper mapper;
@@ -68,9 +66,7 @@ public class AMQPBusPubProvider implements Provider<AMQPBusPublisher> {
 
     @SuppressWarnings("unchecked")
     @Inject
-    public AMQPBusPubProvider(Config config,
-        @Named("abc") Function adapter,
-        ObjectMapper omapper) {
+    public AMQPBusPubProvider(Config config, ObjectMapper omapper) {
         try {
             configureSslProperties(config);
 
@@ -80,7 +76,6 @@ public class AMQPBusPubProvider implements Provider<AMQPBusPublisher> {
                 .lookup("qpidConnectionfactory");
             this.connection = (TopicConnection) connectionFactory
                 .createConnection();
-            this.adapter = adapter;
             this.session = this.connection.createTopicSession(false,
                 Session.AUTO_ACKNOWLEDGE);
         }
@@ -141,7 +136,7 @@ public class AMQPBusPubProvider implements Provider<AMQPBusPublisher> {
                 storeTopicProducer(typeToTpMap, target);
                 pm.put(target, typeToTpMap);
             }
-            return new AMQPBusPublisher(session, this.adapter, pm, mapper);
+            return new AMQPBusPublisher(session, pm, mapper);
         }
         catch (Exception ex) {
             throw new RuntimeException(ex);

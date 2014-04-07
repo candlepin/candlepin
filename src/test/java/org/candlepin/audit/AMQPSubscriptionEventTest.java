@@ -30,6 +30,7 @@ import org.candlepin.pki.PKIUtility;
 import com.google.common.collect.Sets;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -58,11 +59,8 @@ public class AMQPSubscriptionEventTest {
     @Mock
     private PKIUtility pkiutil;
 
-    private AMQPBusEventAdapter eventAdapter;
-
     @Before
     public void init() {
-        this.eventAdapter = new AMQPBusEventAdapter(mapper, reader, pkiutil);
     }
 
     @Test
@@ -100,7 +98,7 @@ public class AMQPSubscriptionEventTest {
                 "http://dummy.com/content", "/path/to/RPM-GPG-KEY")));
 
         // when
-        this.eventAdapter.apply(event);
+        this.mapper.writeValueAsString(event);
 
         // then
         Map<String, Object> expectedMap = new HashMap<String, Object>();
@@ -149,7 +147,7 @@ public class AMQPSubscriptionEventTest {
         when(sub.getOwner().getKey()).thenReturn("test-owner");
 
         // when
-        this.eventAdapter.apply(event);
+        this.mapper.writeValueAsString(event);
 
         // then
         Map<String, Object> expectedMap = new HashMap<String, Object>();
