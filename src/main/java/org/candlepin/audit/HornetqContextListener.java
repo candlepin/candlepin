@@ -87,7 +87,6 @@ public class HornetqContextListener {
             // in vm, who needs security?
             config.setSecurityEnabled(false);
 
-            // XXX: should use AIO when we get the native bindings working
             config.setJournalType(JournalType.NIO);
 
             config.setCreateBindingsDir(true);

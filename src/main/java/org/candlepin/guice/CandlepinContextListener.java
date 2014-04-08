@@ -109,8 +109,8 @@ public class CandlepinContextListener extends
         loggerListener = injector.getInstance(LoggerContextListener.class);
         loggerListener.contextDestroyed();
 
+        // if amqp is enabled, close all connections.
         Config config = injector.getInstance(Config.class);
-        //if amqp is enabled, close all connections.
         if (config.getBoolean(ConfigProperties.AMQP_INTEGRATION_ENABLED)) {
             Util.closeSafely(injector.getInstance(AMQPBusPublisher.class),
                 "AMQPBusPublisher");
@@ -161,11 +161,12 @@ public class CandlepinContextListener extends
     /**
      * This is what RESTEasy's ModuleProcessor does, but we need the injector
      * afterwards.
-     * @param injector - guice injector
+     * @param inj - guice injector
      */
+    @SuppressWarnings("rawtypes")
     private void processInjector(Registry registry,
-        ResteasyProviderFactory providerFactory, Injector injector) {
-        for (final Binding<?> binding : injector.getBindings().values()) {
+        ResteasyProviderFactory providerFactory, Injector inj) {
+        for (final Binding<?> binding : inj.getBindings().values()) {
             final Type type = binding.getKey().getTypeLiteral().getType();
             if (type instanceof Class) {
                 final Class<?> beanClass = (Class) type;

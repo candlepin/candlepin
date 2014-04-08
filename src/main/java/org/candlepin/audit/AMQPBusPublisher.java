@@ -75,7 +75,7 @@ public class AMQPBusPublisher implements EventListener {
     }
 
     public void close() {
-        /*Why this big loop? To log in case, we failed to close any publishers.*/
+        // Why this big loop? To log in case, we failed to close any publishers.
         for (Entry<Target, Map<Type, TopicPublisher>> entry : this.producerMap
             .entrySet()) {
             for (Entry<Type, TopicPublisher> tpMap : entry.getValue()

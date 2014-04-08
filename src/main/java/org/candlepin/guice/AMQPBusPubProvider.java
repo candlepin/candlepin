@@ -17,7 +17,6 @@ package org.candlepin.guice;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
-import com.google.inject.name.Named;
 
 import org.candlepin.audit.AMQPBusPublisher;
 import org.candlepin.audit.Event;
@@ -44,8 +43,7 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
 /**
- *
- * @author ajay
+ * A provider that creates and configures AMQPBusPublishers.
  */
 public class AMQPBusPubProvider implements Provider<AMQPBusPublisher> {
 
@@ -64,7 +62,6 @@ public class AMQPBusPubProvider implements Provider<AMQPBusPublisher> {
         }
     };
 
-    @SuppressWarnings("unchecked")
     @Inject
     public AMQPBusPubProvider(Config config, ObjectMapper omapper) {
         try {
@@ -85,7 +82,6 @@ public class AMQPBusPubProvider implements Provider<AMQPBusPublisher> {
         }
     }
 
-
     private void configureSslProperties(Config config) {
         // FIXME: Setting the property here is dangerous,
         // but in theory nothing else is setting/using it
@@ -98,7 +94,6 @@ public class AMQPBusPubProvider implements Provider<AMQPBusPublisher> {
         System.setProperty("javax.net.ssl.trustStorePassword",
             config.getString(ConfigProperties.AMQP_TRUSTSTORE_PASSWORD));
     }
-
 
     /**
      * @return A Properties object containing the amqp configuration for jms
@@ -126,7 +121,6 @@ public class AMQPBusPubProvider implements Provider<AMQPBusPublisher> {
         return properties;
     }
 
-
     @Override
     public AMQPBusPublisher get() {
         try {
@@ -136,6 +130,7 @@ public class AMQPBusPubProvider implements Provider<AMQPBusPublisher> {
                 storeTopicProducer(typeToTpMap, target);
                 pm.put(target, typeToTpMap);
             }
+            log.debug("XXX " + pm.toString());
             return new AMQPBusPublisher(session, pm, mapper);
         }
         catch (Exception ex) {
@@ -158,7 +153,6 @@ public class AMQPBusPubProvider implements Provider<AMQPBusPublisher> {
         map.put(type, tp);
     }
 
-
     private String getTopicName(Type type, Target target) {
         String name = target.toString().toLowerCase() +
             Util.capitalize(type.toString().toLowerCase());
@@ -177,5 +171,4 @@ public class AMQPBusPubProvider implements Provider<AMQPBusPublisher> {
             storeTopicProducer(type, target, map);
         }
     }
-
 }
