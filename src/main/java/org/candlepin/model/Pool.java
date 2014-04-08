@@ -32,7 +32,6 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
-import javax.persistence.UniqueConstraint;
 import javax.persistence.Version;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -62,8 +61,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @XmlRootElement(name = "pool")
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "cp_pool", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"subscriptionid", "subscriptionsubkey"})})
+@Table(name = "cp_pool")
 @JsonFilter("PoolFilter")
 public class Pool extends AbstractHibernateObject implements Persisted, Owned {
 
@@ -109,23 +107,6 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
 
     private Boolean activeSubscription = Boolean.TRUE;
 
-    // An identifier for the subscription this pool is associated with. Note
-    // that this is not a database foreign key. The subscription identified
-    // could exist in another system only accessible to us as a service.
-    // Actual implementations of our SubscriptionService will be used to use
-    // this data.
-    @Column(nullable = true)
-    @Size(max = 255)
-    private String subscriptionId;
-
-    // since one subscription can create multiple pools, we need to use a
-    // combination of subid/some other key to uniquely identify a pool.
-    // subscriptionSubKey is set in the js rules, according to the same logic
-    // that will create more than one pool per sub.
-    @Column(nullable = true)
-    @Size(max = 255)
-    private String subscriptionSubKey;
-
     /** Indicates this pool was created as a result of granting an entitlement.
      * Allows us to know that we need to clean this pool up if that entitlement
      * if ever revoked. */
@@ -144,6 +125,16 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
     @XmlTransient
     private SourceStack sourceStack;
+
+    /**
+     * Signifies that this pool was created from this subscription (only one
+     * pool per subscription id/subkey is allowed)
+     */
+    @OneToOne(mappedBy = "pool", targetEntity = SourceSubscription.class)
+    @Cascade({org.hibernate.annotations.CascadeType.ALL,
+        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+    @XmlTransient
+    private SourceSubscription sourceSubscription;
 
     @Column(nullable = false)
     @NotNull
@@ -534,15 +525,12 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
     /**
      * @return subscription id associated with this pool.
      */
+    @JsonProperty("subscriptionId")
     public String getSubscriptionId() {
-        return subscriptionId;
-    }
-
-    /**
-     * @param subscriptionId associates the given subscription.
-     */
-    public void setSubscriptionId(String subscriptionId) {
-        this.subscriptionId = subscriptionId;
+        if (this.getSourceSubscription() != null) {
+            return this.getSourceSubscription().getSubscriptionId();
+        }
+        return null;
     }
 
     @XmlTransient
@@ -553,6 +541,8 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
     public void setSourceStack(SourceStack sourceStack) {
         if (sourceStack != null) {
             sourceStack.setDerivedPool(this);
+            // Setting source Stack should invalidate source subscription
+            this.setSourceSubscription(null);
         }
         this.sourceStack = sourceStack;
     }
@@ -812,15 +802,12 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
     /**
      * @return the subscriptionSubKey
      */
+    @JsonProperty("subscriptionSubKey")
     public String getSubscriptionSubKey() {
-        return subscriptionSubKey;
-    }
-
-    /**
-     * @param subscriptionSubKey the subscriptionSubKey to set
-     */
-    public void setSubscriptionSubKey(String subscriptionSubKey) {
-        this.subscriptionSubKey = subscriptionSubKey;
+        if (this.getSourceSubscription() != null) {
+            return this.getSourceSubscription().getSubscriptionSubKey();
+        }
+        return null;
     }
 
     public Map<String, String> getCalculatedAttributes() {
@@ -927,5 +914,17 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
 
     public void setBranding(Set<Branding> branding) {
         this.branding = branding;
+    }
+
+    @XmlTransient
+    public SourceSubscription getSourceSubscription() {
+        return sourceSubscription;
+    }
+
+    public void setSourceSubscription(SourceSubscription sourceSubscription) {
+        if (sourceSubscription != null) {
+            sourceSubscription.setPool(this);
+        }
+        this.sourceSubscription = sourceSubscription;
     }
 }

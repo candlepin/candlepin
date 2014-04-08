@@ -58,6 +58,7 @@ import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.SourceStack;
+import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.Subscription;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
@@ -174,12 +175,12 @@ public class PoolManagerTest {
 
         // Should be unchanged
         Pool p = TestUtil.createPool(product);
-        p.setSubscriptionId(sub.getId());
+        p.setSourceSubscription(new SourceSubscription(sub.getId(), "master"));
         pools.add(p);
 
         // Should be regenerated because it has no subscription id
         Pool floating = TestUtil.createPool(TestUtil.createProduct());
-        floating.setSubscriptionId(null);
+        floating.setSourceSubscription(null);
         pools.add(floating);
         when(mockSubAdapter.getSubscriptions(any(Owner.class))).thenReturn(
             subscriptions);
@@ -214,7 +215,7 @@ public class PoolManagerTest {
 
         // Should be unchanged
         Pool p = TestUtil.createPool(product);
-        p.setSubscriptionId(sub.getId());
+        p.setSourceSubscription(new SourceSubscription(sub.getId(), "master"));
         pools.add(p);
 
         when(mockSubAdapter.getSubscriptions(any(Owner.class))).thenReturn(
@@ -243,7 +244,7 @@ public class PoolManagerTest {
         List<Subscription> subscriptions = Util.newList();
         List<Pool> pools = Util.newList();
         Pool p = TestUtil.createPool(TestUtil.createProduct());
-        p.setSubscriptionId("112");
+        p.setSourceSubscription(new SourceSubscription("112", "master"));
         pools.add(p);
         when(mockSubAdapter.getSubscriptions(any(Owner.class))).thenReturn(
             subscriptions);
@@ -266,7 +267,7 @@ public class PoolManagerTest {
         List<Subscription> subscriptions = Util.newList();
         List<Pool> pools = Util.newList();
         Pool p = TestUtil.createPool(TestUtil.createProduct());
-        p.setSubscriptionId("112");
+        p.setSourceSubscription(new SourceSubscription("112", "master"));
 
         // Make it look like a hosted virt bonus pool:
         p.setAttribute("pool_derived", "true");
@@ -295,7 +296,7 @@ public class PoolManagerTest {
         List<Subscription> subscriptions = Util.newList();
         List<Pool> pools = Util.newList();
         Pool p = TestUtil.createPool(TestUtil.createProduct());
-        p.setSubscriptionId("112");
+        p.setSourceSubscription(new SourceSubscription("112", "master"));
 
         // Mock a pool with a source entitlement:
         p.setAttribute("pool_derived", "true");
@@ -324,7 +325,7 @@ public class PoolManagerTest {
         List<Subscription> subscriptions = Util.newList();
         List<Pool> pools = Util.newList();
         Pool p = TestUtil.createPool(TestUtil.createProduct());
-        p.setSubscriptionId("112");
+        p.setSourceSubscription(new SourceSubscription("112", "master"));
 
         // Mock a pool with a source stack ID:
         p.setAttribute("pool_derived", "true");
@@ -397,7 +398,7 @@ public class PoolManagerTest {
 
         List<Pool> newPools = new LinkedList<Pool>();
         Pool p = TestUtil.createPool(s.getProduct());
-        p.setSubscriptionId(s.getId());
+        p.setSourceSubscription(new SourceSubscription(s.getId(), "master"));
         newPools.add(p);
         when(poolRulesMock.createPools(s)).thenReturn(newPools);
 
@@ -415,7 +416,7 @@ public class PoolManagerTest {
         s.setId("01923");
         subscriptions.add(s);
         Pool p = TestUtil.createPool(s.getProduct());
-        p.setSubscriptionId(s.getId());
+        p.setSourceSubscription(new SourceSubscription(s.getId(), "master"));
         p.setAttribute(PoolManager.DELETE_FLAG, "true");
         pools.add(p);
 
@@ -465,7 +466,7 @@ public class PoolManagerTest {
         Subscription s = TestUtil.createSubscription(getOwner(),
             product);
         s.setId("testSubId");
-        pool.setSubscriptionId(s.getId());
+        pool.setSourceSubscription(new SourceSubscription(s.getId(), "master"));
         Entitlement e = new Entitlement(pool, TestUtil.createConsumer(o),
             1);
         e.setDirty(true);
@@ -496,7 +497,7 @@ public class PoolManagerTest {
 
         List<Pool> newPools = new LinkedList<Pool>();
         Pool p = TestUtil.createPool(s.getProduct());
-        p.setSubscriptionId(s.getId());
+        p.setSourceSubscription(new SourceSubscription(s.getId(), "master"));
         newPools.add(p);
         when(poolRulesMock.createPools(s)).thenReturn(newPools);
 
@@ -611,7 +612,7 @@ public class PoolManagerTest {
 
         List<Pool> pools = Util.newList();
         Pool p = TestUtil.createPool(sub.getOwner(), sub.getProduct());
-        p.setSubscriptionId(sub.getId());
+        p.setSourceSubscription(new SourceSubscription(sub.getId(), "master"));
         p.setStartDate(expiredStart);
         p.setEndDate(expiredDate);
         p.setConsumed(1L);

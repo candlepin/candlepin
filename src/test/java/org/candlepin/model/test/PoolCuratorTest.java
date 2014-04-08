@@ -38,6 +38,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.SourceStack;
+import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.Subscription;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
@@ -499,7 +500,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             TestUtil.createDate(2055, 3, 2),
             "", "", "");
         derivedPool.setSourceEntitlement(sourceEnt);
-        derivedPool.setSubscriptionId(subid);
+        derivedPool.setSourceSubscription(new SourceSubscription(subid, "derived"));
         poolCurator.create(derivedPool);
 
         assertEquals(0, poolCurator.lookupOversubscribedBySubscriptionId(
@@ -842,7 +843,8 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         Pool pool2 = TestUtil.createPool(owner, product);
         pool2.setSourceEntitlement(e);
-        pool2.setSubscriptionId(sourcePool.getSubscriptionId());
+        pool2.setSourceSubscription(new SourceSubscription(
+            sourcePool.getSubscriptionId(), "derived"));
         poolCurator.create(pool2);
 
         assertTrue(poolCurator.lookupBySubscriptionId(sub.getId()).size() == 2);

@@ -178,7 +178,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertTrue(pool.getStartDate() != sub.getStartDate());
         assertTrue(pool.getEndDate() != sub.getEndDate());
 
-        pool.setSubscriptionId(sub.getId());
+        pool.getSourceSubscription().setSubscriptionId(sub.getId());
         poolCurator.merge(pool);
 
         poolManager.getRefresher().add(owner).run();

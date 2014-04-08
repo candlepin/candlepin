@@ -35,6 +35,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductPoolAttribute;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.SourceStack;
+import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.Pool.PoolType;
 import org.candlepin.policy.EntitlementRefusedException;
@@ -71,7 +72,8 @@ public class PoolTest extends DatabaseTestFixture {
         pool = TestUtil.createPool(owner, prod1, providedProducts, 1000);
         subscription = TestUtil.createSubscription(owner, prod1);
         subAdapter.createSubscription(subscription);
-        pool.setSubscriptionId(subscription.getId());
+        pool.setSourceSubscription(
+            new SourceSubscription(subscription.getId(), "master"));
         providedProduct.setPool(pool);
         poolCurator.create(pool);
         owner = pool.getOwner();

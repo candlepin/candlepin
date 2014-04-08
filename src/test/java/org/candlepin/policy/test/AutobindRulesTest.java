@@ -49,6 +49,7 @@ import org.candlepin.model.ProductPoolAttribute;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
+import org.candlepin.model.SourceSubscription;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.policy.js.ProductCache;
@@ -465,7 +466,8 @@ public class AutobindRulesTest {
         int quantity, Date startDate, Date endDate) {
         Pool p = TestUtil.createPool(owner, product, quantity);
         p.setId("testpool" + TestUtil.randomInt());
-        p.setSubscriptionId("testsub" + TestUtil.randomInt());
+        p.setSourceSubscription(
+            new SourceSubscription("testsub" + TestUtil.randomInt(), "master"));
         p.setStartDate(startDate);
         p.setEndDate(endDate);
         for (ProductAttribute pa : product.getAttributes()) {

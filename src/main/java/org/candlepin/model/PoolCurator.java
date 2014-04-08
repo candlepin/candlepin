@@ -288,7 +288,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
     public List<Pool> lookupBySubscriptionId(String subId) {
         return createSecureCriteria()
-            .add(Restrictions.eq("subscriptionId", subId)).list();
+            .createAlias("sourceSubscription", "sourceSub")
+            .add(Restrictions.eq("sourceSub.subscriptionId", subId)).list();
     }
 
     /**
@@ -310,16 +311,17 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @param ent Entitlement just created or modified.
      * @return Pools with too many entitlements for their new quantity.
      */
+    @SuppressWarnings("unchecked")
     public List<Pool> lookupOversubscribedBySubscriptionId(String subId, Entitlement ent) {
-        String queryString = "from Pool as pool " +
-            "where pool.subscriptionId = :subId AND " +
-            "(pool.sourceEntitlement = null OR pool.sourceEntitlement = :ent) AND " +
-            "pool.quantity >= 0 AND " +
-            "pool.consumed > pool.quantity ";
-        Query query = currentSession().createQuery(queryString);
-        query.setString("subId", subId);
-        query.setEntity("ent", ent);
-        return query.list();
+        return currentSession().createCriteria(Pool.class)
+            .createAlias("sourceSubscription", "sourceSub")
+            .add(Restrictions.eq("sourceSub.subscriptionId", subId))
+            .add(Restrictions.ge("quantity", 0L))
+            .add(Restrictions.gtProperty("consumed", "quantity"))
+            .add(Restrictions.or(
+                Restrictions.isNull("sourceEntitlement"),
+                Restrictions.eqOrIsNull("sourceEntitlement", ent)))
+            .list();
     }
 
     @Transactional

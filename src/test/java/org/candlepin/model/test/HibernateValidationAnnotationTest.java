@@ -60,6 +60,7 @@ import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Role;
 import org.candlepin.model.Rules;
 import org.candlepin.model.SourceStack;
+import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.Statistic;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.SubscriptionsCertificate;
@@ -360,8 +361,8 @@ public class HibernateValidationAnnotationTest extends DatabaseTestFixture{
         Map<Field, Matcher<AnnotatedElement>> fm = new HashMap<Field, Matcher<AnnotatedElement>>();
         fm.put(Pool.class.getDeclaredField("id"), notNull);
         fm.put(Pool.class.getDeclaredField("owner"), notNull);
-        fm.put(Pool.class.getDeclaredField("subscriptionId"), size);
-        fm.put(Pool.class.getDeclaredField("subscriptionSubKey"), size);
+        fm.put(SourceSubscription.class.getDeclaredField("subscriptionId"), size);
+        fm.put(SourceSubscription.class.getDeclaredField("subscriptionSubKey"), size);
         fm.put(Pool.class.getDeclaredField("quantity"), notNull);
         fm.put(Pool.class.getDeclaredField("startDate"), notNull);
         fm.put(Pool.class.getDeclaredField("endDate"), notNull);

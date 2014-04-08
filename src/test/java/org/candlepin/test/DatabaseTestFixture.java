@@ -69,6 +69,7 @@ import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Role;
 import org.candlepin.model.RoleCurator;
 import org.candlepin.model.RulesCurator;
+import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.StatisticCurator;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.SubscriptionCurator;
@@ -290,7 +291,7 @@ public class DatabaseTestFixture {
             new HashSet<Product>(), quantity, startDate, endDate,
             TestUtil.createDate(2010, 2, 12));
         subCurator.create(sub);
-        p.setSubscriptionId(sub.getId());
+        p.setSourceSubscription(new SourceSubscription(sub.getId(), "master"));
         for (ProductAttribute pa : product.getAttributes()) {
             p.addProductAttribute(new ProductPoolAttribute(pa.getName(),
                 pa.getValue(), product.getId()));
