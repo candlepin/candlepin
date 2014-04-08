@@ -50,7 +50,6 @@ public class AMQPBusPublisher implements EventListener {
         this.mapper = omapper;
     }
 
-
     @Override
     public void onEvent(Event e) {
         try {
@@ -60,7 +59,6 @@ public class AMQPBusPublisher implements EventListener {
                 if (tp != null) {
                     log.debug("Sending event to tp");
                     tp.send(session.createTextMessage(this.apply(e)));
-
                 }
                 else {
                     log.warn("TopicPublisher is NULL!");
