@@ -21,6 +21,8 @@ import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlTransient;
 
 import org.hibernate.annotations.DiscriminatorFormula;
@@ -40,13 +42,20 @@ public class ContentOverride extends AbstractHibernateObject {
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     @Column(length = 32)
+    @NotNull
     private String id;
 
     @Column(name = "content_label")
+    @Size(max = 255)
+    @NotNull
     private String contentLabel;
 
+    @Size(max = 255)
+    @NotNull
     private String name;
 
+    @Size(max = 255)
+    @NotNull
     private String value;
 
     public ContentOverride() {

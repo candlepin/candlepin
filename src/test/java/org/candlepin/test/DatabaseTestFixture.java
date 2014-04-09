@@ -18,6 +18,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 
+import javax.inject.Provider;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.servlet.http.HttpServletRequest;
@@ -83,6 +84,11 @@ import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.util.DateSource;
 import org.candlepin.util.ServiceLevelValidator;
+import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
+import org.hibernate.ejb.HibernateEntityManagerFactory;
+import org.hibernate.event.service.spi.EventListenerRegistry;
+import org.hibernate.event.spi.EventType;
+import org.hibernate.internal.SessionFactoryImpl;
 import org.junit.After;
 import org.junit.Before;
 import org.xnap.commons.i18n.I18n;
@@ -160,6 +166,7 @@ public class DatabaseTestFixture {
                 .with(guiceOverrideModule),
                 new CandlepinNonServletEnvironmentTestingModule());
         }
+        insertValidationEventListeners(injector);
 
         cpSingletonScope = injector.getInstance(CandlepinSingletonScope.class);
         // Because all candlepin operations are running in the CandlepinSingletonScope
@@ -372,6 +379,29 @@ public class DatabaseTestFixture {
         Role role = new Role("testrole" + TestUtil.randomInt());
         role.addPermission(p);
         return role;
+    }
+
+    /**
+     * There's no way to really get Guice to perform injections on stuff that
+     * the JpaPersistModule is creating, so we resort to grabbing the EntityManagerFactory
+     * after the fact and adding the Validation EventListener ourselves.
+     * @param injector
+     */
+    private void insertValidationEventListeners(Injector injector) {
+        Provider<EntityManagerFactory> emfProvider =
+            injector.getProvider(EntityManagerFactory.class);
+        HibernateEntityManagerFactory hibernateEntityManagerFactory =
+            (HibernateEntityManagerFactory) emfProvider.get();
+        SessionFactoryImpl sessionFactoryImpl =
+            (SessionFactoryImpl) hibernateEntityManagerFactory.getSessionFactory();
+        EventListenerRegistry registry =
+            sessionFactoryImpl.getServiceRegistry().getService(EventListenerRegistry.class);
+
+        Provider<BeanValidationEventListener> listenerProvider =
+            injector.getProvider(BeanValidationEventListener.class);
+        registry.getEventListenerGroup(EventType.PRE_INSERT).appendListener(listenerProvider.get());
+        registry.getEventListenerGroup(EventType.PRE_UPDATE).appendListener(listenerProvider.get());
+        registry.getEventListenerGroup(EventType.PRE_DELETE).appendListener(listenerProvider.get());
     }
 
 }

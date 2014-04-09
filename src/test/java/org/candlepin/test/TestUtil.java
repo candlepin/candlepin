@@ -372,4 +372,9 @@ public class TestUtil {
         return tree1.equals(tree2);
     }
 
+    public static String getStringOfSize(int size) {
+        char[] charArray = new char[size];
+        Arrays.fill(charArray, 'x');
+        return new String(charArray);
+    }
 }

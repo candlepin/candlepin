@@ -14,19 +14,6 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.jackson.HateoasArrayExclude;
-import org.candlepin.jackson.HateoasInclude;
-import org.candlepin.util.Util;
-
-import com.fasterxml.jackson.annotation.JsonFilter;
-
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.ForeignKey;
-import org.hibernate.annotations.Formula;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Index;
-import org.hibernate.annotations.Type;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -51,10 +38,24 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+
+import org.candlepin.jackson.HateoasArrayExclude;
+import org.candlepin.jackson.HateoasInclude;
+import org.candlepin.util.Util;
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.ForeignKey;
+import org.hibernate.annotations.Formula;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Index;
+import org.hibernate.annotations.Type;
+
+import com.fasterxml.jackson.annotation.JsonFilter;
 
 /**
  * A Consumer is the entity that uses a given Entitlement. It can be a user,
@@ -77,27 +78,36 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     @Column(length = 32)
+    @NotNull
     private String id;
 
     @Column(nullable = false, unique = true)
+    @Size(max = 255)
+    @NotNull
     private String uuid;
 
     @Column(nullable = false)
+    @Size(max = 255)
+    @NotNull
     private String name;
 
     // Represents the username used to register this consumer
     @Column
+    @Size(max = 255)
     private String username;
 
     @Column(length = 32)
+    @Size(max = 32)
     private String entitlementStatus;
 
     @Column(length = 255, nullable = true)
     @Type(type = "org.candlepin.hibernate.EmptyStringUserType")
+    @Size(max = 255)
     private String serviceLevel;
 
     // for selecting Y/Z stream
     @Column(length = 255, nullable =  true)
+    @Size(max = 255)
     private String releaseVer;
 
     /*
@@ -141,6 +151,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     @MapKeyColumn(name = "mapkey")
     @Column(name = "element")
     @Cascade({org.hibernate.annotations.CascadeType.ALL})
+    @Size(max = 255)
     private Map<String, String> facts;
 
     @OneToOne(cascade = CascadeType.ALL)

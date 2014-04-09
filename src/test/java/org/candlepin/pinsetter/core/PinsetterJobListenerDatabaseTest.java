@@ -95,7 +95,8 @@ public class PinsetterJobListenerDatabaseTest {
 
         // verify the message stored is a substring of the long message
         JobStatus verify = curator.find("name");
-        assertEquals(longstr.substring(0, 255), verify.getResult());
+        assertEquals(longstr.substring(0, JobStatus.RESULT_COL_LENGTH),
+            verify.getResult());
     }
 
     public class TestModule extends AbstractModule {

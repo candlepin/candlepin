@@ -26,6 +26,8 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -53,9 +55,12 @@ public class Product extends AbstractHibernateObject implements Linkable {
     // This is a subset of the product OID known as the hash.
     @Id
     @Column(length = 32, unique = true)
+    @NotNull
     private String id;
 
     @Column(nullable = false)
+    @Size(max = 255)
+    @NotNull
     private String name;
 
     /**
@@ -86,6 +91,7 @@ public class Product extends AbstractHibernateObject implements Linkable {
     @CollectionTable(name = "cp_product_dependent_products",
                      joinColumns = @JoinColumn(name = "cp_product_id"))
     @Column(name = "element")
+    @Size(max = 255)
     private Set<String> dependentProductIds;
 
     @ElementCollection

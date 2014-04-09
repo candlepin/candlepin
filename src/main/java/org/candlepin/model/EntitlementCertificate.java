@@ -22,6 +22,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -44,6 +45,7 @@ public class EntitlementCertificate extends AbstractCertificate {
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     @Column(length = 32)
+    @NotNull
     private String id;
 
     @OneToOne
@@ -53,6 +55,7 @@ public class EntitlementCertificate extends AbstractCertificate {
     @ForeignKey(name = "fk_cert_entitlement")
     @JoinColumn(nullable = false)
     @Index(name = "cp_cert_entitlement_fk_idx")
+    @NotNull
     private Entitlement entitlement;
 
     public CertificateSerial getSerial() {

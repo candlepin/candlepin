@@ -21,7 +21,6 @@ import org.candlepin.exceptions.ExceptionMessage;
 import org.candlepin.util.VersionUtil;
 
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 
 import org.jboss.resteasy.util.HttpHeaderNames;
 import org.slf4j.Logger;
@@ -52,19 +51,17 @@ public class CandlepinExceptionMapper {
             }
         };
 
+    // Use a provider so we get a scoped HttpServletRequest
     @Inject
-    private Injector injector;
+    private javax.inject.Provider<HttpServletRequest> requestProvider;
 
     @Inject
     protected I18n i18n;
 
     private static Logger log = LoggerFactory.getLogger(CandlepinExceptionMapper.class);
 
-
     public MediaType determineBestMediaType() {
-
-        // injectory the request directly seems to annoying Candlepin startup.
-        HttpServletRequest request = injector.getInstance(HttpServletRequest.class);
+        HttpServletRequest request = requestProvider.get();
 
         String header = request.getHeader(HttpHeaderNames.ACCEPT);
 

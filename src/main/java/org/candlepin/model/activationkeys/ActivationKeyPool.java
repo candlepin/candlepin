@@ -28,6 +28,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
+import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -48,18 +49,21 @@ public class ActivationKeyPool extends AbstractHibernateObject {
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     @Column(length = 32)
+    @NotNull
     private String id;
 
     @ManyToOne
     @ForeignKey(name = "fk_activation_key_pool_k")
     @JoinColumn(nullable = false)
     @Index(name = "cp_activation_key_pool_k_fk_idx")
+    @NotNull
     private ActivationKey key;
 
     @ManyToOne
     @ForeignKey(name = "fk_activation_key_pool_p")
     @JoinColumn(nullable = false)
     @Index(name = "cp_activation_key_pool_p_fk_idx")
+    @NotNull
     private Pool pool;
 
     @Column(nullable = true, name = "quantity")

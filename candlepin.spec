@@ -73,6 +73,7 @@ BuildRequires: commons-collections >= 3.1
 # for schema
 BuildRequires: hibernate4-entitymanager >= 0:4.2.5
 BuildRequires: hibernate3-commons-annotations >= 0:4.0.1
+BuildRequires: hibernate-beanvalidation-api >= 1.0.0
 
 BuildRequires: google-collections >= 0:1.0
 BuildRequires: resteasy >= 0:2.3.1
@@ -132,6 +133,7 @@ Requires: hibernate4-c3p0 >= 0:4.2.5
 Requires: hibernate3-commons-annotations >= 0:4.0.1
 Requires: hibernate-jpa-2.0-api >= 0:1.0.1
 Requires: candlepin-scl
+Requires: hibernate-beanvalidation-api >= 1.0.0
 Requires: c3p0 >= 0:0.9.1.2
 Requires: resteasy >= 0:2.3.1
 Requires: google-guice >= 0:3.0

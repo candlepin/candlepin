@@ -14,14 +14,6 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.jackson.HateoasInclude;
-
-import com.fasterxml.jackson.annotation.JsonFilter;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
-import org.hibernate.annotations.ForeignKey;
-import org.hibernate.annotations.GenericGenerator;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -29,9 +21,18 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+
+import org.candlepin.jackson.HateoasInclude;
+import org.hibernate.annotations.ForeignKey;
+import org.hibernate.annotations.GenericGenerator;
+
+import com.fasterxml.jackson.annotation.JsonFilter;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 /**
  * ImportUpstreamConsumer
@@ -48,26 +49,35 @@ public class ImportUpstreamConsumer extends AbstractHibernateObject {
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     @Column(length = 32)
+    @NotNull
     private String id;
 
     @Column(nullable = false, unique = true)
+    @Size(max = 255)
+    @NotNull
     private String uuid;
 
     @Column(nullable = false)
+    @Size(max = 255)
+    @NotNull
     private String name;
 
     @ManyToOne
     @JoinColumn(nullable = false)
     @ForeignKey(name = "fk_import_upstream_cnsmr_type")
+    @NotNull
     private ConsumerType type;
 
     @Column(nullable = false, name = "owner_id")
+    @NotNull
     private String ownerId;
 
     @Column(length = 255, name = "prefix_url_web")
+    @Size(max = 255)
     private String prefixUrlWeb;
 
     @Column(length = 255, name = "prefix_url_api")
+    @Size(max = 255)
     private String prefixUrlApi;
 
     public ImportUpstreamConsumer() {

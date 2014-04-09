@@ -14,6 +14,8 @@
  */
 package org.candlepin;
 
+import javax.validation.MessageInterpolator;
+
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Principal;
 import org.candlepin.config.CandlepinCommonTestConfig;
@@ -30,6 +32,8 @@ import org.candlepin.guice.JPAInitializer;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.guice.ScriptEngineProvider;
 import org.candlepin.guice.TestPrincipalProvider;
+import org.candlepin.guice.ValidationListenerProvider;
+import org.candlepin.hibernate.CandlepinMessageInterpolator;
 import org.candlepin.pinsetter.core.GuiceJobFactory;
 import org.candlepin.pinsetter.core.PinsetterJobListener;
 import org.candlepin.pinsetter.tasks.CertificateRevocationListTask;
@@ -71,16 +75,16 @@ import org.candlepin.test.PKIReaderForTesting;
 import org.candlepin.util.DateSource;
 import org.candlepin.util.ExpiryDateFunction;
 import org.candlepin.util.X509ExtensionUtil;
+import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
+import org.quartz.JobListener;
+import org.quartz.spi.JobFactory;
+import org.xnap.commons.i18n.I18n;
 
 import com.google.common.base.Function;
 import com.google.inject.Singleton;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Names;
 import com.google.inject.persist.jpa.JpaPersistModule;
-
-import org.quartz.JobListener;
-import org.quartz.spi.JobFactory;
-import org.xnap.commons.i18n.I18n;
 
 public class CandlepinCommonTestingModule extends CandlepinModule {
 
@@ -91,6 +95,9 @@ public class CandlepinCommonTestingModule extends CandlepinModule {
         CandlepinSingletonScope singletonScope = new CandlepinSingletonScope();
         bindScope(CandlepinSingletonScoped.class, singletonScope);
         bind(CandlepinSingletonScope.class).toInstance(singletonScope);
+
+        bind(BeanValidationEventListener.class).toProvider(ValidationListenerProvider.class);
+        bind(MessageInterpolator.class).to(CandlepinMessageInterpolator.class);
 
         install(new JpaPersistModule("default"));
         bind(JPAInitializer.class).asEagerSingleton();

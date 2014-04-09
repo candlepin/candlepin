@@ -14,14 +14,6 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.jackson.HateoasInclude;
-
-import com.fasterxml.jackson.annotation.JsonFilter;
-
-import org.hibernate.annotations.ForeignKey;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Index;
-
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -35,10 +27,18 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+
+import org.candlepin.jackson.HateoasInclude;
+import org.hibernate.annotations.ForeignKey;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Index;
+
+import com.fasterxml.jackson.annotation.JsonFilter;
 
 
 
@@ -71,24 +71,28 @@ public class Entitlement extends AbstractHibernateObject implements Linkable, Ow
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     @Column(length = 32)
+    @NotNull
     private String id;
 
     @ManyToOne
     @ForeignKey(name = "fk_entitlement_owner")
     @JoinColumn(nullable = false)
     @Index(name = "cp_entitlement_owner_fk_idx")
+    @NotNull
     private Owner owner;
 
     @ManyToOne
     @ForeignKey(name = "fk_entitlement_consumer")
     @JoinColumn(nullable = false)
     @Index(name = "cp_entitlement_consumer_fk_idx")
+    @NotNull
     private Consumer consumer;
 
     @ManyToOne
     @ForeignKey(name = "fk_entitlement_pool")
     @JoinColumn(nullable = true)
     @Index(name = "cp_entitlement_pool_fk_idx")
+    @NotNull
     private Pool pool;
 
     // Not positive this should be mapped here, not all entitlements will have

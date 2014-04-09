@@ -14,17 +14,6 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.jackson.HateoasArrayExclude;
-import org.candlepin.jackson.HateoasInclude;
-
-import com.fasterxml.jackson.annotation.JsonFilter;
-
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.ForeignKey;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Index;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -38,10 +27,22 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+
+import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.candlepin.jackson.HateoasArrayExclude;
+import org.candlepin.jackson.HateoasInclude;
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.ForeignKey;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Index;
+
+import com.fasterxml.jackson.annotation.JsonFilter;
 
 
 /**
@@ -61,9 +62,12 @@ public class GuestId extends AbstractHibernateObject {
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     @Column(length = 32)
+    @NotNull
     private String id;
 
     @Column(name = "guest_id", nullable = false)
+    @Size(max = 255)
+    @NotNull
     private String guestId;
 
     @ManyToOne
@@ -71,6 +75,7 @@ public class GuestId extends AbstractHibernateObject {
     @JoinColumn(nullable = false)
     @XmlTransient
     @Index(name = "cp_consumerguest_consumer_fk_idx")
+    @NotNull
     private Consumer consumer;
 
     @ElementCollection
@@ -79,6 +84,7 @@ public class GuestId extends AbstractHibernateObject {
     @MapKeyColumn(name = "mapkey")
     @Column(name = "element")
     @Cascade({org.hibernate.annotations.CascadeType.ALL})
+    @Size(max = 255)
     private Map<String, String> attributes;
 
     public GuestId() {

@@ -23,6 +23,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -54,6 +56,7 @@ public class SourceStack extends AbstractHibernateObject {
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     @Column(length = 32)
+    @NotNull
     private String id;
 
     /**
@@ -61,6 +64,8 @@ public class SourceStack extends AbstractHibernateObject {
      * sub pool per stack allowed)
      */
     @Column(nullable = false)
+    @Size(max = 255)
+    @NotNull
     private String sourceStackId;
 
     /**
@@ -72,6 +77,7 @@ public class SourceStack extends AbstractHibernateObject {
     @ManyToOne
     @ForeignKey(name = "fk_sourcestack_consumer")
     @JoinColumn(nullable = false)
+    @NotNull
     private Consumer sourceConsumer;
 
     /**
@@ -81,6 +87,7 @@ public class SourceStack extends AbstractHibernateObject {
     @ForeignKey(name = "fk_sourcestack_pool")
     @JoinColumn(nullable = false, unique = true)
     @XmlTransient
+    @NotNull
     private Pool derivedPool;
 
     public SourceStack() {

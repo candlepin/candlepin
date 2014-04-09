@@ -220,7 +220,8 @@ public class PinsetterJobListenerTest {
         when(detail.getKey()).thenReturn(jobKey("foo"));
         when(ctx.getJobDetail()).thenReturn(detail);
         when(jcurator.find(eq("foo"))).thenReturn(status);
-        String longstr = RandomStringUtils.randomAlphanumeric(255);
+        String longstr = RandomStringUtils.randomAlphanumeric(
+            JobStatus.RESULT_COL_LENGTH);
         when(e.getMessage()).thenReturn(longstr);
 
         listener.jobWasExecuted(ctx, e);
@@ -250,7 +251,7 @@ public class PinsetterJobListenerTest {
 
         listener.jobWasExecuted(ctx, e);
 
-        assertEquals(longstr.substring(0, 255), status.getResult());
+        assertEquals(longstr.substring(0, JobStatus.RESULT_COL_LENGTH), status.getResult());
         assertEquals(JobState.FAILED, status.getState());
         verify(jcurator).merge(eq(status));
     }

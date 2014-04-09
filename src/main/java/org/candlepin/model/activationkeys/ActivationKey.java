@@ -27,6 +27,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -52,19 +54,25 @@ import org.hibernate.annotations.Index;
 )
 public class ActivationKey extends AbstractHibernateObject implements Owned {
 
+    public static final int RELEASE_VERSION_LENGTH = 255;
+
     @Id
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     @Column(length = 32)
+    @NotNull
     private String id;
 
     @Column(nullable = false)
+    @Size(max = 255)
+    @NotNull
     private String name;
 
     @ManyToOne
     @ForeignKey(name = "fk_activation_key_owner")
     @JoinColumn(nullable = false)
     @Index(name = "cp_activation_key_owner_fk_idx")
+    @NotNull
     private Owner owner;
 
     @OneToMany(mappedBy = "key")
@@ -78,10 +86,12 @@ public class ActivationKey extends AbstractHibernateObject implements Owned {
     private Set<ActivationKeyContentOverride> contentOverrides =
         new HashSet<ActivationKeyContentOverride>();
 
-    @Column(length = 255, nullable =  true)
+    @Column(length = RELEASE_VERSION_LENGTH, nullable =  true)
+    @Size(max = RELEASE_VERSION_LENGTH)
     private String releaseVer;
 
     @Column(length = 255, nullable =  true)
+    @Size(max = 255)
     private String serviceLevel;
 
     public ActivationKey() {

@@ -159,4 +159,17 @@ describe 'Activation Keys' do
       @cp.create_activation_key(@owner['key'], random_string('test_token'), 'Not There')
     }.should raise_exception(RestClient::BadRequest)
   end
+
+  it 'should return correct exception for contraint violations' do
+    lambda {
+      @cp.create_activation_key(@owner['key'], nil)
+    }.should raise_exception(RestClient::BadRequest)
+    lambda {
+      @cp.create_activation_key(@owner['key'], "a" * 256)
+    }.should raise_exception(RestClient::BadRequest)
+    lambda {
+      @cp.create_activation_key(@owner['key'], "name", "a" * 256)
+    }.should raise_exception(RestClient::BadRequest)
+  end
+
 end

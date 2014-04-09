@@ -14,10 +14,6 @@
  */
 package org.candlepin.model;
 
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.hibernate.annotations.ForeignKey;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Index;
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -28,10 +24,17 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+
+import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.hibernate.annotations.ForeignKey;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Index;
 
 /**
  * Represents a product installed (not necessarily entitled) on a consumer.
@@ -48,18 +51,24 @@ public class ConsumerInstalledProduct extends AbstractHibernateObject {
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     @Column(length = 32)
+    @NotNull
     private String id;
 
     @Column(name = "product_id", nullable = false)
+    @Size(max = 255)
+    @NotNull
     private String productId;
 
     @Column(name = "product_name")
+    @Size(max = 255)
     private String productName;
 
     @Column(name = "product_version")
+    @Size(max = 20)
     private String version;
 
     @Column(name = "product_arch")
+    @Size(max = 63)
     private String arch;
 
     @Transient

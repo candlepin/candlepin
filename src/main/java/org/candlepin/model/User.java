@@ -25,6 +25,8 @@ import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -52,16 +54,21 @@ public class User extends AbstractHibernateObject {
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     @Column(length = 32)
+    @NotNull
     private String id;
 
     @ManyToMany(targetEntity = Role.class, mappedBy = "users")
     private Set<Role> roles = new HashSet<Role>();
 
     @Column(nullable = false, unique = true)
+    @Size(max = 255)
+    @NotNull
     private String username;
 
+    @Size(max = 255)
     private String hashedPassword;
 
+    @NotNull
     private boolean superAdmin;
 
     /*

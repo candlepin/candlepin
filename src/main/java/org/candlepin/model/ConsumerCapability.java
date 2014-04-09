@@ -21,6 +21,8 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -48,15 +50,19 @@ public class ConsumerCapability {
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     @Column(length = 32)
+    @NotNull
     private String id;
 
     @Column(nullable = false)
+    @Size(max = 255)
+    @NotNull
     private String name;
 
     @ManyToOne
     @ForeignKey(name = "fk_consumer_capability_consumer")
     @JoinColumn(nullable = false)
     @Index(name = "cp_consumer_capability_consumer_fk_idx")
+    @NotNull
     private Consumer consumer;
 
     public ConsumerCapability() {

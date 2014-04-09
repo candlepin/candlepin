@@ -16,6 +16,7 @@ package org.candlepin.model;
 
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
+import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 
@@ -28,9 +29,11 @@ import javax.xml.bind.annotation.XmlType;
 public abstract class AbstractCertificate extends AbstractHibernateObject {
 
     @Column(nullable = false, name = "privatekey")
+    @NotNull
     private byte[] key;
 
     @Column(nullable = false)
+    @NotNull
     private byte[] cert;
 
     @XmlTransient

@@ -30,6 +30,7 @@ import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.model.Release;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.model.activationkeys.ActivationKeyPool;
@@ -62,16 +63,21 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         Owner owner = createOwner();
         key.setOwner(owner);
         key.setName("dd");
-        key.setServiceLevel("level");
+        key.setServiceLevel("level1");
+        key.setReleaseVer(new Release("release1"));
         activationKeyCurator.create(key);
 
         assertNotNull(key.getId());
         key = activationKeyResource.getActivationKey(key.getId());
         assertNotNull(key);
         key.setName("JarJarBinks");
+        key.setServiceLevel("level2");
+        key.setReleaseVer(new Release("release2"));
         key = activationKeyResource.updateActivationKey(key.getId(), key);
         key = activationKeyResource.getActivationKey(key.getId());
         assertEquals("JarJarBinks", key.getName());
+        assertEquals("level2", key.getServiceLevel());
+        assertEquals("release2", key.getReleaseVer().getReleaseVer());
         activationKeyResource.deleteActivationKey(key.getId());
         key = activationKeyResource.getActivationKey(key.getId());
     }
@@ -281,6 +287,24 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         ActivationKeyResource akr = new ActivationKeyResource(
             akc, i18n, poolManager, serviceLevelValidator, activationKeyRules);
         akr.addPoolToKey("testKey", "testPool", null);
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void testUpdateTooLongRelease() {
+        ActivationKey key = new ActivationKey();
+        Owner owner = createOwner();
+        key.setOwner(owner);
+        key.setName("dd");
+        key.setServiceLevel("level1");
+        key.setReleaseVer(new Release("release1"));
+        activationKeyCurator.create(key);
+
+        ActivationKey key2 = new ActivationKey();
+        key2.setOwner(owner);
+        key2.setName("dd");
+        key2.setServiceLevel("level1");
+        key2.setReleaseVer(new Release(TestUtil.getStringOfSize(256)));
+        key = activationKeyResource.updateActivationKey(key.getId(), key2);
     }
 
     private Pool genPool() {

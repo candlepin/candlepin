@@ -17,7 +17,6 @@ package org.candlepin.model;
 import java.io.Serializable;
 
 import javax.persistence.Column;
-import javax.persistence.UniqueConstraint;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -25,6 +24,9 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -58,16 +60,20 @@ public class HypervisorId extends AbstractHibernateObject {
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     @Column(length = 32)
+    @NotNull
     private String id;
 
     @Column(name = "hypervisor_id", nullable = false)
     @Index(name = "idx_hypervisor_id")
+    @Size(max = 255)
+    @NotNull
     private String hypervisorId;
 
     @OneToOne
     @ForeignKey(name = "fk_hypervisor_consumer")
     @JoinColumn(nullable = false, unique = true)
     @XmlTransient
+    @NotNull
     private Consumer consumer;
 
     @ManyToOne
@@ -75,6 +81,7 @@ public class HypervisorId extends AbstractHibernateObject {
     @JoinColumn(nullable = false)
     @Index(name = "idx_hypervisor_owner_fk")
     @XmlTransient
+    @NotNull
     private Owner owner;
 
     public HypervisorId() {
