@@ -85,6 +85,8 @@ public class AMQPBusPubProvider implements Provider<AMQPBusPublisher> {
     private void configureSslProperties(Config config) {
         // FIXME: Setting the property here is dangerous,
         // but in theory nothing else is setting/using it
+        // http://qpid.apache.org/releases/qpid-0.24/programming/book/ch03s06.html
+
         System.setProperty("javax.net.ssl.keyStore",
             config.getString(ConfigProperties.AMQP_KEYSTORE));
         System.setProperty("javax.net.ssl.keyStorePassword",
@@ -124,12 +126,12 @@ public class AMQPBusPubProvider implements Provider<AMQPBusPublisher> {
     @Override
     public AMQPBusPublisher get() {
         try {
+            // build a map of publishers for each of combination of
+            // target.type. So there will be one for owner.created,
+            // another for pool.deleted, etc.
+
             Map<Target, Map<Type, TopicPublisher>> pm = Util.newMap();
-            for (Target target : Target.values()) {
-                Map<Type, TopicPublisher> typeToTpMap = Util.newMap();
-                storeTopicProducer(typeToTpMap, target);
-                pm.put(target, typeToTpMap);
-            }
+            buildAllTopicPublishers(pm);
             log.debug("XXX " + pm.toString());
             return new AMQPBusPublisher(session, pm, mapper);
         }
@@ -144,8 +146,22 @@ public class AMQPBusPubProvider implements Provider<AMQPBusPublisher> {
         Util.closeSafely(this.ctx, "AMQPContext");
     }
 
+    protected final void buildAllTopicPublishers(
+        Map<Target, Map<Type, TopicPublisher>> pm)
+            throws JMSException, NamingException {
+
+        for (Target target : Target.values()) {
+            Map<Type, TopicPublisher> typeToTpMap = Util.newMap();
+            for (Type type : Type.values()) {
+                storeTopicProducer(type, target, typeToTpMap);
+            }
+            pm.put(target, typeToTpMap);
+        }
+    }
+
     protected final void storeTopicProducer(Type type, Target target,
         Map<Type, TopicPublisher> map) throws JMSException, NamingException {
+
         String name = getTopicName(type, target);
         Topic topic = (Topic) this.ctx.lookup(name);
         log.info("Creating publisher for topic: {}", name);
@@ -154,21 +170,13 @@ public class AMQPBusPubProvider implements Provider<AMQPBusPublisher> {
     }
 
     private String getTopicName(Type type, Target target) {
-        String name = target.toString().toLowerCase() +
+        return target.toString().toLowerCase() +
             Util.capitalize(type.toString().toLowerCase());
-        return name;
     }
 
     private String getDestination(Type type, Target target) {
         String key = target.toString().toLowerCase();
         String object = targetToEvent.get(key);
         return (object == null ? key : object) + "." + type.toString().toLowerCase();
-    }
-
-    protected final void storeTopicProducer(Map<Type, TopicPublisher> map, Target target)
-        throws JMSException, NamingException {
-        for (Type type : Type.values()) {
-            storeTopicProducer(type, target, map);
-        }
     }
 }
