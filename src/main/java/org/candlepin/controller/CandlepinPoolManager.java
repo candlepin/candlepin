@@ -14,6 +14,7 @@
  */
 package org.candlepin.controller;
 
+import org.apache.commons.lang.StringUtils;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
@@ -55,6 +56,8 @@ import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.util.CertificateSizeException;
 import org.candlepin.util.Util;
 import org.candlepin.version.CertVersionConflictException;
+import org.hibernate.HibernateException;
+import org.hibernate.exception.ConstraintViolationException;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -146,14 +149,16 @@ public class CandlepinPoolManager implements PoolManager {
         // subscription ID associated with them.
         Map<String, List<Pool>> subToPoolMap = new HashMap<String, List<Pool>>();
         for (Pool p : pools) {
-            if (p.getSubscriptionId() != null) {
+            if (!StringUtils.isEmpty(p.getSubscriptionId())) {
                 if (!subToPoolMap.containsKey(p.getSubscriptionId())) {
                     subToPoolMap.put(p.getSubscriptionId(),
                         new LinkedList<Pool>());
                 }
                 subToPoolMap.get(p.getSubscriptionId()).add(p);
             }
-            floatingPools.add(p);
+            else {
+                floatingPools.add(p);
+            }
         }
 
         Set<Entitlement> entitlementsToRegen = Util.newSet();
@@ -166,14 +171,24 @@ public class CandlepinPoolManager implements PoolManager {
                 continue;
             }
 
-            if (!poolExistsForSubscription(subToPoolMap, sub.getId())) {
-                createPoolsForSubscription(sub);
-                subToPoolMap.remove(sub.getId());
+            try {
+                if (!poolExistsForSubscription(subToPoolMap, sub.getId())) {
+                    createPoolsForSubscription(sub);
+                }
+                else {
+                    entitlementsToRegen.addAll(
+                        updatePoolsForSubscription(subToPoolMap.get(sub.getId()), sub)
+                    );
+                }
             }
-            else {
-                entitlementsToRegen.addAll(
-                    updatePoolsForSubscription(subToPoolMap.get(sub.getId()), sub)
-                );
+            catch (ConstraintViolationException e) {
+                // This shouldn't cause our entire job to fail. Probably a concurrent
+                // refresh job
+                log.warn("Failed to create or update pool for" + sub + " on " + owner +
+                    " Probably the result of concurrent refreshes, and the pool has " +
+                    "already been created or modified", e);
+            }
+            finally {
                 subToPoolMap.remove(sub.getId());
             }
         }
@@ -190,7 +205,14 @@ public class CandlepinPoolManager implements PoolManager {
                 // However if this is an older bonus pool (hosted) not tied to any
                 // entitlements, we need to proceed:
                 if (p.getType() == PoolType.NORMAL || p.getType() == PoolType.BONUS) {
-                    deletePool(p);
+                    try {
+                        deletePool(p);
+                    }
+                    catch (HibernateException e) {
+                        // Is there an exception for objs that have already been deleted?
+                        log.error("Failed to delete " + p + " It has probably already " +
+                            "been deleted by another refresh", e);
+                    }
                 }
             }
         }
