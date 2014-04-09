@@ -32,8 +32,7 @@ import javax.jms.TopicPublisher;
 import javax.jms.TopicSession;
 
 /**
- *
- * @author ajay
+ * An EventListener that publishes events to an AMQP bus (qpid).
  */
 public class AMQPBusPublisher implements EventListener {
     private static Logger log = LoggerFactory.getLogger(AMQPBusPublisher.class);
@@ -66,7 +65,6 @@ public class AMQPBusPublisher implements EventListener {
         }
         catch (JMSException ex) {
             log.warn("Unable to send event :" + e + " via AMQPBus", ex);
-            // TODO Try recovering session?
         }
         catch (JsonProcessingException jpe) {
             log.warn("Unable to send event :" + jpe + " via AMQPBus", jpe);

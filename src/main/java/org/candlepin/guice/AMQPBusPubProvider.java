@@ -132,7 +132,6 @@ public class AMQPBusPubProvider implements Provider<AMQPBusPublisher> {
 
             Map<Target, Map<Type, TopicPublisher>> pm = Util.newMap();
             buildAllTopicPublishers(pm);
-            log.debug("XXX " + pm.toString());
             return new AMQPBusPublisher(session, pm, mapper);
         }
         catch (Exception ex) {
