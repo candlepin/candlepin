@@ -68,6 +68,53 @@
     </changeSet>
 
     <changeSet id="20140408160212-2" author="ckozak">
+        <comment>Add cascading delete on pool branding So we can delete pools without violating foreign keys</comment>
+        <dropForeignKeyConstraint
+            baseTableName="cp_pool_branding"
+            constraintName="fk_pool_branding_pool_id"/>
+
+        <addForeignKeyConstraint
+            baseColumnNames="pool_id"
+            baseTableName="cp_pool_branding"
+            constraintName="fk_pool_branding_pool_id"
+            deferrable="false"
+            initiallyDeferred="false"
+            onDelete="CASCADE"
+            onUpdate="NO ACTION"
+            referencedColumnNames="id"
+            referencedTableName="cp_pool"
+            referencesUniqueColumn="false"/>
+    </changeSet>
+
+    <changeSet id="20140408160212-3" author="ckozak">
+        <comment>Migrate subscriptions on duplicate pools to a single pool per set</comment>
+        <customChange class="org.candlepin.liquibase.FixDuplicatePoolsLiquibaseWrapper">
+        </customChange>
+    </changeSet>
+
+    <changeSet id="20140408160212-4" author="ckozak">
+        <comment>Copy all pool source subscription data to the new table</comment>
+        <!-- Everything with non-null values for both subid and subkey can be copied directly assuming we have properly removed duplicates -->
+        <sql>
+            INSERT INTO cp_pool_source_sub (id, subscriptionid, subscriptionsubkey, pool_id, created, updated)
+            SELECT cp_pool.id, cp_pool.subscriptionid, cp_pool.subscriptionsubkey, cp_pool.id, cp_pool.created, cp_pool.updated
+            FROM cp_pool
+            WHERE cp_pool.subscriptionid IS NOT NULL
+            AND cp_pool.subscriptionsubkey IS NOT NULL
+        </sql>
+
+        <!-- Copy over host-restricted non-stackable subscription data using sourceentitlement_id to enforce uniqueness -->
+        <sql>
+            INSERT INTO cp_pool_source_sub (id, subscriptionid, subscriptionsubkey, pool_id, created, updated)
+            SELECT cp_pool.id, cp_pool.subscriptionid, cp_pool.sourceentitlement_id, cp_pool.id, cp_pool.created, cp_pool.updated
+            FROM cp_pool
+            WHERE cp_pool.subscriptionid IS NOT NULL
+            AND cp_pool.subscriptionsubkey IS NULL
+            AND cp_pool.sourceentitlement_id IS NOT NULL
+        </sql>
+    </changeSet>
+
+    <changeSet id="20140408160212-5" author="ckozak">
         <comment>Remove unused columns</comment>
 
         <dropUniqueConstraint
