@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-03-20 16:29-0400\n"
+"POT-Creation-Date: 2014-04-09 12:53-0400\n"
 "PO-Revision-Date: 2014-02-27 06:20-0500\n"
 "Last-Translator: hedda <hedda@fedoraproject.org>\n"
 "Language-Team: German (Germany)\n"
@@ -397,6 +397,7 @@ msgstr ""
 "Anfrage durch gleichzeitige Änderung gescheitert, bitte nochmals versuchen."
 
 #: src/main/java/org/candlepin/model/activationkeys/ActivationKeyCurator.java:58
+#: src/main/java/org/candlepin/resource/OwnerResource.java:708
 #, java-format
 msgid "ActivationKey with id {0} could not be found."
 msgstr "Aktivierungsschlüssel mit ID {0} konnte nicht gefunden werden."
@@ -428,7 +429,7 @@ msgstr ""
 
 #: src/main/java/org/candlepin/model/ConsumerCurator.java:517
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:142
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1641
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1635
 #, java-format
 msgid "Unit with ID ''{0}'' could not be found."
 msgstr "Einheit mit ID ''{0}'' konnte nicht gefunden werden."
@@ -544,6 +545,78 @@ msgstr "Standard"
 msgid "Stackable only with other subscriptions"
 msgstr "Nur mit anderen Subskriptionen stapelbar"
 
+#: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:77
+msgid ""
+"Activation keys can only use consumer type restricted pools for a single "
+"consumer type."
+msgstr ""
+
+#: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:81
+msgid ""
+"Cannot add pools that are restricted to unit type 'person' to activation "
+"keys."
+msgstr ""
+"Auf den Einheitentyp 'Person' beschränkte Pools können nicht zu "
+"Aktivierungsschlüsseln hinzugefügt werden."
+
+#: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:85
+msgid ""
+"Cannot use pools with host restriction with physical only pools on a single "
+"activation key"
+msgstr ""
+
+#: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:89
+msgid "Activation keys can only use host restricted pools from a single host."
+msgstr ""
+"Aktivierungsschlüssel können nur eingeschränkte Host-Pools von einem "
+"einzigen Host verwenden."
+
+#: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:93
+#, java-format
+msgid "Multi-entitlement not supported for pool ''{0}''"
+msgstr ""
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author hedda
+#: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:96
+msgid ""
+"Error: Only pools with multi-entitlement product subscriptions can be added "
+"to the activation key with a quantity greater than one."
+msgstr ""
+"Fehler: Nur Pools mit Multi-Berechtigungs-Produktsubskriptionen können zu "
+"dem Aktivierungsschlüssel mit einer Anzahl größer als eins hinzugefügt "
+"werden."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author hedda
+#: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:101
+msgid "The quantity must not be greater than the total allowed for the pool"
+msgstr ""
+"Die Anzahl darf nicht größer als die erlaubte Gesamtanzahl für den Pool sein"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author hedda
+#: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:105
+msgid "The quantity must be greater than 0"
+msgstr "Anzahl muss größer als 0 sein"
+
+#: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:112
+#, java-format
+msgid ""
+"Activation key with for physical systems can only use quantities of pool "
+"''{0}'' evenly divisible by {1}"
+msgstr ""
+
+#: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:116
+#, java-format
+msgid "Cannot add virtual pool ''{0}'' to activation key for physical systems."
+msgstr ""
+
+#: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:120
+#, java-format
+msgid "Cannot add physical pool ''{0}'' to activation key for virtual systems."
+msgstr ""
+
 #: src/main/java/org/candlepin/resource/CdnResource.java:93
 #, java-format
 msgid "A CDN with the label {0}already exists"
@@ -599,8 +672,8 @@ msgstr "Einheit ''{0}'' hat keine Subskription für Produkt ''{1}''"
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:210
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:240
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:269
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1559
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1679
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1553
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1673
 #, java-format
 msgid "Entitlement with ID ''{0}'' could not be found."
 msgstr "Berechtigung mit ID ''{0}'' konnte nicht gefunden werden."
@@ -624,29 +697,6 @@ msgstr "Keine solche Umgebung: {0}"
 #, java-format
 msgid "Event with ID ''{0}'' could not be found."
 msgstr "Ereignis mit ID ''{0}'' konnte nicht gefunden werden"
-
-#: src/main/java/org/candlepin/resource/JobResource.java:110
-msgid ""
-"You must specify exactly one of owner key, unit UUID, or principal name."
-msgstr ""
-"Sie müssen genau einen Besitzer-Schlüssel, Einheits-UUID, oder Principal-"
-"Name angeben."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author hedda
-#: src/main/java/org/candlepin/resource/JobResource.java:169
-msgid "Error setting scheduler status"
-msgstr "Fehler beim Definieren des Planstatus"
-
-#: src/main/java/org/candlepin/resource/JobResource.java:197
-msgid "job already canceled"
-msgstr "Aufgabe bereits abgebrochen"
-
-#: src/main/java/org/candlepin/resource/JobResource.java:200
-msgid "cannot cancel a job that is not in CREATED or WAITING state"
-msgstr ""
-"Aufgabe, die sich nicht im CREATED- oder WAITING-Status befindet, kann nicht "
-"abgebrochen werden"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author hedda
@@ -732,7 +782,7 @@ msgid "email locale is required for notification"
 msgstr "E-Mail-Sprache ist zur Benachrichtigung nötig"
 
 #: src/main/java/org/candlepin/resource/SubscriptionResource.java:154
-#: src/main/java/org/candlepin/resource/OwnerResource.java:802
+#: src/main/java/org/candlepin/resource/OwnerResource.java:819
 #, java-format
 msgid "No such unit: {0}"
 msgstr "Keine solche Einheit: {0}"
@@ -751,49 +801,6 @@ msgstr "Benutzer {0} existiert nicht"
 #, java-format
 msgid "User {0} not found"
 msgstr "Benutzer {0} nicht gefunden"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author hedda
-#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:133
-msgid "The quantity must be greater than 0"
-msgstr "Anzahl muss größer als 0 sein"
-
-#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:143
-msgid ""
-"Cannot add pools that are restricted to unit type 'person' to activation "
-"keys."
-msgstr ""
-"Auf den Einheitentyp 'Person' beschränkte Pools können nicht zu "
-"Aktivierungsschlüsseln hinzugefügt werden."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author hedda
-#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:150
-msgid ""
-"Error: Only pools with multi-entitlement product subscriptions can be added "
-"to the activation key with a quantity greater than one."
-msgstr ""
-"Fehler: Nur Pools mit Multi-Berechtigungs-Produktsubskriptionen können zu "
-"dem Aktivierungsschlüssel mit einer Anzahl größer als eins hinzugefügt "
-"werden."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author hedda
-#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:157
-msgid "The quantity must not be greater than the total allowed for the pool"
-msgstr ""
-"Die Anzahl darf nicht größer als die erlaubte Gesamtanzahl für den Pool sein"
-
-#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:164
-msgid "Activation keys can only use host restricted pools from a single host."
-msgstr ""
-"Aktivierungsschlüssel können nur eingeschränkte Host-Pools von einem "
-"einzigen Host verwenden."
-
-#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:250
-#, java-format
-msgid "Pool with id {0} could not be found."
-msgstr "Pool mit ID {0} konnte nicht gefunden werden."
 
 #: src/main/java/org/candlepin/resource/ProductResource.java:128
 #: src/main/java/org/candlepin/resource/ProductResource.java:147
@@ -844,7 +851,7 @@ msgid "Invalid Credentials"
 msgstr "Ungültige Berechtigungsnachweise"
 
 #: src/main/java/org/candlepin/resource/GuestIdResource.java:254
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1206
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1200
 #, java-format
 msgid "Cannot unregister {0} {1} because: {2}"
 msgstr "Kann nicht abmelden {0} {1}, da: {2}"
@@ -862,9 +869,9 @@ msgstr ""
 # translation auto-copied from project Candlepin, version master, document
 # keys
 #: src/main/java/org/candlepin/resource/HypervisorResource.java:174
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:262
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:733
-#: src/main/java/org/candlepin/resource/OwnerResource.java:792
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:266
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:727
+#: src/main/java/org/candlepin/resource/OwnerResource.java:809
 #: src/main/java/org/candlepin/resource/OwnerResource.java:897
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1103
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1133
@@ -876,20 +883,25 @@ msgstr ""
 msgid "owner with key: {0} was not found."
 msgstr "Besitzer mit Schlüssel: {0} konnte nicht gefunden werden."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:293
+#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:207
+#, java-format
+msgid "Pool with id {0} could not be found."
+msgstr "Pool mit ID {0} konnte nicht gefunden werden."
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:297
 #, java-format
 msgid "Consumer with id {0} could not be found."
 msgstr "Verbraucher mit ID {0} konnte nicht gefunden werden."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author hedda
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:371
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:375
 msgid "Insufficient permissions"
 msgstr "Ungenügende Berechtigungen"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author hedda
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:377
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:381
 msgid "Must specify an org to register with activation keys."
 msgstr ""
 "Organisation muss zur Registrierung mit Aktivierungsschlüsseln angegeben "
@@ -897,131 +909,124 @@ msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author hedda
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:381
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:385
 msgid "Cannot specify username with activation keys."
 msgstr "Benutzername kann nicht mit Aktivierungsschlüsseln angegeben werden."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:404
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:406
 msgid "A unit type of 'person' cannot be used with activation keys"
 msgstr ""
 "Einheitentyp 'Person' kann nicht mit Aktivierungsschlüsseln verwendet werden"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:409
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:419
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:411
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:421
 msgid "System name cannot contain most special characters."
 msgstr "Systemname darf keine Sonderzeichen enthalten."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:483
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:485
 #, java-format
 msgid "Problem creating unit {0}"
 msgstr "Problem beim Erstellen von Einheit {0}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:501
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:504
 msgid "Pool ID must be provided"
 msgstr "Pool-ID muss angegeben werden"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:605
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:616
 msgid "System name cannot be null."
 msgstr "Systemname kann nicht Null sein."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author hedda
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:612
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:623
 msgid "System name cannot begin with # character"
 msgstr "Systemname darf nicht mit einem #-Zeichen beginnen"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:627
-#: src/main/java/org/candlepin/resource/OwnerResource.java:865
-#, java-format
-msgid "Service level ''{0}'' is not available to units of organization {1}."
-msgstr ""
-"Service-Level \"{0}\" ist nicht für Einheiten der Organisation {1} verfügbar."
-
 # translation auto-copied from project Candlepin, version master, document
 # keys, author hedda
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:656
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:650
 #, java-format
 msgid "Activation key ''{0}'' not found for organization ''{1}''."
 msgstr ""
 "Aktivierungsschlüssel ''{0}'' konnte nicht für Organisation ''{1}'' gefunden "
 "werden."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:676
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:670
 #, java-format
 msgid "User with ID ''{0}'' could not be found."
 msgstr "Benutzer mit ID ''{0}'' konnte nicht gefunden werden."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:684
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:678
 #, java-format
 msgid "User ''{0}'' has no roles for organization ''{1}''"
 msgstr "Benutzer ''{0}'' hat keine Rollen für Organisation ''{1}''"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:696
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:690
 #, java-format
 msgid "User ''{0}'' has already registered a personal consumer"
 msgstr ""
 "Benutzer ''{0}'' hat bereits einen persönlichen Verbraucher registriert"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:713
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:707
 msgid "You must specify an organization for new units."
 msgstr "Sie müssen eine Organisation für neue Einheiten angeben."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author hedda
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:724
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:718
 #, java-format
 msgid "Organization {0} does not exist."
 msgstr "Organisation {0} existiert nicht."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:794
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:788
 #, java-format
 msgid "Unit type ''{0}'' could not be found."
 msgstr "Einheitentyp ''{0}'' konnte nicht gefunden werden."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:826
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:820
 #, java-format
 msgid "Problem updating unit {0}"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:887
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:881
 #, java-format
 msgid "Environment with ID ''{0}'' could not be found."
 msgstr "Umfeld mit ID ''{0}'' konnte nicht gefunden werden"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1293
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1287
 msgid "Unable to create entitlement certificate archive"
 msgstr "Archiv für Berechtigungszertifikate konnte nicht erstellt werden"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1406
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1417
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1400
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1411
 msgid "Cannot bind by multiple parameters."
 msgstr "Kann nicht anhand mehrerer Parameter verknüpfen."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author hedda
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1411
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1405
 msgid "Cannot specify a quantity when auto-binding."
 msgstr "Kann keine Anzahl bei automatischer Verknüpfung angeben."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1585
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1579
 #, java-format
 msgid "Product with ID ''{0}'' could not be found."
 msgstr "Produkt mit ID ''{0}'' konnte nicht gefunden werden."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1702
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1696
 #, java-format
 msgid "Entitlement Certificate with serial number ''{0}'' could not be found."
 msgstr ""
 "Berechtigungszertifikat mit Seriennummer ''{0}'' konnte nicht gefunden "
 "werden."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1786
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1780
 #, java-format
 msgid ""
 "Unit {0} cannot be exported. A manifest cannot be made for units of type "
@@ -1030,50 +1035,71 @@ msgstr ""
 "Einheit {0} konnte nicht exportiert werden. Ein Manifest kann für die "
 "Einheit vom Typ ''{1}'' nicht erstellt werden."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1794
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1788
 #, java-format
 msgid "A CDN with label {0} does not exist on this system."
 msgstr "Ein CDN mit Label {0} existiert nicht auf diesem System."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1810
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1804
 msgid "Unable to create export archive"
 msgstr "Exportarchiv konnte nicht erstellt werden"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1882
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1876
 #, java-format
 msgid "Problem regenerating ID cert for unit {0}"
 msgstr "Problem beim Regenerieren des ID-Zertifikats für Einheit {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1918
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1912
 #, java-format
 msgid "The system with UUID {0} is not a virtual guest."
 msgstr "Das System mit der UUID {0} ist kein virtueller Gast. "
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2025
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2019
 #, java-format
 msgid "Deletion record for hypervisor ''{0}'' not found."
 msgstr "Löschungseintrag für Hypervisor ''{0}'' nicht gefunden."
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:270
+#: src/main/java/org/candlepin/resource/JobResource.java:110
+msgid ""
+"You must specify exactly one of owner key, unit UUID, or principal name."
+msgstr ""
+"Sie müssen genau einen Besitzer-Schlüssel, Einheits-UUID, oder Principal-"
+"Name angeben."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author hedda
+#: src/main/java/org/candlepin/resource/JobResource.java:169
+msgid "Error setting scheduler status"
+msgstr "Fehler beim Definieren des Planstatus"
+
+#: src/main/java/org/candlepin/resource/JobResource.java:197
+msgid "job already canceled"
+msgstr "Aufgabe bereits abgebrochen"
+
+#: src/main/java/org/candlepin/resource/JobResource.java:200
+msgid "cannot cancel a job that is in a finished state"
+msgstr ""
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:275
 #, java-format
 msgid "Could not create the Owner: {0}. Parent {1} does not exist."
 msgstr ""
 "Besitzer konnte nicht erstellt werden: {0}. Parent {1} existiert nicht."
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:283
+#: src/main/java/org/candlepin/resource/OwnerResource.java:288
 #, java-format
 msgid "Could not create the Owner: {0}"
 msgstr "Besitzer konnte nicht erstellt werden: {0}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author hedda
-#: src/main/java/org/candlepin/resource/OwnerResource.java:501
+#: src/main/java/org/candlepin/resource/OwnerResource.java:506
 msgid "Must provide a name for activation key."
 msgstr "Name für Aktivierungsschlüssel muss angegeben werden."
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:508
+#: src/main/java/org/candlepin/resource/OwnerResource.java:513
 #, java-format
 msgid ""
 "The activation key name ''{0}'' must be alphanumeric or include the "
@@ -1082,18 +1108,18 @@ msgstr ""
 "Der Aktivierungsschlüsselname ''{0}''darf nur alphanumerische Zeichen oder "
 "'-' oder '_' enthalten"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:515
+#: src/main/java/org/candlepin/resource/OwnerResource.java:519
 #, java-format
 msgid "The activation key name ''{0}'' is already in use for owner {1}"
 msgstr ""
 "Der Aktivierungsschlüsselname ''{0}'' wird bereits für Besitzer {1} verwendet"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:588
+#: src/main/java/org/candlepin/resource/OwnerResource.java:594
 #, java-format
 msgid "{0} is not a valid log level"
 msgstr "{0} ist keine gültige Protokoll-Ebene"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:681
+#: src/main/java/org/candlepin/resource/OwnerResource.java:688
 #: src/main/java/org/candlepin/resource/PoolResource.java:142
 #, java-format
 msgid "Unit: {0} not found"
@@ -1101,7 +1127,7 @@ msgstr "Einheit: {0} nicht gefunden"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author hedda
-#: src/main/java/org/candlepin/resource/OwnerResource.java:691
+#: src/main/java/org/candlepin/resource/OwnerResource.java:698
 #: src/main/java/org/candlepin/resource/PoolResource.java:219
 #, java-format
 msgid "User {0} cannot access consumer {1}"
@@ -1392,7 +1418,7 @@ msgstr "Das Archiv {0} ist keine korrekt komprimierte Datei oder ist leer"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author hedda
-#: src/main/java/org/candlepin/sync/EntitlementImporter.java:157
+#: src/main/java/org/candlepin/sync/EntitlementImporter.java:163
 msgid "Unable to find product with ID: "
 msgstr "Produkt mit folgender ID konnte nicht gefunden werden:"
 
@@ -1407,3 +1433,9 @@ msgid "Name, value, and label of the override must not exceed {0} characters."
 msgstr ""
 "Name, Wert und Label der Überschreibung darf nicht mehr als {0} Zeichen lang "
 "sein"
+
+#: src/main/java/org/candlepin/util/ServiceLevelValidator.java:67
+#, java-format
+msgid "Service level ''{0}'' is not available to units of organization {1}."
+msgstr ""
+"Service-Level \"{0}\" ist nicht für Einheiten der Organisation {1} verfügbar."
