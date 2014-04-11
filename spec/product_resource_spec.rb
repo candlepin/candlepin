@@ -214,6 +214,14 @@ describe 'Product Resource' do
     prod_ids_to_get.index(bulk_get_products[1]['id']).should_not == nil
   end
 
+  it 'should return correct exception for contraint violations' do
+    lambda {
+      prod = create_product(random_string("test_id"),
+                          random_string("test_name"),
+                          {:attributes => {:support_level => "a" * 256}})
+    }.should raise_exception(RestClient::BadRequest)
+  end
+
   it 'bad request on attempt to delete product attached to sub' do
     lambda do
       @cp.delete_product(@product.id)
@@ -237,6 +245,7 @@ describe 'Product Resource' do
       @cp.delete_product(@derived_prov_product.id)
     end.should raise_exception(RestClient::BadRequest)
   end
+
 
 end
 

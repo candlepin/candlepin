@@ -21,6 +21,8 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -38,6 +40,7 @@ public class DeletedConsumer extends AbstractHibernateObject {
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     @Column(length = 32)
+    @NotNull
     private String id;
 
     /**
@@ -45,6 +48,8 @@ public class DeletedConsumer extends AbstractHibernateObject {
      * real consumer hence no foreign key.
      */
     @Column(name = "consumer_uuid", length = 255, nullable = false, unique = true)
+    @Size(max = 255)
+    @NotNull
     private String consumerUuid;
 
     /**
@@ -52,12 +57,16 @@ public class DeletedConsumer extends AbstractHibernateObject {
      * and we still want to keep this record around.
      */
     @Column(name = "owner_id", length = 32, nullable = false)
+    @Size(max = 32)
+    @NotNull
     private String ownerId;
 
     @Column(name = "owner_key", length = 255, nullable = false)
+    @Size(max = 255)
     private String ownerKey;
 
     @Column(name = "owner_displayname", length = 255, nullable = false)
+    @Size(max = 255)
     private String ownerDisplayName;
 
     public DeletedConsumer(String cuuid, String oid, String okey, String oname) {

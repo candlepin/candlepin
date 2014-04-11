@@ -14,13 +14,6 @@
  */
 package org.candlepin.model;
 
-import com.fasterxml.jackson.annotation.JsonFilter;
-
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.hibernate.annotations.ForeignKey;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Index;
-
 import javax.persistence.Column;
 import javax.persistence.DiscriminatorColumn;
 import javax.persistence.DiscriminatorType;
@@ -33,10 +26,19 @@ import javax.persistence.InheritanceType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+
+import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.hibernate.annotations.ForeignKey;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Index;
+
+import com.fasterxml.jackson.annotation.JsonFilter;
 
 /**
  * Represents a product provided by a Pool
@@ -56,12 +58,17 @@ public class ProvidedProduct extends AbstractHibernateObject {
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     @Column(length = 32)
+    @NotNull
     private String id;
 
     @Column(name = "product_id", nullable = false)
+    @Size(max = 255)
+    @NotNull
     private String productId;
 
     @Column(name = "product_name")
+    @Size(max = 255)
+    @NotNull
     private String productName;
 
     @ManyToOne
@@ -69,6 +76,7 @@ public class ProvidedProduct extends AbstractHibernateObject {
     @JoinColumn(nullable = false)
     @XmlTransient
     @Index(name = "cp_providedproduct_pool_fk_idx")
+    @NotNull
     private Pool pool;
 
     public ProvidedProduct() {

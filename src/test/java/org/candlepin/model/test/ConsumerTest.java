@@ -20,11 +20,16 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.persistence.PersistenceException;
+
 import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
@@ -41,12 +46,6 @@ import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.persistence.PersistenceException;
 
 public class ConsumerTest extends DatabaseTestFixture {
 
@@ -87,7 +86,7 @@ public class ConsumerTest extends DatabaseTestFixture {
         consumerCurator.create(newConsumer);
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test(expected = PersistenceException.class)
     public void testConsumerNameLengthCreate() {
         String name = "";
         for (int x = 0; x < 300; x++) {
@@ -100,7 +99,7 @@ public class ConsumerTest extends DatabaseTestFixture {
         consumerCurator.create(newConsumer);
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test(expected = PersistenceException.class)
     public void testConsumerNameLengthUpdate() {
         String name = "";
         for (int x = 0; x < 300; x++) {

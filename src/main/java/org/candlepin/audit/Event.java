@@ -24,6 +24,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Transient;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -75,44 +77,56 @@ public class Event implements Persisted {
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     @Column(length = 32)
+    @NotNull
     private String id;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
+    @NotNull
     private Type type;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
+    @NotNull
     private Target target;
 
     // This should be there, but may not be
     // moo
     @Column(nullable = true)
+    @Size(max = 255)
     private String targetName;
 
     // String representation of the principal. We probably should not be
     // reconstructing
     // any stored principal object.
     @Column(nullable = false, name = "principal")
+    @Size(max = 255)
+    @NotNull
     private String principalStore;
 
     @Column(nullable = false)
+    @NotNull
     private Date timestamp;
 
     // Uniquely identifies the entity's ID when combined with the event type.
     // The entity type can be determined from the type field.
     @Column(nullable = false)
+    @Size(max = 255)
+    @NotNull
     private String entityId;
 
     @Column(nullable = true)
+    @Size(max = 255)
     private String ownerId;
 
     @Column(nullable = true)
+    @Size(max = 255)
     private String consumerId;
 
     // Generic id field in case a cross reference is needed to some other entity
     // Use with reference type
     @Column(nullable = true)
+    @Size(max = 255)
     private String referenceId;
 
     // Classifies Generic id field in case a cross reference is needed to some

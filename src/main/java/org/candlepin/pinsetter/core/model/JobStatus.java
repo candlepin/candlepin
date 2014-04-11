@@ -20,6 +20,8 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -43,6 +45,7 @@ public class JobStatus extends AbstractHibernateObject {
 
     public static final String TARGET_TYPE = "target_type";
     public static final String TARGET_ID = "target_id";
+    public static final int RESULT_COL_LENGTH = 255;
 
     /**
      * Indicates possible states for a particular job.
@@ -67,17 +70,28 @@ public class JobStatus extends AbstractHibernateObject {
     }
 
     @Id
+    @Size(max = 255)
+    @NotNull
     private String id;
+
     @Column(length = 15)
+    @Size(max = 15)
     private String jobGroup;
+
     private JobState state;
     private Date startTime;
     private Date finishTime;
-    @Column(length = 255)
+
+    @Column(length = RESULT_COL_LENGTH)
+    @Size(max = RESULT_COL_LENGTH)
     private String result;
+
+    @Size(max = 255)
     private String principalName;
 
     private TargetType targetType;
+
+    @Size(max = 255)
     private String targetId;
 
     @Column(length = 255)
@@ -188,12 +202,12 @@ public class JobStatus extends AbstractHibernateObject {
     }
 
     public void setResult(String result) {
-        // truncate the results to the first 255 characters
-        if (result == null || result.length() < 255) {
+        // truncate the result to fit column
+        if (result == null || result.length() < RESULT_COL_LENGTH) {
             this.result = result;
         }
         else {
-            this.result = result.substring(0, 255);
+            this.result = result.substring(0, RESULT_COL_LENGTH);
         }
     }
 

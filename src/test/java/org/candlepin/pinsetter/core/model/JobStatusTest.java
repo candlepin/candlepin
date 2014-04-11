@@ -56,7 +56,7 @@ public class JobStatusTest {
     public void handleTooLongResult() {
         String longstr = RandomStringUtils.randomAlphanumeric(300);
         status.setResult(longstr);
-        assertEquals(longstr.substring(0, 255), status.getResult());
+        assertEquals(longstr.substring(0, JobStatus.RESULT_COL_LENGTH), status.getResult());
     }
 
     @Test
@@ -67,10 +67,12 @@ public class JobStatusTest {
 
     @Test
     public void handleExactResult() {
-        // pass in a string of EXACTLY 255 characters
-        String longstr = RandomStringUtils.randomAlphanumeric(255);
+        // pass in a string of EXACTLY column size characters
+        String longstr = RandomStringUtils.randomAlphanumeric(
+            JobStatus.RESULT_COL_LENGTH);
         status.setResult(longstr);
-        assertEquals(longstr.substring(0, 255), status.getResult());
+        assertEquals(longstr.substring(0, JobStatus.RESULT_COL_LENGTH),
+            status.getResult());
     }
 
     @Test

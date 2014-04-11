@@ -14,8 +14,6 @@
  */
 package org.candlepin.model;
 
-import org.hibernate.annotations.GenericGenerator;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -23,6 +21,10 @@ import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
+import org.hibernate.annotations.GenericGenerator;
 
 /**
  * Event - Base class for Candlepin events. Serves as both our semi-permanent
@@ -55,11 +57,14 @@ public class Statistic extends AbstractHibernateObject {
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     @Column(length = 32)
+    @NotNull
     private String id;
 
     //
     @Column(nullable = false, name = "entry_type")
     @Enumerated(EnumType.STRING)
+    @Size(max = 255)
+    @NotNull
     private EntryType entryType;
 
     //
@@ -69,14 +74,17 @@ public class Statistic extends AbstractHibernateObject {
 
     //
     @Column(nullable = true, name = "value_reference")
+    @Size(max = 255)
     private String valueReference;
 
     //
     @Column(nullable = false)
+    @NotNull
     private int value;
 
     //
     @Column(nullable = true, name = "owner_id")
+    @Size(max = 255)
     private String ownerId;
 
     public Statistic() {

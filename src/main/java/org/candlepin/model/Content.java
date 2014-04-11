@@ -24,6 +24,8 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -45,36 +47,50 @@ public class Content extends AbstractHibernateObject {
     public static final  String UEBER_CONTENT_NAME = "ueber_content";
 
     @Id
+    @Size(max = 255)
+    @NotNull
     private String id;
 
     @Column(nullable = false)
+    @Size(max = 255)
+    @NotNull
     private String type;
 
     @Column(nullable = false, unique = true)
+    @Size(max = 255)
+    @NotNull
     private String label;
 
     // Description?
 
     @Column(nullable = false)
+    @Size(max = 255)
+    @NotNull
     private String name;
 
     @Column(nullable = false)
+    @Size(max = 255)
+    @NotNull
     private String vendor;
 
     @Column(nullable = true)
     @Type(type = "org.candlepin.hibernate.EmptyStringUserType")
+    @Size(max = 255)
     private String contentUrl;
 
     @Column(nullable = true)
+    @Size(max = 255)
     private String requiredTags;
 
     // for selecting Y/Z stream
     @Column(nullable =  true)
+    @Size(max = 255)
     private String releaseVer;
 
     // attribute?
     @Column(nullable = true)
     @Type(type = "org.candlepin.hibernate.EmptyStringUserType")
+    @Size(max = 255)
     private String gpgUrl;
 
     @Column(nullable = true)
@@ -84,9 +100,11 @@ public class Content extends AbstractHibernateObject {
     @CollectionTable(name = "cp_content_modified_products",
                      joinColumns = @JoinColumn(name = "cp_content_id"))
     @Column(name = "element")
+    @Size(max = 255)
     private Set<String> modifiedProductIds = new HashSet<String>();
 
     @Column(nullable = true)
+    @Size(max = 255)
     private String arches;
 
     public Content(String name, String id, String label, String type,

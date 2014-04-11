@@ -14,21 +14,6 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.jackson.HateoasInclude;
-import org.candlepin.util.DateSource;
-
-import com.fasterxml.jackson.annotation.JsonFilter;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.ForeignKey;
-import org.hibernate.annotations.Formula;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Index;
-import org.hibernate.annotations.LazyCollection;
-import org.hibernate.annotations.LazyCollectionOption;
-import org.hibernate.annotations.Where;
-
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -49,10 +34,26 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 import javax.persistence.Version;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+
+import org.candlepin.jackson.HateoasInclude;
+import org.candlepin.util.DateSource;
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.ForeignKey;
+import org.hibernate.annotations.Formula;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Index;
+import org.hibernate.annotations.LazyCollection;
+import org.hibernate.annotations.LazyCollectionOption;
+import org.hibernate.annotations.Where;
+
+import com.fasterxml.jackson.annotation.JsonFilter;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * Represents a pool of products eligible to be consumed (entitled).
@@ -96,12 +97,14 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     @Column(length = 32)
+    @NotNull
     private String id;
 
     @ManyToOne
     @ForeignKey(name = "fk_pool_owner")
     @JoinColumn(nullable = false)
     @Index(name = "cp_pool_owner_fk_idx")
+    @NotNull
     private Owner owner;
 
     private Boolean activeSubscription = Boolean.TRUE;
@@ -112,6 +115,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
     // Actual implementations of our SubscriptionService will be used to use
     // this data.
     @Column(nullable = true)
+    @Size(max = 255)
     private String subscriptionId;
 
     // since one subscription can create multiple pools, we need to use a
@@ -119,6 +123,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
     // subscriptionSubKey is set in the js rules, according to the same logic
     // that will create more than one pool per sub.
     @Column(nullable = true)
+    @Size(max = 255)
     private String subscriptionSubKey;
 
     /** Indicates this pool was created as a result of granting an entitlement.
@@ -141,18 +146,24 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
     private SourceStack sourceStack;
 
     @Column(nullable = false)
+    @NotNull
     private Long quantity;
 
     @Column(nullable = false)
+    @NotNull
     private Date startDate;
 
     @Column(nullable = false)
+    @NotNull
     private Date endDate;
 
     @Column(nullable = false)
+    @Size(max = 255)
+    @NotNull
     private String productId;
 
     @Column
+    @Size(max = 255)
     private String derivedProductId;
 
     @OneToMany(targetEntity = ProvidedProduct.class)
@@ -195,10 +206,16 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
     @LazyCollection(LazyCollectionOption.EXTRA)
     private Set<Entitlement> entitlements = new HashSet<Entitlement>();
 
+    @Size(max = 255)
     private String restrictedToUsername;
 
+    @Size(max = 255)
     private String contractNumber;
+
+    @Size(max = 255)
     private String accountNumber;
+
+    @Size(max = 255)
     private String orderNumber;
 
     @Formula("(select sum(ent.quantity) from cp_entitlement ent " +
@@ -211,8 +228,10 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
     private Long exported;
 
     // TODO: May not still be needed, IIRC a temporary hack for client.
+    @Size(max = 255)
     private String productName;
 
+    @Size(max = 255)
     private String derivedProductName;
 
     @OneToMany

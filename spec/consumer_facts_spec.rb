@@ -101,4 +101,15 @@ describe 'Consumer Facts' do
     consumer['facts'].length.should == 0
   end
 
+
+  it 'should return correct exception for contraint violations' do
+    lambda {
+      facts = {
+        'uname.machine' => "a" * 256
+      }
+      user = user_client(@owner, random_string("user"))
+      @consumer = user.register(random_string("consumer"), :system, nil, facts)
+    }.should raise_exception(RestClient::BadRequest)
+  end
+
 end

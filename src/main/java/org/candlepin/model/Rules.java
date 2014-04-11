@@ -28,6 +28,8 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 import org.candlepin.policy.js.RuleParseException;
 import org.hibernate.annotations.GenericGenerator;
@@ -47,6 +49,7 @@ public class Rules extends AbstractHibernateObject {
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     @Column(length = 32)
+    @NotNull
     private String id;
 
     /**
@@ -63,6 +66,8 @@ public class Rules extends AbstractHibernateObject {
     private RulesSourceEnum rulesSource = RulesSourceEnum.UNDEFINED;
 
     @Column(name = "version", nullable = false, length = 20)
+    @Size(max = 20)
+    @NotNull
     private String version;
 
     /**

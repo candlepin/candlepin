@@ -29,7 +29,6 @@ import static org.mockito.Mockito.when;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SubResource;
-import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerContentOverride;
 import org.candlepin.model.ConsumerContentOverrideCurator;
@@ -39,6 +38,7 @@ import org.candlepin.model.ContentOverride;
 import org.candlepin.model.Owner;
 import org.candlepin.policy.js.override.OverrideRules;
 import org.candlepin.resource.ConsumerContentOverrideResource;
+import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.util.ContentOverrideValidator;
 import org.jboss.resteasy.specimpl.MultivaluedMapImpl;
 import org.junit.Before;
@@ -54,7 +54,7 @@ import org.xnap.commons.i18n.I18nFactory;
  * ConsumerContentOverrideResourceTest
  */
 @RunWith(MockitoJUnitRunner.class)
-public class ConsumerContentOverrideResourceTest {
+public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
 
     private I18n i18n;
     private ConsumerContentOverrideResource resource;
@@ -106,31 +106,5 @@ public class ConsumerContentOverrideResourceTest {
         resource.addContentOverrides(context, principal, entries);
         Mockito.verify(consumerContentOverrideCurator,
             Mockito.times(1)).addOrUpdate(consumer, toAdd);
-    }
-
-    @Test(expected = BadRequestException.class)
-    public void testAddOverrideLongName() {
-        List<ContentOverride> entries = new LinkedList<ContentOverride>();
-        ConsumerContentOverride toAdd = new ConsumerContentOverride(consumer, "label",
-            buildLongString(), "overridevalue");
-        entries.add(toAdd);
-        resource.addContentOverrides(context, principal, entries);
-    }
-
-    @Test(expected = BadRequestException.class)
-    public void testAddOverrideLongValue() {
-        List<ContentOverride> entries = new LinkedList<ContentOverride>();
-        ConsumerContentOverride toAdd = new ConsumerContentOverride(consumer, "label",
-            "overridename", buildLongString());
-        entries.add(toAdd);
-        resource.addContentOverrides(context, principal, entries);
-    }
-
-    private String buildLongString() {
-        String result = "test";
-        while (result.length() < 256) {
-            result += result;
-        }
-        return result;
     }
 }

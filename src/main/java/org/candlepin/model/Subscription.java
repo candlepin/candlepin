@@ -30,6 +30,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -52,17 +54,20 @@ public class Subscription extends AbstractHibernateObject {
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     @Column(length = 32)
+    @NotNull
     private String id;
 
     @ManyToOne
     @ForeignKey(name = "fk_subscription_owner")
     @JoinColumn(nullable = false)
     @Index(name = "cp_subscription_owner_fk_idx")
+    @NotNull
     private Owner owner;
 
     @ManyToOne
     @ForeignKey(name = "fk_subscription_product")
     @JoinColumn(nullable = false)
+    @NotNull
     private Product product;
 
     @ManyToOne
@@ -97,29 +102,38 @@ public class Subscription extends AbstractHibernateObject {
     private Set<Branding> branding = new HashSet<Branding>();
 
     @Column(nullable = false)
+    @NotNull
     private Long quantity;
 
     @Column(nullable = false)
+    @NotNull
     private Date startDate;
 
     @Column(nullable = false)
+    @NotNull
     private Date endDate;
 
+    @Size(max = 255)
     private String contractNumber;
 
+    @Size(max = 255)
     private String accountNumber;
 
     private Date modified;
 
+    @Size(max = 255)
     private String orderNumber;
 
     @Column(name = "upstream_pool_id")
+    @Size(max = 255)
     private String upstreamPoolId;
 
     @Column(name = "upstream_entitlement_id")
+    @Size(max = 37)
     private String upstreamEntitlementId;
 
     @Column(name = "upstream_consumer_id")
+    @Size(max = 255)
     private String upstreamConsumerId;
 
     @OneToOne(cascade = CascadeType.ALL)

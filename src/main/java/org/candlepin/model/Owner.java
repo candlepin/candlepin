@@ -14,14 +14,6 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.jackson.HateoasInclude;
-import org.candlepin.model.activationkeys.ActivationKey;
-import org.candlepin.resteasy.InfoProperty;
-
-import com.fasterxml.jackson.annotation.JsonFilter;
-
-import org.hibernate.annotations.GenericGenerator;
-
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
@@ -35,10 +27,19 @@ import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+
+import org.candlepin.jackson.HateoasInclude;
+import org.candlepin.model.activationkeys.ActivationKey;
+import org.candlepin.resteasy.InfoProperty;
+import org.hibernate.annotations.GenericGenerator;
+
+import com.fasterxml.jackson.annotation.JsonFilter;
 
 /**
  * Represents the owner of entitlements. This is akin to an organization,
@@ -60,15 +61,21 @@ public class Owner extends AbstractHibernateObject implements Serializable,
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     @Column(length = 32)
+    @NotNull
     private String id;
 
     @Column(name = "account", nullable = false, unique = true)
+    @Size(max = 255)
+    @NotNull
     private String key;
 
     @Column(nullable = false)
+    @Size(max = 255)
+    @NotNull
     private String displayName;
 
     @Column(nullable = true)
+    @Size(max = 255)
     private String contentPrefix;
 
     @OneToMany(mappedBy = "owner", targetEntity = Consumer.class)
@@ -81,6 +88,7 @@ public class Owner extends AbstractHibernateObject implements Serializable,
     private Set<Environment> environments;
 
     @Column(nullable = true)
+    @Size(max = 255)
     private String defaultServiceLevel;
 
     // EntitlementPool is the owning side of this relationship.
@@ -92,6 +100,7 @@ public class Owner extends AbstractHibernateObject implements Serializable,
     private UpstreamConsumer upstreamConsumer;
 
     @Column(nullable = true)
+    @Size(max = 32)
     private String logLevel;
 
     /**

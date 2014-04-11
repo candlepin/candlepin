@@ -21,6 +21,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
 
 import org.candlepin.util.Util;
 import org.hibernate.annotations.GenericGenerator;
@@ -37,12 +38,15 @@ public class CertificateSerial extends AbstractHibernateObject {
     @GeneratedValue(generator = "serial-number")
     @GenericGenerator(name = "serial-number",
         strategy = "org.candlepin.util.SerialNumberGenerator")
+    @NotNull
     private Long id;
 
     // Flag which indicates whether the certificate is revoked
+    @NotNull
     private boolean revoked;
 
     // Set to true if this serial is already a part of the CRL
+    @NotNull
     private boolean collected;
 
     // The expiration.

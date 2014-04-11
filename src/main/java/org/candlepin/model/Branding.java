@@ -19,6 +19,8 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlTransient;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -43,15 +45,22 @@ public class Branding extends AbstractHibernateObject {
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     @Column(length = 37)
+    @NotNull
     private String id;
 
     @Column(nullable = false)
+    @NotNull
+    @Size(max = 255)
     private String productId;
 
     @Column(nullable = false)
+    @NotNull
+    @Size(max = 255)
     private String name;
 
     @Column(nullable = false)
+    @NotNull
+    @Size(max = 32)
     private String type;
 
     public Branding() {

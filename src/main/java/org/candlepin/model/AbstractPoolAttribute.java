@@ -20,6 +20,8 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.MappedSuperclass;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlTransient;
 
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -38,12 +40,16 @@ public abstract class AbstractPoolAttribute extends AbstractHibernateObject
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     @Column(length = 32)
+    @NotNull
     protected String id;
 
     @Column(nullable = false)
+    @Size(max = 255)
+    @NotNull
     protected String name;
 
     @Column
+    @Size(max = 255)
     protected String value;
 
     @ManyToOne
@@ -55,6 +61,7 @@ public abstract class AbstractPoolAttribute extends AbstractHibernateObject
     @ForeignKey(name = "fk_pool_id", inverseName = "fk_pool_attribute_id")
     @JoinColumn(nullable = false)
     @Index(name = "cp_poolattribute_pool_fk_idx")
+    @NotNull
     protected Pool pool;
 
     public AbstractPoolAttribute() {

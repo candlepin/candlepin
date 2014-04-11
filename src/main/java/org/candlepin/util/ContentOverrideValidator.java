@@ -50,7 +50,6 @@ public class ContentOverrideValidator {
     public void validate(Collection<? extends ContentOverride> overrides) {
         Set<String> invalidOverrides = new HashSet<String>();
         for (ContentOverride override : overrides) {
-            validateLength(override);
             if (!overrideRules.canOverrideForConsumer(override.getName())) {
                 invalidOverrides.add(override.getName());
             }
@@ -66,23 +65,5 @@ public class ContentOverrideValidator {
         List<ContentOverride> tmpList = new LinkedList<ContentOverride>();
         tmpList.add(override);
         validate(tmpList);
-    }
-
-    /*
-     * If the name/value is longer than 255 characters, the database will throw
-     * exceptions.  There is no reason that we should need overrides with lengths
-     * this long.
-     *
-     * TODO: Can we read the column name from the database?  That would be
-     * a bit more futureproof.
-     */
-    private void validateLength(ContentOverride entry) {
-        if (entry.getName().length() > MAX_COL_LENGTH ||
-            entry.getValue().length() > MAX_COL_LENGTH ||
-            entry.getContentLabel().length() > MAX_COL_LENGTH) {
-            throw new BadRequestException(i18n.tr(
-                "Name, value, and label of the override must not exceed {0} characters.",
-                MAX_COL_LENGTH));
-        }
     }
 }

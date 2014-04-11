@@ -24,6 +24,8 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 import org.hibernate.annotations.GenericGenerator;
 
@@ -41,10 +43,16 @@ public class ExporterMetadata extends AbstractHibernateObject {
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     @Column(length = 32)
+    @NotNull
     private String id;
+
     @Column(nullable = false)
+    @Size(max = 255)
+    @NotNull
     private String type;
+
     @Column(nullable = false)
+    @NotNull
     private Date exported;
 
     @OneToOne

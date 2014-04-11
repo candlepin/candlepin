@@ -24,6 +24,20 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.io.File;
+import java.io.IOException;
+import java.lang.annotation.Annotation;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MultivaluedMap;
+
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
@@ -51,6 +65,7 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.model.Release;
 import org.candlepin.model.Role;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.SubscriptionCurator;
@@ -76,20 +91,6 @@ import org.jboss.resteasy.specimpl.MultivaluedMapImpl;
 import org.jboss.resteasy.util.GenericType;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.io.File;
-import java.io.IOException;
-import java.lang.annotation.Annotation;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MultivaluedMap;
 /**
  * OwnerResourceTest
  */
@@ -607,9 +608,11 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     public void testActivationKeyCreateRead() {
         ActivationKey key = new ActivationKey();
         key.setName("dd");
+        key.setReleaseVer(new Release("release1"));
         key = ownerResource.createActivationKey(owner.getKey(), key);
         assertNotNull(key.getId());
         assertEquals(key.getOwner().getId(), owner.getId());
+        assertEquals(key.getReleaseVer().getReleaseVer(), "release1");
         List<ActivationKey> keys = ownerResource.ownerActivationKeys(owner.getKey());
         assertEquals(1, keys.size());
     }
@@ -619,6 +622,15 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         ActivationKey key = new ActivationKey();
         Owner owner = createOwner();
         key.setOwner(owner);
+        key = ownerResource.createActivationKey(owner.getKey(), key);
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void testActivationKeyTooLongRelease() {
+        ActivationKey key = new ActivationKey();
+        Owner owner = createOwner();
+        key.setOwner(owner);
+        key.setReleaseVer(new Release(TestUtil.getStringOfSize(256)));
         key = ownerResource.createActivationKey(owner.getKey(), key);
     }
 

@@ -1243,6 +1243,24 @@ describe 'Consumer Resource' do
     consumer['guestIds'].length.should == 1
     consumer['guestIds'][0]['guestId'].should == 'guest1'
   end
+
+  it 'should return correct exception for contraint violations' do
+    lambda {
+      user_cp = user_client(@owner1, random_string('test-user'))
+      consumer = user_cp.register("a" * 256, :system, nil,
+      {}, nil, nil, [], [])
+    }.should raise_exception(RestClient::BadRequest)
+    lambda {
+      user_cp = user_client(@owner1, random_string('test-user'))
+      consumer = user_cp.register(random_string('test-consumer'), :system, "a" * 256,
+      {}, nil, nil, [], [])
+    }.should raise_exception(RestClient::BadRequest)
+    lambda {
+      user_cp = user_client(@owner1, random_string('test-user'))
+      consumer = user_cp.register(nil, :system, nil,
+      {}, nil, nil, [], [])
+    }.should raise_exception(RestClient::BadRequest)
+  end
 end
 
 describe 'Consumer Resource Consumer Fact Filter Tests' do

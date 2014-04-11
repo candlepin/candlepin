@@ -70,7 +70,6 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         if (entity.getFacts() != null) {
             entity.setFacts(filterAndVerifyFacts(entity));
         }
-        validate(entity);
         return super.create(entity);
     }
 
@@ -95,16 +94,6 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         }
         else {
             deletedConsumerCurator.create(dc);
-        }
-    }
-
-    protected void validate(Consumer entity) {
-        // TODO: Look at generic validation framework
-        if ((entity.getName() != null) &&
-            (entity.getName().length() >= NAME_LENGTH)) {
-            throw new BadRequestException(i18n.tr(
-                "Name of the unit must be shorter than {0} characters.",
-                NAME_LENGTH));
         }
     }
 
@@ -270,7 +259,6 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             return create(updatedConsumer);
         }
 
-        validate(updatedConsumer);
         // TODO: Are any of these read-only?
         existingConsumer.setEntitlements(entitlementCurator
             .bulkUpdate(updatedConsumer.getEntitlements()));

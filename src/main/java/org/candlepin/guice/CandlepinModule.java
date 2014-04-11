@@ -14,6 +14,12 @@
  */
 package org.candlepin.guice;
 
+import java.util.Properties;
+
+import javax.validation.MessageInterpolator;
+import javax.validation.Validation;
+import javax.validation.ValidatorFactory;
+
 import org.candlepin.audit.EventSink;
 import org.candlepin.audit.EventSinkImpl;
 import org.candlepin.auth.Principal;
@@ -34,19 +40,22 @@ import org.candlepin.exceptions.mappers.NoLogWebApplicationExceptionMapper;
 import org.candlepin.exceptions.mappers.NotAcceptableExceptionMapper;
 import org.candlepin.exceptions.mappers.NotFoundExceptionMapper;
 import org.candlepin.exceptions.mappers.ReaderExceptionMapper;
+import org.candlepin.exceptions.mappers.RollbackExceptionMapper;
 import org.candlepin.exceptions.mappers.RuntimeExceptionMapper;
 import org.candlepin.exceptions.mappers.UnauthorizedExceptionMapper;
 import org.candlepin.exceptions.mappers.UnsupportedMediaTypeExceptionMapper;
+import org.candlepin.exceptions.mappers.ValidationExceptionMapper;
 import org.candlepin.exceptions.mappers.WebApplicationExceptionMapper;
 import org.candlepin.exceptions.mappers.WriterExceptionMapper;
+import org.candlepin.hibernate.CandlepinMessageInterpolator;
 import org.candlepin.model.UeberCertificateGenerator;
 import org.candlepin.pinsetter.core.GuiceJobFactory;
 import org.candlepin.pinsetter.core.PinsetterJobListener;
 import org.candlepin.pinsetter.core.PinsetterKernel;
 import org.candlepin.pinsetter.tasks.CertificateRevocationListTask;
 import org.candlepin.pinsetter.tasks.EntitlerJob;
-import org.candlepin.pinsetter.tasks.JobCleaner;
 import org.candlepin.pinsetter.tasks.ExportCleaner;
+import org.candlepin.pinsetter.tasks.JobCleaner;
 import org.candlepin.pinsetter.tasks.RefreshPoolsJob;
 import org.candlepin.pinsetter.tasks.SweepBarJob;
 import org.candlepin.pinsetter.tasks.UnpauseJob;
@@ -64,11 +73,11 @@ import org.candlepin.resource.ActivationKeyContentOverrideResource;
 import org.candlepin.resource.ActivationKeyResource;
 import org.candlepin.resource.AdminResource;
 import org.candlepin.resource.AtomFeedResource;
+import org.candlepin.resource.CdnResource;
 import org.candlepin.resource.CertificateSerialResource;
 import org.candlepin.resource.ConsumerContentOverrideResource;
 import org.candlepin.resource.ConsumerResource;
 import org.candlepin.resource.ConsumerTypeResource;
-import org.candlepin.resource.CdnResource;
 import org.candlepin.resource.ContentResource;
 import org.candlepin.resource.CrlResource;
 import org.candlepin.resource.DeletedConsumerResource;
@@ -109,16 +118,21 @@ import org.candlepin.util.DateSource;
 import org.candlepin.util.DateSourceImpl;
 import org.candlepin.util.ExpiryDateFunction;
 import org.candlepin.util.X509ExtensionUtil;
-
-import com.google.common.base.Function;
-import com.google.inject.AbstractModule;
-import com.google.inject.Singleton;
-import com.google.inject.name.Names;
-import com.google.inject.persist.jpa.JpaPersistModule;
-
+import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
+import org.hibernate.validator.HibernateValidator;
+import org.hibernate.validator.HibernateValidatorConfiguration;
 import org.quartz.JobListener;
 import org.quartz.spi.JobFactory;
 import org.xnap.commons.i18n.I18n;
+
+import com.google.common.base.Function;
+import com.google.inject.AbstractModule;
+import com.google.inject.Provider;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
+import com.google.inject.name.Names;
+import com.google.inject.persist.jpa.JpaPersistModule;
 
 /**
  * CandlepinProductionConfiguration
@@ -132,14 +146,20 @@ public class CandlepinModule extends AbstractModule {
         bindScope(CandlepinSingletonScoped.class, singletonScope);
         bind(CandlepinSingletonScope.class).toInstance(singletonScope);
 
+        bind(I18n.class).toProvider(I18nProvider.class);
+        bind(BeanValidationEventListener.class).toProvider(ValidationListenerProvider.class);
+        bind(MessageInterpolator.class).to(CandlepinMessageInterpolator.class);
+
         Config config = new Config();
         bind(Config.class).asEagerSingleton();
-        install(new JpaPersistModule("default").properties(
-                config.jpaConfiguration(config)));
+        install(new JpaPersistModule("default").properties(config
+            .jpaConfiguration(config)));
         bind(JPAInitializer.class).asEagerSingleton();
 
-        bind(PKIUtility.class).to(BouncyCastlePKIUtility.class).asEagerSingleton();
-        bind(PKIReader.class).to(BouncyCastlePKIReader.class).asEagerSingleton();
+        bind(PKIUtility.class).to(BouncyCastlePKIUtility.class)
+            .asEagerSingleton();
+        bind(PKIReader.class).to(BouncyCastlePKIReader.class)
+            .asEagerSingleton();
         bind(X509ExtensionUtil.class);
         bind(CrlGenerator.class);
         bind(ConsumerResource.class);
@@ -182,6 +202,8 @@ public class CandlepinModule extends AbstractModule {
         bind(InternalServerErrorExceptionMapper.class);
         bind(DefaultOptionsMethodExceptionMapper.class);
         bind(BadRequestExceptionMapper.class);
+        bind(RollbackExceptionMapper.class);
+        bind(ValidationExceptionMapper.class);
         bind(WebApplicationExceptionMapper.class);
         bind(FailureExceptionMapper.class);
         bind(ReaderExceptionMapper.class);
@@ -200,8 +222,6 @@ public class CandlepinModule extends AbstractModule {
         bind(CdnResource.class);
         bind(GuestIdResource.class);
 
-
-        bind(I18n.class).toProvider(I18nProvider.class);
         this.configureInterceptors();
         bind(JsonProvider.class);
         bind(EventSink.class).to(EventSinkImpl.class);
@@ -213,12 +233,26 @@ public class CandlepinModule extends AbstractModule {
         bind(RefreshPoolsJob.class);
         bind(EntitlerJob.class);
 
-        //UeberCerts
+        // UeberCerts
         bind(UeberCertificateGenerator.class);
 
         // flexible end date for identity certificates
         bind(Function.class).annotatedWith(Names.named("endDateGenerator"))
             .to(ExpiryDateFunction.class).in(Singleton.class);
+    }
+
+    @Provides @Named("ValidationProperties")
+    protected Properties getValidationProperties() {
+        return new Properties();
+    }
+
+    @Provides
+    protected ValidatorFactory getValidationFactory(Provider<MessageInterpolator> interpolatorProvider) {
+        HibernateValidatorConfiguration configure =
+            Validation.byProvider(HibernateValidator.class).configure();
+
+        configure.messageInterpolator(interpolatorProvider.get());
+        return configure.buildValidatorFactory();
     }
 
     private void configureInterceptors() {

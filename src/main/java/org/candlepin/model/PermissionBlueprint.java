@@ -23,6 +23,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlTransient;
 
 import org.candlepin.auth.Access;
@@ -47,18 +48,21 @@ public class PermissionBlueprint extends AbstractHibernateObject {
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     @Column(length = 32)
+    @NotNull
     private String id;
 
     @ManyToOne
     @ForeignKey(name = "fk_permission_owner")
     @JoinColumn(nullable = false)
     @Index(name = "cp_permission_owner_fk_idx")
+    @NotNull
     private Owner owner;
 
     @ManyToOne
     @ForeignKey(name = "fk_permission_role")
     @JoinColumn(nullable = false)
     @Index(name = "cp_permission_role_fk_idx")
+    @NotNull
     private Role role;
 
     @Column(name = "access_level")
@@ -67,6 +71,7 @@ public class PermissionBlueprint extends AbstractHibernateObject {
 
     @Column(name = "permission_type")
     @Enumerated(EnumType.STRING)
+    @NotNull
     private PermissionType type;
 
     public PermissionBlueprint(PermissionType type, Owner owner, Access access) {

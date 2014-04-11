@@ -24,6 +24,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -50,12 +52,17 @@ public class DistributorVersion extends AbstractHibernateObject {
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     @Column(length = 32)
+    @NotNull
     private String id;
 
     @Column(nullable = false, unique = true)
+    @Size(max = 255)
+    @NotNull
     private String name;
 
     @Column(nullable = false, unique = true, name = "display_name")
+    @Size(max = 255)
+    @NotNull
     private String displayName;
 
     @OneToMany(mappedBy = "distributorVersion", targetEntity =

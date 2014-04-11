@@ -22,25 +22,26 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import org.candlepin.audit.HornetqContextListener;
-import org.candlepin.config.Config;
-import org.candlepin.pinsetter.core.PinsetterContextListener;
-
-import com.google.inject.AbstractModule;
-import com.google.inject.Injector;
-import com.google.inject.Module;
-
-import org.jboss.resteasy.spi.Registry;
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
-import org.junit.Before;
-import org.junit.Test;
-
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
+
+import org.candlepin.CandlepinCommonTestingModule;
+import org.candlepin.CandlepinNonServletEnvironmentTestingModule;
+import org.candlepin.audit.HornetqContextListener;
+import org.candlepin.config.Config;
+import org.candlepin.pinsetter.core.PinsetterContextListener;
+import org.jboss.resteasy.spi.Registry;
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.junit.Before;
+import org.junit.Test;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.Injector;
+import com.google.inject.Module;
 
 /**
  * CandlepinContextListenerTest
@@ -68,6 +69,8 @@ public class CandlepinContextListenerTest {
                 // which means the test becomes non-deterministic.
                 // so just load the items we need to verify the
                 // functionality.
+                modules.add(new CandlepinCommonTestingModule());
+                modules.add(new CandlepinNonServletEnvironmentTestingModule());
                 modules.add(new TestModule());
                 return modules;
             }
@@ -117,7 +120,6 @@ public class CandlepinContextListenerTest {
 
         @Override
         protected void configure() {
-            bind(Config.class).toInstance(config);
             bind(PinsetterContextListener.class).toInstance(pinlistener);
             bind(HornetqContextListener.class).toInstance(hqlistener);
         }

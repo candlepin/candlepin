@@ -14,8 +14,6 @@
  */
 package org.candlepin.model;
 
-import org.hibernate.annotations.GenericGenerator;
-
 import java.io.Serializable;
 import java.util.Date;
 
@@ -27,10 +25,14 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+
+import org.hibernate.annotations.GenericGenerator;
 
 /**
  *
@@ -54,6 +56,7 @@ public class ImportRecord extends AbstractHibernateObject {
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     @Column(length = 32)
+    @NotNull
     private String id;
 
     @OneToOne
@@ -61,12 +64,16 @@ public class ImportRecord extends AbstractHibernateObject {
     private Owner owner;
 
     private Status status;
+
+    @Size(max = 255)
     private String statusMessage;
 
     @Column(name = "file_name", nullable = true)
+    @Size(max = 255)
     private String fileName;
 
     @Column(name = "generated_by", nullable = true)
+    @Size(max = 255)
     private String generatedBy;
 
     @Column(name = "generated_date", nullable = true)
