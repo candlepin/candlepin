@@ -31,7 +31,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.8
+Version: 0.9.9
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -347,6 +347,15 @@ fi
 
 
 %changelog
+* Fri Apr 11 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.9-1
+- 1065369: Use Hibernate Validation to supersede database error reporting.  (wpoteat@redhat.com)
+- latest strings from zanata (alikins@redhat.com)
+- Fix import_update_single_pool_spec failure (ckozak@redhat.com)
+- add testing (ckozak@redhat.com)
+- better logging of warnings while refreshing pools (ckozak@redhat.com)
+- don't fail refresh pools so easily (ckozak@redhat.com)
+- don't regenerate all certs for every refresh pools (ckozak@redhat.com)
+
 * Thu Apr 03 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.8-1
 - updated pinsetter with timeout (ckozak@redhat.com)
 - Revert "remove job blocking" (ckozak@redhat.com)
