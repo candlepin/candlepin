@@ -54,7 +54,7 @@ BuildRequires: selinux-policy-doc
 %define distlibdir %{_datadir}/%{name}/lib/
 %define libdir %{_datadir}/%{name}/lib/
 %define usecpdeps "usecpdeps"
-BuildRequires: candlepin-deps >= 0:0.2.1
+BuildRequires: candlepin-deps >= 0:0.2.3
 %else
 %define usecpdeps ""
 
