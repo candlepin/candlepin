@@ -145,9 +145,8 @@ public class AMQPBusPubProvider implements Provider<AMQPBusPublisher> {
         Util.closeSafely(this.ctx, "AMQPContext");
     }
 
-    protected final void buildAllTopicPublishers(
-        Map<Target, Map<Type, TopicPublisher>> pm)
-            throws JMSException, NamingException {
+    protected final void buildAllTopicPublishers(Map<Target, Map<Type, TopicPublisher>> pm)
+        throws JMSException, NamingException {
 
         for (Target target : Target.values()) {
             Map<Type, TopicPublisher> typeToTpMap = Util.newMap();
