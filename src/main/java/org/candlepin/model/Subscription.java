@@ -36,6 +36,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.apache.commons.lang.StringUtils;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
@@ -399,5 +400,21 @@ public class Subscription extends AbstractHibernateObject {
         this.branding = branding;
     }
 
+    public boolean isStacked() {
+        return !StringUtils.isBlank(this.product.getAttributeValue("stacking_id"));
+    }
 
+    public String getStackId() {
+        // Check if we are stacked first so we return null over empty string
+        // when stacking_id = ""
+        if (this.isStacked()) {
+            return this.product.getAttributeValue("stacking_id");
+        }
+        return null;
+    }
+
+    public boolean createsSubPools() {
+        String virtLimit = this.getProduct().getAttributeValue("virt_limit");
+        return !StringUtils.isBlank(virtLimit) && !"0".equals(virtLimit);
+    }
 }

@@ -37,6 +37,7 @@ public class Refresher {
 
     private Set<Owner> owners = Util.newSet();
     private Set<Product> products = Util.newSet();
+    private Set<Subscription> subscriptions = Util.newSet();
 
     Refresher(CandlepinPoolManager poolManager, SubscriptionServiceAdapter subAdapter,
         boolean lazy) {
@@ -55,8 +56,12 @@ public class Refresher {
         return this;
     }
 
+    public Refresher add(Subscription subscription) {
+        subscriptions.add(subscription);
+        return this;
+    }
+
     public void run() {
-        Set<Subscription> subscriptions = Util.newSet();
         for (Product product : products) {
             List<Subscription> candidates = subAdapter.getSubscriptions(product);
 
@@ -71,18 +76,24 @@ public class Refresher {
 
         Set<Entitlement> toRegen = new HashSet<Entitlement>();
 
+        /*
+         * This will delete old pools/ents whose subscriptions have been migrated, which
+         * does not occur during a regular owner refresh pools.
+         */
         for (Subscription subscription : subscriptions) {
             /*
              * on the off chance that this is actually a new subscription, make the required
              * pools. this shouldn't happen; we should really get a refreshpools by owner
              * call for it, but why not handle it, just in case!
              */
+            // TODO: index something on subscriptionId
             List<Pool> pools = poolManager.lookupBySubscriptionId(subscription.getId());
             if (pools.isEmpty()) {
                 poolManager.createPoolsForSubscription(subscription);
             }
             else {
-                toRegen.addAll(poolManager.updatePoolsForSubscription(pools, subscription));
+                toRegen.addAll(poolManager.updatePoolsForSubscription(
+                    pools, subscription, true));
             }
         }
 

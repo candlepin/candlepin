@@ -15,6 +15,7 @@
 package org.candlepin.controller;
 
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -106,7 +107,7 @@ public class RefresherTest {
 
         verify(poolManager, times(1)).refreshPoolsWithoutRegeneration(owner);
         verify(poolManager, times(0)).updatePoolsForSubscription(any(List.class),
-            any(Subscription.class));
+            any(Subscription.class), eq(false));
     }
 
     @Test
@@ -136,6 +137,6 @@ public class RefresherTest {
         refresher.run();
 
         verify(poolManager, times(1)).updatePoolsForSubscription(any(List.class),
-            any(Subscription.class));
+            any(Subscription.class), eq(true));
     }
 }

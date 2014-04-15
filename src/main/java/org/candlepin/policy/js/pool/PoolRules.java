@@ -215,8 +215,7 @@ public class PoolRules {
                     log.error("Stack derived pool has no source consumer: " + p.getId());
                 }
                 else {
-                    PoolUpdate update = updatePoolFromStack(p, c,
-                        p.getSourceStack().getSourceStackId());
+                    PoolUpdate update = updatePoolFromStack(p);
                     if (update.changed()) {
                         updates.add(update);
                     }
@@ -282,7 +281,6 @@ public class PoolRules {
         return poolsUpdated;
     }
 
-
     /**
      * Updates the pool based on the entitlements in the specified stack.
      * @param pool
@@ -291,14 +289,13 @@ public class PoolRules {
      *
      * @return pool update specifics
      */
-    public PoolUpdate updatePoolFromStack(Pool pool, Consumer consumer, String stackId) {
-        List<Entitlement> stackedEnts = this.entCurator.findByStackId(consumer,
-            stackId);
-        return this.updatePoolFromStackedEntitlements(pool, consumer, stackId, stackedEnts);
+    public PoolUpdate updatePoolFromStack(Pool pool) {
+        List<Entitlement> stackedEnts = this.entCurator.findByStackId(
+            pool.getSourceConsumer(), pool.getSourceStackId());
+        return this.updatePoolFromStackedEntitlements(pool, stackedEnts);
     }
 
     public PoolUpdate updatePoolFromStackedEntitlements(Pool pool,
-            Consumer consumer, String stackId,
             List<Entitlement> stackedEnts) {
 
         PoolUpdate update = new PoolUpdate(pool);

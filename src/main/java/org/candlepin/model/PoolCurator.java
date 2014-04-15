@@ -531,4 +531,13 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                                   Restrictions.eq("ss.sourceStackId", stackId)));
         return (Pool) getCount.uniqueResult();
     }
+
+    @SuppressWarnings("unchecked")
+    public List<Pool> getOwnerSubPoolsForStackId(Owner owner, String stackId) {
+        return createSecureCriteria()
+            .createAlias("sourceStack", "ss")
+            .add(Restrictions.eq("ss.sourceStackId", stackId))
+            .add(Restrictions.eq("owner", owner))
+            .list();
+    }
 }
