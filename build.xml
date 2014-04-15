@@ -38,7 +38,7 @@
     resteasy/resteasy-guice resteasy/resteasy-jaxb-provider
     resteasy/resteasy-jaxrs resteasy/jaxrs-api
     resteasy/resteasy-multipart-provider scannotation servlet javamail/mail
-    slf4j-api logback-classic logback-core jcl-over-slf4j validation-api" />
+    slf4j-api logback-classic logback-core jcl-over-slf4j validation-api hibernate-validator" />
 
   <macrodef name="grepfromspec">
     <attribute name="text" />
