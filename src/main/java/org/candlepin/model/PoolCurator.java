@@ -32,10 +32,12 @@ import org.hibernate.Query;
 import org.hibernate.ReplicationMode;
 import org.hibernate.criterion.CriteriaSpecification;
 import org.hibernate.criterion.Criterion;
+import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.internal.FilterImpl;
+import org.hibernate.sql.JoinType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -539,5 +541,27 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             .add(Restrictions.eq("ss.sourceStackId", stackId))
             .add(Restrictions.eq("owner", owner))
             .list();
+    }
+
+    /**
+     * Lists all pools that either belong to owner, or match a subscription id in subIds
+     *
+     * @param owner owner
+     * @param subIds subscription ids
+     * @return resulting list of pools
+     */
+    @SuppressWarnings("unchecked")
+    public List<Pool> getPoolsForOwnerRefresh(Owner owner, List<String> subIds) {
+        Criteria crit = currentSession().createCriteria(Pool.class);
+
+        Disjunction ownerOrIds = Restrictions.disjunction();
+        if (!subIds.isEmpty()) {
+            crit.createAlias("sourceSubscription", "sourceSub",
+                    JoinType.LEFT_OUTER_JOIN);
+            ownerOrIds.add(Restrictions.in("sourceSub.subscriptionId", subIds));
+        }
+        ownerOrIds.add(Restrictions.eq("owner", owner));
+        crit.add(ownerOrIds);
+        return crit.list();
     }
 }

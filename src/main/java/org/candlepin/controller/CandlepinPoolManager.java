@@ -138,8 +138,8 @@ public class CandlepinPoolManager implements PoolManager {
         List<Subscription> subs = subAdapter.getSubscriptions(owner);
         log.debug("Found " + subs.size() + " existing subscriptions.");
 
-        List<Pool> pools = this.listAvailableEntitlementPools(null, null,
-            owner, null, null, false, false, null, null).getPageData();
+        List<String> subIds = getSubscriptionIds(subs);
+        List<Pool> pools = poolCurator.getPoolsForOwnerRefresh(owner, subIds);
 
         // Pools with no subscription ID:
         List<Pool> floatingPools = new LinkedList<Pool>();
@@ -170,6 +170,10 @@ public class CandlepinPoolManager implements PoolManager {
                 continue;
             }
 
+            // If the key doesn't exist, we never have to worry about duplicates.
+            if (subToPoolMap.containsKey(sub.getId())) {
+                removeAndDeletePoolsOnOtherOwners(subToPoolMap.get(sub.getId()), sub);
+            }
             try {
                 if (!poolExistsForSubscription(subToPoolMap, sub.getId())) {
                     createPoolsForSubscription(sub);
@@ -213,6 +217,14 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         return entitlementsToRegen;
+    }
+
+    private List<String> getSubscriptionIds(List<Subscription> subs) {
+        List<String> result = new LinkedList<String>();
+        for (Subscription sub : subs) {
+            result.add(sub.getId());
+        }
+        return result;
     }
 
     public void cleanupExpiredPools() {
@@ -262,6 +274,21 @@ public class CandlepinPoolManager implements PoolManager {
         }
     }
 
+    void removeAndDeletePoolsOnOtherOwners(List<Pool> existingPools, Subscription sub) {
+        List<Pool> toRemove = new LinkedList<Pool>();
+        for (Pool existing : existingPools) {
+            if (!existing.getOwner().equals(sub.getOwner())) {
+                toRemove.add(existing);
+                log.warn("Removing " + existing + " because it exists in the wrong org");
+                if (existing.getType() == PoolType.NORMAL ||
+                    existing.getType() == PoolType.BONUS) {
+                    deletePool(existing);
+                }
+            }
+        }
+        existingPools.removeAll(toRemove);
+    }
+
     /**
      * Update pool for subscription. - This method only checks for change in
      * quantity and dates of a subscription. Currently any quantity changes in
@@ -281,23 +308,10 @@ public class CandlepinPoolManager implements PoolManager {
          * even if we won't use them all.
          */
         Map<String, Event> poolEvents = new HashMap<String, Event>();
-        List<Pool> toRemove = new LinkedList<Pool>();
         for (Pool existing : existingPools) {
             Event e = eventFactory.poolChangedFrom(existing);
             poolEvents.put(existing.getId(), e);
-
-            // If the pool exists for another owner, we have bad data
-            // left over from a migration
-            if (!existing.getOwner().equals(sub.getOwner())) {
-                log.warn("Deleting " + existing + " because it exists in the wrong org");
-                toRemove.add(existing);
-                if (existing.getType() == PoolType.NORMAL ||
-                    existing.getType() == PoolType.BONUS) {
-                    deletePool(existing);
-                }
-            }
         }
-        existingPools.removeAll(toRemove);
 
         // Hand off to rules to determine which pools need updating:
         List<PoolUpdate> updatedPools = poolRules.updatePools(sub,
@@ -388,7 +402,8 @@ public class CandlepinPoolManager implements PoolManager {
 
     private boolean poolExistsForSubscription(
         Map<String, List<Pool>> subToPoolMap, String id) {
-        return subToPoolMap.containsKey(id);
+        return subToPoolMap.containsKey(id) &&
+            !subToPoolMap.get(id).isEmpty();
     }
 
     /**

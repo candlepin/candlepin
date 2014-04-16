@@ -129,4 +129,11 @@
             columnName="subscriptionsubkey"
             tableName="cp_pool" />
     </changeSet>
+
+    <changeSet id="20140408160212-6" author="ckozak">
+        <comment>Index on subscriptionId</comment>
+        <createIndex indexName="idx_sourcesub_subid" tableName="cp_pool_source_sub" unique="false">
+            <column name="subscriptionid"/>
+        </createIndex>
+    </changeSet>
 </databaseChangeLog>
