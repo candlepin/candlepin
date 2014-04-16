@@ -63,7 +63,6 @@ public class Statistic extends AbstractHibernateObject {
     //
     @Column(nullable = false, name = "entry_type")
     @Enumerated(EnumType.STRING)
-    @Size(max = 255)
     @NotNull
     private EntryType entryType;
 
