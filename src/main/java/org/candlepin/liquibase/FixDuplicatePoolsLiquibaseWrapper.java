@@ -49,7 +49,9 @@ public class FixDuplicatePoolsLiquibaseWrapper implements CustomTaskChange {
     @Override
     public void execute(Database db) throws CustomChangeException {
         JdbcConnection conn = (JdbcConnection) db.getConnection();
-        FixDuplicatePools fixer = new FixDuplicatePools(conn);
+        FixDuplicatePools fixer = new FixDuplicatePools(conn,
+            new LiquibaseCustomTaskLogger());
+
         try {
             fixer.execute();
         }
