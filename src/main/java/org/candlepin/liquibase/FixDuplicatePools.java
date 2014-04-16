@@ -35,9 +35,16 @@ import liquibase.database.jvm.JdbcConnection;
 public class FixDuplicatePools {
 
     private JdbcConnection conn;
+    private final CustomTaskLogger log;
 
     public FixDuplicatePools(JdbcConnection conn) {
         this.conn = conn;
+        this.log = new SystemOutLogger();
+    }
+
+    public FixDuplicatePools(JdbcConnection conn, CustomTaskLogger log) {
+        this.conn = conn;
+        this.log = log;
     }
 
     /*
@@ -52,10 +59,10 @@ public class FixDuplicatePools {
      *
      */
     public void execute() throws Exception {
-        System.out.println("--- Running update script ---");
+        log.info("--- Running update script ---");
         // Get a map of source subscription to pool ids
         Map<SubPair, List<String>> subPoolsMap = getSubPoolMap();
-        System.out.println("Found " + subPoolsMap.keySet().size() + " subscriptions " +
+        log.info("Found " + subPoolsMap.keySet().size() + " subscriptions " +
             "with duplicate pools.");
         // Nothing to do if there aren't any duplicates
         if (!subPoolsMap.isEmpty()) {
@@ -70,13 +77,13 @@ public class FixDuplicatePools {
                 for (int i = 1, len = ids.size(); i < len; i++) {
                     poolsToRemove.add(ids.get(i));
                 }
-                System.out.println("Removing " + poolsToRemove.size() +
+                log.info("Removing " + poolsToRemove.size() +
                     " pools for subscription " + sub);
                 updateEntsForIds(poolsToRemove, poolToKeep);
                 removePoolsWithIds(poolsToRemove);
             }
         }
-        System.out.println("--- Finished update script ---");
+        log.info("--- Finished update script ---");
     }
 
     private int removePoolsWithIds(List<String> dupeIds) throws Exception {
@@ -149,7 +156,7 @@ public class FixDuplicatePools {
             }
             else if (!subOwners.get(current).equals(rs.getString(4))) {
                 // Make sure owners are the same
-                System.out.println("Owners '" + rs.getString(4) + "' and '" +
+                log.error("Owners '" + rs.getString(4) + "' and '" +
                     subOwners.get(current) + "' both have pools from subscription " +
                     current);
                 throw new Exception("Pools exist for subscription " + current + " within " +
