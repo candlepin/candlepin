@@ -757,6 +757,58 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
 
     @Test
+    public void ensureV1CertIsCreatedWhenV3factNotPresent() throws Exception {
+        Config mockConfig = mock(Config.class);
+
+        when(consumer.getType()).thenReturn(
+            new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM));
+
+        X509V3ExtensionUtil mockV3extensionUtil = mock(X509V3ExtensionUtil.class);
+        X509ExtensionUtil mockExtensionUtil = mock(X509ExtensionUtil.class);
+
+        DefaultEntitlementCertServiceAdapter entAdapter =
+            new DefaultEntitlementCertServiceAdapter(
+                mockedPKI, mockExtensionUtil, mockV3extensionUtil,
+                mock(EntitlementCertificateCurator.class), keyPairCurator,
+                serialCurator, productAdapter, entCurator,
+                I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
+                mockConfig);
+
+        entAdapter.createX509Certificate(entitlement,
+            product, new HashSet<Product>(), new BigInteger("1234"), keyPair(), true);
+        // Verify v1
+        verify(mockExtensionUtil).consumerExtensions(eq(consumer));
+        verifyZeroInteractions(mockV3extensionUtil);
+    }
+
+    @Test
+    public void ensureV3CertIsCreatedWhenHypervisor() throws Exception {
+        Config mockConfig = mock(Config.class);
+
+        when(consumer.getType()).thenReturn(
+            new ConsumerType(ConsumerType.ConsumerTypeEnum.HYPERVISOR));
+
+        X509V3ExtensionUtil mockV3extensionUtil = mock(X509V3ExtensionUtil.class);
+        X509ExtensionUtil mockExtensionUtil = mock(X509ExtensionUtil.class);
+
+        DefaultEntitlementCertServiceAdapter entAdapter =
+            new DefaultEntitlementCertServiceAdapter(
+                mockedPKI, mockExtensionUtil, mockV3extensionUtil,
+                mock(EntitlementCertificateCurator.class), keyPairCurator,
+                serialCurator, productAdapter, entCurator,
+                I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
+                mockConfig);
+
+        entAdapter.createX509Certificate(entitlement,
+            product, new HashSet<Product>(), new BigInteger("1234"), keyPair(), true);
+        verify(mockV3extensionUtil).getExtensions(eq(entitlement), any(String.class),
+            any(Map.class));
+        verify(mockV3extensionUtil).getByteExtensions(any(Set.class),
+            eq(entitlement), any(String.class), any(Map.class));
+        verifyZeroInteractions(mockExtensionUtil);
+    }
+
+    @Test
     public void testCleanUpPrefixNoChange() throws Exception {
         String[] prefixes = {"/",
                              "/some_prefix/",

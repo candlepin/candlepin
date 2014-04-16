@@ -32,6 +32,7 @@ import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCapability;
+import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCertificateCurator;
@@ -195,6 +196,11 @@ public class DefaultEntitlementCertServiceAdapter extends
                 }
             }
             return false;
+        }
+        else if (consumer.getType().getLabel().equals(
+            ConsumerTypeEnum.HYPERVISOR.getLabel())) {
+            // Hypervisors in this context don't use content, so allow v3
+            return true;
         }
         else {
             String entitlementVersion = consumer.getFact("system.certificate_version");
