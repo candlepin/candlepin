@@ -56,7 +56,6 @@ import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.util.CertificateSizeException;
 import org.candlepin.util.Util;
 import org.candlepin.version.CertVersionConflictException;
-import org.hibernate.exception.ConstraintViolationException;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -174,29 +173,18 @@ public class CandlepinPoolManager implements PoolManager {
             if (subToPoolMap.containsKey(sub.getId())) {
                 removeAndDeletePoolsOnOtherOwners(subToPoolMap.get(sub.getId()), sub);
             }
-            try {
-                if (!poolExistsForSubscription(subToPoolMap, sub.getId())) {
-                    createPoolsForSubscription(sub);
-                }
-                else {
-                    entitlementsToRegen.addAll(
-                        // don't update floating here, we'll do that later
-                        // so we don't update anything twice
-                        updatePoolsForSubscription(
-                            subToPoolMap.get(sub.getId()), sub, false)
-                    );
-                }
+            if (!poolExistsForSubscription(subToPoolMap, sub.getId())) {
+                createPoolsForSubscription(sub);
             }
-            catch (ConstraintViolationException e) {
-                // This shouldn't cause our entire job to fail. Probably a concurrent
-                // refresh job
-                log.warn("Failed to create or update pool for" + sub + " on " + owner +
-                    " Probably the result of concurrent refreshes, and the pool has " +
-                    "already been created or modified", e);
+            else {
+                entitlementsToRegen.addAll(
+                    // don't update floating here, we'll do that later
+                    // so we don't update anything twice
+                    updatePoolsForSubscription(
+                        subToPoolMap.get(sub.getId()), sub, false)
+                );
             }
-            finally {
-                subToPoolMap.remove(sub.getId());
-            }
+            subToPoolMap.remove(sub.getId());
         }
 
         entitlementsToRegen.addAll(updateFloatingPools(floatingPools));

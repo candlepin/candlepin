@@ -514,6 +514,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         Pool toDelete = find(entity.getId());
         if (toDelete != null) {
             currentSession().delete(toDelete);
+            this.flush();
         }
         else {
             log.info("Pool " + entity.getId() + " not found. Skipping deletion. noop");
