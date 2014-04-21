@@ -57,7 +57,7 @@ public class RefreshPoolsJobTest {
         when(refresher.add(eq(owner))).thenReturn(refresher);
 
         // test
-        RefreshPoolsJob rpj = new RefreshPoolsJob(oc, pm, null);
+        RefreshPoolsJob rpj = new RefreshPoolsJob(oc, pm);
         rpj.execute(ctx);
 
         // verification
@@ -100,7 +100,7 @@ public class RefreshPoolsJobTest {
         doThrow(new NullPointerException()).when(refresher).run();
 
         // test
-        RefreshPoolsJob rpj = new RefreshPoolsJob(oc, pm, null);
+        RefreshPoolsJob rpj = new RefreshPoolsJob(oc, pm);
         rpj.execute(ctx);
     }
 }

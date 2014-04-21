@@ -28,7 +28,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
-import com.google.inject.persist.UnitOfWork;
 
 /**
  * ExportCleaner
@@ -45,8 +44,7 @@ public class ExportCleaner extends KingpinJob {
     private static Logger log = LoggerFactory.getLogger(ExportCleaner.class);
 
     @Inject
-    public ExportCleaner(Config config, UnitOfWork unitOfWork) {
-        super(unitOfWork);
+    public ExportCleaner(Config config) {
         this.config = config;
     }
 

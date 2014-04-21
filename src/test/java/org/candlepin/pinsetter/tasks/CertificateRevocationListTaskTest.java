@@ -48,7 +48,7 @@ public class CertificateRevocationListTaskTest {
 
     @Before
     public void init() {
-        this.task = new CertificateRevocationListTask(config, crlFileUtil, generator, null);
+        this.task = new CertificateRevocationListTask(config, crlFileUtil, generator);
     }
 
     @Test(expected = JobExecutionException.class)

@@ -35,7 +35,6 @@ import org.candlepin.model.PoolCurator;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
-import com.google.inject.persist.UnitOfWork;
 
 import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
@@ -90,9 +89,7 @@ public class MigrateOwnerJob extends KingpinJob {
     @Inject
     public MigrateOwnerJob(CandlepinConnection connection, Config conf,
         OwnerCurator oc, PoolCurator pc, EntitlementCurator ec,
-        ConsumerCurator cc, EventSink es,
-        UnitOfWork unitOfWork) {
-        super(unitOfWork);
+        ConsumerCurator cc, EventSink es) {
         ownerCurator = oc;
         consumerCurator = cc;
         conn = connection;

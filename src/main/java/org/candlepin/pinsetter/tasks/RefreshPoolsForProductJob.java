@@ -23,7 +23,6 @@ import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
-import com.google.inject.persist.UnitOfWork;
 
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
@@ -42,8 +41,7 @@ public class RefreshPoolsForProductJob extends KingpinJob {
 
     @Inject
     public RefreshPoolsForProductJob(ProductServiceAdapter productAdapter,
-        PoolManager poolManager, UnitOfWork unitOfWork) {
-        super(unitOfWork);
+        PoolManager poolManager) {
         this.productAdapter = productAdapter;
         this.poolManager = poolManager;
     }

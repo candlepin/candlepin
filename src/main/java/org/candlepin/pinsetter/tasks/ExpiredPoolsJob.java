@@ -17,7 +17,6 @@ package org.candlepin.pinsetter.tasks;
 import org.candlepin.controller.PoolManager;
 
 import com.google.inject.Inject;
-import com.google.inject.persist.UnitOfWork;
 
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -42,8 +41,7 @@ public class ExpiredPoolsJob extends KingpinJob {
     private static Logger log = LoggerFactory.getLogger(ExpiredPoolsJob.class);
 
     @Inject
-    public ExpiredPoolsJob(PoolManager poolManager, UnitOfWork unitOfWork) {
-        super(unitOfWork);
+    public ExpiredPoolsJob(PoolManager poolManager) {
         this.poolManager = poolManager;
     }
 

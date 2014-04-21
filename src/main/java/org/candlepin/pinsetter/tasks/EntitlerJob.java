@@ -23,7 +23,6 @@ import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
-import com.google.inject.persist.UnitOfWork;
 
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
@@ -44,8 +43,7 @@ public class EntitlerJob extends KingpinJob {
     protected ConsumerCurator consumerCurator;
 
     @Inject
-    public EntitlerJob(Entitler e, ConsumerCurator c, UnitOfWork unitOfWork) {
-        super(unitOfWork);
+    public EntitlerJob(Entitler e, ConsumerCurator c) {
         entitler = e;
         consumerCurator = c;
     }

@@ -24,7 +24,6 @@ import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
-import com.google.inject.persist.UnitOfWork;
 
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
@@ -47,9 +46,7 @@ public class RefreshPoolsJob extends UniqueByOwnerJob {
     protected static String prefix = "refresh_pools_";
 
     @Inject
-    public RefreshPoolsJob(OwnerCurator ownerCurator, PoolManager poolManager,
-        UnitOfWork unitOfWork) {
-        super(unitOfWork);
+    public RefreshPoolsJob(OwnerCurator ownerCurator, PoolManager poolManager) {
         this.ownerCurator = ownerCurator;
         this.poolManager = poolManager;
     }

@@ -16,19 +16,18 @@ package org.candlepin.pinsetter.core;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.quartz.CronScheduleBuilder.cronSchedule;
 import static org.quartz.JobBuilder.newJob;
 import static org.quartz.TriggerBuilder.newTrigger;
 
-import org.candlepin.guice.CandlepinSingletonScope;
 import org.candlepin.test.DatabaseTestFixture;
 import org.junit.Test;
 import org.quartz.Job;
 import org.quartz.JobDetail;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
+import org.quartz.spi.JobFactory;
 import org.quartz.spi.OperableTrigger;
 import org.quartz.spi.TriggerFiredBundle;
 
@@ -38,19 +37,18 @@ import java.text.ParseException;
  * HighlanderFactoryTest
  * @version $Rev$
  */
-public class HighlanderFactoryTest extends DatabaseTestFixture{
+public class HighlanderFactoryTest extends DatabaseTestFixture {
 
     @Test
     public void testNewJob() throws SchedulerException, ParseException {
-        GuiceJobFactory hf = new GuiceJobFactory(injector,
-            injector.getInstance(CandlepinSingletonScope.class));
+        JobFactory hf = injector.getInstance(JobFactory.class);
         assertNotNull(hf);
         try {
             hf.newJob(null, null);
             fail("should've died with npe");
         }
         catch (NullPointerException npe) {
-            assertTrue(true);
+            // Expected
         }
 
         String crontab = "0 0 12 * * ?";

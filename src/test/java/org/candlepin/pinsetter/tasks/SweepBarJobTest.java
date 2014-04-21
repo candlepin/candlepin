@@ -43,7 +43,7 @@ public class SweepBarJobTest {
     @Before
     public void init() throws SchedulerException {
         MockitoAnnotations.initMocks(this);
-        sweepBarJob = new SweepBarJob(j, pk, null);
+        sweepBarJob = new SweepBarJob(j, pk);
         when(pk.getSingleJobKeys()).thenReturn((new HashSet<JobKey>()));
     }
 

@@ -20,7 +20,6 @@ import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.pinsetter.core.model.JobStatus.JobState;
 
 import com.google.inject.Inject;
-import com.google.inject.persist.UnitOfWork;
 
 import org.hibernate.HibernateException;
 import org.quartz.DisallowConcurrentExecution;
@@ -47,8 +46,7 @@ public class UnpauseJob extends KingpinJob {
 
     @Inject
     public UnpauseJob(JobCurator jobCurator,
-            PinsetterKernel pinsetterKernel, UnitOfWork unitOfWork) {
-        super(unitOfWork);
+            PinsetterKernel pinsetterKernel) {
         this.jobCurator = jobCurator;
         this.pinsetterKernel = pinsetterKernel;
     }

@@ -23,8 +23,6 @@ import org.quartz.Trigger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.persist.UnitOfWork;
-
 /**
  * UniqueByOwnerJob can by extended by jobs that should not be
  * run concurrently per owner.  A job will wait for the running
@@ -33,10 +31,6 @@ import com.google.inject.persist.UnitOfWork;
  */
 public abstract class UniqueByOwnerJob extends KingpinJob {
     private static Logger log = LoggerFactory.getLogger(UniqueByOwnerJob.class);
-
-    public UniqueByOwnerJob(UnitOfWork unitOfWork) {
-        super(unitOfWork);
-    }
 
     @SuppressWarnings("unchecked")
     public static JobStatus scheduleJob(JobCurator jobCurator,

@@ -20,9 +20,12 @@ import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.spi.JobFactory;
 import org.quartz.spi.TriggerFiredBundle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.google.inject.persist.UnitOfWork;
 
 /**
  * GuiceJobFactory is a custom Quartz JobFactory implementation which
@@ -31,13 +34,17 @@ import com.google.inject.Injector;
  */
 public class GuiceJobFactory implements JobFactory {
 
+    private static Logger log = LoggerFactory.getLogger(GuiceJobFactory.class);
     private Injector injector;
     private CandlepinSingletonScope candlepinSingletonScope;
+    private UnitOfWork unitOfWork;
 
     @Inject
-    public GuiceJobFactory(Injector injector, CandlepinSingletonScope singletonScope) {
+    public GuiceJobFactory(Injector injector, CandlepinSingletonScope singletonScope,
+        UnitOfWork unitOfWork) {
         this.injector = injector;
         this.candlepinSingletonScope = singletonScope;
+        this.unitOfWork = unitOfWork;
     }
 
     /**
@@ -48,12 +55,42 @@ public class GuiceJobFactory implements JobFactory {
         throws SchedulerException {
         Class<Job> jobClass = (Class<Job>) bundle.getJobDetail().getJobClass();
 
+        boolean startedUow = startUnitOfWork();
         candlepinSingletonScope.enter();
         try {
             return injector.getInstance(jobClass);
         }
         finally {
             candlepinSingletonScope.exit();
+            if (startedUow) {
+                endUnitOfWork();
+            }
+        }
+    }
+
+    protected boolean startUnitOfWork() {
+        if (unitOfWork != null) {
+            try {
+                unitOfWork.begin();
+                return true;
+            }
+            catch (IllegalStateException e) {
+                log.debug("Already have an open unit of work");
+                return false;
+            }
+        }
+        return false;
+    }
+
+    protected void endUnitOfWork() {
+        if (unitOfWork != null) {
+            try {
+                unitOfWork.end();
+            }
+            catch (IllegalStateException e) {
+                log.debug("Unit of work is already closed, doing nothing");
+                // If there is no active unit of work, there is no reason to close it
+            }
         }
     }
 }
