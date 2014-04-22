@@ -31,7 +31,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.9
+Version: 0.9.10
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -347,6 +347,16 @@ fi
 
 
 %changelog
+* Tue Apr 22 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.10-1
+- 1075883: whitelist hypervisor consumers for certv3 (ckozak@redhat.com)
+- Add access methods to see more details of Permissions (dcrissma@redhat.com)
+- use unit of work while instantiating job objects (ckozak@redhat.com)
+- Generate doc for superclass methods too. (awood@redhat.com)
+- Fixed hibernate validation test to reflect no @Size on entryType (ckozak@redhat.com)
+- Remove @Size annotation from enum type. (jesusr@redhat.com)
+- bump candlepin-deps (jesusr@redhat.com)
+- remove F18 from katello-koji (jesusr@redhat.com)
+
 * Fri Apr 11 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.9-1
 - 1065369: Use Hibernate Validation to supersede database error reporting.  (wpoteat@redhat.com)
 - latest strings from zanata (alikins@redhat.com)
