@@ -16,6 +16,7 @@ package org.candlepin.util.apicrawl;
 
 import org.candlepin.auth.interceptor.Verify;
 import org.candlepin.config.Config;
+import org.candlepin.guice.HttpMethodMatcher;
 import org.candlepin.resource.RootResource;
 import org.candlepin.resteasy.JsonProvider;
 
@@ -23,6 +24,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.module.jsonSchema.JsonSchema;
 import com.fasterxml.jackson.module.jsonSchema.JsonSchemaGenerator;
+import com.google.inject.matcher.Matcher;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -102,8 +104,9 @@ public class ApiCrawler {
         Path a = (Path) c.getAnnotation(Path.class);
         String parentUrl = a.value();
         List<RestApiCall> classApiCalls = new LinkedList<RestApiCall>();
-        for (Method m : c.getDeclaredMethods()) {
-            if (Modifier.isPublic(m.getModifiers())) {
+        Matcher<Method> matcher = new HttpMethodMatcher();
+        for (Method m : c.getMethods()) {
+            if (Modifier.isPublic(m.getModifiers()) && matcher.matches(m)) {
                 classApiCalls.add(processMethod(parentUrl, m));
             }
         }

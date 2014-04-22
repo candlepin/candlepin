@@ -16,11 +16,13 @@ package org.candlepin.util.apicrawl;
 
 //import com.sun.javadoc.AnnotationDesc;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sun.javadoc.AnnotationDesc;
 import com.sun.javadoc.ClassDoc;
 import com.sun.javadoc.DocErrorReporter;
 import com.sun.javadoc.MethodDoc;
 import com.sun.javadoc.RootDoc;
 import com.sun.javadoc.Tag;
+import com.sun.javadoc.Type;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -96,13 +98,17 @@ public class ApiDoclet {
         List<RestMethod> methods = new ArrayList<RestMethod>();
 
         for (ClassDoc classDoc : root.classes()) {
-            // only look at public methods on Resource classes
-            if (classDoc.qualifiedName().endsWith("Resource")) {
-                for (MethodDoc methodDoc : classDoc.methods()) {
-                    if (methodDoc.isPublic()) {
-                        methods.add(new RestMethod(methodDoc));
-                    }
+            boolean docClass = false;
+            for (AnnotationDesc a : classDoc.annotations()) {
+                // Only look at REST resource classes
+                if ("javax.ws.rs.Path".equals(a.annotationType().qualifiedTypeName())) {
+                    docClass = true;
+                    break;
                 }
+            }
+
+            if (docClass) {
+                getAllMethods(classDoc, methods);
             }
         }
 
@@ -114,6 +120,19 @@ public class ApiDoclet {
         }
         finally {
             jsonFile.close();
+        }
+    }
+
+    private static void getAllMethods(Type type, List<RestMethod> methods) {
+        // Don't walk up beyond our classes.
+        if (type != null && type.qualifiedTypeName().startsWith("org.candlepin")) {
+            ClassDoc classDoc = type.asClassDoc();
+            getAllMethods(classDoc.superclassType(), methods);
+            for (MethodDoc methodDoc : classDoc.methods()) {
+                if (methodDoc.isPublic()) {
+                    methods.add(new RestMethod(methodDoc));
+                }
+            }
         }
     }
 
