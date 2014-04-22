@@ -31,7 +31,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.10.0
+Version: 0.9.10.1
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -349,6 +349,11 @@ fi
 
 
 %changelog
+* Tue Apr 22 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.10.1-1
+- bumping version, building from branch. (jesusr@redhat.com)
+- add hibernate-validator to rpm jars and spec (jesusr@redhat.com)
+- add validation-api to rpm jars (jesusr@redhat.com)
+
 * Tue Apr 22 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.10-1
 - 1075883: whitelist hypervisor consumers for certv3 (ckozak@redhat.com)
 - Add access methods to see more details of Permissions (dcrissma@redhat.com)
