@@ -67,6 +67,7 @@ COMMONS = ['commons-codec:commons-codec:jar:1.4',
            'commons-collections:commons-collections:jar:3.1',
            'commons-io:commons-io:jar:1.3.2',
            'commons-lang:commons-lang:jar:2.5']
+LIQUIBASE = ['org.liquibase:liquibase-core:jar:3.1.0']
 
 # Artifacts that bridge other logging frameworks to slf4j. Mime4j uses
 # JCL for example.
@@ -121,10 +122,10 @@ PROVIDED = [SERVLET]
 #
 # Specify Maven 2.0 remote repositories here, like this:
 repositories.remote << "http://jmrodri.fedorapeople.org/ivy/candlepin/"
-repositories.remote << "http://mirrors.ibiblio.org/pub/mirrors/maven2/"
 repositories.remote << "http://repository.jboss.org/nexus/content/groups/public/"
 repositories.remote << "http://gettext-commons.googlecode.com/svn/maven-repository/"
 repositories.remote << "http://oauth.googlecode.com/svn/code/maven/"
+repositories.remote << "http://central.maven.org/maven2/"
 
 
 nocstyle = ENV['nocheckstyle']
@@ -210,7 +211,7 @@ define "candlepin" do
   else
     compile.with DB
   end
-
+  compile.with LIQUIBASE
   #
   # testing
   #

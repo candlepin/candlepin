@@ -179,4 +179,64 @@ describe 'Refresh Pools' do
     pools[0]['derivedProvidedProducts'].length.should == 0
   end
 
+  it 'can migrate subscription' do
+    # Create the initial owner and generate the pools.
+    owner1 = create_owner random_string('initial-owner')
+    name = random_string("product")
+    product = create_product(name, name)
+    sub = @cp.create_subscription(owner1['key'], product.id)
+    @cp.refresh_pools(owner1["key"])
+    owner1_pools = @cp.list_pools({:owner => owner1.id})
+    owner1_pools.length.should == 1
+
+    # Create another owner and migrate the subscription
+    owner2 = create_owner random_string('migrated-owner')
+    
+    # migrate the subscription to another owner.
+    sub["owner"] = owner2
+    @cp.update_subscription(sub)
+    @cp.list_subscriptions(owner1["key"]).length.should == 0
+    @cp.list_subscriptions(owner2["key"]).length.should == 1
+    
+    # Refresh the first owner so that the pools are removed.
+    @cp.refresh_pools(owner1["key"])
+    @cp.list_pools({:owner => owner1.id}).length.should == 0
+    # No pools on the second owner until it is refreshed.
+    @cp.list_pools({:owner => owner2.id}).length.should == 0
+        
+    # Pools should be created for the second owner after refresh.
+    @cp.refresh_pools(owner2["key"])
+    @cp.list_pools({:owner => owner2.id}).length.should == 1
+  end
+
+  it 'removes pools from other owners when subscription is migrated' do
+    # Create the initial owner and generate the pools.
+    owner1 = create_owner random_string('initial-owner')
+    name = random_string("product")
+    product = create_product(name, name)
+    sub = @cp.create_subscription(owner1['key'], product.id)
+    @cp.refresh_pools(owner1["key"])
+    owner1_pools = @cp.list_pools({:owner => owner1.id})
+    owner1_pools.length.should == 1
+
+    # Create another owner and migrate the subscription
+    owner2 = create_owner random_string('migrated-owner')
+    
+    # migrate the subscription to another owner.
+    sub["owner"] = owner2
+    @cp.update_subscription(sub)
+    @cp.list_subscriptions(owner1["key"]).length.should == 0
+    @cp.list_subscriptions(owner2["key"]).length.should == 1
+    
+    # Refresh the second owner so that the pools are updated.
+    @cp.refresh_pools(owner2["key"])
+    
+    # Initial owner should have all pools removed.
+    @cp.list_pools({:owner => owner1.id}).length.should == 0
+    
+    # Pools should now be created for the second owner since
+    # the subscription was migrated.
+    @cp.list_pools({:owner => owner2.id}).length.should == 1
+  end
+    
 end

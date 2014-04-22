@@ -15,6 +15,7 @@
 package org.candlepin.controller;
 
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -25,6 +26,7 @@ import java.util.List;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.Subscription;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.util.Util;
@@ -82,7 +84,7 @@ public class RefresherTest {
         when(product.getId()).thenReturn("product id");
 
         Pool pool = new Pool();
-        pool.setSubscriptionId("subId");
+        pool.setSourceSubscription(new SourceSubscription("subId", "master"));
         pool.setOwner(owner);
         Subscription subscription = new Subscription();
         subscription.setId("subId");
@@ -105,7 +107,7 @@ public class RefresherTest {
 
         verify(poolManager, times(1)).refreshPoolsWithoutRegeneration(owner);
         verify(poolManager, times(0)).updatePoolsForSubscription(any(List.class),
-            any(Subscription.class));
+            any(Subscription.class), eq(false));
     }
 
     @Test
@@ -117,7 +119,7 @@ public class RefresherTest {
         when(product2.getId()).thenReturn("product id 2");
 
         Pool pool = new Pool();
-        pool.setSubscriptionId("subId");
+        pool.setSourceSubscription(new SourceSubscription("subId", "master"));
         Subscription subscription = new Subscription();
         subscription.setId("subId");
 
@@ -135,6 +137,6 @@ public class RefresherTest {
         refresher.run();
 
         verify(poolManager, times(1)).updatePoolsForSubscription(any(List.class),
-            any(Subscription.class));
+            any(Subscription.class), eq(true));
     }
 }

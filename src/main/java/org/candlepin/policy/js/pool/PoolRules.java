@@ -26,6 +26,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProductPoolAttribute;
 import org.candlepin.model.ProvidedProduct;
+import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.Subscription;
 import org.candlepin.policy.js.ProductCache;
 
@@ -132,8 +133,7 @@ public class PoolRules {
                 b.getName()));
         }
 
-        newPool.setSubscriptionId(sub.getId());
-        newPool.setSubscriptionSubKey("master");
+        newPool.setSourceSubscription(new SourceSubscription(sub.getId(), "master"));
         ProductAttribute virtAtt = sub.getProduct().getAttribute("virt_only");
 
         // note: the product attributes are getting copied above, but the following will
@@ -160,31 +160,38 @@ public class PoolRules {
             // otherwise this will recurse infinitely
             virtAttributes.put("virt_limit", "0");
 
-            String virtLimit = attributes.get("virt_limit");
-            if ("unlimited".equals(virtLimit)) {
+            String virtQuantity = getVirtQuantity(attributes.get("virt_limit"), quantity);
+            if (virtQuantity != null) {
                 Pool derivedPool = helper.createPool(sub, sub.getProduct().getId(),
-                                                    "unlimited", virtAttributes);
-                derivedPool.setSubscriptionSubKey("derived");
+                                                    virtQuantity, virtAttributes);
+                // Using derived here because only one derived pool
+                // is created for this subscription
+                derivedPool.setSourceSubscription(
+                    new SourceSubscription(sub.getId(), "derived"));
                 pools.add(derivedPool);
-            }
-            else {
-                try {
-                    int virtLimitQuantity = Integer.parseInt(virtLimit);
-                    if (virtLimitQuantity > 0) {
-                        long virtQuantity = quantity * virtLimitQuantity;
-                        Pool derivedPool = helper.createPool(sub, sub.getProduct().getId(),
-                            String.valueOf(virtQuantity), virtAttributes);
-                        derivedPool.setSubscriptionSubKey("derived");
-                        pools.add(derivedPool);
-                    }
-                }
-                catch (NumberFormatException nfe) {
-                    // Nothing to update if we get here.
-                    log.warn("Invalid virt_limit attribute specified.");
-                }
             }
         }
         return pools;
+    }
+
+    /*
+     * Returns null if invalid
+     */
+    private String getVirtQuantity(String virtLimit, long quantity) {
+        if ("unlimited".equals(virtLimit)) {
+            return virtLimit;
+        }
+        try {
+            int virtLimitInt = Integer.parseInt(virtLimit);
+            if (virtLimitInt > 0) {
+                return String.valueOf(virtLimitInt * quantity);
+            }
+        }
+        catch (NumberFormatException nfe) {
+            // Nothing to update if we get here.
+            log.warn("Invalid virt_limit attribute specified.");
+        }
+        return null;
     }
 
     /**
@@ -208,8 +215,7 @@ public class PoolRules {
                     log.error("Stack derived pool has no source consumer: " + p.getId());
                 }
                 else {
-                    PoolUpdate update = updatePoolFromStack(p, c,
-                        p.getSourceStack().getSourceStackId());
+                    PoolUpdate update = updatePoolFromStack(p);
                     if (update.changed()) {
                         updates.add(update);
                     }
@@ -275,7 +281,6 @@ public class PoolRules {
         return poolsUpdated;
     }
 
-
     /**
      * Updates the pool based on the entitlements in the specified stack.
      * @param pool
@@ -284,14 +289,13 @@ public class PoolRules {
      *
      * @return pool update specifics
      */
-    public PoolUpdate updatePoolFromStack(Pool pool, Consumer consumer, String stackId) {
-        List<Entitlement> stackedEnts = this.entCurator.findByStackId(consumer,
-            stackId);
-        return this.updatePoolFromStackedEntitlements(pool, consumer, stackId, stackedEnts);
+    public PoolUpdate updatePoolFromStack(Pool pool) {
+        List<Entitlement> stackedEnts = this.entCurator.findByStackId(
+            pool.getSourceConsumer(), pool.getSourceStackId());
+        return this.updatePoolFromStackedEntitlements(pool, stackedEnts);
     }
 
     public PoolUpdate updatePoolFromStackedEntitlements(Pool pool,
-            Consumer consumer, String stackId,
             List<Entitlement> stackedEnts) {
 
         PoolUpdate update = new PoolUpdate(pool);
@@ -302,7 +306,7 @@ public class PoolRules {
         }
 
         pool.setSourceEntitlement(null);
-        pool.setSubscriptionId(null);
+        pool.setSourceSubscription(null);
 
         StackedSubPoolValueAccumulator acc =
             new StackedSubPoolValueAccumulator(pool, stackedEnts);

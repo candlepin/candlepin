@@ -37,6 +37,7 @@ public class Refresher {
 
     private Set<Owner> owners = Util.newSet();
     private Set<Product> products = Util.newSet();
+    private Set<Subscription> subscriptions = Util.newSet();
 
     Refresher(CandlepinPoolManager poolManager, SubscriptionServiceAdapter subAdapter,
         boolean lazy) {
@@ -55,34 +56,38 @@ public class Refresher {
         return this;
     }
 
+    public Refresher add(Subscription subscription) {
+        subscriptions.add(subscription);
+        return this;
+    }
+
     public void run() {
-        Set<Subscription> subscriptions = Util.newSet();
-        for (Product product : products) {
-            List<Subscription> candidates = subAdapter.getSubscriptions(product);
-
-            // drop any subs for owners in our owners list. we'll get them with the full
-            // refreshPools call.
-            for (Subscription subscription : candidates) {
-                if (!owners.contains(subscription.getOwner())) {
-                    subscriptions.add(subscription);
-                }
-            }
-        }
-
         Set<Entitlement> toRegen = new HashSet<Entitlement>();
 
+        for (Product product : products) {
+            subscriptions.addAll(subAdapter.getSubscriptions(product));
+        }
+
         for (Subscription subscription : subscriptions) {
+            // drop any subs for owners in our owners list. we'll get them with the full
+            // refreshPools call.
+            if (owners.contains(subscription.getOwner())) {
+                continue;
+            }
+
             /*
              * on the off chance that this is actually a new subscription, make the required
              * pools. this shouldn't happen; we should really get a refreshpools by owner
              * call for it, but why not handle it, just in case!
              */
             List<Pool> pools = poolManager.lookupBySubscriptionId(subscription.getId());
+            poolManager.removeAndDeletePoolsOnOtherOwners(pools, subscription);
             if (pools.isEmpty()) {
                 poolManager.createPoolsForSubscription(subscription);
             }
             else {
-                toRegen.addAll(poolManager.updatePoolsForSubscription(pools, subscription));
+                toRegen.addAll(poolManager.updatePoolsForSubscription(
+                    pools, subscription, true));
             }
         }
 

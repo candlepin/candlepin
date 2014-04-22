@@ -56,8 +56,6 @@ import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.util.CertificateSizeException;
 import org.candlepin.util.Util;
 import org.candlepin.version.CertVersionConflictException;
-import org.hibernate.HibernateException;
-import org.hibernate.exception.ConstraintViolationException;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -139,8 +137,8 @@ public class CandlepinPoolManager implements PoolManager {
         List<Subscription> subs = subAdapter.getSubscriptions(owner);
         log.debug("Found " + subs.size() + " existing subscriptions.");
 
-        List<Pool> pools = this.listAvailableEntitlementPools(null, null,
-            owner, null, null, false, false, new PoolFilterBuilder(), null).getPageData();
+        List<String> subIds = getSubscriptionIds(subs);
+        List<Pool> pools = poolCurator.getPoolsForOwnerRefresh(owner, subIds);
 
         // Pools with no subscription ID:
         List<Pool> floatingPools = new LinkedList<Pool>();
@@ -171,26 +169,22 @@ public class CandlepinPoolManager implements PoolManager {
                 continue;
             }
 
-            try {
-                if (!poolExistsForSubscription(subToPoolMap, sub.getId())) {
-                    createPoolsForSubscription(sub);
-                }
-                else {
-                    entitlementsToRegen.addAll(
-                        updatePoolsForSubscription(subToPoolMap.get(sub.getId()), sub)
-                    );
-                }
+            // If the key doesn't exist, we never have to worry about duplicates.
+            if (subToPoolMap.containsKey(sub.getId())) {
+                removeAndDeletePoolsOnOtherOwners(subToPoolMap.get(sub.getId()), sub);
             }
-            catch (ConstraintViolationException e) {
-                // This shouldn't cause our entire job to fail. Probably a concurrent
-                // refresh job
-                log.warn("Failed to create or update pool for" + sub + " on " + owner +
-                    " Probably the result of concurrent refreshes, and the pool has " +
-                    "already been created or modified", e);
+            if (!poolExistsForSubscription(subToPoolMap, sub.getId())) {
+                createPoolsForSubscription(sub);
             }
-            finally {
-                subToPoolMap.remove(sub.getId());
+            else {
+                entitlementsToRegen.addAll(
+                    // don't update floating here, we'll do that later
+                    // so we don't update anything twice
+                    updatePoolsForSubscription(
+                        subToPoolMap.get(sub.getId()), sub, false)
+                );
             }
+            subToPoolMap.remove(sub.getId());
         }
 
         entitlementsToRegen.addAll(updateFloatingPools(floatingPools));
@@ -205,19 +199,20 @@ public class CandlepinPoolManager implements PoolManager {
                 // However if this is an older bonus pool (hosted) not tied to any
                 // entitlements, we need to proceed:
                 if (p.getType() == PoolType.NORMAL || p.getType() == PoolType.BONUS) {
-                    try {
-                        deletePool(p);
-                    }
-                    catch (HibernateException e) {
-                        // Is there an exception for objs that have already been deleted?
-                        log.error("Failed to delete " + p + " It has probably already " +
-                            "been deleted by another refresh", e);
-                    }
+                    deletePool(p);
                 }
             }
         }
 
         return entitlementsToRegen;
+    }
+
+    private List<String> getSubscriptionIds(List<Subscription> subs) {
+        List<String> result = new LinkedList<String>();
+        for (Subscription sub : subs) {
+            result.add(sub.getId());
+        }
+        return result;
     }
 
     public void cleanupExpiredPools() {
@@ -267,6 +262,21 @@ public class CandlepinPoolManager implements PoolManager {
         }
     }
 
+    void removeAndDeletePoolsOnOtherOwners(List<Pool> existingPools, Subscription sub) {
+        List<Pool> toRemove = new LinkedList<Pool>();
+        for (Pool existing : existingPools) {
+            if (!existing.getOwner().equals(sub.getOwner())) {
+                toRemove.add(existing);
+                log.warn("Removing " + existing + " because it exists in the wrong org");
+                if (existing.getType() == PoolType.NORMAL ||
+                    existing.getType() == PoolType.BONUS) {
+                    deletePool(existing);
+                }
+            }
+        }
+        existingPools.removeAll(toRemove);
+    }
+
     /**
      * Update pool for subscription. - This method only checks for change in
      * quantity and dates of a subscription. Currently any quantity changes in
@@ -274,9 +284,11 @@ public class CandlepinPoolManager implements PoolManager {
      *
      * @param existingPools the existing pools
      * @param sub the sub
+     * @param updateStackDerived wheter or not to attempt to update stack derived
+     * subscriptions
      */
     Set<Entitlement> updatePoolsForSubscription(List<Pool> existingPools,
-        Subscription sub) {
+        Subscription sub, boolean updateStackDerived) {
 
         /*
          * Rules need to determine which pools have changed, but the Java must
@@ -292,6 +304,23 @@ public class CandlepinPoolManager implements PoolManager {
         // Hand off to rules to determine which pools need updating:
         List<PoolUpdate> updatedPools = poolRules.updatePools(sub,
             existingPools);
+
+        // Update subpools if necessary
+        if (updateStackDerived && !updatedPools.isEmpty() &&
+                sub.createsSubPools() && sub.isStacked()) {
+            // Get all pools for the subscriptions owner derived from the subscriptions
+            // stack id, because we cannot look it up by subscriptionId
+            List<Pool> subPools = getOwnerSubPoolsForStackId(
+                sub.getOwner(), sub.getStackId());
+
+            for (Pool subPool : subPools) {
+                PoolUpdate update = updatePoolFromStack(subPool);
+
+                if (update.changed()) {
+                    updatedPools.add(update);
+                }
+            }
+        }
 
         return processPoolUpdates(poolEvents, updatedPools);
     }
@@ -361,7 +390,8 @@ public class CandlepinPoolManager implements PoolManager {
 
     private boolean poolExistsForSubscription(
         Map<String, List<Pool>> subToPoolMap, String id) {
-        return subToPoolMap.containsKey(id);
+        return subToPoolMap.containsKey(id) &&
+            !subToPoolMap.get(id).isEmpty();
     }
 
     /**
@@ -1046,8 +1076,7 @@ public class CandlepinPoolManager implements PoolManager {
                     deletePool(stackedSubPool);
                 }
                 else {
-                    updatePoolFromStackedEntitlements(
-                        stackedSubPool, consumer, stackId, stackedEnts);
+                    updatePoolFromStackedEntitlements(stackedSubPool, stackedEnts);
                     poolCurator.merge(stackedSubPool);
                 }
             }
@@ -1228,12 +1257,12 @@ public class CandlepinPoolManager implements PoolManager {
             Entitlement entitlement) {
 
             Pool entPool = entitlement.getPool();
-            String stackId = entPool.getProductAttributeValue("stacking_id");
-            if (stackId != null && !stackId.isEmpty()) {
+            if (entPool.isStacked()) {
                 Pool pool =
-                    poolCurator.getSubPoolForStackId(entitlement.getConsumer(), stackId);
+                    poolCurator.getSubPoolForStackId(
+                        entitlement.getConsumer(), entPool.getStackId());
                 if (pool != null) {
-                    poolRules.updatePoolFromStack(pool, consumer, stackId);
+                    poolRules.updatePoolFromStack(pool);
                     poolCurator.merge(pool);
                 }
             }
@@ -1281,7 +1310,7 @@ public class CandlepinPoolManager implements PoolManager {
         @Override
         public void handleBonusPools(Pool pool, Entitlement entitlement) {
             updatePoolsForSubscription(poolCurator.listBySourceEntitlement(entitlement),
-                subAdapter.getSubscription(pool.getSubscriptionId()));
+                subAdapter.getSubscription(pool.getSubscriptionId()), false);
             checkBonusPoolQuantities(pool, entitlement);
         }
     }
@@ -1366,14 +1395,16 @@ public class CandlepinPoolManager implements PoolManager {
         return poolCurator.listByOwner(owner);
     }
 
-    public PoolUpdate updatePoolFromStack(Pool pool, Consumer consumer, String stackId) {
-        return poolRules.updatePoolFromStack(pool, consumer, stackId);
+    public PoolUpdate updatePoolFromStack(Pool pool) {
+        return poolRules.updatePoolFromStack(pool);
     }
 
     private PoolUpdate updatePoolFromStackedEntitlements(Pool pool,
-        Consumer consumer, String stackId,
         List<Entitlement> stackedEntitlements) {
-        return poolRules.updatePoolFromStackedEntitlements(pool, consumer,
-            stackId, stackedEntitlements);
+        return poolRules.updatePoolFromStackedEntitlements(pool, stackedEntitlements);
+    }
+
+    public List<Pool> getOwnerSubPoolsForStackId(Owner owner, String stackId) {
+        return poolCurator.getOwnerSubPoolsForStackId(owner, stackId);
     }
 }

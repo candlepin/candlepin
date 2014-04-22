@@ -202,12 +202,10 @@ public interface PoolManager {
     /**
      * Updates the pool based on the entitlements in the specified stack.
      * @param pool
-     * @param consumer
-     * @param stackId
      *
      * @return pool update specifics
      */
-    PoolUpdate updatePoolFromStack(Pool pool, Consumer consumer, String stackId);
+    PoolUpdate updatePoolFromStack(Pool pool);
 
     /**
      * @param guest products we want to provide for

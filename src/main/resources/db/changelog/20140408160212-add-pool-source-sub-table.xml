@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <property name="timestamp.type" value="TIMESTAMP WITHOUT TIME ZONE" dbms="oracle"/>
+    <property name="timestamp.type" value="TIMESTAMP WITHOUT TIME ZONE" dbms="postgresql"/>
+    <property name="timestamp.type" value="DATETIME" dbms="mysql"/>
+
+    <changeSet id="20140408160212-0" author="ckozak">
+        <comment>Create source subscription table</comment>
+
+        <createTable tableName="cp_pool_source_sub">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_pool_source_sub_pkey"/>
+            </column>
+            <column name="subscriptionid" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="subscriptionsubkey" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="pool_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="${timestamp.type}"/>
+            <column name="updated" type="${timestamp.type}"/>
+        </createTable>
+
+        <addUniqueConstraint
+            columnNames="subscriptionid, subscriptionsubkey"
+            constraintName="cp_pool_source_sub_ukey"
+            deferrable="false"
+            disabled="false"
+            initiallyDeferred="false"
+            tableName="cp_pool_source_sub"/>
+
+        <addUniqueConstraint
+            columnNames="pool_id"
+            constraintName="cp_pool_source_sub_pool_ukey"
+            deferrable="false"
+            disabled="false"
+            initiallyDeferred="false"
+            tableName="cp_pool_source_sub"/>
+
+        <addForeignKeyConstraint
+            baseColumnNames="pool_id"
+            baseTableName="cp_pool_source_sub"
+            constraintName="fk_sourcesub_pool"
+            deferrable="false"
+            initiallyDeferred="false"
+            onDelete="CASCADE"
+            onUpdate="NO ACTION"
+            referencedColumnNames="id"
+            referencedTableName="cp_pool"
+            referencesUniqueColumn="false"/>
+    </changeSet>
+
+    <changeSet id="20140408160212-1" author="ckozak" dbms="mysql,postgresql">
+        <comment>Index new table on pool_id, oracle has already done this</comment>
+
+        <createIndex indexName="idx_sourcesub_pool_fk" tableName="cp_pool_source_sub" unique="false">
+            <column name="pool_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20140408160212-2" author="ckozak">
+        <comment>Add cascading delete on pool branding So we can delete pools without violating foreign keys</comment>
+        <dropForeignKeyConstraint
+            baseTableName="cp_pool_branding"
+            constraintName="fk_pool_branding_pool_id"/>
+
+        <addForeignKeyConstraint
+            baseColumnNames="pool_id"
+            baseTableName="cp_pool_branding"
+            constraintName="fk_pool_branding_pool_id"
+            deferrable="false"
+            initiallyDeferred="false"
+            onDelete="CASCADE"
+            onUpdate="NO ACTION"
+            referencedColumnNames="id"
+            referencedTableName="cp_pool"
+            referencesUniqueColumn="false"/>
+    </changeSet>
+
+    <changeSet id="20140408160212-3" author="ckozak">
+        <comment>Migrate subscriptions on duplicate pools to a single pool per set</comment>
+        <customChange class="org.candlepin.liquibase.FixDuplicatePoolsLiquibaseWrapper">
+        </customChange>
+    </changeSet>
+
+    <changeSet id="20140408160212-4" author="ckozak">
+        <comment>Copy all pool source subscription data to the new table</comment>
+        <!-- Everything with non-null values for both subid and subkey can be copied directly assuming we have properly removed duplicates -->
+        <sql>
+            INSERT INTO cp_pool_source_sub (id, subscriptionid, subscriptionsubkey, pool_id, created, updated)
+            SELECT cp_pool.id, cp_pool.subscriptionid, cp_pool.subscriptionsubkey, cp_pool.id, cp_pool.created, cp_pool.updated
+            FROM cp_pool
+            WHERE cp_pool.subscriptionid IS NOT NULL
+            AND cp_pool.subscriptionsubkey IS NOT NULL
+        </sql>
+
+        <!-- Copy over host-restricted non-stackable subscription data using sourceentitlement_id to enforce uniqueness -->
+        <sql>
+            INSERT INTO cp_pool_source_sub (id, subscriptionid, subscriptionsubkey, pool_id, created, updated)
+            SELECT cp_pool.id, cp_pool.subscriptionid, cp_pool.sourceentitlement_id, cp_pool.id, cp_pool.created, cp_pool.updated
+            FROM cp_pool
+            WHERE cp_pool.subscriptionid IS NOT NULL
+            AND cp_pool.subscriptionsubkey IS NULL
+            AND cp_pool.sourceentitlement_id IS NOT NULL
+        </sql>
+    </changeSet>
+
+    <changeSet id="20140408160212-5" author="ckozak">
+        <comment>Remove unused columns</comment>
+
+        <dropUniqueConstraint
+            constraintName="cp_pool_subid_subsubkey_key"
+            tableName="cp_pool" />
+
+        <dropColumn
+            columnName="subscriptionid"
+            tableName="cp_pool" />
+
+        <dropColumn
+            columnName="subscriptionsubkey"
+            tableName="cp_pool" />
+    </changeSet>
+
+    <changeSet id="20140408160212-6" author="ckozak">
+        <comment>Index on subscriptionId</comment>
+        <createIndex indexName="idx_sourcesub_subid" tableName="cp_pool_source_sub" unique="false">
+            <column name="subscriptionid"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

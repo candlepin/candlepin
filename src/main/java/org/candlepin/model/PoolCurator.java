@@ -32,10 +32,12 @@ import org.hibernate.Query;
 import org.hibernate.ReplicationMode;
 import org.hibernate.criterion.CriteriaSpecification;
 import org.hibernate.criterion.Criterion;
+import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.internal.FilterImpl;
+import org.hibernate.sql.JoinType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -288,7 +290,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
     public List<Pool> lookupBySubscriptionId(String subId) {
         return createSecureCriteria()
-            .add(Restrictions.eq("subscriptionId", subId)).list();
+            .createAlias("sourceSubscription", "sourceSub")
+            .add(Restrictions.eq("sourceSub.subscriptionId", subId)).list();
     }
 
     /**
@@ -310,16 +313,17 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @param ent Entitlement just created or modified.
      * @return Pools with too many entitlements for their new quantity.
      */
+    @SuppressWarnings("unchecked")
     public List<Pool> lookupOversubscribedBySubscriptionId(String subId, Entitlement ent) {
-        String queryString = "from Pool as pool " +
-            "where pool.subscriptionId = :subId AND " +
-            "(pool.sourceEntitlement = null OR pool.sourceEntitlement = :ent) AND " +
-            "pool.quantity >= 0 AND " +
-            "pool.consumed > pool.quantity ";
-        Query query = currentSession().createQuery(queryString);
-        query.setString("subId", subId);
-        query.setEntity("ent", ent);
-        return query.list();
+        return currentSession().createCriteria(Pool.class)
+            .createAlias("sourceSubscription", "sourceSub")
+            .add(Restrictions.eq("sourceSub.subscriptionId", subId))
+            .add(Restrictions.ge("quantity", 0L))
+            .add(Restrictions.gtProperty("consumed", "quantity"))
+            .add(Restrictions.or(
+                Restrictions.isNull("sourceEntitlement"),
+                Restrictions.eqOrIsNull("sourceEntitlement", ent)))
+            .list();
     }
 
     @Transactional
@@ -510,6 +514,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         Pool toDelete = find(entity.getId());
         if (toDelete != null) {
             currentSession().delete(toDelete);
+            this.flush();
         }
         else {
             log.info("Pool " + entity.getId() + " not found. Skipping deletion. noop");
@@ -528,5 +533,36 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             .add(Restrictions.and(Restrictions.isNotNull("ss.sourceStackId"),
                                   Restrictions.eq("ss.sourceStackId", stackId)));
         return (Pool) getCount.uniqueResult();
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<Pool> getOwnerSubPoolsForStackId(Owner owner, String stackId) {
+        return createSecureCriteria()
+            .createAlias("sourceStack", "ss")
+            .add(Restrictions.eq("ss.sourceStackId", stackId))
+            .add(Restrictions.eq("owner", owner))
+            .list();
+    }
+
+    /**
+     * Lists all pools that either belong to owner, or match a subscription id in subIds
+     *
+     * @param owner owner
+     * @param subIds subscription ids
+     * @return resulting list of pools
+     */
+    @SuppressWarnings("unchecked")
+    public List<Pool> getPoolsForOwnerRefresh(Owner owner, List<String> subIds) {
+        Criteria crit = currentSession().createCriteria(Pool.class);
+
+        Disjunction ownerOrIds = Restrictions.disjunction();
+        if (!subIds.isEmpty()) {
+            crit.createAlias("sourceSubscription", "sourceSub",
+                    JoinType.LEFT_OUTER_JOIN);
+            ownerOrIds.add(Restrictions.in("sourceSub.subscriptionId", subIds));
+        }
+        ownerOrIds.add(Restrictions.eq("owner", owner));
+        crit.add(ownerOrIds);
+        return crit.list();
     }
 }

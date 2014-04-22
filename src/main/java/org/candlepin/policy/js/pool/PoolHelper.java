@@ -33,6 +33,7 @@ import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.DerivedProductPoolAttribute;
 import org.candlepin.model.DerivedProvidedProduct;
 import org.candlepin.model.SourceStack;
+import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.Subscription;
 import org.candlepin.policy.js.AttributeHelper;
 import org.candlepin.policy.js.ProductCache;
@@ -103,15 +104,15 @@ public class PoolHelper extends AttributeHelper {
 
         // If the originating pool is stacked, we want to create the derived pool based on
         // the entitlements in the stack, instead of just the parent pool.
-        String stackId = pool.getProductAttributeValue("stacking_id");
-        if (stackId != null && !stackId.isEmpty()) {
-            poolManager.updatePoolFromStack(consumerSpecificPool,
-                sourceEntitlement.getConsumer(), stackId);
+        if (pool.isStacked()) {
+            poolManager.updatePoolFromStack(consumerSpecificPool);
         }
         else {
             // attribute per 795431, useful for rolling up pool info in headpin
             consumerSpecificPool.setAttribute("source_pool_id", pool.getId());
-            consumerSpecificPool.setSubscriptionId(pool.getSubscriptionId());
+            consumerSpecificPool.setSourceSubscription(
+                new SourceSubscription(pool.getSubscriptionId(),
+                    sourceEntitlement.getId()));
         }
 
         poolManager.createPool(consumerSpecificPool);
@@ -170,7 +171,7 @@ public class PoolHelper extends AttributeHelper {
         Pool pool = createPool(productId, sub.getOwner(), quantity, sub.getStartDate(),
             sub.getEndDate(), sub.getContractNumber(), sub.getAccountNumber(),
             sub.getOrderNumber(), new HashSet<ProvidedProduct>());
-        pool.setSubscriptionId(sub.getId());
+        pool.setSourceSubscription(new SourceSubscription(sub.getId(), "master"));
 
         copyProvidedProducts(sub, pool);
 

@@ -34,6 +34,7 @@ import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProductPoolAttribute;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.RulesCurator;
+import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.User;
 import org.candlepin.model.activationkeys.ActivationKey;
@@ -180,6 +181,7 @@ public class TestUtil {
             providedProducts, Long.valueOf(quantity), TestUtil.createDate(2009,
                 11, 30), TestUtil.createDate(2015, 11, 30), "SUB234598S",
             "ACC123", "ORD222");
+        pool.setSourceSubscription(new SourceSubscription("SUB234598S", "master"));
 
         // Simulate copying product attributes to the pool.
         if (product != null) {
@@ -311,7 +313,7 @@ public class TestUtil {
             sub.getQuantity(), sub.getStartDate(),
             sub.getEndDate(), sub.getContractNumber(), sub.getAccountNumber(),
             sub.getOrderNumber());
-        p.setSubscriptionId(sub.getId());
+        p.setSourceSubscription(new SourceSubscription(sub.getId(), "master"));
 
         for (ProductAttribute attr : sub.getProduct().getAttributes()) {
             p.addProductAttribute(new ProductPoolAttribute(attr.getName(), attr.getValue(),
