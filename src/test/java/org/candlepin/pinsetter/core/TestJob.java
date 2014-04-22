@@ -18,9 +18,6 @@ import org.candlepin.pinsetter.tasks.KingpinJob;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
-import com.google.inject.Inject;
-import com.google.inject.persist.UnitOfWork;
-
 /**
  * TestJob
  * @version $Rev$
@@ -28,14 +25,6 @@ import com.google.inject.persist.UnitOfWork;
 public class TestJob extends KingpinJob {
 
     private boolean ran = false;
-
-    /**
-     * @param unitOfWork
-     */
-    @Inject
-    public TestJob(UnitOfWork unitOfWork) {
-        super(unitOfWork);
-    }
 
     @Override
     public void toExecute(JobExecutionContext arg0In)

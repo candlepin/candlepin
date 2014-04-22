@@ -41,7 +41,7 @@ public class ExportCleanerTest {
 
     @Before
     public void init() {
-        cleaner = new ExportCleaner(config, null);
+        cleaner = new ExportCleaner(config);
     }
 
     @Test

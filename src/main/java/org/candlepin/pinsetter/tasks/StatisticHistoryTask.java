@@ -17,7 +17,6 @@ package org.candlepin.pinsetter.tasks;
 import org.candlepin.model.StatisticCurator;
 
 import com.google.inject.Inject;
-import com.google.inject.persist.UnitOfWork;
 
 import org.hibernate.HibernateException;
 import org.quartz.JobExecutionContext;
@@ -43,9 +42,7 @@ public class StatisticHistoryTask extends KingpinJob {
      * @param statCurator the StatisticCurator
      */
     @Inject
-    public StatisticHistoryTask(StatisticCurator statCurator,
-        UnitOfWork unitOfWork) {
-        super(unitOfWork);
+    public StatisticHistoryTask(StatisticCurator statCurator) {
         this.statCurator = statCurator;
     }
 

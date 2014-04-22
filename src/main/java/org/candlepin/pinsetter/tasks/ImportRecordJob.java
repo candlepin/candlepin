@@ -15,7 +15,6 @@
 package org.candlepin.pinsetter.tasks;
 
 import com.google.inject.Inject;
-import com.google.inject.persist.UnitOfWork;
 
 import java.util.List;
 
@@ -42,8 +41,7 @@ public class ImportRecordJob extends KingpinJob {
 
     @Inject
     public ImportRecordJob(ImportRecordCurator importRecordCurator,
-            OwnerCurator ownerCurator, UnitOfWork unitOfWork) {
-        super(unitOfWork);
+            OwnerCurator ownerCurator) {
         this.importRecordCurator = importRecordCurator;
         this.ownerCurator = ownerCurator;
     }

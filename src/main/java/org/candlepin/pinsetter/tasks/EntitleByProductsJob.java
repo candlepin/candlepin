@@ -32,7 +32,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
-import com.google.inject.persist.UnitOfWork;
 
 /**
  * EntitleByProductsJob
@@ -44,8 +43,7 @@ public class EntitleByProductsJob extends KingpinJob {
     protected ConsumerCurator consumerCurator;
 
     @Inject
-    public EntitleByProductsJob(Entitler e, ConsumerCurator c, UnitOfWork unitOfWork) {
-        super(unitOfWork);
+    public EntitleByProductsJob(Entitler e, ConsumerCurator c) {
         entitler = e;
         consumerCurator = c;
     }

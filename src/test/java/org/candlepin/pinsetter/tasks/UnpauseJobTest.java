@@ -51,7 +51,7 @@ public class UnpauseJobTest {
     @Before
     public void init() {
         MockitoAnnotations.initMocks(this);
-        unpauseJob = new UnpauseJob(j, pk, null);
+        unpauseJob = new UnpauseJob(j, pk);
     }
 
     @Test

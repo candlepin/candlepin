@@ -79,7 +79,7 @@ public class EntitlerJobTest {
         List<Entitlement> ents = new ArrayList<Entitlement>();
         when(e.bindByPool(eq(pool), eq(consumerUuid), eq(1))).thenReturn(ents);
 
-        EntitlerJob job = new EntitlerJob(e, null, null);
+        EntitlerJob job = new EntitlerJob(e, null);
         job.execute(ctx);
         verify(e).bindByPool(eq(pool), eq(consumerUuid), eq(1));
         verify(e).sendEvents(eq(ents));
@@ -121,7 +121,7 @@ public class EntitlerJobTest {
         when(e.bindByPool(eq(pool), eq(consumerUuid), eq(1))).thenThrow(
             new ForbiddenException("job should fail"));
 
-        EntitlerJob job = new EntitlerJob(e, null, null);
+        EntitlerJob job = new EntitlerJob(e, null);
         job.execute(ctx);
     }
 

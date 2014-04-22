@@ -18,7 +18,6 @@ import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.PinsetterKernel;
 
 import com.google.inject.Inject;
-import com.google.inject.persist.UnitOfWork;
 
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobExecutionContext;
@@ -60,8 +59,7 @@ public class SweepBarJob extends KingpinJob {
 
     @Inject
     public SweepBarJob(JobCurator jobCurator,
-        PinsetterKernel pinsetterKernel, UnitOfWork unitOfWork) {
-        super(unitOfWork);
+        PinsetterKernel pinsetterKernel) {
         this.jobCurator = jobCurator;
         this.pinsetterKernel = pinsetterKernel;
     }

@@ -20,7 +20,6 @@ import org.candlepin.controller.CrlGenerator;
 import org.candlepin.util.CrlFileUtil;
 
 import com.google.inject.Inject;
-import com.google.inject.persist.UnitOfWork;
 
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -57,9 +56,7 @@ public class CertificateRevocationListTask extends KingpinJob {
      */
     @Inject
     public CertificateRevocationListTask(Config conf,
-        CrlFileUtil crlFileUtil, CrlGenerator crlGenerator,
-        UnitOfWork unitOfWork) {
-        super(unitOfWork);
+        CrlFileUtil crlFileUtil, CrlGenerator crlGenerator) {
         this.config = conf;
         this.crlFileUtil = crlFileUtil;
         this.crlGenerator = crlGenerator;

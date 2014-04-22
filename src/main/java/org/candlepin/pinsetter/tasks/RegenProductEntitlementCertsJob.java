@@ -18,7 +18,6 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
 import com.google.inject.Inject;
-import com.google.inject.persist.UnitOfWork;
 
 import org.candlepin.controller.PoolManager;
 
@@ -32,8 +31,7 @@ public class RegenProductEntitlementCertsJob extends KingpinJob {
     public static final String LAZY_REGEN = "lazy_regen";
 
     @Inject
-    public RegenProductEntitlementCertsJob(PoolManager poolManager, UnitOfWork unitOfWork) {
-        super(unitOfWork);
+    public RegenProductEntitlementCertsJob(PoolManager poolManager) {
         this.poolManager = poolManager;
     }
 

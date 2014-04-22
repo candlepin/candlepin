@@ -86,7 +86,7 @@ public class MigrateOwnerJobTest {
         entCurator = mock(EntitlementCurator.class);
         sink = mock(EventSink.class);
         moj = new MigrateOwnerJob(conn, config, ownerCurator, poolCurator,
-            entCurator, consumerCurator, sink, null);
+            entCurator, consumerCurator, sink);
     }
 
     @Test

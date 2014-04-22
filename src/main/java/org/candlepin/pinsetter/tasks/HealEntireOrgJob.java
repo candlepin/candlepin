@@ -34,7 +34,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
-import com.google.inject.persist.UnitOfWork;
 
 /**
  * HealEntireOrgJob
@@ -47,9 +46,8 @@ public class HealEntireOrgJob extends UniqueByOwnerJob {
     protected static String prefix = "heal_entire_org_";
 
     @Inject
-    public HealEntireOrgJob(Entitler e, UnitOfWork unitOfWork,
+    public HealEntireOrgJob(Entitler e,
             ConsumerCurator c, OwnerCurator o) {
-        super(unitOfWork);
         this.entitler = e;
         this.consumerCurator = c;
         this.ownerCurator = o;

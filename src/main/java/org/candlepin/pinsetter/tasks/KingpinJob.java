@@ -46,13 +46,8 @@ import javax.persistence.PersistenceException;
 public abstract class KingpinJob implements Job {
 
     private static Logger log = LoggerFactory.getLogger(KingpinJob.class);
-    protected UnitOfWork unitOfWork;
+    @Inject protected UnitOfWork unitOfWork;
     protected static String prefix = "job";
-
-    @Inject
-    public KingpinJob(UnitOfWork unitOfWork) {
-        this.unitOfWork = unitOfWork;
-    }
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
@@ -71,7 +66,7 @@ public abstract class KingpinJob implements Job {
          * Execute our 'real' job inside a custom unit of work scope, instead
          * of the guice provided one, which is HTTP request scoped.
          */
-        startUnitOfWork();
+        boolean startedUow = startUnitOfWork();
         try {
             toExecute(context);
         }
@@ -97,7 +92,9 @@ public abstract class KingpinJob implements Job {
             throw new JobExecutionException(e, true);
         }
         finally {
-            endUnitOfWork();
+            if (startedUow) {
+                endUnitOfWork();
+            }
         }
     }
 
@@ -142,18 +139,18 @@ public abstract class KingpinJob implements Job {
         return true;
     }
 
-    protected void startUnitOfWork() {
+    protected boolean startUnitOfWork() {
         if (unitOfWork != null) {
             try {
                 unitOfWork.begin();
+                return true;
             }
             catch (IllegalStateException e) {
-                log.debug("Already have an open unit of work, " +
-                    "will close and start a new one");
-                endUnitOfWork();
-                startUnitOfWork();
+                log.debug("Already have an open unit of work");
+                return false;
             }
         }
+        return false;
     }
 
     protected void endUnitOfWork() {
