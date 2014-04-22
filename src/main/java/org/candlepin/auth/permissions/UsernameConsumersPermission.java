@@ -34,8 +34,8 @@ import org.hibernate.criterion.Restrictions;
  */
 public class UsernameConsumersPermission implements Permission {
 
-    private User user;
-    private Owner owner;
+    private final User user;
+    private final Owner owner;
 
     public UsernameConsumersPermission(User u, Owner o) {
         this.user = u;
@@ -87,6 +87,10 @@ public class UsernameConsumersPermission implements Permission {
     @Override
     public Owner getOwner() {
         return owner;
+    }
+
+    public String getUsername(){
+        return user.getUsername();
     }
 
 }
