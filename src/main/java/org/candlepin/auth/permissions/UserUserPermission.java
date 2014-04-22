@@ -26,7 +26,7 @@ import org.hibernate.criterion.Restrictions;
  */
 public class UserUserPermission extends TypedPermission<User> {
 
-    private String username;
+    private final String username;
 
     public UserUserPermission(String username) {
         this.username = username;
@@ -55,6 +55,10 @@ public class UserUserPermission extends TypedPermission<User> {
     public Owner getOwner() {
         // This permission is not specific to any owner.
         return null;
+    }
+
+    public String getUsername(){
+        return username;
     }
 
 }

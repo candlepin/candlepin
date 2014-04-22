@@ -26,7 +26,7 @@ import org.hibernate.criterion.Criterion;
  */
 public class ConsumerEntitlementPermission extends TypedPermission<Entitlement> {
 
-    private Consumer consumer;
+    private final Consumer consumer;
 
     public ConsumerEntitlementPermission(Consumer consumer) {
         this.consumer = consumer;
@@ -51,6 +51,10 @@ public class ConsumerEntitlementPermission extends TypedPermission<Entitlement> 
     @Override
     public Owner getOwner() {
         return consumer.getOwner();
+    }
+
+    public Consumer getConsumer(){
+        return consumer;
     }
 
 }

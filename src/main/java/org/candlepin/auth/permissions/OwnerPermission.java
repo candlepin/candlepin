@@ -33,9 +33,9 @@ import org.hibernate.criterion.Restrictions;
  */
 public class OwnerPermission implements Permission, Serializable {
 
-    private Owner owner;
+    private final Owner owner;
 
-    private Access access;
+    private final Access access;
 
     public OwnerPermission(Owner owner, Access access) {
         this.owner = owner;
@@ -82,6 +82,10 @@ public class OwnerPermission implements Permission, Serializable {
     @Override
     public Owner getOwner() {
         return owner;
+    }
+
+    public Access getAccess(){
+        return access;
     }
 
 }

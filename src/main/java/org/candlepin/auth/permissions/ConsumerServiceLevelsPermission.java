@@ -28,7 +28,7 @@ import org.hibernate.criterion.Restrictions;
  */
 public class ConsumerServiceLevelsPermission extends TypedPermission<Owner> {
 
-    private Consumer consumer;
+    private final Consumer consumer;
 
     public ConsumerServiceLevelsPermission(Consumer consumer) {
         this.consumer = consumer;
@@ -57,6 +57,10 @@ public class ConsumerServiceLevelsPermission extends TypedPermission<Owner> {
     @Override
     public Owner getOwner() {
         return consumer.getOwner();
+    }
+
+    public Consumer getConsumer(){
+        return consumer;
     }
 
 }
