@@ -57,7 +57,7 @@ public class UserUserPermission extends TypedPermission<User> {
         return null;
     }
 
-    public String getUsername(){
+    public String getUsername() {
         return username;
     }
 

@@ -89,7 +89,7 @@ public class UsernameConsumersPermission implements Permission {
         return owner;
     }
 
-    public String getUsername(){
+    public String getUsername() {
         return user.getUsername();
     }
 

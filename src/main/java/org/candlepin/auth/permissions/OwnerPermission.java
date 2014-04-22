@@ -84,7 +84,7 @@ public class OwnerPermission implements Permission, Serializable {
         return owner;
     }
 
-    public Access getAccess(){
+    public Access getAccess() {
         return access;
     }
 
