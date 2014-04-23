@@ -52,6 +52,7 @@ netty
 oauth/oauth
 oauth/oauth-provider
 postgresql-jdbc
+qpid-java-client
 resteasy/jaxrs-api
 resteasy/resteasy-atom-provider
 resteasy/resteasy-guice
