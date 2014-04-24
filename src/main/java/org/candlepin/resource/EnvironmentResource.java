@@ -81,12 +81,13 @@ public class EnvironmentResource {
         this.consumerCurator = consumerCurator;
     }
 
-
     /**
+     * Retrieves a single Environment
+     *
      * @param envId
      * @httpcode 200
      * @httpcode 404
-     * @return environment requested
+     * @return an Environment object
      */
     @GET
     @Path("/{env_id}")
@@ -101,8 +102,8 @@ public class EnvironmentResource {
     }
 
     /**
-     * Delete an environment.
-     *
+     * Deletes an environment.
+     * <p>
      * WARNING: this will delete all consumers in the environment and revoke their
      * entitlement certificates.
      *
@@ -127,9 +128,11 @@ public class EnvironmentResource {
     }
 
     /**
-     * List all environments on the server. Only available to super admins.
+     * Lists the Environments
+     * <p>
+     * Only available to super admins.
      *
-     * @return list of all environments
+     * @return a list of Environment objects
      * @httpcode 200
      */
     @GET
@@ -140,15 +143,15 @@ public class EnvironmentResource {
     }
 
     /**
-     * Promote content into an environment.
-     *
+     * Promotes a Content into an Environment.
+     * <p>
      * This call accepts multiple content sets to promote at once, after which
      * all affected certificates for consumers in the enironment will be
      * regenerated.
-     *
+     * <p>
      * Consumers registered to this environment will now receive this content in
      * their entitlement certificates.
-     *
+     * <p>
      * Because the certificate regeneraiton can be quite time consuming, this
      * is done as an asynchronous job. The content will be promoted and immediately
      * available for new entitlements, but existing entitlements could take some time
@@ -156,7 +159,7 @@ public class EnvironmentResource {
      *
      * @httpcode 200
      * @httpcode 404
-     * @return Async job details.
+     * @return a A JobDetail object
      */
     @POST
     @Produces(MediaType.APPLICATION_JSON)
@@ -192,14 +195,14 @@ public class EnvironmentResource {
     }
 
     /**
-     * Demote content from an environment.
-     *
+     * Demotes a Content from an Environment.
+     * <p>
      * Consumer's registered to this environment will no see this content in their
      * entitlement certificates. (after they are regenerated and synced to clients)
-     *
+     * <p>
      * This call accepts multiple content IDs to demote at once, allowing us to
      * mass demote, then trigger a cert regeneration.
-     *
+     * <p>
      * NOTE: This call expects the actual content IDs, *not* the ID created for
      * each EnvironmentContent object created after a promotion. This is to help
      * integrate with other management apps which should not have to track/lookup
@@ -207,7 +210,7 @@ public class EnvironmentResource {
      *
      * @httpcode 200
      * @httpcode 404
-     * @return Async job details.
+     * @return a JobDetail object
      */
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
@@ -249,6 +252,18 @@ public class EnvironmentResource {
         return e;
     }
 
+    /**
+     * Creates an Environment
+     *
+     * @param envId
+     * @param consumer
+     * @param principal
+     * @param userName
+     * @param ownerKey
+     * @param activationKeys
+     * @return an Environment object
+     * @throws BadRequestException if the Environment cannot be created
+     */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)

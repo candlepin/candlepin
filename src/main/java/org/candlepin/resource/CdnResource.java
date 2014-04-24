@@ -54,7 +54,28 @@ public class CdnResource {
     }
 
     /**
-     * @return a Cdn list
+     * Retrieves a list of CDN's
+     * <p>
+     * <pre>
+     * {
+     *   "id" : "database_id",
+     *   "label" : "the-cdn",
+     *   "name" : "The CDN",
+     *   "url" : "https://location.cdn.redhat.com",
+     *   "certificate" : {
+     *     "key" : "",
+     *     "cert" : "",
+     *     "id" : "",
+     *     "serial" : "serial number",
+     *     "created" : [date],
+     *     "updated" : [date]
+     *   },
+     *   "created" : [date],
+     *   "updated" : [date]
+     * }
+     * </pre>
+     *
+     * @return a list of Cdn objects
      * @httpcode 200
      */
     @GET
@@ -64,6 +85,8 @@ public class CdnResource {
     }
 
     /**
+     * Removes a CDN
+     *
      * @httpcode 400
      * @httpcode 404
      * @httpcode 200
@@ -79,7 +102,9 @@ public class CdnResource {
     }
 
     /**
-     * @return a Cdn
+     * Creates a CDN
+     *
+     * @return a Cdn object
      * @httpcode 200
      */
     @POST
@@ -97,7 +122,9 @@ public class CdnResource {
     }
 
     /**
-     * @return a Cdn
+     * Updates a CDN
+     *
+     * @return a Cdn object
      * @httpcode 200
      */
     @PUT

@@ -69,7 +69,9 @@ public class SubscriptionResource {
     }
 
     /**
-     * @return a list of Subscriptions
+     * Retrieves a list of Subscriptions
+     *
+     * @return a list of Subscription objects
      * @httpcode 200
      */
     @GET
@@ -79,7 +81,37 @@ public class SubscriptionResource {
     }
 
     /**
-     * @return a Subscription
+     * Retrieves a single Subscription
+     * <p>
+     * <pre>
+     * {
+     *   "id" : "8a8d0986458ef80101458ef87a27057a",
+     *   "owner" : {},
+     *   "product" : {},
+     *   "derivedProduct" : null,
+     *   "providedProducts" : [ ],
+     *   "derivedProvidedProducts" : [ ],
+     *   "branding" : [ ],
+     *   "quantity" : 15,
+     *   "startDate" : [date],
+     *   "endDate" : [date],
+     *   "contractNumber" : "5",
+     *   "accountNumber" : "12331131231",
+     *   "modified" : null,
+     *   "orderNumber" : "order-8675309",
+     *   "upstreamPoolId" : null,
+     *   "upstreamEntitlementId" : null,
+     *   "upstreamConsumerId" : null,
+     *   "cdn" : {},
+     *   "certificate" : {},
+     *   "stacked" : false,
+     *   "stackId" : null,
+     *   "created" : [date],
+     *   "updated" : [date]
+     * }
+     * </pre>
+     *
+     * @return a Subscription object
      * @httpcode 400
      * @httpcode 200
      */
@@ -93,6 +125,14 @@ public class SubscriptionResource {
         return subscription;
     }
 
+     /**
+      * Retrieves a Subscription Certificate
+     * <p>
+      * As a PEM
+      *
+      * @param subscriptionId
+      * @return a String object
+      */
     @DoNotUseJAXBProvider
     @GET
     @Path("{subscription_id}/cert")
@@ -106,6 +146,12 @@ public class SubscriptionResource {
         return subCert.getCert() + subCert.getKey();
     }
 
+    /**
+     * Retrieves a Subscription Certificate
+     *
+     * @param subscriptionId
+     * @return a SubscriptionCertificate object
+     */
     @GET
     @Path("{subscription_id}/cert")
     @Consumes({MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
@@ -127,6 +173,8 @@ public class SubscriptionResource {
     }
 
     /**
+     * Activates a Subscription
+     *
      * @httpcode 400
      * @httpcode 503
      * @httpcode 200
@@ -163,6 +211,8 @@ public class SubscriptionResource {
     }
 
     /**
+     * Removes a Subscription
+     *
      * @httpcode 400
      * @httpcode 200
      */

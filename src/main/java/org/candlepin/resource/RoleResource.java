@@ -65,7 +65,9 @@ public class RoleResource {
     }
 
     /**
-     * @return the created Role
+     * Creates a Role
+     *
+     * @return a Role object
      * @httpcode 404
      * @httpcode 200
      */
@@ -89,14 +91,14 @@ public class RoleResource {
     }
 
     /**
-     * Update a representation of a role.
-     *
+     * Updates a Role
+     * <p>
      * To avoid race conditions, we do not support updating the user or permission
      * collections. Currently this call will only update the role name.
-     *
+     * <p>
      * See the specific nested POST/DELETE calls for modifying users and permissions.
      *
-     * @return the updated Role
+     * @return a Role object
      * @httpcode 404
      * @httpcode 200
      */
@@ -117,7 +119,11 @@ public class RoleResource {
     }
 
     /**
-     * @return the role with the added permission
+     * Adds a Permission to a Role
+     * <p>
+     * Returns the updated Role.
+     *
+     * @return a Role object
      * @httpcode 404
      * @httpcode 400
      * @httpcode 200
@@ -148,7 +154,11 @@ public class RoleResource {
     }
 
     /**
-     * @return the role with the removed permission
+     * Removes a Permission from a Role
+     * <p>
+     * Returns the updated Role.
+     *
+     * @return a Role object
      * @httpcode 404
      * @httpcode 200
      */
@@ -201,7 +211,20 @@ public class RoleResource {
     }
 
     /**
-     * @return a Role
+     * Retrieves a single Role
+     * <p>
+     * <pre>
+     * {
+     *     "id" : "database_id",
+     *     "owner" : {},
+     *     "access" : "READ_ONLY",
+     *     "type" : "OWNER",
+     *     "created" : [date],
+     *     "updated" : [date]
+     * }
+     * </pre>
+     *
+     * @return a Role object
      * @httpcode 200
      */
     @GET
@@ -212,6 +235,8 @@ public class RoleResource {
     }
 
     /**
+     * Removes a Role
+     *
      * @httpcode 200
      */
     @DELETE
@@ -221,7 +246,9 @@ public class RoleResource {
     }
 
     /**
-     * @return a Role
+     * Adds a User to a Role
+     *
+     * @return a Role object
      * @httpcode 404
      * @httpcode 200
      */
@@ -237,7 +264,9 @@ public class RoleResource {
     }
 
     /**
-     * @return a Role
+     * Removes a User from a Role
+     *
+     * @return a Role object
      * @httpcode 404
      */
     @DELETE
@@ -252,7 +281,9 @@ public class RoleResource {
     }
 
     /**
-     * @return a list of Roles
+     * Retrieves a list of Roles
+     *
+     * @return a list of Role objects
      * @httpcode 200
      */
     @GET

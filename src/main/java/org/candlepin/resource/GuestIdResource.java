@@ -77,9 +77,9 @@ public class GuestIdResource {
     }
 
     /**
-     * List all of a Consumers Guests
+     * Retrieves the List of a Consumer's Guests
      *
-     * @return list of all of a Consumers Guests
+     * @return a list of GuestId objects
      * @httpcode 400
      * @httpcode 404
      * @httpcode 200
@@ -99,11 +99,13 @@ public class GuestIdResource {
     }
 
     /**
-     * Look up a single guest by its consumer and guestuuid
+     * Retrieves a single Guest
+     * <p>
+     * By its consumer and the guest UUID
      *
      * @param consumerUuid consumer who owns or hosts the guest in question
      * @param guestId guest virtual uuid
-     * @return data on a single guest
+     * @return a GuestId object
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -118,6 +120,8 @@ public class GuestIdResource {
     }
 
     /**
+     * Updates the List of Guests on a Consumer
+     * <p>
      * This method should work just like updating the consumer, except that it only
      * updates GuestIds.  Eventually we should move All the logic here, and depricate
      * updating guests through the consumer update.
@@ -142,8 +146,9 @@ public class GuestIdResource {
     }
 
     /**
-     * Update a single guest with new data and attributes.  Allows virt-who
-     * to avoid uploading an entire list of guests
+     * Updates a single Guest on a Consumer
+     * <p>
+     * Allows virt-who to avoid uploading an entire list of guests
      *
      * @param consumerUuid consumer who owns or hosts the guest in question
      * @param guestId guest virtual uuid
@@ -193,7 +198,7 @@ public class GuestIdResource {
     }
 
     /**
-     * Delete the Guest
+     * Removes the Guest from the Consumer
      *
      * @param consumerUuid consumer who owns or hosts the guest in question
      * @param guestId guest virtual uuid

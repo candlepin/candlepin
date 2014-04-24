@@ -54,9 +54,9 @@ public class ConsumerTypeResource {
     }
 
     /**
-     * List available ConsumerTypes
+     * Retrieves a list of Consumer Types
      *
-     * @return all the consumer types
+     * @return a list of ConsumerType objects
      * @httpcode 200
      */
     @GET
@@ -67,9 +67,17 @@ public class ConsumerTypeResource {
     }
 
     /**
-     * Return the consumer type identified by the given label.
+     * Retrieves a single Consumer Type
+     * <p>
+     * <pre>
+     *  {
+     *    "id" : "database_id",
+     *    "label" : "candlepin",
+     *    "manifest" : true
+     * }
+     * </pre>
      *
-     * @return a consumer type
+     * @return a ConsumerType object
      * @httpcode 404
      * @httpcode 200
      */
@@ -88,9 +96,9 @@ public class ConsumerTypeResource {
     }
 
     /**
-     * Create a ConsumerType
+     * Creates a Consumer Type
      *
-     * @return newly created ConsumerType
+     * @return a ConsumerType object
      * @throws BadRequestException When the type is not found
      * @httpcode 400
      * @httpcode 200
@@ -111,9 +119,9 @@ public class ConsumerTypeResource {
     }
 
     /**
-     * Update a ConsumerType
+     * Updates a Consumer Type
      *
-     * @return newly created ConsumerType
+     * @return a ConsumerType object
      * @throws BadRequestException When the type is not found
      * @httpcode 400
      * @httpcode 200
@@ -135,7 +143,7 @@ public class ConsumerTypeResource {
     }
 
     /**
-     * Deletes a consumer type
+     * Removes a Consumer Type
      *
      * @httpcode 400
      * @httpcode 200

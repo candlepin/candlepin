@@ -68,7 +68,23 @@ public class ActivationKeyResource {
     }
 
     /**
-     * @return an ActivationKey
+     * Retrieves a single Activation Key
+     * <p>
+     * <pre>
+     * {
+     *   "id" : "database_id",
+     *   "name" : "default_key",
+     *   "owner" : {},
+     *   "pools" : [ ],
+     *   "contentOverrides" : [ ],
+     *   "releaseVer" : {},
+      *  "serviceLevel" : null,
+      *  "updated" : [date]
+     *   "created" : [date],
+     * }
+     * </pre>
+     *
+     * @return an ActivationKey object
      * @httpcode 400
      * @httpcode 200
      */
@@ -84,6 +100,8 @@ public class ActivationKeyResource {
     }
 
     /**
+     * Retrieves a list of Pools based on the Activation Key
+     *
      * @return a list of Pool objects
      * @httpcode 400
      * @httpcode 200
@@ -102,7 +120,9 @@ public class ActivationKeyResource {
     }
 
     /**
-     * @return an ActivationKey
+     * Updates an Activation Key
+     *
+     * @return an ActivationKey object
      * @httpcode 400
      * @httpcode 200
      */
@@ -130,7 +150,9 @@ public class ActivationKeyResource {
     }
 
     /**
-     * @return a Pool
+     * Adds a Pool to an Activation Key
+     *
+     * @return a Pool object
      * @httpcode 400
      * @httpcode 200
      */
@@ -153,7 +175,9 @@ public class ActivationKeyResource {
     }
 
     /**
-     * @return a Pool
+     * Removes a Pool from an Activation Key
+     *
+     * @return a Pool object
      * @httpcode 400
      * @httpcode 200
      */
@@ -172,6 +196,8 @@ public class ActivationKeyResource {
     }
 
     /**
+     * Retrieves a list of Activation Keys
+     *
      * @return a list of ActivationKey objects
      * @httpcode 200
      */
@@ -183,6 +209,8 @@ public class ActivationKeyResource {
     }
 
     /**
+     * Removes an Activation Key
+     *
      * @httpcode 400
      * @httpcode 200
      */

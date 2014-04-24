@@ -61,9 +61,12 @@ public class RulesResource {
     }
 
     /**
-     * Uploads new Rules, returns a copy of the uploaded rules.
+     * Uploads the Rules
+     * <p>
+     * Returns a copy of the uploaded rules.
+     *
      * @param rulesBuffer rules to upload.
-     * @return a copy of the uploaded rules.
+     * @return a String object
      * @httpcode 400
      * @httpcode 200
      */
@@ -93,8 +96,9 @@ public class RulesResource {
     }
 
     /**
-     * return a the rules as a string.
-     * @return a the rules as a string.
+     * Retrieves the Rules
+     *
+     * @return a String object
      * @httpcode 503
      * @httpcode 200
      */
@@ -115,7 +119,10 @@ public class RulesResource {
     }
 
     /**
-     * deletes any uploaded rules, use bundled rules instead
+     * Removes the Rules
+     * <p>
+     * Deletes any uploaded rules, uses bundled rules instead
+     *
      * @httpcode 200
      */
     @DELETE

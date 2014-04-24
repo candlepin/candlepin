@@ -86,7 +86,7 @@ public class PoolResource {
     }
 
     /**
-     * Returns the list of available entitlement pools.
+     * Retrieves a list of Pools
      *
      * @deprecated Use the method on /owners
      * @param ownerId optional parameter to limit the search by owner
@@ -98,7 +98,7 @@ public class PoolResource {
      *        due to a rules warning. (i.e. not recommended) Pools that trigger
      *        an error however will still be omitted. (no entitlements
      *        available, consumer type mismatch, etc)
-     * @return the list of available entitlement pools.
+     * @return a list of Pool objects
      * @httpcode 200 if the request succeeded
      * @httpcode 400 if both consumer(unit) and owner are given, or if a product id is
      *           specified without a consumer(unit) or owner
@@ -190,10 +190,27 @@ public class PoolResource {
     }
 
     /**
-     * Return the Entitlement Pool for the given id
+     * Retrieves a single Pool
+     * <p>
+     * <pre>
+     * {
+     *   "id" : "database_id",
+     *   "active" : "true",
+     *   "startDate" : [date]
+     *   "endDate" : [date],
+     *   "quantity" : "20000",
+     *   "consumed" : "20000",
+     *   "productId" : "product_id",
+     *   "productName": "product_name",
+     *   "sourceEntitlement": null,
+     *   "unlimited": false,
+     *   "created": [date],
+     *   "updated": [date],
+     * }
+     * </pre>
      *
      * @param id the id of the pool
-     * @return the pool identified by the id
+     * @return a Pool object
      * @httpcode 200 if the request succeeded
      * @httpcode 404 if the pool with the specified id is not found
      * @httpcode 404
@@ -237,7 +254,7 @@ public class PoolResource {
     }
 
     /**
-     * Revoke an entitlements for a pool and delete it.
+     * Remove a Pool
      *
      * @param id the id of the pool
      * @httpcode 200 if the request succeeded
@@ -257,7 +274,9 @@ public class PoolResource {
     }
 
     /**
-     * @return a list of Statistics
+     * Retrieve a list of Statistics for a Pool
+     *
+     * @return a list of Statistic objects
      * @httpcode 400
      * @httpcode 200
      */
@@ -276,7 +295,9 @@ public class PoolResource {
     }
 
     /**
-     * @return the current entitlements for a pool
+     * Retrieve a list of Entitlements for a Pool
+     *
+     * @return a list of Entitlement objects
      * @httpcode 400
      * @httpcode 200
      */
@@ -301,7 +322,11 @@ public class PoolResource {
     }
 
     /**
-     * @return a list of Statistics
+     * Retrieve a list of Statistics for a Pool
+     * <p>
+     * By Type
+     *
+     * @return a list of Statistic objects
      * @httpcode 200
      */
     @GET

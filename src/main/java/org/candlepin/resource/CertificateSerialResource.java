@@ -41,6 +41,8 @@ public class CertificateSerialResource {
     }
 
     /**
+     * Retrieves a list of Certificate Serials
+     *
      * @return a list of CertificateSerial objects
      * @httpcode 200
      */
@@ -51,7 +53,13 @@ public class CertificateSerialResource {
     }
 
     /**
-     * @return a CertificateSerial
+     * Retrieves single Certificate Serial
+     * <p>
+     * <pre>
+     * {'serial': 'MYSERIALNUMBER'}
+     * </pre>
+     *
+     * @return a CertificateSerial object
      * @httpcode 200
      */
     @GET

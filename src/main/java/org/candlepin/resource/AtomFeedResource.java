@@ -46,7 +46,9 @@ public class AtomFeedResource {
     }
 
     /**
-     * @return a Feed
+     * Retrieves an Event Atom Feed
+     *
+     * @return a Feed object
      * @httpcode 200
      */
     @GET

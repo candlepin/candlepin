@@ -76,10 +76,12 @@ public class HypervisorResource {
     }
 
     /**
+     * Updates the list of Hypervisor Guests
+     * <p>
      * Allows agents such as virt-who to update its host list and associate the
      * guests for each host. This is typically used when a host is unable to
      * register to candlepin via subscription manager.
-     *
+     * <p>
      * In situations where consumers already exist it is probably best not to
      * allow creation of new hypervisor consumers.  Most consumers do not
      * have a hypervisorId attribute, so that should be added manually
@@ -91,7 +93,7 @@ public class HypervisorResource {
      * @param createMissing specify whether or not to create missing hypervisors.
      * Default is true.  If false is specified, hypervisorIds that are not found
      * will result in failed entries in the resulting HypervisorCheckInResult
-     * @return HypervisorCheckInResult
+     * @return a HypervisorCheckInResult object
      *
      * @httpcode 202
      * @httpcode 200

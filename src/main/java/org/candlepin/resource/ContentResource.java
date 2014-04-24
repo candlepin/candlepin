@@ -67,6 +67,8 @@ public class ContentResource {
     }
 
     /**
+     * Retrieves list of Content
+     *
      * @return a list of Content objects
      * @httpcode 200
      */
@@ -77,6 +79,27 @@ public class ContentResource {
     }
 
     /**
+     * Retrieves a single Content
+     * <p>
+     * <pre>
+     * {
+     *   "id" : "database_id",
+     *   "type" : "yum",
+     *   "label" : "content_label",
+     *   "name" : "content_name",
+     *   "vendor" : "test-vendor",
+     *   "contentUrl" : "/foo/path/always",
+     *   "requiredTags" : "TAG1,TAG2",
+     *   "releaseVer" : null,
+     *   "gpgUrl" : "/foo/path/always/gpg",
+     *   "metadataExpire" : null,
+     *   "modifiedProductIds" : [ ],
+     *   "arches" : null,
+     *   "created" : [date],
+     *   "updated" : [date]
+     * }
+     * </pre>
+     *
      * @return a Content object
      * @httpcode 400
      */
@@ -95,6 +118,8 @@ public class ContentResource {
     }
 
     /**
+     * Creates a Content
+     *
      * @return a Content object
      * @httpcode 200
      */
@@ -116,7 +141,9 @@ public class ContentResource {
     }
 
     /**
-     * @return a Content object
+     * Creates Contents in bulk
+     *
+     * @return a list of Content objects
      * @httpcode 200
      */
     @POST
@@ -137,6 +164,13 @@ public class ContentResource {
         return result;
     }
 
+    /**
+     * Updates a Content
+     *
+     * @param contentId
+     * @param changes
+     * @return a Content object
+     */
     @PUT
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{content_id}")
@@ -168,6 +202,8 @@ public class ContentResource {
     }
 
     /**
+     * Deletes a Content
+     *
      * @httpcode 200
      */
     @DELETE
