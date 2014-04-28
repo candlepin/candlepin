@@ -47,7 +47,9 @@ public class MigrationResource {
     }
 
     /**
-     * @return a JobDetail
+     * Creates a Migration
+     *
+     * @return a JobDetail object
      * @httpcode 400
      * @httpcode 202
      */
@@ -66,7 +68,7 @@ public class MigrationResource {
     }
 
     /**
-     * @return a JobDetail
+     * @return a JobDetail object
      * @httpcode 202
      */
     private JobDetail migrateOwner(String ownerKey, String url, boolean delete) {

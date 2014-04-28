@@ -47,7 +47,10 @@ public class StatisticResource {
     }
 
     /**
-     * Gathers statistics in system and records them in stat history table.
+     * Gathers statistics in system
+     * <p>
+     * Records them in Statistic History table
+     *
      * @httpcode 503
      * @httpcode 200
      */

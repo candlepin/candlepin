@@ -64,7 +64,9 @@ public class CrlResource {
     }
 
     /**
-     * @return the current CRL
+     * Retrieves the Certificate Revocation List
+     *
+     * @return a String object
      * @throws CRLException if there is issue generating the CRL
      * @throws IOException if there is a problem serializing the CRL
      * @httpcode 200
@@ -92,10 +94,11 @@ public class CrlResource {
     }
 
     /**
-     * delete a certificate from the revocation list
+     * Deletes a Certificate from the Revocation List
+     *
      * @param serialIds list of certificate serial ids
      * @throws CRLException if there is a problem updating the CRL object
-     * @throws IOException if there is a problem reading the crl file
+     * @throws IOException if there is a problem reading the CRL file
      */
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)

@@ -143,7 +143,6 @@ public class ApiDoclet {
     static class RestMethod {
         private String method;
         private String description;
-        private String summary;
         private String deprecated;
         private String returns;
         private List<HttpStatusCode> httpStatusCodes;
@@ -164,13 +163,7 @@ public class ApiDoclet {
             }
 
             this.method = doc.qualifiedName();
-
-            String[] parts = doc.commentText().split("\n\n");
-            this.summary = parts[0];
-
-            if (parts.length > 1) {
-                this.description = parts[1];
-            }
+            this.description = doc.commentText();
         }
 
         public String getMethod() {
@@ -179,10 +172,6 @@ public class ApiDoclet {
 
         public String getDescription() {
             return this.description;
-        }
-
-        public String getSummary() {
-            return this.summary;
         }
 
         public String getDeprecated() {

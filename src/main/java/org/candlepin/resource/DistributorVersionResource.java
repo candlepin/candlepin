@@ -55,7 +55,35 @@ public class DistributorVersionResource {
     }
 
     /**
-     * @return a DistributorVersion list
+     * Retrieves list of Distributor Versions
+     * <p>
+     * <pre>
+     * {
+     *   "id" : "database_id",
+     *   "name" : "sat-5.6",
+     *   "displayName" : "Satellite 5.6",
+     *   "capabilities" : [ {
+     *     "id" : "database_id",
+     *     "name" : "derived_product"
+     *   }, {
+     *     "id" : "database_id",
+     *     "name" : "ram"
+     *   }, {
+     *     "id" : "database_id",
+     *     "name" : "cert_v3"
+     *   }, {
+     *     "id" : "database_id",
+     *     "name" : "cores"
+     *   }, {
+     *     "id" : "database_id",
+     *     "name" : "instance_multiplier"
+     *   } ],
+     *   "created" : [date],
+     *   "updated" : [date]
+     * }
+     * </pre>
+     *
+     * @return a list of DistributorVersion objects
      * @httpcode 200
      */
     @GET
@@ -75,6 +103,8 @@ public class DistributorVersionResource {
     }
 
     /**
+     * Deletes a Distributor Version
+     *
      * @httpcode 400
      * @httpcode 404
      * @httpcode 200
@@ -90,7 +120,9 @@ public class DistributorVersionResource {
     }
 
     /**
-     * @return a DistributorVersion
+     * Creates a Distributor Version
+     *
+     * @return a DistributorVersion object
      * @httpcode 200
      */
     @POST
@@ -108,7 +140,9 @@ public class DistributorVersionResource {
     }
 
     /**
-     * @return a DistributorVersion
+     * Updates a Distributor Version
+     *
+     * @return a DistributorVersion object
      * @httpcode 200
      */
     @PUT

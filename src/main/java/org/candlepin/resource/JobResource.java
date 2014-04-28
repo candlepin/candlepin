@@ -65,8 +65,7 @@ public class JobResource {
      * @param owner param1
      * @param uuid param2
      * @param pname param3
-     * @return false if only one of the strings is not empty, otherwise
-     * returns true.
+     * @return a boolean
      */
     private boolean ensureOnlyOne(String owner, String uuid, String pname) {
         String[] params = new String[3];
@@ -89,7 +88,9 @@ public class JobResource {
     }
 
     /**
-     * @return a collection of JobStatus objects.
+     * Retrieves a list of Job Status
+     *
+     * @return a list of JobStatus objects
      * @httpcode 400
      * @httpcode 404
      * @httpcode 200
@@ -130,7 +131,9 @@ public class JobResource {
     }
 
     /**
-     * @return a SchedulerStatus
+     * Retrieves the Scheduler Status
+     *
+     * @return a SchedulerStatus object
      * @httpcode 200
      */
     @GET
@@ -149,7 +152,9 @@ public class JobResource {
     }
 
     /**
-     * @return a SchedulerStatus
+     * Updates the Scheduler Status
+     *
+     * @return a SchedulerStatus object
      * @httpcode 500
      * @httpcode 200
      */
@@ -172,7 +177,27 @@ public class JobResource {
     }
 
     /**
-     * @return a JobStatus
+     * Retrieves a single Job Status
+     * <p>
+     * <pre>
+     * {
+     *   "id" : "refresh_pools_uuid",
+     *   "state" : "FINISHED",
+     *   "startTime" : [date],
+     *   "finishTime" : [date],
+     *   "result" : "Pools refreshed for owner Admin Owner",
+     *   "principalName" : "admin",
+     *   "targetType" : "owner",
+     *   "targetId" : "admin",
+     *   "group" : "async group",
+     *   "done" : true,
+     *   "statusPath" : "/jobs/refresh_pools_uuid",
+     *   "created" : [date],
+     *   "updated" : [date]
+     * } *
+     * </pre>
+     *
+     * @return a JobStatus object
      * @httpcode 200
      */
     @GET
@@ -183,7 +208,9 @@ public class JobResource {
     }
 
     /**
-     * @return a JobStatus
+     * Cancels a Job Status
+     *
+     * @return a JobStatus object
      * @httpcode 400
      * @httpcode 404
      * @httpcode 200
@@ -204,7 +231,9 @@ public class JobResource {
     }
 
     /**
-     * @return a JobStatus
+     * Retrieves a Job Status and Removes if finished
+     *
+     * @return a JobStatus object
      * @httpcode 200
      */
     @POST

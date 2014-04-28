@@ -204,9 +204,9 @@ public class OwnerResource {
     }
 
     /**
-     * Return list of Owners.
+     * Retrieves a list of Owners
      *
-     * @return list of Owners
+     * @return a list of Owner objects
      * @httpcode 200
      */
     @GET
@@ -228,10 +228,26 @@ public class OwnerResource {
     }
 
     /**
-     * Return the owner identified by the given ID.
+     * Retrieves a single Owner
+     * <p>
+     * <pre>
+     * {
+     *   "parentOwner" : null,
+     *   "id" : "database_id",
+     *   "key" : "admin",
+     *   "displayName" : "Admin Owner",
+     *   "contentPrefix" : null,
+     *   "defaultServiceLevel" : null,
+     *   "upstreamConsumer" : null,
+     *   "logLevel" : null,
+     *   "href" : "/owners/admin",
+     *   "created" : [date],
+     *   "updated" : [date]
+     * }
+     * </pre>
      *
      * @param ownerKey Owner ID.
-     * @return the owner identified by the given id.
+     * @return an Owner object
      * @httpcode 404
      * @httpcode 200
      */
@@ -243,10 +259,10 @@ public class OwnerResource {
     }
 
     /**
-     * Return the owner's info identified by the given ID.
+     * Retrieves the Owner Info for an Owner
      *
      * @param ownerKey Owner ID.
-     * @return the info of the owner identified by the given id.
+     * @return an OwnerInfo object
      * @httpcode 404
      * @httpcode 200
      */
@@ -260,9 +276,9 @@ public class OwnerResource {
     }
 
     /**
-     * Creates a new Owner
+     * Creates an Owner
      *
-     * @return the new owner
+     * @return an Owner object
      * @httpcode 400
      * @httpcode 200
      */
@@ -289,7 +305,7 @@ public class OwnerResource {
     }
 
     /**
-     * Deletes an owner
+     * Removes an Owner
      *
      * @httpcode 404
      * @httpcode 200
@@ -402,10 +418,10 @@ public class OwnerResource {
     }
 
     /**
-     * Return the entitlements for the owner of the given id.
+     * Retrieves the list of Entitlements for an Owner
      *
      * @param ownerKey id of the owner whose entitlements are sought.
-     * @return the entitlements for the owner of the given id.
+     * @return a list of Entitlement objects
      * @httpcode 404
      * @httpcode 200
      */
@@ -425,12 +441,14 @@ public class OwnerResource {
     }
 
     /**
+     * Heals an Owner
+     * <p>
      * Starts an asynchronous healing for the given Owner. At the end of the
      * process the idea is that all of the consumers in the owned by the Owner
      * will be up to date.
      *
      * @param ownerKey id of the owner to be healed.
-     * @return the status of the pending job
+     * @return a JobDetail object
      * @httpcode 404
      * @httpcode 202
      */
@@ -443,10 +461,10 @@ public class OwnerResource {
     }
 
     /**
-     * Return the support levels for the owner of the given id.
+     * Retrieves a list of Support Levels for an Owner
      *
      * @param ownerKey id of the owner whose support levels are sought.
-     * @return the support levels for the owner of the given id.
+     * @return a set of String objects
      * @httpcode 404
      * @httpcode 200
      */
@@ -465,10 +483,10 @@ public class OwnerResource {
     }
 
     /**
-     * Return the activation keys for the owner of the given id.
+     * Retrieves a list of Activation Keys for an Owner
      *
      * @param ownerKey id of the owner whose keys are sought.
-     * @return the activation keys for the owner of the given id.
+     * @return a list of Activation Key objects
      * @httpcode 404
      * @httpcode 200
      */
@@ -483,10 +501,10 @@ public class OwnerResource {
     }
 
     /**
-     * Allow the creation of an activation key from the owner resource
+     * Creates an Activation Key for the Owner
      *
      * @param ownerKey id of the owner whose keys are sought.
-     * @return the activation keys for the owner of the given id.
+     * @return an Activation Key object
      * @httpcode 400
      * @httpcode 404
      * @httpcode 200
@@ -533,7 +551,9 @@ public class OwnerResource {
     }
 
     /**
-     * @return the created Environment
+     * Creates an Environment for an Owner
+     *
+     * @return an Environment object
      * @httpcode 404
      * @httpcode 200
      */
@@ -550,10 +570,10 @@ public class OwnerResource {
     }
 
     /**
-     * List all environments for a particular owner.
+     * Retrieves a list of Environments for an Owner
      *
      * @param envName Optional environment name filter to search for.
-     * @return list of environments
+     * @return a list of Environment objects
      * @httpcode 200
      */
     @GET
@@ -573,6 +593,13 @@ public class OwnerResource {
         return envs;
     }
 
+    /**
+     * Sets the Log Level for an Owner
+     *
+     * @param ownerKey
+     * @param level
+     * @return an Owner object
+     */
     @PUT
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/log")
@@ -599,6 +626,11 @@ public class OwnerResource {
         return owner;
     }
 
+    /**
+     * Remove the Log Level of an Owner
+     *
+     * @param ownerKey
+     */
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/log")
@@ -609,10 +641,10 @@ public class OwnerResource {
     }
 
     /**
-     * Return the consumers for the owner of the given id.
+     * Retrieve a list of Consumers for the Owner
      *
      * @param ownerKey id of the owner whose consumers are sought.
-     * @return the consumers for the owner of the given id.
+     * @return a list of Consumer objects
      * @httpcode 400
      * @httpcode 404
      * @httpcode 200
@@ -649,10 +681,10 @@ public class OwnerResource {
 
 
     /**
-     * Return the entitlement pools for the owner of the given id.
+     * Retrieves a list of Pools for an Owner
      *
      * @param ownerKey id of the owner whose entitlement pools are sought.
-     * @return the entitlement pools for the owner of the given id.
+     * @return a list of Pool objects
      * @httpcode 400
      * @httpcode 404
      * @httpcode 200
@@ -733,7 +765,9 @@ public class OwnerResource {
     }
 
     /**
-     * @return the created Subscription
+     * Creates a Subscription for an Owner
+     *
+     * @return a Subscription object
      * @httpcode 404
      * @httpcode 200
      */
@@ -750,7 +784,9 @@ public class OwnerResource {
     }
 
     /**
-     * @return the owner Feed
+     * Retrieves an Event Atom Feed for an owner
+     *
+     * @return a Feed object
      * @httpcode 404
      * @httpcode 200
      */
@@ -768,7 +804,9 @@ public class OwnerResource {
     }
 
     /**
-     * @return a list of Events
+     * Retrieves a list of Events for an Owner
+     *
+     * @return a list of Event objects
      * @httpcode 404
      * @httpcode 200
      */
@@ -786,7 +824,9 @@ public class OwnerResource {
     }
 
     /**
-     * @return a list of Subscriptions
+     * Retrieves a list of Subscriptions for an Owner
+     *
+     * @return a list of Subscription objects
      * @httpcode 404
      * @httpcode 200
      */
@@ -823,13 +863,13 @@ public class OwnerResource {
     }
 
     /**
-     * Update an owner.
-     *
+     * Updates an Owner
+     * <p>
      * To un-set the defaultServiceLevel for an owner, submit an empty string.
      *
      * @param key
      * @param owner
-     * @return the update {@link Owner}
+     * @return an Owner object
      * @httpcode 404
      * @httpcode 200
      */
@@ -869,12 +909,14 @@ public class OwnerResource {
     }
 
     /**
+     * Refreshes the Pools for an Owner
+     * <p>
      * 'Tickle' an owner to have all of their entitlement pools synced with
      * their subscriptions. This method (and the one below may not be entirely
      * RESTful, as the updated data is not supplied as an argument.
      *
      * @param ownerKey unique id key of the owner whose pools should be updated
-     * @return the status of the pending job
+     * @return a JobDetail object
      * @httpcode 404
      * @httpcode 202
      */
@@ -902,6 +944,8 @@ public class OwnerResource {
     }
 
     /**
+     * Updates a Subscription for an Owner
+     *
      * @httpcode 404
      * @httpcode 200
      */
@@ -919,20 +963,22 @@ public class OwnerResource {
     }
 
     /**
+     * Removes Imports for an Owner
+     * <p>
      * Cleans out all imported subscriptions and triggers a background refresh pools.
      * Link to an upstream distributor is removed for the owner, so they can import from
      * another distributor. Other owners can also now import the manifests originally
      * used in this owner.
-     *
+     * <p>
      * This call does not differentiate between any specific import, it just
      * destroys all subscriptions with an upstream pool ID, essentially anything from
      * an import. Custom subscriptions will be left alone.
-     *
+     * <p>
      * Imports do carry rules and product information which is global to the candlepin
      * server. This import data is *not* undone, we assume that updates to this data
      * can be safely kept.
      *
-     * @return the status of the pending job
+     * @return a JobDetail object
      * @httpcode 404
      * @httpcode 200
      */
@@ -977,6 +1023,8 @@ public class OwnerResource {
     }
 
     /**
+     * Imports a Manifest to the Owner
+     *
      * @httpcode 400
      * @httpcode 404
      * @httpcode 500
@@ -1066,7 +1114,9 @@ public class OwnerResource {
     }
 
     /**
-     * @return a list of ImportRecords
+     * Retrieves a list of Import Records for an Owner
+     *
+     * @return a list of ImportRecord objects
      * @httpcode 404
      * @httpcode 200
      */
@@ -1082,7 +1132,9 @@ public class OwnerResource {
     }
 
     /**
-     * @return a list of Statistics
+     * Retrieves a list of Statistics for an Owner
+     *
+     * @return a list of Statistic objects
      * @httpcode 400
      * @httpcode 404
      * @httpcode 200
@@ -1110,7 +1162,11 @@ public class OwnerResource {
     }
 
     /**
-     * @return a list of Statistics
+     * Retrieves a list of Statistics for an Owner
+     * <p>
+     * By Type
+     *
+     * @return a list of Statistic objects
      * @httpcode 400
      * @httpcode 404
      * @httpcode 200
@@ -1139,7 +1195,11 @@ public class OwnerResource {
     }
 
     /**
-     * @return a list of Statistics
+     * Retrieves a list of Statistics for an Owner
+     * <p>
+     * By Types
+     *
+     * @return a list of Statistic objects
      * @httpcode 400
      * @httpcode 404
      * @httpcode 200
@@ -1169,7 +1229,9 @@ public class OwnerResource {
     }
 
     /**
-     * @return an EntitlementCertificate
+     * Creates an Ueber Entitlement Certificate
+     *
+     * @return an EntitlementCertificate object
      * @httpcode 400
      * @httpcode 404
      * @httpcode 200
@@ -1211,7 +1273,9 @@ public class OwnerResource {
     }
 
     /**
-     * @return an EntitlementCertificate
+     * Retrieves the Ueber Entitlement Certificate
+     *
+     * @return an EntitlementCertificate object
      * @httpcode 404
      * @httpcode 200
      */
@@ -1244,7 +1308,9 @@ public class OwnerResource {
     }
 
     /**
-     * @return a List of UpstreamConsumer for the given Owner
+     * Retrieves a list of Upstream Consumers for an Owner
+     *
+     * @return a list of UpstreamConsumer objects
      * @httpcode 404
      * @httpcode 200
      */
@@ -1269,6 +1335,13 @@ public class OwnerResource {
         return results;
     }
 
+    /**
+     * Retrieves a list of Hypervisors for an Owner
+     *
+     * @param ownerKey
+     * @param hypervisorIds
+     * @return a list of Consumer objects
+     */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{owner_key}/hypervisors")

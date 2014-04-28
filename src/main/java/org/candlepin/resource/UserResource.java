@@ -65,7 +65,9 @@ public class UserResource {
     }
 
     /**
-     * @return a list of Users
+     * Retrieves a list of Users
+     *
+     * @return a list of User objects
      * @httpcode 200
      */
     @GET
@@ -75,7 +77,20 @@ public class UserResource {
     }
 
     /**
-     * @return a User
+     * Retrieves a single User
+     * <p>
+     * <pre>
+     * {
+     *   "id" : "database_id",
+     *   "username" : "user_name",
+     *   "hashedPassword" : "05557a2aaec7cb676df574d2eb080691949a6752",
+     *   "superAdmin" : false,
+     *   "created" : [date],
+     *   "updated" : [date]
+     * }
+     * </pre>
+     *
+     * @return a User object
      * @httpcode 200
      */
     @GET
@@ -87,7 +102,9 @@ public class UserResource {
     }
 
     /**
-     * @return a list of Roles
+     * Retrieves a list of Roles by User
+     *
+     * @return a list of Role objects
      * @httpcode 200
      */
     /*
@@ -110,7 +127,9 @@ public class UserResource {
     }
 
     /**
-     * @return a User
+     * Creates a User
+     *
+     * @return a User object
      * @httpcode 200
      */
     @POST
@@ -124,7 +143,9 @@ public class UserResource {
     }
 
     /**
-     * @return a User
+     * Updates a User
+     *
+     * @return a User object
      * @httpcode 404
      * @httpcode 200
      */
@@ -145,6 +166,8 @@ public class UserResource {
 
 
     /**
+     * Removes a User
+     *
      * @httpcode 410
      * @httpcode 200
      */
@@ -162,7 +185,11 @@ public class UserResource {
     }
 
     /**
-     * @return a list of owners this user has admin rights for.
+     * Retrieve a list of Owners by User
+     * <p>
+     * Owners for which this User has admin rights.
+     *
+     * @return a list of Owner objects
      * @httpcode 200
      */
     // TODO: should probably accept an access level query param someday

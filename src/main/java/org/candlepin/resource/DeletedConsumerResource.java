@@ -41,9 +41,11 @@ public class DeletedConsumerResource {
     }
 
     /**
-     * List deleted consumers that were deleted after a given date
+     * Retrieves a list of Deleted Consumers
+     * <p>
+     * By deletion date or all. List returned is the deleted Consumers.
      *
-     * @return list of deleted consumers.
+     * @return a list of Consumer objects
      * @httpcode 400
      * @httpcode 404
      * @httpcode 200

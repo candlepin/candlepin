@@ -64,9 +64,24 @@ public class StatusResource {
     }
 
     /**
-     * status to see if a server is up and running
+     * Retrieves the Status of the System
+     * <p>
+     * <pre>
+     * {
+     *   "result" : true,
+     *   "version" : "0.9.10",
+     *   "rulesVersion" : "5.8",
+     *   "release" : "1",
+     *   "standalone" : true,
+     *   "timeUTC" : [date],
+     *   "managerCapabilities" : [ "cores", "ram", "instance_multiplier" ],
+     *   "rulesSource" : "DEFAULT"
+     * }
+     * </pre>
+     * <p>
+     * Status to see if a server is up and running
      *
-     * @return the running status
+     * @return a Status object
      * @httpcode 200
      */
     @GET

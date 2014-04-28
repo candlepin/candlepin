@@ -1,9 +1,0 @@
-<h1><%= name %></h1>
-<table>
-    <% resource.each do |method| %>
-        <tr> <td> <a href="../<%= method["page"] %>">
-          <%= method['httpVerbs'].join ', ' %> <%= method['url'] %>
-        </a></td>
-        <td><%= method['summary'] %></td> </tr>
-    <% end %>
-</table>

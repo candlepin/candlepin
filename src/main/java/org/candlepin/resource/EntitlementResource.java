@@ -94,10 +94,11 @@ public class EntitlementResource {
     }
 
     /**
-     * Check to see if a given Consumer is entitled to given Product
+     * Checks Consumer for Product Entitlement
+     *
      * @param consumerUuid consumerUuid to check if entitled or not
      * @param productId productLabel to check if entitled or not
-     * @return boolean if entitled or not
+     * @return a boolean
      * @httpcode 404
      * @httpcode 200
      */
@@ -122,6 +123,8 @@ public class EntitlementResource {
     }
 
     /**
+     * Retrieves list of Entitlements
+     *
      * @return a list of Entitlement objects
      * @httpcode 400
      * @httpcode 200
@@ -154,9 +157,25 @@ public class EntitlementResource {
     }
 
     /**
-     * Return the entitlement for the given id.
+     * Retrieves a single Entitlement
+     * <p>
+     * <pre>
+     * {
+     *   "id" : "database_id",
+     *   "consumer" : {},
+     *   "pool" : {},
+     *   "certificates" : [ ],
+     *   "quantity" : 1,
+     *   "startDate" : [date],
+     *   "endDate" : [date],
+     *   "href" : "/entitlements/database_id",
+     *   "created" : [date],
+     *   "updated" : [date]
+     * }
+     * </pre>
+     *
      * @param dbid entitlement id.
-     * @return the entitlement for the given id.
+     * @return an Entitlement object
      * @httpcode 404
      * @httpcode 200
      */
@@ -176,7 +195,9 @@ public class EntitlementResource {
     }
 
     /**
-     * Update entitlement only works for the quantity.
+     * Updates an Entitlement
+     * <p>
+     * This only works for the quantity.
      *
      * @httpcode 404
      * @httpcode 200
@@ -213,16 +234,17 @@ public class EntitlementResource {
 
 
     /**
-     * Return the subscription cert for the given id.
-     *
+     * Retrieves a Subscription Certificate
+     * <p>
      * We can't return CdnInfo at this time, but when the time comes this
      * is the implementation we want to start from. It will require changes
      * to thumbslug.
+     * <p>
      * public CdnInfo getEntitlementUpstreamCert
      * will also @Produces(MediaType.APPLICATION_JSON)
      *
      * @param dbid entitlement id.
-     * @return the subscription cert for the given id.
+     * @return a String object
      * @httpcode 404
      * @httpcode 200
      */
@@ -250,7 +272,7 @@ public class EntitlementResource {
     }
 
     /**
-     * Remove an entitlement by ID.
+     * Deletes an Entitlement
      *
      * @param dbid the entitlement to delete.
      * @httpcode 403
@@ -270,7 +292,9 @@ public class EntitlementResource {
     }
 
     /**
-     * @return a JobDetail
+     * Regenerates the Entitlement Certificates for a Product
+     *
+     * @return a JobDetail object
      * @httpcode 202
      */
     @PUT

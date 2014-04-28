@@ -51,6 +51,8 @@ public class EventResource {
     }
 
     /**
+     * Retrieves a list of Events
+     *
      * @return a list of Event objects
      * @httpcode 200
      */
@@ -65,7 +67,29 @@ public class EventResource {
     }
 
     /**
-     * @return an Event
+     * Retrieves a single Event
+     * <p>
+     * <pre>
+     * {
+     *   "id" : "database_id",
+     *   "type" : "MODIFIED",
+     *   "target" : "CONSUMER",
+     *   "targetName" : "client.rdu.redhat.com",
+     *   "timestamp" : [date],
+     *   "entityId" : "entity_id",
+     *   "ownerId" : "owner_id",
+     *   "consumerId" : "consumer_id",
+     *   "referenceId" : null,
+     *   "referenceType" : null,
+     *   "messageText" : "text",
+     *   "principal" : {
+     *     "type" : "consumer",
+     *     "name" : "consumer_uuid"
+     *   }
+     * }
+     * </pre>
+     *
+     * @return an Event object
      * @httpcode 404
      * @httpcode 200
      */

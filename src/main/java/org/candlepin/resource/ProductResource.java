@@ -90,10 +90,10 @@ public class ProductResource {
     }
 
     /**
-     * returns the list of Products available.
+     * Retrieves a list of Products
      *
      * @param productIds if specified, the list of product ids to return product info for
-     * @return the list of available products.
+     * @return a list of Product objects
      * @httpcode 200
      */
     @GET
@@ -105,11 +105,30 @@ public class ProductResource {
     }
 
     /**
-     * Return the Product identified by the given uuid.
+     * Retrieves a single Product
+     * <p>
+     * <pre>
+     * {
+     *   "id" : "product_id",
+     *   "name" : "product_name",
+     *   "multiplier" : 1,
+     *   "attributes" : [ {
+     *     "name" : "version",
+     *     "value" : "1.0",
+     *     "created" : [date],
+     *     "updated" : [date]
+     *   } ],
+     *   "productContent" : [ ],
+     *   "dependentProductIds" : [ ],
+     *   "reliesOn" : [ ],
+     *   "href" : "/products/product_id",
+     *   "created" : [date],
+     *   "updated" : [date]
+     * }
+     * </pre>
      *
-     * @param pid
-     *            uuid of the product sought.
-     * @return the product identified by the given uuid.
+     * @param pid uuid of the product sought.
+     * @return a Product object
      * @httpcode 404
      * @httpcode 200
      */
@@ -129,7 +148,9 @@ public class ProductResource {
     }
 
     /**
-     * @return the ProductCertificate
+     * Retreives a Certificate for a Product
+     *
+     * @return a ProductCertificate object
      * @httpcode 404
      * @httpcode 200
      */
@@ -151,10 +172,12 @@ public class ProductResource {
     }
 
     /**
+     * Creates a Product
+     * <p>
+     * Returns either the new created Product or the Product that already existed.
      *
      * @param product
-     * @return the newly created product, or the product that already
-     *         exists
+     * @return a Product object
      * @httpcode 200
      */
     @POST
@@ -164,7 +187,9 @@ public class ProductResource {
     }
 
     /**
-     * @return a Product
+     * Updates a Product
+     *
+     * @return a Product object
      * @httpcode 400
      * @httpcode 200
      */
@@ -232,7 +257,11 @@ public class ProductResource {
     }
 
     /**
-     * @return the Product
+     * Adds Content to a Product
+     * <p>
+     * Batch mode
+     *
+     * @return a Product object
      * @httpcode 200
      */
     @POST
@@ -252,7 +281,11 @@ public class ProductResource {
     }
 
     /**
-     * @return the Product
+     * Adds Content to a Product
+     * <p>
+     * Single mode
+     *
+     * @return a Product object
      * @httpcode 200
      */
     @POST
@@ -270,6 +303,8 @@ public class ProductResource {
     }
 
     /**
+     * Removes Content from a Product
+     *
      * @httpcode 200
      */
     @DELETE
@@ -281,7 +316,9 @@ public class ProductResource {
     }
 
     /**
-     * @return the Product
+     * Adds a Reliance to a Product
+     *
+     * @return a Product object
      * @httpcode 200
      */
     @POST
@@ -294,6 +331,8 @@ public class ProductResource {
     }
 
     /**
+     * Deletes a Reliance from a Product
+     *
      * @httpcode 200
      */
     @DELETE
@@ -305,6 +344,8 @@ public class ProductResource {
     }
 
     /**
+     * Removes a Product
+     *
      * @httpcode 400
      * @httpcode 404
      * @httpcode 200
@@ -328,7 +369,9 @@ public class ProductResource {
     }
 
     /**
-     * @return a list of Statistics
+     * Retrieves a list of Statistics for a Product
+     *
+     * @return a list of Statistic objects
      * @httpcode 400
      * @httpcode 200
      */
@@ -346,7 +389,11 @@ public class ProductResource {
     }
 
     /**
-     * @return a list of Statistics
+     * Retrieves a list of Statistics for a Product
+     * <p>
+     * By Statistic type
+     *
+     * @return a list of Statistic objects
      * @httpcode 400
      * @httpcode 200
      */
@@ -365,7 +412,9 @@ public class ProductResource {
     }
 
     /**
-     * @return a list of owners using the specified product
+     * Retrieves a list of Owners by Product
+     *
+     * @return a list of Owner objects
      * @httpcode 200
      * @httpcode 400
      */
@@ -381,6 +430,13 @@ public class ProductResource {
         return ownerCurator.lookupOwnersByActiveProduct(ids);
     }
 
+    /**
+     * Refreshes Pools by Product
+     *
+     * @param pid
+     * @param lazyRegen
+     * @return a JobDetail object
+     */
     @PUT
     @Path("/{product_uuid}/subscriptions")
     @Produces(MediaType.APPLICATION_JSON)

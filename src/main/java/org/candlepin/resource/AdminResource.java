@@ -51,13 +51,15 @@ public class AdminResource {
     }
 
     /**
-     * Initialize the Candlepin database.
-     *
+     * Initializes the Candlepin database
+     * <p>
      * Currently this just creates the admin user for standalone deployments using the
      * default user service adapter. It must be called once after candlepin is installed,
      * repeat calls are not required, but will be harmless.
+     * <p>
+     * The String returned is the description if the db was or already is initialized.
      *
-     * @return Description if db was or already is initialized.
+     * @return a String object
      * @httpcode 200
      */
     @GET
