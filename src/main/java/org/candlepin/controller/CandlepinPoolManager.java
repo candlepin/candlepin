@@ -369,7 +369,7 @@ public class CandlepinPoolManager implements PoolManager {
      * Update pools which have no subscription attached, if applicable.
      *
      * @param floatingPools
-     * @return
+     * @return set of updated Entitlements
      */
     Set<Entitlement> updateFloatingPools(List<Pool> floatingPools) {
         /*
@@ -846,7 +846,7 @@ public class CandlepinPoolManager implements PoolManager {
      * @param pool
      * @param e
      * @param mergedPool
-     * @return
+     * @return generated EntitlementCertificate
      */
     private EntitlementCertificate generateEntitlementCertificate(
         Pool pool, Entitlement e, boolean generateUeberCert) {

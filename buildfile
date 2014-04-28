@@ -230,6 +230,7 @@ define "candlepin" do
   # javadoc projects
   #
   doc.using :tag => 'httpcode:m:HTTP Code:'
+  doc.classpath << "#{Java.tools_jar}"
 
   # NOTE: changes here must also be made in build.xml!
   candlepin_path = "org/candlepin"

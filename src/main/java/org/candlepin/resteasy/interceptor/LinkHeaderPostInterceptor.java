@@ -197,7 +197,7 @@ public class LinkHeaderPostInterceptor implements PostProcessInterceptor, Accept
     /**
      * Based on RESTEasy's UriInfoImpl.extractParameters()
      * @param queryString
-     * @return
+     * @return map of decoded query params
      * @throws UnsupportedEncodingException
      */
     protected MultivaluedMap<String, String> extractParameters(String queryString)

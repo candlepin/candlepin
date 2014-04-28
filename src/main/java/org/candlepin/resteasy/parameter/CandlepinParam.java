@@ -26,10 +26,11 @@ import org.jboss.resteasy.annotations.StringParameterUnmarshallerBinder;
  * by RestEasy. A parameter 'type' class must be specified and will be
  * the type of the returned parameter object.
  *
- * <pre>
  * For example:
+ * <br />
+ * <pre>
  *
- * @QueryParam("my_param") @CandlepinParam(type=KeyValueParameter.class)
+ * {@literal @}QueryParam("my_param") {@literal @}CandlepinParam(type=KeyValueParameter.class)
  * List<KeyValueParameter> attributeFileterParams
  * </pre>
  *

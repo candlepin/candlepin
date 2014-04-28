@@ -79,11 +79,6 @@ public class Cdn extends AbstractHibernateObject {
         this.cert = cert;
     }
 
-    /**
-     * @param string
-     * @param string2
-     * @param string3
-     */
     public Cdn(String key, String name, String url) {
         this(key, name, url, null);
     }

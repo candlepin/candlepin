@@ -186,7 +186,7 @@ public class PoolHelper extends AttributeHelper {
     }
 
     /**
-     * Copies all of the {@link Products} attributes onto the pool.
+     * Copies all of the {@link Product} attributes onto the pool.
      * If an attribute already exists, it will be updated. Any attributes that are
      * on the {@link Pool} but not on the {@link Product} will be removed.
      *

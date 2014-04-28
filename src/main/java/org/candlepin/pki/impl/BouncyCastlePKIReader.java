@@ -94,9 +94,7 @@ public class BouncyCastlePKIReader implements PKIReader, PasswordFinder {
         this.upstreamX509Certificates = loadUpstreamCACertificates(upstreamCaCertPath);
         this.privateKey = loadPrivateKey();
     }
-    /**
-     * @return
-     */
+
     private X509Certificate loadCACertificate(String path) {
         InputStream inStream = null;
         try {
@@ -153,9 +151,6 @@ public class BouncyCastlePKIReader implements PKIReader, PasswordFinder {
         return result;
     }
 
-    /**
-     * @return
-     */
     private PrivateKey loadPrivateKey() {
         try {
             InputStreamReader inStream = new InputStreamReader(
