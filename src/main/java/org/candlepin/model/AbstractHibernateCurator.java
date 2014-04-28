@@ -89,7 +89,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     }
 
     /**
-     * Same as {@link find} but allows permissions on the current principal to inject
+     * Same as {@link #find(Serializable)} but allows permissions on the current principal to inject
      * filters into the query before it is run. Primarily useful in authentication when
      * we want to verify access to an entity specified in the URL, but not reveal if
      * the entity exists or not if you don't have permissions to see it at all.

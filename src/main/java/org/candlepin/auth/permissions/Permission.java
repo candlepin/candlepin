@@ -16,6 +16,7 @@ package org.candlepin.auth.permissions;
 
 import org.candlepin.auth.Access;
 import org.candlepin.auth.SubResource;
+import org.candlepin.model.AbstractHibernateCurator;
 import org.candlepin.model.Owner;
 import org.hibernate.criterion.Criterion;
 

@@ -14,6 +14,8 @@
  */
 package org.candlepin.auth;
 
+import org.candlepin.resteasy.interceptor.AuthInterceptor;
+
 /**
  * Enumeration of the access rights used in the Candlepin permission model.
  * @see AuthInterceptor

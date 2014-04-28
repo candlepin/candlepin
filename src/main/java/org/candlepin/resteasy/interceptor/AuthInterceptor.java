@@ -415,7 +415,8 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
      *
      * @param request
      * @param method
-     * @return
+     * @return an array of the parameters that will be passed by RestEasy into
+     * our method.
      */
     protected Object[] getArguments(HttpRequest request, ResourceMethod method) {
         HttpResponse response =
@@ -441,7 +442,7 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
      * the HTTP verbs used. We'll assume this is the required access type, but any
      * Verify annotation which specifies an access type can override this later.
      *
-     * @param invocation method invocation object
+     * @param method whose access is inquired
      * @return the required minimum access type
      */
     protected Access getAssumedAccessType(Method method) {

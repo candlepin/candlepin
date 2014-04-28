@@ -44,7 +44,7 @@ public class EventCurator extends AbstractHibernateCurator<Event> {
 
     /**
      * @param limit
-     * @return
+     * @return Criteria to limit the events to the given number.
      */
     private Criteria createEventCriteria(int limit) {
         return currentSession().createCriteria(Event.class)

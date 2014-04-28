@@ -339,11 +339,12 @@ public class ConsumerInstalledProductEnricher {
     }
 
     /**
-     * Return a copy of the specified list of <code>Entitlement</code>s sorted by
-     * start date ASC.
+     * Returns a copy of the specified list of <code>Entitlement</code>s sorted
+     * by start date ASC.
      *
      * @param toSort the list to sort.
-     * @return
+     * @return a copy of the specified list of <code>Entitlement</code>s sorted
+     * by start date ASC.
      */
     private List<Entitlement> sortByStartDate(List<Entitlement> toSort) {
         List<Entitlement> sorted = new ArrayList<Entitlement>(toSort);
@@ -399,7 +400,7 @@ public class ConsumerInstalledProductEnricher {
      * Add one second to the specified date, and return a new {@link Date}.
      *
      * @param date the date to add one second too.
-     * @return
+     * @return the given date plus one second.
      */
     private Date getDatePlusOneSecond(Date date) {
         Calendar cal = Calendar.getInstance();
