@@ -212,61 +212,6 @@ public class EnforcerTest extends DatabaseTestFixture {
         );
     }
 
-    // grrr. have to test two conditions atm: sufficient number of entitlements
-    // *when* pool has not expired
-    //
-    // shouldPassValidationWhenSufficientNumberOfEntitlementsIsAvailableAndNotExpired
-    @Test
-    public void passValidationEnoughNumberOfEntitlementsIsAvailableAndNotExpired() {
-        Product product = new Product("a-product", "A product for testing");
-        productCurator.create(product);
-
-        when(this.productAdapter.getProductById("a-product")).thenReturn(product);
-
-        ValidationResult result = enforcer.preEntitlement(
-            createConsumer(owner),
-            entitlementPoolWithMembersAndExpiration(owner, product, 1, 2,
-                expiryDate(2010, 10, 10)),
-            1);
-        assertTrue(result.isSuccessful());
-        assertFalse(result.hasErrors());
-        assertFalse(result.hasWarnings());
-    }
-
-    @Test
-    public void shouldFailValidationWhenNoEntitlementsAreAvailable() {
-        Product product = new Product("a-product", "A product for testing");
-        productCurator.create(product);
-
-        when(this.productAdapter.getProductById("a-product")).thenReturn(product);
-
-        ValidationResult result = enforcer.preEntitlement(
-            createConsumer(owner),
-            entitlementPoolWithMembersAndExpiration(owner, product, 1, 1,
-                expiryDate(2010, 10, 10)),
-            1);
-
-        assertFalse(result.isSuccessful());
-        assertTrue(result.hasErrors());
-        assertFalse(result.hasWarnings());
-    }
-
-    @Test
-    public void shouldFailWhenEntitlementsAreExpired() {
-        Product product = new Product("a-product", "A product for testing");
-        productCurator.create(product);
-
-        when(this.productAdapter.getProductById("a-product")).thenReturn(product);
-
-        ValidationResult result = enforcer.preEntitlement(
-            createConsumer(owner),
-            entitlementPoolWithMembersAndExpiration(owner, product, 1, 2,
-                expiryDate(2000, 1, 1)), 1);
-        assertFalse(result.isSuccessful());
-        assertTrue(result.hasErrors());
-        assertFalse(result.hasWarnings());
-    }
-
     // This exception should mention wrapping a MissingFactException
     @Test(expected = RuleExecutionException.class)
     public void testRuleFailsWhenConsumerDoesntHaveFact() {

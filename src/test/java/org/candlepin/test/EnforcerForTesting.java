@@ -14,6 +14,8 @@
  */
 package org.candlepin.test;
 
+import java.util.List;
+
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
@@ -53,5 +55,11 @@ public class EnforcerForTesting implements Enforcer {
     public PoolHelper postUnbind(Consumer consumer, PoolHelper postEntHelper,
             Entitlement ent) {
         return postEntHelper;
+    }
+
+    @Override
+    public List<Pool> filterPools(Consumer consumer, List<Pool> pools,
+        boolean showAll) {
+        return pools;
     }
 }

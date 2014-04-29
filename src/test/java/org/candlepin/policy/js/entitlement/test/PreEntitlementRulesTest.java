@@ -20,6 +20,8 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
@@ -696,4 +698,40 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         return pool;
     }
 
+    @Test
+    public void testBindForSameProductNotAllowedList() {
+        Product product = new Product(productId, "A product for testing");
+        Pool pool = createPool(owner, product);
+        List<Pool> pools = new LinkedList<Pool>();
+        pools.add(pool);
+
+        Entitlement e = new Entitlement(pool, consumer, 1);
+        consumer.addEntitlement(e);
+
+        when(this.prodAdapter.getProductById(productId)).thenReturn(product);
+
+        List<Pool> filtered = enforcer.filterPools(consumer, pools, true);
+
+        assertTrue(filtered.isEmpty());
+    }
+
+    @Test
+    public void testListForSufficientCoresList() {
+        Product product = new Product(productId, "A product for testing");
+        product.addAttribute(new ProductAttribute("cores", "10"));
+        Pool pool = createPool(owner, product);
+
+        consumer.setFacts(new HashMap<String, String>());
+        consumer.setFact("cpu.cpu_socket(s)", "1");
+        consumer.setFact("cpu.core(s)_per_socket", "10");
+
+        when(this.prodAdapter.getProductById(productId)).thenReturn(product);
+
+        List<Pool> pools = new LinkedList<Pool>();
+        pools.add(pool);
+        List<Pool> filtered = enforcer.filterPools(consumer, pools, false);
+
+        assertEquals(1, filtered.size());
+        assertTrue(filtered.contains(pool));
+    }
 }

@@ -23,7 +23,6 @@ import org.candlepin.model.PoolCurator;
 import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.ValidationWarning;
-import org.candlepin.policy.js.JsContext;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.RulesObjectMapper;
@@ -62,7 +61,6 @@ public abstract class AbstractEntitlementRules implements Enforcer {
 
     protected RulesObjectMapper objectMapper = RulesObjectMapper.instance();
 
-    protected static final String PRE_PREFIX = "pre_";
     protected static final String POST_PREFIX = "post_";
 
     protected void rulesInit() {
@@ -148,28 +146,6 @@ public abstract class AbstractEntitlementRules implements Enforcer {
             throw new IllegalArgumentException(i18n.tr(
                 "second parameter should be the priority number.", e));
         }
-    }
-
-    protected ValidationResult callPreEntitlementRules(List<Rule> matchingRules,
-        JsContext context) {
-        ValidationResult result = new ValidationResult();
-        for (Rule rule : matchingRules) {
-            if (log.isDebugEnabled()) {
-                log.debug("invoking rule: " + PRE_PREFIX + rule.getRuleName());
-            }
-
-            String validationJson = jsRules.invokeRule(PRE_PREFIX + rule.getRuleName(),
-                context);
-
-            // If the resulting validation json is empty, either the method
-            // did not exist in the rules, or the method did not return
-            // anything. In this case we skip the result.
-            if (validationJson == null) {
-                continue;
-            }
-            result.add(objectMapper.toObject(validationJson, ValidationResult.class));
-        }
-        return result;
     }
 
     protected void callPostEntitlementRules(List<Rule> matchingRules) {
