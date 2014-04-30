@@ -342,6 +342,11 @@ define "candlepin" do
 
   end
 
+  desc 'run rpmlint on the spec file'
+  task :rpmlint do
+      sh('rpmlint -f rpmlint.config candlepin.spec')
+  end
+
   #
   # coverity report generation
   #
