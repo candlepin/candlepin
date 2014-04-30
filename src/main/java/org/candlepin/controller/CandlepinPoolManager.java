@@ -1152,13 +1152,6 @@ public class CandlepinPoolManager implements PoolManager {
     public void deletePool(Pool pool) {
         Event event = eventFactory.poolDeleted(pool);
 
-        // remove the link between the key and the pool before deleting the pool
-        // TODO: is there a better way to do this with hibernate annotations?
-        List<ActivationKey> keys = poolCurator.getActivationKeysForPool(pool);
-        for (ActivationKey k : keys) {
-            k.removePool(pool);
-        }
-
         // Must do a full revoke for all entitlements:
         for (Entitlement e : poolCurator.entitlementsIn(pool)) {
             revokeEntitlement(e);
