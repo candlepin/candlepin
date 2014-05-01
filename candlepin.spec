@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.10
+Version: 0.9.11
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -368,6 +368,26 @@ fi
 
 
 %changelog
+* Thu May 01 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.11-1
+- Updated translations. (dgoodwin@redhat.com)
+- Extract and merge strings. (dgoodwin@redhat.com)
+- Validate entire pools at once (ckozak@redhat.com)
+- let cascade delete actkey pools (ckozak@redhat.com)
+- Package updates for RHEL 7 (wpoteat@redhat.com)
+- Method incorrectly removed from file (wpoteat@redhat.com)
+- Reformat the java docs for use in the CandlepinProject API page (wpoteat@redhat.com)
+- add hibernate-validator to rpm jars and spec (jesusr@redhat.com)
+- add validation-api to rpm jars (jesusr@redhat.com)
+- fix checkstyle: space before curly braces :D (jesusr@redhat.com)
+- Added another test case around migration (mstead@redhat.com)
+- Flush the entity manager when we delete a pool. (ckozak@redhat.com)
+- Adding spec test for refresh_pools migrate case (mstead@redhat.com)
+- Output logging to liquibase logs. (mstead@redhat.com)
+- Update refresh pools for owner to clean up pools that exist for other owners (ckozak@redhat.com)
+- allow single subscriptions to be refreshed (ckozak@redhat.com)
+- add migration to the liquibase script (ckozak@redhat.com)
+- model source subscription (ckozak@redhat.com)
+
 * Tue Apr 22 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.10-1
 - 1075883: whitelist hypervisor consumers for certv3 (ckozak@redhat.com)
 - Add access methods to see more details of Permissions (dcrissma@redhat.com)
