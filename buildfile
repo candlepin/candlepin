@@ -110,14 +110,6 @@ AMQP  = [group('qpid-common', 'qpid-client',
          group('mina-core', 'mina-filter-ssl',
              :under => 'org.apache.mina', :version => '1.0.1'),
          'geronimo-spec:geronimo-spec-jms:jar:1.1-rc4']
-#AMQP  = [group('qpid-common', 'qpid-client',
-#             :under => 'org.apache.qpid', :version => '0.22'),
-#         group('mina-core', 'mina-filter-ssl',
-#             :under => 'org.apache.mina', :version => '1.0.1'),
-#         'backport-util-concurrent:backport-util-concurrent:jar:2.2',
-#         'commons-digester:commons-digester:jar:1.8.1',
-#         'commons-configuration:commons-configuration:jar:1.6',
-#         'geronimo-spec:geronimo-spec-jms:jar:1.1-rc4']
 
 RHINO = 'org.mozilla:rhino:jar:1.7R3'
 
