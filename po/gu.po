@@ -6,14 +6,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-05-01 15:52-0300\n"
+"POT-Creation-Date: 2012-06-27 12:35-0400\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
 "PO-Revision-Date: 2014-03-10 09:41-0400\n"
 "Last-Translator: Ankit Patel <ankit@redhat.com>\n"
 "Language-Team: Gujarati\n"
 "Language: gu\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 "X-Generator: Zanata 3.3.2\n"
 
@@ -431,8 +431,8 @@ msgid ""
 "Unit {0} cannot be exported. A manifest cannot be made for units of type "
 "''{1}''."
 msgstr ""
-"ગ્રાહક {0} નિકાસ કરી શકાતુ નથી. manifest ને ગ્રાહકનાં પ્રકાર ''{1}'' માટે બનાવી "
-"શકાતુ નથી."
+"ગ્રાહક {0} નિકાસ કરી શકાતુ નથી. manifest ને ગ્રાહકનાં પ્રકાર ''{1}'' માટે "
+"બનાવી શકાતુ નથી."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1851
 #, java-format
@@ -487,7 +487,9 @@ msgstr "UUID ''{0}'' સાથે પ્રોડક્ટ શોધી શક�
 #: src/main/java/org/candlepin/resource/ProductResource.java:364
 #, java-format
 msgid "Product with UUID ''{0}'' cannot be deleted while subscriptions exist."
-msgstr "UUID ''{0}'' સાથે પ્રોડક્ટ કાઢી શકાતી નથી જ્યારે ઉમેદવારીઓ અસ્તિત્વ ધરાવે છે."
+msgstr ""
+"UUID ''{0}'' સાથે પ્રોડક્ટ કાઢી શકાતી નથી જ્યારે ઉમેદવારીઓ અસ્તિત્વ ધરાવે છે."
+""
 
 #: src/main/java/org/candlepin/resource/ProductResource.java:427
 msgid "Must specify product ID."
@@ -612,8 +614,8 @@ msgid ""
 "The activation key name ''{0}'' must be alphanumeric or include the "
 "characters '-' or '_'"
 msgstr ""
-"સક્રિયકરણ કી નામ  ''{0}'' આલ્ફાન્યૂમેરિક હોવુ જ જોઇએ અથવા અક્ષરો '-' અથવા '_' ને "
-"સમાવે છે"
+"સક્રિયકરણ કી નામ  ''{0}'' આલ્ફાન્યૂમેરિક હોવુ જ જોઇએ અથવા અક્ષરો '-' અથવા "
+"'_' ને સમાવે છે"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:537
 #, java-format
@@ -674,7 +676,9 @@ msgstr "માલિક {0} માટે ueber પ્રમાણપત્રન
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1299
 #, java-format
 msgid "ueber certificate for owner {0} was not found. Please generate one."
-msgstr "માલિક {0} માટે ueber પ્રમાણપત્ર મળ્યુ ન હતુ. મહેરબાની કરીને એકને ઉત્પન્ન કરો."
+msgstr ""
+"માલિક {0} માટે ueber પ્રમાણપત્ર મળ્યુ ન હતુ. મહેરબાની કરીને એકને ઉત્પન્ન કરો."
+""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author swkothar
@@ -750,7 +754,8 @@ msgstr "ID ''{0}'' સાથે એંંટાઇટેલમેંટ પુ�
 #: src/main/java/org/candlepin/resource/JobResource.java:111
 msgid ""
 "You must specify exactly one of owner key, unit UUID, or principal name."
-msgstr "તમારે માલિક કી, એકમ UUID, અથવા પ્રિન્સીપાસ નામમાંના એકને સ્પષ્ટ કરવુ જ જોઇએ."
+msgstr ""
+"તમારે માલિક કી, એકમ UUID, અથવા પ્રિન્સીપાસ નામમાંના એકને સ્પષ્ટ કરવુ જ જોઇએ."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author swkothar
@@ -911,7 +916,9 @@ msgstr ""
 msgid ""
 "Cannot add pools that are restricted to unit type 'person' to activation "
 "keys."
-msgstr "પુલ ઉમેરી શકાતુ નથી કે જે સક્રિયકરણ કીઓ માટે એકમ પ્રકાર 'માણસ' ને મર્યાદિત છે."
+msgstr ""
+"પુલ ઉમેરી શકાતુ નથી કે જે સક્રિયકરણ કીઓ માટે એકમ પ્રકાર 'માણસ' ને મર્યાદિત "
+"છે."
 
 #: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:85
 msgid ""
@@ -921,7 +928,8 @@ msgstr ""
 
 #: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:89
 msgid "Activation keys can only use host restricted pools from a single host."
-msgstr "સક્રિયકરણ કી એકજ યજમાનમાંથી ફક્ત યજમાન મર્યાદિત થયેલ પુલને વાપરી શકે છે."
+msgstr ""
+"સક્રિયકરણ કી એકજ યજમાનમાંથી ફક્ત યજમાન મર્યાદિત થયેલ પુલને વાપરી શકે છે."
 
 #: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:93
 #, java-format
@@ -935,8 +943,8 @@ msgid ""
 "Error: Only pools with multi-entitlement product subscriptions can be added "
 "to the activation key with a quantity greater than one."
 msgstr ""
-"ભૂલ: મલ્ટી-એંટાઇટેલમેંટ પ્રોડક્ટ સાથે ફક્ત પુલો એક કરતા વધારે ગુણવત્તા સાથે સક્રિયકરણ કીમાં "
-"ઉમેરી શકાય છે."
+"ભૂલ: મલ્ટી-એંટાઇટેલમેંટ પ્રોડક્ટ સાથે ફક્ત પુલો એક કરતા વધારે ગુણવત્તા સાથે "
+"સક્રિયકરણ કીમાં ઉમેરી શકાય છે."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author swkothar
@@ -959,12 +967,14 @@ msgstr ""
 
 #: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:116
 #, java-format
-msgid "Cannot add virtual pool ''{0}'' to activation key for physical systems."
+msgid ""
+"Cannot add virtual pool ''{0}'' to activation key for physical systems."
 msgstr ""
 
 #: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:120
 #, java-format
-msgid "Cannot add physical pool ''{0}'' to activation key for virtual systems."
+msgid ""
+"Cannot add physical pool ''{0}'' to activation key for virtual systems."
 msgstr ""
 
 #: src/main/java/org/candlepin/util/ServiceLevelValidator.java:67
@@ -1091,13 +1101,15 @@ msgid ""
 "This subscription management application has already been imported by "
 "another owner."
 msgstr ""
-"આ ઉમેદવારી સંચાલન કાર્યક્રમ પાસે પહેલેથી જ બીજા માલિક દ્દારા પહેલેથી આયાત કરી દેવામાં "
-"આવ્યુ છે."
+"આ ઉમેદવારી સંચાલન કાર્યક્રમ પાસે પહેલેથી જ બીજા માલિક દ્દારા પહેલેથી આયાત "
+"કરી દેવામાં આવ્યુ છે."
 
 #: src/main/java/org/candlepin/sync/ConsumerImporter.java:85
 msgid ""
 "Owner has already imported from another subscription management application."
-msgstr "માલિક પહેલેથી જ બીજી ઉમેદવારી સંચાલન કાર્યક્રમ માંથી આયાત કરી દેવામાં આવ્યુ છે."
+msgstr ""
+"માલિક પહેલેથી જ બીજી ઉમેદવારી સંચાલન કાર્યક્રમ માંથી આયાત કરી દેવામાં આવ્યુ "
+"છે."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author swkothar
@@ -1127,7 +1139,8 @@ msgstr ""
 
 #: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:51
 msgid ""
-"numeric value out of bounds (<{integer} digits>.<{fraction} digits> expected)"
+"numeric value out of bounds (<{integer} digits>.<{fraction} digits> "
+"expected)"
 msgstr ""
 
 #: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:55
@@ -1255,11 +1268,12 @@ msgstr "oauth એકમ પ્રકારને મેળવી રહ્યા
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
-"to address this problem. See kbase https://access.redhat.com/knowledge/"
-"node/129003 for more information."
+"to address this problem. See kbase https://access.redhat.com/knowledge/node/"
+"129003 for more information."
 msgstr ""
-"પ્રમાણપત્ર {0} માટે ઘણાં સમાવિષ્ટ સુયોજનો. નવાં ક્લાયન્ટ આ સમસ્યાને સંબોધવા ઉપલબ્ધ હોઇ શકે "
-"છે. વધારે જાણકારી માટે kbase https://access.redhat.com/knowledge/node/129003 જુઓ."
+"પ્રમાણપત્ર {0} માટે ઘણાં સમાવિષ્ટ સુયોજનો. નવાં ક્લાયન્ટ આ સમસ્યાને સંબોધવા "
+"ઉપલબ્ધ હોઇ શકે છે. વધારે જાણકારી માટે kbase https://access.redhat.com/"
+"knowledge/node/129003 જુઓ."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author swkothar
@@ -1278,6 +1292,7 @@ msgstr "ઉમેદવારી પુલ {0} અસ્તિત્વ ધર�
 #, java-format
 msgid ""
 "This unit has already had the subscription matching pool ID ''{0}'' attached."
+""
 msgstr "આ એકમ પાસે પહેલેથી જ જોડાયેલ ઉમેદવારીને બંધબેસતુ પુલ ID ''{0}'' હતુ."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:114
@@ -1288,7 +1303,8 @@ msgstr "ID ''{0}'' સાથે પુલમાંથી ઉમેદવાર�
 #: src/main/java/org/candlepin/controller/Entitler.java:119
 #, java-format
 msgid "Units of this type are not allowed to attach the pool with ID ''{0}''."
-msgstr "આ પ્રકારનાં એકમો ID ''{0}'' સાથે પુલ સાથે જોડાવા માટે પરવાનગી મળેલ નથી."
+msgstr ""
+"આ પ્રકારનાં એકમો ID ''{0}'' સાથે પુલ સાથે જોડાવા માટે પરવાનગી મળેલ નથી."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:123
 #, java-format
@@ -1324,8 +1340,8 @@ msgid ""
 "Subscription ''{0}'' must be attached using a quantity evenly divisible by "
 "{1}"
 msgstr ""
-"ઉમેદવારી ''{0}'' ગુણવત્તાથી સરખા પ્રમાણમાં જોડાયેલી હોવી જોઇએ કે જે {1} દ્વારા સરખા "
-"પ્રમાણમાં ભાગી શકાય"
+"ઉમેદવારી ''{0}'' ગુણવત્તાથી સરખા પ્રમાણમાં જોડાયેલી હોવી જોઇએ કે જે {1} "
+"દ્વારા સરખા પ્રમાણમાં ભાગી શકાય"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:153
 #, java-format
@@ -1346,7 +1362,8 @@ msgstr "એકમ એ પુલ ''{0}'' દ્દારા જરૂરી RAM  
 #: src/main/java/org/candlepin/controller/Entitler.java:165
 #, java-format
 msgid "Unit does not support derived products data required by pool ''{0}''"
-msgstr "પુલ ''{0}'' દ્વારા જરૂરી ઉતરી આવેલી પ્રોડક્ટ માહિતીને એકમ આધાર આપતો નથી"
+msgstr ""
+"પુલ ''{0}'' દ્વારા જરૂરી ઉતરી આવેલી પ્રોડક્ટ માહિતીને એકમ આધાર આપતો નથી"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:169
 #, java-format
@@ -1428,16 +1445,19 @@ msgstr "ગુણધર્મ ''{0}'' બુલિયન કિંમત હો�
 msgid ""
 "You cannot create a circular reference for products that ''{0}'' relies on."
 msgstr ""
-"તમે પ્રોડક્ટો માટે તમારે સંદર્ભને બનાવી શકાતો નથી કે જે  ''{0}'' તેની પર આધારિત હોય."
+"તમે પ્રોડક્ટો માટે તમારે સંદર્ભને બનાવી શકાતો નથી કે જે  ''{0}'' તેની પર "
+"આધારિત હોય."
 
 #: src/main/java/org/candlepin/model/ConsumerCurator.java:396
 #, java-format
 msgid "The system with UUID {0} is a virtual guest. It does not have guests."
-msgstr "UUID {0} સાથે સિસ્ટમ એ એક વર્ચ્યુઅલ મહેમાન છે. તેની પાસે મહેમાનો હોતા નથી."
+msgstr ""
+"UUID {0} સાથે સિસ્ટમ એ એક વર્ચ્યુઅલ મહેમાન છે. તેની પાસે મહેમાનો હોતા નથી."
 
 #: src/main/java/org/candlepin/model/AbstractHibernateCurator.java:418
 msgid "Request failed due to concurrent modification, please re-try."
-msgstr "પુનરાવર્તિ ફેરફારોને કારણે અરજી નિષ્ફળ ગઇ, મહેરબાની કરીને પુનઃપ્રયાસ કરો."
+msgstr ""
+"પુનરાવર્તિ ફેરફારોને કારણે અરજી નિષ્ફળ ગઇ, મહેરબાની કરીને પુનઃપ્રયાસ કરો."
 
 #: src/main/java/org/candlepin/model/ConsumerTypeCurator.java:70
 #, java-format
@@ -1448,13 +1468,3 @@ msgstr "આવા કોઇ એકમ પ્રકાર નથી: {0}"
 #, java-format
 msgid "No such unit type: {0}"
 msgstr "આવો એકમ પ્રકાર નથી: {0}"
-
-#~ msgid "Name of the unit must be shorter than {0} characters."
-#~ msgstr "એકમનું નામ {0} અક્ષરો કરતા નાનું હોવુ જ જોઇએ."
-
-#~ msgid "System name cannot be null."
-#~ msgstr "સિસ્ટમ નામને null રાખી શકાતુ નથી."
-
-#~ msgid ""
-#~ "Name, value, and label of the override must not exceed {0} characters."
-#~ msgstr "ઓવરરાઇડનું નામ, કિંમત, અને લેબલ {0} અક્ષરો કરતાં વધવું જોઇએ નહિ."

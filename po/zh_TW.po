@@ -8,14 +8,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-05-01 15:52-0300\n"
+"POT-Creation-Date: 2012-06-27 12:35-0400\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
 "PO-Revision-Date: 2014-03-11 07:23-0400\n"
 "Last-Translator: tchuang <tchuang@redhat.com>\n"
 "Language-Team: Chinese (Traditional, Taiwan)\n"
 "Language: zh-Hant-TW\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0\n"
 "X-Generator: Zanata 3.3.2\n"
 
@@ -955,12 +955,14 @@ msgstr ""
 
 #: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:116
 #, java-format
-msgid "Cannot add virtual pool ''{0}'' to activation key for physical systems."
+msgid ""
+"Cannot add virtual pool ''{0}'' to activation key for physical systems."
 msgstr ""
 
 #: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:120
 #, java-format
-msgid "Cannot add physical pool ''{0}'' to activation key for virtual systems."
+msgid ""
+"Cannot add physical pool ''{0}'' to activation key for virtual systems."
 msgstr ""
 
 #: src/main/java/org/candlepin/util/ServiceLevelValidator.java:67
@@ -1121,7 +1123,8 @@ msgstr ""
 
 #: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:51
 msgid ""
-"numeric value out of bounds (<{integer} digits>.<{fraction} digits> expected)"
+"numeric value out of bounds (<{integer} digits>.<{fraction} digits> "
+"expected)"
 msgstr ""
 
 #: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:55
@@ -1249,11 +1252,11 @@ msgstr "嘗試取得 oauth 單位金鑰時發生了錯誤"
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
-"to address this problem. See kbase https://access.redhat.com/knowledge/"
-"node/129003 for more information."
+"to address this problem. See kbase https://access.redhat.com/knowledge/node/"
+"129003 for more information."
 msgstr ""
-"憑證 {0} 擁有過多的內容集。您可使用更新的客戶端來解決此問題。欲取得更多相關資"
-"訊，請查看 kbase https://access.redhat.com/knowledge/node/129003。"
+"憑證 {0} 擁有過多的內容集。您可使用更新的客戶端來解決此問題。欲取得更多相關資訊，請查看 kbase https://access.redhat."
+"com/knowledge/node/129003。"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author snowlet
@@ -1272,6 +1275,7 @@ msgstr "訂閱集區 {0} 不存在。"
 #, java-format
 msgid ""
 "This unit has already had the subscription matching pool ID ''{0}'' attached."
+""
 msgstr "這單位已經有訂閱相符集區 ID「{0}」相連。"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:114
@@ -1439,13 +1443,3 @@ msgstr "沒有此種單位類型：{0}"
 #, java-format
 msgid "No such unit type: {0}"
 msgstr "沒有此種單位類型：{0}"
-
-#~ msgid "Name of the unit must be shorter than {0} characters."
-#~ msgstr "單位的名稱必須少於 {0} 個字元。"
-
-#~ msgid "System name cannot be null."
-#~ msgstr "必須要有系統名稱。"
-
-#~ msgid ""
-#~ "Name, value, and label of the override must not exceed {0} characters."
-#~ msgstr "Override 的名稱、值，與標簽不允許超過 {0} 個字元。"

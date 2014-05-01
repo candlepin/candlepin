@@ -8,13 +8,13 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2014-05-01 15:52-0300\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
 "PO-Revision-Date: 2014-02-26 04:25-0500\n"
 "Last-Translator: Sandeep Shedmake <sshedmak@redhat.com>\n"
 "Language-Team: Marathi <sshedmak@redhat.com>\n"
 "Language: mr\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: Zanata 3.3.2\n"
 
@@ -432,8 +432,8 @@ msgid ""
 "Unit {0} cannot be exported. A manifest cannot be made for units of type "
 "''{1}''."
 msgstr ""
-"युनिट {0} ला एक्सपोर्ट करणे अशक्य. ''{1}'' प्रकारच्या युनिट्सकरिता मॅनिफेस्ट निर्माण करणे "
-"अशक्य."
+"युनिट {0} ला एक्सपोर्ट करणे अशक्य. ''{1}'' प्रकारच्या युनिट्सकरिता मॅनिफेस्ट "
+"निर्माण करणे अशक्य."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1851
 #, java-format
@@ -488,7 +488,8 @@ msgstr "UUID ''{0}'' सह उत्पादन आढळले नाही."
 #: src/main/java/org/candlepin/resource/ProductResource.java:364
 #, java-format
 msgid "Product with UUID ''{0}'' cannot be deleted while subscriptions exist."
-msgstr "सबस्क्रिप्शन अस्तित्वात असताना UUID ''{0}'' सह उत्पादन नष्ट करणे अशक्य."
+msgstr ""
+"सबस्क्रिप्शन अस्तित्वात असताना UUID ''{0}'' सह उत्पादन नष्ट करणे अशक्य."
 
 #: src/main/java/org/candlepin/resource/ProductResource.java:427
 msgid "Must specify product ID."
@@ -613,8 +614,8 @@ msgid ""
 "The activation key name ''{0}'' must be alphanumeric or include the "
 "characters '-' or '_'"
 msgstr ""
-"ॲक्टिवेशन कि नाव ''{0}'' अल्फान्युमेरिक पाहिजे किंवा अक्षरे '-' किंवा '_' समाविष्टीत "
-"पाहिजे"
+"ॲक्टिवेशन कि नाव ''{0}'' अल्फान्युमेरिक पाहिजे किंवा अक्षरे '-' किंवा '_' "
+"समाविष्टीत पाहिजे"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:537
 #, java-format
@@ -751,7 +752,8 @@ msgstr "ID ''{0}'' सह एंटाइटलमेंट पूल आढळ�
 #: src/main/java/org/candlepin/resource/JobResource.java:111
 msgid ""
 "You must specify exactly one of owner key, unit UUID, or principal name."
-msgstr "अगदी तसेच मालकी कि, युनिट UUID, किंवा प्राथमिक नाव निर्देशीत करणे आवश्यक."
+msgstr ""
+"अगदी तसेच मालकी कि, युनिट UUID, किंवा प्राथमिक नाव निर्देशीत करणे आवश्यक."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -912,7 +914,8 @@ msgstr ""
 msgid ""
 "Cannot add pools that are restricted to unit type 'person' to activation "
 "keys."
-msgstr "ॲक्टिवेशन किजकरिता युनिट प्रकार 'person' करिता पूल्स समाविष्ट करणे अशक्य."
+msgstr ""
+"ॲक्टिवेशन किजकरिता युनिट प्रकार 'person' करिता पूल्स समाविष्ट करणे अशक्य."
 
 #: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:85
 msgid ""
@@ -922,7 +925,8 @@ msgstr ""
 
 #: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:89
 msgid "Activation keys can only use host restricted pools from a single host."
-msgstr "ॲक्टिवेशन किज एका यजमानपासून फक्त यजमान प्रतिबंधीत पूलचा वापर करू शकतात."
+msgstr ""
+"ॲक्टिवेशन किज एका यजमानपासून फक्त यजमान प्रतिबंधीत पूलचा वापर करू शकतात."
 
 #: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:93
 #, java-format
@@ -936,8 +940,8 @@ msgid ""
 "Error: Only pools with multi-entitlement product subscriptions can be added "
 "to the activation key with a quantity greater than one."
 msgstr ""
-"त्रुटी: फक्त बहु-एंटाइटलमेंट उत्पादन सबस्क्रिप्शन्स् सह पूल्स्ला ॲक्टिवेशन किमध्ये समाविष्ट करणे "
-"शक्य आहे."
+"त्रुटी: फक्त बहु-एंटाइटलमेंट उत्पादन सबस्क्रिप्शन्स् सह पूल्स्ला ॲक्टिवेशन "
+"किमध्ये समाविष्ट करणे शक्य आहे."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author sandeeps
@@ -960,12 +964,14 @@ msgstr ""
 
 #: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:116
 #, java-format
-msgid "Cannot add virtual pool ''{0}'' to activation key for physical systems."
+msgid ""
+"Cannot add virtual pool ''{0}'' to activation key for physical systems."
 msgstr ""
 
 #: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:120
 #, java-format
-msgid "Cannot add physical pool ''{0}'' to activation key for virtual systems."
+msgid ""
+"Cannot add physical pool ''{0}'' to activation key for virtual systems."
 msgstr ""
 
 #: src/main/java/org/candlepin/util/ServiceLevelValidator.java:67
@@ -1091,12 +1097,14 @@ msgstr "अपस्ट्रिम सबस्क्रिप्शन मॅ�
 msgid ""
 "This subscription management application has already been imported by "
 "another owner."
-msgstr "सबस्क्रिप्शन मॅनेजमेंट ॲप्लिकेशन आधिपासूनच इतर मालकीतर्फे आयात केले आहे."
+msgstr ""
+"सबस्क्रिप्शन मॅनेजमेंट ॲप्लिकेशन आधिपासूनच इतर मालकीतर्फे आयात केले आहे."
 
 #: src/main/java/org/candlepin/sync/ConsumerImporter.java:85
 msgid ""
 "Owner has already imported from another subscription management application."
-msgstr "इतर सबस्क्रिप्शन मॅनेजमेंट ॲप्लिकेशनपासून मालकी आधिपासूनच आयात केली आहे."
+msgstr ""
+"इतर सबस्क्रिप्शन मॅनेजमेंट ॲप्लिकेशनपासून मालकी आधिपासूनच आयात केली आहे."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author sandeeps
@@ -1126,7 +1134,8 @@ msgstr ""
 
 #: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:51
 msgid ""
-"numeric value out of bounds (<{integer} digits>.<{fraction} digits> expected)"
+"numeric value out of bounds (<{integer} digits>.<{fraction} digits> "
+"expected)"
 msgstr ""
 
 #: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:55
@@ -1254,12 +1263,12 @@ msgstr "oauth युनिट कि प्राप्त करतेवेळ
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
-"to address this problem. See kbase https://access.redhat.com/knowledge/"
-"node/129003 for more information."
+"to address this problem. See kbase https://access.redhat.com/knowledge/node/"
+"129003 for more information."
 msgstr ""
-"प्रमाणपत्र {0} करीता एकापेक्षा जास्त कंटेंट सेट्स. या अडचणीच्या निवारणकरीता नवीन क्लाएंट "
-"कदाचीत उपलब्ध असू शकते. अधिक माहितीकरीता kbase https://access.redhat.com/"
-"knowledge/node/129003 पहा."
+"प्रमाणपत्र {0} करीता एकापेक्षा जास्त कंटेंट सेट्स. या अडचणीच्या निवारणकरीता "
+"नवीन क्लाएंट कदाचीत उपलब्ध असू शकते. अधिक माहितीकरीता kbase https://access."
+"redhat.com/knowledge/node/129003 पहा."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author sandeeps
@@ -1278,7 +1287,9 @@ msgstr "सबस्क्रिप्शन पूल {0} अस्तित्
 #, java-format
 msgid ""
 "This unit has already had the subscription matching pool ID ''{0}'' attached."
-msgstr "ह्या युनिटसह आधीपासूनच सबस्क्रिप्शन मॅचिंग पूल ID ''{0}'' जुळलेले आहे."
+""
+msgstr ""
+"ह्या युनिटसह आधीपासूनच सबस्क्रिप्शन मॅचिंग पूल ID ''{0}'' जुळलेले आहे."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:114
 #, java-format
@@ -1323,13 +1334,15 @@ msgstr "पूल फिजिकल प्रणालींकरिता: ''
 msgid ""
 "Subscription ''{0}'' must be attached using a quantity evenly divisible by "
 "{1}"
-msgstr "सबस्क्रिप्शन ''{0}'' ला {1} तर्फे समरित्या विभाजीत प्रमाणद्वारे जोडायला हवे"
+msgstr ""
+"सबस्क्रिप्शन ''{0}'' ला {1} तर्फे समरित्या विभाजीत प्रमाणद्वारे जोडायला हवे"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:153
 #, java-format
 msgid ""
 "Unit does not support instance based calculation required by pool ''{0}''"
-msgstr "पूल ''{0}'' तर्फे आवश्यक युनिट घटना आधारित गणनाकरिता समर्थन पुरवत नाही"
+msgstr ""
+"पूल ''{0}'' तर्फे आवश्यक युनिट घटना आधारित गणनाकरिता समर्थन पुरवत नाही"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:157
 #, java-format
@@ -1344,7 +1357,8 @@ msgstr "पूल ''{0}'' तर्फे आवश्यक युनिट RAM
 #: src/main/java/org/candlepin/controller/Entitler.java:165
 #, java-format
 msgid "Unit does not support derived products data required by pool ''{0}''"
-msgstr "पूल ''{0}'' तर्फे आवश्यक आधारित उत्पादनांकरिता युनिट समर्थन पुरवत नाही"
+msgstr ""
+"पूल ''{0}'' तर्फे आवश्यक आधारित उत्पादनांकरिता युनिट समर्थन पुरवत नाही"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:169
 #, java-format
@@ -1362,7 +1376,8 @@ msgstr "एंटाइटलमेंट ''{0}'' करीता सुस्�
 #, java-format
 msgid ""
 "Multi-entitlement not supported for pool connected with entitlement ''{0}''."
-msgstr "एंटाइटलमेंट ''{0}'' सह पूलकरीता एकापेक्षा जास्त एंटाइटलमेंट समर्थीत नाही."
+msgstr ""
+"एंटाइटलमेंट ''{0}'' सह पूलकरीता एकापेक्षा जास्त एंटाइटलमेंट समर्थीत नाही."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:205
 #, java-format
@@ -1373,7 +1388,8 @@ msgstr "id ''{0}'': {1} सह एंटाइटलमेंटकरीता 
 #, java-format
 msgid ""
 "This system already has a subscription for the product ''{0}'' attached."
-msgstr "उत्पादन ''{0}'' करिता ह्या प्रणालीकडे आधीपासूनच सबस्क्रिप्शन जुळलेले आहे."
+msgstr ""
+"उत्पादन ''{0}'' करिता ह्या प्रणालीकडे आधीपासूनच सबस्क्रिप्शन जुळलेले आहे."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:288
 #, java-format
@@ -1425,7 +1441,8 @@ msgstr "गुणधर्म ''{0}'' बूलियन मूल्य पा�
 #, java-format
 msgid ""
 "You cannot create a circular reference for products that ''{0}'' relies on."
-msgstr "''{0}'' वर आधारित उत्पादनांकरीता सर्क्युलर रेफरेंस निर्माण करणे अशक्य."
+msgstr ""
+"''{0}'' वर आधारित उत्पादनांकरीता सर्क्युलर रेफरेंस निर्माण करणे अशक्य."
 
 #: src/main/java/org/candlepin/model/ConsumerCurator.java:396
 #, java-format
@@ -1445,13 +1462,3 @@ msgstr "या प्रकारचे युनिट प्रकार: {0} 
 #, java-format
 msgid "No such unit type: {0}"
 msgstr "ह्या प्रकारचे युनिट प्रकार: {0} नाही"
-
-#~ msgid "Name of the unit must be shorter than {0} characters."
-#~ msgstr "युनिटचे नाव {0} अक्षरांपेक्षा कमी पाहिजे."
-
-#~ msgid "System name cannot be null."
-#~ msgstr "प्रणालीचे नाव null असणे अशक्य."
-
-#~ msgid ""
-#~ "Name, value, and label of the override must not exceed {0} characters."
-#~ msgstr "ओव्हरराइडचे नाव, मूल्य, आणि लेबल {0} अक्षरांपेक्षा जास्त नाही पाहिजे."

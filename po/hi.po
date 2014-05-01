@@ -5,14 +5,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-05-01 15:52-0300\n"
+"POT-Creation-Date: 2012-06-27 12:35-0400\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
 "PO-Revision-Date: 2014-03-10 05:21-0400\n"
 "Last-Translator: rajesh <rajesh@fedoraproject.org>\n"
 "Language-Team: Hindi\n"
 "Language: hi\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 "X-Generator: Zanata 3.3.2\n"
 
@@ -298,7 +298,9 @@ msgstr "सक्रियकरण कुंजी के साथ उपय�
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:440
 msgid "A unit type of 'person' cannot be used with activation keys"
-msgstr "'व्यक्ति' की तरह की इकाई का सक्रियकरण कुंजी के साथ प्रयोग नहीं किया जा सकता है"
+msgstr ""
+"'व्यक्ति' की तरह की इकाई का सक्रियकरण कुंजी के साथ प्रयोग नहीं किया जा सकता "
+"है"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -430,8 +432,8 @@ msgid ""
 "Unit {0} cannot be exported. A manifest cannot be made for units of type "
 "''{1}''."
 msgstr ""
-"इकाई {0} को निर्यात नहीं किया जा सकता है. एक मेनिफेस्ट ''{1}'' प्रकार के इकाई के लिए "
-"नहीं बनाया जा सकता है. "
+"इकाई {0} को निर्यात नहीं किया जा सकता है. एक मेनिफेस्ट ''{1}'' प्रकार के "
+"इकाई के लिए नहीं बनाया जा सकता है. "
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1851
 #, java-format
@@ -610,7 +612,8 @@ msgstr "सक्रियकरण कुंजी के लिए एक न�
 msgid ""
 "The activation key name ''{0}'' must be alphanumeric or include the "
 "characters '-' or '_'"
-msgstr "सक्रियकरण कुंजी नाम ''{0}'' को जरूर वर्णांकिक या वर्ण '-' या '_  होना चाहिए"
+msgstr ""
+"सक्रियकरण कुंजी नाम ''{0}'' को जरूर वर्णांकिक या वर्ण '-' या '_  होना चाहिए"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:537
 #, java-format
@@ -748,7 +751,8 @@ msgstr "ID ''{0}'' के लिए एंटाइटेलमेंट नह�
 msgid ""
 "You must specify exactly one of owner key, unit UUID, or principal name."
 msgstr ""
-"आपको स्वामी कुँजी, इकाई UUID, या प्रधान नाम में से एक को जरूर निर्दिष्ट करना चाहिए."
+"आपको स्वामी कुँजी, इकाई UUID, या प्रधान नाम में से एक को जरूर निर्दिष्ट करना "
+"चाहिए."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author rajesh
@@ -909,7 +913,9 @@ msgstr ""
 msgid ""
 "Cannot add pools that are restricted to unit type 'person' to activation "
 "keys."
-msgstr "इकाई प्रकार 'व्यक्ति' में प्रतिबंधित को सक्रियकरण कुंजी में पुल नहीं जोड़ सकता है."
+msgstr ""
+"इकाई प्रकार 'व्यक्ति' में प्रतिबंधित को सक्रियकरण कुंजी में पुल नहीं जोड़ "
+"सकता है."
 
 #: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:85
 msgid ""
@@ -919,7 +925,8 @@ msgstr ""
 
 #: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:89
 msgid "Activation keys can only use host restricted pools from a single host."
-msgstr "सक्रियन कुँजी किसी एकल होस्ट से मेजबान प्रतिबंधित पुल का उपयोग नहीं करता है."
+msgstr ""
+"सक्रियन कुँजी किसी एकल होस्ट से मेजबान प्रतिबंधित पुल का उपयोग नहीं करता है."
 
 #: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:93
 #, java-format
@@ -933,8 +940,8 @@ msgid ""
 "Error: Only pools with multi-entitlement product subscriptions can be added "
 "to the activation key with a quantity greater than one."
 msgstr ""
-"त्रुटि: बहुल एंटाइटेलमेंट उत्पाद सदस्यता के साथ पूल को सक्रियकरण कुंजी में जोड़ा जा सकता है जो "
-"एक से अधिक बड़ा है."
+"त्रुटि: बहुल एंटाइटेलमेंट उत्पाद सदस्यता के साथ पूल को सक्रियकरण कुंजी में "
+"जोड़ा जा सकता है जो एक से अधिक बड़ा है."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author rajesh
@@ -957,12 +964,14 @@ msgstr ""
 
 #: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:116
 #, java-format
-msgid "Cannot add virtual pool ''{0}'' to activation key for physical systems."
+msgid ""
+"Cannot add virtual pool ''{0}'' to activation key for physical systems."
 msgstr ""
 
 #: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:120
 #, java-format
-msgid "Cannot add physical pool ''{0}'' to activation key for virtual systems."
+msgid ""
+"Cannot add physical pool ''{0}'' to activation key for virtual systems."
 msgstr ""
 
 #: src/main/java/org/candlepin/util/ServiceLevelValidator.java:67
@@ -1088,7 +1097,9 @@ msgstr "अपस्ट्रीम सदस्यता प्रबंधन 
 msgid ""
 "This subscription management application has already been imported by "
 "another owner."
-msgstr "यह सदस्यता प्रबंधन अनुप्रयोग पहले से दूसरे स्वामी द्वारा आयातित किया जा चुका है."
+msgstr ""
+"यह सदस्यता प्रबंधन अनुप्रयोग पहले से दूसरे स्वामी द्वारा आयातित किया जा चुका "
+"है."
 
 #: src/main/java/org/candlepin/sync/ConsumerImporter.java:85
 msgid ""
@@ -1123,7 +1134,8 @@ msgstr ""
 
 #: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:51
 msgid ""
-"numeric value out of bounds (<{integer} digits>.<{fraction} digits> expected)"
+"numeric value out of bounds (<{integer} digits>.<{fraction} digits> "
+"expected)"
 msgstr ""
 
 #: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:55
@@ -1251,12 +1263,12 @@ msgstr "oauth इकाई कुंजी पाने में त्रु�
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
-"to address this problem. See kbase https://access.redhat.com/knowledge/"
-"node/129003 for more information."
+"to address this problem. See kbase https://access.redhat.com/knowledge/node/"
+"129003 for more information."
 msgstr ""
-"प्रमाणपत्र {0} के लिए कई सामग्री सेट. एक नव्यतर क्लाइंट को इस समस्या को संबोधित करने के "
-"लिए जरूर उपलब्ध रहना चाहिए. अधिक सूचना के लिए केबस देखें https://access.redhat.com/"
-"knowledge/node/129003."
+"प्रमाणपत्र {0} के लिए कई सामग्री सेट. एक नव्यतर क्लाइंट को इस समस्या को "
+"संबोधित करने के लिए जरूर उपलब्ध रहना चाहिए. अधिक सूचना के लिए केबस देखें "
+"https://access.redhat.com/knowledge/node/129003."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author rajesh
@@ -1275,6 +1287,7 @@ msgstr "सदस्यता पूल {0} मौजूद नहीं है.
 #, java-format
 msgid ""
 "This unit has already had the subscription matching pool ID ''{0}'' attached."
+""
 msgstr "इस इकाई के पास सदस्यता मैचिंग पुल ID ''{0}'' पहले से संलग्न है."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:114
@@ -1285,7 +1298,9 @@ msgstr "आईडी ''{0}'' के साथ कोई सदस्यता �
 #: src/main/java/org/candlepin/controller/Entitler.java:119
 #, java-format
 msgid "Units of this type are not allowed to attach the pool with ID ''{0}''."
-msgstr "इस प्रकार के इकाई  ''{0}'' के साथ पूल में संलग्न करने के लिए अनुमति प्राप्त नहीं है"
+msgstr ""
+"इस प्रकार के इकाई  ''{0}'' के साथ पूल में संलग्न करने के लिए अनुमति प्राप्त "
+"नहीं है"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:123
 #, java-format
@@ -1321,8 +1336,8 @@ msgid ""
 "Subscription ''{0}'' must be attached using a quantity evenly divisible by "
 "{1}"
 msgstr ""
-"''{0}'' सदस्यता को जरूर संलग्न किया जाना चाहिए ऐसी मात्रा के साथ जो {1} से समान रूप "
-"से विभाज्य हो"
+"''{0}'' सदस्यता को जरूर संलग्न किया जाना चाहिए ऐसी मात्रा के साथ जो {1} से "
+"समान रूप से विभाज्य हो"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:153
 #, java-format
@@ -1343,7 +1358,9 @@ msgstr "इकाई पुल ''{0}'' के द्वारा जरूरी
 #: src/main/java/org/candlepin/controller/Entitler.java:165
 #, java-format
 msgid "Unit does not support derived products data required by pool ''{0}''"
-msgstr "इकाई पुल ''{0}'' के द्वारा जरूरी व्युत्पन्न उत्पाद आँकड़ा का समर्थन नहीं करता है"
+msgstr ""
+"इकाई पुल ''{0}'' के द्वारा जरूरी व्युत्पन्न उत्पाद आँकड़ा का समर्थन नहीं "
+"करता है"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:169
 #, java-format
@@ -1354,19 +1371,23 @@ msgstr "पुल को ID ''{0}'' के साथ संलग्न कर�
 #, java-format
 msgid ""
 "Insufficient pool quantity available for adjustment to entitlement ''{0}''."
-msgstr "''{0}'' एंटाइटेलमेंट में समायोजन के लिए अपर्याप्त खराब मात्रा उपलब्ध है."
+msgstr ""
+"''{0}'' एंटाइटेलमेंट में समायोजन के लिए अपर्याप्त खराब मात्रा उपलब्ध है."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:195
 #: src/main/java/org/candlepin/controller/Entitler.java:200
 #, java-format
 msgid ""
 "Multi-entitlement not supported for pool connected with entitlement ''{0}''."
-msgstr "एंटाइटेलमेंट ''{0}'' के साथ जुड़े पूल के लिए बहुल एंटाइटेलमेंट समर्थित नहीं है."
+msgstr ""
+"एंटाइटेलमेंट ''{0}'' के साथ जुड़े पूल के लिए बहुल एंटाइटेलमेंट समर्थित नहीं "
+"है."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:205
 #, java-format
 msgid "Unable to adjust quantity for the entitlement with id ''{0}'': {1}"
-msgstr "id ''{0}'' के साथ एंटाइटेलमेंट के लिए मात्रा समायोजित करने में असमर्थ: {1}"
+msgstr ""
+"id ''{0}'' के साथ एंटाइटेलमेंट के लिए मात्रा समायोजित करने में असमर्थ: {1}"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:284
 #, java-format
@@ -1425,7 +1446,8 @@ msgstr "विशेषता ''{0}'' को जरूर एक बुलिय
 msgid ""
 "You cannot create a circular reference for products that ''{0}'' relies on."
 msgstr ""
-"उत्पादों के लिए आप कोई वृत्तीय संदर्भ नहीं बना सकते हैं जो ''{0}'' पर भरोसा करता है."
+"उत्पादों के लिए आप कोई वृत्तीय संदर्भ नहीं बना सकते हैं जो ''{0}'' पर भरोसा "
+"करता है."
 
 #: src/main/java/org/candlepin/model/ConsumerCurator.java:396
 #, java-format
@@ -1445,13 +1467,3 @@ msgstr "इस प्रकार का कोई इकाई नहीं: {0
 #, java-format
 msgid "No such unit type: {0}"
 msgstr "कोई इकाई प्रकार नहीं: {0}"
-
-#~ msgid "Name of the unit must be shorter than {0} characters."
-#~ msgstr "इकाई के नाम {0} वर्ण से कम होने चाहिए."
-
-#~ msgid "System name cannot be null."
-#~ msgstr "तंत्र नाम रिक्त नहीं हो सकता है."
-
-#~ msgid ""
-#~ "Name, value, and label of the override must not exceed {0} characters."
-#~ msgstr "नाम, मान, और अधिरोहन का स्तर {0} वर्ण से अधिक नहीं होना चाहिए."

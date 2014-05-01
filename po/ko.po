@@ -5,14 +5,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-05-01 15:52-0300\n"
+"POT-Creation-Date: 2012-06-27 12:35-0400\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
 "PO-Revision-Date: 2014-03-09 07:40-0400\n"
 "Last-Translator: eukim <eukim@fedoraproject.org>\n"
 "Language-Team: Korean\n"
 "Language: ko\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0\n"
 "X-Generator: Zanata 3.3.2\n"
 
@@ -429,9 +429,7 @@ msgstr "시리얼 번호 ''{0}''인 인타이틀먼트 인증서를 찾을 수 �
 msgid ""
 "Unit {0} cannot be exported. A manifest cannot be made for units of type "
 "''{1}''."
-msgstr ""
-"유닛 {0}을(를) 내보내기할 수 없습니다. 유닛 유형 ''{1}''에 대한 매니페스트를 "
-"만들 수 없습니다. "
+msgstr "유닛 {0}을(를) 내보내기할 수 없습니다. 유닛 유형 ''{1}''에 대한 매니페스트를 만들 수 없습니다. "
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1851
 #, java-format
@@ -486,9 +484,7 @@ msgstr "UUID ''{0}''을(를) 갖는 제품을 찾을 수 없습니다."
 #: src/main/java/org/candlepin/resource/ProductResource.java:364
 #, java-format
 msgid "Product with UUID ''{0}'' cannot be deleted while subscriptions exist."
-msgstr ""
-"서브스크립션이 존재하는 동안 UUID ''{0}''을(를) 갖는 제품을 삭제할 수 없습니"
-"다. "
+msgstr "서브스크립션이 존재하는 동안 UUID ''{0}''을(를) 갖는 제품을 삭제할 수 없습니다. "
 
 #: src/main/java/org/candlepin/resource/ProductResource.java:427
 msgid "Must specify product ID."
@@ -512,8 +508,7 @@ msgstr "유효한 게스트 ID를 입력하십시오 "
 #: src/main/java/org/candlepin/resource/GuestIdResource.java:184
 #, java-format
 msgid "Guest ID in json \"{0}\" does not match path guest ID \"{1}\""
-msgstr ""
-"json \"{0}\"에서 게스트 ID는 경로 게스트 ID \"{1}\"과 일치하지 않습니다 "
+msgstr "json \"{0}\"에서 게스트 ID는 경로 게스트 ID \"{1}\"과 일치하지 않습니다 "
 
 #: src/main/java/org/candlepin/resource/GuestIdResource.java:231
 #, java-format
@@ -613,9 +608,7 @@ msgstr "활성화 키의 이름을 반드시 지정해야 합니다. "
 msgid ""
 "The activation key name ''{0}'' must be alphanumeric or include the "
 "characters '-' or '_'"
-msgstr ""
-"활성키 이름 ''{0}''은 알파벳과 숫자 조합이거나 '-' 또는 '_' 문자로 되어 있어"
-"야 합니다."
+msgstr "활성키 이름 ''{0}''은 알파벳과 숫자 조합이거나 '-' 또는 '_' 문자로 되어 있어야 합니다."
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:537
 #, java-format
@@ -676,8 +669,7 @@ msgstr "소유자 {0}의 ueber 인증서를 생성하는 도중 문제 발생 "
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1299
 #, java-format
 msgid "ueber certificate for owner {0} was not found. Please generate one."
-msgstr ""
-"소유자 {0}의 ueber 인증서를 찾을 수 없습니다. 해당 인증서를 생성해 주십시오. "
+msgstr "소유자 {0}의 ueber 인증서를 찾을 수 없습니다. 해당 인증서를 생성해 주십시오. "
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author eukim
@@ -937,9 +929,7 @@ msgstr ""
 msgid ""
 "Error: Only pools with multi-entitlement product subscriptions can be added "
 "to the activation key with a quantity greater than one."
-msgstr ""
-"오류: 멀티 인타이틀먼트 제품 서브스크립션을 갖는 풀 만이 하나 이상의 수량을 "
-"갖는 활성화 키에 추가시킬 수 있습니다.  "
+msgstr "오류: 멀티 인타이틀먼트 제품 서브스크립션을 갖는 풀 만이 하나 이상의 수량을 갖는 활성화 키에 추가시킬 수 있습니다.  "
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author eukim
@@ -962,12 +952,14 @@ msgstr ""
 
 #: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:116
 #, java-format
-msgid "Cannot add virtual pool ''{0}'' to activation key for physical systems."
+msgid ""
+"Cannot add virtual pool ''{0}'' to activation key for physical systems."
 msgstr ""
 
 #: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:120
 #, java-format
-msgid "Cannot add physical pool ''{0}'' to activation key for virtual systems."
+msgid ""
+"Cannot add physical pool ''{0}'' to activation key for virtual systems."
 msgstr ""
 
 #: src/main/java/org/candlepin/util/ServiceLevelValidator.java:67
@@ -1002,9 +994,7 @@ msgstr "런타임 오류 {0}"
 #: src/main/java/org/candlepin/exceptions/mappers/BadRequestExceptionMapper.java:57
 #, java-format
 msgid "Invalid format for query parameter {0}. Expected format: {1}"
-msgstr ""
-"쿼리 매개 변수 {0}에 대해 잘못된 형식입니다. 다음과 같은 형식이어야 합니다: "
-"{1}"
+msgstr "쿼리 매개 변수 {0}에 대해 잘못된 형식입니다. 다음과 같은 형식이어야 합니다: {1}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -1095,15 +1085,12 @@ msgstr "업스트림 서브스크립션 관리 애플리케이션의 ID가 없�
 msgid ""
 "This subscription management application has already been imported by "
 "another owner."
-msgstr ""
-"이 서브스크립션 관리 애플리케이션은 다른 소유자에 의해 이미 가져오기 되었습니"
-"다."
+msgstr "이 서브스크립션 관리 애플리케이션은 다른 소유자에 의해 이미 가져오기 되었습니다."
 
 #: src/main/java/org/candlepin/sync/ConsumerImporter.java:85
 msgid ""
 "Owner has already imported from another subscription management application."
-msgstr ""
-"소유자가 이미 다른 서브스크립션 관리 애플리케이션에서 가져오기되었습니다."
+msgstr "소유자가 이미 다른 서브스크립션 관리 애플리케이션에서 가져오기되었습니다."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author eukim
@@ -1133,7 +1120,8 @@ msgstr ""
 
 #: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:51
 msgid ""
-"numeric value out of bounds (<{integer} digits>.<{fraction} digits> expected)"
+"numeric value out of bounds (<{integer} digits>.<{fraction} digits> "
+"expected)"
 msgstr ""
 
 #: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:55
@@ -1261,12 +1249,11 @@ msgstr "oauth 유닛 키를 가져오는 도중 오류 발생  "
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
-"to address this problem. See kbase https://access.redhat.com/knowledge/"
-"node/129003 for more information."
+"to address this problem. See kbase https://access.redhat.com/knowledge/node/"
+"129003 for more information."
 msgstr ""
-"너무 많은 컨텐츠가 인증서 {0}에 설정되어 있습니다. 새로운 클라이언트의 경우 "
-"이 문제를 처리할 수 있습니다. 자세한 내용은 기술 문서에서 참조하십시오. "
-"(https://access.redhat.com/knowledge/node/129003)"
+"너무 많은 컨텐츠가 인증서 {0}에 설정되어 있습니다. 새로운 클라이언트의 경우 이 문제를 처리할 수 있습니다. 자세한 내용은 기술 "
+"문서에서 참조하십시오. (https://access.redhat.com/knowledge/node/129003)"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author eukim
@@ -1285,8 +1272,8 @@ msgstr "서브스크리션 풀 {0}은(는) 존재하지 않습니다. "
 #, java-format
 msgid ""
 "This unit has already had the subscription matching pool ID ''{0}'' attached."
-msgstr ""
-"이 유닛에는 이미 첨부된 풀 ID ''{0}''와 일치하는 서브스크립션이 있습니다."
+""
+msgstr "이 유닛에는 이미 첨부된 풀 ID ''{0}''와 일치하는 서브스크립션이 있습니다."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:114
 #, java-format
@@ -1301,8 +1288,7 @@ msgstr "이러한 유닛 유형은 ID ''{0}''의 풀에 연결이 허용되지 �
 #: src/main/java/org/candlepin/controller/Entitler.java:123
 #, java-format
 msgid "Multi-entitlement not supported for pool with ID ''{0}''."
-msgstr ""
-"멀티 인타이틀먼트는 ID ''{0}''을(를) 갖는 풀에 대해 지원되지 않습니다. "
+msgstr "멀티 인타이틀먼트는 ID ''{0}''을(를) 갖는 풀에 대해 지원되지 않습니다. "
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -1371,9 +1357,7 @@ msgstr "인타이틀먼트 ''{0}''의 조정에 사용할 수 있는 풀 수량�
 #, java-format
 msgid ""
 "Multi-entitlement not supported for pool connected with entitlement ''{0}''."
-msgstr ""
-"멀티 인타이틀먼트는 인타이틀먼트 ''{0}''에 연결된 풀에 대해 지원되지 않습니"
-"다."
+msgstr "멀티 인타이틀먼트는 인타이틀먼트 ''{0}''에 연결된 풀에 대해 지원되지 않습니다."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:205
 #, java-format
@@ -1441,8 +1425,7 @@ msgstr "''{0}''이 의존하는 제품의 순환 참조를 생성할 수 없습�
 #: src/main/java/org/candlepin/model/ConsumerCurator.java:396
 #, java-format
 msgid "The system with UUID {0} is a virtual guest. It does not have guests."
-msgstr ""
-"UUID {0}을 갖는 시스템은 가상 게스트입니다. 이는 게스트를 갖을 수 없습니다. "
+msgstr "UUID {0}을 갖는 시스템은 가상 게스트입니다. 이는 게스트를 갖을 수 없습니다. "
 
 #: src/main/java/org/candlepin/model/AbstractHibernateCurator.java:418
 msgid "Request failed due to concurrent modification, please re-try."
@@ -1457,13 +1440,3 @@ msgstr "이러한 유닛 유형이 없음: {0}"
 #, java-format
 msgid "No such unit type: {0}"
 msgstr "이러한 유닛 유형이 없음: {0}"
-
-#~ msgid "Name of the unit must be shorter than {0} characters."
-#~ msgstr "유닛 이름은 {0}자 미만이어야 합니다. "
-
-#~ msgid "System name cannot be null."
-#~ msgstr "시스템 이름은 null일 수 없습니다."
-
-#~ msgid ""
-#~ "Name, value, and label of the override must not exceed {0} characters."
-#~ msgstr "덮어쓰기하려면 이름,값, 레이블이 {0} 자를 초과해서는 안됩니다."
