@@ -1329,42 +1329,24 @@ public class CandlepinPoolManager implements PoolManager {
         // Note that something could change between the time we list a pool as
         // available, and the consumer requests the actual entitlement, and the
         // request still could fail.
-        List<Pool> preFilterResults = page.getPageData();
-        List<Pool> newResults = new LinkedList<Pool>();
-        for (Pool p : preFilterResults) {
-            ValidationResult result = new ValidationResult();
-            if (consumer != null) {
-                result.add(enforcer.preEntitlement(
-                    consumer, p, 1, CallerType.LIST_POOLS));
-            }
-            if (key != null) {
-                result.add(activationKeyRules.runPreActKey(key, p, null));
-            }
-
-            if (result.isSuccessful() && (!result.hasWarnings() || includeWarnings)) {
-                newResults.add(p);
-            }
-            else {
-                if (log.isDebugEnabled()) {
-                    log.debug("Omitting pool due to failed rules: " + p.getId());
-                    if (result.hasErrors()) {
-                        log.debug("\tErrors: " + result.getErrors());
-                    }
-                    if (result.hasWarnings()) {
-                        log.debug("\tWarnings: " + result.getWarnings());
-                    }
-                }
-            }
+        List<Pool> resultingPools = page.getPageData();
+        if (consumer != null) {
+            resultingPools = enforcer.filterPools(
+                consumer, resultingPools, includeWarnings);
+        }
+        if (key != null) {
+            resultingPools = this.filterPoolsForActKey(
+                key, resultingPools, includeWarnings);
         }
 
         // Set maxRecords once we are done filtering
-        page.setMaxRecords(newResults.size());
+        page.setMaxRecords(resultingPools.size());
 
         if (pageRequest != null && pageRequest.isPaging()) {
-            newResults = poolCurator.takeSubList(pageRequest, newResults);
+            resultingPools = poolCurator.takeSubList(pageRequest, resultingPools);
         }
 
-        page.setPageData(newResults);
+        page.setPageData(resultingPools);
         return page;
     }
 
@@ -1399,5 +1381,26 @@ public class CandlepinPoolManager implements PoolManager {
 
     public List<Pool> getOwnerSubPoolsForStackId(Owner owner, String stackId) {
         return poolCurator.getOwnerSubPoolsForStackId(owner, stackId);
+    }
+
+    private List<Pool> filterPoolsForActKey(ActivationKey key,
+        List<Pool> pools, boolean includeWarnings) {
+        List<Pool> filteredPools = new LinkedList<Pool>();
+        for (Pool p : pools) {
+            ValidationResult result = activationKeyRules.runPreActKey(key, p, null);
+            if (result.isSuccessful() && (!result.hasWarnings() || includeWarnings)) {
+                filteredPools.add(p);
+            }
+            else if (log.isDebugEnabled()) {
+                log.debug("Omitting pool due to failed rules: " + p.getId());
+                if (result.hasErrors()) {
+                    log.debug("\tErrors: " + result.getErrors());
+                }
+                if (result.hasWarnings()) {
+                    log.debug("\tWarnings: " + result.getWarnings());
+                }
+            }
+        }
+        return filteredPools;
     }
 }

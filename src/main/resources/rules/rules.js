@@ -1,4 +1,4 @@
-// Version: 5.8
+// Version: 5.9
 
 /*
  * Default Candlepin rule set.
@@ -1279,10 +1279,8 @@ var Entitlement = {
             "cores:1:cores," +
             "requires_consumer_type:1:requires_consumer_type," +
             "virt_only:1:virt_only," +
-            "virt_limit:1:virt_limit," +
             "requires_host:1:requires_host," +
             "instance_multiplier:1:instance_multiplier," +
-            "guest_limit:1:guest_limit," +
             "vcpu:1:vcpu," +
             "physical_only:1:physical_only";
     },
@@ -1311,6 +1309,12 @@ var Entitlement = {
             context.pool = createPool(context.pool);
         }
 
+        if ("pools" in context) {
+            for (var i = 0; i < context.pools.length; i++) {
+                context.pools[i] = createPool(context.pools[i]);
+            }
+        }
+
         context.hasEntitlement = function(poolId) {
             for (var k = 0; k < this.consumerEntitlements.length; k++) {
                 var e = this.consumerEntitlements[k];
@@ -1335,9 +1339,24 @@ var Entitlement = {
         return context;
     },
 
-    pre_virt_only: function() {
-        var result = Entitlement.ValidationResult();
-        context = Entitlement.get_attribute_context();
+    // Creates a wrapper function for do_FOO functions so that old candlepins
+    // can still call "pre_cores()" the old way.  The wrapper loads the necessary
+    // context data, and handles stringifying the result.
+    //
+    // We can remove this function and wrappers once the rules hit 6.0
+    build_func: function(element) {
+        // the existing function
+        do_func = this[element];
+        // Create a new function that encapsulates it
+        return function() {
+            var result = Entitlement.ValidationResult();
+            context = Entitlement.get_attribute_context();
+            do_func(context, result);
+            return JSON.stringify(result);
+        }
+    },
+
+    do_pre_virt_only: function(context, result) {
         var caller = context.caller;
         var consumer = context.consumer;
         var virt_pool = Utils.equalsIgnoreCase('true', context.getAttribute(context.pool, VIRT_ONLY));
@@ -1360,12 +1379,13 @@ var Entitlement = {
                 }
             }
         }
-        return JSON.stringify(result);
     },
 
-    pre_physical_only: function() {
-        var result = Entitlement.ValidationResult();
-        context = Entitlement.get_attribute_context();
+    pre_virt_only: function() {
+        return this.build_func("do_pre_virt_only")();
+    },
+
+    do_pre_physical_only: function(context, result) {
         var caller = context.caller;
         var consumer = context.consumer;
         var physical_pool = Utils.equalsIgnoreCase('true', context.getAttribute(context.pool, PHYSICAL_ONLY));
@@ -1382,13 +1402,13 @@ var Entitlement = {
                 }
             }
         }
-        return JSON.stringify(result);
     },
 
-    pre_requires_host: function() {
-        var result = Entitlement.ValidationResult();
-        context = Entitlement.get_attribute_context();
+    pre_physical_only: function() {
+        return this.build_func("do_pre_physical_only")();
+    },
 
+    do_pre_requires_host: function(context, result) {
         // requires_host derived pools not available to manifest
         if (context.consumer.type.manifest) {
             result.addError("pool.not.available.to.manifest.consumers");
@@ -1405,12 +1425,13 @@ var Entitlement = {
                                                                    REQUIRES_HOST_ATTRIBUTE)) {
             result.addError("virt.guest.host.does.not.match.pool.owner");
         }
-        return JSON.stringify(result);
     },
 
-    pre_requires_consumer_type: function() {
-        var result = Entitlement.ValidationResult();
-        context = Entitlement.get_attribute_context();
+    pre_requires_host: function() {
+        return this.build_func("do_pre_requires_host")();
+    },
+
+    do_pre_requires_consumer_type: function(context, result) {
         // Distributors can access everything
         if (context.consumer.type.manifest) {
             return JSON.stringify(result);
@@ -1429,19 +1450,13 @@ var Entitlement = {
                 }
             }
         }
-        return JSON.stringify(result);
     },
 
-    pre_virt_limit: function() {
+    pre_requires_consumer_type: function() {
+        return this.build_func("do_pre_requires_consumer_type")();
     },
 
-    pre_guest_limit: function() {
-    },
-
-    pre_vcpu: function() {
-        var result = Entitlement.ValidationResult();
-        context = Entitlement.get_attribute_context();
-
+    do_pre_vcpu: function(context, result) {
         var consumer = context.consumer;
         var pool = context.pool;
         var caller = context.caller;
@@ -1460,12 +1475,13 @@ var Entitlement = {
         // Don't check if the manifest consumer is capable,
         // this attribute has existed for a while
         // now, we have just never checked it before
-        return JSON.stringify(result);
     },
 
-    pre_architecture: function() {
-        var result = Entitlement.ValidationResult();
-        context = Entitlement.get_attribute_context();
+    pre_vcpu: function() {
+        return this.build_func("do_pre_vcpu")();
+    },
+
+    do_pre_architecture: function(context, result) {
         var consumer = context.consumer;
         if (consumer.type.manifest) {
             return JSON.stringify(result);
@@ -1476,12 +1492,13 @@ var Entitlement = {
                                  context.consumer.type.label)) {
             result.addWarning("rulewarning.architecture.mismatch");
         }
-        return JSON.stringify(result);
     },
 
-    pre_sockets: function() {
-        var result = Entitlement.ValidationResult();
-        context = Entitlement.get_attribute_context();
+    pre_architecture: function() {
+        return this.build_func("do_pre_architecture")();
+    },
+
+    do_pre_sockets: function(context, result) {
         var consumer = context.consumer;
         var pool = context.pool;
 
@@ -1497,13 +1514,13 @@ var Entitlement = {
                 result.addWarning("rulewarning.unsupported.number.of.sockets");
             }
         }
-        return JSON.stringify(result);
     },
 
-    pre_cores: function() {
-        var result = Entitlement.ValidationResult();
-        context = Entitlement.get_attribute_context();
+    pre_sockets: function() {
+        return this.build_func("do_pre_sockets")();
+    },
 
+    do_pre_cores: function(context, result) {
         var consumer = context.consumer;
         var pool = context.pool;
         var caller = context.caller;
@@ -1530,12 +1547,13 @@ var Entitlement = {
                 }
             }
         }
-        return JSON.stringify(result);
     },
 
-    pre_ram: function() {
-        var result = Entitlement.ValidationResult();
-        context = Entitlement.get_attribute_context();
+    pre_cores: function() {
+        return this.build_func("do_pre_cores")();
+    },
+
+    do_pre_ram: function(context, result) {
         var caller = context.caller;
         var consumer = context.consumer;
 
@@ -1560,12 +1578,13 @@ var Entitlement = {
                 }
             }
         }
-        return JSON.stringify(result);
     },
 
-    pre_instance_multiplier: function() {
-        var result = Entitlement.ValidationResult();
-        context = Entitlement.get_attribute_context();
+    pre_ram: function() {
+        return this.build_func("do_pre_ram")();
+    },
+
+    do_pre_instance_multiplier: function(context, result) {
         var pool = context.pool;
         var caller = context.caller;
         var consumer = context.consumer;
@@ -1599,12 +1618,13 @@ var Entitlement = {
                 }
             }
         }
-        return JSON.stringify(result);
     },
 
-    pre_global: function() {
-        var result = Entitlement.ValidationResult();
-        context = Entitlement.get_attribute_context();
+    pre_instance_multiplier: function() {
+        return this.build_func("do_pre_instance_multiplier")();
+    },
+
+    do_pre_global: function(context, result) {
         var pool = context.pool;
         var caller = context.caller;
         var consumer = context.consumer;
@@ -1626,34 +1646,77 @@ var Entitlement = {
                     result.addWarning("rulewarning.derivedproduct.unsupported.by.consumer");
                 }
             }
-            return JSON.stringify(result);
-        }
+        } else {
+            if (context.hasEntitlement(pool.id) && !Utils.isMultiEnt(pool)) {
+                result.addError("rulefailed.consumer.already.has.product");
+            }
 
-        if (context.hasEntitlement(pool.id) && !Utils.isMultiEnt(pool)) {
-            result.addError("rulefailed.consumer.already.has.product");
-        }
+            if (context.quantity > 1 && !Utils.isMultiEnt(pool)) {
+                result.addError("rulefailed.pool.does.not.support.multi-entitlement");
+            }
 
-        if (context.quantity > 1 && !Utils.isMultiEnt(pool)) {
-            result.addError("rulefailed.pool.does.not.support.multi-entitlement");
-        }
+            // If the product has no required consumer type, assume it is restricted to "system".
+            // "hypervisor"/"uebercert" type are essentially the same as "system".
+            if (!pool.getProductAttribute("requires_consumer_type")) {
+                if (consumer.type.label != SYSTEM_TYPE && consumer.type.label != HYPERVISOR_TYPE &&
+                        consumer.type.label != UEBERCERT_TYPE) {
+                    result.addError("rulefailed.consumer.type.mismatch");
+                }
+            }
 
-
-        // If the product has no required consumer type, assume it is restricted to "system".
-        // "hypervisor"/"uebercert" type are essentially the same as "system".
-        if (!pool.getProductAttribute("requires_consumer_type")) {
-            if (consumer.type.label != SYSTEM_TYPE && consumer.type.label != HYPERVISOR_TYPE &&
-                    consumer.type.label != UEBERCERT_TYPE) {
-                result.addError("rulefailed.consumer.type.mismatch");
+            if (pool.restrictedToUsername != null && pool.restrictedToUsername != consumer.username) {
+                result.addError("pool.not.available.to.user, pool= '" + pool.restrictedToUsername + "', actual username='" + consumer.username + "'" );
             }
         }
+    },
 
-        if (pool.restrictedToUsername != null && pool.restrictedToUsername != consumer.username) {
-            result.addError("pool.not.available.to.user, pool= '" + pool.restrictedToUsername + "', actual username='" + consumer.username + "'" );
+    pre_global: function() {
+        return this.build_func("do_pre_global")();
+    },
+
+    get_validators: function(pool) {
+        var validators = [this.do_pre_global];
+        var mappings = this.attribute_mappings().split(",");
+        for (var i = 0; i < mappings.length; i++) {
+            var attr_data = mappings[i].split(":");
+            var funcname = "do_pre_" + attr_data[0];
+            var attribute = attr_data[2];
+            if (pool.hasAttribute(attribute)) {
+                validators.push(this[funcname]);
+            }
         }
+        return validators;
+    },
 
+    validate_pool: function() {
+        context = this.get_attribute_context();
+        validators = this.get_validators(context.pool);
+        var result = this.ValidationResult();
+        for (var k = 0; k < validators.length; k++) {
+            validators[k](context, result);
+        }
         return JSON.stringify(result);
     },
 
+    validate_pools_list: function() {
+        context = this.get_attribute_context();
+        // We know the caller is list pools, use quantity 1
+        context.quantity = 1;
+
+        var result_map = {};
+        for (var i = 0; i < context.pools.length; i++) {
+            pool = context.pools[i]
+            validators = this.get_validators(pool);
+            var result = this.ValidationResult();
+            for (var k = 0; k < validators.length; k++) {
+                // Set up the context to work like an individual validation
+                context.pool = pool;
+                validators[k](context, result);
+            }
+            result_map[pool['id']] = result;
+        }
+        return JSON.stringify(result_map);
+    },
 }
 
 var Autobind = {

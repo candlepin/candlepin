@@ -14,6 +14,8 @@
  */
 package org.candlepin.policy.js.entitlement;
 
+import java.util.List;
+
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
@@ -84,6 +86,15 @@ public interface Enforcer {
      */
     ValidationResult preEntitlement(Consumer consumer, Pool entitlementPool,
         Integer quantity, CallerType caller);
+
+    /**
+     * @param consumer Consumer who wishes to consume an entitlement.
+     * @param pools Entitlement pools to potentially consume from.
+     * @param showAll if true, allows pools with warnings
+     * @return list of valid pools for the given consumer
+     */
+    List<Pool> filterPools(Consumer consumer, List<Pool> pools, boolean showAll);
+
     /**
      * Run post-entitlement actions.
      *
