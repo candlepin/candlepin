@@ -21,24 +21,23 @@
   <!-- Source location for Candlepin software collection jar dependencies in a regular build. -->
   <property name="scl.lib.dir" location="${scllibdir}" />
 
-  <!-- List of jars we expect to install from /usr/share/java in a regular build. -->
-  <property name="jar.deps" value="antlr aopalliance apache-mime4j bcprov-jdk16 c3p0
-    sisu-cglib/cglib jackson-annotations jackson-core jackson-databind
-    jackson-jaxrs-providers/jackson-jaxrs-json-provider jackson-module-jaxb-annotations
-    jackson-jaxrs-providers/jackson-jaxrs-base istack-commons-runtime
-    commons-codec commons-collections
-    commons-httpclient commons-io commons-lang
-    dom4j gettext-commons google-collections guice
-    guice-assistedinject guice-multibindings guice-persist guice-servlet
-    guice-throwingproviders hibernate-commons-annotations
-    hibernate4-core hibernate4-c3p0 hibernate4-entitymanager hornetq-commons hornetq-server
-    hornetq-core-client hornetq-journal javassist javax.inject jaxb-impl
-    jboss-logging hibernate-jpa-2.0-api jta log4j netty oauth/oauth oauth/oauth-provider
-    postgresql-jdbc resteasy/resteasy-atom-provider
-    resteasy/resteasy-guice resteasy/resteasy-jaxb-provider
-    resteasy/resteasy-jaxrs resteasy/jaxrs-api
-    resteasy/resteasy-multipart-provider scannotation servlet javamail/mail
-    slf4j-api logback-classic logback-core jcl-over-slf4j validation-api hibernate-validator" />
+  <!-- A newline delimited list of all the JAR dependencies -->
+  <!-- Use /dev/null if not set -->
+  <condition property="deps.file" value="/dev/null">
+      <not><isset property="deps.file"/></not>
+  </condition>
+
+  <!-- List of jars we expect to install from /usr/share/java in a regular build.
+       The input should be a newline delimited list of artifact names or coordinates
+       that build-jar-repository can understand. -->
+  <loadfile property="jar.deps" srcFile="${deps.file}">
+      <filterchain>
+          <stripjavacomments/>
+          <prefixlines prefix=" "/>
+          <striplinebreaks/>
+          <trim/>
+      </filterchain>
+  </loadfile>
 
   <macrodef name="grepfromspec">
     <attribute name="text" />

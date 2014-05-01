@@ -10,21 +10,25 @@
 # This is technically just a temporary directory to get us through
 # the compilation phase. It is later destroyed and the spec file will
 # re-call initjars with the correct destination for both tomcat and jboss.
-%define distlibdir $RPM_BUILD_ROOT/%{_tmppath}/distlibdir/
-%define libdir %{_datadir}/java/
+%global distlibdir %{buildroot}/%{_tmppath}/distlibdir/
+%global libdir %{_javadir}
 
 # We require the Candlepin SCL, but because we are not an SCL package
 # ourselves, we need to point to deps in the expected location.
-%define scllibdir /opt/rh/candlepin-scl/root
+%global scllibdir /opt/rh/candlepin-scl/root
 
-%if 0%{?fedora}
-%define reqcpdeps 1
-%endif
+%{?fedora:%global reqcpdeps 1}
+
+# Ideally we would just use %{dist} for the deps_suffix, but %dist isn't just always
+# the major version.  E.g. rpm --eval "%{dist}" returns ".el6_5" in the RHEL 6
+# candlepin buildroot and ".el6" in other environments.
+%{?fedora:%global deps_suffix fc%{fedora}}
+%{?rhel:%global deps_suffix el%{rhel}}
 
 %if 0%{?fedora} >= 19
-%define tomcat tomcat
+%global tomcat tomcat
 %else
-%define tomcat tomcat6
+%global tomcat tomcat6
 %endif
 
 Name: candlepin
@@ -42,22 +46,15 @@ BuildArch: noarch
 
 BuildRequires: java-devel >= 0:1.6.0
 BuildRequires: ant >= 0:1.7.0
-%if 0%{?rhel}
-BuildRequires: ant-nodeps >= 0:1.7.0
-%endif
-
 BuildRequires: gettext
 BuildRequires: selinux-policy-doc
 
-
 %if 0%{?reqcpdeps}
-%define distlibdir %{_datadir}/%{name}/lib/
-%define libdir %{_datadir}/%{name}/lib/
-%define usecpdeps "usecpdeps"
+%global distlibdir %{_datadir}/%{name}/lib/
+%global libdir %{_datadir}/%{name}/lib/
+%global usecpdeps "usecpdeps"
 BuildRequires: candlepin-deps >= 0:0.2.3
 %else
-%define usecpdeps ""
-
 # Require the candlepin software collection for packages we use that may
 # conflict with other projects/releases:
 BuildRequires: scl-utils-build
@@ -66,21 +63,36 @@ BuildRequires: candlepin-scl
 BuildRequires: antlr >= 0:2.7.7
 BuildRequires: bouncycastle
 BuildRequires: hibernate4-core >= 0:4.2.5
+BuildRequires: hibernate4-entitymanager >= 0:4.2.5
 BuildRequires: hibernate4-c3p0 >= 0:4.2.5
-BuildRequires: javassist >= 3.12.0
+%if 0%{?rhel} >= 7
+BuildRequires: glassfish-jaxb
+BuildRequires: guava >= 0:13.0
+BuildRequires: apache-commons-collections
+BuildRequires: mvn(org.slf4j:slf4j-api)  >= 0:1.7.4
+BuildRequires: mvn(org.slf4j:jcl-over-slf4j)  >= 0:1.7.4
+BuildRequires: mvn(ch.qos.logback:logback-classic)
+%else
+BuildRequires: ant-nodeps >= 0:1.7.0
+BuildRequires: jaxb-impl
+BuildRequires: google-collections >= 0:1.0
 BuildRequires: commons-collections >= 3.1
+BuildRequires: slf4j-api >= 0:1.7.5
+BuildRequires: jcl-over-slf4j >= 0:1.7.5
+BuildRequires: logback-classic
+%endif
+
+BuildRequires: javassist >= 3.12.0
 
 # for schema
-BuildRequires: hibernate4-entitymanager >= 0:4.2.5
 BuildRequires: hibernate3-commons-annotations >= 0:4.0.1
 BuildRequires: hibernate-beanvalidation-api >= 1.0.0
 BuildRequires: hibernate4-validator >= 0:4.2.5
 
-BuildRequires: google-collections >= 0:1.0
+BuildRequires: liquibase >= 0:2.0.5
 BuildRequires: resteasy >= 0:2.3.1
 BuildRequires: hornetq >= 0:2.3.5
 BuildRequires: google-guice >= 0:3.0
-BuildRequires: logback-classic
 BuildRequires: jakarta-commons-lang
 BuildRequires: jakarta-commons-io
 BuildRequires: apache-commons-codec
@@ -96,11 +108,8 @@ BuildRequires: jackson-module-jaxb-annotations >= %{jackson_version}
 BuildRequires: jakarta-commons-httpclient
 BuildRequires: hibernate-jpa-2.0-api >= 1.0.1
 BuildRequires: netty
-BuildRequires: jaxb-impl
 BuildRequires: jms >= 0:1.1
 BuildRequires: oauth >= 20100601-4
-BuildRequires: slf4j-api >= 0:1.7.5
-BuildRequires: jcl-over-slf4j >= 0:1.7.5
 
 # needed to setup runtime deps, not for compilation
 BuildRequires: c3p0 >= 0.9.1.2
@@ -119,7 +128,7 @@ BuildRequires: apache-mime4j
 Requires: java >= 0:1.6.0
 #until cpsetup is removed
 Requires: wget
-Requires: liquibase >= 2.0.5
+Requires: liquibase >= 0:2.0.5
 Requires: postgresql-jdbc
 
 # specific requires
@@ -128,6 +137,22 @@ Requires: postgresql-jdbc
 # candlepin webapp requires
 Requires: antlr >= 0:2.7.7
 Requires: bouncycastle
+%if 0%{?rhel} >= 7
+Requires: glassfish-jaxb
+Requires: guava >= 0:13.0
+Requires: apache-commons-collections
+Requires: mvn(org.slf4j:slf4j-api)  >= 0:1.7.4
+Requires: mvn(org.slf4j:jcl-over-slf4j)  >= 0:1.7.4
+Requires: mvn(ch.qos.logback:logback-classic)
+%else
+Requires: jaxb-impl
+Requires: google-collections >= 0:1.0
+Requires: commons-collections >= 3.1
+Requires: slf4j-api >= 0:1.7.5-4
+# apache-mime4j uses commons-logging, so we have to provide a slf4j bridge
+Requires: jcl-over-slf4j >= 0:1.7.5
+Requires: logback-classic
+%endif
 Requires: hibernate4-core >= 0:4.2.5
 Requires: hibernate4-entitymanager >= 0:4.2.5
 Requires: hibernate4-c3p0 >= 0:4.2.5
@@ -147,25 +172,18 @@ Requires: jackson-module-jaxb-annotations >= %{jackson_version}
 Requires: hornetq >= 0:2.3.5
 Requires: netty
 Requires: oauth >= 20100601-4
-Requires: logback-classic
-Requires: jaxb-impl
 Requires: scannotation
-Requires: slf4j-api >= 0:1.7.5-4
-# apache-mime4j uses commons-logging, so we have to provide a slf4j bridge
-Requires: jcl-over-slf4j >= 0:1.7.5
 Requires: jakarta-commons-lang
 Requires: jakarta-commons-io
 Requires: apache-commons-codec
 Requires: jakarta-commons-httpclient
-Requires: google-collections >= 0:1.0
 Requires: apache-mime4j
 Requires: gettext-commons
 Requires: javamail
 Requires: javassist >= 3.12.0
-Requires: commons-collections >= 3.1
 Requires: jta
 %endif
-%define __jar_repack %{nil}
+%global __jar_repack %{nil}
 
 %description
 Candlepin is an open source entitlement management system.
@@ -217,7 +235,8 @@ SELinux policy module supporting candlepin
 mkdir -p %{distlibdir}
 
 %build
-ant -Dlibdir=%{libdir} -Ddistlibdir=%{distlibdir} -Dscllibdir=%{scllibdir}/%{_datadir}/java/ clean %{usecpdeps} package
+# Once candlepin-deps is gone we can remove the %{?rhel} conditional
+ant %{?rhel:-Ddeps.file=deps/%{deps_suffix}.txt} -Dlibdir=%{libdir} -Ddistlibdir=%{distlibdir} -Dscllibdir=%{scllibdir}/%{_datadir}/java/ clean %{?reqcpdeps:usecpdeps} package
 
 cd selinux
 for selinuxvariant in %{selinux_variants}
@@ -229,62 +248,62 @@ done
 cd -
 
 %install
-rm -rf $RPM_BUILD_ROOT
+rm -rf %{buildroot}
 # Create the directory structure required to lay down our files
 # common
-install -d -m 755 $RPM_BUILD_ROOT/%{_sysconfdir}/%{name}/certs/
-install -d -m 755 $RPM_BUILD_ROOT/%{_sysconfdir}/%{name}/certs/upstream/
+install -d -m 755 %{buildroot}/%{_sysconfdir}/%{name}/certs/
+install -d -m 755 %{buildroot}/%{_sysconfdir}/%{name}/certs/upstream/
 install -m 644 conf/candlepin-redhat-ca.crt %{buildroot}%{_sysconfdir}/%{name}/certs/upstream/
 install -d 755 %{buildroot}%{_sysconfdir}/logrotate.d/
 install -m 644 conf/logrotate.conf %{buildroot}%{_sysconfdir}/logrotate.d/%{name}
-install -d -m 755 $RPM_BUILD_ROOT/%{_sysconfdir}/%{name}/
-install -d -m 755 $RPM_BUILD_ROOT/%{_datadir}/%{name}/
-install -m 755 code/setup/cpsetup $RPM_BUILD_ROOT/%{_datadir}/%{name}/cpsetup
-install -m 755 code/setup/cpdb $RPM_BUILD_ROOT/%{_datadir}/%{name}/cpdb
-touch $RPM_BUILD_ROOT/%{_sysconfdir}/%{name}/%{name}.conf
+install -d -m 755 %{buildroot}/%{_sysconfdir}/%{name}/
+install -d -m 755 %{buildroot}/%{_datadir}/%{name}/
+install -m 755 code/setup/cpsetup %{buildroot}/%{_datadir}/%{name}/cpsetup
+install -m 755 code/setup/cpdb %{buildroot}/%{_datadir}/%{name}/cpdb
+touch %{buildroot}/%{_sysconfdir}/%{name}/%{name}.conf
 
 # tomcat
-install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/%{tomcat}/webapps/
-install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/%{tomcat}/webapps/%{name}/
-install -d -m 755 $RPM_BUILD_ROOT/%{_sysconfdir}/%{tomcat}/
-unzip target/%{name}-%{version}.war -d $RPM_BUILD_ROOT/%{_localstatedir}/lib/%{tomcat}/webapps/%{name}/
+install -d -m 755 %{buildroot}/%{_localstatedir}/lib/%{tomcat}/webapps/
+install -d -m 755 %{buildroot}/%{_localstatedir}/lib/%{tomcat}/webapps/%{name}/
+install -d -m 755 %{buildroot}/%{_sysconfdir}/%{tomcat}/
+unzip target/%{name}-%{version}.war -d %{buildroot}/%{_localstatedir}/lib/%{tomcat}/webapps/%{name}/
 
 
 %if !0%{?reqcpdeps}
 #remove the copied jars and resymlink
-rm $RPM_BUILD_ROOT/%{_localstatedir}/lib/%{tomcat}/webapps/%{name}/WEB-INF/lib/*.jar
-ant -Ddistlibdir=$RPM_BUILD_ROOT/%{_localstatedir}/lib/%{tomcat}/webapps/%{name}/WEB-INF/lib/ -Dscllibdir=%{scllibdir}/%{_datadir}/java/ initjars
+rm %{buildroot}/%{_localstatedir}/lib/%{tomcat}/webapps/%{name}/WEB-INF/lib/*.jar
+ant %{?rhel:-Ddeps.file=deps/%{deps_suffix}.txt} -Ddistlibdir=%{buildroot}/%{_localstatedir}/lib/%{tomcat}/webapps/%{name}/WEB-INF/lib/ -Dscllibdir=%{scllibdir}/%{_datadir}/java/ initjars
 
 %endif
-ln -s /etc/candlepin/certs/keystore $RPM_BUILD_ROOT/%{_sysconfdir}/%{tomcat}/keystore
+ln -s /etc/candlepin/certs/keystore %{buildroot}/%{_sysconfdir}/%{tomcat}/keystore
 
 # devel
-install -d -m 755 $RPM_BUILD_ROOT/%{_datadir}/%{name}/lib/
-install -m 644 target/%{name}-api-%{version}.jar $RPM_BUILD_ROOT/%{_datadir}/%{name}/lib/
+install -d -m 755 %{buildroot}/%{_datadir}/%{name}/lib/
+install -m 644 target/%{name}-api-%{version}.jar %{buildroot}/%{_datadir}/%{name}/lib/
 
 # jar
-install -d -m 755 $RPM_BUILD_ROOT/usr/share/java
-install -m 644 target/%{name}-certgen-%{version}.jar $RPM_BUILD_ROOT/usr/share/java/
-ln -s /usr/share/java/candlepin-certgen-%{version}.jar $RPM_BUILD_ROOT/usr/share/java/candlepin-certgen.jar
+install -d -m 755 %{buildroot}/usr/share/java
+install -m 644 target/%{name}-certgen-%{version}.jar %{buildroot}/usr/share/java/
+ln -s /usr/share/java/candlepin-certgen-%{version}.jar %{buildroot}/usr/share/java/candlepin-certgen.jar
 
 # /var/lib dir for hornetq state
-install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/%{name}
+install -d -m 755 %{buildroot}/%{_localstatedir}/lib/%{name}
 
-install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/log/%{name}
-install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/cache/%{name}
+install -d -m 755 %{buildroot}/%{_localstatedir}/log/%{name}
+install -d -m 755 %{buildroot}/%{_localstatedir}/cache/%{name}
 
 cd selinux
 for selinuxvariant in %{selinux_variants}
 do
-  install -d $RPM_BUILD_ROOT/%{_datadir}/selinux/${selinuxvariant}
+  install -d %{buildroot}/%{_datadir}/selinux/${selinuxvariant}
   install -p -m 644 %{modulename}.pp.${selinuxvariant} \
-    $RPM_BUILD_ROOT/%{_datadir}/selinux/${selinuxvariant}/%{modulename}.pp
+    %{buildroot}/%{_datadir}/selinux/${selinuxvariant}/%{modulename}.pp
 done
 cd -
-/usr/sbin/hardlink -cv $RPM_BUILD_ROOT/%{_datadir}/selinux
+/usr/sbin/hardlink -cv %{buildroot}/%{_datadir}/selinux
 
 %clean
-rm -rf $RPM_BUILD_ROOT
+rm -rf %{buildroot}
 rm -rf %{_tmppath}/distlibdir
 
 %post selinux
