@@ -67,14 +67,20 @@ public class AMQPBusPubProvider implements Provider<AMQPBusPublisher> {
         try {
             configureSslProperties(config);
 
-            this.mapper = omapper;
-            this.ctx = new InitialContext(buildConfigurationProperties(config));
-            ConnectionFactory connectionFactory = (ConnectionFactory) ctx
-                .lookup("qpidConnectionfactory");
-            this.connection = (TopicConnection) connectionFactory
-                .createConnection();
-            this.session = this.connection.createTopicSession(false,
-                Session.AUTO_ACKNOWLEDGE);
+            mapper = omapper;
+
+            log.info("building initialcontext");
+            ctx = new InitialContext(buildConfigurationProperties(config));
+
+            log.info("looking up qpidConnectionfactory");
+            ConnectionFactory connectionFactory =
+                (ConnectionFactory) ctx.lookup("qpidConnectionfactory");
+
+            log.info("creating connection");
+            connection = (TopicConnection) connectionFactory.createConnection();
+
+            log.info("creating topic session");
+            session = connection.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
         }
         catch (Exception ex) {
             log.error("Unable to instantiate AMQPBusProvider: ", ex);
@@ -95,6 +101,8 @@ public class AMQPBusPubProvider implements Provider<AMQPBusPublisher> {
             config.getString(ConfigProperties.AMQP_TRUSTSTORE));
         System.setProperty("javax.net.ssl.trustStorePassword",
             config.getString(ConfigProperties.AMQP_TRUSTSTORE_PASSWORD));
+
+        log.info("Configured SSL properites.");
     }
 
     /**
@@ -120,6 +128,9 @@ public class AMQPBusPubProvider implements Provider<AMQPBusPublisher> {
                 properties.put("destination." + name, "event/" + destination);
             }
         }
+
+        log.debug("Properties: " + properties);
+
         return properties;
     }
 
