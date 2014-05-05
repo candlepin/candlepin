@@ -103,8 +103,10 @@ public class CandlepinCommonTestingModule extends CandlepinModule {
         bind(JPAInitializer.class).asEagerSingleton();
 
         bind(X509ExtensionUtil.class);
-        bind(Config.class).to(CandlepinCommonTestConfig.class)
-            .asEagerSingleton();
+
+        // allowing folks to override the config in unit tests.
+        bindConfig();
+
         bind(LoggingConfig.class).asEagerSingleton();
         bind(ConsumerResource.class);
         bind(PoolResource.class);
@@ -163,5 +165,12 @@ public class CandlepinCommonTestingModule extends CandlepinModule {
 
     public TestingInterceptor securityInterceptor() {
         return authMethodInterceptor;
+    }
+
+    /**
+     * Allows overriding the Config bind from a test class.
+     */
+    protected void bindConfig() {
+        bind(Config.class).to(CandlepinCommonTestConfig.class).asEagerSingleton();
     }
 }

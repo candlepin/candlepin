@@ -39,10 +39,8 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
@@ -61,7 +59,7 @@ public class CandlepinContextListenerTest {
 
     @Before
     public void init() {
-        config = new Config(new HashMap<String, String>());
+        config = mock(Config.class);
         hqlistener = mock(HornetqContextListener.class);
         pinlistener = mock(PinsetterContextListener.class);
         buspublisher = mock(AMQPBusPublisher.class);
@@ -77,7 +75,7 @@ public class CandlepinContextListenerTest {
                 // which means the test becomes non-deterministic.
                 // so just load the items we need to verify the
                 // functionality.
-                modules.add(new CandlepinCommonTestingModule());
+                modules.add(new ConfigModule());
                 modules.add(new CandlepinNonServletEnvironmentTestingModule());
                 modules.add(new TestModule());
                 return modules;
@@ -126,27 +124,9 @@ public class CandlepinContextListenerTest {
         verifyZeroInteractions(buspublisher);
     }
 
-    /**
-     * creates a config with the given property set to the value.
-     * @param prop property to be configured
-     * @param value the value property should be set to
-     */
-    private void createConfig(final String prop, final String value) {
-        createConfig(
-            new HashMap<String, String>() {
-                {
-                    put(prop, value);
-                }
-            });
-    }
-
-    private void createConfig(Map<String, String> map) {
-        config = new Config(map);
-    }
-
     @Test
     public void ensureAMQPClosedProperly() {
-        createConfig(ConfigProperties.AMQP_INTEGRATION_ENABLED, "true");
+        when(config.getBoolean(eq(ConfigProperties.AMQP_INTEGRATION_ENABLED))).thenReturn(true);
         prepareForInitialization();
         listener.contextInitialized(evt);
 
@@ -158,12 +138,24 @@ public class CandlepinContextListenerTest {
 
     public class TestModule extends AbstractModule {
 
+        @SuppressWarnings("synthetic-access")
         @Override
         protected void configure() {
             bind(PinsetterContextListener.class).toInstance(pinlistener);
             bind(HornetqContextListener.class).toInstance(hqlistener);
             bind(AMQPBusPublisher.class).toInstance(buspublisher);
             bind(AMQPBusPubProvider.class).toInstance(busprovider);
+        }
+    }
+
+    /**
+     * ConfigModule overrides the config from the testing module with the one
+     * from this test class. This allows us to override the configuration.
+     */
+    public class ConfigModule extends CandlepinCommonTestingModule {
+        @SuppressWarnings("synthetic-access")
+        protected void bindConfig() {
+            bind(Config.class).toInstance(config);
         }
     }
 }
