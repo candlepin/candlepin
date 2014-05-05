@@ -152,7 +152,6 @@ public class HibernateValidationAnnotationTest extends DatabaseTestFixture{
         fm.put(Consumer.class.getDeclaredField("entitlementStatus"), size);
         fm.put(Consumer.class.getDeclaredField("serviceLevel"), size);
         fm.put(Consumer.class.getDeclaredField("releaseVer"), size);
-        fm.put(Consumer.class.getDeclaredField("facts"), size);
         runMap(fm);
     }
 

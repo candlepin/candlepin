@@ -151,7 +151,6 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     @MapKeyColumn(name = "mapkey")
     @Column(name = "element")
     @Cascade({org.hibernate.annotations.CascadeType.ALL})
-    @Size(max = 255)
     private Map<String, String> facts;
 
     @OneToOne(cascade = CascadeType.ALL)
