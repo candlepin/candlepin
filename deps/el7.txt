@@ -4,6 +4,7 @@
 antlr
 aopalliance
 apache-mime4j
+atinject
 bcprov-jdk16
 c3p0
 commons-codec
@@ -14,7 +15,7 @@ commons-lang
 dom4j
 gettext-commons
 glassfish-jaxb/jaxb-impl
-google-collections
+guava
 guice
 guice-assistedinject
 guice-multibindings
@@ -40,7 +41,6 @@ jackson-jaxrs-providers/jackson-jaxrs-json-provider
 jackson-module-jaxb-annotations
 javamail/mail
 javassist
-javax.inject
 jboss-logging
 jta
 liquibase
