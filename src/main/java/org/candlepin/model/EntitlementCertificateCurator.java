@@ -14,7 +14,6 @@
  */
 package org.candlepin.model;
 
-import java.util.Date;
 import java.util.List;
 
 import org.hibernate.criterion.Restrictions;
@@ -45,12 +44,10 @@ public class EntitlementCertificateCurator extends
     @SuppressWarnings("unchecked")
     @Transactional
     public List<EntitlementCertificate> listForConsumer(Consumer c) {
+        // TODO: order by pool id in order to avoid deadlocks
         return currentSession().createCriteria(EntitlementCertificate.class)
             .createAlias("entitlement", "ent")
-            .createAlias("ent.pool", "p")
             .add(Restrictions.eq("ent.consumer", c))
-            // Never show a consumer expired certificates
-            .add(Restrictions.ge("p.endDate", new Date()))
             .list();
     }
 

@@ -74,11 +74,9 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
 
     public Page<List<Entitlement>> listByConsumer(Consumer consumer,
         PageRequest pageRequest) {
+        // TODO: order by pool id in order to avoid deadlocks
         Criteria query = createSecureCriteria()
-            .createAlias("pool", "p")
-            .add(Restrictions.eq("consumer", consumer))
-            // Never show a consumer expired entitlements
-            .add(Restrictions.ge("p.endDate", new Date()));
+            .add(Restrictions.eq("consumer", consumer));
         return listByCriteria(query, pageRequest);
     }
 
