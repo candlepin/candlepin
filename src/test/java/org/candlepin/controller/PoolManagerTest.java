@@ -34,6 +34,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -51,10 +52,10 @@ import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCertificateCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EnvironmentCurator;
-import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
+import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.SourceStack;
@@ -135,6 +136,7 @@ public class PoolManagerTest {
     private Product product;
     private ComplianceStatus dummyComplianceStatus;
     private ProductCache productCache;
+    private PoolRules poolRules;
 
     @Before
     public void init() throws Exception {
@@ -347,7 +349,7 @@ public class PoolManagerTest {
         Pool p = TestUtil.createPool(s.getProduct());
         p.setSourceSubscription(new SourceSubscription(s.getId(), "master"));
         newPools.add(p);
-        when(poolRulesMock.createPools(s)).thenReturn(newPools);
+        when(poolRulesMock.createPools(eq(s), any(List.class))).thenReturn(newPools);
 
         this.manager.getRefresher().add(getOwner()).run();
         verify(this.mockPoolCurator, times(1)).create(any(Pool.class));
@@ -440,7 +442,7 @@ public class PoolManagerTest {
         Pool p = TestUtil.createPool(s.getProduct());
         p.setSourceSubscription(new SourceSubscription(s.getId(), "master"));
         newPools.add(p);
-        when(poolRulesMock.createPools(s)).thenReturn(newPools);
+        when(poolRulesMock.createPools(eq(s), any(List.class))).thenReturn(newPools);
 
         this.manager.createPoolsForSubscription(s);
         verify(this.mockPoolCurator, times(1)).create(any(Pool.class));
@@ -726,11 +728,93 @@ public class PoolManagerTest {
         // Make sure pools that don't match the owner were removed from the list
         // They shouldn't cause us to attempt to update existing pools when we
         // haven't created them in the first place
-        verify(poolRulesMock).createPools(eq(sub));
+        verify(poolRulesMock).createPools(eq(sub), any(List.class));
     }
 
     private void mockPoolsList(List<Pool> toReturn) {
         when(mockPoolCurator.getPoolsForOwnerRefresh(any(Owner.class), any(List.class)))
             .thenReturn(toReturn);
+    }
+
+    @Test
+    public void createPoolsForExistingSubscriptionsNoneExist() {
+        PoolRules pRules = new PoolRules(manager, productCache,
+            mockConfig, entitlementCurator);
+        List<Subscription> subscriptions = Util.newList();
+        List<Pool> pools = Util.newList();
+        Product prod = TestUtil.createProduct();
+        Set<Product> products = new HashSet<Product>();
+        products.add(prod);
+        prod.setAttribute("virt_limit", "4");
+        productCache.addProducts(products);
+        Subscription s = TestUtil.createSubscription(getOwner(), prod);
+        subscriptions.add(s);
+        when(mockSubAdapter.getSubscriptions(any(Owner.class))).thenReturn(
+            subscriptions);
+        when(mockConfig.standalone()).thenReturn(false);
+
+        List<Pool> existingPools = new LinkedList<Pool>();
+        List<Pool> newPools = pRules.createPools(s, existingPools);
+
+        assertEquals(newPools.size(), 2);
+        assert (newPools.get(0).getSourceSubscription().getSubscriptionSubKey()
+            .equals("derived") || newPools.get(0).getSourceSubscription()
+            .getSubscriptionSubKey().equals("derived"));
+        assert (newPools.get(0).getSourceSubscription().getSubscriptionSubKey()
+            .equals("master") || newPools.get(0).getSourceSubscription()
+            .getSubscriptionSubKey().equals("master"));
+    }
+
+    @Test
+    public void createPoolsForExistingSubscriptionsMasterExist() {
+        PoolRules pRules = new PoolRules(manager, productCache,
+            mockConfig, entitlementCurator);
+        List<Subscription> subscriptions = Util.newList();
+        List<Pool> pools = Util.newList();
+        Product prod = TestUtil.createProduct();
+        Set<Product> products = new HashSet<Product>();
+        products.add(prod);
+        productCache.addProducts(products);
+        prod.setAttribute("virt_limit", "4");
+        Subscription s = TestUtil.createSubscription(getOwner(), prod);
+        subscriptions.add(s);
+        when(mockSubAdapter.getSubscriptions(any(Owner.class))).thenReturn(
+            subscriptions);
+        when(mockConfig.standalone()).thenReturn(false);
+
+        List<Pool> existingPools = new LinkedList<Pool>();
+        Pool p = TestUtil.createPool(s.getProduct());
+        p.setSourceSubscription(new SourceSubscription(s.getId(), "master"));
+        existingPools.add(p);
+        List<Pool> newPools = pRules.createPools(s, existingPools);
+        assertEquals(newPools.size(), 1);
+        assertEquals(newPools.get(0).getSourceSubscription().getSubscriptionSubKey(), "derived");
+    }
+
+    @Test
+    public void createPoolsForExistingSubscriptionsBonusExist() {
+        PoolRules pRules = new PoolRules(manager, productCache,
+            mockConfig, entitlementCurator);
+        List<Subscription> subscriptions = Util.newList();
+        List<Pool> pools = Util.newList();
+        Product prod = TestUtil.createProduct();
+        Set<Product> products = new HashSet<Product>();
+        products.add(prod);
+        productCache.addProducts(products);
+        prod.setAttribute("virt_limit", "4");
+        Subscription s = TestUtil.createSubscription(getOwner(), prod);
+        subscriptions.add(s);
+        when(mockSubAdapter.getSubscriptions(any(Owner.class))).thenReturn(
+            subscriptions);
+        when(mockConfig.standalone()).thenReturn(false);
+
+        List<Pool> existingPools = new LinkedList<Pool>();
+        Pool p = TestUtil.createPool(s.getProduct());
+        p.setSourceSubscription(new SourceSubscription(s.getId(), "derived"));
+        existingPools.add(p);
+        pRules.createPools(s, existingPools);
+        List<Pool> newPools = pRules.createPools(s, existingPools);
+        assertEquals(newPools.size(), 1);
+        assertEquals(newPools.get(0).getSourceSubscription().getSubscriptionSubKey(), "master");
     }
 }

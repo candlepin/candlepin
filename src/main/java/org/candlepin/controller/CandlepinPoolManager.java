@@ -173,17 +173,15 @@ public class CandlepinPoolManager implements PoolManager {
             if (subToPoolMap.containsKey(sub.getId())) {
                 removeAndDeletePoolsOnOtherOwners(subToPoolMap.get(sub.getId()), sub);
             }
-            if (!poolExistsForSubscription(subToPoolMap, sub.getId())) {
-                createPoolsForSubscription(sub);
-            }
-            else {
-                entitlementsToRegen.addAll(
-                    // don't update floating here, we'll do that later
-                    // so we don't update anything twice
-                    updatePoolsForSubscription(
-                        subToPoolMap.get(sub.getId()), sub, false)
-                );
-            }
+            // BUG 1012386 This will regenerate master/derived for bonus scenarios
+            //  if only one of the pair still exists.
+            createPoolsForSubscription(sub, subToPoolMap.get(sub.getId()));
+            entitlementsToRegen.addAll(
+                // don't update floating here, we'll do that later
+                // so we don't update anything twice
+                updatePoolsForSubscription(
+                    subToPoolMap.get(sub.getId()), sub, false)
+            );
             subToPoolMap.remove(sub.getId());
         }
 
@@ -295,6 +293,9 @@ public class CandlepinPoolManager implements PoolManager {
          * send out the events. Create an event for each pool that could change,
          * even if we won't use them all.
          */
+        if (existingPools == null || existingPools.isEmpty()) {
+            return new HashSet<Entitlement>();
+        }
         Map<String, Event> poolEvents = new HashMap<String, Event>();
         for (Pool existing : existingPools) {
             Event e = eventFactory.poolChangedFrom(existing);
@@ -400,11 +401,15 @@ public class CandlepinPoolManager implements PoolManager {
      */
     @Override
     public List<Pool> createPoolsForSubscription(Subscription sub) {
+        return createPoolsForSubscription(sub, new LinkedList<Pool>());
+    }
+
+    public List<Pool> createPoolsForSubscription(Subscription sub, List<Pool> existingPools) {
         if (log.isDebugEnabled()) {
             log.debug("Creating new pool for new sub: " + sub.getId());
         }
 
-        List<Pool> pools = poolRules.createPools(sub);
+        List<Pool> pools = poolRules.createPools(sub, existingPools);
         for (Pool pool : pools) {
             createPool(pool);
         }
