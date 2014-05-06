@@ -31,7 +31,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.10.1
+Version: 0.9.10.2
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -349,6 +349,11 @@ fi
 
 
 %changelog
+* Tue May 06 2014 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.10.2-1
+- Remove bad validator from Consumer.java (ckozak@redhat.com)
+- 1092678: Handle failure to delete expired revoked serials.
+  (dgoodwin@redhat.com)
+
 * Tue Apr 22 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.10.1-1
 - bumping version, building from branch. (jesusr@redhat.com)
 - add hibernate-validator to rpm jars and spec (jesusr@redhat.com)
