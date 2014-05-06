@@ -95,6 +95,7 @@ import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.resteasy.parameter.CandlepinParam;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
+import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.sync.ConflictOverrides;
 import org.candlepin.sync.Importer;
@@ -131,6 +132,7 @@ public class OwnerResource {
     private ActivationKeyCurator activationKeyCurator;
     private StatisticCurator statisticCurator;
     private SubscriptionServiceAdapter subService;
+    private OwnerServiceAdapter ownerService;
     private ConsumerCurator consumerCurator;
     private I18n i18n;
     private EventSink sink;
@@ -174,7 +176,8 @@ public class OwnerResource {
         UeberCertificateGenerator ueberCertGenerator,
         EnvironmentCurator envCurator, CalculatedAttributesUtil calculatedAttributesUtil,
         ContentOverrideValidator contentOverrideValidator,
-        ServiceLevelValidator serviceLevelValidator) {
+        ServiceLevelValidator serviceLevelValidator,
+        OwnerServiceAdapter ownerService) {
 
         this.ownerCurator = ownerCurator;
         this.ownerInfoCurator = ownerInfoCurator;
@@ -201,6 +204,7 @@ public class OwnerResource {
         this.calculatedAttributesUtil = calculatedAttributesUtil;
         this.contentOverrideValidator = contentOverrideValidator;
         this.serviceLevelValidator = serviceLevelValidator;
+        this.ownerService = ownerService;
     }
 
     /**
@@ -931,7 +935,8 @@ public class OwnerResource {
 
         Owner owner = ownerCurator.lookupByKey(ownerKey);
         if (owner == null) {
-            if (autoCreateOwner) {
+            if (autoCreateOwner &&
+                ownerService.isOwnerKeyValidForCreation(ownerKey)) {
                 owner = this.createOwner(new Owner(ownerKey, ownerKey));
             }
             else {

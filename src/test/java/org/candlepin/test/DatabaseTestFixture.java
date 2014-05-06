@@ -80,6 +80,7 @@ import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyContentOverrideCurator;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.service.EntitlementCertServiceAdapter;
+import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UniqueIdGenerator;
@@ -119,6 +120,7 @@ public class DatabaseTestFixture {
     protected ProductCertificateCurator productCertificateCurator;
     protected ProductServiceAdapter productAdapter;
     protected SubscriptionServiceAdapter subAdapter;
+    protected OwnerServiceAdapter ownerAdapter;
     protected ConsumerCurator consumerCurator;
     protected ConsumerTypeCurator consumerTypeCurator;
     protected ConsumerContentOverrideCurator consumerContentOverrideCurator;
@@ -212,6 +214,7 @@ public class DatabaseTestFixture {
 
         productAdapter = injector.getInstance(ProductServiceAdapter.class);
         subAdapter = injector.getInstance(SubscriptionServiceAdapter.class);
+        ownerAdapter = injector.getInstance(OwnerServiceAdapter.class);
         entCertCurator = injector
             .getInstance(EntitlementCertificateCurator.class);
         certSerialCurator = injector
