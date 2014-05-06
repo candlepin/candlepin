@@ -63,13 +63,6 @@ public interface EntitlementCertServiceAdapter {
         throws GeneralSecurityException, IOException;
 
     /**
-     * Revoke certificates for the given entitlement
-     *
-     * @param e Entitlement for which the certificates are going to be revoked
-     */
-    void revokeEntitlementCertificates(Entitlement e);
-
-    /**
      * Return a list of all entitlement certificates for a given consumer.
      *
      * @param consumer

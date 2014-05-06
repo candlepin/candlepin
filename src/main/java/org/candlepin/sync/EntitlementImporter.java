@@ -138,7 +138,6 @@ public class EntitlementImporter {
             CertificateSerial cs = new CertificateSerial();
             cs.setCollected(cert.getSerial().isCollected());
             cs.setExpiration(cert.getSerial().getExpiration());
-            cs.setRevoked(cert.getSerial().isRevoked());
             cs.setUpdated(cert.getSerial().getUpdated());
             cs.setCreated(cert.getSerial().getCreated());
             csCurator.create(cs);

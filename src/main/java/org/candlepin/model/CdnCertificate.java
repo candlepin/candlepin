@@ -16,6 +16,7 @@
 package org.candlepin.model;
 
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -46,7 +47,7 @@ public class CdnCertificate extends AbstractCertificate {
     @NotNull
     private String id;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     private CertificateSerial serial;
 
     /**

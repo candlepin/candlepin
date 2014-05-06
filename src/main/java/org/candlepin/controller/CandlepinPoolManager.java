@@ -975,7 +975,6 @@ public class CandlepinPoolManager implements PoolManager {
                 e.getPool(), e, ueberCertificate);
             e.setDirty(false);
             entitlementCurator.merge(e);
-            this.entCertAdapter.revokeEntitlementCertificates(tempE);
             for (EntitlementCertificate ec : tempE.getCertificates()) {
                 if (log.isDebugEnabled()) {
                     log.debug("Deleting entitlementCertificate: #" + ec.getId());
@@ -1111,7 +1110,6 @@ public class CandlepinPoolManager implements PoolManager {
     @Override
     @Transactional
     public void revokeEntitlement(Entitlement entitlement) {
-        entCertAdapter.revokeEntitlementCertificates(entitlement);
         removeEntitlement(entitlement, true);
     }
 
@@ -1120,7 +1118,6 @@ public class CandlepinPoolManager implements PoolManager {
     public int revokeAllEntitlements(Consumer consumer) {
         int count = 0;
         for (Entitlement e : entitlementCurator.listByConsumer(consumer)) {
-            entCertAdapter.revokeEntitlementCertificates(e);
             removeEntitlement(e, false);
             count++;
         }

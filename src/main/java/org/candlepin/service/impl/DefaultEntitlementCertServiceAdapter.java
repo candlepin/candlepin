@@ -121,17 +121,6 @@ public class DefaultEntitlementCertServiceAdapter extends
         return generateEntitlementCert(entitlement, sub, product, true);
     }
 
-
-    @Override
-    public void revokeEntitlementCertificates(Entitlement e) {
-        for (EntitlementCertificate cert : e.getCertificates()) {
-            CertificateSerial serial = cert.getSerial();
-            serial.setRevoked(true);
-
-            this.serialCurator.merge(serial);
-        }
-    }
-
     private Set<Product> getProvidedProducts(Pool pool, Subscription sub) {
         Set<Product> providedProducts = new HashSet<Product>();
         // TODO: eliminate the use of subscription here by looking up products in a batch
