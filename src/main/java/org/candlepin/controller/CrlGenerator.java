@@ -87,7 +87,20 @@ public class CrlGenerator {
         }
 
         crlEntries.addAll(getNewSerialsToAppendAndSetThemConsumed());
-        this.certificateSerialCurator.deleteExpiredSerials();
+
+        /*
+         * Chasing bug #1092678. We have seen this fail due to a revoked, expired serial
+         * in the db, which still has an entitlement certificate in the db. We are unable
+         * to account for how this could have happened with current code, and unsure when
+         * it occurred. For now we will gracefully handle the issue, and still allow
+         * CRL generation to complete.
+         */
+        try {
+            certificateSerialCurator.deleteExpiredSerials();
+        }
+        catch (RuntimeException e) {
+            log.error("Error deleting expired serials.", e);
+        }
 
         return pkiUtility.createX509CRL(crlEntries, no
             .add(BigInteger.ONE));
