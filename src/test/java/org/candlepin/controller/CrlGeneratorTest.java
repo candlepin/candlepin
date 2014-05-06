@@ -277,6 +277,24 @@ public class CrlGeneratorTest {
     }
 
     @Test
+    public void updateCRLWithErrorDeletingExpired() {
+        List<CertificateSerial> serials = getStubCSList();
+        when(this.curator.retrieveTobeCollectedSerials())
+            .thenReturn(serials);
+        when(this.curator.deleteExpiredSerials()).thenThrow(new RuntimeException());
+
+        X509CRL x509crl = this.generator.syncCRLWithDB((X509CRL) null);
+        Set<? extends X509CRLEntry> entries = x509crl.getRevokedCertificates();
+        Set<BigInteger> nos = Util.newSet();
+        for (X509CRLEntry entry : entries) {
+            nos.add(entry.getSerialNumber());
+        }
+        assertTrue(nos.contains(BigInteger.ONE));
+        assertTrue(nos.contains(new BigInteger("100")));
+        assertTrue(nos.contains(new BigInteger("1235465")));
+    }
+
+    @Test
     @SuppressWarnings({ "unchecked", "serial", "rawtypes" })
     public void testUpdateCRLWithMockedCRL() {
         X509CRL oldCert = mock(X509CRL.class);
