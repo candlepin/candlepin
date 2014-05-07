@@ -280,20 +280,19 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      * Modifies the last check in and persists the entity. Make sure that the data
      * is refreshed before using this method.
      * @param consumer the consumer to update
-     * @return Updated consumer
      */
-    @Transactional
-    public Consumer updateLastCheckin(Consumer consumer) {
-        consumer.setLastCheckin(new Date());
-        save(consumer);
-        return consumer;
+    public void updateLastCheckin(Consumer consumer) {
+        this.updateLastCheckin(consumer, new Date());
     }
 
     @Transactional
-    public Consumer updateLastCheckin(Consumer consumer, Date checkinDate) {
-        consumer.setLastCheckin(checkinDate);
-        save(consumer);
-        return consumer;
+    public void updateLastCheckin(Consumer consumer, Date checkinDate) {
+        currentSession().createQuery("update Consumer c " +
+            "set c.lastCheckin = :date " +
+            "where c.id = :consumerid")
+            .setTimestamp("date", checkinDate)
+            .setParameter("consumerid", consumer.getId())
+            .executeUpdate();
     }
 
     private boolean factsChanged(Map<String, String> updatedFacts,
