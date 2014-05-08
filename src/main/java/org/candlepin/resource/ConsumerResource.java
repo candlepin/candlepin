@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -522,8 +523,8 @@ public class ConsumerResource {
 
     private void handleActivationKeys(Consumer consumer, List<ActivationKey> keys) {
         // Process activation keys.
+        handleActivationKeyPools(consumer, keys);
         for (ActivationKey ak : keys) {
-            handleActivationKeyPools(consumer, ak.getPools());
             handleActivationKeyOverrides(consumer, ak.getContentOverrides());
             handleActivationKeyRelease(consumer, ak.getReleaseVer());
             handleActivationKeyServiceLevel(consumer, ak.getServiceLevel(), ak.getOwner());
@@ -531,17 +532,24 @@ public class ConsumerResource {
     }
 
     private void handleActivationKeyPools(Consumer consumer,
-            Set<ActivationKeyPool> activationPools) {
-        for (ActivationKeyPool akp : activationPools) {
-            List<Entitlement> entitlements = null;
-            String poolId = Util.assertNotNull(akp.getPool().getId(),
-                i18n.tr("Pool ID must be provided"));
+        List<ActivationKey> keys) {
+        List<ActivationKeyPool> toBind = new LinkedList<ActivationKeyPool>();
+        for (ActivationKey key : keys) {
+            for (ActivationKeyPool akp : key.getPools()) {
+                Util.assertNotNull(akp.getPool().getId(),
+                    i18n.tr("Pool ID must be provided"));
+                toBind.add(akp);
+            }
+        }
+
+        // Sort pools before binding to avoid deadlocks
+        Collections.sort(toBind);
+        for (ActivationKeyPool akp : toBind) {
             int quantity = (akp.getQuantity() == null) ?
                 getQuantityToBind(akp.getPool(), consumer) :
-                akp.getQuantity().intValue();
-            entitlements = entitler.bindByPool(poolId, consumer, quantity);
-            // Trigger events:
-            entitler.sendEvents(entitlements);
+                    akp.getQuantity().intValue();
+            entitler.sendEvents(entitler.bindByPool(
+                akp.getPool().getId(), consumer, quantity));
         }
     }
 

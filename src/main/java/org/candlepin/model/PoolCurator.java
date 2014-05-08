@@ -288,10 +288,16 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         return criteriaToSelectEntitlementForPool(entitlementPool).list();
     }
 
+    /**
+     * @param subId Subscription to look up pools by
+     * @return pools from the given subscription, sorted by pool.id to avoid deadlocks
+     */
+    @SuppressWarnings("unchecked")
     public List<Pool> lookupBySubscriptionId(String subId) {
         return createSecureCriteria()
             .createAlias("sourceSubscription", "sourceSub")
-            .add(Restrictions.eq("sourceSub.subscriptionId", subId)).list();
+            .add(Restrictions.eq("sourceSub.subscriptionId", subId))
+            .addOrder(Order.asc("id")).list();
     }
 
     /**
@@ -563,6 +569,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         }
         ownerOrIds.add(Restrictions.eq("owner", owner));
         crit.add(ownerOrIds);
+        // Add order to help avoid deadlocks when refreshing pools
+        crit.addOrder(Order.asc("id"));
         return crit.list();
     }
 }

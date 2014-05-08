@@ -63,7 +63,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @Entity
 @Table(name = "cp_pool")
 @JsonFilter("PoolFilter")
-public class Pool extends AbstractHibernateObject implements Persisted, Owned {
+public class Pool extends AbstractHibernateObject implements Persisted, Owned, Comparable<Pool> {
 
     /**
      * PoolType
@@ -926,5 +926,10 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
             sourceSubscription.setPool(this);
         }
         this.sourceSubscription = sourceSubscription;
+    }
+
+    @Override
+    public int compareTo(Pool other) {
+        return this.getId().compareTo(other.getId());
     }
 }

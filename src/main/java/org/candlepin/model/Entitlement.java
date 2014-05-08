@@ -63,7 +63,7 @@ import com.fasterxml.jackson.annotation.JsonFilter;
 @Entity
 @Table(name = "cp_entitlement")
 @JsonFilter("EntitlementFilter")
-public class Entitlement extends AbstractHibernateObject implements Linkable, Owned {
+public class Entitlement extends AbstractHibernateObject implements Linkable, Owned, Comparable<Entitlement> {
 
     private static final long serialVersionUID = 1L;
 
@@ -303,5 +303,10 @@ public class Entitlement extends AbstractHibernateObject implements Linkable, Ow
     @XmlTransient
     public boolean isValid() {
         return this.isValidOnDate(new Date());
+    }
+
+    @Override
+    public int compareTo(Entitlement other) {
+        return this.getPool().compareTo(other.getPool());
     }
 }
