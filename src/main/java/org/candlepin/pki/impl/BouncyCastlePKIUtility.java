@@ -139,7 +139,7 @@ public class BouncyCastlePKIUtility extends PKIUtility {
 
         // Add an alternate name if provided
         if (alternateName != null) {
-            GeneralName name = new GeneralName(GeneralName.directoryName,
+            GeneralName name = new GeneralName(GeneralName.uniformResourceIdentifier,
                 "CN=" + alternateName);
             certGen.addExtension(X509Extensions.SubjectAlternativeName, false,
                 new GeneralNames(name));
