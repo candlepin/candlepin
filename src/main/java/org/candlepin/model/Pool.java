@@ -930,6 +930,9 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, C
 
     @Override
     public int compareTo(Pool other) {
-        return this.getId().compareTo(other.getId());
+        return (this.getId() == null ^ other.getId() == null) ?
+            (this.getId() == null ? -1 : 1) :
+                this.getId() == other.getId() ? 0 :
+                    this.getId().compareTo(other.getId());
     }
 }

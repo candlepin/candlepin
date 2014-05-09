@@ -307,6 +307,13 @@ public class Entitlement extends AbstractHibernateObject implements Linkable, Ow
 
     @Override
     public int compareTo(Entitlement other) {
-        return this.getPool().compareTo(other.getPool());
+        int compare = this.getPool().compareTo(other.getPool());
+        if (compare == 0) {
+            return (this.getId() == null ^ other.getId() == null) ?
+                (this.getId() == null ? -1 : 1) :
+                    this.getId() == other.getId() ? 0 :
+                        this.getId().compareTo(other.getId());
+        }
+        return compare;
     }
 }

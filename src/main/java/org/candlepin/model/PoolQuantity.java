@@ -80,6 +80,13 @@ public class PoolQuantity implements Comparable<PoolQuantity> {
 
     @Override
     public int compareTo(PoolQuantity other) {
-        return this.getPool().compareTo(other.getPool());
+        int compare = this.getPool().compareTo(other.getPool());
+        if (compare == 0) {
+            return (this.getQuantity() == null ^ other.getQuantity() == null) ?
+                (this.getQuantity() == null ? -1 : 1) :
+                    this.getQuantity() == other.getQuantity() ? 0 :
+                        this.getQuantity().compareTo(other.getQuantity());
+        }
+        return compare;
     }
 }
