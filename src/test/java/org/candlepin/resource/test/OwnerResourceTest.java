@@ -748,7 +748,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             null, akc, null, null, i18n, null, null, null,
             null, null, null, null, null, null, null,
             null, null, null, null, null, null, null, contentOverrideValidator,
-            serviceLevelValidator);
+            serviceLevelValidator, null);
         or.createActivationKey("testOwner", ak);
     }
 
@@ -826,7 +826,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             null, null, null, i18n, es, null, null, null, importer, null, null,
             null, importRecordCurator, null, null, null, null, null,
             null, null, null, contentOverrideValidator,
-            serviceLevelValidator);
+            serviceLevelValidator, null);
 
         MultipartInput input = mock(MultipartInput.class);
         InputPart part = mock(InputPart.class);
@@ -862,7 +862,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             null, null, null, i18n, es, null, null, null, null, null, ec,
             null, importRecordCurator, null, null, null, null, null,
             null, null, null, contentOverrideValidator,
-            serviceLevelValidator);
+            serviceLevelValidator, null);
 
         ExporterMetadata metadata = new ExporterMetadata();
         when(ec.lookupByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, owner))
@@ -886,7 +886,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             null, null, null, i18n, es, null, null, null, importer, null, null,
             null, importRecordCurator, null, null, null, null, null,
             null, null, null, contentOverrideValidator,
-            serviceLevelValidator);
+            serviceLevelValidator, null);
 
         MultipartInput input = mock(MultipartInput.class);
         InputPart part = mock(InputPart.class);
@@ -927,7 +927,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerResource ownerres = new OwnerResource(oc, null,
             null, null, null, i18n, null, null, null, null, null, null, null,
             null, null, null, null, null, null, null, null, null, null,
-            contentOverrideValidator, serviceLevelValidator);
+            contentOverrideValidator, serviceLevelValidator, null);
 
         when(oc.lookupByKey(eq("admin"))).thenReturn(owner);
         when(owner.getUpstreamConsumer()).thenReturn(upstream);

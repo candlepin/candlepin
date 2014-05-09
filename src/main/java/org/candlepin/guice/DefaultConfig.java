@@ -19,11 +19,13 @@ import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.impl.DefaultSubjectKeyIdentifierWriter;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.IdentityCertServiceAdapter;
+import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.service.impl.DefaultEntitlementCertServiceAdapter;
 import org.candlepin.service.impl.DefaultIdentityCertServiceAdapter;
+import org.candlepin.service.impl.DefaultOwnerServiceAdapter;
 import org.candlepin.service.impl.DefaultProductServiceAdapter;
 import org.candlepin.service.impl.DefaultSubscriptionServiceAdapter;
 import org.candlepin.service.impl.DefaultUserServiceAdapter;
@@ -45,6 +47,8 @@ class DefaultConfig extends AbstractModule {
         bind(ScriptEngineProvider.class);
         bind(SubscriptionServiceAdapter.class).to(
             DefaultSubscriptionServiceAdapter.class);
+        bind(OwnerServiceAdapter.class).to(
+            DefaultOwnerServiceAdapter.class);
         bind(IdentityCertServiceAdapter.class).to(
             DefaultIdentityCertServiceAdapter.class);
         bind(EntitlementCertServiceAdapter.class).to(

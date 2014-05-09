@@ -57,11 +57,13 @@ import org.candlepin.resource.ProductResource;
 import org.candlepin.resource.SubscriptionResource;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.IdentityCertServiceAdapter;
+import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.service.impl.DefaultIdentityCertServiceAdapter;
+import org.candlepin.service.impl.DefaultOwnerServiceAdapter;
 import org.candlepin.service.impl.DefaultProductServiceAdapter;
 import org.candlepin.service.impl.DefaultSubscriptionServiceAdapter;
 import org.candlepin.service.impl.DefaultUniqueIdGenerator;
@@ -125,6 +127,8 @@ public class CandlepinCommonTestingModule extends CandlepinModule {
         bind(PKIReader.class).to(PKIReaderForTesting.class).asEagerSingleton();
         bind(SubscriptionServiceAdapter.class).to(
             DefaultSubscriptionServiceAdapter.class);
+        bind(OwnerServiceAdapter.class).to(
+            DefaultOwnerServiceAdapter.class);
         bind(EntitlementCertServiceAdapter.class).to(
             StubEntitlementCertServiceAdapter.class);
         bind(ScriptEngineProvider.class);
