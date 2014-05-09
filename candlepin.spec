@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.11
+Version: 0.9.12
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -368,6 +368,17 @@ fi
 
 
 %changelog
+* Fri May 09 2014 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.12-1
+- 1094492: Consumer name in Alternate Subject needs to be different type
+  (wpoteat@redhat.com)
+- Update consumer.updated when modifying lastCheckIn (ckozak@redhat.com)
+- Ensure that a null Product will not cause Subscription#toString to throw a
+  NullPointerException (dcrissma@redhat.com)
+- Do an update on consumer to modify the last checkin (ckozak@redhat.com)
+- 1092678: Handle failure to delete expired revoked serials.
+  (dgoodwin@redhat.com)
+- Remove bad validator from Consumer.java (ckozak@redhat.com)
+
 * Thu May 01 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.11-1
 - Updated translations. (dgoodwin@redhat.com)
 - Extract and merge strings. (dgoodwin@redhat.com)
