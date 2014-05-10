@@ -43,7 +43,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @Table(name = "cp_activationkey_pool",
     uniqueConstraints = {@UniqueConstraint(columnNames = {"key_id", "pool_id"})}
 )
-public class ActivationKeyPool extends AbstractHibernateObject {
+public class ActivationKeyPool extends AbstractHibernateObject implements Comparable<ActivationKeyPool> {
 
     @Id
     @GeneratedValue(generator = "system-uuid")
@@ -127,5 +127,17 @@ public class ActivationKeyPool extends AbstractHibernateObject {
      */
     public void setQuantity(Long quantity) {
         this.quantity = quantity;
+    }
+
+    @Override
+    public int compareTo(ActivationKeyPool other) {
+        int compare = this.getPool().compareTo(other.getPool());
+        if (compare == 0) {
+            return (this.getId() == null ^ other.getId() == null) ?
+                (this.getId() == null ? -1 : 1) :
+                    this.getId() == other.getId() ? 0 :
+                        this.getId().compareTo(other.getId());
+        }
+        return compare;
     }
 }

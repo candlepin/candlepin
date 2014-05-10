@@ -65,6 +65,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -722,6 +723,8 @@ public class CandlepinPoolManager implements PoolManager {
         List<PoolQuantity> enforced = autobindRules.selectBestPools(consumer,
             productIds, filteredPools, compliance, serviceLevelOverride,
             poolCurator.retrieveServiceLevelsForOwner(owner, true), false);
+        // Sort the resulting pools to avoid deadlocks
+        Collections.sort(enforced);
         return enforced;
     }
 

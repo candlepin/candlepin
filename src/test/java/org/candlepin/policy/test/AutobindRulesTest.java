@@ -919,4 +919,54 @@ public class AutobindRulesTest {
         assertEquals(new Integer(1), bestPools.get(0).getQuantity());
         assertEquals("POOL-ID1", bestPools.get(0).getPool().getId());
     }
+
+    @Test
+    public void testPoolQuantityCompare() {
+        Product prod =
+            mockProduct(productId, "some prod", "2");
+        Pool pool1 = TestUtil.createPool(owner, prod, 10);
+        pool1.setId("1234");
+        PoolQuantity pq1 = new PoolQuantity(pool1, 5);
+        PoolQuantity pq2 = new PoolQuantity(pool1, 7);
+        assertEquals(-1, pq1.compareTo(pq2));
+    }
+
+    @Test
+    public void testPoolQuantityCompareEqual() {
+        Product prod =
+            mockProduct(productId, "some prod", "2");
+        Pool pool1 = TestUtil.createPool(owner, prod, 10);
+        pool1.setId("1234");
+        PoolQuantity pq1 = new PoolQuantity(pool1, 5);
+        PoolQuantity pq2 = new PoolQuantity(pool1, 5);
+        assertEquals(0, pq1.compareTo(pq2));
+    }
+
+    @Test
+    public void testPoolQuantityCompareDiffPool() {
+        Product prod =
+            mockProduct(productId, "some prod", "2");
+        Pool pool1 = TestUtil.createPool(owner, prod, 10);
+        pool1.setId("1234");
+        Pool pool2 = TestUtil.createPool(owner, prod, 10);
+        pool2.setId("4321");
+        PoolQuantity pq1 = new PoolQuantity(pool1, 5);
+        PoolQuantity pq2 = new PoolQuantity(pool2, 5);
+        assertTrue(pq1.compareTo(pq2) != 0);
+        assertEquals(pq1.compareTo(pq2), -pq2.compareTo(pq1));
+    }
+
+    @Test
+    public void testPoolQuantityCompareNullPool() {
+        Product prod =
+            mockProduct(productId, "some prod", "2");
+        Pool pool1 = TestUtil.createPool(owner, prod, 10);
+        pool1.setId("1234");
+        Pool pool2 = TestUtil.createPool(owner, prod, 10);
+        pool2.setId(null);
+        PoolQuantity pq1 = new PoolQuantity(pool1, 5);
+        PoolQuantity pq2 = new PoolQuantity(pool2, 5);
+        assertTrue(pq1.compareTo(pq2) != 0);
+        assertEquals(pq1.compareTo(pq2), -pq2.compareTo(pq1));
+    }
 }

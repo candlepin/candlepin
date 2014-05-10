@@ -26,7 +26,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @XmlRootElement(name = "poolquantity")
 @XmlAccessorType(XmlAccessType.PROPERTY)
-public class PoolQuantity {
+public class PoolQuantity implements Comparable<PoolQuantity> {
 
     private Pool pool;
     private Integer quantity;
@@ -76,5 +76,17 @@ public class PoolQuantity {
 
     public String toString() {
         return pool.toString() + ", Quantity: " + quantity;
+    }
+
+    @Override
+    public int compareTo(PoolQuantity other) {
+        int compare = this.getPool().compareTo(other.getPool());
+        if (compare == 0) {
+            return (this.getQuantity() == null ^ other.getQuantity() == null) ?
+                (this.getQuantity() == null ? -1 : 1) :
+                    this.getQuantity() == other.getQuantity() ? 0 :
+                        this.getQuantity().compareTo(other.getQuantity());
+        }
+        return compare;
     }
 }

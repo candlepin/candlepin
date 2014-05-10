@@ -24,6 +24,7 @@ import com.google.inject.persist.Transactional;
 import org.hibernate.Criteria;
 import org.hibernate.ReplicationMode;
 import org.hibernate.criterion.CriteriaSpecification;
+import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
 import org.slf4j.Logger;
@@ -82,9 +83,21 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         return listByCriteria(query, pageRequest);
     }
 
+    /**
+     * This must return a sorted list in order to avoid deadlocks
+     *
+     * @param consumer
+     * @return list of entitlements belonging to the consumer, ordered by pool id
+     */
+    @SuppressWarnings("unchecked")
     public List<Entitlement> listByConsumer(Consumer consumer) {
-        Page<List<Entitlement>> p = listByConsumer(consumer, null);
-        return p.getPageData();
+        return createSecureCriteria()
+            .createAlias("pool", "p")
+            .add(Restrictions.eq("consumer", consumer))
+            // Never show a consumer expired entitlements
+            .add(Restrictions.ge("p.endDate", new Date()))
+            .addOrder(Order.asc("p.id"))
+            .list();
     }
 
     public List<Entitlement> listByEnvironment(Environment environment) {

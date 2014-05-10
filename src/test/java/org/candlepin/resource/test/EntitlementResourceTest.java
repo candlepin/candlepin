@@ -14,8 +14,12 @@
  */
 package org.candlepin.resource.test;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
+import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
@@ -119,4 +123,13 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
         // assertEquals("AEF", jto.getUuid());
     }
 
+    @Test
+    public void testCompareTo() {
+        Entitlement e1 = TestUtil.createEntitlement();
+        Entitlement e2 = TestUtil.createEntitlement(e1.getOwner(), e1.getConsumer(), e1.getPool(), null);
+        e2.getCertificates().addAll(e1.getCertificates());
+
+        assertTrue(e1.equals(e2));
+        assertEquals(0, e1.compareTo(e2));
+    }
 }
