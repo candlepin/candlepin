@@ -241,6 +241,106 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertEquals(2, pools.size());
     }
 
+    // test covers scenario from bug 1012386
+    @Test
+    public void testRefreshPoolsWithRemovedMasterPool() {
+        Product prod = TestUtil.createProduct();
+        prod.setAttribute("virt_limit", "4");
+        productCurator.create(prod);
+        config.setProperty(ConfigProperties.STANDALONE, "false");
+
+        Subscription sub = new Subscription(owner, prod,
+            new HashSet<Product>(), 2000L, TestUtil.createDate(2010, 2, 9),
+            TestUtil.createDate(3000, 2, 9), TestUtil.createDate(2010, 2, 12));
+        subCurator.create(sub);
+
+        // Trigger the refresh:
+        poolManager.getRefresher().add(owner).run();
+
+        List<Pool> pools = poolCurator.lookupBySubscriptionId(sub.getId());
+        assertEquals(2, pools.size());
+        String bonusId =  "";
+        String masterId = "";
+
+        for (Pool p : pools) {
+            if (p.getSourceSubscription().getSubscriptionSubKey().equals("master")) {
+                poolCurator.delete(p);
+                masterId = p.getId();
+            }
+            else {
+                bonusId = p.getId();
+            }
+        }
+
+        // Trigger the refresh:
+        poolManager.getRefresher().add(owner).run();
+
+        assertNull("Original Master Pool should be gone",
+            poolCurator.find(masterId));
+        assertNotNull("Bonus Pool should be the same",
+            poolCurator.find(bonusId));
+        // master pool should have been recreated
+        pools = poolCurator.lookupBySubscriptionId(sub.getId());
+        assertEquals(2, pools.size());
+        boolean newMaster = false;
+        for (Pool p : pools) {
+            if (p.getSourceSubscription().getSubscriptionSubKey().equals("master")) {
+                newMaster = true;
+            }
+        }
+        assertTrue(newMaster);
+    }
+
+    // test covers a corollary scenario from bug 1012386
+    @Test
+    public void testRefreshPoolsWithRemovedBonusPool() {
+        Product prod = TestUtil.createProduct();
+        prod.setAttribute("virt_limit", "4");
+        productCurator.create(prod);
+        config.setProperty(ConfigProperties.STANDALONE, "false");
+
+        Subscription sub = new Subscription(owner, prod,
+            new HashSet<Product>(), 2000L, TestUtil.createDate(2010, 2, 9),
+            TestUtil.createDate(3000, 2, 9), TestUtil.createDate(2010, 2, 12));
+        subCurator.create(sub);
+
+        // Trigger the refresh:
+        poolManager.getRefresher().add(owner).run();
+
+        List<Pool> pools = poolCurator.lookupBySubscriptionId(sub.getId());
+        assertEquals(2, pools.size());
+        String bonusId =  "";
+        String masterId = "";
+
+        for (Pool p : pools) {
+            if (p.getSourceSubscription().getSubscriptionSubKey().equals("derived")) {
+                poolCurator.delete(p);
+                bonusId = p.getId();
+            }
+            else {
+                masterId = p.getId();
+            }
+        }
+
+        // Trigger the refresh:
+        poolManager.getRefresher().add(owner).run();
+
+        assertNull("Original bonus pool should be gone",
+            poolCurator.find(bonusId));
+        assertNotNull("Master pool should be the same",
+            poolCurator.find(masterId));
+        // master pool should have been recreated
+        pools = poolCurator.lookupBySubscriptionId(sub.getId());
+        assertEquals(2, pools.size());
+        boolean newBonus = false;
+        for (Pool p : pools) {
+            if (p.getSourceSubscription().getSubscriptionSubKey().equals("derived")) {
+                newBonus = true;
+            }
+        }
+        assertTrue(newBonus);
+    }
+
     @Test
     public void testComplexDeleteOwner() throws Exception {
 

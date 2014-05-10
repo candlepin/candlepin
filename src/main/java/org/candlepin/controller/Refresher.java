@@ -82,13 +82,10 @@ public class Refresher {
              */
             List<Pool> pools = poolManager.lookupBySubscriptionId(subscription.getId());
             poolManager.removeAndDeletePoolsOnOtherOwners(pools, subscription);
-            if (pools.isEmpty()) {
-                poolManager.createPoolsForSubscription(subscription);
-            }
-            else {
-                toRegen.addAll(poolManager.updatePoolsForSubscription(
-                    pools, subscription, true));
-            }
+
+            poolManager.createPoolsForSubscription(subscription, pools);
+            toRegen.addAll(poolManager.updatePoolsForSubscription(
+                pools, subscription, true));
         }
 
         for (Owner owner : owners) {
