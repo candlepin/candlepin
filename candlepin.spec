@@ -67,6 +67,7 @@ BuildRequires: hibernate4-entitymanager >= 0:4.2.5
 BuildRequires: hibernate4-c3p0 >= 0:4.2.5
 %if 0%{?rhel} >= 7
 BuildRequires: glassfish-jaxb
+BuildRequires: candlepin-guice >= 0:3.0
 BuildRequires: guava >= 0:13.0
 BuildRequires: apache-commons-collections
 BuildRequires: mvn(org.slf4j:slf4j-api)  >= 0:1.7.4
@@ -75,6 +76,7 @@ BuildRequires: mvn(ch.qos.logback:logback-classic)
 %else
 BuildRequires: ant-nodeps >= 0:1.7.0
 BuildRequires: jaxb-impl
+BuildRequires: google-guice >= 0:3.0
 BuildRequires: google-collections >= 0:1.0
 BuildRequires: commons-collections >= 3.1
 BuildRequires: slf4j-api >= 0:1.7.5
@@ -92,7 +94,6 @@ BuildRequires: hibernate4-validator >= 0:4.2.5
 BuildRequires: liquibase >= 0:2.0.5
 BuildRequires: resteasy >= 0:2.3.1
 BuildRequires: hornetq >= 0:2.3.5
-BuildRequires: google-guice >= 0:3.0
 BuildRequires: jakarta-commons-lang
 BuildRequires: jakarta-commons-io
 BuildRequires: apache-commons-codec
@@ -139,6 +140,7 @@ Requires: antlr >= 0:2.7.7
 Requires: bouncycastle
 %if 0%{?rhel} >= 7
 Requires: glassfish-jaxb
+Requires: candlepin-guice >= 0:3.0
 Requires: guava >= 0:13.0
 Requires: apache-commons-collections
 Requires: mvn(org.slf4j:slf4j-api)  >= 0:1.7.4
@@ -146,6 +148,7 @@ Requires: mvn(org.slf4j:jcl-over-slf4j)  >= 0:1.7.4
 Requires: mvn(ch.qos.logback:logback-classic)
 %else
 Requires: jaxb-impl
+Requires: google-guice >= 0:3.0
 Requires: google-collections >= 0:1.0
 Requires: commons-collections >= 3.1
 Requires: slf4j-api >= 0:1.7.5-4
@@ -163,7 +166,6 @@ Requires: candlepin-scl
 Requires: hibernate-beanvalidation-api >= 1.0.0
 Requires: c3p0 >= 0:0.9.1.2
 Requires: resteasy >= 0:2.3.1
-Requires: google-guice >= 0:3.0
 Requires: jackson-annotations >= %{jackson_version}
 Requires: jackson-core >= %{jackson_version}
 Requires: jackson-databind >= %{jackson_version}
