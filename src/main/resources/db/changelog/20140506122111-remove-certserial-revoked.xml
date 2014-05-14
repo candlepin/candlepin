@@ -7,11 +7,18 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
 
-    <changeSet id="20140506122111" author="ckozak">
+    <changeSet id="20140506122111-0" author="ckozak">
         <comment>Remove revoked form Certificate Serial</comment>
         <dropColumn
             columnName="revoked"
             tableName="cp_cert_serial"/>
+    </changeSet>
+
+    <changeSet id="20140506122111-1" author="ckozak">
+        <comment>index cp_cdn_certificate on serial_id</comment>
+        <createIndex indexName="cp_cdn_cert_serial_idx" tableName="cp_cdn_certificate" unique="false">
+            <column name="serial_id"/>
+        </createIndex>
     </changeSet>
 
 </databaseChangeLog>
