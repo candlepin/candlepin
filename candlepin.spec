@@ -70,6 +70,7 @@ BuildRequires: glassfish-jaxb
 BuildRequires: candlepin-guice >= 0:3.0
 BuildRequires: guava >= 0:13.0
 BuildRequires: apache-commons-collections
+BuildRequires: mvn(org.apache.httpcomponents:httpclient) >= 0:4.1.2
 BuildRequires: mvn(org.slf4j:slf4j-api)  >= 0:1.7.4
 BuildRequires: mvn(org.slf4j:jcl-over-slf4j)  >= 0:1.7.4
 BuildRequires: mvn(ch.qos.logback:logback-classic)
@@ -82,6 +83,7 @@ BuildRequires: commons-collections >= 3.1
 BuildRequires: slf4j-api >= 0:1.7.5
 BuildRequires: jcl-over-slf4j >= 0:1.7.5
 BuildRequires: logback-classic
+BuildRequires: httpclient >= 0:4.1.2
 %endif
 
 BuildRequires: javassist >= 3.12.0
@@ -92,7 +94,7 @@ BuildRequires: hibernate-beanvalidation-api >= 1.0.0
 BuildRequires: hibernate4-validator >= 0:4.2.5
 
 BuildRequires: liquibase >= 0:2.0.5
-BuildRequires: resteasy >= 0:2.3.1
+BuildRequires: resteasy >= 0:2.3.7
 BuildRequires: hornetq >= 0:2.3.5
 BuildRequires: jakarta-commons-lang
 BuildRequires: jakarta-commons-io
@@ -106,7 +108,6 @@ BuildRequires: jackson-jaxrs-json-provider >= %{jackson_version}
 BuildRequires: jackson-module-jaxb-annotations >= %{jackson_version}
 
 # Configure Datasources
-BuildRequires: jakarta-commons-httpclient
 BuildRequires: hibernate-jpa-2.0-api >= 1.0.1
 BuildRequires: netty
 BuildRequires: jms >= 0:1.1
@@ -143,6 +144,7 @@ Requires: glassfish-jaxb
 Requires: candlepin-guice >= 0:3.0
 Requires: guava >= 0:13.0
 Requires: apache-commons-collections
+Requires: mvn(org.apache.httpcomponents:httpclient) >= 0:4.1.2
 Requires: mvn(org.slf4j:slf4j-api)  >= 0:1.7.4
 Requires: mvn(org.slf4j:jcl-over-slf4j)  >= 0:1.7.4
 Requires: mvn(ch.qos.logback:logback-classic)
@@ -155,6 +157,7 @@ Requires: slf4j-api >= 0:1.7.5-4
 # apache-mime4j uses commons-logging, so we have to provide a slf4j bridge
 Requires: jcl-over-slf4j >= 0:1.7.5
 Requires: logback-classic
+Requires: httpclient >= 0:4.1.2
 %endif
 Requires: hibernate4-core >= 0:4.2.5
 Requires: hibernate4-entitymanager >= 0:4.2.5
@@ -165,7 +168,7 @@ Requires: hibernate-jpa-2.0-api >= 0:1.0.1
 Requires: candlepin-scl
 Requires: hibernate-beanvalidation-api >= 1.0.0
 Requires: c3p0 >= 0:0.9.1.2
-Requires: resteasy >= 0:2.3.1
+Requires: resteasy >= 0:2.3.7
 Requires: jackson-annotations >= %{jackson_version}
 Requires: jackson-core >= %{jackson_version}
 Requires: jackson-databind >= %{jackson_version}
@@ -178,7 +181,6 @@ Requires: scannotation
 Requires: jakarta-commons-lang
 Requires: jakarta-commons-io
 Requires: apache-commons-codec
-Requires: jakarta-commons-httpclient
 Requires: apache-mime4j
 Requires: gettext-commons
 Requires: javamail

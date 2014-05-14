@@ -42,7 +42,7 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 
-import org.apache.commons.httpclient.Credentials;
+import org.apache.http.auth.Credentials;
 import org.jboss.resteasy.client.ClientResponse;
 import org.junit.Before;
 import org.junit.Test;

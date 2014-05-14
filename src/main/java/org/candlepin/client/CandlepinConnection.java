@@ -19,12 +19,12 @@ import org.candlepin.resteasy.JsonProvider;
 
 import com.google.inject.Inject;
 
-import org.apache.commons.httpclient.Credentials;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.auth.AuthScope;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.Credentials;
+import org.apache.http.impl.client.DefaultHttpClient;
 import org.jboss.resteasy.client.ClientExecutor;
 import org.jboss.resteasy.client.ProxyFactory;
-import org.jboss.resteasy.client.core.executors.ApacheHttpClientExecutor;
+import org.jboss.resteasy.client.core.executors.ApacheHttpClient4Executor;
 import org.jboss.resteasy.plugins.providers.RegisterBuiltin;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
@@ -52,9 +52,9 @@ public class CandlepinConnection {
      * @return Client proxy used to interact with Candlepin via REST API.
      */
     public <T> T connect(Class<T> clazz, Credentials creds, String uri) {
-        HttpClient httpclient = new HttpClient();
-        httpclient.getState().setCredentials(AuthScope.ANY, creds);
-        ClientExecutor clientExecutor = new ApacheHttpClientExecutor(httpclient);
+        DefaultHttpClient httpclient = new DefaultHttpClient();
+        httpclient.getCredentialsProvider().setCredentials(AuthScope.ANY, creds);
+        ClientExecutor clientExecutor = new ApacheHttpClient4Executor(httpclient);
         return ProxyFactory.create(clazz, uri,
             clientExecutor);
     }
