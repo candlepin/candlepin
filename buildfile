@@ -105,6 +105,11 @@ HORNETQ = [group('hornetq-server',
 
 
 SCHEMASPY = 'net.sourceforge:schemaSpy:jar:4.1.1'
+AMQP  = [group('qpid-common', 'qpid-client',
+             :under => 'org.apache.qpid', :version => '0.22'),
+         group('mina-core', 'mina-filter-ssl',
+             :under => 'org.apache.mina', :version => '1.0.1'),
+         'geronimo-spec:geronimo-spec-jms:jar:1.1-rc4']
 
 RHINO = 'org.mozilla:rhino:jar:1.7R3'
 
@@ -203,7 +208,7 @@ define "candlepin" do
   compile.options.source = '1.6'
   compile_classpath = [COMMONS, SLF4J_BRIDGES, RESTEASY, LOGBACK, HIBERNATE, BOUNCYCASTLE,
     GUICE, JACKSON, QUARTZ, GETTEXT_COMMONS, HORNETQ, SUN_JAXB, MIME4J, OAUTH, RHINO, COLLECTIONS,
-    PROVIDED]
+    PROVIDED, AMQP]
   compile.with compile_classpath
   compile.with LOGDRIVER, LOG4J_BRIDGE if use_logdriver
   if Buildr.environment == 'oracle'

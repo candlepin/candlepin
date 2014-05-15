@@ -87,7 +87,6 @@ public class HornetqContextListener {
             // in vm, who needs security?
             config.setSecurityEnabled(false);
 
-            // XXX: should use AIO when we get the native bindings working
             config.setJournalType(JournalType.NIO);
 
             config.setCreateBindingsDir(true);
@@ -111,8 +110,13 @@ public class HornetqContextListener {
 
         cleanupOldQueues();
 
+        //AMQP integration here - If it is disabled, don't add it to listeners.
         List<String> listeners = Lists.newArrayList(candlepinConfig
             .getStringArray(ConfigProperties.AUDIT_LISTENERS));
+        if (candlepinConfig
+            .getBoolean(ConfigProperties.AMQP_INTEGRATION_ENABLED)) {
+            listeners.add(AMQPBusPublisher.class.getName());
+        }
 
         eventSource = injector.getInstance(EventSource.class);
         for (int i = 0; i < listeners.size(); i++) {

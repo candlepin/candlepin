@@ -20,19 +20,15 @@ import static org.mockito.Mockito.atMost;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
-
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-
-import javax.servlet.ServletContext;
-import javax.servlet.ServletContextEvent;
 
 import org.candlepin.CandlepinCommonTestingModule;
 import org.candlepin.CandlepinNonServletEnvironmentTestingModule;
+import org.candlepin.audit.AMQPBusPublisher;
 import org.candlepin.audit.HornetqContextListener;
 import org.candlepin.config.Config;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.pinsetter.core.PinsetterContextListener;
 import org.jboss.resteasy.spi.Registry;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
@@ -43,6 +39,12 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 
+import java.util.LinkedList;
+import java.util.List;
+
+import javax.servlet.ServletContext;
+import javax.servlet.ServletContextEvent;
+
 /**
  * CandlepinContextListenerTest
  */
@@ -51,13 +53,17 @@ public class CandlepinContextListenerTest {
     private CandlepinContextListener listener;
     private HornetqContextListener hqlistener;
     private PinsetterContextListener pinlistener;
+    private AMQPBusPublisher buspublisher;
+    private AMQPBusPubProvider busprovider;
     private ServletContextEvent evt;
 
     @Before
     public void init() {
-        config = new Config(new HashMap<String, String>());
+        config = mock(Config.class);
         hqlistener = mock(HornetqContextListener.class);
         pinlistener = mock(PinsetterContextListener.class);
+        buspublisher = mock(AMQPBusPublisher.class);
+        busprovider = mock(AMQPBusPubProvider.class);
         // for testing we override the getModules so we can
         // insert our mock versions of listeners to verify
         // they are getting invoked properly.
@@ -69,7 +75,7 @@ public class CandlepinContextListenerTest {
                 // which means the test becomes non-deterministic.
                 // so just load the items we need to verify the
                 // functionality.
-                modules.add(new CandlepinCommonTestingModule());
+                modules.add(new ConfigModule());
                 modules.add(new CandlepinNonServletEnvironmentTestingModule());
                 modules.add(new TestModule());
                 return modules;
@@ -114,14 +120,42 @@ public class CandlepinContextListenerTest {
         verifyNoMoreInteractions(evt); // destroy shoudln't use it
         verify(hqlistener).contextDestroyed();
         verify(pinlistener).contextDestroyed();
+        verifyZeroInteractions(busprovider);
+        verifyZeroInteractions(buspublisher);
+    }
+
+    @Test
+    public void ensureAMQPClosedProperly() {
+        when(config.getBoolean(eq(ConfigProperties.AMQP_INTEGRATION_ENABLED))).thenReturn(true);
+        prepareForInitialization();
+        listener.contextInitialized(evt);
+
+        // test & verify
+        listener.contextDestroyed(evt);
+        verify(busprovider).close();
+        verify(buspublisher).close();
     }
 
     public class TestModule extends AbstractModule {
 
+        @SuppressWarnings("synthetic-access")
         @Override
         protected void configure() {
             bind(PinsetterContextListener.class).toInstance(pinlistener);
             bind(HornetqContextListener.class).toInstance(hqlistener);
+            bind(AMQPBusPublisher.class).toInstance(buspublisher);
+            bind(AMQPBusPubProvider.class).toInstance(busprovider);
+        }
+    }
+
+    /**
+     * ConfigModule overrides the config from the testing module with the one
+     * from this test class. This allows us to override the configuration.
+     */
+    public class ConfigModule extends CandlepinCommonTestingModule {
+        @SuppressWarnings("synthetic-access")
+        protected void bindConfig() {
+            bind(Config.class).toInstance(config);
         }
     }
 }

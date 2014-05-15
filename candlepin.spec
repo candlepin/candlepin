@@ -122,6 +122,8 @@ BuildRequires: jta
 # resteasy multipart requires this at runtime
 BuildRequires: apache-mime4j
 
+# needed to send events to a qpid
+BuildRequires: qpid-java-client >= 0:0.22
 %endif
 
 # Common requires go here
@@ -182,6 +184,7 @@ Requires: gettext-commons
 Requires: javamail
 Requires: javassist >= 3.12.0
 Requires: jta
+Requires: qpid-java-client >= 0:0.22
 %endif
 %global __jar_repack %{nil}
 

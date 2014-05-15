@@ -59,6 +59,11 @@ public class Util {
     private static Logger log = LoggerFactory.getLogger(Util.class);
     private static ObjectMapper mapper = new ObjectMapper();
 
+    /**
+     * Invokes the close() method of any given object, if present.
+     */
+    private static Closure closeInvoker = ClosureUtils.invokerClosure("close");
+
     private Util() {
         // default ctor
     }
@@ -94,7 +99,6 @@ public class Util {
     public static <T> Set<T> newSet() {
         return new HashSet<T>();
     }
-
 
     public static Date getFutureDate(int years) {
         Calendar future = Calendar.getInstance();
@@ -180,9 +184,17 @@ public class Util {
         return str.equals(str1);
     }
 
-    private static Closure closeInvoker =
-        ClosureUtils.invokerClosure("close");
-
+    /**
+     * Invokes the close() method on the given closable object, and logs that
+     * it is closing "msg". If closable is null, the function simply returns.
+     *
+     * For example, if msg = AMQPSession, the logs will show something like
+     * this:  INFO Going to close: AMQPSession
+     *
+     * @param closable Object with a close() method.
+     * @param msg indicates what the closable is and used to log informational
+     * messages.
+     */
     public static void closeSafely(Object closable, String msg) {
         if (closable == null) {
             return;
@@ -325,6 +337,7 @@ public class Util {
         return output;
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     public static Object fromJson(String json, Class clazz) {
         Object output = null;
         try {
@@ -336,6 +349,7 @@ public class Util {
         return output;
     }
 
+    @SuppressWarnings("rawtypes")
     public static String getClassName(Class c) {
         return getClassName(c.getName());
     }
