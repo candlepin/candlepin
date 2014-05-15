@@ -14,13 +14,16 @@
  */
 package org.candlepin.model;
 
-import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
 import org.hibernate.criterion.Criterion;
+import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.criterion.Disjunction;
+import org.hibernate.criterion.LikeExpression;
+import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.Type;
+import org.hibernate.criterion.Subqueries;
 
 /**
  * FactFilterBuilder
@@ -29,103 +32,49 @@ import org.hibernate.type.Type;
  */
 public class FactFilterBuilder extends FilterBuilder {
 
-    /*
-     * This MUST be tested in spec tests.  It is sql, not hql, therefore
-     * very database dependant.  Make sure tests are run on all target databases.
-     */
     @Override
     protected Criterion buildCriteriaForKey(String key, List<String> values) {
-        FactSqlRestrictionHelper helper = new FactSqlRestrictionHelper();
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("{alias}.id in (select cp_consumer_facts.cp_consumer_id " +
-            "from cp_consumer_facts " +
-            // Dependant subquery works better if there are multiple facts
-            "where {alias}.id = cp_consumer_facts.cp_consumer_id " +
-            "and cp_consumer_facts.mapkey like ");
-
-        // complete the like statement, with key, more-or-less. Let hibernate escape
-        // everything, but transform * to %
-        sb.append(matchWithWild(key, helper));
-        sb.append("and ");
-
-        // Build and add "or" restrictions to the query
-        for (int i = 0, vsize = values.size(); i < vsize; i++) {
-            String value = values.get(i);
-            if (value == null || value.isEmpty()) {
-                sb.append("(cp_consumer_facts.element IS NULL OR" +
-                    "cp_consumer_facts.element = '') ");
+        Disjunction valuesCriteria = Restrictions.disjunction();
+        for (String value : values) {
+            if (StringUtils.isEmpty(value)) {
+                valuesCriteria.add(Restrictions.isNull("cfacts.elements"));
+                valuesCriteria.add(Restrictions.eq("cfacts.elements", ""));
             }
             else {
-                // Case insensitive on value, not on key
-                sb.append("lower(cp_consumer_facts.element) like lower(");
-                sb.append(matchWithWild(value, helper));
-                sb.append(')');
-            }
-            if (i != vsize - 1) {
-                sb.append("or ");
+                valuesCriteria.add(new FactLikeExpression("cfacts.elements", value, true));
             }
         }
 
-        // Close the subquery
-        sb.append(')');
-        return Restrictions.sqlRestriction(
-            sb.toString(), helper.getParams(), helper.getTypes());
+        DetachedCriteria dc = DetachedCriteria.forClass(Consumer.class, "subcons")
+            .add(Restrictions.eqProperty("this.id", "subcons.id"))
+            .createAlias("subcons.facts", "cfacts")
+            // Match the key, case sensitive
+            .add(new FactLikeExpression("cfacts.indices", key, false))
+            // Match values, case insensitive
+            .add(valuesCriteria)
+            .setProjection(Projections.property("subcons.id"));
+
+        return Subqueries.exists(dc);
     }
 
-    /*
-     * Returns a representation of the string with * replaced with %
-     *
-     * We want to let the hibernate library escape everything for us,
-     * then add wildcards in the place of *
+    /**
+     * FactLikeExpression to easily build like clauses, escaping all sql wildcards
+     * from input while allowing us to use a custom wildcard
      */
-    private String matchWithWild(String input, FactSqlRestrictionHelper helper) {
-        StringBuilder sb = new StringBuilder();
-        // Max split -1 so "value*" will give us "value", "", not just "value"
-        String[] parts = input.split("\\*", -1);
-        // some databases only support concat(a,b), others support any number of args.
-        // we have to ensure only 2
-        for (int i = 0; i < parts.length; i++) {
-            helper.add(parts[i]);
-            boolean notLast = i < parts.length - 1;
-            if (notLast) {
-                sb.append("concat(");
-            }
-            sb.append("? ");
-            if (notLast) {
-                sb.append(", concat('%', ");
-            }
-        }
-        for (int i = 0; i < 2 * (parts.length - 1); i++) {
-            sb.append(')');
-        }
-        // Always leave whitespace at the end
-        sb.append(' ');
-        return sb.toString();
-    }
+    @SuppressWarnings("serial")
+    public static class FactLikeExpression extends LikeExpression {
 
-    /*
-     * This class makes it easier to build the sqlRestriction for facts
-     * by building the list of types and parameters we are passing
-     * into the query.  Currently we only use strings, so there is
-     * no type checking.
-     */
-    private class FactSqlRestrictionHelper {
-
-        private List<Type> types = new LinkedList<Type>();
-        private List<Object> params = new LinkedList<Object>();
-
-        private void add(String toAdd) {
-            types.add(StandardBasicTypes.STRING);
-            params.add(toAdd);
+        public FactLikeExpression(String propertyName, String value, boolean ignoreCase) {
+            super(propertyName, escape(value), '!', ignoreCase);
         }
 
-        public Type[] getTypes() {
-            return types.toArray(new Type[types.size()]);
-        }
-
-        public Object[] getParams() {
-            return params.toArray(new Object[params.size()]);
+        private static String escape(String raw) {
+            // If our escape char is already here, escape it
+            return raw.replace("!", "!!")
+                // Escape anything that would be a wildcard
+                .replace("_", "!_").replace("%", "!%")
+                // Now use * as wildcard
+                .replace("*", "%");
         }
     }
 }

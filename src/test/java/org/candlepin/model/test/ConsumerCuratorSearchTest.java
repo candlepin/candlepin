@@ -421,6 +421,34 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         assertEquals(2, resultList.size());
     }
 
+    @Test
+    public void testSearchOwnerConsumersNoMatch() {
+        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        Map<String, String> facts = new HashMap<String, String>();
+        facts.put("key1", "value1");
+        facts.put("key2", "value2");
+        //facts.put("otherkey", "otherval");
+        consumer.setFacts(facts);
+        consumer = consumerCurator.create(consumer);
+
+        // Create another consumer to make sure we're not just retreiving everyhting
+        Consumer otherConsumer = new Consumer("testConsumer2", "testUser2", owner, ct);
+        Map<String, String> otherFacts = new HashMap<String, String>();
+        otherFacts.put("key1", "value2");
+        otherFacts.put("key2", "value1");
+        otherConsumer.setFacts(otherFacts);
+        otherConsumer = consumerCurator.create(otherConsumer);
+
+        List<KeyValueParameter> factFilters = new LinkedList<KeyValueParameter>();
+        factFilters.add(new TestingKeyValueParameter("key1", "value2"));
+        factFilters.add(new TestingKeyValueParameter("key2", "value1"));
+        Page<List<Consumer>> results = consumerCurator.searchOwnerConsumers(
+            owner, null, null, null, null, factFilters, null);
+        List<Consumer> resultList = results.getPageData();
+        assertEquals(1, resultList.size());
+        assertEquals(otherConsumer, resultList.get(0));
+    }
+
     private class TestingKeyValueParameter extends KeyValueParameter {
 
         /**
