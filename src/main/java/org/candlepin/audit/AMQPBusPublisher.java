@@ -67,7 +67,7 @@ public class AMQPBusPublisher implements EventListener {
             log.warn("Unable to send event :" + e + " via AMQPBus", ex);
         }
         catch (JsonProcessingException jpe) {
-            log.warn("Unable to send event :" + jpe + " via AMQPBus", jpe);
+            log.warn("Unable to send event :" + e + " via AMQPBus", jpe);
         }
     }
 
