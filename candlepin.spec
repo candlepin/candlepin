@@ -25,7 +25,7 @@
 %{?fedora:%global deps_suffix fc%{fedora}}
 %{?rhel:%global deps_suffix el%{rhel}}
 
-%if 0%{?fedora} >= 19
+%if 0%{?fedora} >= 19 || 0%{?rhel} >= 7
 %global tomcat tomcat
 %else
 %global tomcat tomcat6
@@ -122,7 +122,7 @@ BuildRequires: gettext-commons
 BuildRequires: jta
 
 # resteasy multipart requires this at runtime
-BuildRequires: apache-mime4j
+BuildRequires: apache-mime4j = 0:0.6
 
 %endif
 
@@ -148,6 +148,8 @@ Requires: mvn(org.apache.httpcomponents:httpclient) >= 0:4.1.2
 Requires: mvn(org.slf4j:slf4j-api)  >= 0:1.7.4
 Requires: mvn(org.slf4j:jcl-over-slf4j)  >= 0:1.7.4
 Requires: mvn(ch.qos.logback:logback-classic)
+Requires: mvn(net.sf.cglib:cglib)
+Requires: mvn(asm:asm)
 %else
 Requires: jaxb-impl
 Requires: google-guice >= 0:3.0
@@ -181,7 +183,10 @@ Requires: scannotation
 Requires: jakarta-commons-lang
 Requires: jakarta-commons-io
 Requires: apache-commons-codec
-Requires: apache-mime4j
+
+# RESTEasy breaks if you use a newer version because the location of some
+# of the packages changed between 0.6 and 0.7
+Requires: apache-mime4j = 0:0.6
 Requires: gettext-commons
 Requires: javamail
 Requires: javassist >= 3.12.0
