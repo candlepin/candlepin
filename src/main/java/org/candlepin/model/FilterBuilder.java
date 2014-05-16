@@ -39,23 +39,23 @@ public abstract class FilterBuilder {
     }
 
     public void addAttributeFilter(String attrName, String attrValue) {
-        if (!this.attributeFilters.containsKey(attrName)) {
-            this.attributeFilters.put(attrName, new LinkedList<String>());
+        if (!attributeFilters.containsKey(attrName)) {
+            attributeFilters.put(attrName, new LinkedList<String>());
         }
-        this.attributeFilters.get(attrName).add(attrValue);
+        attributeFilters.get(attrName).add(attrValue);
     }
 
     public void applyTo(Criteria parentCriteria) {
         // Only apply attribute filters if any were specified.
-        if (!this.attributeFilters.isEmpty()) {
-            parentCriteria.add(this.buildAttributeCriteria());
+        if (!attributeFilters.isEmpty()) {
+            parentCriteria.add(buildAttributeCriteria());
         }
     }
 
     private Criterion buildAttributeCriteria() {
         Conjunction all = Restrictions.conjunction();
         for (Entry<String, List<String>> entry : attributeFilters.entrySet()) {
-            all.add(this.buildCriteriaForKey(entry.getKey(), entry.getValue()));
+            all.add(buildCriteriaForKey(entry.getKey(), entry.getValue()));
         }
 
         // Currently all attributes of different names are ANDed.
