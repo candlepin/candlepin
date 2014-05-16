@@ -562,7 +562,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, C
     }
 
     public String toString() {
-        return "Pool[id: " + getId() + ", owner: " + owner.getId() +
+        return "Pool[id: " + getId() + ", owner: " + ((owner == null) ? "null" : owner.getId()) +
             ", product: " + productId +
             ", quantity: " + getQuantity() + ", expires: " + getEndDate() + "]";
     }
