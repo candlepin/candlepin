@@ -14,13 +14,14 @@
  */
 package org.candlepin.model;
 
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import org.hibernate.Criteria;
+import org.hibernate.criterion.Conjunction;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Restrictions;
 
@@ -31,7 +32,6 @@ import org.hibernate.criterion.Restrictions;
  */
 public abstract class FilterBuilder {
 
-
     private Map<String, List<String>> attributeFilters;
 
     public FilterBuilder() {
@@ -39,31 +39,27 @@ public abstract class FilterBuilder {
     }
 
     public void addAttributeFilter(String attrName, String attrValue) {
-        if (!this.attributeFilters.containsKey(attrName)) {
-            List<String> values = new ArrayList<String>();
-            values.add(attrValue);
-            this.attributeFilters.put(attrName, values);
+        if (!attributeFilters.containsKey(attrName)) {
+            attributeFilters.put(attrName, new LinkedList<String>());
         }
-        else {
-            this.attributeFilters.get(attrName).add(attrValue);
-        }
+        attributeFilters.get(attrName).add(attrValue);
     }
 
     public void applyTo(Criteria parentCriteria) {
         // Only apply attribute filters if any were specified.
-        if (!this.attributeFilters.isEmpty()) {
-            parentCriteria.add(this.buildAttributeCriteria());
+        if (!attributeFilters.isEmpty()) {
+            parentCriteria.add(buildAttributeCriteria());
         }
     }
 
     private Criterion buildAttributeCriteria() {
-        List<Criterion> all = new ArrayList<Criterion>();
+        Conjunction all = Restrictions.conjunction();
         for (Entry<String, List<String>> entry : attributeFilters.entrySet()) {
-            all.add(this.buildCriteriaForKey(entry.getKey(), entry.getValue()));
+            all.add(buildCriteriaForKey(entry.getKey(), entry.getValue()));
         }
 
         // Currently all attributes of different names are ANDed.
-        return Restrictions.and(all.toArray(new Criterion[all.size()]));
+        return all;
     }
 
     protected abstract Criterion buildCriteriaForKey(String key, List<String> values);
