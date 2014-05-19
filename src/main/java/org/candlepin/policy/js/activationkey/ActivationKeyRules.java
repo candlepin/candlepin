@@ -109,7 +109,7 @@ public class ActivationKeyRules {
             if (pool.hasMergedAttribute("instance_multiplier")) {
                 multip = pool.getMergedAttribute("instance_multiplier").getValue();
             }
-            msg = i18n.tr("Activation key with for physical systems can only use " +
+            msg = i18n.tr("Activation keys for physical systems can only use " +
                 "quantities of pool ''{0}'' evenly divisible by {1}", pool.getId(), multip);
         }
         else if (error.equals("rulefailed.virtonly.on.physical.key")) {
