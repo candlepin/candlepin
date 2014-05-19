@@ -192,7 +192,7 @@ public class ActivationKeyRulesTest {
             fail("Should have thrown an exception");
         }
         catch (BadRequestException bre) {
-            String expectedMsg = "Activation key with for physical systems can only" +
+            String expectedMsg = "Activation keys for physical systems can only" +
                 " use quantities of pool '" + pool.getId() + "' evenly divisible by 2";
             assertEquals(expectedMsg, bre.getMessage());
         }
