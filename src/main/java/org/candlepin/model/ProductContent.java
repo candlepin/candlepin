@@ -56,8 +56,8 @@ public class ProductContent extends AbstractHibernateObject {
     }
 
     public String toString() {
-        return "[ProductContent, product = " + ((getProduct() == null) ? "null" : getProduct().getName()) +
-                ", content = " + ((content == null) ? "null" : content.getLabel()) +
+        return "ProductContent [product = " + getProduct() +
+                ", content = " + content +
                 ", enabled = " + enabled + "]";
     }
 

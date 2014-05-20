@@ -160,8 +160,7 @@ public class Subscription extends AbstractHibernateObject {
     }
 
     public String toString() {
-        String productId = ((getProduct() == null) ? "null" : getProduct().getId());
-        return "Subscription [id = " + getId() + ", product = " + productId +
+        return "Subscription [id = " + getId() + ", product = " + getProduct() +
             ", quantity = " + getQuantity() + ", expires = " + getEndDate() + "]";
     }
 
