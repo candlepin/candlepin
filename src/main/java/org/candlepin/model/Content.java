@@ -308,4 +308,9 @@ public class Content extends AbstractHibernateObject {
         return val == null ? dflt : val;
     }
 
+    @Override
+    public String toString() {
+        return "Content [id: " + getId() + ", label: " + getLabel() + "]";
+    }
+
 }
