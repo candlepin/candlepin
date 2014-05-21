@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.12
+Version: 0.9.13
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -380,6 +380,23 @@ fi
 
 
 %changelog
+* Wed May 21 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.13-1
+- 1012386: Ensure that both master and bonus pool exist on pool refresh.  (wpoteat@redhat.com)
+- 1093457: Allow adapter to confirm validity of owner creation on pool refresh (wpoteat@redhat.com)
+- Spec test failure when running in parallel (wpoteat@redhat.com)
+- add toString method to Content.java (dcrissma@redhat.com)
+- simply use object reference instead of checking for null (dcrissma@redhat.com)
+- Latest string extract (bkearney@redhat.com)
+- Make toString methods in models able to handle null objects (dcrissma@redhat.com)
+- Rewrite fact filters to take advantage of hibernate criteria api (ckozak@redhat.com)
+- log event not just the exception (jesusr@redhat.com)
+- index cdn certificates on serial_id for uniformity with other certs (ckozak@redhat.com)
+- Use candlepin-guice in RHEL 7. (awood@redhat.com)
+- Changes in packaging required for RHEL 7. (awood@redhat.com)
+- Upgrade RESTEasy to what is available in RHEL 7. (awood@redhat.com)
+- Some preliminary code to avoid deadlock situations (ckozak@redhat.com)
+- Add support for emitting events over qpid (jesusr@redhat.com)
+
 * Fri May 09 2014 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.12-1
 - 1094492: Consumer name in Alternate Subject needs to be different type
   (wpoteat@redhat.com)
