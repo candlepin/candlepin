@@ -8,7 +8,6 @@ bcprov-jdk16
 c3p0
 commons-codec
 commons-collections
-commons-httpclient
 commons-io
 commons-lang
 dom4j
@@ -30,6 +29,7 @@ hornetq-commons
 hornetq-core-client
 hornetq-journal
 hornetq-server
+httpclient
 istack-commons-runtime
 jackson-annotations
 jackson-core

@@ -4,23 +4,19 @@
 antlr
 aopalliance
 apache-mime4j
+atinject
 bcprov-jdk16
 c3p0
+candlepin-guice // This will pull in all the jars under candlepin-guice
+cglib
 commons-codec
 commons-collections
-commons-httpclient
 commons-io
 commons-lang
 dom4j
 gettext-commons
 glassfish-jaxb/jaxb-impl
-google-collections
-guice
-guice-assistedinject
-guice-multibindings
-guice-persist
-guice-servlet
-guice-throwingproviders
+guava
 hibernate-commons-annotations
 hibernate-jpa-2.0-api
 hibernate-validator
@@ -31,6 +27,7 @@ hornetq-commons
 hornetq-core-client
 hornetq-journal
 hornetq-server
+httpcomponents/httpclient
 istack-commons-runtime
 jackson-annotations
 jackson-core
@@ -40,7 +37,6 @@ jackson-jaxrs-providers/jackson-jaxrs-json-provider
 jackson-module-jaxb-annotations
 javamail/mail
 javassist
-javax.inject
 jboss-logging
 jta
 liquibase
@@ -50,6 +46,7 @@ logback/logback-core
 netty
 oauth/oauth
 oauth/oauth-provider
+objectweb-asm/asm
 postgresql-jdbc
 resteasy/jaxrs-api
 resteasy/resteasy-atom-provider

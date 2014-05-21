@@ -36,9 +36,9 @@ import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
 
-import org.apache.commons.httpclient.Credentials;
-import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.lang.StringUtils;
+import org.apache.http.auth.Credentials;
+import org.apache.http.auth.UsernamePasswordCredentials;
 import org.jboss.resteasy.client.ClientResponse;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;

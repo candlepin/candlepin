@@ -25,7 +25,7 @@
 %{?fedora:%global deps_suffix fc%{fedora}}
 %{?rhel:%global deps_suffix el%{rhel}}
 
-%if 0%{?fedora} >= 19
+%if 0%{?fedora} >= 19 || 0%{?rhel} >= 7
 %global tomcat tomcat
 %else
 %global tomcat tomcat6
@@ -67,19 +67,23 @@ BuildRequires: hibernate4-entitymanager >= 0:4.2.5
 BuildRequires: hibernate4-c3p0 >= 0:4.2.5
 %if 0%{?rhel} >= 7
 BuildRequires: glassfish-jaxb
+BuildRequires: candlepin-guice >= 0:3.0
 BuildRequires: guava >= 0:13.0
 BuildRequires: apache-commons-collections
+BuildRequires: mvn(org.apache.httpcomponents:httpclient) >= 0:4.1.2
 BuildRequires: mvn(org.slf4j:slf4j-api)  >= 0:1.7.4
 BuildRequires: mvn(org.slf4j:jcl-over-slf4j)  >= 0:1.7.4
 BuildRequires: mvn(ch.qos.logback:logback-classic)
 %else
 BuildRequires: ant-nodeps >= 0:1.7.0
 BuildRequires: jaxb-impl
+BuildRequires: google-guice >= 0:3.0
 BuildRequires: google-collections >= 0:1.0
 BuildRequires: commons-collections >= 3.1
 BuildRequires: slf4j-api >= 0:1.7.5
 BuildRequires: jcl-over-slf4j >= 0:1.7.5
 BuildRequires: logback-classic
+BuildRequires: httpclient >= 0:4.1.2
 %endif
 
 BuildRequires: javassist >= 3.12.0
@@ -90,9 +94,8 @@ BuildRequires: hibernate-beanvalidation-api >= 1.0.0
 BuildRequires: hibernate4-validator >= 0:4.2.5
 
 BuildRequires: liquibase >= 0:2.0.5
-BuildRequires: resteasy >= 0:2.3.1
+BuildRequires: resteasy >= 0:2.3.7
 BuildRequires: hornetq >= 0:2.3.5
-BuildRequires: google-guice >= 0:3.0
 BuildRequires: jakarta-commons-lang
 BuildRequires: jakarta-commons-io
 BuildRequires: apache-commons-codec
@@ -105,7 +108,6 @@ BuildRequires: jackson-jaxrs-json-provider >= %{jackson_version}
 BuildRequires: jackson-module-jaxb-annotations >= %{jackson_version}
 
 # Configure Datasources
-BuildRequires: jakarta-commons-httpclient
 BuildRequires: hibernate-jpa-2.0-api >= 1.0.1
 BuildRequires: netty
 BuildRequires: jms >= 0:1.1
@@ -120,7 +122,7 @@ BuildRequires: gettext-commons
 BuildRequires: jta
 
 # resteasy multipart requires this at runtime
-BuildRequires: apache-mime4j
+BuildRequires: apache-mime4j = 0:0.6
 
 # needed to send events to a qpid
 BuildRequires: qpid-java-client >= 0:0.22
@@ -141,19 +143,25 @@ Requires: antlr >= 0:2.7.7
 Requires: bouncycastle
 %if 0%{?rhel} >= 7
 Requires: glassfish-jaxb
+Requires: candlepin-guice >= 0:3.0
 Requires: guava >= 0:13.0
 Requires: apache-commons-collections
+Requires: mvn(org.apache.httpcomponents:httpclient) >= 0:4.1.2
 Requires: mvn(org.slf4j:slf4j-api)  >= 0:1.7.4
 Requires: mvn(org.slf4j:jcl-over-slf4j)  >= 0:1.7.4
 Requires: mvn(ch.qos.logback:logback-classic)
+Requires: mvn(net.sf.cglib:cglib)
+Requires: mvn(asm:asm)
 %else
 Requires: jaxb-impl
+Requires: google-guice >= 0:3.0
 Requires: google-collections >= 0:1.0
 Requires: commons-collections >= 3.1
 Requires: slf4j-api >= 0:1.7.5-4
 # apache-mime4j uses commons-logging, so we have to provide a slf4j bridge
 Requires: jcl-over-slf4j >= 0:1.7.5
 Requires: logback-classic
+Requires: httpclient >= 0:4.1.2
 %endif
 Requires: hibernate4-core >= 0:4.2.5
 Requires: hibernate4-entitymanager >= 0:4.2.5
@@ -164,8 +172,7 @@ Requires: hibernate-jpa-2.0-api >= 0:1.0.1
 Requires: candlepin-scl
 Requires: hibernate-beanvalidation-api >= 1.0.0
 Requires: c3p0 >= 0:0.9.1.2
-Requires: resteasy >= 0:2.3.1
-Requires: google-guice >= 0:3.0
+Requires: resteasy >= 0:2.3.7
 Requires: jackson-annotations >= %{jackson_version}
 Requires: jackson-core >= %{jackson_version}
 Requires: jackson-databind >= %{jackson_version}
@@ -178,8 +185,10 @@ Requires: scannotation
 Requires: jakarta-commons-lang
 Requires: jakarta-commons-io
 Requires: apache-commons-codec
-Requires: jakarta-commons-httpclient
-Requires: apache-mime4j
+
+# RESTEasy breaks if you use a newer version because the location of some
+# of the packages changed between 0.6 and 0.7
+Requires: apache-mime4j = 0:0.6
 Requires: gettext-commons
 Requires: javamail
 Requires: javassist >= 3.12.0

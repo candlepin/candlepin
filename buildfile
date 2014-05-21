@@ -23,9 +23,9 @@ RESTEASY = [group('jaxrs-api',
                   # XXX: this version requires us to use
                   # ContentTypeHackFilter.java when updating,
                   # please check if its still needed, and remove if not.
-                  :version => '2.3.1.GA'),
+                  :version => '2.3.7.Final'),
             'org.scannotation:scannotation:jar:1.0.2',
-            'commons-httpclient:commons-httpclient:jar:3.1']
+            'org.apache.httpcomponents:httpclient:jar:4.1.2']
 
 MIME4J = [group('apache-mime4j',
                 :under => 'org.apache.james',

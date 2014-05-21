@@ -20,8 +20,8 @@ import static org.junit.Assert.assertNotNull;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.model.Owner;
 
-import org.apache.commons.httpclient.Credentials;
-import org.apache.commons.httpclient.UsernamePasswordCredentials;
+import org.apache.http.auth.Credentials;
+import org.apache.http.auth.UsernamePasswordCredentials;
 import org.jboss.resteasy.client.ClientResponse;
 import org.junit.Ignore;
 import org.junit.Test;
