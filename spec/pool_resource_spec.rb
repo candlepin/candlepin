@@ -170,8 +170,7 @@ describe 'Pool Resource' do
 
     @cp.create_subscription(owner['key'], product.id, 25)
     @cp.refresh_pools(owner['key'])
-    pools = @cp.list_pools
-    pool = pools.select { |p| p['owner']['key'] == owner['key'] }.first
+    pool = @cp.list_pools(:owner => owner.id).first
 
     user = user_client(owner, random_string('billy'))
     system = consumer_client(user, 'system')
