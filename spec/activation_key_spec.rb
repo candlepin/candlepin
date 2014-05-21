@@ -17,8 +17,7 @@ describe 'Activation Keys' do
     @sub = @cp.create_subscription(@owner['key'], @some_product['id'], 37)
     @cp.refresh_pools(@owner['key'])
 
-    pools = @cp.list_pools
-    @pool = pools.select { |p| p['owner']['key'] == @owner['key'] }.first
+    @pool = @cp.list_pools(:owner => @owner.id).first
 
     @activation_key = @cp.create_activation_key(@owner['key'], random_string('test_token'))
     @activation_key['id'].should_not be_nil
