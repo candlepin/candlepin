@@ -21,7 +21,7 @@ describe 'OAuth' do
      :authorize_path => "",
      :access_token_path => "",
     }
-    @owner = create_owner "oauth-owner"
+    @owner = create_owner random_string("oauth-owner")
     @user = create_user(@owner, "oauth-user", 'password')
     @consumer = @cp.register("oauth-consumer", :system, nil, {},
                              @user.username, @owner['key'])
