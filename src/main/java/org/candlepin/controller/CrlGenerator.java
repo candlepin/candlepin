@@ -209,7 +209,6 @@ public class CrlGenerator {
                     }
                     // put them back in circulation
                     cs.setCollected(false);
-                    cs.setRevoked(false);
                 }
             }
 

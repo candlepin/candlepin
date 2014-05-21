@@ -25,7 +25,14 @@ import static org.candlepin.util.Util.yesterday;
 import static org.junit.Assert.assertNotNull;
 
 import org.candlepin.model.CertificateSerial;
+import org.candlepin.model.Consumer;
+import org.candlepin.model.Entitlement;
+import org.candlepin.model.EntitlementCertificate;
+import org.candlepin.model.Owner;
+import org.candlepin.model.Pool;
+import org.candlepin.model.Product;
 import org.candlepin.test.DatabaseTestFixture;
+import org.candlepin.test.TestUtil;
 import org.junit.Test;
 
 import java.math.BigInteger;
@@ -69,8 +76,11 @@ public class CertificateSerialCuratorTest extends DatabaseTestFixture {
         public CertificateSerial save() {
             CertificateSerial serial = new CertificateSerial(dt);
             serial.setCollected(collected);
-            serial.setRevoked(revoked);
-            return certSerialCurator.create(serial);
+            serial = certSerialCurator.create(serial);
+            if (!this.revoked) {
+                serial = createEntitlementCertificate(serial).getSerial();
+            }
+            return serial;
         }
     }
 
@@ -217,5 +227,22 @@ public class CertificateSerialCuratorTest extends DatabaseTestFixture {
     @Test
     public void givenNullReturnsNull() {
         assertEquals(null, certSerialCurator.listBySerialIds(null));
+    }
+
+    private EntitlementCertificate createEntitlementCertificate(CertificateSerial serial) {
+        Owner owner = this.createOwner();
+        Consumer c = this.createConsumer(owner);
+        Product prod = new Product("id" + TestUtil.randomInt(), "test");
+        this.productCurator.create(prod);
+        Pool p = this.createPoolAndSub(owner, prod, 10L, new Date(),
+            new Date(new Date().getTime() + 100000L));
+
+        EntitlementCertificate toReturn = new EntitlementCertificate();
+        toReturn.setKeyAsBytes("key".getBytes());
+        toReturn.setCertAsBytes("cert".getBytes());
+        toReturn.setSerial(serial);
+        Entitlement e = this.createEntitlement(owner, c, p, toReturn);
+        this.entitlementCurator.create(e);
+        return toReturn;
     }
 }

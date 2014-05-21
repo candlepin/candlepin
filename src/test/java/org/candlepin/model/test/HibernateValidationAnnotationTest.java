@@ -137,7 +137,6 @@ public class HibernateValidationAnnotationTest extends DatabaseTestFixture{
     public void certificateSerialTest() throws Exception {
         Map<Field, Matcher<AnnotatedElement>> fm = new HashMap<Field, Matcher<AnnotatedElement>>();
         fm.put(CertificateSerial.class.getDeclaredField("id"), notNull);
-        fm.put(CertificateSerial.class.getDeclaredField("revoked"), notNull);
         fm.put(CertificateSerial.class.getDeclaredField("collected"), notNull);
         runMap(fm);
     }

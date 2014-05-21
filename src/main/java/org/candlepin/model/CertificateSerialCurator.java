@@ -15,7 +15,12 @@
 package org.candlepin.model;
 
 import org.candlepin.util.Util;
+import org.hibernate.criterion.Conjunction;
+import org.hibernate.criterion.Criterion;
+import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.criterion.Subqueries;
 
 import java.util.List;
 
@@ -24,6 +29,10 @@ import java.util.List;
  * CertificateSerialCurator - Interface to request a unique certificate serial number.
  */
 public class CertificateSerialCurator extends AbstractHibernateCurator<CertificateSerial> {
+
+    @SuppressWarnings("rawtypes")
+    private static final Class[] CERTCLASSES = {IdentityCertificate.class,
+        EntitlementCertificate.class, SubscriptionsCertificate.class, CdnCertificate.class};
 
     protected CertificateSerialCurator() {
         super(CertificateSerial.class);
@@ -36,7 +45,7 @@ public class CertificateSerialCurator extends AbstractHibernateCurator<Certifica
     @SuppressWarnings("unchecked")
     public List<CertificateSerial> retrieveTobeCollectedSerials() {
         return this.currentSession().createCriteria(CertificateSerial.class)
-            .add(Restrictions.eq("revoked", true))
+            .add(getRevokedCriteria())
             .add(Restrictions.eq("collected", false)).list();
     }
 
@@ -46,7 +55,7 @@ public class CertificateSerialCurator extends AbstractHibernateCurator<Certifica
         return this.currentSession()
             .createCriteria(CertificateSerial.class)
             .add(Restrictions.le("expiration", Util.yesterday()))
-            .add(Restrictions.eq("revoked", true)).list();
+            .add(getRevokedCriteria()).list();
     }
 
     /**
@@ -55,11 +64,36 @@ public class CertificateSerialCurator extends AbstractHibernateCurator<Certifica
      * @return the number of rows deleted.
      */
     public int deleteExpiredSerials() {
-        return this.currentSession().createQuery(
-            "delete from CertificateSerial where expiration <= :date" +
-                " and revoked = :revoked")
-                .setDate("date", Util.yesterday())
-                .setBoolean("revoked", true).executeUpdate();
+        String hql = "DELETE from CertificateSerial " +
+            "WHERE expiration <= :date " +
+            getHqlForRevoked();
+        return this.currentSession()
+            .createQuery(hql)
+            .setDate("date", Util.yesterday())
+            .executeUpdate();
+    }
+
+    @SuppressWarnings("rawtypes")
+    private String getHqlForRevoked() {
+        StringBuilder sb = new StringBuilder();
+        for (Class clazz : CERTCLASSES) {
+            String className = clazz.getSimpleName();
+            // Assume they all end with "Certificate"
+            String asName = className.substring(0,
+                className.indexOf("Certificate")).toLowerCase();
+            sb.append("AND id NOT IN (SELECT ");
+            sb.append(asName);
+            sb.append("serial.id FROM ");
+            sb.append(className);
+            sb.append(" as ");
+            sb.append(asName);
+            sb.append("cert JOIN ");
+            sb.append(asName);
+            sb.append("cert.serial as ");
+            sb.append(asName);
+            sb.append("serial) ");
+        }
+        return sb.toString();
     }
 
     @SuppressWarnings("unchecked")
@@ -76,5 +110,23 @@ public class CertificateSerialCurator extends AbstractHibernateCurator<Certifica
 
         return currentSession().createCriteria(
             CertificateSerial.class).add(Restrictions.in("id", lids)).list();
+    }
+
+    /*
+     * Generates criteria to check that no certificates (of any type in
+     * CertificateSerialCurator.CERTCLASSES) reference a serial so we can consider
+     * it revoked
+     */
+    @SuppressWarnings("rawtypes")
+    private Criterion getRevokedCriteria() {
+        Conjunction crit = Restrictions.conjunction();
+        for (Class clazz : CERTCLASSES) {
+            DetachedCriteria certSerialQuery =
+                DetachedCriteria.forClass(clazz)
+                    .createCriteria("serial")
+                    .setProjection(Projections.property("id"));
+            crit.add(Subqueries.propertyNotIn("id", certSerialQuery));
+        }
+        return crit;
     }
 }

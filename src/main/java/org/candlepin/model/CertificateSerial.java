@@ -24,6 +24,7 @@ import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 
 import org.candlepin.util.Util;
+import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.GenericGenerator;
 
 /**
@@ -41,8 +42,17 @@ public class CertificateSerial extends AbstractHibernateObject {
     @NotNull
     private Long id;
 
-    // Flag which indicates whether the certificate is revoked
-    @NotNull
+    /*
+     * A CertificateSerial is considered revoked when no certificates reference it
+     * TODO: put different kinds of serials into different tables.  More specifically,
+     * those that we own (can revoke) vs those that we don't
+     */
+    @Formula("(CASE (" +
+        "(SELECT count(entcert.id) FROM cp_ent_certificate entcert where entcert.serial_id = id) + " +
+        "(SELECT count(cdncert.id) FROM cp_cdn_certificate cdncert where cdncert.serial_id = id) + " +
+        "(SELECT count(subcert.id) FROM cp_certificate subcert where subcert.serial_id = id) + " +
+        "(SELECT count(idcert.id) FROM cp_id_cert idcert where idcert.serial_id = id)" +
+        ") WHEN 0 THEN 1 ELSE 0 END)")
     private boolean revoked;
 
     // Set to true if this serial is already a part of the CRL
@@ -85,13 +95,6 @@ public class CertificateSerial extends AbstractHibernateObject {
      */
     public boolean isRevoked() {
         return revoked;
-    }
-
-    /**
-     * @param revoked the revoked to set
-     */
-    public void setRevoked(boolean revoked) {
-        this.revoked = revoked;
     }
 
     /**

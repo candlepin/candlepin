@@ -419,7 +419,6 @@ public class PoolManagerTest {
         manager.regenerateCertificatesOf(e, false, false);
         assertFalse(e.getDirty());
 
-        verify(entCertAdapterMock).revokeEntitlementCertificates(e);
         verify(entCertAdapterMock).generateEntitlementCert(eq(e), eq(s),
             eq(product));
         verify(mockEventSink, times(1)).sendEvent(any(Event.class));
@@ -488,7 +487,6 @@ public class PoolManagerTest {
 
         manager.revokeEntitlement(e);
 
-        verify(entCertAdapterMock).revokeEntitlementCertificates(e);
         verify(entitlementCurator).delete(e);
     }
 
@@ -581,8 +579,6 @@ public class PoolManagerTest {
         verify(mockSubAdapter).deleteSubscription(eq(sub));
         verify(mockPoolCurator).delete(eq(p));
 
-        // Verify the entitlement was removed.
-        verify(entCertAdapterMock).revokeEntitlementCertificates(eq(ent));
         verify(entitlementCurator).delete(eq(ent));
     }
 
@@ -723,7 +719,6 @@ public class PoolManagerTest {
         // The pool left over from the pre-migrated subscription should be deleted
         // and granted entitlements should be revoked
         verify(mockPoolCurator).delete(eq(p));
-        verify(entCertAdapterMock).revokeEntitlementCertificates(eq(ent));
         verify(entitlementCurator).delete(eq(ent));
         // Make sure pools that don't match the owner were removed from the list
         // They shouldn't cause us to attempt to update existing pools when we
