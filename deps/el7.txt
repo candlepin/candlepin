@@ -38,6 +38,7 @@ jackson-module-jaxb-annotations
 javamail/mail
 javassist
 jboss-logging
+jms
 jta
 liquibase
 log4j
@@ -48,6 +49,7 @@ oauth/oauth
 oauth/oauth-provider
 objectweb-asm/asm
 postgresql-jdbc
+qpid-client-0.22
 resteasy/jaxrs-api
 resteasy/resteasy-atom-provider
 resteasy/resteasy-guice
