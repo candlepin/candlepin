@@ -43,6 +43,7 @@ javax.inject
 jaxb-impl
 jboss-logging
 jcl-over-slf4j
+jms
 jta
 liquibase
 log4j
@@ -52,7 +53,7 @@ netty
 oauth/oauth
 oauth/oauth-provider
 postgresql-jdbc
-qpid-java-client
+qpid-client-0.22
 resteasy/jaxrs-api
 resteasy/resteasy-atom-provider
 resteasy/resteasy-guice
