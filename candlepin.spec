@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.13
+Version: 0.9.14
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -380,6 +380,10 @@ fi
 
 
 %changelog
+* Thu May 22 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.14-1
+- bump candlepin-deps (jesusr@redhat.com)
+- add rhel7 build (jesusr@redhat.com)
+
 * Wed May 21 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.13-1
 - 1012386: Ensure that both master and bonus pool exist on pool refresh.  (wpoteat@redhat.com)
 - 1093457: Allow adapter to confirm validity of owner creation on pool refresh (wpoteat@redhat.com)
