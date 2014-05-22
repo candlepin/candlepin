@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.14
+Version: 0.9.15
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -380,6 +380,11 @@ fi
 
 
 %changelog
+* Thu May 22 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.15-1
+- add jms & qpid for el7 (jesusr@redhat.com)
+- Translations update. (dgoodwin@redhat.com)
+- use proper qpid-java-client jar name: qpid-client-0.22 & jms el6 (jesusr@redhat.com)
+
 * Thu May 22 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.14-1
 - bump candlepin-deps (jesusr@redhat.com)
 - add rhel7 build (jesusr@redhat.com)
