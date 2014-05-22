@@ -258,147 +258,147 @@ msgstr "이러한 사용자가 없음: {0} "
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:266
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:756
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:267
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:764
 #: src/main/java/org/candlepin/resource/HypervisorResource.java:176
-#: src/main/java/org/candlepin/resource/OwnerResource.java:849
-#: src/main/java/org/candlepin/resource/OwnerResource.java:939
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1155
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1189
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1222
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1250
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1291
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1325
+#: src/main/java/org/candlepin/resource/OwnerResource.java:853
+#: src/main/java/org/candlepin/resource/OwnerResource.java:944
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1160
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1194
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1227
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1255
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1296
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1330
 #, java-format
 msgid "owner with key: {0} was not found."
 msgstr "키: {0}의 소유자를 찾을 수 없음  "
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:299
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:300
 #, java-format
 msgid "Consumer with id {0} could not be found."
 msgstr "id {0}의 컨슈머를 찾을 수 없습니다."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author eukim
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:409
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:410
 msgid "Insufficient permissions"
 msgstr "권한이 충분하지 않음 "
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author eukim
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:415
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:416
 msgid "Must specify an org to register with activation keys."
 msgstr "활성화 키로 등록할 조직을 지정해야 합니다. "
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author eukim
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:419
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:420
 msgid "Cannot specify username with activation keys."
 msgstr "활성화 키와 함께 사용자 이름을 지정할 수 없음 "
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:440
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:441
 msgid "A unit type of 'person' cannot be used with activation keys"
 msgstr "'개인'의 유닛 유형은 활성화 키로 사용할 수 없음"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:445
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:455
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:446
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:456
 msgid "System name cannot contain most special characters."
 msgstr "시스템 이름에 대부분의 특수 문자를 포함시킬 수 없음. "
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:519
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:520
 #, java-format
 msgid "Problem creating unit {0}"
 msgstr "유닛 {0}을 생성하는 도중 문제 발생 "
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:538
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:540
 msgid "Pool ID must be provided"
 msgstr "풀 ID가 필요함 "
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author eukim
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:652
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:660
 msgid "System name cannot begin with # character"
 msgstr "시스템 이름을 # 문자로 시작할 수 없음 "
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author eukim
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:679
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:687
 #, java-format
 msgid "Activation key ''{0}'' not found for organization ''{1}''."
 msgstr "조직 ''{1}''에 대한 활성화 키 ''{0}''을(를) 찾을 수 없습니다. "
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:699
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:707
 #, java-format
 msgid "User with ID ''{0}'' could not be found."
 msgstr "ID ''{0}''인 사용자를 찾을 수 없습니다."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:707
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:715
 #, java-format
 msgid "User ''{0}'' has no roles for organization ''{1}''"
 msgstr "사용자 ''{0}''은(는) 조직 ''{1}''에 대한 역할을 갖지 않음 "
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:719
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:727
 #, java-format
 msgid "User ''{0}'' has already registered a personal consumer"
 msgstr "사용자 ''{0}''은 이미 개인 컨슈머를 등록하고 있음  "
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:736
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:744
 msgid "You must specify an organization for new units."
 msgstr "새 단위에 대한 유닛을 지정하셔야 합니다."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author eukim
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:747
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:755
 #, java-format
 msgid "Organization {0} does not exist."
 msgstr "조직 {0}이 존재하지 않습니다. "
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:817
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:825
 #, java-format
 msgid "Unit type ''{0}'' could not be found."
 msgstr "''{0}''의 유닛 유형을 찾을 수 없습니다."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:851
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:859
 #, java-format
 msgid "Problem updating unit {0}"
 msgstr "유닛 {0}을 업데이트하는 도중 문제 발생 "
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:912
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:920
 #, java-format
 msgid "Environment with ID ''{0}'' could not be found."
 msgstr "ID ''{0}''인 환경을 찾을 수 없습니다."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1235
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1243
 #: src/main/java/org/candlepin/resource/GuestIdResource.java:259
 #, java-format
 msgid "Cannot unregister {0} {1} because: {2}"
 msgstr "다음과 같은 이유로 {0} {1}을 등록 취소할 수 없음: {2} "
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1324
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1332
 msgid "Unable to create entitlement certificate archive"
 msgstr "인타이틀먼트 인증서 아카이브를 생성할 수 없습니다 "
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1441
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1452
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1449
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1460
 msgid "Cannot bind by multiple parameters."
 msgstr "여러 매개 변수로 바인딩할 수 없음 "
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author eukim
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1446
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1454
 msgid "Cannot specify a quantity when auto-binding."
 msgstr "자동 바인딩 시 수량을 지정할 수 없습니다. "
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author eukim
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1596
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1724
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1604
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1732
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:194
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:231
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:262
@@ -407,52 +407,52 @@ msgstr "자동 바인딩 시 수량을 지정할 수 없습니다. "
 msgid "Entitlement with ID ''{0}'' could not be found."
 msgstr "ID ''{0}''을(를) 갖는 인타이틀먼트를 찾을 수 없습니다. "
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1624
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1632
 #, java-format
 msgid "Product with ID ''{0}'' could not be found."
 msgstr " ID ''{0}''인 제품을 찾을 수 없습니다."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1684
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1692
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:145
 #: src/main/java/org/candlepin/model/ConsumerCurator.java:505
 #, java-format
 msgid "Unit with ID ''{0}'' could not be found."
 msgstr "ID ''{0}''인 유닛을 찾을 수 없습니다."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1751
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1759
 #, java-format
 msgid "Entitlement Certificate with serial number ''{0}'' could not be found."
 msgstr "시리얼 번호 ''{0}''인 인타이틀먼트 인증서를 찾을 수 없습니다."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1843
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1851
 #, java-format
 msgid ""
 "Unit {0} cannot be exported. A manifest cannot be made for units of type "
 "''{1}''."
 msgstr "유닛 {0}을(를) 내보내기할 수 없습니다. 유닛 유형 ''{1}''에 대한 매니페스트를 만들 수 없습니다. "
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1851
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1859
 #, java-format
 msgid "A CDN with label {0} does not exist on this system."
 msgstr "레이블 {0}인 CDN은 이 시스템에 존재하지 않습니다."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1867
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1875
 msgid "Unable to create export archive"
 msgstr "내보내기 아카이브를 생성할 수 없음 "
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1939
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1947
 #, java-format
 msgid "Problem regenerating ID cert for unit {0}"
 msgstr "유닛 {0}의 ID 인증서를 다시 생성하는 도중 문제 발생 "
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1979
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1987
 #, java-format
 msgid "The system with UUID {0} is not a virtual guest."
 msgstr "UUID {0}를 갖는 시스템은 가상 게스트가 아닙니다. "
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2099
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2107
 #, java-format
 msgid "Deletion record for hypervisor ''{0}'' not found."
 msgstr "하이퍼바이저 ''{0}''의 삭제 기록을 찾을 수 없습니다."
@@ -560,7 +560,7 @@ msgid "email locale is required for notification"
 msgstr "통지를 위해 이메일 로케일이 필요함 "
 
 #: src/main/java/org/candlepin/resource/SubscriptionResource.java:202
-#: src/main/java/org/candlepin/resource/OwnerResource.java:859
+#: src/main/java/org/candlepin/resource/OwnerResource.java:863
 #, java-format
 msgid "No such unit: {0}"
 msgstr "이러한 유닛이 없음: {0} "
@@ -587,40 +587,40 @@ msgstr "하이퍼바이저 ''{0}''는 다른 조직에 의해 이미 사용되�
 msgid "Event with ID ''{0}'' could not be found."
 msgstr "ID ''{0}''을(를) 갖는 이벤트를 찾을 수 없음. "
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:291
+#: src/main/java/org/candlepin/resource/OwnerResource.java:295
 #, java-format
 msgid "Could not create the Owner: {0}. Parent {1} does not exist."
 msgstr "소유자를 생성할 수 없음: {0}. 부모 {1}은 존재하지 않습니다. "
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:304
+#: src/main/java/org/candlepin/resource/OwnerResource.java:308
 #, java-format
 msgid "Could not create the Owner: {0}"
 msgstr "소유자를 생성할 수 없음: {0} "
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author eukim
-#: src/main/java/org/candlepin/resource/OwnerResource.java:524
+#: src/main/java/org/candlepin/resource/OwnerResource.java:528
 msgid "Must provide a name for activation key."
 msgstr "활성화 키의 이름을 반드시 지정해야 합니다. "
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:531
+#: src/main/java/org/candlepin/resource/OwnerResource.java:535
 #, java-format
 msgid ""
 "The activation key name ''{0}'' must be alphanumeric or include the "
 "characters '-' or '_'"
 msgstr "활성키 이름 ''{0}''은 알파벳과 숫자 조합이거나 '-' 또는 '_' 문자로 되어 있어야 합니다."
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:537
+#: src/main/java/org/candlepin/resource/OwnerResource.java:541
 #, java-format
 msgid "The activation key name ''{0}'' is already in use for owner {1}"
 msgstr "활성키 이름 ''{0}''은 소유자 {1}에 의해 이미 사용되고 있습니다."
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:621
+#: src/main/java/org/candlepin/resource/OwnerResource.java:625
 #, java-format
 msgid "{0} is not a valid log level"
 msgstr "{0}은 올바른 로그 레벨이 아닙니다 "
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:720
+#: src/main/java/org/candlepin/resource/OwnerResource.java:724
 #: src/main/java/org/candlepin/resource/PoolResource.java:142
 #, java-format
 msgid "Unit: {0} not found"
@@ -628,13 +628,13 @@ msgstr "유닛: {0}을(를) 찾을 수 없음 "
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author eukim
-#: src/main/java/org/candlepin/resource/OwnerResource.java:730
+#: src/main/java/org/candlepin/resource/OwnerResource.java:734
 #: src/main/java/org/candlepin/resource/PoolResource.java:236
 #, java-format
 msgid "User {0} cannot access consumer {1}"
 msgstr "사용자 {0}은(는) 사용자 {1}에 액세스할 수 없음 "
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:740
+#: src/main/java/org/candlepin/resource/OwnerResource.java:744
 #: src/main/java/org/candlepin/model/activationkeys/ActivationKeyCurator.java:58
 #, java-format
 msgid "ActivationKey with id {0} could not be found."
@@ -642,50 +642,50 @@ msgstr "ID {0}을(를) 갖는 활성화 키를 찾을 수 없습니다."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/OwnerResource.java:960
+#: src/main/java/org/candlepin/resource/OwnerResource.java:965
 #, java-format
 msgid "subscription with id: {0} not found."
 msgstr "id: {0}의 서브스크립션을 찾을 수 없음. "
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1065
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1070
 msgid "Unknown conflict to force"
 msgstr "강제에 대해 알 수 없는 충돌 "
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1094
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1099
 msgid "Error reading export archive"
 msgstr "내보내기 아카이브를 읽는 도중 오류 발생 "
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author eukim
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1271
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1276
 #, java-format
 msgid "Problem generating ueber cert for owner {0}"
 msgstr "소유자 {0}의 ueber 인증서를 생성하는 도중 문제 발생 "
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author eukim
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1299
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1304
 #, java-format
 msgid "ueber certificate for owner {0} was not found. Please generate one."
 msgstr "소유자 {0}의 ueber 인증서를 찾을 수 없습니다. 해당 인증서를 생성해 주십시오. "
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author eukim
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1369
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1374
 #, java-format
 msgid "{0} file imported successfully."
 msgstr "{0} 파일을 성공적으로 불러왔습니다. "
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1371
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1376
 #, java-format
 msgid "{0} file imported forcibly"
 msgstr "{0} 파일을 강제로 가져왔습니다 "
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1401
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1406
 #, java-format
 msgid "Subscriptions deleted by {0}"
 msgstr "{0}에 의해 서브스크립션이 삭제되었습니다 "
@@ -946,8 +946,8 @@ msgstr "수량은 0 보다 커야 합니다 "
 #: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:112
 #, java-format
 msgid ""
-"Activation key with for physical systems can only use quantities of pool "
-"''{0}'' evenly divisible by {1}"
+"Activation keys for physical systems can only use quantities of pool ''{0}'' "
+"evenly divisible by {1}"
 msgstr ""
 
 #: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:116
@@ -1094,7 +1094,7 @@ msgstr "소유자가 이미 다른 서브스크립션 관리 애플리케이션�
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author eukim
-#: src/main/java/org/candlepin/sync/EntitlementImporter.java:163
+#: src/main/java/org/candlepin/sync/EntitlementImporter.java:162
 msgid "Unable to find product with ID: "
 msgstr "다음 ID를 갖는 제품을 찾을 수 없음: "
 
@@ -1245,7 +1245,7 @@ msgstr "OAuth 오류가 발생했습니다. 내부 오류 메세지는 다음과
 msgid "Error getting oauth unit key"
 msgstr "oauth 유닛 키를 가져오는 도중 오류 발생  "
 
-#: src/main/java/org/candlepin/service/impl/DefaultEntitlementCertServiceAdapter.java:282
+#: src/main/java/org/candlepin/service/impl/DefaultEntitlementCertServiceAdapter.java:271
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
