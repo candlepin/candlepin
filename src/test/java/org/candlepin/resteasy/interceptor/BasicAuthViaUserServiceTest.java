@@ -120,11 +120,57 @@ public class BasicAuthViaUserServiceTest {
         assertEquals(expected, this.auth.getPrincipal(request));
     }
 
+    @Test
+    public void correctPrincipalColonPassword() throws Exception {
+        Owner owner = new Owner("user", "user");
+
+        setUserAndPassword("user", "1:2");
+        when(userService.validateUser("user", "1:2")).thenReturn(true);
+
+
+        Set<OwnerPermission> permissions = new HashSet<OwnerPermission>();
+        permissions.add(new OwnerPermission(owner, Access.ALL));
+
+        when(userService.findByLogin("user")).thenReturn(new User());
+
+        UserPrincipal expected = new UserPrincipal("user",
+                new ArrayList<Permission>(permissions), false);
+        assertEquals(expected, this.auth.getPrincipal(request));
+    }
+    @Test
+    public void correctPrincipalNoPassword() throws Exception {
+        Owner owner = new Owner("user", "user");
+
+        setUserNoPassword("user");
+        when(userService.validateUser("user", null)).thenReturn(true);
+
+
+        Set<OwnerPermission> permissions = new HashSet<OwnerPermission>();
+        permissions.add(new OwnerPermission(owner, Access.ALL));
+
+        when(userService.findByLogin("user")).thenReturn(new User());
+
+        UserPrincipal expected = new UserPrincipal("user",
+                new ArrayList<Permission>(permissions), false);
+        assertEquals(expected, this.auth.getPrincipal(request));
+    }
+
     // TODO:  Add in owner creation/retrieval tests?
 
     private void setUserAndPassword(String username, String password) {
         headers.getRequestHeaders().add("Authorization",
             "BASIC " + encodeUserAndPassword(username, password));
+    }
+
+    private void setUserNoPassword(String username) {
+        headers.getRequestHeaders().add("Authorization",
+            "BASIC " + encodeUserNoPassword(username));
+    }
+
+    private String encodeUserNoPassword(String username) {
+        String decoded = username;
+        byte[] encoded = Base64.encodeBase64(decoded.getBytes());
+        return new String(encoded);
     }
 
     private String encodeUserAndPassword(String username, String password) {
