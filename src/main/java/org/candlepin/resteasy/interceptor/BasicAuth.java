@@ -50,8 +50,7 @@ class BasicAuth extends UserAuth {
             if (auth != null && auth.toUpperCase().startsWith("BASIC ")) {
                 String userpassEncoded = auth.substring(6);
                 String[] userpass = new String(Base64
-                    .decodeBase64(userpassEncoded)).split(":");
-
+                    .decodeBase64(userpassEncoded)).split(":", 2);
                 String username = userpass[0];
                 String password = null;
                 if (userpass.length > 1) {
