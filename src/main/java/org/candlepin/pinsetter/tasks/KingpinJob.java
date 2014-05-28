@@ -16,6 +16,8 @@ package org.candlepin.pinsetter.tasks;
 
 import static org.quartz.impl.matchers.NameMatcher.jobNameEquals;
 
+import org.candlepin.config.Config;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.PinsetterJobListener;
 import org.candlepin.pinsetter.core.model.JobStatus;
@@ -47,6 +49,7 @@ public abstract class KingpinJob implements Job {
 
     private static Logger log = LoggerFactory.getLogger(KingpinJob.class);
     @Inject protected UnitOfWork unitOfWork;
+    @Inject protected Config config;
     protected static String prefix = "job";
 
     @Override
@@ -89,7 +92,11 @@ public abstract class KingpinJob implements Job {
             // job for any update collisions, which will only be detected
             // on commit.
 
-            throw new JobExecutionException(e, true);
+            int maxRefires = getMaxRetries();
+            // If the maximum is sub-zero, do not enforce any limit
+            boolean refire = maxRefires < 0 || context.getRefireCount() < maxRefires;
+            log.error("Persistence exception caught running pinsetter task.  Refire: " + refire, e);
+            throw new JobExecutionException(e, refire);
         }
         finally {
             if (startedUow) {
@@ -163,5 +170,20 @@ public abstract class KingpinJob implements Job {
                 // If there is no active unit of work, there is no reason to close it
             }
         }
+    }
+
+    private int getMaxRetries() {
+        int maxRetries = ConfigProperties.PINSETTER_MAX_RETRIES_DEFAULT;
+        try {
+            // config may be null if this Job object has been created by hand
+            if (config != null) {
+                maxRetries = config.getInt(ConfigProperties.PINSETTER_MAX_RETRIES);
+            }
+        }
+        catch (Exception ce) {
+            log.warn("Unable to read '" + ConfigProperties.PINSETTER_MAX_RETRIES +
+                "' from candlepin config.  Using default of " + maxRetries);
+        }
+        return maxRetries;
     }
 }
