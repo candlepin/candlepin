@@ -95,7 +95,8 @@ public abstract class KingpinJob implements Job {
             int maxRefires = getMaxRetries();
             // If the maximum is sub-zero, do not enforce any limit
             boolean refire = maxRefires < 0 || context.getRefireCount() < maxRefires;
-            log.error("Persistence exception caught running pinsetter task.  Refire: " + refire, e);
+            log.error("Persistence exception caught running pinsetter task. Attempt: " +
+                context.getRefireCount() + ", Refire: " + refire, e);
             throw new JobExecutionException(e, refire);
         }
         finally {
