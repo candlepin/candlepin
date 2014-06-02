@@ -40,6 +40,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import org.apache.commons.lang.StringUtils;
 import org.candlepin.jackson.HateoasInclude;
 import org.candlepin.util.DateSource;
 import org.hibernate.annotations.Cascade;
@@ -926,6 +927,32 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, C
             sourceSubscription.setPool(this);
         }
         this.sourceSubscription = sourceSubscription;
+    }
+
+    public void setSubscriptionId(String subid) {
+        if (sourceSubscription == null && !StringUtils.isBlank(subid)) {
+            setSourceSubscription(new SourceSubscription());
+        }
+        if (sourceSubscription != null) {
+            sourceSubscription.setSubscriptionId(subid);
+            if (StringUtils.isBlank(sourceSubscription.getSubscriptionId()) &&
+                StringUtils.isBlank(sourceSubscription.getSubscriptionSubKey())) {
+                sourceSubscription = null;
+            }
+        }
+    }
+
+    public void setSubscriptionSubKey(String subkey) {
+        if (sourceSubscription == null && !StringUtils.isBlank(subkey)) {
+            setSourceSubscription(new SourceSubscription());
+        }
+        if (sourceSubscription != null) {
+            sourceSubscription.setSubscriptionSubKey(subkey);
+            if (StringUtils.isBlank(sourceSubscription.getSubscriptionId()) &&
+                StringUtils.isBlank(sourceSubscription.getSubscriptionSubKey())) {
+                sourceSubscription = null;
+            }
+        }
     }
 
     @Override
