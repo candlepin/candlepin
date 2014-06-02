@@ -83,6 +83,8 @@ public class ConfigProperties {
     public static final String ENABLE_PINSETTER = "candlepin.pinsetter.enable";
     public static final String PINSETTER_ASYNC_JOB_TIMEOUT =
         "pinsetter.waiting.timeout.seconds";
+    public static final String PINSETTER_MAX_RETRIES = "pinsetter.retries.max";
+    public static final int PINSETTER_MAX_RETRIES_DEFAULT = 10;
 
     private static final String[] DEFAULT_TASK_LIST = new String[]{
         CertificateRevocationListTask.class.getName(),
@@ -268,6 +270,7 @@ public class ConfigProperties {
 
                 // Default 20 minutes
                 this.put(PINSETTER_ASYNC_JOB_TIMEOUT, Integer.toString(1200));
+                this.put(PINSETTER_MAX_RETRIES, Integer.toString(PINSETTER_MAX_RETRIES_DEFAULT));
             }
         };
     public static final String CRL_FILE_PATH = "candlepin.crl.file";
