@@ -267,14 +267,6 @@ define "candlepin" do
     web_inf.path(candlepin_path).include("#{compiled_cp_path}/**").exclude("#{compiled_cp_path}/util/apicrawl")
   end
 
-  desc 'Print a list of dependencies'
-  task :antdeps do
-    artifacts(compile_classpath).collect do |a|
-      jar = File.basename(a.to_s).sub!(/(.*)-\d.*.jar/, '\1')
-      puts "<include name=\"**/#{jar}-*.jar\"/>"
-    end
-  end
-
   desc "generate a .syntastic_class_path for vim/syntastic"
   task :list_classpath do
     # see https://github.com/scrooloose/syntastic/blob/master/syntax_checkers/java/javac.vim
@@ -350,50 +342,6 @@ define "candlepin" do
   desc 'run rpmlint on the spec file'
   task :rpmlint do
       sh('rpmlint -f rpmlint.config candlepin.spec')
-  end
-
-  #
-  # coverity report generation
-  #
-  desc 'Generate coverity reports (coverity must be installed)'
-  task :coverity => [:compile] do
-    mkdir_p compile.target.to_s
-    sources = FileList[_("src/main/java/**/*.java")]
-    classpath = compile.dependencies.inject("") {|a,c| a << ":#{c}"}
-    classpath << ":#{Java.tools_jar}"
-
-    sh "cov-build --dir=/cov_builds/candlepin_jd/ javac -classpath #{classpath} -d #{compile.target} -verbose -g -target 1.6 #{sources}"
-    sh "cov-analyze-java --dir=/cov_builds/candlepin_jd/"
-    sh "cov-commit-defects --dir /cov_builds/candlepin_jd/ --stream candlepin --user admin --host #{`hostname`}"
-  end
-
-  #
-  # to use: buildr candlepin:genschema
-  #
-  task :genschema do
-    begin
-      ant('gen-schema') do |ant|
-        rm_rf 'target/schema'
-        mkdir_p 'target/schema'
-        filter('src/main/resources/META-INF').into('target/classes/META-INF').run
-
-        ant.taskdef :name=>'schema',
-          :classname=>'org.hibernate.tool.ant.HibernateToolTask',
-          #:classpath=>Buildr.artifacts([HIBERNATE, HSQLDB, DB, COMMONS, LOGBACK, RESTEASY, JACKSON, QUARTZ]).each(&:invoke).map(&:name).join(File::PATH_SEPARATOR)
-          :classpath=>Buildr.artifacts([HIBERNATE, COMMONS, LOGBACK, QUARTZ]).each(&:invoke).map(&:name).join(File::PATH_SEPARATOR)
-
-        ant.schema :destdir=>'target/schema' do
-          ant.classpath :path=>_('target/classes')
-          ant.jpaconfiguration :persistenceunit=>'production'
-          ant.hbm2ddl :export=>'false', :update=>'false', :drop=>'false', :create=>'true',
-            :outputfilename=>'candlepin-proxy.sql', :delimiter=>';', :format=>'true', :haltonerror=>'true'
-        end
-      end
-    ensure
-      rm_rf 'target/classes/META-INF'
-    end
-    # copy over the quartz schema files
-    cp_r 'code/schema/quartz/', 'target/schema/quartz'
   end
 
   desc 'Create an html report of the schema'
