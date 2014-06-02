@@ -120,7 +120,10 @@ LOGDRIVER = 'logdriver:logdriver:jar:1.0'
 # servlet-api is provided by the servlet container and Tomcat won't
 # even load servlet API classes seen in WEB-INF/lib.  See section 9.7.2 of
 # Servlet Spec 2.4 and http://stackoverflow.com/questions/15601469
-PROVIDED = [SERVLET]
+#
+# We need to mark JAVA_HOME/lib/tools.jar as a dependency in order for
+# Buildr to include it in the Eclipse .classpath file.
+PROVIDED = [SERVLET, file(Java.tools_jar)]
 
 #############################################################################
 # REPOSITORIES
@@ -167,12 +170,17 @@ define "candlepin" do
   project.group = GROUP
   manifest["Implementation-Vendor"] = COPYRIGHT
 
-  #
   # eclipse settings
   # http://buildr.apache.org/more_stuff.html#eclipse
-  #
-  eclipse.natures 'org.eclipse.jdt.core.javanature'
-  eclipse.builders 'org.eclipse.jdt.core.javabuilder'
+  eclipse.natures :java
+
+  # Buildr tries to outsmart you and use classpath variables whenever possible.  If
+  # we don't do the below, Buildr will add 'JAVA_HOMElib/tools.jar' to the .classpath
+  # file, but Eclipse doesn't have JAVA_HOME set as one of its classpath variables by
+  # default so the file isn't found.  We will cheat by setting the classpath variable to
+  # be exactly the same as the file path.
+  tools_location = File.basename(Java.tools_jar)
+  eclipse.classpath_variables tools_location.to_sym => tools_location
 
   # download the stuff we do not have in the repositories
   download artifact(SCHEMASPY) => 'http://downloads.sourceforge.net/project/schemaspy/schemaspy/SchemaSpy%204.1.1/schemaSpy_4.1.1.jar'
@@ -356,23 +364,6 @@ define "candlepin" do
    end
   end
 
-end
-
-# runs the eclipse task to generate the .classpath and .project
-# files, then fixes the output.
-task :eclipse do
-  puts "Fixing eclipse .classpath"
-  text = File.read(".classpath")
-  tmp = File.new("tmp", "w")
-  text = text.gsub(/output="target\/resources"/, "")
-  tmp.write(text.gsub(/<\/classpath>/, "  <classpathentry path=\"#{Java.tools_jar}\" kind=\"lib\"\/>"))
-  tmp.write("</classpath>")
-  tmp.close()
-  FileUtils.copy("tmp", ".classpath")
-  File.delete("tmp")
-
-  # make the gettext output dir to silence eclipse errors
-  mkdir_p("target/generated-source")
 end
 
 namespace "gettext" do
