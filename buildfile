@@ -136,12 +136,12 @@ end
 # (and findbugs and it's large set of deps)
 findbugs = ENV['findbugs']
 if not findbugs.nil?
-    require 'buildr-findBugs'
+  require 'buildr-findBugs'
 end
 
 use_pmd = ENV['pmd']
 if not use_pmd.nil?
-    require 'buildr/pmd'
+  require 'buildr/pmd'
 end
 
 use_logdriver = ENV['logdriver']
@@ -193,7 +193,7 @@ define "candlepin" do
   test.resources.filter.using(resource_substitutions)
 
   if not use_pmd.nil?
-      pmd.enabled = true
+    pmd.enabled = true
   end
 
   # Hook in gettext bundle generation to compile
@@ -349,7 +349,7 @@ define "candlepin" do
 
   desc 'run rpmlint on the spec file'
   task :rpmlint do
-      sh('rpmlint -f rpmlint.config candlepin.spec')
+    sh('rpmlint -f rpmlint.config candlepin.spec')
   end
 
   desc 'Create an html report of the schema'
@@ -367,15 +367,15 @@ define "candlepin" do
 end
 
 namespace "gettext" do
-    task :extract do
-      %x{xgettext -ktrc:1c,2 -k -ktrnc:1c,2,3 -ktr -kmarktr -ktrn:1,2 -o po/keys.pot $(find src/main/java -name "*.java")}
+  task :extract do
+    %x{xgettext -ktrc:1c,2 -k -ktrnc:1c,2,3 -ktr -kmarktr -ktrn:1,2 -o po/keys.pot $(find src/main/java -name "*.java")}
+  end
+  task :merge do
+    sources = FileList["po/*.po"]
+    sources.each do |source|
+      sh "msgmerge -N --backup=none -U #{source} po/keys.pot"
     end
-    task :merge do
-      sources = FileList["po/*.po"]
-      sources.each do |source|
-        sh "msgmerge -N --backup=none -U #{source} po/keys.pot"
-      end
-    end
+  end
 end
 
 desc 'Make sure eventhing is working as it should'
@@ -425,7 +425,7 @@ RSpec::Core::RakeTask.new do |task|
   task.rspec_opts << '-c'
   skipbundler = ENV['skipbundler']
   if not skipbundler.nil?
-      task.skip_bundler = true
+    task.skip_bundler = true
   end
 
   # Allow specify only="should do something" to run only a specific
@@ -453,31 +453,31 @@ end
 # we're adding to the existing emma:html task here
 # This is AWESOME!
 namespace :emma do
-   task :html do
-      puts "Fixing emma reports"
-      fixemmareports("reports/emma/coverage.html")
+ task :html do
+  puts "Fixing emma reports"
+  fixemmareports("reports/emma/coverage.html")
 
-      dir = "reports/emma/_files"
-      Dir.foreach(dir) do |filename|
-          fixemmareports("#{dir}/#{filename}") unless filename == "." || filename == ".."
-      end
-   end
+  dir = "reports/emma/_files"
+  Dir.foreach(dir) do |filename|
+    fixemmareports("#{dir}/#{filename}") unless filename == "." || filename == ".."
+  end
+ end
 end
 
 # fixes the html produced by emma
 def fixemmareports(filetofix)
-      text = File.read(filetofix)
-      newstr = ''
-      text.each_byte do |c|
-         if c != 160 then
-             newstr.concat(c)
-         else
-             newstr.concat('&nbsp;')
-         end
-      end
-      tmp = File.new("tmpreport", "w")
-      tmp.write(newstr)
-      tmp.close()
-      FileUtils.copy("tmpreport", filetofix)
-      File.delete("tmpreport")
+  text = File.read(filetofix)
+  newstr = ''
+  text.each_byte do |c|
+    if c != 160 then
+      newstr.concat(c)
+    else
+      newstr.concat('&nbsp;')
+    end
+  end
+  tmp = File.new("tmpreport", "w")
+  tmp.write(newstr)
+  tmp.close()
+  FileUtils.copy("tmpreport", filetofix)
+  File.delete("tmpreport")
 end
