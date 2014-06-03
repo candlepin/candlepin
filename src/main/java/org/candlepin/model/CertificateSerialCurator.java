@@ -18,6 +18,7 @@ import org.candlepin.util.Util;
 import org.hibernate.criterion.Conjunction;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.Subqueries;
@@ -64,36 +65,24 @@ public class CertificateSerialCurator extends AbstractHibernateCurator<Certifica
      * @return the number of rows deleted.
      */
     public int deleteExpiredSerials() {
+        // Some databases don't like to update based on a field that is being updated
+        // So we must get expired ids, and then delete them
+        @SuppressWarnings("unchecked")
+        List<String> ids = this.currentSession()
+            .createCriteria(CertificateSerial.class)
+            .add(Restrictions.le("expiration", Util.yesterday()))
+            .add(getRevokedCriteria())
+            .setProjection(Projections.id())
+            .addOrder(Order.asc("id")).list();
+        if (ids.isEmpty()) {
+            return 0;
+        }
         String hql = "DELETE from CertificateSerial " +
-            "WHERE expiration <= :date " +
-            getHqlForRevoked();
+            "WHERE id IN (:expiredids)";
         return this.currentSession()
             .createQuery(hql)
-            .setDate("date", Util.yesterday())
+            .setParameterList("expiredids", ids)
             .executeUpdate();
-    }
-
-    @SuppressWarnings("rawtypes")
-    private String getHqlForRevoked() {
-        StringBuilder sb = new StringBuilder();
-        for (Class clazz : CERTCLASSES) {
-            String className = clazz.getSimpleName();
-            // Assume they all end with "Certificate"
-            String asName = className.substring(0,
-                className.indexOf("Certificate")).toLowerCase();
-            sb.append("AND id NOT IN (SELECT ");
-            sb.append(asName);
-            sb.append("serial.id FROM ");
-            sb.append(className);
-            sb.append(" as ");
-            sb.append(asName);
-            sb.append("cert JOIN ");
-            sb.append(asName);
-            sb.append("cert.serial as ");
-            sb.append(asName);
-            sb.append("serial) ");
-        }
-        return sb.toString();
     }
 
     @SuppressWarnings("unchecked")
