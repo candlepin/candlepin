@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.15
+Version: 0.9.16
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -380,6 +380,13 @@ fi
 
 
 %changelog
+* Tue Jun 03 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.16-1
+- Fix failing crl delete expired serials job (ckozak@redhat.com)
+- Add setters for emulated subscriptionId/SubKey fields (ckozak@redhat.com)
+- log refire number when rerunning pinsetter task (ckozak@redhat.com)
+- 1094456: cap the number of pinsetter job refires (ckozak@redhat.com)
+- 1070388: Changes userpass string parsing to allow colons in passwords. (csnyder@redhat.com)
+
 * Thu May 22 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.15-1
 - add jms & qpid for el7 (jesusr@redhat.com)
 - Translations update. (dgoodwin@redhat.com)
