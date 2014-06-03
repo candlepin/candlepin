@@ -394,8 +394,8 @@ task :deploy_check do
     http = Net::HTTP.new('localhost', 8443)
     http.use_ssl = true
     http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-    http.start do |http|
-      response = http.request Net::HTTP::Get.new "/candlepin/admin/init"
+    http.start do |conn|
+      response = conn.request Net::HTTP::Get.new "/candlepin/admin/init"
       Rake::Task[:deploy].invoke if response.code != '200'
     end
   rescue
