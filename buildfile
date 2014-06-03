@@ -15,30 +15,40 @@ RESTEASY = [group('jaxrs-api',
                   # please check if its still needed, and remove if not.
                   :version => '2.3.7.Final'),
             'org.scannotation:scannotation:jar:1.0.2',
-            'org.apache.httpcomponents:httpclient:jar:4.1.2']
+            'org.apache.httpcomponents:httpclient:jar:4.1.2',
+            'org.apache.james:apache-mime4j:jar:0.6']
 
-MIME4J = [group('apache-mime4j',
-                :under => 'org.apache.james',
-                :version => '0.6')]
 JACKSON_NS = "com.fasterxml.jackson"
 JACKSON_VERSION = "2.3.0"
-JACKSON = ["#{JACKSON_NS}.core:jackson-annotations:jar:#{JACKSON_VERSION}",
-            "#{JACKSON_NS}.core:jackson-core:jar:#{JACKSON_VERSION}",
-            "#{JACKSON_NS}.core:jackson-databind:jar:#{JACKSON_VERSION}",
-            "#{JACKSON_NS}.jaxrs:jackson-jaxrs-json-provider:jar:#{JACKSON_VERSION}",
-            "#{JACKSON_NS}.jaxrs:jackson-jaxrs-base:jar:#{JACKSON_VERSION}",
-            "#{JACKSON_NS}.module:jackson-module-jsonSchema:jar:#{JACKSON_VERSION}",
-            "#{JACKSON_NS}.module:jackson-module-jaxb-annotations:jar:#{JACKSON_VERSION}"]
+JACKSON = [group('jackson-annotations', 'jackson-core', 'jackson-databind',
+                 :under=> "#{JACKSON_NS}.core",
+                 :version => JACKSON_VERSION),
+           group('jackson-jaxrs-base', 'jackson-jaxrs-json-provider',
+                 :under=> "#{JACKSON_NS}.jaxrs",
+                 :version => JACKSON_VERSION),
+           group('jackson-module-jsonSchema', 'jackson-module-jaxb-annotations',
+                 :under=> "#{JACKSON_NS}.module",
+                 :version => JACKSON_VERSION)]
+
 SUN_JAXB = 'com.sun.xml.bind:jaxb-impl:jar:2.1.12'
+
 JUNIT = ['junit:junit:jar:4.5', 'org.mockito:mockito-all:jar:1.8.5']
-LOGBACK = [group('logback-core', 'logback-classic', :under => 'ch.qos.logback', :version => '1.0.13')]
-HIBERNATE = ['org.hibernate:hibernate-core:jar:4.2.5.Final',
+
+LOGBACK = [group('logback-core', 'logback-classic',
+                 :under => 'ch.qos.logback',
+                 :version => '1.0.13')]
+
+# Artifacts that bridge other logging frameworks to slf4j. Mime4j uses
+# JCL for example.
+SLF4J_BRIDGES = 'org.slf4j:jcl-over-slf4j:jar:1.7.5'
+LOGGING = [LOGBACK, SLF4J_BRIDGES]
+
+HIBERNATE = [group('hibernate-core', 'hibernate-entitymanager', 'hibernate-c3p0',
+                   :under => 'org.hibernate',
+                   :version => '4.2.5.Final'),
              'org.hibernate.common:hibernate-commons-annotations:jar:4.0.1.Final',
-             'org.hibernate:hibernate-entitymanager:jar:4.2.5.Final',
              'org.hibernate:hibernate-tools:jar:3.2.4.GA',
-             # hibernate-validator required for hibernate-tools
              'org.hibernate:hibernate-validator:jar:4.3.1.Final',
-             'org.hibernate:hibernate-c3p0:jar:4.2.5.Final',
              'org.hibernate.javax.persistence:hibernate-jpa-2.0-api:jar:1.0.1.Final',
              'antlr:antlr:jar:2.7.7',
              'asm:asm:jar:3.0',
@@ -51,26 +61,34 @@ HIBERNATE = ['org.hibernate:hibernate-core:jar:4.2.5.Final',
              'dom4j:dom4j:jar:1.6.1',
              'org.jboss.logging:jboss-logging:jar:3.1.1.GA',
              'javax.validation:validation-api:jar:1.0.0.GA']
-DB = ['postgresql:postgresql:jar:9.0-801.jdbc4', 'mysql:mysql-connector-java:jar:5.1.26']
+
+POSTGRESQL = 'postgresql:postgresql:jar:9.0-801.jdbc4'
+
+MYSQL = 'mysql:mysql-connector-java:jar:5.1.26'
+
+DB = [POSTGRESQL, MYSQL]
+
+HSQLDB = 'hsqldb:hsqldb:jar:1.8.0.10'
+
 ORACLE = ['com.oracle:ojdbc6:jar:11.2.0', 'org.quartz-scheduler:quartz-oracle:jar:2.1.5']
+
 COMMONS = ['commons-codec:commons-codec:jar:1.4',
            'commons-collections:commons-collections:jar:3.1',
            'commons-io:commons-io:jar:1.3.2',
            'commons-lang:commons-lang:jar:2.5']
-LIQUIBASE = ['org.liquibase:liquibase-core:jar:3.1.0']
 
-# Artifacts that bridge other logging frameworks to slf4j. Mime4j uses
-# JCL for example.
-SLF4J_BRIDGES = ['org.slf4j:jcl-over-slf4j:jar:1.7.5']
-HSQLDB = 'hsqldb:hsqldb:jar:1.8.0.10'
+LIQUIBASE = 'org.liquibase:liquibase-core:jar:3.1.0'
+
 GETTEXT_COMMONS = 'org.xnap.commons:gettext-commons:jar:0.9.6'
 
-BOUNCYCASTLE = group('bcprov-jdk16', :under=>'org.bouncycastle', :version=>'1.46')
+BOUNCYCASTLE = 'org.bouncycastle:bcprov-jdk16:jar:1.46'
 
 SERVLET = 'javax.servlet:servlet-api:jar:2.5'
+
 GUICE =  [group('guice-assistedinject', 'guice-multibindings',
                 'guice-servlet', 'guice-throwingproviders', 'guice-persist',
-                :under=>'com.google.inject.extensions', :version=>'3.0'),
+                :under=>'com.google.inject.extensions',
+                :version=>'3.0'),
            'com.google.inject:guice:jar:3.0',
            'aopalliance:aopalliance:jar:1.0',
            'javax.inject:javax.inject:jar:1']
@@ -88,17 +106,19 @@ HORNETQ = [group('hornetq-server',
                  'hornetq-core-client',
                  'hornetq-commons',
                  'hornetq-journal',
-#                 'hornetq-resources', #Native libs for libaio
+                 # 'hornetq-resources', #Native libs for libaio
                  :under=>'org.hornetq',
                  :version=>'2.3.5.Final'),
             'org.jboss.netty:netty:jar:3.2.1.Final']
 
-
 SCHEMASPY = 'net.sourceforge:schemaSpy:jar:4.1.1'
+
 AMQP  = [group('qpid-common', 'qpid-client',
-             :under => 'org.apache.qpid', :version => '0.22'),
+               :under => 'org.apache.qpid',
+               :version => '0.22'),
          group('mina-core', 'mina-filter-ssl',
-             :under => 'org.apache.mina', :version => '1.0.1'),
+               :under => 'org.apache.mina',
+               :version => '1.0.1'),
          'geronimo-spec:geronimo-spec-jms:jar:1.1-rc4']
 
 RHINO = 'org.mozilla:rhino:jar:1.7R3'
@@ -216,9 +236,9 @@ define "candlepin" do
   #
   compile.options.target = '1.6'
   compile.options.source = '1.6'
-  compile_classpath = [COMMONS, SLF4J_BRIDGES, RESTEASY, LOGBACK, HIBERNATE, BOUNCYCASTLE,
-    GUICE, JACKSON, QUARTZ, GETTEXT_COMMONS, HORNETQ, SUN_JAXB, MIME4J, OAUTH, RHINO, COLLECTIONS,
-    PROVIDED, AMQP]
+  compile_classpath = [COMMONS, RESTEASY, LOGGING, HIBERNATE, BOUNCYCASTLE,
+    GUICE, JACKSON, QUARTZ, GETTEXT_COMMONS, HORNETQ, SUN_JAXB, OAUTH, RHINO, COLLECTIONS,
+    PROVIDED, AMQP, LIQUIBASE]
   compile.with compile_classpath
   compile.with LOGDRIVER, LOG4J_BRIDGE if use_logdriver
   if Buildr.environment == 'oracle'
@@ -226,7 +246,7 @@ define "candlepin" do
   else
     compile.with DB
   end
-  compile.with LIQUIBASE
+
   #
   # testing
   #
