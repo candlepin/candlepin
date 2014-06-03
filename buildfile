@@ -289,17 +289,12 @@ define "candlepin" do
   desc "generate a .syntastic_class_path for vim/syntastic"
   task :list_classpath do
     # see https://github.com/scrooloose/syntastic/blob/master/syntax_checkers/java/javac.vim
-    # this generates a .syntastic_class_path so the syntastic javac checker will
-    # work properly
-    syntastic_class_path = File.new(".syntastic_class_path", "w")
-    syn_class_path_buf = ""
-    compile.dependencies.inject("") { |a,c| syn_class_path_buf << "#{c}\n"}
-    syn_class_path_buf << "#{Java.tools_jar}\n"
-    # I'm sure there is a better way to figure out local target
-    syn_class_path_buf << "target/classes\n"
-
-    syntastic_class_path.write(syn_class_path_buf)
-    syntastic_class_path.close()
+    # this generates a .syntastic_class_path so the syntastic javac checker will work properly
+    File.open(".syntastic_class_path", "w") do |f|
+      compile.dependencies.each { |dep| f.puts(dep) }
+      f.puts(Java.tools_jar)
+      f.puts(path_to(:target, :classes))
+    end
   end
 
   desc 'Crawl the REST API and print a summary.'
