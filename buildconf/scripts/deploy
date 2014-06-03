@@ -74,7 +74,7 @@ else
 fi
 
 	echo "============ $MESSAGE =============="
-    LQCOMMAND="liquibase --driver=$DRIVER --classpath=src/main/resources/:target/classes/:$JDBC_JAR --changeLogFile=db/changelog/$CHANGELOG --url=$JDBC_URL --username=candlepin --logLevel=info"
+    LQCOMMAND="liquibase --driver=$DRIVER --classpath=src/main/resources/:target/classes/:$JDBC_JAR --changeLogFile=db/changelog/$CHANGELOG --url=$JDBC_URL --username=candlepin"
     if [ -n "$DBPASSWORD" ] ; then
         LQCOMMAND="$LQCOMMAND --password=$DBPASSWORD "
     fi
