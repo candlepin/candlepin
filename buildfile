@@ -368,11 +368,10 @@ end
 
 namespace "gettext" do
   task :extract do
-    %x{xgettext -ktrc:1c,2 -k -ktrnc:1c,2,3 -ktr -kmarktr -ktrn:1,2 -o po/keys.pot $(find src/main/java -name "*.java")}
+    sh 'xgettext -ktrc:1c,2 -k -ktrnc:1c,2,3 -ktr -kmarktr -ktrn:1,2 -o po/keys.pot $(find src/main/java -name "*.java")'
   end
   task :merge do
-    sources = FileList["po/*.po"]
-    sources.each do |source|
+    FileList["po/*.po"].each do |source|
       sh "msgmerge -N --backup=none -U #{source} po/keys.pot"
     end
   end
@@ -386,7 +385,7 @@ task :check_all => [:clean, :checkstyle, 'candlepin:rpmlint', :test, :deploy, :s
 #==========================================================================
 desc 'Build and deploy candlepin to a local Tomcat instance'
 task :deploy do
-  `buildconf/scripts/deploy`
+  sh 'buildconf/scripts/deploy'
 end
 
 task :deploy_check do
