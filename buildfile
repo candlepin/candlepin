@@ -3,6 +3,25 @@ require 'net/http'
 require 'rspec/core/rake_task'
 require 'json'
 
+nocstyle = ENV['nocheckstyle']
+if nocstyle.nil?
+  require "./buildr/checkstyle"
+end
+
+# Don't require findbugs by default.
+# needs "buildr-findBugs" gem installed
+# (and findbugs and its large set of deps)
+findbugs = ENV['findbugs']
+unless findbugs.nil?
+  require 'buildr-findBugs'
+end
+
+use_pmd = ENV['pmd']
+unless use_pmd.nil?
+  require 'buildr/pmd'
+end
+
+### Dependencies
 RESTEASY = [group('jaxrs-api',
                   'resteasy-jaxrs',
                   'resteasy-jaxb-provider',
@@ -135,41 +154,14 @@ LOGDRIVER = 'logdriver:logdriver:jar:1.0'
 # Buildr to include it in the Eclipse .classpath file.
 PROVIDED = [SERVLET, file(Java.tools_jar)]
 
-#############################################################################
-# REPOSITORIES
-#
-# Specify Maven 2.0 remote repositories here, like this:
+### Repositories
 repositories.remote << "http://jmrodri.fedorapeople.org/ivy/candlepin/"
 repositories.remote << "http://repository.jboss.org/nexus/content/groups/public/"
 repositories.remote << "http://gettext-commons.googlecode.com/svn/maven-repository/"
 repositories.remote << "http://oauth.googlecode.com/svn/code/maven/"
 repositories.remote << "http://central.maven.org/maven2/"
 
-
-nocstyle = ENV['nocheckstyle']
-if nocstyle.nil?
-   require "./buildr/checkstyle"
-end
-
-# dont require findbugs by default
-# needs "buildr-findBugs" gem installed
-# (and findbugs and it's large set of deps)
-findbugs = ENV['findbugs']
-if not findbugs.nil?
-  require 'buildr-findBugs'
-end
-
-use_pmd = ENV['pmd']
-if not use_pmd.nil?
-  require 'buildr/pmd'
-end
-
-use_logdriver = ENV['logdriver']
-puts use_logdriver
-
-#############################################################################
-# PROJECT BUILD
-#############################################################################
+### Project
 GROUP = "candlepin"
 COPYRIGHT = ""
 
@@ -201,6 +193,9 @@ define "candlepin" do
   tools_location = File.basename(Java.tools_jar)
   eclipse.classpath_variables tools_location.to_sym => tools_location
 
+  use_logdriver = ENV['logdriver']
+  info "Compiling with logdriver" if use_logdriver
+
   # download the stuff we do not have in the repositories
   download artifact(SCHEMASPY) => 'http://downloads.sourceforge.net/project/schemaspy/schemaspy/SchemaSpy%204.1.1/schemaSpy_4.1.1.jar'
   download artifact(LOGDRIVER) => 'http://jmrodri.fedorapeople.org/ivy/candlepin/logdriver/logdriver/1.0/logdriver-1.0.jar' if use_logdriver
@@ -231,9 +226,7 @@ define "candlepin" do
   end
   compile.from generate
 
-  #
-  # building
-  #
+  ### Building
   compile.options.target = '1.6'
   compile.options.source = '1.6'
   compile_classpath = [COMMONS, RESTEASY, LOGGING, HIBERNATE, BOUNCYCASTLE,
@@ -241,29 +234,27 @@ define "candlepin" do
     PROVIDED, AMQP, LIQUIBASE]
   compile.with compile_classpath
   compile.with LOGDRIVER, LOG4J_BRIDGE if use_logdriver
+
   if Buildr.environment == 'oracle'
     compile.with ORACLE
   else
     compile.with DB
   end
 
-  #
-  # testing
-  #
+  ### Testing
   test.setup do |task|
     filter('src/main/resources/META-INF').into('target/classes/META-INF').run
   end
 
-  # the other dependencies are gotten from compile.classpath automagically
+  # the other dependencies transfer from compile.classpath automagically
   test.with HSQLDB, JUNIT, generate
   test.with LOGDRIVER, LOG4J_BRIDGE if use_logdriver
   test.using :java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ]
 
-  #
-  # javadoc projects
-  #
+  ### Javadoc
   doc.using :tag => 'httpcode:m:HTTP Code:'
 
+  ### Packaging
   # NOTE: changes here must also be made in build.xml!
   candlepin_path = "org/candlepin"
   compiled_cp_path = "#{compile.target}/#{candlepin_path}"
@@ -361,10 +352,7 @@ define "candlepin" do
     # Cleanup
     rm api_file
     rm comments_file
-    puts
-    puts "Wrote Candlepin API to: " << final_file
-    puts
-
+    info "Wrote Candlepin API to: #{final_file}"
   end
 
   desc 'run rpmlint on the spec file'
@@ -375,7 +363,6 @@ define "candlepin" do
   desc 'Create an html report of the schema'
   task :schemaspy do
    cp = Buildr.artifacts(DB, SCHEMASPY).each(&:invoke).map(&:name).join(File::PATH_SEPARATOR)
-   puts cp
    command = "-t pgsql -db candlepin -s public -host localhost -u candlepin -p candlepin -o target/schemaspy"
    ant('java') do |ant|
      ant.java(:classname => "net.sourceforge.schemaspy.Main", :classpath => cp, :fork => true) do |java|
@@ -473,7 +460,7 @@ end
 # This is AWESOME!
 namespace :emma do
  task :html do
-  puts "Fixing emma reports"
+  info "Fixing emma reports"
   fixemmareports("reports/emma/coverage.html")
 
   dir = "reports/emma/_files"
