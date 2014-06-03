@@ -17,6 +17,7 @@ package org.candlepin.model.test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Calendar;
@@ -326,5 +327,67 @@ public class PoolTest extends DatabaseTestFixture {
         pool.setSourceEntitlement(null);
         pool.setSourceStack(new SourceStack(new Consumer(), "something"));
         assertEquals(PoolType.STACK_DERIVED, pool.getType());
+    }
+
+    @Test
+    public void testSetSubIdFromValue() {
+        pool.setSubscriptionId("testid");
+        assertEquals("testid", pool.getSourceSubscription().getSubscriptionId());
+        // subkey should be unchanged
+        assertEquals("master", pool.getSourceSubscription().getSubscriptionSubKey());
+    }
+
+    @Test
+    public void testSetSubIdFromNull() {
+        pool.setSourceSubscription(null);
+        pool.setSubscriptionId("testid");
+        assertEquals("testid", pool.getSourceSubscription().getSubscriptionId());
+        // subkey should be null
+        assertNull(pool.getSourceSubscription().getSubscriptionSubKey());
+    }
+
+    @Test
+    public void testSetSubIdNullRemoval() {
+        pool.getSourceSubscription().setSubscriptionSubKey(null);
+        pool.setSubscriptionId(null);
+        assertNull(pool.getSourceSubscription());
+    }
+
+    @Test
+    public void testSetSubIdNullEmptyString() {
+        pool.getSourceSubscription().setSubscriptionSubKey(null);
+        pool.setSubscriptionId("");
+        assertNull(pool.getSourceSubscription());
+    }
+
+    @Test
+    public void testSetSubKeyFromValue() {
+        pool.setSubscriptionSubKey("testkey");
+        assertEquals("testkey", pool.getSourceSubscription().getSubscriptionSubKey());
+        // subkey should be unchanged
+        assertEquals(subscription.getId(), pool.getSourceSubscription().getSubscriptionId());
+    }
+
+    @Test
+    public void testSetSubKeyFromNull() {
+        pool.setSourceSubscription(null);
+        pool.setSubscriptionSubKey("testid");
+        assertEquals("testid", pool.getSourceSubscription().getSubscriptionSubKey());
+        // subkey should be null
+        assertNull(pool.getSourceSubscription().getSubscriptionId());
+    }
+
+    @Test
+    public void testSetSubKeyNullRemoval() {
+        pool.getSourceSubscription().setSubscriptionId(null);
+        pool.setSubscriptionSubKey(null);
+        assertNull(pool.getSourceSubscription());
+    }
+
+    @Test
+    public void testSetSubKeyNullEmptyString() {
+        pool.getSourceSubscription().setSubscriptionId(null);
+        pool.setSubscriptionSubKey("");
+        assertNull(pool.getSourceSubscription());
     }
 }
