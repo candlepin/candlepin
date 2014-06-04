@@ -10,6 +10,7 @@
         <filter-name>Guice Filter</filter-name>
         <filter-class>com.google.inject.servlet.GuiceFilter</filter-class>
     </filter>
+
     <filter-mapping>
         <filter-name>Guice Filter</filter-name>
         <url-pattern>/*</url-pattern>

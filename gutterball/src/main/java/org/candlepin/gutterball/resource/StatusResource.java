@@ -18,6 +18,7 @@ import com.google.inject.Provider;
 
 import org.xnap.commons.i18n.I18n;
 
+import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -31,6 +32,7 @@ public class StatusResource {
 
     private Provider<I18n> i18nProvider;
 
+    @Inject
     public StatusResource(Provider<I18n> i18nProvider) {
         this.i18nProvider = i18nProvider;
     }
