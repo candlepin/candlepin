@@ -8,6 +8,7 @@ usage() {
 
     OPTIONS:
       -q  quiet; no notifications and minimal output
+      -t  hot deloy; do not stop and start Tomcat
 HELP
 }
 
@@ -19,7 +20,6 @@ init() {
     cd $PROJECT_ROOT
 }
 
-
 build() {
     buildr -s clean package test=no
 }
@@ -28,17 +28,26 @@ deploy() {
     VERSION="$(grep Version: ${APP}.spec | cut --delim=' ' -f2)"
 
     # TODO - Make this portable for RHEL 6
-    sudo install -o tomcat -g tomcat target/$APP-$VERSION.war /var/lib/tomcat/webapps/${APP}.war
+    sudo install -o tomcat -g tomcat -m 644 target/$APP-$VERSION.war /var/lib/tomcat/webapps/${APP}.war
 }
 
 start_container() {
-  # TODO - Make this portable for RHEL 6
-  sudo systemctl start tomcat
+    if [ -n $HOTDEPLOY ]; then
+        return
+    fi
+
+    sudo install -o tomcat -g tomcat -d -m 755 /var/log/gutterball
+    # TODO - Make this portable for RHEL 6
+    sudo systemctl start tomcat
 }
 
 stop_container() {
-  # TODO - Make this portable for RHEL 6
-  sudo systemctl stop tomcat
+    if [ -n $HOTDEPLOY ]; then
+        return
+    fi
+
+    # TODO - Make this portable for RHEL 6
+    sudo systemctl stop tomcat
 }
 
 notify() {
@@ -61,9 +70,10 @@ trap clean_up EXIT INT TERM
 # Abort on errors
 set -e
 
-while getopts ":q" opt; do
+while getopts ":qt" opt; do
     case $opt in
         q  ) QUIET="1";;
+        t  ) HOTDEPLOY="1";;
         ?  ) usage; exit;;
     esac
 done
