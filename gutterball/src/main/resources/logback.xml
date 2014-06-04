@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <contextName>gutterball</contextName>
+
+    <appender name="GutterballAppender" class="ch.qos.logback.core.FileAppender">
+        <file>/var/log/gutterball/gutterball.log</file>
+        <encoder>
+            <pattern>%d{ISO8601} [%X{requestType}=%X{requestUuid}] %-5p %c - %m%n</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="org.candlepin.gutterball" level="INFO"/>
+
+    <root level="WARN">
+        <appender-ref ref="ConsoleAppender" />
+    </root>
+</configuration>
