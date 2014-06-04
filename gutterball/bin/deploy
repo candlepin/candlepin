@@ -12,10 +12,27 @@ usage() {
 HELP
 }
 
+err_msg() {
+    echo "${RED}${1}${RESET_COLOR}" >&2
+}
+
+success_msg() {
+    echo "${GREEN}${1}${RESET_COLOR}"
+}
+
+warn_msg() {
+    echo "${YELLOW}${1}${RESET_COLOR}"
+}
+
 init() {
     # Get the directory this script is in. See http://mywiki.wooledge.org/BashFAQ/028
     DEPLOY_BIN_DIR="${BASH_SOURCE%/*}"
     PROJECT_ROOT=$(readlink -n -f "${DEPLOY_BIN_DIR}/../")
+
+    RED=$(tput setaf 1)
+    GREEN=$(tput setaf 2)
+    YELLOW=$(tput setaf 3)
+    RESET_COLOR=$(tput sgr0)
 
     cd $PROJECT_ROOT
 }
@@ -51,8 +68,11 @@ stop_container() {
 }
 
 notify() {
-    if [ -z $QUIET ] && type notify-send &> /dev/null; then
-        notify-send -i info -t 2000 "Deployment complete!"
+    if [ -z $QUIET ]; then
+        if type notify-send &> /dev/null; then
+            notify-send -i info -t 2000 "Deployment complete!"
+        fi
+        success_msg "Deployment complete!"
     fi
 }
 
