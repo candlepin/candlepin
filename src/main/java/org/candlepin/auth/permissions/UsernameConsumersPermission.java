@@ -14,6 +14,8 @@
  */
 package org.candlepin.auth.permissions;
 
+import java.io.Serializable;
+
 import org.candlepin.auth.Access;
 import org.candlepin.auth.SubResource;
 import org.candlepin.model.Consumer;
@@ -32,7 +34,7 @@ import org.hibernate.criterion.Restrictions;
  *
  * Allows the user to create and manage entitlements for the consumer as well.
  */
-public class UsernameConsumersPermission implements Permission {
+public class UsernameConsumersPermission implements Permission, Serializable {
 
     private final User user;
     private final Owner owner;
