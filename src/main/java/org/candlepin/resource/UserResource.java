@@ -33,6 +33,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
+import org.candlepin.auth.SubResource;
 import org.candlepin.auth.interceptor.Verify;
 import org.candlepin.exceptions.ConflictException;
 import org.candlepin.exceptions.GoneException;
@@ -185,14 +186,17 @@ public class UserResource {
     }
 
     /**
-     * Retrieve a list of Owners by User
+     * Retrieve a list of owners the user can register systems to.
      * <p>
-     * Owners for which this User has admin rights.
+     * Previously this represented owners the user was an admin for. Because the client uses
+     * this API call to list the owners a user can register to, when we introduced "my
+     * systems" administrator, we have to change its meaning to listing the owners that
+     * can be registered to by default to maintain compatability with released clients.
      *
      * @return a list of Owner objects
      * @httpcode 200
      */
-    // TODO: should probably accept an access level query param someday
+    // TODO: should probably accept access level and sub-resource query params someday
     @GET
     @Path("/{username}/owners")
     @Produces(MediaType.APPLICATION_JSON)
@@ -206,7 +210,7 @@ public class UserResource {
             owners.addAll(ownerCurator.listAll());
         }
         else {
-            for (Owner o : user.getOwners(Access.ALL)) {
+            for (Owner o : user.getOwners(SubResource.CONSUMERS, Access.CREATE)) {
                 owners.add(o);
             }
         }

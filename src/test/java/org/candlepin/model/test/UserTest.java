@@ -53,14 +53,33 @@ public class UserTest extends DatabaseTestFixture {
         Owner owner2 = new Owner("owner2", "owner two");
         User user = new User(username, password);
 
-        Set<Owner> owners = user.getOwners(Access.ALL);
+        Set<Owner> owners = user.getOwners(null, Access.ALL);
         assertEquals(0, owners.size());
         user.addPermissions(new TestPermission(owner1));
         user.addPermissions(new TestPermission(owner2));
 
         // Adding the new permissions should give us access
         // to both new owners
-        owners = user.getOwners(Access.ALL);
+        owners = user.getOwners(null, Access.ALL);
+        assertEquals(2, owners.size());
+    }
+
+    @Test
+    public void testGetOwnersCoversCreateConsumers() {
+        String username = "TESTUSER";
+        String password = "sekretpassword";
+        Owner owner1 = new Owner("owner1", "owner one");
+        Owner owner2 = new Owner("owner2", "owner two");
+        User user = new User(username, password);
+
+        Set<Owner> owners = user.getOwners(null, Access.ALL);
+        assertEquals(0, owners.size());
+        user.addPermissions(new TestPermission(owner1));
+        user.addPermissions(new TestPermission(owner2));
+
+        // This is the check we do in API call, make sure owner admins show up as
+        // having perms to create consumers as well:
+        owners = user.getOwners(SubResource.CONSUMERS, Access.CREATE);
         assertEquals(2, owners.size());
     }
 
@@ -72,14 +91,14 @@ public class UserTest extends DatabaseTestFixture {
         Owner owner2 = new Owner("owner2", "owner two");
         User user = new User(username, password);
 
-        Set<Owner> owners = user.getOwners(Access.ALL);
+        Set<Owner> owners = user.getOwners(null, Access.ALL);
         assertEquals(0, owners.size());
         user.addPermissions(new OtherPermission(owner1));
         user.addPermissions(new OtherPermission(owner2));
 
         // Adding the new permissions should not give us access
         // to either of the new owners
-        owners = user.getOwners(Access.ALL);
+        owners = user.getOwners(null, Access.ALL);
         assertEquals(0, owners.size());
     }
 

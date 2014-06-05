@@ -29,6 +29,7 @@ import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.permissions.OwnerPermission;
 import org.candlepin.auth.permissions.Permission;
 import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
+import org.candlepin.auth.permissions.UsernameConsumersPermission;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.Owner;
 import org.candlepin.model.PermissionBlueprint;
@@ -106,6 +107,31 @@ public class UserResourceTest extends DatabaseTestFixture {
 
         // Requesting the list of owners for this user should assume ALL, and not
         // return owner2:
+        List<Owner> owners = userResource.listUsersOwners(user.getUsername(),
+            userPrincipal);
+        assertEquals(1, owners.size());
+        assertEquals(owner1.getKey(), owners.get(0).getKey());
+    }
+
+    @Test
+    public void testListOwnersForMySystemsAdmin() {
+        User user = new User();
+        user.setUsername("dummyuser" + TestUtil.randomInt());
+        user.setPassword("password");
+        userResource.createUser(user);
+
+        Owner owner1 = createOwner();
+
+        Role owner1Role = new Role(owner1.getKey() + " role");
+        owner1Role.addPermission(new PermissionBlueprint(PermissionType.USERNAME_CONSUMERS,
+            owner1, Access.ALL));
+        owner1Role.addUser(user);
+        roleCurator.create(owner1Role);
+
+        Set<Permission> perms = new HashSet<Permission>();
+        perms.add(new UsernameConsumersPermission(user, owner1));
+        Principal userPrincipal = new UserPrincipal(user.getUsername(), perms, false);
+
         List<Owner> owners = userResource.listUsersOwners(user.getUsername(),
             userPrincipal);
         assertEquals(1, owners.size());
