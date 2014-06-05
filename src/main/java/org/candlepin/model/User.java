@@ -154,10 +154,13 @@ public class User extends AbstractHibernateObject {
      * @return associated owners
      */
     @XmlTransient
-    public Set<Owner> getOwners(Access accessLevel) {
+    public Set<Owner> getOwners(SubResource sub, Access accessLevel) {
         Set<Owner> owners = new HashSet<Owner>();
+        if (sub == null) {
+            sub = SubResource.NONE;
+        }
         for (Permission p : this.getPermissions()) {
-            if (p.canAccess(p.getOwner(), SubResource.NONE, accessLevel)) {
+            if (p.canAccess(p.getOwner(), sub, accessLevel)) {
                 owners.add(p.getOwner());
             }
         }

@@ -166,6 +166,11 @@ describe 'System admins with read-only on org' do
     return pool
   end
 
+  it 'can list their owners' do
+    owners = @user_cp.list_users_owners(@username)
+    owners.size.should == 1
+  end
+
   it 'can see all systems in org' do
     # Admin should see both systems in the org:
     @cp.list_consumers({:owner => @owner['key']}).size.should == 2
