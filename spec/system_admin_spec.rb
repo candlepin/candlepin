@@ -79,6 +79,15 @@ describe 'System Admins' do
     end.should raise_exception(RestClient::ResourceNotFound)
   end
 
+  it "can create entitlements asynchronously" do
+    pool = create_pool()
+    @user_cp.consume_pool(pool['id'],
+      {
+        :uuid => @consumer1['uuid'],
+        :async => true
+      })
+  end
+
   it "can view only their system's entitlements" do
     pool = create_pool()
     ent = @user_cp.consume_pool(pool['id'], {:uuid => @consumer1['uuid']})[0]
