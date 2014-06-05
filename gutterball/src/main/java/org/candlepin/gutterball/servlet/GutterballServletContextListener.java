@@ -73,9 +73,7 @@ public class GutterballServletContextListener extends
             config = readConfiguration(context);
         }
         catch (ConfigurationException e) {
-            log.error(
-                    "Could not read configuration file.  Aborting initialization.",
-                    e);
+            log.error("Could not read configuration file.  Aborting initialization.", e);
             throw new RuntimeException(e);
         }
 
@@ -122,14 +120,13 @@ public class GutterballServletContextListener extends
 
     /**
      * The RESTEasy ModuleProcessor class doesn't return the injector nor does
-     * it allow you
-     * to send an injector in. Consequently, we have to duplicate the
-     * functionality.
+     * it allow you to send an injector in. Consequently, we have to duplicate
+     * the functionality.
      *
      * @param context
      */
     @SuppressWarnings("rawtypes")
-    private void processRestEasy(ServletContext context) {
+    protected void processRestEasy(ServletContext context) {
         final Injector injector = (Injector) context
                 .getAttribute(Injector.class.getName());
         final Registry registry = (Registry) context
@@ -144,11 +141,11 @@ public class GutterballServletContextListener extends
                 if (GetRestful.isRootResource(beanClass)) {
                     final ResourceFactory resourceFactory = new GuiceResourceFactory(
                             binding.getProvider(), beanClass);
-                    log.info("registering factory for {}", beanClass.getName());
+                    log.info("Registering factory for {}", beanClass.getName());
                     registry.addResourceFactory(resourceFactory);
                 }
                 if (beanClass.isAnnotationPresent(Provider.class)) {
-                    log.info("registering provider instance for {}",
+                    log.info("Registering provider instance for {}",
                             beanClass.getName());
                     providerFactory.registerProviderInstance(binding
                             .getProvider().get());

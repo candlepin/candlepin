@@ -31,6 +31,15 @@ import javax.servlet.http.HttpServletRequest;
 /**
  * I18nProvider is a Guice Provider that returns an I18n instance matched
  * to the locale of the ServletRequest.
+ * <p>
+ * <b>Note that this Provider is RequestScoped!</b>  That means that a new Provider
+ * will be created for every request.  If need a RequestScoped object in a broader
+ * scope (like in a Singleton) inject a Provider for that class instead and call
+ * get() whenever you need the object.  Our Resource classes are created per request
+ * so we can inject the I18n object directly.
+ * <p>
+ * See http://code.google.com/p/google-guice/wiki/ServletModule#Using_RequestScope
+ * for more information.
  */
 @RequestScoped
 public class I18nProvider implements Provider<I18n> {

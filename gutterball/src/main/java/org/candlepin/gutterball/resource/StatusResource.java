@@ -16,8 +16,6 @@ package org.candlepin.gutterball.resource;
 
 import org.candlepin.gutterball.configuration.Configuration;
 
-import com.google.inject.Provider;
-
 import org.xnap.commons.i18n.I18n;
 
 import javax.inject.Inject;
@@ -31,18 +29,21 @@ import javax.ws.rs.core.MediaType;
  */
 @Path("status")
 public class StatusResource {
-    private Provider<I18n> i18nProvider;
+    private I18n i18n;
     private Configuration config;
 
     @Inject
-    public StatusResource(Provider<I18n> i18nProvider, Configuration config) {
-        this.i18nProvider = i18nProvider;
+    public StatusResource(I18n i18n, Configuration config) {
+        this.i18n = i18n;
         this.config = config;
     }
 
     @GET
     @Produces({ MediaType.APPLICATION_JSON })
     public String getStatus() {
-        return "Running Gutterball " + config.getString("gutterball.version");
+        String version = config.getString("gutterball.version");
+        String locale = i18n.getLocale().toString();
+        String message = String.format("[%s] Gutterball version %s", locale, version);
+        return message;
     }
 }

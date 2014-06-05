@@ -36,6 +36,8 @@ public class GutterballModule extends AbstractModule {
     @Override
     protected void configure() {
         install(configModule);
+
+        // See JavaDoc on I18nProvider for more information of RequestScope
         bind(I18n.class).toProvider(I18nProvider.class).in(ServletScopes.REQUEST);
         bind(StatusResource.class);
     }
