@@ -76,7 +76,7 @@ public class LoggingFilter implements Filter {
 
             // Report the requestUuid to the client in the response.
             // Not sure this is useful yet.
-            resp.setHeader("x-candlepin-request-uuid", requestUUID);
+            resp.setHeader("x-gutterball-request-uuid", requestUUID);
 
             log.info("{}", ServletLogger.logBasicRequestInfo(req));
             if (log.isDebugEnabled()) {

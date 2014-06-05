@@ -20,10 +20,12 @@ import org.slf4j.LoggerFactory;
 
 import java.io.UnsupportedEncodingException;
 
-
+/**
+ * Basic utilities.
+ */
 public class Util {
+    private static Logger log = LoggerFactory.getLogger(Util.class);
 
-    private static final Logger log = LoggerFactory.getLogger(Util.class);
     private Util() {
         // This class provides only static methods
     }

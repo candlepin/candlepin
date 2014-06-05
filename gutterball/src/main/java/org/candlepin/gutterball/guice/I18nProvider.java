@@ -14,8 +14,6 @@
  */
 package org.candlepin.gutterball.guice;
 
-import org.candlepin.gutterball.guice.I18nProvider;
-
 import com.google.inject.Provider;
 import com.google.inject.servlet.RequestScoped;
 
@@ -38,7 +36,7 @@ import javax.servlet.http.HttpServletRequest;
 public class I18nProvider implements Provider<I18n> {
     public static final String BASENAME = "org.candlepin.gutterball.i18n.Messages";
 
-    private static final Logger log = LoggerFactory.getLogger(I18nProvider.class);
+    private static Logger log = LoggerFactory.getLogger(I18nProvider.class);
 
     private static ConcurrentHashMap<Locale, I18n> cache = new ConcurrentHashMap<Locale, I18n>();
 

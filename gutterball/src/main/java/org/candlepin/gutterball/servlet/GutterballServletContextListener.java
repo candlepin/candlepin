@@ -14,23 +14,147 @@
  */
 package org.candlepin.gutterball.servlet;
 
+import org.candlepin.gutterball.configuration.Configuration;
+import org.candlepin.gutterball.configuration.ConfigurationException;
+import org.candlepin.gutterball.configuration.PropertiesFileConfiguration;
+import org.candlepin.gutterball.guice.GutterballModule;
+import org.candlepin.gutterball.guice.GutterballServletModule;
+import org.candlepin.gutterball.guice.I18nProvider;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.Binding;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Module;
+import com.google.inject.servlet.GuiceServletContextListener;
+
+import org.jboss.resteasy.plugins.guice.GuiceResourceFactory;
+import org.jboss.resteasy.spi.Registry;
+import org.jboss.resteasy.spi.ResourceFactory;
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.jboss.resteasy.util.GetRestful;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18nManager;
 
+import java.io.InputStream;
+import java.lang.reflect.Type;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
+import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
-import javax.servlet.ServletContextListener;
+import javax.ws.rs.ext.Provider;
 
+/**
+ * The GutterballServletContextListener initializes all the injections and
+ * registers
+ * all the RESTEasy resources.
+ */
+public class GutterballServletContextListener extends
+        GuiceServletContextListener {
 
-public class GutterballServletContextListener implements ServletContextListener {
+    public static final String CONFIGURATION_NAME = Configuration.class
+            .getName();
+
+    private static Logger log = LoggerFactory.getLogger(I18nProvider.class);
+
+    private Configuration config;
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
         I18nManager.getInstance().setDefaultLocale(Locale.US);
+        ServletContext context = sce.getServletContext();
+
+        try {
+            config = readConfiguration(context);
+        }
+        catch (ConfigurationException e) {
+            log.error(
+                    "Could not read configuration file.  Aborting initialization.",
+                    e);
+            throw new RuntimeException(e);
+        }
+
+        context.setAttribute(CONFIGURATION_NAME, config);
+
+        super.contextInitialized(sce);
+        processRestEasy(context);
+    }
+
+    protected Configuration readConfiguration(ServletContext servletContext)
+        throws ConfigurationException {
+
+        Charset utf8 = StandardCharsets.UTF_8;
+
+        InputStream defaultStream = GutterballServletModule.class
+                .getClassLoader().getResourceAsStream("default.properties");
+
+        PropertiesFileConfiguration defaults =
+                new PropertiesFileConfiguration(defaultStream, utf8);
+        return defaults;
+
+        // String confFile = servletContext.getInitParameter("org.candlepin.gutterball.config_file");
+        // Configuration userConfig = new PropertiesFileConfiguration(confFile, utf8);
+        // return userConfig.merge(defaults);
     }
 
     @Override
-    public void contextDestroyed(ServletContextEvent sce) {
-        // do nothing
+    protected Injector getInjector() {
+        List<Module> modules = new ArrayList<Module>();
+        modules.add(new GutterballModule(getConfigModule()));
+        modules.add(new GutterballServletModule());
+        return Guice.createInjector(modules);
+    }
+
+    private Module getConfigModule() {
+        return new AbstractModule() {
+
+            @Override
+            protected void configure() {
+                bind(Configuration.class).toInstance(config);
+            }
+        };
+    }
+
+    /**
+     * The RESTEasy ModuleProcessor class doesn't return the injector nor does
+     * it allow you
+     * to send an injector in. Consequently, we have to duplicate the
+     * functionality.
+     *
+     * @param context
+     */
+    @SuppressWarnings("rawtypes")
+    private void processRestEasy(ServletContext context) {
+        final Injector injector = (Injector) context
+                .getAttribute(Injector.class.getName());
+        final Registry registry = (Registry) context
+                .getAttribute(Registry.class.getName());
+        final ResteasyProviderFactory providerFactory = (ResteasyProviderFactory) context
+                .getAttribute(ResteasyProviderFactory.class.getName());
+
+        for (final Binding<?> binding : injector.getBindings().values()) {
+            final Type type = binding.getKey().getTypeLiteral().getType();
+            if (type instanceof Class) {
+                final Class<?> beanClass = (Class) type;
+                if (GetRestful.isRootResource(beanClass)) {
+                    final ResourceFactory resourceFactory = new GuiceResourceFactory(
+                            binding.getProvider(), beanClass);
+                    log.info("registering factory for {}", beanClass.getName());
+                    registry.addResourceFactory(resourceFactory);
+                }
+                if (beanClass.isAnnotationPresent(Provider.class)) {
+                    log.info("registering provider instance for {}",
+                            beanClass.getName());
+                    providerFactory.registerProviderInstance(binding
+                            .getProvider().get());
+                }
+            }
+        }
+
     }
 }

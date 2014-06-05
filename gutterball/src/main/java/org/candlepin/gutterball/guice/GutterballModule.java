@@ -17,16 +17,26 @@ package org.candlepin.gutterball.guice;
 import org.candlepin.gutterball.resource.StatusResource;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Module;
 import com.google.inject.servlet.ServletScopes;
 
 import org.xnap.commons.i18n.I18n;
 
+/**
+ * Simple module to perform bindings.
+ */
 public class GutterballModule extends AbstractModule {
+
+    private Module configModule;
+
+    public GutterballModule(Module configModule) {
+        this.configModule = configModule;
+    }
 
     @Override
     protected void configure() {
+        install(configModule);
         bind(I18n.class).toProvider(I18nProvider.class).in(ServletScopes.REQUEST);
-
         bind(StatusResource.class);
     }
 
