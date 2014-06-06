@@ -25,9 +25,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.Charset;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Properties;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Configuration implementation that reads from a Java Properties object.  If
@@ -43,7 +41,7 @@ public class PropertiesFileConfiguration extends AbstractConfiguration
 
     protected Charset encoding;
 
-    private ConcurrentHashMap<String, Object> configMap = new ConcurrentHashMap<String, Object>();
+    private MapConfiguration backingMap = new MapConfiguration();
 
     public PropertiesFileConfiguration() {
     }
@@ -78,61 +76,68 @@ public class PropertiesFileConfiguration extends AbstractConfiguration
         load(inStream);
     }
 
+    public PropertiesFileConfiguration(Properties properties) {
+        load(properties);
+    }
+
     @Override
     public Configuration subset(String prefix) {
-        // TODO Auto-generated method stub
-        return null;
+        return backingMap.subset(prefix);
     }
 
     @Override
     public boolean isEmpty() {
-        return configMap.isEmpty();
+        return backingMap.isEmpty();
     }
 
     @Override
     public boolean containsKey(String key) {
-        return configMap.containsKey(key);
-    }
-
-    @Override
-    public void addProperty(String key, Object value) {
-        // TODO Auto-generated method stub
+        return backingMap.containsKey(key);
     }
 
     @Override
     public void setProperty(String key, Object value) {
-        clearProperty(key);
-        addProperty(key, value);
+        backingMap.setProperty(key, value);
     }
 
     @Override
     public void clear() {
-        configMap.clear();
+        backingMap.clear();
     }
 
     @Override
     public void clearProperty(String key) {
-        configMap.remove(key);
+        backingMap.clearProperty(key);
     }
 
     @Override
     public Iterable<String> getKeys() {
-        return configMap.keySet();
+        return backingMap.getKeys();
     }
 
     @Override
     public Object getProperty(String key) {
-        if (containsKey(key)) {
-            return configMap.get(key);
-        }
-        else {
-            throw new NoSuchElementException(doesNotMapMessage(key));
-        }
+        return backingMap.getProperty(key);
     }
 
     @Override
     public Object getProperty(String key, Object defaultValue) {
-        return (containsKey(key)) ? configMap.get(key) : defaultValue;
+        return backingMap.getProperty(key, defaultValue);
+    }
+
+    @Override
+    public Charset getEncoding() {
+        return encoding;
+    }
+
+    @Override
+    public void setEncoding(Charset encoding) {
+        this.encoding = encoding;
+    }
+
+    @Override
+    public Configuration merge(Configuration base) {
+        return backingMap.merge(base);
     }
 
     public void setSource(String fileName) throws ConfigurationException {
@@ -145,16 +150,6 @@ public class PropertiesFileConfiguration extends AbstractConfiguration
 
     public void setSource(InputStream inStream) throws ConfigurationException {
         this.inStream = inStream;
-    }
-
-    @Override
-    public Charset getEncoding() {
-        return encoding;
-    }
-
-    @Override
-    public void setEncoding(Charset encoding) {
-        this.encoding = encoding;
     }
 
     public void load(String fileName) throws ConfigurationException {
@@ -178,23 +173,20 @@ public class PropertiesFileConfiguration extends AbstractConfiguration
         try {
             Properties p = new Properties();
             p.load(reader);
-            for (Map.Entry<Object, Object> entry : p.entrySet()) {
-                configMap.put((String) entry.getKey(),
-                        (String) entry.getValue());
-            }
+            load(p);
         }
         catch (IOException e) {
             throw new ConfigurationException(e);
         }
     }
 
-    @Override
-    public Configuration merge(Configuration base) {
-        for (String key : base.getKeys()) {
-            if (!containsKey(key)) {
-                configMap.put(key, base.getProperty(key));
-            }
+    /**
+     * Calling this method directly is primarily meant for testing purposes.
+     * @param properties
+     */
+    public void load(Properties properties) {
+        for (Map.Entry<Object, Object> entry : properties.entrySet()) {
+            backingMap.setProperty((String) entry.getKey(), (String) entry.getValue());
         }
-        return this;
     }
 }

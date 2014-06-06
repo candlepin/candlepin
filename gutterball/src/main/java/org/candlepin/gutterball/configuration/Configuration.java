@@ -14,16 +14,32 @@
  */
 package org.candlepin.gutterball.configuration;
 
-/** Inspired by Apache's Commons Configuration library
+import java.util.List;
+
+/** Inspired by Apache's Commons Configuration library.
+ * <p>
+ * This class should only be used to hold <b>immutable objects</b>.  If you place
+ * a mutable object in the configuration and using the subset() method, both configurations
+ * will reference the same object and any changes to that object will be reflected
+ * in both!
  */
 public interface Configuration {
+
+    /**
+     * Enumeration that defines whether or not to trim whitespace from a String.
+     */
+    public static enum TrimMode {
+        TRIM,
+        NO_TRIM;
+    }
+
     /**
      * Return a Configuration object composed only of properties beginning
      * with the provided prefix.
      *
      * @param prefix
      * @return a new Configuration object containing only properties beginning with the provided
-     * prefix
+     * prefix.  The object will be empty if no matches are found.
      */
     Configuration subset(String prefix);
 
@@ -52,26 +68,6 @@ public interface Configuration {
      *         key, {@code false} otherwise
      */
     boolean containsKey(String key);
-
-    /**
-     * Add a property to the configuration. If it already exists then the value
-     * stated here will be added to the configuration entry. For example, if
-     * the property:
-     *
-     * <pre>resource.loader = file</pre>
-     *
-     * is already present in the configuration and you call
-     *
-     * <pre>addProperty("resource.loader", "classpath")</pre>
-     *
-     * Then you will end up with a List like the following:
-     *
-     * <pre>["file", "classpath"]</pre>
-     *
-     * @param key The key to add the property to.
-     * @param value The value to add.
-     */
-    void addProperty(String key, Object value);
 
     /**
      * Set a property, this will replace any previously set values. Set values
@@ -107,6 +103,24 @@ public interface Configuration {
     Long getLong(String key);
     Long getLong(String key, Long defaultValue);
 
+    /**
+     * Return a property of type String <b>with all whitespace trimmed!</b>
+     * @param key
+     * @return a String property with all whitespace trimmed by String.trim()
+     */
     String getString(String key);
+
+    /**
+     * Return a property of type String <b>with all whitespace trimmed!</b> or
+     * the default value if the key is not found.
+     * @param key
+     * @return a String property with all whitespace trimmed by String.trim() or the default value
+     * if the key is not found.
+     */
     String getString(String key, String defaultValue);
+
+    String getString(String key, String defaultValue, TrimMode trimMode);
+
+    List<String> getList(String key);
+    List<String> getList(String key, List<String> defaultValue);
 }

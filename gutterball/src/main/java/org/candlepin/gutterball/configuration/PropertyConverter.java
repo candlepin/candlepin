@@ -18,6 +18,8 @@ import org.apache.commons.lang.BooleanUtils;
 
 import java.lang.reflect.Constructor;
 import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * PropertyConverter. Inspired by
@@ -114,4 +116,13 @@ public class PropertyConverter {
         }
     }
 
+    public static List<String> toList(Object value) {
+        if (value instanceof String) {
+            String[] parts = ((String) value).split("\\s*,\\s*");
+            return Arrays.asList(parts);
+        }
+        else {
+            throw new ConversionException(formatErrorMessage(value, List.class));
+        }
+    }
 }

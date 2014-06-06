@@ -14,6 +14,7 @@
  */
 package org.candlepin.gutterball.configuration;
 
+import java.util.List;
 import java.util.NoSuchElementException;
 
 /**
@@ -101,8 +102,36 @@ public abstract class AbstractConfiguration implements Configuration {
 
     @Override
     public String getString(String key, String defaultValue) {
+        return getString(key, defaultValue, TrimMode.TRIM);
+
+    }
+
+    @Override
+    public String getString(String key, String defaultValue, TrimMode trimMode) {
         if (containsKey(key)) {
-            return getProperty(key).toString();
+            String val = getProperty(key).toString();
+            return (trimMode.equals(TrimMode.TRIM)) ? val.trim() : val;
+        }
+        else {
+            return defaultValue;
+        }
+    }
+
+    @Override
+    public List<String> getList(String key) {
+        List<String> list = getList(key, null);
+        if (list != null) {
+            return list;
+        }
+        else {
+            throw new NoSuchElementException(doesNotMapMessage(key));
+        }
+    }
+
+    @Override
+    public List<String> getList(String key, List<String> defaultValue) {
+        if (containsKey(key)) {
+            return PropertyConverter.toList(getProperty(key));
         }
         else {
             return defaultValue;
