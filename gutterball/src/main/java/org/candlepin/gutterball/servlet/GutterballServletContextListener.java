@@ -17,15 +17,12 @@ package org.candlepin.gutterball.servlet;
 import org.candlepin.gutterball.configuration.Configuration;
 import org.candlepin.gutterball.configuration.ConfigurationException;
 import org.candlepin.gutterball.configuration.PropertiesFileConfiguration;
-import org.candlepin.gutterball.guice.GutterballModule;
 import org.candlepin.gutterball.guice.GutterballServletModule;
 import org.candlepin.gutterball.guice.I18nProvider;
 
-import com.google.inject.AbstractModule;
 import com.google.inject.Binding;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.google.inject.Module;
 import com.google.inject.servlet.GuiceServletContextListener;
 
 import org.jboss.resteasy.plugins.guice.GuiceResourceFactory;
@@ -41,8 +38,6 @@ import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Locale;
 
 import javax.servlet.ServletContext;
@@ -51,14 +46,12 @@ import javax.ws.rs.ext.Provider;
 
 /**
  * The GutterballServletContextListener initializes all the injections and
- * registers
- * all the RESTEasy resources.
+ * registers all the RESTEasy resources.
  */
 public class GutterballServletContextListener extends
-        GuiceServletContextListener {
+    GuiceServletContextListener {
 
-    public static final String CONFIGURATION_NAME = Configuration.class
-            .getName();
+    public static final String CONFIGURATION_NAME = Configuration.class.getName();
 
     private static Logger log = LoggerFactory.getLogger(I18nProvider.class);
 
@@ -102,26 +95,15 @@ public class GutterballServletContextListener extends
 
     @Override
     protected Injector getInjector() {
-        List<Module> modules = new ArrayList<Module>();
-        modules.add(new GutterballModule(getConfigModule()));
-        modules.add(new GutterballServletModule());
-        return Guice.createInjector(modules);
-    }
-
-    private Module getConfigModule() {
-        return new AbstractModule() {
-
-            @Override
-            protected void configure() {
-                bind(Configuration.class).toInstance(config);
-            }
-        };
+        return Guice.createInjector(new GutterballServletModule());
     }
 
     /**
      * The RESTEasy ModuleProcessor class doesn't return the injector nor does
-     * it allow you to send an injector in. Consequently, we have to duplicate
-     * the functionality.
+     * it allow you to send an injector in.  In order to use the more flexible
+     * GuiceServletContextListener, we have to implement getInjector() so we need
+     * a method that can accept an injector.  Thus, we duplicate the
+     * ModuleProcessor functionality.
      *
      * @param context
      */
@@ -145,13 +127,11 @@ public class GutterballServletContextListener extends
                     registry.addResourceFactory(resourceFactory);
                 }
                 if (beanClass.isAnnotationPresent(Provider.class)) {
-                    log.info("Registering provider instance for {}",
-                            beanClass.getName());
+                    log.info("Registering provider instance for {}", beanClass.getName());
                     providerFactory.registerProviderInstance(binding
                             .getProvider().get());
                 }
             }
         }
-
     }
 }
