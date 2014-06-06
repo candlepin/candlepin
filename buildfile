@@ -35,7 +35,8 @@ RESTEASY = [group('jaxrs-api',
                   :version => '2.3.7.Final'),
             'org.scannotation:scannotation:jar:1.0.2',
             'org.apache.httpcomponents:httpclient:jar:4.1.2',
-            'org.apache.james:apache-mime4j:jar:0.6']
+            'org.apache.james:apache-mime4j:jar:0.6',
+            'javax.mail:mail:jar:1.4']
 
 JACKSON_NS = "com.fasterxml.jackson"
 JACKSON_VERSION = "2.3.0"
