@@ -72,7 +72,7 @@ public class PropertyConverter {
     }
 
     public static Long toLong(Object value) throws ConversionException {
-        Number n = toNumber(value, Integer.class);
+        Number n = toNumber(value, Long.class);
         if (n instanceof Long) {
             return (Long) n;
         }
@@ -81,7 +81,17 @@ public class PropertyConverter {
         }
     }
 
-    static Number toNumber(Object value, Class<?> clazz) throws ConversionException {
+    public static BigInteger toBigInteger(Object value) throws ConversionException {
+        Number n = toNumber(value, BigInteger.class);
+        if (n instanceof BigInteger) {
+            return (BigInteger) n;
+        }
+        else {
+            return BigInteger.valueOf(n.longValue());
+        }
+    }
+
+    protected static Number toNumber(Object value, Class<?> clazz) throws ConversionException {
         if (value instanceof Number) {
             return (Number) value;
         }

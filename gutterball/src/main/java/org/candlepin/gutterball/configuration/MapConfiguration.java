@@ -22,7 +22,15 @@ import java.util.concurrent.ConcurrentHashMap;
  * In-memory Configuration implementation.
  */
 public class MapConfiguration extends AbstractConfiguration {
-    private ConcurrentHashMap<String, Object> configMap = new ConcurrentHashMap<String, Object>();
+    private ConcurrentHashMap<String, Object> configMap;
+
+    public MapConfiguration() {
+        configMap = new ConcurrentHashMap<String, Object>();
+    }
+
+    protected MapConfiguration(ConcurrentHashMap<String, Object> configMap) {
+        this.configMap = new ConcurrentHashMap<String, Object>(configMap);
+    }
 
     @Override
     public Configuration subset(String prefix) {
@@ -39,12 +47,13 @@ public class MapConfiguration extends AbstractConfiguration {
 
     @Override
     public Configuration merge(Configuration base) {
+        MapConfiguration mergedConfig = new MapConfiguration(configMap);
         for (String key : base.getKeys()) {
             if (!containsKey(key)) {
-                setProperty(key, base.getProperty(key));
+                mergedConfig.setProperty(key, base.getProperty(key));
             }
         }
-        return this;
+        return mergedConfig;
     }
 
     @Override
@@ -90,5 +99,10 @@ public class MapConfiguration extends AbstractConfiguration {
     @Override
     public Object getProperty(String key, Object defaultValue) {
         return (containsKey(key)) ? configMap.get(key) : defaultValue;
+    }
+
+    @Override
+    public String toString() {
+        return configMap.toString();
     }
 }

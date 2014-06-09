@@ -1,3 +1,5 @@
+# vi:syntax=ruby
+
 require 'buildr/java/emma'
 require 'buildr/checkstyle'
 require 'rspec/core/rake_task'
@@ -15,6 +17,12 @@ use_pmd = ENV['pmd']
 unless use_pmd.nil?
   require 'buildr/pmd'
 end
+
+### Repositories
+repositories.remote << "http://jmrodri.fedorapeople.org/ivy/candlepin/"
+repositories.remote << "http://repository.jboss.org/nexus/content/groups/public/"
+repositories.remote << "http://gettext-commons.googlecode.com/svn/maven-repository/"
+repositories.remote << "http://central.maven.org/maven2/"
 
 ### Dependencies
 RESTEASY = [group('jaxrs-api',
@@ -40,7 +48,11 @@ JACKSON = [group('jackson-annotations', 'jackson-core', 'jackson-databind',
 
 SUN_JAXB = 'com.sun.xml.bind:jaxb-impl:jar:2.1.12'
 
-JUNIT = ['junit:junit:jar:4.5', 'org.mockito:mockito-all:jar:1.8.5']
+JUKITO = Buildr.transitive(['junit:junit:jar:4.11', 'org.mockito:mockito-all:jar:1.9.5', 'org.jukito:jukito:jar:1.4'])
+
+HSQLDB = 'hsqldb:hsqldb:jar:1.8.0.10'
+
+TESTING = [HSQLDB, JUKITO]
 
 LOGBACK = [group('logback-core', 'logback-classic',
                  :under => 'ch.qos.logback',
@@ -73,8 +85,6 @@ HIBERNATE = [group('hibernate-core', 'hibernate-entitymanager', 'hibernate-c3p0'
 POSTGRESQL = 'postgresql:postgresql:jar:9.0-801.jdbc4'
 
 DB = [POSTGRESQL]
-
-HSQLDB = 'hsqldb:hsqldb:jar:1.8.0.10'
 
 GETTEXT_COMMONS = 'org.xnap.commons:gettext-commons:jar:0.9.6'
 
@@ -109,12 +119,6 @@ RHINO = 'org.mozilla:rhino:jar:1.7R3'
 # even load servlet API classes seen in WEB-INF/lib.  See section 9.7.2 of
 # Servlet Spec 2.4 and http://stackoverflow.com/questions/15601469
 PROVIDED = [SERVLET]
-
-### Repositories
-repositories.remote << "http://jmrodri.fedorapeople.org/ivy/candlepin/"
-repositories.remote << "http://repository.jboss.org/nexus/content/groups/public/"
-repositories.remote << "http://gettext-commons.googlecode.com/svn/maven-repository/"
-repositories.remote << "http://central.maven.org/maven2/"
 
 ### Project
 GROUP = "candlepin"
@@ -186,7 +190,7 @@ define "gutterball" do
   end
 
   # the other dependencies transfer from compile.classpath automagically
-  test.with HSQLDB, JUNIT
+  test.with HSQLDB, TESTING
   test.using :java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ]
 
   package(:war, :id=> project.name).tap do |war|

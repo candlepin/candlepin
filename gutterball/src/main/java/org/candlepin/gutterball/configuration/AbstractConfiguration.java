@@ -22,8 +22,10 @@ import java.util.NoSuchElementException;
  *
  */
 public abstract class AbstractConfiguration implements Configuration {
+    protected static final String ERROR_MESSAGE = "\"%s\" doesn't map to an existing object";
+
     protected String doesNotMapMessage(String key) {
-        return String.format("\"%s\" doesn't map to an existing object", key);
+        return String.format(ERROR_MESSAGE, key);
     }
 
     @Override
