@@ -230,8 +230,9 @@ BuildRequires:  selinux-policy-devel
 BuildRequires:  /usr/share/selinux/devel/policyhelp
 BuildRequires:  hardlink
 
-%if "%{selinux_policyver}" != ""
-Requires:       selinux-policy >= %{selinux_policyver}
+%{!?_selinux_policy_version: %global _selinux_policy_version %(sed -e 's,.*selinux-policy-\\([^/]*\\)/.*,\\1,' /usr/share/selinux/devel/policyhelp 2>/dev/null)}
+%if "%{_selinux_policy_version}" != ""
+Requires:      selinux-policy >= %{_selinux_policy_version}
 %endif
 Requires:       %{name} = %{version}-%{release}
 Requires(post):   /usr/sbin/semodule
