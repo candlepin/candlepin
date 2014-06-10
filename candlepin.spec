@@ -53,7 +53,7 @@ BuildRequires: selinux-policy-doc
 %global distlibdir %{_datadir}/%{name}/lib/
 %global libdir %{_datadir}/%{name}/lib/
 %global usecpdeps "usecpdeps"
-BuildRequires: candlepin-deps >= 0:0.2.5
+BuildRequires: candlepin-deps >= 0:0.2.6
 %else
 # Require the candlepin software collection for packages we use that may
 # conflict with other projects/releases:
