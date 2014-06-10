@@ -14,7 +14,7 @@
  */
 package org.candlepin.gutterball.guice;
 
-import org.candlepin.gutterball.configuration.Configuration;
+import org.candlepin.gutterball.config.Configuration;
 import org.candlepin.gutterball.filter.LoggingFilter;
 import org.candlepin.gutterball.resource.StatusResource;
 import org.candlepin.gutterball.servlet.GutterballServletContextListener;

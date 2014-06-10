@@ -14,7 +14,7 @@
  */
 package org.candlepin.gutterball.resource;
 
-import org.candlepin.gutterball.configuration.Configuration;
+import org.candlepin.gutterball.config.Configuration;
 
 import org.xnap.commons.i18n.I18n;
 

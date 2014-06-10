@@ -17,8 +17,8 @@ package org.candlepin.gutterball.resource;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
-import org.candlepin.gutterball.configuration.Configuration;
-import org.candlepin.gutterball.configuration.MapConfiguration;
+import org.candlepin.gutterball.config.Configuration;
+import org.candlepin.gutterball.config.MapConfiguration;
 
 import org.jukito.JukitoModule;
 import org.jukito.JukitoRunner;

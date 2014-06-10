@@ -14,9 +14,9 @@
  */
 package org.candlepin.gutterball.servlet;
 
-import org.candlepin.gutterball.configuration.Configuration;
-import org.candlepin.gutterball.configuration.ConfigurationException;
-import org.candlepin.gutterball.configuration.PropertiesFileConfiguration;
+import org.candlepin.gutterball.config.Configuration;
+import org.candlepin.gutterball.config.ConfigurationException;
+import org.candlepin.gutterball.config.PropertiesFileConfiguration;
 import org.candlepin.gutterball.guice.GutterballServletModule;
 import org.candlepin.gutterball.guice.I18nProvider;
 

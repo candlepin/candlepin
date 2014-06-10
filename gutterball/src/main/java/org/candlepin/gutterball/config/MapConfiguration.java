@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.gutterball.configuration;
+package org.candlepin.gutterball.config;
 
 import java.util.Map;
 import java.util.NoSuchElementException;

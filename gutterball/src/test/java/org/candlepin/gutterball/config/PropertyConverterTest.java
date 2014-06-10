@@ -12,10 +12,13 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.gutterball.configuration;
+package org.candlepin.gutterball.config;
 
-import static org.candlepin.gutterball.configuration.PropertyConverter.*;
+import static org.candlepin.gutterball.config.PropertyConverter.*;
 import static org.junit.Assert.assertEquals;
+
+import org.candlepin.gutterball.config.ConversionException;
+import org.candlepin.gutterball.config.PropertyConverter;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -110,6 +113,6 @@ public class PropertyConverterTest {
     public void testFailToBigInteger() {
         ex.expect(ConversionException.class);
         ex.expectMessage(expectedMessage(BAD_COMPARISON, BigInteger.class));
-        toNumber(BAD_COMPARISON, BigInteger.class);
+        toBigInteger(BAD_COMPARISON);
     }
 }

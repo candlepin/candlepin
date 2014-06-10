@@ -48,7 +48,9 @@ JACKSON = [group('jackson-annotations', 'jackson-core', 'jackson-databind',
 
 SUN_JAXB = 'com.sun.xml.bind:jaxb-impl:jar:2.1.12'
 
-JUKITO = Buildr.transitive(['junit:junit:jar:4.11', 'org.mockito:mockito-all:jar:1.9.5', 'org.jukito:jukito:jar:1.4'])
+JUKITO = Buildr.transitive(['junit:junit:jar:4.11',
+             'org.mockito:mockito-all:jar:1.9.5',
+             'org.jukito:jukito:jar:1.4'])
 
 HSQLDB = 'hsqldb:hsqldb:jar:1.8.0.10'
 

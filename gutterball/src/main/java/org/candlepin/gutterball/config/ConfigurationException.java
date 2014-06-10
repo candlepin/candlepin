@@ -12,27 +12,27 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.gutterball.configuration;
+package org.candlepin.gutterball.config;
 
 /**
- * A ConversionException is thrown when the PropertyConverter is unable to convert
- * and object to the requested class.
+ * A ConfigurationException is thrown when there is a problem building a Configuration
+ * object.
  */
 @SuppressWarnings("serial")
-public class ConversionException extends RuntimeException {
-    public ConversionException() {
+public class ConfigurationException extends Exception {
+    public ConfigurationException() {
         super();
     }
 
-    public ConversionException(String message) {
+    public ConfigurationException(String message) {
         super(message);
     }
 
-    public ConversionException(Throwable cause) {
+    public ConfigurationException(Throwable cause) {
         super(cause);
     }
 
-    public ConversionException(String message, Throwable cause) {
+    public ConfigurationException(String message, Throwable cause) {
         super(message, cause);
     }
 }
