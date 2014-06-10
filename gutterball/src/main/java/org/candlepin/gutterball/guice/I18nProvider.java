@@ -26,7 +26,7 @@ import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
+import javax.servlet.ServletRequest;
 
 /**
  * I18nProvider is a Guice Provider that returns an I18n instance matched
@@ -49,15 +49,16 @@ public class I18nProvider implements Provider<I18n> {
 
     private static ConcurrentHashMap<Locale, I18n> cache = new ConcurrentHashMap<Locale, I18n>();
 
-    private Locale locale;
+    private ServletRequest request;
 
     @Inject
-    public I18nProvider(HttpServletRequest request) {
-        locale = (request.getLocale() == null) ? Locale.US : request.getLocale();
+    public I18nProvider(ServletRequest request) {
+        this.request = request;
     }
 
     @Override
     public I18n get() {
+        Locale locale = (request.getLocale() == null) ? Locale.US : request.getLocale();
         I18n i18n;
 
         // If the locale does not exist, xnap is pretty inefficient.
