@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.18
+Version: 0.9.19
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -381,6 +381,13 @@ fi
 
 
 %changelog
+* Wed Jun 11 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.19-1
+- Audit log was not getting generated or populated (wpoteat@redhat.com)
+- Backwards compatible selinux dep fix for EL7/F20 (jmontleo@redhat.com)
+- bump candlepin-deps version which included javamail (jesusr@redhat.com)
+- add java mail dependency (jesusr@redhat.com)
+- various buildfile cleanup (awood@redhat.com)
+
 * Thu Jun 05 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.18-1
 - Fix client registration for my system admins. (dgoodwin@redhat.com)
 
