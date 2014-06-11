@@ -63,6 +63,7 @@ public class LoggingListener implements EventListener {
         appender.setContext(lc);
         appender.start();
 
+        auditLog.addAppender(appender);
         // Keep these messages in audit.log only
         auditLog.setAdditive(false);
 
