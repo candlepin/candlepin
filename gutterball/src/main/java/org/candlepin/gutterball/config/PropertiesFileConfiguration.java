@@ -35,10 +35,6 @@ import java.util.Properties;
 public class PropertiesFileConfiguration extends AbstractConfiguration
     implements FileConfiguration {
 
-    protected String fileName;
-    protected File file;
-    protected InputStream inStream;
-
     protected Charset encoding;
 
     private MapConfiguration backingMap = new MapConfiguration();
@@ -140,22 +136,12 @@ public class PropertiesFileConfiguration extends AbstractConfiguration
         return backingMap.merge(base);
     }
 
-    public void setSource(String fileName) throws ConfigurationException {
-        this.fileName = fileName;
-    }
-
-    public void setSource(File file) throws ConfigurationException {
-        this.file = file;
-    }
-
-    public void setSource(InputStream inStream) throws ConfigurationException {
-        this.inStream = inStream;
-    }
-
+    @Override
     public void load(String fileName) throws ConfigurationException {
         load(new File(fileName));
     }
 
+    @Override
     public void load(File file) throws ConfigurationException {
         try {
             load(new BufferedInputStream(new FileInputStream(file)));
@@ -165,10 +151,12 @@ public class PropertiesFileConfiguration extends AbstractConfiguration
         }
     }
 
+    @Override
     public void load(InputStream inStream) throws ConfigurationException {
         load(new BufferedReader(new InputStreamReader(inStream, getEncoding())));
     }
 
+    @Override
     public void load(Reader reader) throws ConfigurationException {
         try {
             Properties p = new Properties();

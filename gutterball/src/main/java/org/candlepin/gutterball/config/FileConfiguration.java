@@ -14,6 +14,9 @@
  */
 package org.candlepin.gutterball.config;
 
+import java.io.File;
+import java.io.InputStream;
+import java.io.Reader;
 import java.nio.charset.Charset;
 
 /**
@@ -23,4 +26,9 @@ import java.nio.charset.Charset;
 public interface FileConfiguration extends Configuration {
     Charset getEncoding();
     void setEncoding(Charset encoding);
+
+    void load(String fileName) throws ConfigurationException;
+    void load(File file) throws ConfigurationException;
+    void load(InputStream inStream) throws ConfigurationException;
+    void load(Reader reader) throws ConfigurationException;
 }
