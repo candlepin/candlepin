@@ -16,8 +16,6 @@ package org.candlepin.gutterball.config;
 
 import static org.junit.Assert.*;
 
-import org.candlepin.gutterball.config.Configuration;
-import org.candlepin.gutterball.config.MapConfiguration;
 import org.candlepin.gutterball.config.Configuration.TrimMode;
 
 import org.junit.Before;
@@ -27,7 +25,6 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.NoSuchElementException;

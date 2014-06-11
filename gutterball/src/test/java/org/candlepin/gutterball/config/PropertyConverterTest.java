@@ -35,7 +35,7 @@ public class PropertyConverterTest {
     public ExpectedException ex = ExpectedException.none();
 
     private Object BAD_COMPARISON = StandardCharsets.UTF_8;
-    private String expectedMessage(Object value, Class clazz) {
+    private String expectedMessage(Object value, Class<?> clazz) {
         return String.format(PropertyConverter.ERROR_MESSAGE, value, clazz.getName());
     }
 
