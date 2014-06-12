@@ -81,11 +81,12 @@ describe 'System Admins' do
 
   it "can create entitlements asynchronously" do
     pool = create_pool()
-    @user_cp.consume_pool(pool['id'],
+    job = @user_cp.consume_pool(pool['id'],
       {
         :uuid => @consumer1['uuid'],
         :async => true
       })
+    wait_for_job(job['id'], 10)
   end
 
   it "can view only their system's entitlements" do
