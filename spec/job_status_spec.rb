@@ -12,27 +12,18 @@ describe 'Job Status' do
     @cp.create_subscription(@owner['key'], @monitoring.id, 4)
   end
 
-  def finish_job(status)
-    #let it finish
-    while status != nil && status['state'].downcase != 'finished'
-      sleep 1
-      # POSTing here will delete the job once it has finished
-      status = @owner.post(status['statusPath'])
-    end
-  end
-
   it 'should contain the owner key' do
     status = @cp.refresh_pools(@owner['key'], true)
     status['targetId'].should == @owner['key']
 
-    finish_job(status)
+    wait_for_job(status['id'], 15)
   end
 
   it 'should contain the target type' do
     status = @cp.refresh_pools(@owner['key'], true)
     status['targetType'].should == "owner"
 
-    finish_job(status)
+    wait_for_job(status['id'], 15)
   end
 
 
@@ -40,7 +31,7 @@ describe 'Job Status' do
     jobs = []
     3.times {
         jobs << @cp.refresh_pools(@owner['key'], true)
-        finish_job(jobs[-1])
+        wait_for_job(jobs[-1]['id'], 15)
     }
 
     @cp.list_jobs(@owner['key']).length.should == 3
@@ -55,12 +46,12 @@ describe 'Job Status' do
     4.times {
         jobs << @cp.refresh_pools(owner2['key'], true)
         jobs << @cp.refresh_pools(@owner['key'], true)
-        finish_job(jobs[-1])
-        finish_job(jobs[-2])
+        wait_for_job(jobs[-1]['id'], 15)
+        wait_for_job(jobs[-2]['id'], 15)
     }
     2.times {
         jobs << @cp.refresh_pools(owner2['key'], true)
-        finish_job(jobs[-1])
+        wait_for_job(jobs[-1]['id'], 15)
     }
 
     @cp.list_jobs(@owner['key']).length.should == 4
@@ -104,7 +95,7 @@ describe 'Job Status' do
     status['targetType'].should == "consumer"
     status['targetId'].should == system.uuid
 
-    finish_job(status)
+    wait_for_job(status['id'], 15)
   end
 
 
