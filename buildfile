@@ -3,11 +3,6 @@ require 'net/http'
 require 'rspec/core/rake_task'
 require 'json'
 
-nocstyle = ENV['nocheckstyle']
-if nocstyle.nil?
-  require "./buildr/checkstyle"
-end
-
 # Don't require findbugs by default.
 # needs "buildr-findBugs" gem installed
 # (and findbugs and its large set of deps)
@@ -185,6 +180,8 @@ define "candlepin" do
   # eclipse settings
   # http://buildr.apache.org/more_stuff.html#eclipse
   eclipse.natures :java
+
+  checkstyle.config_directory = path_to(:buildconf)
 
   # Buildr tries to outsmart you and use classpath variables whenever possible.  If
   # we don't do the below, Buildr will add 'JAVA_HOMElib/tools.jar' to the .classpath

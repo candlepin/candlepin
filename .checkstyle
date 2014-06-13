@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <fileset-config file-format-version="1.2.0" simple-config="false">
-  <local-check-config name="candlepin-src-checkstyle" location="buildconf/checkstyle.xml" type="project" description="">
+  <local-check-config name="candlepin-src-checkstyle" location="buildconf/checks.xml" type="project" description="">
     <property name="checkstyle.header.file" value="${basedir}/buildconf/LICENSE.txt"/>
     <property name="checkstyle.cache.file" value="${basedir}/target/checkstyle.cache.src"/>
     <property name="javadoc.type.scope" value="package"/>
@@ -11,7 +11,7 @@
     <property name="javadoc.missing.param" value="true"/>
     <additional-data name="protect-config-file" value="true"/>
   </local-check-config>
-  <local-check-config name="candlepin-test-checkstyle" location="buildconf/checkstyle.xml" type="project" description="">
+  <local-check-config name="candlepin-test-checkstyle" location="buildconf/checks.xml" type="project" description="">
     <property name="checkstyle.header.file" value="${basedir}/buildconf/LICENSE.txt"/>
     <property name="checkstyle.cache.file" value="${basedir}/target/checkstyle.cache.src"/>
     <property name="javadoc.type.scope" value="nothing"/>
