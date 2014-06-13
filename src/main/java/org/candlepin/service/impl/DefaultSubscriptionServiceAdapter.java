@@ -111,11 +111,6 @@ public class DefaultSubscriptionServiceAdapter implements
     }
 
     @Override
-    public Subscription findUeberSubscription(Owner owner) {
-        return subCurator.findUeberSubscription(owner);
-    }
-
-    @Override
     public List<Subscription> getSubscriptions() {
         List<Subscription> toReturn = subCurator.listAll();
         return toReturn == null ? new LinkedList<Subscription>() : toReturn;
