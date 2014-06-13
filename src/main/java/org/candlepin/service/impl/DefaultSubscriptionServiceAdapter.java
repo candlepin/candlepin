@@ -31,7 +31,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
-import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -64,45 +63,8 @@ public class DefaultSubscriptionServiceAdapter implements
     }
 
     @Override
-    public List<Subscription> getSubscriptions(Owner owner, String productId) {
-
-        log.debug("Searching for subscriptions providing: " + productId);
-        List<Subscription> subs = new LinkedList<Subscription>();
-
-        // We need "fuzzy" product matching, so we need to list all subs for this owner
-        // and then filter out products that do not match:
-        for (Subscription sub : getSubscriptions(owner)) {
-
-            if (sub.getProduct().getId().equals(productId)) {
-                subs.add(sub);
-                if (log.isDebugEnabled()) {
-                    log.debug("   found: " + sub);
-                }
-                continue;
-            }
-            else if (sub.provides(productId)) {
-                if (log.isDebugEnabled()) {
-                    log.debug("   found provides: " + sub);
-                }
-                subs.add(sub);
-            }
-        }
-        return subs;
-    }
-
-    @Override
     public Subscription getSubscription(String subscriptionId) {
         return subCurator.lookupByOwnerAndId(subscriptionId);
-    }
-
-    @Override
-    public List<Subscription> getSubscriptionsSince(Owner owner, Date sinceDate) {
-        return subCurator.listByOwnerSince(owner, sinceDate);
-    }
-
-    @Override
-    public List<Subscription> getSubscriptionsSince(Date sinceDate) {
-        return subCurator.listSince(sinceDate);
     }
 
     @Override

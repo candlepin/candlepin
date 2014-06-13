@@ -69,22 +69,6 @@ public class SubscriptionCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testGetSubscriptions() {
-        List<Subscription> subs = adapter.getSubscriptions(owner,
-            parentProduct.getId().toString());
-        assertEquals(1, subs.size());
-    }
-
-    @Test
-    public void testGetSubscriptionsNoneExist() {
-        Owner owner2 = createOwner();
-        ownerCurator.create(owner2);
-        List<Subscription> subs = adapter.getSubscriptions(owner2,
-            parentProduct.getId().toString());
-        assertEquals(0, subs.size());
-    }
-
-    @Test
     public void testGetSubscription() {
         Subscription s = adapter.getSubscription(s1.getId());
         assertNotNull(s);
@@ -92,37 +76,6 @@ public class SubscriptionCuratorTest extends DatabaseTestFixture {
 
         s = adapter.getSubscription("-15");
         assertNull(s);
-    }
-
-
-    @Test
-    public void testGetAllSubscriptionsSince() {
-        List<Subscription> subs = adapter.getSubscriptionsSince(
-                TestUtil.createDate(2010, 1, 20));
-        assertEquals(1, subs.size());
-        assertEquals(s1.getId(), subs.get(0).getId());
-
-        subs = adapter.getSubscriptionsSince(
-                TestUtil.createDate(2010, 2, 2));
-        assertEquals(0, subs.size());
-    }
-
-    @Test
-    public void testGetSubscriptionsSince() {
-        List<Subscription> subs = adapter.getSubscriptionsSince(owner,
-            TestUtil.createDate(2010, 1, 20));
-        assertEquals(1, subs.size());
-        assertEquals(s1.getId(), subs.get(0).getId());
-    }
-
-    @Test
-    public void testGetSubscriptionsProviding() {
-        List<Subscription> subIds = adapter.getSubscriptions(owner,
-            parentProduct.getId());
-        assertEquals(1, subIds.size());
-
-        subIds = adapter.getSubscriptions(owner, childProduct.getId());
-        assertEquals(1, subIds.size());
     }
 
     @Test

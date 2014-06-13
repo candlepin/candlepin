@@ -14,7 +14,6 @@
  */
 package org.candlepin.service;
 
-import java.util.Date;
 import java.util.List;
 
 import org.candlepin.model.Consumer;
@@ -37,38 +36,6 @@ public interface SubscriptionServiceAdapter {
      * @return all subscriptions for the given owner.
      */
     List<Subscription> getSubscriptions(Owner owner);
-
-    /**
-     * List all subscriptions for the given owner and product, which have
-     * changed or been created since the given date.
-     * @param owner Owner of the subscriptions.
-     * @param sinceDate changed since or created since date.
-     * @return all subscriptions for the given owner and product, which have
-     * changed or been created since the given date.
-     */
-    List<Subscription> getSubscriptionsSince(Owner owner, Date sinceDate);
-
-    /**
-     * List all subscriptions for the given owner and product.
-     *
-     * This method may do "fuzzy" product matching, where the subscription returned
-     * may actually be for a different product than requested, but would provide
-     * access to it.
-     *
-     * @param owner Owner of the subscriptions.
-     * @param productId product ID desired.
-     * @return all subscriptions for the given owner which provide this product.
-     */
-    List<Subscription> getSubscriptions(Owner owner, String productId);
-
-    /**
-     * List all subscriptions which have been changed or created since the
-     * given date.
-     * @param sinceDate changed since or created since date.
-     * @return all subscriptions which have been changed since the
-     * given date.
-     */
-    List<Subscription> getSubscriptionsSince(Date sinceDate);
 
     /**
      * Lookup a specific subscription.

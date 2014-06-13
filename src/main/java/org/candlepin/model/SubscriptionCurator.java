@@ -19,8 +19,6 @@ import org.hibernate.criterion.CriteriaSpecification;
 import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -101,41 +99,6 @@ public class SubscriptionCurator extends AbstractHibernateCurator<Subscription> 
             ));
 
         List<Subscription> subs = subscriptionCriteria.list();
-        if (subs == null) {
-            return new LinkedList<Subscription>();
-        }
-        return subs;
-    }
-
-    /**
-     * Return a list of subscriptions filtered by owner, product, since date.
-     * @param o Owner of the subscription.
-     * @param sinceDate date since modified.
-     * @return a list of subscriptions filtered by owner, product, since date.
-     */
-    @SuppressWarnings("unchecked")
-    public List<Subscription> listByOwnerSince(Owner o, Date sinceDate) {
-        List<Subscription> subs = currentSession().createCriteria(
-                Subscription.class)
-            .add(Restrictions.eq("owner", o))
-            .add(Restrictions.gt("modified", sinceDate)).list();
-        if (subs == null) {
-            return new LinkedList<Subscription>();
-        }
-        return subs;
-    }
-
-
-    /**
-     * Return list of subscriptions from added since the given date.
-     * @param sinceDate Date used in searches.
-     * @return list of subscriptions from added since the given date.
-     */
-    @SuppressWarnings("unchecked")
-    public List<Subscription> listSince(Date sinceDate) {
-        List<Subscription> subs = currentSession().createCriteria(
-                Subscription.class)
-            .add(Restrictions.gt("modified", sinceDate)).list();
         if (subs == null) {
             return new LinkedList<Subscription>();
         }
