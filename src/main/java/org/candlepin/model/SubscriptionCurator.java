@@ -66,20 +66,6 @@ public class SubscriptionCurator extends AbstractHibernateCurator<Subscription> 
     }
 
     /**
-     * Return an ueber subscription filtered by owner.
-     * @param o Owner of the subscription.
-     * @return an ueber subscription filtered by owner or null.
-     */
-    public Subscription findUeberSubscription(Owner o) {
-        return (Subscription) currentSession()
-            .createCriteria(Subscription.class)
-            .add(Restrictions.eq("owner", o))
-            .createCriteria("product")
-            .add(Restrictions.eq("name", Product.ueberProductNameForOwner(o)))
-            .uniqueResult();
-    }
-
-    /**
      * Return a list of subscriptions for the given product.
      *
      * We do essentially 2 queries here, so there is room for optimization
