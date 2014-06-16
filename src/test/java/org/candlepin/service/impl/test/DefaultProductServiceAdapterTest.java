@@ -179,31 +179,6 @@ public class DefaultProductServiceAdapterTest {
         verify(pc).productHasSubscriptions(eq(p));
     }
 
-    @Test
-    public void addRely() {
-        Product p = mock(Product.class);
-        when(p.getId()).thenReturn(someid);
-        when(pc.find(eq(someid))).thenReturn(p);
-        dpsa.addRely(someid, "beefdead");
-        verify(pc).addRely(eq(p), eq("beefdead"));
-    }
-
-    @Test
-    public void reliesOn() {
-        Product p = mock(Product.class);
-        when(pc.find(eq(someid))).thenReturn(p);
-        dpsa.getReliesOn(someid);
-        verify(p).getReliesOn();
-    }
-
-    @Test
-    public void removeRely() {
-        Product p = mock(Product.class);
-        when(pc.find(eq(someid))).thenReturn(p);
-        dpsa.removeRely(someid, "relyid");
-        verify(pc).removeRely(eq(p), eq("relyid"));
-    }
-
     // can't mock a final class, so create a dummy one
     private KeyPair createKeyPair() {
         PublicKey pk = mock(PublicKey.class);
