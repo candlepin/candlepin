@@ -14,32 +14,44 @@ module AntTaskCheckstyle
       dependencies = (options[:dependencies] || []) + AntTaskCheckstyle.dependencies
       cp = Buildr.artifacts(dependencies).each { |a| a.invoke() if a.respond_to?(:invoke) }.map(&:to_s).join(File::PATH_SEPARATOR)
       options[:properties] ||= {}
-      options[:patterns] ||= Pattern.new(".*\.java", true)
+      options[:profiles] ||= []
       begin
         # See http://checkstyle.sourceforge.net/anttask.html
         Buildr.ant('checkstyle') do |ant|
           ant.taskdef(:classpath => cp, :resource => "checkstyletask.properties")
-          ant.checkstyle(:classpath => cp, :config => conf_file) do
-            format_opts = { :type => format }
-            format_opts[:toFile] = output_file unless output_file.nil?
-            ant.formatter(format_opts)
-            options[:properties].each do |k, v|
-              ant.property(:key => k, :value => v)
+          options[:profiles].each do |profile|
+            next unless profile.enabled == "true"
+            puts "Checkstyle checking #{profile.name}"
+
+            profile_properties = options[:properties].merge(profile.properties)
+            profile.properties.values.map! do |v|
+              v.gsub!("${basedir}", profile_properties[:basedir])
             end
-            source_paths.each do |source_path|
-              ant.fileset(:dir => p) do
-                options[:patterns].each do |pattern|
-                  ant.filename(:regex => pattern.pattern, :negate => !pattern.include?)
+
+            patterns = profile.patterns || Pattern.new(".*\.java", true)
+            ant.checkstyle(:classpath => cp, :config => conf_file,
+                :failOnViolation => false, :failureProperty => 'checkstyleFailed') do
+              format_opts = { :type => format }
+              format_opts[:toFile] = output_file unless output_file.nil?
+              ant.formatter(format_opts)
+              profile.properties.each do |k, v|
+                ant.property(:key => k, :value => v)
+              end
+              source_paths.each do |source_path|
+                ant.fileset(:dir => p) do
+                  patterns.each do |pattern|
+                    ant.filename(:regex => pattern.pattern, :negate => !pattern.include?)
+                  end
                 end
               end
             end
           end
+          fail("Checkstyle failed") if ant.project.getProperty('checkstyleFailed')
         end
       rescue => e
+        warn("Checkstyle found errors")
         raise e if options[:fail_on_error]
       end
-
-
     end
   end
 
@@ -147,38 +159,31 @@ module AntTaskCheckstyle
       ide.builders('net.sf.eclipsecs.core.CheckstyleBuilder')
 
       if cs.enabled?
-          task('checkstyle:xml').clear
-          task('checkstyle:html').clear
-          cs.eclipse_properties.each do |profile|
-            next unless profile.enabled == "true"
+        task('checkstyle:xml').clear
+        task('checkstyle:html').clear
+        task('checkstyle').enhance do
+          AntTaskCheckstyle.checkstyle(cs.configuration_file,
+                                       'plain',
+                                       cs.plain_output_file,
+                                       cs.source_paths.flatten.compact,
+                                       :profiles => cs.eclipse_properties,
+                                       :properties => cs.properties,
+                                       :fail_on_error => cs.fail_on_error?,
+                                       :dependencies => cs.extra_dependencies)
+        end
 
-            profile_properties = cs.properties.merge(profile.properties)
-            profile.properties.values.map! do |v|
-              v.gsub!("${basedir}", profile_properties[:basedir])
-            end
-            task('checkstyle').enhance do
-              puts "Checkstyle checking #{profile.name}"
-              AntTaskCheckstyle.checkstyle(cs.configuration_file,
-                                           'plain',
-                                           cs.plain_output_file,
-                                           cs.source_paths.flatten.compact,
-                                           :properties => profile_properties,
-                                           :fail_on_error => cs.fail_on_error?,
-                                           :dependencies => cs.extra_dependencies,
-                                           :patterns => profile.patterns)
-            end
-
-            task('checkstyle:xml').enhance do
-              puts "Checkstyle rendering #{profile.name} to XML"
-              AntTaskCheckstyle.checkstyle(cs.configuration_file,
-                                           'xml',
-                                           cs.xml_output_file,
-                                           cs.source_paths.flatten.compact,
-                                           :properties => profile_properties,
-                                           :fail_on_error => false,
-                                           :dependencies => cs.extra_dependencies,
-                                           :patterns => profile.patterns)
-            end
+        task('checkstyle:xml').enhance do
+          reports_dir = project.path_to(:reports, :checkstyle)
+          rm_rf(reports_dir)
+          mkdir_p(reports_dir)
+          AntTaskCheckstyle.checkstyle(cs.configuration_file,
+                                       'xml',
+                                       cs.xml_output_file,
+                                       cs.source_paths.flatten.compact,
+                                       :profiles => cs.eclipse_properties,
+                                       :properties => cs.properties,
+                                       :fail_on_error => false,
+                                       :dependencies => cs.extra_dependencies)
         end
         if cs.html_enabled?
           task('checkstyle:html' => task('checkstyle:xml')) do
