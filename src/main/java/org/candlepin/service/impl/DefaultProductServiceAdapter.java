@@ -181,21 +181,6 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
         return prodCurator.productHasSubscriptions(prod);
     }
 
-    public void addRely(String productId, String relyId) {
-        Product product = prodCurator.find(productId);
-        prodCurator.addRely(product, relyId);
-    }
-
-    public Set<String> getReliesOn(String productId) {
-        Product product = prodCurator.find(productId);
-        return product.getReliesOn();
-    }
-
-    public void removeRely(String productId, String relyId) {
-        Product product = prodCurator.find(productId);
-        prodCurator.removeRely(product, relyId);
-    }
-
     @Override
     public List<Product> getProductsByIds(Collection<String> ids) {
         return prodCurator.listAllByIds(ids);

@@ -149,47 +149,6 @@ describe 'Product Resource' do
     pool[0]['owner']['key'].should == owner['key']
   end
 
-  it 'creates products with relies on relationships' do
-    relies_on = ['ProductA','ProductB','ProductC']
-    prod = create_product(random_string("test_id"),
-                          random_string("test_name"),
-                          {:relies_on => relies_on})
-    prod = @cp.get_product(prod['id'])
-    prod['reliesOn'].size.should == 3
-  end
-
-  it 'adds and removes relies on relationships' do
-    relies_on = ['ProductA','ProductB','ProductC']
-    prod = create_product(random_string("test_id"),
-                          random_string("test_name"),
-                          {:relies_on => relies_on})
-    @cp.remove_product_reliance(prod['id'], 'ProductB')
-    @cp.remove_product_reliance(prod['id'], 'ProductC')
-    prod = @cp.get_product(prod['id'])
-    prod['reliesOn'].first.should == 'ProductA'
-
-    @cp.add_product_reliance(prod['id'], 'ProductD')
-    prod = @cp.get_product(prod['id'])
-    prod['reliesOn'].size.should == 2
-  end
-
-  it 'rejects product creation with circular relies on relationships' do
-    prod1_id = random_string("test_id")
-    prod2_id = random_string("test_id")
-    prod3_id = random_string("test_id")
-    prod1 = create_product(prod1_id,
-                          random_string("test_name"),
-                          {:relies_on => [prod2_id]})
-    prod2 = create_product(prod2_id,
-                          random_string("test_name"),
-                          {:relies_on => [prod3_id]})
-    lambda do
-        prod3 = create_product(prod3_id,
-                          random_string("test_name"),
-                          {:relies_on => [prod1_id]})
-    end.should raise_exception(RestClient::BadRequest)
-  end
-
   it 'lists all products in bulk fetch' do
     prod1_id = random_string("test_id")
     prod2_id = random_string("test_id")

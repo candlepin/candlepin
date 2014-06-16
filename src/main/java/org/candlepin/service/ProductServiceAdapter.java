@@ -88,12 +88,6 @@ public interface ProductServiceAdapter {
 
     boolean productHasSubscriptions(Product prod);
 
-    void addRely(String productId, String relyId);
-
-    void removeRely(String productId, String relyId);
-
-    Set<String> getReliesOn(String productId);
-
     Product mergeProduct(Product prod);
 
     Set<String> getProductsWithContent(Collection<String> contentId);
