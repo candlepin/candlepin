@@ -16,7 +16,6 @@ package org.candlepin.gutterball.config;
 
 import static org.junit.Assert.*;
 
-import org.hamcrest.Matchers;
 import org.hamcrest.core.IsInstanceOf;
 import org.junit.Before;
 import org.junit.Rule;
@@ -42,6 +41,7 @@ public class PropertiesFileConfigurationTest {
     private static final Charset UTF8 = StandardCharsets.UTF_8;
     private static final Charset ASCII = StandardCharsets.US_ASCII;
 
+    @SuppressWarnings("checkstyle:visibilitymodifier")
     @Rule
     public ExpectedException ex = ExpectedException.none();
 

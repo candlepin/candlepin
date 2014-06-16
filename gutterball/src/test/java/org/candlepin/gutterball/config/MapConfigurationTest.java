@@ -35,8 +35,10 @@ import java.util.Set;
  */
 @RunWith(MockitoJUnitRunner.class)
 public class MapConfigurationTest {
+
+    @SuppressWarnings("checkstyle:visibilitymodifier")
     @Rule
-    public ExpectedException ex = ExpectedException.none();
+    public ExpectedException ex;
 
     private MapConfiguration config;
 

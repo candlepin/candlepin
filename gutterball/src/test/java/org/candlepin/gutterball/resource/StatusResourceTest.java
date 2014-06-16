@@ -37,16 +37,18 @@ import javax.inject.Inject;
  */
 @RunWith(JukitoRunner.class)
 public class StatusResourceTest {
-    @Inject StatusResource statusResource;
+    @Inject private StatusResource statusResource;
 
     @Test
     @SuppressWarnings("serial")
     public void testGetStatus(I18n i18n) {
         when(i18n.getLocale()).thenReturn(Locale.US);
-        Map<String, String> expectedMap = new HashMap<String, String>() {{
-            put("gutterball.version", "X.Y.Z");
-            put("request_locale", Locale.US.toString());
-        }};
+        Map<String, String> expectedMap = new HashMap<String, String>() {
+            {
+                put("gutterball.version", "X.Y.Z");
+                put("request_locale", Locale.US.toString());
+            }
+        };
         assertEquals(expectedMap, statusResource.getStatus());
     }
 
@@ -54,10 +56,12 @@ public class StatusResourceTest {
     @SuppressWarnings("serial")
     public void testGetFrenchStatus(I18n i18n) {
         when(i18n.getLocale()).thenReturn(Locale.FRANCE);
-        Map<String, String> expectedMap = new HashMap<String, String>() {{
-            put("gutterball.version", "X.Y.Z");
-            put("request_locale", Locale.FRANCE.toString());
-        }};
+        Map<String, String> expectedMap = new HashMap<String, String>() {
+            {
+                put("gutterball.version", "X.Y.Z");
+                put("request_locale", Locale.FRANCE.toString());
+            }
+        };
         assertEquals(expectedMap, statusResource.getStatus());
     }
 

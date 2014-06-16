@@ -15,10 +15,8 @@
 package org.candlepin.gutterball.config;
 
 import static org.candlepin.gutterball.config.PropertyConverter.*;
-import static org.junit.Assert.assertEquals;
 
-import org.candlepin.gutterball.config.ConversionException;
-import org.candlepin.gutterball.config.PropertyConverter;
+import static org.junit.Assert.*;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -31,6 +29,7 @@ import java.util.List;
 
 
 public class PropertyConverterTest {
+    @SuppressWarnings("checkstyle:visibilitymodifier")
     @Rule
     public ExpectedException ex = ExpectedException.none();
 

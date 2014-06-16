@@ -32,7 +32,8 @@ import javax.servlet.http.HttpServletRequest;
 @RunWith(JukitoRunner.class)
 public class I18nProviderTest {
 
-    @Inject HttpServletRequest mockReq;
+    @Inject
+    private HttpServletRequest mockReq;
 
     @Test
     public void testGetFrench() {
