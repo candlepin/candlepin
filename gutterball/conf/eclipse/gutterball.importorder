@@ -1,0 +1,10 @@
+#Organize Import Order
+#Mon Jun 16 11:10:34 EDT 2014
+7=javax
+6=java
+5=ch
+4=net
+3=org
+2=com
+1=com.redhat.rhn
+0=org.candlepin

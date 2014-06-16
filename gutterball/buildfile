@@ -1,7 +1,6 @@
 # vi:syntax=ruby
 
 require 'buildr/java/emma'
-require 'buildr/checkstyle'
 require 'rspec/core/rake_task'
 require 'json'
 
@@ -147,13 +146,13 @@ define "gutterball" do
   eclipse.natures :java
 
   checkstyle.config_directory = path_to(:conf)
-  checkstyle.properties['checkstyle.header.file'] = File.join(checkstyle.config_directory, 'HEADER.txt')
-  checkstyle.properties['checkstyle.cache.file'] = File.join(path_to(:target), 'checkstyle.cache.src')
-  checkstyle.properties['javadoc.type.scope'] = 'package'
-  checkstyle.properties['javadoc.method.scope'] = 'public'
-  checkstyle.properties['javadoc.lazy'] = 'false'
-  checkstyle.properties['javadoc.var.scope'] = 'package'
-  checkstyle.properties['javadoc.missing.param'] = 'true'
+  # checkstyle.properties['checkstyle.header.file'] = File.join(checkstyle.config_directory, 'HEADER.txt')
+  # checkstyle.properties['checkstyle.cache.file'] = File.join(path_to(:target), 'checkstyle.cache.src')
+  # checkstyle.properties['javadoc.type.scope'] = 'package'
+  # checkstyle.properties['javadoc.method.scope'] = 'public'
+  # checkstyle.properties['javadoc.lazy'] = 'false'
+  # checkstyle.properties['javadoc.var.scope'] = 'package'
+  # checkstyle.properties['javadoc.missing.param'] = 'true'
 
   resource_substitutions = {
     'version' => project.version,
