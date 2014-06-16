@@ -118,7 +118,6 @@ public class Product extends AbstractHibernateObject implements Linkable {
         setProductContent(new HashSet<ProductContent>());
         setSubscriptions(new HashSet<Subscription>());
         setDependentProductIds(new HashSet<String>());
-        setReliesOn(new HashSet<String>());
     }
 
     public Product(String id, String name, String variant, String version,
@@ -130,7 +129,6 @@ public class Product extends AbstractHibernateObject implements Linkable {
         setProductContent(new HashSet<ProductContent>());
         setSubscriptions(new HashSet<Subscription>());
         setDependentProductIds(new HashSet<String>());
-        setReliesOn(new HashSet<String>());
         setAttribute("version", version);
         setAttribute("variant", variant);
         setAttribute("type", type);
@@ -381,33 +379,6 @@ public class Product extends AbstractHibernateObject implements Linkable {
      */
     public Set<String> getDependentProductIds() {
         return dependentProductIds;
-    }
-
-    /**
-     * @param reliantProductIds the reliantProductIds to set
-     */
-    public void setReliesOn(Set<String> reliantProductIds) {
-        this.reliantProductIds = reliantProductIds;
-    }
-
-    /**
-     * @return the reliantProductIds
-     */
-    public Set<String> getReliesOn() {
-        return reliantProductIds;
-    }
-
-    public void addRely(String relyId) {
-        if (getReliesOn() == null) {
-            this.reliantProductIds = new HashSet<String>();
-        }
-        this.reliantProductIds.add(relyId);
-    }
-
-    public void removeRely(String relyId) {
-        if (getReliesOn() != null) {
-            this.reliantProductIds.remove(relyId);
-        }
     }
 
     @Override

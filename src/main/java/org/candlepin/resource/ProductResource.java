@@ -120,7 +120,6 @@ public class ProductResource {
      *   } ],
      *   "productContent" : [ ],
      *   "dependentProductIds" : [ ],
-     *   "reliesOn" : [ ],
      *   "href" : "/products/product_id",
      *   "created" : [date],
      *   "updated" : [date]
@@ -313,34 +312,6 @@ public class ProductResource {
     public void removeContent(@PathParam("product_uuid") String pid,
                               @PathParam("content_id") String contentId) {
         prodAdapter.removeContent(pid, contentId);
-    }
-
-    /**
-     * Adds a Reliance to a Product
-     *
-     * @return a Product object
-     * @httpcode 200
-     */
-    @POST
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("/{product_uuid}/reliance/{rely_product_id}")
-    public Product addReliance(@PathParam("product_uuid") String pid,
-                              @PathParam("rely_product_id") String relyId) {
-        prodAdapter.addRely(pid, relyId);
-        return prodAdapter.getProductById(pid);
-    }
-
-    /**
-     * Deletes a Reliance from a Product
-     *
-     * @httpcode 200
-     */
-    @DELETE
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("/{product_uuid}/reliance/{rely_product_uuid}")
-    public void removeReliance(@PathParam("product_uuid") String pid,
-                              @PathParam("rely_product_uuid") String relyId) {
-        prodAdapter.removeRely(pid, relyId);
     }
 
     /**
