@@ -16,6 +16,10 @@ package org.candlepin.model.test;
 
 import static org.junit.Assert.assertEquals;
 
+import org.candlepin.auth.Principal;
+import org.candlepin.auth.UserPrincipal;
+import org.candlepin.auth.permissions.Permission;
+import org.candlepin.auth.permissions.UsernameConsumersPermission;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Entitlement;
@@ -25,6 +29,7 @@ import org.candlepin.model.OwnerInfo;
 import org.candlepin.model.OwnerInfoCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.model.User;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
@@ -34,7 +39,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * OwnerInfoCuratorTest
@@ -658,6 +665,79 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         assertConsumerCountsByEntitlementStatus(info);
     }
 
+    @Test
+    public void testPermissionsAppliedForConsumerCounts() {
+        User mySystemsUser = setupOnlyMyConsumersPrincipal();
+
+        ConsumerType type = consumerTypeCurator.lookupByLabel("system");
+        Consumer consumer = new Consumer("my-system-1", mySystemsUser.getUsername(),
+            owner, type);
+        consumerCurator.create(consumer);
+
+        consumer = new Consumer("not-my-system", "another-user", owner, type);
+        consumerCurator.create(consumer);
+
+        OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
+
+        Map<String, Integer> expectedConsumers = new HashMap<String, Integer>() {
+            {
+                put("system", 1);
+                put("domain", 0);
+                put("uebercert", 0);
+            }
+        };
+
+        assertEquals(expectedConsumers, info.getConsumerCounts());
+    }
+
+    @Test
+    public void testPermissionsAppliedForConsumerTypeEntitlementEntitlementsConsumedByType() {
+        User mySystemsUser = setupOnlyMyConsumersPrincipal();
+
+        ConsumerType type = consumerTypeCurator.lookupByLabel("system");
+        Consumer consumer = new Consumer("my-system-1", mySystemsUser.getUsername(),
+            owner, type);
+        consumerCurator.create(consumer);
+
+        EntitlementCertificate myConsumersCert = createEntitlementCertificate("mine",
+            "mine");
+        Entitlement myConsumerEntitlement = createEntitlement(owner, consumer, pool1,
+            myConsumersCert);
+        myConsumerEntitlement.setQuantity(2);
+        entitlementCurator.create(myConsumerEntitlement);
+        consumerCurator.merge(consumer);
+
+        consumer = new Consumer("not-my-system", "another-user", owner, type);
+        consumerCurator.create(consumer);
+
+        EntitlementCertificate otherCert = createEntitlementCertificate("other", "other");
+        Entitlement otherEntitlement = createEntitlement(owner, consumer, pool1, otherCert);
+        otherEntitlement.setQuantity(1);
+        entitlementCurator.create(otherEntitlement);
+        consumerCurator.merge(consumer);
+
+        OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
+
+        Map<String, Integer> expectedConsumers = new HashMap<String, Integer>() {
+            {
+                put("system", 1);
+                put("domain", 0);
+                put("uebercert", 0);
+            }
+        };
+
+        Map<String, Integer> expectedEntitlementsConsumed = new HashMap<String, Integer>() {
+            {
+                put("system", 2);
+                put("domain", 0);
+                put("uebercert", 0);
+            }
+        };
+
+        assertEquals(expectedConsumers, info.getConsumerCounts());
+        assertEquals(expectedEntitlementsConsumed, info.getEntitlementsConsumedByType());
+    }
+
     private void setupConsumerCountTest() {
         ConsumerType systemType = consumerTypeCurator.lookupByLabel("system");
         Consumer consumer1 = new Consumer("test-consumer1", "test-user", owner, systemType);
@@ -685,6 +765,15 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
 
         // Make sure unknown statuses report 0 consumers:
         assertEquals((Integer) 0, info.getConsumerCountByStatus("Unknown Status"));
+    }
+
+    private User setupOnlyMyConsumersPrincipal() {
+        Set<Permission> perms = new HashSet<Permission>();
+        User u = new User("MySystemsAdmin", "passwd");
+        perms.add(new UsernameConsumersPermission(u, owner));
+        Principal p = new UserPrincipal(u.getUsername(), perms, false);
+        setupPrincipal(p);
+        return u;
     }
 
 }
