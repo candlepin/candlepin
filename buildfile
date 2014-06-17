@@ -1,3 +1,12 @@
+# vi: set ft=ruby:
+
+### Repositories
+repositories.remote << "http://jmrodri.fedorapeople.org/ivy/candlepin/"
+repositories.remote << "http://repository.jboss.org/nexus/content/groups/public/"
+repositories.remote << "http://gettext-commons.googlecode.com/svn/maven-repository/"
+repositories.remote << "http://oauth.googlecode.com/svn/code/maven/"
+repositories.remote << "http://central.maven.org/maven2/"
+
 require 'buildr/java/emma'
 require 'net/http'
 require 'rspec/core/rake_task'
@@ -154,13 +163,6 @@ LOGDRIVER = 'logdriver:logdriver:jar:1.0'
 # We need to mark JAVA_HOME/lib/tools.jar as a dependency in order for
 # Buildr to include it in the Eclipse .classpath file.
 PROVIDED = [SERVLET, file(Java.tools_jar)]
-
-### Repositories
-repositories.remote << "http://jmrodri.fedorapeople.org/ivy/candlepin/"
-repositories.remote << "http://repository.jboss.org/nexus/content/groups/public/"
-repositories.remote << "http://gettext-commons.googlecode.com/svn/maven-repository/"
-repositories.remote << "http://oauth.googlecode.com/svn/code/maven/"
-repositories.remote << "http://central.maven.org/maven2/"
 
 ### Project
 GROUP = "candlepin"
