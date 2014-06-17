@@ -1,3 +1,5 @@
+# vi: set ft=ruby:
+
 ### Repositories
 repositories.remote << "http://jmrodri.fedorapeople.org/ivy/candlepin/"
 repositories.remote << "http://repository.jboss.org/nexus/content/groups/public/"
