@@ -18,7 +18,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.mockito.Mockito.mock;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -28,7 +27,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Response;
 
 import org.candlepin.auth.Access;
@@ -251,17 +249,6 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
             null);
 
         assertEquals(USER_NAME, consumer.getUsername());
-    }
-
-    @Test(expected = ForbiddenException.class)
-    public void testReadOnlyUsersCantGenerateExports() {
-        consumer.setType(consumerTypeCurator.create(
-            new ConsumerType(ConsumerTypeEnum.CANDLEPIN)));
-        consumerCurator.update(consumer);
-        setupPrincipal(owner, Access.READ_ONLY);
-        securityInterceptor.enable();
-        consumerResource.exportData(mock(HttpServletResponse.class),
-            consumer.getUuid(), null, null, null);
     }
 
     @SuppressWarnings("unchecked")

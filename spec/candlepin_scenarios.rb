@@ -306,6 +306,15 @@ class Exporter
     export
   end
 
+  def create_candlepin_export_with_ro_user
+    ro_user_client = user_client(@owner, random_string('CPExport_user'), true)
+    export = Export.new
+    export.export_filename = ro_user_client.export_consumer(export.tmp_dir, @opts, @candlepin_client.uuid)
+    export.extract()
+    @exports << export
+    export
+  end
+
   def create_certificate_export
     export = Export.new
     export.export_filename = @candlepin_client.export_certificates(export.tmp_dir)

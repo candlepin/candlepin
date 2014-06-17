@@ -432,8 +432,9 @@ class Candlepin
     return status['result']
   end
 
-  def export_consumer(dest_dir, params={})
-    path = "/consumers/#{@uuid}/export"
+  def export_consumer(dest_dir, params={}, uuid=nil)
+    uuid = @uuid unless uuid
+    path = "/consumers/#{uuid}/export"
     path += "?" if params
     path += "cdn_label=#{params[:cdn_label]}&" if params[:cdn_label]
     path += "webapp_prefix=#{params[:webapp_prefix]}&" if params[:webapp_prefix]
