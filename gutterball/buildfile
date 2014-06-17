@@ -1,4 +1,4 @@
-# vi:syntax=ruby
+# vi: set ft=ruby:
 
 require 'buildr/java/emma'
 require 'rspec/core/rake_task'
