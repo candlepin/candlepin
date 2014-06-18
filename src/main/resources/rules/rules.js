@@ -1735,6 +1735,7 @@ var Autobind = {
             installed: installed_ids,
             consumer: consumer,
             attached_ents: attached_ents,
+            pool_quantity: null,
 
             // Indicates we are trying to autobind a host to things that would unlock pools for it's guests.
             // Implies we should look at derived product data if it exists on the pool, otherwise we look at
@@ -1985,16 +1986,32 @@ var Autobind = {
                     // use virt only if possible
                     // if the consumer is not virt, the pool will have been filtered out
                     if (Utils.equalsIgnoreCase(pool.getProductAttribute(VIRT_ONLY), "true")) {
-                        priority += 100;
+                        priority += 10000;
                     }
                     // better still if host_specific
-                    if (pool.getAttribute(REQUIRES_HOST_ATTRIBUTE) != null) {
-                        priority += 150;
+                    if (pool.getAttribute(REQUIRES_HOST_ATTRIBUTE) !== null) {
+                        priority += 15000;
                     }
                     return priority;
                 };
                 var priority0 = get_pool_priority(pool0);
                 var priority1 = get_pool_priority(pool1);
+
+                /*
+                 * Special case to match socket counts exactly if possible.  We don't want to waste a pair
+                 * of two socket subscriptions when we have a 4 socket sub.
+                 */
+                var complianceAttrs = getComplianceAttributes(consumer);
+                if (contains(complianceAttrs, SOCKETS_ATTRIBUTE)) {
+                    var consumerVal = FactValueCalculator.getFact(SOCKETS_ATTRIBUTE, consumer);
+                    if (consumerVal == parseInt(pool0.getProductAttribute(SOCKETS_ATTRIBUTE))) {
+                        priority0 += 2;
+                    }
+                    if (consumerVal == parseInt(pool1.getProductAttribute(SOCKETS_ATTRIBUTE))) {
+                        priority1 += 2;
+                    }
+                }
+
                 // If two pools are still considered equal, select the pool that expires first
                 if (pool0.endDate > pool1.endDate) {
                     priority1 += 1;
@@ -2007,10 +2024,23 @@ var Autobind = {
                 return priority1 - priority0;
             },
 
+            get_total_quantity: function() {
+                map = this.get_pool_quantity();
+                values = map.values();
+                result = 0;
+                for (var i = 0; i < values.length; i++) {
+                    result += values[i];
+                }
+                return result;
+            },
+
             /*
              * Returns a map of pool id to pool quantity for every pool that is required from this group
              */
             get_pool_quantity: function() {
+                if (this.pool_quantity !== null) {
+                    return this.pool_quantity;
+                }
                 var result = Utils.getJsMap();
                 // Still in priority order, but reversed from prune_pools
                 var ents = this.get_all_ents(this.pools);
@@ -2041,6 +2071,7 @@ var Autobind = {
                         }
                     }
                 }
+                this.pool_quantity = result;
                 return result;
             },
 
@@ -2285,17 +2316,21 @@ var Autobind = {
         var best = null;
         var num_virt_only = 0;
         var num_host_specific = 0;
+        var total_poolquantity = Number.MAX_VALUE;
+
         for (var i = 0; i < all_groups.length; i++) {
             var group = all_groups[i];
             var intersection = this.get_common_products(installed, group).length;
             var group_host_specific = group.get_num_host_specific();
             var group_virt_only = group.get_num_virt_only();
+            var group_poolquantity = group.get_total_quantity();
             // Choose group that provides the most installed products
             if (intersection > max_provide) {
                 max_provide = intersection;
                 stacked = group.stackable;
                 num_virt_only = group_virt_only;
                 num_host_specific = group_host_specific;
+                total_poolquantity = group_poolquantity;
                 best = group;
             }
             if (intersection > 0 && intersection == max_provide) {
@@ -2305,6 +2340,7 @@ var Autobind = {
                    stacked = group.stackable;
                    num_virt_only = group_virt_only;
                    num_host_specific = group_host_specific;
+                   total_poolquantity = group_poolquantity;
                 }
                 if (num_host_specific == group_host_specific) {
                     // Break ties with number of virt only pools
@@ -2312,12 +2348,21 @@ var Autobind = {
                         best = group;
                         num_virt_only = group_virt_only;
                         stacked = group.stackable;
+                        total_poolquantity = group_poolquantity;
                     }
                     if (num_virt_only == group_virt_only) {
-                        // Break ties by prefering non-stacked entitlements
-                        if (stacked && !group.stackable) {
+                        // Break ties by fewest pool quantities (total in the stack)
+                        if (group_poolquantity < total_poolquantity) {
                             best = group;
+                            total_poolquantity = group_poolquantity;
                             stacked = group.stackable;
+                        }
+                        if (group_poolquantity == total_poolquantity) {
+                            // Break ties by prefering non-stacked entitlements
+                            if (stacked && !group.stackable) {
+                                best = group;
+                                stacked = group.stackable;
+                            }
                         }
                     }
                 }
@@ -2423,7 +2468,14 @@ var Autobind = {
         for (var i = ent_groups.length - 1; i >= 0; i--) {
             var ent_group = ent_groups[i];
             if (ent_group.validate()) {
-                valid_groups.push(ent_group);
+                // Only really consider the group if it provides a necessary product, or stacks with an existing partial stack
+                if (this.get_common_products(installed, ent_group).length > 0 || (ent_group.attached_ents !== null && ent_group.attached_ents.length > 0)) {
+                    valid_groups.push(ent_group);
+                    ent_group.remove_extra_attrs();
+                    ent_group.prune_pools();
+                } else {
+                    log.debug("Group "+ent_group.stack_id+" provides no installed products");
+                }
             } else {
                 log.debug("Group "+ent_group.stack_id+" failed validation.");
             }
@@ -2435,14 +2487,7 @@ var Autobind = {
                                                            context.considerDerived);
         log.debug("best_groups size: "+best_groups.length);
 
-        for (var i = 0; i < best_groups.length; i++) {
-            var group = best_groups[i];
-            group.remove_extra_attrs();
-            group.prune_pools();
-        }
-
         selected_pools = Utils.getJsMap();
-
         for (var i = 0; i < best_groups.length; i++) {
             var group = best_groups[i];
             selected_pools.putAll(group.get_pool_quantity());
