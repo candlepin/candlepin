@@ -1057,6 +1057,30 @@ describe 'Consumer Resource' do
     @cp.get_consumer_guests(host_consumer['uuid']).length.should == 2
   end
 
+  it 'should allow host to list guests when guestids reported with reverse endianness' do
+    uuid2 = random_string('system.uuid')
+    guests = [{'guestId' => '78d7e200-b7d6-4cfe-b7a9-5700e8094df3'}, {'guestId' => uuid2}]
+
+    user_cp = user_client(@owner1, random_string('test-user'))
+    host_consumer = user_cp.register(random_string('host'), :system, nil,
+      {}, nil, nil, [], [])
+    # The virt-uuid has reversed-endianness in the first 3 sections
+    guest_consumer1 = user_cp.register(random_string('guest'), :system, nil,
+      {'virt.uuid' => '00e2d778-d6b7-fe4c-b7a9-5700e8094df3'}, nil, nil, [], [])
+    guest_consumer2 = user_cp.register(random_string('guest'), :system, nil,
+      {'virt.uuid' => uuid2}, nil, nil, [], [])
+
+    consumer_client = Candlepin.new(username=nil, password=nil,
+        cert=host_consumer['idCert']['cert'],
+        key=host_consumer['idCert']['key'])
+    consumer_client.update_consumer({:guestIds => guests})
+
+    @cp.get_consumer_guests(host_consumer['uuid']).length.should == 2
+    # Verify the lookup works both ways
+    @cp.get_consumer_host(guest_consumer1['uuid'])['uuid'].should == host_consumer['uuid']
+    @cp.get_consumer_host(guest_consumer2['uuid'])['uuid'].should == host_consumer['uuid']
+  end
+
   it 'should not allow host to list guests that another host has claimed' do
     uuid1 = random_string('system.uuid')
     uuid2 = random_string('system.uuid')

@@ -21,6 +21,7 @@ import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
+import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -29,6 +30,7 @@ import org.hibernate.Criteria;
 import org.hibernate.Query;
 import org.hibernate.ReplicationMode;
 import org.hibernate.criterion.Criterion;
+import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
@@ -143,17 +145,18 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     @Transactional
     public Consumer findByVirtUuid(String uuid, String ownerId) {
         Consumer result = null;
+        List<String> possibleGuestIds = Util.getPossibleUuids(uuid);
 
         String sql = "select cp_consumer.id from cp_consumer " +
             "inner join cp_consumer_facts " +
             "on cp_consumer.id = cp_consumer_facts.cp_consumer_id " +
             "where cp_consumer_facts.mapkey = 'virt.uuid' and " +
-            "lower(cp_consumer_facts.element) = :uuid and " +
-            "cp_consumer.owner_id = :ownerid " +
+            "lower(cp_consumer_facts.element) in (:guestids) " +
+            "and cp_consumer.owner_id = :ownerid " +
             "order by cp_consumer.updated desc";
 
         Query q = currentSession().createSQLQuery(sql);
-        q.setParameter("uuid", uuid.toLowerCase());
+        q.setParameterList("guestids", possibleGuestIds);
         q.setParameter("ownerid", ownerId);
         List<String> options = q.list();
 
@@ -371,15 +374,18 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      */
     @Transactional
     public Consumer getHost(String guestId, Owner owner) {
-        return (Consumer) currentSession()
+        Disjunction guestIdCrit = Restrictions.disjunction();
+        for (String possibleId : Util.getPossibleUuids(guestId)) {
+            guestIdCrit.add(Restrictions.eq("guestId", possibleId).ignoreCase());
+        }
+        Criteria crit = currentSession()
             .createCriteria(GuestId.class)
-            .add(Restrictions.eq("guestId", guestId).ignoreCase())
             .createAlias("consumer", "gconsumer")
             .add(Restrictions.eq("gconsumer.owner", owner))
             .addOrder(Order.desc("updated"))
             .setMaxResults(1)
-            .setProjection(Projections.property("consumer"))
-            .uniqueResult();
+            .setProjection(Projections.property("consumer"));
+        return (Consumer) crit.add(guestIdCrit).uniqueResult();
     }
 
     /**
