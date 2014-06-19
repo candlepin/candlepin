@@ -1076,6 +1076,9 @@ describe 'Consumer Resource' do
     consumer_client.update_consumer({:guestIds => guests})
 
     @cp.get_consumer_guests(host_consumer['uuid']).length.should == 2
+    # Verify the lookup works both ways
+    @cp.get_consumer_host(guest_consumer1['uuid'])['uuid'].should == host_consumer['uuid']
+    @cp.get_consumer_host(guest_consumer2['uuid'])['uuid'].should == host_consumer['uuid']
   end
 
   it 'should not allow host to list guests that another host has claimed' do
