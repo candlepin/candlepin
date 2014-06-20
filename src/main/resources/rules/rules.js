@@ -239,6 +239,10 @@ function createPool(pool) {
         return pool.quantity - pool.consumed; 
     };
 
+    pool.getInstanceMulti = function() {
+        return parseInt(pool.getAttribute(INSTANCE_ATTRIBUTE)) || 1;
+    };
+
     // Lazily initialize the list of derived provided product IDs.
     pool.derivedProducts = function () {
 
@@ -1981,36 +1985,43 @@ var Autobind = {
              * Sort pools for pruning (helps us later with quantity as well)
              */
             compare_pools: function(pool0, pool1) {
-                get_pool_priority = function(pool) {
+                get_pool_priority = function(pool, consumer) {
                     var priority = 0;
                     // use virt only if possible
                     // if the consumer is not virt, the pool will have been filtered out
                     if (Utils.equalsIgnoreCase(pool.getProductAttribute(VIRT_ONLY), "true")) {
-                        priority += 10000;
+                        priority += 100;
                     }
                     // better still if host_specific
                     if (pool.getAttribute(REQUIRES_HOST_ATTRIBUTE) !== null) {
-                        priority += 15000;
+                        priority += 150;
+                    }
+                    /*
+                     * Special case to match socket counts exactly if possible.  We don't want to waste a pair
+                     * of two socket subscriptions when we have a 4 socket sub.
+                     */
+                    var complianceAttrs = getComplianceAttributes(consumer);
+                    if (contains(complianceAttrs, SOCKETS_ATTRIBUTE)) {
+                        var consumerVal = FactValueCalculator.getFact(SOCKETS_ATTRIBUTE, consumer);
+                        var poolVal = parseInt(pool.getProductAttribute(SOCKETS_ATTRIBUTE));
+                        if (consumerVal !== null && poolVal !== null && consumerVal > 0 && poolVal > 0) {
+                            var required = Math.ceil(consumerVal/poolVal);
+                            // Don't count pools INSTANCE_MULTIPLIER times for "required", however let's be sure there
+                            // are enough available if we give it preference.
+                            if (pool.getAvailable()/pool.getInstanceMulti() >= required) {
+                                poolVal *= required;
+                                // Maximum of 9 with an exact match.  We prefer the closest match possible.
+                                // a half point is lost for each additional quantity
+                                // We double this value so that it trumps the date comparator
+                                var requirementpriority = Math.max(0, 10-Math.abs(consumerVal-poolVal)-(required/2)) * 2;
+                                priority += requirementpriority;
+                            }
+                        }
                     }
                     return priority;
                 };
-                var priority0 = get_pool_priority(pool0);
-                var priority1 = get_pool_priority(pool1);
-
-                /*
-                 * Special case to match socket counts exactly if possible.  We don't want to waste a pair
-                 * of two socket subscriptions when we have a 4 socket sub.
-                 */
-                var complianceAttrs = getComplianceAttributes(consumer);
-                if (contains(complianceAttrs, SOCKETS_ATTRIBUTE)) {
-                    var consumerVal = FactValueCalculator.getFact(SOCKETS_ATTRIBUTE, consumer);
-                    if (consumerVal == parseInt(pool0.getProductAttribute(SOCKETS_ATTRIBUTE))) {
-                        priority0 += 2;
-                    }
-                    if (consumerVal == parseInt(pool1.getProductAttribute(SOCKETS_ATTRIBUTE))) {
-                        priority1 += 2;
-                    }
-                }
+                var priority0 = get_pool_priority(pool0, consumer);
+                var priority1 = get_pool_priority(pool1, consumer);
 
                 // If two pools are still considered equal, select the pool that expires first
                 if (pool0.endDate > pool1.endDate) {
