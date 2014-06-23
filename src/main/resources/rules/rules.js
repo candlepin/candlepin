@@ -311,6 +311,43 @@ function get_mock_ent_for_pool(pool, consumer) {
     };
 }
 
+function get_pool_priority(pool, consumer) {
+    var priority = 0;
+    // use virt only if possible
+    // if the consumer is not virt, the pool will have been filtered out
+    if (Utils.equalsIgnoreCase(pool.getProductAttribute(VIRT_ONLY), "true")) {
+        priority += 100;
+    }
+    // better still if host_specific
+    if (pool.getAttribute(REQUIRES_HOST_ATTRIBUTE) !== null) {
+        priority += 150;
+    }
+    /*
+     * Special case to match socket counts exactly if possible.  We don't want to waste a pair
+     * of two socket subscriptions when we have a 4 socket sub.
+     */
+    var complianceAttrs = getComplianceAttributes(consumer);
+    if (contains(complianceAttrs, SOCKETS_ATTRIBUTE)) {
+        var consumerVal = FactValueCalculator.getFact(SOCKETS_ATTRIBUTE, consumer);
+        var poolVal = parseInt(pool.getProductAttribute(SOCKETS_ATTRIBUTE));
+        if (consumerVal !== null && poolVal !== null && consumerVal > 0 && poolVal > 0) {
+            var required = Math.ceil(consumerVal/poolVal);
+            // Don't count pools INSTANCE_MULTIPLIER times for "required", however let's be sure there
+            // are enough available if we give it preference.
+            if (pool.getAvailable()/pool.getInstanceMulti() >= required) {
+                poolVal *= required;
+                // Maximum of 10 with an exact match.  We prefer the closest match possible.
+                // a half point is lost for every additional quantity
+                // We double this value so that it trumps the date comparator
+                var requirementpriority = Math.max(0, 10-(poolVal-consumerVal)-((required-1)/2)) * 2;
+                priority += requirementpriority;
+            }
+        }
+    }
+    return priority;
+}
+
+
 /* Utility functions */
 function contains(a, obj) {
     for (var i = 0; i < a.length; i++) {
@@ -1740,6 +1777,7 @@ var Autobind = {
             consumer: consumer,
             attached_ents: attached_ents,
             pool_quantity: null,
+            average_priority: null,
 
             // Indicates we are trying to autobind a host to things that would unlock pools for it's guests.
             // Implies we should look at derived product data if it exists on the pool, otherwise we look at
@@ -1985,41 +2023,6 @@ var Autobind = {
              * Sort pools for pruning (helps us later with quantity as well)
              */
             compare_pools: function(pool0, pool1) {
-                get_pool_priority = function(pool, consumer) {
-                    var priority = 0;
-                    // use virt only if possible
-                    // if the consumer is not virt, the pool will have been filtered out
-                    if (Utils.equalsIgnoreCase(pool.getProductAttribute(VIRT_ONLY), "true")) {
-                        priority += 100;
-                    }
-                    // better still if host_specific
-                    if (pool.getAttribute(REQUIRES_HOST_ATTRIBUTE) !== null) {
-                        priority += 150;
-                    }
-                    /*
-                     * Special case to match socket counts exactly if possible.  We don't want to waste a pair
-                     * of two socket subscriptions when we have a 4 socket sub.
-                     */
-                    var complianceAttrs = getComplianceAttributes(consumer);
-                    if (contains(complianceAttrs, SOCKETS_ATTRIBUTE)) {
-                        var consumerVal = FactValueCalculator.getFact(SOCKETS_ATTRIBUTE, consumer);
-                        var poolVal = parseInt(pool.getProductAttribute(SOCKETS_ATTRIBUTE));
-                        if (consumerVal !== null && poolVal !== null && consumerVal > 0 && poolVal > 0) {
-                            var required = Math.ceil(consumerVal/poolVal);
-                            // Don't count pools INSTANCE_MULTIPLIER times for "required", however let's be sure there
-                            // are enough available if we give it preference.
-                            if (pool.getAvailable()/pool.getInstanceMulti() >= required) {
-                                poolVal *= required;
-                                // Maximum of 9 with an exact match.  We prefer the closest match possible.
-                                // a half point is lost for each additional quantity
-                                // We double this value so that it trumps the date comparator
-                                var requirementpriority = Math.max(0, 10-Math.abs(consumerVal-poolVal)-(required/2)) * 2;
-                                priority += requirementpriority;
-                            }
-                        }
-                    }
-                    return priority;
-                };
                 var priority0 = get_pool_priority(pool0, consumer);
                 var priority1 = get_pool_priority(pool1, consumer);
 
@@ -2045,6 +2048,19 @@ var Autobind = {
                 return result;
             },
 
+            get_average_priority: function() {
+                if (this.average_priority === null) {
+                    var len = this.pools.length;
+                    var total = 0;
+                    for (var i=0; i < len; i++) {
+                        var pool = this.pools[i];
+                        total += get_pool_priority(pool, consumer);
+                    }
+                    this.average_priority = total/len;
+                }
+                return this.average_priority;
+            },
+
             /*
              * Returns a map of pool id to pool quantity for every pool that is required from this group
              */
@@ -2052,6 +2068,7 @@ var Autobind = {
                 if (this.pool_quantity !== null) {
                     return this.pool_quantity;
                 }
+                this.pool_quantity_map = {};
                 var result = Utils.getJsMap();
                 // Still in priority order, but reversed from prune_pools
                 var ents = this.get_all_ents(this.pools);
@@ -2325,55 +2342,42 @@ var Autobind = {
         var max_provide = 0;
         var stacked = false;
         var best = null;
-        var num_virt_only = 0;
-        var num_host_specific = 0;
         var total_poolquantity = Number.MAX_VALUE;
+        var best_avg_prio = 0;
 
         for (var i = 0; i < all_groups.length; i++) {
             var group = all_groups[i];
+            var group_avg_prio = group.get_average_priority();
             var intersection = this.get_common_products(installed, group).length;
-            var group_host_specific = group.get_num_host_specific();
-            var group_virt_only = group.get_num_virt_only();
             var group_poolquantity = group.get_total_quantity();
             // Choose group that provides the most installed products
             if (intersection > max_provide) {
-                max_provide = intersection;
                 stacked = group.stackable;
-                num_virt_only = group_virt_only;
-                num_host_specific = group_host_specific;
+                max_provide = intersection;
                 total_poolquantity = group_poolquantity;
+                best_avg_prio = group_avg_prio;
                 best = group;
             }
             if (intersection > 0 && intersection == max_provide) {
-                // Break ties with number of host specific pools
-                if (num_host_specific < group_host_specific) {
+                // Break ties with average pool priority
+                // TODO: use average priority
+                if (best_avg_prio < group_avg_prio) {
                    best = group;
                    stacked = group.stackable;
-                   num_virt_only = group_virt_only;
-                   num_host_specific = group_host_specific;
                    total_poolquantity = group_poolquantity;
+                   best_avg_prio = group_avg_prio;
                 }
-                if (num_host_specific == group_host_specific) {
-                    // Break ties with number of virt only pools
-                    if (num_virt_only < group_virt_only) {
+                if (best_avg_prio == group_avg_prio) {
+                    // Break ties with pool quantity
+                    if (total_poolquantity < group_poolquantity) {
                         best = group;
-                        num_virt_only = group_virt_only;
                         stacked = group.stackable;
                         total_poolquantity = group_poolquantity;
                     }
-                    if (num_virt_only == group_virt_only) {
-                        // Break ties by fewest pool quantities (total in the stack)
-                        if (group_poolquantity < total_poolquantity) {
+                    if (total_poolquantity == group_poolquantity) {
+                        if (stacked && !group.stackable) {
                             best = group;
-                            total_poolquantity = group_poolquantity;
                             stacked = group.stackable;
-                        }
-                        if (group_poolquantity == total_poolquantity) {
-                            // Break ties by prefering non-stacked entitlements
-                            if (stacked && !group.stackable) {
-                                best = group;
-                                stacked = group.stackable;
-                            }
                         }
                     }
                 }
