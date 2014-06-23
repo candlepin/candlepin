@@ -281,7 +281,7 @@ public class TestUtil {
         toReturn.setOwner(owner);
         toReturn.setPool(pool);
         toReturn.setOwner(owner);
-        toReturn.setConsumer(consumer);
+        consumer.addEntitlement(toReturn);
         if (cert != null) {
             cert.setEntitlement(toReturn);
             toReturn.getCertificates().add(cert);

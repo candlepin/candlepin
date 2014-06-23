@@ -17,11 +17,8 @@ package org.candlepin.model;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 
-import org.hibernate.Criteria;
 import org.hibernate.Query;
 import org.hibernate.Session;
-import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Restrictions;
 
 import java.util.Collection;
 import java.util.Date;
@@ -40,11 +37,13 @@ import javax.persistence.EntityManager;
 public class OwnerInfoCurator {
     private Provider<EntityManager> entityManager;
     private ConsumerTypeCurator consumerTypeCurator;
+    private ConsumerCurator consumerCurator;
 
     @Inject
     public OwnerInfoCurator(Provider<EntityManager> entityManager,
-        ConsumerTypeCurator consumerTypeCurator) {
+        ConsumerCurator consumerCurator, ConsumerTypeCurator consumerTypeCurator) {
         this.entityManager = entityManager;
+        this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
     }
 
@@ -59,25 +58,9 @@ public class OwnerInfoCurator {
             typeHash.put(type.getLabel(), type);
 
             // Do the real work
-            Criteria c = currentSession().createCriteria(Consumer.class)
-                .add(Restrictions.eq("owner", owner))
-                .add(Restrictions.eq("type", type));
-            c.setProjection(Projections.rowCount());
-            int consumers = ((Long) c.uniqueResult()).intValue();
-
-            c = currentSession().createCriteria(Entitlement.class)
-                .setProjection(Projections.sum("quantity"))
-                .createCriteria("consumer")
-                .add(Restrictions.eq("owner", owner))
-                .add(Restrictions.eq("type", type));
-
-            // If there's no rows summed, quantity returns null.
-            Object result = c.uniqueResult();
-            int entitlements = 0;
-            if (result != null) {
-                entitlements = ((Long) result).intValue();
-            }
-            info.addTypeTotal(type, consumers, entitlements);
+            int consumers = consumerCurator.getConsumerCount(owner, type);
+            int entCount = consumerCurator.getConsumerEntitlementCount(owner, type);
+            info.addTypeTotal(type, consumers, entCount);
 
             int count = getRequiresConsumerTypeCount(type, owner, now);
             info.addToConsumerTypeCountByPool(type, count);

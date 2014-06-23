@@ -548,4 +548,31 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         }
         return this.listByCriteria(crit, pageRequest);
     }
+
+    /**
+     * Finds the consumer count for an Owner based on type.
+     *
+     * @param owner the owner to count consumers for
+     * @param type the type of the Consumer to filter on.
+     * @return the number of consumers based on the type.
+     */
+    public int getConsumerCount(Owner owner, ConsumerType type) {
+        Criteria c = createSecureCriteria()
+            .add(Restrictions.eq("owner", owner))
+            .add(Restrictions.eq("type", type));
+        c.setProjection(Projections.rowCount());
+        return ((Long) c.uniqueResult()).intValue();
+    }
+
+    public int getConsumerEntitlementCount(Owner owner, ConsumerType type) {
+        Criteria c = createSecureCriteria()
+            .add(Restrictions.eq("owner", owner))
+            .add(Restrictions.eq("type", type))
+            .createAlias("entitlements", "ent")
+            .setMaxResults(0)
+            .setProjection(Projections.sum("ent.quantity"));
+        Long result = (Long) c.uniqueResult();
+        return result == null ? 0 : result.intValue();
+    }
+
 }
