@@ -30,7 +30,6 @@ import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
 import org.candlepin.model.Role;
-import org.candlepin.model.Subscription;
 import org.candlepin.model.User;
 import org.candlepin.resource.OwnerResource;
 import org.candlepin.test.DatabaseTestFixture;
@@ -84,16 +83,6 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
     public void testUeberProductIsCreated() throws Exception {
         or.createUeberCertificate(principal, owner.getKey());
         assertNotNull(productCurator.lookupByName(owner.getKey() + UEBER_PRODUCT));
-    }
-
-    @Test
-    public void testUeberSubscriptionIsCreated() throws Exception {
-        or.createUeberCertificate(principal, owner.getKey());
-        Subscription ueberSubscription = subAdapter.findUeberSubscription(owner);
-
-        assertNotNull(ueberSubscription);
-        assertTrue(ueberSubscription.getProduct() ==
-            productCurator.lookupByName(owner.getKey() + UEBER_PRODUCT));
     }
 
     @Test
