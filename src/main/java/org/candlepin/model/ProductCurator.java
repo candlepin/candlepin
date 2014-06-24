@@ -96,7 +96,6 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
         /*
          * Ensure that no circular reference exists
          */
-        validateReliesOn(entity);
 
         return super.create(entity);
     }
@@ -116,7 +115,6 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
         /*
          * Ensure that no circular reference exists
          */
-        validateReliesOn(entity);
 
         return super.merge(entity);
     }
@@ -183,29 +181,6 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
         }
     }
 
-    private void validateReliesOn(Product prod) {
-        if (relyPointsBackTo(prod.getId(), prod)) {
-            throw new BadRequestException(i18n.tr(
-                "You cannot create a circular reference for products that" +
-                " ''{0}'' relies on.",
-                prod.getId()));
-        }
-    }
-
-    private boolean relyPointsBackTo(String productIdToFind, Product prod) {
-        if (prod.getReliesOn() == null || prod.getReliesOn().size() == 0) { return false; }
-        if (prod.getReliesOn().contains(productIdToFind)) {
-            return true;
-        }
-        boolean pointsBack = false;
-        for (String id : prod.getReliesOn()) {
-            Product rely = this.find(id);
-            if (rely == null) { continue; }
-            pointsBack = pointsBack || relyPointsBackTo(productIdToFind, rely);
-        }
-        return pointsBack;
-    }
-
     @Transactional
     public void removeProductContent(Product prod, Content content) {
         for (ProductContent pc : prod.getProductContent()) {
@@ -228,16 +203,6 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
                 Restrictions.eq("derivedProvidedProd.id", prod.getId())))
             .setProjection(Projections.count("id"))
             .uniqueResult()) > 0;
-    }
-
-    public void addRely(Product prod, String relyId) {
-        prod.addRely(relyId);
-        merge(prod);
-    }
-
-    public void removeRely(Product prod, String relyId) {
-        prod.removeRely(relyId);
-        merge(prod);
     }
 
     @SuppressWarnings("unchecked")

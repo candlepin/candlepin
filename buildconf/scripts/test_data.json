@@ -1499,10 +1499,6 @@
             },
             "provided_products": [
                 "801"
-            ],
-            "relies_on": [
-                "awesomeos-server-basic",
-                "awesomeos-workstation-basic"
             ]
         },
         {
