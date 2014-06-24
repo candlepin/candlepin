@@ -326,21 +326,28 @@ function get_pool_priority(pool, consumer) {
      * Special case to match socket counts exactly if possible.  We don't want to waste a pair
      * of two socket subscriptions when we have a 4 socket sub.
      */
+    var attrsToCheck = [SOCKETS_ATTRIBUTE, CORES_ATTRIBUTE, RAM_ATTRIBUTE, VCPU_ATTRIBUTE];
     var complianceAttrs = getComplianceAttributes(consumer);
-    if (contains(complianceAttrs, SOCKETS_ATTRIBUTE)) {
-        var consumerVal = FactValueCalculator.getFact(SOCKETS_ATTRIBUTE, consumer);
-        var poolVal = parseInt(pool.getProductAttribute(SOCKETS_ATTRIBUTE));
-        if (consumerVal !== null && poolVal !== null && consumerVal > 0 && poolVal > 0) {
-            var required = Math.ceil(consumerVal/poolVal);
-            // Don't count pools INSTANCE_MULTIPLIER times for "required", however let's be sure there
-            // are enough available if we give it preference.
-            if (pool.getAvailable()/pool.getInstanceMulti() >= required) {
-                poolVal *= required;
-                // Maximum of 10 with an exact match.  We prefer the closest match possible.
-                // a half point is lost for every additional quantity
-                // We double this value so that it trumps the date comparator
-                var requirementpriority = Math.max(0, 10-(poolVal-consumerVal)-((required-1)/2)) * 2;
-                priority += requirementpriority;
+    for (var i=0; i<attrsToCheck.length; i++) {
+        var attribute = attrsToCheck[i];
+        if (contains(complianceAttrs, attribute)) {
+            var consumerVal = FactValueCalculator.getFact(attribute, consumer);
+            var poolVal = parseInt(pool.getProductAttribute(attribute));
+            if (consumerVal !== null && poolVal !== null && consumerVal > 0 && poolVal > 0) {
+                var required = Math.ceil(consumerVal/poolVal);
+                // Don't count pools INSTANCE_MULTIPLIER times for "required", however let's be sure there
+                // are enough available if we give it preference.
+                var multi = (attribute == SOCKETS_ATTRIBUTE) ? pool.getInstanceMulti() : 1;
+                if (pool.getAvailable()/multi >= required) {
+                    poolVal *= required;
+                    // Maximum of 10 with an exact match.  We prefer the closest match possible.
+                    // a half point is lost for every additional quantity
+                    // We double this value so that it trumps the date comparator
+                    var requirementpriority = Math.max(0, 10-(poolVal-consumerVal)-((required-1)/2)) * 2;
+                    priority += requirementpriority;
+                }
+            } else {
+                priority += 20;
             }
         }
     }
