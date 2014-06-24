@@ -1783,6 +1783,9 @@ var Autobind = {
             installed: installed_ids,
             consumer: consumer,
             attached_ents: attached_ents,
+            // pool_quantity and average_priority should only be used after prune_pools
+            // has been run.  They are metrics to pick the best available groups, once
+            // we've gotten rid of pools that won't be used.
             pool_quantity: null,
             average_priority: null,
 
@@ -2055,6 +2058,10 @@ var Autobind = {
                 return result;
             },
 
+            /*
+             * Don't use this before running prune_pools, otherwise the value will always be wrong.  This
+             * should be used afterward to compare the group with other entitlement groups
+             */
             get_average_priority: function() {
                 if (this.average_priority === null) {
                     var len = this.pools.length;
@@ -2070,6 +2077,9 @@ var Autobind = {
 
             /*
              * Returns a map of pool id to pool quantity for every pool that is required from this group
+             *
+             * Don't use this before running prune_pools, otherwise the value will always be wrong.  This
+             * should be used afterward to compare the group with other entitlement groups
              */
             get_pool_quantity: function() {
                 if (this.pool_quantity !== null) {
