@@ -18,6 +18,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.mockito.Mockito.mock;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -27,6 +28,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Response;
 
 import org.candlepin.auth.Access;
@@ -45,6 +47,7 @@ import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.IdentityCertificate;
+import org.candlepin.model.IdentityCertificateCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
@@ -59,6 +62,7 @@ import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestDateUtil;
 import org.candlepin.test.TestUtil;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -128,6 +132,12 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
         pool = createPoolAndSub(owner, product, 10L,
             TestDateUtil.date(2010, 1, 1), TestDateUtil.date(2020, 12, 31));
+    }
+
+    @After
+    public void cleanup() {
+        // cleanup the temp exports
+        TestUtil.cleanupDir("/tmp", "export");
     }
 
     @Test
@@ -249,6 +259,28 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
             null);
 
         assertEquals(USER_NAME, consumer.getUsername());
+    }
+
+    @Test
+    public void testReadOnlyUsersCanGenerateExports() {
+        // add an identity certificate for the export
+        IdentityCertificate idCert = TestUtil.createIdCert();
+        idCert.setId(null); // needs to be null to persist
+        idCert.getSerial().setId(null);  // needs to be null to persist
+        certSerialCurator.create(idCert.getSerial());
+        IdentityCertificateCurator idCurator =
+            injector.getInstance(IdentityCertificateCurator.class);
+        idCurator.create(idCert);
+        consumer.setIdCert(idCert);
+
+        consumer.setType(consumerTypeCurator.create(
+            new ConsumerType(ConsumerTypeEnum.CANDLEPIN)));
+        consumerCurator.update(consumer);
+        setupPrincipal(owner, Access.READ_ONLY);
+        securityInterceptor.enable();
+        consumerResource.exportData(mock(HttpServletResponse.class),
+            consumer.getUuid(), null, null, null);
+        // if no exception, we're good
     }
 
     @SuppressWarnings("unchecked")

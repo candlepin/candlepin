@@ -44,6 +44,7 @@ public class CandlepinCommonTestConfig extends Config {
             properties.put(ConfigProperties.CA_CERT_UPSTREAM,
                 "target/test/resources/certs/upstream");
             properties.put(ConfigProperties.CA_KEY, key);
+            properties.put(ConfigProperties.SYNC_WORK_DIR, "/tmp");
         }
         catch (URISyntaxException e) {
             throw new RuntimeException("Error loading cert/key resources!", e);
