@@ -10,6 +10,7 @@ repositories.remote << "http://central.maven.org/maven2/"
 require 'buildr/java/emma'
 require 'net/http'
 require 'rspec/core/rake_task'
+require 'rexml/document'
 require 'json'
 
 # Don't require findbugs by default.
@@ -403,6 +404,17 @@ task :deploy_check do
     # Http request failed
     Rake::Task[:deploy].invoke
   end
+end
+
+task :eclipse do
+  info("Fixing eclipse .classpath")
+  doc = REXML::Document.new(File.new('.classpath'))
+  elements = REXML::XPath.match(doc, "/classpath/classpathentry[@path='src/main/resources']")
+  elements.map! { |e| e.delete_attribute('output') }
+  doc.write(File.open('.classpath', 'w'))
+
+  # make the gettext output dir to silence eclipse errors
+  mkdir_p("target/generated-source")
 end
 
 #==========================================================================
