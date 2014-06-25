@@ -4,6 +4,7 @@ require 'candlepin_scenarios'
 describe 'Derived Products' do
   include CandlepinMethods
   include SpecUtils
+  include CertificateMethods
 
   before(:each) do
     @owner = create_owner random_string('instance_owner')
@@ -11,6 +12,13 @@ describe 'Derived Products' do
 
     #create_product() creates products with numeric IDs by default
     @eng_product = create_product()
+
+    @eng_product_content = create_content({:gpg_url => 'gpg_url',
+                                         :content_url => '/content/dist/rhel/$releasever/$basearch/os',
+                                         :metadata_expire => 6400})
+
+    @cp.add_content_to_product(@eng_product.id, @eng_product_content.id, true)
+
     installed_prods = [{'productId' => @eng_product['id'],
       'productName' => @eng_product['name']}]
 
@@ -22,7 +30,8 @@ describe 'Derived Products' do
     @physical_client = Candlepin.new(username=nil, password=nil,
         cert=@physical_sys['idCert']['cert'],
         key=@physical_sys['idCert']['key'])
-    @physical_client.update_consumer({:guestIds => [{'guestId' => @uuid}]})
+    @physical_client.update_consumer({:facts => {"system.certificate_version" => "3.2"},
+                                           :guestIds => [{'guestId' => @uuid}]})
 
     @guest1 = @user.register(random_string('guest'), :system, nil,
       {'virt.uuid' => @uuid, 'virt.is_guest' => 'true'}, nil, nil,
@@ -63,8 +72,6 @@ describe 'Derived Products' do
     @distributor_client = Candlepin.new(username=nil, password=nil,
         cert=@distributor['idCert']['cert'],
         key=@distributor['idCert']['key'])
-    #@distributor_client.update_consumer(
-    #    {:facts => {'@distributor_version' => 'sam-1.3'}})
   end
 
   # Complicated scenario, but we wanted to verify that if a derived SKU and an instance based
@@ -168,6 +175,49 @@ describe 'Derived Products' do
       message = JSON.parse(e.http_body)['displayMessage']
       message.should == expected_error
     end
+  end
+
+  it 'distributor entitlement cert includes derived content' do
+
+    dist_name = random_string("CP Distributor")
+    dist_version = create_distributor_version(dist_name,
+      "Subscription Asset Manager",
+      ["cert_v3", "derived_product"])
+
+    facts = { 'distributor_version' => dist_name}
+      @distributor_client.update_consumer(
+        {:facts => {'distributor_version' => dist_name}})
+
+    entitlement = @distributor_client.consume_pool @main_pool['id']
+    entitlement.should_not be_nil
+
+    json_body = extract_payload(@distributor_client.list_certificates[0]['cert'])
+    products = json_body['products']
+    products.size.should == 3
+
+    found = false;
+    products.each do |cert_product|
+      if cert_product['id'] == @eng_product.id
+         found = true;
+         content_sets = cert_product['content']
+         content_sets.size.should == 1
+         content_sets[0].id.should == @eng_product_content.id
+      end
+    end
+
+    found.should == true
+  end
+
+  it 'host entitlement cert does not include derived content' do
+    entitlement = @physical_client.consume_pool @main_pool['id']
+    entitlement.should_not be_nil
+
+    json_body = extract_payload(@physical_client.list_certificates[0]['cert'])
+    products = json_body['products']
+    products.size.should == 1
+    product = products[0]
+    product['id'].should == @datacenter_product.id
+    product['content'].size.should == 0
   end
 
   def verify_attribute(attrs, attr_name, attr_value)
