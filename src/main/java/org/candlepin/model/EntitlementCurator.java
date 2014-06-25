@@ -332,4 +332,33 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             .add(Restrictions.isNull("ss.id"));
         return activeNowQuery.list();
     }
+
+    /**
+     * For a given stack, find the eldest active entitlement with a subscription ID.
+     * This is used to look up the upstream subscription certificate to use to talk to
+     * the CDN.
+     *
+     * @param consumer the consumer
+     * @param stackId the ID of the stack
+     * @return the eldest active entitlement with a subscription ID, or null if none can
+     * be found.
+     */
+    public Entitlement findUpstreamEntitlementForStack(Consumer consumer, String stackId) {
+        Date currentDate = new Date();
+        Criteria activeNowQuery = currentSession().createCriteria(Entitlement.class)
+            .add(Restrictions.eq("consumer", consumer))
+            .createAlias("pool", "ent_pool")
+            .createAlias("ent_pool.productAttributes", "attrs")
+            .add(Restrictions.le("ent_pool.startDate", currentDate))
+            .add(Restrictions.ge("ent_pool.endDate", currentDate))
+            .add(Restrictions.eq("attrs.name", "stacking_id"))
+            .add(Restrictions.eq("attrs.value", stackId))
+            .add(Restrictions.isNull("ent_pool.sourceEntitlement"))
+            .createAlias("ent_pool.sourceSubscription", "sourceSub")
+                .add(Restrictions.isNotNull("sourceSub.id"))
+            .addOrder(Order.asc("created")) // eldest entitlement
+            .setMaxResults(1);
+        return (Entitlement) activeNowQuery.uniqueResult();
+    }
+
 }
