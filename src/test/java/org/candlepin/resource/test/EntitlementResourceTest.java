@@ -15,121 +15,118 @@
 package org.candlepin.resource.test;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.when;
 
+import java.util.Locale;
+
+import org.candlepin.controller.CandlepinPoolManager;
+import org.candlepin.controller.Entitler;
+import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.Consumer;
-import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Entitlement;
+import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
-import org.candlepin.model.Pool;
-import org.candlepin.model.Product;
-import org.candlepin.test.DatabaseTestFixture;
-import org.candlepin.test.TestDateUtil;
+import org.candlepin.model.SourceStack;
+import org.candlepin.resource.EntitlementResource;
+import org.candlepin.resource.SubscriptionResource;
+import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.TestUtil;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
+import org.xnap.commons.i18n.I18n;
+import org.xnap.commons.i18n.I18nFactory;
 
 /**
- * ConsumerResourceTest
+ * EntitlementResourceTest
  */
-public class EntitlementResourceTest extends DatabaseTestFixture {
+@RunWith(MockitoJUnitRunner.class)
+public class EntitlementResourceTest {
 
+    private I18n i18n;
     private Consumer consumer;
-    private Product product;
-    private Pool ep;
     private Owner owner;
+    @Mock private ProductServiceAdapter prodAdapter;
+    @Mock private EntitlementCurator entitlementCurator;
+    @Mock private ConsumerCurator consumerCurator;
+    @Mock private CandlepinPoolManager poolManager;
+    @Mock private Entitler entitler;
+    @Mock private SubscriptionResource subResource;
 
-    // private EntitlementResource eapi;
-    // private Entitler entitler;
+    private EntitlementResource entResource;
 
     @Before
-    public void createTestObjects() {
-        owner = createOwner();
-        ownerCurator.create(owner);
-
-        ConsumerType type = new ConsumerType("some-consumer-type");
-        consumerTypeCurator.create(type);
-
-        consumer = TestUtil.createConsumer(type, owner);
-        consumerCurator.create(consumer);
-
-        product = TestUtil.createProduct();
-        productCurator.create(product);
-
-        ep = createPoolAndSub(owner, product, 10L, TestDateUtil.date(
-            2010, 1, 1), TestDateUtil.date(2020, 12, 31));
-        poolCurator.create(ep);
-
-        // entitler = injector.getInstance(Entitler.class);
-
-        // eapi = new EntitlementResource(
-        // poolCurator, entitlementCurator,
-        // consumerCurator, productAdapter, subAdapter, entitler);
-
-        dateSource.currentDate(TestDateUtil.date(2010, 1, 13));
+    public void before() {
+        i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
+        entResource = new EntitlementResource(prodAdapter, entitlementCurator,
+            consumerCurator, poolManager, i18n, entitler, subResource);
+        owner = new Owner("admin");
+        consumer = new Consumer("myconsumer", "bill", owner,
+            TestUtil.createConsumerType());
     }
 
     @Test
-    public void testEntitleOwnerHasNoEntitlements() {
-        // TODO
+    public void getUpstreamCertSimple() {
+        Entitlement e = TestUtil.createEntitlement();
+        e.setId("entitlementID");
+        when(entitlementCurator.find(eq(e.getId()))).thenReturn(e);
+
+        String expected = "HELLO";
+        // Mock out the PEM text so we can verify without actually generating a cert:
+        when(subResource.getSubCertAsPem(eq(e.getPool().getSubscriptionId())))
+            .thenReturn(expected);
+        String result = entResource.getUpstreamCert(e.getId());
+        assertEquals(expected, result);
+    }
+
+    @Test(expected = NotFoundException.class)
+    public void getUpstreamCertSimpleNothingFound() {
+        // Entitlement from stack sub-pool:
+        Entitlement e = TestUtil.createEntitlement();
+        e.setId("entitlementID");
+        e.getPool().setSourceSubscription(null);
+        when(entitlementCurator.find(eq(e.getId()))).thenReturn(e);
+        entResource.getUpstreamCert(e.getId());
     }
 
     @Test
-    public void testEntitleOwnerHasNoAviailableEntitlements() {
-        // TODO
+    public void getUpstreamCertStackSubPool() {
+        Entitlement parentEnt = TestUtil.createEntitlement();
+        parentEnt.setId("parentEnt");
+        when(entitlementCurator.findUpstreamEntitlementForStack(consumer, "mystack"))
+            .thenReturn(parentEnt);
+
+        String expected = "HELLO";
+        // Mock out the PEM text so we can verify without actually generating a cert:
+        when(subResource.getSubCertAsPem(eq(parentEnt.getPool().getSubscriptionId())))
+            .thenReturn(expected);
+
+        // Entitlement from stack sub-pool:
+        Entitlement e = TestUtil.createEntitlement();
+        e.setId("entitlementID");
+        e.getPool().setSourceStack(new SourceStack(consumer, "mystack"));
+        when(entitlementCurator.find(eq(e.getId()))).thenReturn(e);
+
+        String result = entResource.getUpstreamCert(e.getId());
+        assertEquals(expected, result);
     }
 
-    @Test
-    public void testEntitleConsumerAlreadyEntitledForProduct() {
-        // TODO
+    @Test(expected = NotFoundException.class)
+    public void getUpstreamCertStackSubPoolNothingFound() {
+        when(entitlementCurator.findUpstreamEntitlementForStack(consumer, "mystack"))
+            .thenReturn(null);
+
+        // Entitlement from stack sub-pool:
+        Entitlement e = TestUtil.createEntitlement();
+        e.setId("entitlementID");
+        e.getPool().setSourceStack(new SourceStack(consumer, "mystack"));
+        when(entitlementCurator.find(eq(e.getId()))).thenReturn(e);
+
+        entResource.getUpstreamCert(e.getId());
     }
 
-    // @Ignore
-    // public void testHasEntitlement() {
-    //
-    // eapi.entitleByProduct(consumer.getUuid(), product.getLabel());
-    //
-    // // TODO: Disabling this test, boils into ObjectFactory things that need
-    // // to be fixed before we can do this check! Sorry! :) - dgoodwin
-    // // assertTrue(eapi.hasEntitlement(consumer.getUuid(),
-    // product.getUuid()));
-    // }
-
-    @Test
-    @Ignore
-    public void testJson() {
-//        ClientConfig cc = new DefaultClientConfig();
-//        Client c = Client.create(cc);
-//
-//
-//
-//        Object[] params = new Object[2];
-//        params[0] = consumer;
-//        params[1] = product;
-//        List<Object> aparams = new ArrayList<Object>();
-//        aparams.add(consumer);
-//        aparams.add(product);
-//
-//        WebResource postresource =
-//            c.resource("http://localhost:8080/candlepin/entitlement/foo/");
-//        postresource.accept("application/json").type("application/json").post(consumer);
-
-
-        // System.out.println(jto.getName());
-        // jto =
-        // getresource.accept("application/json").get(JsonTestObject.class);
-        // assertEquals("testname", jto.getName());
-        // assertEquals("AEF", jto.getUuid());
-    }
-
-    @Test
-    public void testCompareTo() {
-        Entitlement e1 = TestUtil.createEntitlement();
-        Entitlement e2 = TestUtil.createEntitlement(e1.getOwner(), e1.getConsumer(), e1.getPool(), null);
-        e2.getCertificates().addAll(e1.getCertificates());
-
-        assertTrue(e1.equals(e2));
-        assertEquals(0, e1.compareTo(e2));
-    }
 }
