@@ -24,6 +24,7 @@ import com.google.inject.persist.Transactional;
 import org.hibernate.Criteria;
 import org.hibernate.ReplicationMode;
 import org.hibernate.criterion.CriteriaSpecification;
+import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
 import org.slf4j.Logger;
@@ -319,4 +320,32 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             .add(Restrictions.isNull("ss.id"));
         return activeNowQuery.list();
     }
+
+    /**
+     * For a given stack, find the eldest active entitlement with a subscription ID.
+     * This is used to look up the upstream subscription certificate to use to talk to
+     * the CDN.
+     *
+     * @param consumer the consumer
+     * @param stackId the ID of the stack
+     * @return the eldest active entitlement with a subscription ID, or null if none can
+     * be found.
+     */
+    public Entitlement findUpstreamEntitlementForStack(Consumer consumer, String stackId) {
+        Date currentDate = new Date();
+        Criteria activeNowQuery = currentSession().createCriteria(Entitlement.class)
+            .add(Restrictions.eq("consumer", consumer))
+            .createAlias("pool", "ent_pool")
+            .createAlias("ent_pool.productAttributes", "attrs")
+            .add(Restrictions.le("ent_pool.startDate", currentDate))
+            .add(Restrictions.ge("ent_pool.endDate", currentDate))
+            .add(Restrictions.eq("attrs.name", "stacking_id"))
+            .add(Restrictions.eq("attrs.value", stackId))
+            .add(Restrictions.isNull("ent_pool.sourceEntitlement"))
+            .add(Restrictions.isNotNull("ent_pool.subscriptionId"))
+            .addOrder(Order.asc("created")) // eldest entitlement
+            .setMaxResults(1);
+        return (Entitlement) activeNowQuery.uniqueResult();
+    }
+
 }

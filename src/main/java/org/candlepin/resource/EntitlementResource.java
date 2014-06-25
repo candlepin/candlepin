@@ -32,26 +32,29 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
+import org.apache.commons.lang.StringUtils;
 import org.candlepin.auth.interceptor.Verify;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
+import org.candlepin.model.Cdn;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
-import org.candlepin.model.Cdn;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.Pool;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.paging.Paginate;
 import org.candlepin.pinsetter.tasks.RegenProductEntitlementCertsJob;
 import org.candlepin.service.ProductServiceAdapter;
-import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.util.Util;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
@@ -61,29 +64,29 @@ import com.google.inject.Inject;
  */
 @Path("/entitlements")
 public class EntitlementResource {
+    private static Logger log = LoggerFactory.getLogger(EntitlementResource.class);
     private final ConsumerCurator consumerCurator;
     private PoolManager poolManager;
     private final EntitlementCurator entitlementCurator;
-    private SubscriptionServiceAdapter subService;
     private I18n i18n;
     private ProductServiceAdapter prodAdapter;
     private Entitler entitler;
+    private SubscriptionResource subResource;
 
     @Inject
     public EntitlementResource(ProductServiceAdapter prodAdapter,
             EntitlementCurator entitlementCurator,
             ConsumerCurator consumerCurator,
-            SubscriptionServiceAdapter subService,
             PoolManager poolManager,
-            I18n i18n, Entitler entitler) {
+            I18n i18n, Entitler entitler, SubscriptionResource subResource) {
 
         this.entitlementCurator = entitlementCurator;
-        this.subService = subService;
         this.consumerCurator = consumerCurator;
         this.i18n = i18n;
         this.prodAdapter = prodAdapter;
         this.poolManager = poolManager;
         this.entitler = entitler;
+        this.subResource = subResource;
     }
 
     private void verifyExistence(Object o, String id) {
@@ -221,7 +224,7 @@ public class EntitlementResource {
      * public CdnInfo getEntitlementUpstreamCert
      * will also @Produces(MediaType.APPLICATION_JSON)
      *
-     * @param dbid entitlement id.
+     * @param entitlementId entitlement id.
      * @return the subscription cert for the given id.
      * @httpcode 404
      * @httpcode 200
@@ -229,20 +232,42 @@ public class EntitlementResource {
     @GET
     @Produces(MediaType.TEXT_PLAIN)
     @Path("{dbid}/upstream_cert")
-    public String getEntitlementUpstreamCert(
-        @PathParam("dbid") String dbid) {
-        Entitlement ent = entitlementCurator.find(dbid);
-        // optimization: don't do entitlement regen here, as we don't read
-        // the entitlement certificate in this call.
-
+    public String getUpstreamCert(
+        @PathParam("dbid") String entitlementId) {
+        Entitlement ent = entitlementCurator.find(entitlementId);
         if (ent == null) {
             throw new NotFoundException(i18n.tr(
-                "Entitlement with ID ''{0}'' could not be found.", dbid));
+                "Entitlement with ID ''{0}'' could not be found.", entitlementId));
         }
 
-        String subscriptionId = ent.getPool().getSubscriptionId();
-        SubscriptionResource subResource = new SubscriptionResource(subService,
-            consumerCurator, i18n);
+        String subscriptionId = null;
+        Pool entPool = ent.getPool();
+        if (StringUtils.isBlank(entPool.getSourceStackId())) {
+            subscriptionId = entPool.getSubscriptionId();
+        }
+        /*
+         * A derived pool originating from a stacked parent pool will have no subscription
+         * ID as the pool is technically from many subscriptions. (i.e. all the
+         * entitlements in the stack) In this case we must look up an active entitlement
+         * in the hosts stack, and use this as our upstream certificate.
+         */
+        else {
+            log.debug("Entitlement is from a stack derived pool, searching for oldest " +
+                "active entitlements in source stack.");
+            Entitlement e = entitlementCurator.findUpstreamEntitlementForStack(
+                entPool.getSourceConsumer(),
+                entPool.getSourceStackId());
+            if (e != null) {
+                subscriptionId = e.getPool().getSubscriptionId();
+            }
+        }
+
+        if (StringUtils.isEmpty(subscriptionId)) {
+            throw new NotFoundException(
+                i18n.tr("Unable to find upstream certificate for entitlement: {0}",
+                    entitlementId));
+        }
+
         return subResource.getSubCertAsPem(subscriptionId);
         // Cdn cdn = subResource.getSubscription(subscriptionId).getCdn();
         // CdnInfo result = new CdnInfo(cdn, subResource.getSubCertAsPem(subscriptionId));

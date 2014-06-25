@@ -17,6 +17,7 @@ package org.candlepin.model.test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import org.candlepin.model.Consumer;
@@ -434,6 +435,66 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         List<Entitlement> results = entitlementCurator.findByStackId(consumer, stackingId);
         assertEquals(1, results.size());
         assertEquals(createdEntitlements.get(4), results.get(0));
+    }
+
+    @Test
+    public void findUpstreamEntitlementForStack() {
+        String stackingId = "test_stack_id";
+        Product product = TestUtil.createProduct();
+        product.setAttribute("stacking_id", stackingId);
+        productCurator.create(product);
+
+        Pool futurePool = createPoolAndSub(owner, product, 1L,
+            createDate(2020, 1, 1), createDate(2021, 1, 1));
+        poolCurator.create(futurePool);
+        bind(consumer, futurePool);
+
+        Pool currentPool = createPoolAndSub(owner, product, 1L,
+            dateSource.currentDate(), createDate(2020, 1, 1));
+        poolCurator.create(currentPool);
+        bind(consumer, currentPool);
+
+        Pool anotherCurrentPool = createPoolAndSub(owner, product, 1L,
+            dateSource.currentDate(), createDate(2020, 1, 1));
+        poolCurator.create(anotherCurrentPool);
+        bind(consumer, anotherCurrentPool);
+
+        // The future entitlement should have been omitted, and the eldest active
+        // entitlement should have been selected:
+        Entitlement result = entitlementCurator.findUpstreamEntitlementForStack(
+            consumer, stackingId);
+        assertNotNull(result);
+        assertEquals(currentPool, result.getPool());
+    }
+
+    @Test
+    public void findUpstreamEntitlementForStackNothingActive() {
+        String stackingId = "test_stack_id";
+        Product product = TestUtil.createProduct();
+        product.setAttribute("stacking_id", stackingId);
+        productCurator.create(product);
+
+        Pool futurePool = createPoolAndSub(owner, product, 1L,
+            createDate(2020, 1, 1), createDate(2021, 1, 1));
+        poolCurator.create(futurePool);
+        bind(consumer, futurePool);
+
+        // The future entitlement should have been omitted:
+        Entitlement result = entitlementCurator.findUpstreamEntitlementForStack(
+            consumer, stackingId);
+        assertNull(result);
+    }
+
+    @Test
+    public void findUpstreamEntitlementForStackNoResults() {
+        String stackingId = "test_stack_id";
+        Product product = TestUtil.createProduct();
+        product.setAttribute("stacking_id", stackingId);
+        productCurator.create(product);
+
+        Entitlement result = entitlementCurator.findUpstreamEntitlementForStack(
+            consumer, stackingId);
+        assertNull(result);
     }
 
     private Entitlement bind(Consumer consumer, Pool pool) {
