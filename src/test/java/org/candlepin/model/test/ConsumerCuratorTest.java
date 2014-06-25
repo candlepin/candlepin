@@ -99,28 +99,6 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void addGuestConsumersReversedEndianGuestId() {
-        Consumer consumer = new Consumer("hostConsumer", "testUser", owner, ct);
-        consumerCurator.create(consumer);
-        Consumer gConsumer1 = new Consumer("guestConsumer1", "testUser", owner, ct);
-        gConsumer1.getFacts().put("virt.uuid", "06F81B41-AAC0-7685-FBE9-79AA4A326511");
-        consumerCurator.create(gConsumer1);
-        Consumer gConsumer2 = new Consumer("guestConsumer2", "testUser", owner, ct);
-        gConsumer2.getFacts().put("virt.uuid", "4C4C4544-0046-4210-8031-C7C04F445831");
-        consumerCurator.create(gConsumer2);
-        // Reversed endian, first 3 sections
-        consumer.addGuestId(new GuestId("411bf806-c0aa-8576-fbe9-79aa4a326511"));
-        // matches a guests facts, case insensitive
-        consumer.addGuestId(new GuestId("4c4c4544-0046-4210-8031-c7c04f445831"));
-        // Doesn't match a registered guest consumer
-        consumer.addGuestId(new GuestId("43e41def-e9ae-4b6b-b8f4-942c8b69a39e"));
-        consumerCurator.update(consumer);
-
-        List<Consumer> guests = consumerCurator.getGuests(consumer);
-        assertTrue(guests.size() == 2);
-    }
-
-    @Test
     public void caseInsensitiveVirtUuidMatching() {
         Consumer host = new Consumer("hostConsumer", "testUser", owner, ct);
         consumerCurator.create(host);
@@ -223,23 +201,6 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
         Consumer guestHost = consumerCurator.getHost(
             "daf0fe10-956b-7b4e-b7dc-b383ce681ba8", owner);
-        assertEquals(host, guestHost);
-    }
-
-    @Test
-    public void oneHostRegisteredReverseEndian() {
-        Consumer host = new Consumer("hostConsumer", "testUser", owner, ct);
-        consumerCurator.create(host);
-
-        Consumer gConsumer1 = new Consumer("guestConsumer1", "testUser", owner, ct);
-        gConsumer1.getFacts().put("virt.uuid", "daf0fe10-956b-7b4e-b7dc-b383ce681ba8");
-        consumerCurator.create(gConsumer1);
-
-        host.addGuestId(new GuestId("DAF0FE10-956B-7B4E-B7DC-B383CE681BA8"));
-        consumerCurator.update(host);
-
-        Consumer guestHost = consumerCurator.getHost(
-            "10fef0da-6b95-4e7b-b7dc-b383ce681ba8", owner);
         assertEquals(host, guestHost);
     }
 

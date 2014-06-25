@@ -22,7 +22,6 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.collections.Closure;
 import org.apache.commons.collections.ClosureUtils;
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,7 +41,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -348,50 +346,5 @@ public class Util {
             fullClassName = fullClassName.substring(firstChar);
         }
         return fullClassName;
-    }
-
-    public static String reverseEndian(String in) {
-        in = (in.length() % 2 != 0) ? "0" + in : in;
-        StringBuilder sb = new StringBuilder();
-        for (int i = in.length() - 2; i >= 0; i += (i % 2 == 0) ? 1 : -3) {
-            sb.append(in.charAt(i));
-        }
-        return sb.toString();
-    }
-
-    public static String transformUuid(String uuid) {
-        String[] partitions = uuid.split("-");
-        List<String> newPartitions = new LinkedList<String>();
-        // We only want to revese the first three partitions
-        for (int i = 0; i < partitions.length; i++) {
-            newPartitions.add(i < 3 ? reverseEndian(partitions[i]) : partitions[i]);
-        }
-        return StringUtils.join(newPartitions, '-');
-    }
-
-    /*
-     * Gets possible guest uuids regardless of endianness. When given a non-uuid,
-     * this should return a list of length 1, with the given value.  All values
-     * returned should be lower case
-     */
-    public static List<String> getPossibleUuids(String id) {
-        if (id != null) {
-            // We want to use lower case everywhere we can in order
-            // to do less work at query time.
-            id = id.toLowerCase();
-        }
-        List<String> results = new LinkedList<String>();
-        results.add(id);
-        if (isUuid(id)) {
-            results.add(transformUuid(id));
-        }
-        return results;
-    }
-
-    private static final String UUID_REGEX = "[a-fA-F0-9]{8}-" +
-        "[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}";
-
-    public static boolean isUuid(String uuid) {
-        return uuid != null && uuid.matches(UUID_REGEX);
     }
 }
