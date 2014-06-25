@@ -87,6 +87,9 @@ describe 'Consumer Facts' do
       'uname.system' => 'x86_64',
     }
     initial_date = @consumer.updated
+
+    # MySQL drops millis, we need to wait a bit longer
+    sleep 1
     @consumer_api.update_consumer({:facts => updated_facts})
 
     updated_consumer = @consumer_api.get_consumer
