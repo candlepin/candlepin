@@ -145,6 +145,11 @@ describe 'Export', :serial => true do
     File.exists?(File.join(prod_dir, "#{@exporter.products[:derived_provided_prod].id}.pem")).should be_true
   end
 
+  it 'should allow manifest creation with read only user' do
+    @exporter = StandardExporter.new
+    @cp_export = @exporter.create_candlepin_export_with_ro_user()
+  end
+
 end
 
 

@@ -1837,8 +1837,7 @@ public class ConsumerResource {
     @Path("{consumer_uuid}/export")
     public File exportData(
         @Context HttpServletResponse response,
-        @PathParam("consumer_uuid")
-        @Verify(value = Consumer.class, require = Access.ALL) String consumerUuid,
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         @QueryParam("cdn_label") String cdnLabel,
         @QueryParam("webapp_prefix") String webAppPrefix,
         @QueryParam("api_url") String apiUrl) {
