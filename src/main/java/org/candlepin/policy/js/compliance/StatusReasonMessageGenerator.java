@@ -114,7 +114,7 @@ public class StatusReasonMessageGenerator {
 
     private String getMarketingName(String id, Consumer consumer, Date onDate) {
         for (Entitlement e : getEntitlementsOnDate(consumer, onDate)) {
-            if (e.getId().equals(id)) {
+            if (e.getId() != null && e.getId().equals(id)) {
                 return e.getPool().getProductName();
             }
         }

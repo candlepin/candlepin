@@ -15,12 +15,11 @@
 package org.candlepin.resource.util;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -41,6 +40,8 @@ public class ConsumerInstalledProductEnricher {
     private static final String RED_STATUS = "red";
     private static final String YELLOW_STATUS = "yellow";
     private static final String GREEN_STATUS = "green";
+
+    private static final String[] GLOBAL_ATTRS = {"guest_limit"};
 
     private ComplianceStatus status;
     private Consumer consumer;
@@ -107,252 +108,67 @@ public class ConsumerInstalledProductEnricher {
         // the same thing, either it's the range of time you're green, or the range of
         // time you're yellow or better. i.e. if I'm green now and then going to be yellow,
         // the date range should show me the whole span of time until I go red.
-
-        // We only return a DateRange for valid products.
-        String status = getStatus(product.getId());
-
-        // This just saves some time, not necessary for correctness
-        if (status == RED_STATUS) {
+        String prodStatus = getStatus(product.getId());
+        if (prodStatus == RED_STATUS) {
             return null;
         }
-
-        // The status is GREEN_STATUS so we should definitely get entitlements from the
-        // consumer. Check to make sure.
+        Date current = status.getDate();
         List<Entitlement> allEntitlements = getEntitlementsForProduct(product);
-        if (allEntitlements.isEmpty()) {
+        List<Date> dates = getDatesAndNowSorted(current, allEntitlements);
+        if (dates.size() <= 1) {
             return null;
         }
-
-        List<Entitlement> possible = getSortedEntitlementsSpanningStatusDate(
-            allEntitlements);
-        if (possible.isEmpty()) {
-            return null;
-        }
-
-        /*
-         * Given NOW, start date == the first date in the past where there is a
-         * gap in the entitlements for a product. AND end date would be first
-         * date in the future that the product is not fully covered by an
-         * entitlement. So the markers for end and start dates of the range are
-         * when you are NOT green.
-         *
-         * this is where this method gets interesting. We want to loop through
-         * the sorted list of possible entitlements, checking each one is valid
-         * for its start and end dates. Also, comparing the current entitlement
-         * with the previous entitlement processed.
-         *
-         * We adjust the end date to match the end date of the latest
-         * entitlement until there is no gap in coverage.
-         */
+        int currentIdx = dates.indexOf(current);
         Date startDate = null;
         Date endDate = null;
-        Entitlement lastProcessed = null;
-        for (int i = 0; i < possible.size(); i++) {
-            boolean last = i == possible.size() - 1;
-            Entitlement next = possible.get(i);
-            Date entStart = next.getStartDate();
-            Date entEnd = next.getEndDate();
-
-            boolean entValidOnStart;
-            boolean entValidOnEnd;
-            if (status == GREEN_STATUS) {
-                entValidOnStart = isEntitlementValidOnDate(next, possible, entStart);
-                entValidOnEnd = isEntitlementValidOnDate(next, possible, entEnd);
+        for (int i = currentIdx - 1; i >= 0; i--) {
+            if (!isProductValidOnDate(product.getId(), dates.get(i))) {
+                startDate = dates.get(i + 1);
+                break;
             }
-            else {
-                entValidOnStart = true;
-                entValidOnEnd = true;
-            }
-
-            boolean validAfterLast = true;
-
-            // compare against the previous one if we're not the last item
-            // this is key, because if the currently processed entitlement (i.e.
-            // next) is not valid within the date range of the previous
-            // entitlement, we have found a gap and need to adjust the start
-            // date.
-            if (lastProcessed != null && !last &&
-                lastProcessed.getEndDate().before(next.getEndDate())) {
-
-                Date afterLastProcessed = getDatePlusOneSecond(lastProcessed.getEndDate());
-
-                if (status == GREEN_STATUS) {
-                    // bz#959967: pass in next instead of lastProcessed
-                    validAfterLast = isEntitlementValidOnDate(next, possible,
-                        afterLastProcessed);
-                }
-                else {
-                    validAfterLast = isEntitlementDateValid(next, afterLastProcessed);
-                }
-                if (!validAfterLast) {
-                    startDate = null;
-                }
-            }
-
-            // adjust the start date only if the new start date is BEFORE the
-            // previous entitlement's start date, otherwise leave it alone.
-            if (entValidOnStart && validAfterLast) {
-                if (startDate == null || startDate.after(entStart)) {
-                    startDate = entStart;
-                }
-            }
-
-            // adjust the end date only if the new end date is AFTER the
-            // previous entitlement's end date, otherwise leave it alone.
-            if (entValidOnEnd && (endDate == null || endDate.before(entEnd))) {
-                endDate = entEnd;
-            }
-
-            lastProcessed = next;
+        }
+        if (startDate == null) {
+            startDate = new Date(dates.get(0).getTime());
         }
 
-        if (startDate == null || endDate == null) {
-            return null;
+        for (int i = currentIdx + 1; i < dates.size(); i++) {
+            if (!isProductValidOnDate(product.getId(), dates.get(i))) {
+                endDate = new Date(dates.get(i).getTime() - 1);
+                break;
+            }
         }
-
         return new DateRange(startDate, endDate);
     }
 
-    /**
-     * Determine whether the specified entitlement is valid on the specified date.
-     *
-     * An entitlement is considered valid if:
-     * <pre>
-     *     1) Its stack is valid, or there is a non-stackable entitlement covering this
-     *        date.
-     *
-     *     2) the entitlement is compliant according to the rules file (socket coverage).
-     *
-     *     3) the non-stacking entitlement spans the specified date.
-     * </pre>
-     *
-     * @param ent the entitlement to check.
-     * @param possible a list of possible entitlements to check (entitlements already
-     *                 filtered b product id.
-     * @param date the date to check.
-     * @return true if the entitlement is valid on this date, false otherwise.
-     */
-    private boolean isEntitlementValidOnDate(Entitlement ent,
-        List<Entitlement> possible, Date date) {
-        boolean entToCheckActiveOnDate = isEntitlementDateValid(ent, date);
-
-        // Check if entitlement is stackable.
-        if (ent.getPool().hasProductAttribute("stacking_id")) {
-            List<Entitlement> activeOnDate = new ArrayList<Entitlement>();
-            for (Entitlement next : possible) {
-                DateRange validRange = new DateRange(next.getStartDate(),
-                    next.getEndDate());
-                if (validRange.contains(date)) {
-                    activeOnDate.add(next);
-                }
-            }
-            // Entitlement is valid if its stack is valid.
-            String stackId = ent.getPool().getProductAttribute("stacking_id").getValue();
-            boolean isStackCompliant = this.complianceRules.isStackCompliant(this.consumer,
-                stackId, activeOnDate);
-            if (isStackCompliant) {
-                return true;
-            }
-
-            // There may be an entitlement already covering the product on this date.
-            for (Entitlement next : activeOnDate) {
-                if (!next.getPool().hasProductAttribute("stacking_id") &&
-                    entToCheckActiveOnDate) {
-                    return true;
-                }
-            }
-            return false;
+    private boolean isProductValidOnDate(String prodId, Date date) {
+        if (this.getStatus(prodId) == GREEN_STATUS) {
+            // Calculating compliantUntil is expensive, and useless in this case
+            ComplianceStatus status = complianceRules.getStatus(consumer, date, false);
+            return status.getCompliantProducts().containsKey(prodId);
         }
-        // Non-stackable entitlement may not be valid according to the rules file.
-        else if (!complianceRules.isEntitlementCompliant(this.consumer, ent, date)) {
-            return false;
-        }
-
-        // At this point, we consider the entitlement valid if the entitlement
-        // covers the specified date.
-        return entToCheckActiveOnDate;
+        return !getConsumerEntsProvidingOnDate(prodId, date).isEmpty();
     }
 
-    private boolean isEntitlementDateValid(Entitlement ent, Date date) {
-        DateRange entToCheckRange = new DateRange(ent.getStartDate(), ent.getEndDate());
-        return entToCheckRange.contains(date);
-    }
-
-    /**
-     * Gets a list of entitlements that form a continuous span across the date
-     * specified in {@link ComplianceStatus}. Stacking is not considered here.
-     *
-     * @param allEntitlements all entitlements to check.
-     * @return a list of all entitlements making up a span across status.date.
-     */
-    private List<Entitlement> getSortedEntitlementsSpanningStatusDate(
-        List<Entitlement> allEntitlements) {
-        List<Entitlement> sorted = sortByStartDate(allEntitlements);
-
-        List<List<Entitlement>> groups = new ArrayList<List<Entitlement>>();
-        List<Entitlement> nextGroup = new ArrayList<Entitlement>();
-        for (int i = 0; i < sorted.size(); i++) {
-            Entitlement ent = sorted.get(i);
-            nextGroup.add(ent);
-
-            boolean last = i == sorted.size() - 1;
-            if (last || gapExistsBetween(ent, sorted.get(i + 1))) {
-                groups.add(new ArrayList<Entitlement>(nextGroup));
-                nextGroup.clear();
-            }
-
-        }
-
-        Date statusDate = status.getDate();
-        for (List<Entitlement> group : groups) {
-            for (Entitlement ent : group) {
-                DateRange range = new DateRange(ent.getStartDate(), ent.getEndDate());
-                if (range.contains(statusDate)) {
-                    return group;
-                }
+    private List<Entitlement> getConsumerEntsProvidingOnDate(String productId, Date date) {
+        List<Entitlement> active = new LinkedList<Entitlement>();
+        for (Entitlement ent : consumer.getEntitlements()) {
+            if (ent.isValidOnDate(date) && ent.getPool().provides(productId)) {
+                active.add(ent);
             }
         }
-        return new ArrayList<Entitlement>();
+        return active;
     }
 
-    /**
-     * Determine if a gap exists b/w the specified entitlements. A gap may exist
-     * either before or after the start date of ent1.
-     *
-     * @param ent1
-     * @param ent2
-     * @return true if a gap exists, false otherwise.
-     */
-    private boolean gapExistsBetween(Entitlement ent1, Entitlement ent2) {
-
-        DateRange range1 = new DateRange(ent1.getStartDate(), ent1.getEndDate());
-        if (range1.contains(ent2.getStartDate()) || range1.contains(ent2.getEndDate())) {
-            return false;
+    private List<Date> getDatesAndNowSorted(Date current, List<Entitlement> ents) {
+        Set<Date> dates = new HashSet<Date>();
+        dates.add(current);
+        for (Entitlement ent : ents) {
+            dates.add(ent.getStartDate());
+            Date end = new Date(ent.getEndDate().getTime() + 1);
+            dates.add(end);
         }
-
-        DateRange range2 = new DateRange(ent2.getStartDate(), ent2.getEndDate());
-        if (range2.contains(ent1.getStartDate()) || range2.contains(ent1.getEndDate())) {
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * Return a copy of the specified list of <code>Entitlement</code>s sorted by
-     * start date ASC.
-     *
-     * @param toSort the list to sort.
-     * @return
-     */
-    private List<Entitlement> sortByStartDate(List<Entitlement> toSort) {
-        List<Entitlement> sorted = new ArrayList<Entitlement>(toSort);
-        Collections.sort(sorted, new Comparator<Entitlement>() {
-            @Override
-            public int compare(Entitlement ent1, Entitlement ent2) {
-                return ent1.getStartDate().compareTo(ent2.getStartDate());
-            }
-        });
+        List<Date> sorted = new ArrayList<Date>(dates);
+        Collections.sort(sorted);
         return sorted;
     }
 
@@ -366,6 +182,12 @@ public class ConsumerInstalledProductEnricher {
         Set<Entitlement> productEnts = new HashSet<Entitlement>();
         Set<String> stackIds = new HashSet<String>();
         Map<String, Set<Entitlement>> stackIdMap = new HashMap<String, Set<Entitlement>>();
+
+        // Track global attribute usage.  If an entitlement that provies one of our products
+        // uses a global attribute, we need to send in everything that provides it
+        Map<String, List<Entitlement>> globalAttrMap = createGlobalsMap();
+        Set<String> requiredGlobalAttrs = new HashSet<String>();
+
         for (Entitlement ent : this.consumer.getEntitlements()) {
             if (ent.getPool().provides(product.getId())) {
                 productEnts.add(ent);
@@ -377,7 +199,7 @@ public class ConsumerInstalledProductEnricher {
                         .getProductAttribute("stacking_id").getValue());
                 }
             }
-            //Save the stacking id so we don't have to loop over everything again
+            // Save the stacking id so we don't have to loop over everything again
             if (ent.getPool().hasProductAttribute("stacking_id")) {
                 String key = ent.getPool().getProductAttribute("stacking_id").getValue();
                 if (!stackIdMap.containsKey(key)) {
@@ -385,27 +207,35 @@ public class ConsumerInstalledProductEnricher {
                 }
                 stackIdMap.get(key).add(ent);
             }
+            // Save the global attributes so we don't need to loop over them again.
+            for (String attribute : globalAttrMap.keySet()) {
+                if (ent.getPool().hasProductAttribute(attribute)) {
+                    globalAttrMap.get(attribute).add(ent);
+                    if (ent.getPool().provides(product.getId())) {
+                        requiredGlobalAttrs.add(attribute);
+                    }
+                }
+            }
         }
         //Add entitlements that provide via a stack,
         //however may not physically provide the product
         for (String stackId : stackIds) {
             productEnts.addAll(stackIdMap.get(stackId));
         }
+
+        for (String requiredAttr : requiredGlobalAttrs) {
+            productEnts.addAll(globalAttrMap.get(requiredAttr));
+        }
+
         //Cast the set back to a List
         return new ArrayList<Entitlement>(productEnts);
     }
 
-    /**
-     * Add one second to the specified date, and return a new {@link Date}.
-     *
-     * @param date the date to add one second too.
-     * @return
-     */
-    private Date getDatePlusOneSecond(Date date) {
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(date);
-        cal.add(Calendar.SECOND, 1);
-        return cal.getTime();
+    private Map<String, List<Entitlement>> createGlobalsMap() {
+        Map<String, List<Entitlement>> globalAttrMap = new HashMap<String, List<Entitlement>>();
+        for (String attribute : GLOBAL_ATTRS) {
+            globalAttrMap.put(attribute, new LinkedList<Entitlement>());
+        }
+        return globalAttrMap;
     }
-
 }

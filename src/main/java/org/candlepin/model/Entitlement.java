@@ -297,7 +297,8 @@ public class Entitlement extends AbstractHibernateObject implements Linkable, Ow
 
     @XmlTransient
     public boolean isValidOnDate(Date d) {
-        return d.after(this.getStartDate()) && d.before(this.getEndDate());
+        return (d.after(this.getStartDate()) || d.equals(this.getStartDate())) &&
+            (d.before(this.getEndDate()) || d.equals(this.getEndDate()));
     }
 
     @XmlTransient

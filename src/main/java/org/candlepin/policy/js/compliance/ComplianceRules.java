@@ -62,13 +62,24 @@ public class ComplianceRules {
      * @return Compliance status.
      */
     public ComplianceStatus getStatus(Consumer c, Date date) {
+        return getStatus(c, date, true);
+    }
 
-        List<Entitlement> ents = entCurator.listByConsumerAndDate(c, date);
+    /**
+     * Check compliance status for a consumer on a specific date.
+     *
+     * @param c Consumer to check.
+     * @param date Date to check compliance status for.
+     * @param calculateCompliantUntil calculate how long the system will remain compliant (expensive)
+     * @return Compliance status.
+     */
+    public ComplianceStatus getStatus(Consumer c, Date date, boolean calculateCompliantUntil) {
 
         JsonJsContext args = new JsonJsContext(mapper);
         args.put("consumer", c);
-        args.put("entitlements", ents);
+        args.put("entitlements", c.getEntitlements());
         args.put("ondate", date);
+        args.put("calculateCompliantUntil", calculateCompliantUntil);
         args.put("log", log, false);
 
         // Convert the JSON returned into a ComplianceStatus object:

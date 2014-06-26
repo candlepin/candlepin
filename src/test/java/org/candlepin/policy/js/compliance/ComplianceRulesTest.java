@@ -147,6 +147,7 @@ public class ComplianceRulesTest {
         Pool p = new Pool(owner, productId, productId, provided,
             new Long(1000), start, end, "1000", "1000", "1000");
         Entitlement e = new Entitlement(p, consumer, 1);
+        e.setId("ent_" + TestUtil.randomInt());
         return e;
     }
 
@@ -777,7 +778,7 @@ public class ComplianceRulesTest {
         Consumer consumer = mockConsumer("Only One Installed Prod");
         Date expectedOnDate = TestUtil.createDate(9999, 4, 12);
         ComplianceStatus status = compliance.getStatus(consumer, expectedOnDate);
-        assertEquals(expectedOnDate, status.getCompliantUntil());
+        assertNull(status.getCompliantUntil());
     }
 
     @Test
@@ -878,7 +879,7 @@ public class ComplianceRulesTest {
         Date expectedOnDate = TestUtil.createDate(2011, 8, 30);
         ComplianceStatus status = compliance.getStatus(c, expectedOnDate);
         assertEquals(1, status.getPartialStacks().size());
-        assertEquals(expectedOnDate, status.getCompliantUntil());
+        assertNull(status.getCompliantUntil());
     }
 
     // NOTE: This scenario should NEVER happen since listByConsumerAndDate should
@@ -1745,6 +1746,7 @@ public class ComplianceRulesTest {
         mockHypervisorEntitlement.getPool()
             .setProductAttribute("guest_limit", "-1", PRODUCT_1);
         ents.add(mockHypervisorEntitlement);
+        mockEntCurator(c, ents);
 
         // Now that we've added the hypervisor,
         // the base guest_limit of 4 should be overridden
@@ -1756,8 +1758,8 @@ public class ComplianceRulesTest {
         assertTrue(status.getCompliantProducts().keySet().contains(PRODUCT_1));
         assertTrue(status.getCompliantProducts().keySet().contains(PRODUCT_2));
 
-        assertEquals(1, status.getCompliantProducts().get(PRODUCT_1).size());
-        assertEquals(1, status.getCompliantProducts().get(PRODUCT_2).size());
+        assertEquals(2, status.getCompliantProducts().get(PRODUCT_1).size());
+        assertEquals(2, status.getCompliantProducts().get(PRODUCT_2).size());
     }
 
     @Test
@@ -1907,6 +1909,7 @@ public class ComplianceRulesTest {
     }
 
     private void mockEntCurator(Consumer c, List<Entitlement> ents) {
+        c.setEntitlements(new HashSet<Entitlement>(ents));
         when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
         when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(ents);
     }

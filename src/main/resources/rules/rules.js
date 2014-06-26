@@ -1,4 +1,4 @@
-// Version: 5.9
+// Version: 5.10
 
 /*
  * Default Candlepin rule set.
@@ -2509,6 +2509,10 @@ var Compliance = {
         if ("entitlement" in context) {
             context.entitlement.pool = createPool(context.entitlement.pool);
         }
+        // Older candlepins don't send this value, assume they need to calculate compliantUntil
+        if (!"calculateCompliantUntil" in context) {
+            context.calculateCompliantUntil = true;
+        }
         return context;
     },
 
@@ -2516,15 +2520,10 @@ var Compliance = {
         var context = Compliance.get_status_context();
         var compStatus = this.getComplianceStatusOnDate(context.consumer,
             context.entitlements, context.ondate, log);
-        var compliantUntil = context.ondate;
-        if (compStatus.isCompliant()) {
-            if (context.entitlements.length == 0) {
-                compliantUntil = null;
-            }
-            else {
-                compliantUntil = this.determineCompliantUntilDate(context.consumer,
-                    context.entitlements, context.ondate, log);
-            }
+        var compliantUntil = null;
+        if (compStatus.isCompliant() && context.calculateCompliantUntil && context.entitlements.length > 0) {
+            compliantUntil = this.determineCompliantUntilDate(context.consumer,
+                context.entitlements, context.ondate, log);
         }
         compStatus.compliantUntil = compliantUntil;
         var output = JSON.stringify(compStatus);

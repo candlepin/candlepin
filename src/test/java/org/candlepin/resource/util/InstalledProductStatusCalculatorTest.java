@@ -25,10 +25,12 @@ import static org.mockito.Mockito.when;
 import java.io.InputStream;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
@@ -37,6 +39,7 @@ import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.GuestId;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
@@ -713,6 +716,42 @@ public class InstalledProductStatusCalculatorTest {
         assertEquals(range2.getEndDate(), validRange.getEndDate());
     }
 
+    @Test
+    public void validRangeWhenGuestLimitOverridden() {
+        Consumer c = mockConsumer(PRODUCT_1);
+        for (int i = 0; i < 5; i++) {
+            c.addGuestId(new GuestId("" + i, c, getActiveGuestAttrs()));
+        }
+
+        Calendar cal = Calendar.getInstance();
+        Date now = cal.getTime();
+        DateRange range = rangeRelativeToDate(now, -4, 4);
+
+        DateRange hypervisorRange = rangeRelativeToDate(now, -2, 2);
+
+        Entitlement ent = mockStackedEntitlement(c, range, STACK_ID_1, PRODUCT_1, 10, PRODUCT_1);
+        ent.getPool().setProductAttribute("guest_limit", "2", PRODUCT_1);
+        c.addEntitlement(ent);
+        Entitlement hpvsrEnt = mockStackedEntitlement(c, hypervisorRange,
+            "other_stack_id", "other", 10, "prod2");
+        hpvsrEnt.getPool().setProductAttribute("guest_limit", "-1", "prod2");
+        c.addEntitlement(hpvsrEnt);
+
+        List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
+        mockEntCurator(c, ents);
+
+        ComplianceStatus status = compliance.getStatus(c, now);
+        assertEquals("valid", status.getStatus());
+        ConsumerInstalledProductEnricher calculator =
+            new ConsumerInstalledProductEnricher(c, status, compliance);
+        Product p1 = new Product(PRODUCT_1, "Awesome Product");
+        DateRange validRange = calculator.getValidDateRange(p1);
+        assertNotNull(validRange);
+
+        assertEquals(hypervisorRange.getStartDate(), validRange.getStartDate());
+        assertEquals(hypervisorRange.getEndDate(), validRange.getEndDate());
+    }
+
     private Entitlement mockEntitlement(Consumer consumer, String productId,
         DateRange range, String ... providedProductIds) {
 
@@ -771,5 +810,12 @@ public class InstalledProductStatusCalculatorTest {
     private void mockEntCurator(Consumer c, List<Entitlement> ents) {
         when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
         when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(ents);
+    }
+
+    private Map<String, String> getActiveGuestAttrs() {
+        Map<String, String> activeGuestAttrs = new HashMap<String, String>();
+        activeGuestAttrs.put("virtWhoType", "libvirt");
+        activeGuestAttrs.put("active", "1");
+        return activeGuestAttrs;
     }
 }
