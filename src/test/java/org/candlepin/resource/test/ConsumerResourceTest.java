@@ -21,6 +21,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -271,7 +272,7 @@ public class ConsumerResourceTest {
 
         Consumer consumer = createConsumer();
         ComplianceStatus status = new ComplianceStatus();
-        when(rules.getStatus(any(Consumer.class), any(Date.class))).thenReturn(status);
+        when(rules.getStatus(any(Consumer.class), any(Date.class), anyBoolean())).thenReturn(status);
         // cert expires today which will trigger regen
         consumer.setIdCert(createIdCert());
         BigInteger origserial = consumer.getIdCert().getSerial().getSerial();
@@ -298,7 +299,7 @@ public class ConsumerResourceTest {
 
         Consumer consumer = createConsumer();
         ComplianceStatus status = new ComplianceStatus();
-        when(rules.getStatus(any(Consumer.class), any(Date.class))).thenReturn(status);
+        when(rules.getStatus(any(Consumer.class), any(Date.class), anyBoolean())).thenReturn(status);
         consumer.setIdCert(createIdCert(TestUtil.createDate(2025, 6, 9)));
         BigInteger origserial = consumer.getIdCert().getSerial().getSerial();
 

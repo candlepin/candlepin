@@ -2069,7 +2069,7 @@ public class ConsumerResource {
     private void addDataToInstalledProducts(Consumer consumer) {
 
         ComplianceStatus complianceStatus = complianceRules.getStatus(
-                           consumer, Calendar.getInstance().getTime());
+                           consumer, Calendar.getInstance().getTime(), false);
         consumer.setEntitlementStatus(complianceStatus.getStatus());
 
         ConsumerInstalledProductEnricher enricher = new ConsumerInstalledProductEnricher(
