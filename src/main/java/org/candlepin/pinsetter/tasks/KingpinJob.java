@@ -173,6 +173,11 @@ public abstract class KingpinJob implements Job {
         }
     }
 
+    protected void commitAndContinue() {
+        endUnitOfWork();
+        startUnitOfWork();
+    }
+
     private int getMaxRetries() {
         int maxRetries = ConfigProperties.PINSETTER_MAX_RETRIES_DEFAULT;
         try {
