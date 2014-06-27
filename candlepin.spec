@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.20
+Version: 0.9.20.1
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -381,6 +381,9 @@ fi
 
 
 %changelog
+* Fri Jun 27 2014 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.20.1-1
+- 1113202: Add derived content to distributors ent cert (mstead@redhat.com)
+
 * Fri Jun 20 2014 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.20-1
 - 1056760: Support guestids with reverse-endianness (ckozak@redhat.com)
 - Removal of Adapter Methods for IT. Part 1. (wpoteat@redhat.com)
