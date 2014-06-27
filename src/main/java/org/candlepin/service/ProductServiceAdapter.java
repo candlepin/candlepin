@@ -76,8 +76,9 @@ public interface ProductServiceAdapter {
 
     /**
      * Used to purge product cache
+     * @param cachedKeys productIds to remove from cache
      */
-    void purgeCache();
+    void purgeCache(Collection<String> cachedKeys);
 
     /**
      * Remove content associated to a product.

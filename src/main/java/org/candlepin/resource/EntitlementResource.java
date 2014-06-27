@@ -327,7 +327,7 @@ public class EntitlementResource {
     public JobDetail regenerateEntitlementCertificatesForProduct(
             @PathParam("product_id") String productId,
             @QueryParam("lazy_regen") @DefaultValue("true") boolean lazyRegen) {
-        prodAdapter.purgeCache();
+        prodAdapter.purgeCache(Arrays.asList(productId));
         JobDataMap map = new JobDataMap();
         map.put(RegenProductEntitlementCertsJob.PROD_ID, productId);
         map.put(RegenProductEntitlementCertsJob.LAZY_REGEN, lazyRegen);
