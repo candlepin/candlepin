@@ -160,9 +160,11 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
         return cert;
     }
 
+    /* (non-Javadoc)
+     * @see org.candlepin.service.ProductServiceAdapter#purgeCache(java.util.Collection)
+     */
     @Override
-    public void purgeCache() {
-
+    public void purgeCache(Collection<String> cachedKeys) {
     }
 
     @Override
@@ -190,4 +192,5 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
     public Set<String> getProductsWithContent(Collection<String> contentIds) {
         return new HashSet<String>(prodCurator.getProductIdsWithContent(contentIds));
     }
+
 }
