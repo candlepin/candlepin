@@ -120,7 +120,6 @@ public class DefaultEntitlementCertServiceAdapter extends
         return generateEntitlementCert(entitlement, sub, product, true);
     }
 
-
     @Override
     public void revokeEntitlementCertificates(Entitlement e) {
         for (EntitlementCertificate cert : e.getCertificates()) {
@@ -129,6 +128,18 @@ public class DefaultEntitlementCertServiceAdapter extends
 
             this.serialCurator.merge(serial);
         }
+    }
+
+    private Set<Product> getDerivedProductsForDistributor(Subscription sub,
+        Entitlement ent) {
+        Set<Product> derivedProducts = new HashSet<Product>();
+        boolean derived = ent.getPool().hasAttribute("pool_derived");
+        if (!derived && ent.getConsumer().getType().isManifest() &&
+            sub.getDerivedProduct() != null) {
+            derivedProducts.add(sub.getDerivedProduct());
+            derivedProducts.addAll(sub.getDerivedProvidedProducts());
+        }
+        return derivedProducts;
     }
 
     private Set<Product> getProvidedProducts(Pool pool, Subscription sub) {
@@ -340,8 +351,14 @@ public class DefaultEntitlementCertServiceAdapter extends
         // otherwise we could have used cascading create
         serial = serialCurator.create(serial);
 
-        Set<Product> products = new HashSet<Product>(getProvidedProducts(entitlement
-            .getPool(), sub));
+        Set<Product> products = new HashSet<Product>(getProvidedProducts(
+            entitlement.getPool(), sub));
+
+        // If creating a certificate for a distributor, we need
+        // to add any derived products as well so that their content
+        // is available in the upstream certificate.
+        products.addAll(getDerivedProductsForDistributor(sub, entitlement));
+
         X509Certificate x509Cert = createX509Certificate(entitlement,
             product, products, BigInteger.valueOf(serial.getId()), keyPair,
             !thisIsUeberCert);
