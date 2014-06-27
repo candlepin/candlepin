@@ -17,7 +17,6 @@ package org.candlepin.resource;
 import static org.quartz.JobBuilder.newJob;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
