@@ -16,6 +16,7 @@ package org.candlepin.model;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -67,7 +68,7 @@ public class SourceSubscription extends AbstractHibernateObject {
     /**
      * pool derived from the source
      */
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     @ForeignKey(name = "fk_sourcesub_pool")
     @JoinColumn(nullable = false, unique = true)
     @XmlTransient

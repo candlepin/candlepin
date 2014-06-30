@@ -15,6 +15,7 @@
 package org.candlepin.model;
 
 import javax.persistence.Column;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -52,7 +53,7 @@ public abstract class AbstractPoolAttribute extends AbstractHibernateObject
     @Size(max = 255)
     protected String value;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     /* The @ForeignKey annotation is only used by HBM2DDL.  Please note that
      * this particular annotation will create keys with the same name because
      * there are two classes that extend this abstract class.  This duplication
