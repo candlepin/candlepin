@@ -699,6 +699,20 @@ public class AutobindRulesTest {
         return pools;
     }
 
+    private List<Pool> createSocketPool(int sockets, int quantity, String stackingId) {
+        Product product = new Product(productId, "A test product");
+        product.setAttribute("stacking_id", stackingId);
+        product.setAttribute("multi-entitlement", "yes");
+        product.setAttribute("sockets", "" + sockets);
+        Pool pool = TestUtil.createPool(owner, product, quantity);
+        pool.setId("DEAD-BEEF-SOCKETS-" + TestUtil.randomInt());
+        when(this.prodAdapter.getProductById(productId)).thenReturn(product);
+
+        List<Pool> pools = new LinkedList<Pool>();
+        pools.add(pool);
+        return pools;
+    }
+
     @Test
     public void hostRestrictedAutobindForVirt8Vcpu() {
         List<Pool> pools = createHostRestrictedVirtLimitPool();
@@ -968,5 +982,147 @@ public class AutobindRulesTest {
         PoolQuantity pq2 = new PoolQuantity(pool2, 5);
         assertTrue(pq1.compareTo(pq2) != 0);
         assertEquals(pq1.compareTo(pq2), -pq2.compareTo(pq1));
+    }
+
+    @Test
+    public void autobindForPhysicalSocketPicksBestFitStack() {
+        List<Pool> pools = createSocketPool(1, 100, "1");
+        pools.addAll(createSocketPool(2, 100, "1"));
+
+        setupConsumer("32", false);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{ productId }, pools, compliance, null, new HashSet<String>(),
+            false);
+
+        // Should always pick the 2 socket subscriptions because less are required
+        assertEquals(1, bestPools.size());
+        PoolQuantity q = bestPools.get(0);
+        assertEquals(new Integer(16), q.getQuantity());
+    }
+
+    @Test
+    public void autobindForPhysicalSocketPicksBestFitOvercoverageStack() {
+        List<Pool> pools = createSocketPool(2, 100, "1");
+        pools.addAll(createSocketPool(32, 100, "1"));
+
+        setupConsumer("8", false);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{ productId }, pools, compliance, null, new HashSet<String>(),
+            false);
+
+        // Should always pick the 2 socket subscriptions because there is no over-coverage
+        assertEquals(1, bestPools.size());
+        PoolQuantity q = bestPools.get(0);
+        assertEquals(new Integer(4), q.getQuantity());
+    }
+
+    @Test
+    public void autobindForPhysicalSocketPicksBestFitBalanceStack() {
+        List<Pool> pools = createSocketPool(3, 100, "1");
+        pools.addAll(createSocketPool(5, 100, "1"));
+
+        setupConsumer("8", false);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{ productId }, pools, compliance, null, new HashSet<String>(),
+            false);
+
+        // Should always pick the 3 socket subscription, becuase 3*3 gives 1 socket over-coverage,
+        // and 2*5 provides 2 extra sockets.  using 1 quantity is worth .5 sockets
+        assertEquals(1, bestPools.size());
+        PoolQuantity q = bestPools.get(0);
+        assertEquals(new Integer(3), q.getQuantity());
+    }
+
+    @Test
+    public void autobindForPhysicalSocketPicksBestFitBalanceQuantityStack() {
+        List<Pool> pools = createSocketPool(1, 100, "1");
+        pools.addAll(createSocketPool(5, 100, "1"));
+
+        setupConsumer("9", false);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{ productId }, pools, compliance, null, new HashSet<String>(),
+            false);
+
+        // Should always pick the 2 5 socket subscriptions over 9 1 socket subscriptions
+        // although we're slightly overconsuming, it's better than wasting subs that may be
+        // used elsewhere
+        assertEquals(1, bestPools.size());
+        PoolQuantity q = bestPools.get(0);
+        assertEquals(new Integer(2), q.getQuantity());
+    }
+
+    @Test
+    public void autobindForPhysicalSocketPicksBestFit() {
+        List<Pool> pools = createSocketPool(1, 100, "1");
+        pools.addAll(createSocketPool(2, 100, "2"));
+
+        setupConsumer("32", false);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{ productId }, pools, compliance, null, new HashSet<String>(),
+            false);
+
+        // Should always pick the 2 socket subscriptions because less are required
+        assertEquals(1, bestPools.size());
+        PoolQuantity q = bestPools.get(0);
+        assertEquals(new Integer(16), q.getQuantity());
+    }
+
+    @Test
+    public void autobindForPhysicalSocketPicksBestFitOvercoverage() {
+        List<Pool> pools = createSocketPool(2, 100, "1");
+        pools.addAll(createSocketPool(32, 100, "2"));
+
+        setupConsumer("8", false);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{ productId }, pools, compliance, null, new HashSet<String>(),
+            false);
+
+        // Should always pick the 2 socket subscriptions because there is no over-coverage
+        assertEquals(1, bestPools.size());
+        PoolQuantity q = bestPools.get(0);
+        assertEquals(new Integer(4), q.getQuantity());
+    }
+
+    @Test
+    public void autobindForPhysicalSocketPicksBestFitBalance() {
+        List<Pool> pools = createSocketPool(3, 100, "1");
+        pools.addAll(createSocketPool(5, 100, "2"));
+
+        setupConsumer("8", false);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{ productId }, pools, compliance, null, new HashSet<String>(),
+            false);
+
+        // Should always pick the 3 socket subscription, becuase 3*3 gives 1 socket over-coverage,
+        // and 2*5 provides 2 extra sockets.  using 1 quantity is worth .5 sockets
+        assertEquals(1, bestPools.size());
+        PoolQuantity q = bestPools.get(0);
+        assertEquals(new Integer(3), q.getQuantity());
+    }
+
+    @Test
+    public void autobindForPhysicalSocketPicksBestFitBalanceQuantity() {
+        List<Pool> pools = createSocketPool(1, 100, "1");
+        pools.addAll(createSocketPool(5, 100, "2"));
+
+        setupConsumer("9", false);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{ productId }, pools, compliance, null, new HashSet<String>(),
+            false);
+
+        // Should always pick the 2 5 socket subscriptions over 9 1 socket subscriptions
+        // although we're slightly overconsuming, it's better than wasting subs that may be
+        // used elsewhere
+        assertEquals(1, bestPools.size());
+        PoolQuantity q = bestPools.get(0);
+        assertEquals(new Integer(2), q.getQuantity());
     }
 }
