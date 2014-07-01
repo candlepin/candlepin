@@ -12,6 +12,9 @@ require 'net/http'
 require 'rspec/core/rake_task'
 require 'rexml/document'
 require 'json'
+require 'naether'
+require 'naether/bootstrap'
+require 'naether/maven'
 
 # Don't require findbugs by default.
 # needs "buildr-findBugs" gem installed
@@ -148,6 +151,15 @@ AMQP  = [group('qpid-common', 'qpid-client',
 
 RHINO = 'org.mozilla:rhino:jar:1.7R3'
 
+MAVEN = [group('aether-api', 'aether-impl', 'aether-spi',
+               :under => 'org.sonatype.aether',
+               :version => '1.13.1'),
+         group('maven-model-builder','maven-model',
+               :under => 'org.apache.maven',
+               :version => '3.2.2'),
+         'org.codehaus.plexus:plexus-utils:jar:3.0.17',
+         'com.tobedevoured.naether:core:jar:0.13.5']
+
 # required by LOGDRIVER
 LOG4J_BRIDGE = 'org.slf4j:log4j-over-slf4j:jar:1.7.5'
 LOGDRIVER = 'logdriver:logdriver:jar:1.0'
@@ -162,6 +174,7 @@ PROVIDED = [SERVLET, file(Java.tools_jar)]
 
 ### Project
 GROUP = "candlepin"
+ARTIFACT_API = 'candlepin-api'
 COPYRIGHT = ""
 
 desc "The Proxy project"
@@ -232,7 +245,7 @@ define "candlepin" do
   compile.options.source = '1.6'
   compile_classpath = [COMMONS, RESTEASY, LOGGING, HIBERNATE, BOUNCYCASTLE,
     GUICE, JACKSON, QUARTZ, GETTEXT_COMMONS, HORNETQ, SUN_JAXB, OAUTH, RHINO, COLLECTIONS,
-    PROVIDED, AMQP, LIQUIBASE]
+    PROVIDED, AMQP, LIQUIBASE, MAVEN]
   compile.with compile_classpath
   compile.with LOGDRIVER, LOG4J_BRIDGE if use_logdriver
 
@@ -263,7 +276,7 @@ define "candlepin" do
   # The apicrawl package is only used for generating documentation so there is no
   # need to ship it.  Ideally, we'd put apicrawl in its own buildr project but I
   # kept getting complaints about circular dependencies.
-  package(:jar, :id=>'candlepin-api').tap do |jar|
+  package(:jar, :id=>ARTIFACT_API).tap do |jar|
     jar.clean
     pkgs = %w{auth config exceptions jackson model paging pki resteasy service util}.map { |pkg| "#{compiled_cp_path}/#{pkg}" }
     p = jar.path(candlepin_path)
@@ -296,6 +309,32 @@ define "candlepin" do
       f.puts(Java.tools_jar)
       f.puts(path_to(:target, :classes))
     end
+  end
+  
+  desc 'Generate Maven POM file'
+  task :pom do
+    puts 'Generating Maven POM file'
+    
+    options.test = 'no'
+    
+    Naether::Bootstrap.bootstrap_local_repo
+    
+    maven = Naether::Maven.create_from_notation([GROUP,ARTIFACT_API,project.version].join(':'))
+    
+    compile_classpath.flatten.each do |dep|
+      #tools.jar can be ignored for maven pom purposes
+      next if dep.is_a?(Rake::FileTask)
+      
+      #dependencies defined using the group method will be Buildr::Artifact(s) instead of String(s)
+      if dep.is_a?(Buildr::Artifact)
+        dep_hash = Buildr::Artifact.to_hash(dep)
+        maven.add_dependency([dep_hash[:group],dep_hash[:id], dep_hash[:type], dep_hash[:version]].join(':'))
+      else
+        maven.add_dependency(dep.to_s)
+      end
+    end
+    
+    maven.write_pom "target/#{ARTIFACT_API}.pom"
   end
 
   desc 'Crawl the REST API and print a summary.'
