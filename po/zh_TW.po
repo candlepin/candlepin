@@ -209,12 +209,12 @@ msgstr "{0} 更新了資料庫中的規則至版本 {1}"
 msgid "{0} removed the rules from the database"
 msgstr "{0} 移除了資料庫中的規則"
 
-#: src/main/java/org/candlepin/resource/UserResource.java:162
+#: src/main/java/org/candlepin/resource/UserResource.java:163
 #, java-format
 msgid "User {0} does not exist"
 msgstr "使用者 {0} 不存在"
 
-#: src/main/java/org/candlepin/resource/UserResource.java:180
+#: src/main/java/org/candlepin/resource/UserResource.java:181
 #, java-format
 msgid "User {0} not found"
 msgstr "找不到使用者 {0}"
@@ -521,7 +521,7 @@ msgstr "找不到 uuid 為 {0} 的客座端。"
 # translation auto-copied from project Candlepin, version master, document
 # keys
 #: src/main/java/org/candlepin/resource/GuestIdResource.java:261
-#: src/main/java/org/candlepin/resteasy/interceptor/BasicAuth.java:73
+#: src/main/java/org/candlepin/resteasy/interceptor/BasicAuth.java:72
 msgid "Invalid Credentials"
 msgstr "無效的認證"
 
@@ -1191,7 +1191,7 @@ msgstr "單位 {0} 已被刪除"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resteasy/interceptor/BasicAuth.java:88
+#: src/main/java/org/candlepin/resteasy/interceptor/BasicAuth.java:87
 msgid "Error contacting user service"
 msgstr "聯絡使用者服務時發生了錯誤"
 

@@ -2,6 +2,7 @@
 # swkothar <swkothar@redhat.com>, 2012. #zanata
 # swkothar <swkothar@redhat.com>, 2013. #zanata
 # Ankit Patel <ankit@redhat.com>, 2014. #zanata
+# keral patel <keralpatel29@yahoo.com>, 2014. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
@@ -10,8 +11,8 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2014-03-10 09:41-0400\n"
-"Last-Translator: Ankit Patel <ankit@redhat.com>\n"
+"PO-Revision-Date: 2014-06-26 06:58-0400\n"
+"Last-Translator: keral patel <keralpatel29@yahoo.com>\n"
 "Language-Team: Gujarati\n"
 "Language: gu\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
@@ -207,12 +208,12 @@ msgstr "{0} એ આવૃત્તિ {1} માં ડેટાબેઝના 
 msgid "{0} removed the rules from the database"
 msgstr "{0} એ ડેટાબેઝમાંથી નિયમો દૂર કર્યા"
 
-#: src/main/java/org/candlepin/resource/UserResource.java:162
+#: src/main/java/org/candlepin/resource/UserResource.java:163
 #, java-format
 msgid "User {0} does not exist"
 msgstr "વપરાશકર્તા {0} અસ્તિત્વ ધરાવતુ નથી"
 
-#: src/main/java/org/candlepin/resource/UserResource.java:180
+#: src/main/java/org/candlepin/resource/UserResource.java:181
 #, java-format
 msgid "User {0} not found"
 msgstr "વપરાશકર્તા {0} મળ્યુ નથી"
@@ -523,7 +524,7 @@ msgstr "uuid {0} વાળો મહેમાન શોધી શકાયો �
 # translation auto-copied from project Candlepin, version master, document
 # keys
 #: src/main/java/org/candlepin/resource/GuestIdResource.java:261
-#: src/main/java/org/candlepin/resteasy/interceptor/BasicAuth.java:73
+#: src/main/java/org/candlepin/resteasy/interceptor/BasicAuth.java:72
 msgid "Invalid Credentials"
 msgstr "અયોગ્ય શ્રેય"
 
@@ -769,7 +770,7 @@ msgstr "જૉબ પહેલેથી રદ થયેલ છે"
 
 #: src/main/java/org/candlepin/resource/JobResource.java:227
 msgid "cannot cancel a job that is in a finished state"
-msgstr ""
+msgstr "એક સમાપ્ત થયેલ સ્થિતિમાં કે જે નોકરી રદ ન કરી શકો છો"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author swkothar
@@ -911,6 +912,8 @@ msgid ""
 "Activation keys can only use consumer type restricted pools for a single "
 "consumer type."
 msgstr ""
+"સક્રિયકરણ કીઓ માત્ર એક જ ગ્રાહક પ્રકાર માટે ગ્રાહક પ્રકાર પ્રતિબંધિત પુલનો "
+"ઉપયોગ કરી શકો છો."
 
 #: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:81
 msgid ""
@@ -925,6 +928,8 @@ msgid ""
 "Cannot use pools with host restriction with physical only pools on a single "
 "activation key"
 msgstr ""
+"એક સક્રિયકરણ કી પર માત્ર શારીરિક પુલ સાથે યજમાન પ્રતિબંધ સાથે પુલ ઉપયોગ કરી "
+"શકાતું નથી"
 
 #: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:89
 msgid "Activation keys can only use host restricted pools from a single host."
@@ -934,7 +939,7 @@ msgstr ""
 #: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:93
 #, java-format
 msgid "Multi-entitlement not supported for pool ''{0}''"
-msgstr ""
+msgstr "પૂલ ''{0}'' માટે મલ્ટી ઉમેદવારી આધારભૂત નથી"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author swkothar
@@ -964,18 +969,22 @@ msgid ""
 "Activation keys for physical systems can only use quantities of pool ''{0}'' "
 "evenly divisible by {1}"
 msgstr ""
+"શારીરિક સિસ્ટમો માટે સક્રિયકરણ કીઓ માત્ર ''{0}'' ને {1} દ્વારા સમાનરૂપે ભાગી "
+"પૂલ જથ્થામાં ઉપયોગ કરી શકો છો"
 
 #: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:116
 #, java-format
 msgid ""
 "Cannot add virtual pool ''{0}'' to activation key for physical systems."
 msgstr ""
+"શારીરિક સિસ્ટમો માટે સક્રિયકરણ કી સાથે વાસ્તવિક પૂલ'' {0}'' ઉમેરી શકતા નથી."
 
 #: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:120
 #, java-format
 msgid ""
 "Cannot add physical pool ''{0}'' to activation key for virtual systems."
 msgstr ""
+"વાસ્તવિક સિસ્ટમો માટે સક્રિયકરણ કી સાથે શારીરિક પૂલ'' {0}'' ઉમેરી શકતા નથી."
 
 #: src/main/java/org/candlepin/util/ServiceLevelValidator.java:67
 #, java-format
@@ -1119,85 +1128,87 @@ msgstr "ID સાથે પ્રોડક્ટને શોધવામાં 
 
 #: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:40
 msgid "must be false"
-msgstr ""
+msgstr "ખોટા જ હોવા જોઈએ"
 
 #: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:42
 msgid "must be true"
-msgstr ""
+msgstr "સાચુ હોવુ જ જોઈએ"
 
 #: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:44
 #: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:57
 #, java-format
 msgid "must be less than or equal to {0}"
-msgstr ""
+msgstr "કરતાં ઓછી અથવા {0} સમાન હોવો જોઈએ "
 
 #: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:47
 #: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:60
 #, java-format
 msgid "must be greater than or equal to {0}"
-msgstr ""
+msgstr "કરતાં વધારે અથવા {0} બરાબર હોવા જ જોઈએ"
 
 #: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:51
 msgid ""
 "numeric value out of bounds (<{integer} digits>.<{fraction} digits> "
 "expected)"
 msgstr ""
+"આંકડાકીય કિંમત સીમાઓ (અપેક્ષિત <{integer} digits>.<{fraction} digits>) ની "
+"બહાર"
 
 #: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:55
 msgid "must be in the future"
-msgstr ""
+msgstr "ભવિષ્યમાં જ હોવી જોઈએ"
 
 #: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:63
 msgid "may not be null"
-msgstr ""
+msgstr "નકામું ન પણ હોય"
 
 #: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:65
 msgid "must be null"
-msgstr ""
+msgstr "નકામું હોવુ જ જોઈએ"
 
 #: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:67
 msgid "must be in the past"
-msgstr ""
+msgstr "ભૂતકાળમાં જ હોવી જોઈએ"
 
 #: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:69
 msgid "must match ''{regexp}''"
-msgstr ""
+msgstr "''{regexp}'' મેચ થવા જોઇએ"
 
 #: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:72
 #: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:79
 #, java-format
 msgid "size must be between {0} and {1}"
-msgstr ""
+msgstr "{0} અને {1} વચ્ચે જ માપ હોવુ જોઈએ"
 
 #: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:75
 msgid "invalid credit card number"
-msgstr ""
+msgstr "અમાન્ય ક્રેડિટ કાર્ડ નંબર"
 
 #: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:77
 msgid "not a well-formed email address"
-msgstr ""
+msgstr "ઇમેઇલ સરનામું સારી રચનામાં નથી"
 
 #: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:82
 #: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:84
 msgid "may not be empty"
-msgstr ""
+msgstr "ખાલી હોઈ શકે નહિં"
 
 #: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:86
 msgid "must be between {min} and {max}"
-msgstr ""
+msgstr "{min} અને {max} વચ્ચે જ હોવી જોઈએ"
 
 #: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:89
 msgid "may have unsafe html content"
-msgstr ""
+msgstr "અસુરક્ષિત HTML સામગ્રી હોઈ શકે છે"
 
 #: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:91
 #, java-format
 msgid "script expression ''{0}'' didn't evaluate to true"
-msgstr ""
+msgstr "સ્ક્રિપ્ટ અભિવ્યક્તિ''{0}'' નું ખરી રીતે મૂલ્યાંકન કર્યું નથી"
 
 #: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:94
 msgid "must be a valid URL"
-msgstr ""
+msgstr "માન્ય URL હોવો આવશ્યક છે"
 
 #: src/main/java/org/candlepin/resteasy/interceptor/ConsumerAuth.java:57
 #: src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:550
@@ -1207,7 +1218,7 @@ msgstr "એકમ {0} ને કાઢી નાંખવામાં આવ્�
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resteasy/interceptor/BasicAuth.java:88
+#: src/main/java/org/candlepin/resteasy/interceptor/BasicAuth.java:87
 msgid "Error contacting user service"
 msgstr "વપરાશકર્તા સેવાને સંપર્ક કરી રહ્યા હોય ત્યારે ભૂલ"
 
@@ -1417,7 +1428,7 @@ msgstr "પ્રોડક્ટ ''{0}'' માટે ઉમેદવારી�
 
 #: src/main/java/org/candlepin/model/RulesCurator.java:104
 msgid "No rules file found in the database"
-msgstr ""
+msgstr "ડેટાબેઝમાં નીયમ નથી એ ફાઇલ મળે છે"
 
 #: src/main/java/org/candlepin/model/ProductCurator.java:143
 #, java-format

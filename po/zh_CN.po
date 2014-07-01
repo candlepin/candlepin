@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2014-05-20 08:13-0400\n"
+"PO-Revision-Date: 2014-05-30 01:09-0400\n"
 "Last-Translator: leahliu <lliu@redhat.com>\n"
 "Language-Team: Chinese (Simplified, China)\n"
 "Language: zh-Hans-CN\n"
@@ -31,12 +31,12 @@ msgstr "{0} 创建新单元 {1}"
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:126
 #, java-format
 msgid "{0} modified the unit {1}"
-msgstr "{0} 修改了单元 {1}"
+msgstr "{0} 修改的单元 {1}"
 
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:127
 #, java-format
 msgid "{0} deleted the unit {1}"
-msgstr "{0} 删除单元 {1}"
+msgstr "{0} 删除的单元 {1}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -50,7 +50,7 @@ msgstr "{0} 创建的新拥有者 {1}"
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:129
 #, java-format
 msgid "{0} modified the owner {1}"
-msgstr "{0} 修改了拥有者 {1}"
+msgstr "{0} 修改的拥有者 {1}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -206,12 +206,12 @@ msgstr "{0} 将数据库中的规则更新至版本 {1}"
 msgid "{0} removed the rules from the database"
 msgstr "{0} 从数据库中删除规则"
 
-#: src/main/java/org/candlepin/resource/UserResource.java:162
+#: src/main/java/org/candlepin/resource/UserResource.java:163
 #, java-format
 msgid "User {0} does not exist"
 msgstr "用户 {0} 不存在"
 
-#: src/main/java/org/candlepin/resource/UserResource.java:180
+#: src/main/java/org/candlepin/resource/UserResource.java:181
 #, java-format
 msgid "User {0} not found"
 msgstr "未找到用户 {0}"
@@ -518,7 +518,7 @@ msgstr "无法找到 uuid {0} 的虚拟机。"
 # translation auto-copied from project Candlepin, version master, document
 # keys
 #: src/main/java/org/candlepin/resource/GuestIdResource.java:261
-#: src/main/java/org/candlepin/resteasy/interceptor/BasicAuth.java:73
+#: src/main/java/org/candlepin/resteasy/interceptor/BasicAuth.java:72
 msgid "Invalid Credentials"
 msgstr "无效证书"
 
@@ -1188,7 +1188,7 @@ msgstr "已删除单元 {0}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resteasy/interceptor/BasicAuth.java:88
+#: src/main/java/org/candlepin/resteasy/interceptor/BasicAuth.java:87
 msgid "Error contacting user service"
 msgstr "联系用户服务出错"
 
