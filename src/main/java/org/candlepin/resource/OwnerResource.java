@@ -274,7 +274,7 @@ public class OwnerResource {
     @Path("/{owner_key}/info")
     @Produces(MediaType.APPLICATION_JSON)
     public OwnerInfo getOwnerInfo(@PathParam("owner_key")
-        @Verify(Owner.class) String ownerKey) {
+        @Verify(value = Owner.class, subResource = SubResource.CONSUMERS) String ownerKey) {
         Owner owner = findOwner(ownerKey);
         return ownerInfoCurator.lookupByOwner(owner);
     }
