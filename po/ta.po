@@ -5,14 +5,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-06-11 15:43-0300\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2014-07-02 15:49-0300\n"
 "PO-Revision-Date: 2014-06-26 06:14-0400\n"
 "Last-Translator: Shantha kumar <shkumar@redhat.com>\n"
 "Language-Team: Tamil <kde-i18n-doc@kde.org>\n"
 "Language: ta-IN\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Zanata 3.3.2\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
@@ -206,55 +206,490 @@ msgstr "{0} தரவுத்தளத்தில் உள்ள விதி
 msgid "{0} removed the rules from the database"
 msgstr "{0} தரவுத்தளத்திலிருந்து விதிகளை நீக்கியது"
 
-#: src/main/java/org/candlepin/resource/UserResource.java:163
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ifelix
+#: src/main/java/org/candlepin/controller/Entitler.java:77
 #, java-format
-msgid "User {0} does not exist"
-msgstr "{0} எனும் பயனர் இல்லை"
+msgid "Subscription pool {0} does not exist."
+msgstr "சந்தா தொகுப்பகம் {0} இல்லை."
 
-#: src/main/java/org/candlepin/resource/UserResource.java:181
+#: src/main/java/org/candlepin/controller/Entitler.java:109
 #, java-format
-msgid "User {0} not found"
-msgstr "{0} எனும் பயனர் இல்லை"
+msgid ""
+"This unit has already had the subscription matching pool ID ''{0}'' attached."
+msgstr ""
+"இந்த அலகுக்கு ஏற்கனவே தொகுப்பக ID ''{0}'' க்குப் பொருந்தும் சந்தா இணைக்கப்பட்டுள்ளது."
+
+#: src/main/java/org/candlepin/controller/Entitler.java:114
+#, java-format
+msgid "No subscriptions are available from the pool with ID ''{0}''."
+msgstr "''{0}'' என்ற ID கொண்ட தொகுப்பகத்தில் இருந்து எந்த சந்தாக்களும் இல்லை."
+
+#: src/main/java/org/candlepin/controller/Entitler.java:119
+#, java-format
+msgid "Units of this type are not allowed to attach the pool with ID ''{0}''."
+msgstr ""
+"இந்த வகை அலகுகளுக்கு ID ''{0}''கொண்டுள்ள தொகுப்பகத்துடன் இணைய அனுமதி கிடையாது."
+
+#: src/main/java/org/candlepin/controller/Entitler.java:123
+#, java-format
+msgid "Multi-entitlement not supported for pool with ID ''{0}''."
+msgstr "''{0}'' என்ற ID கொண்ட தொகுப்பகத்திற்கு பல உரிமங்களுக்கு ஆதரவில்லை."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/controller/Entitler.java:127
+#, java-format
+msgid "Guest''s host does not match owner of pool: ''{0}''."
+msgstr "விருந்தினரின் வழங்கி தொகுப்பகத்தின் உரிமையாளருடன் பொருந்தவில்லை: ''{0}''."
+
+#: src/main/java/org/candlepin/controller/Entitler.java:131
+msgid "Pool not available to subscription management applications."
+msgstr "சந்தா நிர்வாக பயன்பாடுகளுக்கு தொகுப்பகம் கிடைக்கவில்லை."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/controller/Entitler.java:135
+#, java-format
+msgid "Pool is restricted to virtual guests: ''{0}''."
+msgstr ""
+"தொகுப்பகம் மெய்நிகர் விருந்தினர்களுக்கு மட்டும் என கட்டுப்படுத்தப்பட்டுள்ளது: ''{0}''."
+
+#: src/main/java/org/candlepin/controller/Entitler.java:139
+#, java-format
+msgid "Pool is restricted to physical systems: ''{0}''."
+msgstr "தொகுப்பகம் உண்மையான கணினிகளுக்கு மட்டும் என வரையறைப்படுத்தப்பட்டுள்ளது: ''{0}''."
+
+#: src/main/java/org/candlepin/controller/Entitler.java:148
+#, java-format
+msgid ""
+"Subscription ''{0}'' must be attached using a quantity evenly divisible by "
+"{1}"
+msgstr "சந்தா ''{0}'' ஆனது {1} ஆல் மீதமின்றி வகுபடும் அளவைக் கொண்டே இணைக்கப்பட வேண்டும்"
+
+#: src/main/java/org/candlepin/controller/Entitler.java:153
+#, java-format
+msgid ""
+"Unit does not support instance based calculation required by pool ''{0}''"
+msgstr ""
+"தொகுப்பகம் ''{0}'' க்குத் தேவைப்படும் நேர்வு அடிப்படையிலான கணக்கீட்டை அலகு ஆதரிக்கவில்லை"
+
+#: src/main/java/org/candlepin/controller/Entitler.java:157
+#, java-format
+msgid "Unit does not support core calculation required by pool ''{0}''"
+msgstr ""
+"தொகுப்பகம் ''{0}'' க்குத் தேவைப்படும் கோர் அடிப்படையிலான கணக்கீட்டை அலகு ஆதரிக்கவில்லை"
+
+#: src/main/java/org/candlepin/controller/Entitler.java:161
+#, java-format
+msgid "Unit does not support RAM calculation required by pool ''{0}''"
+msgstr ""
+"தொகுப்பகம் ''{0}'' க்குத் தேவைப்படும் RAM அடிப்படையிலான கணக்கீட்டை அலகு ஆதரிக்கவில்லை"
+
+#: src/main/java/org/candlepin/controller/Entitler.java:165
+#, java-format
+msgid "Unit does not support derived products data required by pool ''{0}''"
+msgstr ""
+"தொகுப்பகம் ''{0}'' க்குத் தேவையான தருவிக்கப்பட்ட தயாரிப்புகள் தரவை அலகு ஆதரிக்காது"
+
+#: src/main/java/org/candlepin/controller/Entitler.java:169
+#, java-format
+msgid "Unable to attach pool with ID ''{0}''.: {1}."
+msgstr "''{0}'' என்ற ID கொண்ட தொகுப்பகத்தை இணைக்க முடியவில்லை.: {1}."
+
+#: src/main/java/org/candlepin/controller/Entitler.java:190
+#, java-format
+msgid ""
+"Insufficient pool quantity available for adjustment to entitlement ''{0}''."
+msgstr "''{0}'' உரிமத்திற்கு சரிசெய்ய கிடைக்கக்கூடிய தொகுப்பக அளவு போதுமானதாக இல்லை."
+
+#: src/main/java/org/candlepin/controller/Entitler.java:195
+#: src/main/java/org/candlepin/controller/Entitler.java:200
+#, java-format
+msgid ""
+"Multi-entitlement not supported for pool connected with entitlement ''{0}''."
+msgstr ""
+"''{0}'' உரிமத்துடன் இணைந்துள்ள தொகுப்பகத்திற்கு பல-உரிமப்படுத்தல்கள் ஆதரிக்கப்படாது."
+
+#: src/main/java/org/candlepin/controller/Entitler.java:205
+#, java-format
+msgid "Unable to adjust quantity for the entitlement with id ''{0}'': {1}"
+msgstr "''{0}'' ஐடி கொண்ட உரிமத்திற்கு அளவைச் சரிசெய்ய முடியவில்லை: {1}"
+
+#: src/main/java/org/candlepin/controller/Entitler.java:284
+#, java-format
+msgid ""
+"This system already has a subscription for the product ''{0}'' attached."
+msgstr "இந்தக் கணினியின் ''{0}'' தயாரிப்புக்கு ஏற்கனவே சந்தா இணைக்கப்பட்டுள்ளது."
+
+#: src/main/java/org/candlepin/controller/Entitler.java:288
+#, java-format
+msgid ""
+"There are not enough free subscriptions available for the product ''{0}''"
+msgstr "தயாரிப்பு ''{0}'' க்கான போதுமான இலவச சந்தாக்கள் எதுவும் இல்லை"
+
+#: src/main/java/org/candlepin/controller/Entitler.java:292
+#, java-format
+msgid "Units of this type are not allowed for the product ''{0}''."
+msgstr "இந்த வகை அலகுகள் தயாரிப்பு ''{0}''க்கு அனுமதிக்கப்படுவதில்லை."
+
+#: src/main/java/org/candlepin/controller/Entitler.java:297
+#, java-format
+msgid "Only virtual systems can have subscription ''{0}'' attached."
+msgstr "மெய்நிகர் கணினிகளுக்கு மட்டுமே ''{0}'' சந்தா இணைக்கப்பட்டிருக்க முடியும்."
+
+#: src/main/java/org/candlepin/controller/Entitler.java:302
+#, java-format
+msgid "Unable to attach subscription for the product ''{0}'': {1}."
+msgstr "தயாரிப்பு ''{0}'' சந்தாவை இணைக்க முடியவில்லை: {1}."
+
+#: src/main/java/org/candlepin/exceptions/mappers/BadRequestExceptionMapper.java:57
+#, java-format
+msgid "Invalid format for query parameter {0}. Expected format: {1}"
+msgstr ""
+"வினவல் அளவுரு {0} க்கு செல்லுபடியாகாத வடிவமைப்பு. எதிர்பார்க்கும் வடிவமைப்பு: {1}"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/exceptions/mappers/BadRequestExceptionMapper.java:77
+#, java-format
+msgid "{0} is not a valid value for {1}"
+msgstr "{0} ஆனது {1}க்கான சரியான மதிப்பு அல்ல"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/exceptions/mappers/BadRequestExceptionMapper.java:81
+#: src/main/java/org/candlepin/guice/I18nProvider.java:91
+msgid "Bad Request"
+msgstr "தவறான கோரிக்கை"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/exceptions/mappers/CandlepinExceptionMapper.java:104
+#, java-format
+msgid "Runtime Error {0} at {1}.{2}:{3}"
+msgstr "{0} ஆனது {1}.{2}:{3}இல் இயக்கநேரப் பிழை"
+
+#: src/main/java/org/candlepin/exceptions/mappers/CandlepinExceptionMapper.java:109
+#, java-format
+msgid "Runtime Error {0}"
+msgstr "இயக்க நேர பிழை {0}"
+
+#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:40
+msgid "must be false"
+msgstr "false என்றே இருக்க வேண்டும்"
+
+#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:42
+msgid "must be true"
+msgstr "true என்றே இருக்க வேண்டும்"
+
+#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:44
+#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:57
+#, java-format
+msgid "must be less than or equal to {0}"
+msgstr "{0} க்கு சமமாக அல்லது குறைவாகவே இருக்க வேண்டும்"
+
+#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:47
+#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:60
+#, java-format
+msgid "must be greater than or equal to {0}"
+msgstr "{0} க்கு சமமாக அல்லது அதிகமாகவே இருக்க வேண்டும்"
+
+#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:51
+msgid ""
+"numeric value out of bounds (<{integer} digits>.<{fraction} digits> expected)"
+msgstr ""
+"எண் மதிப்பு எல்லைகளுக்கு அப்பாலுள்ளது (<{integer} digits>.<{fraction} digits> "
+"எதிர்பார்க்கப்படுகிறது)"
+
+#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:55
+msgid "must be in the future"
+msgstr "எதிர்காலத்திலேயே இருக்க வேண்டும்"
+
+#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:63
+msgid "may not be null"
+msgstr "null ஆக இருக்கக்கூடாது"
+
+#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:65
+msgid "must be null"
+msgstr "null ஆகவே இருக்க வேண்டும்"
+
+#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:67
+msgid "must be in the past"
+msgstr "கடந்தகாலத்திலேயே இருக்க வேண்டும்"
+
+#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:69
+msgid "must match ''{regexp}''"
+msgstr "''{regexp}'' க்குப் பொருந்த வேண்டும்"
+
+#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:72
+#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:79
+#, java-format
+msgid "size must be between {0} and {1}"
+msgstr "அளவு {0} மற்றும் {1} க்கு இடைப்பட்டதாகவே இருக்க வேண்டும்"
+
+#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:75
+msgid "invalid credit card number"
+msgstr "செல்லுபடியாகாத கிரெடிட் கார்டு எண்"
+
+#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:77
+msgid "not a well-formed email address"
+msgstr "மின்னஞ்சல் முகவரி வடிவம் சரியில்லை"
+
+#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:82
+#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:84
+msgid "may not be empty"
+msgstr "காலியாக இருக்கக்கூடாது"
+
+#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:86
+msgid "must be between {min} and {max}"
+msgstr "{min} மற்றும் {max} க்கு இடைப்பட்டதாகவே இருக்க வேண்டும்"
+
+#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:89
+msgid "may have unsafe html content"
+msgstr "பாதுகாப்பற்ற html உள்ளடக்கத்தைக் கொண்டிருக்கக்கூடும்"
+
+#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:91
+#, java-format
+msgid "script expression ''{0}'' didn't evaluate to true"
+msgstr "ஸ்கிரிப்ட் கோவை ''{0}'' இன் மதிப்பீடு true என இல்லை"
+
+#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:94
+msgid "must be a valid URL"
+msgstr "செல்லுபடியான  ஒரு URL ஆகவே இருக்க வேண்டும்"
+
+#: src/main/java/org/candlepin/model/UeberCertificateGenerator.java:122
+#, java-format
+msgid "No such unit type: {0}"
+msgstr "இது போன்ற அலகு வகை இல்லை: {0}"
+
+#: src/main/java/org/candlepin/model/AbstractHibernateCurator.java:418
+msgid "Request failed due to concurrent modification, please re-try."
+msgstr "ஒரே சமயத்திலான மாற்றத்தினால் கோரிக்கை தோல்வியடைந்தது, மீண்டும் முயற்சிக்கவும்."
+
+#: src/main/java/org/candlepin/model/ConsumerTypeCurator.java:70
+#, java-format
+msgid "No such unit type(s): {0}"
+msgstr "இது போன்ற அலகு வகை(கள்) இல்லை: {0}"
+
+#: src/main/java/org/candlepin/model/activationkeys/ActivationKeyCurator.java:58
+#: src/main/java/org/candlepin/resource/OwnerResource.java:744
+#, java-format
+msgid "ActivationKey with id {0} could not be found."
+msgstr "{0} என்ற id கொண்ட செயல்படுத்தல் விசையைக் கண்டறிய முடியவில்லை."
+
+#: src/main/java/org/candlepin/model/RulesCurator.java:104
+msgid "No rules file found in the database"
+msgstr "தரவுத்தளத்தில் விதிகள் கோப்பு இல்லை"
+
+#: src/main/java/org/candlepin/model/ConsumerCurator.java:402
+#, java-format
+msgid "The system with UUID {0} is a virtual guest. It does not have guests."
+msgstr "UUID {0} கொண்ட கணினி ஒரு மெய்நிகர் விருந்தினர். அதில் விருந்தினர்கள் இல்லை."
+
+#: src/main/java/org/candlepin/model/ConsumerCurator.java:511
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1692
+#: src/main/java/org/candlepin/resource/EntitlementResource.java:148
+#, java-format
+msgid "Unit with ID ''{0}'' could not be found."
+msgstr "''{0}'' என்ற ID கொண்ட அலகைக் கண்டறிய முடியவில்லை."
+
+#: src/main/java/org/candlepin/model/ProductCurator.java:141
+#, java-format
+msgid "The attribute ''{0}'' must be an integer value."
+msgstr "பண்புக்கூறு ''{0}'' ஆனது ஒரு முழு எண் மதிப்பாகவே இருக்க வேண்டும்."
+
+#: src/main/java/org/candlepin/model/ProductCurator.java:148
+#: src/main/java/org/candlepin/model/ProductCurator.java:167
+#, java-format
+msgid "The attribute ''{0}'' must have a positive value."
+msgstr "பண்புக்கூறு ''{0}'' ஆனது நேர்க்குறி மதிப்பையே கொண்டிருக்க வேண்டும்."
+
+#: src/main/java/org/candlepin/model/ProductCurator.java:160
+#, java-format
+msgid "The attribute ''{0}'' must be a long value."
+msgstr "பண்புக்கூறு ''{0}'' ஆனது ஒரு long மதிப்பாகவே இருக்க வேண்டும்."
+
+#: src/main/java/org/candlepin/model/ProductCurator.java:178
+#, java-format
+msgid "The attribute ''{0}'' must be a boolean value."
+msgstr "பண்புக்கூறு ''{0}'' ஆனது ஒரு பூலியன் மதிப்பாகவே இருக்க வேண்டும்."
+
+#: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:58
+msgid "Not supported by a valid subscription."
+msgstr "செல்லுபடியான சந்தாவினால் ஆதரிக்கப்படவில்லை."
+
+#: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:61
+#, java-format
+msgid "Supports architecture {0} but the system is {1}."
+msgstr "{0} கட்டமைப்பை ஆதரிக்கிறது, ஆனால் கணினி {1} ஆக உள்ளது."
+
+#: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:66
+#, java-format
+msgid "Only supports {0} of {1} sockets."
+msgstr "{1} சாக்கெட்டுகளில் {0} ஐ மட்டுமே ஆதரிக்கிறது."
+
+#: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:71
+#, java-format
+msgid "Only supports {0} of {1} cores."
+msgstr "{1} கோர்களில் {0} ஐ மட்டுமே ஆதரிக்கிறது."
+
+#: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:76
+#, java-format
+msgid "Only supports {0}GB of {1}GB of RAM."
+msgstr "{1}GB RAM இல் {0}GB ஐ மட்டுமே ஆதரிக்கிறது."
+
+#: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:81
+#, java-format
+msgid "Only supports {0} of {1} virtual guests."
+msgstr "மெய்நிகர் விருந்தினர்கள் {1} இல் {0} ஐ மட்டுமே ஆதரிக்கிறது."
+
+#: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:86
+#, java-format
+msgid "Only supports {0} of {1} vCPUs."
+msgstr "{1} vCPUகளில் {0} ஐ மட்டுமே ஆதரிக்கிறது."
+
+#: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:91
+#, java-format
+msgid "{2} COVERAGE PROBLEM.  Supports {0} of {1}"
+msgstr "{2} ஆதரவு சிக்கல். {1} இல் {0} ஐ மட்டுமே ஆதரிக்கிறது"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ifelix
-#: src/main/java/org/candlepin/resource/RoleResource.java:84
+#: src/main/java/org/candlepin/policy/js/entitlement/AbstractEntitlementRules.java:132
 #, java-format
-msgid "No such owner: {0}"
-msgstr "இப்படி ஒரு உரிமையாளர் இல்லை: {0}"
+msgid "''{0}'' Should contain name, priority and at least one attribute"
+msgstr "''{0}'' பெயர், முன்னுரிமை மற்றும் குறைந்தபட்சம் ஒரு பண்பை கொண்டுள்ளது"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author ifelix
-#: src/main/java/org/candlepin/resource/RoleResource.java:114
-msgid "Role ID does not match path."
-msgstr "பங்கு ID பாதைக்கு பொருந்தவில்லை."
+# keys
+#: src/main/java/org/candlepin/policy/js/entitlement/AbstractEntitlementRules.java:147
+msgid "second parameter should be the priority number."
+msgstr "இரண்டாவது அளவுரு முன்னுரிமை எண்ணாக இருக்க வேண்டும்."
 
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ifelix
-#: src/main/java/org/candlepin/resource/RoleResource.java:143
-msgid "Access type NONE not supported."
-msgstr "அணுகல் வகை NONE ஆதரிக்கப்படாது."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ifelix
-#: src/main/java/org/candlepin/resource/RoleResource.java:186
+#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:149
 #, java-format
-msgid "No such permission: {0} in role: {1}"
-msgstr "இது போன்ற அனுமதி இல்லை: {0} பங்கில்: {1}"
+msgid "Subscriptions for {0} expired on: {1}"
+msgstr "{0} க்கான சந்தாவானது காலாவதியாவது: {1}"
+
+#: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:50
+msgid "Other"
+msgstr "மற்றவை"
+
+#: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:53
+msgid "Instance Based"
+msgstr "நேர்வு அடிப்படையிலானது"
+
+#: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:56
+msgid "Stackable"
+msgstr "ஸ்டேக் செய்யத்தக்கது"
+
+#: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:59
+msgid "Multi-Entitleable"
+msgstr "பல உரிம தன்மை கொண்டது"
+
+#: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:62
+msgid "Standard"
+msgstr "தரநிலையானது"
+
+#: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:65
+msgid "Stackable only with other subscriptions"
+msgstr "மற்ற சந்தாக்களுடன் மட்டுமே ஸ்டேக் செய்யத்தக்கது"
+
+#: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:77
+msgid ""
+"Activation keys can only use consumer type restricted pools for a single "
+"consumer type."
+msgstr ""
+"ஓர் ஒற்றை நுகர்வோர் வகைக்கு, செயல்படுத்தல் விசைகளால் நுகர்வோர் வகையால் கட்டுப்படுத்தப்படும் "
+"தொகுப்பகங்களை மட்டுமே பயன்படுத்த முடியும்."
+
+#: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:81
+msgid ""
+"Cannot add pools that are restricted to unit type 'person' to activation "
+"keys."
+msgstr ""
+"'நபர்' என்ற வகை அலகுகளுக்கு மட்டும் என வரம்புப்படுத்தப்பட்ட தொகுப்பகங்களை செயல்படுத்தல் "
+"விசைகளுக்குச் சேர்க முடியாது."
+
+#: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:85
+msgid ""
+"Cannot use pools with host restriction with physical only pools on a single "
+"activation key"
+msgstr ""
+"ஓர் ஒற்றை செயல்படுத்தல் விசையில், இயல்நிலை மட்டுமான தொகுப்பகங்களைக் கொண்ட வழங்கி "
+"கட்டுப்பாடு கொண்ட தொகுப்பகங்களைப் பயன்படுத்த முடியாது"
+
+#: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:89
+msgid "Activation keys can only use host restricted pools from a single host."
+msgstr ""
+"செயல்படுத்தல் விசைகள் ஒரே வழங்கியிலிருந்து வரும் வழங்கிக்குரிய கட்டுப்பாடு கொண்ட "
+"தொகுப்பகங்களை மட்டுமே பயன்படுத்த முடியும்."
+
+#: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:93
+#, java-format
+msgid "Multi-entitlement not supported for pool ''{0}''"
+msgstr "தொகுப்பகம் ''{0}'' க்கு பல உரிமங்களுக்கு ஆதரவில்லை"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ifelix
-#: src/main/java/org/candlepin/resource/RoleResource.java:200
-#, java-format
-msgid "No such role: {0}"
-msgstr "இது போன்ற பங்கு இல்லை: {0}"
+#: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:96
+msgid ""
+"Error: Only pools with multi-entitlement product subscriptions can be added "
+"to the activation key with a quantity greater than one."
+msgstr ""
+"பிழை: பல்-உரிம தயாரிப்பு சந்தாக்கள் செயல்பாட்டு விசையுடன் உள்ள ஒரு அளவை விட அதிகமான "
+"ஒன்றாக சேர்க்கப்படலாம்."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ifelix
-#: src/main/java/org/candlepin/resource/RoleResource.java:208
+#: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:101
+msgid "The quantity must not be greater than the total allowed for the pool"
+msgstr "தொகுப்பகத்திற்காக அனுமதிக்கப்பட்ட மொத்தத்தை விட அளவு அதிகமாக இருக்க வேண்டும்"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ifelix
+#: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:105
+msgid "The quantity must be greater than 0"
+msgstr "அளவானது 0 விட அதிகமாக இருக்க வேண்டும்"
+
+#: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:112
 #, java-format
-msgid "No such user: {0}"
-msgstr "இது போன்ற பயனர் இல்லை: {0}"
+msgid ""
+"Activation keys for physical systems can only use quantities of pool ''{0}'' "
+"evenly divisible by {1}"
+msgstr ""
+"இயல்நிலை கணினிகளுக்கான செயல்படுத்தல் விசைகளால், {1} ஆல் மீதமின்றி வகுக்கக்கூடிய ''{0}'' "
+"தொகுப்பகத்தின் அளவுகளை மட்டுமே பயன்படுத்த முடியும்."
+
+#: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:116
+#, java-format
+msgid "Cannot add virtual pool ''{0}'' to activation key for physical systems."
+msgstr ""
+"இயல்நிலை கணினிகளுக்கான செயல்படுத்தல் விசையில் மெய்நிகர் தொகுப்பகம் ''{0}'' ஐச் சேர்க்க "
+"முடியாது."
+
+#: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:120
+#, java-format
+msgid "Cannot add physical pool ''{0}'' to activation key for virtual systems."
+msgstr ""
+"மெய்நிகர் கணினிகளுக்கான செயல்படுத்தல் விசையில் இயல்நிலை தொகுப்பகம் ''{0}'' ஐச் சேர்க்க "
+"முடியாது."
+
+#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:235
+#, java-format
+msgid "Pool with id {0} could not be found."
+msgstr "{0} என்ற id கொண்ட தொகுப்பகத்தைக் கண்டறிய முடியவில்லை."
+
+#: src/main/java/org/candlepin/resource/CdnResource.java:118
+#, java-format
+msgid "A CDN with the label {0}already exists"
+msgstr "{0} என்ற லேபிள் கொண்ட CDN ஏற்கனவே உள்ளது"
+
+#: src/main/java/org/candlepin/resource/CdnResource.java:155
+#, java-format
+msgid "No such content delivery network: {0}"
+msgstr "இப்படி ஒரு உள்ளடக்க வழங்கல் பிணையம் இல்லை: {0}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -399,10 +834,10 @@ msgstr "தானியக்க-பிணைப்பின் போது ஒ
 # keys, author ifelix
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1604
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1732
-#: src/main/java/org/candlepin/resource/EntitlementResource.java:194
-#: src/main/java/org/candlepin/resource/EntitlementResource.java:231
+#: src/main/java/org/candlepin/resource/EntitlementResource.java:197
+#: src/main/java/org/candlepin/resource/EntitlementResource.java:234
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:262
-#: src/main/java/org/candlepin/resource/EntitlementResource.java:291
+#: src/main/java/org/candlepin/resource/EntitlementResource.java:316
 #, java-format
 msgid "Entitlement with ID ''{0}'' could not be found."
 msgstr "''{0}'' என்ற ID கொண்ட உரிமத்தைக் கண்டறிய முடியவில்லை."
@@ -412,97 +847,115 @@ msgstr "''{0}'' என்ற ID கொண்ட உரிமத்தைக் �
 msgid "Product with ID ''{0}'' could not be found."
 msgstr "''{0}'' என்ற ID கொண்ட தயாரிப்பைக் கண்டறிய முடியவில்லை."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1692
-#: src/main/java/org/candlepin/resource/EntitlementResource.java:145
-#: src/main/java/org/candlepin/model/ConsumerCurator.java:505
-#, java-format
-msgid "Unit with ID ''{0}'' could not be found."
-msgstr "''{0}'' என்ற ID கொண்ட அலகைக் கண்டறிய முடியவில்லை."
-
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1759
 #, java-format
 msgid "Entitlement Certificate with serial number ''{0}'' could not be found."
 msgstr "''{0}'' என்ற வரிசை எண் கொண்ட உரிம சான்றிதழைக் கண்டறிய முடியவில்லை."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1851
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1850
 #, java-format
 msgid ""
 "Unit {0} cannot be exported. A manifest cannot be made for units of type "
 "''{1}''."
 msgstr ""
-"அலகு {0} ஐ ஏற்றுமதி செய்ய முடியாது. ''{1}'' வகை அலகுகளுக்கு மேனிஃபெஸ்ட்டை "
-"உருவாக்க முடியாது."
+"அலகு {0} ஐ ஏற்றுமதி செய்ய முடியாது. ''{1}'' வகை அலகுகளுக்கு மேனிஃபெஸ்ட்டை உருவாக்க "
+"முடியாது."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1859
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1858
 #, java-format
 msgid "A CDN with label {0} does not exist on this system."
 msgstr "லேபிள் {0} கொண்ட CDN இந்தக் கணினியில் இல்லை."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1875
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1874
 msgid "Unable to create export archive"
 msgstr "ஏற்றுமதி காப்பகத்தை உருவாக்க முடியவில்லை"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1947
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1946
 #, java-format
 msgid "Problem regenerating ID cert for unit {0}"
 msgstr "அலகு {0} க்கு ID சான்றிதழை மறுஉருவாக்குவதில் பிழை"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1987
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1986
 #, java-format
 msgid "The system with UUID {0} is not a virtual guest."
 msgstr "{0} என்ற UUID கொண்ட கணினி ஒரு மெய்நிகர் விருந்தினர் அல்ல."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2107
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2106
 #, java-format
 msgid "Deletion record for hypervisor ''{0}'' not found."
 msgstr "ஹைப்பர்வைசர் ''{0}'' க்கான நீக்கல் பதிவு காணப்படவில்லை."
 
-#: src/main/java/org/candlepin/resource/EntitlementResource.java:92
+#: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:95
+msgid "Unit type with id '"
+msgstr "id கொண்ட அலகு வகை'"
+
+#: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:117
+#, java-format
+msgid "Problem creating unit type: {0}"
+msgstr "{0} என்ற அலகு வகையை உருவாக்குவதில் சிக்கல்"
+
+#: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:138
+#, java-format
+msgid "Unit type with label {0} could not be found."
+msgstr "லேபிள் {0} கொண்ட அலகு வகையைக் கண்டறிய முடியவில்லை."
+
+#: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:159
+#, java-format
+msgid "Unit type with id {0} could not be found."
+msgstr "id {0} ஐக் கொண்ட அலகு வகையைக் கண்டறிய முடியவில்லை."
+
+#: src/main/java/org/candlepin/resource/ContentResource.java:114
+#: src/main/java/org/candlepin/resource/ContentResource.java:182
+#, java-format
+msgid "Content with id {0} could not be found."
+msgstr "id {0}-உடன் உள்ள உள்ளடக்கத்தை காண முடியவில்லை."
+
+#: src/main/java/org/candlepin/resource/DistributorVersionResource.java:136
+#, java-format
+msgid "A distributor version with name {0} already exists"
+msgstr "{0} என்ற பெயருடன் ஒரு விநியோகஸ்தர் ஏற்கனவே உள்ளது"
+
+#: src/main/java/org/candlepin/resource/DistributorVersionResource.java:166
+#, java-format
+msgid "No such distributor version: {0}"
+msgstr "இப்படி ஒரு விநியோகஸ்தர் பதிப்பு இல்லை: {0}"
+
+#: src/main/java/org/candlepin/resource/EntitlementResource.java:95
 #, java-format
 msgid "Object with ID ''{0}'' could not found."
 msgstr "''{0}'' என்ற ID கொண்ட பொருளைக் கண்டறிய முடியவில்லை."
 
-#: src/main/java/org/candlepin/resource/EntitlementResource.java:121
+#: src/main/java/org/candlepin/resource/EntitlementResource.java:124
 #, java-format
 msgid "Unit ''{0}'' has no subscription for product ''{1}''."
 msgstr "அலகு ''{0}'' இல் தயாரிப்பு ''{1}'' க்கான சந்தா இல்லை."
 
-#: src/main/java/org/candlepin/resource/EntitlementResource.java:216
+#: src/main/java/org/candlepin/resource/EntitlementResource.java:219
 msgid "Quantity value must be greater than 0."
 msgstr "அளவு மதிப்பு 0 ஐ விட அதிகமாக இருக்க வேண்டும்."
 
-#: src/main/java/org/candlepin/resource/ProductResource.java:147
-#: src/main/java/org/candlepin/resource/ProductResource.java:168
-#: src/main/java/org/candlepin/resource/ProductResource.java:360
-#: src/main/java/org/candlepin/resource/ProductResource.java:450
+#: src/main/java/org/candlepin/resource/EntitlementResource.java:289
 #, java-format
-msgid "Product with UUID ''{0}'' could not be found."
-msgstr "தயாரிப்பு UUID \"{0} உடன் கண்டறிய முடியவில்லை."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ifelix
-#: src/main/java/org/candlepin/resource/ProductResource.java:364
-#, java-format
-msgid "Product with UUID ''{0}'' cannot be deleted while subscriptions exist."
+msgid "Unable to find upstream certificate for entitlement: {0}"
 msgstr ""
-"தயாரிப்பு UUID ''{0}'' உடன் சந்தாக்கள் இருக்கும் போது அழிக்க முடியாது."
-
-#: src/main/java/org/candlepin/resource/ProductResource.java:427
-msgid "Must specify product ID."
-msgstr "தயாரிப்பு ID ஐக் குறிப்பிட வேண்டும்."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ifelix
-#: src/main/java/org/candlepin/resource/StatisticResource.java:65
-msgid "couldn't generate statistics"
-msgstr "புள்ளிவிவரங்களை உருவாக்க முடியவில்லை"
-
-#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:235
+#: src/main/java/org/candlepin/resource/EnvironmentResource.java:99
+#: src/main/java/org/candlepin/resource/EnvironmentResource.java:118
+#: src/main/java/org/candlepin/resource/EnvironmentResource.java:250
 #, java-format
-msgid "Pool with id {0} could not be found."
-msgstr "{0} என்ற id கொண்ட தொகுப்பகத்தைக் கண்டறிய முடியவில்லை."
+msgid "No such environment: {0}"
+msgstr "இப்படி ஒரு சூழல் இல்லை: {0}"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ifelix
+#: src/main/java/org/candlepin/resource/EventResource.java:109
+#, java-format
+msgid "Event with ID ''{0}'' could not be found."
+msgstr "நிகழ்வு ஆனது id {0} உடன் கண்டறிய முடியவில்லை"
 
 #: src/main/java/org/candlepin/resource/GuestIdResource.java:168
 msgid "Please supply a valid guest id"
@@ -512,8 +965,7 @@ msgstr "செல்லுபடியான விருந்தினர் i
 #, java-format
 msgid "Guest ID in json \"{0}\" does not match path guest ID \"{1}\""
 msgstr ""
-"json \"{0}\" இல் உள்ள விருந்தினரானது பாதை விருந்தினர் ID \"{1}\" க்குப் "
-"பொருந்தவில்லை"
+"json \"{0}\" இல் உள்ள விருந்தினரானது பாதை விருந்தினர் ID \"{1}\" க்குப் பொருந்தவில்லை"
 
 #: src/main/java/org/candlepin/resource/GuestIdResource.java:231
 #, java-format
@@ -527,58 +979,6 @@ msgstr "uuid {0} கொண்ட விருந்தினரைக் கண�
 msgid "Invalid Credentials"
 msgstr "தவறான சான்றுகள்"
 
-#: src/main/java/org/candlepin/resource/ContentResource.java:114
-#: src/main/java/org/candlepin/resource/ContentResource.java:182
-#, java-format
-msgid "Content with id {0} could not be found."
-msgstr "id {0}-உடன் உள்ள உள்ளடக்கத்தை காண முடியவில்லை."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/RulesResource.java:90
-msgid "Error decoding the rules. The text should be base 64 encoded"
-msgstr ""
-"விதிகளை மறைகுறியாக்குவதில் பிழை. உரை அடிப்படை 64 மறைகுறியாக்கப்பட்டதாக "
-"இருக்க வேண்டும்விதிகளை மறைகுறியாக்குவதில் பிழை. உரை அடிப்படை 64 "
-"மறைகுறியாக்கப்பட்டதவிதிகளை மறைகுறியாக்குவதில் பிழை. உரை அடிப்படை 64 "
-"மறைகுறியாக்கப்பட்டதவிதிகளை மறைகுறியாக்விதிகளை மறைகுறியாக்க "
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/RulesResource.java:117
-msgid "couldn't read rules file"
-msgstr "கோப்பின் விதிமுறைகளை வாசிக்க முடியவில்லை"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/SubscriptionResource.java:170
-#, java-format
-msgid "no certificate for subscription {0}"
-msgstr "சந்தா {0} க்கு சான்றிதழ் இல்லை"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ifelix
-#: src/main/java/org/candlepin/resource/SubscriptionResource.java:191
-msgid "email is required for notification"
-msgstr "அறிவிப்பிற்கு மின்னஞ்சல் தேவை"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ifelix
-#: src/main/java/org/candlepin/resource/SubscriptionResource.java:196
-msgid "email locale is required for notification"
-msgstr "அறிவிப்பிற்கு மின்னஞ்சல் மொழி தேவை"
-
-#: src/main/java/org/candlepin/resource/SubscriptionResource.java:202
-#: src/main/java/org/candlepin/resource/OwnerResource.java:863
-#, java-format
-msgid "No such unit: {0}"
-msgstr "இது போன்ற அலகு இல்லை: {0}"
-
-#: src/main/java/org/candlepin/resource/SubscriptionResource.java:234
-#, java-format
-msgid "Subscription with id {0} could not be found."
-msgstr "id {0}-உடன் உள்ள சந்தா காணப்படவில்லை."
-
 #: src/main/java/org/candlepin/resource/HypervisorResource.java:130
 #, java-format
 msgid "Unable to find hypervisor in org ''{0}''"
@@ -589,12 +989,32 @@ msgstr "நிறுவனம் ''{0}'' இல் ஹைப்பர்வை�
 msgid "Hypervisor ''{0}'' is in use by another org"
 msgstr "ஹைப்பர்வைசர் ''{0}'' ஐ மற்றொரு நிறுவனம் பயன்படுத்திக்கொண்டுள்ளது"
 
+#: src/main/java/org/candlepin/resource/JobResource.java:111
+msgid ""
+"You must specify exactly one of owner key, unit UUID, or principal name."
+msgstr ""
+"உரிமையாளர் விசை, அலகு UUID அல்லது முதன்மைப் பெயர் இவற்றில் ஒன்றை துல்லியமாகக் குறிப்பிட "
+"வேண்டும்."
+
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ifelix
-#: src/main/java/org/candlepin/resource/EventResource.java:109
-#, java-format
-msgid "Event with ID ''{0}'' could not be found."
-msgstr "நிகழ்வு ஆனது id {0} உடன் கண்டறிய முடியவில்லை"
+#: src/main/java/org/candlepin/resource/JobResource.java:174
+msgid "Error setting scheduler status"
+msgstr "பிழை அமைவு திட்டமிடல் நிலை"
+
+#: src/main/java/org/candlepin/resource/JobResource.java:224
+msgid "job already canceled"
+msgstr "பணி ஏற்கனவே ரத்து செய்யப்பட்டது"
+
+#: src/main/java/org/candlepin/resource/JobResource.java:227
+msgid "cannot cancel a job that is in a finished state"
+msgstr "நிறைவுற்ற நிலையில் உள்ள ஒரு பணியை ரத்து செய்ய முடியாது"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ifelix
+#: src/main/java/org/candlepin/resource/MigrationResource.java:67
+msgid "Bad entity value."
+msgstr "தவறான நிறுவன மதிப்பு."
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:295
 #, java-format
@@ -618,15 +1038,14 @@ msgid ""
 "The activation key name ''{0}'' must be alphanumeric or include the "
 "characters '-' or '_'"
 msgstr ""
-"செயல்படுத்தல் விசை பெயர் ''{0}'' ஆனது எண் மற்றும் எழுத்து கொண்டதாகவே இருக்க "
-"வேண்டும், அல்லது '-' அல்லது '_' ஆகிய எழுத்துகளைக் கொண்டிருக்கலாம்"
+"செயல்படுத்தல் விசை பெயர் ''{0}'' ஆனது எண் மற்றும் எழுத்து கொண்டதாகவே இருக்க வேண்டும், "
+"அல்லது '-' அல்லது '_' ஆகிய எழுத்துகளைக் கொண்டிருக்கலாம்"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:541
 #, java-format
 msgid "The activation key name ''{0}'' is already in use for owner {1}"
 msgstr ""
-"செயல்படுத்தல் விசை பெயர் ''{0}'' ஆனது ஏற்கனவே உரிமையாளர் {1} க்கு "
-"பயன்பாட்டில் உள்ளது"
+"செயல்படுத்தல் விசை பெயர் ''{0}'' ஆனது ஏற்கனவே உரிமையாளர் {1} க்கு பயன்பாட்டில் உள்ளது"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:625
 #, java-format
@@ -647,11 +1066,11 @@ msgstr "அலகு: {0} இல்லை"
 msgid "User {0} cannot access consumer {1}"
 msgstr "பயனர் {0} நுகர்வோர் {1} ஐ அணுக முடியவில்லை"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:744
-#: src/main/java/org/candlepin/model/activationkeys/ActivationKeyCurator.java:58
+#: src/main/java/org/candlepin/resource/OwnerResource.java:863
+#: src/main/java/org/candlepin/resource/SubscriptionResource.java:202
 #, java-format
-msgid "ActivationKey with id {0} could not be found."
-msgstr "{0} என்ற id கொண்ட செயல்படுத்தல் விசையைக் கண்டறிய முடியவில்லை."
+msgid "No such unit: {0}"
+msgstr "இது போன்ற அலகு இல்லை: {0}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -682,8 +1101,7 @@ msgstr "ueber cert-ஐ உருவாக்குவதில் உரிம�
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1304
 #, java-format
 msgid "ueber certificate for owner {0} was not found. Please generate one."
-msgstr ""
-"ueber சான்றிதழ்  உரிமையாளர்{0}-க்கு காணப்படவில்லை. ஒன்றை உருவாக்கவும்."
+msgstr "ueber சான்றிதழ்  உரிமையாளர்{0}-க்கு காணப்படவில்லை. ஒன்றை உருவாக்கவும்."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ifelix
@@ -756,287 +1174,203 @@ msgstr "ID \"{0}\" கொண்ட சந்தா தொகுப்பகம�
 msgid "Entitlement Pool with ID ''{0}'' could not be found."
 msgstr "''{0}'' என்ற ID கொண்ட உரிம தொகுப்பகத்தைக் கண்டறிய முடியவில்லை."
 
-#: src/main/java/org/candlepin/resource/JobResource.java:111
-msgid ""
-"You must specify exactly one of owner key, unit UUID, or principal name."
-msgstr ""
-"உரிமையாளர் விசை, அலகு UUID அல்லது முதன்மைப் பெயர் இவற்றில் ஒன்றை "
-"துல்லியமாகக் குறிப்பிட வேண்டும்."
+#: src/main/java/org/candlepin/resource/ProductResource.java:146
+#: src/main/java/org/candlepin/resource/ProductResource.java:167
+#: src/main/java/org/candlepin/resource/ProductResource.java:331
+#: src/main/java/org/candlepin/resource/ProductResource.java:421
+#, java-format
+msgid "Product with UUID ''{0}'' could not be found."
+msgstr "தயாரிப்பு UUID \"{0} உடன் கண்டறிய முடியவில்லை."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ifelix
-#: src/main/java/org/candlepin/resource/JobResource.java:174
-msgid "Error setting scheduler status"
-msgstr "பிழை அமைவு திட்டமிடல் நிலை"
+#: src/main/java/org/candlepin/resource/ProductResource.java:335
+#, java-format
+msgid "Product with UUID ''{0}'' cannot be deleted while subscriptions exist."
+msgstr "தயாரிப்பு UUID ''{0}'' உடன் சந்தாக்கள் இருக்கும் போது அழிக்க முடியாது."
 
-#: src/main/java/org/candlepin/resource/JobResource.java:224
-msgid "job already canceled"
-msgstr "பணி ஏற்கனவே ரத்து செய்யப்பட்டது"
-
-#: src/main/java/org/candlepin/resource/JobResource.java:227
-msgid "cannot cancel a job that is in a finished state"
-msgstr "நிறைவுற்ற நிலையில் உள்ள ஒரு பணியை ரத்து செய்ய முடியாது"
+#: src/main/java/org/candlepin/resource/ProductResource.java:398
+msgid "Must specify product ID."
+msgstr "தயாரிப்பு ID ஐக் குறிப்பிட வேண்டும்."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ifelix
-#: src/main/java/org/candlepin/resource/EnvironmentResource.java:99
-#: src/main/java/org/candlepin/resource/EnvironmentResource.java:118
-#: src/main/java/org/candlepin/resource/EnvironmentResource.java:250
+#: src/main/java/org/candlepin/resource/RoleResource.java:84
 #, java-format
-msgid "No such environment: {0}"
-msgstr "இப்படி ஒரு சூழல் இல்லை: {0}"
+msgid "No such owner: {0}"
+msgstr "இப்படி ஒரு உரிமையாளர் இல்லை: {0}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ifelix
-#: src/main/java/org/candlepin/resource/MigrationResource.java:67
-msgid "Bad entity value."
-msgstr "தவறான நிறுவன மதிப்பு."
-
-#: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:95
-msgid "Unit type with id '"
-msgstr "id கொண்ட அலகு வகை'"
-
-#: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:117
-#, java-format
-msgid "Problem creating unit type: {0}"
-msgstr "{0} என்ற அலகு வகையை உருவாக்குவதில் சிக்கல்"
-
-#: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:138
-#, java-format
-msgid "Unit type with label {0} could not be found."
-msgstr "லேபிள் {0} கொண்ட அலகு வகையைக் கண்டறிய முடியவில்லை."
-
-#: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:159
-#, java-format
-msgid "Unit type with id {0} could not be found."
-msgstr "id {0} ஐக் கொண்ட அலகு வகையைக் கண்டறிய முடியவில்லை."
-
-#: src/main/java/org/candlepin/resource/CdnResource.java:118
-#, java-format
-msgid "A CDN with the label {0}already exists"
-msgstr "{0} என்ற லேபிள் கொண்ட CDN ஏற்கனவே உள்ளது"
-
-#: src/main/java/org/candlepin/resource/CdnResource.java:155
-#, java-format
-msgid "No such content delivery network: {0}"
-msgstr "இப்படி ஒரு உள்ளடக்க வழங்கல் பிணையம் இல்லை: {0}"
-
-#: src/main/java/org/candlepin/resource/DistributorVersionResource.java:136
-#, java-format
-msgid "A distributor version with name {0} already exists"
-msgstr "{0} என்ற பெயருடன் ஒரு விநியோகஸ்தர் ஏற்கனவே உள்ளது"
-
-#: src/main/java/org/candlepin/resource/DistributorVersionResource.java:166
-#, java-format
-msgid "No such distributor version: {0}"
-msgstr "இப்படி ஒரு விநியோகஸ்தர் பதிப்பு இல்லை: {0}"
-
-#: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:58
-msgid "Not supported by a valid subscription."
-msgstr "செல்லுபடியான சந்தாவினால் ஆதரிக்கப்படவில்லை."
-
-#: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:61
-#, java-format
-msgid "Supports architecture {0} but the system is {1}."
-msgstr "{0} கட்டமைப்பை ஆதரிக்கிறது, ஆனால் கணினி {1} ஆக உள்ளது."
-
-#: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:66
-#, java-format
-msgid "Only supports {0} of {1} sockets."
-msgstr "{1} சாக்கெட்டுகளில் {0} ஐ மட்டுமே ஆதரிக்கிறது."
-
-#: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:71
-#, java-format
-msgid "Only supports {0} of {1} cores."
-msgstr "{1} கோர்களில் {0} ஐ மட்டுமே ஆதரிக்கிறது."
-
-#: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:76
-#, java-format
-msgid "Only supports {0}GB of {1}GB of RAM."
-msgstr "{1}GB RAM இல் {0}GB ஐ மட்டுமே ஆதரிக்கிறது."
-
-#: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:81
-#, java-format
-msgid "Only supports {0} of {1} virtual guests."
-msgstr "மெய்நிகர் விருந்தினர்கள் {1} இல் {0} ஐ மட்டுமே ஆதரிக்கிறது."
-
-#: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:86
-#, java-format
-msgid "Only supports {0} of {1} vCPUs."
-msgstr "{1} vCPUகளில் {0} ஐ மட்டுமே ஆதரிக்கிறது."
-
-#: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:91
-#, java-format
-msgid "{2} COVERAGE PROBLEM.  Supports {0} of {1}"
-msgstr "{2} ஆதரவு சிக்கல். {1} இல் {0} ஐ மட்டுமே ஆதரிக்கிறது"
+#: src/main/java/org/candlepin/resource/RoleResource.java:114
+msgid "Role ID does not match path."
+msgstr "பங்கு ID பாதைக்கு பொருந்தவில்லை."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ifelix
-#: src/main/java/org/candlepin/policy/js/entitlement/AbstractEntitlementRules.java:132
+#: src/main/java/org/candlepin/resource/RoleResource.java:143
+msgid "Access type NONE not supported."
+msgstr "அணுகல் வகை NONE ஆதரிக்கப்படாது."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ifelix
+#: src/main/java/org/candlepin/resource/RoleResource.java:186
 #, java-format
-msgid "''{0}'' Should contain name, priority and at least one attribute"
-msgstr "''{0}'' பெயர், முன்னுரிமை மற்றும் குறைந்தபட்சம் ஒரு பண்பை கொண்டுள்ளது"
+msgid "No such permission: {0} in role: {1}"
+msgstr "இது போன்ற அனுமதி இல்லை: {0} பங்கில்: {1}"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ifelix
+#: src/main/java/org/candlepin/resource/RoleResource.java:200
+#, java-format
+msgid "No such role: {0}"
+msgstr "இது போன்ற பங்கு இல்லை: {0}"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ifelix
+#: src/main/java/org/candlepin/resource/RoleResource.java:208
+#, java-format
+msgid "No such user: {0}"
+msgstr "இது போன்ற பயனர் இல்லை: {0}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/policy/js/entitlement/AbstractEntitlementRules.java:147
-msgid "second parameter should be the priority number."
-msgstr "இரண்டாவது அளவுரு முன்னுரிமை எண்ணாக இருக்க வேண்டும்."
-
-#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:149
-#, java-format
-msgid "Subscriptions for {0} expired on: {1}"
-msgstr "{0} க்கான சந்தாவானது காலாவதியாவது: {1}"
-
-#: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:50
-msgid "Other"
-msgstr "மற்றவை"
-
-#: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:53
-msgid "Instance Based"
-msgstr "நேர்வு அடிப்படையிலானது"
-
-#: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:56
-msgid "Stackable"
-msgstr "ஸ்டேக் செய்யத்தக்கது"
-
-#: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:59
-msgid "Multi-Entitleable"
-msgstr "பல உரிம தன்மை கொண்டது"
-
-#: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:62
-msgid "Standard"
-msgstr "தரநிலையானது"
-
-#: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:65
-msgid "Stackable only with other subscriptions"
-msgstr "மற்ற சந்தாக்களுடன் மட்டுமே ஸ்டேக் செய்யத்தக்கது"
-
-#: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:77
-msgid ""
-"Activation keys can only use consumer type restricted pools for a single "
-"consumer type."
+#: src/main/java/org/candlepin/resource/RulesResource.java:90
+msgid "Error decoding the rules. The text should be base 64 encoded"
 msgstr ""
-"ஓர் ஒற்றை நுகர்வோர் வகைக்கு, செயல்படுத்தல் விசைகளால் நுகர்வோர் வகையால் "
-"கட்டுப்படுத்தப்படும் தொகுப்பகங்களை மட்டுமே பயன்படுத்த முடியும்."
-
-#: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:81
-msgid ""
-"Cannot add pools that are restricted to unit type 'person' to activation "
-"keys."
-msgstr ""
-"'நபர்' என்ற வகை அலகுகளுக்கு மட்டும் என வரம்புப்படுத்தப்பட்ட தொகுப்பகங்களை "
-"செயல்படுத்தல் விசைகளுக்குச் சேர்க முடியாது."
-
-#: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:85
-msgid ""
-"Cannot use pools with host restriction with physical only pools on a single "
-"activation key"
-msgstr ""
-"ஓர் ஒற்றை செயல்படுத்தல் விசையில், இயல்நிலை மட்டுமான தொகுப்பகங்களைக் கொண்ட "
-"வழங்கி கட்டுப்பாடு கொண்ட தொகுப்பகங்களைப் பயன்படுத்த முடியாது"
-
-#: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:89
-msgid "Activation keys can only use host restricted pools from a single host."
-msgstr ""
-"செயல்படுத்தல் விசைகள் ஒரே வழங்கியிலிருந்து வரும் வழங்கிக்குரிய கட்டுப்பாடு "
-"கொண்ட தொகுப்பகங்களை மட்டுமே பயன்படுத்த முடியும்."
-
-#: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:93
-#, java-format
-msgid "Multi-entitlement not supported for pool ''{0}''"
-msgstr "தொகுப்பகம் ''{0}'' க்கு பல உரிமங்களுக்கு ஆதரவில்லை"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ifelix
-#: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:96
-msgid ""
-"Error: Only pools with multi-entitlement product subscriptions can be added "
-"to the activation key with a quantity greater than one."
-msgstr ""
-"பிழை: பல்-உரிம தயாரிப்பு சந்தாக்கள் செயல்பாட்டு விசையுடன் உள்ள ஒரு அளவை விட "
-"அதிகமான ஒன்றாக சேர்க்கப்படலாம்."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ifelix
-#: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:101
-msgid "The quantity must not be greater than the total allowed for the pool"
-msgstr ""
-"தொகுப்பகத்திற்காக அனுமதிக்கப்பட்ட மொத்தத்தை விட அளவு அதிகமாக இருக்க வேண்டும்"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ifelix
-#: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:105
-msgid "The quantity must be greater than 0"
-msgstr "அளவானது 0 விட அதிகமாக இருக்க வேண்டும்"
-
-#: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:112
-#, java-format
-msgid ""
-"Activation keys for physical systems can only use quantities of pool ''{0}'' "
-"evenly divisible by {1}"
-msgstr ""
-"இயல்நிலை கணினிகளுக்கான செயல்படுத்தல் விசைகளால், {1} ஆல் மீதமின்றி "
-"வகுக்கக்கூடிய ''{0}'' தொகுப்பகத்தின் அளவுகளை மட்டுமே பயன்படுத்த முடியும்."
-
-#: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:116
-#, java-format
-msgid ""
-"Cannot add virtual pool ''{0}'' to activation key for physical systems."
-msgstr ""
-"இயல்நிலை கணினிகளுக்கான செயல்படுத்தல் விசையில் மெய்நிகர் தொகுப்பகம் ''{0}'' "
-"ஐச் சேர்க்க முடியாது."
-
-#: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:120
-#, java-format
-msgid ""
-"Cannot add physical pool ''{0}'' to activation key for virtual systems."
-msgstr ""
-"மெய்நிகர் கணினிகளுக்கான செயல்படுத்தல் விசையில் இயல்நிலை தொகுப்பகம் ''{0}'' "
-"ஐச் சேர்க்க முடியாது."
-
-#: src/main/java/org/candlepin/util/ServiceLevelValidator.java:67
-#, java-format
-msgid "Service level ''{0}'' is not available to units of organization {1}."
-msgstr "{1} நிறுவனத்தின் அலகுகளுக்கு சேவை நிலை ''{0}'' கிடைக்கவில்லை."
-
-#: src/main/java/org/candlepin/util/ContentOverrideValidator.java:58
-#, java-format
-msgid "Not allowed to override values for: {0}"
-msgstr "இவற்றுக்கான மதிப்புகளுக்கு ஓவர் ரைடு செய்ய அனுமதிக்கப்படவில்லை: {0}"
+"விதிகளை மறைகுறியாக்குவதில் பிழை. உரை அடிப்படை 64 மறைகுறியாக்கப்பட்டதாக இருக்க "
+"வேண்டும்விதிகளை மறைகுறியாக்குவதில் பிழை. உரை அடிப்படை 64 மறைகுறியாக்கப்பட்டதவிதிகளை "
+"மறைகுறியாக்குவதில் பிழை. உரை அடிப்படை 64 மறைகுறியாக்கப்பட்டதவிதிகளை "
+"மறைகுறியாக்விதிகளை மறைகுறியாக்க "
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/guice/I18nProvider.java:91
-#: src/main/java/org/candlepin/exceptions/mappers/BadRequestExceptionMapper.java:81
-msgid "Bad Request"
-msgstr "தவறான கோரிக்கை"
+#: src/main/java/org/candlepin/resource/RulesResource.java:117
+msgid "couldn't read rules file"
+msgstr "கோப்பின் விதிமுறைகளை வாசிக்க முடியவில்லை"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ifelix
+#: src/main/java/org/candlepin/resource/StatisticResource.java:65
+msgid "couldn't generate statistics"
+msgstr "புள்ளிவிவரங்களை உருவாக்க முடியவில்லை"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/exceptions/mappers/CandlepinExceptionMapper.java:104
+#: src/main/java/org/candlepin/resource/SubscriptionResource.java:170
 #, java-format
-msgid "Runtime Error {0} at {1}.{2}:{3}"
-msgstr "{0} ஆனது {1}.{2}:{3}இல் இயக்கநேரப் பிழை"
+msgid "no certificate for subscription {0}"
+msgstr "சந்தா {0} க்கு சான்றிதழ் இல்லை"
 
-#: src/main/java/org/candlepin/exceptions/mappers/CandlepinExceptionMapper.java:109
-#, java-format
-msgid "Runtime Error {0}"
-msgstr "இயக்க நேர பிழை {0}"
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ifelix
+#: src/main/java/org/candlepin/resource/SubscriptionResource.java:191
+msgid "email is required for notification"
+msgstr "அறிவிப்பிற்கு மின்னஞ்சல் தேவை"
 
-#: src/main/java/org/candlepin/exceptions/mappers/BadRequestExceptionMapper.java:57
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ifelix
+#: src/main/java/org/candlepin/resource/SubscriptionResource.java:196
+msgid "email locale is required for notification"
+msgstr "அறிவிப்பிற்கு மின்னஞ்சல் மொழி தேவை"
+
+#: src/main/java/org/candlepin/resource/SubscriptionResource.java:234
 #, java-format
-msgid "Invalid format for query parameter {0}. Expected format: {1}"
+msgid "Subscription with id {0} could not be found."
+msgstr "id {0}-உடன் உள்ள சந்தா காணப்படவில்லை."
+
+#: src/main/java/org/candlepin/resource/UserResource.java:163
+#, java-format
+msgid "User {0} does not exist"
+msgstr "{0} எனும் பயனர் இல்லை"
+
+#: src/main/java/org/candlepin/resource/UserResource.java:181
+#, java-format
+msgid "User {0} not found"
+msgstr "{0} எனும் பயனர் இல்லை"
+
+#: src/main/java/org/candlepin/resteasy/interceptor/PageRequestInterceptor.java:102
+msgid "offset and limit parameters must be positive integers"
+msgstr "ஆஃப்செட் வரம்பு அளவுருக்கள் நேர்க்குறி முழு எண்களாகவே இருக்க வேண்டும்"
+
+#: src/main/java/org/candlepin/resteasy/interceptor/PageRequestInterceptor.java:120
+msgid "the order parameter must be either 'ascending' or 'descending'"
 msgstr ""
-"வினவல் அளவுரு {0} க்கு செல்லுபடியாகாத வடிவமைப்பு. எதிர்பார்க்கும் வடிவமைப்பு:"
-" {1}"
+"ஆர்டர் அளவுருவானது 'ascending' அல்லது 'descending' என்பவற்றில் ஒன்றாகவே இருக்க வேண்டும்"
+
+#: src/main/java/org/candlepin/resteasy/interceptor/PageRequestInterceptor.java:129
+msgid "Expected a positive integer."
+msgstr "ஒரு நேர்க்குறி முழு எண் எதிர்பார்க்கப்பட்டது."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ifelix
+#: src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:325
+msgid "Unable to verify request."
+msgstr "கோரிக்கையை சரிபார்க்க முடியவில்லை."
+
+#: src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:339
+#: src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:362
+#, java-format
+msgid "{0} with id {1} could not be found."
+msgstr "{0} ஆனது id {1} உடன் கண்டறிய முடியவில்லை."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ifelix
+#: src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:356
+msgid "Organization"
+msgstr "நிறுவனம்"
+
+#: src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:550
+#: src/main/java/org/candlepin/resteasy/interceptor/ConsumerAuth.java:57
+#, java-format
+msgid "Unit {0} has been deleted"
+msgstr "அலகு {0} அழிக்கப்பட்டுவிட்டது"
+
+#: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:121
+#: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:157
+msgid "Invalid oauth unit or secret"
+msgstr "தவறான oauth அலகு அல்லது இரகசியம்"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ifelix
+#: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:125
+#, java-format
+msgid "OAuth problem encountered. Internal message is: {0}"
+msgstr "OAuth சிக்கல் எதிர்கொள்ளப்பட்டது. உள்ளார்ந்த செய்தியானது: {0}"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ifelix
+#: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:131
+#, java-format
+msgid "OAuth error encountered. Internal message is: {0}"
+msgstr "OAuth பிழை எதிர்கொள்ளப்பட்டது. உள்ளார்ந்த செய்தியானது: {0}"
+
+#: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:162
+msgid "Error getting oauth unit key"
+msgstr "oauth அலகு விசையைப் பெறுவதில் பிழை"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/exceptions/mappers/BadRequestExceptionMapper.java:77
+#: src/main/java/org/candlepin/resteasy/interceptor/BasicAuth.java:87
+msgid "Error contacting user service"
+msgstr "பயனர் சேவையை தொடர்பு கொள்ளுவதில் பிழை"
+
+#: src/main/java/org/candlepin/service/impl/DefaultEntitlementCertServiceAdapter.java:283
 #, java-format
-msgid "{0} is not a valid value for {1}"
-msgstr "{0} ஆனது {1}க்கான சரியான மதிப்பு அல்ல"
+msgid ""
+"Too many content sets for certificate {0}. A newer client may be available "
+"to address this problem. See kbase https://access.redhat.com/knowledge/"
+"node/129003 for more information."
+msgstr ""
+"சான்றிதழ் {0} க்கு மிக அதிக உள்ளடக்கத் தொகுப்புகள். இந்தச் சிக்கலைச் சரி செய்ய புதிய "
+"கிளையன்ட் கிடைக்கக்கூடும். மேலும் விவரங்களுக்கு kbase https://access.redhat.com/"
+"knowledge/node/129003 ஐப் பார்க்கவும்."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author ifelix
+#: src/main/java/org/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java:105
+msgid "Standalone candlepin does not support redeeming a subscription."
+msgstr "தனியாகநிற்கும் candlepin ஒரு சந்தாவை மீட்டெடுப்பதற்கு துணைபுரியவில்லை."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -1121,15 +1455,13 @@ msgid ""
 "This subscription management application has already been imported by "
 "another owner."
 msgstr ""
-"இந்த சந்தா நிர்வாகி பயன்பாடு மற்றொரு உரிமையாளரால் ஏற்கனவே இறக்குமதி "
-"செய்யப்பட்டுள்ளது."
+"இந்த சந்தா நிர்வாகி பயன்பாடு மற்றொரு உரிமையாளரால் ஏற்கனவே இறக்குமதி செய்யப்பட்டுள்ளது."
 
 #: src/main/java/org/candlepin/sync/ConsumerImporter.java:85
 msgid ""
 "Owner has already imported from another subscription management application."
 msgstr ""
-"ஏற்கனவே மற்றொரு சந்தா நிர்வாகி பயன்பாட்டிலிருந்து உரிமையாளர் இறக்குமதி "
-"செய்யப்பட்டுள்ளார்."
+"ஏற்கனவே மற்றொரு சந்தா நிர்வாகி பயன்பாட்டிலிருந்து உரிமையாளர் இறக்குமதி செய்யப்பட்டுள்ளார்."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ifelix
@@ -1137,380 +1469,18 @@ msgstr ""
 msgid "Unable to find product with ID: "
 msgstr "இந்த ID கொண்ட தயாரிப்பைக் கண்டறிய முடியவில்லை: "
 
-#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:40
-msgid "must be false"
-msgstr "false என்றே இருக்க வேண்டும்"
-
-#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:42
-msgid "must be true"
-msgstr "true என்றே இருக்க வேண்டும்"
-
-#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:44
-#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:57
+#: src/main/java/org/candlepin/util/ContentOverrideValidator.java:58
 #, java-format
-msgid "must be less than or equal to {0}"
-msgstr "{0} க்கு சமமாக அல்லது குறைவாகவே இருக்க வேண்டும்"
+msgid "Not allowed to override values for: {0}"
+msgstr "இவற்றுக்கான மதிப்புகளுக்கு ஓவர் ரைடு செய்ய அனுமதிக்கப்படவில்லை: {0}"
 
-#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:47
-#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:60
+#: src/main/java/org/candlepin/util/ServiceLevelValidator.java:67
 #, java-format
-msgid "must be greater than or equal to {0}"
-msgstr "{0} க்கு சமமாக அல்லது அதிகமாகவே இருக்க வேண்டும்"
+msgid "Service level ''{0}'' is not available to units of organization {1}."
+msgstr "{1} நிறுவனத்தின் அலகுகளுக்கு சேவை நிலை ''{0}'' கிடைக்கவில்லை."
 
-#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:51
-msgid ""
-"numeric value out of bounds (<{integer} digits>.<{fraction} digits> "
-"expected)"
-msgstr ""
-"எண் மதிப்பு எல்லைகளுக்கு அப்பாலுள்ளது (<{integer} digits>.<{fraction} "
-"digits> எதிர்பார்க்கப்படுகிறது)"
-
-#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:55
-msgid "must be in the future"
-msgstr "எதிர்காலத்திலேயே இருக்க வேண்டும்"
-
-#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:63
-msgid "may not be null"
-msgstr "null ஆக இருக்கக்கூடாது"
-
-#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:65
-msgid "must be null"
-msgstr "null ஆகவே இருக்க வேண்டும்"
-
-#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:67
-msgid "must be in the past"
-msgstr "கடந்தகாலத்திலேயே இருக்க வேண்டும்"
-
-#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:69
-msgid "must match ''{regexp}''"
-msgstr "''{regexp}'' க்குப் பொருந்த வேண்டும்"
-
-#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:72
-#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:79
-#, java-format
-msgid "size must be between {0} and {1}"
-msgstr "அளவு {0} மற்றும் {1} க்கு இடைப்பட்டதாகவே இருக்க வேண்டும்"
-
-#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:75
-msgid "invalid credit card number"
-msgstr "செல்லுபடியாகாத கிரெடிட் கார்டு எண்"
-
-#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:77
-msgid "not a well-formed email address"
-msgstr "மின்னஞ்சல் முகவரி வடிவம் சரியில்லை"
-
-#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:82
-#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:84
-msgid "may not be empty"
-msgstr "காலியாக இருக்கக்கூடாது"
-
-#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:86
-msgid "must be between {min} and {max}"
-msgstr "{min} மற்றும் {max} க்கு இடைப்பட்டதாகவே இருக்க வேண்டும்"
-
-#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:89
-msgid "may have unsafe html content"
-msgstr "பாதுகாப்பற்ற html உள்ளடக்கத்தைக் கொண்டிருக்கக்கூடும்"
-
-#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:91
-#, java-format
-msgid "script expression ''{0}'' didn't evaluate to true"
-msgstr "ஸ்கிரிப்ட் கோவை ''{0}'' இன் மதிப்பீடு true என இல்லை"
-
-#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:94
-msgid "must be a valid URL"
-msgstr "செல்லுபடியான  ஒரு URL ஆகவே இருக்க வேண்டும்"
-
-#: src/main/java/org/candlepin/resteasy/interceptor/ConsumerAuth.java:57
-#: src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:550
-#, java-format
-msgid "Unit {0} has been deleted"
-msgstr "அலகு {0} அழிக்கப்பட்டுவிட்டது"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resteasy/interceptor/BasicAuth.java:87
-msgid "Error contacting user service"
-msgstr "பயனர் சேவையை தொடர்பு கொள்ளுவதில் பிழை"
-
-#: src/main/java/org/candlepin/resteasy/interceptor/PageRequestInterceptor.java:102
-msgid "offset and limit parameters must be positive integers"
-msgstr "ஆஃப்செட் வரம்பு அளவுருக்கள் நேர்க்குறி முழு எண்களாகவே இருக்க வேண்டும்"
-
-#: src/main/java/org/candlepin/resteasy/interceptor/PageRequestInterceptor.java:120
-msgid "the order parameter must be either 'ascending' or 'descending'"
-msgstr ""
-"ஆர்டர் அளவுருவானது 'ascending' அல்லது 'descending' என்பவற்றில் ஒன்றாகவே "
-"இருக்க வேண்டும்"
-
-#: src/main/java/org/candlepin/resteasy/interceptor/PageRequestInterceptor.java:129
-msgid "Expected a positive integer."
-msgstr "ஒரு நேர்க்குறி முழு எண் எதிர்பார்க்கப்பட்டது."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ifelix
-#: src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:325
-msgid "Unable to verify request."
-msgstr "கோரிக்கையை சரிபார்க்க முடியவில்லை."
-
-#: src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:339
-#: src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:362
-#, java-format
-msgid "{0} with id {1} could not be found."
-msgstr "{0} ஆனது id {1} உடன் கண்டறிய முடியவில்லை."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ifelix
-#: src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:356
-msgid "Organization"
-msgstr "நிறுவனம்"
-
-#: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:121
-#: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:157
-msgid "Invalid oauth unit or secret"
-msgstr "தவறான oauth அலகு அல்லது இரகசியம்"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ifelix
-#: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:125
-#, java-format
-msgid "OAuth problem encountered. Internal message is: {0}"
-msgstr "OAuth சிக்கல் எதிர்கொள்ளப்பட்டது. உள்ளார்ந்த செய்தியானது: {0}"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ifelix
-#: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:131
-#, java-format
-msgid "OAuth error encountered. Internal message is: {0}"
-msgstr "OAuth பிழை எதிர்கொள்ளப்பட்டது. உள்ளார்ந்த செய்தியானது: {0}"
-
-#: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:162
-msgid "Error getting oauth unit key"
-msgstr "oauth அலகு விசையைப் பெறுவதில் பிழை"
-
-#: src/main/java/org/candlepin/service/impl/DefaultEntitlementCertServiceAdapter.java:271
-#, java-format
-msgid ""
-"Too many content sets for certificate {0}. A newer client may be available "
-"to address this problem. See kbase https://access.redhat.com/knowledge/node/"
-"129003 for more information."
-msgstr ""
-"சான்றிதழ் {0} க்கு மிக அதிக உள்ளடக்கத் தொகுப்புகள். இந்தச் சிக்கலைச் சரி "
-"செய்ய புதிய கிளையன்ட் கிடைக்கக்கூடும். மேலும் விவரங்களுக்கு kbase https://"
-"access.redhat.com/knowledge/node/129003 ஐப் பார்க்கவும்."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ifelix
-#: src/main/java/org/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java:148
-msgid "Standalone candlepin does not support redeeming a subscription."
-msgstr ""
-"தனியாகநிற்கும் candlepin ஒரு சந்தாவை மீட்டெடுப்பதற்கு துணைபுரியவில்லை."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author ifelix
-#: src/main/java/org/candlepin/controller/Entitler.java:77
-#, java-format
-msgid "Subscription pool {0} does not exist."
-msgstr "சந்தா தொகுப்பகம் {0} இல்லை."
-
-#: src/main/java/org/candlepin/controller/Entitler.java:109
-#, java-format
-msgid ""
-"This unit has already had the subscription matching pool ID ''{0}'' attached."
-""
-msgstr ""
-"இந்த அலகுக்கு ஏற்கனவே தொகுப்பக ID ''{0}'' க்குப் பொருந்தும் சந்தா "
-"இணைக்கப்பட்டுள்ளது."
-
-#: src/main/java/org/candlepin/controller/Entitler.java:114
-#, java-format
-msgid "No subscriptions are available from the pool with ID ''{0}''."
-msgstr "''{0}'' என்ற ID கொண்ட தொகுப்பகத்தில் இருந்து எந்த சந்தாக்களும் இல்லை."
-
-#: src/main/java/org/candlepin/controller/Entitler.java:119
-#, java-format
-msgid "Units of this type are not allowed to attach the pool with ID ''{0}''."
-msgstr ""
-"இந்த வகை அலகுகளுக்கு ID ''{0}''கொண்டுள்ள தொகுப்பகத்துடன் இணைய அனுமதி "
-"கிடையாது."
-
-#: src/main/java/org/candlepin/controller/Entitler.java:123
-#, java-format
-msgid "Multi-entitlement not supported for pool with ID ''{0}''."
-msgstr "''{0}'' என்ற ID கொண்ட தொகுப்பகத்திற்கு பல உரிமங்களுக்கு ஆதரவில்லை."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/controller/Entitler.java:127
-#, java-format
-msgid "Guest''s host does not match owner of pool: ''{0}''."
-msgstr ""
-"விருந்தினரின் வழங்கி தொகுப்பகத்தின் உரிமையாளருடன் பொருந்தவில்லை: ''{0}''."
-
-#: src/main/java/org/candlepin/controller/Entitler.java:131
-msgid "Pool not available to subscription management applications."
-msgstr "சந்தா நிர்வாக பயன்பாடுகளுக்கு தொகுப்பகம் கிடைக்கவில்லை."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/controller/Entitler.java:135
-#, java-format
-msgid "Pool is restricted to virtual guests: ''{0}''."
-msgstr ""
-"தொகுப்பகம் மெய்நிகர் விருந்தினர்களுக்கு மட்டும் என கட்டுப்படுத்தப்பட்டுள்ளது:"
-" ''{0}''."
-
-#: src/main/java/org/candlepin/controller/Entitler.java:139
-#, java-format
-msgid "Pool is restricted to physical systems: ''{0}''."
-msgstr ""
-"தொகுப்பகம் உண்மையான கணினிகளுக்கு மட்டும் என வரையறைப்படுத்தப்பட்டுள்ளது: "
-"''{0}''."
-
-#: src/main/java/org/candlepin/controller/Entitler.java:148
-#, java-format
-msgid ""
-"Subscription ''{0}'' must be attached using a quantity evenly divisible by "
-"{1}"
-msgstr ""
-"சந்தா ''{0}'' ஆனது {1} ஆல் மீதமின்றி வகுபடும் அளவைக் கொண்டே இணைக்கப்பட "
-"வேண்டும்"
-
-#: src/main/java/org/candlepin/controller/Entitler.java:153
-#, java-format
-msgid ""
-"Unit does not support instance based calculation required by pool ''{0}''"
-msgstr ""
-"தொகுப்பகம் ''{0}'' க்குத் தேவைப்படும் நேர்வு அடிப்படையிலான கணக்கீட்டை அலகு "
-"ஆதரிக்கவில்லை"
-
-#: src/main/java/org/candlepin/controller/Entitler.java:157
-#, java-format
-msgid "Unit does not support core calculation required by pool ''{0}''"
-msgstr ""
-"தொகுப்பகம் ''{0}'' க்குத் தேவைப்படும் கோர் அடிப்படையிலான கணக்கீட்டை அலகு "
-"ஆதரிக்கவில்லை"
-
-#: src/main/java/org/candlepin/controller/Entitler.java:161
-#, java-format
-msgid "Unit does not support RAM calculation required by pool ''{0}''"
-msgstr ""
-"தொகுப்பகம் ''{0}'' க்குத் தேவைப்படும் RAM அடிப்படையிலான கணக்கீட்டை அலகு "
-"ஆதரிக்கவில்லை"
-
-#: src/main/java/org/candlepin/controller/Entitler.java:165
-#, java-format
-msgid "Unit does not support derived products data required by pool ''{0}''"
-msgstr ""
-"தொகுப்பகம் ''{0}'' க்குத் தேவையான தருவிக்கப்பட்ட தயாரிப்புகள் தரவை அலகு "
-"ஆதரிக்காது"
-
-#: src/main/java/org/candlepin/controller/Entitler.java:169
-#, java-format
-msgid "Unable to attach pool with ID ''{0}''.: {1}."
-msgstr "''{0}'' என்ற ID கொண்ட தொகுப்பகத்தை இணைக்க முடியவில்லை.: {1}."
-
-#: src/main/java/org/candlepin/controller/Entitler.java:190
-#, java-format
-msgid ""
-"Insufficient pool quantity available for adjustment to entitlement ''{0}''."
-msgstr ""
-"''{0}'' உரிமத்திற்கு சரிசெய்ய கிடைக்கக்கூடிய தொகுப்பக அளவு போதுமானதாக இல்லை."
-
-#: src/main/java/org/candlepin/controller/Entitler.java:195
-#: src/main/java/org/candlepin/controller/Entitler.java:200
-#, java-format
-msgid ""
-"Multi-entitlement not supported for pool connected with entitlement ''{0}''."
-msgstr ""
-"''{0}'' உரிமத்துடன் இணைந்துள்ள தொகுப்பகத்திற்கு பல-உரிமப்படுத்தல்கள் "
-"ஆதரிக்கப்படாது."
-
-#: src/main/java/org/candlepin/controller/Entitler.java:205
-#, java-format
-msgid "Unable to adjust quantity for the entitlement with id ''{0}'': {1}"
-msgstr "''{0}'' ஐடி கொண்ட உரிமத்திற்கு அளவைச் சரிசெய்ய முடியவில்லை: {1}"
-
-#: src/main/java/org/candlepin/controller/Entitler.java:284
-#, java-format
-msgid ""
-"This system already has a subscription for the product ''{0}'' attached."
-msgstr ""
-"இந்தக் கணினியின் ''{0}'' தயாரிப்புக்கு ஏற்கனவே சந்தா இணைக்கப்பட்டுள்ளது."
-
-#: src/main/java/org/candlepin/controller/Entitler.java:288
-#, java-format
-msgid ""
-"There are not enough free subscriptions available for the product ''{0}''"
-msgstr "தயாரிப்பு ''{0}'' க்கான போதுமான இலவச சந்தாக்கள் எதுவும் இல்லை"
-
-#: src/main/java/org/candlepin/controller/Entitler.java:292
-#, java-format
-msgid "Units of this type are not allowed for the product ''{0}''."
-msgstr "இந்த வகை அலகுகள் தயாரிப்பு ''{0}''க்கு அனுமதிக்கப்படுவதில்லை."
-
-#: src/main/java/org/candlepin/controller/Entitler.java:297
-#, java-format
-msgid "Only virtual systems can have subscription ''{0}'' attached."
-msgstr ""
-"மெய்நிகர் கணினிகளுக்கு மட்டுமே ''{0}'' சந்தா இணைக்கப்பட்டிருக்க முடியும்."
-
-#: src/main/java/org/candlepin/controller/Entitler.java:302
-#, java-format
-msgid "Unable to attach subscription for the product ''{0}'': {1}."
-msgstr "தயாரிப்பு ''{0}'' சந்தாவை இணைக்க முடியவில்லை: {1}."
-
-#: src/main/java/org/candlepin/model/RulesCurator.java:104
-msgid "No rules file found in the database"
-msgstr "தரவுத்தளத்தில் விதிகள் கோப்பு இல்லை"
-
-#: src/main/java/org/candlepin/model/ProductCurator.java:143
-#, java-format
-msgid "The attribute ''{0}'' must be an integer value."
-msgstr "பண்புக்கூறு ''{0}'' ஆனது ஒரு முழு எண் மதிப்பாகவே இருக்க வேண்டும்."
-
-#: src/main/java/org/candlepin/model/ProductCurator.java:150
-#: src/main/java/org/candlepin/model/ProductCurator.java:169
-#, java-format
-msgid "The attribute ''{0}'' must have a positive value."
-msgstr "பண்புக்கூறு ''{0}'' ஆனது நேர்க்குறி மதிப்பையே கொண்டிருக்க வேண்டும்."
-
-#: src/main/java/org/candlepin/model/ProductCurator.java:162
-#, java-format
-msgid "The attribute ''{0}'' must be a long value."
-msgstr "பண்புக்கூறு ''{0}'' ஆனது ஒரு long மதிப்பாகவே இருக்க வேண்டும்."
-
-#: src/main/java/org/candlepin/model/ProductCurator.java:180
-#, java-format
-msgid "The attribute ''{0}'' must be a boolean value."
-msgstr "பண்புக்கூறு ''{0}'' ஆனது ஒரு பூலியன் மதிப்பாகவே இருக்க வேண்டும்."
-
-#: src/main/java/org/candlepin/model/ProductCurator.java:189
-#, java-format
-msgid ""
-"You cannot create a circular reference for products that ''{0}'' relies on."
-msgstr ""
-"''{0}'' சார்ந்துள்ள தயாரிப்புகளுக்கு நீங்கள் வட்டச்சுழற்சிக் குறிப்பை "
-"உருவாக்க முடியாது."
-
-#: src/main/java/org/candlepin/model/ConsumerCurator.java:396
-#, java-format
-msgid "The system with UUID {0} is a virtual guest. It does not have guests."
-msgstr ""
-"UUID {0} கொண்ட கணினி ஒரு மெய்நிகர் விருந்தினர். அதில் விருந்தினர்கள் இல்லை."
-
-#: src/main/java/org/candlepin/model/AbstractHibernateCurator.java:418
-msgid "Request failed due to concurrent modification, please re-try."
-msgstr ""
-"ஒரே சமயத்திலான மாற்றத்தினால் கோரிக்கை தோல்வியடைந்தது, மீண்டும் "
-"முயற்சிக்கவும்."
-
-#: src/main/java/org/candlepin/model/ConsumerTypeCurator.java:70
-#, java-format
-msgid "No such unit type(s): {0}"
-msgstr "இது போன்ற அலகு வகை(கள்) இல்லை: {0}"
-
-#: src/main/java/org/candlepin/model/UeberCertificateGenerator.java:122
-#, java-format
-msgid "No such unit type: {0}"
-msgstr "இது போன்ற அலகு வகை இல்லை: {0}"
+#~ msgid ""
+#~ "You cannot create a circular reference for products that ''{0}'' relies "
+#~ "on."
+#~ msgstr ""
+#~ "''{0}'' சார்ந்துள்ள தயாரிப்புகளுக்கு நீங்கள் வட்டச்சுழற்சிக் குறிப்பை உருவாக்க முடியாது."
