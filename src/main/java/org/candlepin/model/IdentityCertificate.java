@@ -17,6 +17,7 @@ package org.candlepin.model;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OneToOne;
@@ -48,7 +49,7 @@ public class IdentityCertificate extends AbstractCertificate {
     @OneToOne
     private CertificateSerial serial;
 
-    @OneToOne(mappedBy = "idCert")
+    @OneToOne(mappedBy = "idCert", fetch = FetchType.LAZY)
     private Consumer consumer;
 
     public CertificateSerial getSerial() {

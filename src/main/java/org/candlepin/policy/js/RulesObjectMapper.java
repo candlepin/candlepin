@@ -25,6 +25,7 @@ import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
+import com.fasterxml.jackson.datatype.hibernate4.Hibernate4Module;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 
 import org.slf4j.Logger;
@@ -79,6 +80,10 @@ public class RulesObjectMapper {
                 "activationKeys", "environments", "pools"));
         this.mapper.setFilters(filterProvider);
 
+        Hibernate4Module hbm = new Hibernate4Module();
+        hbm.enable(Hibernate4Module.Feature.FORCE_LAZY_LOADING);
+        mapper.registerModule(hbm);
+
         // Very important for deployments so new rules files can return additional
         // properties that this current server doesn't know how to serialize, but still
         // shouldn't fail on.
@@ -106,6 +111,7 @@ public class RulesObjectMapper {
             return this.mapper.writeValueAsString(mainNode);
         }
         catch (Exception e) {
+            log.error("Unable to serialize objects to JSON.", e);
             throw new IseException("Unable to serialize objects to JSON.", e);
         }
     }

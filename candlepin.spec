@@ -53,7 +53,7 @@ BuildRequires: selinux-policy-doc
 %global distlibdir %{_datadir}/%{name}/lib/
 %global libdir %{_datadir}/%{name}/lib/
 %global usecpdeps "usecpdeps"
-BuildRequires: candlepin-deps >= 0:0.2.6
+BuildRequires: candlepin-deps >= 0:0.2.7
 %else
 # Require the candlepin software collection for packages we use that may
 # conflict with other projects/releases:
@@ -104,6 +104,7 @@ BuildRequires: apache-commons-codec
 BuildRequires: jackson-annotations >= %{jackson_version}
 BuildRequires: jackson-core >= %{jackson_version}
 BuildRequires: jackson-databind >= %{jackson_version}
+BuildRequires: jackson-datatype-hibernate4 >= %{jackson_version}
 BuildRequires: jackson-jaxrs-json-provider >= %{jackson_version}
 BuildRequires: jackson-module-jaxb-annotations >= %{jackson_version}
 
@@ -176,6 +177,7 @@ Requires: resteasy >= 0:2.3.7
 Requires: jackson-annotations >= %{jackson_version}
 Requires: jackson-core >= %{jackson_version}
 Requires: jackson-databind >= %{jackson_version}
+Requires: jackson-datatype-hibernate4 >= %{jackson_version}
 Requires: jackson-jaxrs-json-provider >= %{jackson_version}
 Requires: jackson-module-jaxb-annotations >= %{jackson_version}
 Requires: hornetq >= 0:2.3.5

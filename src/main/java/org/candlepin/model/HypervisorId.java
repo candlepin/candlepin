@@ -18,6 +18,7 @@ import java.io.Serializable;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -69,14 +70,14 @@ public class HypervisorId extends AbstractHibernateObject {
     @NotNull
     private String hypervisorId;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     @ForeignKey(name = "fk_hypervisor_consumer")
     @JoinColumn(nullable = false, unique = true)
     @XmlTransient
     @NotNull
     private Consumer consumer;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @ForeignKey(name = "fk_hypervisor_owner")
     @JoinColumn(nullable = false)
     @Index(name = "idx_hypervisor_owner_fk")

@@ -53,7 +53,10 @@ JACKSON = [group('jackson-annotations', 'jackson-core', 'jackson-databind',
                  :version => JACKSON_VERSION),
            group('jackson-module-jsonSchema', 'jackson-module-jaxb-annotations',
                  :under=> "#{JACKSON_NS}.module",
-                 :version => JACKSON_VERSION)]
+                 :version => JACKSON_VERSION),
+           group('jackson-datatype-hibernate4',
+                :under=> "#{JACKSON_NS}.datatype",
+                :version => JACKSON_VERSION)]
 
 SUN_JAXB = 'com.sun.xml.bind:jaxb-impl:jar:2.1.12'
 

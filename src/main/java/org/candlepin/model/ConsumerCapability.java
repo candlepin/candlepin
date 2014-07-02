@@ -16,6 +16,7 @@ package org.candlepin.model;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -58,7 +59,7 @@ public class ConsumerCapability {
     @NotNull
     private String name;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @ForeignKey(name = "fk_consumer_capability_consumer")
     @JoinColumn(nullable = false)
     @Index(name = "cp_consumer_capability_consumer_fk_idx")

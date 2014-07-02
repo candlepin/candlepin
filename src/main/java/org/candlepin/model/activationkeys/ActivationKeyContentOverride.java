@@ -16,6 +16,7 @@ package org.candlepin.model.activationkeys;
 
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -37,7 +38,7 @@ import org.hibernate.annotations.ForeignKey;
 @DiscriminatorValue("activation_key")
 public class ActivationKeyContentOverride extends ContentOverride {
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @ForeignKey(name = "fk_content_override_key")
     @JoinColumn(nullable = true)
     private ActivationKey key;

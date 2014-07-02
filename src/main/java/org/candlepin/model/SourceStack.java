@@ -16,6 +16,7 @@ package org.candlepin.model;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -74,7 +75,7 @@ public class SourceStack extends AbstractHibernateObject {
      * loosely linked in the database, so instead we will link directly for any derived
      * pool.
      */
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @ForeignKey(name = "fk_sourcestack_consumer")
     @JoinColumn(nullable = false)
     @NotNull
@@ -83,7 +84,7 @@ public class SourceStack extends AbstractHibernateObject {
     /**
      * pool derived from the source
      */
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     @ForeignKey(name = "fk_sourcestack_pool")
     @JoinColumn(nullable = false, unique = true)
     @XmlTransient
