@@ -24,7 +24,7 @@ describe 'GuestId Resource' do
     guests = [{'guestId' => 'guest1'}]
 
     user_cp = user_client(@owner1, random_string('test-user'))
-    consumer = user_cp.register(random_string('host'), :system, nil, 
+    consumer = user_cp.register(random_string('host'), :system, nil,
       {}, nil, nil, [], [])
     consumer.should_not be_nil
     consumer['guestIds'].should be_nil
@@ -35,7 +35,7 @@ describe 'GuestId Resource' do
     consumer_client.update_guestids(guests)
 
     guest_ids = consumer_client.get_guestids()
-    guest_ids.length.should == 1 
+    guest_ids.length.should == 1
     guest_ids[0]['guestId'].should == 'guest1'
   end
 
@@ -44,7 +44,7 @@ describe 'GuestId Resource' do
               {'guestId' => 'guest2'}]
 
     user_cp = user_client(@owner1, random_string('test-user'))
-    consumer = user_cp.register(random_string('host'), :system, nil, 
+    consumer = user_cp.register(random_string('host'), :system, nil,
       {}, nil, nil, [], [])
 
     consumer_client = Candlepin.new(username=nil, password=nil,
@@ -53,11 +53,11 @@ describe 'GuestId Resource' do
     consumer_client.update_guestids(guests)
 
     guest_ids = consumer_client.get_guestids()
-    guest_ids.length.should == 2 
+    guest_ids.length.should == 2
 
     consumer_client.update_guestids([guests[1]])
     guest_ids = consumer_client.get_guestids()
-    guest_ids.length.should == 1 
+    guest_ids.length.should == 1
     guest_ids[0]['guestId'].should == 'guest2'
   end
 
@@ -164,12 +164,12 @@ describe 'GuestId Resource' do
       {}, nil, @owner1['key'], [], [])
     guest_consumer = user_cp.register(random_string('guest'), :system, nil,
       {'virt.uuid' => uuid1, 'virt.is_guest' => 'true'}, nil, @owner1['key'], [], [])
-    # Create a product/subscription 
+    # Create a product/subscription
     super_awesome = create_product(nil, random_string('super_awesome'),
                             :attributes => { "virt_limit" => "10" })
     sub = @cp.create_subscription(@owner1['key'], super_awesome.id, 20)
     @cp.refresh_pools(@owner1['key'])
-    
+
     consumer_client = Candlepin.new(username=nil, password=nil,
         cert=host_consumer['idCert']['cert'],
         key=host_consumer['idCert']['key'])
@@ -225,12 +225,12 @@ describe 'GuestId Resource' do
       {}, nil, @owner1['key'], [], [])
     guest_consumer = user_cp.register(random_string('guest'), :system, nil,
       {'virt.uuid' => uuid1, 'virt.is_guest' => 'true'}, nil, @owner1['key'], [], [])
-    # Create a product/subscription 
+    # Create a product/subscription
     super_awesome = create_product(nil, random_string('super_awesome'),
                             :attributes => { "virt_limit" => "10" })
     sub = @cp.create_subscription(@owner1['key'], super_awesome.id, 20)
     @cp.refresh_pools(@owner1['key'])
-    
+
     consumer_client = Candlepin.new(username=nil, password=nil,
         cert=host_consumer['idCert']['cert'],
         key=host_consumer['idCert']['key'])
@@ -281,7 +281,7 @@ describe 'GuestId Resource' do
       {}, nil, @owner1['key'], [], [])
     guest_consumer = user_cp.register(random_string('guest'), :system, nil,
       {'virt.uuid' => uuid1, 'virt.is_guest' => 'true'}, nil, @owner1['key'], [], [])
-    
+
     consumer_client = Candlepin.new(username=nil, password=nil,
         cert=host_consumer['idCert']['cert'],
         key=host_consumer['idCert']['key'])

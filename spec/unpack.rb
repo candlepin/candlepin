@@ -97,7 +97,7 @@ module Unpack
         node_count.times { node_dict << Node.new() }
         node_trie = build_huffman_for_nodes(node_dict)
         # print_trie(node_trie.root, 0)
-        is_count = false 
+        is_count = false
       else # make bit list
           bit_list += get_bits(byte)
       end
@@ -114,7 +114,7 @@ module Unpack
           name_bits = bit_list[bit_start..bit_end]
           bit_end += 1
           lookup_value = string_trie.decode(name_bits)
-          if !lookup_value.to_s.empty? 
+          if !lookup_value.to_s.empty?
             if lookup_value == @sentinal
               still_node = false
               bit_start = bit_end
@@ -130,14 +130,14 @@ module Unpack
           path_bits = bit_list[bit_start..bit_end]
           bit_end += 1
           lookup_value = node_trie.decode(path_bits)
-          if !lookup_value.to_s.empty? 
+          if !lookup_value.to_s.empty?
             node_value = lookup_value
             node.add_child(NodeChild.new({:name => name_value, :connection => node_value}))
             bit_start = bit_end
           end
         end
       end
-    end 
+    end
     node_dict[0]
   end
 
@@ -149,17 +149,17 @@ module Unpack
   end
 
   def get_bits_rec(remain, power)
-    if power < 0 
+    if power < 0
       return
     end
     return_val = ''
-    if remain > 2**power-1 
+    if remain > 2**power-1
       return_val = '1'
       new_val = get_bits_rec(remain-2**power, power-1)
     else
       return_val = '0'
       new_val = get_bits_rec(remain, power-1)
-    end 
+    end
     if not new_val.nil?
       return_val += new_val
     end
@@ -215,7 +215,7 @@ module Unpack
     nodeRep += "]"
 
     puts nodeRep
- 
+
     if !hn.left.nil?
       print_trie(hn.left, tab + 1)
     end

@@ -116,7 +116,7 @@ class HuffmanEncoding
   def encode_list(list)
     code = ''
     list.each do |c|
-      code += encode(c) 
+      code += encode(c)
     end
     code
   end

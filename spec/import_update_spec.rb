@@ -53,7 +53,7 @@ describe 'Import Update', :serial => true do
     @cp.import(@import_owner['key'], no_ent_export.export_filename)
     # manifest consumer
     @exporter.candlepin_client.list_entitlements().size.should == 0
-    # import owner 
+    # import owner
     @cp.list_subscriptions(@import_owner['key']).size.should == 0
   end
 end

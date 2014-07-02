@@ -8,17 +8,17 @@ describe 'Distributor Capability' do
     @owner = create_owner(random_string("test_owner"))
     @user = user_client(@owner, random_string("test_user"))
   end
- 
+
   it 'should allow distributor version creation' do
     count = @cp.get_distributor_versions.size
     dist_version = create_distributor_version(random_string("WidgetvBillion"),
                                     "Widget Billion",
                                    ["midas touch",
                                     "telepathy",
-                                    "lightning speed"]) 
+                                    "lightning speed"])
     dist_version.id.should_not be_nil
     @cp.get_distributor_versions().size.should == count+1
-    dist_version.capabilities.size.should == 3	
+    dist_version.capabilities.size.should == 3
   end
 
   it 'should allow distributor version update' do
@@ -27,12 +27,12 @@ describe 'Distributor Capability' do
                                     "Widget Billion",
                                    ["midas touch",
                                     "telepathy",
-                                    "lightning speed"]) 
+                                    "lightning speed"])
     dist_version_id = dist_version.id
     dist_version = update_distributor_version(dist_version_id, dist_version.name,
                                     "Widget Billion",
                                    ["midas touch",
-                                    "lightning speed"]) 
+                                    "lightning speed"])
     @cp.get_distributor_versions().size.should == count+1
     dist_version.id.should == dist_version_id
     dist_version.capabilities.size.should == 2
@@ -45,12 +45,12 @@ describe 'Distributor Capability' do
                                     "Widget Billion",
                                    ["midas touch",
                                     "telepathy",
-                                    "lightning speed"]) 
+                                    "lightning speed"])
     facts = {
       'distributor_version' => name
     }
     consumer = @user.register(random_string("consumer"), :candlepin, nil, facts)
-    consumer.capabilities.size.should == 3  
+    consumer.capabilities.size.should == 3
 
   end
 
@@ -60,14 +60,14 @@ describe 'Distributor Capability' do
                                     "Widget Billion",
                                    ["midas touch",
                                     "telepathy",
-                                    "lightning speed"]) 
+                                    "lightning speed"])
     facts = {
       'distributor_version' => name
     }
     capabilities = ["one","two"]
     consumer = @user.register(random_string("consumer"), :candlepin, nil, facts,
                               nil, nil, [], [], nil, capabilities)
-    consumer.capabilities.size.should == 2 
+    consumer.capabilities.size.should == 2
 
   end
 
@@ -78,12 +78,12 @@ describe 'Distributor Capability' do
                                     "Widget Billion",
                                    ["midas touch",
                                     "telepathy",
-                                    "lightning speed"]) 
+                                    "lightning speed"])
     facts = {
       'distributor_version' => name
     }
     consumer = @user.register(random_string("consumer"), :candlepin, nil, facts)
-    consumer.capabilities.size.should == 3  
+    consumer.capabilities.size.should == 3
 
     name = random_string("WidgetvBazillion")
     dist_version = create_distributor_version(name,
@@ -91,7 +91,7 @@ describe 'Distributor Capability' do
                                    ["midas touch",
                                     "telekenesis",
                                     "ludicrist speed",
-                                    "omlet maker"]) 
+                                    "omlet maker"])
     facts = {
       'distributor_version' => name
     }
@@ -132,7 +132,7 @@ describe 'Distributor Capability' do
                     "heat vision"]
     consumer_client.update_consumer({:uuid => consumer['uuid'], :capabilities => capabilities})
     consumer = @cp.get_consumer(consumer['uuid'])
-    consumer.capabilities.size.should == 6  
+    consumer.capabilities.size.should == 6
   end
 
   # The unit tests examine the variations, this is a simple end-to-end test.
@@ -170,13 +170,13 @@ describe 'Distributor Capability' do
                                     "Widget Billion",
                                    ["midas touch",
                                     "telepathy",
-                                    "lightning speed"]) 
+                                    "lightning speed"])
     dist_version = create_distributor_version(name2,
                                     "Widget Bazillion",
                                    ["midas touch",
                                     "telekenesis",
                                     "ludicrist speed",
-                                    "omlet maker"]) 
+                                    "omlet maker"])
     dist_vers = @cp.get_distributor_versions('Bill')
     dist_vers.size.should == 1
     dist_vers[0]['name'].should == name1
@@ -187,14 +187,14 @@ describe 'Distributor Capability' do
     dist_vers = @cp.get_distributor_versions(nil, 'telepathy')
     dist_vers.size.should == 1
     dist_vers[0]['name'].should == name1
-    
+
     dist_vers = @cp.get_distributor_versions(nil, 'omlet maker')
     dist_vers.size.should == 1
     dist_vers[0]['name'].should == name2
-    
+
     dist_vers = @cp.get_distributor_versions(nil, 'midas touch')
     dist_vers.size.should == 2
-    
+
   end
 
 end

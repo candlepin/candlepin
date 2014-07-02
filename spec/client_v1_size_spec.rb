@@ -4,7 +4,7 @@ require 'candlepin_scenarios'
 describe 'Entitlement Certificate V1 Size' do
   include CandlepinMethods
 
-  before(:all) do  
+  before(:all) do
     @cp = Candlepin.new('admin', 'admin')
     @content_list= create_batch_content(200)
   end
@@ -35,7 +35,7 @@ describe 'Entitlement Certificate V1 Size' do
 				{'system.certificate_version' => '1.0'})
   end
 
-  after(:all) do 
+  after(:all) do
     @content_list.each do |content|
       @cp.delete_content(content.id)
     end

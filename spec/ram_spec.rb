@@ -243,7 +243,7 @@ describe 'RAM Limiting' do
         'productName' => @stackable_ram_product.name}
     ]
     system.update_consumer({:installedProducts => installed})
-    
+
     pool = find_pool(@owner.id, @stackable_ram_sub.id)
     pool.should_not == nil
 
@@ -255,9 +255,9 @@ describe 'RAM Limiting' do
     compliance_status['compliant'].should == true
     compliant_products = compliance_status['compliantProducts']
     compliant_products.should have_key(@stackable_ram_product.id)
-    
+
   end
-  
+
   it 'consumer status should be green when stacking a single ram entitlement with proper quantity' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
                 {'system.certificate_version' => '3.1',
@@ -271,19 +271,19 @@ describe 'RAM Limiting' do
         'productName' => @stackable_ram_product.name}
     ]
     system.update_consumer({:installedProducts => installed})
-    
+
     pool = find_pool(@owner.id, @stackable_ram_sub.id)
     pool.should_not == nil
 
     entitlement = system.consume_pool(pool.id, {:quantity => 2})
     entitlement.should_not == nil
-    
+
     compliance_status = system.get_compliance(consumer_id=system.uuid)
     compliance_status['status'].should == 'valid'
     compliance_status['compliant'].should == true
     compliant_products = compliance_status['compliantProducts']
     compliant_products.should have_key(@stackable_ram_product.id)
-    
+
   end
 
   it 'autobind should completely cover ram products' do
@@ -299,10 +299,10 @@ describe 'RAM Limiting' do
         'productName' => @stackable_ram_product.name}
     ]
     system.update_consumer({:installedProducts => installed})
-    
+
     entitlements = system.consume_product()
     entitlements.size.should == 1
-    
+
     entitlement = entitlements[0]
     entitlement.should_not == nil
     entitlement.quantity.should == 2
@@ -327,16 +327,16 @@ describe 'RAM Limiting' do
         'productName' => @stackable_ram_product.name}
     ]
     system.update_consumer({:installedProducts => installed})
-    
+
     pool = find_pool(@owner.id, @stackable_ram_sub.id)
     pool.should_not == nil
 
     entitlement = system.consume_pool(pool.id, {:quantity => 1})
     entitlement.should_not == nil
-    
+
     entitlements = system.consume_product()
     entitlements.size.should == 1
-    
+
     entitlement = entitlements[0]
     entitlement.should_not == nil
     entitlement.quantity.should == 1
@@ -347,6 +347,6 @@ describe 'RAM Limiting' do
     compliant_products = compliance_status['compliantProducts']
     compliant_products.should have_key(@stackable_ram_product.id)
   end
-  
+
 end
 

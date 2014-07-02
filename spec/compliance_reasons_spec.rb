@@ -33,13 +33,13 @@ describe 'Single Entitlement Compliance Reasons' do
                  :support_level => 'standard',
                  :support_type => 'excellent',})
     @product1_sub = @cp.create_subscription(@owner['key'], @product1.id, 100, [], '1888', '1234')
-    
+
     # Refresh pools so that the subscription pools will be available to the test systems.
     @cp.refresh_pools(@owner['key'])
-    
+
     @user = user_client(@owner, random_string('test-user'))
   end
-  
+
   it 'reports products not covered' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
                 {'system.certificate_version' => '3.2',
@@ -56,12 +56,12 @@ describe 'Single Entitlement Compliance Reasons' do
     compliance_status.should have_key('reasons')
     reasons = compliance_status['reasons']
     reasons.size.should == 1
-    
+
     expected_message = "Not supported by a valid subscription."
     assert_reason(reasons[0], "NOTCOVERED", expected_message, {"product_id" => @product1.id,
                                                                 "name" => @product1.name})
   end
-  
+
   it 'reports ram not covered but no installed product' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
                 {'system.certificate_version' => '3.2',
@@ -70,7 +70,7 @@ describe 'Single Entitlement Compliance Reasons' do
                  'memory.memtotal' => '16777216'})
     installed = []
     system.update_consumer({:installedProducts => installed})
-    
+
     pool = find_pool(@owner.id, @product1_sub.id)
     pool.should_not == nil
 
@@ -107,7 +107,7 @@ describe 'Single Entitlement Compliance Reasons' do
         {'productId' => @product1.id, 'productName' => @product1.name}
     ]
     system.update_consumer({:installedProducts => installed})
-    
+
     pool = find_pool(@owner.id, @product1_sub.id)
     pool.should_not == nil
 
@@ -182,7 +182,7 @@ describe 'Single Entitlement Compliance Reasons' do
         {'productId' => @product1.id, 'productName' => @product1.name}
     ]
     system.update_consumer({:installedProducts => installed})
-    
+
     pool = find_pool(@owner.id, @product1_sub.id)
     pool.should_not == nil
 
@@ -208,7 +208,7 @@ describe 'Single Entitlement Compliance Reasons' do
                                                         'has' => expected_has,
                                                         'name' => @product1.name})
   end
-  
+
   it 'reports cores not covered' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
                 {'system.certificate_version' => '3.2',
@@ -221,7 +221,7 @@ describe 'Single Entitlement Compliance Reasons' do
         {'productId' => @product1.id, 'productName' => @product1.name}
     ]
     system.update_consumer({:installedProducts => installed})
-    
+
     pool = find_pool(@owner.id, @product1_sub.id)
     pool.should_not == nil
 
@@ -247,7 +247,7 @@ describe 'Single Entitlement Compliance Reasons' do
                                                         'has' => expected_has,
                                                         'name' => @product1.name})
   end
-  
+
   it 'reports arch not covered' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
                 {'system.certificate_version' => '3.2',
@@ -258,7 +258,7 @@ describe 'Single Entitlement Compliance Reasons' do
         {'productId' => @product1.id, 'productName' => @product1.name}
     ]
     system.update_consumer({:installedProducts => installed})
-    
+
     pool = find_pool(@owner.id, @product1_sub.id)
     pool.should_not == nil
 
@@ -284,7 +284,7 @@ describe 'Single Entitlement Compliance Reasons' do
                                                         'has' => expected_has,
                                                         'name' => @product1.name})
   end
-  
+
   it 'reports multiple reasons' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
                 {'system.certificate_version' => '3.2',
@@ -297,7 +297,7 @@ describe 'Single Entitlement Compliance Reasons' do
         {'productId' => @product1.id, 'productName' => @product1.name}
     ]
     system.update_consumer({:installedProducts => installed})
-    
+
     pool = find_pool(@owner.id, @product1_sub.id)
     pool.should_not == nil
 
@@ -313,7 +313,7 @@ describe 'Single Entitlement Compliance Reasons' do
 
     reasons = compliance_status['reasons']
     reasons.size.should == 4
-    
+
     # Build up an expectation map to reason key because we
     # can't determine the order of the resons that are returned
     # from the server.
@@ -332,10 +332,8 @@ describe 'Single Entitlement Compliance Reasons' do
                               "name" => @product1.name
             },
             "message" => expected_message
-                         
-                         
     }
-    
+
     expected_has = "16"
     expected_covered = "8"
     expected_message = "Only supports %sGB of %sGB of RAM." % [expected_covered,
@@ -365,7 +363,7 @@ describe 'Single Entitlement Compliance Reasons' do
             },
             "message" => expected_message
     }
-    
+
     expected_has = "240"
     expected_covered = "22"
     expected_message = "Only supports %s of %s cores." % [expected_covered,
@@ -385,7 +383,7 @@ describe 'Single Entitlement Compliance Reasons' do
         expectation = reason_expectations[reason["key"]]
         assert_reason(reason, expectation["key"], expectation.message, expectation.attributes)
     end
-    
+
   end
 end
 
@@ -419,13 +417,13 @@ describe 'Stacking Compliance Reasons' do
                  :support_type => 'excellent',})
     @not_covered_product_sub = @cp.create_subscription(@owner['key'], @not_covered_product.id, 100, [],
                                                               '1999', '3332')
-    
+
     # Refresh pools so that the subscription pools will be available to the test systems.
     @cp.refresh_pools(@owner['key'])
-    
+
     @user = user_client(@owner, random_string('test-user'))
   end
-  
+
   it 'report stack does not cover ram' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
                 {'system.certificate_version' => '3.2',
@@ -436,7 +434,7 @@ describe 'Stacking Compliance Reasons' do
         {'productId' => @stackable_product_1.id, 'productName' => @stackable_product_1.name}
     ]
     system.update_consumer({:installedProducts => installed})
-    
+
     pool = find_pool(@owner.id, @stackable_sub_1.id)
     pool.should_not == nil
 
@@ -450,7 +448,7 @@ describe 'Stacking Compliance Reasons' do
     compliance_status['status'].should == 'partial'
     compliance_status['compliant'].should == false
     compliance_status.should have_key('reasons')
-    
+
     expected_has = "16"
     expected_covered = "8"
     expected_message = "Only supports %sGB of %sGB of RAM." % [expected_covered,
@@ -463,7 +461,7 @@ describe 'Stacking Compliance Reasons' do
                                                         'has' => expected_has,
                                                         'name' => @stackable_product_1.name})
   end
-  
+
   it 'report partial for stack that does not cover ram and has no installed products' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
                 {'system.certificate_version' => '3.2',
@@ -472,7 +470,7 @@ describe 'Stacking Compliance Reasons' do
                  'cpu.cpu_socket(s)' => '4'})
     installed = []
     system.update_consumer({:installedProducts => installed})
-    
+
     pool = find_pool(@owner.id, @stackable_sub_1.id)
     pool.should_not == nil
 
@@ -486,7 +484,7 @@ describe 'Stacking Compliance Reasons' do
     compliance_status['status'].should == 'partial'
     compliance_status['compliant'].should == false
     compliance_status.should have_key('reasons')
-    
+
     expected_has = "16"
     expected_covered = "8"
     expected_message = "Only supports %sGB of %sGB of RAM." % [expected_covered,
@@ -499,7 +497,7 @@ describe 'Stacking Compliance Reasons' do
                                                         'has' => expected_has,
                                                         'name' => @stackable_product_1.name})
   end
-  
+
   it 'report stack does not cover sockets' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
                 {'system.certificate_version' => '3.2',
@@ -510,7 +508,7 @@ describe 'Stacking Compliance Reasons' do
         {'productId' => @stackable_product_1.id, 'productName' => @stackable_product_1.name}
     ]
     system.update_consumer({:installedProducts => installed})
-    
+
     pool = find_pool(@owner.id, @stackable_sub_1.id)
     pool.should_not == nil
 
@@ -524,7 +522,7 @@ describe 'Stacking Compliance Reasons' do
     compliance_status['status'].should == 'partial'
     compliance_status['compliant'].should == false
     compliance_status.should have_key('reasons')
-    
+
     expected_has = "6"
     expected_covered = "4"
     expected_message = "Only supports %s of %s sockets." % [expected_covered,
@@ -537,7 +535,7 @@ describe 'Stacking Compliance Reasons' do
                                                         'has' => expected_has,
                                                         'name' => @stackable_product_1.name})
   end
-  
+
   it 'report stack does not cover cores' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
                 {'system.certificate_version' => '3.2',
@@ -550,7 +548,7 @@ describe 'Stacking Compliance Reasons' do
         {'productId' => @stackable_product_1.id, 'productName' => @stackable_product_1.name}
     ]
     system.update_consumer({:installedProducts => installed})
-    
+
     pool = find_pool(@owner.id, @stackable_sub_1.id)
     pool.should_not == nil
 
@@ -564,7 +562,7 @@ describe 'Stacking Compliance Reasons' do
     compliance_status['status'].should == 'partial'
     compliance_status['compliant'].should == false
     compliance_status.should have_key('reasons')
-    
+
     expected_has = "30"
     expected_covered = "20"
     expected_message = "Only supports %s of %s cores." % [expected_covered,
@@ -591,7 +589,7 @@ describe 'Stacking Compliance Reasons' do
         {'productId' => @stackable_product_1.id, 'productName' => @stackable_product_1.name}
     ]
     system.update_consumer({:installedProducts => installed})
-    
+
     pool = find_pool(@owner.id, @stackable_sub_1.id)
     pool.should_not == nil
 
@@ -605,7 +603,7 @@ describe 'Stacking Compliance Reasons' do
     compliance_status['status'].should == 'partial'
     compliance_status['compliant'].should == false
     compliance_status.should have_key('reasons')
-    
+
     expected_has = "30"
     expected_covered = "16"
     expected_message = "Only supports %s of %s vCPUs." % [expected_covered,
@@ -618,7 +616,7 @@ describe 'Stacking Compliance Reasons' do
                                                         'has' => expected_has,
                                                         'name' => @stackable_product_1.name})
   end
-  
+
   it 'report stack does not cover arch' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
                 {'system.certificate_version' => '3.2',
@@ -631,7 +629,7 @@ describe 'Stacking Compliance Reasons' do
         {'productId' => @stackable_product_1.id, 'productName' => @stackable_product_1.name}
     ]
     system.update_consumer({:installedProducts => installed})
-    
+
     pool = find_pool(@owner.id, @stackable_sub_1.id)
     pool.should_not == nil
 
@@ -645,7 +643,7 @@ describe 'Stacking Compliance Reasons' do
     compliance_status['status'].should == 'partial'
     compliance_status['compliant'].should == false
     compliance_status.should have_key('reasons')
-    
+
     expected_has = "ppc64"
     expected_covered = "x86_64"
     expected_message = "Supports architecture %s but the system is %s." % [expected_covered,
@@ -658,7 +656,7 @@ describe 'Stacking Compliance Reasons' do
                                                         'has' => expected_has,
                                                         'name' => @stackable_product_1.name})
   end
-  
+
   it 'report stack does not cover all installed products' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
                 {'system.certificate_version' => '3.2',
@@ -670,7 +668,7 @@ describe 'Stacking Compliance Reasons' do
         {'productId' => @not_covered_product.id, 'productName' => @not_covered_product.name}
     ]
     system.update_consumer({:installedProducts => installed})
-    
+
     pool = find_pool(@owner.id, @stackable_sub_1.id)
     pool.should_not == nil
 
@@ -684,7 +682,7 @@ describe 'Stacking Compliance Reasons' do
     compliance_status['status'].should == 'invalid'
     compliance_status['compliant'].should == false
     compliance_status.should have_key('reasons')
-    
+
     expected_message = "Not supported by a valid subscription."
 
     reasons = compliance_status['reasons']
@@ -692,7 +690,7 @@ describe 'Stacking Compliance Reasons' do
     assert_reason(reasons[0], 'NOTCOVERED', expected_message, {'product_id' => @not_covered_product.id,
                                                                 'name' => @not_covered_product.name})
   end
-  
+
   it 'report stack does not cover multiple attributes' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
                 {'system.certificate_version' => '3.2',
@@ -705,7 +703,7 @@ describe 'Stacking Compliance Reasons' do
         {'productId' => @stackable_product_1.id, 'productName' => @stackable_product_1.name}
     ]
     system.update_consumer({:installedProducts => installed})
-    
+
     pool = find_pool(@owner.id, @stackable_sub_1.id)
     pool.should_not == nil
 
@@ -718,12 +716,12 @@ describe 'Stacking Compliance Reasons' do
     compliance_status['status'].should == 'partial'
     compliance_status['compliant'].should == false
     compliance_status.should have_key('reasons')
-    
+
     # Build up an expectation map to reason key because we
     # can't determine the order of the resons that are returned
     # from the server.
     reason_expectations = {}
-    
+
     expected_has = "ppc64"
     expected_covered = "x86_64"
     expected_message = "Supports architecture %s but the system is %s." % [expected_covered,
@@ -739,7 +737,7 @@ describe 'Stacking Compliance Reasons' do
             },
             "message" => expected_message
     }
-    
+
     expected_has = "16"
     expected_covered = "8"
     expected_message = "Only supports %sGB of %sGB of RAM." % [expected_covered,
@@ -754,7 +752,7 @@ describe 'Stacking Compliance Reasons' do
             },
             "message" => expected_message
     }
-    
+
     expected_has = "20"
     expected_covered = "4"
     expected_message = "Only supports %s of %s sockets." % [expected_covered,
@@ -769,7 +767,7 @@ describe 'Stacking Compliance Reasons' do
             },
             "message" => expected_message
     }
-    
+
     expected_has = "240"
     expected_covered = "20"
     expected_message = "Only supports %s of %s cores." % [expected_covered,
