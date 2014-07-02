@@ -334,7 +334,7 @@ define "candlepin" do
       end
     end
     
-    maven.write_pom "target/#{ARTIFACT_API}.pom"
+    maven.write_pom "target/#{ARTIFACT_API}-#{project.version}.pom"
   end
 
   desc 'Crawl the REST API and print a summary.'
