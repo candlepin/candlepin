@@ -34,6 +34,7 @@ istack-commons-runtime
 jackson-annotations
 jackson-core
 jackson-databind
+jackson-datatype-hibernate/jackson-datatype-hibernate4
 jackson-jaxrs-providers/jackson-jaxrs-base
 jackson-jaxrs-providers/jackson-jaxrs-json-provider
 jackson-module-jaxb-annotations
