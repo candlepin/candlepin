@@ -206,12 +206,12 @@ msgstr "{0} ਨੇ ਡਾਟਾਬੇਸ ਵਿਚਲੇ ਨਿਯਮਾਂ ਨ�
 msgid "{0} removed the rules from the database"
 msgstr "{0} ਨੇ ਡਾਟਾਬੇਸ ਵਿੱਚੋਂ ਨਿਯਮ ਹਟਾ ਦਿੱਤੇ"
 
-#: src/main/java/org/candlepin/resource/UserResource.java:162
+#: src/main/java/org/candlepin/resource/UserResource.java:163
 #, java-format
 msgid "User {0} does not exist"
 msgstr "ਉਪਭੋਗੀ {0} ਮੌਜੂਦ ਨਹੀਂ ਹੈ"
 
-#: src/main/java/org/candlepin/resource/UserResource.java:180
+#: src/main/java/org/candlepin/resource/UserResource.java:181
 #, java-format
 msgid "User {0} not found"
 msgstr "ਉਪਭੋਗੀ {0} ਨਹੀਂ ਲੱਭਿਆ"
@@ -520,7 +520,7 @@ msgstr "uuid {0} ਵਾਲਾ ਪ੍ਰਾਹੁਣਾ ਲੱਭਿਆ ਨਹੀ
 # translation auto-copied from project Candlepin, version master, document
 # keys
 #: src/main/java/org/candlepin/resource/GuestIdResource.java:261
-#: src/main/java/org/candlepin/resteasy/interceptor/BasicAuth.java:73
+#: src/main/java/org/candlepin/resteasy/interceptor/BasicAuth.java:72
 msgid "Invalid Credentials"
 msgstr "ਗਲਤ ਕਰੀਡੈਂਸ਼ੀਅਲ"
 
@@ -1206,7 +1206,7 @@ msgstr "ਇਕਾਈ {0} ਮਿਟਾਈ ਜਾ ਚੁੱਕੀ ਹੈ"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resteasy/interceptor/BasicAuth.java:88
+#: src/main/java/org/candlepin/resteasy/interceptor/BasicAuth.java:87
 msgid "Error contacting user service"
 msgstr "ਉਪਭੋਗੀ ਸੇਵਾ ਨਾਲ ਸੰਪਰਕ ਸਮੇਂ ਗਲਤੀ"
 

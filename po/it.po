@@ -207,12 +207,12 @@ msgstr "{0} ha aggiornato le regole nel database alla versione {1}"
 msgid "{0} removed the rules from the database"
 msgstr "{0} rimosso le regole dal database"
 
-#: src/main/java/org/candlepin/resource/UserResource.java:162
+#: src/main/java/org/candlepin/resource/UserResource.java:163
 #, java-format
 msgid "User {0} does not exist"
 msgstr "L'utente {0} non esiste"
 
-#: src/main/java/org/candlepin/resource/UserResource.java:180
+#: src/main/java/org/candlepin/resource/UserResource.java:181
 #, java-format
 msgid "User {0} not found"
 msgstr "Utente {0} non trovato"
@@ -535,7 +535,7 @@ msgstr "Impossibile trovare il guest con uuid {0}."
 # translation auto-copied from project Candlepin, version master, document
 # keys
 #: src/main/java/org/candlepin/resource/GuestIdResource.java:261
-#: src/main/java/org/candlepin/resteasy/interceptor/BasicAuth.java:73
+#: src/main/java/org/candlepin/resteasy/interceptor/BasicAuth.java:72
 msgid "Invalid Credentials"
 msgstr "Credenziali invalide"
 
@@ -1245,7 +1245,7 @@ msgstr "L'unità {0} è stata cancellata"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resteasy/interceptor/BasicAuth.java:88
+#: src/main/java/org/candlepin/resteasy/interceptor/BasicAuth.java:87
 msgid "Error contacting user service"
 msgstr "Errore durante il contatto con il servizio dell'utente"
 

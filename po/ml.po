@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2014-03-10 06:19-0400\n"
+"PO-Revision-Date: 2014-06-26 03:11-0400\n"
 "Last-Translator: anipeter <anipeter@fedoraproject.org>\n"
 "Language-Team: Malayalam\n"
 "Language: ml\n"
@@ -210,12 +210,12 @@ msgstr ""
 msgid "{0} removed the rules from the database"
 msgstr "ഡേറ്റാബെയിസില്‍ നിന്നും {0} നിയമങ്ങള്‍ നീക്കം ചെയ്തിരിയ്ക്കുന്നു"
 
-#: src/main/java/org/candlepin/resource/UserResource.java:162
+#: src/main/java/org/candlepin/resource/UserResource.java:163
 #, java-format
 msgid "User {0} does not exist"
 msgstr "ഉപയോക്താവു് {0} നിലവിലില്ല"
 
-#: src/main/java/org/candlepin/resource/UserResource.java:180
+#: src/main/java/org/candlepin/resource/UserResource.java:181
 #, java-format
 msgid "User {0} not found"
 msgstr "ഉപയോക്താവു് {0} ലഭ്യമായില്ല"
@@ -533,7 +533,7 @@ msgstr "uuid {0} ഉള്ള ഗസ്റ്റ് ലഭ്യമായില�
 # translation auto-copied from project Candlepin, version master, document
 # keys
 #: src/main/java/org/candlepin/resource/GuestIdResource.java:261
-#: src/main/java/org/candlepin/resteasy/interceptor/BasicAuth.java:73
+#: src/main/java/org/candlepin/resteasy/interceptor/BasicAuth.java:72
 msgid "Invalid Credentials"
 msgstr "തെറ്റായ ആധികാരികതകള്‍"
 
@@ -784,7 +784,7 @@ msgstr "ജോലി റദ്ദാക്കിയിരിയ്ക്കു�
 
 #: src/main/java/org/candlepin/resource/JobResource.java:227
 msgid "cannot cancel a job that is in a finished state"
-msgstr ""
+msgstr "പൂര്‍ത്തിയാക്കിയ ജോലി റദ്ദാക്കുവാന്‍ സാധ്യമല്ല"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author anipeter
@@ -927,6 +927,8 @@ msgid ""
 "Activation keys can only use consumer type restricted pools for a single "
 "consumer type."
 msgstr ""
+"ആക്ടിവേഷന്‍ കീകള്‍ക്കു് ഒറ്റ ഉപഭോക്തൃ തരത്തിലുള്ള ഉപഭോക്തൃ തരത്തിലുള്ള "
+"നിയന്ത്രണമുള്ള പൂളുകള്‍ മാത്രമേ ഉപയോഗിയ്ക്കുവാന്‍ പാടുള്ളൂ."
 
 #: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:81
 msgid ""
@@ -941,6 +943,8 @@ msgid ""
 "Cannot use pools with host restriction with physical only pools on a single "
 "activation key"
 msgstr ""
+"ഏക ആക്ടിവേഷന്‍ കീയില്‍, ഫിസിക്കല്‍ മാത്രമായ പൂളുകള്‍ക്കു് ഹോസ്റ്റ് "
+"നിഷേധച്ചിരിയ്ക്കുന്ന പൂളുകള്‍ ഉപയോഗിയ്ക്കുവാന്‍ സാധ്യമല്ല"
 
 #: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:89
 msgid "Activation keys can only use host restricted pools from a single host."
@@ -951,7 +955,7 @@ msgstr ""
 #: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:93
 #, java-format
 msgid "Multi-entitlement not supported for pool ''{0}''"
-msgstr ""
+msgstr "''{0}'' പൂളിനു് അനവധി എന്റൈറ്റില്‍മെന്റ് പിന്തുണയ്ക്കുന്നില്ല"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author anipeter
@@ -984,18 +988,24 @@ msgid ""
 "Activation keys for physical systems can only use quantities of pool ''{0}'' "
 "evenly divisible by {1}"
 msgstr ""
+"''{0}'' പൂള്‍ സമമായി {1} കൊണ്ടു് വിഭജിയ്ക്കാന്‍ പറ്റിയവ മാത്രമേ ഫിസിക്കല്‍ "
+"സിസ്റ്റങ്ങള്‍ക്കുള്ള ആക്ടിവേഷന്‍ കീകള്‍ക്കു് ഉപയോഗിയ്ക്കുവാന്‍ പാടുള്ളൂ"
 
 #: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:116
 #, java-format
 msgid ""
 "Cannot add virtual pool ''{0}'' to activation key for physical systems."
 msgstr ""
+"ഫിസിക്കല്‍ സിസ്റ്റങ്ങള്‍ക്കു് ആക്ടിവേഷന്‍ കീയിലേക്കു് ''{0}'' വിര്‍ച്ച്വല്‍ "
+"പൂള്‍ ചേര്‍ക്കുവാന്‍ സാധ്യമല്ല."
 
 #: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:120
 #, java-format
 msgid ""
 "Cannot add physical pool ''{0}'' to activation key for virtual systems."
 msgstr ""
+"വിര്‍ച്ച്വല്‍ സിസ്റ്റങ്ങള്‍ക്കു് ആക്ടിവേഷന്‍ കീയിലേക്കു് ''{0}'' ഫിസിക്കല്‍ "
+"പൂള്‍ ചേര്‍ക്കുവാന്‍ സാധ്യമല്ല."
 
 #: src/main/java/org/candlepin/util/ServiceLevelValidator.java:67
 #, java-format
@@ -1140,85 +1150,87 @@ msgstr "ഈ ഐഡിയുള്ള പ്രൊഡക്ട് കണ്ടു
 
 #: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:40
 msgid "must be false"
-msgstr ""
+msgstr "false ആയിരിയ്ക്കണം"
 
 #: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:42
 msgid "must be true"
-msgstr ""
+msgstr "true ആയിരിയ്ക്കണം"
 
 #: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:44
 #: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:57
 #, java-format
 msgid "must be less than or equal to {0}"
-msgstr ""
+msgstr "{0}-യ്ക്കു് സമം അല്ലെങ്കില്‍ കുറവായിരിയ്ക്കണം"
 
 #: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:47
 #: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:60
 #, java-format
 msgid "must be greater than or equal to {0}"
-msgstr ""
+msgstr "{0}-യ്ക്കു് സമം അല്ലെങ്കില്‍ കൂടുതലായിരിയ്ക്കണം"
 
 #: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:51
 msgid ""
 "numeric value out of bounds (<{integer} digits>.<{fraction} digits> "
 "expected)"
 msgstr ""
+"പരിധിയ്ക്കു പുറത്തുള്ള മൂല്ല്യം(<{integer} digits>.<{fraction} digits> "
+"പ്രതീക്ഷിച്ചു)"
 
 #: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:55
 msgid "must be in the future"
-msgstr ""
+msgstr "ഭാവിയിലുണ്ടായിരിയ്ക്കണം"
 
 #: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:63
 msgid "may not be null"
-msgstr ""
+msgstr "null ആകുവാന്‍ പാടില്ല"
 
 #: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:65
 msgid "must be null"
-msgstr ""
+msgstr "null ആയിരിയ്ക്കണം"
 
 #: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:67
 msgid "must be in the past"
-msgstr ""
+msgstr "മുമ്പായിരിയ്ക്കണം"
 
 #: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:69
 msgid "must match ''{regexp}''"
-msgstr ""
+msgstr "''{regexp}''-മായി പൊരുത്തപ്പെടണം"
 
 #: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:72
 #: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:79
 #, java-format
 msgid "size must be between {0} and {1}"
-msgstr ""
+msgstr "{0}-നും {1}-നും മദ്ധ്യത്തിലായിരിയ്ക്കണം വ്യാപ്തി"
 
 #: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:75
 msgid "invalid credit card number"
-msgstr ""
+msgstr "തെറ്റായ ക്രെഡിറ്റ് കാര്‍ഡ് നമ്പര്‍"
 
 #: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:77
 msgid "not a well-formed email address"
-msgstr ""
+msgstr "ശരിയായ ഈമെയില്‍ വിലാസമല്ല"
 
 #: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:82
 #: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:84
 msgid "may not be empty"
-msgstr ""
+msgstr "കാലിയാകുവാന്‍ പാടില്ല"
 
 #: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:86
 msgid "must be between {min} and {max}"
-msgstr ""
+msgstr "{min}-നും {max}-നും മദ്ധ്യത്തിലായിരിയ്ക്കണം"
 
 #: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:89
 msgid "may have unsafe html content"
-msgstr ""
+msgstr "സുരക്ഷിതമല്ലാത്ത html വിവരങ്ങളുണ്ടാവാം"
 
 #: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:91
 #, java-format
 msgid "script expression ''{0}'' didn't evaluate to true"
-msgstr ""
+msgstr "''{0}'' എന്ന സ്ക്രിപ്റ്റ് എക്സ്പ്രെഷന്‍ true ആയില്ല"
 
 #: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:94
 msgid "must be a valid URL"
-msgstr ""
+msgstr "ശരിയായ യുആര്‍എല്‍ ആയിരിയ്ക്കണം"
 
 #: src/main/java/org/candlepin/resteasy/interceptor/ConsumerAuth.java:57
 #: src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:550
@@ -1228,7 +1240,7 @@ msgstr "യൂണിറ്റ് {0} വെട്ടി നീക്കിയി
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resteasy/interceptor/BasicAuth.java:88
+#: src/main/java/org/candlepin/resteasy/interceptor/BasicAuth.java:87
 msgid "Error contacting user service"
 msgstr "ഉപയോക്താവിനുള്ള സര്‍വീസുമായി ബന്ധപ്പെടുന്നതില്‍ പിശക്"
 
@@ -1462,7 +1474,7 @@ msgstr ""
 
 #: src/main/java/org/candlepin/model/RulesCurator.java:104
 msgid "No rules file found in the database"
-msgstr ""
+msgstr "ഡേറ്റാബെയ്സില്‍ നിയമ ഫയല്‍ ലഭ്യമായില്ല"
 
 #: src/main/java/org/candlepin/model/ProductCurator.java:143
 #, java-format

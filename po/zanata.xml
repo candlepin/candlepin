@@ -7,8 +7,8 @@
     <locales>
         <locale>as</locale>
         <locale map-from="bn_IN">bn-IN</locale>
-        <locale map-from="de_DE">de-DE</locale>
-        <locale map-from="es_ES">es-ES</locale>
+        <locale>de</locale>
+        <locale>es</locale>
         <locale>fr</locale>
         <locale>gu</locale>
         <locale>hi</locale>
