@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.20
+Version: 0.9.21
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -388,6 +388,35 @@ fi
 
 
 %changelog
+* Wed Jul 02 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.21-1
+- 1110843: Lookup correct upstream cert from source stack.  (dgoodwin@redhat.com)
+- 1113202: Add derived content to distributors ent cert (mstead@redhat.com)
+- 1113598: Correct date ranges when global attrs are in play (ckozak@redhat.com)
+- Allow UsernameConsumersPermission to list owner info (mstead@redhat.com)
+- Translations update. (dgoodwin@redhat.com)
+- Add jackson-datatype-hibernate4 to dependencies. (awood@redhat.com)
+- Change to a couple of languages. (bkearney@redhat.com)
+- bumping candlepin-deps version (jesusr@redhat.com)
+- Rev rules again (ckozak@redhat.com)
+- use priority for other attributes (ckozak@redhat.com)
+- pick groups better (ckozak@redhat.com)
+- Much better pool comparator for sockets (ckozak@redhat.com)
+- Break ties for best entitlement group by number of ents (ckozak@redhat.com)
+- Don't force one-to-ones on the child side to be loaded eagerly (ckozak@redhat.com)
+- Remove unused import and clean up unnecessary javadoc (mbaglioj@redhat.com)
+- Add selective cache purging rather than a generic purge all (mbaglioj@redhat.com)
+- Commit after each system heal (ckozak@redhat.com)
+- add unit test and add ability to remove temp export dirs (jesusr@redhat.com)
+- Fix Eclipse .classpath file generation. (awood@redhat.com)
+- Remove 'relies on' feature (wpoteat@redhat.com)
+- Add 'buildr-findBugs' and 'pmd' to required gems (alikins@redhat.com)
+- Fix consumer facts spec in mysql (ckozak@redhat.com)
+- Candlepin should own the amqp directory. (jesusr@redhat.com)
+- Apply permissions when determining OwnerInfo consumer counts.  (mstead@redhat.com)
+- Allow read only users to generate manifests (wpoteat@redhat.com)
+- Removal of Adapter Methods. Part 2. (wpoteat@redhat.com)
+- Update to a newer checkstyle and update import ordering. (awood@redhat.com)
+
 * Fri Jun 20 2014 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.20-1
 - 1056760: Support guestids with reverse-endianness (ckozak@redhat.com)
 - Removal of Adapter Methods for IT. Part 1. (wpoteat@redhat.com)
