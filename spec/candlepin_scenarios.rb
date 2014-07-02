@@ -113,7 +113,7 @@ module CandlepinMethods
     @users << user
 
     role = @cp.create_role(random_string('testrole'), perms)
-    @cp.add_role_user(role['id'], @username)
+    @cp.add_role_user(role['id'], username)
 
     return Candlepin.new(username, password)
   end
@@ -429,8 +429,8 @@ class StandardExporter < Exporter
     @candlepin_client.consume_pool(@pool3.id, {:quantity => 1})
 
     @cdn = create_cdn(@cdn_label,
-	              "Test CDN",
-	              "https://cdn.test.com")
+                "Test CDN",
+                "https://cdn.test.com")
   end
 
   def create_candlepin_export_update
