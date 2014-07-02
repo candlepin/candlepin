@@ -12,27 +12,27 @@ describe 'Entitlement Certificate V1 Size' do
   before(:each) do
     @owner = create_owner random_string('test_owner')
     @product1 = create_product(nil, nil, :attributes =>
-				{:version => '6.4',
-				 :warning_period => 15,
-				 :management_enabled => true,
-				 :virt_only => 'false',
-				 :support_level => 'standard',
-				 :support_type => 'excellent',})
+                {:version => '6.4',
+                 :warning_period => 15,
+                 :management_enabled => true,
+                 :virt_only => 'false',
+                 :support_level => 'standard',
+                 :support_type => 'excellent',})
     @cp.add_content_to_product(@product1.id, @content_list[0].id, true)
     @subscription = @cp.create_subscription(@owner['key'], @product1.id, 10, [], '12345', '6789', 'order1')
     @product2 = create_product(nil, nil, :attributes =>
-				{:version => '6.4',
-				 :warning_period => 15,
-				 :management_enabled => true,
-				 :virt_only => 'false',
-				 :support_level => 'standard',
-				 :support_type => 'excellent',})
+                {:version => '6.4',
+                 :warning_period => 15,
+                 :management_enabled => true,
+                 :virt_only => 'false',
+                 :support_level => 'standard',
+                 :support_type => 'excellent',})
     @cp.add_content_to_product(@product2.id, @content_list[0].id, true)
     subscription2 = @cp.create_subscription(@owner['key'], @product2.id, 10, [], '12345', '6789', 'order1')
     @cp.refresh_pools(@owner['key'])
     @user = user_client(@owner, random_string('billy'))
     @system = consumer_client(@user, random_string('system1'), :system, nil,
-				{'system.certificate_version' => '1.0'})
+                {'system.certificate_version' => '1.0'})
   end
 
   after(:all) do

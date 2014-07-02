@@ -37,8 +37,8 @@ describe 'User Resource' do
   end
 
   it "should return a non empty list of users" do
-  	user_list = @cp.list_users
-	user_list.size.should > 0
+    user_list = @cp.list_users
+    user_list.size.should > 0
   end
 
   it 'should allow a user to list their owners' do

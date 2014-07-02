@@ -140,7 +140,7 @@ describe 'Distributor Capability' do
   # distributor consumers not needing cert version validation
   it 'can stop bind based on consumer capabilities' do
     @product = create_product(nil, nil, :attributes =>
-				{:cores => 8})
+                {:cores => 8})
     subscription = @cp.create_subscription(@owner['key'], @product.id, 10, [], '12345', '6789', 'order1')
     @cp.refresh_pools(@owner['key'])
 
