@@ -256,7 +256,7 @@ describe 'Hypervisor Resource', :type => :virt do
     sorted_expected = expected_guest_ids.sort
 
     (0..sorted_ids.size - 1).each do |i|
-	    sorted_ids[i]['guestId'].should == sorted_expected[i]
+        sorted_ids[i]['guestId'].should == sorted_expected[i]
     end
   end
 

@@ -73,7 +73,7 @@ else
     JDBC_URL="jdbc:postgresql:candlepin"
 fi
 
-	echo "============ $MESSAGE =============="
+    echo "============ $MESSAGE =============="
     LQCOMMAND="liquibase --driver=$DRIVER --classpath=src/main/resources/:target/classes/:$JDBC_JAR --changeLogFile=db/changelog/$CHANGELOG --url=$JDBC_URL --username=candlepin"
     if [ -n "$DBPASSWORD" ] ; then
         LQCOMMAND="$LQCOMMAND --password=$DBPASSWORD "
@@ -111,18 +111,18 @@ function isrpm ()
 
 function update_keystore
 {
-	if [ "$FORCECERT" = "1" ]; then
-	    echo "Move the keystore to tomcats location"
-	    sudo cp /etc/candlepin/certs/keystore $CONTAINER_CONF_DIR/keystore
-	else
-	    echo "Using existing keystore"
-	fi
+    if [ "$FORCECERT" = "1" ]; then
+        echo "Move the keystore to tomcats location"
+        sudo cp /etc/candlepin/certs/keystore $CONTAINER_CONF_DIR/keystore
+    else
+        echo "Using existing keystore"
+    fi
 }
 
 function upload_products
 {
   if [ "$TESTDATA" = "1" ]; then
-	  `dirname $0`/import_products.rb  `dirname $0`/test_data.json
+      `dirname $0`/import_products.rb  `dirname $0`/test_data.json
   fi
 }
 

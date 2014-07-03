@@ -27,8 +27,8 @@ describe 'Entitlement Certificate V3' do
   before(:each) do
     @owner = create_owner random_string('test_owner')
     @product = create_product(nil, nil, :attributes =>
-				{:version => '6.4',
-				 :arch => 'i386, x86_64',
+                {:version => '6.4',
+                 :arch => 'i386, x86_64',
                  :sockets => 4,
                  :cores => 8,
                  :ram => 16,
@@ -40,8 +40,8 @@ describe 'Entitlement Certificate V3' do
                  :support_type => 'excellent',})
 
     @product_30 = create_product(nil, nil, :attributes =>
-				{:version => '6.4',
-				 :arch => 'i386, x86_64',
+                {:version => '6.4',
+                 :arch => 'i386, x86_64',
                  :sockets => 4,
                  :warning_period => 15,
                  :management_enabled => true,
@@ -72,7 +72,7 @@ describe 'Entitlement Certificate V3' do
     @user = user_client(@owner, random_string('billy'))
 
     @system = consumer_client(@user, random_string('system1'), :system, nil,
-				{'system.certificate_version' => '3.2',
+                {'system.certificate_version' => '3.2',
                  'uname.machine' => 'i386'})
   end
 

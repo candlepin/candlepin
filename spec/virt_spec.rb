@@ -237,7 +237,7 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
     @host1_client.list_entitlements.length.should == 0
     @guest1_client.list_entitlements.length.should == 0
     @guest1_client.consume_product()
-    # After the guest autobinds, the host should also be healed 
+    # After the guest autobinds, the host should also be healed
     @guest1_client.list_entitlements.length.should == 1
     @host1_client.list_entitlements.length.should == 1
   end
@@ -265,7 +265,7 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
     @host1_client.list_entitlements.length.should == 0
     @guest1_client.list_entitlements.length.should == 0
     @guest1_client.consume_product()
-    # After the guest autobinds, the host should also be healed 
+    # After the guest autobinds, the host should also be healed
     @guest1_client.list_entitlements.length.should == 1
     @host1_client.list_entitlements.length.should == 0
   end
@@ -290,7 +290,7 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
     @host1_client.list_entitlements.length.should == 0
     @guest1_client.list_entitlements.length.should == 0
     @guest1_client.consume_product()
-    # After the guest autobinds, the host should also be healed 
+    # After the guest autobinds, the host should also be healed
     @guest1_client.list_entitlements.length.should == 0
     @host1_client.list_entitlements.length.should == 0
   end
@@ -354,7 +354,7 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
     @host1_client.list_entitlements.length.should == 0
     @guest1_client.list_entitlements.length.should == 0
     @guest1_client.consume_product()
-    # After the guest autobinds, the host should also be healed 
+    # After the guest autobinds, the host should also be healed
     @guest1_client.list_entitlements.length.should == 1
     @host1_client.list_entitlements.length.should == 1
     @host1_client.list_entitlements[0]['pool']['productId'].should == @virt_limit_product.id

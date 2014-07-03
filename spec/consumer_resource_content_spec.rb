@@ -140,7 +140,7 @@ describe 'Consumer Resource Content' do
       @consumer1.add_content_overrides(@consumer1.uuid, overrides)
     end.should raise_exception(RestClient::BadRequest)
   end
-  
+
   it "should reject changes for blacklisted attributes regardless of case" do
     overrides = []
     overrides << create_content_override("content1.label", "BaseURL", "its a no-no")
@@ -164,7 +164,7 @@ describe 'Consumer Resource Content' do
     overrides << create_content_override("my-content", "my-field", "my-value")
     returner = @consumer1.add_content_overrides(@consumer1.uuid, overrides)
     returner.size.should == 1
-    
+
     overrides[0]["name"] = "MY-FIELD"
     overrides[0]["value"] = "changed-value"
     returner = @consumer1.add_content_overrides(@consumer1.uuid, overrides)
