@@ -482,6 +482,7 @@ describe 'Owner Resource Owner Info Tests' do
     @owner = create_owner(random_string("an_owner"))
     @owner_client = user_client(@owner, random_string('owner_admin_user'))
     @owner_client.register(random_string('system_consumer'), :system, nil, {})
+    @owner_client.register(random_string('system_consumer_guest'), :system, nil, {"virt.is_guest" => "true"})
   end
 
   it 'my systems user should filter consumer counts in owner info' do
@@ -492,15 +493,17 @@ describe 'Owner Resource Owner Info Tests' do
     }]
     my_systems_user = user_client_with_perms(@owner, random_string('my_systems_user'), 'password', perms)
     my_systems_user.register(random_string('system_consumer'), :system, nil, {})
+    my_systems_user.register(random_string('system_consumer_guest1'), :system, nil, {"virt.is_guest" => "true"})
+    my_systems_user.register(random_string('system_consumer_guest2'), :system, nil, {"virt.is_guest" => "true"})
 
     admin_owner_info = @owner_client.get_owner_info(@owner['key'])
-    admin_owner_info['consumerCounts']['system'].should == 2
+    admin_owner_info['consumerCounts']['system'].should == 5
 
     my_systems_owner_info = my_systems_user.get_owner_info(@owner['key'])
-    my_systems_owner_info['consumerCounts']['system'].should == 1
-
-
-
+    puts my_systems_owner_info
+    my_systems_owner_info['consumerCounts']['system'].should == 3
+    my_systems_owner_info['consumerGuestCounts']['physical'].should == 1
+    my_systems_owner_info['consumerGuestCounts']['guest'].should == 2
   end
 
 end

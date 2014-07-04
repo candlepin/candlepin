@@ -627,9 +627,13 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         physical1.setFact("virt.is_guest", "false");
         consumerCurator.create(physical1);
 
+        // Second physical machine with no is_guest fact set.
+        Consumer physical2 = new Consumer("test-consumer2", "test-user", owner, type);
+        consumerCurator.create(physical2);
+
         OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
         assertEquals((Integer) 2, info.getConsumerGuestCounts().get(OwnerInfo.GUEST));
-        assertEquals((Integer) 1, info.getConsumerGuestCounts().get(OwnerInfo.PHYSICAL));
+        assertEquals((Integer) 2, info.getConsumerGuestCounts().get(OwnerInfo.PHYSICAL));
 
 
         // Create another owner to make sure we don't see another owners consumers:
@@ -638,7 +642,6 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         info = ownerInfoCurator.lookupByOwner(anotherOwner);
         assertEquals((Integer) 0, info.getConsumerGuestCounts().get(OwnerInfo.GUEST));
         assertEquals((Integer) 0, info.getConsumerGuestCounts().get(OwnerInfo.PHYSICAL));
-
     }
 
     @Test
