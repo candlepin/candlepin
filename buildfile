@@ -164,7 +164,7 @@ LOGDRIVER = 'logdriver:logdriver:jar:1.0'
 PROVIDED = [SERVLET, file(Java.tools_jar)]
 
 ### Project
-GROUP = "candlepin"
+GROUP = "org.candlepin"
 COPYRIGHT = ""
 
 desc "The Proxy project"
@@ -266,12 +266,13 @@ define "candlepin" do
   # The apicrawl package is only used for generating documentation so there is no
   # need to ship it.  Ideally, we'd put apicrawl in its own buildr project but I
   # kept getting complaints about circular dependencies.
-  package(:jar, :id=>'candlepin-api').tap do |jar|
+  api_jar = package(:jar, :id=>'candlepin-api').tap do |jar|
     jar.clean
     pkgs = %w{auth config exceptions jackson model paging pki resteasy service util}.map { |pkg| "#{compiled_cp_path}/#{pkg}" }
     p = jar.path(candlepin_path)
     p.include(pkgs).exclude("#{compiled_cp_path}/util/apicrawl")
   end
+  pom.artifact = api_jar
 
   package(:jar, :id=>"candlepin-certgen").tap do |jar|
     jar.clean
