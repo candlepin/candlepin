@@ -185,6 +185,32 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void availablePoolsCanNotBeFilteredByOverriddenAttribute() throws Exception {
+        Date activeDate = TestUtil.createDate(2000, 3, 2);
+
+        Pool pool1 = createPoolAndSub(owner, product, 100L,
+            activeDate, TestUtil.createDate(2005, 3, 2));
+        poolCurator.create(pool1);
+
+        Pool pool2 = createPoolAndSub(owner, product, 100L,
+            activeDate, TestUtil.createDate(2005, 3, 2));
+
+        // This product value should be overridden by the pool attr
+        pool2.setProductAttribute("virt_only", "true", "1234");
+        pool2.setAttribute("virt_only", "false");
+        poolCurator.create(pool2);
+
+        PoolFilterBuilder filters = new PoolFilterBuilder();
+        filters.addAttributeFilter("virt_only", "true");
+
+        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
+            null, owner, null, activeDate, false, filters,
+            null, false);
+        List<Pool> results = page.getPageData();
+        assertTrue(results.isEmpty());
+    }
+
+    @Test
     public void availablePoolsCanBeFilteredByBothPoolAndProductPoolAttribute()
         throws Exception {
         Date activeDate = TestUtil.createDate(2000, 3, 2);
