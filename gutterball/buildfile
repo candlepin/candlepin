@@ -1,5 +1,6 @@
+# vi: set ft=ruby:
+
 require 'buildr/java/emma'
-require "buildr/checkstyle"
 require 'rspec/core/rake_task'
 require 'json'
 
@@ -15,6 +16,12 @@ use_pmd = ENV['pmd']
 unless use_pmd.nil?
   require 'buildr/pmd'
 end
+
+### Repositories
+repositories.remote << "http://jmrodri.fedorapeople.org/ivy/candlepin/"
+repositories.remote << "http://repository.jboss.org/nexus/content/groups/public/"
+repositories.remote << "http://gettext-commons.googlecode.com/svn/maven-repository/"
+repositories.remote << "http://central.maven.org/maven2/"
 
 ### Dependencies
 RESTEASY = [group('jaxrs-api',
@@ -40,7 +47,13 @@ JACKSON = [group('jackson-annotations', 'jackson-core', 'jackson-databind',
 
 SUN_JAXB = 'com.sun.xml.bind:jaxb-impl:jar:2.1.12'
 
-JUNIT = ['junit:junit:jar:4.5', 'org.mockito:mockito-all:jar:1.8.5']
+JUKITO = Buildr.transitive(['junit:junit:jar:4.11',
+             'org.mockito:mockito-all:jar:1.9.5',
+             'org.jukito:jukito:jar:1.4'])
+
+HSQLDB = 'hsqldb:hsqldb:jar:1.8.0.10'
+
+TESTING = [HSQLDB, JUKITO]
 
 LOGBACK = [group('logback-core', 'logback-classic',
                  :under => 'ch.qos.logback',
@@ -73,8 +86,6 @@ HIBERNATE = [group('hibernate-core', 'hibernate-entitymanager', 'hibernate-c3p0'
 POSTGRESQL = 'postgresql:postgresql:jar:9.0-801.jdbc4'
 
 DB = [POSTGRESQL]
-
-HSQLDB = 'hsqldb:hsqldb:jar:1.8.0.10'
 
 GETTEXT_COMMONS = 'org.xnap.commons:gettext-commons:jar:0.9.6'
 
@@ -110,12 +121,6 @@ RHINO = 'org.mozilla:rhino:jar:1.7R3'
 # Servlet Spec 2.4 and http://stackoverflow.com/questions/15601469
 PROVIDED = [SERVLET]
 
-### Repositories
-repositories.remote << "http://jmrodri.fedorapeople.org/ivy/candlepin/"
-repositories.remote << "http://repository.jboss.org/nexus/content/groups/public/"
-repositories.remote << "http://gettext-commons.googlecode.com/svn/maven-repository/"
-repositories.remote << "http://central.maven.org/maven2/"
-
 ### Project
 GROUP = "candlepin"
 COPYRIGHT = ""
@@ -139,6 +144,15 @@ define "gutterball" do
   # eclipse settings
   # http://buildr.apache.org/more_stuff.html#eclipse
   eclipse.natures :java
+
+  checkstyle.config_directory = path_to(:conf)
+  # checkstyle.properties['checkstyle.header.file'] = File.join(checkstyle.config_directory, 'HEADER.txt')
+  # checkstyle.properties['checkstyle.cache.file'] = File.join(path_to(:target), 'checkstyle.cache.src')
+  # checkstyle.properties['javadoc.type.scope'] = 'package'
+  # checkstyle.properties['javadoc.method.scope'] = 'public'
+  # checkstyle.properties['javadoc.lazy'] = 'false'
+  # checkstyle.properties['javadoc.var.scope'] = 'package'
+  # checkstyle.properties['javadoc.missing.param'] = 'true'
 
   resource_substitutions = {
     'version' => project.version,
@@ -177,7 +191,7 @@ define "gutterball" do
   end
 
   # the other dependencies transfer from compile.classpath automagically
-  test.with HSQLDB, JUNIT
+  test.with HSQLDB, TESTING
   test.using :java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ]
 
   package(:war, :id=> project.name).tap do |war|

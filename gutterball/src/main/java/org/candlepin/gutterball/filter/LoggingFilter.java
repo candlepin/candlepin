@@ -21,6 +21,7 @@ import org.slf4j.MDC;
 import java.io.IOException;
 import java.util.UUID;
 
+import javax.inject.Singleton;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -32,7 +33,12 @@ import javax.servlet.http.HttpServletResponse;
 
 /**
  * LoggingFilter
+ *
+ * This class must be a Singleton as described in
+ * <a href="http://code.google.com/p/google-guice/wiki/ServletModule#Filter_Mapping">
+ * the Guice documentation</a>.
  */
+@Singleton
 public class LoggingFilter implements Filter {
 
     private static Logger log = LoggerFactory.getLogger(LoggingFilter.class);
@@ -70,7 +76,7 @@ public class LoggingFilter implements Filter {
 
             // Report the requestUuid to the client in the response.
             // Not sure this is useful yet.
-            resp.setHeader("x-candlepin-request-uuid", requestUUID);
+            resp.setHeader("x-gutterball-request-uuid", requestUUID);
 
             log.info("{}", ServletLogger.logBasicRequestInfo(req));
             if (log.isDebugEnabled()) {

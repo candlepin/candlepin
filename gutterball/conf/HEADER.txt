@@ -12,22 +12,3 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.gutterball.guice;
-
-import org.candlepin.gutterball.resource.StatusResource;
-
-import com.google.inject.AbstractModule;
-import com.google.inject.servlet.ServletScopes;
-
-import org.xnap.commons.i18n.I18n;
-
-public class GutterballModule extends AbstractModule {
-
-    @Override
-    protected void configure() {
-        bind(I18n.class).toProvider(I18nProvider.class).in(ServletScopes.REQUEST);
-
-        bind(StatusResource.class);
-    }
-
-}

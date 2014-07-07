@@ -3,6 +3,7 @@
 **/.syntastic_class_path
 **/.externalToolBuilders
 **/target
+**/reports
 **/.zanata-cache
 *.swp
 *.swo

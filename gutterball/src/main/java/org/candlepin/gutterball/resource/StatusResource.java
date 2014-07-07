@@ -14,10 +14,16 @@
  */
 package org.candlepin.gutterball.resource;
 
-import com.google.inject.Provider;
+import org.candlepin.gutterball.config.Configuration;
 
 import org.xnap.commons.i18n.I18n;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -28,17 +34,25 @@ import javax.ws.rs.core.MediaType;
  */
 @Path("status")
 public class StatusResource {
+    private I18n i18n;
+    private Configuration config;
 
-    private Provider<I18n> i18nProvider;
-
-    public StatusResource(Provider<I18n> i18nProvider) {
-        this.i18nProvider = i18nProvider;
+    @Inject
+    public StatusResource(I18n i18n, Configuration config) {
+        this.i18n = i18n;
+        this.config = config;
     }
 
     @GET
-    @Produces({ MediaType.APPLICATION_JSON})
-    public String getStatus() {
-        return "Hello world: " + i18nProvider.get().getLocale();
-    }
+    @Produces({ MediaType.APPLICATION_JSON })
+    public Map<String, String> getStatus() {
+        List<String> configKeys = Arrays.asList("gutterball.version");
+        Map<String, String> status = new HashMap<String, String>();
 
+        for (String key : configKeys) {
+            status.put(key, config.getProperty(key).toString());
+        }
+        status.put("request_locale", i18n.getLocale().toString());
+        return status;
+    }
 }

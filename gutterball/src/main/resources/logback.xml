@@ -12,6 +12,6 @@
     <logger name="org.candlepin.gutterball" level="INFO"/>
 
     <root level="WARN">
-        <appender-ref ref="ConsoleAppender" />
+        <appender-ref ref="GutterballAppender" />
     </root>
 </configuration>

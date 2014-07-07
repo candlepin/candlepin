@@ -8,7 +8,20 @@ usage() {
 
     OPTIONS:
       -q  quiet; no notifications and minimal output
+      -t  hot deloy; do not stop and start Tomcat
 HELP
+}
+
+err_msg() {
+    echo "${RED}${1}${RESET_COLOR}" >&2
+}
+
+success_msg() {
+    echo "${GREEN}${1}${RESET_COLOR}"
+}
+
+warn_msg() {
+    echo "${YELLOW}${1}${RESET_COLOR}"
 }
 
 init() {
@@ -16,9 +29,13 @@ init() {
     DEPLOY_BIN_DIR="${BASH_SOURCE%/*}"
     PROJECT_ROOT=$(readlink -n -f "${DEPLOY_BIN_DIR}/../")
 
+    RED=$(tput setaf 1)
+    GREEN=$(tput setaf 2)
+    YELLOW=$(tput setaf 3)
+    RESET_COLOR=$(tput sgr0)
+
     cd $PROJECT_ROOT
 }
-
 
 build() {
     buildr -s clean package test=no
@@ -28,22 +45,34 @@ deploy() {
     VERSION="$(grep Version: ${APP}.spec | cut --delim=' ' -f2)"
 
     # TODO - Make this portable for RHEL 6
-    sudo install -o tomcat -g tomcat target/$APP-$VERSION.war /var/lib/tomcat/webapps/${APP}.war
+    sudo install -o tomcat -g tomcat -m 644 target/$APP-$VERSION.war /var/lib/tomcat/webapps/${APP}.war
 }
 
 start_container() {
-  # TODO - Make this portable for RHEL 6
-  sudo systemctl start tomcat
+    if [ -n $HOTDEPLOY ]; then
+        return
+    fi
+
+    sudo install -o tomcat -g tomcat -d -m 755 /var/log/gutterball
+    # TODO - Make this portable for RHEL 6
+    sudo systemctl start tomcat
 }
 
 stop_container() {
-  # TODO - Make this portable for RHEL 6
-  sudo systemctl stop tomcat
+    if [ -n $HOTDEPLOY ]; then
+        return
+    fi
+
+    # TODO - Make this portable for RHEL 6
+    sudo systemctl stop tomcat
 }
 
 notify() {
-    if [ -z $QUIET ] && type notify-send &> /dev/null; then
-        notify-send -i info -t 2000 "Deployment complete!"
+    if [ -z $QUIET ]; then
+        if type notify-send &> /dev/null; then
+            notify-send -i info -t 2000 "Deployment complete!"
+        fi
+        success_msg "Deployment complete!"
     fi
 }
 
@@ -61,9 +90,10 @@ trap clean_up EXIT INT TERM
 # Abort on errors
 set -e
 
-while getopts ":q" opt; do
+while getopts ":qt" opt; do
     case $opt in
         q  ) QUIET="1";;
+        t  ) HOTDEPLOY="1";;
         ?  ) usage; exit;;
     esac
 done
