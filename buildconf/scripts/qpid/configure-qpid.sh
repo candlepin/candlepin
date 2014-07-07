@@ -25,10 +25,10 @@ setup_qpidd_config () {
     sudo bash -c "sed 's/@LIBARCH@/$LIBARCH/' `dirname $0`/qpidd.conf.tmpl > /etc/qpidd.conf"
 }
 
-if ! is_rpm_installed "qpid-cpp-server-ssl"
+if ! is_rpm_installed "qpid-cpp-server"
 then
     echo "installing qpid-cpp-server"
-    sudo yum -y install qpid-cpp-server-ssl
+    sudo yum -y install qpid-cpp-server
 fi
 
 make_cert_db
