@@ -17,6 +17,7 @@ package org.candlepin.model;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.candlepin.model.FilterBuilder.FilterLikeExpression;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Projections;
@@ -49,7 +50,7 @@ public class PoolFilterBuilder extends FilterBuilder {
         List<String> possibleValues) {
         DetachedCriteria attrMatch = DetachedCriteria.forClass(
             entityClass, "attr");
-        attrMatch.add(Restrictions.eq("name", attributeName));
+        attrMatch.add(new FilterLikeExpression("name", attributeName, false));
 
         // It would be nice to be able to use an 'in' restriction here, but
         // hibernate does not support ignoring case with its 'in' restriction.
@@ -64,7 +65,7 @@ public class PoolFilterBuilder extends FilterBuilder {
                 attrOrs.add(Restrictions.eq("value", ""));
             }
             else {
-                attrOrs.add(Restrictions.eq("value", val).ignoreCase());
+                attrOrs.add(new FilterLikeExpression("value", val, true));
             }
         }
         attrMatch.add(Restrictions.or(
@@ -73,6 +74,16 @@ public class PoolFilterBuilder extends FilterBuilder {
 
         attrMatch.add(Property.forName("this.id").eqProperty("attr.pool.id"));
         attrMatch.setProjection(Projections.property("attr.id"));
+
+        // We don't want to match Product Attributes that have been overridden
+        if (entityClass == ProductPoolAttribute.class) {
+            DetachedCriteria overridden =
+                DetachedCriteria.forClass(PoolAttribute.class, "pattr")
+                // If we're using wildcards in the name, we should block exact matches
+                    .add(Restrictions.eqProperty("name", "attr.name"))
+                    .setProjection(Projections.property("pattr.pool.id"));
+            attrMatch.add(Subqueries.propertyNotIn("attr.pool.id", overridden));
+        }
         return attrMatch;
     }
 }

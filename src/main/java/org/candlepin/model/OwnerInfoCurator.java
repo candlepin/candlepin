@@ -41,13 +41,16 @@ public class OwnerInfoCurator {
     private Provider<EntityManager> entityManager;
     private ConsumerTypeCurator consumerTypeCurator;
     private ConsumerCurator consumerCurator;
+    private PoolCurator poolCurator;
 
     @Inject
     public OwnerInfoCurator(Provider<EntityManager> entityManager,
-        ConsumerCurator consumerCurator, ConsumerTypeCurator consumerTypeCurator) {
+        ConsumerCurator consumerCurator, ConsumerTypeCurator consumerTypeCurator,
+        PoolCurator poolCurator) {
         this.entityManager = entityManager;
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
+        this.poolCurator = poolCurator;
     }
 
     public OwnerInfo lookupByOwner(Owner owner) {
@@ -145,83 +148,41 @@ public class OwnerInfoCurator {
     }
 
     private int getActivePoolCount(Owner owner, Date date) {
-        String queryStr = "select count (p) from Pool p " +
-            "where p.owner = :owner " +
-            "and p.startDate < :date and p.endDate > :date";
-        Query query = currentSession().createQuery(queryStr)
-            .setEntity("owner", owner)
-            .setParameter("date", date);
-        return ((Long) query.uniqueResult()).intValue();
+        Criteria activePoolCountCrit = poolCurator.createSecureCriteria()
+            .add(Restrictions.eq("owner", owner))
+            .add(Restrictions.le("startDate", date))
+            .add(Restrictions.ge("endDate", date))
+            .setProjection(Projections.count("id"));
+        return ((Long) activePoolCountCrit.uniqueResult()).intValue();
     }
 
     private int getRequiresConsumerTypeCount(ConsumerType type, Owner owner, Date date) {
-        String queryStr = "select count (p) from Pool p join p.attributes as attr " +
-            "where p.owner = :owner " +
-            "and p.startDate < :date and p.endDate > :date " +
-            "and attr.name = 'requires_consumer_type'" +
-            "and attr.value = :type";
-        Query query = currentSession().createQuery(queryStr)
-            .setEntity("owner", owner)
-            .setParameter("type", type.getLabel())
-            .setParameter("date", date);
-        int count = ((Long) query.uniqueResult()).intValue();
+        PoolFilterBuilder filterBuilder = new PoolFilterBuilder();
+        filterBuilder.addAttributeFilter("requires_consumer_type", type.getLabel());
+        Criteria typeCountCrit = poolCurator.createSecureCriteria()
+            .add(Restrictions.eq("owner", owner))
+            .add(Restrictions.le("startDate", date))
+            .add(Restrictions.ge("endDate", date))
+            .setProjection(Projections.count("id"));
+        filterBuilder.applyTo(typeCountCrit);
 
-        queryStr = "select count (p) from Pool p join p.productAttributes as prod " +
-            "where p.owner = :owner " +
-            "and p.startDate < :date and p.endDate > :date " +
-            "and prod.name = 'requires_consumer_type'" +
-            "and prod.value = :type " +
-            "and p not in (select distinct pa.pool from PoolAttribute pa " +
-            "              where pa.name = 'requires_consumer_type')";
-        query = currentSession().createQuery(queryStr)
-            .setEntity("owner", owner)
-            .setParameter("type", type.getLabel())
-            .setParameter("date", date);
-
-        return count + ((Long) query.uniqueResult()).intValue();
+        return ((Long) typeCountCrit.uniqueResult()).intValue();
     }
 
     private int getEnabledConsumerTypeCount(ConsumerType type, Owner owner, Date date) {
-        String queryStr = "select count(distinct p) from Pool p " +
-            "join p.attributes as attr " +
-            "where p.owner = :owner " +
-            "and p.startDate < :date and p.endDate > :date " +
-            "and attr.name = 'enabled_consumer_types' and (" +
-            "             attr.value = :single " +
-            "             or attr.value LIKE :begin " +
-            "             or attr.value LIKE :middle " +
-            "             or attr.value LIKE :end" +
-            ")";
-        Query query = currentSession().createQuery(queryStr)
-            .setEntity("owner", owner)
-            .setParameter("date", date)
-            .setParameter("begin", type.getLabel() + ",%")
-            .setParameter("middle", "%," + type.getLabel() + ",%")
-            .setParameter("end", "%," + type.getLabel())
-            .setParameter("single", type.getLabel());
-        int count = ((Long) query.uniqueResult()).intValue();
+        PoolFilterBuilder filterBuilder = new PoolFilterBuilder();
+        filterBuilder.addAttributeFilter("enabled_consumer_types", type.getLabel() + ",*");
+        filterBuilder.addAttributeFilter("enabled_consumer_types", "*," + type.getLabel() + ",*");
+        filterBuilder.addAttributeFilter("enabled_consumer_types", "*," + type.getLabel());
+        filterBuilder.addAttributeFilter("enabled_consumer_types", type.getLabel());
+        Criteria enabledCountCrit = poolCurator.createSecureCriteria()
+            .add(Restrictions.eq("owner", owner))
+            .add(Restrictions.le("startDate", date))
+            .add(Restrictions.ge("endDate", date))
+            .setProjection(Projections.countDistinct("id"));
+        filterBuilder.applyTo(enabledCountCrit);
 
-        queryStr = "select count(distinct p) from Pool p " +
-            "join p.productAttributes as prod " +
-            "where p.owner = :owner " +
-            "and p.startDate < :date and p.endDate > :date " +
-            "and prod.name = 'enabled_consumer_types' and (" +
-            "             prod.value = :single " +
-            "             or prod.value LIKE :begin " +
-            "             or prod.value LIKE :middle " +
-            "             or prod.value LIKE :end" +
-            ") " +
-            "and p not in (select distinct pa.pool from PoolAttribute pa " +
-            "               where pa.name = 'enabled_consumer_types')";
-        query = currentSession().createQuery(queryStr)
-            .setEntity("owner", owner)
-            .setParameter("date", date)
-            .setParameter("begin", type.getLabel() + ",%")
-            .setParameter("middle", "%," + type.getLabel() + ",%")
-            .setParameter("end", "%," + type.getLabel())
-            .setParameter("single", type.getLabel());
-
-        return count + ((Long) query.uniqueResult()).intValue();
+        return ((Long) enabledCountCrit.uniqueResult()).intValue();
     }
 
     private Collection<String> getProductFamilies(Owner owner, Date date) {
