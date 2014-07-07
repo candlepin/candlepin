@@ -98,10 +98,11 @@ public class RuntimeExceptionMapperTest extends TestExceptionMapperBase {
     public void candlepinException() {
         CandlepinException ce = mock(CandlepinException.class);
         when(ce.httpReturnCode()).thenReturn(Status.CONFLICT);
-        when(ce.message()).thenReturn(
-            new ExceptionMessage().setDisplayMessage("you screwed up"));
+        ExceptionMessage em = new ExceptionMessage().setDisplayMessage("you screwed up");
+        when(ce.message()).thenReturn(em);
         when(req.getHeader(HttpHeaderNames.ACCEPT)).thenReturn("application/json");
 
+        assertEquals("you screwed up", em.toString());
         Response r = rem.toResponse(ce);
         assertNotNull(r);
         assertEquals(Status.CONFLICT.getStatusCode(), r.getStatus());
