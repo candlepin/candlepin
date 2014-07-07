@@ -480,8 +480,18 @@ describe 'Owner Resource Owner Info Tests' do
 
   before(:each) do
     @owner = create_owner(random_string("an_owner"))
+
+    # Create a product limiting by all of our attributes.
+    @product = create_product(nil, random_string("Product1"), :attributes =>
+                {"version" => '6.4', "sockets" => 2, "multi-entitlement" => "true"})
+    @subscription = @cp.create_subscription(@owner['key'], @product.id, 100, [], '1888', '1234')
+
+    # Refresh pools so that the subscription pools will be available to the test systems.
+    @cp.refresh_pools(@owner['key'])
+
     @owner_client = user_client(@owner, random_string('owner_admin_user'))
     @owner_client.register(random_string('system_consumer'), :system, nil, {})
+    @owner_client.register(random_string('system_consumer_guest'), :system, nil, {"virt.is_guest" => "true"})
   end
 
   it 'my systems user should filter consumer counts in owner info' do
@@ -491,16 +501,40 @@ describe 'Owner Resource Owner Info Tests' do
       :access => 'READ_ONLY',
     }]
     my_systems_user = user_client_with_perms(@owner, random_string('my_systems_user'), 'password', perms)
-    my_systems_user.register(random_string('system_consumer'), :system, nil, {})
+
+    installed_products = [
+        {'productId' => @product.id, 'productName' => @product.name}
+    ]
+
+    pool = @cp.list_owner_pools(@owner['key'], {:product => @product.id}).first
+    pool.should_not be_nil
+
+    # Create a physical system with valid status
+    c1 = my_systems_user.register(random_string('system_consumer'), :system, nil, {"cpu.cpu_socket(s)" => 4}, nil, nil, [], installed_products)
+    c1_client = registered_consumer_client(c1)
+    ents = c1_client.consume_pool(pool.id, {:quantity => 1})
+    ents.should_not be_nil
+
+    # Create a guest system with a partial status
+    c2 = my_systems_user.register(random_string('system_consumer_guest1'), :system, nil, {"virt.is_guest" => "true"}, nil, nil, [], installed_products)
+    c2_client = registered_consumer_client(c2)
+    ents = c2_client.consume_pool(pool.id, {:quantity => 1})
+    ents.should_not be_nil
+
+    # Create a guest system with invalid status
+    my_systems_user.register(random_string('system_consumer_guest2'), :system, nil, {"virt.is_guest" => "true"}, nil, nil, [], installed_products)
 
     admin_owner_info = @owner_client.get_owner_info(@owner['key'])
-    admin_owner_info['consumerCounts']['system'].should == 2
+    admin_owner_info['consumerCounts']['system'].should == 5
 
     my_systems_owner_info = my_systems_user.get_owner_info(@owner['key'])
-    my_systems_owner_info['consumerCounts']['system'].should == 1
+    my_systems_owner_info['consumerCounts']['system'].should == 3
+    my_systems_owner_info['consumerGuestCounts']['physical'].should == 1
+    my_systems_owner_info['consumerGuestCounts']['guest'].should == 2
 
-
-
+    my_systems_owner_info['consumerCountsByComplianceStatus']['valid'].should == 1
+    my_systems_owner_info['consumerCountsByComplianceStatus']['partial'].should == 1
+    my_systems_owner_info['consumerCountsByComplianceStatus']['invalid'].should == 1
   end
 
 end

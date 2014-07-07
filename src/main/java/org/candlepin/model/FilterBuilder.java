@@ -23,6 +23,7 @@ import java.util.Map.Entry;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Conjunction;
 import org.hibernate.criterion.Criterion;
+import org.hibernate.criterion.LikeExpression;
 import org.hibernate.criterion.Restrictions;
 
 /**
@@ -63,4 +64,25 @@ public abstract class FilterBuilder {
     }
 
     protected abstract Criterion buildCriteriaForKey(String key, List<String> values);
+
+    /**
+     * FilterLikeExpression to easily build like clauses, escaping all sql wildcards
+     * from input while allowing us to use a custom wildcard
+     */
+    @SuppressWarnings("serial")
+    public static class FilterLikeExpression extends LikeExpression {
+
+        public FilterLikeExpression(String propertyName, String value, boolean ignoreCase) {
+            super(propertyName, escape(value), '!', ignoreCase);
+        }
+
+        private static String escape(String raw) {
+            // If our escape char is already here, escape it
+            return raw.replace("!", "!!")
+                // Escape anything that would be a wildcard
+                .replace("_", "!_").replace("%", "!%")
+                // Now use * as wildcard
+                .replace("*", "%");
+        }
+    }
 }

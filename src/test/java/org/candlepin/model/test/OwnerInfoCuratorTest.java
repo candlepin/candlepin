@@ -627,9 +627,13 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         physical1.setFact("virt.is_guest", "false");
         consumerCurator.create(physical1);
 
+        // Second physical machine with no is_guest fact set.
+        Consumer physical2 = new Consumer("test-consumer2", "test-user", owner, type);
+        consumerCurator.create(physical2);
+
         OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
         assertEquals((Integer) 2, info.getConsumerGuestCounts().get(OwnerInfo.GUEST));
-        assertEquals((Integer) 1, info.getConsumerGuestCounts().get(OwnerInfo.PHYSICAL));
+        assertEquals((Integer) 2, info.getConsumerGuestCounts().get(OwnerInfo.PHYSICAL));
 
 
         // Create another owner to make sure we don't see another owners consumers:
@@ -638,12 +642,11 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         info = ownerInfoCurator.lookupByOwner(anotherOwner);
         assertEquals((Integer) 0, info.getConsumerGuestCounts().get(OwnerInfo.GUEST));
         assertEquals((Integer) 0, info.getConsumerGuestCounts().get(OwnerInfo.PHYSICAL));
-
     }
 
     @Test
     public void testConsumerCountsByEntitlementStatus() {
-        setupConsumerCountTest();
+        setupConsumerCountTest("test-user");
 
         OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
         assertConsumerCountsByEntitlementStatus(info);
@@ -651,7 +654,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testConsumerCountsByEntitlementStatusExcludesUebercertConsumers() {
-        setupConsumerCountTest();
+        setupConsumerCountTest("test-user");
 
         ConsumerType ueberType = consumerTypeCurator.lookupByLabel("uebercert");
         Consumer ueberConsumer = new Consumer("test-ueber", "test-user", owner,
@@ -661,6 +664,18 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
 
         // Even though we've added an ubercert consumer, the counts should remain
         // as expected.
+        OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
+        assertConsumerCountsByEntitlementStatus(info);
+    }
+
+    @Test
+    public void testPermissionsAppliedWhenDeterminingConsumerCountsByEntStatus() {
+        User mySystemsUser = setupOnlyMyConsumersPrincipal();
+        setupConsumerCountTest("test-user");
+        setupConsumerCountTest(mySystemsUser.getUsername());
+
+        // Should only get the counts for a single setup case above.
+        // The test-user consumers should be ignored.
         OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
         assertConsumerCountsByEntitlementStatus(info);
     }
@@ -738,21 +753,21 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         assertEquals(expectedEntitlementsConsumed, info.getEntitlementsConsumedByType());
     }
 
-    private void setupConsumerCountTest() {
+    private void setupConsumerCountTest(String username) {
         ConsumerType systemType = consumerTypeCurator.lookupByLabel("system");
-        Consumer consumer1 = new Consumer("test-consumer1", "test-user", owner, systemType);
+        Consumer consumer1 = new Consumer("test-consumer1", username, owner, systemType);
         consumer1.setEntitlementStatus(ComplianceStatus.GREEN);
         consumerCurator.create(consumer1);
 
-        Consumer consumer2 = new Consumer("test-consumer2", "test-user", owner, systemType);
+        Consumer consumer2 = new Consumer("test-consumer2", username, owner, systemType);
         consumer2.setEntitlementStatus(ComplianceStatus.RED);
         consumerCurator.create(consumer2);
 
-        Consumer consumer3 = new Consumer("test-consumer3", "test-user", owner, systemType);
+        Consumer consumer3 = new Consumer("test-consumer3", username, owner, systemType);
         consumer3.setEntitlementStatus(ComplianceStatus.GREEN);
         consumerCurator.create(consumer3);
 
-        Consumer consumer4 = new Consumer("test-consumer3", "test-user", owner, systemType);
+        Consumer consumer4 = new Consumer("test-consumer3", username, owner, systemType);
         consumer4.setEntitlementStatus(ComplianceStatus.YELLOW);
         consumerCurator.create(consumer4);
 
