@@ -41,7 +41,7 @@ public class FactFilterBuilder extends FilterBuilder {
                 valuesCriteria.add(Restrictions.eq("cfacts.elements", ""));
             }
             else {
-                valuesCriteria.add(new FactLikeExpression("cfacts.elements", value, true));
+                valuesCriteria.add(new FilterLikeExpression("cfacts.elements", value, true));
             }
         }
 
@@ -49,7 +49,7 @@ public class FactFilterBuilder extends FilterBuilder {
             .add(Restrictions.eqProperty("this.id", "subcons.id"))
             .createAlias("subcons.facts", "cfacts")
             // Match the key, case sensitive
-            .add(new FactLikeExpression("cfacts.indices", key, false))
+            .add(new FilterLikeExpression("cfacts.indices", key, false))
             // Match values, case insensitive
             .add(valuesCriteria)
             .setProjection(Projections.property("subcons.id"));
@@ -58,13 +58,13 @@ public class FactFilterBuilder extends FilterBuilder {
     }
 
     /**
-     * FactLikeExpression to easily build like clauses, escaping all sql wildcards
+     * FilterLikeExpression to easily build like clauses, escaping all sql wildcards
      * from input while allowing us to use a custom wildcard
      */
     @SuppressWarnings("serial")
-    public static class FactLikeExpression extends LikeExpression {
+    public static class FilterLikeExpression extends LikeExpression {
 
-        public FactLikeExpression(String propertyName, String value, boolean ignoreCase) {
+        public FilterLikeExpression(String propertyName, String value, boolean ignoreCase) {
             super(propertyName, escape(value), '!', ignoreCase);
         }
 
