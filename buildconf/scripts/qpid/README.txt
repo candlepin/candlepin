@@ -1,3 +1,6 @@
-This script contains outdated scripts but are valuable references. t.sh is the
-latest script which is a subset of make_keys.sh. This ultimately needs to be
-documented on the wiki and added to the katello installer.
+If you are installing Candlepin with a standalone qpid broker then run:
+
+./configure-qpid.sh
+
+setup.sh is a subset of make_keys.sh and can be used to configure candlepin to
+work with a qpid broker installed by pulp.
