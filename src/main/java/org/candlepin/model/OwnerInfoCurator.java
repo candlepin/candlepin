@@ -105,8 +105,8 @@ public class OwnerInfoCurator {
         Criteria cr = consumerCurator.createSecureCriteria()
             .createAlias("facts", "f")
             .add(Restrictions.eq("owner", owner))
-            .add(Restrictions.eq("f.indices", "virt.is_guest"))
-            .add(Restrictions.eq("f.elements", "true"))
+            .add(Restrictions.ilike("f.indices", "virt.is_guest"))
+            .add(Restrictions.ilike("f.elements", "true"))
             .setProjection(Projections.count("id"));
 
         int guestCount = ((Long) cr.uniqueResult()).intValue();
