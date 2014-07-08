@@ -55,7 +55,7 @@ deploy() {
 }
 
 start_container() {
-    if [ -n $HOTDEPLOY ]; then
+    if [ -n "$HOTDEPLOY" ]; then
         return
     fi
 
@@ -65,7 +65,7 @@ start_container() {
 }
 
 stop_container() {
-    if [ -n $HOTDEPLOY ]; then
+    if [ -n "$HOTDEPLOY" ]; then
         return
     fi
 
