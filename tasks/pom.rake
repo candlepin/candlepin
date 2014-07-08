@@ -1,6 +1,6 @@
 #! /usr/bin/env ruby
 
-require 'naether/maven'
+require 'builder'
 
 module PomTask
   class Config
@@ -19,6 +19,49 @@ module PomTask
     end
   end
 
+  class PomBuilder
+    attr_reader :artifact
+    attr_reader :dependencies
+
+    def initialize(artifact, dependencies)
+      @artifact = artifact
+      @dependencies = dependencies
+      @buffer = ""
+      build
+    end
+
+    def build
+      artifact_spec = artifact.to_hash
+      xml = Builder::XmlMarkup.new(:target => @buffer, :indent => 2)
+      xml.instruct!
+      xml.project(
+        "xsi:schemaLocation" => "http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd",
+        "xmlns" => "http://maven.apache.org/POM/4.0.0",
+        "xmlns:xsi" => "http://www.w3.org/2001/XMLSchema-instance"
+      ) do
+        xml.modelVersion("4.0.0")
+        xml.groupId(artifact_spec[:group])
+        xml.artifactId(artifact_spec[:id])
+        xml.version(artifact_spec[:version])
+        xml.dependencies do
+          dependencies.each do |dep|
+            h = dep.to_hash
+            xml.dependency do
+              xml.groupId(h[:group])
+              xml.artifactId(h[:id])
+              xml.version(h[:version])
+            end
+          end
+        end
+      end
+    end
+
+    def write_pom(destination)
+      FileUtils.mkdir_p(File.dirname(destination))
+      File.open(destination, "w") { |f| f.write(@buffer) }
+    end
+  end
+
   module ProjectExtension
     include Extension
 
@@ -31,31 +74,12 @@ module PomTask
       if pom.enabled?
         desc 'Generate a POM file'
         project.task('pom') do
-          naether_deps = Buildr::artifacts(pom.dependencies)
-          naether_deps.each { |a| a.install }
-
-          # The recommended process is to call
-          # Naether::Bootstrap.bootstrap_local_repo(project.repositories.local)
-          # but that will perform JAR installations in the Naether code.  I
-          # prefer to control all local repository manipulations from within Buildr.
-          Naether::Java.internal_load_paths(naether_deps.map { |a| a.to_s })
-
           # Filter out Rake::FileTask dependencies
-          specs = project.compile.dependencies.select { |dep| dep.is_a?(Buildr::Artifact) }
-          specs.map! { |s| Buildr::Artifact.to_spec(s) }
-
-          artifact_hash = pom.artifact.to_hash
-          id = artifact_hash[:id]
-          group = artifact_hash[:group]
-          version = artifact_hash[:version]
-
-          maven = Naether::Maven.create_from_notation([group, id, version].join(':'))
-          specs.each do |s|
-            maven.add_dependency(s)
-          end
-
-          destination = project.path_to(:target, "#{id}-#{version}.pom")
-          maven.write_pom(destination)
+          deps = project.compile.dependencies.select { |dep| dep.is_a?(Buildr::Artifact) }
+          xml = PomBuilder.new(pom.artifact, deps)
+          spec = pom.artifact.to_hash
+          destination = project.path_to(:target, "#{spec[:id]}-#{spec[:version]}.pom")
+          xml.write_pom(destination)
           info("POM written to #{destination}")
         end
       end

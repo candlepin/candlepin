@@ -32,8 +32,6 @@ GEM
     json_pure (1.8.0)
     mime-types (1.25.1)
     minitar (0.5.4)
-    naether (0.13.7)
-      rjb (~> 1.4.0)
     net-sftp (2.1.2)
       net-ssh (>= 2.6.5)
     net-ssh (2.7.0)
@@ -64,10 +62,10 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  builder
   buildr (= 1.4.15)
   buildr-findBugs
   mime-types (~> 1.25.0)
-  naether
   oauth
   parallel_tests
   pmd
