@@ -44,8 +44,14 @@ build() {
 deploy() {
     VERSION="$(grep Version: ${APP}.spec | cut --delim=' ' -f2)"
 
+    # use tomcat 6, unless it doesnt exist and tomcat does
+    TC=tomcat6
+    if [[ -f /usr/sbin/tomcat && ! -f /usr/sbin/tomcat6 ]]; then
+        TC=tomcat
+    fi
+
     # TODO - Make this portable for RHEL 6
-    sudo install -o tomcat -g tomcat -m 644 target/$APP-$VERSION.war /var/lib/tomcat/webapps/${APP}.war
+    sudo install -o tomcat -g tomcat -m 644 target/$APP-$VERSION.war /var/lib/${TC}/webapps/${APP}.war
 }
 
 start_container() {

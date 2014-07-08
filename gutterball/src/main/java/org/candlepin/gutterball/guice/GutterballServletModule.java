@@ -17,6 +17,7 @@ package org.candlepin.gutterball.guice;
 import org.candlepin.gutterball.config.Configuration;
 import org.candlepin.gutterball.filter.LoggingFilter;
 import org.candlepin.gutterball.resource.StatusResource;
+import org.candlepin.gutterball.resteasy.JsonProvider;
 import org.candlepin.gutterball.servlet.GutterballServletContextListener;
 
 import com.google.inject.Provides;
@@ -36,6 +37,7 @@ public class GutterballServletModule extends ServletModule {
     protected void configureBindings() {
         // See JavaDoc on I18nProvider for more information of RequestScope
         bind(I18n.class).toProvider(I18nProvider.class).in(ServletScopes.REQUEST);
+        bind(JsonProvider.class);
         bind(StatusResource.class);
     }
 
