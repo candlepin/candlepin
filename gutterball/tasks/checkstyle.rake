@@ -40,7 +40,7 @@ module AntTaskCheckstyle
               source_paths.each do |source_path|
                 ant.fileset(:dir => p) do
                   patterns.each do |pattern|
-                    ant.filename(:regex => pattern.pattern, :negate => !pattern.include?)
+                    ant.filename(:regex => pattern.pattern, :negate => !pattern.is_include)
                   end
                 end
               end
@@ -58,7 +58,7 @@ module AntTaskCheckstyle
   class Profile < Struct.new(:name, :enabled, :properties, :patterns)
   end
 
-  class Pattern < Struct.new(:pattern, :include?)
+  class Pattern < Struct.new(:pattern, :is_include)
   end
 
   class Config < Buildr::Checkstyle::Config
