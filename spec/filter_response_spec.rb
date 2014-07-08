@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 require 'spec_helper'
-require 'candlepin_scenarios'
+require 'canadianTenPin_scenarios'
 
 def hash_diff(h1, h2)
   h1.keys.inject({}) do |memo, key|
@@ -13,7 +13,7 @@ end
 
 describe 'Response JSON Filtering' do
 
-  include CandlepinMethods
+  include CanadianTenPinMethods
 
   before(:each) do
     @owner1 = create_owner random_string('test_owner1')

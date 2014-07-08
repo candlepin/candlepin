@@ -1,14 +1,14 @@
 require 'spec_helper'
-require 'candlepin_scenarios'
+require 'canadianTenPin_scenarios'
 
 require 'rubygems'
 require 'rest_client'
 require 'oauth'
 
 describe 'OAuth' do
-  include CandlepinMethods
+  include CanadianTenPinMethods
 
-  # XXX you must set these in your candlepin.conf
+  # XXX you must set these in your canadianTenPin.conf
   oauth_consumer = "rspec"
   oauth_secret = "rspec-oauth-secret"
 
@@ -45,18 +45,18 @@ describe 'OAuth' do
   end
 
   it 'returns a 401 if oauth user is not configured' do
-    res = make_request('baduser', 'badsecret', "/candlepin/subscriptions/")
+    res = make_request('baduser', 'badsecret', "/canadianTenPin/subscriptions/")
     res.code.should == '401'
   end
 
   it 'returns a 401 if oauth secret does not match' do
-    res = make_request(oauth_consumer, 'badsecret', "/candlepin/subscriptions/")
+    res = make_request(oauth_consumer, 'badsecret', "/canadianTenPin/subscriptions/")
     res.code.should == '401'
   end
 
   it 'lets a caller act as a user' do
     res = make_request(oauth_consumer, oauth_secret,
-                       "/candlepin/users/#{@user.username}",
+                       "/canadianTenPin/users/#{@user.username}",
                        {'cp-user' => @user.username})
     res.code.should == '200'
   end
@@ -64,28 +64,28 @@ describe 'OAuth' do
   it 'trusts the provided username' do
     username = "trustthisuser"
     res = make_request(oauth_consumer, oauth_secret,
-      "/candlepin/owners/#{@owner['key']}",
+      "/canadianTenPin/owners/#{@owner['key']}",
       {'cp-user' => username})
     res.code.should == '200'
   end
 
   it 'lets a caller act as a consumer' do
     res = make_request(oauth_consumer, oauth_secret,
-                       "/candlepin/consumers/#{@consumer.uuid}",
+                       "/canadianTenPin/consumers/#{@consumer.uuid}",
                        {'cp-consumer' => @consumer.uuid})
     res.code.should == '200'
   end
 
   it 'returns 401 if an unknown consumer is requested' do
     res = make_request(oauth_consumer, oauth_secret,
-                       "/candlepin/consumers/#{@consumer.uuid}",
+                       "/canadianTenPin/consumers/#{@consumer.uuid}",
                        {'cp-consumer' => "some unknown consumer"})
     res.code.should == '401'
   end
 
   it 'falls back to trusted system auth if no headers are set' do
     res = make_request(oauth_consumer, oauth_secret,
-                       "/candlepin/consumers/#{@consumer.uuid}")
+                       "/canadianTenPin/consumers/#{@consumer.uuid}")
     res.code.should == '200'
   end
 end

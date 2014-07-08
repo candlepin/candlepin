@@ -1,10 +1,10 @@
 require 'spec_helper'
-require 'candlepin_scenarios'
+require 'canadianTenPin_scenarios'
 require 'time'
 
 describe 'Deleted Consumer Resource' do
 
-  include CandlepinMethods
+  include CanadianTenPinMethods
 
   it 'find all deleted consumers' do
     date = Time.now.utc.iso8601

@@ -1,7 +1,7 @@
 # vi: set ft=ruby:
 
 ### Repositories
-repositories.remote << "http://jmrodri.fedorapeople.org/ivy/candlepin/"
+repositories.remote << "http://jmrodri.fedorapeople.org/ivy/canadianTenPin/"
 repositories.remote << "http://repository.jboss.org/nexus/content/groups/public/"
 repositories.remote << "http://gettext-commons.googlecode.com/svn/maven-repository/"
 repositories.remote << "http://oauth.googlecode.com/svn/code/maven/"
@@ -164,13 +164,13 @@ LOGDRIVER = 'logdriver:logdriver:jar:1.0'
 PROVIDED = [SERVLET, file(Java.tools_jar)]
 
 ### Project
-GROUP = "candlepin"
+GROUP = "canadianTenPin"
 COPYRIGHT = ""
 
 desc "The Proxy project"
-define "candlepin" do
+define "canadianTenPin" do
   release_number = ""
-  File.new('candlepin.spec').each_line do |line|
+  File.new('canadianTenPin.spec').each_line do |line|
     if line =~ /\s*Version:\s*(.*?)\s*$/
       project.version = $1
     end
@@ -202,7 +202,7 @@ define "candlepin" do
 
   # download the stuff we do not have in the repositories
   download artifact(SCHEMASPY) => 'http://downloads.sourceforge.net/project/schemaspy/schemaspy/SchemaSpy%204.1.1/schemaSpy_4.1.1.jar'
-  download artifact(LOGDRIVER) => 'http://jmrodri.fedorapeople.org/ivy/candlepin/logdriver/logdriver/1.0/logdriver-1.0.jar' if use_logdriver
+  download artifact(LOGDRIVER) => 'http://jmrodri.fedorapeople.org/ivy/canadianTenPin/logdriver/logdriver/1.0/logdriver-1.0.jar' if use_logdriver
 
   resource_substitutions = {
     'version' => project.version,
@@ -224,7 +224,7 @@ define "candlepin" do
       locale = source.match("\/([^/]*)?\.po$")[1]
       #we do this inside the loop, in order to create a stub "generate" var
       if nopo.nil? || nopo.split(/,\s*/).include?(locale)
-        sh "msgfmt --java -r org.candlepin.i18n.Messages -d #{dir} -l #{locale} #{source}"
+        sh "msgfmt --java -r org.canadianTenPin.i18n.Messages -d #{dir} -l #{locale} #{source}"
       end
     end
   end
@@ -260,34 +260,34 @@ define "candlepin" do
 
   ### Packaging
   # NOTE: changes here must also be made in build.xml!
-  candlepin_path = "org/candlepin"
-  compiled_cp_path = "#{compile.target}/#{candlepin_path}"
+  canadianTenPin_path = "org/canadianTenPin"
+  compiled_cp_path = "#{compile.target}/#{canadianTenPin_path}"
 
   # The apicrawl package is only used for generating documentation so there is no
   # need to ship it.  Ideally, we'd put apicrawl in its own buildr project but I
   # kept getting complaints about circular dependencies.
-  package(:jar, :id=>'candlepin-api').tap do |jar|
+  package(:jar, :id=>'canadianTenPin-api').tap do |jar|
     jar.clean
     pkgs = %w{auth config exceptions jackson model paging pki resteasy service util}.map { |pkg| "#{compiled_cp_path}/#{pkg}" }
-    p = jar.path(candlepin_path)
+    p = jar.path(canadianTenPin_path)
     p.include(pkgs).exclude("#{compiled_cp_path}/util/apicrawl")
   end
 
-  package(:jar, :id=>"candlepin-certgen").tap do |jar|
+  package(:jar, :id=>"canadianTenPin-certgen").tap do |jar|
     jar.clean
     pkgs = %w{config exceptions jackson model pinsetter pki service util}.map { |pkg| "#{compiled_cp_path}/#{pkg}" }
-    p = jar.path(candlepin_path)
+    p = jar.path(canadianTenPin_path)
     p.include(pkgs).exclude("#{compiled_cp_path}/util/apicrawl")
   end
 
-  package(:war, :id=>"candlepin").tap do |war|
+  package(:war, :id=>"canadianTenPin").tap do |war|
     war.libs += artifacts(HSQLDB)
     war.libs -= artifacts(PROVIDED)
     war.classes.clear
     war.classes = [generate, resources.target]
     web_inf = war.path('WEB-INF/classes')
     web_inf.include("#{compile.target}/net")
-    web_inf.path(candlepin_path).include("#{compiled_cp_path}/**").exclude("#{compiled_cp_path}/util/apicrawl")
+    web_inf.path(canadianTenPin_path).include("#{compiled_cp_path}/**").exclude("#{compiled_cp_path}/util/apicrawl")
   end
 
   desc "generate a .syntastic_class_path for vim/syntastic"
@@ -307,8 +307,8 @@ define "candlepin" do
 
     # Join compile classpath with the package jar. Add the test log4j
     # to the front of the classpath:
-    cp = ['src/test/resources'] | [project('candlepin').package(:jar)] | compile_classpath
-    Java::Commands.java('org.candlepin.util.apicrawl.ApiCrawler',
+    cp = ['src/test/resources'] | [project('canadianTenPin').package(:jar)] | compile_classpath
+    Java::Commands.java('org.canadianTenPin.util.apicrawl.ApiCrawler',
                         {:classpath => cp})
 
     classes = artifacts(cp).collect do |a|
@@ -317,21 +317,21 @@ define "candlepin" do
     end
 
     # Just run the doclet on the *Resource files
-    sources = project('candlepin').compile.sources.collect do |dir|
+    sources = project('canadianTenPin').compile.sources.collect do |dir|
       Dir["#{dir}/**/*Resource.java"]
     end.flatten
 
     # Add in the options as the last arg
-    sources << {:name => 'Candlepin API',
+    sources << {:name => 'CanadianTenPin API',
                 :classpath => classes,
-                :doclet => 'org.candlepin.util.apicrawl.ApiDoclet',
+                :doclet => 'org.canadianTenPin.util.apicrawl.ApiDoclet',
                 :docletpath => ['target/classes', classes].flatten.join(File::PATH_SEPARATOR),
                 :output => 'target'}
 
     Java::Commands.javadoc(*sources)
 
-    api_file = 'target/candlepin_api.json'
-    comments_file = 'target/candlepin_comments.json'
+    api_file = 'target/canadianTenPin_api.json'
+    comments_file = 'target/canadianTenPin_comments.json'
     api = JSON.parse(File.read(api_file))
     comments = JSON.parse(File.read(comments_file))
 
@@ -345,24 +345,24 @@ define "candlepin" do
     end
 
     final = JSON.dump(combined.values.sort_by { |v| v['method'] })
-    final_file = 'target/candlepin_methods.json'
+    final_file = 'target/canadianTenPin_methods.json'
     File.open(final_file, 'w') { |f| f.write final }
 
     # Cleanup
     rm api_file
     rm comments_file
-    info "Wrote Candlepin API to: #{final_file}"
+    info "Wrote CanadianTenPin API to: #{final_file}"
   end
 
   desc 'run rpmlint on the spec file'
   task :rpmlint do
-    sh('rpmlint -f rpmlint.config candlepin.spec')
+    sh('rpmlint -f rpmlint.config canadianTenPin.spec')
   end
 
   desc 'Create an html report of the schema'
   task :schemaspy do
    cp = Buildr.artifacts(DB, SCHEMASPY).each(&:invoke).map(&:name).join(File::PATH_SEPARATOR)
-   command = "-t pgsql -db candlepin -s public -host localhost -u candlepin -p candlepin -o target/schemaspy"
+   command = "-t pgsql -db canadianTenPin -s public -host localhost -u canadianTenPin -p canadianTenPin -o target/schemaspy"
    ant('java') do |ant|
      ant.java(:classname => "net.sourceforge.schemaspy.Main", :classpath => cp, :fork => true) do |java|
        command.split(/\s+/).each {|value| ant.arg :value => value}
@@ -384,12 +384,12 @@ namespace "gettext" do
 end
 
 desc 'Make sure eventhing is working as it should'
-task :check_all => [:clean, :checkstyle, 'candlepin:rpmlint', :test, :deploy, :spec]
+task :check_all => [:clean, :checkstyle, 'canadianTenPin:rpmlint', :test, :deploy, :spec]
 
 #==========================================================================
 # Tomcat deployment
 #==========================================================================
-desc 'Build and deploy candlepin to a local Tomcat instance'
+desc 'Build and deploy canadianTenPin to a local Tomcat instance'
 task :deploy do
   sh 'buildconf/scripts/deploy'
 end
@@ -400,7 +400,7 @@ task :deploy_check do
     http.use_ssl = true
     http.verify_mode = OpenSSL::SSL::VERIFY_NONE
     http.start do |conn|
-      response = conn.request Net::HTTP::Get.new "/candlepin/admin/init"
+      response = conn.request Net::HTTP::Get.new "/canadianTenPin/admin/init"
       Rake::Task[:deploy].invoke if response.code != '200'
     end
   rescue

@@ -1,8 +1,8 @@
 require 'spec_helper'
-require 'candlepin_scenarios'
+require 'canadianTenPin_scenarios'
 
 describe 'Product Certificate' do
-  include CandlepinMethods
+  include CanadianTenPinMethods
 
   before(:each) do
     # Static map of extension labels to OID values

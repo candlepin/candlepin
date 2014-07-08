@@ -5,7 +5,7 @@
 
 %global selinux_variants mls strict targeted
 %global selinux_policyver %(%{__sed} -e 's,.*selinux-policy-\\([^/]*\\)/.*,\\1,' /usr/share/selinux/devel/policyhelp || echo 0.0.0)
-%global modulename candlepin
+%global modulename canadianTenPin
 
 # This is technically just a temporary directory to get us through
 # the compilation phase. It is later destroyed and the spec file will
@@ -13,15 +13,15 @@
 %global distlibdir %{buildroot}/%{_tmppath}/distlibdir/
 %global libdir %{_javadir}
 
-# We require the Candlepin SCL, but because we are not an SCL package
+# We require the CanadianTenPin SCL, but because we are not an SCL package
 # ourselves, we need to point to deps in the expected location.
-%global scllibdir /opt/rh/candlepin-scl/root
+%global scllibdir /opt/rh/canadianTenPin-scl/root
 
 %{?fedora:%global reqcpdeps 1}
 
 # Ideally we would just use %{dist} for the deps_suffix, but %dist isn't just always
 # the major version.  E.g. rpm --eval "%{dist}" returns ".el6_5" in the RHEL 6
-# candlepin buildroot and ".el6" in other environments.
+# canadianTenPin buildroot and ".el6" in other environments.
 %{?fedora:%global deps_suffix fc%{fedora}}
 %{?rhel:%global deps_suffix el%{rhel}}
 
@@ -31,14 +31,14 @@
 %global tomcat tomcat6
 %endif
 
-Name: candlepin
-Summary: Candlepin is an open source entitlement management system
+Name: canadianTenPin
+Summary: CanadianTenPin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
 Version: 0.9.21
 Release: 1%{?dist}
-URL: http://fedorahosted.org/candlepin
-# Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
+URL: http://fedorahosted.org/canadianTenPin
+# Source0: https://fedorahosted.org/releases/c/a/canadianTenPin/%{name}-%{version}.tar.gz
 Source: %{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 Vendor: Red Hat, Inc.
@@ -53,12 +53,12 @@ BuildRequires: selinux-policy-doc
 %global distlibdir %{_datadir}/%{name}/lib/
 %global libdir %{_datadir}/%{name}/lib/
 %global usecpdeps "usecpdeps"
-BuildRequires: candlepin-deps >= 0:0.2.7
+BuildRequires: canadianTenPin-deps >= 0:0.2.7
 %else
-# Require the candlepin software collection for packages we use that may
+# Require the canadianTenPin software collection for packages we use that may
 # conflict with other projects/releases:
 BuildRequires: scl-utils-build
-BuildRequires: candlepin-scl
+BuildRequires: canadianTenPin-scl
 
 BuildRequires: antlr >= 0:2.7.7
 BuildRequires: bouncycastle
@@ -67,7 +67,7 @@ BuildRequires: hibernate4-entitymanager >= 0:4.2.5
 BuildRequires: hibernate4-c3p0 >= 0:4.2.5
 %if 0%{?rhel} >= 7
 BuildRequires: glassfish-jaxb
-BuildRequires: candlepin-guice >= 0:3.0
+BuildRequires: canadianTenPin-guice >= 0:3.0
 BuildRequires: guava >= 0:13.0
 BuildRequires: apache-commons-collections
 BuildRequires: mvn(org.apache.httpcomponents:httpclient) >= 0:4.1.2
@@ -139,12 +139,12 @@ Requires: postgresql-jdbc
 # specific requires
 # if not using cpdeps, we'll need real requires
 %if !0%{?reqcpdeps}
-# candlepin webapp requires
+# canadianTenPin webapp requires
 Requires: antlr >= 0:2.7.7
 Requires: bouncycastle
 %if 0%{?rhel} >= 7
 Requires: glassfish-jaxb
-Requires: candlepin-guice >= 0:3.0
+Requires: canadianTenPin-guice >= 0:3.0
 Requires: guava >= 0:13.0
 Requires: apache-commons-collections
 Requires: mvn(org.apache.httpcomponents:httpclient) >= 0:4.1.2
@@ -170,7 +170,7 @@ Requires: hibernate4-c3p0 >= 0:4.2.5
 Requires: hibernate4-validator >= 0:4.2.5
 Requires: hibernate3-commons-annotations >= 0:4.0.1
 Requires: hibernate-jpa-2.0-api >= 0:1.0.1
-Requires: candlepin-scl
+Requires: canadianTenPin-scl
 Requires: hibernate-beanvalidation-api >= 1.0.0
 Requires: c3p0 >= 0:0.9.1.2
 Requires: resteasy >= 0:2.3.7
@@ -200,32 +200,32 @@ Requires: qpid-java-client >= 0:0.22
 %global __jar_repack %{nil}
 
 %description
-Candlepin is an open source entitlement management system.
+CanadianTenPin is an open source entitlement management system.
 
 %package %{tomcat}
-Summary: Candlepin web application for tomcat
+Summary: CanadianTenPin web application for tomcat
 Requires: %{tomcat}
-Requires: candlepin = %{version}
+Requires: canadianTenPin = %{version}
 
 %description %{tomcat}
-Candlepin web application for tomcat
+CanadianTenPin web application for tomcat
 
 %package devel
-Summary: Development libraries for candlepin integration
+Summary: Development libraries for canadianTenPin integration
 Group: Development/Libraries
 
 %description devel
-Development libraries for candlepin integration
+Development libraries for canadianTenPin integration
 
 %package certgen-lib
-Summary: candlepin certgen library for use by other apps
+Summary: canadianTenPin certgen library for use by other apps
 
 %description certgen-lib
-candlepin library for use by other apps
+canadianTenPin library for use by other apps
 
 
 %package selinux
-Summary:        SELinux policy module supporting candlepin
+Summary:        SELinux policy module supporting canadianTenPin
 Group:          System Environment/Base
 BuildRequires:  checkpolicy
 BuildRequires:  selinux-policy-devel
@@ -243,14 +243,14 @@ Requires(postun): /usr/sbin/semodule
 Requires(postun): /sbin/restorecon
 
 %description selinux
-SELinux policy module supporting candlepin
+SELinux policy module supporting canadianTenPin
 
 %prep
 %setup -q
 mkdir -p %{distlibdir}
 
 %build
-# Once candlepin-deps is gone we can remove the %{?rhel} conditional
+# Once canadianTenPin-deps is gone we can remove the %{?rhel} conditional
 ant %{?rhel:-Ddeps.file=deps/%{deps_suffix}.txt} -Dlibdir=%{libdir} -Ddistlibdir=%{distlibdir} -Dscllibdir=%{scllibdir}/%{_datadir}/java/ clean %{?reqcpdeps:usecpdeps} package
 
 cd selinux
@@ -269,7 +269,7 @@ rm -rf %{buildroot}
 install -d -m 755 %{buildroot}/%{_sysconfdir}/%{name}/certs/
 install -d -m 755 %{buildroot}/%{_sysconfdir}/%{name}/certs/upstream/
 install -d -m 755 %{buildroot}/%{_sysconfdir}/%{name}/certs/amqp/
-install -m 644 conf/candlepin-redhat-ca.crt %{buildroot}%{_sysconfdir}/%{name}/certs/upstream/
+install -m 644 conf/canadianTenPin-redhat-ca.crt %{buildroot}%{_sysconfdir}/%{name}/certs/upstream/
 install -d 755 %{buildroot}%{_sysconfdir}/logrotate.d/
 install -m 644 conf/logrotate.conf %{buildroot}%{_sysconfdir}/logrotate.d/%{name}
 install -d -m 755 %{buildroot}/%{_sysconfdir}/%{name}/
@@ -291,7 +291,7 @@ rm %{buildroot}/%{_localstatedir}/lib/%{tomcat}/webapps/%{name}/WEB-INF/lib/*.ja
 ant %{?rhel:-Ddeps.file=deps/%{deps_suffix}.txt} -Ddistlibdir=%{buildroot}/%{_localstatedir}/lib/%{tomcat}/webapps/%{name}/WEB-INF/lib/ -Dscllibdir=%{scllibdir}/%{_datadir}/java/ initjars
 
 %endif
-ln -s /etc/candlepin/certs/keystore %{buildroot}/%{_sysconfdir}/%{tomcat}/keystore
+ln -s /etc/canadianTenPin/certs/keystore %{buildroot}/%{_sysconfdir}/%{tomcat}/keystore
 
 # devel
 install -d -m 755 %{buildroot}/%{_datadir}/%{name}/lib/
@@ -300,7 +300,7 @@ install -m 644 target/%{name}-api-%{version}.jar %{buildroot}/%{_datadir}/%{name
 # jar
 install -d -m 755 %{buildroot}/usr/share/java
 install -m 644 target/%{name}-certgen-%{version}.jar %{buildroot}/usr/share/java/
-ln -s /usr/share/java/candlepin-certgen-%{version}.jar %{buildroot}/usr/share/java/candlepin-certgen.jar
+ln -s /usr/share/java/canadianTenPin-certgen-%{version}.jar %{buildroot}/usr/share/java/canadianTenPin-certgen.jar
 
 # /var/lib dir for hornetq state
 install -d -m 755 %{buildroot}/%{_localstatedir}/lib/%{name}
@@ -353,12 +353,12 @@ fi
 %{_sysconfdir}/%{name}/certs/amqp
 %ghost %attr(644, tomcat, tomcat) %{_sysconfdir}/%{name}/certs/amqp/keystore
 %ghost %attr(644, tomcat, tomcat) %{_sysconfdir}/%{name}/certs/amqp/truststore
-%ghost %attr(644, root, root) %{_sysconfdir}/%{name}/certs/candlepin-ca.crt
+%ghost %attr(644, root, root) %{_sysconfdir}/%{name}/certs/canadianTenPin-ca.crt
 # Default is to track the rpm version of this cert for manifest signatures.
 # If a deployment is managing their own, they will need to restore from the
-# .rpmsave backup after upgrading the candlepin rpm.
-%config %attr(644, root, root) %{_sysconfdir}/%{name}/certs/upstream/candlepin-redhat-ca.crt
-%config(noreplace) %attr(644,root,root) %{_sysconfdir}/logrotate.d/candlepin
+# .rpmsave backup after upgrading the canadianTenPin rpm.
+%config %attr(644, root, root) %{_sysconfdir}/%{name}/certs/upstream/canadianTenPin-redhat-ca.crt
+%config(noreplace) %attr(644,root,root) %{_sysconfdir}/logrotate.d/canadianTenPin
 %doc LICENSE
 %doc README
 
@@ -396,7 +396,7 @@ fi
 - Translations update. (dgoodwin@redhat.com)
 - Add jackson-datatype-hibernate4 to dependencies. (awood@redhat.com)
 - Change to a couple of languages. (bkearney@redhat.com)
-- bumping candlepin-deps version (jesusr@redhat.com)
+- bumping canadianTenPin-deps version (jesusr@redhat.com)
 - Rev rules again (ckozak@redhat.com)
 - use priority for other attributes (ckozak@redhat.com)
 - pick groups better (ckozak@redhat.com)
@@ -411,7 +411,7 @@ fi
 - Remove 'relies on' feature (wpoteat@redhat.com)
 - Add 'buildr-findBugs' and 'pmd' to required gems (alikins@redhat.com)
 - Fix consumer facts spec in mysql (ckozak@redhat.com)
-- Candlepin should own the amqp directory. (jesusr@redhat.com)
+- CanadianTenPin should own the amqp directory. (jesusr@redhat.com)
 - Apply permissions when determining OwnerInfo consumer counts.  (mstead@redhat.com)
 - Allow read only users to generate manifests (wpoteat@redhat.com)
 - Removal of Adapter Methods. Part 2. (wpoteat@redhat.com)
@@ -424,7 +424,7 @@ fi
 * Wed Jun 11 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.19-1
 - Audit log was not getting generated or populated (wpoteat@redhat.com)
 - Backwards compatible selinux dep fix for EL7/F20 (jmontleo@redhat.com)
-- bump candlepin-deps version which included javamail (jesusr@redhat.com)
+- bump canadianTenPin-deps version which included javamail (jesusr@redhat.com)
 - add java mail dependency (jesusr@redhat.com)
 - various buildfile cleanup (awood@redhat.com)
 
@@ -447,7 +447,7 @@ fi
 - use proper qpid-java-client jar name: qpid-client-0.22 & jms el6 (jesusr@redhat.com)
 
 * Thu May 22 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.14-1
-- bump candlepin-deps (jesusr@redhat.com)
+- bump canadianTenPin-deps (jesusr@redhat.com)
 - add rhel7 build (jesusr@redhat.com)
 
 * Wed May 21 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.13-1
@@ -461,7 +461,7 @@ fi
 - Rewrite fact filters to take advantage of hibernate criteria api (ckozak@redhat.com)
 - log event not just the exception (jesusr@redhat.com)
 - index cdn certificates on serial_id for uniformity with other certs (ckozak@redhat.com)
-- Use candlepin-guice in RHEL 7. (awood@redhat.com)
+- Use canadianTenPin-guice in RHEL 7. (awood@redhat.com)
 - Changes in packaging required for RHEL 7. (awood@redhat.com)
 - Upgrade RESTEasy to what is available in RHEL 7. (awood@redhat.com)
 - Some preliminary code to avoid deadlock situations (ckozak@redhat.com)
@@ -485,7 +485,7 @@ fi
 - let cascade delete actkey pools (ckozak@redhat.com)
 - Package updates for RHEL 7 (wpoteat@redhat.com)
 - Method incorrectly removed from file (wpoteat@redhat.com)
-- Reformat the java docs for use in the CandlepinProject API page (wpoteat@redhat.com)
+- Reformat the java docs for use in the CanadianTenPinProject API page (wpoteat@redhat.com)
 - add hibernate-validator to rpm jars and spec (jesusr@redhat.com)
 - add validation-api to rpm jars (jesusr@redhat.com)
 - fix checkstyle: space before curly braces :D (jesusr@redhat.com)
@@ -505,7 +505,7 @@ fi
 - Generate doc for superclass methods too. (awood@redhat.com)
 - Fixed hibernate validation test to reflect no @Size on entryType (ckozak@redhat.com)
 - Remove @Size annotation from enum type. (jesusr@redhat.com)
-- bump candlepin-deps (jesusr@redhat.com)
+- bump canadianTenPin-deps (jesusr@redhat.com)
 - remove F18 from katello-koji (jesusr@redhat.com)
 
 * Fri Apr 11 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.9-1
@@ -565,10 +565,10 @@ fi
 - Latest translations from zanata (alikins@redhat.com)
 - Use a version of oauth in line with upstream. (awood@redhat.com)
 - Updates for uuid2 (wpoteat@redhat.com)
-- Call Candlepin as consumer where applicable (wpoteat@redhat.com)
+- Call CanadianTenPin as consumer where applicable (wpoteat@redhat.com)
 - Do not revoke entitlements when guestid is removed (ckozak@redhat.com)
 - Adding provider class to persistence.xml (wpoteat@redhat.com)
-- Allow resteasy to handle scoping in CandlepinSingletonScope (ckozak@redhat.com)
+- Allow resteasy to handle scoping in CanadianTenPinSingletonScope (ckozak@redhat.com)
 - added config option to disable hypervisor_id blocking (ckozak@redhat.com)
 - Index on hypervisor_id for faster hypervisor checkins (ckozak@redhat.com)
 - block hypervisor consumer creation when hypervisor_id is in use (ckozak@redhat.com)
@@ -628,7 +628,7 @@ fi
 - 1033365: Added cleaner instance multiplier exception message (ckozak@redhat.com)
 - 1038273: correctly paginate when listing pools by consumer (ckozak@redhat.com)
 - 1034375: Force content override name property to lowercase (mstead@redhat.com)
-- 1037665: /var/cache/candlepin seemingly not being cleaned up (wpoteat@redhat.com)
+- 1037665: /var/cache/canadianTenPin seemingly not being cleaned up (wpoteat@redhat.com)
 - 1044574: Added --schema-only option to cpsetup/cpdb (mstead@redhat.com)
 - 1046158: Fixed instance based compliance calculation (ckozak@redhat.com)
 - 1049001: fix typo in "exceed" (ckozak@redhat.com)
@@ -691,7 +691,7 @@ fi
 - Return suggested/increment 1/1 for distributors (ckozak@redhat.com)
 
 * Wed Dec 11 2013 jesus m. rodriguez <jesusr@redhat.com> 0.9.1-1
-- bump candlepin-deps to include hibernate4, change brew tag, package version (jesusr@redhat.com)
+- bump canadianTenPin-deps to include hibernate4, change brew tag, package version (jesusr@redhat.com)
 - Update jars and related code for Hibernate version 4.2.5 (wpoteat@redhat.com)
 - Comment addition for field to explain number and need. (wpoteat@redhat.com)
 - Remove post filtering where possible (ckozak@redhat.com)
@@ -760,11 +760,11 @@ fi
 - Improved and more machine parsable event logging. (dgoodwin@redhat.com)
 - Consumer specific content set/repo overrides (wpoteat@redhat.com)
 - Log with ISO8601 date format. (dgoodwin@redhat.com)
-- Add logrotate config for new Candlepin log files. (dgoodwin@redhat.com)
+- Add logrotate config for new CanadianTenPin log files. (dgoodwin@redhat.com)
 - Improve request/response logging. (dgoodwin@redhat.com)
 - Log a unique request/job ID with every statement. (dgoodwin@redhat.com)
 - Improve event logging in audit.log. (dgoodwin@redhat.com)
-- Start logging in candlepin specific files rather than catalina.out.  (dgoodwin@redhat.com)
+- Start logging in canadianTenPin specific files rather than catalina.out.  (dgoodwin@redhat.com)
 - Improve default access.log format. (alikins@redhat.com)
 - Setup a access.log in our server.xml via deploy (alikins@redhat.com)
 - Add the requestUuid into servlet request attribs. (alikins@redhat.com)
@@ -780,8 +780,8 @@ fi
 - Fix NPE from base64 (jesusr@redhat.com)
 - Make v1 certs populate 'brand_type' too. (alikins@redhat.com)
 - Log scheduler exception (ckozak@redhat.com)
-- Add option to deploy candlepin.conf automatically. (awood@redhat.com)
-- Generate candlepin.conf based on a template and YAML data. (awood@redhat.com)
+- Add option to deploy canadianTenPin.conf automatically. (awood@redhat.com)
+- Generate canadianTenPin.conf based on a template and YAML data. (awood@redhat.com)
 - Fix import_products on ruby-1.9 (alikins@redhat.com)
 - Add spec test for nonexistant attributes (ckozak@redhat.com)
 - Allow unknown properties in HibernateObjects.  Futureproofing (ckozak@redhat.com)
@@ -844,7 +844,7 @@ fi
 - dont list expired (ckozak@redhat.com)
 - Async binds should have the same behavior as regular binds.
   (awood@redhat.com)
-- 988549: Let CandlepinPoolManager decide which products to bind.
+- 988549: Let CanadianTenPinPoolManager decide which products to bind.
   (awood@redhat.com)
 - 989698: Attempted fix for hornetq journal errors. (dgoodwin@redhat.com)
 - 990728: Refresh Manifest fails when the upstream distributor has all the
@@ -874,7 +874,7 @@ fi
 - Updated spec test and syntax in file (cschevia@redhat.com)
 - Track owner key and owner displayname on deletedconsumers (cduryee@redhat.com)
 - add getComplianceStatus with date, reasons with date (ckozak@redhat.com)
-- Make candlepin work on f19 (ckozak@redhat.com)
+- Make canadianTenPin work on f19 (ckozak@redhat.com)
 - allow user defined ruby versions (ckozak@redhat.com)
 - Add F19 releaser, drop F16. (dgoodwin@redhat.com)
 - set all awesomeos content enabled=0 by default (alikins@redhat.com)
@@ -934,7 +934,7 @@ fi
 - Add pagination to pool listings. (awood@redhat.com)
 - Add paging to additional resources. (awood@redhat.com)
 - Fix Content and Product with no arch. (alikins@redhat.com)
-- 971121: Candlepin Lists Derived Pools For Distributors (wpoteat@redhat.com)
+- 971121: CanadianTenPin Lists Derived Pools For Distributors (wpoteat@redhat.com)
 - 963535: Fix instance quantity increment of 2 on virt guests.
   (dgoodwin@redhat.com)
 
@@ -946,7 +946,7 @@ fi
 - translate errors for supported calculations (ckozak@redhat.com)
 
 * Thu May 30 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.12-1
-- add paging package to candlepin-api.jar (jesusr@redhat.com)
+- add paging package to canadianTenPin-api.jar (jesusr@redhat.com)
 
 * Thu May 30 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.11-1
 - pmd: various code clean up (jmrodri@gmail.com)
@@ -982,19 +982,19 @@ fi
   effects. (awood@redhat.com)
 
 * Fri May 10 2013 Michael Stead <mstead@redhat.com> 0.8.7-1
-- Merge pull request #248 from candlepin/alikins/syntastic_classpath
+- Merge pull request #248 from canadianTenPin/alikins/syntastic_classpath
   (mstead@redhat.com)
 - Add buildfile target to generate a .syntastic_class_path (alikins@redhat.com)
 - Update generate export script to work on arbitrary owner.
   (dgoodwin@redhat.com)
 - latest strings from zanata (alikins@redhat.com)
-- Merge pull request #247 from candlepin/zeus/instancebased
+- Merge pull request #247 from canadianTenPin/zeus/instancebased
   (mstead@redhat.com)
 - minor version bump for rules.js (jesusr@redhat.com)
 - ensure virt guests are not blocked with odd quantity (jesusr@redhat.com)
 - move string to constants (jesusr@redhat.com)
 - remove left over System.out (jesusr@redhat.com)
-- Merge pull request #246 from candlepin/awood/server-side-quantity (dgoodwin
+- Merge pull request #246 from canadianTenPin/awood/server-side-quantity (dgoodwin
   @rm-rf.ca)
 - Bump version of JS rules. (awood@redhat.com)
 - Removing dead JS code. (awood@redhat.com)
@@ -1013,7 +1013,7 @@ fi
 - Adding calculated attributes to OwnerResource. (awood@redhat.com)
 - Move calculated attributes out to a separate class. (awood@redhat.com)
 - Adding spec test for calculated attributes. (awood@redhat.com)
-- Initial attempt at moving quantity calculations into Candlepin.
+- Initial attempt at moving quantity calculations into CanadianTenPin.
   (awood@redhat.com)
 
 * Wed May 08 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.6-1
@@ -1062,11 +1062,11 @@ fi
 - marked helper fields xmltransient (ckozak@redhat.com)
 - refactored ComplianceReason, added StatusReasonMessageGenerator to help build
   messages (ckozak@redhat.com)
-- candlepin accepts reason structures from javascript and builds translated
+- canadianTenPin accepts reason structures from javascript and builds translated
   messages (ckozak@redhat.com)
 
 * Mon Apr 29 2013 Bryan Kearney <bkearney@redhat.com> 0.8.5-1
-- 956873: Fix broken rules on older Candlepin servers. (dgoodwin@redhat.com)
+- 956873: Fix broken rules on older CanadianTenPin servers. (dgoodwin@redhat.com)
 - Add additional EmptyStringInterceptor test. (awood@redhat.com)
 - Remove the term 'cnsmr' to the extent possible. (awood@redhat.com)
 - Consolidate Oracle dependencies. (awood@redhat.com)
@@ -1155,7 +1155,7 @@ fi
 
 * Fri Apr 05 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.2-1
 - remove Fedora 16 and Fedora 17 releaser for Katello (msuchy@redhat.com)
-- require candlepin-deps 0.1.5 or greater (jesusr@redhat.com)
+- require canadianTenPin-deps 0.1.5 or greater (jesusr@redhat.com)
 - Proper comparison between 2 strings of json data (wpoteat@redhat.com)
 - 909467: Now checks stacked entitlements.  Added tests (ckozak@redhat.com)
 - fix scl deps in spec file (cduryee@redhat.com)
@@ -1181,7 +1181,7 @@ fi
 - 916467: disable update checks in quartz (jesusr@redhat.com)
 
 * Wed Mar 13 2013 Devan Goodwin <dgoodwin@rm-rf.ca> 0.8.0-1
-- Introduce candlepin software collection. (dgoodwin@rm-rf.ca)
+- Introduce canadianTenPin software collection. (dgoodwin@rm-rf.ca)
 - converted != to equals instead of !...equals (jesusr@redhat.com)
 - findbugs: Suspicious comparison of Long references (jesusr@redhat.com)
 - New versioned rules v2 implementation. (dgoodwin@redhat.com / mstead@redhat.com)
@@ -1211,11 +1211,11 @@ fi
 - pair down the classes that go in jar to match buildr generated jar (jesusr@redhat.com)
 
 * Fri Mar 08 2013 jesus m. rodriguez <jesusr@redhat.com> 0.7.28-1
-- get resteasy and jackson classes in candlepin-api.jar of rpm (jesusr@redhat.com)
+- get resteasy and jackson classes in canadianTenPin-api.jar of rpm (jesusr@redhat.com)
 
 * Thu Mar 07 2013 William Poteat <wpoteat@redhat.com> 0.7.27-1
 - Update of zanata strings (wpoteat@redhat.com)
-- add packages to candlepin_api (dcrissma@redhat.com)
+- add packages to canadianTenPin_api (dcrissma@redhat.com)
 - Make JsonProvider more re-usable (dcrissma@redhat.com)
 - increase test coverage (jmrodri@gmail.com)
 
@@ -1260,7 +1260,7 @@ fi
   (wpoteat@redhat.com)
 - 889512: Look for getters which use getProperty and isProperty
   (bkearney@redhat.com)
-- 873776: Duplicate String: Candlepin has messages for "No such environment :
+- 873776: Duplicate String: CanadianTenPin has messages for "No such environment :
   {0}" and "No such environment: {0}" (wpoteat@redhat.com)
 - 888849: Fixed stalled jobs on async bind (mstead@redhat.com)
 - 888035: Update messages for invalid certificates. (mstead@redhat.com)
@@ -1283,7 +1283,7 @@ fi
 - 837655: no longer bundle dependencies
 - 840086: no longer bundle dependencies
 - Cert V3 path tree condensing not properly assessing equivalent path nodes (wpoteat@redhat.com)
-- 884694: Fix import of manifests into older candlepin. (dgoodwin@redhat.com)
+- 884694: Fix import of manifests into older canadianTenPin. (dgoodwin@redhat.com)
 - Adding exception class inclusion to build.xml as well (cduryee@redhat.com)
 - Filering -> Filtering typo (jesusr@redhat.com)
 - Overconsumption check performance fix. (dgoodwin@redhat.com)
@@ -1296,7 +1296,7 @@ fi
 * Fri Nov 30 2012 William Poteat <wpoteat@redhat.com> 0.7.21-1
 - Add back missing todo (jbowes@redhat.com)
 - Alter entitlement quantites (wpoteat@redhat.com)
-- add LICENSE file to candlepin rpm (jmrodri@gmail.com)
+- add LICENSE file to canadianTenPin rpm (jmrodri@gmail.com)
 - 877697: Localize the GoneException. (bkearney@redhat.com)
 - adding license file (jmrodri@gmail.com)
 - 879022: Fix too many V1 content sets across multiple products.
@@ -1329,7 +1329,7 @@ fi
 
 * Fri Nov 30 2012 William Poteat <wpoteat@redhat.com>
 - Alter entitlement quantites (wpoteat@redhat.com)
-- add LICENSE file to candlepin rpm (jmrodri@gmail.com)
+- add LICENSE file to canadianTenPin rpm (jmrodri@gmail.com)
 - 877697: Localize the GoneException. (bkearney@redhat.com)
 - adding license file (jmrodri@gmail.com)
 - 879022: Fix too many V1 content sets across multiple products.
@@ -1369,7 +1369,7 @@ fi
 
 * Fri Nov 02 2012 William Poteat <wpoteat@redhat.com> 0.7.18-1
 - Add findbugs target (alikins@redhat.com)
-- Add a build target to build candlepin as a jar, so it can be used by other
+- Add a build target to build canadianTenPin as a jar, so it can be used by other
   apps. Also, create a new rpm for the jar. (cduryee@redhat.com)
 - allow to build in katello koji (msuchy@redhat.com)
 
@@ -1378,7 +1378,7 @@ fi
   (wpoteat@redhat.com)
 - variables should point to correct paths (jesusr@redhat.com)
 - Properly rename recursiveCombination to powerSet (jbowes@redhat.com)
-- Ignore old rules in database after a Candlepin upgrade. (dgoodwin@redhat.com)
+- Ignore old rules in database after a CanadianTenPin upgrade. (dgoodwin@redhat.com)
 - 820630: Fix the pa.po translations where a trailing \ was added.
   (bkearney@redhat.com)
 - 820630: Replace the string uuid with UUID (bkearney@redhat.com)
@@ -1405,7 +1405,7 @@ fi
 - Save the name of the import file uploaded in the event history
   (wpoteat@redhat.com)
 - 857494: Add DB password to liquibase command. (awood@redhat.com)
-- Added candlepin.enable_cert_v3 config property. (mstead@redhat.com)
+- Added canadianTenPin.enable_cert_v3 config property. (mstead@redhat.com)
 - 800145: Update pools across all owners on product import (jbowes@redhat.com)
 - 857918: Add quotes around the invalid service level (bkearney@redhat.com)
 - changed ContentResource#update to use contentId in the resource path
@@ -1479,12 +1479,12 @@ fi
 - remove unnecessary assignment to null (jesusr@redhat.com)
 - Performance improvements when selecting best pools (mstead@redhat.com)
 - various findbugs cleanup (jesusr@redhat.com)
-- Don't use the real /etc/candlepin/candlepin.conf during testing (jbowes@redhat.com)
+- Don't use the real /etc/canadianTenPin/canadianTenPin.conf during testing (jbowes@redhat.com)
 - Add null check for Entitlement.getProductId (alikins@redhat.com)
 
 * Tue Aug 28 2012 Alex Wood <awood@redhat.com> 0.7.7-1
 - 851512: add restorecon -R to %%post (alikins@redhat.com)
-- 851512: add certs_rw and candlepin-ca.certs file context (alikins@redhat.com)
+- 851512: add certs_rw and canadianTenPin-ca.certs file context (alikins@redhat.com)
 - remove FileUtils.cp calls used for debugging (jesusr@redhat.com)
 - ownerinfo: replace pool iteration with hql queries (jbowes@redhat.com)
 - ownerinfo: use pool.getProductAttribute rather than the product adapter
@@ -1496,7 +1496,7 @@ fi
 - Add API method to refresh pools for owner of specific products.
   (awood@redhat.com)
 - Renaming method for getting owners of active products. (awood@redhat.com)
-- 842450: Fix newline issues in candlepin translations (bkearney@redhat.com)
+- 842450: Fix newline issues in canadianTenPin translations (bkearney@redhat.com)
 - First draft of script to mass load data for performance testing.
   (dgoodwin@redhat.com)
 
@@ -1564,7 +1564,7 @@ fi
   (jesusr@redhat.com)
 
 * Mon Jun 04 2012 Chris Duryee (beav) <cduryee@redhat.com>
-- Capture additional data in manifest files from originating Candlepin
+- Capture additional data in manifest files from originating CanadianTenPin
   (wpoteat@redhat.com)
 - Support for partial owner updates. (wpoteat@redhat.com)
 - Quartz 2 merge (cduryee@redhat.com)
@@ -1636,7 +1636,7 @@ fi
 - resource should use guice persist (jesusr@redhat.com)
 - remove commented freemarker (jesusr@redhat.com)
 - remove schema generation (jesusr@redhat.com)
-- use candlepin-deps in fedora (jesusr@redhat.com)
+- use canadianTenPin-deps in fedora (jesusr@redhat.com)
 - remove mockito (jesusr@redhat.com)
 - put in versions for Requires: (jesusr@redhat.com)
 - rpmlint: remove period from summary (jesusr@redhat.com)
@@ -1752,7 +1752,7 @@ fi
 - latest strings from zanata (alikins@redhat.com)
 
 * Tue Apr 03 2012 Chris Duryee (beav) <cduryee@redhat.com>
-- bump candlepin-deps version for new jackson (cduryee@redhat.com)
+- bump canadianTenPin-deps version for new jackson (cduryee@redhat.com)
 - 807452: Null pointer check added on attribute value. Was causing NPE in hash
   code. (wpoteat@redhat.com)
 - 796468: Owner with id FOO could not be found. (wpoteat@redhat.com)
@@ -1907,7 +1907,7 @@ fi
 
 * Wed Jan 11 2012 jesus m. rodriguez <jesusr@redhat.com> 0.5.9-1
 - i18n: extracted and merged strings. (jesusr@redhat.com)
-- 743968: Do not import rules files exported from older candlepins (cduryee@redhat.com)
+- 743968: Do not import rules files exported from older canadianTenPins (cduryee@redhat.com)
 - initial selinux policy import (alikins@redhat.com)
 - latest string files (bkearney@redhat.com)
 - Latest strings from zanata (bkearney@redhat.com)
@@ -1985,19 +1985,19 @@ fi
 - Added new API call to ConsumerResource for getting current compliance status. (mstead@redhat.com)
 - 751158: Deny manifest consumers access to derived pools. (dgoodwin@redhat.com)
 - Behavior of unlimited bonus pool when physical pool is exhausted.  (wpoteat@redhat.com)
-- write test data to candlepin_info.properties to fix unit test (jmrodri@gmail.com)
+- write test data to canadianTenPin_info.properties to fix unit test (jmrodri@gmail.com)
 - 688707: capture all of the internal exceptions, transform into JSON.  (jmrodri@gmail.com)
 - Latest strings (bkearney@redhat.com)
 - Filter out uebercert-related pools and subscriptions (dmitri@redhat.com)
-- 749361: Candlepin exports did not have a proper version in meta.json (awood@redhat.com)
-- Allow command line options to override values in .candlepinrc (awood@redhat.com)
+- 749361: CanadianTenPin exports did not have a proper version in meta.json (awood@redhat.com)
+- Allow command line options to override values in .canadianTenPinrc (awood@redhat.com)
 - version bump (jesusr@redhat.com)
-- move org.fedoraproject.candlepin -> org.candlepin (jmrodri@gmail.com)
+- move org.fedoraproject.canadianTenPin -> org.canadianTenPin (jmrodri@gmail.com)
 - Provide the ability to force an import that is older than existing data. (awood@redhat.com)
 - fixed a bug when the first created uebercertificate would be returned for all
   owners (ddolguik@redhat.com)
 - Latest string files (bkearney@redhat.com)
-- fix NPE being logged during Candlepin usage. (jmrodri@gmail.com)
+- fix NPE being logged during CanadianTenPin usage. (jmrodri@gmail.com)
 
 * Tue Oct 25 2011 jesus m. rodriguez <jesusr@redhat.com> 0.4.23-1
 - don't use bouncycastle for now (jesusr@redhat.com)
@@ -2025,7 +2025,7 @@ fi
   call. (awood@redhat.com)
 - Remove an unused method. (dgoodwin@redhat.com)
 - Fix intermittent ConsumerCuratorTest failure. (dgoodwin@redhat.com)
-- Expose subscription certs via candlepin API, for use by thumbslug.
+- Expose subscription certs via canadianTenPin API, for use by thumbslug.
   (cduryee@redhat.com)
 - Fixed problem where wrong host was being looked up when checking host change.
   (mstead@redhat.com)
@@ -2087,7 +2087,7 @@ fi
 - Update to allow /host and /guests to function (wpoteat@redhat.com)
 - Fixed broken test (mstead@redhat.com)
 - Added test cases for PUT /consumers/{uuid} updating guestIds. (mstead@redhat.com)
-- Removing unneeded add/remove guest functions in candlepin_api (mstead@redhat.com)
+- Removing unneeded add/remove guest functions in canadianTenPin_api (mstead@redhat.com)
 - Use host lookup in rules when checking virt_only pools. (dgoodwin@redhat.com)
 - Incorrect name for accessor (wpoteat@redhat.com)
 - Removed old parent/child relationship (wpoteat@redhat.com)
@@ -2120,8 +2120,8 @@ fi
 - Do not add rulewarning.unsupported.number.of.sockets if sockets is not
   defined on the consumer or product, or if the product has zero sockets.
   (cduryee@redhat.com)
-- Candlepin setup requires wget (bkearney@redhat.com)
-- Ensure that the Candlepin exceptions wrapping normal exceptions do not cause
+- CanadianTenPin setup requires wget (bkearney@redhat.com)
+- Ensure that the CanadianTenPin exceptions wrapping normal exceptions do not cause
   a class cast exception. Chris Alfonso found this doing testing today.
   (bkearney@redhat.com)
 - Return to throwing service unavailable exception. (dgoodwin@redhat.com)
@@ -2197,7 +2197,7 @@ fi
   parameter list size to 24 (ddolguik@redhat.com)
 
 * Wed Sep 14 2011 jesus m. rodriguez <jesusr@redhat.com> 0.4.16-1
-- bumping candlepin-deps version to 0.0.18 (jesusr@redhat.com)
+- bumping canadianTenPin-deps version to 0.0.18 (jesusr@redhat.com)
 
 * Wed Sep 14 2011 jesus m. rodriguez <jesusr@redhat.com> 0.4.15-1
 - Fix the russian string (bkearney@redhat.com)
@@ -2216,7 +2216,7 @@ fi
 - Add an autoheal attribute for consumers. (dgoodwin@redhat.com)
 - Stop erroring out on the healing bind request. (dgoodwin@redhat.com)
 - Corrections for checkstyle (wpoteat@redhat.com)
-- Fix export of virt entitlements for non-candlepin consumers.  (wpoteat@redhat.com)
+- Fix export of virt entitlements for non-canadianTenPin consumers.  (wpoteat@redhat.com)
 - 734174: Add missing produces annotations for role resource.  (dgoodwin@redhat.com)
 - add an OID for virt entitlements (cduryee@redhat.com)
 
@@ -2252,7 +2252,7 @@ fi
   quantity>1 for a non-multi-entitlement pool (wpoteat@redhat.com)
 - 728721: NullPointerException thrown when registering with an activation key
   bound to a pool that requires_consumer_type person. (wpoteat@redhat.com)
-- Added test case for CandlepinContextListener (jesusr@redhat.com)
+- Added test case for CanadianTenPinContextListener (jesusr@redhat.com)
 - remove unused import (checkstyle please) :D (jmrodri@gmail.com)
 - Disable quantity for bind by product. (dgoodwin@redhat.com)
 - Replace hand-coded mock object with Mockito. (jmrodri@gmail.com)
@@ -2324,7 +2324,7 @@ fi
 - add username to JobStatus (increase test coverage of JobCurator)
   (jesusr@redhat.com)
 - remove useless whitespace (jesusr@redhat.com)
-- Improve the candlepin puppet script (bkearney@redhat.com)
+- Improve the canadianTenPin puppet script (bkearney@redhat.com)
 - 725242: Change the error messages for pools to be consistent with
   subscription manager (bkearney@redhat.com)
 - test for exception handling (jesusr@redhat.com)
@@ -2384,7 +2384,7 @@ fi
 - Refactor registration API. (dgoodwin@redhat.com)
 
 * Fri Jul 15 2011 jesus m. rodriguez <jesusr@redhat.com> 0.4.6-1
-- require candlepin-deps 0.0.17 (jesusr@redhat.com)
+- require canadianTenPin-deps 0.0.17 (jesusr@redhat.com)
 - revert to real bouncycastle (jesusr@redhat.com)
 - Better method of checking if user has access to an owner. (dgoodwin@redhat.com)
 - Print where we were API JSON after APICrawl. (dgoodwin@redhat.com)
@@ -2430,8 +2430,8 @@ fi
 - Added spec tests for statistics (wpoteat@redhat.com)
 - Checkstyle issues and a change of constructor (wpoteat@redhat.com)
 - a few enhancements to ownerinfo (cduryee@redhat.com)
-- Added permission for Candlepin stats 2 (wpoteat@redhat.com)
-- Candlepin stats 2 (wpoteat@redhat.com)
+- Added permission for CanadianTenPin stats 2 (wpoteat@redhat.com)
+- CanadianTenPin stats 2 (wpoteat@redhat.com)
 - Remove /owners/{oid}/users (bkearney@redhat.com)
 
 * Mon Jun 20 2011 Devan Goodwin <dgoodwin@redhat.com> 0.4.4-1
@@ -2445,7 +2445,7 @@ fi
 - Added number of days parameter and value type parameter (wpoteat@redhat.com)
 - List owners for user with access ALL. (dgoodwin@redhat.com)
 - Fix the location of the import file (bkearney@redhat.com)
-- Add a simple puppet script for candlepin. It will probably only work the
+- Add a simple puppet script for canadianTenPin. It will probably only work the
   first time (bkearney@redhat.com)
 - using "uname.machine" instead of "cpu.architecture" (wpoteat@redhat.com)
 - Set up system principal for all pinsetter jobs (jbowes@redhat.com)
@@ -2462,7 +2462,7 @@ fi
 - Include Postgresql 9.0 JDBC driver for F15 deployments. (dgoodwin@redhat.com)
 
 * Tue Jun 14 2011 jesus m. rodriguez <jesusr@redhat.com> 0.4.3-1
-- require candlepin-deps 0.0.16 (jesusr@redhat.com)
+- require canadianTenPin-deps 0.0.16 (jesusr@redhat.com)
 
 * Mon Jun 13 2011 jesus m. rodriguez <jesusr@redhat.com> 0.4.2-1
 - matches current state of custom product (wpoteat@redhat.com)
@@ -2530,7 +2530,7 @@ fi
 - getContentUrl prepended with /$owner/$env (wpoteat@redhat.com)
 - change to test as admin can see owners (wpoteat@redhat.com)
 - ignore test to verify this was intentional (jmrodri@gmail.com)
-- don't look at /etc/candlepin during unit test runs (jmrodri@gmail.com)
+- don't look at /etc/canadianTenPin during unit test runs (jmrodri@gmail.com)
 - added privilege for list on owner (wpoteat@redhat.com)
 - Implement GET /users/{username}/owners, add verifyUser option to AccessRoles.
   (dgoodwin@redhat.com)
@@ -2541,7 +2541,7 @@ fi
   to and owner. (wpoteat@redhat.com)
 
 * Thu May 12 2011 jesus m. rodriguez <jesusr@redhat.com> 0.4.1-1
-- require candlepin-deps 0.0.15 (jesusr@redhat.com)
+- require canadianTenPin-deps 0.0.15 (jesusr@redhat.com)
 - fix checkstyle (jesusr@redhat.com)
 - cpbc: allow parsing of encrypted private keys (jesusr@redhat.com)
 - apparently checkstyle isn't being run :), fixed errors. (jesusr@redhat.com)
@@ -2549,7 +2549,7 @@ fi
 - Enhance the events calls so that friendly messages are returned.
   (bkearney@redhat.com)
 - Allowing the Subject Key Identifier to be injected (bleanhar@redhat.com)
-- don't pull in checkstyle deps when creating candlepin-deps.
+- don't pull in checkstyle deps when creating canadianTenPin-deps.
   (jesusr@redhat.com)
 - replace virtual with guest for ownerinfo stats (jbowes@redhat.com)
 - Bump version stream to 0.4 for next tag. (dgoodwin@redhat.com)
@@ -2574,7 +2574,7 @@ fi
 - checkstyle fixup (jbowes@redhat.com)
 - Add specs for oauth (jbowes@redhat.com)
 - Add a new principal and role for trusted external systems (jbowes@redhat.com)
-- Update to Ruby scripts to refine the code and fix an issue with the Candlepin
+- Update to Ruby scripts to refine the code and fix an issue with the CanadianTenPin
   API calls. (wpoteat@redhat.com)
 - Spec test for entitlement import update (wpoteat@redhat.com)
 - fix features= spec task option (jbowes@redhat.com)
@@ -2587,8 +2587,8 @@ fi
   bucket. (wpoteat@redhat.com)
 
 * Tue Apr 19 2011 jesus m. rodriguez <jesusr@redhat.com> 0.3.5-1
-- require exact version of candlepin rpm (jesusr@redhat.com)
-- option to skip the candlepin conf setup step (mmccune@redhat.com)
+- require exact version of canadianTenPin rpm (jesusr@redhat.com)
+- option to skip the canadianTenPin conf setup step (mmccune@redhat.com)
 - make sure we stop tomcat before initalizing the db otherwise you error (mmccune@redhat.com)
 
 * Wed Apr 13 2011 jesus m. rodriguez <jesusr@redhat.com> 0.3.4-1
@@ -2631,7 +2631,7 @@ fi
 - write dialect to avoid exception (jesusr@redhat.com)
 
 * Tue Mar 29 2011 jesus m. rodriguez <jesusr@redhat.com> 0.3.2-1
-- subpackages should require candlepin. (jesusr@redhat.com)
+- subpackages should require canadianTenPin. (jesusr@redhat.com)
 - Allow Ruby API owner creation with a name and key. (dgoodwin@redhat.com)
 - update readme to explain what's in this directory. (jesusr@redhat.com)
 - changed the way the content type for the return message is handled. Allows
@@ -2640,8 +2640,8 @@ fi
 * Mon Mar 28 2011 jesus m. rodriguez <jesusr@redhat.com> 0.3.1-1
 - util to generate an export zip that is consuming all products (mmccune@redhat.com)
 - 684941: Added exception handling for deletion of product with subscription. (wpoteat@wpoteat.desktop)
-- Allow bind with a UUID in Candlepin Ruby API. (dgoodwin@redhat.com)
-- candlepin setup script for the RPM. (jesusr@redhat.com)
+- Allow bind with a UUID in CanadianTenPin Ruby API. (dgoodwin@redhat.com)
+- canadianTenPin setup script for the RPM. (jesusr@redhat.com)
 - Updating transition for checked exceptions in importer. (jharris@redhat.com)
 - Sorting generated api output by method name. (jharris@redhat.com)
 - Adding apidiff. (jharris@redhat.com)
@@ -2651,9 +2651,9 @@ fi
 - remove really old useless code (jesusr@redhat.com)
 - Fixing up unit tests and checkstyle. (jharris@redhat.com)
 - Pulling out all cucumber features and references. (jharris@redhat.com)
-- Rename CandlepinPKI* -> BouncyCastlePKI* (jbowes@redhat.com)
+- Rename CanadianTenPinPKI* -> BouncyCastlePKI* (jbowes@redhat.com)
 - Porting entitlement feature to rspec. (jharris@redhat.com)
-- Move bouncycastle code into CandlepinPKIUtility (jbowes@redhat.com)
+- Move bouncycastle code into CanadianTenPinPKIUtility (jbowes@redhat.com)
 - Move x509 CRL generation into PKIUtility (jbowes@redhat.com)
 - Porting product_cert test to rspec. (jharris@redhat.com)
 - Removing direct pool creation/deletion in the resource. (jharris@redhat.com)
@@ -2669,7 +2669,7 @@ fi
 - consistent indentation is important (jesusr@redhat.com)
 - fix up eclipse classpath generation (jbowes@redhat.com)
 - add tools.jar to eclipse .classpath (jesusr@redhat.com)
-- 688707: add X-Candlepin-Version header to all responses. (jesusr@redhat.com)
+- 688707: add X-CanadianTenPin-Version header to all responses. (jesusr@redhat.com)
 - remove unused imports (jesusr@redhat.com)
 - 670831: use subscription start date for start of certs instead of entitlement
   date (alikins@redhat.com)
@@ -2749,9 +2749,9 @@ fi
 - Adding owner migration event. (jharris@redhat.com)
 - build up the uri properly (jesusr@redhat.com)
 - debug logging to ensure we capture the inputs properly (jesusr@redhat.com)
-- add config entry for webapp defaults to candlepin (jesusr@redhat.com)
+- add config entry for webapp defaults to canadianTenPin (jesusr@redhat.com)
 - adding sharding to configuration (jesusr@redhat.com)
-- added MigrateOwnerJob and CandlepinConnection. (jesusr@redhat.com)
+- added MigrateOwnerJob and CanadianTenPinConnection. (jesusr@redhat.com)
 - rename (jesusr@redhat.com)
 - export client returns ClientResponse now (jesusr@redhat.com)
 - checkstyle: static final instead of final static (jesusr@redhat.com)
@@ -2820,7 +2820,7 @@ fi
 - Mis spelled OAuth (bkearney@redhat.com)
 
 * Thu Feb 24 2011 jesus m. rodriguez <jesusr@redhat.com> 0.2.7-1
-- bump candlepin-deps to 0.0.13 to include rhino (jesusr@redhat.com)
+- bump canadianTenPin-deps to 0.0.13 to include rhino (jesusr@redhat.com)
 - Improve the error messages returned for OAuth errors (bkearney@redhat.com)
 - Use a function to calculate the Pool quantity on the fetch. (bkearney@redhat.com)
 - More entitlementz (bkearney@redhat.com)
@@ -2883,7 +2883,7 @@ fi
 - Teach our rspec target to output dots (jbowes@redhat.com)
 
 * Thu Feb 10 2011 jesus m. rodriguez <jesusr@redhat.com> 0.2.4-1
-- Update spec file to generate candlepin-devel package (jeckersb@redhat.com)
+- Update spec file to generate canadianTenPin-devel package (jeckersb@redhat.com)
 
 * Wed Feb 09 2011 jesus m. rodriguez <jesusr@redhat.com> 0.2.3-1
 - fix highlander unit test (jbowes@redhat.com)
@@ -3076,13 +3076,13 @@ fi
 - spec: use a random string suffix for multi arch test (jbowes@redhat.com)
 - spec: use a random string suffix for refresh pools test (jbowes@redhat.com)
 - import/export: bring down and import contract and account numbers (jbowes@redhat.com)
-- 641155: candlepin should not generate certs that will be rejected by rhsm (anadathu@redhat.com)
+- 641155: canadianTenPin should not generate certs that will be rejected by rhsm (anadathu@redhat.com)
 - Add owner updates (bkearney@redhat.com)
 - Minor fixes to tests for provided pools (calfonso@redhat.com)
 - add support for multiple architectures as attributes of product(s) (anadathu@redhat.com)
 
 * Wed Nov 10 2010 jesus m. rodriguez <jesusr@redhat.com> 0.1.12-1
-- bump candlepin-deps to 0.0.11, new qpid and ldap (jesusr@redhat.com)
+- bump canadianTenPin-deps to 0.0.11, new qpid and ldap (jesusr@redhat.com)
 - fix small bugs with ProvidedProducts. (anadathu@redhat.com)
 - Get the logging tests running again (bkearney@redhat.com)
 - Adding a ProvidedProducts entity for Pools. The provided products now have a
@@ -3093,7 +3093,7 @@ fi
 - add rspec test for list_users_by_owner (alikins@redhat.com)
 - Add a getUser method to OwnerResource (alikins@redhat.com)
 - autobind: speed things up by running fewer overlap checks (jbowes@redhat.com)
-- Candlepin allows you create a hierarchy of owners (anadathu@redhat.com)
+- CanadianTenPin allows you create a hierarchy of owners (anadathu@redhat.com)
 - add account number to the load so we can verify it (bkearney@redhat.com)
 - Add a duplicate subscription at the current time for all subscriptions
   (bkearney@redhat.com)
@@ -3136,13 +3136,13 @@ fi
 - autobind: send multiple products to the js enforcer (jbowes@redhat.com)
 
 * Mon Oct 25 2010 jesus m. rodriguez <jesusr@redhat.com> 0.1.8-1
-- 646000: candlepin requires c3p0 from latest deps rpm (jesusr@redhat.com)
+- 646000: canadianTenPin requires c3p0 from latest deps rpm (jesusr@redhat.com)
 - Make status and root items unprotected (bkearney@redhat.com)
 
 * Mon Oct 25 2010 jesus m. rodriguez <jesusr@redhat.com> 0.1.7-1
 - 646000: add c3p0 dep and configuration. (jesusr@redhat.com)
 - 646000: remove trailing whitespace (jesusr@redhat.com)
-- candlepin url is now a configuration parameter (ddolguik@redhat.com)
+- canadianTenPin url is now a configuration parameter (ddolguik@redhat.com)
 - Fixing Order Name in entitlement certs. (jharris@redhat.com)
 - Added link to the event in ATOM feed entries (ddolguik@redhat.com)
 - 645567: Atom feed does not validate (ddolguik@redhat.com)
@@ -3159,7 +3159,7 @@ fi
 
 * Mon Oct 18 2010 jesus m. rodriguez <jesusr@redhat.com> 0.1.5-1
 - brew prep - require 0.0.9, since that's the working one :) (jesusr@redhat.com)
-- brew prep - require candlepin-deps >= 0.0.7 (jesusr@redhat.com)
+- brew prep - require canadianTenPin-deps >= 0.0.7 (jesusr@redhat.com)
 - brew prep - ugh removing the commons-lang dep (jesusr@redhat.com)
 
 * Mon Oct 18 2010 jesus m. rodriguez <jesusr@redhat.com> 0.1.4-1
@@ -3169,7 +3169,7 @@ fi
 - brew prep - add Group field to sub-packages (jesusr@redhat.com)
 - brew prep - add in dist to the release (jesusr@redhat.com)
 * Mon Oct 18 2010 jesus m. rodriguez <jesusr@redhat.com> 0.1.2-1
-- brew prep - require ant and candlepin-deps (jesusr@redhat.com)
+- brew prep - require ant and canadianTenPin-deps (jesusr@redhat.com)
 
 * Fri Oct 15 2010 jesus m. rodriguez <jesusr@redhat.com> 0.1.1-1
 - 642754: Remove the XML generate annotations from all the resources (ddolguik@redhat.com)
@@ -3211,7 +3211,7 @@ fi
 - Fixing up ruby libs/tests (jharris@redhat.com)
 - Add in some logging (bkearney@redhat.com)
 - correct javadoc warnings (anadathu@redhat.com)
-- Candlepin now returns 400 after processing a badly formed request (anadathu@redhat.com)
+- CanadianTenPin now returns 400 after processing a badly formed request (anadathu@redhat.com)
 - Product changes detected during imports and triggers certificate regeneration. (anadathu@redhat.com)
 - spec: fix subpool spec with new id changes (jbowes@redhat.com)
 - fix subscription deletion (jbowes@redhat.com)
@@ -3387,7 +3387,7 @@ fi
 - store off the last time the importer ran. (jesusr@redhat.com)
 - rspec: convert entitlement regen tests from cukes to rspec (jbowes@redhat.com)
 - Open GET /pools/id to consumers and owner admins. (dgoodwin@redhat.com)
-- Contents: AMQP Integration with candlepin events using apache's qpid java
+- Contents: AMQP Integration with canadianTenPin events using apache's qpid java
   client. (anadathu@redhat.com)
 - ruby: Drop unused arg for update subscriptions. (dgoodwin@redhat.com)
 - rspec: Flex expiry test for refresh pools. (dgoodwin@redhat.com)
@@ -3463,7 +3463,7 @@ fi
 - Show what user/owners we are creating on import (alikins@redhat.com)
 - don't loose exceptions on import/export; checkstyle cleanup. fix eventfactory
   bug(s) (anadathu@redhat.com)
-- unit test the CandlepinExceptionMapper (jesusr@redhat.com)
+- unit test the CanadianTenPinExceptionMapper (jesusr@redhat.com)
 - make response builder methods private (jesusr@redhat.com)
 - Reverting to resteasy 2.0-beta-4 to fix the exception mapper issue. (jharris@redhat.com)
 - Add support for creating some users and owners in the import (alikins@redhat.com)
@@ -3483,7 +3483,7 @@ fi
 - import created event is emitted after import is complete (ddolguik@redhat.com)
 - export created event is emitted after consumer export (ddolguik@redhat.com)
 - remove duplicate changelog entry. (jesusr@redhat.com)
-- put crl file in /var/lib/candlepin by default instead of /etc/candlepin
+- put crl file in /var/lib/canadianTenPin by default instead of /etc/canadianTenPin
   (jesusr@redhat.com)
 - Changing sub-pool binding to look up the originating subscription.
   (jharris@redhat.com)
@@ -3503,7 +3503,7 @@ fi
 - Code, then test. Not the other way around (bkearney@redhat.com)
 - 608005 - Allow strings to be passed in for pool ids and then validate
   internally (bkearney@redhat.com)
-- Move candlepin to resteasy 2.0 GA (bkearney@redhat.com)
+- Move canadianTenPin to resteasy 2.0 GA (bkearney@redhat.com)
 - test the CRLException case (jesusr@redhat.com)
 - Make import_products be a little less chatty. (alikins@redhat.com)
 - rework the CRL task and its unit test. (jesusr@redhat.com)
@@ -3533,7 +3533,7 @@ fi
 - introduced namespaces in js rules (ddolguik@redhat.com)
 - Use the CN to get the UUID, instead of UID (bkearney@redhat.com)
 - create the private key with a password (bkearney@redhat.com)
-- Have tomcats keystore use the cert and password from candlepin
+- Have tomcats keystore use the cert and password from canadianTenPin
   (bkearney@redhat.com)
 - Implement Pool cleanup. (dgoodwin@redhat.com)
 - Make Pool -> Entitlement relationship bi-directional. (dgoodwin@redhat.com)
@@ -3541,7 +3541,7 @@ fi
   (dgoodwin@redhat.com)
 
 * Fri Jul 16 2010 Devan Goodwin <dgoodwin@redhat.com> 0.0.23-1
-- Add support for exporting data to downstream Candlepin. (jbowes@redhat.com)
+- Add support for exporting data to downstream CanadianTenPin. (jbowes@redhat.com)
 - Add schemadiff, a script to check for schema changes over time
   (jbowes@redhat.com)
 - Setting the CRL issuer dn using the CA certificate issuer
@@ -3561,14 +3561,14 @@ fi
 - Modifying the CRL job schedule to once a day (calfonso@redhat.com)
 - Rhino/JS != weirdness? (morazi@redhat.com)
 - Adding CRL resource and matching ruby api (jharris@redhat.com)
-- another resource leak - in CandlepinPKIReader.java (ddolguik@redhat.com)
+- another resource leak - in CanadianTenPinPKIReader.java (ddolguik@redhat.com)
 - fixed a resource leak in CertificateRevocationListTask.java (ddolguik@redhat.com)
 - fixed a small null-dereferencing issue (ddolguik@redhat.com)
 - added buildr task for coverity report generation (ddolguik@redhat.com)
 - Pulling the CRL generation task into a separate controller. (jharris@redhat.com)
 
 * Thu Jul 08 2010 Adrian Likins <alikins@redhat.com> 0.0.21-1
-- candlepin pki reader now caches certificate & keys (anadathu@redhat.com)
+- canadianTenPin pki reader now caches certificate & keys (anadathu@redhat.com)
 - * Adding bulk revocation script * Refactoring Pinsetter to use common config
   code (jharris@redhat.com)
 - Added junit test cases and reduced logging level in CRLTask
@@ -3635,7 +3635,7 @@ fi
   (jharris@redhat.com)
 - fixed a bug when an entitlement with quantity greater than 1 didn't update
   consumed property correctly (ddolguik@redhat.com)
-- Fix ArrayOutOfBounds exception when candlepin is accessed using only
+- Fix ArrayOutOfBounds exception when canadianTenPin is accessed using only
   username. (anadathu@redhat.com)
 - Fix GENDB in deploy script. (dgoodwin@redhat.com)
 - Adding TODO for default product adapter. (dgoodwin@redhat.com)
@@ -3668,7 +3668,7 @@ fi
 - Adding email and locale to the bind by regtoken api (calfonso@redhat.com)
 - Trace displayed when using invalid user name or password for consumer atom
   caused because, MediaType.APPLICATION_ATOM_XML_TYPE was not added to
-  CandlepinExceptionMapper's desired response types. (anadathu@redhat.com)
+  CanadianTenPinExceptionMapper's desired response types. (anadathu@redhat.com)
 - Ruby/hibernate login -> username fixes. (dgoodwin@redhat.com)
 - Refactor User.login to User.username. (dgoodwin@redhat.com)
 - Switch userName to username. (dgoodwin@redhat.com)
@@ -3712,7 +3712,7 @@ fi
   (dgoodwin@redhat.com)
 - fixed a ridiculous bit where the product id from the retrived product was
   used to retrieve it again (ddolguik@redhat.com)
-- Use the import_products.rb from candlepin to optionally import product
+- Use the import_products.rb from canadianTenPin to optionally import product
   information. (alikins@redhat.com)
 - Adding cuke tests for consumer parent/child relationships.  (jharris@redhat.com)
 - fixed a whole slew of broken tests (after the inclusion of product into
@@ -3861,7 +3861,7 @@ fi
 - Add cuke test case for associated a Product and a Content (alikins@redhat.com)
 - Add query param for enabling/disabling the content product relation (alikins@redhat.com)
 - removed resource leak in LoggingResponseWrapper.java (ddolguik@redhat.com)
-- fixed a resource leak in CandlepinPKIReader.java (ddolguik@redhat.com)
+- fixed a resource leak in CanadianTenPinPKIReader.java (ddolguik@redhat.com)
 - fixed a resource leak in ConfigurationFileLoader (ddolguik@redhat.com)
 - Adjust for change to Jackson json encoding format (alikins@redhat.com)
 - Add method to associate a Content with a Product (alikins@redhat.com)
@@ -3875,18 +3875,18 @@ fi
 - Remove "enabled" flag from Content model (alikins@redhat.com)
 - Add some content test cases and a Content curator (alikins@redhat.com)
 - attempt getting product->content uploading as a chunk (alikins@redhat.com)
-- make /var/log/candlepin on deploy (jbowes@redhat.com)
+- make /var/log/canadianTenPin on deploy (jbowes@redhat.com)
 - Store object state with @Lob so the db can choose (jbowes@redhat.com)
 - audit: hook up jackson for object state serialization (jbowes@redhat.com)
 - audit: remove old example listeners (jbowes@redhat.com)
 - Add an audit listener to write events to audit.log (jbowes@redhat.com)
 - Consumer creation events now being stored in database. (dgoodwin@redhat.com)
 - First draft of DatabaseListener. (dgoodwin@redhat.com)
-- oops, update candlepin listener to call the other listeners properly
+- oops, update canadianTenPin listener to call the other listeners properly
   (jbowes@redhat.com)
 - Don't pass ServletContextEvent to our listeners; they don't need it
   (jbowes@redhat.com)
-- initialize pinsetter from the candlepin context, too (jbowes@redhat.com)
+- initialize pinsetter from the canadianTenPin context, too (jbowes@redhat.com)
 - audit: reuse a single injector for event listeners and resteasy
   (jbowes@redhat.com)
 - Guice up the event listeners. (dgoodwin@redhat.com)
@@ -4018,7 +4018,7 @@ fi
 - Add ContractNumber to the ent cert if it exists for the subscription.  (alikins@redhat.com)
 - renamed AbstractHibernateCurator#findAll to listAll (ddolguik@redhat.com)
 - cuke: get virtualization passing (jbowes@redhat.com)
-- Moving the OIDUtil into the org.fedoraproject.candlepin.util (calfonso@redhat.com)
+- Moving the OIDUtil into the org.fedoraproject.canadianTenPin.util (calfonso@redhat.com)
 - small cleanups in AccessControlInterceptor (ddolguik@redhat.com)
 - renamed CRUDInterceptor to AccessControlInterceptor (ddolguik@redhat.com)
 - removed FilterInterceptor (ddolguik@redhat.com)
@@ -4037,7 +4037,7 @@ fi
   id. Change to check product id. (alikins@redhat.com)
 - Change entitlement_certificates to use product hash (alikins@redhat.com)
 - Change entitlement tests to use product has/id's instead of string labels.  (alikins@redhat.com)
-- import prodcut data as the candlepin user (jbowes@redhat.com)
+- import prodcut data as the canadianTenPin user (jbowes@redhat.com)
 - Make pools.features work (walk over list returned of pools, looking for the
   name we are checking for instead of assuming first one is a specific name)
   (alikins@redhat.com)
@@ -4074,7 +4074,7 @@ fi
 - cuke: Introduce auth_steps.rb. (dgoodwin@redhat.com)
 - Cuke: Fix test for checking UUID on identity cert. (dgoodwin@redhat.com)
 - added crud access control to Pools (ddolguik@redhat.com)
-- Cuke: Stop re-initlializing Candlepin connections on register.
+- Cuke: Stop re-initlializing CanadianTenPin connections on register.
   (dgoodwin@redhat.com)
 - Get register.feature working again (jbowes@redhat.com)
 - Remove unused step (jbowes@redhat.com)
@@ -4086,13 +4086,13 @@ fi
   always passes back an answer of false (calfonso@redhat.com)
 - First pass at implementing the default curator-backed user service.
   (jharris@redhat.com)
-- Allow Ruby Candlepin API to be initialized with credentials or certs.
+- Allow Ruby CanadianTenPin API to be initialized with credentials or certs.
   (dgoodwin@redhat.com)
 - Add a new role to indicate which paths can use the NoAuth principal
   (jbowes@redhat.com)
 - Create a test owner and delete during cucumber teardown.
   (dgoodwin@redhat.com)
-- Change default candlepin admin credentials. (dgoodwin@redhat.com)
+- Change default canadianTenPin admin credentials. (dgoodwin@redhat.com)
 - Add a cucumber test configuration file. (dgoodwin@redhat.com)
 - Move a semi-bad TestUtil method to where it's needed only.
   (dgoodwin@redhat.com)
@@ -4160,13 +4160,13 @@ fi
 - 582223 - don't allow the same product to be consumed more than once (jbowes@redhat.com)
 - More serial BigInteger/Long fixes. (dgoodwin@redhat.com)
 - Revert to using BigInteger for certificate serials. (dgoodwin@redhat.com)
-- Allow roles to be specified in candlepin.conf. (dgoodwin@redhat.com)
+- Allow roles to be specified in canadianTenPin.conf. (dgoodwin@redhat.com)
 - Move the client bits into their own directory (bkearney@redhat.com)
 - getEntitlementCertificateSerials was returning a entCert's id instead of it's
   serial number (alikins@redhat.com)
 - added tests around content set extensions in entitlement certificate.
   (ddolguik@redhat.com)
-- Adding a catch clause for CandlepinExceptions, which have localized messages
+- Adding a catch clause for CanadianTenPinExceptions, which have localized messages
   (calfonso@redhat.com)
 - Remove stray print from cucumber tests (jbowes@redhat.com)
 - Move exceptions to their own package, and add them to the api
@@ -4258,7 +4258,7 @@ fi
 - support for parsing of accept-language headers (ddolguik@redhat.com)
 
 * Wed Apr 14 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.2-1
-- Add support for log4j settings in the candlepin.conf file (bkearney@redhat.com)
+- Add support for log4j settings in the canadianTenPin.conf file (bkearney@redhat.com)
 - remove BuildRequires altogether (jesusr@redhat.com)
 - A bit more easy emma love (bkearney@redhat.com)
 - Remove the test resource (jbowes@redhat.com)

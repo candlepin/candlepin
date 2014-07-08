@@ -1,12 +1,12 @@
 require 'spec_helper'
-require 'candlepin_scenarios'
+require 'canadianTenPin_scenarios'
 
 describe 'Hypervisor Resource', :type => :virt do
-  include CandlepinMethods
+  include CanadianTenPinMethods
   include VirtHelper
 
   before(:each) do
-    pending("candlepin running in standalone mode") if is_hosted?
+    pending("canadianTenPin running in standalone mode") if is_hosted?
     @expected_host = random_string("Host1")
     @expected_guest_ids = [@uuid1, @uuid2]
 
@@ -285,7 +285,7 @@ describe 'Hypervisor Resource', :type => :virt do
     consumer = user.register(random_string("virt-who"), :system, nil, {},
         nil, nil, [], [{:productId => 'installedprod',
            :productName => "Installed"}])
-    consumer_api = Candlepin.new(username=nil, password=nil,
+    consumer_api = CanadianTenPin.new(username=nil, password=nil,
                                   cert=consumer['idCert']['cert'],
                                   key=consumer['idCert']['key'])
     return consumer_api

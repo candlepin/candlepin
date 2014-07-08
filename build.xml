@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<project name="candlepin" default="why">
+<project name="canadianTenPin" default="why">
   <property environment="env" />
   <property name="cp-home" location="." />
   <property name="script.dir" location="${cp-home}/buildconf/scripts" />
@@ -10,15 +10,15 @@
   <property name="res.test.dir" location="${cp-home}/src/test/resources" />
   <property name="webapp.test.dir" location="${cp-home}/src/test/webapp" />
   <property name="target.dir" location="${cp-home}/target" />
-  <property name="pkgname" value="org.candlepin" />
+  <property name="pkgname" value="org.canadianTenPin" />
 
-  <!-- Location of libraries when doing a candlepin-deps build. -->
+  <!-- Location of libraries when doing a canadianTenPin-deps build. -->
   <property name="lib.dir" location="${libdir}" />
 
-  <!-- Destination for Candlepin jar dependencies in a regular build. -->
+  <!-- Destination for CanadianTenPin jar dependencies in a regular build. -->
   <property name="dist.lib.dir" location="${distlibdir}" />
 
-  <!-- Source location for Candlepin software collection jar dependencies in a regular build. -->
+  <!-- Source location for CanadianTenPin software collection jar dependencies in a regular build. -->
   <property name="scl.lib.dir" location="${scllibdir}" />
 
   <!-- A newline delimited list of all the JAR dependencies -->
@@ -57,19 +57,19 @@
   <target name="setvr">
     <grepfromspec text="Version:" prop="version" />
     <grepfromspec text="Release:" prop="release" />
-    <property name="candlepin.war"
-              value="${target.dir}/candlepin-${version}.war" />
+    <property name="canadianTenPin.war"
+              value="${target.dir}/canadianTenPin-${version}.war" />
     <property name="api.jar"
-              value="${target.dir}/candlepin-api-${version}.jar" />
-    <property name="candlepin-certgen.jar"
-              value="${target.dir}/candlepin-certgen-${version}.jar" />
+              value="${target.dir}/canadianTenPin-api-${version}.jar" />
+    <property name="canadianTenPin-certgen.jar"
+              value="${target.dir}/canadianTenPin-certgen-${version}.jar" />
   </target>
 
   <target name="da_popo">
     <mkdir dir="${target.dir}/generated-source" />
     <apply executable="${script.dir}/antmsgfmt"
            dest="${target.dir}/generated-source">
-      <arg value="org.candlepin.i18n.Messages" />
+      <arg value="org.canadianTenPin.i18n.Messages" />
       <arg value="${target.dir}/generated-source" />
       <fileset dir="${cp-home}/po">
         <include name="**/*.po" />
@@ -123,7 +123,7 @@
         <path location="${src.main.dir}" />
         <path location="${res.main.dir}" />
       </src>
-      <exclude name="org/candlepin/util/apicrawl/**"/>
+      <exclude name="org/canadianTenPin/util/apicrawl/**"/>
       <classpath>
         <fileset dir="${dist.lib.dir}">
           <include name="**/*.jar" />
@@ -151,9 +151,9 @@
     <!-- Handle the jars in /usr/share/java -->
     <jpackage-deps jars="${jar.deps}" dir="${dist.lib.dir}" />
 
-    <!-- Handle the jars in the software collection under /opt/rh/candlepin-scl/ -->
-    <candlepin-scl-deps jar="quartz" dir="${dist.lib.dir}" />
-    <candlepin-scl-deps jar="js" dir="${dist.lib.dir}" />
+    <!-- Handle the jars in the software collection under /opt/rh/canadianTenPin-scl/ -->
+    <canadianTenPin-scl-deps jar="quartz" dir="${dist.lib.dir}" />
+    <canadianTenPin-scl-deps jar="js" dir="${dist.lib.dir}" />
 
   </target>
 
@@ -161,16 +161,16 @@
     <jar destfile="${api.jar}">
       <fileset dir="${target.dir}/classes">
         <exclude name="**/pinsetter/**" />
-        <include name="**/candlepin/auth/**"/>
-        <include name="**/candlepin/config/**"/>
-        <include name="**/candlepin/service/**"/>
-        <include name="**/candlepin/model/**"/>
-        <include name="**/candlepin/pki/**"/>
-        <include name="**/candlepin/exceptions/**"/>
-        <include name="**/candlepin/util/**"/>
-        <include name="**/candlepin/resteasy/**"/>
-        <include name="**/candlepin/jackson/**"/>
-        <include name="**/candlepin/paging/**"/>
+        <include name="**/canadianTenPin/auth/**"/>
+        <include name="**/canadianTenPin/config/**"/>
+        <include name="**/canadianTenPin/service/**"/>
+        <include name="**/canadianTenPin/model/**"/>
+        <include name="**/canadianTenPin/pki/**"/>
+        <include name="**/canadianTenPin/exceptions/**"/>
+        <include name="**/canadianTenPin/util/**"/>
+        <include name="**/canadianTenPin/resteasy/**"/>
+        <include name="**/canadianTenPin/jackson/**"/>
+        <include name="**/canadianTenPin/paging/**"/>
       </fileset>
       <manifest>
         <attribute name="Implementation-Vendor" value="" />
@@ -182,7 +182,7 @@
         <attribute name="Build-Jdk" value="" />
       </manifest>
     </jar>
-    <jar destfile="${candlepin-certgen.jar}">
+    <jar destfile="${canadianTenPin-certgen.jar}">
       <fileset dir="${target.dir}/classes">
         <include name="**/config/**"/>
         <include name="**/util/**"/>
@@ -204,7 +204,7 @@
         <attribute name="Build-Jdk" value="" />
       </manifest>
     </jar>
-    <war destfile="${candlepin.war}"
+    <war destfile="${canadianTenPin.war}"
          webxml="${webapp.main.dir}/WEB-INF/web.xml">
       <fileset dir="${webapp.main.dir}">
         <exclude name="${webapp.main.dir}/WEB-INF/web.xml" />
@@ -218,7 +218,7 @@
       <classes dir="${target.dir}/generated-source" />
       <lib dir="${dist.lib.dir}">
         <exclude name="**/servlet.jar" />
-        <!-- can be removed once candlepin-deps is dead -->
+        <!-- can be removed once canadianTenPin-deps is dead -->
         <exclude name="**/emma*.jar" />
         <exclude name="**/hamcrest*.jar" />
         <exclude name="**/jmock*.jar" />
@@ -253,9 +253,9 @@
   </macrodef>
 
   <!--
-    creates symlinks for candlepin software collection jars
+    creates symlinks for canadianTenPin software collection jars
   -->
-  <macrodef name="candlepin-scl-deps">
+  <macrodef name="canadianTenPin-scl-deps">
     <attribute name="jar" />
     <attribute name="dir" /> <!-- destination -->
 

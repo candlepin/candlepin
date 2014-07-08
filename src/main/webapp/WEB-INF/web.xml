@@ -2,7 +2,7 @@
     xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd"
     version="2.4">
 
-    <display-name>Candlepin</display-name>
+    <display-name>CanadianTenPin</display-name>
 
     <filter>
         <filter-name>Guice Filter</filter-name>
@@ -15,7 +15,7 @@
 
     <listener>
         <listener-class>
-            org.candlepin.guice.CandlepinContextListener
+            org.canadianTenPin.guice.CanadianTenPinContextListener
         </listener-class>
     </listener>
 
@@ -38,6 +38,6 @@
 
     <login-config>
         <auth-method>CLIENT-CERT</auth-method>
-        <realm-name>candlepin</realm-name>
+        <realm-name>canadianTenPin</realm-name>
     </login-config>
 </web-app>

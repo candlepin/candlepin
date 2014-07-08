@@ -223,8 +223,8 @@
     <!--
     <module name="ImportOrder">
       <message key="import.ordering"
-          value="Wrong order for ''{0}''.  Make sure you have installed conf/eclipse/candlepin.importorder into Eclipse." />
-      <property name="groups" value="org.candlepin,com.redhat.rhn,com,org,net,ch,java,javax"/>
+          value="Wrong order for ''{0}''.  Make sure you have installed conf/eclipse/canadianTenPin.importorder into Eclipse." />
+      <property name="groups" value="org.canadianTenPin,com.redhat.rhn,com,org,net,ch,java,javax"/>
       <property name="ordered" value="true"/>
       <property name="separated" value="true"/>
       <property name="option" value="top"/>

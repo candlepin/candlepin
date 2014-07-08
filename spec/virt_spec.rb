@@ -1,25 +1,25 @@
 require 'spec_helper'
-require 'candlepin_scenarios'
+require 'canadianTenPin_scenarios'
 
-# This spec tests virt limited products in a standalone Candlepin deployment.
+# This spec tests virt limited products in a standalone CanadianTenPin deployment.
 # (which we assume to be testing against)
 describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
-  include CandlepinMethods
+  include CanadianTenPinMethods
   include VirtHelper
 
   before(:each) do
-    pending("candlepin running in standalone mode") if is_hosted?
+    pending("canadianTenPin running in standalone mode") if is_hosted?
 
     # Setup two virt host consumers:
     @host1 = @user.register(random_string('host'), :system, nil,
       {}, nil, nil, [], [])
-    @host1_client = Candlepin.new(username=nil, password=nil,
+    @host1_client = CanadianTenPin.new(username=nil, password=nil,
         cert=@host1['idCert']['cert'],
         key=@host1['idCert']['key'])
 
     @host2 = @user.register(random_string('host'), :system, nil,
       {}, nil, nil, [], [])
-    @host2_client = Candlepin.new(username=nil, password=nil,
+    @host2_client = CanadianTenPin.new(username=nil, password=nil,
         cert=@host2['idCert']['cert'],
         key=@host2['idCert']['key'])
 

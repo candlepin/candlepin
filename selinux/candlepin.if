@@ -1,10 +1,10 @@
 
-## <summary>policy for candlepin</summary>
+## <summary>policy for canadianTenPin</summary>
 
 
 ########################################
 ## <summary>
-##	Transition to candlepin.
+##	Transition to canadianTenPin.
 ## </summary>
 ## <param name="domain">
 ## <summary>
@@ -12,19 +12,19 @@
 ## </summary>
 ## </param>
 #
-interface(`candlepin_domtrans',`
+interface(`canadianTenPin_domtrans',`
 	gen_require(`
-		type candlepin_t, candlepin_exec_t;
+		type canadianTenPin_t, canadianTenPin_exec_t;
 	')
 
 	corecmd_search_bin($1)
-	domtrans_pattern($1, candlepin_exec_t, candlepin_t)
+	domtrans_pattern($1, canadianTenPin_exec_t, canadianTenPin_t)
 ')
 
 
 ########################################
 ## <summary>
-##	Search candlepin conf directories.
+##	Search canadianTenPin conf directories.
 ## </summary>
 ## <param name="domain">
 ##	<summary>
@@ -32,18 +32,18 @@ interface(`candlepin_domtrans',`
 ##	</summary>
 ## </param>
 #
-interface(`candlepin_search_conf',`
+interface(`canadianTenPin_search_conf',`
 	gen_require(`
-		type candlepin_etc_rw_t;
+		type canadianTenPin_etc_rw_t;
 	')
 
-	allow $1 candlepin_etc_rw_t:dir search_dir_perms;
+	allow $1 canadianTenPin_etc_rw_t:dir search_dir_perms;
 	files_search_etc($1)
 ')
 
 ########################################
 ## <summary>
-##	Read candlepin conf files.
+##	Read canadianTenPin conf files.
 ## </summary>
 ## <param name="domain">
 ##	<summary>
@@ -51,22 +51,22 @@ interface(`candlepin_search_conf',`
 ##	</summary>
 ## </param>
 #
-interface(`candlepin_read_conf_files',`
+interface(`canadianTenPin_read_conf_files',`
 	gen_require(`
-		type candlepin_etc_rw_t;
+		type canadianTenPin_etc_rw_t;
 	')
 
-	allow $1 candlepin_etc_rw_t:file read_file_perms;
-	allow $1 candlepin_etc_rw_t:dir list_dir_perms;
-    allow $1 candlepin_etc_certs_rw_t:file read_file_perms;
-    allow $1 candlepin_etc_certs_rw_t:dir list_dir_perms;
-    allow $1 candlepin_etc_certs_ca_cert_r_t:file read_file_perms;
+	allow $1 canadianTenPin_etc_rw_t:file read_file_perms;
+	allow $1 canadianTenPin_etc_rw_t:dir list_dir_perms;
+    allow $1 canadianTenPin_etc_certs_rw_t:file read_file_perms;
+    allow $1 canadianTenPin_etc_certs_rw_t:dir list_dir_perms;
+    allow $1 canadianTenPin_etc_certs_ca_cert_r_t:file read_file_perms;
     files_search_etc($1)
 ')
 
 ########################################
 ## <summary>
-##	Manage candlepin conf files.
+##	Manage canadianTenPin conf files.
 ## </summary>
 ## <param name="domain">
 ##	<summary>
@@ -74,12 +74,12 @@ interface(`candlepin_read_conf_files',`
 ##	</summary>
 ## </param>
 #
-interface(`candlepin_manage_conf_files',`
+interface(`canadianTenPin_manage_conf_files',`
 	gen_require(`
-		type candlepin_etc_rw_t;
+		type canadianTenPin_etc_rw_t;
 	')
 
-	manage_files_pattern($1, candlepin_etc_rw_t, candlepin_etc_rw_t)
+	manage_files_pattern($1, canadianTenPin_etc_rw_t, canadianTenPin_etc_rw_t)
 	files_search_etc($1)
 ')
 
@@ -87,7 +87,7 @@ interface(`candlepin_manage_conf_files',`
 ########################################
 ## <summary>
 ##	All of the rules required to administrate
-##	an candlepin environment
+##	an canadianTenPin environment
 ## </summary>
 ## <param name="domain">
 ##	<summary>
@@ -101,17 +101,17 @@ interface(`candlepin_manage_conf_files',`
 ## </param>
 ## <rolecap/>
 #
-interface(`candlepin_admin',`
+interface(`canadianTenPin_admin',`
 	gen_require(`
-		type candlepin_t;
-	type candlepin_etc_rw_t;
+		type canadianTenPin_t;
+	type canadianTenPin_etc_rw_t;
 	')
 
-	allow $1 candlepin_t:process { ptrace signal_perms };
-	ps_process_pattern($1, candlepin_t)
+	allow $1 canadianTenPin_t:process { ptrace signal_perms };
+	ps_process_pattern($1, canadianTenPin_t)
 
 	files_search_etc($1)
-	admin_pattern($1, candlepin_etc_rw_t)
+	admin_pattern($1, canadianTenPin_etc_rw_t)
 
 ')
 

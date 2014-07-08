@@ -1,12 +1,12 @@
 require 'spec_helper'
-require 'candlepin_scenarios'
-require 'candlepin_api'
+require 'canadianTenPin_scenarios'
+require 'canadianTenPin_api'
 require 'pp'
 require 'base64'
 
 describe 'Rules Import', :serial => true do
 
-  #include CandlepinMethods
+  #include CanadianTenPinMethods
 
   it 'gets rules' do
     js_rules = @cp.list_rules

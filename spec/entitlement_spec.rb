@@ -1,9 +1,9 @@
 require 'spec_helper'
-require 'candlepin_scenarios'
+require 'canadianTenPin_scenarios'
 
 describe 'Entitlements' do
 
-  include CandlepinMethods
+  include CanadianTenPinMethods
 
   before(:each) do
     @owner = create_owner random_string 'test_owner'
@@ -33,8 +33,8 @@ describe 'Entitlements' do
     @system = consumer_client(@user, 'system6')
   end
 
-  it 'should bypasses rules for "candlepin" consumers' do
-    box = consumer_client(@user, 'random_box', :candlepin, nil, 'cpu.cpu_socket(s)' => 8)
+  it 'should bypasses rules for "canadianTenPin" consumers' do
+    box = consumer_client(@user, 'random_box', :canadianTenPin, nil, 'cpu.cpu_socket(s)' => 8)
 
     box.consume_product(@super_awesome.id)
     box.list_entitlements.should have(1).things
@@ -129,7 +129,7 @@ describe 'Entitlements' do
   end
 
   it 'should have pool type calculated attribute' do
-    box = consumer_client(@user, 'random_box', :candlepin, nil, 'cpu.cpu_socket(s)' => 8)
+    box = consumer_client(@user, 'random_box', :canadianTenPin, nil, 'cpu.cpu_socket(s)' => 8)
     box.consume_product(@super_awesome.id)
     ents = box.list_entitlements()
     ents.should have(1).things

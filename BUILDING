@@ -24,7 +24,7 @@ disttag = .fc13
 
 == Releasing with tito ==
 
-Once you are ready to release Candlepin, first thing you need to do is tag the
+Once you are ready to release CanadianTenPin, first thing you need to do is tag the
 build.
 
 {{{
@@ -39,9 +39,9 @@ the file.
 Tito will then give you the next steps:
 
 {{{
-Tagging new version of candlepin: 0.0.40-1 -> 0.0.41-1
+Tagging new version of canadianTenPin: 0.0.40-1 -> 0.0.41-1
 
-Created tag: candlepin-0.0.41-1
+Created tag: canadianTenPin-0.0.41-1
 View: git show HEAD
 Undo: tito tag -u
 Push: git push && git push --tags

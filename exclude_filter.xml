@@ -3,7 +3,7 @@
     <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2" />
   </Match>
   <Match>
-    <Class name="org.candlepin.resource.HypervisorResource" />
+    <Class name="org.canadianTenPin.resource.HypervisorResource" />
     <Method name="hypervisorCheckIn" />
     <Bug pattern="REC_CATCH_EXCEPTION" />
   </Match>

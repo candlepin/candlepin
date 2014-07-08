@@ -8,8 +8,8 @@
 
 
     <changeSet id="20130201162323" author="dgoodwin" dbms="postgresql">
-        <comment>Drop the rules candlepin version, obsolete now.</comment>
-        <dropColumn tableName="cp_rules" columnName="candlepin_version"/>
+        <comment>Drop the rules canadianTenPin version, obsolete now.</comment>
+        <dropColumn tableName="cp_rules" columnName="canadianTenPin_version"/>
     </changeSet>
 
 </databaseChangeLog>

@@ -1,8 +1,8 @@
 require 'spec_helper'
-require 'candlepin_scenarios'
+require 'canadianTenPin_scenarios'
 
 describe 'Environments' do
-  include CandlepinMethods
+  include CanadianTenPinMethods
 
   before(:each) do
     @expected_env_id = random_string('testenv1')
@@ -103,7 +103,7 @@ describe 'Environments' do
     consumer = @org_admin.register(random_string('testsystem'), :system, nil, {},
         nil, nil, [], [], @env['id'])
     consumer['environment'].should_not be_nil
-    consumer_cp = Candlepin.new(nil, nil, consumer['idCert']['cert'],
+    consumer_cp = CanadianTenPin.new(nil, nil, consumer['idCert']['cert'],
       consumer['idCert']['key'])
 
     product = create_product
@@ -139,7 +139,7 @@ describe 'Environments' do
     consumer = @org_admin.register(random_string('testsystem'), :system, nil, {},
         nil, nil, [], [], @env['id'])
     consumer['environment'].should_not be_nil
-    consumer_cp = Candlepin.new(nil, nil, consumer['idCert']['cert'],
+    consumer_cp = CanadianTenPin.new(nil, nil, consumer['idCert']['cert'],
       consumer['idCert']['key'])
 
     product = create_product

@@ -1,8 +1,8 @@
 require 'spec_helper'
-require 'candlepin_scenarios'
+require 'canadianTenPin_scenarios'
 
 describe 'Instance Based Subscriptions' do
-  include CandlepinMethods
+  include CanadianTenPinMethods
 
   before(:each) do
     @owner = create_owner random_string('instance_owner')
@@ -18,7 +18,7 @@ describe 'Instance Based Subscriptions' do
 
     @physical_sys = @user.register(random_string('host'), :system, nil,
       {"cpu.cpu_socket(s)" => 8}, nil, nil, [], installed_prods, nil)
-    @physical_client = Candlepin.new(username=nil, password=nil,
+    @physical_client = CanadianTenPin.new(username=nil, password=nil,
         cert=@physical_sys['idCert']['cert'],
         key=@physical_sys['idCert']['key'])
     @physical_client.update_consumer({:guestIds => [{'guestId' => @uuid}]})
@@ -26,7 +26,7 @@ describe 'Instance Based Subscriptions' do
     @guest1 = @user.register(random_string('guest'), :system, nil,
       {'virt.uuid' => @uuid, 'virt.is_guest' => 'true'}, nil, nil,
       [], installed_prods)
-    @guest_client = Candlepin.new(username=nil, password=nil,
+    @guest_client = CanadianTenPin.new(username=nil, password=nil,
         cert=@guest1['idCert']['cert'], key=@guest1['idCert']['key'])
 
     # create instance based subscription:

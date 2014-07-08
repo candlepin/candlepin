@@ -1,8 +1,8 @@
 require 'spec_helper'
-require 'candlepin_scenarios'
+require 'canadianTenPin_scenarios'
 
 describe 'Person Consumer' do
-  include CandlepinMethods
+  include CanadianTenPinMethods
 
 
   before(:each) do

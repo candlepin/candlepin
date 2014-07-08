@@ -16,204 +16,204 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 "X-Generator: Zanata 3.3.2\n"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:113
+#: src/main/java/org/canadianTenPin/audit/EventAdapterImpl.java:113
 #, java-format
 msgid "Unknown event for user {0} and target {1}"
 msgstr "ഉപയോക്താവു് {0}, ലക്ഷ്യം {1} എന്നിവയ്ക്കുള്ള അപരിചിതമായ ഈവന്റ്"
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:125
+#: src/main/java/org/canadianTenPin/audit/EventAdapterImpl.java:125
 #, java-format
 msgid "{0} created new unit {1}"
 msgstr "{0} പുതിയ യൂണിറ്റ് {1} തയ്യാറാക്കിയിരിയ്ക്കുന്നു"
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:126
+#: src/main/java/org/canadianTenPin/audit/EventAdapterImpl.java:126
 #, java-format
 msgid "{0} modified the unit {1}"
 msgstr "{0}, {1}-നു് മാറ്റം വരുത്തിയിരിയ്ക്കുന്നു"
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:127
+#: src/main/java/org/canadianTenPin/audit/EventAdapterImpl.java:127
 #, java-format
 msgid "{0} deleted the unit {1}"
 msgstr "{0}, {1} വെട്ടി നീക്കിയിരിയ്ക്കുന്നു"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:128
+#: src/main/java/org/canadianTenPin/audit/EventAdapterImpl.java:128
 #, java-format
 msgid "{0} created new owner {1}"
 msgstr "{0} പുതിയ ഉടമസ്ഥന്‍ {1}-നെ തയ്യാറാക്കിയിരിയ്ക്കുന്നു"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:129
+#: src/main/java/org/canadianTenPin/audit/EventAdapterImpl.java:129
 #, java-format
 msgid "{0} modified the owner {1}"
 msgstr "{0} ഉടമസ്ഥന്‍ {1}-ല്‍ മാറ്റം വരുത്തിയിരിയ്ക്കുന്നു"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:130
+#: src/main/java/org/canadianTenPin/audit/EventAdapterImpl.java:130
 #, java-format
 msgid "{0} deleted the owner {1}"
 msgstr "{0} ഉടമസ്ഥന്‍ {1}-നെ വെട്ടി നീക്കിയിരിയ്ക്കുന്നു"
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:132
+#: src/main/java/org/canadianTenPin/audit/EventAdapterImpl.java:132
 #, java-format
 msgid "{0} attached a subscription for product {1}"
 msgstr "{0} പ്രൊഡക്ട് {1}-നുള്ള സബ്സ്ക്രിപ്ഷന്‍ ചേര്‍ത്തിരിയ്ക്കുന്നു"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:134
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:152
+#: src/main/java/org/canadianTenPin/audit/EventAdapterImpl.java:134
+#: src/main/java/org/canadianTenPin/audit/EventAdapterImpl.java:152
 #, java-format
 msgid "{0} modified a subscription for product {1}"
 msgstr "{0} പ്രൊഡക്ട് {1}-നുള്ള സബ്സ്ക്രിപ്ഷനില്‍ മാറ്റം വരുത്തിയിരിയ്ക്കുന്നു"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:136
+#: src/main/java/org/canadianTenPin/audit/EventAdapterImpl.java:136
 #, java-format
 msgid "{0} returned the subscription for {1}"
 msgstr "{0} സബ്സ്ക്രിപ്ഷന്‍ {1} തിരികെ നല്‍കിയിരിയ്ക്കുന്നു"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:137
+#: src/main/java/org/canadianTenPin/audit/EventAdapterImpl.java:137
 #, java-format
 msgid "{0} created a pool for product {1}"
 msgstr "{0} പ്രൊഡക്ട് {1}-നുള്ള പൂള്‍ തയ്യാറാക്കിയിരിയ്ക്കുന്നു"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:138
+#: src/main/java/org/canadianTenPin/audit/EventAdapterImpl.java:138
 #, java-format
 msgid "{0} modified a pool for product {1}"
 msgstr "{0} പ്രൊഡക്ട് {1}-നുള്ള പൂളില്‍ മാറ്റം വരുത്തിയിരിയ്ക്കുന്നു"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:139
+#: src/main/java/org/canadianTenPin/audit/EventAdapterImpl.java:139
 #, java-format
 msgid "{0} deleted a pool for product {1}"
 msgstr "{0} പ്രൊഡക്ട് {1}-നുള്ള പൂള്‍ നീക്കം ചെയ്തിരിയ്ക്കുന്നു"
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:141
+#: src/main/java/org/canadianTenPin/audit/EventAdapterImpl.java:141
 #, java-format
 msgid "{0} created an export for unit {1}"
 msgstr "{0} , യൂണിറ്റ് {1}-നു് ഒരു എക്സ്പോര്‍ട്ട് തയ്യാറാക്കിയിരിയ്ക്കുന്നു"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:142
+#: src/main/java/org/canadianTenPin/audit/EventAdapterImpl.java:142
 #, java-format
 msgid "{0} imported a manifest for owner {1}"
 msgstr "{0} ഉടമസ്ഥന്‍ {1}-നുള്ള ഒരു മാനിഫെസ്റ്റ് ഇംപോര്‍ട്ട് ചെയ്തിരിയ്ക്കുന്നു"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:143
+#: src/main/java/org/canadianTenPin/audit/EventAdapterImpl.java:143
 #, java-format
 msgid "{0} created new user {1}"
 msgstr "{0} പുതിയ ഉപയോക്താവു് {1} തയ്യാറാക്കിയിരിയ്ക്കുന്നു"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:144
+#: src/main/java/org/canadianTenPin/audit/EventAdapterImpl.java:144
 #, java-format
 msgid "{0} modified the user {1}"
 msgstr "{0}  ഉപയോക്താവു് {1}-നെ മാറ്റം വരുത്തിരിയിയ്ക്കുന്നു"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:145
+#: src/main/java/org/canadianTenPin/audit/EventAdapterImpl.java:145
 #, java-format
 msgid "{0} deleted the user {1}"
 msgstr "{0} ഉപയോക്താവു് {1} നീക്കം ചെയ്തിരിയ്ക്കുന്നു"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:146
+#: src/main/java/org/canadianTenPin/audit/EventAdapterImpl.java:146
 #, java-format
 msgid "{0} created new role {1}"
 msgstr "{0} പുതിയ നിയമനം {1} തയ്യാറാക്കിയിരിയ്ക്കുന്നു"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:147
+#: src/main/java/org/canadianTenPin/audit/EventAdapterImpl.java:147
 #, java-format
 msgid "{0} modified the role {1}"
 msgstr "{0} നിയമനം {1}-ല്‍ മാറ്റം വരുത്തിയിരിയ്ക്കുന്നു"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:148
+#: src/main/java/org/canadianTenPin/audit/EventAdapterImpl.java:148
 #, java-format
 msgid "{0} deleted the role {1}"
 msgstr "{0} നിയമനം {1} നീക്കം ചെയ്തിരിയ്ക്കുന്നു"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:150
+#: src/main/java/org/canadianTenPin/audit/EventAdapterImpl.java:150
 #, java-format
 msgid "{0} created new subscription for product {1}"
 msgstr "{0} പ്രൊഡക്ട് {1}-നുള്ള പുതിയ സബ്സ്ക്രിപ്ഷന്‍ തയ്യാറാക്കിയിരിയ്ക്കുന്നു"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:154
+#: src/main/java/org/canadianTenPin/audit/EventAdapterImpl.java:154
 #, java-format
 msgid "{0} deleted a subscription for product {1}"
 msgstr "{0} പ്രൊഡക്ട് {1}-നുള്ള സബ്സ്ക്രിപ്ഷന്‍ നീക്കം ചെയ്തിരിയ്ക്കുന്നു"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:156
+#: src/main/java/org/canadianTenPin/audit/EventAdapterImpl.java:156
 #, java-format
 msgid "{0} created the activation key {1}"
 msgstr "{0} ആക്ടിവേഷന്‍ കീ {1} തയ്യാറാക്കിയിരിയ്ക്കുന്നു"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:158
+#: src/main/java/org/canadianTenPin/audit/EventAdapterImpl.java:158
 #, java-format
 msgid "{0} deleted the activation key {1}"
 msgstr "{0} ആക്ടിവേഷന്‍ കീ {1} നീക്കം ചെയ്തിരിയ്ക്കുന്നു"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:159
+#: src/main/java/org/canadianTenPin/audit/EventAdapterImpl.java:159
 #, java-format
 msgid "{0} created the guest id {1}"
 msgstr "{0}, ഗസ്റ്റ് ഐഡി {1} തയ്യാറാക്കിയിരിയ്ക്കുന്നു"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:160
+#: src/main/java/org/canadianTenPin/audit/EventAdapterImpl.java:160
 #, java-format
 msgid "{0} deleted the guest id {1}"
 msgstr "{0}, ഗസ്റ്റ് ഐഡി {1} നീക്കം ചെയ്തിരിയ്ക്കുന്നു"
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:162
+#: src/main/java/org/canadianTenPin/audit/EventAdapterImpl.java:162
 #, java-format
 msgid "{0} updated the rules in the databse to version {1}"
 msgstr "{0} ഡേറ്റാബെയിസിലുള്ള നിയമങ്ങള്‍ {1} പതിപ്പിലേക്കു് പുതുക്കിയിരിയ്ക്കുന്നു"
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:164
+#: src/main/java/org/canadianTenPin/audit/EventAdapterImpl.java:164
 #, java-format
 msgid "{0} removed the rules from the database"
 msgstr "ഡേറ്റാബെയിസില്‍ നിന്നും {0} നിയമങ്ങള്‍ നീക്കം ചെയ്തിരിയ്ക്കുന്നു"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/controller/Entitler.java:77
+#: src/main/java/org/canadianTenPin/controller/Entitler.java:77
 #, java-format
 msgid "Subscription pool {0} does not exist."
 msgstr "സബ്സ്ക്രിപ്ഷന്‍ പൂള്‍ {0} നിലവിലില്ല."
 
-#: src/main/java/org/candlepin/controller/Entitler.java:109
+#: src/main/java/org/canadianTenPin/controller/Entitler.java:109
 #, java-format
 msgid ""
 "This unit has already had the subscription matching pool ID ''{0}'' attached."
@@ -221,45 +221,45 @@ msgstr ""
 "ഘടിപ്പിച്ചിരിയ്ക്കുന്ന ''{0}'' എന്ന പൂള്‍ ഐഡിയുമായി ചേരുന്ന സബ്സ്ക്രിപ്ഷന്‍ ഈ യൂണിറ്റിനു് "
 "നിലവിലുണ്ടായിരുന്നു."
 
-#: src/main/java/org/candlepin/controller/Entitler.java:114
+#: src/main/java/org/canadianTenPin/controller/Entitler.java:114
 #, java-format
 msgid "No subscriptions are available from the pool with ID ''{0}''."
 msgstr "''{0}'' എന്ന പൂള്‍ ഐഡിയില്‍ നിന്നും ഒരു സബ്സ്ക്രിപ്ഷനുകളും ലഭ്യമല്ല."
 
-#: src/main/java/org/candlepin/controller/Entitler.java:119
+#: src/main/java/org/canadianTenPin/controller/Entitler.java:119
 #, java-format
 msgid "Units of this type are not allowed to attach the pool with ID ''{0}''."
 msgstr "ഈ തരത്തിലുള്ള യൂണിറ്റുകള്‍ക്കു് പൂളിനൊപ്പം ''{0}'' എന്ന ഐഡി ചേര്‍ക്കുവാന്‍ സാധ്യമല്ല."
 
-#: src/main/java/org/candlepin/controller/Entitler.java:123
+#: src/main/java/org/canadianTenPin/controller/Entitler.java:123
 #, java-format
 msgid "Multi-entitlement not supported for pool with ID ''{0}''."
 msgstr "''{0}'' എന്ന ഐഡിയുള്ള പൂളിനു് മള്‍ട്ടി-എന്റൈറ്റില്‍മെന്റ് പിന്തുണയ്ക്കുന്നില്ല."
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/controller/Entitler.java:127
+#: src/main/java/org/canadianTenPin/controller/Entitler.java:127
 #, java-format
 msgid "Guest''s host does not match owner of pool: ''{0}''."
 msgstr "പൂളിന്റെ ഉടമസ്ഥനുമായി ഗസ്റ്റിന്റെ ഹോസ്റ്റ് പൊരുത്തപ്പെടുന്നില്ല: ''{0}''."
 
-#: src/main/java/org/candlepin/controller/Entitler.java:131
+#: src/main/java/org/canadianTenPin/controller/Entitler.java:131
 msgid "Pool not available to subscription management applications."
 msgstr "സബ്സ്ക്രിപ്ഷന്‍ കൈകാര്യം ചെയ്യുന്ന പ്രയോഗങ്ങള്‍ക്കു് പൂള്‍ ലഭ്യമല്ല."
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/controller/Entitler.java:135
+#: src/main/java/org/canadianTenPin/controller/Entitler.java:135
 #, java-format
 msgid "Pool is restricted to virtual guests: ''{0}''."
 msgstr "വിര്‍ച്ച്വല്‍ ഹോസ്റ്റുകള്‍ക്കു് പൂള്‍ ലഭ്യമല്ല: ''{0}''."
 
-#: src/main/java/org/candlepin/controller/Entitler.java:139
+#: src/main/java/org/canadianTenPin/controller/Entitler.java:139
 #, java-format
 msgid "Pool is restricted to physical systems: ''{0}''."
 msgstr "പൂള്‍ ഫിസിക്കല്‍ സിസ്റ്റങ്ങള്‍ക്കു് ലഭ്യമല്ല: ''{0}''."
 
-#: src/main/java/org/candlepin/controller/Entitler.java:148
+#: src/main/java/org/canadianTenPin/controller/Entitler.java:148
 #, java-format
 msgid ""
 "Subscription ''{0}'' must be attached using a quantity evenly divisible by "
@@ -267,40 +267,40 @@ msgid ""
 msgstr ""
 "{1} ഉപയോഗിച്ച് ഡിവിസിബിളായൊരു വ്യാപ്തി ഉപയോഗിച്ചു്, സബ്സ്ക്രിപ്ഷന്‍ ''{0}'' ഘടിപ്പിയ്ക്കണം"
 
-#: src/main/java/org/candlepin/controller/Entitler.java:153
+#: src/main/java/org/canadianTenPin/controller/Entitler.java:153
 #, java-format
 msgid ""
 "Unit does not support instance based calculation required by pool ''{0}''"
 msgstr "''{0}'' പൂളിനാവശ്യമുള്ള കണക്കുകൂട്ടലിനടിസ്ഥാനമായ ഇന്‍സ്റ്റന്‍സ് യൂണിറ്റ് പിന്തുണയ്ക്കുന്നില്ല"
 
-#: src/main/java/org/candlepin/controller/Entitler.java:157
+#: src/main/java/org/canadianTenPin/controller/Entitler.java:157
 #, java-format
 msgid "Unit does not support core calculation required by pool ''{0}''"
 msgstr "''{0}'' പൂളിനാവശ്യമുള്ള കോര്‍ കണക്കുകൂട്ടല്‍ യൂണിറ്റ് പിന്തുണയ്ക്കുന്നില്ല"
 
-#: src/main/java/org/candlepin/controller/Entitler.java:161
+#: src/main/java/org/canadianTenPin/controller/Entitler.java:161
 #, java-format
 msgid "Unit does not support RAM calculation required by pool ''{0}''"
 msgstr "''{0}'' പൂളിനാവശ്യമുള്ള റാം കണക്കുകൂട്ടല്‍ യൂണിറ്റ് പിന്തുണയ്ക്കുന്നില്ല"
 
-#: src/main/java/org/candlepin/controller/Entitler.java:165
+#: src/main/java/org/canadianTenPin/controller/Entitler.java:165
 #, java-format
 msgid "Unit does not support derived products data required by pool ''{0}''"
 msgstr "''{0}'' പൂളിനാവശ്യമുള്ള ലഭ്യമായ പ്രൊഡക്ട് ഡേറ്റകളുടെ യൂണിറ്റ് പിന്തുണയ്ക്കുന്നില്ല"
 
-#: src/main/java/org/candlepin/controller/Entitler.java:169
+#: src/main/java/org/canadianTenPin/controller/Entitler.java:169
 #, java-format
 msgid "Unable to attach pool with ID ''{0}''.: {1}."
 msgstr "''{0}'' ഐഡിയുള്ള പൂള്‍ ചേര്‍ക്കുവാന്‍‌ സാധ്യമല്ല.: {1}."
 
-#: src/main/java/org/candlepin/controller/Entitler.java:190
+#: src/main/java/org/canadianTenPin/controller/Entitler.java:190
 #, java-format
 msgid ""
 "Insufficient pool quantity available for adjustment to entitlement ''{0}''."
 msgstr "എന്റൈറ്റില്‍മെന്റ് ''{0}''-യ്ക്കുള്ള മതിയായ പൂള്‍ ലഭ്യമായില്ല"
 
-#: src/main/java/org/candlepin/controller/Entitler.java:195
-#: src/main/java/org/candlepin/controller/Entitler.java:200
+#: src/main/java/org/canadianTenPin/controller/Entitler.java:195
+#: src/main/java/org/canadianTenPin/controller/Entitler.java:200
 #, java-format
 msgid ""
 "Multi-entitlement not supported for pool connected with entitlement ''{0}''."
@@ -308,290 +308,290 @@ msgstr ""
 "എന്റൈറ്റില്‍മെന്റ് ''{0}''-മായി കണക്ട് ചെയ്തിരിയ്ക്കുന്ന പൂളിനു് അനവധി എന്റൈറ്റില്‍മെന്റിനുള്ള "
 "പിന്തുണ ലഭ്യമല്ല."
 
-#: src/main/java/org/candlepin/controller/Entitler.java:205
+#: src/main/java/org/canadianTenPin/controller/Entitler.java:205
 #, java-format
 msgid "Unable to adjust quantity for the entitlement with id ''{0}'': {1}"
 msgstr "''{0}'' ഐഡിയുള്ള എന്റൈറ്റില്‍മെന്റിനുള്ള വ്യാപ്തി ശരിയാക്കുവാന്‍ സാധ്യമല്ല: {1}"
 
-#: src/main/java/org/candlepin/controller/Entitler.java:284
+#: src/main/java/org/canadianTenPin/controller/Entitler.java:284
 #, java-format
 msgid ""
 "This system already has a subscription for the product ''{0}'' attached."
 msgstr "ഘടിപ്പിച്ചിരിയ്ക്കുന്ന ''{0}'' ഉല്‍പന്നത്തിനു് ഈ സിസ്റ്റത്തില്‍ നിലവില്‍ ഒരു സബ്സ്ക്രിപ്ഷനുണ്ടു്."
 
-#: src/main/java/org/candlepin/controller/Entitler.java:288
+#: src/main/java/org/canadianTenPin/controller/Entitler.java:288
 #, java-format
 msgid ""
 "There are not enough free subscriptions available for the product ''{0}''"
 msgstr "പ്രൊഡക്ട് \"{0}\"-യ്ക്കു് ആവശ്യമുള്ള സൌജന്യമായ സബ്സ്ക്രിപ്ഷനുകള്‍ ലഭ്യമല്ല."
 
-#: src/main/java/org/candlepin/controller/Entitler.java:292
+#: src/main/java/org/canadianTenPin/controller/Entitler.java:292
 #, java-format
 msgid "Units of this type are not allowed for the product ''{0}''."
 msgstr "''{0}'' ഉല്‍പന്നത്തിനു് ഈ തരത്തിലുള്ള യൂണിറ്റുകള്‍ അനുവദിയ്ക്കുന്നില്ല."
 
-#: src/main/java/org/candlepin/controller/Entitler.java:297
+#: src/main/java/org/canadianTenPin/controller/Entitler.java:297
 #, java-format
 msgid "Only virtual systems can have subscription ''{0}'' attached."
 msgstr "വിര്‍ച്ച്വല്‍ സിസ്റ്റങ്ങള്‍ക്കു് മാത്രം ''{0}'' സബ്സ്ക്രിപ്ഷന്‍ ആകാം."
 
-#: src/main/java/org/candlepin/controller/Entitler.java:302
+#: src/main/java/org/canadianTenPin/controller/Entitler.java:302
 #, java-format
 msgid "Unable to attach subscription for the product ''{0}'': {1}."
 msgstr "''{0}'' ഉല്‍പന്നത്തിനു് സബ്സ്ക്രിപ്ഷന്‍ ചേര്‍ക്കുവാന്‍ സാധ്യമല്ല: {1}."
 
-#: src/main/java/org/candlepin/exceptions/mappers/BadRequestExceptionMapper.java:57
+#: src/main/java/org/canadianTenPin/exceptions/mappers/BadRequestExceptionMapper.java:57
 #, java-format
 msgid "Invalid format for query parameter {0}. Expected format: {1}"
 msgstr "ക്വറി പരാമീറ്റര്‍ {0}-നുള്ള തെറ്റായ ശൈലി. പ്രതീക്ഷിച്ച ശൈലി: {1}"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys
-#: src/main/java/org/candlepin/exceptions/mappers/BadRequestExceptionMapper.java:77
+#: src/main/java/org/canadianTenPin/exceptions/mappers/BadRequestExceptionMapper.java:77
 #, java-format
 msgid "{0} is not a valid value for {1}"
 msgstr "{0},{1}-നുള്ള ഉചിതമായ മൂല്ല്യമല്ല"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys
-#: src/main/java/org/candlepin/exceptions/mappers/BadRequestExceptionMapper.java:81
-#: src/main/java/org/candlepin/guice/I18nProvider.java:91
+#: src/main/java/org/canadianTenPin/exceptions/mappers/BadRequestExceptionMapper.java:81
+#: src/main/java/org/canadianTenPin/guice/I18nProvider.java:91
 msgid "Bad Request"
 msgstr "തെറ്റായ ആവശ്യം"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys
-#: src/main/java/org/candlepin/exceptions/mappers/CandlepinExceptionMapper.java:104
+#: src/main/java/org/canadianTenPin/exceptions/mappers/CanadianTenPinExceptionMapper.java:104
 #, java-format
 msgid "Runtime Error {0} at {1}.{2}:{3}"
 msgstr "{1}.{2}:{3}-ല്‍ റണ്‍ടൈ പിശക് {0}"
 
-#: src/main/java/org/candlepin/exceptions/mappers/CandlepinExceptionMapper.java:109
+#: src/main/java/org/canadianTenPin/exceptions/mappers/CanadianTenPinExceptionMapper.java:109
 #, java-format
 msgid "Runtime Error {0}"
 msgstr "റണ്‍ടൈം പിശക് {0}"
 
-#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:40
+#: src/main/java/org/canadianTenPin/hibernate/CanadianTenPinMessageInterpolator.java:40
 msgid "must be false"
 msgstr "false ആയിരിയ്ക്കണം"
 
-#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:42
+#: src/main/java/org/canadianTenPin/hibernate/CanadianTenPinMessageInterpolator.java:42
 msgid "must be true"
 msgstr "true ആയിരിയ്ക്കണം"
 
-#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:44
-#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:57
+#: src/main/java/org/canadianTenPin/hibernate/CanadianTenPinMessageInterpolator.java:44
+#: src/main/java/org/canadianTenPin/hibernate/CanadianTenPinMessageInterpolator.java:57
 #, java-format
 msgid "must be less than or equal to {0}"
 msgstr "{0}-യ്ക്കു് സമം അല്ലെങ്കില്‍ കുറവായിരിയ്ക്കണം"
 
-#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:47
-#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:60
+#: src/main/java/org/canadianTenPin/hibernate/CanadianTenPinMessageInterpolator.java:47
+#: src/main/java/org/canadianTenPin/hibernate/CanadianTenPinMessageInterpolator.java:60
 #, java-format
 msgid "must be greater than or equal to {0}"
 msgstr "{0}-യ്ക്കു് സമം അല്ലെങ്കില്‍ കൂടുതലായിരിയ്ക്കണം"
 
-#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:51
+#: src/main/java/org/canadianTenPin/hibernate/CanadianTenPinMessageInterpolator.java:51
 msgid ""
 "numeric value out of bounds (<{integer} digits>.<{fraction} digits> expected)"
 msgstr ""
 "പരിധിയ്ക്കു പുറത്തുള്ള മൂല്ല്യം(<{integer} digits>.<{fraction} digits> പ്രതീക്ഷിച്ചു)"
 
-#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:55
+#: src/main/java/org/canadianTenPin/hibernate/CanadianTenPinMessageInterpolator.java:55
 msgid "must be in the future"
 msgstr "ഭാവിയിലുണ്ടായിരിയ്ക്കണം"
 
-#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:63
+#: src/main/java/org/canadianTenPin/hibernate/CanadianTenPinMessageInterpolator.java:63
 msgid "may not be null"
 msgstr "null ആകുവാന്‍ പാടില്ല"
 
-#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:65
+#: src/main/java/org/canadianTenPin/hibernate/CanadianTenPinMessageInterpolator.java:65
 msgid "must be null"
 msgstr "null ആയിരിയ്ക്കണം"
 
-#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:67
+#: src/main/java/org/canadianTenPin/hibernate/CanadianTenPinMessageInterpolator.java:67
 msgid "must be in the past"
 msgstr "മുമ്പായിരിയ്ക്കണം"
 
-#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:69
+#: src/main/java/org/canadianTenPin/hibernate/CanadianTenPinMessageInterpolator.java:69
 msgid "must match ''{regexp}''"
 msgstr "''{regexp}''-മായി പൊരുത്തപ്പെടണം"
 
-#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:72
-#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:79
+#: src/main/java/org/canadianTenPin/hibernate/CanadianTenPinMessageInterpolator.java:72
+#: src/main/java/org/canadianTenPin/hibernate/CanadianTenPinMessageInterpolator.java:79
 #, java-format
 msgid "size must be between {0} and {1}"
 msgstr "{0}-നും {1}-നും മദ്ധ്യത്തിലായിരിയ്ക്കണം വ്യാപ്തി"
 
-#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:75
+#: src/main/java/org/canadianTenPin/hibernate/CanadianTenPinMessageInterpolator.java:75
 msgid "invalid credit card number"
 msgstr "തെറ്റായ ക്രെഡിറ്റ് കാര്‍ഡ് നമ്പര്‍"
 
-#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:77
+#: src/main/java/org/canadianTenPin/hibernate/CanadianTenPinMessageInterpolator.java:77
 msgid "not a well-formed email address"
 msgstr "ശരിയായ ഈമെയില്‍ വിലാസമല്ല"
 
-#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:82
-#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:84
+#: src/main/java/org/canadianTenPin/hibernate/CanadianTenPinMessageInterpolator.java:82
+#: src/main/java/org/canadianTenPin/hibernate/CanadianTenPinMessageInterpolator.java:84
 msgid "may not be empty"
 msgstr "കാലിയാകുവാന്‍ പാടില്ല"
 
-#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:86
+#: src/main/java/org/canadianTenPin/hibernate/CanadianTenPinMessageInterpolator.java:86
 msgid "must be between {min} and {max}"
 msgstr "{min}-നും {max}-നും മദ്ധ്യത്തിലായിരിയ്ക്കണം"
 
-#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:89
+#: src/main/java/org/canadianTenPin/hibernate/CanadianTenPinMessageInterpolator.java:89
 msgid "may have unsafe html content"
 msgstr "സുരക്ഷിതമല്ലാത്ത html വിവരങ്ങളുണ്ടാവാം"
 
-#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:91
+#: src/main/java/org/canadianTenPin/hibernate/CanadianTenPinMessageInterpolator.java:91
 #, java-format
 msgid "script expression ''{0}'' didn't evaluate to true"
 msgstr "''{0}'' എന്ന സ്ക്രിപ്റ്റ് എക്സ്പ്രെഷന്‍ true ആയില്ല"
 
-#: src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:94
+#: src/main/java/org/canadianTenPin/hibernate/CanadianTenPinMessageInterpolator.java:94
 msgid "must be a valid URL"
 msgstr "ശരിയായ യുആര്‍എല്‍ ആയിരിയ്ക്കണം"
 
-#: src/main/java/org/candlepin/model/UeberCertificateGenerator.java:122
+#: src/main/java/org/canadianTenPin/model/UeberCertificateGenerator.java:122
 #, java-format
 msgid "No such unit type: {0}"
 msgstr "ഇത്തരം തരത്തിലുള്ള യൂണിറ്റില്ല: {0}"
 
-#: src/main/java/org/candlepin/model/AbstractHibernateCurator.java:418
+#: src/main/java/org/canadianTenPin/model/AbstractHibernateCurator.java:418
 msgid "Request failed due to concurrent modification, please re-try."
 msgstr "ഒരേ സമയത്തുള്ള മാറ്റം വരുത്തലുകള്‍ കാരണം ആവശ്യപ്പെട്ടതു് പരാജയപ്പെട്ടു."
 
-#: src/main/java/org/candlepin/model/ConsumerTypeCurator.java:70
+#: src/main/java/org/canadianTenPin/model/ConsumerTypeCurator.java:70
 #, java-format
 msgid "No such unit type(s): {0}"
 msgstr "ഇത്തരം യൂണിറ്റ് തരങ്ങള്‍ ലഭ്യമല്ല: {0}"
 
-#: src/main/java/org/candlepin/model/activationkeys/ActivationKeyCurator.java:58
-#: src/main/java/org/candlepin/resource/OwnerResource.java:744
+#: src/main/java/org/canadianTenPin/model/activationkeys/ActivationKeyCurator.java:58
+#: src/main/java/org/canadianTenPin/resource/OwnerResource.java:744
 #, java-format
 msgid "ActivationKey with id {0} could not be found."
 msgstr "id {0} എന്ന ആക്ടിവേഷന്‍കീ ലഭ്യമായില്ല."
 
-#: src/main/java/org/candlepin/model/RulesCurator.java:104
+#: src/main/java/org/canadianTenPin/model/RulesCurator.java:104
 msgid "No rules file found in the database"
 msgstr "ഡേറ്റാബെയ്സില്‍ നിയമ ഫയല്‍ ലഭ്യമായില്ല"
 
-#: src/main/java/org/candlepin/model/ConsumerCurator.java:402
+#: src/main/java/org/canadianTenPin/model/ConsumerCurator.java:402
 #, java-format
 msgid "The system with UUID {0} is a virtual guest. It does not have guests."
 msgstr "യുയുഐഡി {0} ഉള്ള സിസ്റ്റം ഒരു വിര്‍ച്ച്വല്‍ ഗസ്റ്റാകുന്നു. ഇതിനു് ഗസ്റ്റുകള്‍ ലഭ്യമല്ല."
 
-#: src/main/java/org/candlepin/model/ConsumerCurator.java:511
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1692
-#: src/main/java/org/candlepin/resource/EntitlementResource.java:148
+#: src/main/java/org/canadianTenPin/model/ConsumerCurator.java:511
+#: src/main/java/org/canadianTenPin/resource/ConsumerResource.java:1692
+#: src/main/java/org/canadianTenPin/resource/EntitlementResource.java:148
 #, java-format
 msgid "Unit with ID ''{0}'' could not be found."
 msgstr "\"{0}\" ഐഡിയുള്ള യൂണിറ്റ് തരം ലഭ്യമായില്ല."
 
-#: src/main/java/org/candlepin/model/ProductCurator.java:141
+#: src/main/java/org/canadianTenPin/model/ProductCurator.java:141
 #, java-format
 msgid "The attribute ''{0}'' must be an integer value."
 msgstr "''{0}'' വിശേഷത ഒരു ഇന്റിജര്‍ മൂല്ല്യമായിരിയ്ക്കണം."
 
-#: src/main/java/org/candlepin/model/ProductCurator.java:148
-#: src/main/java/org/candlepin/model/ProductCurator.java:167
+#: src/main/java/org/canadianTenPin/model/ProductCurator.java:148
+#: src/main/java/org/canadianTenPin/model/ProductCurator.java:167
 #, java-format
 msgid "The attribute ''{0}'' must have a positive value."
 msgstr "''{0}'' വിശേഷത ഒരു പോസിറ്റീവ് മൂല്ല്യമായിരിയ്ക്കണം."
 
-#: src/main/java/org/candlepin/model/ProductCurator.java:160
+#: src/main/java/org/canadianTenPin/model/ProductCurator.java:160
 #, java-format
 msgid "The attribute ''{0}'' must be a long value."
 msgstr "''{0}'' വിശേഷത ഒരു ലോങ് മൂല്ല്യമായിരിയ്ക്കണം."
 
-#: src/main/java/org/candlepin/model/ProductCurator.java:178
+#: src/main/java/org/canadianTenPin/model/ProductCurator.java:178
 #, java-format
 msgid "The attribute ''{0}'' must be a boolean value."
 msgstr "''{0}'' വിശേഷത ഒരു ബൂളിയന്‍ മൂല്ല്യമായിരിയ്ക്കണം."
 
-#: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:58
+#: src/main/java/org/canadianTenPin/policy/js/compliance/StatusReasonMessageGenerator.java:58
 msgid "Not supported by a valid subscription."
 msgstr "ശരിയായൊരു സബ്സ്ക്രിപ്ഷന്റെ പിന്തുണ ലഭ്യമല്ല."
 
-#: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:61
+#: src/main/java/org/canadianTenPin/policy/js/compliance/StatusReasonMessageGenerator.java:61
 #, java-format
 msgid "Supports architecture {0} but the system is {1}."
 msgstr "{0} ആര്‍ക്കിറ്റക്ചര്‍ പിന്തുണയ്ക്കുന്നു, പക്ഷേ സിസ്റ്റം {1} ആണു്."
 
-#: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:66
+#: src/main/java/org/canadianTenPin/policy/js/compliance/StatusReasonMessageGenerator.java:66
 #, java-format
 msgid "Only supports {0} of {1} sockets."
 msgstr "{0}/{1} സോക്കറ്റുകള്‍ മാത്രം പിന്തുണയ്ക്കുന്നു."
 
-#: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:71
+#: src/main/java/org/canadianTenPin/policy/js/compliance/StatusReasonMessageGenerator.java:71
 #, java-format
 msgid "Only supports {0} of {1} cores."
 msgstr "{0}/{1} കോറുകള്‍ മാത്രം പിന്തുണയ്ക്കുന്നു."
 
-#: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:76
+#: src/main/java/org/canadianTenPin/policy/js/compliance/StatusReasonMessageGenerator.java:76
 #, java-format
 msgid "Only supports {0}GB of {1}GB of RAM."
 msgstr "{0}/{1}ജിബി റാം മാത്രം പിന്തുണയ്ക്കുന്നു."
 
-#: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:81
+#: src/main/java/org/canadianTenPin/policy/js/compliance/StatusReasonMessageGenerator.java:81
 #, java-format
 msgid "Only supports {0} of {1} virtual guests."
 msgstr "{0}/{1} വിര്‍ച്ച്വല്‍ ഗസ്റ്റുകള്‍ മാത്രം പിന്തുണയ്ക്കുന്നു."
 
-#: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:86
+#: src/main/java/org/canadianTenPin/policy/js/compliance/StatusReasonMessageGenerator.java:86
 #, java-format
 msgid "Only supports {0} of {1} vCPUs."
 msgstr "{0}/{1} vCPUs മാത്രം പിന്തുണയ്ക്കുന്നു."
 
-#: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:91
+#: src/main/java/org/canadianTenPin/policy/js/compliance/StatusReasonMessageGenerator.java:91
 #, java-format
 msgid "{2} COVERAGE PROBLEM.  Supports {0} of {1}"
 msgstr "{2} കവറേജ് പ്രശ്നം.  {0}/{1} പിന്തുണയ്ക്കുന്നു"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/policy/js/entitlement/AbstractEntitlementRules.java:132
+#: src/main/java/org/canadianTenPin/policy/js/entitlement/AbstractEntitlementRules.java:132
 #, java-format
 msgid "''{0}'' Should contain name, priority and at least one attribute"
 msgstr "\"{0}\"-നു് പേരു്, മുന്‍ഗണന, കുറഞ്ഞതു് ഒരു വിശേഷത എന്നിവ ഉണ്ടായിരിയ്ക്കണം"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys
-#: src/main/java/org/candlepin/policy/js/entitlement/AbstractEntitlementRules.java:147
+#: src/main/java/org/canadianTenPin/policy/js/entitlement/AbstractEntitlementRules.java:147
 msgid "second parameter should be the priority number."
 msgstr "രണ്ടാമത്തെ പരാമീറ്ററായിരിയ്ക്കണം മുന്‍ഗണനാ നമ്പര്‍."
 
-#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:149
+#: src/main/java/org/canadianTenPin/policy/js/entitlement/EntitlementRules.java:149
 #, java-format
 msgid "Subscriptions for {0} expired on: {1}"
 msgstr "{0}-നുള്ള സബ്സ്ക്രിപ്ഷനുകളുടെ കാലാവധി കഴിഞ്ഞിരിയ്ക്കുന്നു: {1}"
 
-#: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:50
+#: src/main/java/org/canadianTenPin/policy/js/pooltype/PoolComplianceType.java:50
 msgid "Other"
 msgstr "മറ്റുള്ളവ"
 
-#: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:53
+#: src/main/java/org/canadianTenPin/policy/js/pooltype/PoolComplianceType.java:53
 msgid "Instance Based"
 msgstr "ഇന്‍സ്റ്റന്‍സ് അടിസ്ഥാനത്തിലുള്ളതു്"
 
-#: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:56
+#: src/main/java/org/canadianTenPin/policy/js/pooltype/PoolComplianceType.java:56
 msgid "Stackable"
 msgstr "സ്റ്റാക്കബിള്‍"
 
-#: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:59
+#: src/main/java/org/canadianTenPin/policy/js/pooltype/PoolComplianceType.java:59
 msgid "Multi-Entitleable"
 msgstr "മള്‍ട്ടി-എന്റൈറ്റില്‍മെന്റ് രീതിയിലുള്ള"
 
-#: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:62
+#: src/main/java/org/canadianTenPin/policy/js/pooltype/PoolComplianceType.java:62
 msgid "Standard"
 msgstr "സാധാരണ"
 
-#: src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:65
+#: src/main/java/org/canadianTenPin/policy/js/pooltype/PoolComplianceType.java:65
 msgid "Stackable only with other subscriptions"
 msgstr "മറ്റു് സബ്സ്ക്രിപ്ഷനുകളില്‍ മാത്രം സ്റ്റാക്കബിള്‍"
 
-#: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:77
+#: src/main/java/org/canadianTenPin/policy/js/activationkey/ActivationKeyRules.java:77
 msgid ""
 "Activation keys can only use consumer type restricted pools for a single "
 "consumer type."
@@ -599,13 +599,13 @@ msgstr ""
 "ആക്ടിവേഷന്‍ കീകള്‍ക്കു് ഒറ്റ ഉപഭോക്തൃ തരത്തിലുള്ള ഉപഭോക്തൃ തരത്തിലുള്ള നിയന്ത്രണമുള്ള പൂളുകള്‍ മാത്രമേ "
 "ഉപയോഗിയ്ക്കുവാന്‍ പാടുള്ളൂ."
 
-#: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:81
+#: src/main/java/org/canadianTenPin/policy/js/activationkey/ActivationKeyRules.java:81
 msgid ""
 "Cannot add pools that are restricted to unit type 'person' to activation "
 "keys."
 msgstr "ആക്ടീവേഷന്‍ കീകളിലേക്കു് 'person' എന്ന യൂണിറ്റ് തരത്തിലുള്ള പൂളുകള്‍ ചേര്‍ക്കുവാന്‍ സാധ്യമല്ല"
 
-#: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:85
+#: src/main/java/org/canadianTenPin/policy/js/activationkey/ActivationKeyRules.java:85
 msgid ""
 "Cannot use pools with host restriction with physical only pools on a single "
 "activation key"
@@ -613,19 +613,19 @@ msgstr ""
 "ഏക ആക്ടിവേഷന്‍ കീയില്‍, ഫിസിക്കല്‍ മാത്രമായ പൂളുകള്‍ക്കു് ഹോസ്റ്റ് നിഷേധച്ചിരിയ്ക്കുന്ന പൂളുകള്‍ "
 "ഉപയോഗിയ്ക്കുവാന്‍ സാധ്യമല്ല"
 
-#: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:89
+#: src/main/java/org/canadianTenPin/policy/js/activationkey/ActivationKeyRules.java:89
 msgid "Activation keys can only use host restricted pools from a single host."
 msgstr ""
 "ആക്ടിവേഷന്‍ കീകള്‍ക്കു് ഒറ്റ ഹോസ്റ്റില്‍ നിന്നും ഹോസ്റ്റ് നിഷേധിച്ച പൂളുകള്‍ മാത്രം ഉപയോഗിയ്ക്കാം."
 
-#: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:93
+#: src/main/java/org/canadianTenPin/policy/js/activationkey/ActivationKeyRules.java:93
 #, java-format
 msgid "Multi-entitlement not supported for pool ''{0}''"
 msgstr "''{0}'' പൂളിനു് അനവധി എന്റൈറ്റില്‍മെന്റ് പിന്തുണയ്ക്കുന്നില്ല"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:96
+#: src/main/java/org/canadianTenPin/policy/js/activationkey/ActivationKeyRules.java:96
 msgid ""
 "Error: Only pools with multi-entitlement product subscriptions can be added "
 "to the activation key with a quantity greater than one."
@@ -633,19 +633,19 @@ msgstr ""
 "പിശക്: അനവധി എന്റൈറ്റില്‍മെന്റ് പ്രൊഡക്ട് സബ്സ്ക്രിപ്ഷനുകളുള്ള പൂളുകള്‍ മാത്രമേ ആക്ടിവേഷന്‍ കീയിലേക്കു് "
 "ചേര്‍ക്കുവാന്‍ സാധ്യമാകൂ. ഇതിന്റെ മൂല്ല്യം ഒന്നിനേക്കാള്‍ കൂടുതലായിരിയ്ക്കണം."
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:101
+#: src/main/java/org/canadianTenPin/policy/js/activationkey/ActivationKeyRules.java:101
 msgid "The quantity must not be greater than the total allowed for the pool"
 msgstr "പൂളിനുള്ള അനുവദിച്ചിട്ടുള്ള മൊത്തം മൂല്ല്യത്തിനേക്കാള്‍ വ്യാപ്തി വലുതായിരിയ്ക്കണം."
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:105
+#: src/main/java/org/canadianTenPin/policy/js/activationkey/ActivationKeyRules.java:105
 msgid "The quantity must be greater than 0"
 msgstr "വ്യാപ്തി 0 -ത്തേക്കാള്‍ കൂടുതലായിരിയ്ക്കണം"
 
-#: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:112
+#: src/main/java/org/canadianTenPin/policy/js/activationkey/ActivationKeyRules.java:112
 #, java-format
 msgid ""
 "Activation keys for physical systems can only use quantities of pool ''{0}'' "
@@ -654,195 +654,195 @@ msgstr ""
 "''{0}'' പൂള്‍ സമമായി {1} കൊണ്ടു് വിഭജിയ്ക്കാന്‍ പറ്റിയവ മാത്രമേ ഫിസിക്കല്‍ സിസ്റ്റങ്ങള്‍ക്കുള്ള "
 "ആക്ടിവേഷന്‍ കീകള്‍ക്കു് ഉപയോഗിയ്ക്കുവാന്‍ പാടുള്ളൂ"
 
-#: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:116
+#: src/main/java/org/canadianTenPin/policy/js/activationkey/ActivationKeyRules.java:116
 #, java-format
 msgid "Cannot add virtual pool ''{0}'' to activation key for physical systems."
 msgstr ""
 "ഫിസിക്കല്‍ സിസ്റ്റങ്ങള്‍ക്കു് ആക്ടിവേഷന്‍ കീയിലേക്കു് ''{0}'' വിര്‍ച്ച്വല്‍ പൂള്‍ ചേര്‍ക്കുവാന്‍ സാധ്യമല്ല."
 
-#: src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:120
+#: src/main/java/org/canadianTenPin/policy/js/activationkey/ActivationKeyRules.java:120
 #, java-format
 msgid "Cannot add physical pool ''{0}'' to activation key for virtual systems."
 msgstr ""
 "വിര്‍ച്ച്വല്‍ സിസ്റ്റങ്ങള്‍ക്കു് ആക്ടിവേഷന്‍ കീയിലേക്കു് ''{0}'' ഫിസിക്കല്‍ പൂള്‍ ചേര്‍ക്കുവാന്‍ സാധ്യമല്ല."
 
-#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:235
+#: src/main/java/org/canadianTenPin/resource/ActivationKeyResource.java:235
 #, java-format
 msgid "Pool with id {0} could not be found."
 msgstr "id {0} എന്ന പൂള്‍ ലഭ്യമായില്ല."
 
-#: src/main/java/org/candlepin/resource/CdnResource.java:118
+#: src/main/java/org/canadianTenPin/resource/CdnResource.java:118
 #, java-format
 msgid "A CDN with the label {0}already exists"
 msgstr "{0} ലേബലുള്ളൊരു സിഡിഎന്‍ നിലവിലുണ്ടു്"
 
-#: src/main/java/org/candlepin/resource/CdnResource.java:155
+#: src/main/java/org/canadianTenPin/resource/CdnResource.java:155
 #, java-format
 msgid "No such content delivery network: {0}"
 msgstr "കണ്ടന്റ് ഡലിവറി നെറ്റ്‌വര്‍ക്ക് ലഭ്യമല്ല: {0}"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:267
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:764
-#: src/main/java/org/candlepin/resource/HypervisorResource.java:176
-#: src/main/java/org/candlepin/resource/OwnerResource.java:853
-#: src/main/java/org/candlepin/resource/OwnerResource.java:944
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1160
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1194
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1227
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1255
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1296
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1330
+#: src/main/java/org/canadianTenPin/resource/ConsumerResource.java:267
+#: src/main/java/org/canadianTenPin/resource/ConsumerResource.java:764
+#: src/main/java/org/canadianTenPin/resource/HypervisorResource.java:176
+#: src/main/java/org/canadianTenPin/resource/OwnerResource.java:853
+#: src/main/java/org/canadianTenPin/resource/OwnerResource.java:944
+#: src/main/java/org/canadianTenPin/resource/OwnerResource.java:1160
+#: src/main/java/org/canadianTenPin/resource/OwnerResource.java:1194
+#: src/main/java/org/canadianTenPin/resource/OwnerResource.java:1227
+#: src/main/java/org/canadianTenPin/resource/OwnerResource.java:1255
+#: src/main/java/org/canadianTenPin/resource/OwnerResource.java:1296
+#: src/main/java/org/canadianTenPin/resource/OwnerResource.java:1330
 #, java-format
 msgid "owner with key: {0} was not found."
 msgstr "കീ: {0} ഉള്ള ഉടമസ്ഥന്‍ ലഭ്യമല്ല."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:300
+#: src/main/java/org/canadianTenPin/resource/ConsumerResource.java:300
 #, java-format
 msgid "Consumer with id {0} could not be found."
 msgstr "{0} ഐഡിയുള്ള ഉപഭോക്താവു് ലഭ്യമായില്ല."
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:410
+#: src/main/java/org/canadianTenPin/resource/ConsumerResource.java:410
 msgid "Insufficient permissions"
 msgstr "അപരിമിതമായ അനുമതികള്‍"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:416
+#: src/main/java/org/canadianTenPin/resource/ConsumerResource.java:416
 msgid "Must specify an org to register with activation keys."
 msgstr "ആക്ടിവേഷന്‍ കീകളുമായി രജിസ്ടര്‍ ചെയ്യുവാനുള്ള ഒരു സ്ഥാപനം നല്‍കണം."
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:420
+#: src/main/java/org/canadianTenPin/resource/ConsumerResource.java:420
 msgid "Cannot specify username with activation keys."
 msgstr "ആക്ടിവേഷന്‍ കീകളുള്ള ഉപയോക്തൃനാമം നല്‍കുവാന്‍ പാടില്ല."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:441
+#: src/main/java/org/canadianTenPin/resource/ConsumerResource.java:441
 msgid "A unit type of 'person' cannot be used with activation keys"
 msgstr "ആക്ടിവേഷന്‍ കീകള്‍ക്കൊപ്പം 'person' എന്നൊരു യൂണിറ്റ് തരം ഉപയോഗിയ്ക്കുവാന്‍ സാധ്യമല്ല"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:446
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:456
+#: src/main/java/org/canadianTenPin/resource/ConsumerResource.java:446
+#: src/main/java/org/canadianTenPin/resource/ConsumerResource.java:456
 msgid "System name cannot contain most special characters."
 msgstr "സിസ്റ്റത്തിന്റെ നാമത്തില്‍ പ്രത്യേക അക്ഷരങ്ങള്‍ ഉപയോഗിയ്ക്കുവാന്‍ സാധ്യമല്ല."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:520
+#: src/main/java/org/canadianTenPin/resource/ConsumerResource.java:520
 #, java-format
 msgid "Problem creating unit {0}"
 msgstr "{0} യൂണിറ്റ് തയ്യാറാക്കുന്നതില്‍ പ്രശ്നം"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:540
+#: src/main/java/org/canadianTenPin/resource/ConsumerResource.java:540
 msgid "Pool ID must be provided"
 msgstr "പൂള്‍ ഐഡി ലഭ്യമാക്കണം"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:660
+#: src/main/java/org/canadianTenPin/resource/ConsumerResource.java:660
 msgid "System name cannot begin with # character"
 msgstr "# എന്ന അക്ഷരത്തില്‍ സിസ്റ്റം നാമം ആരംഭിയ്ക്കുവാന്‍ സാധ്യമല്ല."
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:687
+#: src/main/java/org/canadianTenPin/resource/ConsumerResource.java:687
 #, java-format
 msgid "Activation key ''{0}'' not found for organization ''{1}''."
 msgstr "സ്ഥാപനം \"{1}\"-നുള്ള ആക്ടിവേഷന്‍ കീ \"{0}\" ലഭ്യമല്ല."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:707
+#: src/main/java/org/canadianTenPin/resource/ConsumerResource.java:707
 #, java-format
 msgid "User with ID ''{0}'' could not be found."
 msgstr "ഐഡി \"{0}\" ഉള്ള ഉപയോക്താവു് ലഭ്യമായില്ല."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:715
+#: src/main/java/org/canadianTenPin/resource/ConsumerResource.java:715
 #, java-format
 msgid "User ''{0}'' has no roles for organization ''{1}''"
 msgstr "ഉപയോക്താവ് \"{0}\"-നു് സ്ഥാപനം \"{1}\"-ല്‍ നിയമനങ്ങളില്ല"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:727
+#: src/main/java/org/canadianTenPin/resource/ConsumerResource.java:727
 #, java-format
 msgid "User ''{0}'' has already registered a personal consumer"
 msgstr "ഉപയോക്താവു് \"{0}\" നിലവില്‍ ഒരു കമ്പ്യൂട്ടറില്‍ രജിസ്ടര്‍ ചെയ്തിരിയ്ക്കുന്നു"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:744
+#: src/main/java/org/canadianTenPin/resource/ConsumerResource.java:744
 msgid "You must specify an organization for new units."
 msgstr "പുതിയ യൂണിറ്റുകള്‍ക്കു് ഒരു സ്ഥാപനം നല്‍കേണ്ടതുണ്ടു്."
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:755
+#: src/main/java/org/canadianTenPin/resource/ConsumerResource.java:755
 #, java-format
 msgid "Organization {0} does not exist."
 msgstr "സ്ഥാപനം {0} നിലവിലില്ല."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:825
+#: src/main/java/org/canadianTenPin/resource/ConsumerResource.java:825
 #, java-format
 msgid "Unit type ''{0}'' could not be found."
 msgstr "\"{0}\" ലേബലുള്ള യൂണിറ്റ് തരം ലഭ്യമായില്ല."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:859
+#: src/main/java/org/canadianTenPin/resource/ConsumerResource.java:859
 #, java-format
 msgid "Problem updating unit {0}"
 msgstr "{0} യൂണിറ്റ് പരിഷ്കരിയ്ക്കുന്നതില്‍ പ്രശ്നം"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:920
+#: src/main/java/org/canadianTenPin/resource/ConsumerResource.java:920
 #, java-format
 msgid "Environment with ID ''{0}'' could not be found."
 msgstr "ഐഡി \"{0}\" ഉള്ള സാഹചര്യം ലഭ്യമായില്ല."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1243
-#: src/main/java/org/candlepin/resource/GuestIdResource.java:259
+#: src/main/java/org/canadianTenPin/resource/ConsumerResource.java:1243
+#: src/main/java/org/canadianTenPin/resource/GuestIdResource.java:259
 #, java-format
 msgid "Cannot unregister {0} {1} because: {2}"
 msgstr "{0} {1} അണ്‍രജിസ്ടര്‍ ചെയ്യുവാന്‍ സാധ്യമല്ല, കാരണം: {2}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1332
+#: src/main/java/org/canadianTenPin/resource/ConsumerResource.java:1332
 msgid "Unable to create entitlement certificate archive"
 msgstr "എന്റൈറ്റില്‍മെന്റ് സര്‍ട്ടിഫിക്കേറ്റ് ആര്‍ക്കൈവ് തയ്യാറാക്കുവാന്‍ സാധ്യമല്ല"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1449
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1460
+#: src/main/java/org/canadianTenPin/resource/ConsumerResource.java:1449
+#: src/main/java/org/canadianTenPin/resource/ConsumerResource.java:1460
 msgid "Cannot bind by multiple parameters."
 msgstr "അനവധി പരമീറ്ററുകള്‍ അനുസരിച്ചു് ബൈന്‍ഡ് ചെയ്യുവാന്‍ സാധ്യമല്ല."
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1454
+#: src/main/java/org/canadianTenPin/resource/ConsumerResource.java:1454
 msgid "Cannot specify a quantity when auto-binding."
 msgstr "ഓട്ടോ-ബൈന്‍ഡിങ് ചെയ്യുമ്പോള്‍ വ്യാപ്തി നല്‍കുവാന്‍ സാധ്യമല്ല."
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1604
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1732
-#: src/main/java/org/candlepin/resource/EntitlementResource.java:197
-#: src/main/java/org/candlepin/resource/EntitlementResource.java:234
-#: src/main/java/org/candlepin/resource/EntitlementResource.java:262
-#: src/main/java/org/candlepin/resource/EntitlementResource.java:316
+#: src/main/java/org/canadianTenPin/resource/ConsumerResource.java:1604
+#: src/main/java/org/canadianTenPin/resource/ConsumerResource.java:1732
+#: src/main/java/org/canadianTenPin/resource/EntitlementResource.java:197
+#: src/main/java/org/canadianTenPin/resource/EntitlementResource.java:234
+#: src/main/java/org/canadianTenPin/resource/EntitlementResource.java:262
+#: src/main/java/org/canadianTenPin/resource/EntitlementResource.java:316
 #, java-format
 msgid "Entitlement with ID ''{0}'' could not be found."
 msgstr "ഐഡി \"{0}\" ഉള്ള എന്റൈറ്റില്‍മെന്റ് ലഭ്യമല്ല."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1632
+#: src/main/java/org/canadianTenPin/resource/ConsumerResource.java:1632
 #, java-format
 msgid "Product with ID ''{0}'' could not be found."
 msgstr "ഐഡി \"{0}\" ഉള്ള പ്രൊഡക്ട് ലഭ്യമായില്ല."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1759
+#: src/main/java/org/canadianTenPin/resource/ConsumerResource.java:1759
 #, java-format
 msgid "Entitlement Certificate with serial number ''{0}'' could not be found."
 msgstr "സീരിയല്‍ നംബര്‍ \"{0}\" ഉള്ള എന്റൈറ്റില്‍മെന്റ് സര്‍ട്ടിഫിക്കേറ്റ് ലഭ്യമല്ല."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1850
+#: src/main/java/org/canadianTenPin/resource/ConsumerResource.java:1850
 #, java-format
 msgid ""
 "Unit {0} cannot be exported. A manifest cannot be made for units of type "
@@ -851,175 +851,175 @@ msgstr ""
 "യൂണിറ്റ് {0} എക്സ്പോര്‍ട്ട് ചെയ്യുവാന്‍ സാധ്യമല്ല. ''{1}'' തരത്തിലുള്ള യൂണിറ്റുകള്‍ക്കു് മാനിഫസ്റ്റ് "
 "തയ്യാറാക്കുവാന്‍ സാധ്യമല്ല."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1858
+#: src/main/java/org/canadianTenPin/resource/ConsumerResource.java:1858
 #, java-format
 msgid "A CDN with label {0} does not exist on this system."
 msgstr "{0} ലേബലുള്ള സിഡിഎന്‍ ഈ സിസ്റ്റത്തില്‍ നിലവിലില്ല."
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1874
+#: src/main/java/org/canadianTenPin/resource/ConsumerResource.java:1874
 msgid "Unable to create export archive"
 msgstr "എക്സ്പോര്‍ട്ട് ആര്‍ക്കൈവ് തയ്യാറാക്കുവാന്‍ സാധ്യമല്ല"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1946
+#: src/main/java/org/canadianTenPin/resource/ConsumerResource.java:1946
 #, java-format
 msgid "Problem regenerating ID cert for unit {0}"
 msgstr "യൂണിറ്റ് {0}-നുള്ള ഐഡി സര്‍ട്ട് തയ്യാറാക്കുന്നതില്‍ പ്രശ്നം"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1986
+#: src/main/java/org/canadianTenPin/resource/ConsumerResource.java:1986
 #, java-format
 msgid "The system with UUID {0} is not a virtual guest."
 msgstr "യുയുഐഡി {0} ഉള്ള സിസ്റ്റം ഒരു വിര്‍ച്ച്വല്‍ ഗസ്റ്റല്ല."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2106
+#: src/main/java/org/canadianTenPin/resource/ConsumerResource.java:2106
 #, java-format
 msgid "Deletion record for hypervisor ''{0}'' not found."
 msgstr "ഹൈപ്പര്‍വൈസര്‍ ''{0}''-നുള്ള വെട്ടി നീക്കല്‍ റിക്കോര്‍ഡ് ലഭ്യമല്ല."
 
-#: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:95
+#: src/main/java/org/canadianTenPin/resource/ConsumerTypeResource.java:95
 msgid "Unit type with id '"
 msgstr "'id ' ഉള്ള യൂണിറ്റ് തരം"
 
-#: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:117
+#: src/main/java/org/canadianTenPin/resource/ConsumerTypeResource.java:117
 #, java-format
 msgid "Problem creating unit type: {0}"
 msgstr "യൂണിറ്റ് തരം തയ്യാറാക്കുന്നതില്‍ പ്രശ്നം: {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:138
+#: src/main/java/org/canadianTenPin/resource/ConsumerTypeResource.java:138
 #, java-format
 msgid "Unit type with label {0} could not be found."
 msgstr "{0} ലേബലുള്ള യൂണിറ്റ് തരം ലഭ്യമായില്ല."
 
-#: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:159
+#: src/main/java/org/canadianTenPin/resource/ConsumerTypeResource.java:159
 #, java-format
 msgid "Unit type with id {0} could not be found."
 msgstr "{0} ഐഡിയുള്ള യൂണിറ്റ് തരം ലഭ്യമായില്ല."
 
-#: src/main/java/org/candlepin/resource/ContentResource.java:114
-#: src/main/java/org/candlepin/resource/ContentResource.java:182
+#: src/main/java/org/canadianTenPin/resource/ContentResource.java:114
+#: src/main/java/org/canadianTenPin/resource/ContentResource.java:182
 #, java-format
 msgid "Content with id {0} could not be found."
 msgstr "ഐഡി {0} എന്ന ഉള്ളടക്കം ലഭ്യമല്ല."
 
-#: src/main/java/org/candlepin/resource/DistributorVersionResource.java:136
+#: src/main/java/org/canadianTenPin/resource/DistributorVersionResource.java:136
 #, java-format
 msgid "A distributor version with name {0} already exists"
 msgstr "{0} എന്ന പേരുള്ളൊരു വിതരണ പതിപ്പു് നിലവിലുണ്ടു്"
 
-#: src/main/java/org/candlepin/resource/DistributorVersionResource.java:166
+#: src/main/java/org/canadianTenPin/resource/DistributorVersionResource.java:166
 #, java-format
 msgid "No such distributor version: {0}"
 msgstr "അത്തരം വിതരണ പതിപ്പു് ലഭ്യമല്ല: {0}"
 
-#: src/main/java/org/candlepin/resource/EntitlementResource.java:95
+#: src/main/java/org/canadianTenPin/resource/EntitlementResource.java:95
 #, java-format
 msgid "Object with ID ''{0}'' could not found."
 msgstr "ഐഡി \"{0}\" ഉള്ള വസ്തു ലഭ്യമായില്ല."
 
-#: src/main/java/org/candlepin/resource/EntitlementResource.java:124
+#: src/main/java/org/canadianTenPin/resource/EntitlementResource.java:124
 #, java-format
 msgid "Unit ''{0}'' has no subscription for product ''{1}''."
 msgstr "\"{0}\" യൂണിറ്റിനു് പ്രൊഡക്ട് \"{1}\"-നുള്ള സബ്സ്ക്രിപ്ഷന്‍ ലഭ്യമല്ല"
 
-#: src/main/java/org/candlepin/resource/EntitlementResource.java:219
+#: src/main/java/org/canadianTenPin/resource/EntitlementResource.java:219
 msgid "Quantity value must be greater than 0."
 msgstr "0-യേക്കാള്‍ വലുതായിരിയ്ക്കണം മൂല്ല്യം"
 
-#: src/main/java/org/candlepin/resource/EntitlementResource.java:289
+#: src/main/java/org/canadianTenPin/resource/EntitlementResource.java:289
 #, java-format
 msgid "Unable to find upstream certificate for entitlement: {0}"
 msgstr ""
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/resource/EnvironmentResource.java:99
-#: src/main/java/org/candlepin/resource/EnvironmentResource.java:118
-#: src/main/java/org/candlepin/resource/EnvironmentResource.java:250
+#: src/main/java/org/canadianTenPin/resource/EnvironmentResource.java:99
+#: src/main/java/org/canadianTenPin/resource/EnvironmentResource.java:118
+#: src/main/java/org/canadianTenPin/resource/EnvironmentResource.java:250
 #, java-format
 msgid "No such environment: {0}"
 msgstr "ഇത്തരം എന്‍വയണ്മെന്റ് ലഭ്യമല്ല: {0}"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/resource/EventResource.java:109
+#: src/main/java/org/canadianTenPin/resource/EventResource.java:109
 #, java-format
 msgid "Event with ID ''{0}'' could not be found."
 msgstr "ഐഡി \"{0}\" ഉള്ള ഈവന്റ് ലഭ്യമായില്ല."
 
-#: src/main/java/org/candlepin/resource/GuestIdResource.java:168
+#: src/main/java/org/canadianTenPin/resource/GuestIdResource.java:168
 msgid "Please supply a valid guest id"
 msgstr "ശരിയായൊരു ഗസ്റ്റ് ഐഡി ലഭ്യമാക്കുക"
 
-#: src/main/java/org/candlepin/resource/GuestIdResource.java:184
+#: src/main/java/org/canadianTenPin/resource/GuestIdResource.java:184
 #, java-format
 msgid "Guest ID in json \"{0}\" does not match path guest ID \"{1}\""
 msgstr "json \"{0}\"-ലുള്ള ഗസ്റ്റ് ഐഡി പാഥ് ഗസ്റ്റ് ഐഡി \"{1}\"-മായി ചേരുന്നില്ല"
 
-#: src/main/java/org/candlepin/resource/GuestIdResource.java:231
+#: src/main/java/org/canadianTenPin/resource/GuestIdResource.java:231
 #, java-format
 msgid "Guest with uuid {0} could not be found."
 msgstr "uuid {0} ഉള്ള ഗസ്റ്റ് ലഭ്യമായില്ല."
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/GuestIdResource.java:261
-#: src/main/java/org/candlepin/resteasy/interceptor/BasicAuth.java:72
+#: src/main/java/org/canadianTenPin/resource/GuestIdResource.java:261
+#: src/main/java/org/canadianTenPin/resteasy/interceptor/BasicAuth.java:72
 msgid "Invalid Credentials"
 msgstr "തെറ്റായ ആധികാരികതകള്‍"
 
-#: src/main/java/org/candlepin/resource/HypervisorResource.java:130
+#: src/main/java/org/canadianTenPin/resource/HypervisorResource.java:130
 #, java-format
 msgid "Unable to find hypervisor in org ''{0}''"
 msgstr "''{0}'' ഓര്‍ഗില്‍ ഹൈപ്പര്‍വൈസര്‍ കണ്ടുപിടിയ്ക്കുവാനായില്ല"
 
-#: src/main/java/org/candlepin/resource/HypervisorResource.java:139
+#: src/main/java/org/canadianTenPin/resource/HypervisorResource.java:139
 #, java-format
 msgid "Hypervisor ''{0}'' is in use by another org"
 msgstr "ഹൈപ്പര്‍വൈസര്‍ ''{0}'' മറ്റൊരു സ്ഥാപനം ഉപയോഗിയ്ക്കുന്നു"
 
-#: src/main/java/org/candlepin/resource/JobResource.java:111
+#: src/main/java/org/canadianTenPin/resource/JobResource.java:111
 msgid ""
 "You must specify exactly one of owner key, unit UUID, or principal name."
 msgstr "കൃത്യം ഒരു ഉടസ്ഥതയിലുള്ള കീ, യൂണിറ്റ് യുയുഐഡി, അല്ലെങ്കില്‍ പ്രധാനം നാമം നല്‍കേണ്ടതുണ്ടു്."
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/resource/JobResource.java:174
+#: src/main/java/org/canadianTenPin/resource/JobResource.java:174
 msgid "Error setting scheduler status"
 msgstr "ഷെഡ്യൂളര്‍ അവസ്ഥ സജ്ജമാക്കുന്നതില്‍ പിശക്"
 
-#: src/main/java/org/candlepin/resource/JobResource.java:224
+#: src/main/java/org/canadianTenPin/resource/JobResource.java:224
 msgid "job already canceled"
 msgstr "ജോലി റദ്ദാക്കിയിരിയ്ക്കുന്നു"
 
-#: src/main/java/org/candlepin/resource/JobResource.java:227
+#: src/main/java/org/canadianTenPin/resource/JobResource.java:227
 msgid "cannot cancel a job that is in a finished state"
 msgstr "പൂര്‍ത്തിയാക്കിയ ജോലി റദ്ദാക്കുവാന്‍ സാധ്യമല്ല"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/resource/MigrationResource.java:67
+#: src/main/java/org/canadianTenPin/resource/MigrationResource.java:67
 msgid "Bad entity value."
 msgstr "തെറ്റായ എന്റിറ്റി മൂല്ല്യം."
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:295
+#: src/main/java/org/canadianTenPin/resource/OwnerResource.java:295
 #, java-format
 msgid "Could not create the Owner: {0}. Parent {1} does not exist."
 msgstr "ഉടമസ്ഥന്‍: {0} തയ്യാറാക്കുവാന്‍ സാധ്യമല്ല. പേരന്റ് {1} നിലവിലില്ല"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:308
+#: src/main/java/org/canadianTenPin/resource/OwnerResource.java:308
 #, java-format
 msgid "Could not create the Owner: {0}"
 msgstr "ഉടമസ്ഥന്‍: {0} തയ്യാറാക്കുവാന്‍ സാധ്യമല്ല"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/resource/OwnerResource.java:528
+#: src/main/java/org/canadianTenPin/resource/OwnerResource.java:528
 msgid "Must provide a name for activation key."
 msgstr "ആക്ടിവേഷന്‍ കീയ്ക്കുള്ള നാമം നല്‍കണം"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:535
+#: src/main/java/org/canadianTenPin/resource/OwnerResource.java:535
 #, java-format
 msgid ""
 "The activation key name ''{0}'' must be alphanumeric or include the "
@@ -1028,316 +1028,316 @@ msgstr ""
 "ആക്ടിവേഷന്‍ കീ നാമം ''{0}'' ഒന്നെങ്കില്‍ ആല്‍ഫാന്യൂമറിക്കു് ആയിരിയ്ക്കണം അല്ലെങ്കില്‍  '-' , '_' "
 "എന്നിങ്ങനെയുള്ള അക്ഷരങ്ങള്‍ ഉള്‍പ്പെടുത്തണം."
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:541
+#: src/main/java/org/canadianTenPin/resource/OwnerResource.java:541
 #, java-format
 msgid "The activation key name ''{0}'' is already in use for owner {1}"
 msgstr "''{0}'' ആക്ടിവേഷന്‍ കീ നിലവില്‍ ഉടമസ്ഥന്‍ {1} ഉപയോഗിയ്ക്കുന്നു"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:625
+#: src/main/java/org/canadianTenPin/resource/OwnerResource.java:625
 #, java-format
 msgid "{0} is not a valid log level"
 msgstr "{0} ശരിയായൊരു ലോഗ് ലവല്‍ അല്ല"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:724
-#: src/main/java/org/candlepin/resource/PoolResource.java:142
+#: src/main/java/org/canadianTenPin/resource/OwnerResource.java:724
+#: src/main/java/org/canadianTenPin/resource/PoolResource.java:142
 #, java-format
 msgid "Unit: {0} not found"
 msgstr "യൂണിറ്റ്: {0} ലഭ്യമായില്ല"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/resource/OwnerResource.java:734
-#: src/main/java/org/candlepin/resource/PoolResource.java:236
+#: src/main/java/org/canadianTenPin/resource/OwnerResource.java:734
+#: src/main/java/org/canadianTenPin/resource/PoolResource.java:236
 #, java-format
 msgid "User {0} cannot access consumer {1}"
 msgstr "ഉപയോക്താവ് {0}-നു് ഉപഭോക്താവു് {1}-നെ ലഭ്യമാക്കുവാന്‍ സാധ്യമല്ല."
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:863
-#: src/main/java/org/candlepin/resource/SubscriptionResource.java:202
+#: src/main/java/org/canadianTenPin/resource/OwnerResource.java:863
+#: src/main/java/org/canadianTenPin/resource/SubscriptionResource.java:202
 #, java-format
 msgid "No such unit: {0}"
 msgstr "ഇത്തരം യൂണിറ്റില്ല: {0}"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/OwnerResource.java:965
+#: src/main/java/org/canadianTenPin/resource/OwnerResource.java:965
 #, java-format
 msgid "subscription with id: {0} not found."
 msgstr "ഐഡി: {0} സബ്സ്ക്രിപ്ഷന്‍ ലഭ്യമല്ല."
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1070
+#: src/main/java/org/canadianTenPin/resource/OwnerResource.java:1070
 msgid "Unknown conflict to force"
 msgstr "അപരിചിതമായ പൊരുത്തക്കേടു്"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1099
+#: src/main/java/org/canadianTenPin/resource/OwnerResource.java:1099
 msgid "Error reading export archive"
 msgstr "എക്സ്പോര്‍ട്ട് ആര്‍ക്കൈവ് ലഭ്യമാക്കുന്നതില്‍ പിശക്"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1276
+#: src/main/java/org/canadianTenPin/resource/OwnerResource.java:1276
 #, java-format
 msgid "Problem generating ueber cert for owner {0}"
 msgstr "{0} ഉടമസ്ഥനുള്ള ueber cert ലഭ്യമാക്കുന്നതില്‍ പ്രശ്നമുണ്ടു്"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1304
+#: src/main/java/org/canadianTenPin/resource/OwnerResource.java:1304
 #, java-format
 msgid "ueber certificate for owner {0} was not found. Please generate one."
 msgstr "ഉടമസ്ഥന്‍ {0}-നുള്ള ueber സര്‍ട്ടിഫിക്കേറ്റ് ലഭ്യമായില്ല. ദയവായി ഒന്നു് ലഭ്യമാക്കുക."
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1374
+#: src/main/java/org/canadianTenPin/resource/OwnerResource.java:1374
 #, java-format
 msgid "{0} file imported successfully."
 msgstr "{0} ഫയല്‍ വിജയകരമായി ഇംപോര്‍ട്ട് ചെയ്തിരിയ്ത്തുന്നു."
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1376
+#: src/main/java/org/canadianTenPin/resource/OwnerResource.java:1376
 #, java-format
 msgid "{0} file imported forcibly"
 msgstr "നിര്‍ബന്ധമായി {0} ഫയല്‍ ഇംപോര്‍ട്ട് ചെയ്തിരിയ്ക്കുന്നു"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1406
+#: src/main/java/org/canadianTenPin/resource/OwnerResource.java:1406
 #, java-format
 msgid "Subscriptions deleted by {0}"
 msgstr "{0} നീക്കം ചെയ്ത സബ്സ്ക്രിപ്ഷനുകള്‍"
 
-#: src/main/java/org/candlepin/resource/PoolResource.java:125
+#: src/main/java/org/canadianTenPin/resource/PoolResource.java:125
 msgid "Cannot filter on both owner and unit"
 msgstr "ഉടമസ്ഥനിലും യൂണിറ്റിലും ഫില്‍റ്റര്‍ ചെയ്യുവാന്‍ സാധ്യമല്ല"
 
-#: src/main/java/org/candlepin/resource/PoolResource.java:129
+#: src/main/java/org/canadianTenPin/resource/PoolResource.java:129
 msgid "A unit or owner is needed to filter on product"
 msgstr "ഉല്‍പന്നത്തില്‍ ഒരു യൂണിറ്റ് അല്ലെങ്കില്‍ ഉടമസ്ഥന്‍ ഫില്‍റ്റര്‍ ചെയ്യേണ്ടതുണ്ടു്"
 
-#: src/main/java/org/candlepin/resource/PoolResource.java:148
+#: src/main/java/org/canadianTenPin/resource/PoolResource.java:148
 #, java-format
 msgid "User {0} cannot access unit {1}"
 msgstr "{0} ഉപയോക്താവിനു് {1} യൂണിറ്റിലേക്കു് പ്രവേശനം ലഭ്യമല്ല"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/PoolResource.java:159
+#: src/main/java/org/canadianTenPin/resource/PoolResource.java:159
 #, java-format
 msgid "owner: {0}"
 msgstr "ഉടമസ്ഥന്‍: {0}"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/resource/PoolResource.java:163
+#: src/main/java/org/canadianTenPin/resource/PoolResource.java:163
 #, java-format
 msgid "User {0} cannot access owner {1}"
 msgstr "ഉപയോക്താവ് {0}-നു് ഉടമസ്ഥന്‍ {1}-നെ ലഭ്യമാക്കുവാന്‍ സാധ്യമല്ല."
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/resource/PoolResource.java:172
+#: src/main/java/org/canadianTenPin/resource/PoolResource.java:172
 #, java-format
 msgid "User {0} cannot access all pools."
 msgstr "ഉപയോക്താവു് {0}-നു് എല്ലാം പൂളുകളും ലഭ്യമാക്കുവാന്‍ സാധ്യമല്ല."
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/resource/PoolResource.java:231
+#: src/main/java/org/canadianTenPin/resource/PoolResource.java:231
 #, java-format
 msgid "consumer: {0} not found"
 msgstr "ഉപഭോക്താവു്: {0} ലഭ്യമല്ല"
 
-#: src/main/java/org/candlepin/resource/PoolResource.java:253
-#: src/main/java/org/candlepin/resource/PoolResource.java:316
+#: src/main/java/org/canadianTenPin/resource/PoolResource.java:253
+#: src/main/java/org/canadianTenPin/resource/PoolResource.java:316
 #, java-format
 msgid "Subscription Pool with ID ''{0}'' could not be found."
 msgstr "ഐഡി  ''{0}'' ഉള്ള സബ്സ്ക്രിപ്ഷന്‍ പൂള്‍ ലഭ്യമായില്ല."
 
-#: src/main/java/org/candlepin/resource/PoolResource.java:270
+#: src/main/java/org/canadianTenPin/resource/PoolResource.java:270
 #, java-format
 msgid "Entitlement Pool with ID ''{0}'' could not be found."
 msgstr "ഐഡി  ''{0}'' ഉള്ള എന്റൈറ്റില്‍മെന്റ് ലഭ്യമായില്ല."
 
-#: src/main/java/org/candlepin/resource/ProductResource.java:146
-#: src/main/java/org/candlepin/resource/ProductResource.java:167
-#: src/main/java/org/candlepin/resource/ProductResource.java:331
-#: src/main/java/org/candlepin/resource/ProductResource.java:421
+#: src/main/java/org/canadianTenPin/resource/ProductResource.java:146
+#: src/main/java/org/canadianTenPin/resource/ProductResource.java:167
+#: src/main/java/org/canadianTenPin/resource/ProductResource.java:331
+#: src/main/java/org/canadianTenPin/resource/ProductResource.java:421
 #, java-format
 msgid "Product with UUID ''{0}'' could not be found."
 msgstr "UUID \"{0}\" ഉള്ള പ്രൊഡക്ട് ലഭ്യമായില്ല."
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/resource/ProductResource.java:335
+#: src/main/java/org/canadianTenPin/resource/ProductResource.java:335
 #, java-format
 msgid "Product with UUID ''{0}'' cannot be deleted while subscriptions exist."
 msgstr ""
 "സബ്സ്ക്രിപ്ഷനുകള്‍ നിലവിലുള്ളപ്പോള്‍  UUID \"{0}\" ഉള്ള പ്രൊഡക്ട് നീക്കം ചെയ്യുവാന്‍ സാധ്യമല്ല."
 
-#: src/main/java/org/candlepin/resource/ProductResource.java:398
+#: src/main/java/org/canadianTenPin/resource/ProductResource.java:398
 msgid "Must specify product ID."
 msgstr "പ്രൊഡക്ട് ഐഡി നല്‍കേണ്ടതുണ്ടു്."
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/resource/RoleResource.java:84
+#: src/main/java/org/canadianTenPin/resource/RoleResource.java:84
 #, java-format
 msgid "No such owner: {0}"
 msgstr "ഇത്തരം ഒരു ഉടമസ്ഥനില്ല : {0}"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/resource/RoleResource.java:114
+#: src/main/java/org/canadianTenPin/resource/RoleResource.java:114
 msgid "Role ID does not match path."
 msgstr "നിയമനത്തിനുള്ള ഐഡി പാഥുമായി പൊരുത്തപ്പെടുന്നില്ല."
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/resource/RoleResource.java:143
+#: src/main/java/org/canadianTenPin/resource/RoleResource.java:143
 msgid "Access type NONE not supported."
 msgstr "NONE എന്ന ആക്സസ്സ് രീതി പിന്തുണയ്ക്കുന്നില്ല."
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/resource/RoleResource.java:186
+#: src/main/java/org/canadianTenPin/resource/RoleResource.java:186
 #, java-format
 msgid "No such permission: {0} in role: {1}"
 msgstr "അത്തരം അനുമതി ലഭ്യമല്ല: നിയമനത്തില്‍ {0} : {1}"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/resource/RoleResource.java:200
+#: src/main/java/org/canadianTenPin/resource/RoleResource.java:200
 #, java-format
 msgid "No such role: {0}"
 msgstr "ഇത്തരം നിയമനമില്ല : {0}"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/resource/RoleResource.java:208
+#: src/main/java/org/canadianTenPin/resource/RoleResource.java:208
 #, java-format
 msgid "No such user: {0}"
 msgstr "ഇത്തരം ഉപയോക്താവില്ല: {0}"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/RulesResource.java:90
+#: src/main/java/org/canadianTenPin/resource/RulesResource.java:90
 msgid "Error decoding the rules. The text should be base 64 encoded"
 msgstr "നിയമങ്ങള്‍ ഡീകോഡ് ചെയ്യുന്നതില്‍ പിശക്. വാചകം ബെയിസ് 64 എന്‍കോഡഡ് ആയിരിയ്ക്കണം"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/RulesResource.java:117
+#: src/main/java/org/canadianTenPin/resource/RulesResource.java:117
 msgid "couldn't read rules file"
 msgstr "നിയമങ്ങള്‍ക്കുള്ള ഫയല്‍ ലഭ്യമാക്കുവാന്‍ സാധ്യമായില്ല"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/resource/StatisticResource.java:65
+#: src/main/java/org/canadianTenPin/resource/StatisticResource.java:65
 msgid "couldn't generate statistics"
 msgstr "സ്ഥിതിവിവരക്കണക്കുകള്‍ ലഭ്യമാക്കുവാന്‍ സാധ്യമല്ല"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/resource/SubscriptionResource.java:170
+#: src/main/java/org/canadianTenPin/resource/SubscriptionResource.java:170
 #, java-format
 msgid "no certificate for subscription {0}"
 msgstr "സബ്സ്ക്രിപ്ഷന്‍ {0}-നുള്ള സര്‍ട്ടിഫിക്കേറ്റ് ലഭ്യമല്ല"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/resource/SubscriptionResource.java:191
+#: src/main/java/org/canadianTenPin/resource/SubscriptionResource.java:191
 msgid "email is required for notification"
 msgstr "അറിയിപ്പിനായി ഈമെയില്‍ ആവശ്യമുണ്ടു്"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/resource/SubscriptionResource.java:196
+#: src/main/java/org/canadianTenPin/resource/SubscriptionResource.java:196
 msgid "email locale is required for notification"
 msgstr "അറിയിപ്പിനായി ഈമെയില്‍ ഏതു് ഭാഷയാണു് എന്നു് അറിയേണ്ടതുണ്ടു്."
 
-#: src/main/java/org/candlepin/resource/SubscriptionResource.java:234
+#: src/main/java/org/canadianTenPin/resource/SubscriptionResource.java:234
 #, java-format
 msgid "Subscription with id {0} could not be found."
 msgstr "id {0} എന്ന സബ്സ്ക്രിപ്ഷന്‍ ലഭ്യമായില്ല."
 
-#: src/main/java/org/candlepin/resource/UserResource.java:163
+#: src/main/java/org/canadianTenPin/resource/UserResource.java:163
 #, java-format
 msgid "User {0} does not exist"
 msgstr "ഉപയോക്താവു് {0} നിലവിലില്ല"
 
-#: src/main/java/org/candlepin/resource/UserResource.java:181
+#: src/main/java/org/canadianTenPin/resource/UserResource.java:181
 #, java-format
 msgid "User {0} not found"
 msgstr "ഉപയോക്താവു് {0} ലഭ്യമായില്ല"
 
-#: src/main/java/org/candlepin/resteasy/interceptor/PageRequestInterceptor.java:102
+#: src/main/java/org/canadianTenPin/resteasy/interceptor/PageRequestInterceptor.java:102
 msgid "offset and limit parameters must be positive integers"
 msgstr "ഓഫ്‌സെറ്റും പരിധി പരാമീറ്ററുകളും പോസിറ്റീവ് ഇന്റിജറുകള്‍ ആയിരിയ്ക്കണം."
 
-#: src/main/java/org/candlepin/resteasy/interceptor/PageRequestInterceptor.java:120
+#: src/main/java/org/canadianTenPin/resteasy/interceptor/PageRequestInterceptor.java:120
 msgid "the order parameter must be either 'ascending' or 'descending'"
 msgstr "പരാമീറ്ററിന്റെ ക്രമം 'ആരോഹണം' അല്ലെങ്കില്‍ 'അവരോഹണത്തില്‍' ആയിരിയ്ക്കണം."
 
-#: src/main/java/org/candlepin/resteasy/interceptor/PageRequestInterceptor.java:129
+#: src/main/java/org/canadianTenPin/resteasy/interceptor/PageRequestInterceptor.java:129
 msgid "Expected a positive integer."
 msgstr "ഒരു പോസിറ്റീവ് ഇന്റിജര്‍ പ്രതീക്ഷിച്ചു."
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:325
+#: src/main/java/org/canadianTenPin/resteasy/interceptor/AuthInterceptor.java:325
 msgid "Unable to verify request."
 msgstr "ആവശ്യം ഉറപ്പാക്കുവാന്‍ സാധ്യമല്ല."
 
-#: src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:339
-#: src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:362
+#: src/main/java/org/canadianTenPin/resteasy/interceptor/AuthInterceptor.java:339
+#: src/main/java/org/canadianTenPin/resteasy/interceptor/AuthInterceptor.java:362
 #, java-format
 msgid "{0} with id {1} could not be found."
 msgstr "ഐഡി {1} ഉള്ള {0} ലഭ്യമായില്ല."
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:356
+#: src/main/java/org/canadianTenPin/resteasy/interceptor/AuthInterceptor.java:356
 msgid "Organization"
 msgstr "സ്ഥാപനം"
 
-#: src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:550
-#: src/main/java/org/candlepin/resteasy/interceptor/ConsumerAuth.java:57
+#: src/main/java/org/canadianTenPin/resteasy/interceptor/AuthInterceptor.java:550
+#: src/main/java/org/canadianTenPin/resteasy/interceptor/ConsumerAuth.java:57
 #, java-format
 msgid "Unit {0} has been deleted"
 msgstr "യൂണിറ്റ് {0} വെട്ടി നീക്കിയിരിയ്ക്കുന്നു"
 
-#: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:121
-#: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:157
+#: src/main/java/org/canadianTenPin/resteasy/interceptor/OAuth.java:121
+#: src/main/java/org/canadianTenPin/resteasy/interceptor/OAuth.java:157
 msgid "Invalid oauth unit or secret"
 msgstr "തെറ്റായ oauth യൂണിറ്റ് അല്ലെങ്കില്‍ രഹസ്യം"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:125
+#: src/main/java/org/canadianTenPin/resteasy/interceptor/OAuth.java:125
 #, java-format
 msgid "OAuth problem encountered. Internal message is: {0}"
 msgstr "OAuth പ്രശ്നം നേരിട്ടിയിയ്ക്കുന്നു. ആന്തരിക സന്ദേശം : {0}"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:131
+#: src/main/java/org/canadianTenPin/resteasy/interceptor/OAuth.java:131
 #, java-format
 msgid "OAuth error encountered. Internal message is: {0}"
 msgstr "OAuth പിശക് നേരിട്ടിയിയ്ക്കുന്നു. ആന്തരിക സന്ദേശം : {0}"
 
-#: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:162
+#: src/main/java/org/canadianTenPin/resteasy/interceptor/OAuth.java:162
 msgid "Error getting oauth unit key"
 msgstr "oauth യൂണിറ്റ് കീ ലഭ്യമാക്കുന്നതില്‍ പിശക്"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys
-#: src/main/java/org/candlepin/resteasy/interceptor/BasicAuth.java:87
+#: src/main/java/org/canadianTenPin/resteasy/interceptor/BasicAuth.java:87
 msgid "Error contacting user service"
 msgstr "ഉപയോക്താവിനുള്ള സര്‍വീസുമായി ബന്ധപ്പെടുന്നതില്‍ പിശക്"
 
-#: src/main/java/org/candlepin/service/impl/DefaultEntitlementCertServiceAdapter.java:283
+#: src/main/java/org/canadianTenPin/service/impl/DefaultEntitlementCertServiceAdapter.java:283
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
@@ -1348,113 +1348,113 @@ msgstr ""
 "ക്ലയന്റ് ലഭ്യമാവാം. കൂടുതല്‍ വിവരങ്ങള്‍ക്കായി kbase https://access.redhat.com/knowledge/"
 "node/129003 കാണുക."
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java:105
-msgid "Standalone candlepin does not support redeeming a subscription."
-msgstr "ഒറ്റയ്ക്കുള്ള candlepin സബ്സ്ക്രിപ്ഷന്‍ ലഭ്യമാക്കുന്നതിനു് പിന്തുണയ്ക്കുന്നില്ല."
+#: src/main/java/org/canadianTenPin/service/impl/DefaultSubscriptionServiceAdapter.java:105
+msgid "Standalone canadianTenPin does not support redeeming a subscription."
+msgstr "ഒറ്റയ്ക്കുള്ള canadianTenPin സബ്സ്ക്രിപ്ഷന്‍ ലഭ്യമാക്കുന്നതിനു് പിന്തുണയ്ക്കുന്നില്ല."
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys
-#: src/main/java/org/candlepin/sync/Importer.java:178
+#: src/main/java/org/canadianTenPin/sync/Importer.java:178
 msgid "Wrong metadata type"
 msgstr "തെറ്റായ മെറ്റാഡേറ്റാ രീതി"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys
-#: src/main/java/org/candlepin/sync/Importer.java:187
+#: src/main/java/org/canadianTenPin/sync/Importer.java:187
 msgid "Invalid owner"
 msgstr "തെറ്റായ ഉടമസ്ഥന്‍"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys
-#: src/main/java/org/candlepin/sync/Importer.java:201
+#: src/main/java/org/canadianTenPin/sync/Importer.java:201
 msgid "Import is older than existing data"
 msgstr "നിലവിലുള്ള ഡേറ്റയേക്കാള്‍ പഴയതാണു് ലഭ്യമാക്കിയതു്"
 
-#: src/main/java/org/candlepin/sync/Importer.java:221
+#: src/main/java/org/canadianTenPin/sync/Importer.java:221
 msgid "Import is the same as existing data"
 msgstr "ഇംപോര്‍ട്ട് ചെയ്തതു് നിലവിലുള്ള ഡേറ്റാ തന്നെയാകുന്നു"
 
-#: src/main/java/org/candlepin/sync/Importer.java:246
+#: src/main/java/org/canadianTenPin/sync/Importer.java:246
 msgid "The archive does not contain the required signature file"
 msgstr "ആര്‍ക്കൈവില്‍ ആവശ്യമുള്ള സിഗ്നേച്ചര്‍ ഫയല്‍ ലഭ്യമല്ല"
 
-#: src/main/java/org/candlepin/sync/Importer.java:266
+#: src/main/java/org/canadianTenPin/sync/Importer.java:266
 msgid "Archive failed signature check"
 msgstr "ആര്‍ക്കൈവില്‍ സിഗ്നേച്ചര്‍ പരിശോധന പരാജയപ്പെട്ടു"
 
-#: src/main/java/org/candlepin/sync/Importer.java:280
+#: src/main/java/org/canadianTenPin/sync/Importer.java:280
 msgid "The consumer_export archive has no contents"
 msgstr "consumer_export ആര്‍ക്കൈവില്‍ വിവരങ്ങള്‍ ലഭ്യമല്ല"
 
-#: src/main/java/org/candlepin/sync/Importer.java:300
+#: src/main/java/org/canadianTenPin/sync/Importer.java:300
 msgid "The archive does not contain the required consumer_export.zip file"
 msgstr "ആര്‍ക്കൈവില്‍ ആവശ്യമായ consumer_export.zip ഫയല്‍ ലഭ്യമല്ല"
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/sync/Importer.java:305
-#: src/main/java/org/candlepin/sync/Importer.java:310
+#: src/main/java/org/canadianTenPin/sync/Importer.java:305
+#: src/main/java/org/canadianTenPin/sync/Importer.java:310
 msgid "Failed to import archive"
 msgstr "ആര്‍ക്കൈവ് ഇംപോര്‍ട്ട് ചെയ്യുന്നതില്‍ പരാജയപ്പെട്ടു"
 
-#: src/main/java/org/candlepin/sync/Importer.java:316
+#: src/main/java/org/canadianTenPin/sync/Importer.java:316
 msgid "Unable to extract export archive"
 msgstr "എക്സ്പോര്‍ട്ട് ആര്‍ക്കൈവ് എക്സ്ട്രാക്റ്റ് ചെയ്യുവാന്‍ സാധ്യമല്ല"
 
-#: src/main/java/org/candlepin/sync/Importer.java:321
+#: src/main/java/org/canadianTenPin/sync/Importer.java:321
 msgid "Certificate exception checking archive signature"
 msgstr "സര്‍ട്ടിഫിക്കേറ്റ് എക്സപ്ഷന്‍ ആര്‍ക്കൈവ് ഒപ്പ് പരിശോധിയ്ക്കുന്നു"
 
-#: src/main/java/org/candlepin/sync/Importer.java:344
+#: src/main/java/org/canadianTenPin/sync/Importer.java:344
 msgid "The archive does not contain the required meta.json file"
 msgstr "ആര്‍ക്കൈവില്‍ ആവശ്യമായ meta.json‍ ഫയല്‍ ലഭ്യമല്ല"
 
-#: src/main/java/org/candlepin/sync/Importer.java:349
+#: src/main/java/org/canadianTenPin/sync/Importer.java:349
 msgid "The archive does not contain the required consumer_types directory"
 msgstr "ആര്‍ക്കൈവില്‍ ആവശ്യമായ consumer_types ഡയറക്ടറി ലഭ്യമല്ല"
 
-#: src/main/java/org/candlepin/sync/Importer.java:354
+#: src/main/java/org/canadianTenPin/sync/Importer.java:354
 msgid "The archive does not contain the required consumer.json file"
 msgstr "ആര്‍ക്കൈവില്‍ ആവശ്യമായ consumer.json‍ ഫയല്‍ ലഭ്യമല്ല"
 
-#: src/main/java/org/candlepin/sync/Importer.java:360
+#: src/main/java/org/canadianTenPin/sync/Importer.java:360
 msgid "The archive does not contain the required entitlements directory"
 msgstr "ആര്‍ക്കൈവില്‍ ആവശ്യമായ എന്റൈറ്റില്‍മെന്റുകളുടെ ഡയറക്ടറി ലഭ്യമല്ല"
 
-#: src/main/java/org/candlepin/sync/Importer.java:631
+#: src/main/java/org/canadianTenPin/sync/Importer.java:631
 #, java-format
 msgid "The archive {0} is not a properly compressed file or is empty"
 msgstr "ആര്‍ക്കൈവ് {0} ശരിയായി കമ്പ്രസ്സ് ചെയ്ത ഫയലല്ല അല്ലെങ്കില്‍ കാലിയാണു്"
 
-#: src/main/java/org/candlepin/sync/ConsumerImporter.java:62
+#: src/main/java/org/canadianTenPin/sync/ConsumerImporter.java:62
 msgid "No ID for upstream subscription management application."
 msgstr "അപ്‌സ്ട്രാം സബ്സ്ക്രിപ്ഷന്‍ മാനേജ്മെന്റ് പ്രയോഗത്തിനുള്ള ഐഡി ലഭ്യമല്ല."
 
-#: src/main/java/org/candlepin/sync/ConsumerImporter.java:77
+#: src/main/java/org/canadianTenPin/sync/ConsumerImporter.java:77
 msgid ""
 "This subscription management application has already been imported by "
 "another owner."
 msgstr "ഈ സബ്സ്ക്രിപ്ഷന്‍ മാനേജ്മെന്റ് പ്രയോഗം നിലവില്‍ മറ്റൊരു ഉടമസ്ഥന്‍ ഇംപോര്‍ട്ട് ചെയ്തിരിയ്ക്കുന്നു."
 
-#: src/main/java/org/candlepin/sync/ConsumerImporter.java:85
+#: src/main/java/org/canadianTenPin/sync/ConsumerImporter.java:85
 msgid ""
 "Owner has already imported from another subscription management application."
 msgstr "ഉടമസ്ഥന്‍ നിലവില്‍ മറ്റൊരു സബ്സ്ക്രിപ്ഷന്‍ മാനേജ്മെന്റ് പ്രയോഗം ഇംപോര്‍ട്ട് ചെയ്തിരിയ്ക്കുന്നു."
 
-# translation auto-copied from project Candlepin, version master, document
+# translation auto-copied from project CanadianTenPin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/sync/EntitlementImporter.java:162
+#: src/main/java/org/canadianTenPin/sync/EntitlementImporter.java:162
 msgid "Unable to find product with ID: "
 msgstr "ഈ ഐഡിയുള്ള പ്രൊഡക്ട് കണ്ടുപിടിയ്ക്കുവാന്‍ സാധ്യമല്ല:"
 
-#: src/main/java/org/candlepin/util/ContentOverrideValidator.java:58
+#: src/main/java/org/canadianTenPin/util/ContentOverrideValidator.java:58
 #, java-format
 msgid "Not allowed to override values for: {0}"
 msgstr "ഇതിനുള്ള മൂല്ല്യങ്ങള്‍ മാറ്റവാന്‍ അനുവാദമില്ല: {0}"
 
-#: src/main/java/org/candlepin/util/ServiceLevelValidator.java:67
+#: src/main/java/org/canadianTenPin/util/ServiceLevelValidator.java:67
 #, java-format
 msgid "Service level ''{0}'' is not available to units of organization {1}."
 msgstr " ''{0}'' സര്‍വീസ് ലവല്‍ {1} സ്ഥാപനങ്ങള്‍ക്കൊപ്പം ലഭ്യമല്ല."

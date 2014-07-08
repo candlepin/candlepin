@@ -1,8 +1,8 @@
 require 'spec_helper'
-require 'candlepin_scenarios'
+require 'canadianTenPin_scenarios'
 
 describe 'Virt Only Pools' do
-  include CandlepinMethods
+  include CanadianTenPinMethods
 
   before(:each) do
     @owner = create_owner random_string('virt_owner')
@@ -58,7 +58,7 @@ describe 'Virt Only Pools' do
 
   it 'should allow virt_only pools to be listed for manifest consumers' do
     virt_product = new_product true
-    manifest = consumer_client(@user, 'virty', :candlepin, nil, {})
+    manifest = consumer_client(@user, 'virty', :canadianTenPin, nil, {})
 
     pools = manifest.list_pools({:consumer => manifest.uuid})
     pools.size.should == 1

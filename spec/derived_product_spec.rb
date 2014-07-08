@@ -1,8 +1,8 @@
 require 'spec_helper'
-require 'candlepin_scenarios'
+require 'canadianTenPin_scenarios'
 
 describe 'Derived Products' do
-  include CandlepinMethods
+  include CanadianTenPinMethods
   include SpecUtils
   include CertificateMethods
 
@@ -27,7 +27,7 @@ describe 'Derived Products' do
 
     @physical_sys = @user.register(random_string('host'), :system, nil,
       {"cpu.cpu_socket(s)" => 8}, nil, nil, [], [], nil)
-    @physical_client = Candlepin.new(username=nil, password=nil,
+    @physical_client = CanadianTenPin.new(username=nil, password=nil,
         cert=@physical_sys['idCert']['cert'],
         key=@physical_sys['idCert']['key'])
     @physical_client.update_consumer({:facts => {"system.certificate_version" => "3.2"},
@@ -36,7 +36,7 @@ describe 'Derived Products' do
     @guest1 = @user.register(random_string('guest'), :system, nil,
       {'virt.uuid' => @uuid, 'virt.is_guest' => 'true'}, nil, nil,
       [], installed_prods)
-    @guest_client = Candlepin.new(username=nil, password=nil,
+    @guest_client = CanadianTenPin.new(username=nil, password=nil,
         cert=@guest1['idCert']['cert'], key=@guest1['idCert']['key'])
 
     # create subscription with sub-pool data:
@@ -67,9 +67,9 @@ describe 'Derived Products' do
     @pools.size.should == 1
     @main_pool = @pools[0]
 
-    @distributor = @user.register(random_string('host'), :candlepin, nil,
+    @distributor = @user.register(random_string('host'), :canadianTenPin, nil,
       {}, nil, nil, [], [], nil)
-    @distributor_client = Candlepin.new(username=nil, password=nil,
+    @distributor_client = CanadianTenPin.new(username=nil, password=nil,
         cert=@distributor['idCert']['cert'],
         key=@distributor['idCert']['key'])
   end

@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Generate a diff file of the candlepin schema between two points in history.
+# Generate a diff file of the canadianTenPin schema between two points in history.
 #
 # Useage:
 # schemadiff PERIOD
@@ -9,7 +9,7 @@
 
 function gen_schema() {
     local out_file=$1
-    buildr -s clean compile candlepin:genschema > $out_file 2> /dev/null
+    buildr -s clean compile canadianTenPin:genschema > $out_file 2> /dev/null
 }
 
 function diff_schemas() {

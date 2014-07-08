@@ -1,11 +1,11 @@
 require 'spec_helper'
-require 'candlepin_scenarios'
+require 'canadianTenPin_scenarios'
 
 require 'rubygems'
 require 'rest_client'
 
 describe 'Uebercert' do
-  include CandlepinMethods
+  include CanadianTenPinMethods
 
   it 'owner can be deleted' do
     owner = @cp.create_owner random_string("test_owner1")

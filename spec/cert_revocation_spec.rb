@@ -1,10 +1,10 @@
 require 'spec_helper'
-require 'candlepin_scenarios'
+require 'canadianTenPin_scenarios'
 require 'openssl'
 
 describe 'Certificate Revocation List', :serial => true do
 
-  include CandlepinMethods
+  include CanadianTenPinMethods
 
   before do
     @owner = create_owner random_string('test_owner')
@@ -20,7 +20,7 @@ describe 'Certificate Revocation List', :serial => true do
     #create consumer
     username = random_string('billy')
     @user = create_user(@owner, username, 'password')
-    user = Candlepin.new(username, 'password')
+    user = CanadianTenPin.new(username, 'password')
     @system = consumer_client(user, 'system6')
   end
 
@@ -69,8 +69,8 @@ describe 'Certificate Revocation List', :serial => true do
   end
 
   it 'should regenerate the on-disk crl and revoke' do
-    crl = OpenSSL::X509::CRL.new File.read "/var/lib/candlepin/candlepin-crl.crl"
-    old_time = File.mtime("/var/lib/candlepin/candlepin-crl.crl")
+    crl = OpenSSL::X509::CRL.new File.read "/var/lib/canadianTenPin/canadianTenPin-crl.crl"
+    old_time = File.mtime("/var/lib/canadianTenPin/canadianTenPin-crl.crl")
     #consume an entitlement, revoke it and check that CRL contains the new serial.
     @system.consume_product(@monitoring_prod.id)
     serial = filter_serial(@monitoring_prod)
@@ -79,14 +79,14 @@ describe 'Certificate Revocation List', :serial => true do
     revoked_serials.should include(serial)
 
     # ensure that the on-disk crl got updated
-    new_time = File.mtime("/var/lib/candlepin/candlepin-crl.crl")
+    new_time = File.mtime("/var/lib/canadianTenPin/canadianTenPin-crl.crl")
     new_time.should_not == old_time
-    crl = OpenSSL::X509::CRL.new File.read "/var/lib/candlepin/candlepin-crl.crl"
+    crl = OpenSSL::X509::CRL.new File.read "/var/lib/canadianTenPin/canadianTenPin-crl.crl"
     crl.revoked.map { |i| i.serial }.should include(serial)
   end
 
   it 'should regenerate the on-disk crl' do
-    old_time = File.mtime("/var/lib/candlepin/candlepin-crl.crl")
+    old_time = File.mtime("/var/lib/canadianTenPin/canadianTenPin-crl.crl")
     # do some stuff
     @system.consume_product @monitoring_prod.id
     @system.consume_product @virt_prod.id
@@ -99,7 +99,7 @@ describe 'Certificate Revocation List', :serial => true do
 
     revoked_serials.should_not include(serials)
     # ensure that the on-disk crl got updated
-    new_time = File.mtime("/var/lib/candlepin/candlepin-crl.crl")
+    new_time = File.mtime("/var/lib/canadianTenPin/canadianTenPin-crl.crl")
     new_time.should_not == old_time
   end
 

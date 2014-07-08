@@ -1,9 +1,9 @@
 require 'spec_helper'
-require 'candlepin_scenarios'
+require 'canadianTenPin_scenarios'
 
 describe 'Consumer Facts' do
 
-  include CandlepinMethods
+  include CanadianTenPinMethods
 
   before(:each) do
     @owner = create_owner random_string('test_owner')
@@ -18,7 +18,7 @@ describe 'Consumer Facts' do
         nil, nil, [], [{:productId => 'installedprod',
            :productName => "Installed"}])
 
-    @consumer_api = Candlepin.new(username=nil, password=nil,
+    @consumer_api = CanadianTenPin.new(username=nil, password=nil,
                                   cert=@consumer['idCert']['cert'],
                                   key=@consumer['idCert']['key'])
   end

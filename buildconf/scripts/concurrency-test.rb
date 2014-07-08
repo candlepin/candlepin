@@ -8,7 +8,7 @@
 # watch the progress bar in terminal 2 (green dot for consumed ent, red N for not)
 # watch the details in terminal 1
 
-require "../../client/ruby/candlepin_api"
+require "../../client/ruby/canadianTenPin_api"
 require 'pp'
 require 'optparse'
 
@@ -42,7 +42,7 @@ end
 
 # Create a product and pool to consume:
 product_id = "concurproduct-#{rand(100000)}"
-cp = Candlepin.new(username=CP_ADMIN_USER, password=CP_ADMIN_PASS,
+cp = CanadianTenPin.new(username=CP_ADMIN_USER, password=CP_ADMIN_PASS,
   cert=nil, key=nil,
   host=CP_SERVER, port=CP_PORT)
 test_owner = cp.create_owner("testowner-#{rand(100000)}")
@@ -55,9 +55,9 @@ pool = pools[0]
 
 # Create a consumer to bind entitlements to. We'll just use one combined
 # with a pool that supports multi-entitlement:
-consumer = cp.register("test" << rand(10000).to_s, :candlepin,
+consumer = cp.register("test" << rand(10000).to_s, :canadianTenPin,
   nil, {}, nil, test_owner['key'])
-consumer_cp = Candlepin.new(nil, nil, consumer['idCert']['cert'],
+consumer_cp = CanadianTenPin.new(nil, nil, consumer['idCert']['cert'],
   consumer['idCert']['key'], CP_SERVER, CP_PORT)
 
 # Launch threads to try to bind at same time:

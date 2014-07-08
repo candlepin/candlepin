@@ -1,14 +1,14 @@
 require 'spec_helper'
-require 'candlepin_scenarios'
+require 'canadianTenPin_scenarios'
 
-# This spec tests virt limited products in a standalone Candlepin deployment.
+# This spec tests virt limited products in a standalone CanadianTenPin deployment.
 # (which we assume to be testing against)
 describe 'One Sub Pool Per Stack' do
-  include CandlepinMethods
+  include CanadianTenPinMethods
   include VirtHelper
 
   before(:each) do
-    pending("candlepin running in standalone mode") if is_hosted?
+    pending("canadianTenPin running in standalone mode") if is_hosted?
     @owner = create_owner random_string('virt_owner')
     @user = user_client(@owner, random_string('virt_user'))
 
@@ -131,19 +131,19 @@ describe 'One Sub Pool Per Stack' do
     @guest_uuid = random_string('system.uuid')
     @guest = @user.register(random_string('guest'), :system, nil,
       {'virt.uuid' => @guest_uuid, 'virt.is_guest' => 'true'}, nil, nil, [], [])
-    @guest_client = Candlepin.new(username=nil, password=nil,
+    @guest_client = CanadianTenPin.new(username=nil, password=nil,
         cert=@guest['idCert']['cert'],
         key=@guest['idCert']['key'])
 
     @host = @user.register(random_string('host'), :system, nil,
       {}, nil, nil, [], [])
-    @host_client = Candlepin.new(username=nil, password=nil,
+    @host_client = CanadianTenPin.new(username=nil, password=nil,
         cert=@host['idCert']['cert'],
         key=@host['idCert']['key'])
 
     @host2 = @user.register(random_string('host'), :system, nil,
       {}, nil, nil, [], [])
-    @host2_client = Candlepin.new(username=nil, password=nil,
+    @host2_client = CanadianTenPin.new(username=nil, password=nil,
         cert=@host2['idCert']['cert'],
         key=@host2['idCert']['key'])
 

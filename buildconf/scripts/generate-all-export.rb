@@ -1,12 +1,12 @@
 #!/usr/bin/env ruby
 #
-# Script to create a valid candlepin export.zip which can then be imported
+# Script to create a valid canadianTenPin export.zip which can then be imported
 # for an owner. Creates everything necessary, starting with a fresh owner,
-# admin user, candlepin consumer, products, subs, pools, and entitlements.
+# admin user, canadianTenPin consumer, products, subs, pools, and entitlements.
 #
 # None of the above will be cleaned up.
 
-require  "../../client/ruby/candlepin_api"
+require  "../../client/ruby/canadianTenPin_api"
 require 'pp'
 
 ADMIN_USERNAME = "admin"
@@ -24,15 +24,15 @@ if ARGV.length != 1 then
 end
 
 
-cp = Candlepin.new(ADMIN_USERNAME, ADMIN_PASSWORD, nil, nil, HOST, PORT)
+cp = CanadianTenPin.new(ADMIN_USERNAME, ADMIN_PASSWORD, nil, nil, HOST, PORT)
 owner = cp.get_owner(ARGV[0])
 
 capabilities = ["cores", "instance_multiplier", "ram"]
-consumer = cp.register(random_string('dummyconsumer'), "candlepin",
+consumer = cp.register(random_string('dummyconsumer'), "canadianTenPin",
   nil, {"system.certificate_version" => "3.9"}, nil, owner['key'],
   [], [], nil, capabilities)
 
-consumer_cp = Candlepin.new(nil, nil, consumer['idCert']['cert'],
+consumer_cp = CanadianTenPin.new(nil, nil, consumer['idCert']['cert'],
   consumer['idCert']['key'], HOST, PORT)
 
 pools = cp.list_pools(:owner => owner['id'])
@@ -42,7 +42,7 @@ for p in pools
 end
 
 # Make a temporary directory where we can safely extract our archive:
-tmp_dir = File.join(Dir.tmpdir, random_string('candlepin-export'))
+tmp_dir = File.join(Dir.tmpdir, random_string('canadianTenPin-export'))
 export_dir = File.join(tmp_dir, "export")
 Dir.mkdir(tmp_dir)
 

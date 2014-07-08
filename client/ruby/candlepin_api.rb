@@ -8,20 +8,20 @@ require 'uri'
 require 'pp'
 require 'oauth'
 
-class Candlepin
+class CanadianTenPin
 
   attr_accessor :consumer
   attr_reader :identity_certificate
   attr_accessor :uuid
   attr_reader :lang
 
-  # Initialize a connection to candlepin. Can use username/password for
+  # Initialize a connection to canadianTenPin. Can use username/password for
   # basic authentication, or provide an identity certificate and key to
   # connect as a "consumer".
   # TODO probably want to convert this to rails style kv
   def initialize(username=nil, password=nil, cert=nil, key=nil,
                  host='localhost', port=8443, lang=nil, uuid=nil,
-                 trusted_user=false, context='candlepin',
+                 trusted_user=false, context='canadianTenPin',
                  use_ssl = true)
 
     if not username.nil? and not cert.nil?
@@ -1250,7 +1250,7 @@ class Candlepin
 
 end
 
-class OauthCandlepinApi < Candlepin
+class OauthCanadianTenPinApi < CanadianTenPin
 
   def initialize(username, password, oauth_consumer_key, oauth_consumer_secret, params={})
 

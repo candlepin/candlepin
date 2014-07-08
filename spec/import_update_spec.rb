@@ -1,14 +1,14 @@
 require 'spec_helper'
-require 'candlepin_scenarios'
+require 'canadianTenPin_scenarios'
 
 describe 'Import Update', :serial => true do
 
-  include CandlepinMethods
+  include CanadianTenPinMethods
 
   before(:all) do
-    @cp = Candlepin.new('admin', 'admin')
+    @cp = CanadianTenPin.new('admin', 'admin')
     @exporter = StandardExporter.new
-    base_export = @exporter.create_candlepin_export()
+    base_export = @exporter.create_canadianTenPin_export()
 
     @import_owner = @cp.create_owner(random_string("test_owner"))
     @import_username = random_string("import-user")
@@ -24,7 +24,7 @@ describe 'Import Update', :serial => true do
   end
 
   it 'should successfully update the import' do
-    updated_export = @exporter.create_candlepin_export_update()
+    updated_export = @exporter.create_canadianTenPin_export_update()
 
     @cp.import(@import_owner['key'], updated_export.export_filename)
 
@@ -48,11 +48,11 @@ describe 'Import Update', :serial => true do
 
 
   it 'should remove all imported subscriptions if import has no entitlements' do
-    no_ent_export = @exporter.create_candlepin_export_update_no_ent()
+    no_ent_export = @exporter.create_canadianTenPin_export_update_no_ent()
 
     @cp.import(@import_owner['key'], no_ent_export.export_filename)
     # manifest consumer
-    @exporter.candlepin_client.list_entitlements().size.should == 0
+    @exporter.canadianTenPin_client.list_entitlements().size.should == 0
     # import owner
     @cp.list_subscriptions(@import_owner['key']).size.should == 0
   end

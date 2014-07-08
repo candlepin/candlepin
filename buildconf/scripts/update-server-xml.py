@@ -166,7 +166,7 @@ class AccessValveEditor(AbstractBaseEditor):
     def attributes(self):
         return [
             ("className", self.access_valve_class),
-            ("directory", "/var/log/candlepin/"),
+            ("directory", "/var/log/canadianTenPin/"),
             ("prefix", "access"),
             ("rotatable", "false"),
             ("suffix", ".log"),

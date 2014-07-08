@@ -10,8 +10,8 @@ fi
 
 if [ $# -eq 1 ]; then
 	if [ "$1" = "--update" ] ; then
-		time=`ls -l --time-style="+%x %X" candlepin.te | awk '{ printf "%s %s", $6, $7 }'`
-		rules=`ausearch --start $time -m avc --raw -se candlepin`
+		time=`ls -l --time-style="+%x %X" canadianTenPin.te | awk '{ printf "%s %s", $6, $7 }'`
+		rules=`ausearch --start $time -m avc --raw -se canadianTenPin`
 		if [ x"$rules" != "x" ] ; then
 			echo "Found avc's to update policy with"
 			echo -e "$rules" | audit2allow -R
@@ -19,7 +19,7 @@ if [ $# -eq 1 ]; then
 			read ANS
 			if [ "$ANS" = "y" -o "$ANS" = "Y" ] ; then
 				echo "Updating policy"
-				echo -e "$rules" | audit2allow -R >> candlepin.te
+				echo -e "$rules" | audit2allow -R >> canadianTenPin.te
 				# Fall though and rebuild policy
 			else
 				exit 0
@@ -40,9 +40,9 @@ fi
 echo "Building and Loading Policy"
 set -x
 make -f /usr/share/selinux/devel/Makefile || exit
-/usr/sbin/semodule -i candlepin.pp
+/usr/sbin/semodule -i canadianTenPin.pp
 
-# Fixing the file context on /usr/sbin/candlepin
-/sbin/restorecon -F -R -v /usr/sbin/candlepin
-# Fixing the file context on /etc/candlepin
-/sbin/restorecon -F -R -v /etc/candlepin
+# Fixing the file context on /usr/sbin/canadianTenPin
+/sbin/restorecon -F -R -v /usr/sbin/canadianTenPin
+# Fixing the file context on /etc/canadianTenPin
+/sbin/restorecon -F -R -v /etc/canadianTenPin

@@ -24,22 +24,22 @@ jpa.config.hibernate.connection.password=<%= password || profile.password %>
 jpa.config.hibernate.dialect=<%= dialect || profile.dialect %>
 jpa.config.hibernate.show_sql=<%= show_hibernate || false %>
 
-candlepin.auth.trusted.enable=<%= trusted_enable || true %>
-candlepin.auth.oauth.enable=<%= oauth_enable || true %>
-candlepin.auth.oauth.consumer.rspec.secret=rspec-oauth-secret
-candlepin.auth.oauth.consumer.thumbslug.secret=thumbslug-secret
+canadianTenPin.auth.trusted.enable=<%= trusted_enable || true %>
+canadianTenPin.auth.oauth.enable=<%= oauth_enable || true %>
+canadianTenPin.auth.oauth.consumer.rspec.secret=rspec-oauth-secret
+canadianTenPin.auth.oauth.consumer.thumbslug.secret=thumbslug-secret
 
-candlepin.importer.fail_on_unknown=<%= fail_on_unknown || false %>
-candlepin.pretty_print=<%= cp_pretty_print || true %>
+canadianTenPin.importer.fail_on_unknown=<%= fail_on_unknown || false %>
+canadianTenPin.pretty_print=<%= cp_pretty_print || true %>
 
 <%- if hidden_resources -%>
-candlepin.hidden_resources=<%= hidden_resources %>
+canadianTenPin.hidden_resources=<%= hidden_resources %>
 <%- end -%>
 
-# uncomment to enable debug logging in candlepin.log:
-#log4j.logger.org.candlepin=DEBUG
+# uncomment to enable debug logging in canadianTenPin.log:
+#log4j.logger.org.canadianTenPin=DEBUG
 
-candlepin.pinsetter.enable=<%= pinsetter_enabled || true %>
+canadianTenPin.pinsetter.enable=<%= pinsetter_enabled || true %>
 org.quartz.jobStore.misfireThreshold=60000
 org.quartz.jobStore.useProperties=false
 org.quartz.jobStore.dataSource=myDS

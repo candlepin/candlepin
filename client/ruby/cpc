@@ -2,26 +2,26 @@
 $VERBOSE = nil
 
 require 'pp'
-require File.expand_path('candlepin_api', File.dirname(__FILE__))
+require File.expand_path('canadianTenPin_api', File.dirname(__FILE__))
 require 'optparse'
 
-# Wrapper class for the base Candlepin lib that
+# Wrapper class for the base CanadianTenPin lib that
 # will introspect an instance for currently defined
 # methods, allowing command line invocation of those
 # methods.
 #
 # Also adds a little functionality to the base
-# Candlepin lib that are specific to the cli.
-class CandlepinCLI < Candlepin
+# CanadianTenPin lib that are specific to the cli.
+class CanadianTenPinCLI < CanadianTenPin
 
   def self.commands
-    Candlepin.public_instance_methods(false).sort.each do |method|
+    CanadianTenPin.public_instance_methods(false).sort.each do |method|
       yield method if callable_name? method
     end
   end
 
   def is_method?(method_name)
-    respond_to? method_name.intern and CandlepinCLI.callable_name? method_name
+    respond_to? method_name.intern and CanadianTenPinCLI.callable_name? method_name
   end
 
   private
@@ -62,8 +62,8 @@ optparse = OptionParser.new do|opts|
         options[:port] = opt.to_i
     end
 
-    options[:context] = 'candlepin'
-    opts.on( '--context [CONTEXT]', 'Context to use. Defults to candlepin' ) do |opt|
+    options[:context] = 'canadianTenPin'
+    opts.on( '--context [CONTEXT]', 'Context to use. Defults to canadianTenPin' ) do |opt|
         options[:context] = opt
     end
 
@@ -96,7 +96,7 @@ optparse = OptionParser.new do|opts|
         puts "=========== Commands ============"
         puts
 
-        CandlepinCLI.commands do |command|
+        CanadianTenPinCLI.commands do |command|
           puts "\t" + command.to_s
         end
         exit
@@ -111,7 +111,7 @@ if ARGV.empty?
     exit
 else
 
-  cli = CandlepinCLI.new(options[:user], options[:password], nil,nil,
+  cli = CanadianTenPinCLI.new(options[:user], options[:password], nil,nil,
                         options[:server], options[:port], nil, options[:uuid],
                         options[:trused_user], options[:context],
                         options[:ssl])

@@ -14,7 +14,7 @@
 # in this software or its documentation.
 #
 
-""" A CLI utility for managing the Candlepin database. """
+""" A CLI utility for managing the CanadianTenPin database. """
 
 
 import commands
@@ -29,8 +29,8 @@ if os.path.exists('/usr/sbin/tomcat') and not os.path.exists('/usr/sbin/tomcat6'
 else:
     TOMCAT = 'tomcat6'
 
-JBOSS_CLASSPATH = "/var/lib/jbossas/server/production/deploy/candlepin.war/WEB-INF/classes/"
-TOMCAT_CLASSPATH = "/var/lib/" + TOMCAT + "/webapps/candlepin/WEB-INF/classes/"
+JBOSS_CLASSPATH = "/var/lib/jbossas/server/production/deploy/canadianTenPin.war/WEB-INF/classes/"
+TOMCAT_CLASSPATH = "/var/lib/" + TOMCAT + "/webapps/canadianTenPin/WEB-INF/classes/"
 
 def run_command(command):
     (status, output) = commands.getstatusoutput(command)
@@ -57,15 +57,15 @@ class DbSetup(object):
         raise NotImplementedError("Implemented by subclasses")
 
     def initialize_schema(self):
-        print("Loading candlepin schema")
+        print("Loading canadianTenPin schema")
         self._run_liquibase("db/changelog/changelog-create.xml")
 
     def drop(self):
         raise NotImplementedError("Implemented by subclasses")
 
     def update(self):
-        """ Upgrades an existing candlepin database. """
-        print("Migrating candlepin database")
+        """ Upgrades an existing canadianTenPin database. """
+        print("Migrating canadianTenPin database")
         self._run_liquibase("db/changelog/changelog-update.xml")
 
     def _run_liquibase(self, changelog_path):
@@ -122,7 +122,7 @@ class OracleSetup(DbSetup):
             print("%s user already exists.  Skipping..." % self.username)
             return
 
-        print("Creating candlepin database")
+        print("Creating canadianTenPin database")
         out = self._runSql('create user %s identified by %s default tablespace users;' %
             (self.username, self.password))
         print out
@@ -131,7 +131,7 @@ class OracleSetup(DbSetup):
         print out
 
     def drop(self):
-        print("Dropping candlepin database")
+        print("Dropping canadianTenPin database")
         out = self._runSql('drop user %s cascade;' % self.username)
         print out
 
@@ -146,18 +146,18 @@ class PostgresqlSetup(DbSetup):
             os.environ["PGPASSWORD"] = password
 
     def create(self):
-        print("Creating candlepin database")
+        print("Creating canadianTenPin database")
         command = "createdb -U %s %s" % (self.username, self.db)
         (status, output) = commands.getstatusoutput(command)
 
         if status > 0 and output.find("already exists") > 0:
-            print("Candlepin database already exists, skipping...")
+            print("CanadianTenPin database already exists, skipping...")
             return
         elif status > 0:
             error_out(command, status, output)
 
     def drop(self):
-        print("Dropping candlepin database")
+        print("Dropping canadianTenPin database")
         command = "dropdb -U %s %s" % (self.username, self.db)
         (status, output) = commands.getstatusoutput(command)
         if status > 0 and output.find('does not exist') > 0:
@@ -170,23 +170,23 @@ if __name__ == "__main__":
     parser = OptionParser()
     parser.add_option("--create",
             dest="create", action="store_true", default=False,
-            help="create the Candlepin database")
+            help="create the CanadianTenPin database")
     parser.add_option("--schema-only",
             dest="schema_only", action="store_true", default=False,
             help="assumes database is already created by another tool and"
                  "applies schema to database; used with --create")
     parser.add_option("--update",
             dest="update", action="store_true", default=False,
-            help="update the Candlepin database")
+            help="update the CanadianTenPin database")
 
     parser.add_option("--drop",
             dest="drop", action="store_true", default=False,
-            help="drop the existing Candlepin database before creating")
+            help="drop the existing CanadianTenPin database before creating")
     parser.add_option("-u", "--user",
-            dest="dbuser", default="candlepin",
+            dest="dbuser", default="canadianTenPin",
             help="database user to use")
     parser.add_option("-d", "--database",
-            dest="db", default="candlepin",
+            dest="db", default="canadianTenPin",
             help="database name to use")
     parser.add_option("-p", "--password",
             dest="dbpassword",
@@ -213,7 +213,7 @@ if __name__ == "__main__":
             print("ERROR: Please provide the DBA password.")
             sys.exit(1)
         if not options.dbpassword:
-            print("ERROR: Please provide a password for the Candlepin database user.")
+            print("ERROR: Please provide a password for the CanadianTenPin database user.")
             sys.exit(1)
 
     if (not options.create and not options.update) or \

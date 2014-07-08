@@ -1,8 +1,8 @@
 require 'spec_helper'
-require 'candlepin_scenarios'
+require 'canadianTenPin_scenarios'
 
 describe 'Environments Certificate V3' do
-  include CandlepinMethods
+  include CanadianTenPinMethods
   include CertificateMethods
 
   before(:each) do
@@ -17,7 +17,7 @@ describe 'Environments Certificate V3' do
         {'system.certificate_version' => '3.1'},
         nil, nil, [], [], @env['id'])
     consumer['environment'].should_not be_nil
-    consumer_cp = Candlepin.new(nil, nil, consumer['idCert']['cert'],
+    consumer_cp = CanadianTenPin.new(nil, nil, consumer['idCert']['cert'],
       consumer['idCert']['key'])
 
     product = create_product
@@ -54,7 +54,7 @@ describe 'Environments Certificate V3' do
         {'system.certificate_version' => '3.1'},
         nil, nil, [], [], @env['id'])
     consumer['environment'].should_not be_nil
-    consumer_cp = Candlepin.new(nil, nil, consumer['idCert']['cert'],
+    consumer_cp = CanadianTenPin.new(nil, nil, consumer['idCert']['cert'],
       consumer['idCert']['key'])
 
     product = create_product

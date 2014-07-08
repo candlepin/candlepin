@@ -1,9 +1,9 @@
-require 'candlepin_api'
+require 'canadianTenPin_api'
 
 require 'pp'
 require 'zip/zip'
 
-module CandlepinMethods
+module CanadianTenPinMethods
 
   # Wrapper for ruby API so we can track all owners we created and clean them
   # up. Note that this entails cleanup of all objects beneath that owner, so
@@ -105,7 +105,7 @@ module CandlepinMethods
 
   def user_client(owner, user_name, readonly=false)
     create_user(owner, user_name, 'password', readonly)
-    Candlepin.new(user_name, 'password')
+    CanadianTenPin.new(user_name, 'password')
   end
 
   def user_client_with_perms(owner, username, password, perms)
@@ -115,7 +115,7 @@ module CandlepinMethods
     role = @cp.create_role(random_string('testrole'), perms)
     @cp.add_role_user(role['id'], username)
 
-    return Candlepin.new(username, password)
+    return CanadianTenPin.new(username, password)
   end
 
   # Creates the given user, with access to a role giving them full permissions
@@ -156,11 +156,11 @@ module CandlepinMethods
 
   def consumer_client(cp_client, consumer_name, type=:system, username=nil, facts= {}, owner_key=nil)
     consumer = cp_client.register(consumer_name, type, nil, facts, username, owner_key)
-    Candlepin.new(nil, nil, consumer.idCert.cert, consumer.idCert['key'])
+    CanadianTenPin.new(nil, nil, consumer.idCert.cert, consumer.idCert['key'])
   end
 
   def registered_consumer_client(consumer)
-    Candlepin.new(nil, nil, consumer.idCert.cert, consumer.idCert['key'])
+    CanadianTenPin.new(nil, nil, consumer.idCert.cert, consumer.idCert['key'])
   end
 
   # List all the pools for the given owner, and find one that matches
@@ -178,11 +178,11 @@ module CandlepinMethods
   end
 
   def trusted_consumer_client(uuid)
-    Candlepin.new(nil, nil, nil, nil, "localhost", "8443", nil, uuid)
+    CanadianTenPin.new(nil, nil, nil, nil, "localhost", "8443", nil, uuid)
   end
 
   def trusted_user_client(username)
-    Candlepin.new(username, nil, nil, nil, "localhost", "8443", nil, nil, true)
+    CanadianTenPin.new(username, nil, nil, nil, "localhost", "8443", nil, nil, true)
   end
 
   def random_string(prefix=nil, numeric_only=false)
@@ -229,14 +229,14 @@ module CandlepinMethods
 end
 
 class Export
-  include CandlepinMethods
+  include CanadianTenPinMethods
 
   attr_reader :tmp_dir
   attr_reader :export_dir
   attr_accessor :export_filename
 
   def initialize
-    @tmp_dir = File.join(Dir.tmpdir, random_string('candlepin-rspec'))
+    @tmp_dir = File.join(Dir.tmpdir, random_string('canadianTenPin-rspec'))
     Dir.mkdir(@tmp_dir)
 
     @export_dir = File.join(@tmp_dir, "export")
@@ -267,10 +267,10 @@ class Export
 end
 
 class Exporter
-  include CandlepinMethods
+  include CanadianTenPinMethods
   include CleanupHooks
 
-  attr_reader :candlepin_client
+  attr_reader :canadianTenPin_client
 
   # Creating an export is fairly expensive, so we generally build them
   # in before(:all) blocks and use them throughout the various tests.
@@ -291,25 +291,25 @@ class Exporter
     @owner = create_owner(random_string('CPExport_owner'))
     user = create_user(@owner, random_string('CPExport_user'), 'password')
 
-    owner_client = Candlepin.new(user['username'], 'password')
+    owner_client = CanadianTenPin.new(user['username'], 'password')
 
-    @candlepin_client = consumer_client(owner_client, random_string('test_client'),
-        "candlepin", user['username'])
+    @canadianTenPin_client = consumer_client(owner_client, random_string('test_client'),
+        "canadianTenPin", user['username'])
 
   end
 
-  def create_candlepin_export
+  def create_canadianTenPin_export
     export = Export.new
-    export.export_filename = @candlepin_client.export_consumer(export.tmp_dir, @opts)
+    export.export_filename = @canadianTenPin_client.export_consumer(export.tmp_dir, @opts)
     export.extract()
     @exports << export
     export
   end
 
-  def create_candlepin_export_with_ro_user
+  def create_canadianTenPin_export_with_ro_user
     ro_user_client = user_client(@owner, random_string('CPExport_user'), true)
     export = Export.new
-    export.export_filename = ro_user_client.export_consumer(export.tmp_dir, @opts, @candlepin_client.uuid)
+    export.export_filename = ro_user_client.export_consumer(export.tmp_dir, @opts, @canadianTenPin_client.uuid)
     export.extract()
     @exports << export
     export
@@ -317,7 +317,7 @@ class Exporter
 
   def create_certificate_export
     export = Export.new
-    export.export_filename = @candlepin_client.export_certificates(export.tmp_dir)
+    export.export_filename = @canadianTenPin_client.export_certificates(export.tmp_dir)
     export.extract()
     @exports << export
     export
@@ -417,26 +417,26 @@ class StandardExporter < Exporter
       instance_variable_set("@#{name}", @cp.list_pools(:owner => @owner.id, :product => @products[product].id)[0] )
     end
 
-    @candlepin_client.update_consumer({:facts => {"distributor_version" => "sam-1.3"}})
-    @candlepin_consumer = @candlepin_client.get_consumer()
+    @canadianTenPin_client.update_consumer({:facts => {"distributor_version" => "sam-1.3"}})
+    @canadianTenPin_consumer = @canadianTenPin_client.get_consumer()
 
     ent_names = ["entitlement1", "entitlement2", "entitlement3", "entitlement_up"]
     ent_names.zip([@pool1, @pool2, @pool4, @pool_up]).each do |ent_name, pool|
-      instance_variable_set("@#{ent_name}", @candlepin_client.consume_pool(pool.id, {:quantity => 1})[0])
+      instance_variable_set("@#{ent_name}", @canadianTenPin_client.consume_pool(pool.id, {:quantity => 1})[0])
     end
 
     # pool3 is special
-    @candlepin_client.consume_pool(@pool3.id, {:quantity => 1})
+    @canadianTenPin_client.consume_pool(@pool3.id, {:quantity => 1})
 
     @cdn = create_cdn(@cdn_label,
                 "Test CDN",
                 "https://cdn.test.com")
   end
 
-  def create_candlepin_export_update
+  def create_canadianTenPin_export_update
     ## to determine if the process of updating the entitlement import is successful
     ## use the process for creating the import above to make one that is an update
-    ## You must execute the create_candlepin_export method in the same test before
+    ## You must execute the create_canadianTenPin_export method in the same test before
     ## this one.
     product1 = create_product(random_string(nil, true), random_string())
     product2 = create_product(random_string(nil, true), random_string())
@@ -458,26 +458,26 @@ class StandardExporter < Exporter
     pool1 = @cp.list_pools(:owner => @owner.id, :product => product1.id)[0]
     pool2 = @cp.list_pools(:owner => @owner.id, :product => product2.id)[0]
 
-    @candlepin_client.consume_pool(pool1.id, {:quantity => 1})
-    @candlepin_client.consume_pool(pool2.id, {:quantity => 1})
-    @candlepin_client.consume_pool(@pool_up.id, {:quantity => 4})
+    @canadianTenPin_client.consume_pool(pool1.id, {:quantity => 1})
+    @canadianTenPin_client.consume_pool(pool2.id, {:quantity => 1})
+    @canadianTenPin_client.consume_pool(@pool_up.id, {:quantity => 4})
 
-    @cp.unbind_entitlement(@entitlement2.id, :uuid => @candlepin_client.uuid)
-    @cp.unbind_entitlement(@entitlement_up.id, :uuid => @candlepin_client.uuid)
-    @candlepin_client.regenerate_entitlement_certificates_for_entitlement(@entitlement1.id)
+    @cp.unbind_entitlement(@entitlement2.id, :uuid => @canadianTenPin_client.uuid)
+    @cp.unbind_entitlement(@entitlement_up.id, :uuid => @canadianTenPin_client.uuid)
+    @canadianTenPin_client.regenerate_entitlement_certificates_for_entitlement(@entitlement1.id)
 
-    create_candlepin_export()
+    create_canadianTenPin_export()
   end
 
-  def create_candlepin_export_update_no_ent
+  def create_canadianTenPin_export_update_no_ent
     ## We need to test the behavoir of the manifest update when no entitlements
     ## are included
-    ents = @candlepin_client.list_entitlements()
+    ents = @canadianTenPin_client.list_entitlements()
     # remove all entitlements
     ents.each do |ent|
-      @cp.unbind_entitlement(ent.id, {:uuid => @candlepin_client.uuid})
+      @cp.unbind_entitlement(ent.id, {:uuid => @canadianTenPin_client.uuid})
     end
 
-    create_candlepin_export()
+    create_canadianTenPin_export()
   end
 end

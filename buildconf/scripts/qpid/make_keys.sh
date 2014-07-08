@@ -2,8 +2,8 @@
 # based on http://rajith.2rlabs.com/2010/03/01/apache-qpid-securing-connections-with-ssl/
 
 # certificate information
-COMPANY="O=Candlepin,ST=North Carolina,C=US"
-CA_NAME="CandlepinCA"
+COMPANY="O=CanadianTenPin,ST=North Carolina,C=US"
+CA_NAME="CanadianTenPinCA"
 CA_PASS="password"
 
 SERVER_NAME="localhost"
@@ -87,7 +87,7 @@ keytool -import -v -alias amqp-client -keystore $KEYSTORE -storepass $JAVA_KEYPA
 
 
 # copy the keystore to the right place
-sudo mkdir -p /etc/candlepin/certs/amqp/
-sudo cp keystore /etc/candlepin/certs/amqp/
-sudo cp truststore /etc/candlepin/certs/amqp/
-sudo chown -R tomcat:tomcat /etc/candlepin/certs/amqp/
+sudo mkdir -p /etc/canadianTenPin/certs/amqp/
+sudo cp keystore /etc/canadianTenPin/certs/amqp/
+sudo cp truststore /etc/canadianTenPin/certs/amqp/
+sudo chown -R tomcat:tomcat /etc/canadianTenPin/certs/amqp/

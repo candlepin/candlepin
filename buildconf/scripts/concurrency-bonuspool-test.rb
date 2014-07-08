@@ -8,7 +8,7 @@
 # watch the progress bar in terminal 2 (green dot for consumed ent, red N for not)
 # watch the details in terminal 1
 
-require "../../client/ruby/candlepin_api"
+require "../../client/ruby/canadianTenPin_api"
 require 'pp'
 require 'optparse'
 
@@ -35,12 +35,12 @@ def an_ent()
 end
 
 def reg_and_consume(server, port, user, pass, pool_id, owner_key)
-  cp = Candlepin.new(username=user, password=pass,
+  cp = CanadianTenPin.new(username=user, password=pass,
     cert=nil, key=nil,
     host=server, port=port)
-  consumer = cp.register("test" << rand(10000).to_s, :candlepin, nil, {}, nil, owner_key)
+  consumer = cp.register("test" << rand(10000).to_s, :canadianTenPin, nil, {}, nil, owner_key)
 
-  cp = Candlepin.new(nil, nil, consumer['idCert']['cert'],
+  cp = CanadianTenPin.new(nil, nil, consumer['idCert']['cert'],
                      consumer['idCert']['key'], server, port)
   ent = cp.consume_pool(pool_id)[0]
   pool = cp.get_pool(ent['pool']['id'])
@@ -53,7 +53,7 @@ end
 
 # Create a product and pool to consume:
 product_id = "concurproduct-#{rand(100000)}"
-cp = Candlepin.new(username=CP_ADMIN_USER, password=CP_ADMIN_PASS,
+cp = CanadianTenPin.new(username=CP_ADMIN_USER, password=CP_ADMIN_PASS,
   cert=nil, key=nil,
   host=CP_SERVER, port=CP_PORT)
 test_owner = cp.create_owner("testowner-#{rand(100000)}")
