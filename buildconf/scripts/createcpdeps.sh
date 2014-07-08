@@ -1,5 +1,5 @@
 if [ "$1" == "" ] ; then
- echo "Please specify candlepin-deps git repo location."
+ echo "Please specify canadianTenPin-deps git repo location."
  exit
 fi
 
@@ -14,7 +14,7 @@ function flatten ()
     # remove all the directories
     find . -type d | cut -c 3- | xargs -n 1 rm -rf
     cd ..
-    echo "candlepin deps located in $M2_REPO"
+    echo "canadianTenPin deps located in $M2_REPO"
 }
 
 buildr nocheckstyle=1 artifacts

@@ -1,9 +1,9 @@
 require 'spec_helper'
-require 'candlepin_scenarios'
+require 'canadianTenPin_scenarios'
 
 describe 'Import Single Pool Update', :serial => true do
 
-  include CandlepinMethods
+  include CanadianTenPinMethods
 
   class ImportUpdateExporter < Exporter
     attr_reader :pool
@@ -17,7 +17,7 @@ describe 'Import Single Pool Update', :serial => true do
 
       @cp.refresh_pools(@owner['key'])
       @pool = @cp.list_pools(:owner => @owner.id, :product => product.id)[0]
-      @entitlement1 = @candlepin_client.consume_pool(@pool.id, {:quantity => 15})[0]
+      @entitlement1 = @canadianTenPin_client.consume_pool(@pool.id, {:quantity => 15})[0]
     end
   end
 
@@ -30,23 +30,23 @@ describe 'Import Single Pool Update', :serial => true do
   end
 
   it 'should be able to maintain multiple imported entitlements from the same pool' do
-    export_filename = @exporter.create_candlepin_export.export_filename
+    export_filename = @exporter.create_canadianTenPin_export.export_filename
     import_owner = create_owner(random_string("test_owner"))
 
     @cp.import(import_owner['key'], export_filename)
     sublist = @cp.list_subscriptions(import_owner['key'])
     sublist.size().should == 1
 
-    entitlement2 = @exporter.candlepin_client.consume_pool(@exporter.pool.id, {:quantity => 25})[0]
+    entitlement2 = @exporter.canadianTenPin_client.consume_pool(@exporter.pool.id, {:quantity => 25})[0]
     sleep(1)
-    export_filename = @exporter.create_candlepin_export.export_filename
+    export_filename = @exporter.create_canadianTenPin_export.export_filename
     @cp.import(import_owner['key'], export_filename)
     sublist = @cp.list_subscriptions(import_owner['key'])
     sublist.size().should == 2
 
-    @exporter.candlepin_client.unbind_entitlement(@exporter.entitlement1.id)
+    @exporter.canadianTenPin_client.unbind_entitlement(@exporter.entitlement1.id)
     sleep(1)
-    export_filename = @exporter.create_candlepin_export.export_filename
+    export_filename = @exporter.create_canadianTenPin_export.export_filename
     @cp.import(import_owner['key'], export_filename)
     sublist = @cp.list_subscriptions(import_owner['key'])
     sublist.size().should == 1

@@ -3,7 +3,7 @@ require 'zip/zip'
 
 module CleanupHooks
   def cleanup_before
-    @cp = Candlepin.new('admin', 'admin')
+    @cp = CanadianTenPin.new('admin', 'admin')
     @owners = []
     @created_products = []
     @dist_versions = []
@@ -52,7 +52,7 @@ RSpec.configure do |config|
   end
 
   config.before(:each, :type => :virt) do
-    pending("candlepin running in standalone mode") if is_hosted?
+    pending("canadianTenPin running in standalone mode") if is_hosted?
     @owner = create_owner random_string('virt_owner')
     @user = user_client(@owner, random_string('virt_user'))
 
@@ -80,13 +80,13 @@ RSpec.configure do |config|
     @uuid2 = random_string('system.uuid')
     @guest1 = @user.register(random_string('guest'), :system, nil,
       {'virt.uuid' => @uuid1, 'virt.is_guest' => 'true', 'uname.machine' => 'x86_64'}, nil, nil, [], [])
-    @guest1_client = Candlepin.new(username=nil, password=nil,
+    @guest1_client = CanadianTenPin.new(username=nil, password=nil,
         cert=@guest1['idCert']['cert'],
         key=@guest1['idCert']['key'])
 
     @guest2 = @user.register(random_string('guest'), :system, nil,
       {'virt.uuid' => @uuid2, 'virt.is_guest' => 'true'}, nil, nil, [], [])
-    @guest2_client = Candlepin.new(username=nil, password=nil,
+    @guest2_client = CanadianTenPin.new(username=nil, password=nil,
         cert=@guest2['idCert']['cert'],
         key=@guest2['idCert']['key'])
   end

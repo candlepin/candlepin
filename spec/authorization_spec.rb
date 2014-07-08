@@ -1,11 +1,11 @@
 require 'spec_helper'
-require 'candlepin_scenarios'
+require 'canadianTenPin_scenarios'
 
 require 'rubygems'
 require 'rest_client'
 
 describe 'Authorization' do
-  include CandlepinMethods
+  include CanadianTenPinMethods
 
   before(:each) do
     @owner = create_owner random_string('test_owner')
@@ -13,12 +13,12 @@ describe 'Authorization' do
   end
 
   it 'returns a 401 if user credentials are invalid' do
-    lambda { Candlepin.new('random', 'not valid').list_consumer_types() }.should \
+    lambda { CanadianTenPin.new('random', 'not valid').list_consumer_types() }.should \
       raise_exception(RestClient::Request::Unauthorized)
   end
 
   it 'does not return a 401 for the root level, since it is not protected' do
-    lambda { Candlepin.new('random', 'not valid')}.should \
+    lambda { CanadianTenPin.new('random', 'not valid')}.should \
       be_true
   end
 

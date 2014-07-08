@@ -15,29 +15,29 @@
 
 
 #
-# Creates and installs the Candlepin server. This
+# Creates and installs the CanadianTenPin server. This
 # will probably only work against a clean install
 #
 # To run this against a fedora machine, do the following
 # yum install puppet
-# pupper candlepin.pp
+# pupper canadianTenPin.pp
 
 
 #
-# Get the candlepin repo and install it
+# Get the canadianTenPin repo and install it
 #
-exec {"wget http://repos.fedorapeople.org/repos/candlepin/candlepin/fedora-candlepin.repo":
-        creates => "/etc/yum.repos.d/fedora-candlepin.repo",
+exec {"wget http://repos.fedorapeople.org/repos/canadianTenPin/canadianTenPin/fedora-canadianTenPin.repo":
+        creates => "/etc/yum.repos.d/fedora-canadianTenPin.repo",
         cwd => "/etc/yum.repos.d",
         path => "/usr/bin"
 }
 
-file {"/etc/yum.repos.d/fedora-candlepin.repo":
+file {"/etc/yum.repos.d/fedora-canadianTenPin.repo":
 }
 
-package {"candlepin-tomcat6":
+package {"canadianTenPin-tomcat6":
     ensure => "installed",
-    require => File["/etc/yum.repos.d/fedora-candlepin.repo"]
+    require => File["/etc/yum.repos.d/fedora-canadianTenPin.repo"]
 }
 
 #
@@ -70,18 +70,18 @@ service {postgresql:
     require => Augeas["pg_hba.conf"]
 }
 
-exec {"CandlepinDB":
-    command => "/usr/bin/createuser -dls candlepin",
+exec {"CanadianTenPinDB":
+    command => "/usr/bin/createuser -dls canadianTenPin",
     user => "postgres",
-    unless => "/usr/bin/psql -l | grep 'candlepin *|'",
+    unless => "/usr/bin/psql -l | grep 'canadianTenPin *|'",
     require => Service["postgresql"],
 }
 
 #
-# Now configure Candlepin
+# Now configure CanadianTenPin
 #
 
 exec {"cpsetup":
-    command => "/usr/share/candlepin/cpsetup",
-    require => [Exec["CandlepinDB"],Package["candlepin-tomcat6"]]
+    command => "/usr/share/canadianTenPin/cpsetup",
+    require => [Exec["CanadianTenPinDB"],Package["canadianTenPin-tomcat6"]]
 }

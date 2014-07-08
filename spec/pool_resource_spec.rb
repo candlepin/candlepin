@@ -1,9 +1,9 @@
 require 'spec_helper'
-require 'candlepin_scenarios'
+require 'canadianTenPin_scenarios'
 
 describe 'Pool Resource' do
 
-  include CandlepinMethods
+  include CanadianTenPinMethods
 
   it 'lets consumers view pools' do
     owner1 = create_owner random_string('test_owner')

@@ -1,9 +1,9 @@
 #!/usr/bin/env ruby
 
-require  "../../client/ruby/candlepin_api"
+require  "../../client/ruby/canadianTenPin_api"
 require 'pp'
 
-cp = Candlepin.new('admin', 'admin')
+cp = CanadianTenPin.new('admin', 'admin')
 
 puts 'Creating Owner'
 owner = cp.create_owner('test_owner')
@@ -19,11 +19,11 @@ puts 'Creating Subscription'
 cp.create_subscription(owner['key'], product['id'], 3000000)
 cp.refresh_pools(owner['key'])
 
-cp_user = Candlepin.new('test_user', 'password')
+cp_user = CanadianTenPin.new('test_user', 'password')
 
 puts 'Creating Consumer'
 consumer = cp_user.register('test-consumer')
-cp_consumer = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
+cp_consumer = CanadianTenPin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
 
 threads = []
 

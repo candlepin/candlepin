@@ -1,13 +1,13 @@
 # encoding: utf-8
 require 'spec_helper'
-require 'candlepin_scenarios'
+require 'canadianTenPin_scenarios'
 
 require 'rubygems'
 require 'rest_client'
 
 describe 'Owner Resource' do
 
-  include CandlepinMethods
+  include CanadianTenPinMethods
 
   it 'allows consumers to view their service levels' do
     owner = create_owner random_string('owner1')
@@ -15,7 +15,7 @@ describe 'Owner Resource' do
     owner2 = create_owner random_string('owner2')
 
     consumer = owner_admin.register('somesystem')
-    consumer_client = Candlepin.new(username=nil, password=nil,
+    consumer_client = CanadianTenPin.new(username=nil, password=nil,
         cert=consumer['idCert']['cert'],
         key=consumer['idCert']['key'])
 
@@ -261,7 +261,7 @@ describe 'Owner Resource' do
     owner_admin = user_client(owner, random_string('bill'))
 
     consumer = owner_admin.register('somesystem')
-    consumer_client = Candlepin.new(username=nil, password=nil,
+    consumer_client = CanadianTenPin.new(username=nil, password=nil,
         cert=consumer['idCert']['cert'],
         key=consumer['idCert']['key'])
 
@@ -360,7 +360,7 @@ describe 'Owner Resource' do
     system1 = owner_admin.register("system1-consumer")
     system2 = owner_admin.register("system2-consumer")
     hypervisor = owner_admin.register("hypervisor-consumer", type=:hypervisor)
-    distributor = owner_admin.register("distributor-consumer", type=:candlepin)
+    distributor = owner_admin.register("distributor-consumer", type=:canadianTenPin)
 
     systems = owner_admin.list_owner_consumers(owner['key'], types=["system"])
     systems.length.should == 2
@@ -370,25 +370,25 @@ describe 'Owner Resource' do
     hypervisors.length.should == 1
     hypervisors.each { |consumer| consumer['type']['label'].should == "hypervisor" }
 
-    distributors = owner_admin.list_owner_consumers(owner['key'], types=["candlepin"])
+    distributors = owner_admin.list_owner_consumers(owner['key'], types=["canadianTenPin"])
     distributors.length.should == 1
-    distributors.each { |consumer| consumer['type']['label'].should == "candlepin" }
+    distributors.each { |consumer| consumer['type']['label'].should == "canadianTenPin" }
 
     # Now that we have our counts we can do a lookup for multiple types
-    consumers = owner_admin.list_owner_consumers(owner['key'], types=["hypervisor", "candlepin"])
+    consumers = owner_admin.list_owner_consumers(owner['key'], types=["hypervisor", "canadianTenPin"])
     consumers.length.should == 2
     found = []
     consumers.each { |consumer| found << consumer['type']['label']}
     found.length.should == 2
     found.delete("hypervisor").should_not be_nil
-    found.delete("candlepin").should_not be_nil
+    found.delete("canadianTenPin").should_not be_nil
   end
 
 end
 
 describe 'Owner Resource Pool Filter Tests' do
 
-  include CandlepinMethods
+  include CanadianTenPinMethods
 
   before(:each) do
     @owner = create_owner(random_string("test_owner"))
@@ -433,7 +433,7 @@ end
 
 describe 'Owner Resource Consumer Fact Filter Tests' do
 
-  include CandlepinMethods
+  include CanadianTenPinMethods
 
   before(:each) do
     @owner = create_owner(random_string("test_owner"))
@@ -476,7 +476,7 @@ end
 
 describe 'Owner Resource Owner Info Tests' do
 
-  include CandlepinMethods
+  include CanadianTenPinMethods
 
   before(:each) do
     @owner = create_owner(random_string("an_owner"))

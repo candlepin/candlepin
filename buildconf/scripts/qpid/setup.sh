@@ -1,5 +1,5 @@
 #!/bin/bash
-#CA_NAME="CandlepinCA"
+#CA_NAME="CanadianTenPinCA"
 CA_NAME="ca"
 JAVA_TRUSTPASS="password"
 JAVA_KEYPASS="password"
@@ -7,7 +7,7 @@ KEYSTORE=keystore
 TRUSTSTORE=truststore
 CA_CERT='/etc/pki/pulp/qpid/ca.crt'
 PWDFILE='CA_db/pfile'
-COMPANY="O=Candlepin,ST=North Carolina,C=US"
+COMPANY="O=CanadianTenPin,ST=North Carolina,C=US"
 
 rm -rf CA_db
 mkdir CA_db
@@ -84,7 +84,7 @@ rm sign_client
 keytool -import -v -alias amqp-client -keystore $KEYSTORE -storepass $JAVA_KEYPASS -file java-client.crt
 
 # copy the keystore to the right place
-sudo mkdir -p /etc/candlepin/certs/amqp/
-sudo cp keystore /etc/candlepin/certs/amqp/
-sudo cp truststore /etc/candlepin/certs/amqp/
-sudo chown -R tomcat:tomcat /etc/candlepin/certs/amqp/
+sudo mkdir -p /etc/canadianTenPin/certs/amqp/
+sudo cp keystore /etc/canadianTenPin/certs/amqp/
+sudo cp truststore /etc/canadianTenPin/certs/amqp/
+sudo chown -R tomcat:tomcat /etc/canadianTenPin/certs/amqp/

@@ -1,16 +1,16 @@
 require 'spec_helper'
-require 'candlepin_scenarios'
+require 'canadianTenPin_scenarios'
 require 'tmpdir'
 require 'openssl'
 
 describe 'Export', :serial => true do
 
-  include CandlepinMethods
+  include CanadianTenPinMethods
   include SpecUtils
 
   before(:all) do
     @exporter = StandardExporter.new
-    @cp_export = @exporter.create_candlepin_export()
+    @cp_export = @exporter.create_canadianTenPin_export()
 
     @cert_export = StandardExporter.new
     @cert_export.create_certificate_export()
@@ -43,7 +43,7 @@ describe 'Export', :serial => true do
     exported_consumer = parse_file(
       File.join(@cp_export.export_dir, 'consumer.json')
     )
-    exported_consumer['uuid'].should == @exporter.candlepin_client.uuid
+    exported_consumer['uuid'].should == @exporter.canadianTenPin_client.uuid
   end
 
   it 'exports CDN URL' do
@@ -64,7 +64,7 @@ describe 'Export', :serial => true do
     exported_entitlement_certs = files_in_dir(entitlement_certs_dir)
 
     available_certs ||= {}
-    @exporter.candlepin_client.list_certificates.each do |c|
+    @exporter.canadianTenPin_client.list_certificates.each do |c|
       available_certs[c['serial']] = c
     end
 
@@ -83,8 +83,8 @@ describe 'Export', :serial => true do
     exported_entitlement_certs = files_in_dir(entitlement_certs_dir)
 
     # Regenerate some entitlement certificates, and generate a new manifest:
-    @exporter.candlepin_client.regenerate_entitlement_certificates()
-    new_export = @exporter.create_candlepin_export()
+    @exporter.canadianTenPin_client.regenerate_entitlement_certificates()
+    new_export = @exporter.create_canadianTenPin_export()
     new_entitlement_certs_dir = File.join(new_export.export_dir, 'entitlement_certificates')
     new_exported_entitlement_certs = files_in_dir(new_entitlement_certs_dir)
 
@@ -98,7 +98,7 @@ describe 'Export', :serial => true do
     exported_entitlement_certs = files_in_dir(entitlement_certs_dir)
 
     available_certs ||= {}
-    @cert_export.candlepin_client.list_certificates.each do |c|
+    @cert_export.canadianTenPin_client.list_certificates.each do |c|
       available_certs[c['serial']] = c
     end
 
@@ -147,7 +147,7 @@ describe 'Export', :serial => true do
 
   it 'should allow manifest creation with read only user' do
     @exporter = StandardExporter.new
-    @cp_export = @exporter.create_candlepin_export_with_ro_user()
+    @cp_export = @exporter.create_canadianTenPin_export_with_ro_user()
   end
 
 end

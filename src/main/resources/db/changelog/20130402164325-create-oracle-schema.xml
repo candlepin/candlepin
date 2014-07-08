@@ -1384,7 +1384,7 @@
         </insert>
         <insert tableName="cp_consumer_type">
             <column name="id" value="1003"/>
-            <column name="label" value="candlepin"/>
+            <column name="label" value="canadianTenPin"/>
             <column name="manifest" value="Y"/>
         </insert>
         <insert tableName="cp_consumer_type">

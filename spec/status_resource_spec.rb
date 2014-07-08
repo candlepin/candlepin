@@ -1,11 +1,11 @@
 require 'spec_helper'
-require 'candlepin_scenarios'
+require 'canadianTenPin_scenarios'
 
 describe 'Status Resource' do
 
-  include CandlepinMethods
+  include CanadianTenPinMethods
 
-  it 'should return a valid candlepin version and release' do
+  it 'should return a valid canadianTenPin version and release' do
     json = @cp.get_status()
     json['release'].should_not == "Unknown"
     json['release'].should_not == "${hash}"

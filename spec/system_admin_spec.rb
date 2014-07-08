@@ -1,8 +1,8 @@
 require 'spec_helper'
-require 'candlepin_scenarios'
+require 'canadianTenPin_scenarios'
 
 describe 'System Admins' do
-  include CandlepinMethods
+  include CanadianTenPinMethods
 
   before(:each) do
     @owner = create_owner(random_string('test'))
@@ -125,7 +125,7 @@ end
 
 # Testing users who can manage systems they registered, as well as view all other systems:
 describe 'System admins with read-only on org' do
-  include CandlepinMethods
+  include CanadianTenPinMethods
 
   before(:each) do
     @owner = create_owner(random_string('test'))

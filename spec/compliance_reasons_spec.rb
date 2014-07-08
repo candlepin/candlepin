@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-require 'candlepin_scenarios'
+require 'canadianTenPin_scenarios'
 require 'time'
 
 def assert_reason(reason, expected_key, expected_message, expected_attributes)
@@ -16,7 +16,7 @@ def assert_reason(reason, expected_key, expected_message, expected_attributes)
 end
 
 describe 'Single Entitlement Compliance Reasons' do
-  include CandlepinMethods
+  include CanadianTenPinMethods
 
   before(:each) do
     @owner = create_owner random_string('test_owner')
@@ -388,7 +388,7 @@ describe 'Single Entitlement Compliance Reasons' do
 end
 
 describe 'Stacking Compliance Reasons' do
-  include CandlepinMethods
+  include CanadianTenPinMethods
 
   before(:each) do
     @owner = create_owner random_string('test_owner')

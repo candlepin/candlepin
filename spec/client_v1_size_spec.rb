@@ -1,11 +1,11 @@
 require 'spec_helper'
-require 'candlepin_scenarios'
+require 'canadianTenPin_scenarios'
 
 describe 'Entitlement Certificate V1 Size' do
-  include CandlepinMethods
+  include CanadianTenPinMethods
 
   before(:all) do
-    @cp = Candlepin.new('admin', 'admin')
+    @cp = CanadianTenPin.new('admin', 'admin')
     @content_list= create_batch_content(200)
   end
 

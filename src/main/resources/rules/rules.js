@@ -1,7 +1,7 @@
 // Version: 5.11
 
 /*
- * Default Candlepin rule set.
+ * Default CanadianTenPin rule set.
  *
  * Minor version number bumped on every content change. Major version bumped
  * when the API between the engine and these rules changes.
@@ -1387,7 +1387,7 @@ var Entitlement = {
         return context;
     },
 
-    // Creates a wrapper function for do_FOO functions so that old candlepins
+    // Creates a wrapper function for do_FOO functions so that old canadianTenPins
     // can still call "pre_cores()" the old way.  The wrapper loads the necessary
     // context data, and handles stringifying the result.
     //
@@ -2586,7 +2586,7 @@ var Compliance = {
         if ("entitlement" in context) {
             context.entitlement.pool = createPool(context.entitlement.pool);
         }
-        // Older candlepins don't send this value, assume they need to calculate compliantUntil
+        // Older canadianTenPins don't send this value, assume they need to calculate compliantUntil
         if (!"calculateCompliantUntil" in context) {
             context.calculateCompliantUntil = true;
         }

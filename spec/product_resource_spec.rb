@@ -1,9 +1,9 @@
 require 'spec_helper'
-require 'candlepin_scenarios'
+require 'canadianTenPin_scenarios'
 
 describe 'Product Resource' do
 
-  include CandlepinMethods
+  include CanadianTenPinMethods
 
   before do
     @owner = create_owner random_string('test_owner')

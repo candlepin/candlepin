@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 require 'spec_helper'
-require 'candlepin_scenarios'
+require 'canadianTenPin_scenarios'
 require 'rexml/document'
 
 describe 'GuestId Resource' do
 
-  include CandlepinMethods
+  include CanadianTenPinMethods
 
   before(:each) do
     @owner1 = create_owner random_string('test_owner1')
@@ -29,7 +29,7 @@ describe 'GuestId Resource' do
     consumer.should_not be_nil
     consumer['guestIds'].should be_nil
 
-    consumer_client = Candlepin.new(username=nil, password=nil,
+    consumer_client = CanadianTenPin.new(username=nil, password=nil,
         cert=consumer['idCert']['cert'],
         key=consumer['idCert']['key'])
     consumer_client.update_guestids(guests)
@@ -47,7 +47,7 @@ describe 'GuestId Resource' do
     consumer = user_cp.register(random_string('host'), :system, nil,
       {}, nil, nil, [], [])
 
-    consumer_client = Candlepin.new(username=nil, password=nil,
+    consumer_client = CanadianTenPin.new(username=nil, password=nil,
         cert=consumer['idCert']['cert'],
         key=consumer['idCert']['key'])
     consumer_client.update_guestids(guests)
@@ -68,7 +68,7 @@ describe 'GuestId Resource' do
     consumer = user_cp.register(random_string('host'), :system, nil,
       {}, nil, nil, [], [])
 
-    consumer_client = Candlepin.new(username=nil, password=nil,
+    consumer_client = CanadianTenPin.new(username=nil, password=nil,
         cert=consumer['idCert']['cert'],
         key=consumer['idCert']['key'])
     consumer_client.update_guestids(guests)
@@ -94,7 +94,7 @@ describe 'GuestId Resource' do
     guest_consumer2 = user_cp.register(random_string('guest'), :system, nil,
       {'virt.uuid' => uuid2}, nil, nil, [], [])
 
-    consumer_client = Candlepin.new(username=nil, password=nil,
+    consumer_client = CanadianTenPin.new(username=nil, password=nil,
         cert=host_consumer['idCert']['cert'],
         key=host_consumer['idCert']['key'])
     consumer_client.update_guestids(guests)
@@ -118,7 +118,7 @@ describe 'GuestId Resource' do
     guest_consumer2 = user_cp.register(random_string('guest'), :system, nil,
       {'virt.uuid' => uuid2}, nil, nil, [], [])
 
-    consumer_client1 = Candlepin.new(username=nil, password=nil,
+    consumer_client1 = CanadianTenPin.new(username=nil, password=nil,
         cert=host_consumer1['idCert']['cert'],
         key=host_consumer1['idCert']['key'])
     consumer_client1.update_guestids(guests1)
@@ -128,7 +128,7 @@ describe 'GuestId Resource' do
     # host a guest is associated with) sorts results by updated time.
     sleep 1
 
-    consumer_client2 = Candlepin.new(username=nil, password=nil,
+    consumer_client2 = CanadianTenPin.new(username=nil, password=nil,
         cert=host_consumer2['idCert']['cert'],
         key=host_consumer2['idCert']['key'])
     consumer_client2.update_guestids(guests2)
@@ -144,7 +144,7 @@ describe 'GuestId Resource' do
     user_cp = user_client(@owner1, random_string('test-user'))
     host_consumer = user_cp.register(random_string('host'), :system, nil,
       {}, nil, @owner1['key'], [], [])
-    consumer_client = Candlepin.new(username=nil, password=nil,
+    consumer_client = CanadianTenPin.new(username=nil, password=nil,
       cert=host_consumer['idCert']['cert'],
       key=host_consumer['idCert']['key'])
     consumer_client.update_guestids(guests)
@@ -170,13 +170,13 @@ describe 'GuestId Resource' do
     sub = @cp.create_subscription(@owner1['key'], super_awesome.id, 20)
     @cp.refresh_pools(@owner1['key'])
 
-    consumer_client = Candlepin.new(username=nil, password=nil,
+    consumer_client = CanadianTenPin.new(username=nil, password=nil,
         cert=host_consumer['idCert']['cert'],
         key=host_consumer['idCert']['key'])
-    new_consumer_client = Candlepin.new(username=nil, password=nil,
+    new_consumer_client = CanadianTenPin.new(username=nil, password=nil,
         cert=new_host_consumer['idCert']['cert'],
         key=new_host_consumer['idCert']['key'])
-    guest_client = Candlepin.new(username=nil, password=nil,
+    guest_client = CanadianTenPin.new(username=nil, password=nil,
         cert=guest_consumer['idCert']['cert'],
         key=guest_consumer['idCert']['key'])
     consumer_client.update_guestids(guests)
@@ -231,10 +231,10 @@ describe 'GuestId Resource' do
     sub = @cp.create_subscription(@owner1['key'], super_awesome.id, 20)
     @cp.refresh_pools(@owner1['key'])
 
-    consumer_client = Candlepin.new(username=nil, password=nil,
+    consumer_client = CanadianTenPin.new(username=nil, password=nil,
         cert=host_consumer['idCert']['cert'],
         key=host_consumer['idCert']['key'])
-    guest_client = Candlepin.new(username=nil, password=nil,
+    guest_client = CanadianTenPin.new(username=nil, password=nil,
         cert=guest_consumer['idCert']['cert'],
         key=guest_consumer['idCert']['key'])
     consumer_client.update_guestids(guests)
@@ -282,7 +282,7 @@ describe 'GuestId Resource' do
     guest_consumer = user_cp.register(random_string('guest'), :system, nil,
       {'virt.uuid' => uuid1, 'virt.is_guest' => 'true'}, nil, @owner1['key'], [], [])
 
-    consumer_client = Candlepin.new(username=nil, password=nil,
+    consumer_client = CanadianTenPin.new(username=nil, password=nil,
         cert=host_consumer['idCert']['cert'],
         key=host_consumer['idCert']['key'])
     consumer_client.update_guestids(guests)
@@ -304,7 +304,7 @@ describe 'GuestId Resource' do
     user_cp = user_client(@owner1, random_string('test-user'))
     host_consumer = user_cp.register(random_string('host'), :system, nil,
       {}, nil, @owner1['key'], [], [])
-    consumer_client = Candlepin.new(username=nil, password=nil,
+    consumer_client = CanadianTenPin.new(username=nil, password=nil,
         cert=host_consumer['idCert']['cert'],
         key=host_consumer['idCert']['key'])
     consumer_client.update_guestids(guests)
@@ -320,7 +320,7 @@ describe 'GuestId Resource' do
     user_cp = user_client(@owner1, random_string('test-user'))
     host_consumer = user_cp.register(random_string('host'), :system, nil,
       {}, nil, @owner1['key'], [], [])
-    consumer_client = Candlepin.new(username=nil, password=nil,
+    consumer_client = CanadianTenPin.new(username=nil, password=nil,
         cert=host_consumer['idCert']['cert'],
         key=host_consumer['idCert']['key'])
 

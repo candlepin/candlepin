@@ -1,9 +1,9 @@
 require 'spec_helper'
-require 'candlepin_scenarios'
+require 'canadianTenPin_scenarios'
 
 describe 'Custom Product' do
 
-  include CandlepinMethods
+  include CanadianTenPinMethods
 
 
   before(:each) do
@@ -30,10 +30,10 @@ describe 'Custom Product' do
     pool1 = @cp.list_pools(:owner => @owner.id, :product => product1.id)[0]
     pool2 = @cp.list_pools(:owner => @owner.id, :product => product2.id)[0]
 
-    candlepin_client = consumer_client(owner_client, random_string(),
-        "candlepin")
-    candlepin_client.consume_pool(pool1.id, {:quantity => 1})[0]
-    candlepin_client.consume_pool(pool2.id, {:quantity => 1})[0]
+    canadianTenPin_client = consumer_client(owner_client, random_string(),
+        "canadianTenPin")
+    canadianTenPin_client.consume_pool(pool1.id, {:quantity => 1})[0]
+    canadianTenPin_client.consume_pool(pool2.id, {:quantity => 1})[0]
 
     product1.id.should == @owner['key'] + '_product_1'
     product2.id.should_not == ''

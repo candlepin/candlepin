@@ -62,10 +62,10 @@ if __name__ == "__main__":
                       dest="debug", action="store_true", default=False,
                       help="DO NOT RUN COMMANDS"),
     parser.add_option("-u", "--user",
-                      dest="dbuser", default="candlepin",
+                      dest="dbuser", default="canadianTenPin",
                       help="database user to use")
     parser.add_option("-d", "--database",
-                      dest="db", default="candlepin",
+                      dest="db", default="canadianTenPin",
                       help="database name to use")
     parser.add_option("-r", "--relink",
                       dest="relink", action="store_true", default=False,

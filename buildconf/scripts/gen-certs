@@ -1,13 +1,13 @@
 #!/bin/bash
 
-CERTS_HOME=/etc/candlepin/certs
+CERTS_HOME=/etc/canadianTenPin/certs
 UPSTREAM_CERTS_HOME=$CERTS_HOME/upstream
-CA_KEY_PASSWORD=$CERTS_HOME/candlepin-ca-password.txt
-CA_KEY=$CERTS_HOME/candlepin-ca.key
-CA_REDHAT_CERT=conf/candlepin-redhat-ca.crt
-CA_UPSTREAM_CERT=$UPSTREAM_CERTS_HOME/candlepin-redhat-ca.crt
-CA_PUB_KEY=$CERTS_HOME/candlepin-ca-pub.key
-CA_CERT=$CERTS_HOME/candlepin-ca.crt
+CA_KEY_PASSWORD=$CERTS_HOME/canadianTenPin-ca-password.txt
+CA_KEY=$CERTS_HOME/canadianTenPin-ca.key
+CA_REDHAT_CERT=conf/canadianTenPin-redhat-ca.crt
+CA_UPSTREAM_CERT=$UPSTREAM_CERTS_HOME/canadianTenPin-redhat-ca.crt
+CA_PUB_KEY=$CERTS_HOME/canadianTenPin-ca-pub.key
+CA_CERT=$CERTS_HOME/canadianTenPin-ca.crt
 KEYSTORE=$CERTS_HOME/keystore
 
 while getopts ":f" opt; do

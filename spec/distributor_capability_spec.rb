@@ -1,8 +1,8 @@
 require 'spec_helper'
-require 'candlepin_scenarios'
+require 'canadianTenPin_scenarios'
 
 describe 'Distributor Capability' do
-  include CandlepinMethods
+  include CanadianTenPinMethods
 
   before(:each) do
     @owner = create_owner(random_string("test_owner"))
@@ -49,7 +49,7 @@ describe 'Distributor Capability' do
     facts = {
       'distributor_version' => name
     }
-    consumer = @user.register(random_string("consumer"), :candlepin, nil, facts)
+    consumer = @user.register(random_string("consumer"), :canadianTenPin, nil, facts)
     consumer.capabilities.size.should == 3
 
   end
@@ -65,7 +65,7 @@ describe 'Distributor Capability' do
       'distributor_version' => name
     }
     capabilities = ["one","two"]
-    consumer = @user.register(random_string("consumer"), :candlepin, nil, facts,
+    consumer = @user.register(random_string("consumer"), :canadianTenPin, nil, facts,
                               nil, nil, [], [], nil, capabilities)
     consumer.capabilities.size.should == 2
 
@@ -82,7 +82,7 @@ describe 'Distributor Capability' do
     facts = {
       'distributor_version' => name
     }
-    consumer = @user.register(random_string("consumer"), :candlepin, nil, facts)
+    consumer = @user.register(random_string("consumer"), :canadianTenPin, nil, facts)
     consumer.capabilities.size.should == 3
 
     name = random_string("WidgetvBazillion")
@@ -113,11 +113,11 @@ describe 'Distributor Capability' do
     facts = {
       'distributor_version' => name
     }
-    consumer = @user.register(random_string("consumer"), :candlepin, nil, facts)
+    consumer = @user.register(random_string("consumer"), :canadianTenPin, nil, facts)
     consumer.capabilities.size.should == 4
     consumer.lastCheckin.should be_nil
 
-    consumer_client = Candlepin.new(username=nil, password=nil,
+    consumer_client = CanadianTenPin.new(username=nil, password=nil,
         cert=consumer['idCert']['cert'],
         key=consumer['idCert']['key'])
     consumer_client.update_consumer({})
@@ -144,7 +144,7 @@ describe 'Distributor Capability' do
     subscription = @cp.create_subscription(@owner['key'], @product.id, 10, [], '12345', '6789', 'order1')
     @cp.refresh_pools(@owner['key'])
 
-    consumer = @user.register(random_string("consumer"), :candlepin, nil, {})
+    consumer = @user.register(random_string("consumer"), :canadianTenPin, nil, {})
     entitlements = @cp.consume_product(@product.id, {:uuid => consumer.uuid})
     nil.should == entitlements
 
@@ -155,7 +155,7 @@ describe 'Distributor Capability' do
     facts = {
       'distributor_version' => name
     }
-    consumer_client = Candlepin.new(username=nil, password=nil,
+    consumer_client = CanadianTenPin.new(username=nil, password=nil,
         cert=consumer['idCert']['cert'],
         key=consumer['idCert']['key'])
     consumer_client.update_consumer({:uuid => consumer['uuid'], :facts => facts})

@@ -88,7 +88,7 @@
 
     <changeSet id="20140408160212-3" author="ckozak">
         <comment>Migrate subscriptions on duplicate pools to a single pool per set</comment>
-        <customChange class="org.candlepin.liquibase.FixDuplicatePoolsLiquibaseWrapper">
+        <customChange class="org.canadianTenPin.liquibase.FixDuplicatePoolsLiquibaseWrapper">
         </customChange>
     </changeSet>
 

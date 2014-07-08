@@ -1,10 +1,10 @@
 require 'spec_helper'
-require 'candlepin_scenarios'
+require 'canadianTenPin_scenarios'
 require 'time'
 
 describe 'Healing' do
 
-  include CandlepinMethods
+  include CanadianTenPinMethods
 
   before(:each) do
     @owner = create_owner random_string('test_owner1')
@@ -21,7 +21,7 @@ describe 'Healing' do
 
     @consumer = @user_cp.register(consumername1, :system, nil,
       {'cpu.cpu_socket(s)' => '8'}, nil, @owner['key'], [], installed)
-    @consumer_cp = Candlepin.new(nil, nil, @consumer.idCert.cert, @consumer.idCert['key'])
+    @consumer_cp = CanadianTenPin.new(nil, nil, @consumer.idCert.cert, @consumer.idCert['key'])
   end
 
   it 'entitles non-compliant products' do

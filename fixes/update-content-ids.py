@@ -5,7 +5,7 @@
 # label being imported already exists in the db with a different ID.
 #
 # This script opens a manifest, looks for all the content in it, checks
-# the Candlepin database for that content label but with a different ID,
+# the CanadianTenPin database for that content label but with a different ID,
 # and if found attempts to update all references to that content to the
 # new value so the import can proceed. (same for pulp database)
 #
@@ -42,7 +42,7 @@ def load_content(filename):
 def scan_content(conn, content):
     """
     Scan all manifest content looking for pre-existing content with
-    same label but different ID. We can do this by checking the Candlepin
+    same label but different ID. We can do this by checking the CanadianTenPin
     database.
     """
     for c in content:
@@ -57,7 +57,7 @@ def scan_content(conn, content):
                     (content_label, result[0], content_id)
             check_new_content_exists(conn, content_id)
             fix_pulp_content(result[0], content_id)
-            fix_candlepin_content(conn, content_label, result[0], content_id)
+            fix_canadianTenPin_content(conn, content_label, result[0], content_id)
 
 
 def check_new_content_exists(conn, new_id):
@@ -79,9 +79,9 @@ def check_new_content_exists(conn, new_id):
         raise Exception("New content ID already exists: %s" % new_id)
 
 
-def fix_candlepin_content(conn, label, old_id, new_id):
+def fix_canadianTenPin_content(conn, label, old_id, new_id):
     """
-    Fix the content in candlepin by updating all references to the old ID to
+    Fix the content in canadianTenPin by updating all references to the old ID to
     the new.
     """
     cur = conn.cursor()
@@ -106,7 +106,7 @@ def fix_pulp_content(old_id, new_id):
     """
     command = """echo "db.repos.update({ groupid: 'content:%s'}, {\\$set: { groupid: 'content:%s'}}, false, true);" | mongo pulp_database""" % (old_id, new_id)
     (status, output) = getstatusoutput(command)
-    # Raise exception is command didn't give proper status, this should kill the Candlepin
+    # Raise exception is command didn't give proper status, this should kill the CanadianTenPin
     # transaction and prevent anything from being committed so we can fix and rerun.
     if status != 0:
         raise Exception("Pulp update failed")
@@ -133,7 +133,7 @@ def main(args):
 
 
     # These credentials should be good for a normal Katello/SAM deployment:
-    conn = psycopg2.connect("dbname=candlepin user=postgres")
+    conn = psycopg2.connect("dbname=canadianTenPin user=postgres")
 
     scan_content(conn, content)
 

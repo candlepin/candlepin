@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-require  "./client/ruby/candlepin_api"
+require  "./client/ruby/canadianTenPin_api"
 
 require 'rubygems'
 require 'date'
@@ -63,7 +63,7 @@ class Pool
   end
 end
 
-cp = Candlepin.new(username='admin', password='admin', cert=nil, key=nil, host='localhost', post=8443)
+cp = CanadianTenPin.new(username='admin', password='admin', cert=nil, key=nil, host='localhost', post=8443)
 
 
 def create_owner(cp, new_owner)

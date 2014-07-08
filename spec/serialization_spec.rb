@@ -1,15 +1,15 @@
 require 'spec_helper'
-require 'candlepin_scenarios'
+require 'canadianTenPin_scenarios'
 
 describe 'Consumer serialization' do
 
-  include CandlepinMethods
+  include CanadianTenPinMethods
 
   before(:each) do
     @owner = create_owner(random_string("test_owner"))
     @owner_client = user_client(@owner, random_string('testuser'))
     @consumer_client = consumer_client(@owner_client, random_string(),
-        "candlepin")
+        "canadianTenPin")
     @consumer = @cp.get_consumer(@consumer_client.uuid)
   end
 
@@ -22,7 +22,7 @@ end
 
 describe 'Pool serialization' do
 
-  include CandlepinMethods
+  include CanadianTenPinMethods
 
   before(:each) do
     @owner = create_owner(random_string("test_owner"))
@@ -49,7 +49,7 @@ end
 
 describe 'Entitlement Serialization' do
 
-  include CandlepinMethods
+  include CanadianTenPinMethods
 
   before(:each) do
     @owner = create_owner(random_string("test_owner"))
@@ -63,7 +63,7 @@ describe 'Entitlement Serialization' do
                            :product => product1.id)[0]
 
     consumer_client = consumer_client(@owner_client, random_string(),
-        "candlepin")
+        "canadianTenPin")
     ent_id = consumer_client.consume_pool(@pool.id, {:quantity => 1})[0]['id']
     @ent = @cp.get_entitlement(ent_id)
   end

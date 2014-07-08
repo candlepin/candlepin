@@ -1,20 +1,20 @@
 require 'spec_helper'
-require 'candlepin_scenarios'
+require 'canadianTenPin_scenarios'
 require 'json'
 
 describe 'Import', :serial => true do
 
-  include CandlepinMethods
+  include CanadianTenPinMethods
 
   before(:all) do
-    @cp = Candlepin.new('admin', 'admin')
+    @cp = CanadianTenPin.new('admin', 'admin')
 
     @cp_export = StandardExporter.new
-    @cp_export.create_candlepin_export()
+    @cp_export.create_canadianTenPin_export()
     @cp_export_file = @cp_export.export_filename
 
-    @candlepin_consumer = @cp_export.candlepin_client.get_consumer()
-    @candlepin_consumer.unregister @candlepin_consumer['uuid']
+    @canadianTenPin_consumer = @cp_export.canadianTenPin_client.get_consumer()
+    @canadianTenPin_consumer.unregister @canadianTenPin_consumer['uuid']
 
     @import_owner = @cp.create_owner(random_string("test_owner"))
     @import_username = random_string("import-user")
@@ -51,12 +51,12 @@ describe 'Import', :serial => true do
 
   it 'modifies owner to reference upstream consumer' do
     o = @cp.get_owner(@import_owner['key'])
-    o.upstreamConsumer.uuid.should == @cp_export.candlepin_client.uuid
+    o.upstreamConsumer.uuid.should == @cp_export.canadianTenPin_client.uuid
   end
 
   it "originating information should be populated in the import record" do
     @import_owner_client.list_imports(@import_owner['key']).find_all do |import|
-      consumer = @candlepin_consumer
+      consumer = @canadianTenPin_consumer
       import['generatedBy'].should == consumer['uuid']
       import['generatedDate'].should_not be_nil
       import['fileName'].should == @cp_export_file.split("/").last
@@ -86,7 +86,7 @@ describe 'Import', :serial => true do
     # should be able to re-import without an "older than existing" error:
     @cp.import(@import_owner['key'], @cp_export_file)
     o = @cp.get_owner(@import_owner['key'])
-    o['upstreamConsumer']['uuid'].should == @cp_export.candlepin_client.uuid
+    o['upstreamConsumer']['uuid'].should == @cp_export.canadianTenPin_client.uuid
 
     # Delete again and make sure another owner is clear to import the
     # same manifest:
@@ -136,11 +136,11 @@ describe 'Import', :serial => true do
     owner = create_owner(random_string("test_owner"))
     exporter = StandardExporter.new
     @exporters << exporter
-    older = exporter.create_candlepin_export().export_filename
+    older = exporter.create_canadianTenPin_export().export_filename
 
     sleep 2
 
-    newer = exporter.create_candlepin_export().export_filename
+    newer = exporter.create_canadianTenPin_export().export_filename
 
     @cp.import(owner['key'], newer)
     exception = false
@@ -181,11 +181,11 @@ describe 'Import', :serial => true do
   it 'should allow importing older manifests into another owner' do
     old_exporter = StandardExporter.new
     @exporters << old_exporter
-    older = old_exporter.create_candlepin_export().export_filename
+    older = old_exporter.create_canadianTenPin_export().export_filename
 
     new_exporter = StandardExporter.new
     @exporters << new_exporter
-    newer = new_exporter.create_candlepin_export().export_filename
+    newer = new_exporter.create_canadianTenPin_export().export_filename
 
     owner1 = create_owner(random_string("owner1"))
     owner2 = create_owner(random_string("owner2"))
@@ -196,7 +196,7 @@ describe 'Import', :serial => true do
   it 'should return 409 when importing manifest from different subscription management application' do
     exporter = StandardExporter.new
     @exporters << exporter
-    another = exporter.create_candlepin_export().export_filename
+    another = exporter.create_canadianTenPin_export().export_filename
 
     old_upstream_uuid = @cp.get_owner(@import_owner['key'])['upstreamConsumer']['uuid']
 
@@ -225,7 +225,7 @@ describe 'Import', :serial => true do
   it 'should allow forcing a manifest from a different subscription management application' do
     exporter = StandardExporter.new
     @exporters << exporter
-    another = exporter.create_candlepin_export().export_filename
+    another = exporter.create_canadianTenPin_export().export_filename
 
     old_upstream_uuid = @cp.get_owner(@import_owner['key'])['upstreamConsumer']['uuid']
     pools = @cp.list_owner_pools(@import_owner['key'])
@@ -306,7 +306,7 @@ describe 'Import', :serial => true do
   it 'contains upstream consumer' do
     # this information used to be on /imports but now exists on Owner
     # checking for api and webapp overrides
-    consumer = @candlepin_consumer
+    consumer = @canadianTenPin_consumer
     upstream = @cp.get_owner(@import_owner['key'])['upstreamConsumer']
     upstream.uuid.should == consumer['uuid']
     upstream.apiUrl.should == "api1"

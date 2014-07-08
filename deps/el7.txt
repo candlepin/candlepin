@@ -7,7 +7,7 @@ apache-mime4j
 atinject
 bcprov-jdk16
 c3p0
-candlepin-guice // This will pull in all the jars under candlepin-guice
+canadianTenPin-guice // This will pull in all the jars under canadianTenPin-guice
 cglib
 commons-codec
 commons-collections

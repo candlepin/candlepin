@@ -2,7 +2,7 @@
  * WARNING: DEPRECATED
  *
  * This rules file has been replaced by the versioned file in rules.js. Do
- * not edit anything here, this file is not imported on newer candlepin's
+ * not edit anything here, this file is not imported on newer canadianTenPin's
  * and only remains in manifests to appease old deployments.
  */
 
@@ -814,7 +814,7 @@ var PoolCriteria = {
 
         if (consumer.getType().isManifest()) {
             var noRequiresHost = org.hibernate.criterion.DetachedCriteria.forClass(
-                    org.candlepin.model.PoolAttribute, "attr")
+                    org.canadianTenPin.model.PoolAttribute, "attr")
                     .add(org.hibernate.criterion.Restrictions.eq("name", "requires_host"))
                     .add(org.hibernate.criterion.Property.forName("this.id")
                             .eqProperty("attr.pool.id"))
@@ -827,7 +827,7 @@ var PoolCriteria = {
             // not a guest
             var noVirtOnlyPoolAttr =
                 org.hibernate.criterion.DetachedCriteria.forClass(
-                        org.candlepin.model.PoolAttribute, "pool_attr")
+                        org.canadianTenPin.model.PoolAttribute, "pool_attr")
                     .add(org.hibernate.criterion.Restrictions.eq("name", "virt_only"))
                     .add(org.hibernate.criterion.Restrictions.eq("value", "true"))
                     .add(org.hibernate.criterion.Property.forName("this.id")
@@ -841,7 +841,7 @@ var PoolCriteria = {
             // worth it to combine in some clever fashion
             var noVirtOnlyProductAttr =
                 org.hibernate.criterion.DetachedCriteria.forClass(
-                        org.candlepin.model.ProductPoolAttribute, "prod_attr")
+                        org.canadianTenPin.model.ProductPoolAttribute, "prod_attr")
                     .add(org.hibernate.criterion.Restrictions.eq("name", "virt_only"))
                     .add(org.hibernate.criterion.Restrictions.eq("value", "true"))
                     .add(org.hibernate.criterion.Property.forName("this.id")
@@ -859,7 +859,7 @@ var PoolCriteria = {
                     hostUuid = hostConsumer.getUuid();
                 }
                 var noRequiresHost = org.hibernate.criterion.DetachedCriteria.forClass(
-                        org.candlepin.model.PoolAttribute, "attr")
+                        org.canadianTenPin.model.PoolAttribute, "attr")
                         .add(org.hibernate.criterion.Restrictions.eq("name", "requires_host"))
                         //  Note: looking for pools that are not for this guest
                         .add(org.hibernate.criterion.Restrictions.ne("value", hostUuid))
@@ -887,13 +887,13 @@ var Pool = {
         var pools = new java.util.LinkedList();
         var quantity = sub.getQuantity() * sub.getProduct().getMultiplier();
         var providedProducts = new java.util.HashSet();
-        var newPool = new org.candlepin.model.Pool(sub.getOwner(), sub.getProduct().getId(),
+        var newPool = new org.canadianTenPin.model.Pool(sub.getOwner(), sub.getProduct().getId(),
                 sub.getProduct().getName(), providedProducts,
                     quantity, sub.getStartDate(), sub.getEndDate(), sub.getContractNumber(),
                     sub.getAccountNumber());
         if (sub.getProvidedProducts() != null) {
             for each (var p in sub.getProvidedProducts().toArray()) {
-                var providedProduct = new org.candlepin.model.
+                var providedProduct = new org.canadianTenPin.model.
                     ProvidedProduct(p.getId(), p.getName());
                 providedProduct.setPool(newPool);
                 providedProducts.add(providedProduct);
@@ -909,7 +909,7 @@ var Pool = {
         //    manager and any other downstream consumer.
         if (virtAtt != null && virtAtt.getValue() != null &&
             !virtAtt.getValue().equals("")) {
-            newPool.addAttribute(new org.candlepin.model.PoolAttribute("virt_only", virtAtt.getValue()));
+            newPool.addAttribute(new org.canadianTenPin.model.PoolAttribute("virt_only", virtAtt.getValue()));
         }
 
         pools.add(newPool);
@@ -961,7 +961,7 @@ var Pool = {
 
             /*
              *  WARNING: when updating pools, we have the added complication of having to
-             *  watch out for pools that candlepin creates internally. (i.e. virt bonus
+             *  watch out for pools that canadianTenPin creates internally. (i.e. virt bonus
              *  pools in hosted (created when sub is first detected), and host restricted
              *  virt pools when on-site. (created when a host binds)
              */
@@ -973,8 +973,8 @@ var Pool = {
                     log.warn("virt_limit attribute has been removed from subscription, flagging pool for deletion if supported: " + existingPool.getId());
                     // virt_limit has been removed! We need to clean up this pool. Set
                     // attribute to notify the server of this:
-                    existingPool.setAttribute("candlepin.delete_pool", "true");
-                    // Older candlepin's won't look at the delete attribute, so we will
+                    existingPool.setAttribute("canadianTenPin.delete_pool", "true");
+                    // Older canadianTenPin's won't look at the delete attribute, so we will
                     // set the expected quantity to 0 to effectively disable the pool
                     // on those servers as well.
                     expectedQuantity = 0;
@@ -1051,13 +1051,13 @@ var Pool = {
 
                 if (sub.getProvidedProducts() != null) {
                     for each (var p in sub.getProvidedProducts().toArray()) {
-                        var providedProduct = new org.candlepin.model.
+                        var providedProduct = new org.canadianTenPin.model.
                             ProvidedProduct(p.getId(), p.getName());
                         existingPool.addProvidedProduct(providedProduct);
                     }
                 }
             }
-            poolsUpdated.add(new org.candlepin.policy.js.pool.PoolUpdate(
+            poolsUpdated.add(new org.canadianTenPin.policy.js.pool.PoolUpdate(
                                  existingPool, datesChanged, quantityChanged, productsChanged));
         }
         return poolsUpdated;
@@ -1200,7 +1200,7 @@ var Compliance = {
  * Checks compliance status for a consumer on a given date.
  */
 function getComplianceStatusOnDate(consumer, entitlements, ondate, log) {
-    var status = new org.candlepin.policy.js.compliance.ComplianceStatus(ondate);
+    var status = new org.canadianTenPin.policy.js.compliance.ComplianceStatus(ondate);
 
     // Track the stack IDs we've already checked to save some time:
     var compliant_stack_ids = new java.util.HashSet();

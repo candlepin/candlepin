@@ -10,8 +10,8 @@ function evalrc ()
 
 function recreate_mysql()
 {
-    mysqladmin --user="$DBUSER" --password="$DBPASSWORD" --force drop candlepin
-    mysqladmin --user="$DBUSER" --password="$DBPASSWORD" create candlepin
+    mysqladmin --user="$DBUSER" --password="$DBPASSWORD" --force drop canadianTenPin
+    mysqladmin --user="$DBUSER" --password="$DBPASSWORD" create canadianTenPin
     evalrc $? "mysqladmin create failed"
 }
 
@@ -19,24 +19,24 @@ function recreate_postgresql ()
 {
     # need to setup .pgpass for this to use passwds
     # something like:
-    #   *:*:candlepin:candlepin:candlepinpasswd
-    #   *:*:postgres:candlepin:candlepinpasswd
+    #   *:*:canadianTenPin:canadianTenPin:canadianTenPinpasswd
+    #   *:*:postgres:canadianTenPin:canadianTenPinpasswd
 
-    dropdb -w -U "$DBUSER" candlepin
-    createdb -w -U "$DBUSER" candlepin
+    dropdb -w -U "$DBUSER" canadianTenPin
+    createdb -w -U "$DBUSER" canadianTenPin
     evalrc $? "createdb failed"
 }
 
 function recreate_oracle ()
 {
-    #sqlplus -s 'sys/password@//localhost/XE as sysdba' @`dirname $0`/recreate-candlepin.sql
+    #sqlplus -s 'sys/password@//localhost/XE as sysdba' @`dirname $0`/recreate-canadianTenPin.sql
     sqlplus -s 'sys/password@//localhost/XE as sysdba'<<EOF
-drop user candlepin cascade;
-create user candlepin identified by candlepin default tablespace users;
-grant dba to candlepin;
+drop user canadianTenPin cascade;
+create user canadianTenPin identified by canadianTenPin default tablespace users;
+grant dba to canadianTenPin;
 quit
 EOF
-    evalrc $? "Creating Candlepin user failed"
+    evalrc $? "Creating CanadianTenPin user failed"
 }
 
 function gendb ()
@@ -61,20 +61,20 @@ if [ "$USE_ORACLE" == "1" ]; then
     JDBC_JAR="/usr/lib/oracle/11.2/client64/lib/ojdbc6.jar"
     JDBC_URL="jdbc:oracle:thin:@//localhost:1521/XE "
     if [ -z "$DBPASSWORD" ] ; then
-        DBPASSWORD="candlepin"
+        DBPASSWORD="canadianTenPin"
     fi
 elif [ "$USE_MYSQL" == "1" ]; then
     DRIVER="com.mysql.jdbc.Driver"
     JDBC_JAR="/usr/share/java/mysql-connector-java.jar"
-    JDBC_URL="jdbc:mysql:///candlepin"
+    JDBC_URL="jdbc:mysql:///canadianTenPin"
 else
     DRIVER="org.postgresql.Driver"
     JDBC_JAR="/usr/share/java/postgresql-jdbc.jar"
-    JDBC_URL="jdbc:postgresql:candlepin"
+    JDBC_URL="jdbc:postgresql:canadianTenPin"
 fi
 
     echo "============ $MESSAGE =============="
-    LQCOMMAND="liquibase --driver=$DRIVER --classpath=src/main/resources/:target/classes/:$JDBC_JAR --changeLogFile=db/changelog/$CHANGELOG --url=$JDBC_URL --username=candlepin"
+    LQCOMMAND="liquibase --driver=$DRIVER --classpath=src/main/resources/:target/classes/:$JDBC_JAR --changeLogFile=db/changelog/$CHANGELOG --url=$JDBC_URL --username=canadianTenPin"
     if [ -n "$DBPASSWORD" ] ; then
         LQCOMMAND="$LQCOMMAND --password=$DBPASSWORD "
     fi
@@ -85,13 +85,13 @@ fi
 
 function deploy ()
 {
-    VERSION="`grep Version: candlepin.spec | cut --delim=' ' -f2`"
+    VERSION="`grep Version: canadianTenPin.spec | cut --delim=' ' -f2`"
     if [ -z $CLEAN ] ; then
         $SUDO rm -rf $DEPLOY
     else
         $SUDO rm -rf $CLEAN
     fi
-    $SUDO cp target/candlepin-$VERSION.war $DEPLOY
+    $SUDO cp target/canadianTenPin-$VERSION.war $DEPLOY
 }
 
 function stopappserver ()
@@ -113,7 +113,7 @@ function update_keystore
 {
     if [ "$FORCECERT" = "1" ]; then
         echo "Move the keystore to tomcats location"
-        sudo cp /etc/candlepin/certs/keystore $CONTAINER_CONF_DIR/keystore
+        sudo cp /etc/canadianTenPin/certs/keystore $CONTAINER_CONF_DIR/keystore
     else
         echo "Using existing keystore"
     fi
@@ -126,22 +126,22 @@ function upload_products
   fi
 }
 
-function create_var_lib_candlepin
+function create_var_lib_canadianTenPin
 {
-    sudo mkdir -p /var/lib/candlepin
-    sudo chown tomcat:tomcat /var/lib/candlepin
+    sudo mkdir -p /var/lib/canadianTenPin
+    sudo chown tomcat:tomcat /var/lib/canadianTenPin
 }
 
-function create_var_log_candlepin
+function create_var_log_canadianTenPin
 {
-    sudo mkdir -p /var/log/candlepin
-    sudo chown tomcat:tomcat /var/log/candlepin
+    sudo mkdir -p /var/log/canadianTenPin
+    sudo chown tomcat:tomcat /var/log/canadianTenPin
 }
 
-function create_var_cache_candlepin
+function create_var_cache_canadianTenPin
 {
-    sudo mkdir -p /var/cache/candlepin
-    sudo chown tomcat:tomcat /var/cache/candlepin
+    sudo mkdir -p /var/cache/canadianTenPin
+    sudo chown tomcat:tomcat /var/cache/canadianTenPin
 }
 
 function autoconf
@@ -151,16 +151,16 @@ function autoconf
   red='\e[0;31m'
   NC='\e[0m' # No Color
   if [ "$?" -ne "0" ]; then
-    echo -e "${red}ERROR: candlepin.conf generation failed!${NC}"
+    echo -e "${red}ERROR: canadianTenPin.conf generation failed!${NC}"
     return 1
   fi
 
-  CANDLEPIN_CONF="/etc/candlepin/candlepin.conf"
+  CANADIAN_TEN_PIN_CONF="/etc/canadianTenPin/canadianTenPin.conf"
 
-  if $(sudo head -n 1 $CANDLEPIN_CONF | grep -q "AUTOGENERATED"); then
-    sudo cp target/generated/erb/candlepin.conf $CANDLEPIN_CONF
+  if $(sudo head -n 1 $CANADIAN_TEN_PIN_CONF | grep -q "AUTOGENERATED"); then
+    sudo cp target/generated/erb/canadianTenPin.conf $CANADIAN_TEN_PIN_CONF
   else
-    echo -e "${red}Your candlepin.conf does not appear to be autogenerated.  Cowardly refusing to overwrite.${NC}"
+    echo -e "${red}Your canadianTenPin.conf does not appear to be autogenerated.  Cowardly refusing to overwrite.${NC}"
     return 1
   fi
 }
@@ -177,16 +177,16 @@ function usage
         -o  use Oracle
         -l  use Logdriver
         -m  use MySQL
-        -a  auto-deploy a generated candlepin.conf
+        -a  auto-deploy a generated canadianTenPin.conf
 HELP
 }
 
 # Read in user defined variables
-if [ -f $HOME/.candlepinrc ] ; then
-    source $HOME/.candlepinrc
+if [ -f $HOME/.canadianTenPinrc ] ; then
+    source $HOME/.canadianTenPinrc
 fi
 
-DBUSER="candlepin"
+DBUSER="canadianTenPin"
 
 while getopts ":fgtolma" opt; do
     case $opt in
@@ -223,7 +223,7 @@ if [ "$JBOSS_HOME" != "" ]; then
         DEPLOY="$JBOSS_HOME/server/default/deploy/"
     fi
     CONTAINER_CONF_DIR="$JBOSS_HOME/conf"
-    CLEAN="$JBOSS_HOME/server/default/deploy/candlepin*"
+    CLEAN="$JBOSS_HOME/server/default/deploy/canadianTenPin*"
 else
     # use tomcat 6, unless it doesnt exist and tomcat does
     TC=tomcat6
@@ -248,8 +248,8 @@ else
         CONTAINER_CONF_DIR="/etc/$TC"
     fi
 
-    DEPLOY="$TC_HOME/webapps/candlepin.war"
-    CLEAN="$TC_HOME/webapps/candlepin/"
+    DEPLOY="$TC_HOME/webapps/canadianTenPin.war"
+    CLEAN="$TC_HOME/webapps/canadianTenPin/"
 fi
 
 # stop the appserver
@@ -298,9 +298,9 @@ update_keystore
 # update server.xml
 sudo python buildconf/scripts/update-server-xml.py $CONTAINER_CONF_DIR
 
-create_var_lib_candlepin
-create_var_log_candlepin
-create_var_cache_candlepin
+create_var_lib_canadianTenPin
+create_var_log_canadianTenPin
+create_var_cache_canadianTenPin
 
 if [ "$AUTOCONF" == "1" ]; then
   autoconf $ENV_BUILDR $LOGDRIVER
@@ -312,8 +312,8 @@ deploy
 eval $START
 
 sleep 10
-echo "Initializing Candlepin..."
-wget --no-check-certificate -qO- https://localhost:8443/candlepin/admin/init
+echo "Initializing CanadianTenPin..."
+wget --no-check-certificate -qO- https://localhost:8443/canadianTenPin/admin/init
 
 upload_products
 

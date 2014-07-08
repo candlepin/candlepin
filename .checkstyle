@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <fileset-config file-format-version="1.2.0" simple-config="false">
-  <local-check-config name="candlepin-src-checkstyle" location="buildconf/checks.xml" type="project" description="">
+  <local-check-config name="canadianTenPin-src-checkstyle" location="buildconf/checks.xml" type="project" description="">
     <property name="checkstyle.header.file" value="${basedir}/buildconf/LICENSE.txt"/>
     <property name="checkstyle.cache.file" value="${basedir}/target/checkstyle.cache.src"/>
     <property name="javadoc.type.scope" value="package"/>
@@ -11,7 +11,7 @@
     <property name="javadoc.missing.param" value="true"/>
     <additional-data name="protect-config-file" value="true"/>
   </local-check-config>
-  <local-check-config name="candlepin-test-checkstyle" location="buildconf/checks.xml" type="project" description="">
+  <local-check-config name="canadianTenPin-test-checkstyle" location="buildconf/checks.xml" type="project" description="">
     <property name="checkstyle.header.file" value="${basedir}/buildconf/LICENSE.txt"/>
     <property name="checkstyle.cache.file" value="${basedir}/target/checkstyle.cache.src"/>
     <property name="javadoc.type.scope" value="nothing"/>
@@ -21,13 +21,13 @@
     <property name="javadoc.missing.param" value="false"/>
     <additional-data name="protect-config-file" value="true"/>
   </local-check-config>
-  <fileset name="all" enabled="false" check-config-name="candlepin-src-checkstyle" local="true">
+  <fileset name="all" enabled="false" check-config-name="canadianTenPin-src-checkstyle" local="true">
     <file-match-pattern match-pattern="." include-pattern="true"/>
   </fileset>
-  <fileset name="main" enabled="true" check-config-name="candlepin-src-checkstyle" local="true">
+  <fileset name="main" enabled="true" check-config-name="canadianTenPin-src-checkstyle" local="true">
     <file-match-pattern match-pattern="^src/main/java/" include-pattern="true"/>
   </fileset>
-  <fileset name="test" enabled="true" check-config-name="candlepin-test-checkstyle" local="true">
+  <fileset name="test" enabled="true" check-config-name="canadianTenPin-test-checkstyle" local="true">
     <file-match-pattern match-pattern="^src/test/java" include-pattern="true"/>
   </fileset>
   <filter name="FileTypesFilter" enabled="true">

@@ -1,8 +1,8 @@
 require 'spec_helper'
-require 'candlepin_scenarios'
+require 'canadianTenPin_scenarios'
 
 describe 'Entitlement Certificate' do
-  include CandlepinMethods
+  include CanadianTenPinMethods
 
   class String
       def to_date

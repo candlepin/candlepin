@@ -7,7 +7,7 @@
 #
 # Can be run and re-run against a typical dev deployment without any arguments.
 
-require  "../../client/ruby/candlepin_api"
+require  "../../client/ruby/canadianTenPin_api"
 require 'pp'
 
 require 'benchmark'
@@ -26,7 +26,7 @@ def time_rand from = 0.0, to = Time.now
   Time.at(from + rand * (to.to_f - from.to_f))
 end
 
-cp = Candlepin.new(ADMIN_USERNAME, ADMIN_PASSWORD, nil, nil, HOST, PORT)
+cp = CanadianTenPin.new(ADMIN_USERNAME, ADMIN_PASSWORD, nil, nil, HOST, PORT)
 
 owner = cp.create_owner random_string("consumertest")
 puts "Created owner: #{owner['key']}"
@@ -82,7 +82,7 @@ end
 org_admin_username = random_string("orgadmin")
 org_admin_password = 'password'
 cp.create_user(org_admin_username, org_admin_password, true)
-org_admin_cp = Candlepin.new(org_admin_username, org_admin_password)
+org_admin_cp = CanadianTenPin.new(org_admin_username, org_admin_password)
 facts = {
     "distributor_version" => "sat-6.0",
     "satellite_version" => "6.0",
@@ -91,7 +91,7 @@ facts = {
 consumer = org_admin_cp.register(random_string('dummyconsumer'), "system",
   nil, facts, nil, owner['key'])
 puts "Created consumer: id = #{consumer['id']}, uuid = #{consumer['uuid']}"
-consumer_cp = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'],
+consumer_cp = CanadianTenPin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'],
   HOST, PORT)
 
 pools = cp.list_owner_pools(owner['key'])

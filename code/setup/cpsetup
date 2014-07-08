@@ -15,7 +15,7 @@
 #
 
 """
-Script to set up a Candlepin server.
+Script to set up a CanadianTenPin server.
 
 This script should be idempotent, as puppet will re-run this to keep
 the server functional.
@@ -30,7 +30,7 @@ import time
 import httplib
 from optparse import OptionParser
 
-CANDLEPIN_CONF = '/etc/candlepin/candlepin.conf'
+CANADIAN_TEN_PIN_CONF = '/etc/canadianTenPin/canadianTenPin.conf'
 
 if os.path.exists('/usr/sbin/tomcat') and not os.path.exists('/usr/sbin/tomcat6'):
     TOMCAT = 'tomcat'
@@ -123,7 +123,7 @@ class TomcatSetup(object):
         for x in range(1,5):
             time.sleep(5)
             try:
-                conn.request('GET', "/candlepin/")
+                conn.request('GET', "/canadianTenPin/")
                 if conn.getresponse().status == 200:
                     break
             except:
@@ -131,11 +131,11 @@ class TomcatSetup(object):
 
 class CertSetup(object):
     def __init__(self):
-        self.cert_home = '/etc/candlepin/certs'
-        self.ca_key_passwd = self.cert_home + '/candlepin-ca-password.txt'
-        self.ca_key = self.cert_home + '/candlepin-ca.key'
-        self.ca_pub_key = self.cert_home + '/candlepin-ca-pub.key'
-        self.ca_cert = self.cert_home + '/candlepin-ca.crt'
+        self.cert_home = '/etc/canadianTenPin/certs'
+        self.ca_key_passwd = self.cert_home + '/canadianTenPin-ca-password.txt'
+        self.ca_key = self.cert_home + '/canadianTenPin-ca.key'
+        self.ca_pub_key = self.cert_home + '/canadianTenPin-ca-pub.key'
+        self.ca_cert = self.cert_home + '/canadianTenPin-ca.crt'
         self.keystore = self.cert_home + '/keystore'
 
     def generate(self):
@@ -180,15 +180,15 @@ class PostgresqlConf(object):
         return "jdbc:postgresql:%s" % db
 
 
-def write_candlepin_conf(options):
+def write_canadianTenPin_conf(options):
     """
-    Write configuration to candlepin.conf.
+    Write configuration to canadianTenPin.conf.
     """
 
     # If the file exists and it's size is not 0 (it will be empty after
     # fresh rpm install), write out a default with database configuration:
-    if os.path.exists(CANDLEPIN_CONF) and os.stat(CANDLEPIN_CONF).st_size > 0:
-        print("candlepin.conf already exists, skipping...")
+    if os.path.exists(CANADIAN_TEN_PIN_CONF) and os.stat(CANADIAN_TEN_PIN_CONF).st_size > 0:
+        print("canadianTenPin.conf already exists, skipping...")
         return
 
     print("Writing configuration file")
@@ -198,14 +198,14 @@ def write_candlepin_conf(options):
     else:
         dbconf = PostgresqlConf()
 
-    f = open(CANDLEPIN_CONF, 'w')
+    f = open(CANADIAN_TEN_PIN_CONF, 'w')
     f.write('jpa.config.hibernate.dialect=%s\n' % dbconf.get_dialect())
     f.write('jpa.config.hibernate.connection.driver_class=%s\n' % dbconf.get_driver())
     f.write('jpa.config.hibernate.connection.url=%s\n' % dbconf.get_jdbc_url(options.db))
     f.write('jpa.config.hibernate.connection.username=%s\n' % options.dbuser)
     f.write('jpa.config.hibernate.connection.password=%s\n' % options.password)
     if options.webapp_prefix:
-        f.write('\ncandlepin.export.webapp.prefix=%s\n' % options.webapp_prefix)
+        f.write('\ncanadianTenPin.export.webapp.prefix=%s\n' % options.webapp_prefix)
     f.close()
 
 
@@ -214,12 +214,12 @@ def main(argv):
     parser = OptionParser()
     parser.add_option("-s", "--skipdbcfg",
                   action="store_true", dest="skipdbcfg", default=False,
-                  help="don't configure the /etc/candlepin/candlepin.conf file")
+                  help="don't configure the /etc/canadianTenPin/canadianTenPin.conf file")
     parser.add_option("-u", "--user",
-                  dest="dbuser", default="candlepin",
+                  dest="dbuser", default="canadianTenPin",
                   help="the database user to use")
     parser.add_option("-d", "--database",
-                  dest="db", default="candlepin",
+                  dest="db", default="canadianTenPin",
                   help="the database to use")
     parser.add_option("--schema-only",
                   action="store_true", dest="schema_only", default=False,
@@ -231,11 +231,11 @@ def main(argv):
                   dest="keystorepwd", default="password",
                   help="the keystore password to use for the tomcat configuration")
     parser.add_option("-p", "--password",
-                  dest="password", default="candlepin",
-                  help="Database password. Defaults to 'candlepin'")
+                  dest="password", default="canadianTenPin",
+                  help="Database password. Defaults to 'canadianTenPin'")
     parser.add_option("--oracle",
                   action="store_true", dest="oracle", default=False,
-                  help="set up Candlepin to run against Oracle")
+                  help="set up CanadianTenPin to run against Oracle")
     parser.add_option("--oracle-user",
                   dest="oracle_user", default="sys",
                   help="Oracle DBA user. Defaults to 'sys'")
@@ -254,7 +254,7 @@ def main(argv):
     tsetup.fix_perms()
     tsetup.stop()
 
-    # Call the cpdb script to create the candlepin database. Database creation will be
+    # Call the cpdb script to create the canadianTenPin database. Database creation will be
     # skipped if it already exists. The --schema-only option can be used if the database
     # is expected to have been created by an external script, and only the schema is to
     # be applied.
@@ -272,7 +272,7 @@ def main(argv):
     run_command(command)
 
     if not options.skipdbcfg:
-        write_candlepin_conf(options)
+        write_canadianTenPin_conf(options)
     else:
         print "** Skipping configuration file setup"
 
@@ -284,9 +284,9 @@ def main(argv):
     tsetup.restart()
     tsetup.wait_for_startup()
 
-    run_command("wget -qO- http://localhost:8080/candlepin/admin/init")
+    run_command("wget -qO- http://localhost:8080/canadianTenPin/admin/init")
 
-    print("Candlepin has been configured.")
+    print("CanadianTenPin has been configured.")
 
 if __name__ == "__main__":
     main(sys.argv[1:])

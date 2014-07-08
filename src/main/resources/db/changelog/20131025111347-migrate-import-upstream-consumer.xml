@@ -35,7 +35,7 @@
                    ir.updated
             FROM cp_import_record ir,
                    cp_consumer_type ct
-            WHERE ct.label = 'candlepin'
+            WHERE ct.label = 'canadianTenPin'
        </sql>
        <sql>
            UPDATE cp_import_upstream_consumer
@@ -65,7 +65,7 @@
                    ir.updated
             FROM cp_import_record ir,
                    cp_consumer_type ct
-            WHERE ct.label = 'candlepin'
+            WHERE ct.label = 'canadianTenPin'
        </sql>
        <sql>
            UPDATE cp_import_upstream_consumer t1

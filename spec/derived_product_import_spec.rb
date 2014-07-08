@@ -1,13 +1,13 @@
 require 'spec_helper'
-require 'candlepin_scenarios'
+require 'canadianTenPin_scenarios'
 require 'json'
 
 describe 'Import', :serial => true do
 
-  include CandlepinMethods
+  include CanadianTenPinMethods
 
   before(:all) do
-    @cp = Candlepin.new('admin', 'admin')
+    @cp = CanadianTenPin.new('admin', 'admin')
     @owners = []
     @owner = @cp.create_owner(random_string('owner'))
     @user = user_client(@owner, random_string('user'))
@@ -52,10 +52,10 @@ describe 'Import', :serial => true do
     pool = @cp.list_owner_pools(@owner['key'], {:product => stacked_datacenter_product.id})[0]
 
     # create the distributor consumer
-    consumer = @user.register(random_string("consumer"), :candlepin, nil, {
+    consumer = @user.register(random_string("consumer"), :canadianTenPin, nil, {
       'distributor_version' => 'sam-1.3'
     })
-    consumer_client = Candlepin.new(username=nil, password=nil,
+    consumer_client = CanadianTenPin.new(username=nil, password=nil,
         cert=consumer['idCert']['cert'],
         key=consumer['idCert']['key'])
     # entitlements from data center pool
@@ -77,7 +77,7 @@ describe 'Import', :serial => true do
 
     # make host client to get entitlement from distributor
     dist_consumer_1 = @dist_user.register(random_string("consumer"))
-    dist_consumer_client_1 = Candlepin.new(username=nil, password=nil,
+    dist_consumer_client_1 = CanadianTenPin.new(username=nil, password=nil,
         cert=dist_consumer_1['idCert']['cert'],
         key=dist_consumer_1['idCert']['key'])
     virt_uuid = random_string('system.uuid')
@@ -90,7 +90,7 @@ describe 'Import', :serial => true do
     # make guest client
     dist_consumer_2 = @dist_user.register(random_string("consumer"), :system, nil,
        {'virt.uuid' => virt_uuid, 'virt.is_guest' => 'true'})
-    dist_consumer_client_2 = Candlepin.new(username=nil, password=nil,
+    dist_consumer_client_2 = CanadianTenPin.new(username=nil, password=nil,
         cert=dist_consumer_2['idCert']['cert'],
         key=dist_consumer_2['idCert']['key'])
 

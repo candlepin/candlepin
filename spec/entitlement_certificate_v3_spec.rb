@@ -1,9 +1,9 @@
 require 'spec_helper'
-require 'candlepin_scenarios'
+require 'canadianTenPin_scenarios'
 require 'unpack'
 
 describe 'Entitlement Certificate V3' do
-  include CandlepinMethods
+  include CanadianTenPinMethods
   include CertificateMethods
   include Unpack
 
@@ -242,8 +242,8 @@ describe 'Entitlement Certificate V3' do
       ["cert_v3"])
     facts = { 'distributor_version' => dist_name}
 
-    consumer = @user.register(random_string('v3_system'), :candlepin, nil, facts, nil, nil)
-    v3_system = Candlepin.new(nil, nil, consumer.idCert.cert, consumer.idCert['key'])
+    consumer = @user.register(random_string('v3_system'), :canadianTenPin, nil, facts, nil, nil)
+    v3_system = CanadianTenPin.new(nil, nil, consumer.idCert.cert, consumer.idCert['key'])
     v3_system.consume_product(@product_30.id)
 
     value = extension_from_cert(v3_system.list_certificates[0]['cert'], "1.3.6.1.4.1.2312.9.6")

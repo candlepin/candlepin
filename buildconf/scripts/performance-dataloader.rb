@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 #
-# Script to load up a candlepin server for performance testing.
+# Script to load up a canadianTenPin server for performance testing.
 #
 # Requires our test data to be loaded, as some of the eng products
 # are referenced below so we can test some things easily with our
@@ -11,7 +11,7 @@
 # A number of fake systems are then registered with installed
 # products, and then an autobind is performed for each.
 
-require  "../../client/ruby/candlepin_api"
+require  "../../client/ruby/canadianTenPin_api"
 require 'pp'
 require 'benchmark'
 require 'optparse'
@@ -118,7 +118,7 @@ if options[:pool_count] == 0 and options[:system_count] == 0
   exit
 end
 
-cp = Candlepin.new(ADMIN_USERNAME, ADMIN_PASSWORD, nil, nil, HOST, PORT)
+cp = CanadianTenPin.new(ADMIN_USERNAME, ADMIN_PASSWORD, nil, nil, HOST, PORT)
 
 # Create the owner we will load up with data:
 

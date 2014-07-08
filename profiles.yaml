@@ -3,14 +3,14 @@
 # See http://viewsourcecode.org/why/redhanded/bits/yamlSMergeKey.html
 
 common: &common
-  username: "candlepin"
+  username: "canadianTenPin"
   password: ""
   logdriver_class: "net.rkbloom.logdriver.LogDriver"
 
 postgresql: &default
   <<: *common
   driver_class: "org.postgresql.Driver"
-  jdbc_url: "jdbc:postgresql:candlepin"
+  jdbc_url: "jdbc:postgresql:canadianTenPin"
   dialect: "org.hibernate.dialect.PostgreSQLDialect"
   quartz_driver: "org.quartz.impl.jdbcjobstore.PostgreSQLDelegate"
 
@@ -23,13 +23,13 @@ oracle:
   <<: *common
   driver_class: "oracle.jdbc.OracleDriver"
   jdbc_url: "jdbc:oracle:thin:@//localhost:1521/XE"
-  password: "candlepin"
+  password: "canadianTenPin"
   dialect: "org.hibernate.dialect.Oracle10gDialect"
   quartz_driver: "org.quartz.impl.jdbcjobstore.oracle.OracleDelegate"
 
 mysql:
   <<: *common
   driver_class: "com.mysql.jdbc.Driver"
-  jdbc_url: "jdbc:mysql:///candlepin"
+  jdbc_url: "jdbc:mysql:///canadianTenPin"
   dialect: "org.hibernate.dialect.MySQL5InnoDBDialect"
   quartz_driver: "org.quartz.impl.jdbcjobstore.StdJDBCDelegate"

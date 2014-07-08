@@ -8,13 +8,13 @@
 
 
     <changeSet id="20121015121627" author="dgoodwin" dbms="postgresql">
-        <comment>Add a column in rules table for the version of candlepin they came from.</comment>
+        <comment>Add a column in rules table for the version of canadianTenPin they came from.</comment>
         <addColumn tableName="cp_rules">
-            <column name="candlepin_version" type="varchar(255)"/>
+            <column name="canadianTenPin_version" type="varchar(255)"/>
         </addColumn>
         <!-- this statement lets us update existing values without setting a column default -->
         <addNotNullConstraint tableName="cp_rules"
-                columnName="candlepin_version"
+                columnName="canadianTenPin_version"
                 defaultNullValue="0.0.0" />
     </changeSet>
 
