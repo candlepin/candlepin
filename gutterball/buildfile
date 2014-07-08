@@ -122,7 +122,7 @@ RHINO = 'org.mozilla:rhino:jar:1.7R3'
 PROVIDED = [SERVLET]
 
 ### Project
-GROUP = "candlepin"
+GROUP = "org.candlepin"
 COPYRIGHT = ""
 
 desc "The Gutterball project"
