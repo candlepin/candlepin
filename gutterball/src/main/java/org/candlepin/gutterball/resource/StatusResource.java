@@ -14,14 +14,7 @@
  */
 package org.candlepin.gutterball.resource;
 
-import org.candlepin.gutterball.config.Configuration;
-
-import org.xnap.commons.i18n.I18n;
-
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import org.candlepin.gutterball.model.Status;
 
 import javax.inject.Inject;
 import javax.ws.rs.GET;
@@ -34,25 +27,17 @@ import javax.ws.rs.core.MediaType;
  */
 @Path("status")
 public class StatusResource {
-    private I18n i18n;
-    private Configuration config;
+
+    private Status status;
 
     @Inject
-    public StatusResource(I18n i18n, Configuration config) {
-        this.i18n = i18n;
-        this.config = config;
+    public StatusResource(Status status) {
+        this.status = status;
     }
 
     @GET
     @Produces({ MediaType.APPLICATION_JSON })
-    public Map<String, String> getStatus() {
-        List<String> configKeys = Arrays.asList("gutterball.version");
-        Map<String, String> status = new HashMap<String, String>();
-
-        for (String key : configKeys) {
-            status.put(key, config.getProperty(key).toString());
-        }
-        status.put("request_locale", i18n.getLocale().toString());
-        return status;
+    public Status getStatus() {
+    	return status;
     }
 }
