@@ -69,4 +69,8 @@ public class ExceptionMessage {
         }
 
     }
+
+    public String toString() {
+        return displayMessage;
+    }
 }
