@@ -63,8 +63,7 @@ class Pool
   end
 end
 
-cp = Candlepin.new(username='admin', password='admin', cert=nil, key=nil, host='localhost', post=8443)
-
+cp = Candlepin.new('admin', 'admin', nil, nil, 'localhost', 8443)
 
 def create_owner(cp, new_owner)
   owner_name =  new_owner['name']

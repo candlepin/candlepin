@@ -118,7 +118,7 @@ module ErbRenderer
 
   class Config
     def enabled?
-      File.exist?(self.erb_directory)
+      File.exist?(erb_directory)
     end
 
     attr_writer :erb_directory
@@ -157,33 +157,36 @@ module ErbRenderer
     end
 
     before_define do |project|
-      task('erb') do |task|
-        if task.prerequisites.empty?
-          warn("No ERB directory given!")
-        else
-          # Load YAML at beginning so if the file is malformed, we'll just abort.
-          if File.exist?(project.erb.yaml)
-            yaml = YAML.load_file(project.erb.yaml)
+      erb = project.erb
+      if erb.enabled?
+        project.recursive_task('erb') do |task|
+          if task.prerequisites.empty?
+            warn("No ERB directory given!")
           else
-            yaml = {}
-          end
+            # Load YAML at beginning so if the file is malformed, we'll just abort.
+            if File.exist?(erb.yaml)
+              yaml = YAML.load_file(erb.yaml)
+            else
+              yaml = {}
+            end
 
-          files = task.prerequisites.map do |path|
-            Dir.glob(File.join(path, '**', '*.erb'))
-          end
-          files.flatten!
+            files = task.prerequisites.map do |path|
+              Dir.glob(File.join(path.to_s, '**', '*.erb'))
+            end
+            files.flatten!
 
-          mkdir_p(project.erb.output_dir)
-          files.each do |file|
-            puts "Rendering #{File.basename(file)} ..."
-            ErbRenderer.render(yaml, file, project)
+            mkdir_p(erb.output_dir)
+            files.each do |file|
+              puts "Rendering #{File.basename(file)} ..."
+              ErbRenderer.render(yaml, file, project)
+            end
           end
         end
       end
     end
 
     after_define do |project|
-      task('erb' => project.erb.erb_directory) if project.erb.enabled?
+      project.recursive_task('erb' => project.erb.erb_directory) if project.erb.enabled?
     end
   end
 end

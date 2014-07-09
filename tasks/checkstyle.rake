@@ -155,10 +155,12 @@ module AntTaskCheckstyle
       cs = project.checkstyle
       ide = project.eclipse
 
-      ide.natures('net.sf.eclipsecs.core.CheckstyleNature')
-      ide.builders('net.sf.eclipsecs.core.CheckstyleBuilder')
-
       if cs.enabled?
+        unless ide.natures.empty?
+          ide.natures('net.sf.eclipsecs.core.CheckstyleNature')
+          ide.builders('net.sf.eclipsecs.core.CheckstyleBuilder')
+        end
+
         task('checkstyle:xml').clear
         task('checkstyle:html').clear
         task('checkstyle').enhance do
