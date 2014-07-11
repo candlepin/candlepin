@@ -78,7 +78,7 @@ BuildRequires: google-guice >= 0:3.0
 BuildRequires: logback-classic
 BuildRequires: jakarta-commons-lang
 BuildRequires: jakarta-commons-io
-BuildRequires: apache-commons-codec
+BuildRequires: apache-commons-codec-eap6
 
 %global jackson_version 0:2.3.0
 BuildRequires: jackson-annotations >= %{jackson_version}
@@ -148,7 +148,7 @@ Requires: slf4j-api >= 0:1.7.5-4
 Requires: jcl-over-slf4j >= 0:1.7.5
 Requires: jakarta-commons-lang
 Requires: jakarta-commons-io
-Requires: apache-commons-codec
+Requires: apache-commons-codec-eap6
 Requires: jakarta-commons-httpclient
 Requires: google-collections >= 0:1.0
 Requires: apache-mime4j
