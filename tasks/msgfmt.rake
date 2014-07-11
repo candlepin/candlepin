@@ -2,7 +2,8 @@ module MsgFmt
   class Config
     attr_writer :resource
     def resource
-      @resource || "#{project.group}.i18n.Messages"
+      short_name = project.to_s.split(':').last
+      @resource || "#{project.group}.#{short_name}.i18n.Messages"
     end
 
     attr_writer :msgfmt_args
@@ -11,7 +12,7 @@ module MsgFmt
     end
 
     def enabled?
-      File.exist?(self.po_directory)
+      File.exist?(po_directory)
     end
 
     attr_writer :po_directory
@@ -41,18 +42,23 @@ module MsgFmt
     end
 
     first_time do
-      # Define task not specific to any projet.
       desc 'Run msgfmt on source files'
       Project.local_task('msgfmt')
     end
 
-    before_define(:msgfmt) do |project|
+    after_define(:msgfmt) do |project|
       msgfmt = project.msgfmt
       if msgfmt.enabled?
+        task(:compile => :msgfmt)
+
         nopo = ENV['nopo']
+
         project.recursive_task('msgfmt') do |task|
           mkdir_p(msgfmt.destination)
-          task.prerequisites.each do |po_file|
+
+          po_files = Dir[File.join(msgfmt.po_directory, '*.po')]
+          info("Running msgfmt on #{project}")
+          po_files.each do |po_file|
             locale = File.basename(po_file).chomp('.po')
             args = ["--java",
                     "--resource", msgfmt.resource,
@@ -68,14 +74,6 @@ module MsgFmt
         end
       end
     end
-
-    after_define(:msgfmt) do |project|
-      msgfmt = project.msgfmt
-      project.recursive_task('msgfmt' => FileList[project.path_to(msgfmt.po_directory, '*.po')])
-      task(:compile => :msgfmt)
-    end
-
-    after_define(:compile => :msgfmt)
   end
 end
 
