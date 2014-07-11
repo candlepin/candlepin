@@ -26,7 +26,7 @@
     sisu-cglib/cglib jackson-annotations jackson-core jackson-databind
     jackson-jaxrs-providers/jackson-jaxrs-json-provider jackson-module-jaxb-annotations
     jackson-jaxrs-providers/jackson-jaxrs-base istack-commons-runtime
-    commons-codec commons-collections
+    commons-codec-eap6/commons-codec commons-collections
     commons-httpclient commons-io commons-lang
     dom4j gettext-commons google-collections guice
     guice-assistedinject guice-multibindings guice-persist guice-servlet
