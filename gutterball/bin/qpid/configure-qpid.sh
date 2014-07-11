@@ -22,7 +22,7 @@ setup_qpidd_config () {
     then
         LIBARCH="lib64"
     fi
-    sudo bash -c "sed 's/@LIBARCH@/$LIBARCH/' `dirname $0`/qpidd.conf.tmpl > /etc/qpidd.conf"
+    sudo bash -c "sed 's/@LIBARCH@/$LIBARCH/' `dirname $0`/qpidd.conf.tmpl > /etc/qpid/qpidd.conf"
 }
 
 #
