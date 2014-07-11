@@ -59,7 +59,7 @@ JACKSON = [group('jackson-annotations', 'jackson-core', 'jackson-databind',
 
 SUN_JAXB = 'com.sun.xml.bind:jaxb-impl:jar:2.1.12'
 
-JUNIT = ['junit:junit:jar:4.5', 'org.mockito:mockito-all:jar:1.8.5']
+TESTING = Buildr.transitive(['junit:junit:jar:4.11', 'org.mockito:mockito-all:jar:1.9.5'])
 
 LOGBACK = [group('logback-core', 'logback-classic',
                  :under => 'ch.qos.logback',
@@ -68,7 +68,9 @@ LOGBACK = [group('logback-core', 'logback-classic',
 # Artifacts that bridge other logging frameworks to slf4j. Mime4j uses
 # JCL for example.
 SLF4J_BRIDGES = 'org.slf4j:jcl-over-slf4j:jar:1.7.5'
-LOGGING = [LOGBACK, SLF4J_BRIDGES]
+SLF4J = 'org.slf4j:slf4j-api:jar:1.7.5'
+
+LOGGING = [LOGBACK, SLF4J_BRIDGES, SLF4J]
 
 HIBERNATE = [group('hibernate-core', 'hibernate-entitymanager', 'hibernate-c3p0',
                    :under => 'org.hibernate',
@@ -82,7 +84,6 @@ HIBERNATE = [group('hibernate-core', 'hibernate-entitymanager', 'hibernate-c3p0'
              'cglib:cglib:jar:2.2',
              'javassist:javassist:jar:3.12.0.GA',
              'javax.transaction:jta:jar:1.1',
-             'org.slf4j:slf4j-api:jar:1.7.5',
              'org.freemarker:freemarker:jar:2.3.15',
              'c3p0:c3p0:jar:0.9.1.2',
              'dom4j:dom4j:jar:1.6.1',
@@ -179,8 +180,25 @@ define "candlepin" do
   # path_to() (and it's alias _()) simply provides the absolute path to
   # a directory relative to the project.
   # See http://buildr.apache.org/rdoc/Buildr/Project.html#method-i-path_to
-  checkstyle.config_directory = path_to(:project_conf)
-  rpmlint.rpmlint_conf = path_to("rpmlint.config")
+  checkstyle_config_directory = path_to(:project_conf)
+  rpmlint_conf = path_to("rpmlint.config")
+
+  desc "Common Candlepin Code"
+  define "common" do
+    project.version = spec_version('candlepin-common.spec')
+
+    eclipse.natures :java
+    checkstyle.config_directory = checkstyle_config_directory
+    rpmlint.rpmlint_conf = rpmlint_conf
+
+    compile_classpath = [COMMONS, LOGGING, GUICE, GETTEXT_COMMONS, COLLECTIONS, PROVIDED, RESTEASY]
+    compile.with(compile_classpath)
+
+    test.with(TESTING)
+    test.using :java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ]
+
+    package(:jar)
+  end
 
   desc "The Candlepin Server"
   define "server" do
@@ -191,8 +209,8 @@ define "candlepin" do
     # http://buildr.apache.org/more_stuff.html#eclipse
     eclipse.natures :java
 
-    checkstyle.config_directory = parent.checkstyle.config_directory
-    rpmlint.rpmlint_conf = parent.rpmlint.rpmlint_conf
+    checkstyle.config_directory = checkstyle_config_directory
+    rpmlint.rpmlint_conf = rpmlint_conf
 
     # Buildr tries to outsmart you and use classpath variables whenever possible.  If
     # we don't do the below, Buildr will add 'JAVA_HOMElib/tools.jar' to the .classpath
@@ -226,13 +244,13 @@ define "candlepin" do
     compile_classpath = [COMMONS, RESTEASY, LOGGING, HIBERNATE, BOUNCYCASTLE,
       GUICE, JACKSON, QUARTZ, GETTEXT_COMMONS, HORNETQ, SUN_JAXB, OAUTH, RHINO, COLLECTIONS,
       PROVIDED, AMQP, LIQUIBASE]
-    compile.with compile_classpath
-    compile.with LOGDRIVER, LOG4J_BRIDGE if use_logdriver
+    compile.with(compile_classpath)
+    compile.with(LOGDRIVER, LOG4J_BRIDGE) if use_logdriver
 
     if Buildr.environment == 'oracle'
-      compile.with ORACLE
+      compile.with(ORACLE)
     else
-      compile.with DB
+      compile.with(DB)
     end
 
     ### Testing
@@ -241,9 +259,9 @@ define "candlepin" do
     end
 
     # the other dependencies transfer from compile.classpath automagically
-    test.with HSQLDB, JUNIT
-    test.with LOGDRIVER, LOG4J_BRIDGE if use_logdriver
-    test.using :java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ]
+    test.with(HSQLDB, TESTING)
+    test.with(LOGDRIVER, LOG4J_BRIDGE) if use_logdriver
+    test.using(:java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ])
 
     ### Javadoc
     doc.using :tag => 'httpcode:m:HTTP Code:'
