@@ -98,7 +98,7 @@ BuildRequires: resteasy >= 0:2.3.7
 BuildRequires: hornetq >= 0:2.3.5
 BuildRequires: jakarta-commons-lang
 BuildRequires: jakarta-commons-io
-BuildRequires: apache-commons-codec
+BuildRequires: apache-commons-codec-eap6
 
 %global jackson_version 0:2.3.0
 BuildRequires: jackson-annotations >= %{jackson_version}
@@ -186,7 +186,7 @@ Requires: oauth >= 20100601-4
 Requires: scannotation
 Requires: jakarta-commons-lang
 Requires: jakarta-commons-io
-Requires: apache-commons-codec
+Requires: apache-commons-codec-eap6
 
 # RESTEasy breaks if you use a newer version because the location of some
 # of the packages changed between 0.6 and 0.7
