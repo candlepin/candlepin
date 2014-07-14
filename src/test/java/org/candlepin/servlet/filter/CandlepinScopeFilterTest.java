@@ -73,7 +73,7 @@ public class CandlepinScopeFilterTest {
     }
 
     @Test
-    public void ensureAlreadyCommitedResponsesSafelyExit() throws Exception{
+    public void ensureAlreadyCommitedResponsesSafelyExit() throws Exception {
         doReturn(true).when(response).isCommitted();
 
         filter.doFilter(request, response, chain);

@@ -57,7 +57,7 @@ public class CandlepinScopeFilter implements Filter {
     public void doFilter(ServletRequest request, ServletResponse response,
         FilterChain chain) throws IOException, ServletException {
 
-        if(response.isCommitted()){
+        if (response.isCommitted()) {
             log.warn("Response was already committed!");
             return;
         }
