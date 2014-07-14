@@ -108,6 +108,17 @@ public interface SubscriptionServiceAdapter {
     void deleteSubscription(Subscription s);
 
     /**
+     * Some subscription services are read-only. This allows us to avoid certain
+     * costly operations when we cannot do anything with them. For example,
+     * cleanupExpiredPools will also try to get and then delete the source
+     * subscription, however the prior is not necessary when the latter is a
+     * no-op.
+     *
+     * @return Whether or not this service is read-only
+     */
+    boolean isReadOnly();
+
+    /**
      * Search for all subscriptions that provide a given product.
      *
      * @param product the main or provided product to look for.
