@@ -38,11 +38,11 @@ public class ReceiverTest {
 
     @Test
     public void test() throws AMQException, JMSException, URISyntaxException {
-        System.setProperty("javax.net.ssl.keyStore", "/etc/gutterball/certs/amqp/keystore");
+        System.setProperty("javax.net.ssl.keyStore", "/etc/candlepin/certs/amqp/keystore");
             //config.getString(ConfigProperties.AMQP_KEYSTORE));
         System.setProperty("javax.net.ssl.keyStorePassword", "password");
             //config.getString(ConfigProperties.AMQP_KEYSTORE_PASSWORD));
-        System.setProperty("javax.net.ssl.trustStore", "/etc/gutterball/certs/amqp/truststore");
+        System.setProperty("javax.net.ssl.trustStore", "/etc/candlepin/certs/amqp/truststore");
             //config.getString(ConfigProperties.AMQP_TRUSTSTORE));
         System.setProperty("javax.net.ssl.trustStorePassword", "password");
             //config.getString(ConfigProperties.AMQP_TRUSTSTORE_PASSWORD));

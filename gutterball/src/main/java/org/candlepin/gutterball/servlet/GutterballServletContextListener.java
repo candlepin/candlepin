@@ -71,7 +71,6 @@ public class GutterballServletContextListener extends
         }
 
         context.setAttribute(CONFIGURATION_NAME, config);
-
         super.contextInitialized(sce);
         processRestEasy(context);
     }
