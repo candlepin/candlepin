@@ -40,10 +40,14 @@ module ModifiedEclipse
         altered_doctype = REXML::DocType.new('fileset-config')
         altered_doctype.add(REXML::Entity.new('conf_dir', File.absolute_path('project_conf')))
 
-        altered_document = REXML::Document.new(doc.root.to_s)
-        altered_document.add(altered_doctype)
+        comment = REXML::Comment.new('This file is auto-generated.  The master copy is in project_conf.')
+
+        altered_document = REXML::Document.new()
+        altered_document.add(comment)
         altered_document.add(
           REXML::XMLDecl.new(REXML::XMLDecl::DEFAULT_VERSION, REXML::XMLDecl::DEFAULT_ENCODING))
+        altered_document.add(altered_doctype)
+        altered_document.add(doc.root)
 
         File.open(destination_xml, 'w') do |f|
           altered_document.write(f, 2)
