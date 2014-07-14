@@ -9,7 +9,7 @@ bcprov-jdk16
 c3p0
 candlepin-guice // This will pull in all the jars under candlepin-guice
 cglib
-commons-codec
+commons-codec-eap6/commons-codec
 commons-collections
 commons-io
 commons-lang
