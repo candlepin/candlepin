@@ -181,6 +181,7 @@ define "candlepin" do
   # a directory relative to the project.
   # See http://buildr.apache.org/rdoc/Buildr/Project.html#method-i-path_to
   checkstyle_config_directory = path_to(:project_conf)
+  checkstyle_eclipse_xml = path_to(:project_conf, 'eclipse-checkstyle.xml')
   rpmlint_conf = path_to("rpmlint.config")
 
   desc "Common Candlepin Code"
@@ -188,7 +189,10 @@ define "candlepin" do
     project.version = spec_version('candlepin-common.spec')
 
     eclipse.natures :java
+
     checkstyle.config_directory = checkstyle_config_directory
+    checkstyle.eclipse_xml = checkstyle_eclipse_xml
+
     rpmlint.rpmlint_conf = rpmlint_conf
 
     compile_classpath = [COMMONS, LOGGING, GUICE, GETTEXT_COMMONS, COLLECTIONS, PROVIDED, RESTEASY]
@@ -210,6 +214,8 @@ define "candlepin" do
     eclipse.natures :java
 
     checkstyle.config_directory = checkstyle_config_directory
+    checkstyle.eclipse_xml = checkstyle_eclipse_xml
+
     rpmlint.rpmlint_conf = rpmlint_conf
 
     # Buildr tries to outsmart you and use classpath variables whenever possible.  If

@@ -13,6 +13,8 @@
 *.swp
 
 **/.classpath
+# The master checkstyle configuration is in project_conf
+**/.checkstyle
 **/.DS_Store
 **/.externalToolBuilders
 **/.project
