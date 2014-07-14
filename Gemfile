@@ -8,3 +8,5 @@ gem 'oauth'
 gem 'parallel_tests'
 gem 'buildr-findBugs'
 gem 'pmd'
+# Not a typo - we use both buildr and builder
+gem 'builder'
