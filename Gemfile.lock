@@ -66,6 +66,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  builder
   buildr (= 1.4.19)
   buildr-findBugs
   mime-types (~> 1.25.0)
