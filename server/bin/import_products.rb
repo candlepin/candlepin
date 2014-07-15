@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-require  "./client/ruby/candlepin_api"
+require_relative "../client/ruby/candlepin_api"
 
 require 'rubygems'
 require 'date'
