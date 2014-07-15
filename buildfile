@@ -159,10 +159,11 @@ LOGDRIVER = 'logdriver:logdriver:jar:1.0'
 # servlet-api is provided by the servlet container and Tomcat won't
 # even load servlet API classes seen in WEB-INF/lib.  See section 9.7.2 of
 # Servlet Spec 2.4 and http://stackoverflow.com/questions/15601469
-#
+PROVIDED = [SERVLET]
+
 # We need to mark JAVA_HOME/lib/tools.jar as a dependency in order for
 # Buildr to include it in the Eclipse .classpath file.
-PROVIDED = [SERVLET, file(Java.tools_jar)]
+JAVA_TOOLS = file(Java.tools_jar)
 
 # Make Util available in all projects.  See http://buildr.apache.org/extending.html#extensions
 class Project
@@ -307,6 +308,7 @@ define "candlepin" do
       HIBERNATE,
       HORNETQ,
       JACKSON,
+      JAVA_TOOLS,
       LIQUIBASE,
       LOGGING,
       OAUTH,
@@ -364,6 +366,7 @@ define "candlepin" do
     package(:war, :id=>"candlepin").tap do |war|
       war.libs += artifacts(HSQLDB)
       war.libs -= artifacts(PROVIDED)
+      war.libs -= artifacts(JAVA_TOOLS)
       war.classes.clear
       war.classes = [msgfmt.destination, resources.target]
       web_inf = war.path('WEB-INF/classes')
