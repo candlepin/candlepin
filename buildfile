@@ -249,7 +249,7 @@ define "candlepin" do
     test.with(TESTING, JUKITO, HSQLDB)
     test.using :java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ]
 
-    package(:war, :id=> project.name).tap do |war|
+    package(:war, :id=>"gutterball").tap do |war|
       war.libs -= artifacts(PROVIDED)
     end
   end
