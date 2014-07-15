@@ -60,6 +60,7 @@ JACKSON = [group('jackson-annotations', 'jackson-core', 'jackson-databind',
 SUN_JAXB = 'com.sun.xml.bind:jaxb-impl:jar:2.1.12'
 
 TESTING = Buildr.transitive(['junit:junit:jar:4.11', 'org.mockito:mockito-all:jar:1.9.5'])
+JUKITO = Buildr.transitive(['org.jukito:jukito:jar:1.4'])
 
 LOGBACK = [group('logback-core', 'logback-classic',
                  :under => 'ch.qos.logback',
@@ -192,7 +193,6 @@ define "candlepin" do
 
     checkstyle.config_directory = checkstyle_config_directory
     checkstyle.eclipse_xml = checkstyle_eclipse_xml
-
     rpmlint.rpmlint_conf = rpmlint_conf
 
     compile_classpath = [COMMONS, LOGGING, GUICE, GETTEXT_COMMONS, COLLECTIONS, PROVIDED, RESTEASY]
@@ -204,19 +204,69 @@ define "candlepin" do
     package(:jar)
   end
 
+  desc "The Gutterball Reporting Engine"
+  define "gutterball" do
+    spec_file = "gutterball.spec"
+    project.version = spec_version(spec_file)
+    release_number = spec_release(spec_file)
+
+    checkstyle.config_directory = checkstyle_config_directory
+    checkstyle.eclipse_xml = checkstyle_eclipse_xml
+    rpmlint.rpmlint_conf = rpmlint_conf
+
+    eclipse.natures :java
+
+    unless use_pmd.nil?
+      pmd.enabled = true
+    end
+
+    msgfmt.resource = "#{project.group}.gutterball.i18n.Messages"
+
+    compile_classpath = [
+      AMQP,
+      COLLECTIONS,
+      COMMONS,
+      DB,
+      GETTEXT_COMMONS,
+      GUICE,
+      HIBERNATE,
+      JACKSON,
+      LOGGING,
+      PROVIDED,
+      RESTEASY,
+      RHINO,
+      SUN_JAXB,
+    ]
+    compile.with(compile_classpath)
+
+    resource_substitutions = {
+      'version' => project.version,
+      'release' => release_number,
+    }
+    resources.filter.using(resource_substitutions)
+    test.resources.filter.using(resource_substitutions)
+
+    test.with(TESTING, JUKITO, HSQLDB)
+    test.using :java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ]
+
+    package(:war, :id=> project.name).tap do |war|
+      war.libs -= artifacts(PROVIDED)
+    end
+  end
+
   desc "The Candlepin Server"
   define "server" do
-    project.version = spec_version('candlepin.spec')
-    release_number = spec_release('candlepin.spec')
+    spec_file = "candlepin.spec"
+    project.version = spec_version(spec_file)
+    release_number = spec_release(spec_file)
+
+    checkstyle.config_directory = checkstyle_config_directory
+    checkstyle.eclipse_xml = checkstyle_eclipse_xml
+    rpmlint.rpmlint_conf = rpmlint_conf
 
     # eclipse settings
     # http://buildr.apache.org/more_stuff.html#eclipse
     eclipse.natures :java
-
-    checkstyle.config_directory = checkstyle_config_directory
-    checkstyle.eclipse_xml = checkstyle_eclipse_xml
-
-    rpmlint.rpmlint_conf = rpmlint_conf
 
     # Buildr tries to outsmart you and use classpath variables whenever possible.  If
     # we don't do the below, Buildr will add 'JAVA_HOMElib/tools.jar' to the .classpath
@@ -247,9 +297,25 @@ define "candlepin" do
     msgfmt.resource = "#{project.group}.i18n.Messages"
 
     ### Building
-    compile_classpath = [COMMONS, RESTEASY, LOGGING, HIBERNATE, BOUNCYCASTLE,
-      GUICE, JACKSON, QUARTZ, GETTEXT_COMMONS, HORNETQ, SUN_JAXB, OAUTH, RHINO, COLLECTIONS,
-      PROVIDED, AMQP, LIQUIBASE]
+    compile_classpath = [
+      AMQP,
+      BOUNCYCASTLE,
+      COLLECTIONS,
+      COMMONS,
+      GETTEXT_COMMONS,
+      GUICE,
+      HIBERNATE,
+      HORNETQ,
+      JACKSON,
+      LIQUIBASE,
+      LOGGING,
+      OAUTH,
+      PROVIDED,
+      QUARTZ,
+      RESTEASY,
+      RHINO,
+      SUN_JAXB,
+    ]
     compile.with(compile_classpath)
     compile.with(LOGDRIVER, LOG4J_BRIDGE) if use_logdriver
 
