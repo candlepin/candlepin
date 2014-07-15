@@ -38,6 +38,6 @@ public class StatusResource {
     @GET
     @Produces({ MediaType.APPLICATION_JSON })
     public Status getStatus() {
-    	return status;
+        return status;
     }
 }

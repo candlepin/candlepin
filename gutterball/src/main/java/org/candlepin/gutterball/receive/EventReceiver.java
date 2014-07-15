@@ -38,30 +38,30 @@ import com.google.inject.Inject;
  * therefore specify an encoding.
  */
 public class EventReceiver {
-	TopicSubscriber consumer;
-	Session sess;
-	Topic dest;
-	Connection conn;
-	String connstr;
+    private TopicSubscriber consumer;
+    private Session sess;
+    private Topic dest;
+    private Connection conn;
+    private String connstr;
     private static Logger log = LoggerFactory.getLogger(EventReceiver.class);
 
     @Inject
-	public EventReceiver(Configuration config) throws AMQException, JMSException, URISyntaxException {
+    public EventReceiver(Configuration config) throws AMQException, JMSException, URISyntaxException {
         configureSslProperties(config);
         init(config);
     }
-    
+
     private void init(Configuration config) throws AMQException, JMSException, URISyntaxException  {
-	    conn = new AMQConnection(config.getString(ConfigKey.AMQP_CONNECT_STRING.toString()));
-	    conn.start();
-	    sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
-	    dest = new AMQAnyDestination("event");
-	    consumer = sess.createDurableSubscriber(dest, "event");
-	    consumer.setMessageListener(new EventMessageListener());
-	    log.info("receiver init complete");
-	    
+        conn = new AMQConnection(config.getString(ConfigKey.AMQP_CONNECT_STRING.toString()));
+        conn.start();
+        sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        dest = new AMQAnyDestination("event");
+        consumer = sess.createDurableSubscriber(dest, "event");
+        consumer.setMessageListener(new EventMessageListener());
+        log.info("receiver init complete");
+
     }
-    
+
     private void configureSslProperties(Configuration config) {
         // FIXME: Setting the property here is dangerous,
         // but in theory nothing else is setting/using it
@@ -80,9 +80,9 @@ public class EventReceiver {
     }
 
     private void finish() throws JMSException {
-	    consumer.close();
-	    sess.close();
-	    conn.close();
-	    log.info("DONE");
+        consumer.close();
+        sess.close();
+        conn.close();
+        log.info("DONE");
     }
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 Red Hat, Inc.
+ * Copyright (c) 2009 - 2012 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -17,7 +17,6 @@ package org.candlepin.gutterball.receiver;
 import org.apache.qpid.AMQException;
 import org.apache.qpid.client.AMQAnyDestination;
 import org.apache.qpid.client.AMQConnection;
-import org.apache.qpid.url.URLSyntaxException;
 import org.junit.Test;
 
 import java.net.URISyntaxException;
@@ -46,7 +45,8 @@ public class ReceiverTest {
             //config.getString(ConfigProperties.AMQP_TRUSTSTORE));
         System.setProperty("javax.net.ssl.trustStorePassword", "password");
             //config.getString(ConfigProperties.AMQP_TRUSTSTORE_PASSWORD));
-        String connstr = "amqp://guest:guest@localhost/test?brokerlist='tcp://localhost:5671?ssl='true'&ssl_cert_alias='amqp-client''";
+        String connstr = "amqp://guest:guest@localhost/test?brokerlist=" +
+            "'tcp://localhost:5671?ssl='true'&ssl_cert_alias='amqp-client''";
         Connection conn = new AMQConnection(connstr);
         conn.start();
         Session sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
