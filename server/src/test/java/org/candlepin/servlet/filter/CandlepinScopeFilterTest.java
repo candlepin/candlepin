@@ -15,9 +15,10 @@
 package org.candlepin.servlet.filter;
 
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.doThrow;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -27,6 +28,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.candlepin.guice.CandlepinSingletonScope;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.internal.verification.VerificationModeFactory;
 
 /**
  * CandlepinScopeFilterTest
@@ -68,6 +70,14 @@ public class CandlepinScopeFilterTest {
         }
         verify(scope).enter();
         verify(scope).exit();
+    }
+
+    @Test
+    public void ensureAlreadyCommitedResponsesSafelyExit() throws Exception {
+        doReturn(true).when(response).isCommitted();
+
+        filter.doFilter(request, response, chain);
+        verify(scope, VerificationModeFactory.noMoreInteractions()).enter();
     }
 
 }
