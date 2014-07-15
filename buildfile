@@ -7,11 +7,10 @@ repositories.remote << "http://gettext-commons.googlecode.com/svn/maven-reposito
 repositories.remote << "http://oauth.googlecode.com/svn/code/maven/"
 repositories.remote << "http://central.maven.org/maven2/"
 
-require 'buildr/java/emma'
+require 'date'
+require 'json'
 require 'net/http'
 require 'rspec/core/rake_task'
-require 'rexml/document'
-require 'json'
 
 # Don't require findbugs by default.
 # needs "buildr-findBugs" gem installed
@@ -60,7 +59,7 @@ JACKSON = [group('jackson-annotations', 'jackson-core', 'jackson-databind',
 
 SUN_JAXB = 'com.sun.xml.bind:jaxb-impl:jar:2.1.12'
 
-JUNIT = ['junit:junit:jar:4.5', 'org.mockito:mockito-all:jar:1.8.5']
+TESTING = Buildr.transitive(['junit:junit:jar:4.11', 'org.mockito:mockito-all:jar:1.9.5'])
 
 LOGBACK = [group('logback-core', 'logback-classic',
                  :under => 'ch.qos.logback',
@@ -69,7 +68,9 @@ LOGBACK = [group('logback-core', 'logback-classic',
 # Artifacts that bridge other logging frameworks to slf4j. Mime4j uses
 # JCL for example.
 SLF4J_BRIDGES = 'org.slf4j:jcl-over-slf4j:jar:1.7.5'
-LOGGING = [LOGBACK, SLF4J_BRIDGES]
+SLF4J = 'org.slf4j:slf4j-api:jar:1.7.5'
+
+LOGGING = [LOGBACK, SLF4J_BRIDGES, SLF4J]
 
 HIBERNATE = [group('hibernate-core', 'hibernate-entitymanager', 'hibernate-c3p0',
                    :under => 'org.hibernate',
@@ -83,7 +84,6 @@ HIBERNATE = [group('hibernate-core', 'hibernate-entitymanager', 'hibernate-c3p0'
              'cglib:cglib:jar:2.2',
              'javassist:javassist:jar:3.12.0.GA',
              'javax.transaction:jta:jar:1.1',
-             'org.slf4j:slf4j-api:jar:1.7.5',
              'org.freemarker:freemarker:jar:2.3.15',
              'c3p0:c3p0:jar:0.9.1.2',
              'dom4j:dom4j:jar:1.6.1',
@@ -163,337 +163,211 @@ LOGDRIVER = 'logdriver:logdriver:jar:1.0'
 # Buildr to include it in the Eclipse .classpath file.
 PROVIDED = [SERVLET, file(Java.tools_jar)]
 
-### Project
-GROUP = "candlepin"
-COPYRIGHT = ""
-
-desc "The Proxy project"
-define "candlepin" do
-  release_number = ""
-  File.new('candlepin.spec').each_line do |line|
-    if line =~ /\s*Version:\s*(.*?)\s*$/
-      project.version = $1
-    end
-
-    if line =~ /\s*Release:\s*(.*?)\s*$/
-      release_number = $1.chomp("%{?dist}")
-    end
-  end
-
-  project.group = GROUP
-  manifest["Implementation-Vendor"] = COPYRIGHT
-
-  # eclipse settings
-  # http://buildr.apache.org/more_stuff.html#eclipse
-  eclipse.natures :java
-
-  checkstyle.config_directory = path_to(:buildconf)
-
-  # Buildr tries to outsmart you and use classpath variables whenever possible.  If
-  # we don't do the below, Buildr will add 'JAVA_HOMElib/tools.jar' to the .classpath
-  # file, but Eclipse doesn't have JAVA_HOME set as one of its classpath variables by
-  # default so the file isn't found.  We will cheat by setting the classpath variable to
-  # be exactly the same as the file path.
-  tools_location = File.basename(Java.tools_jar)
-  eclipse.classpath_variables tools_location.to_sym => tools_location
-
-  use_logdriver = ENV['logdriver']
-  info "Compiling with logdriver" if use_logdriver
-
-  # download the stuff we do not have in the repositories
-  download artifact(SCHEMASPY) => 'http://downloads.sourceforge.net/project/schemaspy/schemaspy/SchemaSpy%204.1.1/schemaSpy_4.1.1.jar'
-  download artifact(LOGDRIVER) => 'http://jmrodri.fedorapeople.org/ivy/candlepin/logdriver/logdriver/1.0/logdriver-1.0.jar' if use_logdriver
-
-  resource_substitutions = {
-    'version' => project.version,
-    'release' => release_number,
-  }
-  resources.filter.using(resource_substitutions)
-  test.resources.filter.using(resource_substitutions)
-
-  if not use_pmd.nil?
-    pmd.enabled = true
-  end
-
-  # Hook in gettext bundle generation to compile
-  nopo = ENV['nopo']
-  sources = FileList[_("po/*.po")]
-  generate = file(_("target/generated-source") => sources) do |dir|
-    mkdir_p dir.to_s
-    sources.each do |source|
-      locale = source.match("\/([^/]*)?\.po$")[1]
-      #we do this inside the loop, in order to create a stub "generate" var
-      if nopo.nil? || nopo.split(/,\s*/).include?(locale)
-        sh "msgfmt --java -r org.candlepin.i18n.Messages -d #{dir} -l #{locale} #{source}"
-      end
-    end
-  end
-  compile.from generate
-
-  ### Building
-  compile.options.target = '1.6'
-  compile.options.source = '1.6'
-  compile_classpath = [COMMONS, RESTEASY, LOGGING, HIBERNATE, BOUNCYCASTLE,
-    GUICE, JACKSON, QUARTZ, GETTEXT_COMMONS, HORNETQ, SUN_JAXB, OAUTH, RHINO, COLLECTIONS,
-    PROVIDED, AMQP, LIQUIBASE]
-  compile.with compile_classpath
-  compile.with LOGDRIVER, LOG4J_BRIDGE if use_logdriver
-
-  if Buildr.environment == 'oracle'
-    compile.with ORACLE
-  else
-    compile.with DB
-  end
-
-  ### Testing
-  test.setup do |task|
-    filter('src/main/resources/META-INF').into('target/classes/META-INF').run
-  end
-
-  # the other dependencies transfer from compile.classpath automagically
-  test.with HSQLDB, JUNIT, generate
-  test.with LOGDRIVER, LOG4J_BRIDGE if use_logdriver
-  test.using :java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ]
-
-  ### Javadoc
-  doc.using :tag => 'httpcode:m:HTTP Code:'
-
-  ### Packaging
-  # NOTE: changes here must also be made in build.xml!
-  candlepin_path = "org/candlepin"
-  compiled_cp_path = "#{compile.target}/#{candlepin_path}"
-
-  # The apicrawl package is only used for generating documentation so there is no
-  # need to ship it.  Ideally, we'd put apicrawl in its own buildr project but I
-  # kept getting complaints about circular dependencies.
-  package(:jar, :id=>'candlepin-api').tap do |jar|
-    jar.clean
-    pkgs = %w{auth config exceptions jackson model paging pki resteasy service util}.map { |pkg| "#{compiled_cp_path}/#{pkg}" }
-    p = jar.path(candlepin_path)
-    p.include(pkgs).exclude("#{compiled_cp_path}/util/apicrawl")
-  end
-
-  package(:jar, :id=>"candlepin-certgen").tap do |jar|
-    jar.clean
-    pkgs = %w{config exceptions jackson model pinsetter pki service util}.map { |pkg| "#{compiled_cp_path}/#{pkg}" }
-    p = jar.path(candlepin_path)
-    p.include(pkgs).exclude("#{compiled_cp_path}/util/apicrawl")
-  end
-
-  package(:war, :id=>"candlepin").tap do |war|
-    war.libs += artifacts(HSQLDB)
-    war.libs -= artifacts(PROVIDED)
-    war.classes.clear
-    war.classes = [generate, resources.target]
-    web_inf = war.path('WEB-INF/classes')
-    web_inf.include("#{compile.target}/net")
-    web_inf.path(candlepin_path).include("#{compiled_cp_path}/**").exclude("#{compiled_cp_path}/util/apicrawl")
-  end
-
-  desc "generate a .syntastic_class_path for vim/syntastic"
-  task :list_classpath do
-    # see https://github.com/scrooloose/syntastic/blob/master/syntax_checkers/java/javac.vim
-    # this generates a .syntastic_class_path so the syntastic javac checker will work properly
-    File.open(".syntastic_class_path", "w") do |f|
-      compile.dependencies.each { |dep| f.puts(dep) }
-      f.puts(Java.tools_jar)
-      f.puts(path_to(:target, :classes))
-    end
-  end
-
-  desc 'Crawl the REST API and print a summary.'
-  task :apicrawl  do
-    options.test = 'no'
-
-    # Join compile classpath with the package jar. Add the test log4j
-    # to the front of the classpath:
-    cp = ['src/test/resources'] | [project('candlepin').package(:jar)] | compile_classpath
-    Java::Commands.java('org.candlepin.util.apicrawl.ApiCrawler',
-                        {:classpath => cp})
-
-    classes = artifacts(cp).collect do |a|
-      task(a.to_s).invoke
-      File.expand_path a.to_s
-    end
-
-    # Just run the doclet on the *Resource files
-    sources = project('candlepin').compile.sources.collect do |dir|
-      Dir["#{dir}/**/*Resource.java"]
-    end.flatten
-
-    # Add in the options as the last arg
-    sources << {:name => 'Candlepin API',
-                :classpath => classes,
-                :doclet => 'org.candlepin.util.apicrawl.ApiDoclet',
-                :docletpath => ['target/classes', classes].flatten.join(File::PATH_SEPARATOR),
-                :output => 'target'}
-
-    Java::Commands.javadoc(*sources)
-
-    api_file = 'target/candlepin_api.json'
-    comments_file = 'target/candlepin_comments.json'
-    api = JSON.parse(File.read(api_file))
-    comments = JSON.parse(File.read(comments_file))
-
-    combined = Hash[api.collect { |a| [a['method'], a] }]
-    comments.each do |c|
-      if combined.has_key? c['method']
-        combined[c['method']].merge!(c)
-      else
-        combined[c['method']] = c
-      end
-    end
-
-    final = JSON.dump(combined.values.sort_by { |v| v['method'] })
-    final_file = 'target/candlepin_methods.json'
-    File.open(final_file, 'w') { |f| f.write final }
-
-    # Cleanup
-    rm api_file
-    rm comments_file
-    info "Wrote Candlepin API to: #{final_file}"
-  end
-
-  desc 'run rpmlint on the spec file'
-  task :rpmlint do
-    sh('rpmlint -f rpmlint.config candlepin.spec')
-  end
-
-  desc 'Create an html report of the schema'
-  task :schemaspy do
-   cp = Buildr.artifacts(DB, SCHEMASPY).each(&:invoke).map(&:name).join(File::PATH_SEPARATOR)
-   command = "-t pgsql -db candlepin -s public -host localhost -u candlepin -p candlepin -o target/schemaspy"
-   ant('java') do |ant|
-     ant.java(:classname => "net.sourceforge.schemaspy.Main", :classpath => cp, :fork => true) do |java|
-       command.split(/\s+/).each {|value| ant.arg :value => value}
-     end
-   end
-  end
-
+# Make Util available in all projects.  See http://buildr.apache.org/extending.html#extensions
+class Project
+  include Util
 end
 
-namespace "gettext" do
-  task :extract do
-    sh 'xgettext -ktrc:1c,2 -k -ktrnc:1c,2,3 -ktr -kmarktr -ktrn:1,2 -o po/keys.pot $(find src/main/java -name "*.java")'
+### Project
+desc "The Candlepin Project"
+define "candlepin" do
+  project.group = "org.candlepin"
+  manifest["Copyright"] = "Red Hat, Inc. #{Date.today.strftime('%Y')}"
+
+  compile.options.target = '1.6'
+  compile.options.source = '1.6'
+
+  # path_to() (and it's alias _()) simply provides the absolute path to
+  # a directory relative to the project.
+  # See http://buildr.apache.org/rdoc/Buildr/Project.html#method-i-path_to
+  checkstyle_config_directory = path_to(:project_conf)
+  checkstyle_eclipse_xml = path_to(:project_conf, 'eclipse-checkstyle.xml')
+  rpmlint_conf = path_to("rpmlint.config")
+
+  desc "Common Candlepin Code"
+  define "common" do
+    project.version = spec_version('candlepin-common.spec')
+
+    eclipse.natures :java
+
+    checkstyle.config_directory = checkstyle_config_directory
+    checkstyle.eclipse_xml = checkstyle_eclipse_xml
+
+    rpmlint.rpmlint_conf = rpmlint_conf
+
+    compile_classpath = [COMMONS, LOGGING, GUICE, GETTEXT_COMMONS, COLLECTIONS, PROVIDED, RESTEASY]
+    compile.with(compile_classpath)
+
+    test.with(TESTING)
+    test.using :java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ]
+
+    package(:jar)
   end
-  task :merge do
-    FileList["po/*.po"].each do |source|
-      sh "msgmerge -N --backup=none -U #{source} po/keys.pot"
+
+  desc "The Candlepin Server"
+  define "server" do
+    project.version = spec_version('candlepin.spec')
+    release_number = spec_release('candlepin.spec')
+
+    # eclipse settings
+    # http://buildr.apache.org/more_stuff.html#eclipse
+    eclipse.natures :java
+
+    checkstyle.config_directory = checkstyle_config_directory
+    checkstyle.eclipse_xml = checkstyle_eclipse_xml
+
+    rpmlint.rpmlint_conf = rpmlint_conf
+
+    # Buildr tries to outsmart you and use classpath variables whenever possible.  If
+    # we don't do the below, Buildr will add 'JAVA_HOMElib/tools.jar' to the .classpath
+    # file, but Eclipse doesn't have JAVA_HOME set as one of its classpath variables by
+    # default so the file isn't found.  We will cheat by setting the classpath variable to
+    # be exactly the same as the file path.
+    tools_location = File.basename(Java.tools_jar)
+    eclipse.classpath_variables tools_location.to_sym => tools_location
+
+    use_logdriver = ENV['logdriver']
+    info "Compiling with logdriver" if use_logdriver
+
+    # download the stuff we do not have in the repositories
+    download artifact(SCHEMASPY) => 'http://downloads.sourceforge.net/project/schemaspy/schemaspy/SchemaSpy%204.1.1/schemaSpy_4.1.1.jar'
+    download artifact(LOGDRIVER) => 'http://jmrodri.fedorapeople.org/ivy/candlepin/logdriver/logdriver/1.0/logdriver-1.0.jar' if use_logdriver
+
+    resource_substitutions = {
+      'version' => project.version,
+      'release' => release_number,
+    }
+    resources.filter.using(resource_substitutions)
+    test.resources.filter.using(resource_substitutions)
+
+    unless use_pmd.nil?
+      pmd.enabled = true
+    end
+
+    msgfmt.resource = "#{project.group}.i18n.Messages"
+
+    ### Building
+    compile_classpath = [COMMONS, RESTEASY, LOGGING, HIBERNATE, BOUNCYCASTLE,
+      GUICE, JACKSON, QUARTZ, GETTEXT_COMMONS, HORNETQ, SUN_JAXB, OAUTH, RHINO, COLLECTIONS,
+      PROVIDED, AMQP, LIQUIBASE]
+    compile.with(compile_classpath)
+    compile.with(LOGDRIVER, LOG4J_BRIDGE) if use_logdriver
+
+    if Buildr.environment == 'oracle'
+      compile.with(ORACLE)
+    else
+      compile.with(DB)
+    end
+
+    ### Testing
+    test.setup do |task|
+      filter(path_to(:src, :main, :resources, 'META-INF')).into(path_to(:target, :classes, 'META-INF')).run
+    end
+
+    # the other dependencies transfer from compile.classpath automagically
+    test.with(HSQLDB, TESTING)
+    test.with(LOGDRIVER, LOG4J_BRIDGE) if use_logdriver
+    test.using(:java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ])
+
+    ### Javadoc
+    doc.using :tag => 'httpcode:m:HTTP Code:'
+
+    ### Packaging
+    # NOTE: changes here must also be made in build.xml!
+    candlepin_path = "org/candlepin"
+    compiled_cp_path = "#{compile.target}/#{candlepin_path}"
+
+    # The apicrawl package is only used for generating documentation so there is no
+    # need to ship it.  Ideally, we'd put apicrawl in its own buildr project but I
+    # kept getting complaints about circular dependencies.
+    api_jar = package(:jar, :id=>'candlepin-api').tap do |jar|
+      jar.clean
+      pkgs = %w{auth config exceptions jackson model paging pki resteasy service util}.map { |pkg| "#{compiled_cp_path}/#{pkg}" }
+      p = jar.path(candlepin_path)
+      p.include(pkgs).exclude("#{compiled_cp_path}/util/apicrawl")
+    end
+    pom.artifact = api_jar
+
+    package(:jar, :id=>"candlepin-certgen").tap do |jar|
+      jar.clean
+      pkgs = %w{config exceptions jackson model pinsetter pki service util}.map { |pkg| "#{compiled_cp_path}/#{pkg}" }
+      p = jar.path(candlepin_path)
+      p.include(pkgs).exclude("#{compiled_cp_path}/util/apicrawl")
+    end
+
+    package(:war, :id=>"candlepin").tap do |war|
+      war.libs += artifacts(HSQLDB)
+      war.libs -= artifacts(PROVIDED)
+      war.classes.clear
+      war.classes = [msgfmt.destination, resources.target]
+      web_inf = war.path('WEB-INF/classes')
+      web_inf.include("#{compile.target}/net")
+      web_inf.path(candlepin_path).include("#{compiled_cp_path}/**").exclude("#{compiled_cp_path}/util/apicrawl")
+    end
+
+    desc 'Crawl the REST API and print a summary.'
+    task :apicrawl  do
+      options.test = 'no'
+
+      # Join compile classpath with the package jar.
+      cp = [path_to(:src, :main, :resources)] | [project.package(:jar)] | compile_classpath
+      Java::Commands.java('org.candlepin.util.apicrawl.ApiCrawler', :classpath => cp)
+
+      classes = artifacts(cp).collect do |a|
+        task(a.to_s).invoke
+        File.expand_path a.to_s
+      end
+
+      # Just run the doclet on the *Resource files
+      sources = project.compile.sources.collect do |dir|
+        Dir["#{dir}/**/*Resource.java"]
+      end.flatten
+
+      # Add in the options as the last arg
+      sources << {:name => 'Candlepin API',
+                  :classpath => classes,
+                  :doclet => 'org.candlepin.util.apicrawl.ApiDoclet',
+                  :docletpath => [path_to(:target, :classes), classes].flatten.join(File::PATH_SEPARATOR),
+                  :output => path_to(:target)}
+
+      Java::Commands.javadoc(*sources)
+
+      api_file = path_to(:target, "candlepin_api.json")
+      comments_file = path_to(:target, "candlepin_comments.json")
+      api = JSON.parse(File.read(api_file))
+      comments = JSON.parse(File.read(comments_file))
+
+      combined = Hash[api.collect { |a| [a['method'], a] }]
+      comments.each do |c|
+        if combined.has_key? c['method']
+          combined[c['method']].merge!(c)
+        else
+          combined[c['method']] = c
+        end
+      end
+
+      final = JSON.dump(combined.values.sort_by { |v| v['method'] })
+      final_file = path_to(:target, "candlepin_methods.json")
+      File.open(final_file, 'w') { |f| f.write final }
+
+      # Cleanup
+      rm api_file
+      rm comments_file
+      info "Wrote Candlepin API to: #{final_file}"
+    end
+
+    desc 'Create an html report of the schema'
+    task :schemaspy do
+     cp = Buildr.artifacts(DB, SCHEMASPY).each(&:invoke).map(&:name).join(File::PATH_SEPARATOR)
+     command = "-t pgsql -db candlepin -s public -host localhost -u candlepin -p candlepin -o target/schemaspy"
+     ant('java') do |ant|
+       ant.java(:classname => "net.sourceforge.schemaspy.Main", :classpath => cp, :fork => true) do |java|
+         command.split(/\s+/).each {|value| ant.arg :value => value}
+       end
+     end
     end
   end
 end
 
 desc 'Make sure eventhing is working as it should'
-task :check_all => [:clean, :checkstyle, 'candlepin:rpmlint', :test, :deploy, :spec]
-
-#==========================================================================
-# Tomcat deployment
-#==========================================================================
-desc 'Build and deploy candlepin to a local Tomcat instance'
-task :deploy do
-  sh 'buildconf/scripts/deploy'
-end
-
-task :deploy_check do
-  begin
-    http = Net::HTTP.new('localhost', 8443)
-    http.use_ssl = true
-    http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-    http.start do |conn|
-      response = conn.request Net::HTTP::Get.new "/candlepin/admin/init"
-      Rake::Task[:deploy].invoke if response.code != '200'
-    end
-  rescue
-    # Http request failed
-    Rake::Task[:deploy].invoke
-  end
-end
-
-task :eclipse do
-  info("Fixing eclipse .classpath")
-  doc = REXML::Document.new(File.new('.classpath'))
-  elements = REXML::XPath.match(doc, "/classpath/classpathentry[@path='src/main/resources']")
-  elements.map! { |e| e.delete_attribute('output') }
-  doc.write(File.open('.classpath', 'w'))
-
-  # make the gettext output dir to silence eclipse errors
-  mkdir_p("target/generated-source")
-end
-
-#==========================================================================
-# RSpec functional tests
-#==========================================================================
-RSpec::Core::RakeTask.new do |task|
-
-  # Support optional features env variable, specify the spec files to run
-  # without the trailing '_spec.rb'. Specify multiple by separating with ':'.
-  # i.e. build spec features=flex_expiry:authorization
-  features = ENV['features']
-  if not features.nil?
-    feature_files = Array.new
-    features.split(":").each do |part|
-      feature_files << "spec/#{part}_spec.rb"
-    end
-    task.pattern = feature_files
-  end
-
-  task.rspec_opts = ["-I#{File.expand_path 'client/ruby/'}"]
-  task.rspec_opts << '-c'
-  skipbundler = ENV['skipbundler']
-  if not skipbundler.nil?
-    task.skip_bundler = true
-  end
-
-  # Allow specify only="should do something" to run only a specific
-  # test. The text must completely match the contents of your "it" string.
-  only_run = ENV['only']
-  if not only_run.nil?
-    task.rspec_opts << "-e '#{only_run}'"
-  end
-
-  fail_fast = ENV['fail_fast']
-  if not fail_fast.nil?
-    task.rspec_opts << "--fail-fast"
-  end
-
-  dots = ENV['dots']
-  if not dots.nil?
-    task.rspec_opts << "-fp"
-  else
-    task.rspec_opts << "-fd"
-  end
-end
-#task :spec => :deploy_check
-
-# fix the coverage reports generated by emma.
-# we're adding to the existing emma:html task here
-# This is AWESOME!
-namespace :emma do
- task :html do
-  info "Fixing emma reports"
-  fixemmareports("reports/emma/coverage.html")
-
-  dir = "reports/emma/_files"
-  Dir.foreach(dir) do |filename|
-    fixemmareports("#{dir}/#{filename}") unless filename == "." || filename == ".."
-  end
- end
-end
-
-# fixes the html produced by emma
-def fixemmareports(filetofix)
-  text = File.read(filetofix)
-  newstr = ''
-  text.each_byte do |c|
-    if c != 160 then
-      newstr.concat(c)
-    else
-      newstr.concat('&nbsp;')
-    end
-  end
-  tmp = File.new("tmpreport", "w")
-  tmp.write(newstr)
-  tmp.close()
-  FileUtils.copy("tmpreport", filetofix)
-  File.delete("tmpreport")
-end
+task :check_all => [:clean, :checkstyle, :rpmlint, :test]

@@ -2,7 +2,7 @@
 <project name="candlepin" default="why">
   <property environment="env" />
   <property name="cp-home" location="." />
-  <property name="script.dir" location="${cp-home}/buildconf/scripts" />
+  <property name="script.dir" location="${cp-home}/bin" />
   <property name="src.main.dir" location="${cp-home}/src/main/java" />
   <property name="res.main.dir" location="${cp-home}/src/main/resources" />
   <property name="webapp.main.dir" location="${cp-home}/src/main/webapp" />

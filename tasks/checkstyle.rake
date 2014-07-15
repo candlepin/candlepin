@@ -1,11 +1,8 @@
-#! /usr/bin/env ruby
-
 require 'buildr/checkstyle'
 require 'rexml/document'
 
 module AntTaskCheckstyle
   class << self
-    include Buildr::Checkstyle
     def dependencies
       Buildr.transitive('com.puppycrawl.tools:checkstyle:jar:5.7')
     end
@@ -16,15 +13,17 @@ module AntTaskCheckstyle
       options[:properties] ||= {}
       options[:profiles] ||= []
       begin
+        info("Running Checkstyle on #{options[:project]}")
+
         # See http://checkstyle.sourceforge.net/anttask.html
         Buildr.ant('checkstyle') do |ant|
           ant.taskdef(:classpath => cp, :resource => "checkstyletask.properties")
           options[:profiles].each do |profile|
             next unless profile.enabled == "true"
-            puts "Checkstyle checking #{profile.name}"
 
             profile_properties = options[:properties].merge(profile.properties)
             profile.properties.values.map! do |v|
+              # basedir is set in the properties method of Config's superclass: Buildr::Checkstyle::Config
               v.gsub!("${basedir}", profile_properties[:basedir])
             end
 
@@ -38,9 +37,12 @@ module AntTaskCheckstyle
                 ant.property(:key => k, :value => v)
               end
               source_paths.each do |source_path|
-                ant.fileset(:dir => p) do
+                ant.fileset(:dir => source_path) do
                   patterns.each do |pattern|
                     ant.filename(:regex => pattern.pattern, :negate => !pattern.is_include)
+                    if pattern.is_include
+                      info("Checking #{File.join(source_path, pattern.pattern)}")
+                    end
                   end
                 end
               end
@@ -62,29 +64,42 @@ module AntTaskCheckstyle
   end
 
   class Config < Buildr::Checkstyle::Config
+    attr_writer :eclipse_xml
     def eclipse_xml
       @eclipse_xml || project.path_to(".checkstyle")
     end
 
+    attr_writer :format
     def format
       @format || "plain"
     end
 
+    attr_writer :source_paths
     def source_paths
       # The filesets in the Eclipse checkstyle config will take care of the
       # particulars, so we just want to start at the top
       @source_paths || [project.base_dir]
     end
 
+    attr_writer :fail_on_error
     def fail_on_error?
       (@fail_on_error.nil?) ? true : @fail_on_error
     end
 
+    attr_writer :plain_output_file
     def plain_output_file
       # nil will write to stdout
       @plain_output_file || nil
     end
 
+    # This overrides the super class which adds project.compile.dependencies
+    # and project.test.compile.dependencies by default.  We don't need all that
+    # stuff on the classpath because we aren't even compiling the project.
+    def extra_dependencies
+      @extra_dependencies || []
+    end
+
+    attr_writer :properties
     def properties
       unless @properties
         @properties = super
@@ -93,7 +108,11 @@ module AntTaskCheckstyle
     end
 
     def eclipse_properties
-      return {} unless File.exist?(eclipse_xml)
+      unless File.exist?(eclipse_xml)
+        warn("Could not find #{eclipse_xml} for #{project}.  This is probably an error.") if enabled?
+        return {}
+      end
+
       return @eclipse_properties unless @eclipse_properties.nil?
       @eclipse_properties = []
 
@@ -104,7 +123,9 @@ module AntTaskCheckstyle
       configs.each do |c|
         props = {}
         c.get_elements('property').inject(props) do |h, el|
-          h[el.attribute('name').to_s] = el.attribute('value').to_s
+          # The .value() call is important.  It's what expands the XML entity we
+          # use to point to the config directory.
+          h[el.attribute('name').to_s] = el.attribute('value').value
           h
         end
         property_sets[c.attribute('name').to_s] = props
@@ -154,14 +175,16 @@ module AntTaskCheckstyle
     after_define do |project|
       cs = project.checkstyle
       ide = project.eclipse
-
-      ide.natures('net.sf.eclipsecs.core.CheckstyleNature')
-      ide.builders('net.sf.eclipsecs.core.CheckstyleBuilder')
-
       if cs.enabled?
+        unless ide.natures.empty?
+          ide.natures('net.sf.eclipsecs.core.CheckstyleNature')
+          ide.builders('net.sf.eclipsecs.core.CheckstyleBuilder')
+        end
+
         task('checkstyle:xml').clear
         task('checkstyle:html').clear
-        task('checkstyle').enhance do
+
+        project.recursive_task('checkstyle') do |task|
           AntTaskCheckstyle.checkstyle(cs.configuration_file,
                                        'plain',
                                        cs.plain_output_file,
@@ -169,10 +192,11 @@ module AntTaskCheckstyle
                                        :profiles => cs.eclipse_properties,
                                        :properties => cs.properties,
                                        :fail_on_error => cs.fail_on_error?,
-                                       :dependencies => cs.extra_dependencies)
+                                       :dependencies => cs.extra_dependencies,
+                                       :project => project)
         end
 
-        task('checkstyle:xml').enhance do
+        project.recursive_task('checkstyle:xml') do |task|
           reports_dir = project.path_to(:reports, :checkstyle)
           rm_rf(reports_dir)
           mkdir_p(reports_dir)
@@ -183,11 +207,12 @@ module AntTaskCheckstyle
                                        :profiles => cs.eclipse_properties,
                                        :properties => cs.properties,
                                        :fail_on_error => false,
-                                       :dependencies => cs.extra_dependencies)
+                                       :dependencies => cs.extra_dependencies,
+                                       :project => project)
         end
         if cs.html_enabled?
-          task('checkstyle:html' => task('checkstyle:xml')) do
-            puts "Converting XML to HTML"
+          project.recursive_task('checkstyle:html' => 'checkstyle:xml') do |task|
+            info("Converting XML to HTML")
             mkdir_p(File.dirname(cs.html_output_file))
             Buildr.ant('checkstyle') do |ant|
               ant.xslt(:in => cs.xml_output_file,
