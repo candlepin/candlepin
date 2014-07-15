@@ -18,6 +18,7 @@ import org.apache.qpid.AMQException;
 import org.apache.qpid.client.AMQAnyDestination;
 import org.apache.qpid.client.AMQConnection;
 import org.junit.Test;
+import org.junit.Ignore;
 
 import java.net.URISyntaxException;
 
@@ -35,6 +36,7 @@ import javax.jms.Session;
  */
 public class ReceiverTest {
 
+    @Ignore
     @Test
     public void test() throws AMQException, JMSException, URISyntaxException {
         System.setProperty("javax.net.ssl.keyStore", "/etc/candlepin/certs/amqp/keystore");
