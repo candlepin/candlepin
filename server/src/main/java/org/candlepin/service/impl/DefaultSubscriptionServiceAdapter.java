@@ -127,4 +127,9 @@ public class DefaultSubscriptionServiceAdapter implements
     public List<Subscription> getSubscriptions(Product product) {
         return subCurator.listByProduct(product);
     }
+
+    @Override
+    public boolean isReadOnly() {
+        return false;
+    }
 }

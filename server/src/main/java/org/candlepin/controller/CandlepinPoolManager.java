@@ -226,12 +226,13 @@ public class CandlepinPoolManager implements PoolManager {
             log.info("Cleaning up expired pool: " + p.getId() +
                 " (" + p.getEndDate() + ")");
 
-            Subscription sub = subAdapter.getSubscription(p.getSubscriptionId());
-            // In case it was already deleted:
-            if (sub != null) {
-                subAdapter.deleteSubscription(sub);
+            if (!subAdapter.isReadOnly()) {
+                Subscription sub = subAdapter.getSubscription(p.getSubscriptionId());
+                // In case it was already deleted:
+                if (sub != null) {
+                    subAdapter.deleteSubscription(sub);
+                }
             }
-
             deletePool(p);
         }
     }

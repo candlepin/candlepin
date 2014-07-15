@@ -612,6 +612,60 @@ public class PoolManagerTest {
         verify(mockEventSink, times(3)).sendEvent((Event) any());
     }
 
+    @Test
+    public void testCleanupExpiredPools() {
+        Pool p = createPoolWithEntitlements();
+        p.setSubscriptionId("subid");
+        List<Pool> pools = new LinkedList<Pool>();
+        pools.add(p);
+
+        when(mockPoolCurator.lockAndLoad(any(Pool.class))).thenReturn(p);
+        when(mockPoolCurator.listExpiredPools()).thenReturn(pools);
+        when(mockPoolCurator.entitlementsIn(p)).thenReturn(
+                new ArrayList<Entitlement>(p.getEntitlements()));
+        Subscription sub = new Subscription();
+        sub.setId(p.getSubscriptionId());
+        when(mockSubAdapter.getSubscription(any(String.class))).thenReturn(sub);
+        when(mockSubAdapter.isReadOnly()).thenReturn(false);
+        PreUnbindHelper preHelper =  mock(PreUnbindHelper.class);
+        ValidationResult result = new ValidationResult();
+        when(preHelper.getResult()).thenReturn(result);
+
+        manager.cleanupExpiredPools();
+
+        // And the pool should be deleted:
+        verify(mockPoolCurator).delete(p);
+        verify(mockSubAdapter).getSubscription(eq("subid"));
+        verify(mockSubAdapter).deleteSubscription(eq(sub));
+    }
+
+    @Test
+    public void testCleanupExpiredPoolsReadOnlySubscriptions() {
+        Pool p = createPoolWithEntitlements();
+        p.setSubscriptionId("subid");
+        List<Pool> pools = new LinkedList<Pool>();
+        pools.add(p);
+
+        when(mockPoolCurator.lockAndLoad(any(Pool.class))).thenReturn(p);
+        when(mockPoolCurator.listExpiredPools()).thenReturn(pools);
+        when(mockPoolCurator.entitlementsIn(p)).thenReturn(
+                new ArrayList<Entitlement>(p.getEntitlements()));
+        Subscription sub = new Subscription();
+        sub.setId(p.getSubscriptionId());
+        when(mockSubAdapter.getSubscription(any(String.class))).thenReturn(sub);
+        when(mockSubAdapter.isReadOnly()).thenReturn(true);
+        PreUnbindHelper preHelper =  mock(PreUnbindHelper.class);
+        ValidationResult result = new ValidationResult();
+        when(preHelper.getResult()).thenReturn(result);
+
+        manager.cleanupExpiredPools();
+
+        // And the pool should be deleted:
+        verify(mockPoolCurator).delete(p);
+        verify(mockSubAdapter, never()).getSubscription(any(String.class));
+        verify(mockSubAdapter, never()).deleteSubscription(any(Subscription.class));
+    }
+
     private Pool createPoolWithEntitlements() {
         Pool newPool = TestUtil.createPool(o, product);
         Entitlement e1 = new Entitlement(newPool, TestUtil.createConsumer(o),
