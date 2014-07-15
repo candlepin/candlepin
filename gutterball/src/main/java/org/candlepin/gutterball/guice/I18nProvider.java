@@ -15,7 +15,7 @@
 package org.candlepin.gutterball.guice;
 
 import com.google.inject.Provider;
-import com.google.inject.servlet.RequestScoped;
+//import com.google.inject.servlet.RequestScoped;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,7 +41,7 @@ import javax.servlet.ServletRequest;
  * See http://code.google.com/p/google-guice/wiki/ServletModule#Using_RequestScope
  * for more information.
  */
-@RequestScoped
+//@RequestScoped
 public class I18nProvider implements Provider<I18n> {
     public static final String BASENAME = "org.candlepin.gutterball.i18n.Messages";
 
