@@ -38,7 +38,7 @@ public class MapConfigurationTest {
 
     @SuppressWarnings("checkstyle:visibilitymodifier")
     @Rule
-    public ExpectedException ex;
+    public ExpectedException ex = ExpectedException.none();
 
     private MapConfiguration config;
 
