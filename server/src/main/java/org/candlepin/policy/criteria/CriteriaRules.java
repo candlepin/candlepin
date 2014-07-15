@@ -21,7 +21,7 @@ import org.candlepin.config.Config;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.PoolAttribute;
-import org.candlepin.model.ProductPoolAttribute;
+import org.candlepin.model.PoolFilterBuilder;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Projections;
@@ -74,42 +74,19 @@ public class CriteriaRules  {
         // Don't load virt_only pools if this consumer isn't a guest
         // or a manifest consumer
         if (consumer.getType().isManifest()) {
-            DetachedCriteria noRequiresHost = DetachedCriteria.forClass(
+            DetachedCriteria requiresHost = DetachedCriteria.forClass(
                     PoolAttribute.class, "attr")
                 .add(Restrictions.eq("name", "requires_host"))
                 .add(Property.forName("this.id").eqProperty("attr.pool.id"))
                 .setProjection(Projections.property("attr.id"));
 
             // we do want everything else
-            criteriaFilters.add(Subqueries.notExists(noRequiresHost));
+            criteriaFilters.add(Subqueries.notExists(requiresHost));
         }
         else if (!"true".equalsIgnoreCase(consumer.getFact("virt.is_guest"))) {
-            // not a guest
-            DetachedCriteria noVirtOnlyPoolAttr =
-                DetachedCriteria.forClass(
-                        PoolAttribute.class, "pool_attr")
-                    .add(Restrictions.eq("name", "virt_only"))
-                    .add(Restrictions.eq("value", "true").ignoreCase())
-                    .add(Property.forName("this.id")
-                            .eqProperty("pool_attr.pool.id"))
-                    .setProjection(Projections.property("pool_attr.id"));
-            criteriaFilters.add(Subqueries.notExists(
-                    noVirtOnlyPoolAttr));
-
-            // same criteria but for PoolProduct attributes
-            // not sure if this should be two separate criteria, or if it's
-            // worth it to combine in some clever fashion
-            DetachedCriteria noVirtOnlyProductAttr =
-                DetachedCriteria.forClass(
-                        ProductPoolAttribute.class, "prod_attr")
-                    .add(Restrictions.eq("name", "virt_only"))
-                    .add(Restrictions.eq("value", "true").ignoreCase())
-                    .add(Property.forName("this.id")
-                            .eqProperty("prod_attr.pool.id"))
-                    .setProjection(Projections.property("prod_attr.id"));
-            criteriaFilters.add(Subqueries.notExists(
-                    noVirtOnlyProductAttr));
-
+            PoolFilterBuilder filterBuilder = new PoolFilterBuilder();
+            filterBuilder.addAttributeFilter("virt_only", "true");
+            criteriaFilters.add(Restrictions.not(filterBuilder.getCriteria()));
         }
         else {
             // we are a virt guest
@@ -119,7 +96,7 @@ public class CriteriaRules  {
                 if (hostConsumer != null) {
                     hostUuid = hostConsumer.getUuid();
                 }
-                DetachedCriteria noRequiresHost = DetachedCriteria.forClass(
+                DetachedCriteria wrongRequiresHost = DetachedCriteria.forClass(
                         PoolAttribute.class, "attr")
                         .add(Restrictions.eq("name", "requires_host"))
                         //  Note: looking for pools that are not for this guest
@@ -128,8 +105,7 @@ public class CriteriaRules  {
                                 .eqProperty("attr.pool.id"))
                                 .setProjection(Projections.property("attr.id"));
                 // we do want everything else
-                criteriaFilters.add(Subqueries.notExists(
-                        noRequiresHost));
+                criteriaFilters.add(Subqueries.notExists(wrongRequiresHost));
             }
             // no virt.uuid, we can't try to filter
         }

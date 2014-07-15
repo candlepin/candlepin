@@ -17,7 +17,6 @@ package org.candlepin.model;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.candlepin.model.FilterBuilder.FilterLikeExpression;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Projections;

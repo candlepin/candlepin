@@ -20,7 +20,6 @@ import org.apache.commons.lang.StringUtils;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Disjunction;
-import org.hibernate.criterion.LikeExpression;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.Subqueries;
@@ -55,26 +54,5 @@ public class FactFilterBuilder extends FilterBuilder {
             .setProjection(Projections.property("subcons.id"));
 
         return Subqueries.exists(dc);
-    }
-
-    /**
-     * FilterLikeExpression to easily build like clauses, escaping all sql wildcards
-     * from input while allowing us to use a custom wildcard
-     */
-    @SuppressWarnings("serial")
-    public static class FilterLikeExpression extends LikeExpression {
-
-        public FilterLikeExpression(String propertyName, String value, boolean ignoreCase) {
-            super(propertyName, escape(value), '!', ignoreCase);
-        }
-
-        private static String escape(String raw) {
-            // If our escape char is already here, escape it
-            return raw.replace("!", "!!")
-                // Escape anything that would be a wildcard
-                .replace("_", "!_").replace("%", "!%")
-                // Now use * as wildcard
-                .replace("*", "%");
-        }
     }
 }
