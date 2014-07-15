@@ -1,0 +1,120 @@
+#! /bin/bash
+
+APP="gutterball"
+
+usage() {
+    cat <<HELP
+    usage: deploy [options]
+
+    OPTIONS:
+      -q  quiet; no notifications and minimal output
+      -t  hot deloy; do not stop and start Tomcat
+HELP
+}
+
+err_msg() {
+    echo "${RED}${1}${RESET_COLOR}" >&2
+}
+
+success_msg() {
+    echo "${GREEN}${1}${RESET_COLOR}"
+}
+
+warn_msg() {
+    echo "${YELLOW}${1}${RESET_COLOR}"
+}
+
+init() {
+    # Get the directory this script is in. See http://mywiki.wooledge.org/BashFAQ/028
+    DEPLOY_BIN_DIR="${BASH_SOURCE%/*}"
+    PROJECT_ROOT=$(readlink -n -f "${DEPLOY_BIN_DIR}/../")
+
+    RED=$(tput setaf 1)
+    GREEN=$(tput setaf 2)
+    YELLOW=$(tput setaf 3)
+    RESET_COLOR=$(tput sgr0)
+
+    cd $PROJECT_ROOT
+}
+
+build() {
+    buildr -s clean package test=no
+}
+
+deploy() {
+    VERSION="$(grep Version: ${APP}.spec | cut --delim=' ' -f2)"
+
+    # use tomcat 6, unless it doesnt exist and tomcat does
+    TC=tomcat6
+    if [[ -f /usr/sbin/tomcat && ! -f /usr/sbin/tomcat6 ]]; then
+        TC=tomcat
+    fi
+
+    # delete the exploded directory otherwise app won't reload
+    if [ -d /var/lib/${TC}/webapps/${APP}/ ]; then
+        sudo rm -rf /var/lib/${TC}/webapps/${APP}/
+    fi
+
+    # TODO - Make this portable for RHEL 6
+    sudo install -o tomcat -g tomcat -m 644 target/$APP-$VERSION.war /var/lib/${TC}/webapps/${APP}.war
+}
+
+start_container() {
+    if [ -n "$HOTDEPLOY" ]; then
+        return
+    fi
+
+    sudo install -o tomcat -g tomcat -d -m 755 /var/log/gutterball
+    # TODO - Make this portable for RHEL 6
+    sudo systemctl start tomcat
+}
+
+stop_container() {
+    if [ -n "$HOTDEPLOY" ]; then
+        return
+    fi
+
+    # TODO - Make this portable for RHEL 6
+    sudo systemctl stop tomcat
+}
+
+notify() {
+    if [ -z $QUIET ]; then
+        if type notify-send &> /dev/null; then
+            notify-send -i info -t 2000 "Deployment complete!"
+        fi
+        success_msg "Deployment complete!"
+    fi
+}
+
+clean_up() {
+    cd $START_DIR
+}
+
+### Main
+
+# At the end of the script go back to where we started.
+# See http://linux.die.net/Bash-Beginners-Guide/sect_12_02.html
+START_DIR="$(pwd)"
+trap clean_up EXIT INT TERM
+
+# Abort on errors
+set -e
+
+while getopts ":qt" opt; do
+    case $opt in
+        q  ) QUIET="1";;
+        t  ) HOTDEPLOY="1";;
+        ?  ) usage; exit;;
+    esac
+done
+
+shift $(($OPTIND - 1))
+
+init
+build
+stop_container
+deploy
+start_container
+notify
+clean_up
