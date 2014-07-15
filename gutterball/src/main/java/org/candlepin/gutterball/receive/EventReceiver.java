@@ -18,9 +18,6 @@ import java.net.URISyntaxException;
 
 import javax.jms.Connection;
 import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.Queue;
 import javax.jms.Session;
 import javax.jms.Topic;
 import javax.jms.TopicSubscriber;
@@ -28,6 +25,8 @@ import javax.jms.TopicSubscriber;
 import org.apache.qpid.AMQException;
 import org.apache.qpid.client.AMQAnyDestination;
 import org.apache.qpid.client.AMQConnection;
+import org.candlepin.gutterball.config.ConfigKey;
+import org.candlepin.gutterball.config.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,21 +46,13 @@ public class EventReceiver {
     private static Logger log = LoggerFactory.getLogger(EventReceiver.class);
 
     @Inject
-	public EventReceiver() throws AMQException, JMSException, URISyntaxException {
-    	System.setProperty("javax.net.ssl.keyStore", "/etc/candlepin/certs/amqp/keystore");
-	        //config.getString(ConfigProperties.AMQP_KEYSTORE));
-	    System.setProperty("javax.net.ssl.keyStorePassword", "password");
-	        //config.getString(ConfigProperties.AMQP_KEYSTORE_PASSWORD));
-	    System.setProperty("javax.net.ssl.trustStore", "/etc/candlepin/certs/amqp/truststore");
-	        //config.getString(ConfigProperties.AMQP_TRUSTSTORE));
-	    System.setProperty("javax.net.ssl.trustStorePassword", "password");
-	        //config.getString(ConfigProperties.AMQP_TRUSTSTORE_PASSWORD));
-	    connstr = "amqp://guest:guest@localhost/test?brokerlist='tcp://localhost:5671?ssl='true'&ssl_cert_alias='amqp-client''";
-        init();
+	public EventReceiver(Configuration config) throws AMQException, JMSException, URISyntaxException {
+        configureSslProperties(config);
+        init(config);
     }
     
-    private void init() throws AMQException, JMSException, URISyntaxException  {
-	    conn = new AMQConnection(connstr);
+    private void init(Configuration config) throws AMQException, JMSException, URISyntaxException  {
+	    conn = new AMQConnection(config.getString(ConfigKey.AMQP_CONNECT_STRING.toString()));
 	    conn.start();
 	    sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
 	    dest = new AMQAnyDestination("event");
@@ -71,6 +62,23 @@ public class EventReceiver {
 	    
     }
     
+    private void configureSslProperties(Configuration config) {
+        // FIXME: Setting the property here is dangerous,
+        // but in theory nothing else is setting/using it
+        // http://qpid.apache.org/releases/qpid-0.24/programming/book/ch03s06.html
+
+        System.setProperty("javax.net.ssl.keyStore",
+            config.getString(ConfigKey.AMQP_KEYSTORE.toString()));
+        System.setProperty("javax.net.ssl.keyStorePassword",
+            config.getString(ConfigKey.AMQP_KEYSTORE_PASSWORD.toString()));
+        System.setProperty("javax.net.ssl.trustStore",
+            config.getString(ConfigKey.AMQP_TRUSTSTORE.toString()));
+        System.setProperty("javax.net.ssl.trustStorePassword",
+            config.getString(ConfigKey.AMQP_TRUSTSTORE_PASSWORD.toString()));
+
+        log.info("Configured SSL properites.");
+    }
+
     private void finish() throws JMSException {
 	    consumer.close();
 	    sess.close();
