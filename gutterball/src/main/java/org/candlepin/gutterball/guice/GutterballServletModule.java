@@ -16,6 +16,7 @@ package org.candlepin.gutterball.guice;
 
 import org.candlepin.gutterball.config.Configuration;
 import org.candlepin.gutterball.filter.LoggingFilter;
+import org.candlepin.gutterball.receive.EventReceiver;
 import org.candlepin.gutterball.resource.StatusResource;
 import org.candlepin.gutterball.resteasy.JsonProvider;
 import org.candlepin.gutterball.servlet.GutterballServletContextListener;
@@ -39,6 +40,7 @@ public class GutterballServletModule extends ServletModule {
         bind(I18n.class).toProvider(I18nProvider.class).in(ServletScopes.REQUEST);
         bind(JsonProvider.class);
         bind(StatusResource.class);
+        bind(EventReceiver.class).asEagerSingleton();
     }
 
     /**
