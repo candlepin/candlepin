@@ -239,6 +239,7 @@ define "candlepin" do
       SUN_JAXB,
     ]
     compile.with(compile_classpath)
+    compile.with(project('common'))
 
     resource_substitutions = {
       'version' => project.version,
@@ -319,6 +320,7 @@ define "candlepin" do
       SUN_JAXB,
     ]
     compile.with(compile_classpath)
+    compile.with(project('common'))
     compile.with(LOGDRIVER, LOG4J_BRIDGE) if use_logdriver
 
     if Buildr.environment == 'oracle'
