@@ -20,7 +20,6 @@ import javax.jms.MessageListener;
 import javax.jms.TextMessage;
 
 import org.candlepin.gutterball.model.Event;
-import org.candlepin.gutterball.util.EventJsonUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,10 +31,8 @@ public class EventMessageListener implements MessageListener {
 
     private static Logger log = LoggerFactory.getLogger(EventMessageListener.class);
 
-    private EventJsonUtil eventUtil;
 
-    public EventMessageListener(EventJsonUtil eventUtil) {
-        this.eventUtil = eventUtil;
+    public EventMessageListener() {
     }
 
     @Override
@@ -43,7 +40,7 @@ public class EventMessageListener implements MessageListener {
         log.info(message.toString());
 
         String messageBody = getMessageBody(message);
-        Event event = eventUtil.buildEvent(messageBody);
+        Event event = new Event(messageBody);
 
         log.info("Received Event: " + event);
     }

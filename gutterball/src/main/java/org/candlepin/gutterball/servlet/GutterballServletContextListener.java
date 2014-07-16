@@ -19,6 +19,7 @@ import org.candlepin.gutterball.config.ConfigurationException;
 import org.candlepin.gutterball.config.PropertiesFileConfiguration;
 import org.candlepin.gutterball.guice.GutterballServletModule;
 import org.candlepin.gutterball.guice.I18nProvider;
+import org.candlepin.gutterball.guice.MongoDBClientProvider;
 
 import com.google.inject.Binding;
 import com.google.inject.Guice;
@@ -133,4 +134,17 @@ public class GutterballServletContextListener extends
             }
         }
     }
+    
+    /**
+     * Do any cleanup required.
+     */
+    @Override
+    public void contextDestroyed(ServletContextEvent servletContextEvent) {
+        super.contextDestroyed(servletContextEvent);
+        final Injector injector = (Injector) servletContextEvent.getServletContext()
+                .getAttribute(Injector.class.getName());
+
+        injector.getInstance(MongoDBClientProvider.class).closeConnection();
+    }
+    
 }

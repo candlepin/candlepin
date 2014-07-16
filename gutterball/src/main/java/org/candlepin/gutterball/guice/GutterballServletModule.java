@@ -14,22 +14,24 @@
  */
 package org.candlepin.gutterball.guice;
 
+import javax.inject.Singleton;
+import javax.servlet.ServletContext;
+
 import org.candlepin.gutterball.config.Configuration;
+import org.candlepin.gutterball.curator.EventCurator;
 import org.candlepin.gutterball.filter.LoggingFilter;
 import org.candlepin.gutterball.receive.EventReceiver;
+import org.candlepin.gutterball.resource.EventResource;
 import org.candlepin.gutterball.resource.StatusResource;
 import org.candlepin.gutterball.resteasy.JsonProvider;
 import org.candlepin.gutterball.servlet.GutterballServletContextListener;
-import org.candlepin.gutterball.util.EventJsonUtil;
+import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Provides;
 import com.google.inject.servlet.ServletModule;
 import com.google.inject.servlet.ServletScopes;
-
-import org.xnap.commons.i18n.I18n;
-
-import javax.inject.Singleton;
-import javax.servlet.ServletContext;
+import com.mongodb.DB;
+import com.mongodb.MongoClient;
 
 /**
  * GutterballServletContextListener is responsible for starting Guice and binding
@@ -40,9 +42,19 @@ public class GutterballServletModule extends ServletModule {
         // See JavaDoc on I18nProvider for more information of RequestScope
         bind(I18n.class).toProvider(I18nProvider.class).in(ServletScopes.REQUEST);
         bind(JsonProvider.class);
-        bind(StatusResource.class);
-        bind(EventJsonUtil.class).asEagerSingleton();
         bind(EventReceiver.class).asEagerSingleton();
+        
+        // It is safe to share a single instance of the mongodb connection
+        bind(MongoClient.class).toProvider(MongoDBClientProvider.class).in(Singleton.class);
+        // FIXME: Determine if we need to share the DB connection.
+        bind(DB.class).toProvider(MongoDBProvider.class).in(Singleton.class);
+        
+        // Bind curators
+        bind(EventCurator.class);
+
+        // Bind resources
+        bind(StatusResource.class);
+        bind(EventResource.class);
     }
 
     /**
