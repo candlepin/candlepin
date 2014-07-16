@@ -14,10 +14,6 @@
  */
 package org.candlepin.servlet.filter.logging;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
-
 import java.io.IOException;
 import java.util.UUID;
 
@@ -29,6 +25,13 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import org.candlepin.common.filter.ServletLogger;
+import org.candlepin.common.filter.TeeHttpServletRequest;
+import org.candlepin.common.filter.TeeHttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 /**
  * LoggingFilter

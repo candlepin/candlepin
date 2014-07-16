@@ -15,7 +15,7 @@
 package org.candlepin.gutterball.guice;
 
 import org.candlepin.common.config.Configuration;
-import org.candlepin.common.filter.LoggingFilter;
+import org.candlepin.gutterball.filter.LoggingFilter;
 import org.candlepin.gutterball.receive.EventReceiver;
 import org.candlepin.gutterball.resource.StatusResource;
 import org.candlepin.gutterball.resteasy.JsonProvider;

@@ -47,8 +47,8 @@ import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.servlet.filter.logging.LoggingFilter;
-import org.candlepin.servlet.filter.logging.ServletLogger;
-import org.candlepin.servlet.filter.logging.TeeHttpServletRequest;
+import org.candlepin.common.filter.ServletLogger;
+import org.candlepin.common.filter.TeeHttpServletRequest;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
