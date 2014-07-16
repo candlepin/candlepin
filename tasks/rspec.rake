@@ -2,23 +2,27 @@ require 'parallel_tests'
 
 module ModifiedRSpec
   class << self
-    def includes_to_string(include_dirs)
-      include_dirs.map { |dir| "-I #{dir}" }.join(' ')
+    def default_rspec_opts(rspec)
+      opts = %W{--color --format documentation}
+      opts.concat(%W{--require #{File.join(Dir.pwd, 'tasks', 'failure_formatter')}})
+      opts.concat(%W{--format ModifiedRSpec::Formatters::FailuresFormatter})
+
+      includes = rspec.includes.map { |dir| "-I #{dir}" }
+      opts.concat(includes)
+      opts
     end
 
     def rspec_task(name, rspec, &block)
-      t = RSpec::Core::RakeTask.new(name) do |task|
+      RSpec::Core::RakeTask.new(name) do |task|
         task.verbose = false
-        task.rspec_opts = %W{--color -fd}
-        task.rspec_opts << self.includes_to_string(rspec.includes)
+        task.rspec_opts = self.default_rspec_opts(rspec)
         # Running buildr rspec:parallel all_tests=true will cause all the tests
-        # to run even if a test fails during the run.
-        if not ENV['all_tests'].nil?
+        # to run even if there is a failure in the serial portion of the run.
+        unless ENV['all_tests'].nil?
           task.fail_on_error = false
         end
-        yield task
+        yield task if block_given?
       end
-      return t
     end
   end
 
@@ -39,6 +43,12 @@ module ModifiedRSpec
 
     def includes
       [spec_dir] + requires
+    end
+
+    # This is not configurable because we have no way to
+    # pass this information to the RSpec formatter.
+    def failure_file
+      project.path_to(:target, 'rspec.failures')
     end
 
     protected
@@ -63,6 +73,9 @@ module ModifiedRSpec
       desc "*DEPRECATED* use rspec:parallel"
       Project.local_task('parallel_rspec')
 
+      desc "Run RSpec tests that failed last run"
+      Project.local_task('rspec:failures')
+
       desc "Run RSpec tests in serial"
       Project.local_task('rspec')
     end
@@ -72,27 +85,48 @@ module ModifiedRSpec
 
       if rspec.enabled?
         universal_pattern = File.join(rspec.spec_dir, '*_spec.rb')
-        ModifiedRSpec.rspec_task('hidden_rspec', rspec) do |task|
-          task.pattern = universal_pattern
+
+        task('rspec:clean_failures') do |task|
+          FileUtils.rm_f(rspec.failure_file)
         end
 
-        project.recursive_task('rspec' => 'hidden_rspec')
-
-        ModifiedRSpec.rspec_task('rspec_serial_only', rspec) do |task|
-          task.rspec_opts.concat(%w{--tag serial})
-          task.pattern = universal_pattern
+        project.recursive_task('rspec' => 'rspec:clean_failures') do |task|
+          ModifiedRSpec.rspec_task('hidden_rspec', rspec) do |rspec_task|
+            rspec_task.pattern = universal_pattern
+          end
+          task('hidden_rspec').invoke
         end
 
-        project.recursive_task('rspec:parallel' => 'rspec_serial_only') do |task|
-          rspec_opts = %W{--tag ~serial --format documentation}
-          rspec_opts << ModifiedRSpec.includes_to_string(rspec.includes)
-          rspec_opts = rspec_opts.join(' ')
-          ParallelTests::CLI.new.run(["--type", "rspec", "-o", rspec_opts, rspec.spec_dir])
+        project.recursive_task('rspec:parallel' => 'rspec:clean_failures') do |task|
+          ModifiedRSpec.rspec_task('rspec_serial_only', rspec) do |rspec_task|
+            rspec_task.rspec_opts.concat(%w{--tag serial})
+            rspec_task.pattern = universal_pattern
+          end
+          task('rspec_serial_only').invoke
+
+          rspec_opts = ModifiedRSpec.default_rspec_opts(rspec)
+          rspec_opts.concat(%w{--tag ~serial})
+          ParallelTests::CLI.new.run(["--type", "rspec", "-o", rspec_opts.join(' '), rspec.spec_dir])
         end
 
         project.recursive_task('parallel_rspec') do |task|
           warn("'parallel_rspec' is deprecated.  Use 'rspec:parallel'")
           task('rspec:parallel').invoke
+        end
+
+        project.recursive_task('rspec:failures') do |task|
+          failures = IO.readlines(rspec.failure_file)
+          failures.map! do |f|
+            %Q{-e "#{f.strip}"}
+          end
+
+          FileUtils.rm_f(rspec.failure_file)
+
+          ModifiedRSpec.rspec_task('rspec_failures', rspec) do |rspec_task|
+            rspec_task.rspec_opts.concat(failures)
+            rspec_task.pattern = universal_pattern
+          end
+          task('rspec_failures').invoke
         end
 
         TEST_SPECIFIC_REGEX = /^rspec:(.+)/

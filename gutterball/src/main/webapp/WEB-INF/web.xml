@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<web-app xmlns="http://java.sun.com/xml/ns/j2ee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd"
+    version="2.4">
+
+    <display-name>Gutterball</display-name>
+
+    <filter>
+        <filter-name>Guice Filter</filter-name>
+        <filter-class>com.google.inject.servlet.GuiceFilter</filter-class>
+    </filter>
+
+    <filter-mapping>
+        <filter-name>Guice Filter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
+    <listener>
+        <listener-class>
+            org.jboss.resteasy.plugins.server.servlet.ResteasyBootstrap
+        </listener-class>
+    </listener>
+
+    <listener>
+        <listener-class>
+            org.candlepin.gutterball.servlet.GutterballServletContextListener
+        </listener-class>
+    </listener>
+
+    <context-param>
+        <!--
+            RestEasy tries to dynamically determine what to use for logging in its
+            org.jboss.resteasy.logging.Logger class.  It chooses between commons-logging,
+            log4j, and slf4j by looking for implementation specific classes on the
+            class loader.  Unfortunately, since it looks for Log4j first and Log4j is
+            bundled with Tomcat, its always going to use Log4j even when not appropriate.
+            Consequently, we have to specify SLF4J ourselves.
+
+            For more reading on class loaders and logging see http://articles.qos.ch/classloader.html
+
+            Also see http://docs.jboss.org/resteasy/docs/2.3.1.GA/userguide/html/Installation_Configuration.html#RESTEasyLogging
+         -->
+        <param-name>resteasy.logger.type</param-name>
+        <param-value>SLF4J</param-value>
+
+        <param-name>resteasy.guice.modules</param-name>
+        <param-value>
+            org.candlepin.gutterball.guice.GutterballModule,
+            org.candlepin.gutterball.guice.GutterballServletModule
+        </param-value>
+    </context-param>
+
+    <servlet>
+        <servlet-name>Resteasy</servlet-name>
+        <servlet-class>
+            org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher
+        </servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>Resteasy</servlet-name>
+        <url-pattern>/*</url-pattern>
+    </servlet-mapping>
+</web-app>
