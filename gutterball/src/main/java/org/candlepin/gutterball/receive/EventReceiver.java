@@ -26,7 +26,7 @@ import org.apache.qpid.AMQException;
 import org.apache.qpid.client.AMQAnyDestination;
 import org.apache.qpid.client.AMQConnection;
 import org.candlepin.gutterball.config.ConfigKey;
-import org.candlepin.gutterball.config.Configuration;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.gutterball.util.EventJsonUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
