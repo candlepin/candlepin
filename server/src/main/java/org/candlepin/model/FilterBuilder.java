@@ -53,6 +53,10 @@ public abstract class FilterBuilder {
         }
     }
 
+    public Criterion getCriteria() {
+        return buildAttributeCriteria();
+    }
+
     private Criterion buildAttributeCriteria() {
         Conjunction all = Restrictions.conjunction();
         for (Entry<String, List<String>> entry : attributeFilters.entrySet()) {
