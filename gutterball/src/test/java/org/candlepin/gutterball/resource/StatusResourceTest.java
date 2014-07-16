@@ -17,8 +17,8 @@ package org.candlepin.gutterball.resource;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 
-import org.candlepin.gutterball.config.Configuration;
-import org.candlepin.gutterball.config.MapConfiguration;
+import org.candlepin.common.config.Configuration;
+import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.gutterball.guice.I18nProvider;
 import org.candlepin.gutterball.model.Status;
 import org.jukito.JukitoModule;
