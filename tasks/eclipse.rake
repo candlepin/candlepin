@@ -60,8 +60,15 @@ module ModifiedEclipse
     include Extension
 
     after_define do |project|
-      unless project.eclipse.natures.empty?
-        task('eclipse').enhance do |task|
+      eclipse = project.eclipse
+      unless eclipse.natures.empty?
+        task('clean_eclipse') do |task|
+          info("Removing old .classpath and .project")
+          FileUtils.rm_f(project.path_to('.project'))
+          FileUtils.rm_f(project.path_to('.classpath'))
+        end
+
+        task('eclipse' => 'clean_eclipse').enhance do |task|
           info("Fixing eclipse .classpath in #{project}")
           ModifiedEclipse.fix_classpath(project)
           ModifiedEclipse.fix_checkstyle(project)
