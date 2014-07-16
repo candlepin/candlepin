@@ -12,11 +12,16 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.servlet.filter.logging;
+package org.candlepin.common.filter;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import java.io.IOException;
 import java.util.UUID;
 
+import javax.inject.Singleton;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -26,28 +31,31 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.candlepin.common.filter.ServletLogger;
-import org.candlepin.common.filter.TeeHttpServletRequest;
-import org.candlepin.common.filter.TeeHttpServletResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
-
 /**
  * LoggingFilter
+ *
+ * This class must be a Singleton as described in
+ * <a href="http://code.google.com/p/google-guice/wiki/ServletModule#Filter_Mapping">
+ * the Guice documentation</a>.
  */
+@Singleton
 public class LoggingFilter implements Filter {
 
     private static Logger log = LoggerFactory.getLogger(LoggingFilter.class);
 
+    private String headerName;
+
+    @Override
     public void init(FilterConfig filterConfig) throws ServletException {
-        // Nothing to do here
+        headerName = filterConfig.getInitParameter("header.name");
     }
 
+    @Override
     public void destroy() {
-        // Nothing to do here
+        headerName = null;
     }
 
+    @Override
     public void doFilter(ServletRequest request, ServletResponse response,
         FilterChain chain) throws IOException, ServletException {
 
@@ -58,19 +66,19 @@ public class LoggingFilter implements Filter {
             (HttpServletResponse) response);
 
         try {
-            // Generate a UUID for this request and store in log4j's thread local MDC.
+            // Generate a UUID for this request and store in the thread local MDC.
             // Will be logged with every request if the ConversionPattern uses it.
             MDC.put("requestType", "req");
             String requestUUID = UUID.randomUUID().toString();
             MDC.put("requestUuid", requestUUID);
 
-            // Add requestUuid to the serverRequest as an attribute, so tomcat can
-            //   log it to the access log with "%{requestUuid}r"
+            // Add requestUuid to the serverRequest as an attribute, so Tomcat can
+            // log it to the access log with "%{requestUuid}r"
             req.setAttribute("requestUuid", requestUUID);
 
             // Report the requestUuid to the client in the response.
             // Not sure this is useful yet.
-            resp.setHeader("x-candlepin-request-uuid", requestUUID);
+            resp.setHeader(headerName, requestUUID);
 
             log.info("{}", ServletLogger.logBasicRequestInfo(req));
             if (log.isDebugEnabled()) {
