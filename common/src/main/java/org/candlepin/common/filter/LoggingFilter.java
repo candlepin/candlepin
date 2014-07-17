@@ -43,16 +43,16 @@ public class LoggingFilter implements Filter {
 
     private static Logger log = LoggerFactory.getLogger(LoggingFilter.class);
 
-    private String headerName;
+    private String customHeaderName;
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
-        headerName = filterConfig.getInitParameter("header.name");
+        customHeaderName = filterConfig.getInitParameter("header.name");
     }
 
     @Override
     public void destroy() {
-        headerName = null;
+        customHeaderName = null;
     }
 
     @Override
@@ -78,7 +78,7 @@ public class LoggingFilter implements Filter {
 
             // Report the requestUuid to the client in the response.
             // Not sure this is useful yet.
-            resp.setHeader(headerName, requestUUID);
+            resp.setHeader(customHeaderName, requestUUID);
 
             log.info("{}", ServletLogger.logBasicRequestInfo(req));
             if (log.isDebugEnabled()) {
