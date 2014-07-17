@@ -20,6 +20,7 @@ import org.candlepin.gutterball.receive.EventReceiver;
 import org.candlepin.gutterball.resource.StatusResource;
 import org.candlepin.gutterball.resteasy.JsonProvider;
 import org.candlepin.gutterball.servlet.GutterballServletContextListener;
+import org.candlepin.gutterball.util.EventJsonUtil;
 
 import com.google.inject.Provides;
 import com.google.inject.servlet.ServletModule;
@@ -40,6 +41,7 @@ public class GutterballServletModule extends ServletModule {
         bind(I18n.class).toProvider(I18nProvider.class).in(ServletScopes.REQUEST);
         bind(JsonProvider.class);
         bind(StatusResource.class);
+        bind(EventJsonUtil.class).asEagerSingleton();
         bind(EventReceiver.class).asEagerSingleton();
     }
 
