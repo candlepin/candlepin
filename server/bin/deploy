@@ -250,6 +250,12 @@ else
         CONTAINER_CONF_DIR="/etc/$TC"
     fi
 
+    # Check if we're in a container using supervisord instead:
+    if [ "$SUPERVISOR" == "1" ]; then
+        START="supervisorctl start tomcat"
+        STOP="supervisorctl stop tomcat"
+    fi
+
     DEPLOY="$TC_HOME/webapps/candlepin.war"
     CLEAN="$TC_HOME/webapps/candlepin/"
 fi
