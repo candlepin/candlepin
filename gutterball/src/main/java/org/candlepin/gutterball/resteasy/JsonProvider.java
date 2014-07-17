@@ -25,7 +25,7 @@ import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 import com.google.inject.Inject;
 
-import org.candlepin.gutterball.jackson.DynamicPropertyFilter;
+import org.candlepin.common.jackson.DynamicPropertyFilter;
 import org.jboss.resteasy.plugins.providers.RegisterBuiltin;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
