@@ -1,0 +1,77 @@
+#!/bin/bash
+#
+# Launch point for the docker container to run Candlepin tests.
+#
+# Starts supervisor to manage services, then tries to cd to the correct
+# location, either /candlepin-dev if you mounted this as a volume when
+# running your container, otherwise the included /candlepin clone which
+# we will make sure to update.
+#
+# See usage below.
+
+# Exit on any error:
+set -e
+
+export JAVA_HOME=/usr/lib/jvm/java-1.7.0/
+export SUPERVISOR=1
+export AUTOCONF=1
+
+function usage
+{
+    cat <<HELP
+    usage: candlepin-test [options]
+
+    OPTIONS:
+        -r  run rspec test suite
+        -u  run unit test suite
+        -s  run a bash shell when done
+HELP
+}
+
+while getopts ":rus" opt; do
+    case $opt in
+        r  ) RSPEC="1" ;;
+        u  ) UNITTEST="1";;
+        s  ) LAUNCHSHELL="1";;
+        ?  ) usage; exit;;
+    esac
+done
+
+shift $(($OPTIND - 1))
+
+
+# WARNING: control+c while this is running will take out supervisor as well.
+/usr/bin/supervisord -c /etc/supervisord.conf &
+
+# Pass volume with docker run mounted at this location if you'd like to
+# run against your source checkout.
+# i.e. -v /home/dgoodwin/src/candlepin:/candlepin-dev
+if [ -d "/candlepin-dev" ]; then
+    echo "Using mounted volume /candlepin-dev"
+    cd /candlepin-dev/server
+else
+    # Otherwise we use the clone in the image and try to update it.
+    echo "Using /candlepin."
+    cd /candlepin/server
+    git pull
+fi
+
+# Make sure we update the ruby bundle:
+bundle install
+
+# TODO: keep track of return code?
+
+if [ "$UNITTEST" == "1" ]; then
+    echo "Running unit tests."
+    buildr test
+fi
+
+if [ "$RSPEC" == "1" ]; then
+    echo "Running rspec tests."
+    bin/deploy -g
+fi
+
+if [ "$LAUNCHSHELL" == "1" ]; then
+    /bin/bash
+fi
+

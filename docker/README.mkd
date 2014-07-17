@@ -1,0 +1,15 @@
+Containers for running Candlepin tests in a development environment.
+
+Based on Fedora, this uses supervisord instead of systemd (as this is not yet
+ready for running services in containers) to keep postgresql and tomcat
+up and running.
+
+A slight postgresql-setup customization is necessary to avoid looking up
+values from systemd config files which do not exist, so we carry our own
+version of this.
+
+rebuild.sh is used to rebuild the containers and push to our internal docker
+registry.
+
+The included scripts actually make a fairly good guide for setting up a
+development environment.
