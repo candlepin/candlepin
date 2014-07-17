@@ -64,7 +64,7 @@ public class EventReceiver {
         dest = new AMQAnyDestination("event");
         consumer = sess.createDurableSubscriber(dest, "event");
         consumer.setMessageListener(new EventMessageListener(eventCurator));
-        log.info("receiver init complete");
+        log.info("Receiver init complete");
 
     }
 

@@ -18,13 +18,7 @@
 
     <listener>
         <listener-class>
-            org.jboss.resteasy.plugins.server.servlet.ResteasyBootstrap
-        </listener-class>
-    </listener>
-
-    <listener>
-        <listener-class>
-            org.candlepin.gutterball.servlet.GutterballServletContextListener
+            org.candlepin.gutterball.servlet.GutterballContextListener
         </listener-class>
     </listener>
 
@@ -43,23 +37,5 @@
          -->
         <param-name>resteasy.logger.type</param-name>
         <param-value>SLF4J</param-value>
-
-        <param-name>resteasy.guice.modules</param-name>
-        <param-value>
-            org.candlepin.gutterball.guice.GutterballModule,
-            org.candlepin.gutterball.guice.GutterballServletModule
-        </param-value>
     </context-param>
-
-    <servlet>
-        <servlet-name>Resteasy</servlet-name>
-        <servlet-class>
-            org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher
-        </servlet-class>
-    </servlet>
-
-    <servlet-mapping>
-        <servlet-name>Resteasy</servlet-name>
-        <url-pattern>/*</url-pattern>
-    </servlet-mapping>
 </web-app>
