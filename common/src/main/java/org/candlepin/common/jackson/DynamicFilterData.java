@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.jackson;
+package org.candlepin.common.jackson;
 
 import java.lang.reflect.Method;
 import java.util.Collection;
