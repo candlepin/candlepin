@@ -14,9 +14,13 @@
  */
 package org.candlepin.gutterball.receive;
 
+import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
+import javax.jms.TextMessage;
 
+import org.candlepin.gutterball.model.Event;
+import org.candlepin.gutterball.util.EventJsonUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,11 +30,32 @@ import org.slf4j.LoggerFactory;
  */
 public class EventMessageListener implements MessageListener {
 
-    private static Logger log = LoggerFactory.getLogger(EventReceiver.class);
+    private static Logger log = LoggerFactory.getLogger(EventMessageListener.class);
+
+    private EventJsonUtil eventUtil;
+
+    public EventMessageListener(EventJsonUtil eventUtil) {
+        this.eventUtil = eventUtil;
+    }
 
     @Override
     public void onMessage(Message message) {
         log.info(message.toString());
+
+        String messageBody = getMessageBody(message);
+        Event event = eventUtil.buildEvent(messageBody);
+
+        log.info("Received Event: " + event);
     }
 
+    private String getMessageBody(Message message) {
+        try {
+            return ((TextMessage) message).getText();
+        }
+        catch (JMSException e) {
+            log.error("failed to get text out of message");
+            // TODO: use a candlepin exception
+            throw new RuntimeException(e);
+        }
+    }
 }
