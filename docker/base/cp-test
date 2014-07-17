@@ -25,14 +25,18 @@ function usage
         -r  run rspec test suite
         -u  run unit test suite
         -s  run a bash shell when done
+        -c  git reference to checkout
 HELP
 }
 
-while getopts ":rus" opt; do
+while getopts ":rusc:" opt; do
     case $opt in
         r  ) RSPEC="1" ;;
         u  ) UNITTEST="1";;
         s  ) LAUNCHSHELL="1";;
+        c  )
+            CHECKOUT="${OPTARG}"
+            ;;
         ?  ) usage; exit;;
     esac
 done
@@ -54,6 +58,10 @@ else
     echo "Using /candlepin."
     cd /candlepin/server
     git pull
+    if [ ! -z "$CHECKOUT" ]; then
+        echo "Checking out: $CHECKOUT"
+        git checkout $CHECKOUT
+    fi
 fi
 
 # Make sure we update the ruby bundle:
