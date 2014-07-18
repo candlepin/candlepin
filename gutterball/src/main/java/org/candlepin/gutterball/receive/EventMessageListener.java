@@ -19,6 +19,7 @@ import javax.jms.Message;
 import javax.jms.MessageListener;
 import javax.jms.TextMessage;
 
+import org.candlepin.gutterball.curator.EventCurator;
 import org.candlepin.gutterball.model.Event;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,8 +32,11 @@ public class EventMessageListener implements MessageListener {
 
     private static Logger log = LoggerFactory.getLogger(EventMessageListener.class);
 
+    // TODO: This can get injected with a little work.
+    private EventCurator eventCurator;
 
-    public EventMessageListener() {
+    public EventMessageListener(EventCurator eventCurator) {
+    	this.eventCurator = eventCurator;
     }
 
     @Override
@@ -41,8 +45,9 @@ public class EventMessageListener implements MessageListener {
 
         String messageBody = getMessageBody(message);
         Event event = new Event(messageBody);
-
         log.info("Received Event: " + event);
+        
+        eventCurator.insert(event);
     }
 
     private String getMessageBody(Message message) {
