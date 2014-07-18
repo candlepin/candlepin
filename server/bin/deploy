@@ -113,9 +113,9 @@ function isrpm ()
 
 function update_keystore
 {
-    if [ "$FORCECERT" = "1" ]; then
-        echo "Move the keystore to tomcats location"
-        sudo cp /etc/candlepin/certs/keystore $CONTAINER_CONF_DIR/keystore
+    if [ ! -f $CONTAINER_CONF_DIR/keystore ]; then
+        echo "Symlinking keystore for tomcat"
+        sudo ln -s /etc/candlepin/certs/keystore $CONTAINER_CONF_DIR/keystore
     else
         echo "Using existing keystore"
     fi
