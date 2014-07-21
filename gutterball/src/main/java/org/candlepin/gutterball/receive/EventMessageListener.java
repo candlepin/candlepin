@@ -19,10 +19,12 @@ import javax.jms.Message;
 import javax.jms.MessageListener;
 import javax.jms.TextMessage;
 
-import org.candlepin.gutterball.curator.EventCurator;
+import org.candlepin.gutterball.eventhandler.EventManager;
 import org.candlepin.gutterball.model.Event;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.inject.Inject;
 
 /**
  * A JMS message listener that is invoked when Gutterball receives an
@@ -32,22 +34,26 @@ public class EventMessageListener implements MessageListener {
 
     private static Logger log = LoggerFactory.getLogger(EventMessageListener.class);
 
-    // TODO: This can get injected with a little work.
-    private EventCurator eventCurator;
+    private EventManager eventManager;
 
-    public EventMessageListener(EventCurator eventCurator) {
-        this.eventCurator = eventCurator;
+    @Inject
+    public EventMessageListener(EventManager eventManager) {
+        this.eventManager = eventManager;
     }
 
     @Override
     public void onMessage(Message message) {
         log.info(message.toString());
 
-        String messageBody = getMessageBody(message);
-        Event event = new Event(messageBody);
-        log.info("Received Event: " + event);
-
-        eventCurator.insert(event);
+        try {
+            String messageBody = getMessageBody(message);
+            Event event = new Event(messageBody);
+            eventManager.handle(event);
+            log.info("Received Event: " + event);
+        }
+        catch (Exception e) {
+            log.error("Failed to decode and store event ", e);
+        }
     }
 
     private String getMessageBody(Message message) {
