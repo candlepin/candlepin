@@ -15,7 +15,6 @@
 package org.candlepin.gutterball.model;
 
 import java.util.Date;
-import java.util.Map;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -38,29 +37,29 @@ import com.mongodb.util.JSON;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 public class Event extends BasicDBObject {
 
-	private static final String TARGET = "target";
-	private static final String TIMESTAMP = "timestamp";
-	private static final String OWNER_ID = "ownerId";
-	private static final String REFERENCE_ID = "referenceId";
-	private static final String REFERENCE_TYPE = "referenceType";
-	private static final String PRINCIPAL_STORE = "principalStore";
-	private static final String ENTITY_ID = "entityId";
-	private static final String OLD_ENTITY = "oldEntity";
-	private static final String NEW_ENTITY = "newEntity";
-	private static final String CONSUMER_ID = "consumerId";
-	private static final String TARGET_NAME = "targetName";
-	private static final String MESSAGE_TEXT = "messageText";
-	private static final String ORIGINAL_JSON = "originalJson";
-	private static final String ID = "id";
+    private static final String TARGET = "target";
+    private static final String TIMESTAMP = "timestamp";
+    private static final String OWNER_ID = "ownerId";
+    private static final String REFERENCE_ID = "referenceId";
+    private static final String REFERENCE_TYPE = "referenceType";
+    private static final String PRINCIPAL_STORE = "principalStore";
+    private static final String ENTITY_ID = "entityId";
+    private static final String OLD_ENTITY = "oldEntity";
+    private static final String NEW_ENTITY = "newEntity";
+    private static final String CONSUMER_ID = "consumerId";
+    private static final String TARGET_NAME = "targetName";
+    private static final String MESSAGE_TEXT = "messageText";
+    private static final String ORIGINAL_JSON = "originalJson";
+    private static final String ID = "id";
     private static final String TYPE = "type";
 
-	public Event() {
+    public Event() {
     }
 
     public Event(String eventJson) {
-    	this.putAll((DBObject) JSON.parse(eventJson));
+        this.putAll((DBObject) JSON.parse(eventJson));
     }
-    
+
     public String getId() {
         return this.getString(ID);
     }
@@ -85,11 +84,11 @@ public class Event extends BasicDBObject {
         this.put(TARGET, target);
     }
 
-    public Date getTimestamp() {
-        return this.getDate(TIMESTAMP);
+    public Long getTimestamp() {
+        return this.getLong(TIMESTAMP);
     }
 
-    public void setTimestamp(Date timestamp) {
+    public void setTimestamp(Long timestamp) {
         this.put(TIMESTAMP, timestamp);
     }
 
