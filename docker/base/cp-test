@@ -78,6 +78,15 @@ if [ "$RSPEC" == "1" ]; then
     echo "Running rspec tests."
     bin/deploy -g
     buildr rspec
+
+    # If the caller mounted a volume at /artifacts, copy server logs out:
+    if [ -d "/artifacts" ]; then
+        echo "Copying logs to /artifacts."
+        cp -v /var/log/candlepin/access.log /artifacts/
+        cp -v /var/log/candlepin/audit.log /artifacts/
+        cp -v /var/log/candlepin/candlepin.log /artifacts/
+        cp -v /var/log/candlepin/error.log /artifacts/
+    fi
 fi
 
 if [ "$LAUNCHSHELL" == "1" ]; then
