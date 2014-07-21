@@ -36,7 +36,7 @@ public class EventMessageListener implements MessageListener {
     private EventCurator eventCurator;
 
     public EventMessageListener(EventCurator eventCurator) {
-    	this.eventCurator = eventCurator;
+        this.eventCurator = eventCurator;
     }
 
     @Override
@@ -46,7 +46,7 @@ public class EventMessageListener implements MessageListener {
         String messageBody = getMessageBody(message);
         Event event = new Event(messageBody);
         log.info("Received Event: " + event);
-        
+
         eventCurator.insert(event);
     }
 

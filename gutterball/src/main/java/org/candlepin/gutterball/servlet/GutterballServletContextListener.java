@@ -49,8 +49,7 @@ import javax.ws.rs.ext.Provider;
  * The GutterballServletContextListener initializes all the injections and
  * registers all the RESTEasy resources.
  */
-public class GutterballServletContextListener extends
-    GuiceServletContextListener {
+public class GutterballServletContextListener extends GuiceServletContextListener {
 
     public static final String CONFIGURATION_NAME = Configuration.class.getName();
 
@@ -134,7 +133,7 @@ public class GutterballServletContextListener extends
             }
         }
     }
-    
+
     /**
      * Do any cleanup required.
      */
@@ -146,5 +145,5 @@ public class GutterballServletContextListener extends
 
         injector.getInstance(MongoDBClientProvider.class).closeConnection();
     }
-    
+
 }

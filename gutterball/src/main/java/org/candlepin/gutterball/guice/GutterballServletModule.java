@@ -43,12 +43,12 @@ public class GutterballServletModule extends ServletModule {
         bind(I18n.class).toProvider(I18nProvider.class).in(ServletScopes.REQUEST);
         bind(JsonProvider.class);
         bind(EventReceiver.class).asEagerSingleton();
-        
+
         // It is safe to share a single instance of the mongodb connection
         bind(MongoClient.class).toProvider(MongoDBClientProvider.class).in(Singleton.class);
         // FIXME: Determine if we need to share the DB connection.
         bind(DB.class).toProvider(MongoDBProvider.class).in(Singleton.class);
-        
+
         // Bind curators
         bind(EventCurator.class);
 

@@ -39,20 +39,20 @@ import com.google.inject.Inject;
  * therefore specify an encoding.
  */
 public class EventReceiver {
-	private static Logger log = LoggerFactory.getLogger(EventReceiver.class);
+    private static Logger log = LoggerFactory.getLogger(EventReceiver.class);
 
-	private TopicSubscriber consumer;
+    private TopicSubscriber consumer;
     private Session sess;
     private Topic dest;
     private Connection conn;
     private String connstr;
 
     private EventCurator eventCurator;
-    
+
     @Inject
     public EventReceiver(Configuration config, EventCurator eventCurator)
         throws AMQException, JMSException, URISyntaxException {
-    	this.eventCurator = eventCurator;
+        this.eventCurator = eventCurator;
         configureSslProperties(config);
         init(config);
     }
