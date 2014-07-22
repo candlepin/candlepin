@@ -14,9 +14,9 @@
  */
 package org.candlepin.gutterball.servlet;
 
-import org.candlepin.gutterball.config.Configuration;
-import org.candlepin.gutterball.config.ConfigurationException;
-import org.candlepin.gutterball.config.PropertiesFileConfiguration;
+import org.candlepin.common.config.Configuration;
+import org.candlepin.common.config.ConfigurationException;
+import org.candlepin.common.config.PropertiesFileConfiguration;
 import org.candlepin.gutterball.guice.GutterballServletModule;
 import org.candlepin.gutterball.guice.I18nProvider;
 import org.candlepin.gutterball.guice.MongoDBClientProvider;
@@ -38,7 +38,6 @@ import org.xnap.commons.i18n.I18nManager;
 import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 
 import javax.servlet.ServletContext;
@@ -78,7 +77,8 @@ public class GutterballServletContextListener extends GuiceServletContextListene
     protected Configuration readConfiguration(ServletContext servletContext)
         throws ConfigurationException {
 
-        Charset utf8 = StandardCharsets.UTF_8;
+        // Use StandardCharsets.UTF_8 when we move to Java 7
+        Charset utf8 = Charset.forName("UTF-8");
 
         InputStream defaultStream = GutterballServletModule.class
                 .getClassLoader().getResourceAsStream("default.properties");

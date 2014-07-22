@@ -14,12 +14,8 @@
  */
 package org.candlepin.gutterball.guice;
 
-import javax.inject.Singleton;
-import javax.servlet.ServletContext;
-
-import org.candlepin.gutterball.config.Configuration;
-import org.candlepin.gutterball.curator.EventCurator;
-import org.candlepin.gutterball.filter.LoggingFilter;
+import org.candlepin.common.config.Configuration;
+import org.candlepin.common.filter.LoggingFilter;
 import org.candlepin.gutterball.receive.EventReceiver;
 import org.candlepin.gutterball.resource.EventResource;
 import org.candlepin.gutterball.resource.StatusResource;
@@ -30,8 +26,14 @@ import org.xnap.commons.i18n.I18n;
 import com.google.inject.Provides;
 import com.google.inject.servlet.ServletModule;
 import com.google.inject.servlet.ServletScopes;
-import com.mongodb.DB;
-import com.mongodb.MongoClient;
+
+import org.xnap.commons.i18n.I18n;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.inject.Singleton;
+import javax.servlet.ServletContext;
 
 /**
  * GutterballServletContextListener is responsible for starting Guice and binding
@@ -75,6 +77,8 @@ public class GutterballServletModule extends ServletModule {
     @Override
     protected void configureServlets() {
         configureBindings();
-        filter("/*").through(LoggingFilter.class);
+        Map<String, String> loggingFilterConfig = new HashMap<String, String>();
+        loggingFilterConfig.put("header.name", "x-gutterball-request-uuid");
+        filter("/*").through(LoggingFilter.class, loggingFilterConfig);
     }
 }
