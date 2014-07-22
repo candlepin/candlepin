@@ -18,6 +18,7 @@ package org.candlepin.gutterball.guice;
 import javax.inject.Inject;
 
 import org.candlepin.common.config.Configuration;
+import org.candlepin.gutterball.config.ConfigKey;
 
 import com.google.inject.Provider;
 import com.mongodb.DB;
@@ -29,14 +30,14 @@ import com.mongodb.MongoClient;
  */
 public class MongoDBProvider implements Provider<DB> {
 
-    protected static final String DATABASE_CONFIG_PROPERTY = "gutterball.mongodb.database";
-    protected static final String DEFAULT_DATABASE = "gutterball";
+    protected static final String DEFAULT_DB = "gutterball";
 
     private DB database;
 
     @Inject
     public MongoDBProvider(Configuration config, MongoClient mongo) {
-        String databaseName = config.getString(DATABASE_CONFIG_PROPERTY, DEFAULT_DATABASE);
+        String databaseName = config.getString(ConfigKey.MONGODB_DATABASE.toString(),
+                DEFAULT_DB);
         database = mongo.getDB(databaseName);
     }
 

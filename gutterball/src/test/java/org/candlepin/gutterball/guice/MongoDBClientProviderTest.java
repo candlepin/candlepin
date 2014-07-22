@@ -17,8 +17,12 @@ package org.candlepin.gutterball.guice;
 
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.validateMockitoUsage;
+
 
 import org.candlepin.common.config.Configuration;
+import org.candlepin.gutterball.config.ConfigKey;
+import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -33,9 +37,15 @@ public class MongoDBClientProviderTest {
     @Test
     public void testProperConfigValuesUsed() {
         new MongoDBClientProvider(config);
-        verify(config).getString(eq(MongoDBClientProvider.HOST_CONFIG_PROPERTY),
+        verify(config).getString(eq(ConfigKey.MONGODB_HOST.toString()),
                                  eq(MongoDBClientProvider.DEFAULT_HOST));
-        verify(config).getInteger(eq(MongoDBClientProvider.PORT_CONFIG_PROPERTY),
+        verify(config).getInteger(eq(ConfigKey.MONGODB_PORT.toString()),
                 eq(MongoDBClientProvider.DEFAULT_PORT));
     }
+
+    @After
+    public void validate() {
+        validateMockitoUsage();
+    }
+
 }

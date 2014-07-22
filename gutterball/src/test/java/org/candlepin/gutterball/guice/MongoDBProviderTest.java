@@ -20,6 +20,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.common.config.Configuration;
+import org.candlepin.gutterball.config.ConfigKey;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -41,16 +42,16 @@ public class MongoDBProviderTest {
 
     @Before
     public void setupMocks() {
-        when(config.getString(eq(MongoDBProvider.DATABASE_CONFIG_PROPERTY),
-                              eq(MongoDBProvider.DEFAULT_DATABASE)))
+        when(config.getString(eq(ConfigKey.MONGODB_DATABASE.toString()),
+                              eq(MongoDBProvider.DEFAULT_DB)))
                               .thenReturn(TEST_DB);
     }
 
     @Test
     public void testCorrectDatabaseConfigured() {
         new MongoDBProvider(config, mongoClient);
-        verify(config).getString(eq(MongoDBProvider.DATABASE_CONFIG_PROPERTY),
-                              eq(MongoDBProvider.DEFAULT_DATABASE));
+        verify(config).getString(eq(ConfigKey.MONGODB_DATABASE.toString()),
+                              eq(MongoDBProvider.DEFAULT_DB));
         verify(mongoClient).getDB(eq(TEST_DB));
     }
 

@@ -18,6 +18,7 @@ package org.candlepin.gutterball.guice;
 import java.net.UnknownHostException;
 
 import org.candlepin.common.config.Configuration;
+import org.candlepin.gutterball.config.ConfigKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,9 +32,6 @@ import com.mongodb.MongoClient;
  */
 public class MongoDBClientProvider implements Provider<MongoClient> {
 
-    protected static final String PORT_CONFIG_PROPERTY = "gutterball.mongodb.port";
-    protected static final String HOST_CONFIG_PROPERTY = "gutterball.mongodb.host";
-
     protected static final String DEFAULT_HOST = "localhost";
     protected static final int DEFAULT_PORT = 27017;
 
@@ -45,8 +43,8 @@ public class MongoDBClientProvider implements Provider<MongoClient> {
 
     @Inject
     public MongoDBClientProvider(Configuration config) {
-        host = config.getString(HOST_CONFIG_PROPERTY, DEFAULT_HOST);
-        port = config.getInteger(PORT_CONFIG_PROPERTY, DEFAULT_PORT);
+        host = config.getString(ConfigKey.MONGODB_HOST.toString(), DEFAULT_HOST);
+        port = config.getInteger(ConfigKey.MONGODB_PORT.toString(), DEFAULT_PORT);
     }
 
     @Override
