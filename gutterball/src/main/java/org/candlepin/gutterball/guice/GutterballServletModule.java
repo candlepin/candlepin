@@ -16,6 +16,7 @@ package org.candlepin.gutterball.guice;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.filter.LoggingFilter;
+import org.candlepin.gutterball.curator.EventCurator;
 import org.candlepin.gutterball.receive.EventReceiver;
 import org.candlepin.gutterball.resource.EventResource;
 import org.candlepin.gutterball.resource.StatusResource;
@@ -26,8 +27,8 @@ import org.xnap.commons.i18n.I18n;
 import com.google.inject.Provides;
 import com.google.inject.servlet.ServletModule;
 import com.google.inject.servlet.ServletScopes;
-
-import org.xnap.commons.i18n.I18n;
+import com.mongodb.DB;
+import com.mongodb.MongoClient;
 
 import java.util.HashMap;
 import java.util.Map;

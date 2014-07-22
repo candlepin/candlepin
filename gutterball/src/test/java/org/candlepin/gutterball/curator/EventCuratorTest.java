@@ -21,9 +21,9 @@ import static org.junit.Assert.assertNotNull;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import org.candlepin.common.config.Configuration;
+import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.gutterball.TestUtils;
-import org.candlepin.gutterball.config.Configuration;
-import org.candlepin.gutterball.config.MapConfiguration;
 import org.candlepin.gutterball.guice.MongoDBClientProvider;
 import org.candlepin.gutterball.guice.MongoDBProvider;
 import org.candlepin.gutterball.model.Event;

@@ -18,7 +18,7 @@ package org.candlepin.gutterball.guice;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 
-import org.candlepin.gutterball.config.Configuration;
+import org.candlepin.common.config.Configuration;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;

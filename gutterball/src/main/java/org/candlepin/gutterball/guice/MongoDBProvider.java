@@ -17,7 +17,7 @@ package org.candlepin.gutterball.guice;
 
 import javax.inject.Inject;
 
-import org.candlepin.gutterball.config.Configuration;
+import org.candlepin.common.config.Configuration;
 
 import com.google.inject.Provider;
 import com.mongodb.DB;

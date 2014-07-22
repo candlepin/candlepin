@@ -17,7 +17,7 @@ package org.candlepin.gutterball.guice;
 
 import java.net.UnknownHostException;
 
-import org.candlepin.gutterball.config.Configuration;
+import org.candlepin.common.config.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
