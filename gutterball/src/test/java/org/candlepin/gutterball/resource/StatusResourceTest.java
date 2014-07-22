@@ -17,12 +17,16 @@ package org.candlepin.gutterball.resource;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 
-import org.candlepin.gutterball.config.Configuration;
-import org.candlepin.gutterball.config.MapConfiguration;
+import org.candlepin.common.config.Configuration;
+import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.gutterball.guice.I18nProvider;
 import org.candlepin.gutterball.model.Status;
+
+import com.google.inject.servlet.RequestScoped;
+
 import org.jukito.JukitoModule;
 import org.jukito.JukitoRunner;
+import org.jukito.TestScope;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -59,6 +63,8 @@ public class StatusResourceTest {
     public static class StatusConfig extends JukitoModule {
         @Override
         protected void configureTest() {
+            bindScope(RequestScoped.class, TestScope.EAGER_SINGLETON);
+
             Configuration c = new MapConfiguration();
             c.setProperty("gutterball.version", "X.Y.Z");
             bind(Configuration.class).toInstance(c);

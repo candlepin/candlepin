@@ -12,11 +12,11 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.gutterball.config;
+package org.candlepin.common.config;
 
 import static org.junit.Assert.*;
 
-import org.candlepin.gutterball.config.Configuration.TrimMode;
+import org.candlepin.common.config.Configuration.TrimMode;
 
 import org.junit.Before;
 import org.junit.Rule;

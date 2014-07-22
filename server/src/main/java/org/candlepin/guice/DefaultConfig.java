@@ -29,7 +29,6 @@ import org.candlepin.service.impl.DefaultOwnerServiceAdapter;
 import org.candlepin.service.impl.DefaultProductServiceAdapter;
 import org.candlepin.service.impl.DefaultSubscriptionServiceAdapter;
 import org.candlepin.service.impl.DefaultUserServiceAdapter;
-import org.candlepin.servlet.filter.logging.LoggingFilter;
 import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
 
 import com.google.inject.AbstractModule;
@@ -42,7 +41,6 @@ class DefaultConfig extends AbstractModule {
     @Override
     public void configure() {
         bind(HttpServletDispatcher.class).asEagerSingleton();
-        bind(LoggingFilter.class).asEagerSingleton();
         bind(LoggingConfig.class).asEagerSingleton();
         bind(ScriptEngineProvider.class);
         bind(SubscriptionServiceAdapter.class).to(

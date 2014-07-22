@@ -43,14 +43,16 @@ public class LoggingFilter implements Filter {
 
     private static Logger log = LoggerFactory.getLogger(LoggingFilter.class);
 
+    private String customHeaderName;
+
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
-        // Nothing to do here
+        customHeaderName = filterConfig.getInitParameter("header.name");
     }
 
     @Override
     public void destroy() {
-        // Nothing to do here
+        customHeaderName = null;
     }
 
     @Override
@@ -76,7 +78,7 @@ public class LoggingFilter implements Filter {
 
             // Report the requestUuid to the client in the response.
             // Not sure this is useful yet.
-            resp.setHeader("x-gutterball-request-uuid", requestUUID);
+            resp.setHeader(customHeaderName, requestUUID);
 
             log.info("{}", ServletLogger.logBasicRequestInfo(req));
             if (log.isDebugEnabled()) {

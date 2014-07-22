@@ -15,7 +15,6 @@
 package org.candlepin.common.config;
 
 import static org.candlepin.common.config.PropertyConverter.*;
-
 import static org.junit.Assert.*;
 
 import org.junit.Rule;
@@ -23,7 +22,6 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 
@@ -33,7 +31,7 @@ public class PropertyConverterTest {
     @Rule
     public ExpectedException ex = ExpectedException.none();
 
-    private Object BAD_COMPARISON = StandardCharsets.UTF_8;
+    private Object BAD_COMPARISON = new Object();
     private String expectedMessage(Object value, Class<?> clazz) {
         return String.format(PropertyConverter.ERROR_MESSAGE, value, clazz.getName());
     }

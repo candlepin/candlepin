@@ -28,7 +28,6 @@ import java.io.FileReader;
 import java.io.InputStream;
 import java.io.Reader;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Properties;
 
@@ -38,8 +37,9 @@ public class PropertiesFileConfigurationTest {
     private static final String UTF8_FILE = "config/utf8.properties";
     private static final String ASCII_FILE = "config/ascii.properties";
 
-    private static final Charset UTF8 = StandardCharsets.UTF_8;
-    private static final Charset ASCII = StandardCharsets.US_ASCII;
+    // Use StandardCharsets.UTF_8/US_ASCII when we move to Java 7
+    private static final Charset UTF8 = Charset.forName("UTF-8");
+    private static final Charset ASCII = Charset.forName("US-ASCII");
 
     @SuppressWarnings("checkstyle:visibilitymodifier")
     @Rule

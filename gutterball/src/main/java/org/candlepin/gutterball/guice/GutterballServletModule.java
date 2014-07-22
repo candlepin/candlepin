@@ -14,8 +14,8 @@
  */
 package org.candlepin.gutterball.guice;
 
-import org.candlepin.gutterball.config.Configuration;
-import org.candlepin.gutterball.filter.LoggingFilter;
+import org.candlepin.common.config.Configuration;
+import org.candlepin.common.filter.LoggingFilter;
 import org.candlepin.gutterball.receive.EventReceiver;
 import org.candlepin.gutterball.resource.StatusResource;
 import org.candlepin.gutterball.resteasy.JsonProvider;
@@ -27,6 +27,9 @@ import com.google.inject.servlet.ServletModule;
 import com.google.inject.servlet.ServletScopes;
 
 import org.xnap.commons.i18n.I18n;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.inject.Singleton;
 import javax.servlet.ServletContext;
@@ -63,6 +66,8 @@ public class GutterballServletModule extends ServletModule {
     @Override
     protected void configureServlets() {
         configureBindings();
-        filter("/*").through(LoggingFilter.class);
+        Map<String, String> loggingFilterConfig = new HashMap<String, String>();
+        loggingFilterConfig.put("header.name", "x-gutterball-request-uuid");
+        filter("/*").through(LoggingFilter.class, loggingFilterConfig);
     }
 }

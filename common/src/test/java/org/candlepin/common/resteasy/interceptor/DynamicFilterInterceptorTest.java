@@ -12,15 +12,14 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.resteasy.interceptor;
+package org.candlepin.common.resteasy.interceptor;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
-import org.candlepin.jackson.DynamicFilterData;
-import org.candlepin.pinsetter.core.PinsetterKernel;
+import org.candlepin.common.jackson.DynamicFilterData;
 import org.jboss.resteasy.core.ResourceMethod;
 import org.jboss.resteasy.core.ServerResponse;
 import org.jboss.resteasy.mock.MockHttpRequest;
@@ -39,7 +38,6 @@ import org.mockito.runners.MockitoJUnitRunner;
 public class DynamicFilterInterceptorTest {
 
     @Mock private HttpRequest request;
-    @Mock private PinsetterKernel pinsetterKernel;
 
     private DynamicFilterInterceptor interceptor;
     private ResourceMethod rmethod;
