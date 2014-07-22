@@ -1,0 +1,33 @@
+#! /bin/bash
+
+RED=$(tput setaf 1)
+GREEN=$(tput setaf 2)
+YELLOW=$(tput setaf 3)
+RESET_COLOR=$(tput sgr0)
+
+err_msg() {
+    echo "${RED}${1}${RESET_COLOR}" >&2
+}
+
+success_msg() {
+    echo "${GREEN}${1}${RESET_COLOR}"
+}
+
+warn_msg() {
+    echo "${YELLOW}${1}${RESET_COLOR}"
+}
+
+project_directory() {
+    echo -n $(buildr -s project_root)
+}
+
+checkout_directory() {
+    echo -n $(buildr -s checkout_root)
+}
+
+evalrc() {
+    if [ "$1" -ne "0" ]; then
+        echo "$2"
+        exit $1
+    fi
+}
