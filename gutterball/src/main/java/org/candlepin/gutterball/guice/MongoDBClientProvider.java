@@ -31,8 +31,11 @@ import com.mongodb.MongoClient;
  */
 public class MongoDBClientProvider implements Provider<MongoClient> {
 
-    private static final String DEFAULT_HOST = "localhost";
-    private static final int DEFAULT_PORT = 27017;
+    protected static final String PORT_CONFIG_PROPERTY = "gutterball.mongodb.port";
+    protected static final String HOST_CONFIG_PROPERTY = "gutterball.mongodb.host";
+
+    protected static final String DEFAULT_HOST = "localhost";
+    protected static final int DEFAULT_PORT = 27017;
 
     private static Logger log = LoggerFactory.getLogger(MongoDBClientProvider.class);
 
@@ -42,31 +45,28 @@ public class MongoDBClientProvider implements Provider<MongoClient> {
 
     @Inject
     public MongoDBClientProvider(Configuration config) {
-        host = config.getString("gutterball.mongodb.host", DEFAULT_HOST);
-        port = config.getInteger("gutterball.mongodb.port", DEFAULT_PORT);
-
-        this.client = createConnection();
-    }
-
-    protected MongoClient createConnection() {
-        log.info("Creating mongodb connection: " + host + ":" + port);
-
-        try {
-            return new MongoClient(host, port);
-        }
-        catch (UnknownHostException e) {
-            throw new RuntimeException("Unable to connect to mongodb", e);
-        }
+        host = config.getString(HOST_CONFIG_PROPERTY, DEFAULT_HOST);
+        port = config.getInteger(PORT_CONFIG_PROPERTY, DEFAULT_PORT);
     }
 
     @Override
     public MongoClient get() {
-        log.info("Retrieving new mongodb client instance");
-        return this.client;
+        log.info("Creating mongodb connection: " + host + ":" + port);
+
+        try {
+            client = new MongoClient(host, port);
+        }
+        catch (UnknownHostException e) {
+            throw new RuntimeException("Unable to connect to mongodb", e);
+        }
+        return client;
     }
 
     public void closeConnection() {
-        this.client.close();
+        log.info("Closing mongodb client instance.");
+        if (this.client != null) {
+            this.client.close();
+        }
     }
 
 }

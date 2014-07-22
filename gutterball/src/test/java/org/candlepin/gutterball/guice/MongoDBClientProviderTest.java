@@ -15,34 +15,27 @@
 
 package org.candlepin.gutterball.guice;
 
-import javax.inject.Inject;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.verify;
 
 import org.candlepin.gutterball.config.Configuration;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
 
-import com.google.inject.Provider;
-import com.mongodb.DB;
-import com.mongodb.MongoClient;
+@RunWith(MockitoJUnitRunner.class)
+public class MongoDBClientProviderTest {
 
-/**
- * A guice provider that provides a connection to a mongo DB database.
- *
- */
-public class MongoDBProvider implements Provider<DB> {
+    @Mock
+    private Configuration config;
 
-    protected static final String DATABASE_CONFIG_PROPERTY = "gutterball.mongodb.database";
-    protected static final String DEFAULT_DATABASE = "gutterball";
-
-    private DB database;
-
-    @Inject
-    public MongoDBProvider(Configuration config, MongoClient mongo) {
-        String databaseName = config.getString(DATABASE_CONFIG_PROPERTY, DEFAULT_DATABASE);
-        database = mongo.getDB(databaseName);
+    @Test
+    public void testProperConfigValuesUsed() {
+        new MongoDBClientProvider(config);
+        verify(config).getString(eq(MongoDBClientProvider.HOST_CONFIG_PROPERTY),
+                                 eq(MongoDBClientProvider.DEFAULT_HOST));
+        verify(config).getInteger(eq(MongoDBClientProvider.PORT_CONFIG_PROPERTY),
+                eq(MongoDBClientProvider.DEFAULT_PORT));
     }
-
-    @Override
-    public DB get() {
-        return database;
-    }
-
 }
