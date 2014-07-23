@@ -12,6 +12,8 @@
 # Exit on any error:
 set -e
 
+source /etc/profile
+
 export JAVA_HOME=/usr/lib/jvm/java-1.7.0/
 export SUPERVISOR=1
 export AUTOCONF=1
@@ -26,14 +28,16 @@ function usage
         -u  run unit test suite
         -s  run a bash shell when done
         -c  git reference to checkout
+        -o  use oracle instead of postgresql
 HELP
 }
 
-while getopts ":rusc:" opt; do
+while getopts ":rusoc:" opt; do
     case $opt in
         r  ) RSPEC="1" ;;
         u  ) UNITTEST="1";;
         s  ) LAUNCHSHELL="1";;
+        o  ) USE_ORACLE="1";;
         c  )
             CHECKOUT="${OPTARG}"
             ;;
@@ -76,7 +80,11 @@ fi
 
 if [ "$RSPEC" == "1" ]; then
     echo "Running rspec tests."
-    bin/deploy -g
+    if [ "$USE_ORACLE" == "1" ]; then
+        bin/deploy -g -o
+    else
+        bin/deploy -g
+    fi
     buildr rspec
 
     # If the caller mounted a volume at /artifacts, copy server logs out:
