@@ -167,7 +167,7 @@ JAVA_TOOLS = file(Java.tools_jar)
 
 # Make Util available in all projects.  See http://buildr.apache.org/extending.html#extensions
 class Project
-  include Util
+  include Candlepin::Util
 end
 
 ### Project

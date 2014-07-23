@@ -174,7 +174,7 @@ init() {
     # Source useful bash functions
     source "$(buildr -s checkout_root)/bin/bash_functions"
 
-    PROJECT_DIR="$(project_directory)"
+    PROJECT_DIR="$(project_directory server)"
 
     # Get the directory this script is in. See http://mywiki.wooledge.org/BashFAQ/028
     SELF_DIR="${BASH_SOURCE%/*}"

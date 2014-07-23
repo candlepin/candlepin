@@ -18,11 +18,24 @@ warn_msg() {
 }
 
 project_directory() {
-    echo -n $(buildr -s project_root)
+    if [ -n "$1" ]; then
+        qbuildr "project_root:$1"
+    else
+        qbuilder project_root
+    fi
 }
 
 checkout_directory() {
-    echo -n $(buildr -s checkout_root)
+    git rev-parse --show-toplevel
+}
+
+qbuildr() {
+    # The implementation of "$*" has always been a problem and realistically
+    # should have been replaced with the behavior of "$@". In almost every case
+    # where coders use "$*", they mean "$@". "$*" Can cause bugs and even
+    # security holes in your software.
+    # http://tldp.org/LDP/Bash-Beginners-Guide/html/sect_03_02.html
+    buildr -s "$@"
 }
 
 evalrc() {
