@@ -30,6 +30,7 @@ import org.candlepin.gutterball.model.Event;
 import org.jukito.JukitoModule;
 import org.jukito.JukitoRunner;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -66,6 +67,7 @@ public class EventCuratorTest {
         curator.save(e1);
     }
 
+    @Ignore
     @Test
     public void testFindById() {
         Event found = curator.findById(e1.getString("_id"));
@@ -75,6 +77,7 @@ public class EventCuratorTest {
         assertEquals(e1.get("type"), found.getType());
     }
 
+    @Ignore
     @Test
     public void testGetAll() {
         DBCursor results = curator.all();
