@@ -9,6 +9,7 @@ module ModifiedRSpec
 
       includes = rspec.includes.map { |dir| "-I #{dir}" }
       opts.concat(includes)
+      opts << ENV['RSPEC_OPTS'] unless ENV['RSPEC_OPTS'].nil?
       opts
     end
 
