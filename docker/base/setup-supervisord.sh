@@ -32,12 +32,31 @@ setup_tomcat() {
     cat > /etc/supervisor/conf.d/tomcat.conf <<TOMCAT_SUPERVISOR
 [program:tomcat]
 user=tomcat
-#environment=PGDATA="/var/lib/pgsql/data"
-command=/usr/bin/tomcat-wrapper
+environment=CATALINA_PID="/tmp/tomcat.pid",JAVA_HOME="/usr/lib/jvm/jre"
+command=/usr/libexec/tomcat/server start
 redirect_stderr=true
 TOMCAT_SUPERVISOR
 }
 
+setup_ssh() {
+    yum install -y openssh-server
+    echo 'root:redhat' |chpasswd
+    RSA_KEY=/etc/ssh/ssh_host_rsa_key
+    DSA_KEY=/etc/ssh/ssh_host_dsa_key
+
+    ssh-keygen -q -t dsa -f $DSA_KEY -C '' -N '' >&/dev/null
+    chmod 600 $DSA_KEY
+    chmod 644 $DSA_KEY.pub
+
+    ssh-keygen -q -t rsa -f $RSA_KEY -C '' -N '' >&/dev/null
+    chmod 600 $RSA_KEY
+    chmod 644 $RSA_KEY.pub
+    cat > /etc/supervisor/conf.d/sshd.conf <<SSH_SUPERVISOR
+[program:sshd]
+command=/usr/sbin/sshd -D
+SSH_SUPERVISOR
+}
 
 setup_supervisor
+setup_ssh
 setup_tomcat

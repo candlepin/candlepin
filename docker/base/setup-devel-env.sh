@@ -5,6 +5,7 @@
 
 export JAVA_HOME=/usr/lib/jvm/java-1.7.0/
 
+yum clean all
 yum -y install rsyslog wget vim-enhanced python-pip git ruby rubygems ruby-devel gcc tomcat java-1.7.0-openjdk-devel liquibase libxml2-python openssl gettext
 
 # Setup for autoconf:
@@ -21,4 +22,4 @@ gem install bundler
 bundle install
 
 # Installs all Java deps into the image, big time saver:
-buildr clean test=no package
+buildr artifacts
