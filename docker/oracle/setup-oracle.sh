@@ -20,8 +20,8 @@ command=/usr/bin/launch-oracle.sh
 #redirect_stderr=false
 ORACLE_SUPERVISOR
 
-    mv /root/init.ora /u01/app/oracle/product/11.2.0/xe/config/scripts
-    mv /root/initXETemp.ora /u01/app/oracle/product/11.2.0/xe/config/scripts
+    mv /root/oracle/init.ora /u01/app/oracle/product/11.2.0/xe/config/scripts
+    mv /root/oracle/initXETemp.ora /u01/app/oracle/product/11.2.0/xe/config/scripts
 
     echo 'export ORACLE_HOME=/u01/app/oracle/product/11.2.0/xe' >> /etc/profile.d/oracle_profile.sh
     echo 'export PATH=$ORACLE_HOME/bin:$PATH' >> /etc/profile.d/oracle_profile.sh

@@ -11,8 +11,6 @@ RUN wget -r --no-parent -l 1 http://file.rdu.redhat.com/~dgoodwin/oracle/ -nH -n
 ADD setup-oracle.sh /root/
 ADD xe.rsp /root/
 ADD launch-oracle.sh /usr/bin/
-ADD init.ora /root/
-ADD initXETemp.ora /root/
 
 RUN /bin/bash /root/setup-oracle.sh
 
