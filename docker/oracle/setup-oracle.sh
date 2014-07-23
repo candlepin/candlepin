@@ -13,7 +13,6 @@ setup_oracle() {
 
     cat > /etc/supervisor/conf.d/oracle.conf <<ORACLE_SUPERVISOR
 [program:oracle]
-user=oracle
 environment=ORACLE_HOME=/u01/app/oracle/product/11.2.0/xe,ORACLE_SID=XE
 command=/usr/bin/launch-oracle.sh
 #stopsignal=INT

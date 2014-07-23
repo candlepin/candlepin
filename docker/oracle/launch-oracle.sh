@@ -1,4 +1,4 @@
-#/bin/sh
+#! /bin/sh
 
 # Need to adjust hostname for the running container:
 mkdir -p /run/lock/subsys
