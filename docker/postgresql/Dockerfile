@@ -1,4 +1,4 @@
-FROM docker.usersys.redhat.com/dgoodwin/candlepin-base
+FROM candlepin-base
 MAINTAINER Devan Goodwin <dgoodwin@redhat.com>
 
 # Configure postgresql:

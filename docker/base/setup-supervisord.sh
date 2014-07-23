@@ -34,6 +34,7 @@ setup_tomcat() {
 user=tomcat
 environment=CATALINA_PID="/tmp/tomcat.pid",JAVA_HOME="/usr/lib/jvm/jre"
 command=/usr/libexec/tomcat/server start
+stopsignal=KILL
 redirect_stderr=true
 TOMCAT_SUPERVISOR
 }

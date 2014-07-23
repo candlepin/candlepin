@@ -11,11 +11,8 @@ command=/usr/bin/postgres
 stopsignal=INT
 redirect_stderr=true
 POSTGRES_SUPERVISOR
-    /root/postgresql-setup initdb
 
-    # WARNING: Relaxing postgres authentication:
-    sed -i 's/ident/trust/g' /var/lib/pgsql/data/pg_hba.conf
-    sed -i 's/peer/trust/g' /var/lib/pgsql/data/pg_hba.conf
+    /root/postgresql-setup initdb --auth=trust
 
     /usr/bin/supervisord -c /etc/supervisord.conf &
     sleep 5
