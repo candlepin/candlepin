@@ -19,6 +19,7 @@ import org.candlepin.common.config.ConfigurationException;
 import org.candlepin.common.config.PropertiesFileConfiguration;
 import org.candlepin.gutterball.guice.GutterballServletModule;
 import org.candlepin.gutterball.guice.I18nProvider;
+import org.candlepin.gutterball.guice.MongoDBClientProvider;
 
 import com.google.inject.Binding;
 import com.google.inject.Guice;
@@ -47,8 +48,7 @@ import javax.ws.rs.ext.Provider;
  * The GutterballServletContextListener initializes all the injections and
  * registers all the RESTEasy resources.
  */
-public class GutterballServletContextListener extends
-    GuiceServletContextListener {
+public class GutterballServletContextListener extends GuiceServletContextListener {
 
     public static final String CONFIGURATION_NAME = Configuration.class.getName();
 
@@ -133,4 +133,17 @@ public class GutterballServletContextListener extends
             }
         }
     }
+
+    /**
+     * Do any cleanup required.
+     */
+    @Override
+    public void contextDestroyed(ServletContextEvent servletContextEvent) {
+        super.contextDestroyed(servletContextEvent);
+        final Injector injector = (Injector) servletContextEvent.getServletContext()
+                .getAttribute(Injector.class.getName());
+
+        injector.getInstance(MongoDBClientProvider.class).closeConnection();
+    }
+
 }

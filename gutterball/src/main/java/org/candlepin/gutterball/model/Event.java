@@ -14,11 +14,13 @@
  */
 package org.candlepin.gutterball.model;
 
-import java.util.Date;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
+import com.mongodb.util.JSON;
 
 /**
  * Event - Base class for Candlepin events. Serves as both our semi-permanent
@@ -31,144 +33,128 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
-public class Event {
+public class Event extends BasicDBObject {
 
-    private String id;
-
-    private String type;
-
-    private String target;
-
-    // This should be there, but may not be
-    // moo
-    private String targetName;
-
-    // String representation of the principal. We probably should not be
-    // reconstructing
-    // any stored principal object.
-    private String principalStore;
-
-    private Date timestamp;
-
-    // Uniquely identifies the entity's ID when combined with the event type.
-    // The entity type can be determined from the type field.
-    private String entityId;
-
-    private String ownerId;
-
-    private String consumerId;
-
-    // Generic id field in case a cross reference is needed to some other entity
-    // Use with reference type)
-    private String referenceId;
-
-    // Classifies Generic id field in case a cross reference is needed to some
-    // other entity
-    // Use with reference id
-    private String referenceType;
-
-    // Both old/new may be null for creation/deletion events. These are marked
-    // Transient as we decided we do not necessarily want to store the object
-    // state
-    // in our Events table. The Event passing through the message queue will
-    // still
-    // carry them.
-    private String oldEntity;
-    private String newEntity;
-
-    private String messageText;
-
-    private String originalJson;
+    private static final String TARGET = "target";
+    private static final String TIMESTAMP = "timestamp";
+    private static final String OWNER_ID = "ownerId";
+    private static final String REFERENCE_ID = "referenceId";
+    private static final String REFERENCE_TYPE = "referenceType";
+    private static final String PRINCIPAL_STORE = "principalStore";
+    private static final String ENTITY_ID = "entityId";
+    private static final String OLD_ENTITY = "oldEntity";
+    private static final String NEW_ENTITY = "newEntity";
+    private static final String CONSUMER_ID = "consumerId";
+    private static final String TARGET_NAME = "targetName";
+    private static final String MESSAGE_TEXT = "messageText";
+    private static final String ORIGINAL_JSON = "originalJson";
+    private static final String ID = "id";
+    private static final String TYPE = "type";
 
     public Event() {
     }
 
+    public Event(String eventJson) {
+        this.putAll((DBObject) JSON.parse(eventJson));
+    }
+
     public String getId() {
-        return id;
+        return this.getString(ID);
     }
 
     public void setId(String id) {
-        this.id = id;
+        this.put(ID, id);
     }
 
     public String getType() {
-        return type;
+        return this.getString(TYPE);
     }
 
     public void setType(String type) {
-        this.type = type;
+        this.put(TYPE, type);
     }
 
     public String getTarget() {
-        return target;
+        return this.getString(TARGET);
     }
 
     public void setTarget(String target) {
-        this.target = target;
+        this.put(TARGET, target);
     }
 
-    public Date getTimestamp() {
-        return timestamp;
+    public Long getTimestamp() {
+        return this.getLong(TIMESTAMP);
     }
 
-    public void setTimestamp(Date timestamp) {
-        this.timestamp = timestamp;
+    public void setTimestamp(Long timestamp) {
+        this.put(TIMESTAMP, timestamp);
     }
 
     public String getOwnerId() {
-        return ownerId;
+        return this.getString(OWNER_ID);
     }
 
     public void setOwnerId(String ownerId) {
-        this.ownerId = ownerId;
+        this.put(OWNER_ID, ownerId);
     }
 
+    // Generic id field in case a cross reference is needed to some other entity
+    // Use with reference type)
     public String getReferenceId() {
-        return referenceId;
+        return this.getString(REFERENCE_ID);
     }
 
     public void setReferenceId(String referenceId) {
-        this.referenceId = referenceId;
+        this.put(REFERENCE_ID, referenceId);
     }
 
+    // Classifies Generic id field in case a cross reference is needed to some
+    // other entity
+    // Use with reference id
     public String getReferenceType() {
-        return referenceType;
+        return getString(REFERENCE_TYPE);
     }
 
     public void setReferenceType(String referenceType) {
-        this.referenceType = referenceType;
+        this.put(REFERENCE_TYPE, referenceType);
     }
 
     public String getPrincipalStore() {
-        return principalStore;
+        return this.getString(PRINCIPAL_STORE);
     }
 
+    // String representation of the principal. We probably should not be
+    // reconstructing any stored principal object.
     public void setPrincipalStore(String principalStore) {
-        this.principalStore = principalStore;
+        this.put(PRINCIPAL_STORE, principalStore);
     }
 
     public String getEntityId() {
-        return entityId;
+        return this.getString(ENTITY_ID);
     }
 
     public void setEntityId(String entityId) {
-        this.entityId = entityId;
+        this.put(ENTITY_ID, entityId);
     }
 
+    // Both old/new may be null for creation/deletion events. These are marked
+    // Transient as we decided we do not necessarily want to store the object
+    // state in our Events table. The Event passing through the message queue will
+    // still carry them.
     public String getOldEntity() {
-        return oldEntity;
+        return this.getString(OLD_ENTITY);
     }
 
     public void setOldEntity(String oldEntity) {
-        this.oldEntity = oldEntity;
+        this.put(OLD_ENTITY, oldEntity);
     }
 
     public String getNewEntity() {
-        return newEntity;
+        return this.getString(NEW_ENTITY);
     }
 
     public void setNewEntity(String newEntity) {
-        this.newEntity = newEntity;
+        this.put(NEW_ENTITY, newEntity);
     }
 
     @Override
@@ -179,53 +165,53 @@ public class Event {
     }
 
     public String getConsumerId() {
-        return consumerId;
+        return this.getString(CONSUMER_ID);
     }
 
     public void setConsumerId(String consumerId) {
-        this.consumerId = consumerId;
+        this.put(CONSUMER_ID, consumerId);
     }
 
     /**
      * @return the targetName
      */
     public String getTargetName() {
-        return targetName;
+        return this.getString(TARGET_NAME);
     }
 
     /**
      * @param targetName the targetName to set
      */
     public void setTargetName(String targetName) {
-        this.targetName = targetName;
+        this.put(TARGET_NAME, targetName);
     }
 
     /**
      * @return the messageText
      */
     public String getMessageText() {
-        return messageText;
+        return this.getString(MESSAGE_TEXT);
     }
 
     /**
      * @param messageText the messageText to set
      */
     public void setMessageText(String messageText) {
-        this.messageText = messageText;
+        this.put(MESSAGE_TEXT, messageText);
     }
 
     /**
      * @return the originalJson
      */
     public String getOriginalJson() {
-        return originalJson;
+        return this.getString(ORIGINAL_JSON);
     }
 
     /**
      * @param originalJson the originalJson to set
      */
     public void setOriginalJson(String originalJson) {
-        this.originalJson = originalJson;
+        this.put(ORIGINAL_JSON, originalJson);
     }
 }
 

@@ -27,7 +27,7 @@ import org.apache.qpid.client.AMQAnyDestination;
 import org.apache.qpid.client.AMQConnection;
 import org.candlepin.gutterball.config.ConfigKey;
 import org.candlepin.common.config.Configuration;
-import org.candlepin.gutterball.util.EventJsonUtil;
+import org.candlepin.gutterball.curator.EventCurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,18 +39,20 @@ import com.google.inject.Inject;
  * therefore specify an encoding.
  */
 public class EventReceiver {
+    private static Logger log = LoggerFactory.getLogger(EventReceiver.class);
+
     private TopicSubscriber consumer;
     private Session sess;
     private Topic dest;
     private Connection conn;
     private String connstr;
-    private EventJsonUtil eventUtil;
-    private static Logger log = LoggerFactory.getLogger(EventReceiver.class);
+
+    private EventCurator eventCurator;
 
     @Inject
-    public EventReceiver(Configuration config, EventJsonUtil eventUtil)
+    public EventReceiver(Configuration config, EventCurator eventCurator)
         throws AMQException, JMSException, URISyntaxException {
-        this.eventUtil = eventUtil;
+        this.eventCurator = eventCurator;
         configureSslProperties(config);
         init(config);
     }
@@ -61,7 +63,7 @@ public class EventReceiver {
         sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
         dest = new AMQAnyDestination("event");
         consumer = sess.createDurableSubscriber(dest, "event");
-        consumer.setMessageListener(new EventMessageListener(eventUtil));
+        consumer.setMessageListener(new EventMessageListener(eventCurator));
         log.info("receiver init complete");
 
     }
