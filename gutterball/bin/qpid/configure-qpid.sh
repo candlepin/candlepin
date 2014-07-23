@@ -2,136 +2,123 @@
 
 # This script will configure a qpid installed server to work with SSL.
 
+# Get the directory this script is in. See http://mywiki.wooledge.org/BashFAQ/028
+LOCATION="${BASH_SOURCE%/*}"
 
-# certificate information
-# based on http://rajith.2rlabs.com/2010/03/01/apache-qpid-securing-connections-with-ssl/
-COMPANY="O=Candlepin,ST=North Carolina,C=US"
-CA_NAME="CandlepinCA"
+SUBJ="/C=US/O=Candlepin"
+CA_NAME="Qpid CA"
 CA_PASS="password"
 
-SERVER_NAME="localhost"
-SERVER_PASS="password"
+CN_NAME="localhost"
+CLIENT_PASS="password"
 
 JAVA_TRUSTPASS="password"
 JAVA_KEYPASS="password"
-CERT_LOC=keys
-KEYSTORE=$CERT_LOC/keystore
-TRUSTSTORE=$CERT_LOC/truststore
-CA_DB=$CERT_LOC/CA_db
-SERVER_DB=$CERT_LOC/server_db
 
-create_ca_cert () {
+CERT_LOC=$LOCATION/keys
+CA_PASS_FILE="$CERT_LOC/ca_password.txt"
+CA_DB=$CERT_LOC/CA_db
+LOG=$CERT_LOC/keys.log
+
+create_ca_cert() {
     # prep for creating certificates
     rm -rf $CA_DB
     mkdir -p $CA_DB
 
-    echo "y" > ca_input
-    echo "0" >> ca_input
-    echo "n" >> ca_input
+    openssl genrsa -out $CERT_LOC/qpid_ca.key 2048 &>> $LOG
+    openssl req -new -x509 -days 3650 -out $CERT_LOC/qpid_ca.crt -key $CERT_LOC/qpid_ca.key -subj "$SUBJ/CN=$CA_NAME" -extensions v3_ca -passin file:$CA_PASS_FILE &>> $LOG
+    openssl pkcs12 -export -in $CERT_LOC/qpid_ca.crt -inkey $CERT_LOC/qpid_ca.key -out $CERT_LOC/qpid_ca.p12 -name "$CA_NAME" -password file:$CA_PASS_FILE &>> $LOG
 
-    echo $CA_PASS > $CA_DB/pfile
-    certutil -N -d $CA_DB -f $CA_DB/pfile
-    dd bs=256 count=1 if=/dev/urandom of=noise
-    cat ca_input | certutil -S -d $CA_DB -n "$CA_NAME" -s "CN=$CA_NAME,$COMPANY" -t "CT,," -x -2 -f $CA_DB/pfile -z noise
-    rm noise ca_input
-
-    certutil -L -d $CA_DB -n "$CA_NAME" -a -o $CA_DB/rootca.crt -f $CA_DB/pfile
+    convert_to_nssdb
 }
 
-create_server_cert () {
-    rm -rf $SERVER_DB
-    mkdir $SERVER_DB
-    echo $SERVER_PASS > $SERVER_DB/pfile
-    certutil -N -d $SERVER_DB -f $SERVER_DB/pfile
-
-    # import the CA certificate into the CA_DB
-    certutil -A -d $SERVER_DB -n "$CA_NAME" -t "TC,," -a -i $CA_DB/rootca.crt -f $SERVER_DB/pfile
-    dd bs=256 count=1 if=/dev/urandom of=noise
-    certutil -R -d $SERVER_DB -s "CN=$SERVER_NAME,$COMPANY" -a -o $SERVER_DB/server.req -z noise -f $SERVER_DB/pfile
-    rm noise
-
-    echo "0" > sign_serv
-    echo "9" >> sign_serv
-    echo "n" >> sign_serv
-    echo "n" >> sign_serv
-    echo "-1" >> sign_serv
-    echo "n" >> sign_serv
-
-    echo "sleeping for entropy"
-    sleep 2
-
-    cat sign_serv | certutil -C -d $CA_DB -c "$CA_NAME" -a -i $SERVER_DB/server.req -o $SERVER_DB/server.crt -2 -6 -f $CA_DB/pfile
-    certutil -A -d $SERVER_DB -n $SERVER_NAME -a -i $SERVER_DB/server.crt -t ",," -f $SERVER_DB/pfile
-
-    rm -f $TRUSTSTORE $KEYSTORE sign_serv
+convert_to_nssdb() {
+    rm -rf $CA_DB
+    mkdir $CA_DB
+    # The only way to import a private key to an NSS DB is by converting from a PKCS12
+    pk12util -i $CERT_LOC/qpid_ca.p12 -d $CA_DB -w $CA_PASS_FILE -k $CA_PASS_FILE &>> $LOG
+    certutil -M -d $CA_DB -f $CA_PASS_FILE -n "$CA_NAME" -t 'CT,CT,CT' &>> $LOG
 }
 
-import_ca_into_stores () {
-    # import the CA certificate in to the trust store
-    keytool -import -v -keystore $TRUSTSTORE -storepass $JAVA_TRUSTPASS -alias $CA_NAME -file $CA_DB/rootca.crt -noprompt
+create_client_certs() {
+    clients=("candlepin" "gutterball")
+    for client in "${clients[@]}"; do
+        DEST="$CERT_LOC/$client"
+        # Generate the key and certificate signing request
+        openssl req -nodes -new -newkey rsa:2048 -out $DEST.csr -keyout $DEST.key -subj "$SUBJ/OU=$client/CN=$CN_NAME" -passin pass:$CLIENT_PASS &>> $LOG
 
-    # import the CA certificate into the keystore (for client authentication)
-    keytool -import -v -keystore $KEYSTORE -storepass $JAVA_KEYPASS -alias $CA_NAME -file $CA_DB/rootca.crt -noprompt
-}
+        # Sign the CSR with the Qpid CA
+        openssl x509 -days 3650 -req -CA $CERT_LOC/qpid_ca.crt -CAkey $CERT_LOC/qpid_ca.key -CAcreateserial -in $DEST.csr -out $DEST.crt &>> $LOG
 
-create_client_certificate () {
-    CLIENT=$1-client
-    # generate keys for the client certificate
-    keytool -genkey -alias $CLIENT -keyalg RSA -sigalg SHA256withRSA -validity 356 -keystore $KEYSTORE -storepass $JAVA_KEYPASS -keypass $JAVA_KEYPASS -dname "CN=$CLIENT,$COMPANY"
-    # create certificate request
-    keytool -certreq -alias $CLIENT -sigalg SHA256withRSA -keystore $KEYSTORE -storepass $JAVA_KEYPASS -keypass $JAVA_KEYPASS -v -file $CERT_LOC/$CLIENT.req
+        # Remove serial file that openssl creates.  Keep going if the file isn't there.
+        rm $LOCATION/.srl || true
 
-    # sign the certificate request using the CA certificate
-    echo "1" > sign_client
-    echo "9" >> sign_client
-    echo "n" >> sign_client
-    echo "n" >> sign_client
-    echo "-1" >> sign_client
-    echo "n" >> sign_client
+        # Import the signed cert into the NSS DB
+        certutil -A -d $CA_DB -t ',,' -f $CA_PASS_FILE -a -n $client -i $DEST.crt &>> $LOG
 
-    cat sign_client | certutil -C -d $CA_DB -c "$CA_NAME" -a -i $CERT_LOC/$CLIENT.req -o $CERT_LOC/$CLIENT.crt -2 -6 -f $CA_DB/pfile
-    rm sign_client
-
-    # import the certicate into the keystore
-    keytool -import -v -alias $CLIENT -keystore $KEYSTORE -storepass $JAVA_KEYPASS -file $CERT_LOC/$CLIENT.crt
+        # Stupid keytool doesn't allow you to import a keypair. You can only
+        # import a cert. Hence, we have to create the store as an PKCS12 and
+        # convert to JKS. See http://stackoverflow.com/a/8224863
+        openssl pkcs12 -export -name $client -in $DEST.crt -inkey $DEST.key -out $DEST.p12 -passout pass:$CLIENT_PASS &>> $LOG
+        keytool -importkeystore -destkeystore $DEST.jks -srckeystore $DEST.p12 -srcstoretype pkcs12 -alias $client -storepass $JAVA_KEYPASS -srcstorepass $CA_PASS -noprompt &>> $LOG
+        if [ -f $DEST.truststore ]; then
+            keytool -delete -alias "$CA_NAME" -keystore $DEST.truststore -storepass $JAVA_TRUSTPASS
+        fi
+        keytool -import -v -keystore $DEST.truststore -storepass $JAVA_TRUSTPASS -alias "$CA_NAME" -file $CERT_LOC/qpid_ca.crt -noprompt &>> $LOG
+    done
 }
 
 copy_client_cert () {
     PROJECT=$1
     sudo mkdir -p /etc/$PROJECT/certs/amqp/
-    sudo cp $KEYSTORE /etc/$PROJECT/certs/amqp/
-    sudo cp $TRUSTSTORE /etc/$PROJECT/certs/amqp/
+    sudo cp $CERT_LOC/$PROJECT.jks /etc/$PROJECT/certs/amqp/
+    sudo cp $CERT_LOC/$PROJECT.truststore /etc/$PROJECT/certs/amqp/
     sudo chown -R tomcat:tomcat /etc/$PROJECT/certs/amqp/
 }
 
 is_rpm_installed () {
-    rpm=$1
-    rpm -q $1 > /dev/null
+    rpm -q "$@" > /dev/null
     return $?
 }
 
 make_cert_db () {
-    echo "creating nss certificate db"
     sudo mkdir -p /etc/qpid/brokerdb
-    sudo cp -R $SERVER_DB/* /etc/qpid/brokerdb/
+    sudo cp -R $CA_DB/* /etc/qpid/brokerdb/
+    sudo cp $CA_PASS_FILE /etc/qpid/brokerdb/qpid_ca.password
     sudo chown -R qpidd:qpidd /etc/qpid/brokerdb
 }
 
 setup_qpidd_config () {
-    # lib arch is required on older qpids to let it know where ssl.so lives
-    LIBARCH="lib"
-    if [ "x86_64" = `uname -p` ]
-    then
-        LIBARCH="lib64"
-    fi
-    sudo bash -c "sed 's/@LIBARCH@/$LIBARCH/' `dirname $0`/qpidd.conf.tmpl > /etc/qpid/qpidd.conf"
+    # Older Qpids need to point to ssl.so which is under %{_libdir}
+    local libdir=$(rpm --eval "%{_libdir}")
+    sudo -E bash -c "cat << CONF > /etc/qpid/qpidd.conf
+auth=no
+#load-module=${libdir}/qpid/daemon/ssl.so
+require-encryption=yes
+# SSL
+ssl-require-client-authentication=yes
+ssl-cert-db=/etc/qpid/brokerdb
+ssl-cert-password-file=/etc/qpid/brokerdb/qpid_ca.password
+ssl-cert-name=Qpid CA
+ssl-port=5671
+log-to-syslog=yes
+log-enable=info+
+CONF
+"
+}
+
+create_exchange() {
+    exchange_name="$1"
+    config_args="--ssl-certificate $CERT_LOC/qpid_ca.crt --ssl-key $CERT_LOC/qpid_ca.key -b amqps://localhost:5671"
+    # Only create the exchange if it does not exist
+    qpid-config $config_args exchanges event &>> $LOG || qpid-config $config_args add exchange topic event --durable &>> $LOG
 }
 
 ##############
 # main
 ##############
 
-# Abort on errors
+# Stop on errors
 set -e
 
 while getopts ":c" opt; do
@@ -140,21 +127,18 @@ while getopts ":c" opt; do
     esac
 done
 
-if ! is_rpm_installed "qpid-cpp-server"
-then
-    echo "installing qpid-cpp-server"
-    sudo yum -y install qpid-cpp-server
+if ! is_rpm_installed qpid-cpp-server qpid-tools qpid-cpp-server; then
+    echo "installing Qpid"
+    sudo yum -y install qpid-cpp-server qpid-tools qpid-cpp-server
 fi
 
 # create working directory
 mkdir -p $CERT_LOC
+echo -n $CA_PASS > $CA_PASS_FILE
 
 create_ca_cert
-create_server_cert
-import_ca_into_stores
-create_client_certificate "candlepin"
+create_client_certs
 copy_client_cert "candlepin"
-create_client_certificate "gutterball"
 copy_client_cert "gutterball"
 
 make_cert_db
@@ -162,3 +146,7 @@ setup_qpidd_config
 
 sudo service qpidd restart
 echo "Qpid configuration complete"
+
+echo "Creating event exchange"
+sleep 7
+create_exchange "event"
