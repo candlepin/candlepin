@@ -15,12 +15,13 @@ setup_oracle() {
 [program:oracle]
 environment=ORACLE_HOME=/u01/app/oracle/product/11.2.0/xe,ORACLE_SID=XE
 command=/usr/bin/launch-oracle.sh
-#stopsignal=INT
-#redirect_stderr=false
 ORACLE_SUPERVISOR
 
     mv /root/oracle/init.ora /u01/app/oracle/product/11.2.0/xe/config/scripts
     mv /root/oracle/initXETemp.ora /u01/app/oracle/product/11.2.0/xe/config/scripts
+
+    mkdir -p /root/.m2/repository/com/oracle/ojdbc6/11.2.0
+    mv /root/oracle/ojdbc6.jar /root/.m2/repository/com/oracle/ojdbc6/11.2.0/ojdbc6-11.2.0.jar
 
     echo 'export ORACLE_HOME=/u01/app/oracle/product/11.2.0/xe' >> /etc/profile.d/oracle_profile.sh
     echo 'export PATH=$ORACLE_HOME/bin:$PATH' >> /etc/profile.d/oracle_profile.sh
