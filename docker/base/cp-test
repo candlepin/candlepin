@@ -30,19 +30,15 @@ function usage
         -u  run unit test suite
         -s  run a bash shell when done
         -c  git reference to checkout
-        -o  use oracle instead of postgresql
 HELP
 }
 
-while getopts ":rusoc:" opt; do
+while getopts ":rusc:" opt; do
     case $opt in
         r  ) RSPEC="1" ;;
         u  ) UNITTEST="1";;
         s  ) LAUNCHSHELL="1";;
-        o  ) USE_ORACLE="1";;
-        c  )
-            CHECKOUT="${OPTARG}"
-            ;;
+        c  ) CHECKOUT="${OPTARG}";;
         ?  ) usage; exit;;
     esac
 done
@@ -82,11 +78,8 @@ fi
 
 if [ "$RSPEC" == "1" ]; then
     echo "Running rspec tests."
-    if [ "$USE_ORACLE" == "1" ]; then
-        bin/deploy -g -o
-    else
-        bin/deploy -g
-    fi
+    bin/deploy -g
+    sleep 7
     buildr rspec
 
     # If the caller mounted a volume at /artifacts, copy server logs out:

@@ -11,6 +11,10 @@ setup_oracle() {
     #yum install -y http://yum.spacewalkproject.org/1.9/RHEL/6/x86_64/spacewalk-repo-1.9-1.el6.noarch.rpm
     #yum install -y oracle-xe-selinux oracle-instantclient-selinux oracle-instantclient-sqlplus-selinux
 
+    cat >> /root/.candlepinrc << CANDLEPINRC
+USE_ORACLE="1"
+CANDLEPINRC
+
     cat > /etc/supervisor/conf.d/oracle.conf <<ORACLE_SUPERVISOR
 [program:oracle]
 environment=ORACLE_HOME=/u01/app/oracle/product/11.2.0/xe,ORACLE_SID=XE
