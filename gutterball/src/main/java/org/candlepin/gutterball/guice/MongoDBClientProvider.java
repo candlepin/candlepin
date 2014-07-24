@@ -16,6 +16,8 @@
 package org.candlepin.gutterball.guice;
 
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.gutterball.config.ConfigKey;
@@ -25,6 +27,8 @@ import org.slf4j.LoggerFactory;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.mongodb.MongoClient;
+import com.mongodb.MongoCredential;
+import com.mongodb.ServerAddress;
 
 /**
  * A guice provider that creates a MongoClient from the Configuration.
@@ -38,25 +42,39 @@ public class MongoDBClientProvider implements Provider<MongoClient> {
     private static Logger log = LoggerFactory.getLogger(MongoDBClientProvider.class);
 
     private MongoClient client;
-    private String host;
-    private int port;
+    private ServerAddress mongoServerAddress;
+    private List<MongoCredential> credentials;
 
     @Inject
     public MongoDBClientProvider(Configuration config) {
-        host = config.getString(ConfigKey.MONGODB_HOST.toString(), DEFAULT_HOST);
-        port = config.getInteger(ConfigKey.MONGODB_PORT.toString(), DEFAULT_PORT);
-    }
+        String host = config.getString(ConfigKey.MONGODB_HOST.toString(), DEFAULT_HOST);
+        int port = config.getInteger(ConfigKey.MONGODB_PORT.toString(), DEFAULT_PORT);
+        String database = config.getString(ConfigKey.MONGODB_DATABASE.toString(),
+                MongoDBProvider.DEFAULT_DB);
+        String username = config.getString(ConfigKey.MONGODB_USERNAME.toString(), "");
 
-    @Override
-    public MongoClient get() {
-        log.info("Creating mongodb connection: " + host + ":" + port);
 
         try {
-            client = new MongoClient(host, port);
+            mongoServerAddress = new ServerAddress(host, port);
         }
         catch (UnknownHostException e) {
             throw new RuntimeException("Unable to connect to mongodb", e);
         }
+
+        credentials = new ArrayList<MongoCredential>();
+        if (username != null && !username.isEmpty()) {
+            log.info("Mongodb connection will be authenticated with user: " + username);
+            String password = config.getString(ConfigKey.MONGODB_PASSWORD.toString(), "");
+            credentials.add(MongoCredential.createMongoCRCredential(username,
+                database, password.toCharArray()));
+        }
+    }
+
+    @Override
+    public MongoClient get() {
+        log.info("Creating mongodb connection: " + mongoServerAddress.getHost() +
+                ":" + mongoServerAddress.getPort());
+        client = new MongoClient(mongoServerAddress, credentials);
         return client;
     }
 

@@ -26,7 +26,9 @@ public enum ConfigKey {
 
     MONGODB_HOST("gutterball.mongodb.host"),
     MONGODB_PORT("gutterball.mongodb.port"),
-    MONGODB_DATABASE("gutterball.mongodb.database");
+    MONGODB_DATABASE("gutterball.mongodb.database"),
+    MONGODB_USERNAME("gutterball.mongodb.username"),
+    MONGODB_PASSWORD("gutterball.mongodb.password");
 
     private String key;
     private ConfigKey(String key) {
