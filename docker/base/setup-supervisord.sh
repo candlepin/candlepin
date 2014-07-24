@@ -58,6 +58,13 @@ command=/usr/sbin/sshd -D
 SSH_SUPERVISOR
 }
 
+setup_candlepinrc() {
+    cat > /root/.candlepinrc <<CANDLEPINRC
+SUPERVISOR=1
+CANDLEPINRC
+}
+
 setup_supervisor
 setup_ssh
 setup_tomcat
+setup_candlepinrc

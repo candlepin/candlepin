@@ -17,6 +17,8 @@ source /etc/profile
 export JAVA_HOME=/usr/lib/jvm/java-1.7.0/
 export SUPERVISOR=1
 export AUTOCONF=1
+export FORCECERT=1
+export HOME=/root
 
 function usage
 {
@@ -98,6 +100,6 @@ if [ "$RSPEC" == "1" ]; then
 fi
 
 if [ "$LAUNCHSHELL" == "1" ]; then
-    /bin/bash
+    /bin/bash -i -l
 fi
 
