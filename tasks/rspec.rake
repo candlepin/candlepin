@@ -80,6 +80,8 @@ module ModifiedRSpec
       Project.local_task('rspec')
     end
 
+    TEST_SPECIFIC_REGEX = /^rspec:(.+)/
+
     after_define do |project|
       rspec = project.rspec
 
@@ -129,7 +131,6 @@ module ModifiedRSpec
           task('rspec_failures').invoke
         end
 
-        TEST_SPECIFIC_REGEX = /^rspec:(.+)/
         rule(TEST_SPECIFIC_REGEX) do |task|
           tests, signifiers = TEST_SPECIFIC_REGEX.match(task.name)[1].split(/:/, 2)
           tests = tests.split(/,/)

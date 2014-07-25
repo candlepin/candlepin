@@ -19,7 +19,7 @@
 **/.externalToolBuilders
 **/.project
 **/.pydevproject
-**/.syntastic_class_path
+**/.syntastic_javac_config
 **/.zanata-cache
 
 **/build/
