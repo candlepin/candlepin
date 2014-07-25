@@ -18,6 +18,8 @@ package org.candlepin.gutterball.guice;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.validateMockitoUsage;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.never;
 
 
 import org.candlepin.common.config.Configuration;
@@ -35,12 +37,35 @@ public class MongoDBClientProviderTest {
     private Configuration config;
 
     @Test
-    public void testProperConfigValuesUsed() {
+    public void testProperConfigValuesUsedForNoAuth() {
+        when(config.getString(ConfigKey.MONGODB_USERNAME.toString(), ""))
+            .thenReturn("");
+
         new MongoDBClientProvider(config);
+        verifyCommonConfig();
+        verify(config, never()).getString(ConfigKey.MONGODB_PASSWORD.toString(), "");
+    }
+
+    @Test
+    public void testProperConfigValuesUserForAuthEnabled() {
+        when(config.getString(ConfigKey.MONGODB_USERNAME.toString(), ""))
+            .thenReturn("username");
+        when(config.getString(ConfigKey.MONGODB_PASSWORD.toString(), ""))
+            .thenReturn("password");
+
+        new MongoDBClientProvider(config);
+
+        verifyCommonConfig();
+        verify(config).getString(eq(ConfigKey.MONGODB_PASSWORD.toString()), eq(""));
+    }
+
+    private void verifyCommonConfig() {
         verify(config).getString(eq(ConfigKey.MONGODB_HOST.toString()),
-                                 eq(MongoDBClientProvider.DEFAULT_HOST));
+                eq(MongoDBClientProvider.DEFAULT_HOST));
         verify(config).getInteger(eq(ConfigKey.MONGODB_PORT.toString()),
                 eq(MongoDBClientProvider.DEFAULT_PORT));
+        verify(config).getString(eq(ConfigKey.MONGODB_DATABASE.toString()),
+                eq(MongoDBProvider.DEFAULT_DB));
     }
 
     @After

@@ -17,13 +17,19 @@ package org.candlepin.gutterball.curator;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
+
+import java.io.InputStream;
+import java.nio.charset.Charset;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import org.candlepin.common.config.Configuration;
-import org.candlepin.common.config.MapConfiguration;
+import org.candlepin.common.config.ConfigurationException;
+import org.candlepin.common.config.PropertiesFileConfiguration;
 import org.candlepin.gutterball.TestUtils;
+import org.candlepin.gutterball.guice.GutterballServletModule;
 import org.candlepin.gutterball.guice.MongoDBClientProvider;
 import org.candlepin.gutterball.guice.MongoDBProvider;
 import org.candlepin.gutterball.model.Event;
@@ -41,15 +47,34 @@ import com.mongodb.MongoClient;
 @RunWith(JukitoRunner.class)
 public class EventCuratorTest {
 
+    // TODO: Can this be broken out into a reusable JukitoModule
+    //       and used with @UseModules?
     public static class EventCuratorTestModule extends JukitoModule {
         @Override
         protected void configureTest() {
-            Configuration c = new MapConfiguration();
-            c.setProperty("gutterball.mongodb.database", "test");
-            bind(Configuration.class).toInstance(c);
+            bind(Configuration.class).toInstance(readIntegrationTestConfig());
             bind(MongoClient.class).toProvider(MongoDBClientProvider.class).in(Singleton.class);
             bind(DB.class).toProvider(MongoDBProvider.class).in(Singleton.class);
         }
+
+        // NOTE: If tests are failing due to auth errors, be sure that you have
+        //       a user added to your test database that match those set in the
+        //       integration_test.properties file.
+        private Configuration readIntegrationTestConfig() {
+            Charset utf8 = Charset.forName("UTF-8");
+            InputStream defaultStream = GutterballServletModule.class
+                    .getClassLoader().getResourceAsStream("integration_test.properties");
+
+            Configuration defaults = null;
+            try {
+                defaults = new PropertiesFileConfiguration(defaultStream, utf8);
+            }
+            catch (ConfigurationException e) {
+                fail("Unable to read test config: " + e.getMessage());
+            }
+            return defaults;
+        }
+
     }
 
     @Inject
