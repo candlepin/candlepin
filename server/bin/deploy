@@ -1,24 +1,12 @@
 #!/bin/sh
 
-SERVER_DIR="${BASH_SOURCE%/*}/.."
-
-function evalrc ()
-{
-    if [ "$1" -ne "0" ] ; then
-        echo "$2"
-        exit
-    fi
-}
-
-function recreate_mysql()
-{
+recreate_mysql() {
     mysqladmin --user="$DBUSER" --password="$DBPASSWORD" --force drop candlepin
     mysqladmin --user="$DBUSER" --password="$DBPASSWORD" create candlepin
     evalrc $? "mysqladmin create failed"
 }
 
-function recreate_postgresql ()
-{
+recreate_postgresql() {
     # need to setup .pgpass for this to use passwds
     # something like:
     #   *:*:candlepin:candlepin:candlepinpasswd
@@ -29,9 +17,7 @@ function recreate_postgresql ()
     evalrc $? "createdb failed"
 }
 
-function recreate_oracle ()
-{
-    #sqlplus -s 'sys/password@//localhost/XE as sysdba' @`dirname $0`/recreate-candlepin.sql
+recreate_oracle () {
     sqlplus -s 'sys/password@//localhost/XE as sysdba'<<EOF
 drop user candlepin cascade;
 create user candlepin identified by candlepin default tablespace users;
@@ -41,78 +27,73 @@ EOF
     evalrc $? "Creating Candlepin user failed"
 }
 
-function gendb ()
-{
-if [ "$GENDB" == "1" ]; then
-    MESSAGE="generating a new db"
-    CHANGELOG="changelog-create.xml"
-    if [ "$USE_ORACLE" == "1" ]; then
-        recreate_oracle
-    elif [ "$USE_MYSQL" == "1" ]; then
-        recreate_mysql
+gendb () {
+    if [ "$GENDB" == "1" ]; then
+        MESSAGE="generating a new db"
+        CHANGELOG="changelog-create.xml"
+        if [ "$USE_ORACLE" == "1" ]; then
+            recreate_oracle
+        elif [ "$USE_MYSQL" == "1" ]; then
+            recreate_mysql
+        else
+            recreate_postgresql
+        fi
     else
-        recreate_postgresql
+        MESSAGE="updating db"
+        CHANGELOG="changelog-update.xml"
     fi
-else
-    MESSAGE="updating db"
-    CHANGELOG="changelog-update.xml"
-fi
 
-if [ "$USE_ORACLE" == "1" ]; then
-    DRIVER="oracle.jdbc.OracleDriver"
-    JDBC_JAR="/usr/lib/oracle/11.2/client64/lib/ojdbc6.jar"
-    JDBC_URL="jdbc:oracle:thin:@//localhost:1521/XE "
-    if [ -z "$DBPASSWORD" ] ; then
-        DBPASSWORD="candlepin"
+    if [ "$USE_ORACLE" == "1" ]; then
+        DRIVER="oracle.jdbc.OracleDriver"
+        JDBC_JAR="/usr/lib/oracle/11.2/client64/lib/ojdbc6.jar"
+        JDBC_URL="jdbc:oracle:thin:@//localhost:1521/XE "
+        if [ -z "$DBPASSWORD" ] ; then
+            DBPASSWORD="candlepin"
+        fi
+    elif [ "$USE_MYSQL" == "1" ]; then
+        DRIVER="com.mysql.jdbc.Driver"
+        JDBC_JAR="/usr/share/java/mysql-connector-java.jar"
+        JDBC_URL="jdbc:mysql:///candlepin"
+    else
+        DRIVER="org.postgresql.Driver"
+        JDBC_JAR="/usr/share/java/postgresql-jdbc.jar"
+        JDBC_URL="jdbc:postgresql:candlepin"
     fi
-elif [ "$USE_MYSQL" == "1" ]; then
-    DRIVER="com.mysql.jdbc.Driver"
-    JDBC_JAR="/usr/share/java/mysql-connector-java.jar"
-    JDBC_URL="jdbc:mysql:///candlepin"
-else
-    DRIVER="org.postgresql.Driver"
-    JDBC_JAR="/usr/share/java/postgresql-jdbc.jar"
-    JDBC_URL="jdbc:postgresql:candlepin"
-fi
 
     echo "============ $MESSAGE =============="
-    LQCOMMAND="liquibase --driver=$DRIVER --classpath=src/main/resources/:target/classes/:$JDBC_JAR --changeLogFile=db/changelog/$CHANGELOG --url=$JDBC_URL --username=candlepin"
+    LQCOMMAND="liquibase --driver=$DRIVER --classpath=$PROJECT_DIR/src/main/resources/:target/classes/:$JDBC_JAR --changeLogFile=db/changelog/$CHANGELOG --url=$JDBC_URL --username=candlepin"
     if [ -n "$DBPASSWORD" ] ; then
         LQCOMMAND="$LQCOMMAND --password=$DBPASSWORD "
     fi
     LQCOMMAND="$LQCOMMAND update -Dcommunity=True"
-    (cd $SERVER_DIR && $LQCOMMAND)
+    (cd $PROJECT_DIR && $LQCOMMAND)
     evalrc $? "Liquibase command failed"
 }
 
-function deploy ()
-{
-    VERSION="`grep Version: $SERVER_DIR/candlepin.spec | cut --delim=' ' -f2`"
+deploy() {
+  VERSION="$(grep Version: $PROJECT_DIR/candlepin.spec | cut --delim=' ' -f2)"
     if [ -z $CLEAN ] ; then
         $SUDO rm -rf $DEPLOY
     else
         $SUDO rm -rf $CLEAN
     fi
-    $SUDO cp $SERVER_DIR/target/candlepin-$VERSION.war $DEPLOY
+    $SUDO cp $PROJECT_DIR/target/candlepin-$VERSION.war $DEPLOY
 }
 
-function stopappserver ()
-{
+stopappserver() {
     # tc rpm /sbin/service tomcat6 stop
     # tc opt $TC_HOME/bin/catalina.sh stop
     # jboss opt $JBOSS_HOME/bin/shutdown.sh
     $STOP
 }
 
-function isrpm ()
-{
+isrpm() {
     echo $1 | grep "var/lib" > /dev/null
     return $?
 }
 
 
-function update_keystore
-{
+update_keystore() {
     if [ "$FORCECERT" = "1" ]; then
         echo "Move the keystore to tomcats location"
         sudo cp /etc/candlepin/certs/keystore $CONTAINER_CONF_DIR/keystore
@@ -121,54 +102,45 @@ function update_keystore
     fi
 }
 
-function upload_products
-{
+upload_products() {
   if [ "$TESTDATA" = "1" ]; then
-      `dirname $0`/import_products.rb  `dirname $0`/test_data.json
+      $SELF_DIR/import_products.rb $SELF_DIR/test_data.json
   fi
 }
 
-function create_var_lib_candlepin
-{
+create_var_lib_candlepin() {
     sudo mkdir -p /var/lib/candlepin
     sudo chown tomcat:tomcat /var/lib/candlepin
 }
 
-function create_var_log_candlepin
-{
+create_var_log_candlepin() {
     sudo mkdir -p /var/log/candlepin
     sudo chown tomcat:tomcat /var/log/candlepin
 }
 
-function create_var_cache_candlepin
-{
+create_var_cache_candlepin() {
     sudo mkdir -p /var/cache/candlepin
     sudo chown tomcat:tomcat /var/cache/candlepin
 }
 
-function autoconf
-{
+autoconf() {
   buildr -s -e $1 erb $2
 
-  red='\e[0;31m'
-  NC='\e[0m' # No Color
   if [ "$?" -ne "0" ]; then
-    echo -e "${red}ERROR: candlepin.conf generation failed!${NC}"
+    err_msg "ERROR: candlepin.conf generation failed!"
     return 1
   fi
 
   CANDLEPIN_CONF="/etc/candlepin/candlepin.conf"
 
   if $(sudo head -n 1 $CANDLEPIN_CONF | grep -q "AUTOGENERATED"); then
-    sudo cp $SERVER_DIR/target/generated/erb/candlepin.conf $CANDLEPIN_CONF
+    sudo cp $PROJECT_DIR/target/generated/erb/candlepin.conf $CANDLEPIN_CONF
   else
-    echo -e "${red}Your candlepin.conf does not appear to be autogenerated.  Cowardly refusing to overwrite.${NC}"
-    return 1
+    warn_msg "Your candlepin.conf does not appear to be autogenerated.  Cowardly refusing to overwrite."
   fi
 }
 
-function usage
-{
+usage() {
     cat <<HELP
     usage: deploy [options]
 
@@ -183,10 +155,37 @@ function usage
 HELP
 }
 
-# Read in user defined variables
-if [ -f $HOME/.candlepinrc ] ; then
-    source $HOME/.candlepinrc
-fi
+notify() {
+    if [ -z "$QUIET" ]; then
+        if type notify-send &> /dev/null; then
+            notify-send -i info -t 2000 "Deployment complete!"
+        fi
+        echo
+        success_msg "Deployment complete!"
+    fi
+}
+
+init() {
+    # Read in user defined variables
+    if [ -f $HOME/.candlepinrc ] ; then
+        source $HOME/.candlepinrc
+    fi
+
+    # Source useful bash functions
+    source "$(buildr -s checkout_root)/bin/bash_functions"
+
+    PROJECT_DIR="$(project_directory server)"
+
+    # Get the directory this script is in. See http://mywiki.wooledge.org/BashFAQ/028
+    SELF_DIR="${BASH_SOURCE%/*}"
+}
+
+### Main
+
+# Abort on errors
+set -e
+
+init
 
 DBUSER="candlepin"
 
@@ -264,12 +263,10 @@ fi
 eval $STOP
 
 # generate the postgresql DB
-
 if [ "$LOGDRIVER" == "logdriver" ]; then
     echo "using logdriver"
     LOGDRIVER="logdriver=yes"
 else
-    echo "using NO logdriver"
     LOGDRIVER=""
 fi
 
@@ -284,7 +281,7 @@ else
     ENV_BUILDR="development"
 fi
 
-buildr -e $ENV_BUILDR clean package test=no $LOGDRIVER
+buildr -s -e $ENV_BUILDR clean package test=no $LOGDRIVER
 
 if [ "$?" -ne "0" ]; then
   echo "ERROR: Compile failed."
@@ -298,13 +295,13 @@ if [ "$FORCECERT" == "1" ]; then
 fi
 
 # generate SSL certs if they are needed
-sh -x `dirname $0`/gen-certs $GEN_CERTS_ARGS
+bash $SELF_DIR/gen-certs $GEN_CERTS_ARGS
 
 # update keystore file and put it into tomcat's conf directory
 update_keystore
 
 # update server.xml
-sudo python $SERVER_DIR/bin/update-server-xml.py $CONTAINER_CONF_DIR
+sudo python $PROJECT_DIR/bin/update-server-xml.py $CONTAINER_CONF_DIR
 
 create_var_lib_candlepin
 create_var_log_candlepin
@@ -324,7 +321,4 @@ echo "Initializing Candlepin..."
 wget --no-check-certificate -qO- https://localhost:8443/candlepin/admin/init
 
 upload_products
-
-if [ "$NOTIFY" == "1" ] && which notify-send &> /dev/null; then
-    notify-send -i info -t 2000 "Deployment complete!"
-fi
+notify
