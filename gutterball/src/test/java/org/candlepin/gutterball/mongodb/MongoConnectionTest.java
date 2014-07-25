@@ -13,14 +13,15 @@
  * in this software or its documentation.
  */
 
-package org.candlepin.gutterball.guice;
+package org.candlepin.gutterball.mongodb;
 
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.validateMockitoUsage;
-import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.validateMockitoUsage;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+import java.util.List;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.gutterball.config.ConfigKey;
@@ -28,10 +29,17 @@ import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import com.mongodb.DB;
+import com.mongodb.MongoClient;
+import com.mongodb.MongoCredential;
+import com.mongodb.MongoException;
+import com.mongodb.ServerAddress;
+
 @RunWith(MockitoJUnitRunner.class)
-public class MongoDBClientProviderTest {
+public class MongoConnectionTest {
 
     @Mock
     private Configuration config;
@@ -41,7 +49,8 @@ public class MongoDBClientProviderTest {
         when(config.getString(ConfigKey.MONGODB_USERNAME.toString(), ""))
             .thenReturn("");
 
-        new MongoDBClientProvider(config);
+        new MongoConnectionStub(config);
+
         verifyCommonConfig();
         verify(config, never()).getString(ConfigKey.MONGODB_PASSWORD.toString(), "");
     }
@@ -53,7 +62,7 @@ public class MongoDBClientProviderTest {
         when(config.getString(ConfigKey.MONGODB_PASSWORD.toString(), ""))
             .thenReturn("password");
 
-        new MongoDBClientProvider(config);
+        new MongoConnectionStub(config);
 
         verifyCommonConfig();
         verify(config).getString(eq(ConfigKey.MONGODB_PASSWORD.toString()), eq(""));
@@ -61,11 +70,11 @@ public class MongoDBClientProviderTest {
 
     private void verifyCommonConfig() {
         verify(config).getString(eq(ConfigKey.MONGODB_HOST.toString()),
-                eq(MongoDBClientProvider.DEFAULT_HOST));
+                eq(MongoConnection.DEFAULT_HOST));
         verify(config).getInteger(eq(ConfigKey.MONGODB_PORT.toString()),
-                eq(MongoDBClientProvider.DEFAULT_PORT));
+                eq(MongoConnection.DEFAULT_PORT));
         verify(config).getString(eq(ConfigKey.MONGODB_DATABASE.toString()),
-                eq(MongoDBProvider.DEFAULT_DB));
+                eq(MongoConnection.DEFAULT_DB));
     }
 
     @After
@@ -73,4 +82,21 @@ public class MongoDBClientProviderTest {
         validateMockitoUsage();
     }
 
+    private class MongoConnectionStub extends MongoConnection {
+
+        public MongoConnectionStub(Configuration config) throws MongoException {
+            super(config);
+        }
+
+        /**
+         * Override to stub out connection details
+         */
+        @Override
+        protected void initConnection(ServerAddress address,
+            List<MongoCredential> credentials, String databaseName) throws MongoException {
+            this.mongo = Mockito.mock(MongoClient.class);
+        }
+
+
+    }
 }

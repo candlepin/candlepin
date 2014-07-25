@@ -14,7 +14,12 @@
  */
 package org.candlepin.gutterball.servlet;
 
-import org.candlepin.gutterball.guice.MongoDBClientProvider;
+import org.candlepin.gutterball.mongodb.MongoConnection;
+
+import com.google.inject.Binding;
+import com.google.inject.Injector;
+import com.google.inject.Module;
+import com.google.inject.Stage;
 
 import org.jboss.resteasy.plugins.guice.GuiceResourceFactory;
 import org.jboss.resteasy.plugins.server.servlet.ResteasyBootstrap;
@@ -24,11 +29,6 @@ import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.jboss.resteasy.util.GetRestful;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.inject.Binding;
-import com.google.inject.Injector;
-import com.google.inject.Module;
-import com.google.inject.Stage;
 
 import java.lang.reflect.Type;
 import java.util.List;
@@ -113,6 +113,7 @@ public abstract class  GutterballGuiceResteasyBootstrap extends ResteasyBootstra
         final Injector injector = (Injector) servletContextEvent.getServletContext()
                 .getAttribute(Injector.class.getName());
 
-        injector.getInstance(MongoDBClientProvider.class).closeConnection();
+        injector.getInstance(MongoConnection.class).close();
     }
+
 }

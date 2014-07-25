@@ -14,8 +14,9 @@
  */
 package org.candlepin.gutterball.curator;
 
+import org.candlepin.gutterball.mongodb.MongoConnection;
+
 import com.google.inject.Inject;
-import com.mongodb.DB;
 import com.mongodb.DBObject;
 
 /**
@@ -25,8 +26,8 @@ public class ConsumerCurator extends MongoDBCurator<DBObject> {
     public static final String COLLECTION = "consumers";
 
     @Inject
-    public ConsumerCurator(DB database) {
-        super(DBObject.class, database);
+    public ConsumerCurator(MongoConnection mongo) {
+        super(DBObject.class, mongo);
     }
 
     @Override

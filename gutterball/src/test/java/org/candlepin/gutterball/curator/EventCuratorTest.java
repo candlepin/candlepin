@@ -23,16 +23,15 @@ import java.io.InputStream;
 import java.nio.charset.Charset;
 
 import javax.inject.Inject;
-import javax.inject.Singleton;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.ConfigurationException;
 import org.candlepin.common.config.PropertiesFileConfiguration;
 import org.candlepin.gutterball.TestUtils;
 import org.candlepin.gutterball.guice.GutterballServletModule;
-import org.candlepin.gutterball.guice.MongoDBClientProvider;
-import org.candlepin.gutterball.guice.MongoDBProvider;
 import org.candlepin.gutterball.model.Event;
+import org.candlepin.gutterball.mongodb.MongoConnection;
+
 import org.jukito.JukitoModule;
 import org.jukito.JukitoRunner;
 import org.junit.Before;
@@ -40,9 +39,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import com.mongodb.DB;
 import com.mongodb.DBCursor;
-import com.mongodb.MongoClient;
 
 @RunWith(JukitoRunner.class)
 public class EventCuratorTest {
@@ -52,9 +49,9 @@ public class EventCuratorTest {
     public static class EventCuratorTestModule extends JukitoModule {
         @Override
         protected void configureTest() {
-            bind(Configuration.class).toInstance(readIntegrationTestConfig());
-            bind(MongoClient.class).toProvider(MongoDBClientProvider.class).in(Singleton.class);
-            bind(DB.class).toProvider(MongoDBProvider.class).in(Singleton.class);
+            Configuration config = readIntegrationTestConfig();
+            MongoConnection conn = new MongoConnection(config);
+            bind(MongoConnection.class).toInstance(conn);
         }
 
         // NOTE: If tests are failing due to auth errors, be sure that you have
@@ -78,7 +75,7 @@ public class EventCuratorTest {
     }
 
     @Inject
-    private DB database;
+    private MongoConnection mongo;
 
     @Inject
     private EventCurator curator;
@@ -87,7 +84,7 @@ public class EventCuratorTest {
 
     @Before
     public void setupData() {
-        database.getCollection(EventCurator.COLLECTION).drop();
+        mongo.getDB().getCollection(EventCurator.COLLECTION).drop();
         e1 = TestUtils.createEvent("CREATE");
         curator.save(e1);
     }
