@@ -99,6 +99,9 @@ POSTGRESQL = 'postgresql:postgresql:jar:9.0-801.jdbc4'
 MYSQL = 'mysql:mysql-connector-java:jar:5.1.26'
 
 MONGODB = 'org.mongodb:mongo-java-driver:jar:2.12.2'
+MONGODB_EMBEDDED = ['de.flapdoodle.embed:de.flapdoodle.embed.mongo:jar:1.46.0',
+                    'de.flapdoodle.embed:de.flapdoodle.embed.process:jar:1.39.0',
+                    'org.apache.commons:commons-compress:jar:1.8.1']
 
 DB = [POSTGRESQL, MYSQL, MONGODB]
 
@@ -253,7 +256,7 @@ define "candlepin" do
     resources.filter.using(resource_substitutions)
     test.resources.filter.using(resource_substitutions)
 
-    test.with(TESTING, JUKITO, HSQLDB)
+    test.with(TESTING, JUKITO, HSQLDB, MONGODB_EMBEDDED)
     test.using :java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ]
 
     package(:war, :id=>"gutterball").tap do |war|
