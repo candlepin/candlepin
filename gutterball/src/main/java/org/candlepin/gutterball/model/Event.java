@@ -16,7 +16,8 @@ package org.candlepin.gutterball.model;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
-import com.mongodb.util.JSON;
+
+import java.util.Date;
 
 /**
  * Event - Base class for Candlepin events. Serves as both our semi-permanent
@@ -51,10 +52,6 @@ public class Event extends BasicDBObject {
         this.putAll(dbObject);
     }
 
-    public Event(String eventJson) {
-        this.putAll((DBObject) JSON.parse(eventJson));
-    }
-
     public String getId() {
         return this.getString(ID);
     }
@@ -79,11 +76,11 @@ public class Event extends BasicDBObject {
         this.put(TARGET, target);
     }
 
-    public Long getTimestamp() {
-        return this.getLong(TIMESTAMP);
+    public Date getTimestamp() {
+        return this.getDate(TIMESTAMP);
     }
 
-    public void setTimestamp(Long timestamp) {
+    public void setTimestamp(Date timestamp) {
         this.put(TIMESTAMP, timestamp);
     }
 

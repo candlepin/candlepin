@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.gutterball.util;
+package org.candlepin.gutterball.bsoncallback;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -35,11 +35,15 @@ public class BsonEscapeCallback extends JSONCallback implements DBCallback {
     private final int replacementIdx;
     private final Matcher matchesAny;
 
+    protected final boolean write;
+
     public BsonEscapeCallback() {
         this(true);
     }
 
     public BsonEscapeCallback(boolean write) {
+        // Save write for other callbacks to check
+        this.write = write;
         toReplaceIdx = write ? 0 : 1;
         replacementIdx = write ? 1 : 0;
         // Build our regex once (expensive) so we can check every key more quickly/efficiently

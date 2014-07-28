@@ -42,7 +42,7 @@ public class TestUtils {
         e.setConsumerId(randomString("My Test Consumer"));
         e.setType("CREATE");
         e.setMessageText("This is a message");
-        e.setTimestamp(new Date().getTime());
+        e.setTimestamp(new Date());
         return e;
     }
 
