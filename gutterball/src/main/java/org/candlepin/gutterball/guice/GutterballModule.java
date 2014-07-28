@@ -15,10 +15,12 @@
 package org.candlepin.gutterball.guice;
 
 import org.candlepin.gutterball.curator.EventCurator;
+import org.candlepin.gutterball.eventhandler.EventManager;
 import org.candlepin.gutterball.receive.EventReceiver;
 import org.candlepin.gutterball.resource.EventResource;
 import org.candlepin.gutterball.resource.StatusResource;
 import org.candlepin.gutterball.resteasy.JsonProvider;
+
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.AbstractModule;
@@ -43,6 +45,7 @@ public class GutterballModule extends AbstractModule {
         bind(JsonProvider.class);
 
         // Backend classes
+        bind(EventManager.class).asEagerSingleton();
         bind(EventReceiver.class).asEagerSingleton();
 
         // It is safe to share a single instance of the mongodb connection

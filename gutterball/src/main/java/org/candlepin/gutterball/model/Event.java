@@ -14,10 +14,6 @@
  */
 package org.candlepin.gutterball.model;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
@@ -31,8 +27,6 @@ import com.mongodb.util.JSON;
  * We also store the original json as a field in this so that we don't
  * lose values when this class is out of sync with the candlepin version
  */
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.PROPERTY)
 public class Event extends BasicDBObject {
 
     private static final String TARGET = "target";
@@ -47,11 +41,14 @@ public class Event extends BasicDBObject {
     private static final String CONSUMER_ID = "consumerId";
     private static final String TARGET_NAME = "targetName";
     private static final String MESSAGE_TEXT = "messageText";
-    private static final String ORIGINAL_JSON = "originalJson";
     private static final String ID = "id";
     private static final String TYPE = "type";
 
     public Event() {
+    }
+
+    public Event(DBObject dbObject) {
+        this.putAll(dbObject);
     }
 
     public Event(String eventJson) {
@@ -198,20 +195,6 @@ public class Event extends BasicDBObject {
      */
     public void setMessageText(String messageText) {
         this.put(MESSAGE_TEXT, messageText);
-    }
-
-    /**
-     * @return the originalJson
-     */
-    public String getOriginalJson() {
-        return this.getString(ORIGINAL_JSON);
-    }
-
-    /**
-     * @param originalJson the originalJson to set
-     */
-    public void setOriginalJson(String originalJson) {
-        this.put(ORIGINAL_JSON, originalJson);
     }
 }
 

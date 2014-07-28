@@ -21,7 +21,6 @@ import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
 
 import java.util.HashMap;
 import java.util.Map;
-
 /**
  * GutterballServletModule is responsible for starting Guice and binding
  * all the dependencies.
