@@ -14,31 +14,33 @@
  */
 package org.candlepin.gutterball.eventhandler;
 
-import org.apache.commons.lang.StringUtils;
-import org.bson.BSONCallback;
-
 import org.candlepin.gutterball.bsoncallback.DateAndEscapeCallback;
-import org.candlepin.gutterball.curator.ConsumerCurator;
+import org.candlepin.gutterball.curator.GuestIdCurator;
 import org.candlepin.gutterball.model.Event;
 
 import com.google.inject.Inject;
 import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
 
+import org.apache.commons.lang.StringUtils;
+import org.bson.BSONCallback;
+
 /**
- * ConsumerHandler to properly update the database when
- * a consumer based event is received
+ * GuestIdHandler class to deal with guestId events
+ *
+ * TODO: This looks almost exactly like ConsumerHandler, unless
+ * they diverge, we should use an abstract superclass.
  */
-public class ConsumerHandler implements EventHandler {
+public class GuestIdHandler implements EventHandler {
 
-    public static final String TARGET = "CONSUMER";
+    public static final String TARGET = "GUESTID";
 
-    protected ConsumerCurator consumerCurator;
+    protected GuestIdCurator curator;
     protected BSONCallback callback;
 
     @Inject
-    public ConsumerHandler(ConsumerCurator consumerCurator) {
-        this.consumerCurator = consumerCurator;
+    public GuestIdHandler(GuestIdCurator curator) {
+        this.curator = curator;
         callback = new DateAndEscapeCallback();
     }
 
@@ -46,11 +48,11 @@ public class ConsumerHandler implements EventHandler {
         String newEntityJson = (String) event.get("newEntity");
         if (!StringUtils.isBlank(newEntityJson)) {
             DBObject newEntity = (DBObject) JSON.parse(newEntityJson, callback);
-            // TODO: we should have a consumer record that we maintain with
+            // TODO: we should have a record that we maintain with
             // created/deleted/owner info to narrow our queries.
             // Each consumer record could also store that records id in some
             // sort of _master_id field.
-            consumerCurator.insert(newEntity);
+            curator.insert(newEntity);
         }
     }
 

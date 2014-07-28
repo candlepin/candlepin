@@ -19,12 +19,15 @@ import javax.jms.Message;
 import javax.jms.MessageListener;
 import javax.jms.TextMessage;
 
+import org.candlepin.gutterball.bsoncallback.EventCallback;
 import org.candlepin.gutterball.eventhandler.EventManager;
 import org.candlepin.gutterball.model.Event;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
+import com.mongodb.util.JSON;
 
 /**
  * A JMS message listener that is invoked when Gutterball receives an
@@ -35,10 +38,12 @@ public class EventMessageListener implements MessageListener {
     private static Logger log = LoggerFactory.getLogger(EventMessageListener.class);
 
     private EventManager eventManager;
+    private EventCallback eventCallback;
 
     @Inject
-    public EventMessageListener(EventManager eventManager) {
+    public EventMessageListener(EventManager eventManager, EventCallback eventCallback) {
         this.eventManager = eventManager;
+        this.eventCallback = eventCallback;
     }
 
     @Override
@@ -47,7 +52,7 @@ public class EventMessageListener implements MessageListener {
 
         try {
             String messageBody = getMessageBody(message);
-            Event event = new Event(messageBody);
+            Event event = (Event) JSON.parse(messageBody, eventCallback);
             eventManager.handle(event);
             log.info("Received Event: " + event);
         }
