@@ -54,7 +54,9 @@ public class GutterballContextListener extends
     private Injector injector;
 
     // getServletContext() from the GuiceServletContextListener is deprecated.
-    // See http://bit.ly/1mYslCW#L43-L45
+    // See
+    // https://github.com/google/guice/blob/bf0e7ce902dd97e62ef16679c587d78d59200450
+    // /extensions/servlet/src/com/google/inject/servlet/GuiceServletContextListener.java#L43-L45
     // A typical way of doing this then is to cache the context ourselves:
     // https://github.com/google/guice/issues/603
     // Currently only needed for access to the Configuration.
