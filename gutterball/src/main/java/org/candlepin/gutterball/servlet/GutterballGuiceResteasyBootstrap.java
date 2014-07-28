@@ -14,108 +14,78 @@
  */
 package org.candlepin.gutterball.servlet;
 
-import org.candlepin.common.config.Configuration;
-import org.candlepin.common.config.ConfigurationException;
-import org.candlepin.common.config.PropertiesFileConfiguration;
-import org.candlepin.gutterball.guice.GutterballServletModule;
-import org.candlepin.gutterball.guice.I18nProvider;
 import org.candlepin.gutterball.guice.MongoDBClientProvider;
 
-import com.google.inject.Binding;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.servlet.GuiceServletContextListener;
-
 import org.jboss.resteasy.plugins.guice.GuiceResourceFactory;
+import org.jboss.resteasy.plugins.server.servlet.ResteasyBootstrap;
 import org.jboss.resteasy.spi.Registry;
 import org.jboss.resteasy.spi.ResourceFactory;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.jboss.resteasy.util.GetRestful;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.xnap.commons.i18n.I18nManager;
 
-import java.io.InputStream;
+import com.google.inject.Binding;
+import com.google.inject.Injector;
+import com.google.inject.Module;
+import com.google.inject.Stage;
+
 import java.lang.reflect.Type;
-import java.nio.charset.Charset;
-import java.util.Locale;
+import java.util.List;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
 import javax.ws.rs.ext.Provider;
 
+
 /**
- * The GutterballServletContextListener initializes all the injections and
- * registers all the RESTEasy resources.
+ * GutterballGuiceResteasyBootstrap is an intermediate class that will make it
+ * easier to upgrade to RESTEasy 3.0. It takes the relevant parts from
+ * GuiceResteasyBootstrapServletContextListener that we need and also uses some
+ * of the changes they made in 3.0 with protected methods. They are abstract
+ * here since we will override them.
  */
-public class GutterballServletContextListener extends GuiceServletContextListener {
+public abstract class  GutterballGuiceResteasyBootstrap extends ResteasyBootstrap
+        implements ServletContextListener {
+    private static Logger log = LoggerFactory.getLogger(GutterballGuiceResteasyBootstrap.class);
 
-    public static final String CONFIGURATION_NAME = Configuration.class.getName();
-
-    private static Logger log = LoggerFactory.getLogger(I18nProvider.class);
-
-    private Configuration config;
-
-    @Override
-    public void contextInitialized(ServletContextEvent sce) {
-        I18nManager.getInstance().setDefaultLocale(Locale.US);
-        ServletContext context = sce.getServletContext();
-
-        try {
-            config = readConfiguration(context);
-        }
-        catch (ConfigurationException e) {
-            log.error("Could not read configuration file.  Aborting initialization.", e);
-            throw new RuntimeException(e);
-        }
-
-        context.setAttribute(CONFIGURATION_NAME, config);
-        super.contextInitialized(sce);
-        processRestEasy(context);
+    public void contextInitialized(final ServletContextEvent event) {
+        super.contextInitialized(event);
+        final ServletContext context = event.getServletContext();
+        final List<Module> modules = getModules(context);
+        log.debug("modules retrieved");
+        final Stage stage = getStage(context);
+        log.debug("Processing injector");
+        processInjector(context, getInjector(stage, modules));
+        log.debug("Returned from process injector");
     }
 
-    protected Configuration readConfiguration(ServletContext servletContext)
-        throws ConfigurationException {
+    protected abstract Injector getInjector(Stage stage, List<Module> modules);
 
-        // Use StandardCharsets.UTF_8 when we move to Java 7
-        Charset utf8 = Charset.forName("UTF-8");
+    protected abstract Stage getStage(ServletContext context);
 
-        InputStream defaultStream = GutterballServletModule.class
-                .getClassLoader().getResourceAsStream("default.properties");
-
-        PropertiesFileConfiguration defaults =
-                new PropertiesFileConfiguration(defaultStream, utf8);
-        return defaults;
-
-        // String confFile = servletContext.getInitParameter("org.candlepin.gutterball.config_file");
-        // Configuration userConfig = new PropertiesFileConfiguration(confFile, utf8);
-        // return userConfig.merge(defaults);
-    }
-
-    @Override
-    protected Injector getInjector() {
-        return Guice.createInjector(new GutterballServletModule());
-    }
+    protected abstract List<Module> getModules(final ServletContext context);
 
     /**
      * The RESTEasy ModuleProcessor class doesn't return the injector nor does
      * it allow you to send an injector in.  In order to use the more flexible
-     * GuiceServletContextListener, we have to implement getInjector() so we need
+     * GutterballContextListener, we have to implement getInjector() so we need
      * a method that can accept an injector.  Thus, we duplicate the
      * ModuleProcessor functionality.
      *
+     * TODO: RESTEasy 3.0 fixes this problem and we would no longer need this.
      * @param context
+     * @param injector
      */
     @SuppressWarnings("rawtypes")
-    protected void processRestEasy(ServletContext context) {
-        final Injector injector = (Injector) context
-                .getAttribute(Injector.class.getName());
+    protected void processInjector(ServletContext context, Injector inj) {
         final Registry registry = (Registry) context
                 .getAttribute(Registry.class.getName());
         final ResteasyProviderFactory providerFactory = (ResteasyProviderFactory) context
                 .getAttribute(ResteasyProviderFactory.class.getName());
 
-        for (final Binding<?> binding : injector.getBindings().values()) {
+        for (final Binding<?> binding : inj.getBindings().values()) {
             final Type type = binding.getKey().getTypeLiteral().getType();
             if (type instanceof Class) {
                 final Class<?> beanClass = (Class) type;
@@ -145,5 +115,4 @@ public class GutterballServletContextListener extends GuiceServletContextListene
 
         injector.getInstance(MongoDBClientProvider.class).closeConnection();
     }
-
 }
