@@ -15,13 +15,17 @@
 package org.candlepin.gutterball.guice;
 
 import org.candlepin.gutterball.curator.EventCurator;
+import org.candlepin.gutterball.eventhandler.EventHandler;
 import org.candlepin.gutterball.eventhandler.EventManager;
+import org.candlepin.gutterball.eventhandler.HandlerTarget;
 import org.candlepin.gutterball.receive.EventReceiver;
 import org.candlepin.gutterball.resource.EventResource;
 import org.candlepin.gutterball.resource.StatusResource;
 import org.candlepin.gutterball.resteasy.JsonProvider;
+import org.candlepin.gutterball.util.EventHandlerLoader;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.multibindings.MapBinder;
 import com.google.inject.servlet.ServletScopes;
 
 import org.xnap.commons.i18n.I18n;
@@ -42,6 +46,7 @@ public class GutterballModule extends AbstractModule {
         bind(JsonProvider.class);
 
         // Backend classes
+        configureEventHandlers();
         bind(EventManager.class).asEagerSingleton();
         bind(EventReceiver.class).asEagerSingleton();
 
@@ -51,5 +56,16 @@ public class GutterballModule extends AbstractModule {
         // RestEasy API resources
         bind(StatusResource.class);
         bind(EventResource.class);
+    }
+
+    private void configureEventHandlers() {
+        MapBinder<String, EventHandler> eventBinder =
+                MapBinder.newMapBinder(binder(), String.class, EventHandler.class);
+        for (Class<? extends EventHandler> clazz : EventHandlerLoader.getClasses()) {
+            if (clazz.isAnnotationPresent(HandlerTarget.class)) {
+                HandlerTarget targetAnnotation = clazz.getAnnotation(HandlerTarget.class);
+                eventBinder.addBinding(targetAnnotation.value()).to(clazz).asEagerSingleton();
+            }
+        }
     }
 }

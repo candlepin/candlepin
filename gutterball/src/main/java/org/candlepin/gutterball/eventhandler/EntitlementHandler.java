@@ -35,9 +35,8 @@ import org.bson.BSONCallback;
  * what this class is going to do, otherwise we might tie our hands
  * behind our backs.
  */
+@HandlerTarget("ENTITLEMENT")
 public class EntitlementHandler implements EventHandler {
-
-    public static final String TARGET = "ENTITLEMENT";
 
     protected EntitlementCurator curator;
     protected BSONCallback callback;
@@ -58,10 +57,6 @@ public class EntitlementHandler implements EventHandler {
             // sort of _master_id field.
             curator.insert(newEntity);
         }
-    }
-
-    public String getTarget() {
-        return TARGET;
     }
 
     @Override

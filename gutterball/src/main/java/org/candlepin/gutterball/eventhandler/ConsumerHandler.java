@@ -29,9 +29,8 @@ import com.mongodb.util.JSON;
  * ConsumerHandler to properly update the database when
  * a consumer based event is received
  */
+@HandlerTarget("CONSUMER")
 public class ConsumerHandler implements EventHandler {
-
-    public static final String TARGET = "CONSUMER";
 
     protected ConsumerCurator consumerCurator;
     protected BSONCallback callback;
@@ -52,10 +51,6 @@ public class ConsumerHandler implements EventHandler {
             // sort of _master_id field.
             consumerCurator.insert(newEntity);
         }
-    }
-
-    public String getTarget() {
-        return TARGET;
     }
 
     @Override
