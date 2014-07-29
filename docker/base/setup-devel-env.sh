@@ -4,6 +4,7 @@
 # handled separately), and an initial clone of candlepin.
 
 export JAVA_HOME=/usr/lib/jvm/java-1.7.0/
+export HOME=/root
 
 PACKAGES=(
     rsyslog
