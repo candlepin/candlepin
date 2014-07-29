@@ -34,6 +34,7 @@ ORACLE_SUPERVISOR
 
     cd /
     /etc/init.d/oracle-xe configure responseFile=/root/xe.rsp
+    rm -rf /root/oracle
 }
 
 setup_oracle
