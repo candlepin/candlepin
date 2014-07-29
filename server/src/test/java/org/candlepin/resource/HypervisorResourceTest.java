@@ -20,6 +20,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.audit.ConsumerEventBuilder;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
@@ -44,6 +45,7 @@ import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.util.ServiceLevelValidator;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -104,6 +106,9 @@ public class HypervisorResourceTest {
     @Mock
     private ServiceLevelValidator mockedServiceLevelValidator;
 
+    @Mock
+    private ConsumerEventBuilder consumerEventBuilder;
+
     private ConsumerResource consumerResource;
 
     private I18n i18n;
@@ -138,6 +143,9 @@ public class HypervisorResourceTest {
             .thenReturn(new ComplianceStatus(new Date()));
 
         when(ownerCurator.lookupByKey(any(String.class))).thenReturn(new Owner());
+        when(eventFactory.getConsumerModifiedEventBuilder()).thenReturn(consumerEventBuilder);
+        when(consumerEventBuilder.setNewConsumer(any(Consumer.class))).thenReturn(consumerEventBuilder);
+        when(consumerEventBuilder.setOldConsumer(any(Consumer.class))).thenReturn(consumerEventBuilder);
     }
 
     @Test

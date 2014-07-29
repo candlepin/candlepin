@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory;
  * EventFactory
  */
 public class EventFactory {
-    private final PrincipalProvider principalProvider;
+    protected final PrincipalProvider principalProvider;
     private final ObjectMapper mapper;
     private static Logger logger = LoggerFactory.getLogger(EventFactory.class);
 
@@ -120,25 +120,21 @@ public class EventFactory {
         return e;
     }
 
-    public Event consumerModified(Consumer newConsumer) {
-        String newEntityJson = entityToJson(newConsumer);
-        Principal principal = principalProvider.get();
+    public ConsumerEventBuilder getConsumerModifiedEventBuilder() {
+        return new ConsumerEventBuilder(this);
+    }
 
-        return new Event(Event.Type.MODIFIED, Event.Target.CONSUMER,
-            newConsumer.getName(), principal, newConsumer.getOwner().getId(),
-            newConsumer.getId(), newConsumer.getId(), null, newEntityJson,
-            null, null);
+    public Event consumerModified(Consumer newConsumer) {
+        return getConsumerModifiedEventBuilder()
+                .setNewConsumer(newConsumer)
+                .buildEvent();
     }
 
     public Event consumerModified(Consumer oldConsumer, Consumer newConsumer) {
-        String oldEntityJson = entityToJson(oldConsumer);
-        String newEntityJson = entityToJson(newConsumer);
-        Principal principal = principalProvider.get();
-
-        return new Event(Event.Type.MODIFIED, Event.Target.CONSUMER,
-            oldConsumer.getName(), principal, oldConsumer.getOwner().getId(),
-            oldConsumer.getId(), oldConsumer.getId(), oldEntityJson, newEntityJson,
-            null, null);
+        return getConsumerModifiedEventBuilder()
+                .setOldConsumer(oldConsumer)
+                .setNewConsumer(newConsumer)
+                .buildEvent();
     }
 
     public Event consumerDeleted(Consumer oldConsumer) {
@@ -306,7 +302,7 @@ public class EventFactory {
         return event;
     }
 
-    private String entityToJson(Object entity) {
+    protected String entityToJson(Object entity) {
         String newEntityJson = "";
         // TODO: Throw an auditing exception here
 
