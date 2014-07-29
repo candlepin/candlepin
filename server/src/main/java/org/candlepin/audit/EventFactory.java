@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.introspect.AnnotationIntrospectorPair;
 import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
+import com.fasterxml.jackson.datatype.hibernate4.Hibernate4Module;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 import com.google.inject.Inject;
 
@@ -64,6 +65,10 @@ public class EventFactory {
         filterProvider = filterProvider.addFilter("OwnerFilter",
             new HateoasBeanPropertyFilter());
         mapper.setFilters(filterProvider);
+
+        Hibernate4Module hbm = new Hibernate4Module();
+        hbm.enable(Hibernate4Module.Feature.FORCE_LAZY_LOADING);
+        mapper.registerModule(hbm);
 
         AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
         AnnotationIntrospector secondary = new JaxbAnnotationIntrospector(
