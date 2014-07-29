@@ -14,16 +14,10 @@
  */
 package org.candlepin.gutterball.eventhandler;
 
-import org.candlepin.gutterball.bsoncallback.DateAndEscapeCallback;
 import org.candlepin.gutterball.curator.GuestIdCurator;
-import org.candlepin.gutterball.model.Event;
+import org.candlepin.gutterball.model.ProcessedEvent;
 
 import com.google.inject.Inject;
-import com.mongodb.DBObject;
-import com.mongodb.util.JSON;
-
-import org.apache.commons.lang.StringUtils;
-import org.bson.BSONCallback;
 
 /**
  * GuestIdHandler class to deal with guestId events
@@ -32,41 +26,10 @@ import org.bson.BSONCallback;
  * they diverge, we should use an abstract superclass.
  */
 @HandlerTarget("GUESTID")
-public class GuestIdHandler implements EventHandler {
-
-    protected GuestIdCurator curator;
-    protected BSONCallback callback;
+public class GuestIdHandler extends AbstractBaseHandler<ProcessedEvent, GuestIdCurator> {
 
     @Inject
     public GuestIdHandler(GuestIdCurator curator) {
-        this.curator = curator;
-        callback = new DateAndEscapeCallback();
-    }
-
-    public void handleEvent(Event event) {
-        String newEntityJson = (String) event.get("newEntity");
-        if (!StringUtils.isBlank(newEntityJson)) {
-            DBObject newEntity = (DBObject) JSON.parse(newEntityJson, callback);
-            // TODO: we should have a record that we maintain with
-            // created/deleted/owner info to narrow our queries.
-            // Each consumer record could also store that records id in some
-            // sort of _master_id field.
-            curator.insert(newEntity);
-        }
-    }
-
-    @Override
-    public void handleCreated(Event event) {
-        handleEvent(event);
-    }
-
-    @Override
-    public void handleUpdated(Event event) {
-        handleEvent(event);
-    }
-
-    @Override
-    public void handleDeleted(Event event) {
-        // Eventually we'll need to update some sort of consumer master record
+        super(curator);
     }
 }

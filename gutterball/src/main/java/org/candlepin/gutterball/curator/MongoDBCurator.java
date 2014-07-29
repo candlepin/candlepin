@@ -64,11 +64,11 @@ public abstract class MongoDBCurator<M extends DBObject> {
         return collection.find();
     }
 
-    public void insert(M toInsert) {
+    public void insert(DBObject toInsert) {
         collection.insert(toInsert);
     }
 
-    public void save(M toSave) {
+    public void save(DBObject toSave) {
         collection.save(toSave);
     }
 
