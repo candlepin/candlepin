@@ -47,6 +47,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang.StringUtils;
+
+import org.candlepin.audit.ConsumerEventBuilder;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventAdapter;
 import org.candlepin.audit.EventFactory;
@@ -130,6 +132,7 @@ import org.candlepin.sync.Exporter;
 import org.candlepin.util.ServiceLevelValidator;
 import org.candlepin.util.Util;
 import org.candlepin.version.CertVersionConflictException;
+
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
@@ -866,8 +869,10 @@ public class ConsumerResource {
             log.debug("Updating consumer: " + toUpdate.getUuid());
         }
         // We need a representation of the consumer before making any modifications.
-        // If nothing changes we won't send.
-        Event event = eventFactory.consumerModified(toUpdate, updated);
+        // If nothing changes we won't send.  The new entity needs to be correct though,
+        // so we should get a Jsonstring now, and finish it off if we're going to send
+        ConsumerEventBuilder eventBuilder = eventFactory.getConsumerModifiedEventBuilder()
+                .setOldConsumer(toUpdate);
 
         // version changed on non-checked in consumer, or list of capabilities
         // changed on checked in consumer
@@ -952,6 +957,8 @@ public class ConsumerResource {
             // Set the updated date here b/c @PreUpdate will not get fired
             // since only the facts table will receive the update.
             toUpdate.setUpdated(new Date());
+
+            Event event = eventBuilder.setNewConsumer(toUpdate).buildEvent();
             sink.sendEvent(event);
         }
         return changesMade;

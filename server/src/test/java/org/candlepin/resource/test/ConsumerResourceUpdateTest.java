@@ -34,6 +34,7 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
 
+import org.candlepin.audit.ConsumerEventBuilder;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
@@ -65,6 +66,7 @@ import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.ServiceLevelValidator;
+
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -91,6 +93,7 @@ public class ConsumerResourceUpdateTest {
     @Mock private DeletedConsumerCurator deletedConsumerCurator;
     @Mock private EnvironmentCurator environmentCurator;
     @Mock private ServiceLevelValidator serviceLevelValidator;
+    @Mock private ConsumerEventBuilder consumerEventBuilder;
 
     private I18n i18n;
 
@@ -114,6 +117,10 @@ public class ConsumerResourceUpdateTest {
 
         when(idCertService.regenerateIdentityCert(any(Consumer.class)))
             .thenReturn(new IdentityCertificate());
+
+        when(consumerEventBuilder.setNewConsumer(any(Consumer.class))).thenReturn(consumerEventBuilder);
+        when(consumerEventBuilder.setOldConsumer(any(Consumer.class))).thenReturn(consumerEventBuilder);
+        when(eventFactory.getConsumerModifiedEventBuilder()).thenReturn(consumerEventBuilder);
     }
 
     @Test
