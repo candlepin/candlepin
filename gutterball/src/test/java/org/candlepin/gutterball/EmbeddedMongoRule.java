@@ -16,13 +16,18 @@
 package org.candlepin.gutterball;
 
 import org.candlepin.common.config.Configuration;
+import org.candlepin.common.config.ConfigurationException;
 import org.candlepin.common.config.MapConfiguration;
+import org.candlepin.common.config.PropertiesFileConfiguration;
 import org.candlepin.gutterball.config.ConfigKey;
 import org.candlepin.gutterball.mongodb.MongoConnection;
 
 import org.junit.rules.ExternalResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.InputStream;
+import java.nio.charset.Charset;
 
 import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.MongodProcess;
@@ -38,18 +43,28 @@ import de.flapdoodle.embed.process.runtime.Network;
  * the connection in setup/teardowns.
  */
 public class EmbeddedMongoRule extends ExternalResource {
+    private static final String EMBEDDED_MONGO_OVERRIDES = "embedded-mongo.properties";
     private static final int TEST_PORT = 12345;
     private static final String TEST_DATABASE = "gutterball-test";
+
     private static final MongodStarter STARTER = MongodStarter.getDefaultInstance();
     private static Logger log = LoggerFactory.getLogger(EmbeddedMongoRule.class);
 
     private MongodExecutable mongodExe;
     private MongodProcess mongod;
     private MongoConnection connection;
+    private Configuration config;
 
 
     public EmbeddedMongoRule() {
-
+        // Allow mongodb config overrides via properties file.
+        Configuration config = readConfigOverride();
+        if (config == null) {
+            config = new MapConfiguration();
+            config.setProperty(ConfigKey.MONGODB_PORT.toString(), TEST_PORT);
+            config.setProperty(ConfigKey.MONGODB_DATABASE.toString(), TEST_DATABASE);
+        }
+        this.config = config;
     }
 
     @Override
@@ -65,13 +80,11 @@ public class EmbeddedMongoRule extends ExternalResource {
         log.info("Starting embedded mongodb server...");
         mongodExe = STARTER.prepare(new MongodConfigBuilder()
             .version(Version.Main.PRODUCTION)
-            .net(new Net(TEST_PORT, Network.localhostIsIPv6()))
+            .net(new Net(config.getInteger(ConfigKey.MONGODB_PORT.toString()),
+                    Network.localhostIsIPv6()))
             .build());
         mongod = mongodExe.start();
 
-        Configuration config = new MapConfiguration();
-        config.setProperty(ConfigKey.MONGODB_PORT.toString(), TEST_PORT);
-        config.setProperty(ConfigKey.MONGODB_DATABASE.toString(), TEST_DATABASE);
         connection = new MongoConnection(config);
     }
 
@@ -79,4 +92,21 @@ public class EmbeddedMongoRule extends ExternalResource {
         return connection;
     }
 
+    private Configuration readConfigOverride() {
+        Charset utf8 = Charset.forName("UTF-8");
+        InputStream defaultStream = EmbeddedMongoRule.class
+                .getClassLoader().getResourceAsStream(EMBEDDED_MONGO_OVERRIDES);
+        if (defaultStream == null) {
+            return null;
+        }
+
+        Configuration defaults = null;
+        try {
+            defaults = new PropertiesFileConfiguration(defaultStream, utf8);
+        }
+        catch (ConfigurationException e) {
+            return null;
+        }
+        return defaults;
+    }
 }
