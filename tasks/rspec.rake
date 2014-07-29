@@ -156,6 +156,10 @@ module ModifiedRSpec
             File.basename(s).start_with?(*excluded_tests)
           end
 
+          if specs_to_run.empty?
+            fail("No specs found matching #{tests}")
+          end
+
           ModifiedRSpec.rspec_task('filtered_rspec', rspec) do |rspec_task|
             signifiers.each do |signifier|
               if signifier =~ /\d+/
