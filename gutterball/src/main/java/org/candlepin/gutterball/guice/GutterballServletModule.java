@@ -14,53 +14,27 @@
  */
 package org.candlepin.gutterball.guice;
 
-import org.candlepin.gutterball.config.Configuration;
-import org.candlepin.gutterball.filter.LoggingFilter;
-import org.candlepin.gutterball.receive.EventReceiver;
-import org.candlepin.gutterball.resource.StatusResource;
-import org.candlepin.gutterball.resteasy.JsonProvider;
-import org.candlepin.gutterball.servlet.GutterballServletContextListener;
-
-import com.google.inject.Provides;
 import com.google.inject.servlet.ServletModule;
-import com.google.inject.servlet.ServletScopes;
 
-import org.xnap.commons.i18n.I18n;
+import org.candlepin.common.filter.LoggingFilter;
+import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
 
-import javax.inject.Singleton;
-import javax.servlet.ServletContext;
-
+import java.util.HashMap;
+import java.util.Map;
 /**
- * GutterballServletContextListener is responsible for starting Guice and binding
+ * GutterballServletModule is responsible for starting Guice and binding
  * all the dependencies.
  */
 public class GutterballServletModule extends ServletModule {
-    protected void configureBindings() {
-        // See JavaDoc on I18nProvider for more information of RequestScope
-        bind(I18n.class).toProvider(I18nProvider.class).in(ServletScopes.REQUEST);
-        bind(JsonProvider.class);
-        bind(StatusResource.class);
-        bind(EventReceiver.class).asEagerSingleton();
-    }
-
-    /**
-     * Guice does not normally allow providers to throw exceptions.  You can use the
-     * ThrowingProviders extension (see http://code.google.com/p/google-guice/wiki/ThrowingProviders)
-     * but this forces every user of the provider to catch the relevant exception.  If
-     * we fail to load the configuration, we just want to abort application deployment, so
-     * we read in the configuration in the ServletContextListener and throw any exceptions
-     * there.  Afterwards, we place the configuration in the servlet context and grab it here.
-     * @return
-     */
-    @Provides @Singleton
-    protected Configuration provideConfiguration() {
-        ServletContext context = getServletContext();
-        return (Configuration) context.getAttribute(GutterballServletContextListener.CONFIGURATION_NAME);
-    }
 
     @Override
     protected void configureServlets() {
-        configureBindings();
-        filter("/*").through(LoggingFilter.class);
+        bind(HttpServletDispatcher.class).asEagerSingleton();
+
+        serve("/*").with(HttpServletDispatcher.class);
+        // configure filters and or servlets as needed
+        Map<String, String> loggingFilterConfig = new HashMap<String, String>();
+        loggingFilterConfig.put("header.name", "x-gutterball-request-uuid");
+        filter("/*").through(LoggingFilter.class, loggingFilterConfig);
     }
 }

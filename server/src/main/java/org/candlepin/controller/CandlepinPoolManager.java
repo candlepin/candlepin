@@ -803,6 +803,9 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         entitlement = handler.handleEntitlement(consumer, pool, entitlement, quantity);
+        // Persist the entitlement after it has been created.  It requires an ID in order to
+        // create an entitlement-derived subpool
+        handler.handleEntitlementPersist(entitlement);
 
         // The quantity is calculated at fetch time. We update it here
         // To reflect what we just added to the db.
@@ -817,7 +820,6 @@ public class CandlepinPoolManager implements PoolManager {
         ComplianceStatus compliance = complianceRules.getStatus(consumer, new Date());
         consumer.setEntitlementStatus(compliance.getStatus());
 
-        handler.handleEntitlementPersist(entitlement);
         consumerCurator.update(consumer);
 
         handler.handleSelfCertificate(consumer, pool, entitlement, generateUeberCert);

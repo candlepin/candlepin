@@ -12,29 +12,11 @@ usage() {
 HELP
 }
 
-err_msg() {
-    echo "${RED}${1}${RESET_COLOR}" >&2
-}
-
-success_msg() {
-    echo "${GREEN}${1}${RESET_COLOR}"
-}
-
-warn_msg() {
-    echo "${YELLOW}${1}${RESET_COLOR}"
-}
-
 init() {
-    # Get the directory this script is in. See http://mywiki.wooledge.org/BashFAQ/028
-    DEPLOY_BIN_DIR="${BASH_SOURCE%/*}"
-    PROJECT_ROOT=$(readlink -n -f "${DEPLOY_BIN_DIR}/../")
+    # Source useful bash functions
+    source "$(buildr -s checkout_root)/bin/bash_functions"
 
-    RED=$(tput setaf 1)
-    GREEN=$(tput setaf 2)
-    YELLOW=$(tput setaf 3)
-    RESET_COLOR=$(tput sgr0)
-
-    cd $PROJECT_ROOT
+    PROJECT_DIR="$(project_directory gutterball)"
 }
 
 build() {
@@ -42,7 +24,7 @@ build() {
 }
 
 deploy() {
-    VERSION="$(grep Version: ${APP}.spec | cut --delim=' ' -f2)"
+    VERSION="$(grep Version: $PROJECT_DIR/${APP}.spec | cut --delim=' ' -f2)"
 
     # use tomcat 6, unless it doesnt exist and tomcat does
     TC=tomcat6
@@ -55,8 +37,7 @@ deploy() {
         sudo rm -rf /var/lib/${TC}/webapps/${APP}/
     fi
 
-    # TODO - Make this portable for RHEL 6
-    sudo install -o tomcat -g tomcat -m 644 target/$APP-$VERSION.war /var/lib/${TC}/webapps/${APP}.war
+    sudo install -o tomcat -g tomcat -m 644 $PROJECT_DIR/target/$APP-$VERSION.war /var/lib/${TC}/webapps/${APP}.war
 }
 
 start_container() {
@@ -65,8 +46,8 @@ start_container() {
     fi
 
     sudo install -o tomcat -g tomcat -d -m 755 /var/log/gutterball
-    # TODO - Make this portable for RHEL 6
-    sudo systemctl start tomcat
+
+    sudo service tomcat start
 }
 
 stop_container() {
@@ -74,8 +55,7 @@ stop_container() {
         return
     fi
 
-    # TODO - Make this portable for RHEL 6
-    sudo systemctl stop tomcat
+    sudo service tomcat stop
 }
 
 notify() {
@@ -88,7 +68,7 @@ notify() {
 }
 
 clean_up() {
-    cd $START_DIR
+    cd "$START_DIR"
 }
 
 ### Main

@@ -14,11 +14,17 @@
  */
 package org.candlepin.gutterball.receive;
 
+import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
+import javax.jms.TextMessage;
 
+import org.candlepin.gutterball.eventhandler.EventManager;
+import org.candlepin.gutterball.model.Event;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.inject.Inject;
 
 /**
  * A JMS message listener that is invoked when Gutterball receives an
@@ -26,11 +32,38 @@ import org.slf4j.LoggerFactory;
  */
 public class EventMessageListener implements MessageListener {
 
-    private static Logger log = LoggerFactory.getLogger(EventReceiver.class);
+    private static Logger log = LoggerFactory.getLogger(EventMessageListener.class);
+
+    private EventManager eventManager;
+
+    @Inject
+    public EventMessageListener(EventManager eventManager) {
+        this.eventManager = eventManager;
+    }
 
     @Override
     public void onMessage(Message message) {
         log.info(message.toString());
+
+        try {
+            String messageBody = getMessageBody(message);
+            Event event = new Event(messageBody);
+            eventManager.handle(event);
+            log.info("Received Event: " + event);
+        }
+        catch (Exception e) {
+            log.error("Failed to decode and store event ", e);
+        }
     }
 
+    private String getMessageBody(Message message) {
+        try {
+            return ((TextMessage) message).getText();
+        }
+        catch (JMSException e) {
+            log.error("failed to get text out of message");
+            // TODO: use a candlepin exception
+            throw new RuntimeException(e);
+        }
+    }
 }

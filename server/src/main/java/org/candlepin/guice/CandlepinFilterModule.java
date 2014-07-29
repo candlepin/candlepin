@@ -14,13 +14,17 @@
  */
 package org.candlepin.guice;
 
-import com.google.inject.servlet.ServletModule;
-
+import org.candlepin.common.filter.LoggingFilter;
 import org.candlepin.servlet.filter.CandlepinPersistFilter;
 import org.candlepin.servlet.filter.CandlepinScopeFilter;
 import org.candlepin.servlet.filter.ContentTypeHackFilter;
-import org.candlepin.servlet.filter.logging.LoggingFilter;
+
+import com.google.inject.servlet.ServletModule;
+
 import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Candlepin-specific {@link ServletModule} that configures servlet filters.
@@ -29,6 +33,9 @@ public class CandlepinFilterModule extends ServletModule {
 
     @Override
     protected void configureServlets() {
+        Map<String, String> loggingFilterConfig = new HashMap<String, String>();
+        loggingFilterConfig.put("header.name", "x-candlepin-request-uuid");
+
         filter("/*").through(CandlepinScopeFilter.class);
         filter("/*").through(CandlepinPersistFilter.class);
         filter("/*").through(LoggingFilter.class);

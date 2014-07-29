@@ -62,6 +62,9 @@ SUN_JAXB = 'com.sun.xml.bind:jaxb-impl:jar:2.1.12'
 TESTING = Buildr.transitive(['junit:junit:jar:4.11', 'org.mockito:mockito-all:jar:1.9.5'])
 JUKITO = Buildr.transitive(['org.jukito:jukito:jar:1.4'])
 
+NOSQLUNIT_NS = "com.lordofthejars"
+NOSQLUNIT_VERSION = "0.7.9"
+
 LOGBACK = [group('logback-core', 'logback-classic',
                  :under => 'ch.qos.logback',
                  :version => '1.0.13')]
@@ -95,7 +98,9 @@ POSTGRESQL = 'postgresql:postgresql:jar:9.0-801.jdbc4'
 
 MYSQL = 'mysql:mysql-connector-java:jar:5.1.26'
 
-DB = [POSTGRESQL, MYSQL]
+MONGODB = 'org.mongodb:mongo-java-driver:jar:2.12.2'
+
+DB = [POSTGRESQL, MYSQL, MONGODB]
 
 HSQLDB = 'hsqldb:hsqldb:jar:1.8.0.10'
 
@@ -167,7 +172,7 @@ JAVA_TOOLS = file(Java.tools_jar)
 
 # Make Util available in all projects.  See http://buildr.apache.org/extending.html#extensions
 class Project
-  include Util
+  include Candlepin::Util
 end
 
 ### Project
@@ -196,7 +201,7 @@ define "candlepin" do
     checkstyle.eclipse_xml = checkstyle_eclipse_xml
     rpmlint.rpmlint_conf = rpmlint_conf
 
-    compile_classpath = [COMMONS, LOGGING, GUICE, GETTEXT_COMMONS, COLLECTIONS, PROVIDED, RESTEASY]
+    compile_classpath = [COMMONS, LOGGING, GUICE, GETTEXT_COMMONS, COLLECTIONS, PROVIDED, RESTEASY, JACKSON]
     compile.with(compile_classpath)
 
     test.with(TESTING)

@@ -22,7 +22,13 @@ public enum ConfigKey {
     AMQP_KEYSTORE("gutterball.amqp.keystore"),
     AMQP_KEYSTORE_PASSWORD("gutterball.amqp.keystore_password"),
     AMQP_TRUSTSTORE("gutterball.amqp.truststore"),
-    AMQP_TRUSTSTORE_PASSWORD("gutterball.amqp.truststore_password");
+    AMQP_TRUSTSTORE_PASSWORD("gutterball.amqp.truststore_password"),
+
+    MONGODB_HOST("gutterball.mongodb.host"),
+    MONGODB_PORT("gutterball.mongodb.port"),
+    MONGODB_DATABASE("gutterball.mongodb.database"),
+    MONGODB_USERNAME("gutterball.mongodb.username"),
+    MONGODB_PASSWORD("gutterball.mongodb.password");
 
     private String key;
     private ConfigKey(String key) {
