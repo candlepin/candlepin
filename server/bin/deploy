@@ -12,7 +12,10 @@ recreate_postgresql() {
     #   *:*:candlepin:candlepin:candlepinpasswd
     #   *:*:postgres:candlepin:candlepinpasswd
 
-    dropdb -w -U "$DBUSER" candlepin
+    # Check if candlepin db exists and drop it if so:
+    if psql -U "$DBUSER" -lqt | cut -d \| -f 1 | grep -w candlepin | wc -l; then
+        dropdb -w -U "$DBUSER" candlepin
+    fi
     createdb -w -U "$DBUSER" candlepin
     evalrc $? "createdb failed"
 }
