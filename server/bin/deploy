@@ -94,7 +94,6 @@ isrpm() {
 
 
 update_keystore() {
-{
     if [ ! -f $CONTAINER_CONF_DIR/keystore ]; then
         echo "Symlinking keystore for tomcat"
         sudo ln -s /etc/candlepin/certs/keystore $CONTAINER_CONF_DIR/keystore
