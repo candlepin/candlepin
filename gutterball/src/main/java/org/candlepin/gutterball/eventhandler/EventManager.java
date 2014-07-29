@@ -14,16 +14,11 @@
  */
 package org.candlepin.gutterball.eventhandler;
 
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.candlepin.gutterball.curator.EventCurator;
 import org.candlepin.gutterball.model.Event;
-import org.candlepin.gutterball.util.EventHandlerLoader;
-
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 
 /**
  * EventManager takes an event routes it to
@@ -36,24 +31,13 @@ public class EventManager {
     private static final String MODIFIED = "MODIFIED";
     private static final String DELETED = "DELETED";
 
-    protected Map<String, EventHandler> targetHandler;
+    protected Map<String, EventHandler> targetHandlers;
     private EventCurator eventCurator;
-    private Injector injector;
 
     @Inject
-    public EventManager(Injector injector, EventCurator eventCurator) {
-        this.injector = injector;
+    public EventManager(EventCurator eventCurator, Map<String, EventHandler> targetHandlers) {
         this.eventCurator = eventCurator;
-        targetHandler = new HashMap<String, EventHandler>();
-        loadEventHandlers();
-    }
-
-    protected void loadEventHandlers() {
-        List<Class<? extends EventHandler>> handlers = EventHandlerLoader.getClasses();
-        for (Class<? extends EventHandler> handlerClass : handlers) {
-            EventHandler handler = injector.getInstance(handlerClass);
-            targetHandler.put(handler.getTarget(), handler);
-        }
+        this.targetHandlers = targetHandlers;
     }
 
     /**
@@ -65,7 +49,7 @@ public class EventManager {
         // Store every event
         eventCurator.insert(event);
 
-        EventHandler handler = targetHandler.get(event.getTarget());
+        EventHandler handler = targetHandlers.get(event.getTarget());
         if (handler != null) {
             String eventType = event.getType();
             if (MODIFIED.equals(eventType)) {

@@ -14,29 +14,16 @@
  */
 package org.candlepin.gutterball.eventhandler;
 
-import org.candlepin.gutterball.model.Event;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * EventHandler interface which provides a structure for
- * handling various types of events
+ * HandlerTarget annotation to build event type-handler mapping
  */
-public interface EventHandler {
-
-    /**
-     * Handles creation events
-     * @param event Event to store
-     */
-    void handleCreated(Event event);
-
-    /**
-     * Handles modification events
-     * @param event Event to store
-     */
-    void handleUpdated(Event event);
-
-    /**
-     * Handles deletion events
-     * @param event Event to store
-     */
-    void handleDeleted(Event event);
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface HandlerTarget {
+    String value();
 }

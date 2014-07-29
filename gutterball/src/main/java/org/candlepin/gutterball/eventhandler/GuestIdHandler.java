@@ -31,9 +31,8 @@ import org.bson.BSONCallback;
  * TODO: This looks almost exactly like ConsumerHandler, unless
  * they diverge, we should use an abstract superclass.
  */
+@HandlerTarget("GUESTID")
 public class GuestIdHandler implements EventHandler {
-
-    public static final String TARGET = "GUESTID";
 
     protected GuestIdCurator curator;
     protected BSONCallback callback;
@@ -54,10 +53,6 @@ public class GuestIdHandler implements EventHandler {
             // sort of _master_id field.
             curator.insert(newEntity);
         }
-    }
-
-    public String getTarget() {
-        return TARGET;
     }
 
     @Override
