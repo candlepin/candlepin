@@ -12,7 +12,9 @@ stopsignal=INT
 redirect_stderr=true
 POSTGRES_SUPERVISOR
 
-    /root/postgresql-setup initdb --auth=trust
+    export PGSETUP_INITDB_OPTIONS="--auth=trust"
+
+    /root/postgresql-setup initdb
 
     /usr/bin/supervisord -c /etc/supervisord.conf &
     sleep 5
