@@ -1,15 +1,48 @@
+= Overview =
+
 Containers for running Candlepin tests in a development environment.
+
+These containers can be used to quickly fire up a container with candlepin and
+a fresh database. They can run unit or spec tests against supported databases,
+or just provide a server to register to and test with.
+
+The containers contain a git checkout of candlepin, and the required ruby and
+java dependencies at the time the container was created to help cut down on
+download bandwidth and runtime. When run, we will attempt to update the code
+and all dependencies if anything has changed.
 
 Based on Fedora, this uses supervisord instead of systemd (as this is not yet
 ready for running services in containers) to keep postgresql and tomcat
 up and running.
-
-A slight postgresql-setup customization is necessary to avoid looking up
-values from systemd config files which do not exist, so we carry our own
-version of this.
 
 rebuild.sh is used to rebuild the containers and push to our internal docker
 registry.
 
 The included scripts actually make a fairly good guide for setting up a
 development environment.
+
+The containers are hosted on an internal server (sorry world!), but you can
+build them yourself if you wish.
+
+= Example Usage =
+
+  * Create a fresh candlepin server and postgresql database, leave a shell open:
+
+    docker run -i -P -t --rm docker.usersys.redhat.com/candlepin/candlepin-postgresql cp-test -s -d
+
+    Use docker ps to see the port mappings if you wanted to actually hit the candlepin API.
+
+  * Run the unit tests:
+
+    docker run -i -P -t --rm docker.usersys.redhat.com/candlepin/candlepin-base cp-test -u
+
+  * Run the spec test suite against postgresql (or oracle):
+
+    docker run -i -P -t --rm docker.usersys.redhat.com/candlepin/candlepin-postgresql cp-test -r
+
+  * Specify -v /home/dgoodwin/src/candlepin/:/candlepin-dev/ to use your
+    current source checkout *instead* of the remote git repo. This could be
+    used to run unit or functional tests against code you're working on live,
+    without having to actually configure oracle or postgresql.
+
+  * Specify -c REF to checkout an git reference and run tests against this.
