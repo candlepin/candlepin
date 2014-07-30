@@ -20,8 +20,14 @@ export AUTOCONF=1
 export FORCECERT=1
 export HOME=/root
 
-function usage
-{
+# Be sure to run cleanup on any error, SIGINT, or SIGTERM
+trap cleanup ERR INT TERM
+cleanup() {
+    cd $CP_HOME
+    buildr clean
+}
+
+usage() {
     cat <<HELP
     usage: candlepin-test [options]
 
@@ -32,10 +38,11 @@ function usage
         -s  run a bash shell when done
         -c  git reference to checkout
         -o  use oracle instead of postgresql
+        -p  subproject to build (defaults to "server")
 HELP
 }
 
-while getopts ":rusdoc:" opt; do
+while getopts ":rusdoc:p:" opt; do
     case $opt in
         r  )
             RSPEC="1"
@@ -46,12 +53,14 @@ while getopts ":rusdoc:" opt; do
         d  ) DEPLOY="1";;
         c  ) CHECKOUT="${OPTARG}";;
         o  ) USE_ORACLE="1";;
+        p  ) PROJECT="${OPTARG}";;
         ?  ) usage; exit;;
     esac
 done
 
 shift $(($OPTIND - 1))
 
+PROJECT=${PROJECT:-server}
 
 # WARNING: control+c while this is running will take out supervisor as well.
 /usr/bin/supervisord -c /etc/supervisord.conf
@@ -61,11 +70,13 @@ shift $(($OPTIND - 1))
 # i.e. -v /home/dgoodwin/src/candlepin:/candlepin-dev
 if [ -d "/candlepin-dev" ]; then
     echo "Using mounted volume /candlepin-dev"
-    cd /candlepin-dev/server
+    CP_HOME="/candlepin-dev/"
+    cd $CP_HOME
 else
     # Otherwise we use the clone in the image and try to update it.
     echo "Using /candlepin."
-    cd /candlepin/server
+    CP_HOME="/candlepin"
+    cd $CP_HOME
     git pull
     if [ ! -z "$CHECKOUT" ]; then
         echo "Checking out: $CHECKOUT"
@@ -77,6 +88,7 @@ fi
 bundle install
 
 # TODO: keep track of return code?
+cd $CP_HOME/$PROJECT
 
 if [ "$UNITTEST" == "1" ]; then
     echo "Running unit tests."
@@ -111,3 +123,4 @@ if [ "$LAUNCHSHELL" == "1" ]; then
     /bin/bash -i -l
 fi
 
+cleanup

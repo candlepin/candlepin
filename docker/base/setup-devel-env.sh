@@ -40,7 +40,7 @@ BASHRC
 # Create an initial candlepin checkout at /candlepin in image to help decrease
 # the amount of time to run tests later on.
 git clone https://github.com/candlepin/candlepin.git /candlepin
-cd /candlepin/server
+cd /candlepin
 
 # Allow for grabbing specific pull requests
 git config --add remote.origin.fetch "+refs/pull/*/head:refs/remotes/origin/pull/*"
