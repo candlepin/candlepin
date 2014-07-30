@@ -1,4 +1,4 @@
-= Overview =
+# Overview
 
 Containers for running Candlepin tests in a development environment.
 
@@ -24,7 +24,7 @@ development environment.
 The containers are hosted on an internal server (sorry world!), but you can
 build them yourself if you wish.
 
-= Example Usage =
+# Example Usage
 
   * Create a fresh candlepin server and postgresql database, leave a shell open:
 
