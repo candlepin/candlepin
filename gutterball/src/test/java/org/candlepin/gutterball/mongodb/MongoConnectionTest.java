@@ -21,10 +21,14 @@ import static org.mockito.Mockito.validateMockitoUsage;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.List;
-
 import org.candlepin.common.config.Configuration;
 import org.candlepin.gutterball.config.ConfigKey;
+
+import com.mongodb.MongoClient;
+import com.mongodb.MongoCredential;
+import com.mongodb.MongoException;
+import com.mongodb.ServerAddress;
+
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -32,11 +36,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import com.mongodb.DB;
-import com.mongodb.MongoClient;
-import com.mongodb.MongoCredential;
-import com.mongodb.MongoException;
-import com.mongodb.ServerAddress;
+import java.util.List;
 
 @RunWith(MockitoJUnitRunner.class)
 public class MongoConnectionTest {
@@ -96,7 +96,6 @@ public class MongoConnectionTest {
             List<MongoCredential> credentials, String databaseName) throws MongoException {
             this.mongo = Mockito.mock(MongoClient.class);
         }
-
 
     }
 }
