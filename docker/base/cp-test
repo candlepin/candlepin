@@ -31,10 +31,11 @@ function usage
         -u  run unit test suite
         -s  run a bash shell when done
         -c  git reference to checkout
+        -o  use oracle instead of postgresql
 HELP
 }
 
-while getopts ":rusdc:" opt; do
+while getopts ":rusdoc:" opt; do
     case $opt in
         r  )
             RSPEC="1"
@@ -44,6 +45,7 @@ while getopts ":rusdc:" opt; do
         s  ) LAUNCHSHELL="1";;
         d  ) DEPLOY="1";;
         c  ) CHECKOUT="${OPTARG}";;
+        o  ) USE_ORACLE="1";;
         ?  ) usage; exit;;
     esac
 done
@@ -83,7 +85,11 @@ fi
 
 if [ "$DEPLOY" == "1" ]; then
     echo "Deploying candlepin."
-    bin/deploy -g
+    if [ "$USE_ORACLE" == "1" ]; then
+        bin/deploy -g -o
+    else
+        bin/deploy -g
+    fi
     sleep 7
 fi
 
