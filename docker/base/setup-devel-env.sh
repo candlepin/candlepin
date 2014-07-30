@@ -42,6 +42,9 @@ BASHRC
 git clone https://github.com/candlepin/candlepin.git /candlepin
 cd /candlepin/server
 
+# Allow for grabbing specific pull requests
+git config --add remote.origin.fetch "+refs/pull/*/head:refs/remotes/origin/pull/*"
+
 # Install all ruby deps:
 gem install bundler
 bundle install
