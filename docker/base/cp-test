@@ -1,0 +1,120 @@
+#!/bin/bash
+#
+# Launch point for the docker container to run Candlepin tests.
+#
+# Starts supervisor to manage services, then tries to cd to the correct
+# location, either /candlepin-dev if you mounted this as a volume when
+# running your container, otherwise the included /candlepin clone which
+# we will make sure to update.
+#
+# See usage below.
+
+# Exit on any error:
+set -e
+
+source /etc/profile
+
+export JAVA_HOME=/usr/lib/jvm/java-1.7.0/
+export SUPERVISOR=1
+export AUTOCONF=1
+export FORCECERT=1
+export HOME=/root
+
+# Be sure to run cleanup on any error, SIGINT, or SIGTERM
+trap cleanup ERR INT TERM
+cleanup() {
+    cd $CP_HOME
+    buildr clean
+}
+
+usage() {
+    cat <<HELP
+    usage: candlepin-test [options]
+
+    OPTIONS:
+        -d  deploy a live candlepin
+        -r  run rspec test suite
+        -u  run unit test suite
+        -s  run a bash shell when done
+        -c  git reference to checkout
+        -p  subproject to build (defaults to "server")
+HELP
+}
+
+while getopts ":rusdc:p:" opt; do
+    case $opt in
+        r  )
+            RSPEC="1"
+            DEPLOY="1"
+            ;;
+        u  ) UNITTEST="1";;
+        s  ) LAUNCHSHELL="1";;
+        d  ) DEPLOY="1";;
+        c  ) CHECKOUT="${OPTARG}";;
+        p  ) PROJECT="${OPTARG}";;
+        ?  ) usage; exit;;
+    esac
+done
+
+shift $(($OPTIND - 1))
+
+PROJECT=${PROJECT:-server}
+
+# WARNING: control+c while this is running will take out supervisor as well.
+/usr/bin/supervisord -c /etc/supervisord.conf
+
+# Pass volume with docker run mounted at this location if you'd like to
+# run against your source checkout.
+# i.e. -v /home/dgoodwin/src/candlepin:/candlepin-dev
+if [ -d "/candlepin-dev" ]; then
+    echo "Using mounted volume /candlepin-dev"
+    CP_HOME="/candlepin-dev/"
+    cd $CP_HOME
+else
+    # Otherwise we use the clone in the image and try to update it.
+    echo "Using /candlepin."
+    CP_HOME="/candlepin"
+    cd $CP_HOME
+    git pull
+    if [ ! -z "$CHECKOUT" ]; then
+        echo "Checking out: $CHECKOUT"
+        git checkout $CHECKOUT
+    fi
+fi
+
+# Make sure we update the ruby bundle:
+bundle install
+
+# TODO: keep track of return code?
+cd $CP_HOME/$PROJECT
+
+if [ "$UNITTEST" == "1" ]; then
+    echo "Running unit tests."
+    buildr test
+fi
+
+if [ "$DEPLOY" == "1" ]; then
+    echo "Deploying candlepin."
+    bin/deploy -g
+    sleep 7
+fi
+
+if [ "$RSPEC" == "1" ]; then
+    echo "Running rspec tests."
+    buildr rspec
+
+    # If the caller mounted a volume at /artifacts, copy server logs out:
+    if [ -d "/artifacts" ]; then
+        echo "Copying logs to /artifacts."
+        cp -v /var/log/candlepin/access.log /artifacts/
+        cp -v /var/log/candlepin/audit.log /artifacts/
+        cp -v /var/log/candlepin/candlepin.log /artifacts/
+        cp -v /var/log/candlepin/error.log /artifacts/
+    fi
+fi
+
+if [ "$LAUNCHSHELL" == "1" ]; then
+    /bin/bash -i -l
+fi
+
+cleanup

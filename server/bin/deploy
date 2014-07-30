@@ -12,7 +12,11 @@ recreate_postgresql() {
     #   *:*:candlepin:candlepin:candlepinpasswd
     #   *:*:postgres:candlepin:candlepinpasswd
 
-    dropdb -w -U "$DBUSER" candlepin
+    # Check if candlepin db exists and drop it if so:
+    if [[ `psql -U $DBUSER -tAc "SELECT 1 FROM pg_database WHERE datname='candlepin'"` == "1" ]]; then
+        echo "Candlepin database exists, dropping it."
+        dropdb -w -U "$DBUSER" candlepin
+    fi
     createdb -w -U "$DBUSER" candlepin
     evalrc $? "createdb failed"
 }
@@ -94,9 +98,9 @@ isrpm() {
 
 
 update_keystore() {
-    if [ "$FORCECERT" = "1" ]; then
-        echo "Move the keystore to tomcats location"
-        sudo cp /etc/candlepin/certs/keystore $CONTAINER_CONF_DIR/keystore
+    if [ ! -f $CONTAINER_CONF_DIR/keystore ]; then
+        echo "Symlinking keystore for tomcat"
+        sudo ln -s /etc/candlepin/certs/keystore $CONTAINER_CONF_DIR/keystore
     else
         echo "Using existing keystore"
     fi
