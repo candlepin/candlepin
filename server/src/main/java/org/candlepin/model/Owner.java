@@ -37,6 +37,7 @@ import javax.xml.bind.annotation.XmlTransient;
 import org.candlepin.jackson.HateoasInclude;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.resteasy.InfoProperty;
+
 import org.hibernate.annotations.GenericGenerator;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
@@ -51,7 +52,7 @@ import com.fasterxml.jackson.annotation.JsonFilter;
 @Table(name = "cp_owner")
 @JsonFilter("OwnerFilter")
 public class Owner extends AbstractHibernateObject implements Serializable,
-    Linkable, Owned {
+    Linkable, Owned, Named {
 
     @OneToOne
     @JoinColumn(name = "parent_owner", nullable = true)
@@ -397,5 +398,11 @@ public class Owner extends AbstractHibernateObject implements Serializable,
 
     public void setLogLevel(String logLevel) {
         this.logLevel = logLevel;
+    }
+
+    @Override
+    @XmlTransient
+    public String getName() {
+        return getDisplayName();
     }
 }

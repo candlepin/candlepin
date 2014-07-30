@@ -36,8 +36,11 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 import org.apache.commons.lang.builder.HashCodeBuilder;
+
 import org.candlepin.jackson.HateoasArrayExclude;
 import org.candlepin.jackson.HateoasInclude;
+import org.candlepin.json.model.ConsumerProperty;
+
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
@@ -57,7 +60,7 @@ import com.fasterxml.jackson.annotation.JsonFilter;
 @Entity
 @Table(name = "cp_consumer_guests")
 @JsonFilter("GuestFilter")
-public class GuestId extends AbstractHibernateObject {
+public class GuestId extends AbstractHibernateObject implements Owned, Named, ConsumerProperty {
 
     @Id
     @GeneratedValue(generator = "system-uuid")
@@ -161,5 +164,20 @@ public class GuestId extends AbstractHibernateObject {
     public int hashCode() {
         return new HashCodeBuilder(7, 23).append(getConsumer().getId())
             .append(getGuestId()).toHashCode();
+    }
+
+    @Override
+    @XmlTransient
+    public String getName() {
+        return guestId;
+    }
+
+    @Override
+    @XmlTransient
+    public Owner getOwner() {
+        if (consumer != null) {
+            return consumer.getOwner();
+        }
+        return null;
     }
 }

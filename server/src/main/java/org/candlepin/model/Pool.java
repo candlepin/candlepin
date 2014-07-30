@@ -41,8 +41,10 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 import org.apache.commons.lang.StringUtils;
+
 import org.candlepin.jackson.HateoasInclude;
 import org.candlepin.util.DateSource;
+
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.Formula;
@@ -64,7 +66,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @Entity
 @Table(name = "cp_pool")
 @JsonFilter("PoolFilter")
-public class Pool extends AbstractHibernateObject implements Persisted, Owned, Comparable<Pool> {
+public class Pool extends AbstractHibernateObject implements Persisted, Owned, Named, Comparable<Pool> {
 
     /**
      * PoolType
@@ -961,5 +963,11 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, C
             (this.getId() == null ? -1 : 1) :
                 this.getId() == other.getId() ? 0 :
                     this.getId().compareTo(other.getId());
+    }
+
+    @Override
+    @XmlTransient
+    public String getName() {
+        return this.getProductName();
     }
 }

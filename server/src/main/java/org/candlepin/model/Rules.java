@@ -30,8 +30,10 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import javax.xml.bind.annotation.XmlTransient;
 
 import org.candlepin.policy.js.RuleParseException;
+
 import org.hibernate.annotations.GenericGenerator;
 
 /**
@@ -40,7 +42,7 @@ import org.hibernate.annotations.GenericGenerator;
 @Entity
 @Table(name = "cp_rules")
 @Embeddable
-public class Rules extends AbstractHibernateObject {
+public class Rules extends AbstractHibernateObject implements Named {
 
     private static final Pattern VERSION_REGEX =
         Pattern.compile("[//|#]+ *[V|v]ersion: *([0-9]+(\\.[0-9]+)*) *");
@@ -170,6 +172,12 @@ public class Rules extends AbstractHibernateObject {
         int firstLineEndIdx = this.rules.indexOf("\n");
         firstLineEndIdx = firstLineEndIdx < 0 ? this.rules.length() : firstLineEndIdx;
         return this.rules.substring(0, firstLineEndIdx);
+    }
+
+    @Override
+    @XmlTransient
+    public String getName() {
+        return getVersion();
     }
 
 }
