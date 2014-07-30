@@ -26,6 +26,7 @@ function usage
     usage: candlepin-test [options]
 
     OPTIONS:
+        -d  deploy a live candlepin
         -r  run rspec test suite
         -u  run unit test suite
         -s  run a bash shell when done
@@ -33,11 +34,15 @@ function usage
 HELP
 }
 
-while getopts ":rusc:" opt; do
+while getopts ":rusdc:" opt; do
     case $opt in
-        r  ) RSPEC="1" ;;
+        r  )
+            RSPEC="1"
+            DEPLOY="1"
+            ;;
         u  ) UNITTEST="1";;
         s  ) LAUNCHSHELL="1";;
+        d  ) DEPLOY="1";;
         c  ) CHECKOUT="${OPTARG}";;
         ?  ) usage; exit;;
     esac
@@ -47,7 +52,7 @@ shift $(($OPTIND - 1))
 
 
 # WARNING: control+c while this is running will take out supervisor as well.
-/usr/bin/supervisord -c /etc/supervisord.conf &
+/usr/bin/supervisord -c /etc/supervisord.conf
 
 # Pass volume with docker run mounted at this location if you'd like to
 # run against your source checkout.
@@ -76,10 +81,14 @@ if [ "$UNITTEST" == "1" ]; then
     buildr test
 fi
 
-if [ "$RSPEC" == "1" ]; then
-    echo "Running rspec tests."
+if [ "$DEPLOY" == "1" ]; then
+    echo "Deploying candlepin."
     bin/deploy -g
     sleep 7
+fi
+
+if [ "$RSPEC" == "1" ]; then
+    echo "Running rspec tests."
     buildr rspec
 
     # If the caller mounted a volume at /artifacts, copy server logs out:

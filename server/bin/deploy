@@ -13,7 +13,8 @@ recreate_postgresql() {
     #   *:*:postgres:candlepin:candlepinpasswd
 
     # Check if candlepin db exists and drop it if so:
-    if psql -U "$DBUSER" -lqt | cut -d \| -f 1 | grep -w candlepin | wc -l; then
+    if [[ `psql -U $DBUSER -tAc "SELECT 1 FROM pg_database WHERE datname='candlepin'"` == "1" ]]; then
+        echo "Candlepin database exists, dropping it."
         dropdb -w -U "$DBUSER" candlepin
     fi
     createdb -w -U "$DBUSER" candlepin

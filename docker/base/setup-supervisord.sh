@@ -6,7 +6,7 @@ setup_supervisor() {
     mkdir -p /etc/supervisor/conf.d
     cat > /etc/supervisord.conf <<SUPERVISOR
 [supervisord]
-nodaemon=true
+nodaemon=false
 logfile=/var/log/supervisor/supervisord.log
 pidfile=/var/run/supervisord.pid
 
