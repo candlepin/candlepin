@@ -13,7 +13,7 @@
  * in this software or its documentation.
  */
 
-package org.candlepin.gutterball.guice;
+package org.candlepin.gutterball.mongodb;
 
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -24,65 +24,73 @@ import org.candlepin.gutterball.config.ConfigKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.Inject;
-import com.google.inject.Provider;
+import com.mongodb.DB;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoCredential;
+import com.mongodb.MongoException;
 import com.mongodb.ServerAddress;
 
 /**
- * A guice provider that creates a MongoClient from the Configuration.
+ * Encapsulates the MongoDB Java driver connection details. All configuration is
+ * done in this class.
  *
  */
-public class MongoDBClientProvider implements Provider<MongoClient> {
+public class MongoConnection {
 
     protected static final String DEFAULT_HOST = "localhost";
     protected static final int DEFAULT_PORT = 27017;
+    protected static final String DEFAULT_DB = "gutterball";
 
-    private static Logger log = LoggerFactory.getLogger(MongoDBClientProvider.class);
+    private static Logger log = LoggerFactory.getLogger(MongoConnection.class);
 
-    private MongoClient client;
-    private ServerAddress mongoServerAddress;
-    private List<MongoCredential> credentials;
+    protected MongoClient mongo;
+    private String databaseName;
 
-    @Inject
-    public MongoDBClientProvider(Configuration config) {
+    public MongoConnection(Configuration config) throws MongoException {
         String host = config.getString(ConfigKey.MONGODB_HOST.toString(), DEFAULT_HOST);
         int port = config.getInteger(ConfigKey.MONGODB_PORT.toString(), DEFAULT_PORT);
-        String database = config.getString(ConfigKey.MONGODB_DATABASE.toString(),
-                MongoDBProvider.DEFAULT_DB);
+        databaseName = config.getString(ConfigKey.MONGODB_DATABASE.toString(),
+                DEFAULT_DB);
         String username = config.getString(ConfigKey.MONGODB_USERNAME.toString(), "");
 
-
+        ServerAddress serverAddress = null;
         try {
-            mongoServerAddress = new ServerAddress(host, port);
+            serverAddress = new ServerAddress(host, port);
         }
         catch (UnknownHostException e) {
-            throw new RuntimeException("Unable to connect to mongodb", e);
+            throw new MongoException("Unable to connect to mongodb", e);
         }
 
-        credentials = new ArrayList<MongoCredential>();
+        List<MongoCredential> credentials = new ArrayList<MongoCredential>();
         if (username != null && !username.isEmpty()) {
             log.info("Mongodb connection will be authenticated with user: " + username);
             String password = config.getString(ConfigKey.MONGODB_PASSWORD.toString(), "");
             credentials.add(MongoCredential.createMongoCRCredential(username,
-                database, password.toCharArray()));
+                databaseName, password.toCharArray()));
         }
+        initConnection(serverAddress, credentials, databaseName);
     }
 
-    @Override
-    public MongoClient get() {
-        log.info("Creating mongodb connection: " + mongoServerAddress.getHost() +
-                ":" + mongoServerAddress.getPort());
-        client = new MongoClient(mongoServerAddress, credentials);
-        return client;
+    protected void initConnection(ServerAddress address, List<MongoCredential> credentials,
+        String databaseName) throws MongoException {
+        mongo = new MongoClient(address, credentials);
+        DB dbConnection = mongo.getDB(databaseName);
+
+        // Check to make sure that our connection details are correct.
+        // If anything is wrong, this will throw a MongoException.
+        dbConnection.getCollectionNames();
     }
 
-    public void closeConnection() {
-        log.info("Closing mongodb client instance.");
-        if (this.client != null) {
-            this.client.close();
-        }
+    public MongoClient getMongoClient() {
+        return mongo;
+    }
+
+    public DB getDB() {
+        return mongo.getDB(databaseName);
+    }
+
+    public void close() {
+        mongo.close();
     }
 
 }

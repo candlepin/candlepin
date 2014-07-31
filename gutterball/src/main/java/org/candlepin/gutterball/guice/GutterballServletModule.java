@@ -14,9 +14,10 @@
  */
 package org.candlepin.gutterball.guice;
 
+import org.candlepin.common.filter.LoggingFilter;
+
 import com.google.inject.servlet.ServletModule;
 
-import org.candlepin.common.filter.LoggingFilter;
 import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
 
 import java.util.HashMap;
@@ -37,4 +38,5 @@ public class GutterballServletModule extends ServletModule {
         loggingFilterConfig.put("header.name", "x-gutterball-request-uuid");
         filter("/*").through(LoggingFilter.class, loggingFilterConfig);
     }
+
 }

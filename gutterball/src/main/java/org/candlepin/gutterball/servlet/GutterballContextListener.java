@@ -19,12 +19,15 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Stage;
+import com.mongodb.MongoException;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.ConfigurationException;
 import org.candlepin.common.config.PropertiesFileConfiguration;
 import org.candlepin.gutterball.guice.GutterballModule;
 import org.candlepin.gutterball.guice.GutterballServletModule;
+import org.candlepin.gutterball.mongodb.MongoConnection;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18nManager;
@@ -50,6 +53,7 @@ public class GutterballContextListener extends
     private static Logger log = LoggerFactory.getLogger(GutterballContextListener.class);
 
     private Configuration config;
+    private MongoConnection mongo;
 
     private Injector injector;
 
@@ -80,6 +84,15 @@ public class GutterballContextListener extends
         log.debug("Gutterball stored config on context.");
 
         servletContext.setAttribute(CONFIGURATION_NAME, config);
+
+        // Setup mongodb connection.
+        try {
+            mongo = new MongoConnection(config);
+        }
+        catch (MongoException e) {
+            log.error("Could not connect to mongo database. Aborting initialization.", e);
+            throw new RuntimeException(e);
+        }
 
         // set things up BEFORE calling the super class' initialize method.
         super.contextInitialized(sce);
@@ -129,13 +142,14 @@ public class GutterballContextListener extends
         if (config == null) {
             log.error("Config is null");
         }
-        List<Module> modules = new LinkedList<Module>();
 
+        List<Module> modules = new LinkedList<Module>();
         modules.add(new AbstractModule() {
 
             @Override
             protected void configure() {
                 bind(Configuration.class).toInstance(config);
+                bind(MongoConnection.class).toInstance(mongo);
             }
         });
         modules.add(new GutterballServletModule());

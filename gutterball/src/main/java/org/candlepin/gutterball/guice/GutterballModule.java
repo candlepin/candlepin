@@ -21,13 +21,10 @@ import org.candlepin.gutterball.resource.EventResource;
 import org.candlepin.gutterball.resource.StatusResource;
 import org.candlepin.gutterball.resteasy.JsonProvider;
 
-import org.xnap.commons.i18n.I18n;
-
 import com.google.inject.AbstractModule;
-import com.google.inject.Singleton;
 import com.google.inject.servlet.ServletScopes;
-import com.mongodb.DB;
-import com.mongodb.MongoClient;
+
+import org.xnap.commons.i18n.I18n;
 
 
 /**
@@ -47,11 +44,6 @@ public class GutterballModule extends AbstractModule {
         // Backend classes
         bind(EventManager.class).asEagerSingleton();
         bind(EventReceiver.class).asEagerSingleton();
-
-        // It is safe to share a single instance of the mongodb connection
-        bind(MongoClient.class).toProvider(MongoDBClientProvider.class).in(Singleton.class);
-        // FIXME: Determine if we need to share the DB connection.
-        bind(DB.class).toProvider(MongoDBProvider.class).in(Singleton.class);
 
         // Bind curators
         bind(EventCurator.class);
