@@ -1,12 +1,1 @@
-CanadianTenPin is a service which allows companies to manage software
-subscriptions. The subscriptions allow users to access
-content provided by those subscriptions over secure connections.
-
-The server exposes functionality over a REST API, and stores data
-in a backend SQL database. The source code is delivered under the
-GPL. See LICENSE for explicit version information.
-
-More information on the service can be found at
-https://fedorahosted.org/canadianTenPin/. Questions can be sent to the
-mailing list at https://lists.fedorahosted.org/mailman/listinfo/canadianTenPin
-or on Freenode at #canadianTenPin.
+\m/
