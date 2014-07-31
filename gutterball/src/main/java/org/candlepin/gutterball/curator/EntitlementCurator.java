@@ -14,19 +14,20 @@
  */
 package org.candlepin.gutterball.curator;
 
+import org.candlepin.gutterball.model.ProcessedEvent;
+
 import com.google.inject.Inject;
 import com.mongodb.DB;
-import com.mongodb.DBObject;
 
 /**
  * A curator that manages DB operations on the 'entitlements' collection.
  */
-public class EntitlementCurator extends MongoDBCurator<DBObject> {
+public class EntitlementCurator extends MongoDBCurator<ProcessedEvent> {
     public static final String COLLECTION = "entitlements";
 
     @Inject
     public EntitlementCurator(DB database) {
-        super(DBObject.class, database);
+        super(ProcessedEvent.class, database);
     }
 
     @Override

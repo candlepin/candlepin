@@ -12,26 +12,16 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.gutterball.curator;
+package org.candlepin.gutterball.model;
 
-import org.candlepin.gutterball.model.ProcessedEvent;
-
-import com.google.inject.Inject;
-import com.mongodb.DB;
+import com.mongodb.DBObject;
 
 /**
- * A curator that manages DB operations on the 'guestids' collection.
+ * ProcessedEvent whose json string values have been replaced
+ * by BSONObjects
  */
-public class GuestIdCurator extends MongoDBCurator<ProcessedEvent> {
-    public static final String COLLECTION = "guestids";
+public class ProcessedEvent extends AbstractEvent<DBObject, DBObject> {
 
-    @Inject
-    public GuestIdCurator(DB database) {
-        super(ProcessedEvent.class, database);
-    }
-
-    @Override
-    public String getCollectionName() {
-        return COLLECTION;
+    public ProcessedEvent() {
     }
 }
