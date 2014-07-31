@@ -31,7 +31,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.6.4
+Version: 0.9.6.5
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -342,6 +342,9 @@ fi
 
 
 %changelog
+* Thu Jul 31 2014 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.6.5-1
+- 1075883: whitelist hypervisor consumers for certv3 (ckozak@redhat.com)
+
 * Fri Jul 11 2014 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.6.4-1
 - Replace apache-commons-codec with apache-commons-codec-eap6
   (ckozak@redhat.com)
