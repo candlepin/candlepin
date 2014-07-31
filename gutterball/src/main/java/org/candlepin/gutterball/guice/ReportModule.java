@@ -12,56 +12,31 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
+
 package org.candlepin.gutterball.guice;
 
-import org.candlepin.gutterball.curator.EventCurator;
-import org.candlepin.gutterball.eventhandler.EventManager;
-import org.candlepin.gutterball.receive.EventReceiver;
 import org.candlepin.gutterball.report.ConsumerStatusReport;
 import org.candlepin.gutterball.report.Report;
 import org.candlepin.gutterball.report.ReportFactory;
-import org.candlepin.gutterball.resource.EventResource;
 import org.candlepin.gutterball.resource.ReportsResource;
-import org.candlepin.gutterball.resource.StatusResource;
-import org.candlepin.gutterball.resteasy.JsonProvider;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
-import com.google.inject.servlet.ServletScopes;
-
-import org.xnap.commons.i18n.I18n;
-
 
 /**
- * GutterballModule configures the modules used by Gutterball using Guice.
+ * A guice module that sets up the necessary bingings for the report API.
  */
-public class GutterballModule extends AbstractModule {
+public class ReportModule extends AbstractModule {
 
-    /**
-     * {@inheritDoc}
-     */
     @SuppressWarnings("rawtypes")
     @Override
     protected void configure() {
-        // See JavaDoc on I18nProvider for more information of RequestScope
-        bind(I18n.class).toProvider(I18nProvider.class).in(ServletScopes.REQUEST);
-        bind(JsonProvider.class);
-
-        // Backend classes
-        bind(EventManager.class).asEagerSingleton();
-        bind(EventReceiver.class).asEagerSingleton();
-
-        // Bind curators
-        bind(EventCurator.class);
-
         // Map our report classes so that they can be picked up by the ReportFactory.
         Multibinder<Report> reports = Multibinder.newSetBinder(binder(), Report.class);
         reports.addBinding().to(ConsumerStatusReport.class);
-        bind(ReportFactory.class);
+        bind(ReportFactory.class).asEagerSingleton();
 
-        // RestEasy API resources
-        bind(StatusResource.class);
-        bind(EventResource.class);
         bind(ReportsResource.class);
     }
+
 }
