@@ -596,4 +596,20 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         assertFalse(productCurator.productHasSubscriptions(doesNotHave));
     }
 
+    @Test
+    public void testSaveOrUpdateProductNoDuplicateProdContent() {
+        Product p = createTestProduct();
+        Content content = new Content("best-content", "best-content",
+            "best-content", "yum", "us", "here", "here", "test-arch");
+        p.addContent(content);
+        contentCurator.create(content);
+        productCurator.createOrUpdate(p);
+
+        content.setGpgUrl("different");
+        p.addContent(content);
+        productCurator.createOrUpdate(p);
+
+        Product result = productCurator.find(p.getId());
+        assertEquals(1, result.getProductContent().size());
+    }
 }

@@ -117,8 +117,9 @@ public class ProductContent extends AbstractHibernateObject {
     @Override
     public int hashCode() {
         // TODO: Should we include the product here?
-        return new HashCodeBuilder(3, 23).append(this.enabled)
-            .append(this.content.hashCode()).toHashCode();
+        // No, It's null when we import a manifest (before writing to the db)
+        return new HashCodeBuilder(3, 23)
+            .append(this.content.getId()).toHashCode();
     }
 
     @Override
