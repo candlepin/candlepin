@@ -36,13 +36,17 @@ BuildRequires: ant >= 0:1.7.0
 BuildRequires: gettext
 
 BuildRequires: resteasy >= 0:2.3.7
+%if 0%{?fedora}
+BuildRequires: apache-commons-codec
+%else
 BuildRequires: apache-commons-codec-eap6
+%endif
 BuildRequires: jakarta-commons-io
 BuildRequires: jakarta-commons-lang
 BuildRequires: servlet
 BuildRequires: javax.inject
 
-%global jackson_version 0:2.3.0
+%global jackson_version 0:2.2.2
 BuildRequires: jackson-annotations >= %{jackson_version}
 BuildRequires: jackson-core >= %{jackson_version}
 BuildRequires: jackson-databind >= %{jackson_version}
@@ -58,14 +62,16 @@ BuildRequires: mvn(org.apache.httpcomponents:httpclient) >= 0:4.1.2
 BuildRequires: mvn(org.slf4j:slf4j-api)  >= 0:1.7.4
 BuildRequires: mvn(org.slf4j:jcl-over-slf4j)  >= 0:1.7.4
 BuildRequires: mvn(ch.qos.logback:logback-classic)
+%endif
+
+%if 0%{?fedora}
+BuildRequires: slf4j >= 0:1.7.5
+#BuildRequires: httpclient >= 0:4.1.2
+BuildRequires: jakarta-commons-httpclient
 %else
 BuildRequires: ant-nodeps >= 0:1.7.0
-#BuildRequires: google-guice >= 0:3.0
-#BuildRequires: google-collections >= 0:1.0
-#BuildRequires: commons-collections >= 3.1
 BuildRequires: slf4j-api >= 0:1.7.5
 BuildRequires: jcl-over-slf4j >= 0:1.7.5
-#BuildRequires: logback-classic
 BuildRequires: httpclient >= 0:4.1.2
 %endif
 
@@ -81,24 +87,26 @@ Requires: mvn(org.slf4j:jcl-over-slf4j)  >= 0:1.7.4
 Requires: mvn(ch.qos.logback:logback-classic)
 Requires: mvn(net.sf.cglib:cglib)
 Requires: mvn(asm:asm)
-%else
-#Requires: jaxb-impl
-#Requires: google-guice >= 0:3.0
-#Requires: google-collections >= 0:1.0
-#Requires: commons-collections >= 3.1
-Requires: slf4j-api >= 0:1.7.5-4
-# apache-mime4j uses commons-logging, so we have to provide a slf4j bridge
-Requires: jcl-over-slf4j >= 0:1.7.5
-#Requires: logback-classic
-Requires: httpclient >= 0:4.1.2
 %endif
+
+%if 0%{?fedora}
+Requires: slf4j >= 0:1.7.5
+Requires: apache-commons-codec
+#Requires: httpclient >= 0:4.1.2
+Requires: jakarta-commons-httpclient
+%else
+Requires: slf4j-api >= 0:1.7.5-4
+Requires: jcl-over-slf4j >= 0:1.7.5
+Requires: httpclient >= 0:4.1.2
+Requires: apache-commons-codec-eap6
+%endif
+
 Requires: resteasy >= 0:2.3.7
 Requires: jackson-annotations >= %{jackson_version}
 Requires: jackson-core >= %{jackson_version}
 Requires: jackson-databind >= %{jackson_version}
 Requires: jackson-jaxrs-json-provider >= %{jackson_version}
 Requires: jackson-module-jaxb-annotations >= %{jackson_version}
-Requires: apache-commons-codec-eap6
 Requires: jakarta-commons-io
 Requires: jakarta-commons-lang
 
