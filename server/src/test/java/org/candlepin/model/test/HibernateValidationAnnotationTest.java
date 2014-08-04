@@ -14,6 +14,8 @@
  */
 package org.candlepin.model.test;
 
+import static org.junit.Assert.assertTrue;
+
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
 import java.util.HashMap;
@@ -21,8 +23,6 @@ import java.util.Map;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-
-import junit.framework.Assert;
 
 import org.candlepin.model.AbstractCertificate;
 import org.candlepin.model.Branding;
@@ -67,7 +67,6 @@ import org.candlepin.model.SubscriptionsCertificate;
 import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.model.User;
 import org.candlepin.model.activationkeys.ActivationKey;
-import org.candlepin.test.DatabaseTestFixture;
 import org.junit.Test;
 
 import com.google.inject.matcher.Matcher;
@@ -78,9 +77,7 @@ import com.google.inject.matcher.Matchers;
  *
  *  Tests to determine if the correct validation annotations are set in the bean classes.
  */
-public class HibernateValidationAnnotationTest extends DatabaseTestFixture{
-    public HibernateValidationAnnotationTest() {
-    }
+public class HibernateValidationAnnotationTest {
 
     private Matcher<AnnotatedElement> sizeAndNotNull = buildMatcher(Size.class, NotNull.class);
     private Matcher<AnnotatedElement> size = buildMatcher(Size.class);
@@ -380,7 +377,6 @@ public class HibernateValidationAnnotationTest extends DatabaseTestFixture{
         Map<Field, Matcher<AnnotatedElement>> fm = new HashMap<Field, Matcher<AnnotatedElement>>();
         fm.put(Product.class.getDeclaredField("id"), notNull);
         fm.put(Product.class.getDeclaredField("name"), sizeAndNotNull);
-        fm.put(Product.class.getDeclaredField("dependentProductIds"), size);
         runMap(fm);
     }
 
@@ -516,7 +512,7 @@ public class HibernateValidationAnnotationTest extends DatabaseTestFixture{
         for (Map.Entry<Field, Matcher<AnnotatedElement>> entry : fm.entrySet()) {
             Matcher<AnnotatedElement> matcher = entry.getValue();
             Field field = entry.getKey();
-            Assert.assertTrue(matcher.matches(field));
+            assertTrue(matcher.matches(field));
         }
     }
 
@@ -536,13 +532,5 @@ public class HibernateValidationAnnotationTest extends DatabaseTestFixture{
         }
 
         return m;
-    }
-
-    private String longString() {
-        StringBuffer result = new StringBuffer();
-        for (int i = 0; i < 256; i++) {
-            result.append("e");
-        }
-        return result.toString();
     }
 }
