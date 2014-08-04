@@ -29,7 +29,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.text.SimpleDateFormat;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -203,9 +205,10 @@ public class X509ExtensionUtil  extends X509Util{
     }
 
     public Set<X509ExtensionWrapper> contentExtensions(
-        Set<ProductContent> productContent, String contentPrefix,
+        Collection<ProductContent> productContentList, String contentPrefix,
         Map<String, EnvironmentContent> promotedContent, Consumer consumer) {
 
+        Set<ProductContent> productContent = new HashSet<ProductContent>(productContentList);
         Set<X509ExtensionWrapper> toReturn = new LinkedHashSet<X509ExtensionWrapper>();
 
         boolean enableEnvironmentFiltering = config.environmentFilteringEnabled();
