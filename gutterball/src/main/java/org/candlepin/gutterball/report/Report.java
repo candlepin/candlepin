@@ -15,6 +15,10 @@
 
 package org.candlepin.gutterball.report;
 
+import org.candlepin.gutterball.guice.I18nProvider;
+
+import org.xnap.commons.i18n.I18n;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -28,6 +32,7 @@ import javax.ws.rs.core.MultivaluedMap;
  *
  */
 public abstract class Report {
+    protected I18n i18n;
     protected String key;
     protected String description;
     protected Map<String, ReportParameter> parameters;
@@ -36,7 +41,8 @@ public abstract class Report {
      * @param key
      * @param description
      */
-    public Report(String key, String description) {
+    public Report(I18nProvider i18nProvider, String key, String description) {
+        this.i18n = i18nProvider.get();
         this.key = key;
         this.description = description;
         this.parameters = new HashMap<String, ReportParameter>();
@@ -85,7 +91,8 @@ public abstract class Report {
      *
      * @param params the query parameters that were passed from the rest api call.
      */
-    protected abstract void validateParameters(MultivaluedMap<String, String> params);
+    protected abstract void validateParameters(MultivaluedMap<String, String> params)
+        throws ParameterValidationException;
 
     /**
      * Runs this report with the provided query parameters. All parameters will

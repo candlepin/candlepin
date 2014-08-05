@@ -14,42 +14,42 @@
  */
 package org.candlepin.gutterball.report;
 
+import org.candlepin.gutterball.guice.I18nProvider;
+
+import com.google.inject.Inject;
+
 import java.util.Date;
 
 import javax.ws.rs.core.MultivaluedMap;
-
-import org.xnap.commons.i18n.I18n;
-
-import com.google.inject.Inject;
-import com.google.inject.Provider;
 
 /**
  * ConsumerStatusListReport
  */
 public class ConsumerStatusReport extends Report {
 
-    private I18n i18n;
-
     /**
+     * @param i18nProvider
      * @param key
      * @param description
      */
     @Inject
-    public ConsumerStatusReport(Provider<I18n> i18nProvider) {
-        super("consumer_status_report", i18nProvider.get().tr("List the status of all consumers"));
-        this.i18n = i18nProvider.get();
+    public ConsumerStatusReport(I18nProvider i18nProvider) {
+        super(i18nProvider, "consumer_status_report",
+                i18nProvider.get().tr("List the status of all consumers"));
     }
 
     /* (non-Javadoc)
      * @see org.candlepin.gutterball.Report#validateParameters()
      */
     @Override
-    public void validateParameters(MultivaluedMap<String, String> params) {
+    public void validateParameters(MultivaluedMap<String, String> params)
+        throws ParameterValidationException {
         if (params.containsKey("hours")) {
 
             if (params.containsKey("start_date") || params.containsKey("end_date")) {
-                throw new RuntimeException("Invalid parameter 'hours'. Can not be used " +
-                        "with 'start_date' or 'end_date' paramters");
+                throw new ParameterValidationException("hours",
+                        i18n.tr("Can not be used with '{0}' or '{1}' paramters",
+                                "start_date", "end_date"));
             }
 
             String hours = params.getFirst("hours");
@@ -57,37 +57,47 @@ public class ConsumerStatusReport extends Report {
                 Integer.parseInt(hours);
             }
             catch (NumberFormatException nfe) {
-                throw new RuntimeException("Invalid paramter 'hours'. Must be an Integer value.");
+                throw new ParameterValidationException("hours",
+                        i18n.tr("Parameter must be an Integer value."));
             }
         }
 
         if (params.containsKey("start_date") && !params.containsKey("end_date")) {
-            throw new RuntimeException("Missing parameter 'end_date'.");
+            throw new ParameterValidationException("end_date",
+                    i18n.tr("Missing required parameter. Must be used with '{0}'.",
+                            "start_date"));
         }
 
         if (params.containsKey("end_date") && !params.containsKey("start_date")) {
-            throw new RuntimeException("Missing parameter 'start_date'.");
+            throw new ParameterValidationException("start_date",
+                    i18n.tr("Missing required parameter. Must be used with '{0}'.",
+                            "end_date"));
         }
     }
 
     @Override
     protected void initParameters() {
-        addParameter("owner", "The Owner key(s) to filter on.", false, true);
-        addParameter("status", "The subscription status to filter on.",
+        addParameter("owner", i18n.tr("The Owner key(s) to filter on."), false, true);
+        addParameter("status", i18n.tr("The subscription status to filter on."),
                 false, true);
-        addParameter("satalite_server", "The target satalite server",
+        addParameter("satalite_server", i18n.tr("The target satalite server"),
                 false, false);
-        addParameter("life_cycle_state", "The host life cycle state to filter on. " +
-                "[active, inactive]", false, true);
-        addParameter("hours", "The number of hours filter on (used indepent of date" +
-                " range).", false, false);
-        addParameter("start_date", "The start date to filter on (used with end_date).",
+        addParameter("life_cycle_state",
+                i18n.tr("The host life cycle state to filter on.") + " [active, inactive]",
+                false, true);
+        addParameter("hours",
+                i18n.tr("The number of hours filter on (used indepent of date range)."),
                 false, false);
-        addParameter("end_date", "The end date to filter on (used with start_date)",
+        addParameter("start_date",
+                i18n.tr("The start date to filter on (used with {0}).", "end_date"),
+                false, false);
+        addParameter("end_date",
+                i18n.tr("The end date to filter on (used with {0})", "end_date"),
                 false, false);
     }
 
-    public ReportResult run(MultivaluedMap<String, String> queryParameters) {
+    @Override
+    protected ReportResult execute(MultivaluedMap<String, String> queryParameters) {
         // At this point we would execute a lookup against the DW data store to formulate
         // the report result set.
         //
