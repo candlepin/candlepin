@@ -21,7 +21,15 @@ package org.candlepin.gutterball.report;
  */
 public class ParameterValidationException extends RuntimeException {
 
+    private String paramName;
+
     public ParameterValidationException(String paramName, String message) {
-        super("Invalid report parameter '" + paramName + "'. " + message);
+        super(paramName + ": " + message);
+        this.paramName = paramName;
     }
+
+    public String getParamName() {
+        return paramName;
+    }
+
 }

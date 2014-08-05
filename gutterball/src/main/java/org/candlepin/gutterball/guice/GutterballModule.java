@@ -40,7 +40,6 @@ public class GutterballModule extends AbstractModule {
     /**
      * {@inheritDoc}
      */
-    @SuppressWarnings("rawtypes")
     @Override
     protected void configure() {
         // See JavaDoc on I18nProvider for more information of RequestScope

@@ -12,6 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
+
 package org.candlepin.gutterball.report;
 
 import org.candlepin.gutterball.guice.I18nProvider;
@@ -42,14 +43,13 @@ public class ConsumerStatusReport extends Report {
      * @see org.candlepin.gutterball.Report#validateParameters()
      */
     @Override
-    public void validateParameters(MultivaluedMap<String, String> params)
+    protected void validateParameters(MultivaluedMap<String, String> params)
         throws ParameterValidationException {
         if (params.containsKey("hours")) {
 
             if (params.containsKey("start_date") || params.containsKey("end_date")) {
                 throw new ParameterValidationException("hours",
-                        i18n.tr("Can not be used with '{0}' or '{1}' paramters",
-                                "start_date", "end_date"));
+                        i18n.tr("Can not be used with {0} or {1} parameters", "start_date", "end_date"));
             }
 
             String hours = params.getFirst("hours");
@@ -58,19 +58,19 @@ public class ConsumerStatusReport extends Report {
             }
             catch (NumberFormatException nfe) {
                 throw new ParameterValidationException("hours",
-                        i18n.tr("Parameter must be an Integer value."));
+                        i18n.tr("Parameter must be an Integer value"));
             }
         }
 
         if (params.containsKey("start_date") && !params.containsKey("end_date")) {
             throw new ParameterValidationException("end_date",
-                    i18n.tr("Missing required parameter. Must be used with '{0}'.",
+                    i18n.tr("Missing required parameter. Must be used with {0}",
                             "start_date"));
         }
 
         if (params.containsKey("end_date") && !params.containsKey("start_date")) {
             throw new ParameterValidationException("start_date",
-                    i18n.tr("Missing required parameter. Must be used with '{0}'.",
+                    i18n.tr("Missing required parameter. Must be used with {0}",
                             "end_date"));
         }
     }
@@ -86,7 +86,7 @@ public class ConsumerStatusReport extends Report {
                 i18n.tr("The host life cycle state to filter on.") + " [active, inactive]",
                 false, true);
         addParameter("hours",
-                i18n.tr("The number of hours filter on (used indepent of date range)."),
+                i18n.tr("The number of hours to filter on (used indepent of date range)."),
                 false, false);
         addParameter("start_date",
                 i18n.tr("The start date to filter on (used with {0}).", "end_date"),
