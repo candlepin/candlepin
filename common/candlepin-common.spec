@@ -118,12 +118,9 @@ ant -Ddeps.file=deps/%{deps_suffix}.txt -Dlibdir=%{libdir} -Ddistlibdir=%{distli
 
 %install
 rm -rf %{buildroot}
-# normally we'd put this in /usr/share/projectname but we don't want a
-# a /usr/share/candlepin-common. So we're going to use candlepin instead
-# of %%{name}
-install -d -m 755 %{buildroot}/%{_datadir}/%{parent_proj}/
-install -d -m 755 %{buildroot}/%{_datadir}/%{parent_proj}/lib/
-install -m 644 target/%{name}-%{version}.jar %{buildroot}/%{_datadir}/%{parent_proj}/lib/
+install -d -m 755 %{buildroot}/%{_datadir}/java/
+install -m 644 target/%{name}-%{version}.jar %{buildroot}/%{_datadir}/java/
+ln -s %{_datadir}/java/%{name}-%{version}.jar %{buildroot}/usr/share/java/%{name}.jar
 
 %clean
 rm -rf %{buildroot}
@@ -131,7 +128,8 @@ rm -rf %{_tmppath}/distlibdir
 
 %files
 %defattr(644,root,root,775)
-%{_datadir}/%{parent_proj}/lib/%{name}-%{version}.jar
+%{_datadir}/java/%{name}-%{version}.jar
+%{_datadir}/java/%{name}.jar
 
 %changelog
 * Fri Aug 1 2014 jesus m. rodriguez <jesusr@redhat.com> 1.0.0-1
