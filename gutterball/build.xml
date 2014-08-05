@@ -1,0 +1,159 @@
+<?xml version="1.0"?>
+<project name="gutterball" default="why">
+  <target name="why">
+    <echo message="This file is for building in an RPM environment." />
+    <echo message="Don't use otherwise.  Use buildr instead." />
+  </target>
+
+  <property name="project.home" location="." />
+  <property name="src.dir" location="${project.home}/src/main/java" />
+  <property name="resource.dir" location="${project.home}/src/main/resources"/>
+  <property name="webapp.dir" location="${project.home}/src/main/webapp" />
+  <property name="target.dir" location="${project.home}/target" />
+  <property name="pkgname" value="org.candlepin.gutterball" />
+
+  <fail message="The deps.file property must be defined.">
+    <condition>
+      <not><isset property="deps.file"/></not>
+    </condition>
+  </fail>
+
+  <condition property="lib.dir" value="lib">
+    <not><isset property="lib.dir"/></not>
+  </condition>
+
+  <!--
+    List of jars we expect to install from /usr/share/java in a regular
+    build. The input should be a newline delimited list of artifact names or
+    coordinates that build-jar-repository can understand.
+  -->
+  <loadfile property="jar.deps" srcFile="${deps.file}">
+    <filterchain>
+      <stripjavacomments/>
+      <prefixlines prefix=" "/>
+      <striplinebreaks/>
+      <trim/>
+    </filterchain>
+  </loadfile>
+
+  <macrodef name="grepfromspec">
+    <attribute name="text" />
+    <attribute name="prop" />
+    <sequential>
+      <loadfile property="@{prop}" srcFile="gutterball.spec">
+        <filterchain>
+          <linecontainsregexp regexp="@{text}"/>
+          <replaceregex pattern="@{text}" replace=""/>
+          <replaceregex pattern="\%\{\?dist\}" replace=""/>
+          <striplinebreaks/>
+          <trim/>
+        </filterchain>
+      </loadfile>
+    </sequential>
+  </macrodef>
+
+  <target name="setvr">
+    <grepfromspec text="Version:" prop="version" />
+    <grepfromspec text="Release:" prop="release" />
+    <property name="war.file"
+      value="${target.dir}/gutterball-${version}.war" />
+  </target>
+
+  <target name="msgfmt">
+    <mkdir dir="${target.dir}/generated-source" />
+    <apply executable="msgfmt" failonerror="true" relative="true">
+      <arg value="--java2"/>
+      <arg value="--resource"/>
+      <arg value="org.candlepin.i18n.Messages"/>
+      <arg value="-d"/>
+      <arg value="${target.dir}/generated-source"/>
+      <arg value="--locale"/>
+      <!--
+       The end result of the chained mapper will be placed here.  This
+       is a bit of an abuse because we're using targetfile as a parameter
+       instead of a destination file, but that's the only way I knew how to
+       do it.
+      -->
+      <targetfile/>
+      <!-- Take the name of the po file, run basename on it and then strip
+        off the ".po" suffix" -->
+      <chainedmapper>
+        <flattenmapper/>
+        <globmapper from="*.po" to="*"/>
+      </chainedmapper>
+      <fileset dir="${cp-home}" includes="po/**/*.po"/>
+    </apply>
+  </target>
+
+  <target name="compile" depends="setvr, msgfmt, initjars">
+    <mkdir dir="${target.dir}/classes" />
+    <mkdir dir="${target.dir}/resources" />
+    <mkdir dir="${lib.dir}" />
+    <javac destdir="${target.dir}/classes"
+           optimize="off"
+           debug="on"
+           source="1.6"
+           target="1.6"
+           encoding="utf-8"
+           fork="yes">
+      <src>
+        <path location="${src.dir}" />
+        <path location="${resource.dir}" />
+      </src>
+      <classpath>
+        <fileset dir="${lib.dir}">
+          <include name="**/*.jar" />
+        </fileset>
+      </classpath>
+    </javac>
+    <copy todir="${target.dir}/resources">
+      <fileset dir="${resource.dir}" />
+      <filterset begintoken="$${" endtoken="}">
+        <filter token="version" value="${version}" />
+        <filter token="release" value="${release}" />
+      </filterset>
+    </copy>
+  </target>
+
+  <target name="initjars">
+    <jpackage-deps jars="${jar.deps}" dir="${lib.dir}" />
+  </target>
+
+  <target name="package" depends="initjars,compile,compile_withcpdeps">
+    <war destfile="${war.file}" webxml="${webapp.dir}/WEB-INF/web.xml">
+      <classes dir="${target.dir}/classes" />
+      <classes dir="${target.dir}/generated-source" />
+
+      <fileset dir="${webapp.dir}"/>
+      <fileset dir="${target.dir}/resources"/>
+
+      <lib dir="${lib.dir}">
+        <exclude name="**/servlet.jar" />
+      </lib>
+    </war>
+  </target>
+
+  <target name="clean">
+    <delete dir="${target.dir}" quiet="true" />
+    <delete dir="${lib.dir}" quiet="true" />
+  </target>
+
+  <!--
+    creates symlinks for jpackage jars
+    requires: jpackage-utils
+    other: requires rpms of the jars specified to be installed
+  -->
+  <macrodef name="jpackage-deps">
+    <attribute name="jars" />
+    <attribute name="dir" /> <!-- destination -->
+
+    <sequential>
+      <echo message="Symlinking @{jars}" />
+      <exec executable="build-jar-repository" failonerror="true" >
+        <arg value="-p" />
+        <arg value="-s @{dir}" />
+        <arg line="@{jars}" />
+      </exec>
+    </sequential>
+  </macrodef>
+</project>
