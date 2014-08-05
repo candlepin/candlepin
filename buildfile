@@ -210,7 +210,8 @@ define "candlepin" do
     test.with(TESTING)
     test.using :java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ]
 
-    package(:jar)
+    common_jar = package(:jar)
+    pom.artifact = common_jar
   end
 
   desc "The Gutterball Reporting Engine"
@@ -259,9 +260,10 @@ define "candlepin" do
     test.with(TESTING, JUKITO, HSQLDB, MONGODB_EMBEDDED)
     test.using :java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ]
 
-    package(:war, :id=>"gutterball").tap do |war|
+    gutterball_war = package(:war, :id=>"gutterball").tap do |war|
       war.libs -= artifacts(PROVIDED)
     end
+    pom.artifact = gutterball_war
   end
 
   desc "The Candlepin Server"
