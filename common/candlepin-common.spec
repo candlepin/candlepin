@@ -46,7 +46,7 @@ BuildRequires: jakarta-commons-lang
 BuildRequires: servlet
 BuildRequires: javax.inject
 
-%global jackson_version 0:2.2.2
+%global jackson_version 0:2.3.0
 BuildRequires: jackson-annotations >= %{jackson_version}
 BuildRequires: jackson-core >= %{jackson_version}
 BuildRequires: jackson-databind >= %{jackson_version}
