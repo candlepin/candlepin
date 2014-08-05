@@ -27,20 +27,15 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 Vendor: Red Hat, Inc.
 BuildArch: noarch
 
+# Build deps
 BuildRequires: java-devel >= 0:1.6.0
 BuildRequires: ant >= 0:1.7.0
 BuildRequires: gettext
 
 BuildRequires: resteasy >= 0:2.3.7
-%if 0%{?fedora}
-BuildRequires: apache-commons-codec
-%else
-BuildRequires: apache-commons-codec-eap6
-%endif
 BuildRequires: jakarta-commons-io
 BuildRequires: jakarta-commons-lang
 BuildRequires: servlet
-BuildRequires: javax.inject
 
 %global jackson_version 0:2.3.0
 BuildRequires: jackson-annotations >= %{jackson_version}
@@ -50,39 +45,49 @@ BuildRequires: jackson-jaxrs-json-provider >= %{jackson_version}
 BuildRequires: jackson-module-jaxb-annotations >= %{jackson_version}
 
 %if 0%{?rhel} >= 7
-BuildRequires: glassfish-jaxb
-BuildRequires: candlepin-guice >= 0:3.0
-BuildRequires: guava >= 0:13.0
+BuildRequires: apache-commons-codec-eap6
 BuildRequires: apache-commons-collections
 BuildRequires: mvn(org.apache.httpcomponents:httpclient) >= 0:4.1.2
 BuildRequires: mvn(org.slf4j:slf4j-api)  >= 0:1.7.4
 BuildRequires: mvn(org.slf4j:jcl-over-slf4j)  >= 0:1.7.4
 BuildRequires: mvn(ch.qos.logback:logback-classic)
+BuildRequires: mvn(javax.inject:javax.inject)
+%endif
+
+%if 0%{?rhel} < 7
+BuildRequires: ant-nodeps >= 0:1.7.0
+BuildRequires: apache-commons-codec-eap6
+BuildRequires: slf4j-api >= 0:1.7.5
+BuildRequires: jcl-over-slf4j >= 0:1.7.5
+BuildRequires: httpclient >= 0:4.1.2
+BuildRequires: javax.inject
 %endif
 
 %if 0%{?fedora}
 BuildRequires: slf4j >= 0:1.7.5
 #BuildRequires: httpclient >= 0:4.1.2
 BuildRequires: jakarta-commons-httpclient
-%else
-BuildRequires: ant-nodeps >= 0:1.7.0
-BuildRequires: slf4j-api >= 0:1.7.5
-BuildRequires: jcl-over-slf4j >= 0:1.7.5
-BuildRequires: httpclient >= 0:4.1.2
+BuildRequires: apache-commons-codec
+BuildRequires: javax.inject
 %endif
 
-
+# Runtime deps
 %if 0%{?rhel} >= 7
-Requires: glassfish-jaxb
-Requires: candlepin-guice >= 0:3.0
-Requires: guava >= 0:13.0
+Requires: apache-commons-codec-eap6
 Requires: apache-commons-collections
 Requires: mvn(org.apache.httpcomponents:httpclient) >= 0:4.1.2
 Requires: mvn(org.slf4j:slf4j-api)  >= 0:1.7.4
 Requires: mvn(org.slf4j:jcl-over-slf4j)  >= 0:1.7.4
 Requires: mvn(ch.qos.logback:logback-classic)
-Requires: mvn(net.sf.cglib:cglib)
-Requires: mvn(asm:asm)
+Requires: mvn(javax.inject:javax.inject)
+%endif
+
+%if 0%{?rhel} < 7
+Requires: slf4j-api >= 0:1.7.5-4
+Requires: jcl-over-slf4j >= 0:1.7.5
+Requires: httpclient >= 0:4.1.2
+Requires: apache-commons-codec-eap6
+Requires: javax.inject
 %endif
 
 %if 0%{?fedora}
@@ -90,11 +95,7 @@ Requires: slf4j >= 0:1.7.5
 Requires: apache-commons-codec
 #Requires: httpclient >= 0:4.1.2
 Requires: jakarta-commons-httpclient
-%else
-Requires: slf4j-api >= 0:1.7.5-4
-Requires: jcl-over-slf4j >= 0:1.7.5
-Requires: httpclient >= 0:4.1.2
-Requires: apache-commons-codec-eap6
+Requires: javax.inject
 %endif
 
 Requires: resteasy >= 0:2.3.7
