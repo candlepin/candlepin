@@ -8,10 +8,6 @@
 # re-call initjars with the correct destination for both tomcat and jboss.
 %global distlibdir %{buildroot}/%{_tmppath}/distlibdir/
 
-# We require the Candlepin SCL, but because we are not an SCL package
-# ourselves, we need to point to deps in the expected location.
-%global scllibdir /opt/rh/candlepin-scl/root
-
 # Ideally we would just use %{dist} for the deps_suffix, but %dist isn't just always
 # the major version.  E.g. rpm --eval "%{dist}" returns ".el6_5" in the RHEL 6
 # candlepin buildroot and ".el6" in other environments.
@@ -118,8 +114,7 @@ Common code for Candlepin and related projects
 mkdir -p %{distlibdir}
 
 %build
-#ant %{?rhel:-Ddeps.file=deps/%{deps_suffix}.txt} -Dlibdir=%{libdir} -Ddistlibdir=%{distlibdir} -Dscllibdir=%{scllibdir}/%{_datadir}/java/ clean %{?reqcpdeps:usecpdeps} package
-ant -Ddeps.file=deps/%{deps_suffix}.txt -Dlibdir=%{libdir} -Ddistlibdir=%{distlibdir} -Dscllibdir=%{_datadir}/java/ clean package
+ant -Ddeps.file=deps/%{deps_suffix}.txt -Dlibdir=%{libdir} -Ddistlibdir=%{distlibdir} clean package
 
 %install
 rm -rf %{buildroot}

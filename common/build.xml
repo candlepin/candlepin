@@ -13,9 +13,6 @@
   <!-- Destination for Candlepin jar dependencies in a regular build. -->
   <property name="dist.lib.dir" location="${distlibdir}" />
 
-  <!-- Source location for Candlepin software collection jar dependencies in a regular build. -->
-  <property name="scl.lib.dir" location="${scllibdir}" />
-
   <!-- A newline delimited list of all the JAR dependencies -->
   <!-- Use /dev/null if not set -->
   <condition property="deps.file" value="/dev/null">
@@ -116,15 +113,9 @@
   <target name="initjars">
       <echo>Initializing jars</echo>
       <echo>dist.lib.dir: ${dist.lib.dir}</echo>
-      <echo>scl.lib.dir: ${scl.lib.dir}</echo>
 
     <!-- Handle the jars in /usr/share/java -->
     <jpackage-deps jars="${jar.deps}" dir="${dist.lib.dir}" />
-
-    <!-- Handle the jars in the software collection under /opt/rh/candlepin-scl/ -->
-    <candlepin-scl-deps jar="quartz" dir="${dist.lib.dir}" />
-    <candlepin-scl-deps jar="js" dir="${dist.lib.dir}" />
-
   </target>
 
   <target name="package" depends="initjars,compile">
@@ -166,19 +157,4 @@
       </exec>
     </sequential>
   </macrodef>
-
-  <!--
-    creates symlinks for candlepin software collection jars
-  -->
-  <macrodef name="candlepin-scl-deps">
-    <attribute name="jar" />
-    <attribute name="dir" /> <!-- destination -->
-
-    <sequential>
-      <echo message="Symlinking SCL @{jar}" />
-      <symlink link="@{dir}/@{jar}.jar" resource="${scl.lib.dir}/@{jar}.jar" />
-    </sequential>
-  </macrodef>
-
-
 </project>
