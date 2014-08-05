@@ -118,9 +118,9 @@ ant -Ddeps.file=deps/%{deps_suffix}.txt -Dlibdir=%{libdir} -Ddistlibdir=%{distli
 
 %install
 rm -rf %{buildroot}
-install -d -m 755 %{buildroot}/%{_datadir}/java/
-install -m 644 target/%{name}-%{version}.jar %{buildroot}/%{_datadir}/java/
-ln -s %{_datadir}/java/%{name}-%{version}.jar %{buildroot}/usr/share/java/%{name}.jar
+install -d -m 755 %{buildroot}/%{_javadir}
+install -m 644 target/%{name}-%{version}.jar %{buildroot}/%{_javadir}
+ln -s %{_javadir}/%{name}-%{version}.jar %{buildroot}/%{_javadir}/%{name}.jar
 
 %clean
 rm -rf %{buildroot}
@@ -128,8 +128,8 @@ rm -rf %{_tmppath}/distlibdir
 
 %files
 %defattr(644,root,root,775)
-%{_datadir}/java/%{name}-%{version}.jar
-%{_datadir}/java/%{name}.jar
+%{_javadir}/%{name}-%{version}.jar
+%{_javadir}/%{name}.jar
 
 %changelog
 * Fri Aug 1 2014 jesus m. rodriguez <jesusr@redhat.com> 1.0.0-1
