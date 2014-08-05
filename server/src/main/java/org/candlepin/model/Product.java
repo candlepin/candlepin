@@ -91,7 +91,6 @@ public class Product extends AbstractHibernateObject implements Linkable {
     @CollectionTable(name = "cp_product_dependent_products",
                      joinColumns = @JoinColumn(name = "cp_product_id"))
     @Column(name = "element")
-    @Size(max = 255)
     private Set<String> dependentProductIds;
 
     /**
