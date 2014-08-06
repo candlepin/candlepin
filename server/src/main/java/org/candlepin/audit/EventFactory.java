@@ -26,6 +26,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Rules;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.activationkeys.ActivationKey;
+import org.candlepin.policy.js.compliance.ComplianceStatus;
 
 import com.fasterxml.jackson.databind.AnnotationIntrospector;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -36,10 +37,17 @@ import com.fasterxml.jackson.datatype.hibernate4.Hibernate4Module;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 import com.google.inject.Inject;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Set;
+
 /**
  * EventFactory
  */
 public class EventFactory {
+    private static Logger logger = LoggerFactory.getLogger(EventFactory.class);
+
     protected final PrincipalProvider principalProvider;
     private final ObjectMapper mapper;
 
@@ -76,7 +84,7 @@ public class EventFactory {
     }
 
     public EventBuilder getEventBuilder(Target target, Type type) {
-        return new EventBuilder(principalProvider, mapper, target, type);
+        return new EventBuilder(this, target, type);
     }
 
     public Event consumerCreated(Consumer newConsumer) {
@@ -205,5 +213,31 @@ public class EventFactory {
         return getEventBuilder(Target.GUESTID, Type.DELETED)
                 .setOldEntity(guestId)
                 .buildEvent();
+    }
+
+    public Event complianceCreated(Consumer consumer,
+            Set<Entitlement> entitlements, ComplianceStatus compliance) {
+        return new Event(Event.Type.CREATED, Event.Target.COMPLIANCE,
+                consumer.getName(), principalProvider.get(),
+                consumer.getOwner().getId(), consumer.getId(),
+                consumer.getId(), null, entityToJson(new ComplianceEventData(
+                        consumer, entitlements, compliance)), null, null);
+    }
+
+    protected String entityToJson(Object entity) {
+        String newEntityJson = "";
+        // TODO: Throw an auditing exception here
+
+        // Drop data on consumer we do not want serialized, Jackson doesn't
+        // seem to care about XmlTransient annotations when used here:
+
+        try {
+            newEntityJson = mapper.writeValueAsString(entity);
+        }
+        catch (Exception e) {
+            logger.warn("Unable to jsonify: " + entity);
+            logger.error("jsonification failed!", e);
+        }
+        return newEntityJson;
     }
 }
