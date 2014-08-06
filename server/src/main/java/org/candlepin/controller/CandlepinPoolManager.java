@@ -828,10 +828,7 @@ public class CandlepinPoolManager implements PoolManager {
         handler.handlePostEntitlement(consumer, poolHelper, entitlement);
 
         // Check consumer's new compliance status and save:
-        ComplianceStatus compliance = complianceRules.getStatus(consumer, null);
-        consumer.setEntitlementStatus(compliance.getStatus());
-
-        consumerCurator.update(consumer);
+        complianceRules.getStatus(consumer);
 
         handler.handleSelfCertificate(consumer, pool, entitlement, generateUeberCert);
         for (Entitlement regenEnt : entitlementCurator.listModifying(entitlement)) {
@@ -1121,9 +1118,7 @@ public class CandlepinPoolManager implements PoolManager {
         // don't care about updating compliance either.
         if (regenModified) {
             // Check consumer's new compliance status and save:
-            ComplianceStatus compliance = complianceRules.getStatus(consumer, null);
-            consumer.setEntitlementStatus(compliance.getStatus());
-            consumerCurator.update(consumer);
+            complianceRules.getStatus(consumer);
         }
 
         sink.sendEvent(event);
@@ -1144,9 +1139,7 @@ public class CandlepinPoolManager implements PoolManager {
             count++;
         }
         // Rerun compliance after removing all entitlements
-        ComplianceStatus compliance = complianceRules.getStatus(consumer, null);
-        consumer.setEntitlementStatus(compliance.getStatus());
-        consumerCurator.update(consumer);
+        complianceRules.getStatus(consumer);
         return count;
     }
 

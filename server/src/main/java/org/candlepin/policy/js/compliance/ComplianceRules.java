@@ -16,6 +16,7 @@ package org.candlepin.policy.js.compliance;
 
 import org.candlepin.audit.EventSink;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.policy.js.JsRunner;
@@ -44,17 +45,32 @@ public class ComplianceRules {
     private static Logger log = LoggerFactory.getLogger(ComplianceRules.class);
     private StatusReasonMessageGenerator generator;
     private EventSink eventSink;
+    // Use the curator to update consumer entitlement status every time we run compliance (with null date)
+    private ConsumerCurator consumerCurator;
 
     @Inject
     public ComplianceRules(JsRunner jsRules, EntitlementCurator entCurator,
-        StatusReasonMessageGenerator generator, EventSink eventSink) {
+        StatusReasonMessageGenerator generator, EventSink eventSink,
+        ConsumerCurator consumerCurator) {
         this.entCurator = entCurator;
         this.jsRules = jsRules;
         this.generator = generator;
         this.eventSink = eventSink;
+        this.consumerCurator = consumerCurator;
 
         mapper = RulesObjectMapper.instance();
         jsRules.init("compliance_name_space");
+    }
+
+    /**
+     * Check compliance status for a consumer on a specific date.
+     * This should NOT calculate compliantUntil.
+     *
+     * @param c Consumer to check.
+     * @return Compliance status.
+     */
+    public ComplianceStatus getStatus(Consumer c) {
+        return getStatus(c, null, false);
     }
 
     /**
@@ -76,7 +92,22 @@ public class ComplianceRules {
      * @param calculateCompliantUntil calculate how long the system will remain compliant (expensive)
      * @return Compliance status.
      */
-    public ComplianceStatus getStatus(Consumer c, Date date, boolean calculateCompliantUntil) {
+    public ComplianceStatus getStatus(Consumer c, Date date,
+            boolean calculateCompliantUntil) {
+        return getStatus(c, date, calculateCompliantUntil, true);
+    }
+
+    /**
+     * Check compliance status for a consumer on a specific date.
+     *
+     * @param c Consumer to check.
+     * @param date Date to check compliance status for.
+     * @param calculateCompliantUntil calculate how long the system will remain compliant (expensive)
+     * @param updateConsumer whether or not to use consumerCurator.update
+     * @return Compliance status.
+     */
+    public ComplianceStatus getStatus(Consumer c, Date date,
+            boolean calculateCompliantUntil, boolean updateConsumer) {
 
         // If this is true, we send an updated compliance event
         boolean currentCompliance = false;
@@ -99,6 +130,11 @@ public class ComplianceRules {
                 generator.setMessage(c, reason, result.getDate());
             }
             if (currentCompliance) {
+                c.setEntitlementStatus(result.getStatus());
+                // Merge might work better here, but we use update in other places for this
+                if (updateConsumer) {
+                    consumerCurator.update(c);
+                }
                 eventSink.emitCompliance(c, c.getEntitlements(), result);
             }
             return result;

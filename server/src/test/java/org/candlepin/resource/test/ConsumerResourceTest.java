@@ -547,8 +547,6 @@ public class ConsumerResourceTest {
             null, null, mockedServiceLevelValidator);
 
         Map<String, ComplianceStatus> results = cr.getComplianceStatusList(uuids);
-        verify(c).setEntitlementStatus(status.getStatus());
-        verify(c2).setEntitlementStatus(status.getStatus());
         assertEquals(2, results.size());
         assertTrue(results.containsKey("1"));
         assertTrue(results.containsKey("2"));

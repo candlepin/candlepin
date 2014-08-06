@@ -504,9 +504,8 @@ public class ConsumerResource {
 
             handleActivationKeys(consumer, keys);
 
-            ComplianceStatus compliance = complianceRules.getStatus(consumer, null);
-            consumer.setEntitlementStatus(compliance.getStatus());
-            consumerCurator.update(consumer);
+            // This should update the consumers entitlementStatus
+            complianceRules.getStatus(consumer);
 
             log.info("Consumer " + consumer.getUuid() + " created in org " +
                 consumer.getOwner().getKey());
@@ -950,12 +949,12 @@ public class ConsumerResource {
         if (changesMade) {
             log.debug("Consumer " + toUpdate.getUuid() + " updated.");
 
-            ComplianceStatus compliance = complianceRules.getStatus(toUpdate, null);
-            toUpdate.setEntitlementStatus(compliance.getStatus());
-
             // Set the updated date here b/c @PreUpdate will not get fired
             // since only the facts table will receive the update.
             toUpdate.setUpdated(new Date());
+
+            // this should update compliance on toUpdate, but not call the curator
+            complianceRules.getStatus(toUpdate, null, false, false);
 
             Event event = eventBuilder.setNewEntity(toUpdate).buildEvent();
             sink.sendEvent(event);
@@ -2029,14 +2028,8 @@ public class ConsumerResource {
         @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid,
         @QueryParam("on_date") String onDate) {
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(uuid);
-        Date date = onDate == null ? null : ResourceDateParser.parseDateString(onDate);
-        ComplianceStatus status = this.complianceRules.getStatus(consumer, date);
-
-        // Optional date, so we don't update entitlement status
-        if (onDate == null) {
-            consumer.setEntitlementStatus(status.getStatus());
-        }
-        return status;
+        Date date = ResourceDateParser.parseDateString(onDate);
+        return this.complianceRules.getStatus(consumer, date);
     }
 
     /**
@@ -2058,9 +2051,6 @@ public class ConsumerResource {
 
         for (Consumer consumer : consumers) {
             ComplianceStatus status = complianceRules.getStatus(consumer, null);
-            // NOTE: If this method ever changes to accept an optional date, do
-            // not update this field on the consumer if the date is specified:
-            consumer.setEntitlementStatus(status.getStatus());
             results.put(consumer.getUuid(), status);
         }
 
@@ -2071,7 +2061,6 @@ public class ConsumerResource {
 
         ComplianceStatus complianceStatus = complianceRules.getStatus(
                            consumer, null, false);
-        consumer.setEntitlementStatus(complianceStatus.getStatus());
 
         ConsumerInstalledProductEnricher enricher = new ConsumerInstalledProductEnricher(
             consumer, complianceStatus, complianceRules);

@@ -36,6 +36,7 @@ import java.util.Set;
 
 import org.candlepin.audit.EventSink;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Entitlement;
@@ -74,6 +75,7 @@ public class InstalledProductStatusCalculatorTest {
     private static final String PRODUCT_1 = "product1";
     private static final String STACK_ID_1 = "my-stack-1";
 
+    @Mock private ConsumerCurator consumerCurator;
     @Mock private EntitlementCurator entCurator;
     @Mock private RulesCurator rulesCuratorMock;
     @Mock private EventSink eventSink;
@@ -95,7 +97,7 @@ public class InstalledProductStatusCalculatorTest {
         i18n = I18nFactory.getI18n(getClass(), "org.candlepin.i18n.Messages", locale,
             I18nFactory.FALLBACK);
         compliance = new ComplianceRules(provider.get(),
-            entCurator, new StatusReasonMessageGenerator(i18n), eventSink);
+            entCurator, new StatusReasonMessageGenerator(i18n), eventSink, consumerCurator);
         owner = new Owner("test");
     }
 

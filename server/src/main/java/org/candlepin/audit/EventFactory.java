@@ -220,8 +220,22 @@ public class EventFactory {
         return new Event(Event.Type.CREATED, Event.Target.COMPLIANCE,
                 consumer.getName(), principalProvider.get(),
                 consumer.getOwner().getId(), consumer.getId(),
-                consumer.getId(), null, entityToJson(new ComplianceEventData(
-                        consumer, entitlements, compliance)), null, null);
+                consumer.getId(), null, buildComplianceDataJson(
+                        consumer, entitlements, compliance), null, null);
+    }
+
+    // Jackson should think all 3 are root entities so hateoas doesn't bite us
+    protected String buildComplianceDataJson(Consumer consumer,
+            Set<Entitlement> entitlements, ComplianceStatus status) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("{\"consumer\": ");
+        sb.append(entityToJson(consumer));
+        sb.append(", \"entitlements\": ");
+        sb.append(entityToJson(entitlements));
+        sb.append(", \"status\": ");
+        sb.append(entityToJson(status));
+        sb.append("}");
+        return sb.toString();
     }
 
     protected String entityToJson(Object entity) {
