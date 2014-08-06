@@ -34,6 +34,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 import org.candlepin.jackson.HateoasInclude;
+import org.candlepin.json.model.ConsumerProperty;
+
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Index;
@@ -63,7 +65,8 @@ import com.fasterxml.jackson.annotation.JsonFilter;
 @Entity
 @Table(name = "cp_entitlement")
 @JsonFilter("EntitlementFilter")
-public class Entitlement extends AbstractHibernateObject implements Linkable, Owned, Comparable<Entitlement> {
+public class Entitlement extends AbstractHibernateObject
+    implements Linkable, Owned, Named, ConsumerProperty, Comparable<Entitlement> {
 
     private static final long serialVersionUID = 1L;
 
@@ -316,5 +319,14 @@ public class Entitlement extends AbstractHibernateObject implements Linkable, Ow
                         this.getId().compareTo(other.getId());
         }
         return compare;
+    }
+
+    @Override
+    @XmlTransient
+    public String getName() {
+        if (pool != null) {
+            return pool.getProductName();
+        }
+        return null;
     }
 }

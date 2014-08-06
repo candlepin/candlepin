@@ -40,11 +40,15 @@ import java.util.List;
 import java.util.Set;
 
 import org.candlepin.audit.Event;
+import org.candlepin.audit.Event.Target;
+import org.candlepin.audit.Event.Type;
+import org.candlepin.audit.EventBuilder;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.model.AbstractHibernateObject;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Entitlement;
@@ -79,6 +83,7 @@ import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -121,6 +126,8 @@ public class PoolManagerTest {
 
     @Mock
     private EventFactory eventFactory;
+    @Mock
+    private EventBuilder eventBuilder;
 
     @Mock
     private ComplianceRules complianceRules;
@@ -145,6 +152,9 @@ public class PoolManagerTest {
         pool = TestUtil.createPool(o, product);
 
         when(mockConfig.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX))).thenReturn(100);
+        when(eventFactory.getEventBuilder(any(Target.class), any(Type.class))).thenReturn(eventBuilder);
+        when(eventBuilder.setNewEntity(any(AbstractHibernateObject.class))).thenReturn(eventBuilder);
+        when(eventBuilder.setOldEntity(any(AbstractHibernateObject.class))).thenReturn(eventBuilder);
         this.productCache = new ProductCache(mockConfig, mockProductAdapter);
 
         this.principal = TestUtil.createOwnerPrincipal();

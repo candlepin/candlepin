@@ -48,11 +48,13 @@ import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang.StringUtils;
 
-import org.candlepin.audit.ConsumerEventBuilder;
+import org.candlepin.audit.Event.Target;
+import org.candlepin.audit.EventBuilder;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventAdapter;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
+import org.candlepin.audit.Event.Type;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.NoAuthPrincipal;
 import org.candlepin.auth.Principal;
@@ -871,8 +873,8 @@ public class ConsumerResource {
         // We need a representation of the consumer before making any modifications.
         // If nothing changes we won't send.  The new entity needs to be correct though,
         // so we should get a Jsonstring now, and finish it off if we're going to send
-        ConsumerEventBuilder eventBuilder = eventFactory.getConsumerModifiedEventBuilder()
-                .setOldConsumer(toUpdate);
+        EventBuilder eventBuilder = eventFactory.getEventBuilder(Target.CONSUMER, Type.MODIFIED)
+                .setOldEntity(toUpdate);
 
         // version changed on non-checked in consumer, or list of capabilities
         // changed on checked in consumer
@@ -958,7 +960,7 @@ public class ConsumerResource {
             // since only the facts table will receive the update.
             toUpdate.setUpdated(new Date());
 
-            Event event = eventBuilder.setNewConsumer(toUpdate).buildEvent();
+            Event event = eventBuilder.setNewEntity(toUpdate).buildEvent();
             sink.sendEvent(event);
         }
         return changesMade;
@@ -1105,7 +1107,7 @@ public class ConsumerResource {
                 if (log.isDebugEnabled()) {
                     log.debug("New guest ID added: " + guestId.getGuestId());
                 }
-                sink.sendEvent(eventFactory.guestIdCreated(existing, guestId));
+                sink.sendEvent(eventFactory.guestIdCreated(guestId));
             }
 
             // The guest has not registered. No need to process entitlements.
@@ -1144,7 +1146,7 @@ public class ConsumerResource {
             if (log.isDebugEnabled()) {
                 log.debug("Guest ID removed: " + guestId.getGuestId());
             }
-            sink.sendEvent(eventFactory.guestIdDeleted(existing, guestId));
+            sink.sendEvent(eventFactory.guestIdDeleted(guestId));
 
         }
 
@@ -1899,12 +1901,14 @@ public class ConsumerResource {
         @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid) {
 
         Consumer c = consumerCurator.verifyAndLookupConsumer(uuid);
+        EventBuilder eventBuilder = eventFactory
+                .getEventBuilder(Target.CONSUMER, Type.MODIFIED)
+                .setOldEntity(c);
 
         IdentityCertificate ic = generateIdCert(c, true);
         c.setIdCert(ic);
         consumerCurator.update(c);
-        Event consumerModified = this.eventFactory.consumerModified(c);
-        this.sink.sendEvent(consumerModified);
+        this.sink.sendEvent(eventBuilder.setNewEntity(c).buildEvent());
         return c;
     }
 
