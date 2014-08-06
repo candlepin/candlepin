@@ -18,7 +18,6 @@ import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -503,10 +502,8 @@ public class ConsumerResource {
 
             handleActivationKeys(consumer, keys);
 
-            ComplianceStatus compliance = complianceRules.getStatus(consumer,
-                Calendar.getInstance().getTime());
-            consumer.setEntitlementStatus(compliance.getStatus());
-            consumerCurator.update(consumer);
+            // This should update the consumers entitlementStatus
+            complianceRules.getStatus(consumer);
 
             log.info("Consumer " + consumer.getUuid() + " created in org " +
                 consumer.getOwner().getKey());
@@ -950,13 +947,12 @@ public class ConsumerResource {
         if (changesMade) {
             log.debug("Consumer " + toUpdate.getUuid() + " updated.");
 
-            ComplianceStatus compliance = complianceRules.getStatus(toUpdate,
-                Calendar.getInstance().getTime());
-            toUpdate.setEntitlementStatus(compliance.getStatus());
-
             // Set the updated date here b/c @PreUpdate will not get fired
             // since only the facts table will receive the update.
             toUpdate.setUpdated(new Date());
+
+            // this should update compliance on toUpdate, but not call the curator
+            complianceRules.getStatus(toUpdate, null, false, false);
 
             Event event = eventBuilder.setNewConsumer(toUpdate).buildEvent();
             sink.sendEvent(event);
@@ -1469,10 +1465,7 @@ public class ConsumerResource {
 
         // TODO: really should do this in a before we get to this call
         // so the method takes in a real Date object and not just a String.
-        Date entitleDate = null;
-        if (entitleDateStr != null) {
-            entitleDate = ResourceDateParser.parseDateString(entitleDateStr);
-        }
+        Date entitleDate = ResourceDateParser.parseDateString(entitleDateStr);
 
         // Verify consumer exists:
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
@@ -2031,17 +2024,8 @@ public class ConsumerResource {
         @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid,
         @QueryParam("on_date") String onDate) {
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(uuid);
-        Date date = onDate == null ?
-            Calendar.getInstance().getTime() :
-                ResourceDateParser.parseDateString(onDate);
-        ComplianceStatus status = this.complianceRules.getStatus(consumer,
-            date);
-
-        // Optional date, so we don't update entitlement status
-        if (onDate == null) {
-            consumer.setEntitlementStatus(status.getStatus());
-        }
-        return status;
+        Date date = ResourceDateParser.parseDateString(onDate);
+        return this.complianceRules.getStatus(consumer, date);
     }
 
     /**
@@ -2061,12 +2045,8 @@ public class ConsumerResource {
             consumerCurator.findByUuids(uuids);
         Map<String, ComplianceStatus> results = new HashMap<String, ComplianceStatus>();
 
-        Date now = Calendar.getInstance().getTime();
         for (Consumer consumer : consumers) {
-            ComplianceStatus status = complianceRules.getStatus(consumer, now);
-            // NOTE: If this method ever changes to accept an optional date, do
-            // not update this field on the consumer if the date is specified:
-            consumer.setEntitlementStatus(status.getStatus());
+            ComplianceStatus status = complianceRules.getStatus(consumer, null);
             results.put(consumer.getUuid(), status);
         }
 
@@ -2076,8 +2056,7 @@ public class ConsumerResource {
     private void addDataToInstalledProducts(Consumer consumer) {
 
         ComplianceStatus complianceStatus = complianceRules.getStatus(
-                           consumer, Calendar.getInstance().getTime(), false);
-        consumer.setEntitlementStatus(complianceStatus.getStatus());
+                           consumer, null, false);
 
         ConsumerInstalledProductEnricher enricher = new ConsumerInstalledProductEnricher(
             consumer, complianceStatus, complianceRules);

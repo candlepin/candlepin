@@ -62,7 +62,7 @@ public class Event implements Persisted {
      */
     public enum Target {
         CONSUMER, OWNER, ENTITLEMENT, POOL, EXPORT, IMPORT, USER, ROLE, SUBSCRIPTION,
-        ACTIVATIONKEY, GUESTID, RULES
+        ACTIVATIONKEY, GUESTID, RULES, COMPLIANCE
     }
 
     /**

@@ -139,7 +139,7 @@ public class HypervisorResourceTest {
                 return invocation.getArguments()[0];
             }
         });
-        when(complianceRules.getStatus(any(Consumer.class), any(Date.class)))
+        when(complianceRules.getStatus(any(Consumer.class), any(Date.class), any(Boolean.class)))
             .thenReturn(new ComplianceStatus(new Date()));
 
         when(ownerCurator.lookupByKey(any(String.class))).thenReturn(new Owner());

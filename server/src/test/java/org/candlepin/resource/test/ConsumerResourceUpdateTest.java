@@ -112,7 +112,8 @@ public class ConsumerResourceUpdateTest {
             new CandlepinCommonTestConfig(), null, null, null, null, null,
             serviceLevelValidator);
 
-        when(complianceRules.getStatus(any(Consumer.class), any(Date.class)))
+        when(complianceRules.getStatus(any(Consumer.class), any(Date.class),
+                any(Boolean.class), any(Boolean.class)))
             .thenReturn(new ComplianceStatus(new Date()));
 
         when(idCertService.regenerateIdentityCert(any(Consumer.class)))
@@ -231,7 +232,8 @@ public class ConsumerResourceUpdateTest {
 
         this.resource.updateConsumer(consumer.getUuid(), incoming);
         verify(sink).sendEvent((Event) any());
-        verify(complianceRules).getStatus(eq(consumer), any(Date.class));
+        verify(complianceRules).getStatus(eq(consumer), any(Date.class),
+                any(Boolean.class), any(Boolean.class));
     }
 
     @Test

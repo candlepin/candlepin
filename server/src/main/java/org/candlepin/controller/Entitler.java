@@ -320,10 +320,9 @@ public class Entitler {
         List<PoolQuantity> result = new ArrayList<PoolQuantity>();
         try {
             Owner owner = consumer.getOwner();
-            Date entitleDate = new Date();
 
             result = poolManager.getBestPools(
-                consumer, null, entitleDate, owner, serviceLevelOverride);
+                consumer, null, null, owner, serviceLevelOverride);
             log.debug("Created Pool Quantity list: " + result);
         }
         catch (EntitlementRefusedException e) {

@@ -17,11 +17,13 @@ package org.candlepin.audit;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Rules;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.activationkeys.ActivationKey;
+import org.candlepin.policy.js.compliance.ComplianceStatus;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
@@ -38,6 +40,8 @@ import org.hornetq.api.core.client.ServerLocator;
 import org.hornetq.core.remoting.impl.invm.InVMConnectorFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Set;
 /**
  * EventSink - Reliably dispatches events to all configured listeners.
  */
@@ -177,5 +181,11 @@ public class EventSinkImpl implements EventSink {
     @Override
     public void emitRulesDeleted(Rules rules) {
         sendEvent(eventFactory.rulesDeleted(rules));
+    }
+
+    @Override
+    public void emitCompliance(Consumer consumer,
+            Set<Entitlement> entitlements, ComplianceStatus compliance) {
+        sendEvent(eventFactory.complianceCreated(consumer, entitlements, compliance));
     }
 }
