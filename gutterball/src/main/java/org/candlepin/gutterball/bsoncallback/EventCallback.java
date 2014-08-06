@@ -12,31 +12,28 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.gutterball.eventhandler;
+package org.candlepin.gutterball.bsoncallback;
 
 import org.candlepin.gutterball.model.Event;
 
+import org.bson.BSONObject;
+
+
 /**
- * EventHandler interface which provides a structure for
- * handling various types of events
+ * EventCallback to create and properly escape the event from json
  */
-public interface EventHandler {
+public class EventCallback extends DateAndEscapeCallback {
 
-    /**
-     * Handles creation events
-     * @param event Event to store
-     */
-    void handleCreated(Event event);
+    public EventCallback() {
+        this(true);
+    }
 
-    /**
-     * Handles modification events
-     * @param event Event to store
-     */
-    void handleUpdated(Event event);
+    public EventCallback(boolean write) {
+        super(write);
+    }
 
-    /**
-     * Handles deletion events
-     * @param event Event to store
-     */
-    void handleDeleted(Event event);
+    @Override
+    public BSONObject create() {
+        return new Event();
+    }
 }

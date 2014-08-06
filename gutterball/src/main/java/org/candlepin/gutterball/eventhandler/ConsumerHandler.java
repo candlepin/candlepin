@@ -15,9 +15,11 @@
 package org.candlepin.gutterball.eventhandler;
 
 import org.apache.commons.lang.StringUtils;
+import org.bson.BSONCallback;
+
+import org.candlepin.gutterball.bsoncallback.DateAndEscapeCallback;
 import org.candlepin.gutterball.curator.ConsumerCurator;
 import org.candlepin.gutterball.model.Event;
-import org.candlepin.gutterball.util.BsonEscapeCallback;
 
 import com.google.inject.Inject;
 import com.mongodb.DBObject;
@@ -27,31 +29,28 @@ import com.mongodb.util.JSON;
  * ConsumerHandler to properly update the database when
  * a consumer based event is received
  */
+@HandlerTarget("CONSUMER")
 public class ConsumerHandler implements EventHandler {
 
-    public static final String TARGET = "CONSUMER";
-
     protected ConsumerCurator consumerCurator;
+    protected BSONCallback callback;
 
     @Inject
     public ConsumerHandler(ConsumerCurator consumerCurator) {
         this.consumerCurator = consumerCurator;
+        callback = new DateAndEscapeCallback();
     }
 
     public void handleEvent(Event event) {
         String newEntityJson = (String) event.get("newEntity");
         if (!StringUtils.isBlank(newEntityJson)) {
-            DBObject newEntity = (DBObject) JSON.parse(newEntityJson, new BsonEscapeCallback());
+            DBObject newEntity = (DBObject) JSON.parse(newEntityJson, callback);
             // TODO: we should have a consumer record that we maintain with
             // created/deleted/owner info to narrow our queries.
             // Each consumer record could also store that records id in some
             // sort of _master_id field.
             consumerCurator.insert(newEntity);
         }
-    }
-
-    public String getTarget() {
-        return TARGET;
     }
 
     @Override
