@@ -19,7 +19,7 @@
 Name: %{parent_proj}-common
 Summary: Common code for Candlepin and related projects
 License: GPLv2
-Version: 1.0.0
+Version: 1.0.1
 Release: 1%{?dist}
 URL: http://www.candlepinproject.org
 Source: %{name}-%{version}.tar.gz
@@ -133,6 +133,10 @@ rm -rf %{_tmppath}/distlibdir
 %{_javadir}/%{name}.jar
 
 %changelog
+* Wed Aug 06 2014 jesus m. rodriguez <jesusr@redhat.com> 1.0.1-1
+- Package contains common code used by gutterball and candlepin.
+- new package built with tito
+
 * Fri Aug 1 2014 jesus m. rodriguez <jesusr@redhat.com> 1.0.0-1
 - Initial build
 
