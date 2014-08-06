@@ -387,6 +387,6 @@ public class ConsumerResourceCreationTest {
         consumer.setType(system);
         consumer.setName("consumername");
         resource.create(consumer, p, USER, owner.getKey(), null);
-        verify(complianceRules).getStatus(eq(consumer), any(Date.class));
+        verify(complianceRules).getStatus(eq(consumer));
     }
 }

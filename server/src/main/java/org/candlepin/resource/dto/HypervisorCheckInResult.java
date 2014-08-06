@@ -77,4 +77,9 @@ public class HypervisorCheckInResult {
         return failed;
     }
 
+    @Override
+    public String toString() {
+        return "Created: " + created.size() + ", Updated: " + updated.size() +
+                ", Unchanged:" + unchanged.size() + ", Failed: " + failed.size();
+    }
 }
