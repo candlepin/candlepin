@@ -1,59 +1,40 @@
 // A list of JARs to use on RHEL 6.
 // Each item should be an artifact name or coordinate that
 // build-jar-repository can understand.
-antlr
-aopalliance
-apache-mime4j
-bcprov-jdk16
-c3p0
+
+// SCLs are referenced with the prefix scl:${SCL_NAME}:
+// but note that you must put in special handling for
+// each individual SCL
+
+candlepin-common
 commons-codec-eap6/commons-codec
-commons-collections
-commons-io
 commons-lang
-dom4j
 gettext-commons
-google-collections
 guice
 guice-assistedinject
 guice-multibindings
 guice-persist
 guice-servlet
 guice-throwingproviders
-hibernate-commons-annotations
-hibernate-jpa-2.0-api
-hibernate-validator
-hibernate4-c3p0
-hibernate4-core
-hibernate4-entitymanager
-httpclient
-istack-commons-runtime
 jackson-annotations
 jackson-core
 jackson-databind
-jackson-datatype-hibernate/jackson-datatype-hibernate4
 jackson-jaxrs-providers/jackson-jaxrs-base
 jackson-jaxrs-providers/jackson-jaxrs-json-provider
 jackson-module-jaxb-annotations
-javamail/mail
-javassist
 javax.inject
 jaxb-impl
-jboss-logging
-jcl-over-slf4j
 jms
-jta
-log4j
 logback-classic
 logback-core
 qpid-client-0.22
+qpid-common-0.22
 resteasy/jaxrs-api
-resteasy/resteasy-atom-provider
 resteasy/resteasy-guice
 resteasy/resteasy-jaxb-provider
 resteasy/resteasy-jaxrs
 resteasy/resteasy-multipart-provider
-scannotation
+scl:mongodb24:bson
+scl:mongodb24:mongo
 servlet
-sisu-cglib/cglib
 slf4j-api
-validation-api

@@ -5,7 +5,8 @@ antlr
 aopalliance
 apache-mime4j
 atinject
-c3p0
+bson
+candlepin-common
 candlepin-guice // This will pull in all the jars under candlepin-guice
 cglib
 commons-codec-eap6/commons-codec
@@ -16,18 +17,12 @@ dom4j
 gettext-commons
 glassfish-jaxb/jaxb-impl
 guava
-hibernate-commons-annotations
-hibernate-jpa-2.0-api
 hibernate-validator
-hibernate4-c3p0
-hibernate4-core
-hibernate4-entitymanager
 httpcomponents/httpclient
 istack-commons-runtime
 jackson-annotations
 jackson-core
 jackson-databind
-jackson-datatype-hibernate/jackson-datatype-hibernate4
 jackson-jaxrs-providers/jackson-jaxrs-base
 jackson-jaxrs-providers/jackson-jaxrs-json-provider
 jackson-module-jaxb-annotations
@@ -36,11 +31,12 @@ javassist
 jboss-logging
 jms
 jta
-log4j
 logback/logback-classic
 logback/logback-core
+mongo
 objectweb-asm/asm
 qpid-client-0.22
+qpid-common-0.22
 resteasy/jaxrs-api
 resteasy/resteasy-atom-provider
 resteasy/resteasy-guice
