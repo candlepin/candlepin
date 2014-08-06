@@ -14,39 +14,26 @@
  */
 package org.candlepin.gutterball.curator;
 
-import org.candlepin.gutterball.model.Consumer;
 import org.candlepin.gutterball.mongodb.MongoConnection;
 
 import com.google.inject.Inject;
-import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
-import com.mongodb.WriteResult;
-
-import java.util.Date;
 
 /**
- * A curator that manages DB operations on the 'consumers' collection.
+ * ComplianceDataCurator database curator to save and query
+ * data from compliance events.
  */
-public class ConsumerCurator extends MongoDBCurator<Consumer> {
-    public static final String COLLECTION = "consumers";
+public class ComplianceDataCurator extends MongoDBCurator<DBObject> {
+
+    public static final String COLLECTION = "compliance";
 
     @Inject
-    public ConsumerCurator(MongoConnection mongo) {
-        super(Consumer.class, mongo);
+    public ComplianceDataCurator(MongoConnection mongo) {
+        super(DBObject.class, mongo);
     }
 
     @Override
     public String getCollectionName() {
         return COLLECTION;
-    }
-
-    public Consumer findByUuid(String uuid) {
-        return findByKey("uuid", uuid);
-    }
-
-    public WriteResult setConsumerDeleted(String uuid, Date deleted) {
-        DBObject query = new BasicDBObject("uuid", uuid);
-        DBObject update = new BasicDBObject("$set", new BasicDBObject("deleted", deleted));
-        return collection.update(query, update);
     }
 }

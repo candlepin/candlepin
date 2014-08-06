@@ -47,7 +47,7 @@ import com.mongodb.DBObject;
  */
 public abstract class MongoDBCurator<M extends DBObject> {
 
-    private DBCollection collection;
+    protected DBCollection collection;
 
     public MongoDBCurator(Class<M> modelClass, MongoConnection mongo) {
         this.collection = mongo.getDB().getCollection(getCollectionName());
@@ -72,13 +72,16 @@ public abstract class MongoDBCurator<M extends DBObject> {
         collection.save(toSave);
     }
 
-    @SuppressWarnings("unchecked")
     public M findById(String id) {
-        return (M) collection.findOne(new BasicDBObject("_id", new ObjectId(id)));
+        return findByKey("_id", id);
     }
 
     public long count() {
         return collection.count();
     }
 
+    @SuppressWarnings("unchecked")
+    public M findByKey(String key, String value) {
+        return (M) collection.findOne(new BasicDBObject(key, new ObjectId(value)));
+    }
 }

@@ -14,7 +14,6 @@
  */
 package org.candlepin.gutterball.guice;
 
-import org.candlepin.gutterball.curator.EventCurator;
 import org.candlepin.gutterball.eventhandler.EventHandler;
 import org.candlepin.gutterball.eventhandler.EventManager;
 import org.candlepin.gutterball.eventhandler.HandlerTarget;
@@ -49,9 +48,6 @@ public class GutterballModule extends AbstractModule {
         configureEventHandlers();
         bind(EventManager.class).asEagerSingleton();
         bind(EventReceiver.class).asEagerSingleton();
-
-        // Bind curators
-        bind(EventCurator.class);
 
         // RestEasy API resources
         bind(StatusResource.class);
