@@ -25,6 +25,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Rules;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.activationkeys.ActivationKey;
+import org.candlepin.policy.js.compliance.ComplianceStatus;
 
 import com.fasterxml.jackson.databind.AnnotationIntrospector;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -37,6 +38,8 @@ import com.google.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Set;
 
 /**
  * EventFactory
@@ -300,6 +303,15 @@ public class EventFactory {
             // we use getGuestId here since we may not have a guestID obj with an ID yet
             affectedGuestId.getGuestId(), null, entityToJson(affectedGuestId), null, null);
         return event;
+    }
+
+    public Event complianceCreated(Consumer consumer,
+            Set<Entitlement> entitlements, ComplianceStatus compliance) {
+        return new Event(Event.Type.CREATED, Event.Target.COMPLIANCE,
+                consumer.getName(), principalProvider.get(),
+                consumer.getOwner().getId(), consumer.getId(),
+                consumer.getId(), null, entityToJson(new ComplianceEventData(
+                        consumer, entitlements, compliance)), null, null);
     }
 
     protected String entityToJson(Object entity) {

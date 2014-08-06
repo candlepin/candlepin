@@ -16,6 +16,8 @@ package org.candlepin.resource.util;
 
 import org.candlepin.exceptions.BadRequestException;
 
+import org.apache.commons.lang.StringUtils;
+
 import java.util.Date;
 
 import javax.xml.bind.DatatypeConverter;
@@ -58,7 +60,7 @@ public class ResourceDateParser {
 
     public static Date parseDateString(String activeOn) {
         Date d;
-        if (activeOn == null || activeOn.trim().equals("")) {
+        if (StringUtils.isBlank(activeOn)) {
             return null;
         }
         try {

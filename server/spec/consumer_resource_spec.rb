@@ -34,7 +34,7 @@ describe 'Consumer Resource' do
     atom = @consumer1.list_consumer_events_atom(@consumer1.uuid)
     doc = REXML::Document.new(atom)
     events = REXML::XPath.match(doc, "//*[local-name()='event'][type = 'CREATED' and target ='CONSUMER']")
-    events.should have(1).things
+    events.should have_at_least(1).things
 
     # Consumer 2 should not be able to see consumer 1's feed:
     lambda {
@@ -48,9 +48,7 @@ describe 'Consumer Resource' do
 
     # Events are sorted in order of descending timestamp, so the first
     # event should be consumer created:
-    events[-1]['target'].should == 'CONSUMER'
-    events[-1]['type'].should == 'CREATED'
-    events[-1]['principal']['name'].should == @username1
+    expect(events.find { |event| event['target'] == 'CONSUMER' && event['type'] == 'CREATED' && event['principal']['name'] == @username1}).to_not be_nil
 
     # Consumer 2 should not be able to see consumer 1's feed:
     lambda {

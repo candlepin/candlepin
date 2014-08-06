@@ -14,6 +14,7 @@
  */
 package org.candlepin.policy.js.compliance;
 
+import org.candlepin.audit.EventSink;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
@@ -42,13 +43,15 @@ public class ComplianceRules {
     private RulesObjectMapper mapper;
     private static Logger log = LoggerFactory.getLogger(ComplianceRules.class);
     private StatusReasonMessageGenerator generator;
+    private EventSink eventSink;
 
     @Inject
     public ComplianceRules(JsRunner jsRules, EntitlementCurator entCurator,
-        StatusReasonMessageGenerator generator) {
+        StatusReasonMessageGenerator generator, EventSink eventSink) {
         this.entCurator = entCurator;
         this.jsRules = jsRules;
         this.generator = generator;
+        this.eventSink = eventSink;
 
         mapper = RulesObjectMapper.instance();
         jsRules.init("compliance_name_space");
@@ -75,6 +78,12 @@ public class ComplianceRules {
      */
     public ComplianceStatus getStatus(Consumer c, Date date, boolean calculateCompliantUntil) {
 
+        // If this is true, we send an updated compliance event
+        boolean currentCompliance = false;
+        if (date == null) {
+            date = new Date();
+            currentCompliance = true;
+        }
         JsonJsContext args = new JsonJsContext(mapper);
         args.put("consumer", c);
         args.put("entitlements", c.getEntitlements());
@@ -88,6 +97,9 @@ public class ComplianceRules {
             ComplianceStatus result = mapper.toObject(json, ComplianceStatus.class);
             for (ComplianceReason reason : result.getReasons()) {
                 generator.setMessage(c, reason, result.getDate());
+            }
+            if (currentCompliance) {
+                eventSink.emitCompliance(c, c.getEntitlements(), result);
             }
             return result;
         }
