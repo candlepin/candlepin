@@ -3,13 +3,17 @@
 %global _binary_payload w9.gzdio
 %global _source_payload w9.gzdio
 
-%global libdir %{_javadir}
-
 # Ideally we would just use %{dist} for the deps_suffix, but %dist isn't just
 # always the major version.  E.g. rpm --eval "%{dist}" returns ".el6_5" in the
 # RHEL 6 candlepin buildroot and ".el6" in other environments.
 %{?fedora:%global dist_name fc%{fedora}}
 %{?rhel:%global dist_name el%{rhel}}
+
+%if 0%{?fedora} >= 19 || 0%{?rhel} >= 7
+%global tomcat tomcat
+%else
+%global tomcat tomcat6
+%endif
 
 Name: gutterball
 Version: 1.0.0
@@ -31,10 +35,9 @@ BuildRequires: servlet
 BuildRequires: qpid-java-client >= 0:0.22
 BuildRequires: qpid-java-common >= 0:0.22
 BuildRequires: resteasy >= 0:2.3.7
-BuildRequires: %scl_require_package mongodb24 mongo-java-driver
-BuildRequires: %scl_require_package mongodb24 mongo-java-driver-bson
+BuildRequires: mongodb24-mongo-java-driver
+BuildRequires: mongodb24-mongo-java-driver-bson
 BuildRequires: candlepin-common
-BuildRequires: scl-utils-build
 %global jackson_version 0:2.3.0
 BuildRequires: jackson-annotations >= %{jackson_version}
 BuildRequires: jackson-core >= %{jackson_version}
@@ -42,7 +45,7 @@ BuildRequires: jackson-databind >= %{jackson_version}
 BuildRequires: jackson-jaxrs-json-provider >= %{jackson_version}
 BuildRequires: jackson-module-jaxb-annotations >= %{jackson_version}
 
-# Project dependent build requires
+# Version dependent build requires
 %if 0%{?rhel} == 6
 BuildRequires: jpackage-utils
 BuildRequires: ant-nodeps >= 0:1.7.0
@@ -68,8 +71,8 @@ Requires: servlet
 Requires: qpid-java-client >= 0:0.22
 Requires: qpid-java-common >= 0:0.22
 Requires: gettext-commons
-Requires: %scl_require_package mongodb24 mongo-java-driver
-Requires: %scl_require_package mongodb24 mongo-java-driver-bson
+Requires: mongodb24-mongo-java-driver
+Requires: mongodb24-mongo-java-driver-bson
 Requires: candlepin-common
 
 # Version dependent requires
@@ -100,14 +103,41 @@ engine.
 %setup -q
 
 %build
-ant -Ddist.name=%{dist_name} -Dlib.dir=%{libdir} clean package
+ant -Ddist.name=%{dist_name} clean package
 
 %install
+rm -rf %{buildroot}
+
+# Conf files
+install -d -m 755 %{buildroot}/%{_sysconfdir}/%{name}/certs/amqp
+install -d -m 640 %{buildroot}/%{_sysconfdir}/%{name}/%{name}.conf
+
+# Logging
+install -d -m 755 %{buildroot}/%{_localstatedir}/log/%{name}
+install -d 755 %{buildroot}%{_sysconfdir}/logrotate.d/
+install -m 644 conf/logrotate.conf %{buildroot}%{_sysconfdir}/logrotate.d/%{name}
+
+# War file
+install -d -m 755 %{buildroot}/%{_localstatedir}/lib/%{tomcat}/webapps/%{name}/
+%{__unzip} target/%{name}-%{version}.war -d %{buildroot}/%{_sharedstatedir}/%{tomcat}/webapps/%{name}/
+
+#remove the copied jars and resymlink
+rm %{buildroot}/%{_localstatedir}/lib/%{tomcat}/webapps/%{name}/WEB-INF/lib/*.jar
+ant -Ddist.name=%{dist_name} -Dlib.dir=%{buildroot}/%{_sharedstatedir}/%{tomcat}/webapps/%{name}/WEB-INF/lib/ initjars
+
+%clean
 rm -rf %{buildroot}
 
 %files
 %defattr(-, root, root)
 %doc LICENSE
+%dir %attr(750, root, root) %{_sysconfdir}/%{name}/certs/amqp
+%config(noreplace) %attr(644, root, root) %{_sysconfdir}/logrotate.d/%{name}
+%config(noreplace) %attr(640, root, root) %{_sysconfdir}/%{name}/%{name}.conf
+
+%defattr(644, tomcat, tomcat, 755)
+%{_sharedstatedir}/%{tomcat}/webapps/%{name}/*
+%{_localstatedir}/log/%{name}
 
 %changelog
 * Tue Jun 03 2014 Alex Wood <awood@redhat.com> 1.0.0-1

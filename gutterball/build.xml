@@ -214,6 +214,7 @@
            </tokenfilter>
         </filterchain>
       </loadresource>
+      <echo message="Jar location ${build.jar.override}"/>
       <jpackage-deps jars="${cleaned.jars}" dir="@{dir}">
         <env key="${build.jar.override}" value="/opt/rh/@{scl}/root/usr/share/java" />
       </jpackage-deps>
