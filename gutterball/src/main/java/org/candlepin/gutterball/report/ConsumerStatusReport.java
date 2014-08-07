@@ -80,11 +80,6 @@ public class ConsumerStatusReport extends Report {
         addParameter("owner", i18n.tr("The Owner key(s) to filter on."), false, true);
         addParameter("status", i18n.tr("The subscription status to filter on."),
                 false, true);
-        addParameter("satalite_server", i18n.tr("The target satalite server"),
-                false, false);
-        addParameter("life_cycle_state",
-                i18n.tr("The host life cycle state to filter on.") + " [active, inactive]",
-                false, true);
         addParameter("hours",
                 i18n.tr("The number of hours to filter on (used indepent of date range)."),
                 false, false);
@@ -107,18 +102,14 @@ public class ConsumerStatusReport extends Report {
                 "devbox.bugsquat.net",
                 "112112-1221-23-3",
                 "Current",
-                "dhcp-8-29-250.lab.eng.rdu2.redhat.com",
                 "ACME_Corporation",
-                new Date(),
-                "Active"));
+                new Date()));
         result.addRow(new ConsumerStatusReportRow(
                 "devbox3.bugsquat.net",
                 "112112-1222-333",
                 "Invalid",
-                "dhcp-8-29-250.lab.eng.rdu2.redhat.com",
                 "ACME_Corporation",
-                new Date(),
-                "Inactive"));
+                new Date()));
         return result;
     }
 

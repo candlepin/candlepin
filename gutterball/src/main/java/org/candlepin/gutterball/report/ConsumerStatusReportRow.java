@@ -18,16 +18,14 @@ package org.candlepin.gutterball.report;
 import java.util.Date;
 
 /**
- * ReportResult
+ * A result row returned by the {@link ConsumerStatusReport} object.
  */
 public class ConsumerStatusReportRow {
     private String hostName;
     private String systemId;
     private String status;
-    private String sateliteServer;
     private String org;
     private Date lastCheckIn;
-    private String lifeCycleDate;
 
     /**
     * @param hostName
@@ -38,24 +36,22 @@ public class ConsumerStatusReportRow {
     * @param lastCheckIn
     * @param lifeCycleDate
     */
-    public ConsumerStatusReportRow(String hostName, String systemId,
-            String status, String sateliteServer, String org, Date lastCheckIn,
-            String lifeCycleDate) {
-        super();
+    public ConsumerStatusReportRow(String hostName, String systemId, String status, String org,
+            Date lastCheckIn) {
         this.hostName = hostName;
         this.systemId = systemId;
         this.status = status;
-        this.sateliteServer = sateliteServer;
         this.org = org;
         this.lastCheckIn = lastCheckIn;
-        this.lifeCycleDate = lifeCycleDate;
     }
+
     /**
     * @return the hostName
     */
     public String getHostName() {
         return hostName;
     }
+
     /**
     * @return the systemId
     */
@@ -68,29 +64,19 @@ public class ConsumerStatusReportRow {
     public String getStatus() {
         return status;
     }
-    /**
-    * @return the sateliteServer
-    */
-    public String getSateliteServer() {
-        return sateliteServer;
-    }
+
     /**
     * @return the org
     */
     public String getOrg() {
         return org;
     }
+
     /**
     * @return the lastCheckIn
     */
     public Date getLastCheckIn() {
         return lastCheckIn;
-    }
-    /**
-    * @return the lifeCycleDate
-    */
-    public String getLifeCycleDate() {
-        return lifeCycleDate;
     }
 
 }
