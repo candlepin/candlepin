@@ -28,9 +28,8 @@ import org.candlepin.gutterball.eventhandler.ConsumerHandler;
 import org.candlepin.gutterball.eventhandler.EventHandler;
 import org.candlepin.gutterball.eventhandler.EventManager;
 import org.candlepin.gutterball.eventhandler.HandlerTarget;
+import org.candlepin.gutterball.model.Consumer;
 import org.candlepin.gutterball.model.Event;
-
-import com.mongodb.DBObject;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -70,7 +69,7 @@ public class EventManagerTest {
         toHandle.setTarget("UNKNOWN_EVENT_TARGET");
         eventManager.handle(toHandle);
         verify(eventCurator, times(1)).insert(eq(toHandle));
-        verify(consumerCurator, never()).insert(any(DBObject.class));
+        verify(consumerCurator, never()).insert(any(Consumer.class));
     }
 
     @Test
@@ -78,42 +77,7 @@ public class EventManagerTest {
         Event toHandle = new Event();
         eventManager.handle(toHandle);
         verify(eventCurator, times(1)).insert(eq(toHandle));
-        verify(consumerCurator, never()).insert(any(DBObject.class));
-    }
-
-    @Test
-    public void testEventManagerConsumerCreated() {
-        Event toHandle = new Event();
-        toHandle.setTarget(ConsumerHandler.class.getAnnotation(HandlerTarget.class).value());
-        toHandle.setType("CREATED");
-        toHandle.setNewEntity(CONSUMER_JSON);
-        eventManager.handle(toHandle);
-        verify(eventCurator, times(1)).insert(eq(toHandle));
-        verify(consumerCurator, times(1)).insert(any(DBObject.class));
-    }
-
-    @Test
-    public void testEventManagerConsumerUpdated() {
-        Event toHandle = new Event();
-        toHandle.setTarget(ConsumerHandler.class.getAnnotation(HandlerTarget.class).value());
-        toHandle.setType("MODIFIED");
-        toHandle.setNewEntity(CONSUMER_JSON);
-        eventManager.handle(toHandle);
-        verify(eventCurator, times(1)).insert(eq(toHandle));
-        verify(consumerCurator, times(1)).insert(any(DBObject.class));
-    }
-
-    @Test
-    public void testEventManagerConsumerUnknownType() {
-        Event toHandle = new Event();
-        toHandle.setTarget(ConsumerHandler.class.getAnnotation(HandlerTarget.class).value());
-        toHandle.setType("DUNNO");
-        toHandle.setNewEntity(CONSUMER_JSON);
-        eventManager.handle(toHandle);
-        // We should always save events
-        verify(eventCurator, times(1)).insert(eq(toHandle));
-        // However we don't know what to do with it if it's not created/modified/deleted
-        verify(consumerCurator, never()).insert(any(DBObject.class));
+        verify(consumerCurator, never()).insert(any(Consumer.class));
     }
 
     // Class allows us to override loadEventHandlers, so we can supply mocks

@@ -14,44 +14,43 @@
  */
 package org.candlepin.gutterball.eventhandler;
 
-import org.candlepin.gutterball.curator.ConsumerCurator;
-import org.candlepin.gutterball.model.Consumer;
+import org.candlepin.gutterball.curator.ComplianceDataCurator;
 import org.candlepin.gutterball.model.Event;
 
 import com.google.inject.Inject;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * ConsumerHandler to properly update the database when
- * a consumer based event is received
+ * Handler for Compliance Events.  Currently we only send ComplianceCreated events.
+ * they're not persisted in the candlepin database, so they're always recreated,
+ * it's more of a bundle anyhow.
  */
-@HandlerTarget("CONSUMER")
-public class ConsumerHandler implements EventHandler {
+@HandlerTarget("COMPLIANCE")
+public class ComplianceHandler implements EventHandler {
 
-    protected ConsumerCurator consumerCurator;
+    private static Logger log = LoggerFactory.getLogger(ComplianceHandler.class);
+
+    private ComplianceDataCurator curator;
 
     @Inject
-    public ConsumerHandler(ConsumerCurator consumerCurator) {
-        this.consumerCurator = consumerCurator;
+    public ComplianceHandler(ComplianceDataCurator curator) {
+        this.curator = curator;
     }
 
     @Override
     public void handleCreated(Event event) {
-        BasicDBObject newConsumer = (BasicDBObject) event.getNewEntity();
-        Consumer toAdd = new Consumer(event.getConsumerId(),
-                newConsumer.getDate("created"),
-                (DBObject) newConsumer.get("owner"));
-        consumerCurator.insert(toAdd);
+        curator.insert(event.getNewEntity());
     }
 
     @Override
     public void handleUpdated(Event event) {
-        // NO-OP
+        log.warn("Received a COMPLIANCE MODIFIED event, skipping");
     }
 
     @Override
     public void handleDeleted(Event event) {
-        consumerCurator.setConsumerDeleted(event.getConsumerId(), event.getTimestamp());
+        log.warn("Received a COMPLIANCE DELETED event, skipping");
     }
 }
