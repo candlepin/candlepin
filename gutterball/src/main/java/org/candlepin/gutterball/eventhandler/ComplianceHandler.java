@@ -19,15 +19,18 @@ import org.candlepin.gutterball.model.Event;
 
 import com.google.inject.Inject;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Handler for Compliance Events.  Currently we only send ComplianceCreated events.
  * they're not persisted in the candlepin database, so they're always recreated,
  * it's more of a bundle anyhow.
- *
- * TODO: Should we throw an exception if we get a compliance update/deleted event?
  */
 @HandlerTarget("COMPLIANCE")
 public class ComplianceHandler implements EventHandler {
+
+    private static Logger log = LoggerFactory.getLogger(ComplianceHandler.class);
 
     private ComplianceDataCurator curator;
 
@@ -43,11 +46,11 @@ public class ComplianceHandler implements EventHandler {
 
     @Override
     public void handleUpdated(Event event) {
-        // NO-OP
+        log.warn("Received a COMPLIANCE MODIFIED event, skipping");
     }
 
     @Override
     public void handleDeleted(Event event) {
-        // NO-OP
+        log.warn("Received a COMPLIANCE DELETED event, skipping");
     }
 }
