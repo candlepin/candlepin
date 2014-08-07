@@ -32,9 +32,6 @@ public class ReportFactory {
 
     @Inject
     public ReportFactory(Set<Report> reportSet) {
-        // Could have used a BindMap but lose generics across classes.
-        // Just build map from the injected set and we won't have to specify
-        // the report key at bind time.
         reports = new HashMap<String, Report>();
         for (Report r : reportSet) {
             reports.put(r.getKey(), r);
