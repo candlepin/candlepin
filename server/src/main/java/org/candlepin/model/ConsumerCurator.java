@@ -312,9 +312,9 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         Map<String, String> factsIn = consumer.getFacts();
         Map<String, String> facts = new HashMap<String, String>();
         String factMatch = config.getString(ConfigProperties.CONSUMER_FACTS_MATCHER);
-        List<String> intFacts = config.getStringList(
+        Set<String> intFacts = config.getStringSet(
             ConfigProperties.INTEGER_FACTS);
-        List<String> posFacts = config.getStringList(
+        Set<String> posFacts = config.getStringSet(
             ConfigProperties.NON_NEG_INTEGER_FACTS);
 
         for (Entry<String, String> entry : factsIn.entrySet()) {

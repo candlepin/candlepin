@@ -16,12 +16,12 @@ package org.candlepin.config;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
+import java.util.Set;
 import java.util.TreeMap;
 
 /**
@@ -265,7 +265,7 @@ public class Config {
      * @param s string to get the value of
      * @return the value as an List
      */
-    public List<String> getStringList(String s) {
+    public Set<String> getStringSet(String s) {
         if (s == null) {
             return null;
         }
@@ -274,11 +274,11 @@ public class Config {
         if (value == null) {
             return null;
         }
-        List<String> list = new ArrayList<String>();
+        Set<String> set = new HashSet<String>();
         for (String entry : value.split(",")) {
-            list.add(entry.trim());
+            set.add(entry.trim());
         }
-        return list;
+        return set;
     }
 
     public boolean getBoolean(String s) {
