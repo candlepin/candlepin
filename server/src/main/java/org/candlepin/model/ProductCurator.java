@@ -17,10 +17,13 @@ package org.candlepin.model;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.exceptions.BadRequestException;
+
+import org.apache.commons.lang.StringUtils;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
@@ -120,15 +123,15 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     }
 
     private void validateAttributeValue(ProductAttribute attr) {
-        List<String> intAttrs = config.getStringList(ConfigProperties.INTEGER_ATTRIBUTES);
-        List<String> posIntAttrs = config.getStringList(
+        Set<String> intAttrs = config.getStringSet(ConfigProperties.INTEGER_ATTRIBUTES);
+        Set<String> posIntAttrs = config.getStringSet(
             ConfigProperties.NON_NEG_INTEGER_ATTRIBUTES);
-        List<String> longAttrs = config.getStringList(ConfigProperties.LONG_ATTRIBUTES);
-        List<String> posLongAttrs = config.getStringList(
+        Set<String> longAttrs = config.getStringSet(ConfigProperties.LONG_ATTRIBUTES);
+        Set<String> posLongAttrs = config.getStringSet(
             ConfigProperties.NON_NEG_LONG_ATTRIBUTES);
-        List<String> boolAttrs = config.getStringList(ConfigProperties.BOOLEAN_ATTRIBUTES);
+        Set<String> boolAttrs = config.getStringSet(ConfigProperties.BOOLEAN_ATTRIBUTES);
 
-        if (attr.getValue() == null || attr.getValue().trim().equals("")) { return; }
+        if (StringUtils.isBlank(attr.getValue())) { return; }
 
         if (intAttrs != null && intAttrs.contains(attr.getName()) ||
             posIntAttrs != null && posIntAttrs.contains(attr.getName())) {

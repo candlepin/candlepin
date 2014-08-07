@@ -596,4 +596,24 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         assertFalse(productCurator.productHasSubscriptions(doesNotHave));
     }
 
+    @Test
+    public void testSaveOrUpdateProductNoDuplicateProdContent() {
+        Product p = createTestProduct();
+        Content content = new Content("best-content", "best-content",
+            "best-content", "yum", "us", "here", "here", "test-arch");
+        p.addContent(content);
+        contentCurator.create(content);
+        productCurator.createOrUpdate(p);
+
+        p = createTestProduct();
+        // The content isn't quite the same.  We just care about matching
+        // product ids with content ids
+        content = new Content("best-content", "best-content",
+            "best-content", "yum", "us", "here", "differnet", "test-arch");
+        p.addContent(content);
+        productCurator.createOrUpdate(p);
+
+        Product result = productCurator.find(p.getId());
+        assertEquals(1, result.getProductContent().size());
+    }
 }

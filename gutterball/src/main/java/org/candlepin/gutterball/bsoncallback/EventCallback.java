@@ -16,13 +16,33 @@ package org.candlepin.gutterball.bsoncallback;
 
 import org.candlepin.gutterball.model.Event;
 
+import com.mongodb.util.JSON;
+
+import org.apache.commons.lang.StringUtils;
 import org.bson.BSONObject;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 
 /**
  * EventCallback to create and properly escape the event from json
  */
 public class EventCallback extends DateAndEscapeCallback {
+
+    // Throw anything in here if it should be turned into a date when the value is a long.
+    // It will theoretically be a O(1) check since we're throwing them into a hash.
+    private static final String[] JSON_STRS_ARR = new String[]{"oldEntity", "newEntity"};
+
+    /*
+     * NOTE: we could use a case insensitive set here, but I'm not sure that gains us anything.
+     * TreeMap is already written for us, but lookup time will probably be log(n) rather than 1.
+     * Not that we've got enough elements for it to make any difference...
+     */
+    private static final Set<String> JSONSTRFIELDS = new HashSet<String>(Arrays.asList(JSON_STRS_ARR));
+
+    private DateAndEscapeCallback dateEscapeCb;
 
     public EventCallback() {
         this(true);
@@ -35,5 +55,22 @@ public class EventCallback extends DateAndEscapeCallback {
     @Override
     public BSONObject create() {
         return new Event();
+    }
+
+    @Override
+    public void gotString(String name, String val) {
+        if (!StringUtils.isBlank(val) && JSONSTRFIELDS.contains(name)) {
+            _put(name, JSON.parse(val, getDateEscapeCallback()));
+        }
+        else {
+            super.gotString(name, val);
+        }
+    }
+
+    private DateAndEscapeCallback getDateEscapeCallback() {
+        if (dateEscapeCb == null) {
+            dateEscapeCb = new DateAndEscapeCallback(write);
+        }
+        return dateEscapeCb;
     }
 }

@@ -14,7 +14,6 @@
  */
 package org.candlepin.gutterball.guice;
 
-import org.candlepin.gutterball.curator.EventCurator;
 import org.candlepin.gutterball.eventhandler.EventHandler;
 import org.candlepin.gutterball.eventhandler.EventManager;
 import org.candlepin.gutterball.eventhandler.HandlerTarget;
@@ -54,9 +53,6 @@ public class GutterballModule extends AbstractModule {
         configureEventHandlers();
         bind(EventManager.class).asEagerSingleton();
         bind(EventReceiver.class).asEagerSingleton();
-
-        // Bind curators
-        bind(EventCurator.class);
 
         // Map our report classes so that they can be picked up by the ReportFactory.
         Multibinder<Report> reports = Multibinder.newSetBinder(binder(), Report.class);

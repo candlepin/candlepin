@@ -18,7 +18,11 @@ import java.util.Map;
 
 import org.candlepin.gutterball.curator.EventCurator;
 import org.candlepin.gutterball.model.Event;
+
 import com.google.inject.Inject;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * EventManager takes an event routes it to
@@ -26,6 +30,8 @@ import com.google.inject.Inject;
  * event details specific to that type of event
  */
 public class EventManager {
+
+    private static Logger log = LoggerFactory.getLogger(EventManager.class);
 
     private static final String CREATED = "CREATED";
     private static final String MODIFIED = "MODIFIED";
@@ -51,6 +57,7 @@ public class EventManager {
 
         EventHandler handler = targetHandlers.get(event.getTarget());
         if (handler != null) {
+            log.info("Handling " + event + " with handler: " + handler.getClass().getSimpleName());
             String eventType = event.getType();
             if (MODIFIED.equals(eventType)) {
                 handler.handleUpdated(event);

@@ -135,19 +135,19 @@ public class Event extends BasicDBObject {
     // Transient as we decided we do not necessarily want to store the object
     // state in our Events table. The Event passing through the message queue will
     // still carry them.
-    public String getOldEntity() {
-        return this.getString(OLD_ENTITY);
+    public DBObject getOldEntity() {
+        return (DBObject) this.get(OLD_ENTITY);
     }
 
-    public void setOldEntity(String oldEntity) {
+    public void setOldEntity(DBObject oldEntity) {
         this.put(OLD_ENTITY, oldEntity);
     }
 
-    public String getNewEntity() {
-        return this.getString(NEW_ENTITY);
+    public DBObject getNewEntity() {
+        return (DBObject) this.get(NEW_ENTITY);
     }
 
-    public void setNewEntity(String newEntity) {
+    public void setNewEntity(DBObject newEntity) {
         this.put(NEW_ENTITY, newEntity);
     }
 
