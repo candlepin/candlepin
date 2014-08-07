@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.22
+Version: 0.9.23
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -390,6 +390,16 @@ fi
 
 
 %changelog
+* Thu Aug 07 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.23-1
+- 1126024: 1126026: Contain ProductContent in a list, not a set (ckozak@redhat.com)
+- Require candlepin-common (jesusr@redhat.com)
+- Move ConsumerEventBuilder to more general EventBuilder (ckozak@redhat.com)
+- Rewrite msgfmt task to use native ant commands. (awood@redhat.com)
+- Read version and release using native ant functions. (awood@redhat.com)
+- Removed faulty annotation from Product.derivedProductIds (ckozak@redhat.com)
+- added testing for product content update (ckozak@redhat.com)
+- better attribute validation (ckozak@redhat.com)
+
 * Thu Jul 31 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.22-1
 - 1121674: Persist new entitlements to the database before post-ent (ckozak@redhat.com)
 - Allow running docker container with deployment and shell only. (dgoodwin@redhat.com)
