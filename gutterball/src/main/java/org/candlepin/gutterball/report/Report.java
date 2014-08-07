@@ -57,24 +57,10 @@ public abstract class Report {
     }
 
     /**
-     * @param key the key to set
-     */
-    public void setKey(String key) {
-        this.key = key;
-    }
-
-    /**
      * @return the description
      */
     public String getDescription() {
         return description;
-    }
-
-    /**
-     * @param description the description to set
-     */
-    public void setDescription(String description) {
-        this.description = description;
     }
 
     public List<ReportParameter> getParameters() {
@@ -102,6 +88,7 @@ public abstract class Report {
      * @return a {@link ReportResult} containing the results of the query.
      */
     protected abstract ReportResult execute(MultivaluedMap<String, String> queryParameters);
+
     /**
      * Defines the {@link ReportParameter}s that are used by this report. These
      * parameters are purely informational.
