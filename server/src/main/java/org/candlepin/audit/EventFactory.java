@@ -32,6 +32,7 @@ import com.fasterxml.jackson.databind.AnnotationIntrospector;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.introspect.AnnotationIntrospectorPair;
 import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
+import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.fasterxml.jackson.datatype.hibernate4.Hibernate4Module;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
@@ -69,6 +70,14 @@ public class EventFactory {
             new HateoasBeanPropertyFilter());
         filterProvider = filterProvider.addFilter("OwnerFilter",
             new HateoasBeanPropertyFilter());
+        filterProvider = filterProvider.addFilter("IdentityCertificateFilter",
+            SimpleBeanPropertyFilter.serializeAllExcept("cert", "key"));
+        filterProvider = filterProvider.addFilter("EntitlementCertificateFilter",
+            SimpleBeanPropertyFilter.serializeAllExcept("cert", "key"));
+        filterProvider = filterProvider.addFilter("PoolAttributeFilter",
+            SimpleBeanPropertyFilter.serializeAllExcept("created", "updated", "id"));
+        filterProvider = filterProvider.addFilter("ProductPoolAttributeFilter",
+            SimpleBeanPropertyFilter.serializeAllExcept("created", "updated", "productId", "id"));
         mapper.setFilters(filterProvider);
 
         Hibernate4Module hbm = new Hibernate4Module();
