@@ -53,13 +53,14 @@ public class EventFactoryTest {
         GuestId guestId = mock(GuestId.class);
         Owner owner = mock(Owner.class);
 
+        when(guestId.getConsumer()).thenReturn(consumer);
         when(guestId.getGuestId()).thenReturn("guest-id");
-        when(guestId.getId()).thenReturn(null);
+        when(guestId.getId()).thenReturn("test");
         when(consumer.getOwner()).thenReturn(owner);
         when(consumer.getId()).thenReturn("consumer-id");
         when(owner.getId()).thenReturn("owner-id");
 
-        Event event = eventFactory.guestIdCreated(consumer, guestId);
+        Event event = eventFactory.guestIdCreated(guestId);
         assertNotNull(event.getEntityId());
     }
 

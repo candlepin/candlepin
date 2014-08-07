@@ -47,7 +47,9 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import org.candlepin.jackson.HateoasArrayExclude;
 import org.candlepin.jackson.HateoasInclude;
+import org.candlepin.json.model.ConsumerProperty;
 import org.candlepin.util.Util;
+
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.Formula;
@@ -70,7 +72,7 @@ import com.fasterxml.jackson.annotation.JsonFilter;
 @Entity
 @Table(name = "cp_consumer")
 @JsonFilter("ConsumerFilter")
-public class Consumer extends AbstractHibernateObject implements Linkable, Owned {
+public class Consumer extends AbstractHibernateObject implements Linkable, Owned, Named, ConsumerProperty {
 
     public static final String UEBER_CERT_CONSUMER = "ueber_cert_consumer";
 
@@ -623,5 +625,11 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
             hypervisorId.setConsumer(this);
         }
         this.hypervisorId = hypervisorId;
+    }
+
+    @Override
+    @XmlTransient
+    public Consumer getConsumer() {
+        return this;
     }
 }

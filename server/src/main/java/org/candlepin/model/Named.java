@@ -12,31 +12,16 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.gutterball.eventhandler;
-
-import org.candlepin.gutterball.model.Event;
+package org.candlepin.model;
 
 /**
- * EventHandler interface which provides a structure for
- * handling various types of events
+ * Interface for objects with names
  */
-public interface EventHandler {
+public interface Named {
 
     /**
-     * Handles creation events
-     * @param event Event to store
+     * Gets the name of an object
+     * @return The name of the object
      */
-    void handleCreated(Event event);
-
-    /**
-     * Handles modification events
-     * @param event Event to store
-     */
-    void handleUpdated(Event event);
-
-    /**
-     * Handles deletion events
-     * @param event Event to store
-     */
-    void handleDeleted(Event event);
+    String getName();
 }

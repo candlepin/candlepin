@@ -19,12 +19,15 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.any;
+
 import org.mockito.runners.MockitoJUnitRunner;
 
 import org.candlepin.gutterball.curator.ConsumerCurator;
 import org.candlepin.gutterball.curator.EventCurator;
 import org.candlepin.gutterball.eventhandler.ConsumerHandler;
+import org.candlepin.gutterball.eventhandler.EventHandler;
 import org.candlepin.gutterball.eventhandler.EventManager;
+import org.candlepin.gutterball.eventhandler.HandlerTarget;
 import org.candlepin.gutterball.model.Event;
 
 import com.mongodb.DBObject;
@@ -33,6 +36,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @RunWith(MockitoJUnitRunner.class)
 public class EventManagerTest {
@@ -53,7 +59,9 @@ public class EventManagerTest {
     @Before
     public void before() {
         consumerHandler = new ConsumerHandler(consumerCurator);
-        eventManager = new TestingEventManager(eventCurator);
+        Map<String, EventHandler> handlers = new HashMap<String, EventHandler>();
+        handlers.put(ConsumerHandler.class.getAnnotation(HandlerTarget.class).value(), consumerHandler);
+        eventManager = new TestingEventManager(eventCurator, handlers);
     }
 
     @Test
@@ -76,7 +84,7 @@ public class EventManagerTest {
     @Test
     public void testEventManagerConsumerCreated() {
         Event toHandle = new Event();
-        toHandle.setTarget(ConsumerHandler.TARGET);
+        toHandle.setTarget(ConsumerHandler.class.getAnnotation(HandlerTarget.class).value());
         toHandle.setType("CREATED");
         toHandle.setNewEntity(CONSUMER_JSON);
         eventManager.handle(toHandle);
@@ -87,7 +95,7 @@ public class EventManagerTest {
     @Test
     public void testEventManagerConsumerUpdated() {
         Event toHandle = new Event();
-        toHandle.setTarget(ConsumerHandler.TARGET);
+        toHandle.setTarget(ConsumerHandler.class.getAnnotation(HandlerTarget.class).value());
         toHandle.setType("MODIFIED");
         toHandle.setNewEntity(CONSUMER_JSON);
         eventManager.handle(toHandle);
@@ -98,7 +106,7 @@ public class EventManagerTest {
     @Test
     public void testEventManagerConsumerUnknownType() {
         Event toHandle = new Event();
-        toHandle.setTarget(ConsumerHandler.TARGET);
+        toHandle.setTarget(ConsumerHandler.class.getAnnotation(HandlerTarget.class).value());
         toHandle.setType("DUNNO");
         toHandle.setNewEntity(CONSUMER_JSON);
         eventManager.handle(toHandle);
@@ -112,13 +120,8 @@ public class EventManagerTest {
     // We aren't testing the DB, so we want to avoid the curators
     private class TestingEventManager extends EventManager {
 
-        public TestingEventManager(EventCurator eventCurator) {
-            super(null, eventCurator);
-        }
-
-        @Override
-        protected void loadEventHandlers() {
-            this.targetHandler.put(ConsumerHandler.TARGET, consumerHandler);
+        public TestingEventManager(EventCurator eventCurator, Map<String, EventHandler> handlers) {
+            super(eventCurator, handlers);
         }
     }
 }

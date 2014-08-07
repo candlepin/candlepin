@@ -12,31 +12,18 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.gutterball.eventhandler;
+package org.candlepin.json.model;
 
-import org.candlepin.gutterball.model.Event;
+import org.candlepin.model.Consumer;
 
 /**
- * EventHandler interface which provides a structure for
- * handling various types of events
+ * Interface for Objects with a consumer
  */
-public interface EventHandler {
+public interface ConsumerProperty {
 
     /**
-     * Handles creation events
-     * @param event Event to store
+     * Gets the objects consumer
+     * @return Consumer The objects consumer
      */
-    void handleCreated(Event event);
-
-    /**
-     * Handles modification events
-     * @param event Event to store
-     */
-    void handleUpdated(Event event);
-
-    /**
-     * Handles deletion events
-     * @param event Event to store
-     */
-    void handleDeleted(Event event);
+    Consumer getConsumer();
 }

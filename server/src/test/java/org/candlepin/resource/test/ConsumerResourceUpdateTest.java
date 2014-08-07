@@ -34,10 +34,12 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
 
-import org.candlepin.audit.ConsumerEventBuilder;
+import org.candlepin.audit.EventBuilder;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
+import org.candlepin.audit.Event.Target;
+import org.candlepin.audit.Event.Type;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.PoolManager;
@@ -93,7 +95,7 @@ public class ConsumerResourceUpdateTest {
     @Mock private DeletedConsumerCurator deletedConsumerCurator;
     @Mock private EnvironmentCurator environmentCurator;
     @Mock private ServiceLevelValidator serviceLevelValidator;
-    @Mock private ConsumerEventBuilder consumerEventBuilder;
+    @Mock private EventBuilder consumerEventBuilder;
 
     private I18n i18n;
 
@@ -118,9 +120,12 @@ public class ConsumerResourceUpdateTest {
         when(idCertService.regenerateIdentityCert(any(Consumer.class)))
             .thenReturn(new IdentityCertificate());
 
-        when(consumerEventBuilder.setNewConsumer(any(Consumer.class))).thenReturn(consumerEventBuilder);
-        when(consumerEventBuilder.setOldConsumer(any(Consumer.class))).thenReturn(consumerEventBuilder);
-        when(eventFactory.getConsumerModifiedEventBuilder()).thenReturn(consumerEventBuilder);
+        when(consumerEventBuilder.setNewEntity(any(Consumer.class)))
+            .thenReturn(consumerEventBuilder);
+        when(consumerEventBuilder.setOldEntity(any(Consumer.class)))
+            .thenReturn(consumerEventBuilder);
+        when(eventFactory.getEventBuilder(any(Target.class), any(Type.class)))
+            .thenReturn(consumerEventBuilder);
     }
 
     @Test
@@ -344,7 +349,7 @@ public class ConsumerResourceUpdateTest {
         Consumer updated = createConsumerWithGuests("Guest 1");
 
         Event expectedEvent = new Event();
-        when(this.eventFactory.guestIdCreated(existing, updated.getGuestIds().get(0)))
+        when(this.eventFactory.guestIdCreated(updated.getGuestIds().get(0)))
             .thenReturn(expectedEvent);
 
         this.resource.updateConsumer(existing.getUuid(), updated);
@@ -363,7 +368,7 @@ public class ConsumerResourceUpdateTest {
         Consumer updated = createConsumerWithGuests("Guest 2");
 
         Event expectedEvent = new Event();
-        when(this.eventFactory.guestIdDeleted(existing, existing.getGuestIds().get(0)))
+        when(this.eventFactory.guestIdDeleted(existing.getGuestIds().get(0)))
             .thenReturn(expectedEvent);
 
         this.resource.updateConsumer(existing.getUuid(), updated);

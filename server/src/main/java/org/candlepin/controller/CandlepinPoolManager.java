@@ -15,9 +15,13 @@
 package org.candlepin.controller;
 
 import org.apache.commons.lang.StringUtils;
+
 import org.candlepin.audit.Event;
+import org.candlepin.audit.EventBuilder;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
+import org.candlepin.audit.Event.Target;
+import org.candlepin.audit.Event.Type;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Consumer;
@@ -298,10 +302,12 @@ public class CandlepinPoolManager implements PoolManager {
         if (existingPools == null || existingPools.isEmpty()) {
             return new HashSet<Entitlement>();
         }
-        Map<String, Event> poolEvents = new HashMap<String, Event>();
+        Map<String, EventBuilder> poolEvents = new HashMap<String, EventBuilder>();
         for (Pool existing : existingPools) {
-            Event e = eventFactory.poolChangedFrom(existing);
-            poolEvents.put(existing.getId(), e);
+            EventBuilder eventBuilder = eventFactory
+                    .getEventBuilder(Target.POOL, Type.MODIFIED)
+                    .setOldEntity(existing);
+            poolEvents.put(existing.getId(), eventBuilder);
         }
 
         // Hand off to rules to determine which pools need updating:
@@ -329,7 +335,7 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     private Set<Entitlement> processPoolUpdates(
-        Map<String, Event> poolEvents, List<PoolUpdate> updatedPools) {
+        Map<String, EventBuilder> poolEvents, List<PoolUpdate> updatedPools) {
         Set<Entitlement> entitlementsToRegen = Util.newSet();
         for (PoolUpdate updatedPool : updatedPools) {
 
@@ -360,9 +366,10 @@ public class CandlepinPoolManager implements PoolManager {
             // save changes for the pool
             this.poolCurator.merge(existingPool);
 
-            eventFactory.poolChangedTo(poolEvents.get(existingPool.getId()),
-                existingPool);
-            sink.sendEvent(poolEvents.get(existingPool.getId()));
+            Event event = poolEvents.get(existingPool.getId())
+                    .setNewEntity(existingPool)
+                    .buildEvent();
+            sink.sendEvent(event);
         }
 
         return entitlementsToRegen;
@@ -380,10 +387,11 @@ public class CandlepinPoolManager implements PoolManager {
          * send out the events. Create an event for each pool that could change,
          * even if we won't use them all.
          */
-        Map<String, Event> poolEvents = new HashMap<String, Event>();
+        Map<String, EventBuilder> poolEvents = new HashMap<String, EventBuilder>();
         for (Pool existing : floatingPools) {
-            Event e = eventFactory.poolChangedFrom(existing);
-            poolEvents.put(existing.getId(), e);
+            EventBuilder eventBuilder = eventFactory.getEventBuilder(Target.POOL, Type.MODIFIED)
+                    .setOldEntity(existing);
+            poolEvents.put(existing.getId(), eventBuilder);
         }
 
         // Hand off to rules to determine which pools need updating:
