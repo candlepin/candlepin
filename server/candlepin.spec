@@ -48,6 +48,7 @@ BuildRequires: java-devel >= 0:1.6.0
 BuildRequires: ant >= 0:1.7.0
 BuildRequires: gettext
 BuildRequires: selinux-policy-doc
+BuildRequires: candlepin-common
 
 %if 0%{?reqcpdeps}
 %global distlibdir %{_datadir}/%{name}/lib/
@@ -135,6 +136,7 @@ Requires: java >= 0:1.6.0
 Requires: wget
 Requires: liquibase >= 0:2.0.5
 Requires: postgresql-jdbc
+Requires: candlepin-common
 
 # specific requires
 # if not using cpdeps, we'll need real requires
