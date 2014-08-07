@@ -15,13 +15,12 @@
 
 package org.candlepin.gutterball.report;
 
-import java.util.ArrayList;
+import com.google.inject.Inject;
+
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import com.google.inject.Inject;
 
 /**
  * A factory responsible for mapping a report by report key. All guice bound reports
@@ -42,8 +41,8 @@ public class ReportFactory {
         }
     }
 
-    public List<Report> getReports() {
-        return new ArrayList<Report>(this.reports.values());
+    public Collection<Report> getReports() {
+        return this.reports.values();
     }
 
     public Report getReport(String key) {

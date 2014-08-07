@@ -21,7 +21,7 @@ import org.candlepin.gutterball.report.ReportResult;
 
 import com.google.inject.Inject;
 
-import java.util.List;
+import java.util.Collection;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -48,7 +48,7 @@ public class ReportsResource {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Report> getReports() {
+    public Collection<Report> getReports() {
         return this.reportFactory.getReports();
     }
 

@@ -16,8 +16,11 @@
 package org.candlepin.gutterball.resource;
 
 import static org.candlepin.gutterball.TestUtils.mockReport;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.gutterball.report.Report;
 import org.candlepin.gutterball.report.ReportFactory;
@@ -28,8 +31,8 @@ import org.jukito.JukitoRunner;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -46,7 +49,7 @@ public class ReportsResourceTest {
 
     @Test
     public void testGetReports() {
-        List<Report> reports = reportsResource.getReports();
+        Collection<Report> reports = reportsResource.getReports();
         assertEquals(2, reports.size());
     }
 

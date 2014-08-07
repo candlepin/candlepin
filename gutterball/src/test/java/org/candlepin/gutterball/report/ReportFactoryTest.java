@@ -24,8 +24,8 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 
 public class ReportFactoryTest {
 
@@ -55,7 +55,7 @@ public class ReportFactoryTest {
 
     @Test
     public void ensureAll() {
-        List<Report> all = factory.getReports();
+        Collection<Report> all = factory.getReports();
         assertEquals(2, all.size());
         assertTrue(reports.containsAll(all));
     }
