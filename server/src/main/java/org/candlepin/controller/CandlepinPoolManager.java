@@ -585,7 +585,7 @@ public class CandlepinPoolManager implements PoolManager {
         }
         List<Pool> filteredPools = new LinkedList<Pool>();
 
-        ComplianceStatus guestCompliance = complianceRules.getStatus(guest, entitleDate);
+        ComplianceStatus guestCompliance = complianceRules.getStatus(guest, entitleDate, false);
         Set<String> tmpSet = new HashSet<String>();
         //we only want to heal red products, not yellow
         tmpSet.addAll(guestCompliance.getNonCompliantProducts());
@@ -650,7 +650,7 @@ public class CandlepinPoolManager implements PoolManager {
         if (filteredPools.size() == 0 && failedResult != null) {
             throw new EntitlementRefusedException(failedResult);
         }
-        ComplianceStatus hostCompliance = complianceRules.getStatus(host, entitleDate);
+        ComplianceStatus hostCompliance = complianceRules.getStatus(host, entitleDate, false);
 
         List<PoolQuantity> enforced = autobindRules.selectBestPools(host,
             productIds, filteredPools, hostCompliance, serviceLevelOverride,
@@ -679,7 +679,7 @@ public class CandlepinPoolManager implements PoolManager {
         // We have to check compliance status here so we can replace an empty
         // array of product IDs with the array the consumer actually needs. (i.e. during
         // a healing request)
-        ComplianceStatus compliance = complianceRules.getStatus(consumer, entitleDate);
+        ComplianceStatus compliance = complianceRules.getStatus(consumer, entitleDate, false);
         if (productIds == null || productIds.length == 0) {
             log.debug("No products specified for bind, checking compliance to see what " +
                 "is needed.");
@@ -828,7 +828,8 @@ public class CandlepinPoolManager implements PoolManager {
         handler.handlePostEntitlement(consumer, poolHelper, entitlement);
 
         // Check consumer's new compliance status and save:
-        complianceRules.getStatus(consumer);
+        complianceRules.getStatus(consumer, null, false, false);
+        consumerCurator.update(consumer);
 
         handler.handleSelfCertificate(consumer, pool, entitlement, generateUeberCert);
         for (Entitlement regenEnt : entitlementCurator.listModifying(entitlement)) {

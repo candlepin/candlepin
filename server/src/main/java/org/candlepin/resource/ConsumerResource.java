@@ -504,8 +504,10 @@ public class ConsumerResource {
 
             handleActivationKeys(consumer, keys);
 
-            // This should update the consumers entitlementStatus
-            complianceRules.getStatus(consumer);
+            // Don't allow complianceRules to update entitlementStatus, because we're about to perform
+            // an update unconditionally.
+            complianceRules.getStatus(consumer, null, false, false);
+            consumerCurator.update(consumer);
 
             log.info("Consumer " + consumer.getUuid() + " created in org " +
                 consumer.getOwner().getKey());

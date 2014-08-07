@@ -146,7 +146,8 @@ public class ConsumerResourceCreationTest {
         when(idCertService.generateIdentityCert(any(Consumer.class)))
                 .thenReturn(new IdentityCertificate());
         when(ownerCurator.lookupByKey(owner.getKey())).thenReturn(owner);
-        when(complianceRules.getStatus(any(Consumer.class), any(Date.class)))
+        when(complianceRules.getStatus(any(Consumer.class),
+                any(Date.class), any(Boolean.class), any(Boolean.class)))
                 .thenReturn(new ComplianceStatus(new Date()));
     }
 
@@ -387,6 +388,8 @@ public class ConsumerResourceCreationTest {
         consumer.setType(system);
         consumer.setName("consumername");
         resource.create(consumer, p, USER, owner.getKey(), null);
-        verify(complianceRules).getStatus(eq(consumer));
+        // Should be called with the consumer, null date (now),
+        // no compliantUntil, and not update the consumer record
+        verify(complianceRules).getStatus(eq(consumer), eq((Date) null), eq(false), eq(false));
     }
 }

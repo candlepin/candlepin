@@ -48,7 +48,7 @@ import java.util.Set;
  * EventFactory
  */
 public class EventFactory {
-    private static Logger logger = LoggerFactory.getLogger(EventFactory.class);
+    private static Logger log = LoggerFactory.getLogger(EventFactory.class);
 
     protected final PrincipalProvider principalProvider;
     private final ObjectMapper mapper;
@@ -259,8 +259,8 @@ public class EventFactory {
             newEntityJson = mapper.writeValueAsString(entity);
         }
         catch (Exception e) {
-            logger.warn("Unable to jsonify: " + entity);
-            logger.error("jsonification failed!", e);
+            log.warn("Unable to jsonify: " + entity);
+            log.error("jsonification failed!", e);
         }
         return newEntityJson;
     }

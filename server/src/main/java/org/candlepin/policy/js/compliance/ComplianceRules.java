@@ -130,10 +130,12 @@ public class ComplianceRules {
                 generator.setMessage(c, reason, result.getDate());
             }
             if (currentCompliance) {
-                c.setEntitlementStatus(result.getStatus());
-                // Merge might work better here, but we use update in other places for this
-                if (updateConsumer) {
-                    consumerCurator.update(c);
+                if (!result.getStatus().equals(c.getEntitlementStatus())) {
+                    c.setEntitlementStatus(result.getStatus());
+                    // Merge might work better here, but we use update in other places for this
+                    if (updateConsumer) {
+                        consumerCurator.update(c);
+                    }
                 }
                 eventSink.emitCompliance(c, c.getEntitlements(), result);
             }

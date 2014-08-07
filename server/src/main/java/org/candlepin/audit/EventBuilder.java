@@ -32,14 +32,14 @@ import org.candlepin.model.Pool;
  */
 public class EventBuilder {
 
-    private final EventFactory eventFactory;
+    private final EventFactory factory;
 
     private Event event;
 
-    public EventBuilder(EventFactory eventFactory, Target target, Type type) {
-        this.eventFactory = eventFactory;
+    public EventBuilder(EventFactory factory, Target target, Type type) {
+        this.factory = factory;
 
-        event = new Event(type, target, null, eventFactory.principalProvider.get(),
+        event = new Event(type, target, null, factory.principalProvider.get(),
                 null, null, null, null, null, null, null);
     }
 
@@ -80,7 +80,7 @@ public class EventBuilder {
                 throw new IllegalArgumentException("You cannot set the old entity for a creation event");
             }
             setEventData(old);
-            event.setOldEntity(eventFactory.entityToJson(old));
+            event.setOldEntity(factory.entityToJson(old));
         }
         return this;
     }
@@ -91,7 +91,7 @@ public class EventBuilder {
                 throw new IllegalArgumentException("You cannot set the new entity for a deletion event");
             }
             setEventData(updated);
-            event.setNewEntity(eventFactory.entityToJson(updated));
+            event.setNewEntity(factory.entityToJson(updated));
         }
         return this;
     }

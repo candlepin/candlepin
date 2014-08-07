@@ -708,7 +708,7 @@ public class PoolManagerTest {
         ComplianceStatus mockCompliance = new ComplianceStatus(now);
         mockCompliance.addNonCompliantProduct(installedPids[0]);
         when(complianceRules.getStatus(any(Consumer.class),
-            any(Date.class))).thenReturn(mockCompliance);
+            any(Date.class), any(Boolean.class))).thenReturn(mockCompliance);
 
 
         Page page = mock(Page.class);
