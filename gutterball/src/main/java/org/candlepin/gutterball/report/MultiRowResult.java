@@ -15,7 +15,7 @@
 
 package org.candlepin.gutterball.report;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -27,7 +27,7 @@ public class MultiRowResult<R> implements ReportResult {
     private List<R> results;
 
     public MultiRowResult() {
-        this.results = new ArrayList<R>();
+        this.results = new LinkedList<R>();
     }
 
     public void addRow(R resultRow) {
