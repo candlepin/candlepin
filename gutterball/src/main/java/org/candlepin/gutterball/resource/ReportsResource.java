@@ -65,6 +65,11 @@ public class ReportsResource {
     public ReportResult run(@Context UriInfo uriInfo,
         @PathParam("report_key") String reportKey) {
         Report r = this.reportFactory.getReport(reportKey);
+        if (r == null) {
+            // TODO: Throw an appropriate exception once they are moved
+            //       into candlepin-common.
+            throw new RuntimeException("Report " + reportKey + " not found.");
+        }
         return r.run(uriInfo.getQueryParameters());
     }
 

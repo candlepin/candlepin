@@ -15,12 +15,11 @@
 
 package org.candlepin.gutterball.report;
 
+import static org.candlepin.gutterball.TestUtils.mockReport;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -59,13 +58,6 @@ public class ReportFactoryTest {
         List<Report> all = factory.getReports();
         assertEquals(2, all.size());
         assertTrue(reports.containsAll(all));
-    }
-
-    private Report mockReport(String key, String desc) {
-        Report r = mock(Report.class);
-        when(r.getKey()).thenReturn(key);
-        when(r.getDescription()).thenReturn(desc);
-        return r;
     }
 
 }

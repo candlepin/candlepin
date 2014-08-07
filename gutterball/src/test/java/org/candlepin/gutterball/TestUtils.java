@@ -15,11 +15,16 @@
 
 package org.candlepin.gutterball;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import java.util.Date;
 import java.util.Random;
 
 import org.apache.commons.lang.RandomStringUtils;
+
 import org.candlepin.gutterball.model.Event;
+import org.candlepin.gutterball.report.Report;
 
 public class TestUtils {
 
@@ -46,4 +51,10 @@ public class TestUtils {
         return e;
     }
 
+    public static Report mockReport(String key, String desc) {
+        Report r = mock(Report.class);
+        when(r.getKey()).thenReturn(key);
+        when(r.getDescription()).thenReturn(desc);
+        return r;
+    }
 }
