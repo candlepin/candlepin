@@ -26,7 +26,8 @@ public class DateAndEscapeCallback extends BsonEscapeCallback {
     // Throw anything in here if it should be turned into a date when the value is a long.
     // It will theoretically be a O(1) check since we're throwing them into a hash.
     private static final String[] DATEFIELDS_ARR = new String[]{"timestamp", "created",
-        "updated", "modified", "deleted", "date", "datetime", "expiration", "lastCheckin"};
+        "updated", "modified", "deleted", "date", "datetime", "expiration", "lastCheckin",
+        "startDate", "endDate"};
 
     /*
      * NOTE: we could use a case insensitive set here, but I'm not sure that gains us anything.
