@@ -18,6 +18,7 @@ import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.jackson.HateoasBeanPropertyFilter;
+import org.candlepin.jackson.PoolEventFilter;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.GuestId;
@@ -63,7 +64,7 @@ public class EventFactory {
         SimpleFilterProvider filterProvider = new SimpleFilterProvider();
         filterProvider.setFailOnUnknownId(false);
         filterProvider = filterProvider.addFilter("PoolFilter",
-            new HateoasBeanPropertyFilter());
+            new PoolEventFilter());
         filterProvider = filterProvider.addFilter("ConsumerFilter",
             new HateoasBeanPropertyFilter());
         filterProvider = filterProvider.addFilter("EntitlementFilter",
