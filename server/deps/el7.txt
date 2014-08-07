@@ -7,6 +7,7 @@ apache-mime4j
 atinject
 bcprov-jdk16
 c3p0
+candlepin-common
 candlepin-guice // This will pull in all the jars under candlepin-guice
 cglib
 commons-codec-eap6/commons-codec
