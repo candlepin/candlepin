@@ -16,6 +16,7 @@ package org.candlepin.policy.js;
 
 import org.candlepin.exceptions.IseException;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.AnnotationIntrospector;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -136,5 +137,9 @@ public class RulesObjectMapper {
             log.error(json);
             throw new IseException("Unable to build object from JSON.", e);
         }
+    }
+
+    public String toJsonString(Object entity) throws JsonProcessingException {
+        return mapper.writeValueAsString(entity);
     }
 }

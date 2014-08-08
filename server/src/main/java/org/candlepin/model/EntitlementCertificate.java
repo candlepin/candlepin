@@ -14,6 +14,8 @@
  */
 package org.candlepin.model;
 
+import com.fasterxml.jackson.annotation.JsonFilter;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -39,7 +41,7 @@ import org.hibernate.annotations.Index;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_ent_certificate")
-
+@JsonFilter("EntitlementCertificateFilter")
 public class EntitlementCertificate extends AbstractCertificate {
     @Id
     @GeneratedValue(generator = "system-uuid")

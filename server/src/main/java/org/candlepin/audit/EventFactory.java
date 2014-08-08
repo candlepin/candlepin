@@ -18,6 +18,7 @@ import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.jackson.HateoasBeanPropertyFilter;
+import org.candlepin.jackson.PoolEventFilter;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.GuestId;
@@ -26,20 +27,29 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Rules;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.activationkeys.ActivationKey;
+import org.candlepin.policy.js.compliance.ComplianceStatus;
 
 import com.fasterxml.jackson.databind.AnnotationIntrospector;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.introspect.AnnotationIntrospectorPair;
 import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
+import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.fasterxml.jackson.datatype.hibernate4.Hibernate4Module;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 import com.google.inject.Inject;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Set;
+
 /**
  * EventFactory
  */
 public class EventFactory {
+    private static Logger log = LoggerFactory.getLogger(EventFactory.class);
+
     protected final PrincipalProvider principalProvider;
     private final ObjectMapper mapper;
 
@@ -54,13 +64,21 @@ public class EventFactory {
         SimpleFilterProvider filterProvider = new SimpleFilterProvider();
         filterProvider.setFailOnUnknownId(false);
         filterProvider = filterProvider.addFilter("PoolFilter",
-            new HateoasBeanPropertyFilter());
+            new PoolEventFilter());
         filterProvider = filterProvider.addFilter("ConsumerFilter",
             new HateoasBeanPropertyFilter());
         filterProvider = filterProvider.addFilter("EntitlementFilter",
             new HateoasBeanPropertyFilter());
         filterProvider = filterProvider.addFilter("OwnerFilter",
             new HateoasBeanPropertyFilter());
+        filterProvider = filterProvider.addFilter("IdentityCertificateFilter",
+            SimpleBeanPropertyFilter.serializeAllExcept("cert", "key"));
+        filterProvider = filterProvider.addFilter("EntitlementCertificateFilter",
+            SimpleBeanPropertyFilter.serializeAllExcept("cert", "key"));
+        filterProvider = filterProvider.addFilter("PoolAttributeFilter",
+            SimpleBeanPropertyFilter.serializeAllExcept("created", "updated", "id"));
+        filterProvider = filterProvider.addFilter("ProductPoolAttributeFilter",
+            SimpleBeanPropertyFilter.serializeAllExcept("created", "updated", "productId", "id"));
         mapper.setFilters(filterProvider);
 
         Hibernate4Module hbm = new Hibernate4Module();
@@ -76,7 +94,7 @@ public class EventFactory {
     }
 
     public EventBuilder getEventBuilder(Target target, Type type) {
-        return new EventBuilder(principalProvider, mapper, target, type);
+        return new EventBuilder(this, target, type);
     }
 
     public Event consumerCreated(Consumer newConsumer) {
@@ -205,5 +223,45 @@ public class EventFactory {
         return getEventBuilder(Target.GUESTID, Type.DELETED)
                 .setOldEntity(guestId)
                 .buildEvent();
+    }
+
+    public Event complianceCreated(Consumer consumer,
+            Set<Entitlement> entitlements, ComplianceStatus compliance) {
+        return new Event(Event.Type.CREATED, Event.Target.COMPLIANCE,
+                consumer.getName(), principalProvider.get(),
+                consumer.getOwner().getId(), consumer.getId(),
+                consumer.getId(), null, buildComplianceDataJson(
+                        consumer, entitlements, compliance), null, null);
+    }
+
+    // Jackson should think all 3 are root entities so hateoas doesn't bite us
+    protected String buildComplianceDataJson(Consumer consumer,
+            Set<Entitlement> entitlements, ComplianceStatus status) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("{\"consumer\": ");
+        sb.append(entityToJson(consumer));
+        sb.append(", \"entitlements\": ");
+        sb.append(entityToJson(entitlements));
+        sb.append(", \"status\": ");
+        sb.append(entityToJson(status));
+        sb.append("}");
+        return sb.toString();
+    }
+
+    protected String entityToJson(Object entity) {
+        String newEntityJson = "";
+        // TODO: Throw an auditing exception here
+
+        // Drop data on consumer we do not want serialized, Jackson doesn't
+        // seem to care about XmlTransient annotations when used here:
+
+        try {
+            newEntityJson = mapper.writeValueAsString(entity);
+        }
+        catch (Exception e) {
+            log.warn("Unable to jsonify: " + entity);
+            log.error("jsonification failed!", e);
+        }
+        return newEntityJson;
     }
 }
