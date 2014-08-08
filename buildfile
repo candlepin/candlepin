@@ -385,17 +385,14 @@ define "candlepin" do
     end
 
     desc 'Crawl the REST API and print a summary.'
-    task :apicrawl  do
+    task :apicrawl => :compile do
       options.test = 'no'
 
       # Join compile classpath with the package jar.
-      cp = [path_to(:src, :main, :resources)] | [project.package(:jar)] | compile_classpath
-      Java::Commands.java('org.candlepin.util.apicrawl.ApiCrawler', :classpath => cp)
-
-      classes = artifacts(cp).collect do |a|
-        task(a.to_s).invoke
-        File.expand_path a.to_s
-      end
+      cp = [compile.dependencies, compile.target].flatten.uniq
+      Java::Commands.java('org.candlepin.util.apicrawl.ApiCrawler',
+                          path_to(:target, 'candlepin_api.json'),
+                          :classpath => cp)
 
       # Just run the doclet on the *Resource files
       sources = project.compile.sources.collect do |dir|
@@ -403,11 +400,13 @@ define "candlepin" do
       end.flatten
 
       # Add in the options as the last arg
-      sources << {:name => 'Candlepin API',
-                  :classpath => classes,
-                  :doclet => 'org.candlepin.util.apicrawl.ApiDoclet',
-                  :docletpath => [path_to(:target, :classes), classes].flatten.join(File::PATH_SEPARATOR),
-                  :output => path_to(:target)}
+      sources << {
+        :name => 'Candlepin API',
+        :classpath => cp,
+        :doclet => 'org.candlepin.util.apicrawl.ApiDoclet',
+        :docletpath => [path_to(:target, :classes), cp].flatten.map(&:to_s).join(File::PATH_SEPARATOR),
+        :output => path_to(:target)
+      }
 
       Java::Commands.javadoc(*sources)
 

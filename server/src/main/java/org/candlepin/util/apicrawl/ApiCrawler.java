@@ -52,7 +52,6 @@ public class ApiCrawler {
     private ObjectMapper mapper = new JsonProvider(new Config())
             .locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
     private List<Class> httpClasses;
-    private static final String API_FILE = "target/candlepin_api.json";
     private NonRecursiveModule dontRecurse;
 
     public ApiCrawler() {
@@ -78,7 +77,7 @@ public class ApiCrawler {
         mapper.registerModule(dontRecurse);
     }
 
-    public void run() throws IOException {
+    public void run(String apiFile) throws IOException {
         List<RestApiCall> allApiCalls = new LinkedList<RestApiCall>();
         for (Object o : RootResource.RESOURCE_CLASSES.keySet()) {
             if (o instanceof Class) {
@@ -91,7 +90,7 @@ public class ApiCrawler {
         // schema hack module installed.
         ObjectMapper mapper = new JsonProvider(new Config())
             .locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
-        FileWriter jsonFile = new FileWriter(API_FILE);
+        FileWriter jsonFile = new FileWriter(apiFile);
         try {
             mapper.writeValue(jsonFile, allApiCalls);
         }
@@ -291,6 +290,9 @@ public class ApiCrawler {
 
     public static void main(String [] args) throws Exception {
         ApiCrawler crawler = new ApiCrawler();
-        crawler.run();
+        if (args.length != 1) {
+            throw new IllegalArgumentException("Must provide file name to write to");
+        }
+        crawler.run(args[0]);
     }
 }
