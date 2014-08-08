@@ -4,10 +4,6 @@ module PomTask
   class Config
     attr_accessor :artifact
 
-    def dependencies
-      Buildr.transitive('com.tobedevoured.naether:core:jar:0.13.5')
-    end
-
     def enabled?
       !artifact.nil?
     end
@@ -71,7 +67,6 @@ module PomTask
       desc 'Generate a POM file'
       Project.local_task('pom')
     end
-
 
     after_define do |project|
       pom = project.pom
