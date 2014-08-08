@@ -39,56 +39,40 @@ public class ConsumerStatusReport extends Report {
                 i18nProvider.get().tr("List the status of all consumers"));
     }
 
-    /* (non-Javadoc)
-     * @see org.candlepin.gutterball.Report#validateParameters()
-     */
-    @Override
-    protected void validateParameters(MultivaluedMap<String, String> params)
-        throws ParameterValidationException {
-        if (params.containsKey("hours")) {
-
-            if (params.containsKey("start_date") || params.containsKey("end_date")) {
-                throw new ParameterValidationException("hours",
-                        i18n.tr("Can not be used with {0} or {1} parameters", "start_date", "end_date"));
-            }
-
-            String hours = params.getFirst("hours");
-            try {
-                Integer.parseInt(hours);
-            }
-            catch (NumberFormatException nfe) {
-                throw new ParameterValidationException("hours",
-                        i18n.tr("Parameter must be an Integer value"));
-            }
-        }
-
-        if (params.containsKey("start_date") && !params.containsKey("end_date")) {
-            throw new ParameterValidationException("end_date",
-                    i18n.tr("Missing required parameter. Must be used with {0}",
-                            "start_date"));
-        }
-
-        if (params.containsKey("end_date") && !params.containsKey("start_date")) {
-            throw new ParameterValidationException("start_date",
-                    i18n.tr("Missing required parameter. Must be used with {0}",
-                            "end_date"));
-        }
-    }
-
     @Override
     protected void initParameters() {
-        addParameter("owner", i18n.tr("The Owner key(s) to filter on."), false, true);
-        addParameter("status", i18n.tr("The subscription status to filter on."),
-                false, true);
-        addParameter("hours",
-                i18n.tr("The number of hours to filter on (used indepent of date range)."),
-                false, false);
-        addParameter("start_date",
-                i18n.tr("The start date to filter on (used with {0}).", "end_date"),
-                false, false);
-        addParameter("end_date",
-                i18n.tr("The end date to filter on (used with {0})", "end_date"),
-                false, false);
+        ReportParameterBuilder builder = new ReportParameterBuilder(i18n);
+
+        addParameter(
+            builder.init("hours", i18n.tr("The number of hours to filter on (used indepent of date range)."))
+                   .mustBeInteger()
+                   .mustNotHave("start_date", "end_date")
+                   .getParameter()
+        );
+
+        addParameter(
+            builder.init("owner", i18n.tr("The Owner key(s) to filter on."))
+                .multiValued()
+                .getParameter());
+
+        addParameter(
+            builder.init("status", i18n.tr("The subscription status to filter on."))
+                .multiValued()
+                .getParameter()
+        );
+
+        addParameter(
+            builder.init("start_date", i18n.tr("The start date to filter on (used with {0}).", "end_date"))
+                .mustNotHave("hours")
+                .mustHave("end_date")
+                .getParameter()
+        );
+        addParameter(
+            builder.init("end_date", i18n.tr("The end date to filter on (used with {0})", "start_date"))
+                .mustNotHave("hours")
+                .mustHave("start_date")
+                .getParameter()
+        );
     }
 
     @Override

@@ -20,9 +20,7 @@ import org.candlepin.gutterball.guice.I18nProvider;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.ws.rs.core.MultivaluedMap;
 
@@ -35,7 +33,7 @@ public abstract class Report {
     protected I18n i18n;
     protected String key;
     protected String description;
-    protected Map<String, ReportParameter> parameters;
+    protected List<ReportParameter> parameters;
 
     /**
      * @param key
@@ -45,7 +43,7 @@ public abstract class Report {
         this.i18n = i18nProvider.get();
         this.key = key;
         this.description = description;
-        this.parameters = new HashMap<String, ReportParameter>();
+        this.parameters = new ArrayList<ReportParameter>();
         this.initParameters();
     }
 
@@ -64,7 +62,7 @@ public abstract class Report {
     }
 
     public List<ReportParameter> getParameters() {
-        return new ArrayList<ReportParameter>(this.parameters.values());
+        return this.parameters;
     }
 
     public ReportResult run(MultivaluedMap<String, String> queryParameters) {
@@ -77,8 +75,12 @@ public abstract class Report {
      *
      * @param params the query parameters that were passed from the rest api call.
      */
-    protected abstract void validateParameters(MultivaluedMap<String, String> params)
-        throws ParameterValidationException;
+    protected void validateParameters(MultivaluedMap<String, String> params)
+        throws ParameterValidationException {
+        for (ReportParameter reportParam : this.getParameters()) {
+            reportParam.validate(params);
+        }
+    }
 
     /**
      * Runs this report with the provided query parameters. All parameters will
@@ -95,9 +97,7 @@ public abstract class Report {
      */
     protected abstract void initParameters();
 
-    protected void addParameter(String name, String desc, boolean mandatory,
-            boolean multiValued) {
-        ReportParameter param = new ReportParameter(name, desc, mandatory, multiValued);
-        this.parameters.put(param.getName(), param);
+    protected void addParameter(ReportParameter param) {
+        this.parameters.add(param);
     }
 }

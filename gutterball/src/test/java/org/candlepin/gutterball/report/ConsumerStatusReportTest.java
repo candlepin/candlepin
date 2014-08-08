@@ -27,6 +27,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.MultivaluedMap;
@@ -49,9 +52,10 @@ public class ConsumerStatusReportTest {
     public void startDateCanNotBeUsedWithHoursParam() {
         MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
         when(params.containsKey("hours")).thenReturn(true);
+        when(params.get("hours")).thenReturn(new ArrayList<String>());
         when(params.containsKey("start_date")).thenReturn(true);
 
-        validateParams(params, "hours", "Can not be used with start_date or end_date parameters");
+        validateParams(params, "hours", "Can not be used with start_date parameter.");
 
     }
 
@@ -59,16 +63,17 @@ public class ConsumerStatusReportTest {
     public void endDateCanNotBeUsedWithHoursParam() {
         MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
         when(params.containsKey("hours")).thenReturn(true);
+        when(params.get("hours")).thenReturn(new ArrayList<String>());
         when(params.containsKey("end_date")).thenReturn(true);
 
-        validateParams(params, "hours", "Can not be used with start_date or end_date parameters");
+        validateParams(params, "hours", "Can not be used with end_date parameter.");
     }
 
     @Test
     public void hoursParamMustBeAnInteger() {
         MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
         when(params.containsKey("hours")).thenReturn(true);
-        when(params.getFirst("hours")).thenReturn("a");
+        when(params.get("hours")).thenReturn(Arrays.asList("24a"));
 
         validateParams(params, "hours", "Parameter must be an Integer value");
     }
@@ -76,21 +81,19 @@ public class ConsumerStatusReportTest {
     @Test
     public void endDateMustBeSpecifiedWithStartDate() {
         MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
-        when(params.containsKey("hours")).thenReturn(false);
         when(params.containsKey("start_date")).thenReturn(true);
         when(params.containsKey("end_date")).thenReturn(false);
 
-        validateParams(params, "end_date", "Missing required parameter. Must be used with start_date");
+        validateParams(params, "start_date", "Parameter must be used with end_date.");
     }
 
     @Test
     public void startDateMustBeSpecifiedWithEndDate() {
         MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
-        when(params.containsKey("hours")).thenReturn(false);
         when(params.containsKey("start_date")).thenReturn(false);
         when(params.containsKey("end_date")).thenReturn(true);
 
-        validateParams(params, "start_date", "Missing required parameter. Must be used with end_date");
+        validateParams(params, "end_date", "Parameter must be used with start_date.");
     }
 
     private void validateParams(MultivaluedMap<String, String> params, String expectedParam,
