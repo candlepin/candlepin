@@ -151,4 +151,8 @@ public class Environment extends AbstractHibernateObject implements Serializable
         this.consumers = consumers;
     }
 
+    @Override
+    public int hashCode() {
+        return id.hashCode();
+    }
 }
