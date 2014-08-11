@@ -426,7 +426,7 @@ define "candlepin" do
         end
       end
 
-      final = JSON.dump(combined.values.sort_by { |v| v['method'] })
+      final = JSON.pretty_generate(combined.values.sort_by { |v| v['method'] })
       final_file = path_to(:target, "candlepin_methods.json")
       File.open(final_file, 'w') { |f| f.write final }
 
