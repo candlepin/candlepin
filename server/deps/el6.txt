@@ -6,6 +6,7 @@ aopalliance
 apache-mime4j
 bcprov-jdk16
 c3p0
+candlepin-common
 commons-codec-eap6/commons-codec
 commons-collections
 commons-io

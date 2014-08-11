@@ -29,6 +29,7 @@ import org.apache.commons.lang.StringUtils;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -127,8 +128,9 @@ public class ProductImporter {
         if (existingProd.getProductContent().size() != importedProd.getProductContent().size()) {
             return true;
         }
-        if (Sets.intersection(existingProd.getProductContent(),
-            importedProd.getProductContent()).size() != existingProd.getProductContent().size()) {
+        if (Sets.intersection(new HashSet<ProductContent>(existingProd.getProductContent()),
+                new HashSet<ProductContent>(importedProd.getProductContent())).size() !=
+                existingProd.getProductContent().size()) {
             return true;
         }
 

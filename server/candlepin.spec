@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.21
+Version: 0.9.23
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -48,6 +48,7 @@ BuildRequires: java-devel >= 0:1.6.0
 BuildRequires: ant >= 0:1.7.0
 BuildRequires: gettext
 BuildRequires: selinux-policy-doc
+BuildRequires: candlepin-common
 
 %if 0%{?reqcpdeps}
 %global distlibdir %{_datadir}/%{name}/lib/
@@ -135,6 +136,7 @@ Requires: java >= 0:1.6.0
 Requires: wget
 Requires: liquibase >= 0:2.0.5
 Requires: postgresql-jdbc
+Requires: candlepin-common
 
 # specific requires
 # if not using cpdeps, we'll need real requires
@@ -388,6 +390,42 @@ fi
 
 
 %changelog
+* Thu Aug 07 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.23-1
+- 1126024: 1126026: Contain ProductContent in a list, not a set (ckozak@redhat.com)
+- Require candlepin-common (jesusr@redhat.com)
+- Move ConsumerEventBuilder to more general EventBuilder (ckozak@redhat.com)
+- Rewrite msgfmt task to use native ant commands. (awood@redhat.com)
+- Read version and release using native ant functions. (awood@redhat.com)
+- Removed faulty annotation from Product.derivedProductIds (ckozak@redhat.com)
+- added testing for product content update (ckozak@redhat.com)
+- better attribute validation (ckozak@redhat.com)
+
+* Thu Jul 31 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.22-1
+- 1121674: Persist new entitlements to the database before post-ent (ckozak@redhat.com)
+- Allow running docker container with deployment and shell only. (dgoodwin@redhat.com)
+- Fix deploy script on first run. (dgoodwin@redhat.com)
+- Fix consumer modified events (ckozak@redhat.com)
+- Fix merge error in deploy script. (dgoodwin@redhat.com)
+- Consumer events were missing installed product info (ckozak@redhat.com)
+- remove dead qpid config scripts. (jesusr@redhat.com)
+- Allow the project_root task to take arguments. (awood@redhat.com)
+- Use the values configured by the setup script (jesusr@redhat.com)
+- Refactor common shell functions out. (awood@redhat.com)
+- Move copied dynamic filtering code into candlepin-common (ckozak@redhat.com)
+- Move LoggingFilter into common project. (awood@redhat.com)
+- Move logging servlet filter code to common project. (awood@redhat.com)
+- Symlink keystore for tomcat more reliably. (dgoodwin@redhat.com)
+- Allow an env var to specify if supervisor is controlling tomcat service. (dgoodwin@redhat.com)
+- Add unit tests for readOnly sub adapter (ckozak@redhat.com)
+- Add readonly flag to subscription adapter (ckozak@redhat.com)
+- Allow deploy to be called from anywhere (ckozak@redhat.com)
+- use PoolFilterBuilder to replace some CriteriaRules code (ckozak@redhat.com)
+- Move README to correct new location for rpm build. (dgoodwin@redhat.com)
+- Move server license to correct location for build. (dgoodwin@redhat.com)
+- Fix scripts dir for server build. (dgoodwin@redhat.com)
+- Refactor buildfile to work with subprojects. (awood@redhat.com)
+- Migrate to use subprojects. (awood@redhat.com)
+
 * Wed Jul 02 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.21-1
 - 1110843: Lookup correct upstream cert from source stack.  (dgoodwin@redhat.com)
 - 1113202: Add derived content to distributors ent cert (mstead@redhat.com)

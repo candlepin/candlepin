@@ -1,0 +1,35 @@
+// A list of JARs to use on RHEL 7.
+// Each item should be an artifact name or coordinate that
+// build-jar-repository can understand.
+
+// SCLs are referenced with the prefix scl:${SCL_NAME}:
+// but note that you must put in special handling for
+// each individual SCL
+
+atinject
+candlepin-common
+candlepin-guice // This will pull in all the jars under candlepin-guice
+commons-codec-eap6/commons-codec
+commons-lang
+gettext-commons
+glassfish-jaxb/jaxb-impl
+jackson-annotations
+jackson-core
+jackson-databind
+jackson-jaxrs-providers/jackson-jaxrs-base
+jackson-jaxrs-providers/jackson-jaxrs-json-provider
+jackson-module-jaxb-annotations
+jms
+logback/logback-classic
+logback/logback-core
+qpid-client-0.22
+qpid-common-0.22
+resteasy/jaxrs-api
+resteasy/resteasy-guice
+resteasy/resteasy-jaxb-provider
+resteasy/resteasy-jaxrs
+resteasy/resteasy-multipart-provider
+scl:mongodb24:bson
+scl:mongodb24:mongo
+servlet
+slf4j/api

@@ -27,7 +27,6 @@ import org.apache.qpid.client.AMQAnyDestination;
 import org.apache.qpid.client.AMQConnection;
 import org.candlepin.gutterball.config.ConfigKey;
 import org.candlepin.common.config.Configuration;
-import org.candlepin.gutterball.curator.EventCurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,12 +46,12 @@ public class EventReceiver {
     private Connection conn;
     private String connstr;
 
-    private EventCurator eventCurator;
+    private EventMessageListener eventMessageListener;
 
     @Inject
-    public EventReceiver(Configuration config, EventCurator eventCurator)
+    public EventReceiver(Configuration config, EventMessageListener eventMessageListener)
         throws AMQException, JMSException, URISyntaxException {
-        this.eventCurator = eventCurator;
+        this.eventMessageListener = eventMessageListener;
         configureSslProperties(config);
         init(config);
     }
@@ -63,8 +62,8 @@ public class EventReceiver {
         sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
         dest = new AMQAnyDestination("event");
         consumer = sess.createDurableSubscriber(dest, "event");
-        consumer.setMessageListener(new EventMessageListener(eventCurator));
-        log.info("receiver init complete");
+        consumer.setMessageListener(eventMessageListener);
+        log.info("Receiver init complete");
 
     }
 

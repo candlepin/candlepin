@@ -14,9 +14,11 @@
  */
 package org.candlepin.audit;
 
-import org.candlepin.auth.Principal;
+import org.candlepin.audit.Event.Target;
+import org.candlepin.audit.Event.Type;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.jackson.HateoasBeanPropertyFilter;
+import org.candlepin.jackson.PoolEventFilter;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.GuestId;
@@ -25,25 +27,31 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Rules;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.activationkeys.ActivationKey;
+import org.candlepin.policy.js.compliance.ComplianceStatus;
 
 import com.fasterxml.jackson.databind.AnnotationIntrospector;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.introspect.AnnotationIntrospectorPair;
 import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
+import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
+import com.fasterxml.jackson.datatype.hibernate4.Hibernate4Module;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 import com.google.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Set;
+
 /**
  * EventFactory
  */
 public class EventFactory {
-    private final PrincipalProvider principalProvider;
+    private static Logger log = LoggerFactory.getLogger(EventFactory.class);
+
+    protected final PrincipalProvider principalProvider;
     private final ObjectMapper mapper;
-    private static Logger logger = LoggerFactory.getLogger(EventFactory.class);
 
     @Inject
     public EventFactory(PrincipalProvider principalProvider) {
@@ -56,14 +64,26 @@ public class EventFactory {
         SimpleFilterProvider filterProvider = new SimpleFilterProvider();
         filterProvider.setFailOnUnknownId(false);
         filterProvider = filterProvider.addFilter("PoolFilter",
-            new HateoasBeanPropertyFilter());
+            new PoolEventFilter());
         filterProvider = filterProvider.addFilter("ConsumerFilter",
             new HateoasBeanPropertyFilter());
         filterProvider = filterProvider.addFilter("EntitlementFilter",
             new HateoasBeanPropertyFilter());
         filterProvider = filterProvider.addFilter("OwnerFilter",
             new HateoasBeanPropertyFilter());
+        filterProvider = filterProvider.addFilter("IdentityCertificateFilter",
+            SimpleBeanPropertyFilter.serializeAllExcept("cert", "key"));
+        filterProvider = filterProvider.addFilter("EntitlementCertificateFilter",
+            SimpleBeanPropertyFilter.serializeAllExcept("cert", "key"));
+        filterProvider = filterProvider.addFilter("PoolAttributeFilter",
+            SimpleBeanPropertyFilter.serializeAllExcept("created", "updated", "id"));
+        filterProvider = filterProvider.addFilter("ProductPoolAttributeFilter",
+            SimpleBeanPropertyFilter.serializeAllExcept("created", "updated", "productId", "id"));
         mapper.setFilters(filterProvider);
+
+        Hibernate4Module hbm = new Hibernate4Module();
+        hbm.enable(Hibernate4Module.Feature.FORCE_LAZY_LOADING);
+        mapper.registerModule(hbm);
 
         AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
         AnnotationIntrospector secondary = new JaxbAnnotationIntrospector(
@@ -73,235 +93,162 @@ public class EventFactory {
         mapper.setAnnotationIntrospector(pair);
     }
 
+    public EventBuilder getEventBuilder(Target target, Type type) {
+        return new EventBuilder(this, target, type);
+    }
+
     public Event consumerCreated(Consumer newConsumer) {
-        String newEntityJson = entityToJson(newConsumer);
-        Principal principal = principalProvider.get();
-        Event e = new Event(Event.Type.CREATED, Event.Target.CONSUMER,
-            newConsumer.getName(), principal, newConsumer.getOwner().getId(),
-            newConsumer.getId(), newConsumer.getId(), null, newEntityJson,
-            null, null);
-        return e;
+        return getEventBuilder(Target.CONSUMER, Type.CREATED)
+                .setNewEntity(newConsumer)
+                .buildEvent();
     }
 
     public Event rulesUpdated(Rules oldRules, Rules newRules) {
-        String olds = entityToJson(oldRules);
-        String news = entityToJson(newRules);
-        Principal principal = principalProvider.get();
-        Event e = new Event(Event.Type.MODIFIED, Event.Target.RULES,
-            newRules.getVersion(), principal, null,
-            null, "" + (String) newRules.getId(),
-            olds, news, null, null);
-        return e;
+        return getEventBuilder(Target.RULES, Type.MODIFIED)
+                .setOldEntity(oldRules)
+                .setNewEntity(newRules)
+                .buildEvent();
     }
 
     public Event rulesDeleted(Rules deletedRules) {
-        String oldEntityJson = entityToJson(deletedRules);
-        Principal principal = principalProvider.get();
-        Event e = new Event(Event.Type.DELETED, Event.Target.RULES,
-            deletedRules.getVersion(), principal, null,
-            null, "" + (String) deletedRules.getId(),
-            oldEntityJson, null, null, null);
-        return e;
+        return getEventBuilder(Target.RULES, Type.DELETED)
+                .setOldEntity(deletedRules)
+                .buildEvent();
     }
 
     public Event activationKeyCreated(ActivationKey key) {
-        String newEntityJson = entityToJson(key);
-        Principal principal = principalProvider.get();
-
-        Event e = new Event(Event.Type.CREATED, Event.Target.ACTIVATIONKEY,
-            key.getName(), principal, key.getOwner().getId(),
-            null, key.getId(), null, newEntityJson,
-            null, null);
-        return e;
-    }
-
-    public Event consumerModified(Consumer newConsumer) {
-        String newEntityJson = entityToJson(newConsumer);
-        Principal principal = principalProvider.get();
-
-        return new Event(Event.Type.MODIFIED, Event.Target.CONSUMER,
-            newConsumer.getName(), principal, newConsumer.getOwner().getId(),
-            newConsumer.getId(), newConsumer.getId(), null, newEntityJson,
-            null, null);
+        return getEventBuilder(Target.ACTIVATIONKEY, Type.CREATED)
+                .setNewEntity(key)
+                .buildEvent();
     }
 
     public Event consumerModified(Consumer oldConsumer, Consumer newConsumer) {
-        String oldEntityJson = entityToJson(oldConsumer);
-        String newEntityJson = entityToJson(newConsumer);
-        Principal principal = principalProvider.get();
-
-        return new Event(Event.Type.MODIFIED, Event.Target.CONSUMER,
-            oldConsumer.getName(), principal, oldConsumer.getOwner().getId(),
-            oldConsumer.getId(), oldConsumer.getId(), oldEntityJson, newEntityJson,
-            null, null);
+        return getEventBuilder(Target.CONSUMER, Type.MODIFIED)
+                .setOldEntity(oldConsumer)
+                .setNewEntity(newConsumer)
+                .buildEvent();
     }
 
     public Event consumerDeleted(Consumer oldConsumer) {
-        String oldEntityJson = entityToJson(oldConsumer);
-
-        Event e = new Event(Event.Type.DELETED, Event.Target.CONSUMER,
-            oldConsumer.getName(), principalProvider.get(), oldConsumer
-                .getOwner().getId(), oldConsumer.getId(), oldConsumer.getId(),
-            oldEntityJson, null, null, null);
-        return e;
+        return getEventBuilder(Target.CONSUMER, Type.DELETED)
+                .setOldEntity(oldConsumer)
+                .buildEvent();
     }
 
     public Event entitlementCreated(Entitlement e) {
-        return entitlementEvent(e, Event.Type.CREATED);
+        return getEventBuilder(Target.ENTITLEMENT, Type.CREATED).setNewEntity(e).buildEvent();
     }
 
     public Event entitlementDeleted(Entitlement e) {
-        return entitlementEvent(e, Event.Type.DELETED);
+        return getEventBuilder(Target.ENTITLEMENT, Type.DELETED).setOldEntity(e).buildEvent();
     }
 
     public Event entitlementChanged(Entitlement e) {
-        return entitlementEvent(e, Event.Type.MODIFIED);
-    }
-
-    private Event entitlementEvent(Entitlement e, Event.Type type) {
-        String json = entityToJson(e);
-        String old = null, latest = null;
-        Owner owner = e.getOwner();
-        if (type == Event.Type.DELETED) {
-            old = json;
-        }
-        else {
-            latest = json;
-        }
-        return new Event(type, Event.Target.ENTITLEMENT, e.getPool()
-            .getProductName(), principalProvider.get(), owner.getId(), e
-            .getConsumer().getId(), e.getId(), old, latest,
-            e.getPool().getId(), Event.ReferenceType.POOL);
+        return getEventBuilder(Target.ENTITLEMENT, Type.MODIFIED).setNewEntity(e).buildEvent();
     }
 
     public Event ownerCreated(Owner newOwner) {
-        String newEntityJson = entityToJson(newOwner);
-        Event e = new Event(Event.Type.CREATED, Event.Target.OWNER,
-            newOwner.getDisplayName(), principalProvider.get(),
-            newOwner.getId(), null, newOwner.getId(), null, newEntityJson,
-            null, null);
-        return e;
+        return getEventBuilder(Target.OWNER, Type.CREATED)
+                .setNewEntity(newOwner)
+                .buildEvent();
     }
 
     public Event ownerModified(Owner newOwner) {
-        String newEntityJson = entityToJson(newOwner);
-        return new Event(Event.Type.MODIFIED, Event.Target.OWNER,
-            newOwner.getDisplayName(), principalProvider.get(),
-            newOwner.getId(), null, newOwner.getId(), null, newEntityJson,
-            null, null);
+        return getEventBuilder(Target.OWNER, Type.MODIFIED)
+                .setNewEntity(newOwner)
+                .buildEvent();
     }
-
 
     public Event ownerDeleted(Owner owner) {
-        Event e = new Event(Event.Type.DELETED, Event.Target.OWNER,
-            owner.getDisplayName(), principalProvider.get(), owner.getId(),
-            null, owner.getId(), entityToJson(owner), null, null, null);
-        return e;
+        return getEventBuilder(Target.OWNER, Type.DELETED)
+                .setOldEntity(owner)
+                .buildEvent();
     }
 
+    // FIXME: Why do we need this?
     public Event ownerMigrated(Owner owner) {
-        String ownerJson = entityToJson(owner);
-        Event e = new Event(Event.Type.MODIFIED, Event.Target.OWNER,
-            owner.getDisplayName(), principalProvider.get(), owner.getId(),
-            null, owner.getId(), ownerJson, ownerJson, null, null);
-
-        return e;
+        return ownerModified(owner);
     }
 
     public Event poolCreated(Pool newPool) {
-        String newEntityJson = entityToJson(newPool);
-        Owner o = newPool.getOwner();
-        Event e = new Event(Event.Type.CREATED, Event.Target.POOL,
-            newPool.getProductName(), principalProvider.get(), o.getId(), null,
-            newPool.getId(), null, newEntityJson, null, null);
-        return e;
-    }
-
-    public Event poolChangedFrom(Pool before) {
-        Owner o = before.getOwner();
-        Event e = new Event(Event.Type.MODIFIED, Event.Target.POOL,
-            before.getProductName(), principalProvider.get(), o.getId(), null,
-            before.getId(), entityToJson(before), null, null, null);
-        return e;
-    }
-
-    public void poolChangedTo(Event e, Pool after) {
-        e.setNewEntity(entityToJson(after));
+        return getEventBuilder(Target.POOL, Type.CREATED)
+                .setNewEntity(newPool)
+                .buildEvent();
     }
 
     public Event poolDeleted(Pool pool) {
-        String oldJson = entityToJson(pool);
-        Owner o = pool.getOwner();
-        Event e = new Event(Event.Type.DELETED, Event.Target.POOL,
-            pool.getProductName(), principalProvider.get(), o.getId(), null,
-            pool.getId(), oldJson, null, null, null);
-        return e;
+        return getEventBuilder(Target.POOL, Type.DELETED)
+                .setOldEntity(pool)
+                .buildEvent();
     }
 
     public Event exportCreated(Consumer consumer) {
-        Principal principal = principalProvider.get();
-        Event e = new Event(Event.Type.CREATED, Event.Target.EXPORT, consumer.getName(),
-            principal, consumer.getOwner().getId(), consumer.getId(),
-            consumer.getId(), null, entityToJson(consumer),
-            null, null);
-        return e;
+        return getEventBuilder(Target.POOL, Type.CREATED)
+                .setNewEntity(consumer)
+                .buildEvent();
     }
 
     public Event importCreated(Owner owner) {
-        Principal principal = principalProvider.get();
-        Event e = new Event(Event.Type.CREATED, Event.Target.IMPORT,
-            owner.getDisplayName(), principal, owner.getId(), null,
-            owner.getId(), null, entityToJson(owner), null, null);
-        return e;
+        return getEventBuilder(Target.IMPORT, Type.CREATED)
+                .setNewEntity(owner)
+                .buildEvent();
     }
 
     public Event subscriptionCreated(Subscription subscription) {
-        Principal principal = principalProvider.get();
-
-        Event e = new Event(Event.Type.CREATED, Event.Target.SUBSCRIPTION,
-            subscription.getProduct().getName(), principal,
-            subscription.getOwner().getId(), null, subscription.getId(), null,
-            entityToJson(subscription), null, null);
-        return e;
+        return getEventBuilder(Target.SUBSCRIPTION, Type.CREATED)
+                .setNewEntity(subscription)
+                .buildEvent();
     }
 
     public Event subscriptionModified(Subscription oldSub, Subscription newSub) {
-        String olds = entityToJson(oldSub);
-        String news = entityToJson(newSub);
-        Principal principal = principalProvider.get();
-        return new Event(Event.Type.MODIFIED, Event.Target.SUBSCRIPTION,
-            oldSub.getProduct().getName(), principal, newSub.getOwner().getId(),
-            null, newSub.getId(), olds, news, null, null);
+        return getEventBuilder(Target.SUBSCRIPTION, Type.MODIFIED)
+                .setOldEntity(newSub)
+                .setOldEntity(oldSub)
+                .buildEvent();
     }
 
     public Event subscriptionDeleted(Subscription todelete) {
-        String oldJson = entityToJson(todelete);
-        Owner o = todelete.getOwner();
-        Event e = new Event(Event.Type.DELETED, Event.Target.SUBSCRIPTION,
-            todelete.getProduct().getName(), principalProvider.get(),
-            o.getId(), null, todelete.getId(), oldJson, null, null, null);
-        return e;
+        return getEventBuilder(Target.SUBSCRIPTION, Type.DELETED)
+                .setOldEntity(todelete)
+                .buildEvent();
     }
 
-    public Event guestIdCreated(Consumer consumer, GuestId guestId) {
-        return this.createGuestIdEvent(consumer, guestId, Event.Type.CREATED);
+    public Event guestIdCreated(GuestId guestId) {
+        return getEventBuilder(Target.GUESTID, Type.CREATED)
+                .setNewEntity(guestId)
+                .buildEvent();
     }
 
-    public Event guestIdDeleted(Consumer consumer, GuestId guestId) {
-        return this.createGuestIdEvent(consumer, guestId, Event.Type.DELETED);
+    public Event guestIdDeleted(GuestId guestId) {
+        return getEventBuilder(Target.GUESTID, Type.DELETED)
+                .setOldEntity(guestId)
+                .buildEvent();
     }
 
-    private Event createGuestIdEvent(Consumer affectedConsumer, GuestId affectedGuestId,
-        Event.Type eventType) {
-        Event event = new Event(eventType, Event.Target.GUESTID,
-            affectedGuestId.getGuestId(), principalProvider.get(),
-            affectedConsumer.getOwner().getId(), affectedConsumer.getId(),
-            // we use getGuestId here since we may not have a guestID obj with an ID yet
-            affectedGuestId.getGuestId(), null, entityToJson(affectedGuestId), null, null);
-        return event;
+    public Event complianceCreated(Consumer consumer,
+            Set<Entitlement> entitlements, ComplianceStatus compliance) {
+        return new Event(Event.Type.CREATED, Event.Target.COMPLIANCE,
+                consumer.getName(), principalProvider.get(),
+                consumer.getOwner().getId(), consumer.getId(),
+                consumer.getId(), null, buildComplianceDataJson(
+                        consumer, entitlements, compliance), null, null);
     }
 
-    private String entityToJson(Object entity) {
+    // Jackson should think all 3 are root entities so hateoas doesn't bite us
+    protected String buildComplianceDataJson(Consumer consumer,
+            Set<Entitlement> entitlements, ComplianceStatus status) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("{\"consumer\": ");
+        sb.append(entityToJson(consumer));
+        sb.append(", \"entitlements\": ");
+        sb.append(entityToJson(entitlements));
+        sb.append(", \"status\": ");
+        sb.append(entityToJson(status));
+        sb.append("}");
+        return sb.toString();
+    }
+
+    protected String entityToJson(Object entity) {
         String newEntityJson = "";
         // TODO: Throw an auditing exception here
 
@@ -312,8 +259,8 @@ public class EventFactory {
             newEntityJson = mapper.writeValueAsString(entity);
         }
         catch (Exception e) {
-            logger.warn("Unable to jsonify: " + entity);
-            logger.error("jsonification failed!", e);
+            log.warn("Unable to jsonify: " + entity);
+            log.error("jsonification failed!", e);
         }
         return newEntityJson;
     }

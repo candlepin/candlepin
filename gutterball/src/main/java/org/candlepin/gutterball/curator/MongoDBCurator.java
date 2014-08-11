@@ -30,9 +30,9 @@ package org.candlepin.gutterball.curator;
  */
 
 import org.bson.types.ObjectId;
+import org.candlepin.gutterball.mongodb.MongoConnection;
 
 import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
@@ -47,10 +47,10 @@ import com.mongodb.DBObject;
  */
 public abstract class MongoDBCurator<M extends DBObject> {
 
-    private DBCollection collection;
+    protected DBCollection collection;
 
-    public MongoDBCurator(Class<M> modelClass, DB database) {
-        this.collection = database.getCollection(getCollectionName());
+    public MongoDBCurator(Class<M> modelClass, MongoConnection mongo) {
+        this.collection = mongo.getDB().getCollection(getCollectionName());
         this.collection.setObjectClass(modelClass);
     }
 
@@ -73,11 +73,15 @@ public abstract class MongoDBCurator<M extends DBObject> {
     }
 
     public M findById(String id) {
-        return (M) collection.findOne(new BasicDBObject("_id", new ObjectId(id)));
+        return findByKey("_id", id);
     }
 
     public long count() {
         return collection.count();
     }
 
+    @SuppressWarnings("unchecked")
+    public M findByKey(String key, String value) {
+        return (M) collection.findOne(new BasicDBObject(key, new ObjectId(value)));
+    }
 }

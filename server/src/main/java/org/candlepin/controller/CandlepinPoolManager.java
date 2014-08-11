@@ -15,9 +15,13 @@
 package org.candlepin.controller;
 
 import org.apache.commons.lang.StringUtils;
+
 import org.candlepin.audit.Event;
+import org.candlepin.audit.EventBuilder;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
+import org.candlepin.audit.Event.Target;
+import org.candlepin.audit.Event.Type;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Consumer;
@@ -298,10 +302,12 @@ public class CandlepinPoolManager implements PoolManager {
         if (existingPools == null || existingPools.isEmpty()) {
             return new HashSet<Entitlement>();
         }
-        Map<String, Event> poolEvents = new HashMap<String, Event>();
+        Map<String, EventBuilder> poolEvents = new HashMap<String, EventBuilder>();
         for (Pool existing : existingPools) {
-            Event e = eventFactory.poolChangedFrom(existing);
-            poolEvents.put(existing.getId(), e);
+            EventBuilder eventBuilder = eventFactory
+                    .getEventBuilder(Target.POOL, Type.MODIFIED)
+                    .setOldEntity(existing);
+            poolEvents.put(existing.getId(), eventBuilder);
         }
 
         // Hand off to rules to determine which pools need updating:
@@ -329,7 +335,7 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     private Set<Entitlement> processPoolUpdates(
-        Map<String, Event> poolEvents, List<PoolUpdate> updatedPools) {
+        Map<String, EventBuilder> poolEvents, List<PoolUpdate> updatedPools) {
         Set<Entitlement> entitlementsToRegen = Util.newSet();
         for (PoolUpdate updatedPool : updatedPools) {
 
@@ -360,9 +366,10 @@ public class CandlepinPoolManager implements PoolManager {
             // save changes for the pool
             this.poolCurator.merge(existingPool);
 
-            eventFactory.poolChangedTo(poolEvents.get(existingPool.getId()),
-                existingPool);
-            sink.sendEvent(poolEvents.get(existingPool.getId()));
+            Event event = poolEvents.get(existingPool.getId())
+                    .setNewEntity(existingPool)
+                    .buildEvent();
+            sink.sendEvent(event);
         }
 
         return entitlementsToRegen;
@@ -380,10 +387,11 @@ public class CandlepinPoolManager implements PoolManager {
          * send out the events. Create an event for each pool that could change,
          * even if we won't use them all.
          */
-        Map<String, Event> poolEvents = new HashMap<String, Event>();
+        Map<String, EventBuilder> poolEvents = new HashMap<String, EventBuilder>();
         for (Pool existing : floatingPools) {
-            Event e = eventFactory.poolChangedFrom(existing);
-            poolEvents.put(existing.getId(), e);
+            EventBuilder eventBuilder = eventFactory.getEventBuilder(Target.POOL, Type.MODIFIED)
+                    .setOldEntity(existing);
+            poolEvents.put(existing.getId(), eventBuilder);
         }
 
         // Hand off to rules to determine which pools need updating:
@@ -469,11 +477,6 @@ public class CandlepinPoolManager implements PoolManager {
         throws EntitlementRefusedException {
         Owner owner = consumer.getOwner();
         List<Entitlement> entitlements = new LinkedList<Entitlement>();
-
-        // Use the current date if one wasn't provided:
-        if (entitleDate == null) {
-            entitleDate = new Date();
-        }
 
         List<PoolQuantity> bestPools = getBestPools(consumer, productIds,
             entitleDate, owner, null);
@@ -563,11 +566,15 @@ public class CandlepinPoolManager implements PoolManager {
 
         ValidationResult failedResult = null;
 
+        Date activePoolDate = entitleDate;
+        if (entitleDate == null) {
+            activePoolDate = new Date();
+        }
         List<Pool> allOwnerPools = this.listAvailableEntitlementPools(
-            host, null, owner, (String) null, entitleDate, true, false,
+            host, null, owner, (String) null, activePoolDate, true, false,
             new PoolFilterBuilder(), null).getPageData();
         List<Pool> allOwnerPoolsForGuest = this.listAvailableEntitlementPools(
-            guest, null, owner, (String) null, entitleDate,
+            guest, null, owner, (String) null, activePoolDate,
             true, false, new PoolFilterBuilder(),
             null).getPageData();
         for (Entitlement ent : host.getEntitlements()) {
@@ -578,7 +585,7 @@ public class CandlepinPoolManager implements PoolManager {
         }
         List<Pool> filteredPools = new LinkedList<Pool>();
 
-        ComplianceStatus guestCompliance = complianceRules.getStatus(guest, entitleDate);
+        ComplianceStatus guestCompliance = complianceRules.getStatus(guest, entitleDate, false);
         Set<String> tmpSet = new HashSet<String>();
         //we only want to heal red products, not yellow
         tmpSet.addAll(guestCompliance.getNonCompliantProducts());
@@ -643,7 +650,7 @@ public class CandlepinPoolManager implements PoolManager {
         if (filteredPools.size() == 0 && failedResult != null) {
             throw new EntitlementRefusedException(failedResult);
         }
-        ComplianceStatus hostCompliance = complianceRules.getStatus(host, entitleDate);
+        ComplianceStatus hostCompliance = complianceRules.getStatus(host, entitleDate, false);
 
         List<PoolQuantity> enforced = autobindRules.selectBestPools(host,
             productIds, filteredPools, hostCompliance, serviceLevelOverride,
@@ -660,15 +667,19 @@ public class CandlepinPoolManager implements PoolManager {
 
         ValidationResult failedResult = null;
 
+        Date activePoolDate = entitleDate;
+        if (entitleDate == null) {
+            activePoolDate = new Date();
+        }
         List<Pool> allOwnerPools = this.listAvailableEntitlementPools(
-            consumer, null, owner, (String) null, entitleDate, true, false,
+            consumer, null, owner, (String) null, activePoolDate, true, false,
             new PoolFilterBuilder(), null).getPageData();
         List<Pool> filteredPools = new LinkedList<Pool>();
 
         // We have to check compliance status here so we can replace an empty
         // array of product IDs with the array the consumer actually needs. (i.e. during
         // a healing request)
-        ComplianceStatus compliance = complianceRules.getStatus(consumer, entitleDate);
+        ComplianceStatus compliance = complianceRules.getStatus(consumer, entitleDate, false);
         if (productIds == null || productIds.length == 0) {
             log.debug("No products specified for bind, checking compliance to see what " +
                 "is needed.");
@@ -817,9 +828,7 @@ public class CandlepinPoolManager implements PoolManager {
         handler.handlePostEntitlement(consumer, poolHelper, entitlement);
 
         // Check consumer's new compliance status and save:
-        ComplianceStatus compliance = complianceRules.getStatus(consumer, new Date());
-        consumer.setEntitlementStatus(compliance.getStatus());
-
+        complianceRules.getStatus(consumer, null, false, false);
         consumerCurator.update(consumer);
 
         handler.handleSelfCertificate(consumer, pool, entitlement, generateUeberCert);
@@ -1110,9 +1119,7 @@ public class CandlepinPoolManager implements PoolManager {
         // don't care about updating compliance either.
         if (regenModified) {
             // Check consumer's new compliance status and save:
-            ComplianceStatus compliance = complianceRules.getStatus(consumer, new Date());
-            consumer.setEntitlementStatus(compliance.getStatus());
-            consumerCurator.update(consumer);
+            complianceRules.getStatus(consumer);
         }
 
         sink.sendEvent(event);
@@ -1133,9 +1140,7 @@ public class CandlepinPoolManager implements PoolManager {
             count++;
         }
         // Rerun compliance after removing all entitlements
-        ComplianceStatus compliance = complianceRules.getStatus(consumer, new Date());
-        consumer.setEntitlementStatus(compliance.getStatus());
-        consumerCurator.update(consumer);
+        complianceRules.getStatus(consumer);
         return count;
     }
 

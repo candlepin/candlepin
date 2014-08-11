@@ -16,9 +16,9 @@
 package org.candlepin.gutterball.curator;
 
 import org.candlepin.gutterball.model.Event;
+import org.candlepin.gutterball.mongodb.MongoConnection;
 
 import com.google.inject.Inject;
-import com.mongodb.DB;
 
 /**
  * A curator that manages DB operations on the 'events' collection.
@@ -27,8 +27,8 @@ public class EventCurator extends MongoDBCurator<Event> {
     public static final String COLLECTION = "events";
 
     @Inject
-    public EventCurator(DB database) {
-        super(Event.class, database);
+    public EventCurator(MongoConnection mongo) {
+        super(Event.class, mongo);
     }
 
     @Override

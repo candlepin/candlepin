@@ -34,9 +34,12 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
 
+import org.candlepin.audit.EventBuilder;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
+import org.candlepin.audit.Event.Target;
+import org.candlepin.audit.Event.Type;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.PoolManager;
@@ -65,6 +68,7 @@ import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.ServiceLevelValidator;
+
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -91,6 +95,7 @@ public class ConsumerResourceUpdateTest {
     @Mock private DeletedConsumerCurator deletedConsumerCurator;
     @Mock private EnvironmentCurator environmentCurator;
     @Mock private ServiceLevelValidator serviceLevelValidator;
+    @Mock private EventBuilder consumerEventBuilder;
 
     private I18n i18n;
 
@@ -109,11 +114,19 @@ public class ConsumerResourceUpdateTest {
             new CandlepinCommonTestConfig(), null, null, null, null, null,
             serviceLevelValidator);
 
-        when(complianceRules.getStatus(any(Consumer.class), any(Date.class)))
+        when(complianceRules.getStatus(any(Consumer.class), any(Date.class),
+                any(Boolean.class), any(Boolean.class)))
             .thenReturn(new ComplianceStatus(new Date()));
 
         when(idCertService.regenerateIdentityCert(any(Consumer.class)))
             .thenReturn(new IdentityCertificate());
+
+        when(consumerEventBuilder.setNewEntity(any(Consumer.class)))
+            .thenReturn(consumerEventBuilder);
+        when(consumerEventBuilder.setOldEntity(any(Consumer.class)))
+            .thenReturn(consumerEventBuilder);
+        when(eventFactory.getEventBuilder(any(Target.class), any(Type.class)))
+            .thenReturn(consumerEventBuilder);
     }
 
     @Test
@@ -224,7 +237,8 @@ public class ConsumerResourceUpdateTest {
 
         this.resource.updateConsumer(consumer.getUuid(), incoming);
         verify(sink).sendEvent((Event) any());
-        verify(complianceRules).getStatus(eq(consumer), any(Date.class));
+        verify(complianceRules).getStatus(eq(consumer), any(Date.class),
+                any(Boolean.class), any(Boolean.class));
     }
 
     @Test
@@ -337,7 +351,7 @@ public class ConsumerResourceUpdateTest {
         Consumer updated = createConsumerWithGuests("Guest 1");
 
         Event expectedEvent = new Event();
-        when(this.eventFactory.guestIdCreated(existing, updated.getGuestIds().get(0)))
+        when(this.eventFactory.guestIdCreated(updated.getGuestIds().get(0)))
             .thenReturn(expectedEvent);
 
         this.resource.updateConsumer(existing.getUuid(), updated);
@@ -356,7 +370,7 @@ public class ConsumerResourceUpdateTest {
         Consumer updated = createConsumerWithGuests("Guest 2");
 
         Event expectedEvent = new Event();
-        when(this.eventFactory.guestIdDeleted(existing, existing.getGuestIds().get(0)))
+        when(this.eventFactory.guestIdDeleted(existing.getGuestIds().get(0)))
             .thenReturn(expectedEvent);
 
         this.resource.updateConsumer(existing.getUuid(), updated);

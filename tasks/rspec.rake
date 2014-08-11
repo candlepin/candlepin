@@ -9,6 +9,7 @@ module ModifiedRSpec
 
       includes = rspec.includes.map { |dir| "-I #{dir}" }
       opts.concat(includes)
+      opts << ENV['RSPEC_OPTS'] unless ENV['RSPEC_OPTS'].nil?
       opts
     end
 
@@ -154,6 +155,10 @@ module ModifiedRSpec
 
           specs_to_run.reject! do |s|
             File.basename(s).start_with?(*excluded_tests)
+          end
+
+          if specs_to_run.empty?
+            fail("No specs found matching #{tests}")
           end
 
           ModifiedRSpec.rspec_task('filtered_rspec', rspec) do |rspec_task|

@@ -14,13 +14,10 @@
  */
 package org.candlepin.gutterball.model;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
-import com.mongodb.util.JSON;
+
+import java.util.Date;
 
 /**
  * Event - Base class for Candlepin events. Serves as both our semi-permanent
@@ -31,8 +28,6 @@ import com.mongodb.util.JSON;
  * We also store the original json as a field in this so that we don't
  * lose values when this class is out of sync with the candlepin version
  */
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.PROPERTY)
 public class Event extends BasicDBObject {
 
     private static final String TARGET = "target";
@@ -47,15 +42,14 @@ public class Event extends BasicDBObject {
     private static final String CONSUMER_ID = "consumerId";
     private static final String TARGET_NAME = "targetName";
     private static final String MESSAGE_TEXT = "messageText";
-    private static final String ORIGINAL_JSON = "originalJson";
     private static final String ID = "id";
     private static final String TYPE = "type";
 
     public Event() {
     }
 
-    public Event(String eventJson) {
-        this.putAll((DBObject) JSON.parse(eventJson));
+    public Event(DBObject dbObject) {
+        this.putAll(dbObject);
     }
 
     public String getId() {
@@ -82,11 +76,11 @@ public class Event extends BasicDBObject {
         this.put(TARGET, target);
     }
 
-    public Long getTimestamp() {
-        return this.getLong(TIMESTAMP);
+    public Date getTimestamp() {
+        return this.getDate(TIMESTAMP);
     }
 
-    public void setTimestamp(Long timestamp) {
+    public void setTimestamp(Date timestamp) {
         this.put(TIMESTAMP, timestamp);
     }
 
@@ -141,19 +135,19 @@ public class Event extends BasicDBObject {
     // Transient as we decided we do not necessarily want to store the object
     // state in our Events table. The Event passing through the message queue will
     // still carry them.
-    public String getOldEntity() {
-        return this.getString(OLD_ENTITY);
+    public DBObject getOldEntity() {
+        return (DBObject) this.get(OLD_ENTITY);
     }
 
-    public void setOldEntity(String oldEntity) {
+    public void setOldEntity(DBObject oldEntity) {
         this.put(OLD_ENTITY, oldEntity);
     }
 
-    public String getNewEntity() {
-        return this.getString(NEW_ENTITY);
+    public DBObject getNewEntity() {
+        return (DBObject) this.get(NEW_ENTITY);
     }
 
-    public void setNewEntity(String newEntity) {
+    public void setNewEntity(DBObject newEntity) {
         this.put(NEW_ENTITY, newEntity);
     }
 
@@ -198,20 +192,6 @@ public class Event extends BasicDBObject {
      */
     public void setMessageText(String messageText) {
         this.put(MESSAGE_TEXT, messageText);
-    }
-
-    /**
-     * @return the originalJson
-     */
-    public String getOriginalJson() {
-        return this.getString(ORIGINAL_JSON);
-    }
-
-    /**
-     * @param originalJson the originalJson to set
-     */
-    public void setOriginalJson(String originalJson) {
-        this.put(ORIGINAL_JSON, originalJson);
     }
 }
 

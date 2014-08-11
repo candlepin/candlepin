@@ -15,11 +15,15 @@
 package org.candlepin.audit;
 
 import org.candlepin.model.Consumer;
+import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Rules;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.activationkeys.ActivationKey;
+import org.candlepin.policy.js.compliance.ComplianceStatus;
+
+import java.util.Set;
 
 /**
  * EventSink
@@ -49,6 +53,8 @@ public interface EventSink {
     void emitRulesModified(Rules oldRules, Rules newRules);
 
     void emitRulesDeleted(Rules rules);
+
+    void emitCompliance(Consumer consumer, Set<Entitlement> entitlements, ComplianceStatus compliance);
 
     Event createSubscriptionDeleted(Subscription todelete);
 }

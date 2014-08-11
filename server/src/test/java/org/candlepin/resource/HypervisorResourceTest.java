@@ -20,8 +20,11 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.audit.EventBuilder;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
+import org.candlepin.audit.Event.Target;
+import org.candlepin.audit.Event.Type;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.SubResource;
 import org.candlepin.auth.UserPrincipal;
@@ -44,6 +47,7 @@ import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.util.ServiceLevelValidator;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -104,6 +108,9 @@ public class HypervisorResourceTest {
     @Mock
     private ServiceLevelValidator mockedServiceLevelValidator;
 
+    @Mock
+    private EventBuilder consumerEventBuilder;
+
     private ConsumerResource consumerResource;
 
     private I18n i18n;
@@ -134,10 +141,16 @@ public class HypervisorResourceTest {
                 return invocation.getArguments()[0];
             }
         });
-        when(complianceRules.getStatus(any(Consumer.class), any(Date.class)))
+        when(complianceRules.getStatus(any(Consumer.class), any(Date.class), any(Boolean.class)))
             .thenReturn(new ComplianceStatus(new Date()));
 
         when(ownerCurator.lookupByKey(any(String.class))).thenReturn(new Owner());
+        when(eventFactory.getEventBuilder(any(Target.class), any(Type.class)))
+            .thenReturn(consumerEventBuilder);
+        when(consumerEventBuilder.setNewEntity(any(Consumer.class)))
+            .thenReturn(consumerEventBuilder);
+        when(consumerEventBuilder.setOldEntity(any(Consumer.class)))
+            .thenReturn(consumerEventBuilder);
     }
 
     @Test

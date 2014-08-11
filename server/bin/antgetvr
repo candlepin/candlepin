@@ -1,2 +1,0 @@
-#!/bin/bash
-grep $1 candlepin.spec | sed 's/%{?dist}//g' | awk '{print $2}'

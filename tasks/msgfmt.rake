@@ -58,9 +58,29 @@ module MsgFmt
 
           po_files = Dir[File.join(msgfmt.po_directory, '*.po')]
           info("Running msgfmt on #{project}")
+
+          # msgfmt has some code in it to compile with -target 1.1 and -source 1.3.
+          # These compiler options cause javac to throw a warning since we are not
+          # pointing to the correct rt.jar and there is nothing we can do about it.
+          #
+          # To use javac from JDK N to cross-compiler to an older platform version,
+          # the correct practice is to:
+          #     Use the older -source setting.
+          #     Set the bootclasspath to compile against the rt.jar (or equivalent) for the
+          #     older platform.
+          #
+          # If the second step is not taken, javac will dutifully use the old language rules
+          # combined with new libraries, which can result in class files that do not work on
+          # the older platform since references to non-existent methods can get included.
+          # From http://stackoverflow.com/questions/7816423
+          #
+          # Luckily we can tell javac not to print a message about this.  (Msgfmt will use
+          # whatever is in the JAVAC environment variable but it puts its arguments after
+          # so we can't specify a correct -source and -target)
+          ENV['JAVAC'] = "javac -Xlint:-options"
           po_files.each do |po_file|
             locale = File.basename(po_file).chomp('.po')
-            args = ["--java",
+            args = ["--java2",
                     "--resource", msgfmt.resource,
                     msgfmt.msgfmt_args,
                     "-d", msgfmt.destination,

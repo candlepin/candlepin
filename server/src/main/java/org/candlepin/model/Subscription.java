@@ -35,6 +35,7 @@ import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.annotations.Cascade;
@@ -49,7 +50,7 @@ import org.hibernate.annotations.Index;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_subscription")
-public class Subscription extends AbstractHibernateObject {
+public class Subscription extends AbstractHibernateObject implements Owned, Named {
 
     @Id
     @GeneratedValue(generator = "system-uuid")
@@ -416,5 +417,14 @@ public class Subscription extends AbstractHibernateObject {
     public boolean createsSubPools() {
         String virtLimit = this.getProduct().getAttributeValue("virt_limit");
         return !StringUtils.isBlank(virtLimit) && !"0".equals(virtLimit);
+    }
+
+    @Override
+    @XmlTransient
+    public String getName() {
+        if (getProduct() != null) {
+            return getProduct().getName();
+        }
+        return null;
     }
 }

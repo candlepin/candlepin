@@ -34,10 +34,12 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.candlepin.model.AbstractHibernateObject;
+import org.candlepin.model.Named;
 import org.candlepin.model.Owned;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Release;
+
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
@@ -52,7 +54,7 @@ import org.hibernate.annotations.Index;
 @Table(name = "cp_activation_key",
     uniqueConstraints = {@UniqueConstraint(columnNames = {"name", "owner_id"})}
 )
-public class ActivationKey extends AbstractHibernateObject implements Owned {
+public class ActivationKey extends AbstractHibernateObject implements Owned, Named {
 
     public static final int RELEASE_VERSION_LENGTH = 255;
 

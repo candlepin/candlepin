@@ -27,6 +27,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.audit.Event.Target;
+import org.candlepin.audit.Event.Type;
+import org.candlepin.audit.EventBuilder;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
@@ -70,6 +73,7 @@ import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.ServiceLevelValidator;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -118,10 +122,20 @@ public class ConsumerResourceTest {
     private ServiceLevelValidator mockedServiceLevelValidator;
     @Mock
     private ActivationKeyRules mockedActivationKeyRules;
+    @Mock
+    private EventFactory eventFactory;
+    @Mock
+    private EventBuilder eventBuilder;
 
     @Before
     public void setUp() {
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
+        when(eventBuilder.setOldEntity(any(Consumer.class)))
+            .thenReturn(eventBuilder);
+        when(eventBuilder.setNewEntity(any(Consumer.class)))
+            .thenReturn(eventBuilder);
+        when(eventFactory.getEventBuilder(any(Target.class), any(Type.class)))
+            .thenReturn(eventBuilder);
     }
 
     @Test
@@ -231,7 +245,6 @@ public class ConsumerResourceTest {
             .mock(IdentityCertServiceAdapter.class);
 
         EventSink sink = Mockito.mock(EventSink.class);
-        EventFactory factory = Mockito.mock(EventFactory.class);
 
         Consumer consumer = createConsumer();
         consumer.setIdCert(createIdCert());
@@ -244,7 +257,7 @@ public class ConsumerResourceTest {
             createIdCert());
 
         ConsumerResource cr = new ConsumerResource(mockedConsumerCurator, null,
-            null, null, null, mockedIdSvc, null, null, sink, factory, null, null,
+            null, null, null, mockedIdSvc, null, null, sink, eventFactory, null, null,
             null, null, null, null, mockedOwnerCurator, null, null, null, null,
             null, null, new CandlepinCommonTestConfig(), null, null, null, null, null,
             mockedServiceLevelValidator);
@@ -265,7 +278,6 @@ public class ConsumerResourceTest {
             .mock(IdentityCertServiceAdapter.class);
 
         EventSink sink = Mockito.mock(EventSink.class);
-        EventFactory factory = Mockito.mock(EventFactory.class);
 
         SubscriptionServiceAdapter ssa = Mockito.mock(SubscriptionServiceAdapter.class);
         ComplianceRules rules = Mockito.mock(ComplianceRules.class);
@@ -283,7 +295,7 @@ public class ConsumerResourceTest {
             createIdCert());
 
         ConsumerResource cr = new ConsumerResource(mockedConsumerCurator, null,
-            null, ssa, null, mockedIdSvc, null, null, sink, factory, null, null,
+            null, ssa, null, mockedIdSvc, null, null, sink, eventFactory, null, null,
             null, null, null, null, mockedOwnerCurator, null, null, rules, null,
             null, null, new CandlepinCommonTestConfig(), null, null, null, null, null,
             mockedServiceLevelValidator);
@@ -535,8 +547,6 @@ public class ConsumerResourceTest {
             null, null, mockedServiceLevelValidator);
 
         Map<String, ComplianceStatus> results = cr.getComplianceStatusList(uuids);
-        verify(c).setEntitlementStatus(status.getStatus());
-        verify(c2).setEntitlementStatus(status.getStatus());
         assertEquals(2, results.size());
         assertTrue(results.containsKey("1"));
         assertTrue(results.containsKey("2"));

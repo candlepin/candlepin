@@ -17,11 +17,15 @@ package org.candlepin.test;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventSink;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Rules;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.activationkeys.ActivationKey;
+import org.candlepin.policy.js.compliance.ComplianceStatus;
+
+import java.util.Set;
 
 /**
  * EventSinkForTesting, a no-op class as we don't need hornetq at all.
@@ -79,5 +83,10 @@ public class EventSinkForTesting implements EventSink {
 
     @Override
     public void emitRulesDeleted(Rules rules) {
+    }
+
+    @Override
+    public void emitCompliance(Consumer consumer,
+            Set<Entitlement> entitlements, ComplianceStatus compliance) {
     }
 }

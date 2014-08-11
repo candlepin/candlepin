@@ -18,7 +18,6 @@ import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -47,10 +46,14 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang.StringUtils;
+
+import org.candlepin.audit.Event.Target;
+import org.candlepin.audit.EventBuilder;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventAdapter;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
+import org.candlepin.audit.Event.Type;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.NoAuthPrincipal;
 import org.candlepin.auth.Principal;
@@ -130,6 +133,7 @@ import org.candlepin.sync.Exporter;
 import org.candlepin.util.ServiceLevelValidator;
 import org.candlepin.util.Util;
 import org.candlepin.version.CertVersionConflictException;
+
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
@@ -500,9 +504,9 @@ public class ConsumerResource {
 
             handleActivationKeys(consumer, keys);
 
-            ComplianceStatus compliance = complianceRules.getStatus(consumer,
-                Calendar.getInstance().getTime());
-            consumer.setEntitlementStatus(compliance.getStatus());
+            // Don't allow complianceRules to update entitlementStatus, because we're about to perform
+            // an update unconditionally.
+            complianceRules.getStatus(consumer, null, false, false);
             consumerCurator.update(consumer);
 
             log.info("Consumer " + consumer.getUuid() + " created in org " +
@@ -866,8 +870,10 @@ public class ConsumerResource {
             log.debug("Updating consumer: " + toUpdate.getUuid());
         }
         // We need a representation of the consumer before making any modifications.
-        // If nothing changes we won't send.
-        Event event = eventFactory.consumerModified(toUpdate, updated);
+        // If nothing changes we won't send.  The new entity needs to be correct though,
+        // so we should get a Jsonstring now, and finish it off if we're going to send
+        EventBuilder eventBuilder = eventFactory.getEventBuilder(Target.CONSUMER, Type.MODIFIED)
+                .setOldEntity(toUpdate);
 
         // version changed on non-checked in consumer, or list of capabilities
         // changed on checked in consumer
@@ -945,13 +951,14 @@ public class ConsumerResource {
         if (changesMade) {
             log.debug("Consumer " + toUpdate.getUuid() + " updated.");
 
-            ComplianceStatus compliance = complianceRules.getStatus(toUpdate,
-                Calendar.getInstance().getTime());
-            toUpdate.setEntitlementStatus(compliance.getStatus());
-
             // Set the updated date here b/c @PreUpdate will not get fired
             // since only the facts table will receive the update.
             toUpdate.setUpdated(new Date());
+
+            // this should update compliance on toUpdate, but not call the curator
+            complianceRules.getStatus(toUpdate, null, false, false);
+
+            Event event = eventBuilder.setNewEntity(toUpdate).buildEvent();
             sink.sendEvent(event);
         }
         return changesMade;
@@ -1098,7 +1105,7 @@ public class ConsumerResource {
                 if (log.isDebugEnabled()) {
                     log.debug("New guest ID added: " + guestId.getGuestId());
                 }
-                sink.sendEvent(eventFactory.guestIdCreated(existing, guestId));
+                sink.sendEvent(eventFactory.guestIdCreated(guestId));
             }
 
             // The guest has not registered. No need to process entitlements.
@@ -1137,7 +1144,7 @@ public class ConsumerResource {
             if (log.isDebugEnabled()) {
                 log.debug("Guest ID removed: " + guestId.getGuestId());
             }
-            sink.sendEvent(eventFactory.guestIdDeleted(existing, guestId));
+            sink.sendEvent(eventFactory.guestIdDeleted(guestId));
 
         }
 
@@ -1462,10 +1469,7 @@ public class ConsumerResource {
 
         // TODO: really should do this in a before we get to this call
         // so the method takes in a real Date object and not just a String.
-        Date entitleDate = null;
-        if (entitleDateStr != null) {
-            entitleDate = ResourceDateParser.parseDateString(entitleDateStr);
-        }
+        Date entitleDate = ResourceDateParser.parseDateString(entitleDateStr);
 
         // Verify consumer exists:
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
@@ -1892,12 +1896,14 @@ public class ConsumerResource {
         @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid) {
 
         Consumer c = consumerCurator.verifyAndLookupConsumer(uuid);
+        EventBuilder eventBuilder = eventFactory
+                .getEventBuilder(Target.CONSUMER, Type.MODIFIED)
+                .setOldEntity(c);
 
         IdentityCertificate ic = generateIdCert(c, true);
         c.setIdCert(ic);
         consumerCurator.update(c);
-        Event consumerModified = this.eventFactory.consumerModified(c);
-        this.sink.sendEvent(consumerModified);
+        this.sink.sendEvent(eventBuilder.setNewEntity(c).buildEvent());
         return c;
     }
 
@@ -2024,17 +2030,8 @@ public class ConsumerResource {
         @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid,
         @QueryParam("on_date") String onDate) {
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(uuid);
-        Date date = onDate == null ?
-            Calendar.getInstance().getTime() :
-                ResourceDateParser.parseDateString(onDate);
-        ComplianceStatus status = this.complianceRules.getStatus(consumer,
-            date);
-
-        // Optional date, so we don't update entitlement status
-        if (onDate == null) {
-            consumer.setEntitlementStatus(status.getStatus());
-        }
-        return status;
+        Date date = ResourceDateParser.parseDateString(onDate);
+        return this.complianceRules.getStatus(consumer, date);
     }
 
     /**
@@ -2054,12 +2051,8 @@ public class ConsumerResource {
             consumerCurator.findByUuids(uuids);
         Map<String, ComplianceStatus> results = new HashMap<String, ComplianceStatus>();
 
-        Date now = Calendar.getInstance().getTime();
         for (Consumer consumer : consumers) {
-            ComplianceStatus status = complianceRules.getStatus(consumer, now);
-            // NOTE: If this method ever changes to accept an optional date, do
-            // not update this field on the consumer if the date is specified:
-            consumer.setEntitlementStatus(status.getStatus());
+            ComplianceStatus status = complianceRules.getStatus(consumer, null);
             results.put(consumer.getUuid(), status);
         }
 
@@ -2069,8 +2062,7 @@ public class ConsumerResource {
     private void addDataToInstalledProducts(Consumer consumer) {
 
         ComplianceStatus complianceStatus = complianceRules.getStatus(
-                           consumer, Calendar.getInstance().getTime(), false);
-        consumer.setEntitlementStatus(complianceStatus.getStatus());
+                           consumer, null, false);
 
         ConsumerInstalledProductEnricher enricher = new ConsumerInstalledProductEnricher(
             consumer, complianceStatus, complianceRules);
