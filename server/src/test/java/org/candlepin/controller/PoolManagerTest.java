@@ -33,10 +33,14 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.candlepin.audit.Event;
@@ -89,7 +93,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.stubbing.Answer;
 
 /**
  * PoolManagerTest
@@ -145,6 +151,8 @@ public class PoolManagerTest {
     private ProductCache productCache;
     private PoolRules poolRules;
 
+    protected static Map<String, List<Pool>> subToPools;
+
     @Before
     public void init() throws Exception {
         product = TestUtil.createProduct();
@@ -194,8 +202,7 @@ public class PoolManagerTest {
         Pool floating = TestUtil.createPool(TestUtil.createProduct());
         floating.setSourceSubscription(null);
         pools.add(floating);
-        when(mockSubAdapter.getSubscriptions(any(Owner.class))).thenReturn(
-            subscriptions);
+        mockSubsList(subscriptions);
 
         mockPoolsList(pools);
         this.manager.getRefresher().add(getOwner()).run();
@@ -224,8 +231,7 @@ public class PoolManagerTest {
         p.setOwner(sub.getOwner());
         pools.add(p);
 
-        when(mockSubAdapter.getSubscriptions(any(Owner.class))).thenReturn(
-            subscriptions);
+        mockSubsList(subscriptions);
 
         mockPoolsList(pools);
         this.manager.getRefresher().add(getOwner()).run();
@@ -246,8 +252,7 @@ public class PoolManagerTest {
         Pool p = TestUtil.createPool(TestUtil.createProduct());
         p.setSourceSubscription(new SourceSubscription("112", "master"));
         pools.add(p);
-        when(mockSubAdapter.getSubscriptions(any(Owner.class))).thenReturn(
-            subscriptions);
+        mockSubsList(subscriptions);
 
         mockPoolsList(pools);
         this.manager.getRefresher().add(getOwner()).run();
@@ -268,8 +273,7 @@ public class PoolManagerTest {
         p.setSourceEntitlement(null);
 
         pools.add(p);
-        when(mockSubAdapter.getSubscriptions(any(Owner.class))).thenReturn(
-            subscriptions);
+        mockSubsList(subscriptions);
 
         mockPoolsList(pools);
         this.manager.getRefresher().add(getOwner()).run();
@@ -290,8 +294,7 @@ public class PoolManagerTest {
         p.setSourceEntitlement(new Entitlement());
 
         pools.add(p);
-        when(mockSubAdapter.getSubscriptions(any(Owner.class))).thenReturn(
-            subscriptions);
+        mockSubsList(subscriptions);
 
         mockPoolsList(pools);
         this.manager.getRefresher().add(getOwner()).run();
@@ -312,8 +315,7 @@ public class PoolManagerTest {
         p.setSourceEntitlement(null);
 
         pools.add(p);
-        when(mockSubAdapter.getSubscriptions(any(Owner.class))).thenReturn(
-            subscriptions);
+        mockSubsList(subscriptions);
 
         mockPoolsList(pools);
         this.manager.getRefresher().add(getOwner()).run();
@@ -331,8 +333,7 @@ public class PoolManagerTest {
         p.setSourceStack(new SourceStack(new Consumer(), "a"));
 
         pools.add(p);
-        when(mockSubAdapter.getSubscriptions(any(Owner.class))).thenReturn(
-            subscriptions);
+        mockSubsList(subscriptions);
 
         mockPoolsList(pools);
 
@@ -350,8 +351,7 @@ public class PoolManagerTest {
         Subscription s = TestUtil.createSubscription(getOwner(),
             TestUtil.createProduct());
         subscriptions.add(s);
-        when(mockSubAdapter.getSubscriptions(any(Owner.class))).thenReturn(
-            subscriptions);
+        mockSubsList(subscriptions);
 
         mockPoolsList(pools);
 
@@ -380,8 +380,7 @@ public class PoolManagerTest {
         p.setOwner(s.getOwner());
         pools.add(p);
 
-        when(mockSubAdapter.getSubscriptions(any(Owner.class))).thenReturn(
-            subscriptions);
+        mockSubsList(subscriptions);
 
         mockPoolsList(pools);
 
@@ -558,8 +557,7 @@ public class PoolManagerTest {
         sub.setId("123");
         subscriptions.add(sub);
 
-        when(mockSubAdapter.getSubscriptions(any(Owner.class))).thenReturn(
-            subscriptions);
+        mockSubsList(subscriptions);
 
         List<Pool> pools = Util.newList();
         Pool p = TestUtil.createPool(sub.getOwner(), sub.getProduct());
@@ -754,8 +752,7 @@ public class PoolManagerTest {
         sub.setId("123");
         subscriptions.add(sub);
 
-        when(mockSubAdapter.getSubscriptions(any(Owner.class))).thenReturn(
-            subscriptions);
+        mockSubsList(subscriptions);
 
         List<Pool> pools = Util.newList();
         Pool p = TestUtil.createPool(other, sub.getProduct());
@@ -790,9 +787,52 @@ public class PoolManagerTest {
         verify(poolRulesMock).createPools(eq(sub), any(List.class));
     }
 
-    private void mockPoolsList(List<Pool> toReturn) {
-        when(mockPoolCurator.getPoolsForOwnerRefresh(any(Owner.class), any(List.class)))
-            .thenReturn(toReturn);
+    private void mockSubsList(List<Subscription> subs) {
+        List<String> subIds = new LinkedList<String>();
+        for (Subscription sub : subs) {
+            subIds.add(sub.getId());
+            when(mockSubAdapter.getSubscription(eq(sub.getId()))).thenReturn(sub);
+        }
+        when(mockSubAdapter.getSubscriptionIds(any(Owner.class))).thenReturn(subIds);
+        when(mockSubAdapter.getSubscriptions(any(Owner.class))).thenReturn(subs);
+    }
+
+    private void mockPoolsList(List<Pool> pools) {
+        List<Pool> floating = new LinkedList<Pool>();
+        subToPools = new HashMap<String, List<Pool>>();
+        for (Pool pool : pools) {
+            String subid = pool.getSubscriptionId();
+            if (subid != null) {
+                if (!subToPools.containsKey(subid)) {
+                    subToPools.put(subid, new LinkedList<Pool>());
+                }
+                subToPools.get(subid).add(pool);
+            }
+            else {
+                floating.add(pool);
+            }
+        }
+        for (String subid : subToPools.keySet()) {
+            when(mockPoolCurator.getPoolsBySubscriptionId(eq(subid))).thenReturn(subToPools.get(subid));
+        }
+        when(mockPoolCurator.getOwnersFloatingPools(any(Owner.class))).thenReturn(floating);
+        when(mockPoolCurator.getPoolsFromBadSubs(any(Owner.class), any(Collection.class)))
+            .thenAnswer(new Answer<List<Pool>>() {
+
+                @Override
+                public List<Pool> answer(InvocationOnMock iom) throws Throwable {
+                    Collection<String> subIds = (Collection<String>) iom.getArguments()[1];
+                    List<Pool> results = new LinkedList<Pool>();
+                    for (Entry<String, List<Pool>> entry : PoolManagerTest.subToPools.entrySet()) {
+                        for (Pool pool : entry.getValue()) {
+                            if (!subIds.contains(pool.getSubscriptionId())) {
+                                results.add(pool);
+                            }
+                        }
+                    }
+                    return results;
+                }
+            });
     }
 
     @Test

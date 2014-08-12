@@ -18,13 +18,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.Subscription;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.util.Util;
+
+import com.google.inject.persist.UnitOfWork;
 
 /**
  * Refresher
@@ -34,6 +35,7 @@ public class Refresher {
     private CandlepinPoolManager poolManager;
     private SubscriptionServiceAdapter subAdapter;
     private boolean lazy;
+    private UnitOfWork uow;
 
     private Set<Owner> owners = Util.newSet();
     private Set<Product> products = Util.newSet();
@@ -44,6 +46,11 @@ public class Refresher {
         this.poolManager = poolManager;
         this.subAdapter = subAdapter;
         this.lazy = lazy;
+    }
+
+    public Refresher setUnitOfWork(UnitOfWork uow) {
+        this.uow = uow;
+        return this;
     }
 
     public Refresher add(Owner owner) {
@@ -62,7 +69,7 @@ public class Refresher {
     }
 
     public void run() {
-        Set<Entitlement> toRegen = new HashSet<Entitlement>();
+        Set<String> toRegen = new HashSet<String>();
 
         for (Product product : products) {
             subscriptions.addAll(subAdapter.getSubscriptions(product));
@@ -89,10 +96,10 @@ public class Refresher {
         }
 
         for (Owner owner : owners) {
-            toRegen.addAll(poolManager.refreshPoolsWithoutRegeneration(owner));
+            toRegen.addAll(poolManager.refreshPoolsWithoutRegeneration(owner, uow));
         }
 
         // now regenerate all pending entitlements
-        poolManager.regenerateCertificatesOf(toRegen, lazy);
+        poolManager.regenerateCertificatesByEntIds(toRegen, lazy);
     }
 }

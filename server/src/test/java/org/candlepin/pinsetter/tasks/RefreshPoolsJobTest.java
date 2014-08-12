@@ -16,6 +16,7 @@ package org.candlepin.pinsetter.tasks;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -27,6 +28,9 @@ import org.candlepin.controller.Refresher;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.pinsetter.core.model.JobStatus;
+
+import com.google.inject.persist.UnitOfWork;
+
 import org.junit.Test;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
@@ -55,6 +59,7 @@ public class RefreshPoolsJobTest {
         when(owner.getDisplayName()).thenReturn("test owner");
         when(pm.getRefresher(eq(true))).thenReturn(refresher);
         when(refresher.add(eq(owner))).thenReturn(refresher);
+        when(refresher.setUnitOfWork(any(UnitOfWork.class))).thenReturn(refresher);
 
         // test
         RefreshPoolsJob rpj = new RefreshPoolsJob(oc, pm);

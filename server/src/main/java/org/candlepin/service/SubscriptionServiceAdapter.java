@@ -15,7 +15,6 @@
 package org.candlepin.service;
 
 import java.util.List;
-import java.util.Set;
 
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;

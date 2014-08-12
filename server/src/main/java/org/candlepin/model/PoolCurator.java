@@ -32,7 +32,6 @@ import org.hibernate.Query;
 import org.hibernate.ReplicationMode;
 import org.hibernate.criterion.CriteriaSpecification;
 import org.hibernate.criterion.Criterion;
-import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
@@ -263,6 +262,15 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         boolean lifo) {
         return criteriaToSelectEntitlementForPool(existingPool)
             .addOrder(lifo ? Order.desc("created") : Order.asc("created"))
+            .list();
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<String> retrieveFreeEntitlementIdsOfPool(Pool existingPool,
+        boolean lifo) {
+        return criteriaToSelectEntitlementForPool(existingPool)
+            .addOrder(lifo ? Order.desc("created") : Order.asc("created"))
+            .setProjection(Projections.id())
             .list();
     }
 
