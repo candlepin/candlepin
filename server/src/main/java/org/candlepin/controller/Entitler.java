@@ -26,6 +26,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.policy.EntitlementRefusedException;
+import org.candlepin.policy.js.entitlement.EntitlementRulesTranslator;
 
 import com.google.inject.Inject;
 
@@ -49,16 +50,19 @@ public class Entitler {
     private EventFactory evtFactory;
     private EventSink sink;
     private ConsumerCurator consumerCurator;
+    private EntitlementRulesTranslator messageTranslator;
 
     @Inject
     public Entitler(PoolManager pm, ConsumerCurator cc, I18n i18n,
-        EventFactory evtFactory, EventSink sink) {
+        EventFactory evtFactory, EventSink sink,
+        EntitlementRulesTranslator messageTranslator) {
 
         this.poolManager = pm;
         this.i18n = i18n;
         this.evtFactory = evtFactory;
         this.sink = sink;
         this.consumerCurator = cc;
+        this.messageTranslator = messageTranslator;
     }
 
     public List<Entitlement> bindByPool(String poolId, String consumeruuid,
@@ -96,80 +100,9 @@ public class Entitler {
             return e;
         }
         catch (EntitlementRefusedException e) {
-            // Could be multiple errors, but we'll just report the first one for
-            // now:
-            // TODO: multiple checks here for the errors will get ugly, but the
-            // returned
-            // string is dependent on the caller (ie pool vs product)
-            String msg;
-            String error = e.getResult().getErrors().get(0).getResourceKey();
-
-            if (error.equals("rulefailed.consumer.already.has.product")) {
-                msg = i18n.tr(
-                    "This unit has already had the subscription matching " +
-                    "pool ID ''{0}'' attached.", pool.getId());
-            }
-            else if (error.equals("rulefailed.no.entitlements.available")) {
-                msg = i18n.tr(
-                    "No subscriptions are available from the pool with " +
-                    "ID ''{0}''.", pool.getId());
-            }
-            else if (error.equals("rulefailed.consumer.type.mismatch")) {
-                msg = i18n.tr(
-                    "Units of this type are not allowed to attach the pool " +
-                    "with ID ''{0}''.", pool.getId());
-            }
-            else if (error.equals("rulefailed.pool.does.not.support.multi-entitlement")) {
-                msg = i18n.tr("Multi-entitlement not supported for pool with ID ''{0}''.",
-                    pool.getId());
-            }
-            else if (error.equals("virt.guest.host.does.not.match.pool.owner")) {
-                msg = i18n.tr("Guest''s host does not match owner of pool: ''{0}''.",
-                    pool.getId());
-            }
-            else if (error.equals("pool.not.available.to.manifest.consumers")) {
-                msg = i18n.tr("Pool not available to subscription management " +
-                        "applications.");
-            }
-            else if (error.equals("rulefailed.virt.only")) {
-                msg = i18n.tr("Pool is restricted to virtual guests: ''{0}''.",
-                    pool.getId());
-            }
-            else if (error.equals("rulefailed.physical.only")) {
-                msg = i18n.tr("Pool is restricted to physical systems: ''{0}''.",
-                    pool.getId());
-            }
-            else if (error.equals("rulefailed.quantity.mismatch")) {
-                String multip = null;
-                if (pool.hasProductAttribute("instance_multiplier")) {
-                    multip = pool.getProductAttribute("instance_multiplier").getValue();
-                }
-                msg = i18n.tr(
-                    "Subscription ''{0}'' must be attached using a quantity" +
-                    " evenly divisible by {1}",
-                    pool.getProductName(), multip);
-            }
-            else if (error.equals("rulefailed.instance.unsupported.by.consumer")) {
-                msg = i18n.tr("Unit does not support instance based calculation " +
-                    "required by pool ''{0}''", pool.getId());
-            }
-            else if (error.equals("rulefailed.cores.unsupported.by.consumer")) {
-                msg = i18n.tr("Unit does not support core calculation " +
-                    "required by pool ''{0}''", pool.getId());
-            }
-            else if (error.equals("rulefailed.ram.unsupported.by.consumer")) {
-                msg = i18n.tr("Unit does not support RAM calculation " +
-                    "required by pool ''{0}''", pool.getId());
-            }
-            else if (error.equals("rulefailed.derivedproduct.unsupported.by.consumer")) {
-                msg = i18n.tr("Unit does not support derived products data " +
-                    "required by pool ''{0}''", pool.getId());
-            }
-            else {
-                msg = i18n.tr("Unable to attach pool with ID ''{0}''.: {1}.",
-                    pool.getId().toString(), error);
-            }
-            throw new ForbiddenException(msg);
+            // TODO: Could be multiple errors, but we'll just report the first one for now
+            throw new ForbiddenException(messageTranslator.poolErrorToMessage(pool,
+                    e.getResult().getErrors().get(0)));
         }
     }
 
@@ -180,32 +113,9 @@ public class Entitler {
             poolManager.adjustEntitlementQuantity(consumer, ent, quantity);
         }
         catch (EntitlementRefusedException e) {
-            // Could be multiple errors, but we'll just report the first one for
-            // now:
-            String msg;
-            String error = e.getResult().getErrors().get(0).getResourceKey();
-
-            if (error.equals("rulefailed.no.entitlements.available")) {
-                msg = i18n.tr(
-                    "Insufficient pool quantity available for adjustment to entitlement " +
-                    "''{0}''.",
-                    ent.getId());
-            }
-            else if (error.equals("rulefailed.pool.does.not.support.multi-entitlement")) {
-                msg = i18n.tr("Multi-entitlement not supported for pool connected with " +
-                              "entitlement ''{0}''.",
-                    ent.getId());
-            }
-            else if (error.equals("rulefailed.consumer.already.has.product")) {
-                msg = i18n.tr("Multi-entitlement not supported for pool connected with " +
-                              "entitlement ''{0}''.",
-                    ent.getId());
-            }
-            else {
-                msg = i18n.tr("Unable to adjust quantity for the entitlement with " +
-                    "id ''{0}'': {1}", ent.getId(), error);
-            }
-            throw new ForbiddenException(msg);
+            // TODO: Could be multiple errors, but we'll just report the first one for now:
+            throw new ForbiddenException(messageTranslator.entitlementErrorToMessage(ent,
+                    e.getResult().getErrors().get(0)));
         }
     }
 
@@ -273,36 +183,9 @@ public class Entitler {
             return entitlements;
         }
         catch (EntitlementRefusedException e) {
-            // Could be multiple errors, but we'll just report the first one for
-            // now:
-            // TODO: Convert resource key to user friendly string?
-            // See below for more TODOS
-            String productId = productIds[0];
-            String msg;
-            String error = e.getResult().getErrors().get(0).getResourceKey();
-            if (error.equals("rulefailed.consumer.already.has.product")) {
-                msg = i18n.tr("This system already has a subscription for " +
-                        "the product ''{0}'' attached.", productId);
-            }
-            else if (error.equals("rulefailed.no.entitlements.available")) {
-                msg = i18n.tr("There are not enough free subscriptions " +
-                    "available for the product ''{0}''", productId);
-            }
-            else if (error.equals("rulefailed.consumer.type.mismatch")) {
-                msg = i18n.tr("Units of this type are not allowed for " +
-                        "the product ''{0}''.", productId);
-            }
-            else if (error.equals("rulefailed.virt.only")) {
-                msg = i18n.tr(
-                    "Only virtual systems can have subscription ''{0}'' attached.",
-                    productId);
-            }
-            else {
-                msg = i18n.tr(
-                    "Unable to attach subscription for the product ''{0}'': {1}.",
-                    productId, error);
-            }
-            throw new ForbiddenException(msg);
+            // TODO: Could be multiple errors, but we'll just report the first one for now
+            throw new ForbiddenException(messageTranslator.productErrorToMessage(productIds[0],
+                    e.getResult().getErrors().get(0)));
         }
     }
 

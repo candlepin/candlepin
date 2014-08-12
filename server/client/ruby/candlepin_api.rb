@@ -175,6 +175,14 @@ class Candlepin
     put("/entitlements/#{params[:id]}", entitlement)
   end
 
+  def migrate_entitlement(params)
+    path = "/entitlements/#{params[:id]}/migrate?to_consumer=#{params[:dest]}"
+    if params[:quantity]
+      path << "&quantity=#{params[:quantity]}"
+    end
+    put(path)
+  end
+
   def get_user_info(user)
     get("/users/#{user}")
   end
