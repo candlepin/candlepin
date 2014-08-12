@@ -19,7 +19,7 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.ConfigurationException;
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.common.config.PropertiesFileConfiguration;
-import org.candlepin.gutterball.config.ConfigKey;
+import org.candlepin.gutterball.config.ConfigProperties;
 import org.candlepin.gutterball.mongodb.MongoConnection;
 
 import org.junit.rules.ExternalResource;
@@ -61,8 +61,8 @@ public class EmbeddedMongoRule extends ExternalResource {
         Configuration config = readConfigOverride();
         if (config == null) {
             config = new MapConfiguration();
-            config.setProperty(ConfigKey.MONGODB_PORT.toString(), TEST_PORT);
-            config.setProperty(ConfigKey.MONGODB_DATABASE.toString(), TEST_DATABASE);
+            config.setProperty(ConfigProperties.MONGODB_PORT, TEST_PORT);
+            config.setProperty(ConfigProperties.MONGODB_DATABASE, TEST_DATABASE);
         }
         this.config = config;
     }
@@ -80,7 +80,7 @@ public class EmbeddedMongoRule extends ExternalResource {
         log.info("Starting embedded mongodb server...");
         mongodExe = STARTER.prepare(new MongodConfigBuilder()
             .version(Version.Main.PRODUCTION)
-            .net(new Net(config.getInteger(ConfigKey.MONGODB_PORT.toString()),
+            .net(new Net(config.getInteger(ConfigProperties.MONGODB_PORT),
                     Network.localhostIsIPv6()))
             .build());
         mongod = mongodExe.start();

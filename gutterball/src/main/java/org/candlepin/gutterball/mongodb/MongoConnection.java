@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.candlepin.common.config.Configuration;
-import org.candlepin.gutterball.config.ConfigKey;
+import org.candlepin.gutterball.config.ConfigProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,6 +37,7 @@ import com.mongodb.ServerAddress;
  */
 public class MongoConnection {
 
+    // TODO: consider putting these in ConfigProperties - jesusr 8-12-2014
     protected static final String DEFAULT_HOST = "localhost";
     protected static final int DEFAULT_PORT = 27017;
     protected static final String DEFAULT_DB = "gutterball";
@@ -47,11 +48,11 @@ public class MongoConnection {
     private String databaseName;
 
     public MongoConnection(Configuration config) throws MongoException {
-        String host = config.getString(ConfigKey.MONGODB_HOST.toString(), DEFAULT_HOST);
-        int port = config.getInteger(ConfigKey.MONGODB_PORT.toString(), DEFAULT_PORT);
-        databaseName = config.getString(ConfigKey.MONGODB_DATABASE.toString(),
+        String host = config.getString(ConfigProperties.MONGODB_HOST, DEFAULT_HOST);
+        int port = config.getInteger(ConfigProperties.MONGODB_PORT, DEFAULT_PORT);
+        databaseName = config.getString(ConfigProperties.MONGODB_DATABASE,
                 DEFAULT_DB);
-        String username = config.getString(ConfigKey.MONGODB_USERNAME.toString(), "");
+        String username = config.getString(ConfigProperties.MONGODB_USERNAME, "");
 
         ServerAddress serverAddress = null;
         try {
@@ -64,7 +65,7 @@ public class MongoConnection {
         List<MongoCredential> credentials = new ArrayList<MongoCredential>();
         if (username != null && !username.isEmpty()) {
             log.info("Mongodb connection will be authenticated with user: " + username);
-            String password = config.getString(ConfigKey.MONGODB_PASSWORD.toString(), "");
+            String password = config.getString(ConfigProperties.MONGODB_PASSWORD, "");
             credentials.add(MongoCredential.createMongoCRCredential(username,
                 databaseName, password.toCharArray()));
         }
