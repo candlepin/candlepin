@@ -28,7 +28,7 @@ public class MapConfiguration extends AbstractConfiguration {
         configMap = new ConcurrentHashMap<String, Object>();
     }
 
-    protected MapConfiguration(ConcurrentHashMap<String, Object> configMap) {
+    public MapConfiguration(Map<String, ?> configMap) {
         this.configMap = new ConcurrentHashMap<String, Object>(configMap);
     }
 
