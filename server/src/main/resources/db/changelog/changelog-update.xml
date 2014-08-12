@@ -71,4 +71,5 @@
     <include file="db/changelog/20140506122111-remove-certserial-revoked.xml" />
     <include file="db/changelog/20140616140315-remove-reliant-product.xml" />
     <include file="db/changelog/20140815131046-drop-event-entity-id-not-null.xml" />
+    <include file="db/changelog/20140811163932-compliance-on-startdate.xml" />
 </databaseChangeLog>

@@ -19,6 +19,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
+
+import org.candlepin.pinsetter.tasks.ActiveEntitlementJob;
 import org.candlepin.pinsetter.tasks.CancelJobJob;
 import org.candlepin.pinsetter.tasks.CertificateRevocationListTask;
 import org.candlepin.pinsetter.tasks.ExpiredPoolsJob;
@@ -92,7 +94,7 @@ public class ConfigProperties {
         StatisticHistoryTask.class.getName(),
         CancelJobJob.class.getName(), ExpiredPoolsJob.class.getName(),
         UnpauseJob.class.getName(), SweepBarJob.class.getName(),
-        ExportCleaner.class.getName()};
+        ExportCleaner.class.getName(), ActiveEntitlementJob.class.getName()};
 
     public static final String SYNC_WORK_DIR = "candlepin.sync.work_dir";
     public static final String CONSUMER_FACTS_MATCHER =
