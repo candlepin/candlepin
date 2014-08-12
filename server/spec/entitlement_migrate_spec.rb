@@ -47,8 +47,8 @@ describe 'Entitlement Migrate' do
     entitlement = @dist1.consume_pool(pool.id, {:quantity => 25})[0]
     @cp.update_consumer(:uuid => @dist2.get_consumer()['uuid'], :capabilities => [])
     lambda {
-      @cp.migrate_entitlement({:id => entitlement.id, :dest => @dist2.get_consumer()['uuid'], :quantity => 25})
-    }.should raise_exception(RestClient::BadRequest)
+      x = @cp.migrate_entitlement({:id => entitlement.id, :dest => @dist2.get_consumer()['uuid'], :quantity => 25})
+    }.should raise_exception(RestClient::BadRequest) {|exception| exception.response.headers[:root_cause].should == 'rule_fail'}
   end
 
   it 'should move entire entitlement count when none specified' do

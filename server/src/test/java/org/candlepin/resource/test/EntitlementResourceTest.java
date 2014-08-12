@@ -15,12 +15,14 @@
 package org.candlepin.resource.test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.Entitler;
 import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.exceptions.BadRequestException.CauseEnum;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -30,6 +32,7 @@ import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.SourceStack;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
+import org.candlepin.policy.js.entitlement.EntitlementRulesTranslator;
 import org.candlepin.resource.EntitlementResource;
 import org.candlepin.resource.SubscriptionResource;
 import org.candlepin.service.ProductServiceAdapter;
@@ -44,8 +47,6 @@ import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
 import java.util.Locale;
-
-import javax.ws.rs.core.Response;
 
 /**
  * EntitlementResourceTest
@@ -63,6 +64,7 @@ public class EntitlementResourceTest {
     @Mock private Entitler entitler;
     @Mock private SubscriptionResource subResource;
     @Mock private EntitlementRules entRules;
+    @Mock private EntitlementRulesTranslator messageTranslator;
 
     private EntitlementResource entResource;
 
@@ -70,7 +72,8 @@ public class EntitlementResourceTest {
     public void before() {
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         entResource = new EntitlementResource(prodAdapter, entitlementCurator,
-            consumerCurator, poolManager, i18n, entitler, subResource, entRules);
+            consumerCurator, poolManager, i18n, entitler, subResource, entRules,
+            messageTranslator);
         owner = new Owner("admin");
         consumer = new Consumer("myconsumer", "bill", owner,
             TestUtil.createConsumerType());
@@ -136,7 +139,7 @@ public class EntitlementResourceTest {
         entResource.getUpstreamCert(e.getId());
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void migrateEntitlementQuantityFail() {
         ConsumerType ct = TestUtil.createConsumerType();
         ct.setManifest(true);
@@ -147,22 +150,19 @@ public class EntitlementResourceTest {
         e.setQuantity(25);
 
         when(entitlementCurator.find(eq(e.getId()))).thenReturn(e);
-        when(consumerCurator.verifyAndLookupConsumer(eq(sourceConsumer.getUuid())))
-            .thenReturn(sourceConsumer);
         when(consumerCurator.verifyAndLookupConsumer(eq(destConsumer.getUuid())))
             .thenReturn(destConsumer);
 
         try {
-            Response response = entResource.migrateEntitlement(e.getId(), destConsumer.getUuid(), 30);
+            entResource.migrateEntitlement(e.getId(), destConsumer.getUuid(), 30);
+            fail("Should have thrown BadRequestException");
         }
         catch (BadRequestException bre) {
-            assertEquals(bre.getMessage(), i18n.tr("The quantity specified must be greater than zero " +
-                        "and less than or equal to the total for this entitlement"));
-            throw bre;
+            assertEquals(bre.headers().get(BadRequestException.ROOTCAUSE), CauseEnum.QUANTITY.toString());
         }
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void migrateEntitlementSourceConsumerFail() {
         ConsumerType ct = TestUtil.createConsumerType();
         ct.setManifest(true);
@@ -172,44 +172,39 @@ public class EntitlementResourceTest {
         e.setQuantity(25);
 
         when(entitlementCurator.find(eq(e.getId()))).thenReturn(e);
-        when(consumerCurator.verifyAndLookupConsumer(eq(consumer.getUuid()))).thenReturn(consumer);
         when(consumerCurator.verifyAndLookupConsumer(eq(destConsumer.getUuid()))).thenReturn(destConsumer);
 
         try {
-            Response response = entResource.migrateEntitlement(e.getId(), destConsumer.getUuid(), 15);
+            entResource.migrateEntitlement(e.getId(), destConsumer.getUuid(), 15);
+            fail("Should have thrown BadRequestException");
         }
         catch (BadRequestException bre) {
-            assertEquals(bre.getMessage(), i18n.tr("Entitlement migration is not permissible for " +
-                    "units of type ''{1}''", consumer.getType().getLabel()));
-            throw bre;
+            assertEquals(bre.headers().get(BadRequestException.ROOTCAUSE), CauseEnum.SOURCE.toString());
         }
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void migrateEntitlementDestinationConsumerFail() {
         ConsumerType ct = TestUtil.createConsumerType();
         ct.setManifest(true);
         Entitlement e = TestUtil.createEntitlement();
         Consumer sourceConsumer = new Consumer("source-consumer", "bill", owner, ct);
-        e.setConsumer(consumer);
+        e.setConsumer(sourceConsumer);
         e.setQuantity(25);
 
         when(entitlementCurator.find(eq(e.getId()))).thenReturn(e);
-        when(consumerCurator.verifyAndLookupConsumer(eq(sourceConsumer.getUuid())))
-            .thenReturn(sourceConsumer);
         when(consumerCurator.verifyAndLookupConsumer(eq(consumer.getUuid()))).thenReturn(consumer);
 
         try {
-            Response response = entResource.migrateEntitlement(e.getId(), consumer.getUuid(), 15);
+            entResource.migrateEntitlement(e.getId(), consumer.getUuid(), 15);
+            fail("Should have thrown BadRequestException");
         }
         catch (BadRequestException bre) {
-            assertEquals(bre.getMessage(), i18n.tr("Entitlement migration is not permissible for " +
-                    "units of type ''{1}''", consumer.getType().getLabel()));
-            throw bre;
+            assertEquals(bre.headers().get(BadRequestException.ROOTCAUSE), CauseEnum.DESTINATION.toString());
         }
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void migrateEntitlementSameOwnerFail() {
         ConsumerType ct = TestUtil.createConsumerType();
         ct.setManifest(true);
@@ -221,18 +216,15 @@ public class EntitlementResourceTest {
         e.setQuantity(25);
 
         when(entitlementCurator.find(eq(e.getId()))).thenReturn(e);
-        when(consumerCurator.verifyAndLookupConsumer(eq(sourceConsumer.getUuid())))
-            .thenReturn(sourceConsumer);
         when(consumerCurator.verifyAndLookupConsumer(eq(destConsumer.getUuid())))
             .thenReturn(destConsumer);
 
         try {
-            Response response = entResource.migrateEntitlement(e.getId(), destConsumer.getUuid(), 15);
+            entResource.migrateEntitlement(e.getId(), destConsumer.getUuid(), 15);
+            fail("Should have thrown BadRequestException");
         }
         catch (BadRequestException bre) {
-            assertEquals(bre.getMessage(), i18n.tr("Source and destination units must belong to " +
-                    "the same organization"));
-            throw bre;
+            assertEquals(bre.headers().get(BadRequestException.ROOTCAUSE), CauseEnum.ORGMATCH.toString());
         }
     }
 }

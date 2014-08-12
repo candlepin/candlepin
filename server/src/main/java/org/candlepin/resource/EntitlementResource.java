@@ -20,6 +20,7 @@ import org.candlepin.auth.interceptor.Verify;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.exceptions.BadRequestException.CauseEnum;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.Consumer;
@@ -32,8 +33,9 @@ import org.candlepin.paging.PageRequest;
 import org.candlepin.paging.Paginate;
 import org.candlepin.pinsetter.tasks.RegenProductEntitlementCertsJob;
 import org.candlepin.policy.ValidationResult;
+import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.Enforcer.CallerType;
-import org.candlepin.policy.js.entitlement.EntitlementRules;
+import org.candlepin.policy.js.entitlement.EntitlementRulesTranslator;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.util.Util;
 
@@ -78,7 +80,8 @@ public class EntitlementResource {
     private ProductServiceAdapter prodAdapter;
     private Entitler entitler;
     private SubscriptionResource subResource;
-    private EntitlementRules entitlementRules;
+    private Enforcer enforcer;
+    private EntitlementRulesTranslator messageTranslator;
 
     @Inject
     public EntitlementResource(ProductServiceAdapter prodAdapter,
@@ -86,7 +89,7 @@ public class EntitlementResource {
             ConsumerCurator consumerCurator,
             PoolManager poolManager,
             I18n i18n, Entitler entitler, SubscriptionResource subResource,
-            EntitlementRules entitlementRules) {
+            Enforcer enforcer, EntitlementRulesTranslator messageTranslator) {
 
         this.entitlementCurator = entitlementCurator;
         this.consumerCurator = consumerCurator;
@@ -95,7 +98,8 @@ public class EntitlementResource {
         this.poolManager = poolManager;
         this.entitler = entitler;
         this.subResource = subResource;
-        this.entitlementRules = entitlementRules;
+        this.enforcer = enforcer;
+        this.messageTranslator = messageTranslator;
     }
 
     private void verifyExistence(Object o, String id) {
@@ -177,7 +181,7 @@ public class EntitlementResource {
      *   "consumer" : {},
      *   "pool" : {},
      *   "certificates" : [ ],
-     *   "quantity" : 1,
+     *   CauseEnum.QUANTITY.toString() : 1,
      *   "startDate" : [date],
      *   "endDate" : [date],
      *   "href" : "/entitlements/database_id",
@@ -379,23 +383,35 @@ public class EntitlementResource {
                 Consumer destinationConsumer = consumerCurator.verifyAndLookupConsumer(
                         uuid);
                 if (!sourceConsumer.getType().isManifest()) {
-                    throw new BadRequestException(i18n.tr("Entitlement migration is not permissible for " +
-                            "units of type ''{1}''", sourceConsumer.getType().getLabel()));
+                    BadRequestException bre = new BadRequestException(i18n.tr(
+                            "Entitlement migration is not permissible for units of type ''{1}''",
+                            sourceConsumer.getType().getLabel()));
+                    bre.addHeader(BadRequestException.ROOTCAUSE, CauseEnum.SOURCE.toString());
+                    throw bre;
                 }
                 if (!destinationConsumer.getType().isManifest()) {
-                    throw new BadRequestException(i18n.tr("Entitlement migration is not permissible for " +
-                            "units of type ''{1}''", destinationConsumer.getType().getLabel()));
+                    BadRequestException bre = new BadRequestException(i18n.tr(
+                            "Entitlement migration is not permissible for units of type ''{1}''",
+                            destinationConsumer.getType().getLabel()));
+                    bre.addHeader(BadRequestException.ROOTCAUSE, CauseEnum.DESTINATION.toString());
+                    throw bre;
                 }
                 if (!sourceConsumer.getOwner().getKey().equals(destinationConsumer.getOwner().getKey())) {
-                    throw new BadRequestException(i18n.tr("Source and destination units must belong to " +
-                            "the same organization"));
+                    BadRequestException bre = new BadRequestException(i18n.tr(
+                            "Source and destination units must belong to the same organization"));
+                    bre.addHeader(BadRequestException.ROOTCAUSE, CauseEnum.ORGMATCH.toString());
+                    throw bre;
                 }
                 // test to ensure destination can use the pool
-                ValidationResult result = entitlementRules.preEntitlement(destinationConsumer,
+                ValidationResult result = enforcer.preEntitlement(destinationConsumer,
                         entitlement.getPool(), 0, CallerType.BIND);
                 if (!result.isSuccessful()) {
-                    throw new BadRequestException(i18n.tr("The entitlement cannot be utilized by the " +
-                            "destination unit"));
+                    BadRequestException bre = new BadRequestException(i18n.tr(
+                            "The entitlement cannot be utilized by the destination unit: '{0}'",
+                            messageTranslator.poolErrorToMessage(entitlement.getPool(),
+                            result.getErrors().get(0))));
+                    bre.addHeader(BadRequestException.ROOTCAUSE, CauseEnum.RULEFAIL.toString());
+                    throw bre;
                 }
                 if (quantity.intValue() == entitlement.getQuantity()) {
                     unbind(id);
@@ -413,8 +429,11 @@ public class EntitlementResource {
 
             }
             else {
-                throw new BadRequestException(i18n.tr("The quantity specified must be greater than zero " +
+                BadRequestException bre =  new BadRequestException(i18n.tr(
+                        "The quantity specified must be greater than zero " +
                         "and less than or equal to the total for this entitlement"));
+                bre.addHeader(BadRequestException.ROOTCAUSE, "quantity");
+                throw bre;
             }
         }
         else {
