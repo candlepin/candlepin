@@ -907,28 +907,25 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testGetPoolsForOwnerRefreshBySubId() {
+    public void testGetPoolsBySubId() {
         Owner owner2 = createOwner();
         ownerCurator.create(owner2);
 
         Pool pool = createPool(owner2, "id123");
 
-        List<String> subIds = new LinkedList<String>();
-        subIds.add(pool.getSubscriptionId());
-        List<Pool> result = poolCurator.getPoolsForOwnerRefresh(owner, subIds);
+        List<Pool> result = poolCurator.getPoolsBySubscriptionId(pool.getSubscriptionId());
         assertEquals(1, result.size());
         assertEquals(pool, result.get(0));
     }
 
     @Test
-    public void testGetPoolsForOwnerRefreshNoMatch() {
+    public void testGetPoolsBySubIdNull() {
         Owner owner2 = createOwner();
         ownerCurator.create(owner2);
 
         createPool(owner2, "id123");
 
-        List<String> subIds = new LinkedList<String>();
-        List<Pool> result = poolCurator.getPoolsForOwnerRefresh(owner, subIds);
+        List<Pool> result = poolCurator.getPoolsBySubscriptionId(null);
         assertTrue(result.isEmpty());
     }
 

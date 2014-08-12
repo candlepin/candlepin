@@ -14,8 +14,6 @@
  */
 package org.candlepin.controller;
 
-import org.apache.commons.lang.StringUtils;
-
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventBuilder;
 import org.candlepin.audit.EventFactory;
@@ -77,7 +75,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 /**
@@ -137,85 +134,58 @@ public class CandlepinPoolManager implements PoolManager {
         this.activationKeyRules = activationKeyRules;
     }
 
+    // TODO: Break this up into multiple transactions.  More is better!
+    // That will probably require us to build a list of entitlement Ids to regenerate,
+    // which we can look up later
     Set<Entitlement> refreshPoolsWithoutRegeneration(Owner owner) {
         log.info("Refreshing pools for owner: " + owner.getKey());
-        List<Subscription> subs = subAdapter.getSubscriptions(owner);
-        log.debug("Found " + subs.size() + " existing subscriptions.");
+        List<String> subIds = subAdapter.getSubscriptionIds(owner);
+        log.debug("Found " + subIds.size() + " existing subscriptions.");
 
-        List<String> subIds = getSubscriptionIds(subs);
-        List<Pool> pools = poolCurator.getPoolsForOwnerRefresh(owner, subIds);
-
-        // Pools with no subscription ID:
-        List<Pool> floatingPools = new LinkedList<Pool>();
-
-        // Map all pools for this owner/product that have a
-        // subscription ID associated with them.
-        Map<String, List<Pool>> subToPoolMap = new HashMap<String, List<Pool>>();
-        for (Pool p : pools) {
-            if (!StringUtils.isEmpty(p.getSubscriptionId())) {
-                if (!subToPoolMap.containsKey(p.getSubscriptionId())) {
-                    subToPoolMap.put(p.getSubscriptionId(),
-                        new LinkedList<Pool>());
-                }
-                subToPoolMap.get(p.getSubscriptionId()).add(p);
-            }
-            else {
-                floatingPools.add(p);
-            }
-        }
-
+        List<String> deletedSubs = new LinkedList<String>();
         Set<Entitlement> entitlementsToRegen = Util.newSet();
-        for (Subscription sub : subs) {
-            // Delete any expired subscriptions. Leave it in the map
-            // so that the pools will get deleted as well.
+        for (String subId : subIds) {
+            Subscription sub = subAdapter.getSubscription(subId);
+
+            // Remove expired subscriptions
             if (isExpired(sub)) {
+                deletedSubs.add(subId);
                 log.info("Deleting expired subscription: " + sub);
                 subAdapter.deleteSubscription(sub);
                 continue;
             }
 
-            // If the key doesn't exist, we never have to worry about duplicates.
-            if (subToPoolMap.containsKey(sub.getId())) {
-                removeAndDeletePoolsOnOtherOwners(subToPoolMap.get(sub.getId()), sub);
-            }
+            // These don't all necessarily belong to this owner
+            List<Pool> subscriptionPools = poolCurator.getPoolsBySubscriptionId(subId);
+
+            // Cleans up pools on other owners who have migrated subs away
+            removeAndDeletePoolsOnOtherOwners(subscriptionPools, sub);
+
             // BUG 1012386 This will regenerate master/derived for bonus scenarios
             //  if only one of the pair still exists.
-            createPoolsForSubscription(sub, subToPoolMap.get(sub.getId()));
+            createPoolsForSubscription(sub, subscriptionPools);
             entitlementsToRegen.addAll(
                 // don't update floating here, we'll do that later
                 // so we don't update anything twice
-                updatePoolsForSubscription(
-                    subToPoolMap.get(sub.getId()), sub, false)
+                updatePoolsForSubscription(subscriptionPools, sub, false)
             );
-            subToPoolMap.remove(sub.getId());
         }
 
-        entitlementsToRegen.addAll(updateFloatingPools(floatingPools));
-
+        // We deleted some, need to take that into account so we
+        // remove everything that isn't actually active
+        subIds.removeAll(deletedSubs);
         // delete pools whose subscription disappeared:
-        for (Entry<String, List<Pool>> entry : subToPoolMap.entrySet()) {
-            for (Pool p : entry.getValue()) {
-                // WARNING: need to be very careful here. We do not want to delete
-                // derived pools with a source entitlement or stack, these will be cleaned
-                // up when the entitlements in the master pool are revoked.
-                //
-                // However if this is an older bonus pool (hosted) not tied to any
-                // entitlements, we need to proceed:
-                if (p.getType() == PoolType.NORMAL || p.getType() == PoolType.BONUS) {
-                    deletePool(p);
-                }
+        for (Pool p : poolCurator.getPoolsFromBadSubs(owner, subIds)) {
+            if (p.getType() == PoolType.NORMAL || p.getType() == PoolType.BONUS) {
+                deletePool(p);
             }
         }
 
-        return entitlementsToRegen;
-    }
+        // TODO: break this call into smaller pieces.  There may be lots of floating pools
+        List<Pool> floatingPools = poolCurator.getOwnersFloatingPools(owner);
+        entitlementsToRegen.addAll(updateFloatingPools(floatingPools));
 
-    private List<String> getSubscriptionIds(List<Subscription> subs) {
-        List<String> result = new LinkedList<String>();
-        for (Subscription sub : subs) {
-            result.add(sub.getId());
-        }
-        return result;
+        return entitlementsToRegen;
     }
 
     public void cleanupExpiredPools() {
@@ -397,12 +367,6 @@ public class CandlepinPoolManager implements PoolManager {
         // Hand off to rules to determine which pools need updating:
         List<PoolUpdate> updatedPools = poolRules.updatePools(floatingPools);
         return processPoolUpdates(poolEvents, updatedPools);
-    }
-
-    private boolean poolExistsForSubscription(
-        Map<String, List<Pool>> subToPoolMap, String id) {
-        return subToPoolMap.containsKey(id) &&
-            !subToPoolMap.get(id).isEmpty();
     }
 
     /**

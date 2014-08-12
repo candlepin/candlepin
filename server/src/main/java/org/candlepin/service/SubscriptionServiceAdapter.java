@@ -15,6 +15,7 @@
 package org.candlepin.service;
 
 import java.util.List;
+import java.util.Set;
 
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
@@ -36,6 +37,13 @@ public interface SubscriptionServiceAdapter {
      * @return all subscriptions for the given owner.
      */
     List<Subscription> getSubscriptions(Owner owner);
+
+    /**
+     * List all active subscription ids for the given owner.
+     * @param owner Owner of the subscriptions.
+     * @return ids of all subscriptions for the given owner.
+     */
+    List<String> getSubscriptionIds(Owner owner);
 
     /**
      * Lookup a specific subscription.

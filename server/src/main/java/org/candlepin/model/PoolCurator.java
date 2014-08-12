@@ -43,6 +43,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -550,27 +551,38 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             .list();
     }
 
-    /**
-     * Lists all pools that either belong to owner, or match a subscription id in subIds
-     *
-     * @param owner owner
-     * @param subIds subscription ids
-     * @return resulting list of pools
-     */
+    // Get rid of pools from subs that don't exist
     @SuppressWarnings("unchecked")
-    public List<Pool> getPoolsForOwnerRefresh(Owner owner, List<String> subIds) {
-        Criteria crit = currentSession().createCriteria(Pool.class);
-
-        Disjunction ownerOrIds = Restrictions.disjunction();
+    public List<Pool> getPoolsFromBadSubs(Owner owner, Collection<String> subIds) {
+        Criteria crit = currentSession().createCriteria(Pool.class)
+                .add(Restrictions.eq("owner", owner));
         if (!subIds.isEmpty()) {
-            crit.createAlias("sourceSubscription", "sourceSub",
-                    JoinType.LEFT_OUTER_JOIN);
-            ownerOrIds.add(Restrictions.in("sourceSub.subscriptionId", subIds));
+            crit.createAlias("sourceSubscription", "sourceSub");
+            crit.add(Restrictions.and(Restrictions.not(Restrictions.in("sourceSub.subscriptionId", subIds)),
+                    Restrictions.isNotNull("sourceSub.subscriptionId")));
         }
-        ownerOrIds.add(Restrictions.eq("owner", owner));
-        crit.add(ownerOrIds);
-        // Add order to help avoid deadlocks when refreshing pools
         crit.addOrder(Order.asc("id"));
         return crit.list();
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<Pool> getPoolsBySubscriptionId(String subId) {
+        return currentSession().createCriteria(Pool.class)
+            .createAlias("sourceSubscription", "sourceSub",
+                    JoinType.LEFT_OUTER_JOIN)
+            .add(Restrictions.eq("sourceSub.subscriptionId", subId))
+            .addOrder(Order.asc("id"))
+            .list();
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<Pool> getOwnersFloatingPools(Owner owner) {
+        return currentSession().createCriteria(Pool.class)
+                .add(Restrictions.eq("owner", owner))
+                .createAlias("sourceSubscription", "sourceSub",
+                    JoinType.LEFT_OUTER_JOIN)
+                .add(Restrictions.isNull("sourceSub.subscriptionId"))
+                .addOrder(Order.asc("id"))
+                .list();
     }
 }
