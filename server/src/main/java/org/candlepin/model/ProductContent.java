@@ -116,7 +116,6 @@ public class ProductContent extends AbstractHibernateObject {
 
     @Override
     public int hashCode() {
-        // TODO: Should we include the product here?
         return new HashCodeBuilder(3, 23).append(this.enabled)
             .append(this.content.hashCode()).toHashCode();
     }

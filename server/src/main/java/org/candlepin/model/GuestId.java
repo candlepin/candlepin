@@ -162,7 +162,7 @@ public class GuestId extends AbstractHibernateObject implements Owned, Named, Co
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder(7, 23).append(getConsumer().getId())
+        return new HashCodeBuilder(7, 23)
             .append(getGuestId()).toHashCode();
     }
 
