@@ -38,6 +38,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationResult;
+import org.candlepin.policy.js.entitlement.EntitlementRulesTranslator;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -59,6 +60,7 @@ public class EntitlerTest {
     private Entitler entitler;
     private Consumer consumer;
     private ConsumerCurator cc;
+    private EntitlementRulesTranslator translator;
 
     private ValidationResult fakeOutResult(String msg) {
         ValidationResult result = new ValidationResult();
@@ -79,7 +81,8 @@ public class EntitlerTest {
             Locale.US,
             I18nFactory.READ_PROPERTIES | I18nFactory.FALLBACK
         );
-        entitler = new Entitler(pm, cc, i18n, ef, sink);
+        translator = new EntitlementRulesTranslator(i18n);
+        entitler = new Entitler(pm, cc, i18n, ef, sink, translator);
     }
 
     @Test

@@ -16,7 +16,41 @@ package org.candlepin.resource;
 
 import static org.quartz.JobBuilder.newJob;
 
+import org.candlepin.auth.interceptor.Verify;
+import org.candlepin.controller.Entitler;
+import org.candlepin.controller.PoolManager;
+import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.exceptions.BadRequestException.CauseEnum;
+import org.candlepin.exceptions.NotFoundException;
+import org.candlepin.model.Cdn;
+import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.Entitlement;
+import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.Pool;
+import org.candlepin.paging.Page;
+import org.candlepin.paging.PageRequest;
+import org.candlepin.paging.Paginate;
+import org.candlepin.pinsetter.tasks.RegenProductEntitlementCertsJob;
+import org.candlepin.policy.ValidationResult;
+import org.candlepin.policy.js.entitlement.Enforcer;
+import org.candlepin.policy.js.entitlement.Enforcer.CallerType;
+import org.candlepin.policy.js.entitlement.EntitlementRulesTranslator;
+import org.candlepin.service.ProductServiceAdapter;
+import org.candlepin.util.Util;
+
+import com.google.inject.Inject;
+
+import org.apache.commons.lang.StringUtils;
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.quartz.JobDataMap;
+import org.quartz.JobDetail;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.xnap.commons.i18n.I18n;
+
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -31,33 +65,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-
-import org.apache.commons.lang.StringUtils;
-import org.candlepin.auth.interceptor.Verify;
-import org.candlepin.controller.Entitler;
-import org.candlepin.controller.PoolManager;
-import org.candlepin.exceptions.BadRequestException;
-import org.candlepin.exceptions.NotFoundException;
-import org.candlepin.model.Cdn;
-import org.candlepin.model.Consumer;
-import org.candlepin.model.ConsumerCurator;
-import org.candlepin.model.Entitlement;
-import org.candlepin.model.EntitlementCurator;
-import org.candlepin.model.Pool;
-import org.candlepin.paging.Page;
-import org.candlepin.paging.PageRequest;
-import org.candlepin.paging.Paginate;
-import org.candlepin.pinsetter.tasks.RegenProductEntitlementCertsJob;
-import org.candlepin.service.ProductServiceAdapter;
-import org.candlepin.util.Util;
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
-import org.quartz.JobDataMap;
-import org.quartz.JobDetail;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.xnap.commons.i18n.I18n;
-
-import com.google.inject.Inject;
+import javax.ws.rs.core.Response;
 
 /**
  * REST api gateway for the User object.
@@ -72,13 +80,16 @@ public class EntitlementResource {
     private ProductServiceAdapter prodAdapter;
     private Entitler entitler;
     private SubscriptionResource subResource;
+    private Enforcer enforcer;
+    private EntitlementRulesTranslator messageTranslator;
 
     @Inject
     public EntitlementResource(ProductServiceAdapter prodAdapter,
             EntitlementCurator entitlementCurator,
             ConsumerCurator consumerCurator,
             PoolManager poolManager,
-            I18n i18n, Entitler entitler, SubscriptionResource subResource) {
+            I18n i18n, Entitler entitler, SubscriptionResource subResource,
+            Enforcer enforcer, EntitlementRulesTranslator messageTranslator) {
 
         this.entitlementCurator = entitlementCurator;
         this.consumerCurator = consumerCurator;
@@ -87,6 +98,8 @@ public class EntitlementResource {
         this.poolManager = poolManager;
         this.entitler = entitler;
         this.subResource = subResource;
+        this.enforcer = enforcer;
+        this.messageTranslator = messageTranslator;
     }
 
     private void verifyExistence(Object o, String id) {
@@ -168,7 +181,7 @@ public class EntitlementResource {
      *   "consumer" : {},
      *   "pool" : {},
      *   "certificates" : [ ],
-     *   "quantity" : 1,
+     *   CauseEnum.QUANTITY.toString() : 1,
      *   "startDate" : [date],
      *   "endDate" : [date],
      *   "href" : "/entitlements/database_id",
@@ -338,6 +351,98 @@ public class EntitlementResource {
             .build();
 
         return detail;
+    }
+
+    /**
+     *  Migrate entitlements from one distributor consumer to another
+     *
+     *  Can specify full or partial quantity. No specified quantity
+     *   will lead to full migration of the entitlement.
+     *
+     * @return a Response object
+     * @httpcode 404
+     * @httpcode 200
+     */
+    @PUT
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{entitlement_id}/migrate")
+    public Response migrateEntitlement(
+        @PathParam("entitlement_id") @Verify(Entitlement.class) String id,
+        @QueryParam("to_consumer") @Verify(Consumer.class) String uuid,
+        @QueryParam("quantity") Integer quantity) {
+        // confirm entitlement
+        Entitlement entitlement = entitlementCurator.find(id);
+        List<Entitlement> entitlements = new ArrayList();
+
+        if (entitlement != null) {
+            if (quantity == null) {
+                quantity = entitlement.getQuantity();
+            }
+            if (quantity > 0 && quantity <= entitlement.getQuantity()) {
+                Consumer sourceConsumer = entitlement.getConsumer();
+                Consumer destinationConsumer = consumerCurator.verifyAndLookupConsumer(
+                        uuid);
+                if (!sourceConsumer.getType().isManifest()) {
+                    BadRequestException bre = new BadRequestException(i18n.tr(
+                            "Entitlement migration is not permissible for units of type ''{1}''",
+                            sourceConsumer.getType().getLabel()));
+                    bre.addHeader(BadRequestException.ROOTCAUSE, CauseEnum.SOURCE.toString());
+                    throw bre;
+                }
+                if (!destinationConsumer.getType().isManifest()) {
+                    BadRequestException bre = new BadRequestException(i18n.tr(
+                            "Entitlement migration is not permissible for units of type ''{1}''",
+                            destinationConsumer.getType().getLabel()));
+                    bre.addHeader(BadRequestException.ROOTCAUSE, CauseEnum.DESTINATION.toString());
+                    throw bre;
+                }
+                if (!sourceConsumer.getOwner().getKey().equals(destinationConsumer.getOwner().getKey())) {
+                    BadRequestException bre = new BadRequestException(i18n.tr(
+                            "Source and destination units must belong to the same organization"));
+                    bre.addHeader(BadRequestException.ROOTCAUSE, CauseEnum.ORGMATCH.toString());
+                    throw bre;
+                }
+                // test to ensure destination can use the pool
+                ValidationResult result = enforcer.preEntitlement(destinationConsumer,
+                        entitlement.getPool(), 0, CallerType.BIND);
+                if (!result.isSuccessful()) {
+                    BadRequestException bre = new BadRequestException(i18n.tr(
+                            "The entitlement cannot be utilized by the destination unit: '{0}'",
+                            messageTranslator.poolErrorToMessage(entitlement.getPool(),
+                            result.getErrors().get(0))));
+                    bre.addHeader(BadRequestException.ROOTCAUSE, CauseEnum.RULEFAIL.toString());
+                    throw bre;
+                }
+                if (quantity.intValue() == entitlement.getQuantity()) {
+                    unbind(id);
+                }
+                else {
+                    entitler.adjustEntitlementQuantity(sourceConsumer, entitlement,
+                            entitlement.getQuantity() - quantity);
+                }
+                Pool pool = entitlement.getPool();
+                entitlements.addAll(entitler.bindByPool(pool.getId(), destinationConsumer,
+                        quantity));
+
+                // Trigger events:
+                entitler.sendEvents(entitlements);
+
+            }
+            else {
+                BadRequestException bre =  new BadRequestException(i18n.tr(
+                        "The quantity specified must be greater than zero " +
+                        "and less than or equal to the total for this entitlement"));
+                bre.addHeader(BadRequestException.ROOTCAUSE, "quantity");
+                throw bre;
+            }
+        }
+        else {
+            throw new NotFoundException(
+                i18n.tr("Entitlement with ID ''{0}'' could not be found.", id));
+        }
+        return Response.status(Response.Status.OK)
+                .type(MediaType.APPLICATION_JSON).entity(entitlements).build();
+
     }
 
     /**
