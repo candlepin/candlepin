@@ -14,12 +14,6 @@
  */
 package org.candlepin.guice;
 
-import java.util.Properties;
-
-import javax.validation.MessageInterpolator;
-import javax.validation.Validation;
-import javax.validation.ValidatorFactory;
-
 import org.candlepin.audit.AMQPBusPublisher;
 import org.candlepin.audit.EventSink;
 import org.candlepin.audit.EventSinkImpl;
@@ -70,6 +64,7 @@ import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
+import org.candlepin.policy.js.entitlement.EntitlementRulesTranslator;
 import org.candlepin.policy.js.pool.PoolRules;
 import org.candlepin.resource.ActivationKeyContentOverrideResource;
 import org.candlepin.resource.ActivationKeyResource;
@@ -119,12 +114,6 @@ import org.candlepin.util.DateSource;
 import org.candlepin.util.DateSourceImpl;
 import org.candlepin.util.ExpiryDateFunction;
 import org.candlepin.util.X509ExtensionUtil;
-import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
-import org.hibernate.validator.HibernateValidator;
-import org.hibernate.validator.HibernateValidatorConfiguration;
-import org.quartz.JobListener;
-import org.quartz.spi.JobFactory;
-import org.xnap.commons.i18n.I18n;
 
 import com.google.common.base.Function;
 import com.google.inject.AbstractModule;
@@ -134,6 +123,19 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import com.google.inject.persist.jpa.JpaPersistModule;
+
+import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
+import org.hibernate.validator.HibernateValidator;
+import org.hibernate.validator.HibernateValidatorConfiguration;
+import org.quartz.JobListener;
+import org.quartz.spi.JobFactory;
+import org.xnap.commons.i18n.I18n;
+
+import java.util.Properties;
+
+import javax.validation.MessageInterpolator;
+import javax.validation.Validation;
+import javax.validation.ValidatorFactory;
 
 /**
  * CandlepinProductionConfiguration
@@ -185,6 +187,7 @@ public class CandlepinModule extends AbstractModule {
         bind(JobResource.class);
         bind(DateSource.class).to(DateSourceImpl.class).asEagerSingleton();
         bind(Enforcer.class).to(EntitlementRules.class);
+        bind(EntitlementRulesTranslator.class);
         bind(PoolManager.class).to(CandlepinPoolManager.class);
         bind(PoolRules.class);
         bind(CriteriaRules.class);
