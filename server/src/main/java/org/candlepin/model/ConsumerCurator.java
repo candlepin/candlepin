@@ -58,6 +58,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     @Inject private DeletedConsumerCurator deletedConsumerCurator;
     @Inject private Config config;
 
+    private static final int MAX_FACT_STR_LENGTH = 255;
     private static final int NAME_LENGTH = 250;
     private static Logger log = LoggerFactory.getLogger(ConsumerCurator.class);
 
@@ -341,10 +342,17 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
                         continue;
                     }
                 }
-                facts.put(entry.getKey(), entry.getValue());
+                facts.put(sanitizeFact(entry.getKey()), sanitizeFact(entry.getValue()));
             }
         }
         return facts;
+    }
+
+    private String sanitizeFact(String value) {
+        if (value != null && value.length() > MAX_FACT_STR_LENGTH) {
+            return value.substring(0, MAX_FACT_STR_LENGTH - 3) + "...";
+        }
+        return value;
     }
 
     /**

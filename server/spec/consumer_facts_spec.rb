@@ -104,15 +104,36 @@ describe 'Consumer Facts' do
     consumer['facts'].length.should == 0
   end
 
-
-  it 'should return correct exception for contraint violations' do
-    lambda {
-      facts = {
-        'uname.machine' => "a" * 256
-      }
-      user = user_client(@owner, random_string("user"))
-      @consumer = user.register(random_string("consumer"), :system, nil, facts)
-    }.should raise_exception(RestClient::BadRequest)
+  it 'should truncate long facts' do
+    facts = {
+      'uname.machine' => "a" * 256
+    }
+    user = user_client(@owner, random_string("user"))
+    @consumer = user.register(random_string("consumer"), :system, nil, facts)
+    @consumer.facts['uname.machine'].should == 'a'*252 + '...'
   end
 
+  it 'should allow creation with length 255 fact keys and values' do
+    consumer =  @cp.register('c', :system, nil, {'a'*255 => 'b'*255}, nil, @owner['key'])
+    consumer.facts['a'*255].should == 'b'*255
+  end
+
+  it 'should allow creation length 256 fact keys and values, however truncated for the db' do
+    consumer =  @cp.register('c', :system, nil, {'a'*256 => 'b'*256}, nil, @owner['key'])
+    consumer.facts['a'*252 + '...'].should == 'b'*252 + '...'
+  end
+
+  it 'should allow update with length 255 fact keys and values' do
+    consumer =  @cp.register('c', :system, nil, {}, nil, @owner['key'])
+    @cp.update_consumer({:uuid => consumer['uuid'], :facts => {'a'*255 => 'b'*255}})
+    consumer = @cp.get_consumer(consumer['uuid'])
+    consumer.facts['a'*255].should == 'b'*255
+  end
+
+  it 'should allow update length 256 fact keys and values, however truncated for the db' do
+    consumer =  @cp.register('c', :system, nil, {}, nil, @owner['key'])
+    @cp.update_consumer({:uuid => consumer['uuid'], :facts => {'a'*256 => 'b'*256}})
+    consumer = @cp.get_consumer(consumer['uuid'])
+    consumer.facts['a'*252 + '...'].should == 'b'*252 + '...'
+  end
 end
