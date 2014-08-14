@@ -38,16 +38,22 @@ public class ConfigProperties {
 
             private static final long serialVersionUID = 1L;
             {
+                // AMQP (Qpid) defaults
                 this.put(AMQP_CONNECT_STRING, "https://localhost");
                 this.put(
                         AMQP_CONNECT_STRING,
-                        "amqp://guest:guest@localhost/test?brokerlist='tcp://localhost:5671?ssl='true'&ssl_cert_alias='gutterball'");
+                        "amqp://guest:guest@localhost/test?brokerlist='tcp://localhost:5671?ssl='true'&ssl_cert_alias='gutterball''");
                 this.put(AMQP_KEYSTORE,
                         "/etc/gutterball/certs/amqp/gutterball.jks");
                 this.put(AMQP_KEYSTORE_PASSWORD, "password");
                 this.put(AMQP_TRUSTSTORE,
                         "/etc/gutterball/certs/amqp/gutterball.truststore");
                 this.put(AMQP_TRUSTSTORE_PASSWORD, "password");
+
+                // Mongo defaults
+                this.put(MONGODB_HOST, "localhost");
+                this.put(MONGODB_PORT, "27017");
+                this.put(MONGODB_DATABASE, "gutterball");
             }
         };
 }

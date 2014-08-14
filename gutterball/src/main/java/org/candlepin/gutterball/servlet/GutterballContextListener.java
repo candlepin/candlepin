@@ -14,19 +14,21 @@
  */
 package org.candlepin.gutterball.servlet;
 
+import org.candlepin.common.config.Configuration;
+import org.candlepin.common.config.ConfigurationException;
+import org.candlepin.common.config.MapConfiguration;
+import org.candlepin.common.config.PropertiesFileConfiguration;
+import org.candlepin.gutterball.config.ConfigProperties;
+import org.candlepin.gutterball.guice.GutterballModule;
+import org.candlepin.gutterball.guice.GutterballServletModule;
+import org.candlepin.gutterball.mongodb.MongoConnection;
+
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Stage;
 import com.mongodb.MongoException;
-
-import org.candlepin.common.config.Configuration;
-import org.candlepin.common.config.ConfigurationException;
-import org.candlepin.common.config.PropertiesFileConfiguration;
-import org.candlepin.gutterball.guice.GutterballModule;
-import org.candlepin.gutterball.guice.GutterballServletModule;
-import org.candlepin.gutterball.mongodb.MongoConnection;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -108,13 +110,11 @@ public class GutterballContextListener extends
         throws ConfigurationException {
 
         // Use StandardCharsets.UTF_8 when we move to Java 7
-        Charset utf8 = Charset.forName("UTF-8");
+        // Charset utf8 = Charset.forName("UTF-8");
+        // We need to read /etc/gutterball/gutterball.conf
 
-        InputStream defaultStream = GutterballServletModule.class
-                .getClassLoader().getResourceAsStream("default.properties");
-
-        PropertiesFileConfiguration defaults =
-                new PropertiesFileConfiguration(defaultStream, utf8);
+        MapConfiguration defaults = new MapConfiguration(
+            ConfigProperties.DEFAULT_PROPERTIES);
         return defaults;
     }
 
