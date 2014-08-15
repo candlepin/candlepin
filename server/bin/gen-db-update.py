@@ -27,7 +27,7 @@ CHANGESET_TEMPLATE = """<?xml version="1.0" encoding="UTF-8"?>
 """
 
 # Relative to the location of this script in a git checkout:
-CHANGELOG_DIR = "../../src/main/resources/db/changelog/"
+CHANGELOG_DIR = "../src/main/resources/db/changelog/"
 
 
 def include_changeset(changelog_filepath, changeset_filename):
