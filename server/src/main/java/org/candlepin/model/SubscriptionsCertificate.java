@@ -16,6 +16,8 @@
 package org.candlepin.model;
 
 
+import com.fasterxml.jackson.annotation.JsonFilter;
+
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -39,6 +41,7 @@ import org.hibernate.annotations.GenericGenerator;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_certificate")
+@JsonFilter("SubscriptionCertificateFilter")
 public class SubscriptionsCertificate extends AbstractCertificate {
 
     @Id
