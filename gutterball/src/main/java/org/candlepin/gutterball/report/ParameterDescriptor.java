@@ -17,7 +17,6 @@ package org.candlepin.gutterball.report;
 
 import org.xnap.commons.i18n.I18n;
 
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -189,7 +188,8 @@ public class ParameterDescriptor {
             }
             catch (ParseException pe) {
                 throw new ParameterValidationException(name,
-                        i18n.tr("Invalid date string. Expected format: {0}", dateFormat));            }
+                        i18n.tr("Invalid date string. Expected format: {0}", dateFormat));
+            }
         }
     }
 

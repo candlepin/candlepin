@@ -34,7 +34,6 @@ import org.junit.runner.RunWith;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -150,8 +149,6 @@ public class ConsumerStatusReportTest {
             assertEquals(expectedParam + ": " + expectedMessage, e.getMessage());
         }
     }
-
-    // TODO: Test the report.
 
     @Test
     public void testGetStartEndDate() {

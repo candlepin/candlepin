@@ -28,6 +28,8 @@ import javax.ws.rs.core.MultivaluedMap;
  *
  * An abstract class that defines the common features of a report.
  *
+ * @param <R> result object returned when a report is run.
+ *
  */
 public abstract class Report<R extends ReportResult> {
     protected I18n i18n;

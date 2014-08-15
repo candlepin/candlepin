@@ -126,14 +126,14 @@ public class ConsumerStatusReport extends Report<MultiRowResult<ConsumerStatusRe
         complianceSnapshots = complianceDataCurator.getComplianceForTimespan(startDate, endDate,
                 consumerIds, ownerFilters, statusFilers);
 
-        for(DBObject snapshot : complianceSnapshots) {
+        for (DBObject snapshot : complianceSnapshots) {
             // FIXME Having to do this is wacky! Let's try and fix this.
             DBObject consumer = (DBObject) snapshot.get("consumer");
             DBObject owner = (DBObject) consumer.get("owner");
             DBObject status = (DBObject) snapshot.get("status");
 
             result.add(new ConsumerStatusReportRow(
-                (String)consumer.get("name"),
+                (String) consumer.get("name"),
                 (String) consumer.get("uuid"),
                 (String) status.get("status"),
                 (String) owner.get("displayName"),

@@ -20,7 +20,6 @@ import com.google.inject.Inject;
 import com.mongodb.AggregationOutput;
 import com.mongodb.BasicDBObject;
 import com.mongodb.BasicDBObjectBuilder;
-import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 
 import java.util.Arrays;
