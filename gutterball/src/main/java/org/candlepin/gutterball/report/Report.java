@@ -29,7 +29,7 @@ import javax.ws.rs.core.MultivaluedMap;
  * An abstract class that defines the common features of a report.
  *
  */
-public abstract class Report {
+public abstract class Report<R extends ReportResult> {
     protected I18n i18n;
     protected String key;
     protected String description;
@@ -65,7 +65,7 @@ public abstract class Report {
         return this.parameters;
     }
 
-    public ReportResult run(MultivaluedMap<String, String> queryParameters) {
+    public R run(MultivaluedMap<String, String> queryParameters) {
         validateParameters(queryParameters);
         return execute(queryParameters);
     }
@@ -89,7 +89,7 @@ public abstract class Report {
      * @param queryParameters
      * @return a {@link ReportResult} containing the results of the query.
      */
-    protected abstract ReportResult execute(MultivaluedMap<String, String> queryParameters);
+    protected abstract R execute(MultivaluedMap<String, String> queryParameters);
 
     /**
      * Defines the {@link ReportParameter}s that are used by this report. These

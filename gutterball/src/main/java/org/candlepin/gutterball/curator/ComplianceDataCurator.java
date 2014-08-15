@@ -17,23 +17,80 @@ package org.candlepin.gutterball.curator;
 import org.candlepin.gutterball.mongodb.MongoConnection;
 
 import com.google.inject.Inject;
+import com.mongodb.AggregationOutput;
+import com.mongodb.BasicDBObject;
+import com.mongodb.BasicDBObjectBuilder;
+import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
+
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
 
 /**
  * ComplianceDataCurator database curator to save and query
  * data from compliance events.
  */
-public class ComplianceDataCurator extends MongoDBCurator<DBObject> {
+public class ComplianceDataCurator extends MongoDBCurator<BasicDBObject> {
 
     public static final String COLLECTION = "compliance";
 
     @Inject
     public ComplianceDataCurator(MongoConnection mongo) {
-        super(DBObject.class, mongo);
+        super(BasicDBObject.class, mongo);
     }
 
     @Override
     public String getCollectionName() {
         return COLLECTION;
+    }
+
+    public Iterable<DBObject> getComplianceForTimespan(Date startDate, Date endDate,
+            List<String> consumerIds, List<String> owners, List<String> statusFilers) {
+
+        // Build the match statement
+        BasicDBObjectBuilder queryBuilder = BasicDBObjectBuilder.start();
+        if (consumerIds != null && !consumerIds.isEmpty()) {
+            queryBuilder.add("consumer.uuid", new BasicDBObject("$in", consumerIds));
+        }
+
+        if (owners != null && !owners.isEmpty()) {
+            queryBuilder.add("consumer.owner.key", new BasicDBObject("$in", owners));
+        }
+
+        if (statusFilers != null && !statusFilers.isEmpty()) {
+            queryBuilder.add("status.status", new BasicDBObject("$in", statusFilers));
+        }
+
+        boolean flip = startDate.after(endDate);
+        String startDateFilter = flip ? "$lte" : "$gte";
+        String endDateFilter = flip ? "$gte" : "$lte";
+
+        queryBuilder.add("status.date", new BasicDBObject(startDateFilter, startDate));
+        queryBuilder.add("status.date", new BasicDBObject(endDateFilter, endDate));
+
+        // Build the projections
+        BasicDBObject projections = new BasicDBObject();
+        projections.put("consumer", 1);
+        projections.put("status", 1);
+        projections.put("_id", 0);
+        BasicDBObject project = new BasicDBObject("$project", projections);
+
+        // Build the result groups.
+        BasicDBObject groups = new BasicDBObject("_id", "$consumer.uuid");
+        groups.put("consumer", new BasicDBObject("$first", "$consumer"));
+        groups.put("status", new BasicDBObject("$first", "$status"));
+
+
+        DBObject match = new BasicDBObject("$match", queryBuilder.get());
+        DBObject group = new BasicDBObject("$group", groups);
+        DBObject sort = new BasicDBObject("$sort", new BasicDBObject("status.date", -1));
+
+        // TODO Support paging.
+//        DBObject limit = new BasicDBObject("$limit", 10);
+//        DBObject skip = new BasicDBObject("$skip", 1);
+
+        AggregationOutput output = collection.aggregate(Arrays.asList(match, project, sort, group));
+        return output.results();
     }
 }

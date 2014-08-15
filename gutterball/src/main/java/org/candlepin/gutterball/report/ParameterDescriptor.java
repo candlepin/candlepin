@@ -17,6 +17,9 @@ package org.candlepin.gutterball.report;
 
 import org.xnap.commons.i18n.I18n;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -36,6 +39,7 @@ public class ParameterDescriptor {
     private boolean isMandatory = false;
     private boolean isMultiValued = false;
     private boolean mustBeInt = false;
+    private String dateFormat = null;
     private List<String> mustHaveParams = new ArrayList<String>(0);
     private List<String> mustNotHaveParams = new ArrayList<String>(0);
 
@@ -134,6 +138,10 @@ public class ParameterDescriptor {
             validateInteger(queryParams.get(name));
         }
 
+        if (this.dateFormat != null && !this.dateFormat.isEmpty()) {
+            validateDate(queryParams.get(name));
+        }
+
         verifyMustHaves(queryParams);
         verifyMustNotHaves(queryParams);
     }
@@ -170,6 +178,24 @@ public class ParameterDescriptor {
                         i18n.tr("Parameter must be an Integer value"));
             }
         }
+    }
+
+    private void validateDate(List<String> dateStrings) {
+        for (String dateString : dateStrings) {
+            try {
+                SimpleDateFormat formatter = new SimpleDateFormat(dateFormat);
+                formatter.setLenient(false);
+                formatter.parse(dateString);
+            }
+            catch (ParseException pe) {
+                throw new ParameterValidationException(name,
+                        i18n.tr("Invalid date string. Expected format: {0}", dateFormat));            }
+        }
+    }
+
+    public ParameterDescriptor isDate(String dateFormat) {
+        this.dateFormat = dateFormat;
+        return this;
     }
 
 }
