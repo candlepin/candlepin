@@ -210,7 +210,7 @@ public class PoolManagerTest {
 
         // Make sure that only the floating pool was regenerated
         expectedFloating.add(floating);
-        verify(this.manager).updateFloatingPools(eq(expectedFloating));
+        verify(this.manager).updateFloatingPools(eq(expectedFloating), eq(true));
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -239,7 +239,7 @@ public class PoolManagerTest {
 
         // Make sure that only the floating pool was regenerated
         expectedModified.add(p);
-        verify(this.manager).updateFloatingPools(eq(new LinkedList()));
+        verify(this.manager).updateFloatingPools(eq(new LinkedList()), eq(true));
         verify(this.manager).updatePoolsForSubscription(
             eq(expectedModified), eq(sub), eq(false));
     }

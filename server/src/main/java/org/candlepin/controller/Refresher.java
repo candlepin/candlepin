@@ -25,6 +25,7 @@ import org.candlepin.model.Subscription;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.util.Util;
 
+import com.google.inject.persist.Transactional;
 import com.google.inject.persist.UnitOfWork;
 
 /**
@@ -88,18 +89,22 @@ public class Refresher {
              * call for it, but why not handle it, just in case!
              */
             List<Pool> pools = poolManager.lookupBySubscriptionId(subscription.getId());
-            poolManager.removeAndDeletePoolsOnOtherOwners(pools, subscription);
-
-            poolManager.createPoolsForSubscription(subscription, pools);
-            toRegen.addAll(poolManager.updatePoolsForSubscription(
-                pools, subscription, true));
+            refreshPoolsForSubscription(subscription, pools);
         }
 
         for (Owner owner : owners) {
-            toRegen.addAll(poolManager.refreshPoolsWithoutRegeneration(owner, uow));
+            poolManager.refreshPoolsWithRegeneration(owner, lazy);
         }
+    }
 
-        // now regenerate all pending entitlements
-        poolManager.regenerateCertificatesByEntIds(toRegen, lazy);
+    @Transactional
+    private void refreshPoolsForSubscription(Subscription subscription, List<Pool> pools) {
+        poolManager.removeAndDeletePoolsOnOtherOwners(pools, subscription);
+
+        poolManager.createPoolsForSubscription(subscription, pools);
+        // Regenerate certificates here, that way if it fails, the whole thing rolls back.
+        // We don't want to refresh without marking ents dirty, they will never get regenerated
+        poolManager.regenerateCertificatesByEntIds(poolManager.updatePoolsForSubscription(
+            pools, subscription, true), lazy);
     }
 }

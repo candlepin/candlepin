@@ -23,7 +23,6 @@ import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
 
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
@@ -59,7 +58,6 @@ public class RefreshPoolsJob extends UniqueByOwnerJob {
      *
      * @param context the job's execution context
      */
-    @Transactional
     public void toExecute(JobExecutionContext context) throws JobExecutionException {
         try {
             JobDataMap map = context.getMergedJobDataMap();

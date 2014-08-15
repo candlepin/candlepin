@@ -56,13 +56,11 @@ import org.candlepin.policy.js.pool.PoolUpdate;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.util.CertificateSizeException;
-import org.candlepin.util.UnitOfWorkHelper;
 import org.candlepin.util.Util;
 import org.candlepin.version.CertVersionConflictException;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
-import com.google.inject.persist.UnitOfWork;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -136,19 +134,16 @@ public class CandlepinPoolManager implements PoolManager {
         this.activationKeyRules = activationKeyRules;
     }
 
-    Set<String> refreshPoolsWithoutRegeneration(Owner owner) {
-        return refreshPoolsWithoutRegeneration(owner, null);
-    }
-
-    // Optional unit of work, won't do anything if it's null
-    Set<String> refreshPoolsWithoutRegeneration(Owner owner, UnitOfWork uow) {
-        UnitOfWorkHelper uowHelper = new UnitOfWorkHelper(uow);
+    /*
+     * We need to update/regen entitlements in the same transaction we update pools
+     * so we don't miss anything
+     */
+    void refreshPoolsWithRegeneration(Owner owner, boolean lazy) {
         log.info("Refreshing pools for owner: " + owner.getKey());
         List<String> subIds = subAdapter.getSubscriptionIds(owner);
         log.debug("Found " + subIds.size() + " existing subscriptions.");
 
         List<String> deletedSubs = new LinkedList<String>();
-        Set<String> entitlementsToRegen = Util.newSet();
         for (String subId : subIds) {
             Subscription sub = subAdapter.getSubscription(subId);
 
@@ -167,21 +162,7 @@ public class CandlepinPoolManager implements PoolManager {
                 continue;
             }
 
-            // These don't all necessarily belong to this owner
-            List<Pool> subscriptionPools = poolCurator.getPoolsBySubscriptionId(subId);
-
-            // Cleans up pools on other owners who have migrated subs away
-            removeAndDeletePoolsOnOtherOwners(subscriptionPools, sub);
-
-            // BUG 1012386 This will regenerate master/derived for bonus scenarios
-            //  if only one of the pair still exists.
-            createPoolsForSubscription(sub, subscriptionPools);
-            entitlementsToRegen.addAll(
-                // don't update floating here, we'll do that later
-                // so we don't update anything twice
-                updatePoolsForSubscription(subscriptionPools, sub, false)
-            );
-            uowHelper.commitAndContinue();
+            refreshPoolsForSubscription(sub, lazy);
         }
 
         // We deleted some, need to take that into account so we
@@ -193,14 +174,29 @@ public class CandlepinPoolManager implements PoolManager {
                 deletePool(p);
             }
         }
-        uowHelper.commitAndContinue();
 
         // TODO: break this call into smaller pieces.  There may be lots of floating pools
         List<Pool> floatingPools = poolCurator.getOwnersFloatingPools(owner);
-        entitlementsToRegen.addAll(updateFloatingPools(floatingPools));
-        uowHelper.commitAndContinue();
+        updateFloatingPools(floatingPools, lazy);
+    }
 
-        return entitlementsToRegen;
+    // Returns IDs of deleted subscription
+    @Transactional
+    private void refreshPoolsForSubscription(Subscription sub, boolean lazy) {
+
+        // These don't all necessarily belong to this owner
+        List<Pool> subscriptionPools = poolCurator.getPoolsBySubscriptionId(sub.getId());
+
+        // Cleans up pools on other owners who have migrated subs away
+        removeAndDeletePoolsOnOtherOwners(subscriptionPools, sub);
+
+        // BUG 1012386 This will regenerate master/derived for bonus scenarios
+        //  if only one of the pair still exists.
+        createPoolsForSubscription(sub, subscriptionPools);
+        regenerateCertificatesByEntIds(
+            // don't update floating here, we'll do that later
+            // so we don't update anything twice
+            updatePoolsForSubscription(subscriptionPools, sub, false), lazy);
     }
 
     public void cleanupExpiredPools() {
@@ -366,7 +362,8 @@ public class CandlepinPoolManager implements PoolManager {
      * @param floatingPools
      * @return
      */
-    Set<String> updateFloatingPools(List<Pool> floatingPools) {
+    @Transactional
+    void updateFloatingPools(List<Pool> floatingPools, boolean lazy) {
         /*
          * Rules need to determine which pools have changed, but the Java must
          * send out the events. Create an event for each pool that could change,
@@ -381,7 +378,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         // Hand off to rules to determine which pools need updating:
         List<PoolUpdate> updatedPools = poolRules.updatePools(floatingPools);
-        return processPoolUpdates(poolEvents, updatedPools);
+        regenerateCertificatesByEntIds(processPoolUpdates(poolEvents, updatedPools), lazy);
     }
 
     /**
