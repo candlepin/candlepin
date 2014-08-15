@@ -167,7 +167,7 @@ public class ConsumerStatusReportTest {
         when(params.get("end_date")).thenReturn(Arrays.asList(endDate));
 
         MultiRowResult<ConsumerStatusReportRow> results = report.run(params);
-        assertEquals(9, results.getRows().size());
+        assertEquals(9, results.size());
     }
 
     @Test
@@ -187,9 +187,8 @@ public class ConsumerStatusReportTest {
         when(params.get("owner")).thenReturn(Arrays.asList("donaldduck"));
 
         MultiRowResult<ConsumerStatusReportRow> results = report.run(params);
-        List<ConsumerStatusReportRow> rows = results.getRows();
-        assertEquals(4, rows.size());
-        for (ConsumerStatusReportRow r : rows) {
+        assertEquals(4, results.size());
+        for (ConsumerStatusReportRow r : results) {
             assertEquals("Donald Duck", r.getOrg());
         }
     }
@@ -212,8 +211,8 @@ public class ConsumerStatusReportTest {
         when(params.get("consumer_uuid")).thenReturn(Arrays.asList("c5b87d1a-1b9f-408b-a6ac-be3bf74c46c4"));
 
         MultiRowResult<ConsumerStatusReportRow> results = report.run(params);
-        assertEquals(1, results.getRows().size());
-        ConsumerStatusReportRow row = results.getRows().get(0);
+        assertEquals(1, results.size());
+        ConsumerStatusReportRow row = results.get(0);
         assertEquals("c5b87d1a-1b9f-408b-a6ac-be3bf74c46c4", row.getSystemId());
     }
 
@@ -234,9 +233,8 @@ public class ConsumerStatusReportTest {
         when(params.get("status")).thenReturn(Arrays.asList("valid"));
 
         MultiRowResult<ConsumerStatusReportRow> results = report.run(params);
-        List<ConsumerStatusReportRow> rows = results.getRows();
-        assertEquals(5, rows.size());
-        for (ConsumerStatusReportRow r : rows) {
+        assertEquals(5, results.size());
+        for (ConsumerStatusReportRow r : results) {
             assertEquals("valid", r.getStatus());
         }
     }

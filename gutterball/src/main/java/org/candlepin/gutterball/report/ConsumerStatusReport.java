@@ -19,7 +19,6 @@ import org.candlepin.gutterball.curator.ComplianceDataCurator;
 import org.candlepin.gutterball.guice.I18nProvider;
 
 import com.google.inject.Inject;
-import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 
 import java.text.ParseException;
@@ -133,7 +132,7 @@ public class ConsumerStatusReport extends Report<MultiRowResult<ConsumerStatusRe
             DBObject owner = (DBObject) consumer.get("owner");
             DBObject status = (DBObject) snapshot.get("status");
 
-            result.addRow(new ConsumerStatusReportRow(
+            result.add(new ConsumerStatusReportRow(
                 (String)consumer.get("name"),
                 (String) consumer.get("uuid"),
                 (String) status.get("status"),
