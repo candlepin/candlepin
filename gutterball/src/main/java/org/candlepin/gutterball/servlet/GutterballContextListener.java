@@ -34,7 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18nManager;
 
-import java.io.InputStream;
+import java.io.File;
 import java.nio.charset.Charset;
 import java.util.LinkedList;
 import java.util.List;
@@ -110,12 +110,34 @@ public class GutterballContextListener extends
         throws ConfigurationException {
 
         // Use StandardCharsets.UTF_8 when we move to Java 7
-        // Charset utf8 = Charset.forName("UTF-8");
-        // We need to read /etc/gutterball/gutterball.conf
+        Charset utf8 = Charset.forName("UTF-8");
+        PropertiesFileConfiguration systemConfig = new PropertiesFileConfiguration();
+        systemConfig.setEncoding(utf8);
+        File configFile = new File(ConfigProperties.DEFAULT_CONFIG_FILE);
 
+        if (configFile.canRead()) {
+            log.debug("Loading system configuration");
+            // First, read the system configuration
+            systemConfig.load(configFile);
+            log.debug("System configuration: " + systemConfig);
+        }
+
+        // load the defaults
         MapConfiguration defaults = new MapConfiguration(
             ConfigProperties.DEFAULT_PROPERTIES);
-        return defaults;
+
+        log.debug("Loading default configuration values");
+
+        log.debug("Default config: " + defaults);
+        // merge the defaults with the system configuration. ORDER MATTERS.
+        // system config must be read FIRST otherwise settings won't be applied.
+
+        // merge does NOT affect systemConfig, it just returns a new object
+        // not sure I like that.
+        Configuration merged = systemConfig.merge(defaults);
+
+        log.debug("Configuration: " + merged);
+        return merged;
     }
 
     @Override

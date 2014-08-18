@@ -21,6 +21,7 @@ import java.util.Map;
  * ConfigProperties
  */
 public class ConfigProperties {
+    public static final String DEFAULT_CONFIG_FILE = "/etc/gutterball/gutterball.conf";
     public static final String AMQP_CONNECT_STRING = "gutterball.amqp.connect";
     public static final String AMQP_KEYSTORE = "gutterball.amqp.keystore";
     public static final String AMQP_KEYSTORE_PASSWORD = "gutterball.amqp.keystore_password";
