@@ -182,7 +182,7 @@ public class CandlepinPoolManager implements PoolManager {
 
     // Returns IDs of deleted subscription
     @Transactional
-    private void refreshPoolsForSubscription(Subscription sub, boolean lazy) {
+    void refreshPoolsForSubscription(Subscription sub, boolean lazy) {
 
         // These don't all necessarily belong to this owner
         List<Pool> subscriptionPools = poolCurator.getPoolsBySubscriptionId(sub.getId());
