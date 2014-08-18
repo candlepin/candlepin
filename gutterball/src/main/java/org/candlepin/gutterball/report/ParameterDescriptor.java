@@ -15,6 +15,8 @@
 
 package org.candlepin.gutterball.report;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.text.ParseException;
@@ -29,6 +31,7 @@ import javax.ws.rs.core.MultivaluedMap;
  * Describes all properties and validations of a {@link ReportParameter}.
  */
 public class ParameterDescriptor {
+    private static Logger log = LoggerFactory.getLogger(ParameterDescriptor.class);
 
     private I18n i18n;
     private String name;
@@ -173,6 +176,7 @@ public class ParameterDescriptor {
                 Integer.parseInt(val);
             }
             catch (NumberFormatException nfe) {
+                log.error("Could not parse report parameter as an integer.", nfe);
                 throw new ParameterValidationException(name,
                         i18n.tr("Parameter must be an Integer value"));
             }
@@ -183,10 +187,10 @@ public class ParameterDescriptor {
         for (String dateString : dateStrings) {
             try {
                 SimpleDateFormat formatter = new SimpleDateFormat(dateFormat);
-                formatter.setLenient(false);
                 formatter.parse(dateString);
             }
             catch (ParseException pe) {
+                log.error("Could not parse report parameter as a date.", pe);
                 throw new ParameterValidationException(name,
                         i18n.tr("Invalid date string. Expected format: {0}", dateFormat));
             }

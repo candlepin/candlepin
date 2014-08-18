@@ -34,7 +34,7 @@ import javax.ws.rs.core.MultivaluedMap;
  */
 public class ConsumerStatusReport extends Report<MultiRowResult<DBObject>> {
 
-    private static final String REPORT_DATE_FORMAT = "yyyy-MM-dd";
+    protected static final String REPORT_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
 
     private ComplianceDataCurator complianceDataCurator;
 
@@ -131,7 +131,6 @@ public class ConsumerStatusReport extends Report<MultiRowResult<DBObject>> {
         }
         return result;
     }
-
 
     private Date parseDate(String date) {
         if (date == null || date.isEmpty()) {

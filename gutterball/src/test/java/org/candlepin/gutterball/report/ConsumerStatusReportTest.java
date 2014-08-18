@@ -45,8 +45,8 @@ import javax.ws.rs.core.MultivaluedMap;
 public class ConsumerStatusReportTest {
 
 
-    private static final String TEST_START_DATE = "2014-08-15";
-    private static final String TEST_END_DATE = "2014-08-16";
+    private static final String TEST_START_DATE = "2014-08-15T00:00:00.000+0000";
+    private static final String TEST_END_DATE = "2014-08-16T00:00:00.000+0000";
 
     @SuppressWarnings("checkstyle:visibilitymodifier")
     @ClassRule
@@ -106,7 +106,7 @@ public class ConsumerStatusReportTest {
     public void endDateMustBeSpecifiedWithStartDate() {
         MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
         when(params.containsKey("start_date")).thenReturn(true);
-        when(params.get("start_date")).thenReturn(Arrays.asList("2010-04-18"));
+        when(params.get("start_date")).thenReturn(Arrays.asList(TEST_START_DATE));
         when(params.containsKey("end_date")).thenReturn(false);
 
         validateParams(params, "start_date", "Parameter must be used with end_date.");
@@ -117,7 +117,7 @@ public class ConsumerStatusReportTest {
         MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
         when(params.containsKey("start_date")).thenReturn(false);
         when(params.containsKey("end_date")).thenReturn(true);
-        when(params.get("end_date")).thenReturn(Arrays.asList("2010-04-18"));
+        when(params.get("end_date")).thenReturn(Arrays.asList(TEST_END_DATE));
 
         validateParams(params, "end_date", "Parameter must be used with start_date.");
     }
@@ -125,10 +125,12 @@ public class ConsumerStatusReportTest {
     @Test
     public void testDateFormatValidatedOnStartDate() {
         MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
-        when(params.containsKey("start_date")).thenReturn(true);
-        when(params.get("start_date")).thenReturn(Arrays.asList("2010-18-4"));
 
-        validateParams(params, "start_date", "Invalid date string. Expected format: yyyy-MM-dd");
+        when(params.containsKey("start_date")).thenReturn(true);
+        when(params.get("start_date")).thenReturn(Arrays.asList("13-21-2010"));
+
+        validateParams(params, "start_date", "Invalid date string. Expected format: " +
+                ConsumerStatusReport.REPORT_DATE_FORMAT);
     }
 
     @Test
@@ -137,7 +139,8 @@ public class ConsumerStatusReportTest {
         when(params.containsKey("end_date")).thenReturn(true);
         when(params.get("end_date")).thenReturn(Arrays.asList("2010-18-4"));
 
-        validateParams(params, "end_date", "Invalid date string. Expected format: yyyy-MM-dd");
+        validateParams(params, "end_date", "Invalid date string. Expected format: " +
+                ConsumerStatusReport.REPORT_DATE_FORMAT);
     }
 
     private void validateParams(MultivaluedMap<String, String> params, String expectedParam,
