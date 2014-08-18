@@ -40,10 +40,14 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
 import org.apache.commons.lang.StringUtils;
+
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventAdapter;
+import org.candlepin.audit.EventBuilder;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
+import org.candlepin.audit.Event.Target;
+import org.candlepin.audit.Event.Type;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SubResource;
@@ -104,6 +108,7 @@ import org.candlepin.sync.Meta;
 import org.candlepin.sync.SyncDataFormatException;
 import org.candlepin.util.ContentOverrideValidator;
 import org.candlepin.util.ServiceLevelValidator;
+
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
@@ -884,6 +889,9 @@ public class OwnerResource {
     public Owner updateOwner(@PathParam("owner_key") @Verify(Owner.class) String key,
         Owner owner) {
         Owner toUpdate = findOwner(key);
+        EventBuilder eventBuilder = eventFactory.getEventBuilder(Target.OWNER, Type.MODIFIED)
+                .setOldEntity(toUpdate);
+
         log.debug("Updating owner: " + key);
 
         if (owner.getDisplayName() != null) {
@@ -907,7 +915,7 @@ public class OwnerResource {
         }
 
         ownerCurator.merge(toUpdate);
-        Event e = eventFactory.ownerModified(owner);
+        Event e = eventBuilder.setNewEntity(toUpdate).buildEvent();
         sink.sendEvent(e);
         return toUpdate;
     }

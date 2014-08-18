@@ -79,6 +79,8 @@ public class EventFactory {
             SimpleBeanPropertyFilter.serializeAllExcept("created", "updated", "id"));
         filterProvider = filterProvider.addFilter("ProductPoolAttributeFilter",
             SimpleBeanPropertyFilter.serializeAllExcept("created", "updated", "productId", "id"));
+        filterProvider = filterProvider.addFilter("SubscriptionCertificateFilter",
+            SimpleBeanPropertyFilter.serializeAllExcept("cert", "key"));
         mapper.setFilters(filterProvider);
 
         Hibernate4Module hbm = new Hibernate4Module();
