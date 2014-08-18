@@ -38,6 +38,13 @@ public interface SubscriptionServiceAdapter {
     List<Subscription> getSubscriptions(Owner owner);
 
     /**
+     * List all active subscription ids for the given owner.
+     * @param owner Owner of the subscriptions.
+     * @return ids of all subscriptions for the given owner.
+     */
+    List<String> getSubscriptionIds(Owner owner);
+
+    /**
      * Lookup a specific subscription.
      * @param subscriptionId id of the subscription to return.
      * @return Subscription whose id matches subscriptionId

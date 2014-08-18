@@ -73,6 +73,11 @@ public class DefaultSubscriptionServiceAdapter implements
     }
 
     @Override
+    public List<String> getSubscriptionIds(Owner owner) {
+        return subCurator.listIdsByOwner(owner);
+    }
+
+    @Override
     public List<Subscription> getSubscriptions() {
         List<Subscription> toReturn = subCurator.listAll();
         return toReturn == null ? new LinkedList<Subscription>() : toReturn;

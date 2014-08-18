@@ -23,7 +23,6 @@ import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
 
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
@@ -59,7 +58,6 @@ public class RefreshPoolsJob extends UniqueByOwnerJob {
      *
      * @param context the job's execution context
      */
-    @Transactional
     public void toExecute(JobExecutionContext context) throws JobExecutionException {
         try {
             JobDataMap map = context.getMergedJobDataMap();
@@ -72,7 +70,7 @@ public class RefreshPoolsJob extends UniqueByOwnerJob {
             }
 
             // Assume that we verified the request in the resource layer:
-            poolManager.getRefresher(lazy).add(owner).run();
+            poolManager.getRefresher(lazy).setUnitOfWork(unitOfWork).add(owner).run();
             context.setResult("Pools refreshed for owner " + owner.getDisplayName());
         }
         // Catch any exception that is fired and re-throw as a

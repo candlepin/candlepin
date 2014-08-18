@@ -15,7 +15,6 @@
 package org.candlepin.model.test;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -23,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -896,61 +894,26 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testGetPoolsForOwnerRefreshByOwner() {
-        Pool pool = TestUtil.createPool(owner, product);
-        pool = poolCurator.create(pool);
-
-        List<Pool> result = poolCurator.getPoolsForOwnerRefresh(owner,
-            new LinkedList<String>());
-        assertEquals(1, result.size());
-        assertEquals(pool, result.get(0));
-    }
-
-    @Test
-    public void testGetPoolsForOwnerRefreshBySubId() {
+    public void testGetPoolsBySubId() {
         Owner owner2 = createOwner();
         ownerCurator.create(owner2);
 
         Pool pool = createPool(owner2, "id123");
 
-        List<String> subIds = new LinkedList<String>();
-        subIds.add(pool.getSubscriptionId());
-        List<Pool> result = poolCurator.getPoolsForOwnerRefresh(owner, subIds);
+        List<Pool> result = poolCurator.getPoolsBySubscriptionId(pool.getSubscriptionId());
         assertEquals(1, result.size());
         assertEquals(pool, result.get(0));
     }
 
     @Test
-    public void testGetPoolsForOwnerRefreshNoMatch() {
+    public void testGetPoolsBySubIdNull() {
         Owner owner2 = createOwner();
         ownerCurator.create(owner2);
 
         createPool(owner2, "id123");
 
-        List<String> subIds = new LinkedList<String>();
-        List<Pool> result = poolCurator.getPoolsForOwnerRefresh(owner, subIds);
+        List<Pool> result = poolCurator.getPoolsBySubscriptionId(null);
         assertTrue(result.isEmpty());
-    }
-
-    @Test
-    public void testGetPoolsForOwnerRefreshBothAndNone() {
-        Owner owner2 = createOwner();
-        ownerCurator.create(owner2);
-
-        Pool subMatch = createPool(owner2, "match");
-        Pool ownerMatch = createPool(owner, "not a match");
-        Pool noMatch = createPool(owner2, "no match");
-        Pool bothMatch = createPool(owner, "another match");
-
-        List<String> subIds = new LinkedList<String>();
-        subIds.add(subMatch.getSubscriptionId());
-        subIds.add(bothMatch.getSubscriptionId());
-        List<Pool> result = poolCurator.getPoolsForOwnerRefresh(owner, subIds);
-        assertEquals(3, result.size());
-        assertTrue(result.contains(subMatch));
-        assertTrue(result.contains(ownerMatch));
-        assertTrue(result.contains(bothMatch));
-        assertFalse(result.contains(noMatch));
     }
 
     private Pool createPool(Owner o, String subId) {

@@ -16,9 +16,11 @@ package org.candlepin.model;
 
 import org.hibernate.Criteria;
 import org.hibernate.criterion.CriteriaSpecification;
+import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.util.LinkedList;
 import java.util.List;
 
@@ -61,6 +63,22 @@ public class SubscriptionCurator extends AbstractHibernateCurator<Subscription> 
         }
         log.debug("Found subs: " + subs.size());
         return subs;
+    }
+
+    /**
+     * Return a list of subscription IDs filtered by owner.
+     * @param o Owner of the subscription.
+     * @return a list of subscription ids filtered by owner.
+     */
+    @SuppressWarnings("unchecked")
+    public List<String> listIdsByOwner(Owner o) {
+        return currentSession()
+            .createCriteria(Subscription.class)
+            .createAlias("product", "prod")
+            .add(Restrictions.eq("owner", o))
+            .add(Restrictions.ne("prod.name", Product.ueberProductNameForOwner(o)))
+            .setProjection(Projections.id())
+            .list();
     }
 
     /**

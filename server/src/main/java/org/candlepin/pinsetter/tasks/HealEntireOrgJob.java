@@ -26,6 +26,7 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.util.Util;
+
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
@@ -34,6 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
 
 /**
  * HealEntireOrgJob
@@ -65,11 +67,7 @@ public class HealEntireOrgJob extends UniqueByOwnerJob {
                 // of looking up the non or partially compliant products to bind.
                 try {
                     Consumer consumer = consumerCurator.getConsumer(uuid);
-                    List<Entitlement> ents = entitler.bindByProducts(null, consumer,
-                        entitleDate, true);
-                    entitler.sendEvents(ents);
-                    // commit after each bind so that we don't lock pools forever
-                    commitAndContinue();
+                    healSingleConsumer(consumer, entitleDate);
                 }
                 // We want to catch everything and continue.
                 // Perhaps add something to surface errors later
@@ -84,6 +82,16 @@ public class HealEntireOrgJob extends UniqueByOwnerJob {
             ctx.setResult(e.getMessage());
             throw new JobExecutionException(e.getMessage(), e, false);
         }
+    }
+
+    /*
+     * Each consumer heal should be a separate transaction
+     */
+    @Transactional
+    private void healSingleConsumer(Consumer consumer, Date date) {
+        List<Entitlement> ents = entitler.bindByProducts(null, consumer,
+                date, true);
+        entitler.sendEvents(ents);
     }
 
     public static JobDetail healEntireOrg(String ownerId, Date entitleDate) {
