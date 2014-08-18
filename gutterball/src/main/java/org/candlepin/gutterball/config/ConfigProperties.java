@@ -21,6 +21,9 @@ import java.util.Map;
  * ConfigProperties
  */
 public class ConfigProperties {
+    private ConfigProperties() {
+    }
+
     public static final String DEFAULT_CONFIG_FILE = "/etc/gutterball/gutterball.conf";
     public static final String AMQP_CONNECT_STRING = "gutterball.amqp.connect";
     public static final String AMQP_KEYSTORE = "gutterball.amqp.keystore";
@@ -41,9 +44,8 @@ public class ConfigProperties {
             {
                 // AMQP (Qpid) defaults
                 this.put(AMQP_CONNECT_STRING, "https://localhost");
-                this.put(
-                        AMQP_CONNECT_STRING,
-                        "amqp://guest:guest@localhost/test?brokerlist='tcp://localhost:5671?ssl='true'&ssl_cert_alias='gutterball''");
+                this.put(AMQP_CONNECT_STRING, "amqp://guest:guest@localhost/test?brokerlist=" +
+                        "'tcp://localhost:5671?ssl='true'&ssl_cert_alias='gutterball''");
                 this.put(AMQP_KEYSTORE,
                         "/etc/gutterball/certs/amqp/gutterball.jks");
                 this.put(AMQP_KEYSTORE_PASSWORD, "password");
