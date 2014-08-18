@@ -32,7 +32,7 @@ import javax.ws.rs.core.MultivaluedMap;
 /**
  * ConsumerStatusListReport
  */
-public class ConsumerStatusReport extends Report<MultiRowResult<ConsumerStatusReportRow>> {
+public class ConsumerStatusReport extends Report<MultiRowResult<DBObject>> {
 
     private static final String REPORT_DATE_FORMAT = "yyyy-MM-dd";
 
@@ -96,10 +96,10 @@ public class ConsumerStatusReport extends Report<MultiRowResult<ConsumerStatusRe
     }
 
     @Override
-    protected MultiRowResult<ConsumerStatusReportRow> execute(MultivaluedMap<String, String> queryParams) {
+    protected MultiRowResult<DBObject> execute(MultivaluedMap<String, String> queryParams) {
         // At this point we would execute a lookup against the DW data store to formulate
         // the report result set.
-        MultiRowResult<ConsumerStatusReportRow> result = new MultiRowResult<ConsumerStatusReportRow>();
+        MultiRowResult<DBObject> result = new MultiRowResult<DBObject>();
 
         List<String> consumerIds = queryParams.get("consumer_uuid");
         List<String> statusFilers = queryParams.get("status");
@@ -127,20 +127,8 @@ public class ConsumerStatusReport extends Report<MultiRowResult<ConsumerStatusRe
                 consumerIds, ownerFilters, statusFilers);
 
         for (DBObject snapshot : complianceSnapshots) {
-            // FIXME Having to do this is wacky! Let's try and fix this.
-            DBObject consumer = (DBObject) snapshot.get("consumer");
-            DBObject owner = (DBObject) consumer.get("owner");
-            DBObject status = (DBObject) snapshot.get("status");
-
-            result.add(new ConsumerStatusReportRow(
-                (String) consumer.get("name"),
-                (String) consumer.get("uuid"),
-                (String) status.get("status"),
-                (String) owner.get("displayName"),
-                (Date) consumer.get("lastCheckin"))
-            );
+            result.add(snapshot);
         }
-
         return result;
     }
 

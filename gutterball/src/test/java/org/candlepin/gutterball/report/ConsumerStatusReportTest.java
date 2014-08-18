@@ -25,6 +25,8 @@ import org.candlepin.gutterball.MongoJsonDataImporter;
 import org.candlepin.gutterball.curator.ComplianceDataCurator;
 import org.candlepin.gutterball.guice.I18nProvider;
 
+import com.mongodb.DBObject;
+
 import org.jukito.JukitoRunner;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -163,7 +165,7 @@ public class ConsumerStatusReportTest {
         when(params.getFirst("end_date")).thenReturn(endDate);
         when(params.get("end_date")).thenReturn(Arrays.asList(endDate));
 
-        MultiRowResult<ConsumerStatusReportRow> results = report.run(params);
+        MultiRowResult<DBObject> results = report.run(params);
         assertEquals(9, results.size());
     }
 
@@ -183,16 +185,17 @@ public class ConsumerStatusReportTest {
         when(params.containsKey("owner")).thenReturn(true);
         when(params.get("owner")).thenReturn(Arrays.asList("donaldduck"));
 
-        MultiRowResult<ConsumerStatusReportRow> results = report.run(params);
+        MultiRowResult<DBObject> results = report.run(params);
         assertEquals(4, results.size());
-        for (ConsumerStatusReportRow r : results) {
-            assertEquals("Donald Duck", r.getOrg());
+        for (DBObject r : results) {
+            DBObject consumer = (DBObject) r.get("consumer");
+            DBObject owner = (DBObject) consumer.get("owner");
+            assertEquals("donaldduck", owner.get("key"));
         }
     }
 
     @Test
     public void testGetByConsumerUuid() {
-        //53ecd99f19aaabe10d166a28
         MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
         String startDate = TEST_START_DATE;
         when(params.containsKey("start_date")).thenReturn(true);
@@ -207,10 +210,11 @@ public class ConsumerStatusReportTest {
         when(params.containsKey("consumer_uuid")).thenReturn(true);
         when(params.get("consumer_uuid")).thenReturn(Arrays.asList("c5b87d1a-1b9f-408b-a6ac-be3bf74c46c4"));
 
-        MultiRowResult<ConsumerStatusReportRow> results = report.run(params);
+        MultiRowResult<DBObject> results = report.run(params);
         assertEquals(1, results.size());
-        ConsumerStatusReportRow row = results.get(0);
-        assertEquals("c5b87d1a-1b9f-408b-a6ac-be3bf74c46c4", row.getSystemId());
+        DBObject row = results.get(0);
+        DBObject consumer = (DBObject) row.get("consumer");
+        assertEquals("c5b87d1a-1b9f-408b-a6ac-be3bf74c46c4", consumer.get("uuid"));
     }
 
     @Test
@@ -229,10 +233,11 @@ public class ConsumerStatusReportTest {
         when(params.containsKey("status")).thenReturn(true);
         when(params.get("status")).thenReturn(Arrays.asList("valid"));
 
-        MultiRowResult<ConsumerStatusReportRow> results = report.run(params);
+        MultiRowResult<DBObject> results = report.run(params);
         assertEquals(5, results.size());
-        for (ConsumerStatusReportRow r : results) {
-            assertEquals("valid", r.getStatus());
+        for (DBObject r : results) {
+            DBObject status = (DBObject) r.get("status");
+            assertEquals("valid", status.get("status"));
         }
     }
 
