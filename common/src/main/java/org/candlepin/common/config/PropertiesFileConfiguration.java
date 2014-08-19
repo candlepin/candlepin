@@ -177,4 +177,8 @@ public class PropertiesFileConfiguration extends AbstractConfiguration
             backingMap.setProperty((String) entry.getKey(), (String) entry.getValue());
         }
     }
+
+    public String toString() {
+        return backingMap.toString();
+    }
 }
