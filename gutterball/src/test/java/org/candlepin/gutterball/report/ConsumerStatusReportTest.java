@@ -173,6 +173,26 @@ public class ConsumerStatusReportTest {
     }
 
     @Test
+    public void testGetStartEndDateSameDate() {
+        MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
+        String targetDate = "2014-08-15T14:09:05.572+0000";
+        when(params.containsKey("start_date")).thenReturn(true);
+        when(params.getFirst("start_date")).thenReturn(targetDate);
+        when(params.get("start_date")).thenReturn(Arrays.asList(targetDate));
+
+        when(params.containsKey("end_date")).thenReturn(true);
+        when(params.getFirst("end_date")).thenReturn(targetDate);
+        when(params.get("end_date")).thenReturn(Arrays.asList(targetDate));
+
+        MultiRowResult<DBObject> results = report.run(params);
+        assertEquals(1, results.size());
+
+        DBObject result = results.get(0);
+        DBObject consumer = (DBObject) result.get("consumer");
+        assertEquals("fa35a697-beec-4afe-b105-5bda7c29c8c8", consumer.get("uuid"));
+    }
+
+    @Test
     public void testGetByOwner() {
         MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
         String startDate = TEST_START_DATE;

@@ -65,8 +65,11 @@ public class ComplianceDataCurator extends MongoDBCurator<BasicDBObject> {
         String startDateFilter = flip ? "$lte" : "$gte";
         String endDateFilter = flip ? "$gte" : "$lte";
 
-        queryBuilder.add("status.date", new BasicDBObject(startDateFilter, startDate));
-        queryBuilder.add("status.date", new BasicDBObject(endDateFilter, endDate));
+        BasicDBObject andStatusDate = new BasicDBObject();
+        andStatusDate.append(startDateFilter, startDate);
+        andStatusDate.append(endDateFilter, endDate);
+
+        queryBuilder.add("status.date", andStatusDate);
 
         // Build the projections
         BasicDBObject projections = new BasicDBObject();
