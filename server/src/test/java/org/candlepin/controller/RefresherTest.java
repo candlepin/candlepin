@@ -62,7 +62,7 @@ public class RefresherTest {
         refresher.add(owner);
         refresher.run();
 
-        verify(poolManager, times(1)).refreshPoolsWithoutRegeneration(owner);
+        verify(poolManager, times(1)).refreshPoolsWithRegeneration(eq(owner), eq(false));
     }
 
     @Test
@@ -105,7 +105,7 @@ public class RefresherTest {
         refresher.add(product);
         refresher.run();
 
-        verify(poolManager, times(1)).refreshPoolsWithoutRegeneration(owner);
+        verify(poolManager, times(1)).refreshPoolsWithRegeneration(eq(owner), eq(false));
         verify(poolManager, times(0)).updatePoolsForSubscription(any(List.class),
             any(Subscription.class), eq(false));
     }

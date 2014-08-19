@@ -88,7 +88,7 @@ public class EntitlementCertificate extends AbstractCertificate {
 
     @Override
     public int hashCode() {
-        return this.id == null ? super.hashCode() : 31 * id.hashCode();
+        return this.id == null ? 0 : id.hashCode();
     }
 
     @Override

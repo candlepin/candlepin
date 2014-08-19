@@ -108,6 +108,10 @@ public class Entitlement extends AbstractHibernateObject
 
     private boolean dirty = false;
 
+    // If the entitlement is created before it becomes active, we need to
+    // rerun compliance once we hit the active date range.
+    private boolean updatedOnStart = false;
+
     /**
      * default ctor
      */
@@ -141,6 +145,7 @@ public class Entitlement extends AbstractHibernateObject
         consumer = consumerIn;
         quantity = quantityIn == null || quantityIn.intValue() < 1 ?
             1 : quantityIn;
+        updatedOnStart = poolIn.getStartDate().after(new Date());
     }
 
     /**
@@ -328,5 +333,14 @@ public class Entitlement extends AbstractHibernateObject
             return pool.getProductName();
         }
         return null;
+    }
+
+    @XmlTransient
+    public boolean isUpdatedOnStart() {
+        return updatedOnStart;
+    }
+
+    public void setUpdatedOnStart(boolean updatedOnStart) {
+        this.updatedOnStart = updatedOnStart;
     }
 }

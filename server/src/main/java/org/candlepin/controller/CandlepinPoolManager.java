@@ -14,8 +14,6 @@
  */
 package org.candlepin.controller;
 
-import org.apache.commons.lang.StringUtils;
-
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventBuilder;
 import org.candlepin.audit.EventFactory;
@@ -77,7 +75,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 /**
@@ -137,85 +134,69 @@ public class CandlepinPoolManager implements PoolManager {
         this.activationKeyRules = activationKeyRules;
     }
 
-    Set<Entitlement> refreshPoolsWithoutRegeneration(Owner owner) {
+    /*
+     * We need to update/regen entitlements in the same transaction we update pools
+     * so we don't miss anything
+     */
+    void refreshPoolsWithRegeneration(Owner owner, boolean lazy) {
         log.info("Refreshing pools for owner: " + owner.getKey());
-        List<Subscription> subs = subAdapter.getSubscriptions(owner);
-        log.debug("Found " + subs.size() + " existing subscriptions.");
+        List<String> subIds = subAdapter.getSubscriptionIds(owner);
+        log.debug("Found " + subIds.size() + " existing subscriptions.");
 
-        List<String> subIds = getSubscriptionIds(subs);
-        List<Pool> pools = poolCurator.getPoolsForOwnerRefresh(owner, subIds);
+        List<String> deletedSubs = new LinkedList<String>();
+        for (String subId : subIds) {
+            Subscription sub = subAdapter.getSubscription(subId);
 
-        // Pools with no subscription ID:
-        List<Pool> floatingPools = new LinkedList<Pool>();
-
-        // Map all pools for this owner/product that have a
-        // subscription ID associated with them.
-        Map<String, List<Pool>> subToPoolMap = new HashMap<String, List<Pool>>();
-        for (Pool p : pools) {
-            if (!StringUtils.isEmpty(p.getSubscriptionId())) {
-                if (!subToPoolMap.containsKey(p.getSubscriptionId())) {
-                    subToPoolMap.put(p.getSubscriptionId(),
-                        new LinkedList<Pool>());
-                }
-                subToPoolMap.get(p.getSubscriptionId()).add(p);
+            // If this sub has been removed since getSubscriptionIds was called,
+            if (sub == null) {
+                deletedSubs.add(subId);
+                log.warn("Couldn't load subscription, assuming it has been deleted: " + subId);
+                continue;
             }
-            else {
-                floatingPools.add(p);
-            }
-        }
 
-        Set<Entitlement> entitlementsToRegen = Util.newSet();
-        for (Subscription sub : subs) {
-            // Delete any expired subscriptions. Leave it in the map
-            // so that the pools will get deleted as well.
+            // Remove expired subscriptions
             if (isExpired(sub)) {
+                deletedSubs.add(subId);
                 log.info("Deleting expired subscription: " + sub);
                 subAdapter.deleteSubscription(sub);
                 continue;
             }
 
-            // If the key doesn't exist, we never have to worry about duplicates.
-            if (subToPoolMap.containsKey(sub.getId())) {
-                removeAndDeletePoolsOnOtherOwners(subToPoolMap.get(sub.getId()), sub);
-            }
-            // BUG 1012386 This will regenerate master/derived for bonus scenarios
-            //  if only one of the pair still exists.
-            createPoolsForSubscription(sub, subToPoolMap.get(sub.getId()));
-            entitlementsToRegen.addAll(
-                // don't update floating here, we'll do that later
-                // so we don't update anything twice
-                updatePoolsForSubscription(
-                    subToPoolMap.get(sub.getId()), sub, false)
-            );
-            subToPoolMap.remove(sub.getId());
+            refreshPoolsForSubscription(sub, lazy);
         }
 
-        entitlementsToRegen.addAll(updateFloatingPools(floatingPools));
-
+        // We deleted some, need to take that into account so we
+        // remove everything that isn't actually active
+        subIds.removeAll(deletedSubs);
         // delete pools whose subscription disappeared:
-        for (Entry<String, List<Pool>> entry : subToPoolMap.entrySet()) {
-            for (Pool p : entry.getValue()) {
-                // WARNING: need to be very careful here. We do not want to delete
-                // derived pools with a source entitlement or stack, these will be cleaned
-                // up when the entitlements in the master pool are revoked.
-                //
-                // However if this is an older bonus pool (hosted) not tied to any
-                // entitlements, we need to proceed:
-                if (p.getType() == PoolType.NORMAL || p.getType() == PoolType.BONUS) {
-                    deletePool(p);
-                }
+        for (Pool p : poolCurator.getPoolsFromBadSubs(owner, subIds)) {
+            if (p.getType() == PoolType.NORMAL || p.getType() == PoolType.BONUS) {
+                deletePool(p);
             }
         }
 
-        return entitlementsToRegen;
+        // TODO: break this call into smaller pieces.  There may be lots of floating pools
+        List<Pool> floatingPools = poolCurator.getOwnersFloatingPools(owner);
+        updateFloatingPools(floatingPools, lazy);
     }
 
-    private List<String> getSubscriptionIds(List<Subscription> subs) {
-        List<String> result = new LinkedList<String>();
-        for (Subscription sub : subs) {
-            result.add(sub.getId());
-        }
-        return result;
+    // Returns IDs of deleted subscription
+    @Transactional
+    void refreshPoolsForSubscription(Subscription sub, boolean lazy) {
+
+        // These don't all necessarily belong to this owner
+        List<Pool> subscriptionPools = poolCurator.getPoolsBySubscriptionId(sub.getId());
+
+        // Cleans up pools on other owners who have migrated subs away
+        removeAndDeletePoolsOnOtherOwners(subscriptionPools, sub);
+
+        // BUG 1012386 This will regenerate master/derived for bonus scenarios
+        //  if only one of the pair still exists.
+        createPoolsForSubscription(sub, subscriptionPools);
+        regenerateCertificatesByEntIds(
+            // don't update floating here, we'll do that later
+            // so we don't update anything twice
+            updatePoolsForSubscription(subscriptionPools, sub, false), lazy);
     }
 
     public void cleanupExpiredPools() {
@@ -291,7 +272,7 @@ public class CandlepinPoolManager implements PoolManager {
      * @param updateStackDerived wheter or not to attempt to update stack derived
      * subscriptions
      */
-    Set<Entitlement> updatePoolsForSubscription(List<Pool> existingPools,
+    Set<String> updatePoolsForSubscription(List<Pool> existingPools,
         Subscription sub, boolean updateStackDerived) {
 
         /*
@@ -300,7 +281,7 @@ public class CandlepinPoolManager implements PoolManager {
          * even if we won't use them all.
          */
         if (existingPools == null || existingPools.isEmpty()) {
-            return new HashSet<Entitlement>();
+            return new HashSet<String>(0);
         }
         Map<String, EventBuilder> poolEvents = new HashMap<String, EventBuilder>();
         for (Pool existing : existingPools) {
@@ -334,9 +315,9 @@ public class CandlepinPoolManager implements PoolManager {
         return processPoolUpdates(poolEvents, updatedPools);
     }
 
-    private Set<Entitlement> processPoolUpdates(
+    private Set<String> processPoolUpdates(
         Map<String, EventBuilder> poolEvents, List<PoolUpdate> updatedPools) {
-        Set<Entitlement> entitlementsToRegen = Util.newSet();
+        Set<String> entitlementsToRegen = Util.newSet();
         for (PoolUpdate updatedPool : updatedPools) {
 
             Pool existingPool = updatedPool.getPool();
@@ -358,9 +339,10 @@ public class CandlepinPoolManager implements PoolManager {
 
             // dates changed. regenerate all entitlement certificates
             if (updatedPool.getDatesChanged() ||
-                updatedPool.getProductsChanged()) {
-                List<Entitlement> entitlements = poolCurator
-                    .retrieveFreeEntitlementsOfPool(existingPool, true);
+                updatedPool.getProductsChanged() ||
+                updatedPool.getBrandingChanged()) {
+                List<String> entitlements = poolCurator
+                    .retrieveFreeEntitlementIdsOfPool(existingPool, true);
                 entitlementsToRegen.addAll(entitlements);
             }
             // save changes for the pool
@@ -381,7 +363,8 @@ public class CandlepinPoolManager implements PoolManager {
      * @param floatingPools
      * @return
      */
-    Set<Entitlement> updateFloatingPools(List<Pool> floatingPools) {
+    @Transactional
+    void updateFloatingPools(List<Pool> floatingPools, boolean lazy) {
         /*
          * Rules need to determine which pools have changed, but the Java must
          * send out the events. Create an event for each pool that could change,
@@ -396,13 +379,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         // Hand off to rules to determine which pools need updating:
         List<PoolUpdate> updatedPools = poolRules.updatePools(floatingPools);
-        return processPoolUpdates(poolEvents, updatedPools);
-    }
-
-    private boolean poolExistsForSubscription(
-        Map<String, List<Pool>> subToPoolMap, String id) {
-        return subToPoolMap.containsKey(id) &&
-            !subToPoolMap.get(id).isEmpty();
+        regenerateCertificatesByEntIds(processPoolUpdates(poolEvents, updatedPools), lazy);
     }
 
     /**
@@ -922,6 +899,20 @@ public class CandlepinPoolManager implements PoolManager {
     void regenerateCertificatesOf(Iterable<Entitlement> iterable, boolean lazy) {
         for (Entitlement e : iterable) {
             regenerateCertificatesOf(e, false, lazy);
+        }
+    }
+
+    @Transactional
+    void regenerateCertificatesByEntIds(Iterable<String> iterable, boolean lazy) {
+        for (String entId : iterable) {
+            Entitlement e = entitlementCurator.find(entId);
+            if (e != null) {
+                regenerateCertificatesOf(e, false, lazy);
+            }
+            else {
+                // If it has been deleted, that's fine, one less to regenerate
+                log.info("Couldn't load Entitlement '" + entId + "' to regenerate, assuming deleted");
+            }
         }
     }
 

@@ -228,6 +228,7 @@ public class Content extends AbstractHibernateObject {
 
     @Override
     public int hashCode() {
+        // This must always be a subset of equals
         return new HashCodeBuilder(37, 7).append(this.contentUrl)
             .append(this.gpgUrl).append(this.label).append(this.name)
             .append(this.type).append(this.vendor).toHashCode();

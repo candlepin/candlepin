@@ -108,11 +108,8 @@ public class Event implements Persisted {
     @NotNull
     private Date timestamp;
 
-    // Uniquely identifies the entity's ID when combined with the event type.
-    // The entity type can be determined from the type field.
-    @Column(nullable = false)
+    @Column(nullable = true)
     @Size(max = 255)
-    @NotNull
     private String entityId;
 
     @Column(nullable = true)

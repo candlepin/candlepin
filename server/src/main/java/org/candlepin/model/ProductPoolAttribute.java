@@ -84,6 +84,7 @@ public class ProductPoolAttribute extends AbstractPoolAttribute {
             ProductPoolAttribute that = (ProductPoolAttribute) anObject;
             return new EqualsBuilder().append(this.name, that.getName())
                 .append(this.value, that.getValue())
+                .append(this.productId, that.getProductId())
                 .isEquals();
         }
         return false;

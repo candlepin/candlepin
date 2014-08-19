@@ -14,40 +14,42 @@
  */
 package org.candlepin.pinsetter.tasks;
 
-import org.candlepin.controller.PoolManager;
+import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerCurator;
+import org.candlepin.policy.js.compliance.ComplianceRules;
 
 import com.google.inject.Inject;
 
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import java.util.List;
 
 /**
- * ExpiredPoolsJob: Runs periodically throughout the day to look for any pools past their
- * expiration date.
- *
- * If found we clean up the subscription, pool, and it's entitlements. This is primarily
- * done on a scheduled basis to make sure we re-source derived pools if the stack has
- * other still valid entitlements.
+ * Job to recalculate compliance for consumers when entitlements become active
  */
-public class ExpiredPoolsJob extends KingpinJob {
+public class ActiveEntitlementJob extends KingpinJob {
 
     // Every hour:
     public static final String DEFAULT_SCHEDULE = "0 0 0/1 * * ?";
 
-    private PoolManager poolManager;
-
-    private static Logger log = LoggerFactory.getLogger(ExpiredPoolsJob.class);
+    private ConsumerCurator consumerCurator;
+    private ComplianceRules complianceRules;
 
     @Inject
-    public ExpiredPoolsJob(PoolManager poolManager) {
-        this.poolManager = poolManager;
+    public ActiveEntitlementJob(ConsumerCurator consumerCurator,
+            ComplianceRules complianceRules) {
+        this.consumerCurator = consumerCurator;
+        this.complianceRules = complianceRules;
     }
 
+    @Override
     public void toExecute(JobExecutionContext ctx) throws JobExecutionException {
-
-        log.info("Executing ExpiredPoolsJob");
-        poolManager.cleanupExpiredPools();
+        // not uuids
+        List<String> ids = consumerCurator.getConsumerIdsWithStartedEnts();
+        for (String id : ids) {
+            Consumer c = consumerCurator.find(id);
+            complianceRules.getStatus(c);
+        }
     }
 }

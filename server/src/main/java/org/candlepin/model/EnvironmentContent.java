@@ -111,11 +111,8 @@ public class EnvironmentContent extends AbstractHibernateObject {
 
     @Override
     public int hashCode() {
-        HashCodeBuilder hcBuilder = new HashCodeBuilder(3, 23).append(this.enabled)
+        HashCodeBuilder hcBuilder = new HashCodeBuilder(3, 23)
             .append(this.contentId.hashCode());
-        if (this.environment != null) {
-            hcBuilder.append(this.environment.hashCode());
-        }
         return hcBuilder.toHashCode();
     }
 

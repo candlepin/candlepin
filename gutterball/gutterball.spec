@@ -32,12 +32,14 @@ BuildArch: noarch
 BuildRequires: java-devel >= 0:1.6.0
 BuildRequires: gettext
 BuildRequires: servlet
+BuildRequires: gettext-commons
 BuildRequires: qpid-java-client >= 0:0.22
 BuildRequires: qpid-java-common >= 0:0.22
 BuildRequires: resteasy >= 0:2.3.7
 BuildRequires: mongodb24-mongo-java-driver
 BuildRequires: mongodb24-mongo-java-driver-bson
 BuildRequires: candlepin-common
+BuildRequires: jms
 %global jackson_version 0:2.3.0
 BuildRequires: jackson-annotations >= %{jackson_version}
 BuildRequires: jackson-core >= %{jackson_version}
@@ -50,7 +52,9 @@ BuildRequires: jackson-module-jaxb-annotations >= %{jackson_version}
 BuildRequires: jpackage-utils
 BuildRequires: ant-nodeps >= 0:1.7.0
 BuildRequires: jaxb-impl
+BuildRequires: google-guice >= 0:3.0
 BuildRequires: slf4j-api >= 0:1.7.5
+BuildRequires: logback-classic
 BuildRequires: apache-commons-codec-eap6
 BuildRequires: jakarta-commons-lang
 %endif
@@ -59,6 +63,7 @@ BuildRequires: jakarta-commons-lang
 BuildRequires: javapackages-tools
 BuildRequires: ant >= 0:1.7.0
 BuildRequires: glassfish-jaxb
+BuildRequires: candlepin-guice >= 0:3.0
 BuildRequires: mvn(org.apache.httpcomponents:httpclient) >= 0:4.1.2
 BuildRequires: mvn(org.apache.commons:commons-lang)
 BuildRequires: mvn(org.slf4j:slf4j-api) >= 0:1.7.4
@@ -73,6 +78,7 @@ Requires: qpid-java-common >= 0:0.22
 Requires: gettext-commons
 Requires: mongodb24-mongo-java-driver
 Requires: mongodb24-mongo-java-driver-bson
+Requires: jms
 Requires: candlepin-common
 
 # Version dependent requires

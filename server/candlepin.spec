@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.23
+Version: 0.9.24
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -390,6 +390,23 @@ fi
 
 
 %changelog
+* Mon Aug 18 2014 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.24-1
+- Leverage @Transactional annotation (ckozak@redhat.com)
+- track entitlement ids to refresh (ckozak@redhat.com)
+- started slimming our footprint (ckozak@redhat.com)
+- 1129740: truncate long facts (ckozak@redhat.com)
+- don't double pool ram usage when validating available pools
+  (ckozak@redhat.com)
+- 1095417: Migrate entitlement from one distributor to another
+  (wpoteat@redhat.com)
+- clean up some of our hash code methods (ckozak@redhat.com)
+- Fix apicrawl task. (awood@redhat.com)
+- Allow full pool json in compliance events (ckozak@redhat.com)
+- Update event filters (ckozak@redhat.com)
+- ComplianceRules.getStatus updates the consumers entitlementStatus
+  (ckozak@redhat.com)
+- Add Complicance Created Event (ckozak@redhat.com)
+
 * Thu Aug 07 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.23-1
 - 1126024: 1126026: Contain ProductContent in a list, not a set (ckozak@redhat.com)
 - Require candlepin-common (jesusr@redhat.com)

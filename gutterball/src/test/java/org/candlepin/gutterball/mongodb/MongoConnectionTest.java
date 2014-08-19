@@ -22,7 +22,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.common.config.Configuration;
-import org.candlepin.gutterball.config.ConfigKey;
+import org.candlepin.gutterball.config.ConfigProperties;
 
 import com.mongodb.MongoClient;
 import com.mongodb.MongoCredential;
@@ -46,34 +46,34 @@ public class MongoConnectionTest {
 
     @Test
     public void testProperConfigValuesUsedForNoAuth() {
-        when(config.getString(ConfigKey.MONGODB_USERNAME.toString(), ""))
+        when(config.getString(ConfigProperties.MONGODB_USERNAME, ""))
             .thenReturn("");
 
         new MongoConnectionStub(config);
 
         verifyCommonConfig();
-        verify(config, never()).getString(ConfigKey.MONGODB_PASSWORD.toString(), "");
+        verify(config, never()).getString(ConfigProperties.MONGODB_PASSWORD, "");
     }
 
     @Test
     public void testProperConfigValuesUserForAuthEnabled() {
-        when(config.getString(ConfigKey.MONGODB_USERNAME.toString(), ""))
+        when(config.getString(ConfigProperties.MONGODB_USERNAME, ""))
             .thenReturn("username");
-        when(config.getString(ConfigKey.MONGODB_PASSWORD.toString(), ""))
+        when(config.getString(ConfigProperties.MONGODB_PASSWORD, ""))
             .thenReturn("password");
 
         new MongoConnectionStub(config);
 
         verifyCommonConfig();
-        verify(config).getString(eq(ConfigKey.MONGODB_PASSWORD.toString()), eq(""));
+        verify(config).getString(eq(ConfigProperties.MONGODB_PASSWORD), eq(""));
     }
 
     private void verifyCommonConfig() {
-        verify(config).getString(eq(ConfigKey.MONGODB_HOST.toString()),
+        verify(config).getString(eq(ConfigProperties.MONGODB_HOST),
                 eq(MongoConnection.DEFAULT_HOST));
-        verify(config).getInteger(eq(ConfigKey.MONGODB_PORT.toString()),
+        verify(config).getInteger(eq(ConfigProperties.MONGODB_PORT),
                 eq(MongoConnection.DEFAULT_PORT));
-        verify(config).getString(eq(ConfigKey.MONGODB_DATABASE.toString()),
+        verify(config).getString(eq(ConfigProperties.MONGODB_DATABASE),
                 eq(MongoConnection.DEFAULT_DB));
     }
 
