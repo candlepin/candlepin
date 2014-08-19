@@ -339,7 +339,8 @@ public class CandlepinPoolManager implements PoolManager {
 
             // dates changed. regenerate all entitlement certificates
             if (updatedPool.getDatesChanged() ||
-                updatedPool.getProductsChanged()) {
+                updatedPool.getProductsChanged() ||
+                updatedPool.getBrandingChanged()) {
                 List<String> entitlements = poolCurator
                     .retrieveFreeEntitlementIdsOfPool(existingPool, true);
                 entitlementsToRegen.addAll(entitlements);
