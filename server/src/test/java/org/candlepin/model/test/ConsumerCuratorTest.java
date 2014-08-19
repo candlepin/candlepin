@@ -35,12 +35,16 @@ import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.DeletedConsumer;
 import org.candlepin.model.DeletedConsumerCurator;
+import org.candlepin.model.Entitlement;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.HypervisorId;
 import org.candlepin.model.Owner;
+import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.test.DatabaseTestFixture;
+import org.candlepin.util.Util;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -621,5 +625,39 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         // Should return zero
         boolean result = consumerCurator.isHypervisorIdUsed("different id");
         assertFalse(result);
+    }
+
+    @Test
+    public void testGetConsumerIdsWithStartedEnts() {
+        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        consumerCurator.create(consumer);
+        Product prod = new Product("1", "2");
+        this.productCurator.create(prod);
+        Pool p = createPoolAndSub(owner, prod, 5L, Util.yesterday(), Util.tomorrow());
+        Entitlement ent = this.createEntitlement(owner, consumer, p,
+                createEntitlementCertificate("entkey", "ecert"));
+        ent.setUpdatedOnStart(false);
+        entitlementCurator.create(ent);
+
+        List<String> results = consumerCurator.getConsumerIdsWithStartedEnts();
+        assertEquals(1, results.size());
+        assertEquals(consumer.getId(), results.get(0));
+    }
+
+    @Test
+    public void testGetConsumerIdsWithStartedEntsAlreadyDone() {
+        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        consumerCurator.create(consumer);
+        Product prod = new Product("1", "2");
+        this.productCurator.create(prod);
+        Pool p = createPoolAndSub(owner, prod, 5L, Util.yesterday(), Util.tomorrow());
+        Entitlement ent = this.createEntitlement(owner, consumer, p,
+                createEntitlementCertificate("entkey", "ecert"));
+        // Already taken care of
+        ent.setUpdatedOnStart(true);
+        entitlementCurator.create(ent);
+
+        List<String> results = consumerCurator.getConsumerIdsWithStartedEnts();
+        assertTrue(results.isEmpty());
     }
 }

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+
+    <changeSet id="20140811163932" author="ckozak">
+        <comment>Add boolean flag to entitlement</comment>
+        <addColumn tableName="cp_entitlement">
+            <!-- Ideally the default would be False, but if we set that, the first compliance run
+                 will get thousands of hits.  True allows us to be correct for new entitlements -->
+            <column name="updatedonstart" type="BOOLEAN" defaultValueBoolean="true"/>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>

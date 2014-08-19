@@ -583,4 +583,15 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         return result == null ? 0 : result.intValue();
     }
 
+    @SuppressWarnings("unchecked")
+    public List<String> getConsumerIdsWithStartedEnts() {
+        Date now = new Date();
+        return currentSession().createCriteria(Entitlement.class)
+            .createAlias("pool", "p")
+            .add(Restrictions.eq("updatedOnStart", false))
+            .add(Restrictions.lt("p.startDate", now))
+            .setProjection(Projections.property("consumer.id"))
+            .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY)
+            .list();
+    }
 }

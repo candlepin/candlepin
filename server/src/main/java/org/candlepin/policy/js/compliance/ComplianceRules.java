@@ -130,6 +130,12 @@ public class ComplianceRules {
                 generator.setMessage(c, reason, result.getDate());
             }
             if (currentCompliance) {
+                for (Entitlement ent : c.getEntitlements()) {
+                    if (!ent.isUpdatedOnStart() && ent.isValid()) {
+                        ent.setUpdatedOnStart(true);
+                        entCurator.merge(ent);
+                    }
+                }
                 if (!result.getStatus().equals(c.getEntitlementStatus())) {
                     c.setEntitlementStatus(result.getStatus());
                     // Merge might work better here, but we use update in other places for this
