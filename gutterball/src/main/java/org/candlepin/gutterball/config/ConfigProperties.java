@@ -43,7 +43,6 @@ public class ConfigProperties {
             private static final long serialVersionUID = 1L;
             {
                 // AMQP (Qpid) defaults
-                this.put(AMQP_CONNECT_STRING, "https://localhost");
                 this.put(AMQP_CONNECT_STRING, "amqp://guest:guest@localhost/test?brokerlist=" +
                         "'tcp://localhost:5671?ssl='true'&ssl_cert_alias='gutterball''");
                 this.put(AMQP_KEYSTORE,
