@@ -61,15 +61,21 @@ public class ComplianceDataCurator extends MongoDBCurator<BasicDBObject> {
             queryBuilder.add("status.status", new BasicDBObject("$in", statusFilers));
         }
 
-        boolean flip = startDate.after(endDate);
-        String startDateFilter = flip ? "$lte" : "$gte";
-        String endDateFilter = flip ? "$gte" : "$lte";
+        BasicDBObject statusDateCriteria = new BasicDBObject();
+        if (endDate == null) {
+            // Search all latest status records.
+            statusDateCriteria.append("$lte", startDate);
+        }
+        else {
+            boolean flip = startDate.after(endDate);
+            String startDateFilter = flip ? "$lte" : "$gte";
+            String endDateFilter = flip ? "$gte" : "$lte";
 
-        BasicDBObject andStatusDate = new BasicDBObject();
-        andStatusDate.append(startDateFilter, startDate);
-        andStatusDate.append(endDateFilter, endDate);
+            statusDateCriteria.append(startDateFilter, startDate);
+            statusDateCriteria.append(endDateFilter, endDate);
+        }
 
-        queryBuilder.add("status.date", andStatusDate);
+        queryBuilder.add("status.date", statusDateCriteria);
 
         // Build the projections
         BasicDBObject projections = new BasicDBObject();
@@ -89,10 +95,16 @@ public class ComplianceDataCurator extends MongoDBCurator<BasicDBObject> {
         DBObject sort = new BasicDBObject("$sort", new BasicDBObject("status.date", -1));
 
         // TODO Support paging.
-//        DBObject limit = new BasicDBObject("$limit", 10);
-//        DBObject skip = new BasicDBObject("$skip", 1);
+        // DBObject limit = new BasicDBObject("$limit", 10);
+        // DBObject skip = new BasicDBObject("$skip", 1);
 
         AggregationOutput output = collection.aggregate(Arrays.asList(match, project, sort, group));
         return output.results();
+    }
+
+    public Iterable<DBObject> getComplianceForAllConsumers(
+            List<String> consumerIds, List<String> ownerFilters,
+            List<String> statusFilters) {
+        return this.getComplianceForTimespan(new Date(), null, consumerIds, ownerFilters, statusFilters);
     }
 }

@@ -80,7 +80,6 @@ public class ConsumerStatusReportTest {
         when(params.containsKey("start_date")).thenReturn(true);
 
         validateParams(params, "hours", "Can not be used with start_date parameter.");
-
     }
 
     @Test
@@ -264,5 +263,14 @@ public class ConsumerStatusReportTest {
         }
     }
 
+    @Test
+    public void testGetAllLatestStatusReports() {
+        MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
+        when(params.containsKey("start_date")).thenReturn(false);
+        when(params.containsKey("end_date")).thenReturn(false);
+
+        MultiRowResult<DBObject> results = report.run(params);
+        assertEquals(9, results.size());
+    }
     // TODO Test no date range or hours.
 }

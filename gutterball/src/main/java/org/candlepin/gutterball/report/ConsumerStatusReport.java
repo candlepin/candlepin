@@ -105,26 +105,29 @@ public class ConsumerStatusReport extends Report<MultiRowResult<DBObject>> {
         List<String> statusFilers = queryParams.get("status");
         List<String> ownerFilters = queryParams.get("owner");
 
-        Date startDate = null;
-        Date endDate = null;
         Iterable<DBObject> complianceSnapshots = null;
 
         // Determine if we should lookup for the last x hours.
         if (queryParams.containsKey("hours")) {
             Calendar cal = Calendar.getInstance();
-            startDate = cal.getTime();
+            Date startDate = cal.getTime();
 
             int hours = Integer.parseInt(queryParams.getFirst("hours"));
             cal.add(Calendar.HOUR, hours * -1);
-            endDate = cal.getTime();
+            Date endDate = cal.getTime();
+
+            complianceSnapshots = complianceDataCurator.getComplianceForTimespan(startDate, endDate,
+                    consumerIds, ownerFilters, statusFilers);
+        }
+        else if (queryParams.containsKey("start_date") && queryParams.containsKey("end_date")) {
+            complianceSnapshots = complianceDataCurator.getComplianceForTimespan(
+                parseDate(queryParams.getFirst("start_date")), parseDate(queryParams.getFirst("end_date")),
+                consumerIds, ownerFilters, statusFilers);
         }
         else {
-            startDate = parseDate(queryParams.getFirst("start_date"));
-            endDate = parseDate(queryParams.getFirst("end_date"));
+            complianceSnapshots = complianceDataCurator.getComplianceForAllConsumers(consumerIds,
+                ownerFilters, statusFilers);
         }
-
-        complianceSnapshots = complianceDataCurator.getComplianceForTimespan(startDate, endDate,
-                consumerIds, ownerFilters, statusFilers);
 
         for (DBObject snapshot : complianceSnapshots) {
             result.add(snapshot);
