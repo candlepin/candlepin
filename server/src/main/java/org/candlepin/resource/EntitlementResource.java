@@ -383,12 +383,12 @@ public class EntitlementResource {
                         uuid);
                 if (!sourceConsumer.getType().isManifest()) {
                     throw new BadRequestException(i18n.tr(
-                        "Entitlement migration is not permissible for units of type ''{1}''",
+                        "Entitlement migration is not permissible for units of type ''{0}''",
                         sourceConsumer.getType().getLabel()));
                 }
                 if (!destinationConsumer.getType().isManifest()) {
                     throw new BadRequestException(i18n.tr(
-                        "Entitlement migration is not permissible for units of type ''{1}''",
+                        "Entitlement migration is not permissible for units of type ''{0}''",
                         destinationConsumer.getType().getLabel()));
                 }
                 if (!sourceConsumer.getOwner().getKey().equals(destinationConsumer.getOwner().getKey())) {
@@ -400,9 +400,9 @@ public class EntitlementResource {
                         entitlement.getPool(), 0, CallerType.BIND);
                 if (!result.isSuccessful()) {
                     throw new BadRequestException(i18n.tr(
-                        "The entitlement cannot be utilized by the destination unit: '{0}'",
+                        "The entitlement cannot be utilized by the destination unit: ") +
                         messageTranslator.poolErrorToMessage(entitlement.getPool(),
-                            result.getErrors().get(0))));
+                            result.getErrors().get(0)));
                 }
                 if (quantity.intValue() == entitlement.getQuantity()) {
                     unbind(id);
