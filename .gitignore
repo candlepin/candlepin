@@ -21,6 +21,7 @@
 **/.pydevproject
 **/.syntastic_javac_config
 **/.zanata-cache
+**/tags
 
 **/build/
 **/custom.yaml
