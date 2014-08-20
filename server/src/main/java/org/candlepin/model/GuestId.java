@@ -39,7 +39,6 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
 
 import org.candlepin.jackson.HateoasArrayExclude;
 import org.candlepin.jackson.HateoasInclude;
-import org.candlepin.json.model.ConsumerProperty;
 
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.ForeignKey;

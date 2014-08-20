@@ -47,7 +47,6 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import org.candlepin.jackson.HateoasArrayExclude;
 import org.candlepin.jackson.HateoasInclude;
-import org.candlepin.json.model.ConsumerProperty;
 import org.candlepin.util.Util;
 
 import org.hibernate.annotations.Cascade;
