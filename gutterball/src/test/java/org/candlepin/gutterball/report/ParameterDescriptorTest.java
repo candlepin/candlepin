@@ -106,7 +106,7 @@ public class ParameterDescriptorTest {
         when(params.containsKey(desc.getName())).thenReturn(true);
         when(params.get(desc.getName())).thenReturn(Arrays.asList("2014-04-nineteen19"));
 
-        desc.isDate("yyyy-MM-dd");
+        desc.mustBeDate("yyyy-MM-dd");
         assertInvalidParameter(desc, params, "Invalid date string. Expected format: yyyy-MM-dd");
     }
 
@@ -116,7 +116,7 @@ public class ParameterDescriptorTest {
         when(params.containsKey(desc.getName())).thenReturn(true);
         when(params.get(desc.getName())).thenReturn(Arrays.asList("2014-04-19"));
 
-        desc.isDate("yyyy-MM-dd");
+        desc.mustBeDate("yyyy-MM-dd");
         assertValidParameter(desc, params);
     }
 
@@ -124,9 +124,10 @@ public class ParameterDescriptorTest {
     public void validatesMultipleDateValues() {
         MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
         when(params.containsKey(desc.getName())).thenReturn(true);
-        when(params.get(desc.getName())).thenReturn(Arrays.asList("2014-04-19", "2014-04-20", "a2014-21-d04"));
+        when(params.get(desc.getName())).thenReturn(Arrays.asList("2014-04-19", "2014-04-20",
+            "a2014-21-d04"));
 
-        desc.isDate("yyyy-MM-dd");
+        desc.mustBeDate("yyyy-MM-dd");
         assertInvalidParameter(desc, params, "Invalid date string. Expected format: yyyy-MM-dd");
     }
 

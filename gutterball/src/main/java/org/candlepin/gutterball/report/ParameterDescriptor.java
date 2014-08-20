@@ -102,6 +102,18 @@ public class ParameterDescriptor {
     }
 
     /**
+     * Validate this descriptor's parameter as a Date that follows
+     * the specified date format.
+     *
+     * @param dateFormat the date format the parameter value should follow.
+     * @return
+     */
+    public ParameterDescriptor mustBeDate(String dateFormat) {
+        this.dateFormat = dateFormat;
+        return this;
+    }
+
+    /**
      * Validates this descriptor's parameter as a mandatory parameter.
      * @return a reference to this descriptor.
      */
@@ -195,11 +207,6 @@ public class ParameterDescriptor {
                         i18n.tr("Invalid date string. Expected format: {0}", dateFormat));
             }
         }
-    }
-
-    public ParameterDescriptor isDate(String dateFormat) {
-        this.dateFormat = dateFormat;
-        return this;
     }
 
 }

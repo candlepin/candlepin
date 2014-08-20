@@ -82,7 +82,7 @@ public class ConsumerStatusReport extends Report<MultiRowResult<DBObject>> {
             builder.init("start_date", i18n.tr("The start date to filter on (used with {0}).", "end_date"))
                 .mustNotHave("hours")
                 .mustHave("end_date")
-                .isDate(REPORT_DATE_FORMAT)
+                .mustBeDate(REPORT_DATE_FORMAT)
                 .getParameter()
         );
 
@@ -90,7 +90,7 @@ public class ConsumerStatusReport extends Report<MultiRowResult<DBObject>> {
             builder.init("end_date", i18n.tr("The end date to filter on (used with {0})", "start_date"))
                 .mustNotHave("hours")
                 .mustHave("start_date")
-                .isDate(REPORT_DATE_FORMAT)
+                .mustBeDate(REPORT_DATE_FORMAT)
                 .getParameter()
         );
     }
