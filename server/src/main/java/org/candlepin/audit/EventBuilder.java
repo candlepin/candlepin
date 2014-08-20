@@ -16,9 +16,9 @@ package org.candlepin.audit;
 
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
-import org.candlepin.json.model.ConsumerProperty;
 import org.candlepin.model.AbstractHibernateObject;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerProperty;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Named;
 import org.candlepin.model.Owned;
