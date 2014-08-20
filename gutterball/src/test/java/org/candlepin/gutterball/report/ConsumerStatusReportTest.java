@@ -79,7 +79,7 @@ public class ConsumerStatusReportTest {
         when(params.get("hours")).thenReturn(new ArrayList<String>());
         when(params.containsKey("start_date")).thenReturn(true);
 
-        validateParams(params, "hours", "Can not be used with start_date parameter.");
+        validateParams(params, "hours", "Parameter must not be used with start_date.");
     }
 
     @Test
@@ -89,7 +89,7 @@ public class ConsumerStatusReportTest {
         when(params.get("hours")).thenReturn(new ArrayList<String>());
         when(params.containsKey("end_date")).thenReturn(true);
 
-        validateParams(params, "hours", "Can not be used with end_date parameter.");
+        validateParams(params, "hours", "Parameter must not be used with end_date.");
     }
 
     @Test
@@ -98,7 +98,7 @@ public class ConsumerStatusReportTest {
         when(params.containsKey("hours")).thenReturn(true);
         when(params.get("hours")).thenReturn(Arrays.asList("24a"));
 
-        validateParams(params, "hours", "Parameter must be an Integer value");
+        validateParams(params, "hours", "Parameter must be an Integer value.");
     }
 
     @Test

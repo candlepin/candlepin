@@ -156,7 +156,7 @@ public class ParameterDescriptor {
         for (String paramToCheck : this.mustNotHaveParams) {
             if (queryParams.containsKey(paramToCheck)) {
                 throw new ParameterValidationException(name,
-                        i18n.tr("Can not be used with {0} parameter.", paramToCheck));
+                        i18n.tr("Parameter must not be used with {0}.", paramToCheck));
             }
         }
     }
@@ -178,7 +178,7 @@ public class ParameterDescriptor {
             catch (NumberFormatException nfe) {
                 log.error("Could not parse report parameter as an integer.", nfe);
                 throw new ParameterValidationException(name,
-                        i18n.tr("Parameter must be an Integer value"));
+                        i18n.tr("Parameter must be an Integer value."));
             }
         }
     }
