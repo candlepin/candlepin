@@ -14,10 +14,11 @@
  */
 package org.candlepin.model;
 
-import com.google.inject.Inject;
-
 import org.candlepin.model.Statistic.EntryType;
 import org.candlepin.model.Statistic.ValueType;
+
+import com.google.inject.Inject;
+
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 

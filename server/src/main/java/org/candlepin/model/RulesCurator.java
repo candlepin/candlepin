@@ -17,11 +17,11 @@ package org.candlepin.model;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.util.Util;
 import org.candlepin.util.VersionUtil;
-import org.hibernate.criterion.Order;
-import org.hibernate.criterion.Projections;
 
 import com.google.inject.persist.Transactional;
 
+import org.hibernate.criterion.Order;
+import org.hibernate.criterion.Projections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

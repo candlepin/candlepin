@@ -14,14 +14,15 @@
  */
 package org.candlepin.model.test;
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.HashSet;
+import static org.junit.Assert.*;
 
 import org.candlepin.model.Content;
 import org.candlepin.test.DatabaseTestFixture;
+
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.HashSet;
 
 /**
  * ContentCuratorTest

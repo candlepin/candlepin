@@ -14,11 +14,12 @@
  */
 package org.candlepin.policy.js.pool;
 
-import java.util.LinkedList;
-import java.util.List;
+import org.candlepin.model.Pool;
 
 import org.apache.commons.lang.StringUtils;
-import org.candlepin.model.Pool;
+
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * PoolUpdate: Simple DTO object for passing information about what was updated

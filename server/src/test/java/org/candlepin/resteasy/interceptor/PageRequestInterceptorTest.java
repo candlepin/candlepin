@@ -14,10 +14,8 @@
  */
 package org.candlepin.resteasy.interceptor;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.mockito.Mockito.mock;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.paging.PageRequest;

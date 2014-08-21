@@ -14,15 +14,14 @@
  */
 package org.candlepin.service.impl.test;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.*;
 
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Consumer;
-
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.impl.DefaultSubscriptionServiceAdapter;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;

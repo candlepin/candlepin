@@ -14,13 +14,12 @@
  */
 package org.candlepin;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
+
+import com.google.inject.AbstractModule;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import com.google.inject.AbstractModule;
 
 public class CandlepinNonServletEnvironmentTestingModule extends AbstractModule {
 

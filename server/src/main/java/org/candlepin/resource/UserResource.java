@@ -15,6 +15,23 @@
 package org.candlepin.resource;
 
 
+import org.candlepin.auth.Access;
+import org.candlepin.auth.Principal;
+import org.candlepin.auth.SubResource;
+import org.candlepin.auth.interceptor.Verify;
+import org.candlepin.exceptions.ConflictException;
+import org.candlepin.exceptions.GoneException;
+import org.candlepin.exceptions.NotFoundException;
+import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.Role;
+import org.candlepin.model.User;
+import org.candlepin.service.UserServiceAdapter;
+
+import com.google.inject.Inject;
+
+import org.xnap.commons.i18n.I18n;
+
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -30,22 +47,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-
-import org.candlepin.auth.Access;
-import org.candlepin.auth.Principal;
-import org.candlepin.auth.SubResource;
-import org.candlepin.auth.interceptor.Verify;
-import org.candlepin.exceptions.ConflictException;
-import org.candlepin.exceptions.GoneException;
-import org.candlepin.exceptions.NotFoundException;
-import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.Role;
-import org.candlepin.model.User;
-import org.candlepin.service.UserServiceAdapter;
-import org.xnap.commons.i18n.I18n;
-
-import com.google.inject.Inject;
 
 /**
  * UserResource

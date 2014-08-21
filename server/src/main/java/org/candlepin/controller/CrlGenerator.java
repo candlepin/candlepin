@@ -14,8 +14,7 @@
  */
 package org.candlepin.controller;
 
-import static org.candlepin.util.Util.newList;
-import static org.candlepin.util.Util.newMap;
+import static org.candlepin.util.Util.*;
 
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;

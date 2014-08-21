@@ -15,6 +15,7 @@
 package org.candlepin.pinsetter.core;
 
 import org.candlepin.pinsetter.tasks.KingpinJob;
+
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 

@@ -14,13 +14,13 @@
  */
 package org.candlepin.auth;
 
-import java.util.LinkedList;
-import java.util.List;
 import org.candlepin.auth.permissions.Permission;
 import org.candlepin.auth.permissions.UserUserPermission;
+import org.candlepin.model.Owner;
 
 import java.util.Collection;
-import org.candlepin.model.Owner;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  *

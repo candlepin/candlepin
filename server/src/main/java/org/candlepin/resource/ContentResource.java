@@ -14,6 +14,20 @@
  */
 package org.candlepin.resource;
 
+import org.candlepin.controller.PoolManager;
+import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.exceptions.NotFoundException;
+import org.candlepin.model.Content;
+import org.candlepin.model.ContentCurator;
+import org.candlepin.model.EnvironmentContent;
+import org.candlepin.model.EnvironmentContentCurator;
+import org.candlepin.service.ProductServiceAdapter;
+import org.candlepin.service.UniqueIdGenerator;
+
+import com.google.inject.Inject;
+
+import org.xnap.commons.i18n.I18n;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -27,19 +41,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-
-import org.candlepin.controller.PoolManager;
-import org.candlepin.exceptions.BadRequestException;
-import org.candlepin.exceptions.NotFoundException;
-import org.candlepin.model.Content;
-import org.candlepin.model.ContentCurator;
-import org.candlepin.model.EnvironmentContent;
-import org.candlepin.model.EnvironmentContentCurator;
-import org.candlepin.service.ProductServiceAdapter;
-import org.candlepin.service.UniqueIdGenerator;
-import org.xnap.commons.i18n.I18n;
-
-import com.google.inject.Inject;
 /**
  * ContentResource
  */

@@ -14,15 +14,15 @@
  */
 package org.candlepin.guice;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
-
 import com.google.inject.Key;
 import com.google.inject.OutOfScopeException;
 import com.google.inject.Provider;
 import com.google.inject.Scope;
+
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * CandlepinSingletonScope

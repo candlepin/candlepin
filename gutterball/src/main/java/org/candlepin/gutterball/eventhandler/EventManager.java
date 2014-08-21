@@ -14,8 +14,6 @@
  */
 package org.candlepin.gutterball.eventhandler;
 
-import java.util.Map;
-
 import org.candlepin.gutterball.curator.EventCurator;
 import org.candlepin.gutterball.model.Event;
 
@@ -23,6 +21,8 @@ import com.google.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Map;
 
 /**
  * EventManager takes an event routes it to

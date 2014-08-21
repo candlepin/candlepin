@@ -14,10 +14,10 @@
  */
 package org.candlepin.policy.js;
 
+import org.mozilla.javascript.Scriptable;
+
 import java.util.HashMap;
 import java.util.Map;
-
-import org.mozilla.javascript.Scriptable;
 
 /**
  * JsContext

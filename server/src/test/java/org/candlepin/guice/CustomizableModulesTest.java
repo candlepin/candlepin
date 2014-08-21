@@ -14,16 +14,16 @@
  */
 package org.candlepin.guice;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
+
+import org.candlepin.config.Config;
+
+import com.google.inject.Module;
+
+import org.junit.Test;
 
 import java.net.URISyntaxException;
 import java.util.Set;
-
-import org.candlepin.config.Config;
-import org.junit.Test;
-
-import com.google.inject.Module;
 
 public class CustomizableModulesTest {
 

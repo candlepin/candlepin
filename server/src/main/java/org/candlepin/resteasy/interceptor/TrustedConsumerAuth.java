@@ -14,17 +14,17 @@
  */
 package org.candlepin.resteasy.interceptor;
 
-import java.util.List;
-
 import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.Principal;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.DeletedConsumerCurator;
 
+import com.google.inject.Inject;
+
 import org.jboss.resteasy.spi.HttpRequest;
 import org.xnap.commons.i18n.I18n;
 
-import com.google.inject.Inject;
+import java.util.List;
 
 /**
  * This auth form allows for a consumer id to

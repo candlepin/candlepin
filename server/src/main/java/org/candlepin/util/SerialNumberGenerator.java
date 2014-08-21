@@ -14,11 +14,11 @@
  */
 package org.candlepin.util;
 
-import java.io.Serializable;
-
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.id.IdentifierGenerator;
+
+import java.io.Serializable;
 
 /**
  * SerialNumberGenerator

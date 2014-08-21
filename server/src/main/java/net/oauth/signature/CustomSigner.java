@@ -14,10 +14,10 @@
  */
 package net.oauth.signature;
 
-import net.oauth.OAuthException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import net.oauth.OAuthException;
 
 /**
  * CustomerSigner class overrides the default signature verification

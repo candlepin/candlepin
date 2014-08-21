@@ -14,8 +14,6 @@
  */
 package org.candlepin;
 
-import javax.validation.MessageInterpolator;
-
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Principal;
 import org.candlepin.config.CandlepinCommonTestConfig;
@@ -77,16 +75,19 @@ import org.candlepin.test.PKIReaderForTesting;
 import org.candlepin.util.DateSource;
 import org.candlepin.util.ExpiryDateFunction;
 import org.candlepin.util.X509ExtensionUtil;
-import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
-import org.quartz.JobListener;
-import org.quartz.spi.JobFactory;
-import org.xnap.commons.i18n.I18n;
 
 import com.google.common.base.Function;
 import com.google.inject.Singleton;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Names;
 import com.google.inject.persist.jpa.JpaPersistModule;
+
+import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
+import org.quartz.JobListener;
+import org.quartz.spi.JobFactory;
+import org.xnap.commons.i18n.I18n;
+
+import javax.validation.MessageInterpolator;
 
 public class CandlepinCommonTestingModule extends CandlepinModule {
 

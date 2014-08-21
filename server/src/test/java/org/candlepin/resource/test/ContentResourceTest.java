@@ -13,20 +13,9 @@
  * in this software or its documentation.
  */
 package org.candlepin.resource.test;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.controller.PoolManager;
 import org.candlepin.exceptions.BadRequestException;
@@ -39,11 +28,19 @@ import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.resource.ContentResource;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.impl.DefaultUniqueIdGenerator;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 /**
  * ContentResourceTest
  */

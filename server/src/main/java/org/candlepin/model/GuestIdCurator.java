@@ -14,14 +14,15 @@
  */
 package org.candlepin.model;
 
-import java.util.List;
-
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
+
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.List;
 
 /**
  * GuestIdCurator

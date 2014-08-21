@@ -14,7 +14,7 @@
  */
 package org.candlepin.pinsetter.tasks;
 
-import static org.quartz.impl.matchers.NameMatcher.jobNameEquals;
+import static org.quartz.impl.matchers.NameMatcher.*;
 
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;

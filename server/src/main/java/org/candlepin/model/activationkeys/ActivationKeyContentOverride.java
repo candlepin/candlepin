@@ -14,6 +14,12 @@
  */
 package org.candlepin.model.activationkeys;
 
+import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerContentOverride;
+import org.candlepin.model.ContentOverride;
+
+import org.hibernate.annotations.ForeignKey;
+
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -23,11 +29,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-
-import org.candlepin.model.Consumer;
-import org.candlepin.model.ConsumerContentOverride;
-import org.candlepin.model.ContentOverride;
-import org.hibernate.annotations.ForeignKey;
 
 /**
  * ActivationKeyContentOverride

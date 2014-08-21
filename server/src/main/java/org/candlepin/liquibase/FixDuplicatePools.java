@@ -14,6 +14,8 @@
  */
 package org.candlepin.liquibase;
 
+import liquibase.database.jvm.JdbcConnection;
+
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -22,8 +24,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-
-import liquibase.database.jvm.JdbcConnection;
 
 /**
  * FixDuplicatePools class to fix duplicate pool data.

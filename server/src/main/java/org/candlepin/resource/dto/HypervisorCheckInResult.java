@@ -14,10 +14,10 @@
  */
 package org.candlepin.resource.dto;
 
+import org.candlepin.model.Consumer;
+
 import java.util.HashSet;
 import java.util.Set;
-
-import org.candlepin.model.Consumer;
 
 /**
  * DTO that encapsulates the results from

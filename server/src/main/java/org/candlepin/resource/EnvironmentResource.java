@@ -14,7 +14,7 @@
  */
 package org.candlepin.resource;
 
-import static org.quartz.JobBuilder.newJob;
+import static org.quartz.JobBuilder.*;
 
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.interceptor.SecurityHole;

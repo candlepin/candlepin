@@ -14,11 +14,8 @@
  */
 package org.candlepin.policy.js.pooltype;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.when;
-
-import java.io.InputStream;
-import java.util.Date;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Pool;
@@ -26,10 +23,14 @@ import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.util.Util;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+
+import java.io.InputStream;
+import java.util.Date;
 
 /**
  * PoolTypeRulesTest test class for testing raw

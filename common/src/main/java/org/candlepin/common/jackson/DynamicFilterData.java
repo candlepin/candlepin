@@ -14,6 +14,9 @@
  */
 package org.candlepin.common.jackson;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.HashSet;
@@ -21,9 +24,6 @@ import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * DynamicFilterData

@@ -14,10 +14,10 @@
  */
 package org.candlepin.test;
 
+import org.candlepin.util.DateSource;
+
 import java.util.Calendar;
 import java.util.Date;
-
-import org.candlepin.util.DateSource;
 
 public class DateSourceForTesting implements DateSource {
     private Date currentDate;

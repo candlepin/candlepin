@@ -14,16 +14,12 @@
  */
 package org.candlepin.audit;
 
-import java.net.URI;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-
-import javax.ws.rs.core.MediaType;
-
 import org.candlepin.auth.PrincipalData;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
+
+import com.google.inject.Inject;
+
 import org.jboss.resteasy.plugins.providers.atom.Content;
 import org.jboss.resteasy.plugins.providers.atom.Entry;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
@@ -31,7 +27,12 @@ import org.jboss.resteasy.plugins.providers.atom.Link;
 import org.jboss.resteasy.plugins.providers.atom.Person;
 import org.xnap.commons.i18n.I18n;
 
-import com.google.inject.Inject;
+import java.net.URI;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+
+import javax.ws.rs.core.MediaType;
 
 /**
  * EventAdapterImpl

@@ -14,6 +14,18 @@
  */
 package org.candlepin.model.activationkeys;
 
+import org.candlepin.model.AbstractHibernateObject;
+import org.candlepin.model.Named;
+import org.candlepin.model.Owned;
+import org.candlepin.model.Owner;
+import org.candlepin.model.Pool;
+import org.candlepin.model.Release;
+
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.ForeignKey;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Index;
+
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -32,18 +44,6 @@ import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
-
-import org.candlepin.model.AbstractHibernateObject;
-import org.candlepin.model.Named;
-import org.candlepin.model.Owned;
-import org.candlepin.model.Owner;
-import org.candlepin.model.Pool;
-import org.candlepin.model.Release;
-
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.ForeignKey;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Index;
 
 /**
  * ActivationKey

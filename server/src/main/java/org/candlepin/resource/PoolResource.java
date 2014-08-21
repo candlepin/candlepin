@@ -14,6 +14,36 @@
  */
 package org.candlepin.resource;
 
+import org.candlepin.auth.Access;
+import org.candlepin.auth.Principal;
+import org.candlepin.auth.SubResource;
+import org.candlepin.auth.interceptor.SecurityHole;
+import org.candlepin.auth.interceptor.Verify;
+import org.candlepin.controller.PoolManager;
+import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.exceptions.ForbiddenException;
+import org.candlepin.exceptions.NotFoundException;
+import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.Entitlement;
+import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.Pool;
+import org.candlepin.model.PoolFilterBuilder;
+import org.candlepin.model.Statistic;
+import org.candlepin.model.StatisticCurator;
+import org.candlepin.paging.Page;
+import org.candlepin.paging.PageRequest;
+import org.candlepin.paging.Paginate;
+import org.candlepin.resource.util.CalculatedAttributesUtil;
+import org.candlepin.resource.util.ResourceDateParser;
+
+import com.google.inject.Inject;
+
+import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.xnap.commons.i18n.I18n;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -27,35 +57,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-
-import org.candlepin.auth.Access;
-import org.candlepin.auth.Principal;
-import org.candlepin.auth.SubResource;
-import org.candlepin.auth.interceptor.SecurityHole;
-import org.candlepin.auth.interceptor.Verify;
-import org.candlepin.controller.PoolManager;
-import org.candlepin.exceptions.BadRequestException;
-import org.candlepin.exceptions.ForbiddenException;
-import org.candlepin.exceptions.NotFoundException;
-import org.candlepin.model.Consumer;
-import org.candlepin.model.ConsumerCurator;
-import org.candlepin.model.Entitlement;
-import org.candlepin.model.PoolFilterBuilder;
-import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.Pool;
-import org.candlepin.model.Statistic;
-import org.candlepin.model.StatisticCurator;
-import org.candlepin.paging.Page;
-import org.candlepin.paging.PageRequest;
-import org.candlepin.paging.Paginate;
-import org.candlepin.resource.util.CalculatedAttributesUtil;
-import org.candlepin.resource.util.ResourceDateParser;
-import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
-import org.xnap.commons.i18n.I18n;
-
-import com.google.inject.Inject;
 
 /**
  * API gateway for the EntitlementPool

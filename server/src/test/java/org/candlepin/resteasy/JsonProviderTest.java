@@ -14,7 +14,8 @@
  */
 package org.candlepin.resteasy;
 
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.config.Config;
 
@@ -29,8 +30,6 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import javax.ws.rs.core.MediaType;
 
-import junit.framework.Assert;
-
 @RunWith(MockitoJUnitRunner.class)
 public class JsonProviderTest {
 
@@ -44,7 +43,7 @@ public class JsonProviderTest {
         boolean indentEnabled = isEnabled(provider,
                 SerializationFeature.INDENT_OUTPUT);
 
-        Assert.assertFalse(indentEnabled);
+        assertFalse(indentEnabled);
     }
 
     @Test
@@ -55,7 +54,7 @@ public class JsonProviderTest {
         boolean indentEnabled = isEnabled(provider,
                 SerializationFeature.INDENT_OUTPUT);
 
-        Assert.assertTrue(indentEnabled);
+        assertTrue(indentEnabled);
     }
 
     // This is kind of silly - basically just testing an initial setting...
@@ -66,7 +65,7 @@ public class JsonProviderTest {
         boolean datesAsTimestamps = isEnabled(provider,
                 SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
-        Assert.assertFalse(datesAsTimestamps);
+        assertFalse(datesAsTimestamps);
     }
 
 

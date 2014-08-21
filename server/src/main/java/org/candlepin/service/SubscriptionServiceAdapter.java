@@ -14,12 +14,12 @@
  */
 package org.candlepin.service;
 
-import java.util.List;
-
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
 import org.candlepin.model.Subscription;
+
+import java.util.List;
 
 /**
  * Subscription data may originate from a separate service outside Candlepin

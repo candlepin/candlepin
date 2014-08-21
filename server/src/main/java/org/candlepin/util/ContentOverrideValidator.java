@@ -14,19 +14,20 @@
  */
 package org.candlepin.util;
 
+import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.model.ContentOverride;
+import org.candlepin.policy.js.override.OverrideRules;
+
+import com.google.inject.Inject;
+
+import org.apache.commons.lang.StringUtils;
+import org.xnap.commons.i18n.I18n;
+
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-
-import org.apache.commons.lang.StringUtils;
-import org.candlepin.exceptions.BadRequestException;
-import org.candlepin.model.ContentOverride;
-import org.candlepin.policy.js.override.OverrideRules;
-import org.xnap.commons.i18n.I18n;
-
-import com.google.inject.Inject;
 
 /**
  * ContentOverrideValidator utility class used to validate

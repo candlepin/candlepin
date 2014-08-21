@@ -14,12 +14,12 @@
  */
 package org.candlepin.exceptions.mappers;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
+import org.jboss.resteasy.spi.UnauthorizedException;
 import org.junit.Test;
 
 import javax.ws.rs.core.Response;
-import org.jboss.resteasy.spi.UnauthorizedException;
 
 /**
  * UnauthorizedExceptionMapperTest

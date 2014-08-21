@@ -15,8 +15,7 @@
 
 package org.candlepin.gutterball.curator;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 import org.candlepin.gutterball.EmbeddedMongoRule;
 import org.candlepin.gutterball.MongoCollectionCleanupRule;

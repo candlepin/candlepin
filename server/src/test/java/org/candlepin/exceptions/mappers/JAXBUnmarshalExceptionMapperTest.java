@@ -14,9 +14,8 @@
  */
 package org.candlepin.exceptions.mappers;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 import org.jboss.resteasy.plugins.providers.jaxb.JAXBUnmarshalException;
 import org.junit.Test;

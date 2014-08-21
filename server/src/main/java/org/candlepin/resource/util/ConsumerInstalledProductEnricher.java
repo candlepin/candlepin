@@ -14,6 +14,13 @@
  */
 package org.candlepin.resource.util;
 
+import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerInstalledProduct;
+import org.candlepin.model.Entitlement;
+import org.candlepin.model.Product;
+import org.candlepin.policy.js.compliance.ComplianceRules;
+import org.candlepin.policy.js.compliance.ComplianceStatus;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -23,13 +30,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import org.candlepin.model.Consumer;
-import org.candlepin.model.ConsumerInstalledProduct;
-import org.candlepin.model.Entitlement;
-import org.candlepin.model.Product;
-import org.candlepin.policy.js.compliance.ComplianceRules;
-import org.candlepin.policy.js.compliance.ComplianceStatus;
 
 /**
  * Responsible for enriching a {@link ConsumerInstalledProduct} with

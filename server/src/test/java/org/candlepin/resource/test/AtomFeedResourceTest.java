@@ -14,33 +14,30 @@
  */
 package org.candlepin.resource.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.CandlepinCommonTestingModule;
 import org.candlepin.CandlepinNonServletEnvironmentTestingModule;
 import org.candlepin.audit.Event;
-import org.candlepin.audit.EventAdapter;
-import org.candlepin.audit.EventAdapterImpl;
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
+import org.candlepin.audit.EventAdapter;
+import org.candlepin.audit.EventAdapterImpl;
 import org.candlepin.auth.PrincipalData;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.EventCurator;
 import org.candlepin.resource.AtomFeedResource;
 
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+
 import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.junit.Before;
 import org.junit.Test;
 import org.xnap.commons.i18n.I18n;
-
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 
 import java.util.ArrayList;
 import java.util.Date;

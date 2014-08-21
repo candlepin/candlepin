@@ -16,6 +16,7 @@ package org.candlepin.model.activationkeys;
 
 import org.candlepin.model.AbstractHibernateObject;
 import org.candlepin.model.Pool;
+
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Index;

@@ -16,9 +16,9 @@ package org.candlepin.util;
 
 import static org.junit.Assert.*;
 
-import java.util.Set;
-
 import org.junit.Test;
+
+import java.util.Set;
 
 /**
  * ArchTest

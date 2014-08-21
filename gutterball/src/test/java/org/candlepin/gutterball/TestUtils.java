@@ -15,16 +15,15 @@
 
 package org.candlepin.gutterball;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import java.util.Date;
-import java.util.Random;
-
-import org.apache.commons.lang.RandomStringUtils;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.gutterball.model.Event;
 import org.candlepin.gutterball.report.Report;
+
+import org.apache.commons.lang.RandomStringUtils;
+
+import java.util.Date;
+import java.util.Random;
 
 public class TestUtils {
 

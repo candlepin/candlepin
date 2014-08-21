@@ -14,15 +14,14 @@
  */
 package org.candlepin.resteasy.parameter;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
+
+import org.junit.Before;
+import org.junit.Test;
 
 import java.lang.annotation.Annotation;
 
 import javax.ws.rs.QueryParam;
-
-import org.junit.Before;
-import org.junit.Test;
 
 /**
  * CandlepinParameterUnmarshallerTest

@@ -14,10 +14,6 @@
  */
 package org.candlepin.service.impl;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.Role;
 import org.candlepin.model.RoleCurator;
@@ -27,6 +23,10 @@ import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * A {@link UserServiceAdapter} implementation backed by a {@link UserCurator}

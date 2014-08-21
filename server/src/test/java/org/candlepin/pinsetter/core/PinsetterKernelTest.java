@@ -14,25 +14,14 @@
  */
 package org.candlepin.pinsetter.core;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Matchers.startsWith;
-import static org.mockito.Mockito.atMost;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.quartz.CronScheduleBuilder.cronSchedule;
-import static org.quartz.JobKey.jobKey;
-import static org.quartz.TriggerBuilder.newTrigger;
-import static org.quartz.impl.matchers.GroupMatcher.jobGroupEquals;
-import static org.quartz.impl.matchers.NameMatcher.jobNameEquals;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
+import static org.quartz.CronScheduleBuilder.*;
+import static org.quartz.JobKey.*;
+import static org.quartz.TriggerBuilder.*;
+import static org.quartz.impl.matchers.GroupMatcher.*;
+import static org.quartz.impl.matchers.NameMatcher.*;
 
 import org.candlepin.auth.Principal;
 import org.candlepin.config.Config;
@@ -43,6 +32,7 @@ import org.candlepin.pinsetter.tasks.CancelJobJob;
 import org.candlepin.pinsetter.tasks.JobCleaner;
 import org.candlepin.pinsetter.tasks.StatisticHistoryTask;
 import org.candlepin.util.Util;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;

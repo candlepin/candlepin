@@ -14,13 +14,13 @@
  */
 package org.candlepin.resteasy.parameter;
 
+import org.jboss.resteasy.spi.StringParameterUnmarshaller;
+import org.jboss.resteasy.util.FindAnnotation;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 
 import javax.ws.rs.QueryParam;
-
-import org.jboss.resteasy.spi.StringParameterUnmarshaller;
-import org.jboss.resteasy.util.FindAnnotation;
 
 /**
  * CandlepinParameterUnmarshaller

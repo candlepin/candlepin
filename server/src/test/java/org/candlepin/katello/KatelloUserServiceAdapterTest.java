@@ -14,10 +14,11 @@
  */
 package org.candlepin.katello;
 
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.model.Role;
 import org.candlepin.model.User;
+
 import org.junit.Before;
 import org.junit.Test;
 

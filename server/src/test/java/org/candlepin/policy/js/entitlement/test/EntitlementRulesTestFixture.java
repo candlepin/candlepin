@@ -14,11 +14,8 @@
  */
 package org.candlepin.policy.js.entitlement.test;
 
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.when;
-
-import java.io.InputStream;
-import java.util.Locale;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
@@ -49,10 +46,14 @@ import org.candlepin.test.TestDateUtil;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.DateSourceImpl;
 import org.candlepin.util.Util;
+
 import org.junit.Before;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.xnap.commons.i18n.I18nFactory;
+
+import java.io.InputStream;
+import java.util.Locale;
 
 public class EntitlementRulesTestFixture {
     protected Enforcer enforcer;

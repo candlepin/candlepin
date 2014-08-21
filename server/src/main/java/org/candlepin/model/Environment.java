@@ -14,6 +14,9 @@
  */
 package org.candlepin.model;
 
+import org.hibernate.annotations.ForeignKey;
+import org.hibernate.annotations.Index;
+
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.List;
@@ -34,9 +37,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-
-import org.hibernate.annotations.ForeignKey;
-import org.hibernate.annotations.Index;
 
 /**
  * Represents an environment within an owner/organization. Environments are tracked

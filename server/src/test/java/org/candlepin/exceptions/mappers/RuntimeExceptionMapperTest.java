@@ -14,15 +14,14 @@
  */
 package org.candlepin.exceptions.mappers;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.exceptions.CandlepinException;
 import org.candlepin.exceptions.ExceptionMessage;
 import org.candlepin.sync.ImportExtractionException;
 import org.candlepin.util.VersionUtil;
+
 import org.jboss.resteasy.spi.BadRequestException;
 import org.jboss.resteasy.spi.DefaultOptionsMethodException;
 import org.jboss.resteasy.util.HttpHeaderNames;

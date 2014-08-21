@@ -16,8 +16,10 @@ package org.candlepin.resource.test;
 
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
+
 import org.junit.Assert;
 import org.junit.Test;
+
 import java.util.HashMap;
 
 /**

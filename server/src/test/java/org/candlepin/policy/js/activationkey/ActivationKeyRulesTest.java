@@ -14,14 +14,8 @@
  */
 package org.candlepin.policy.js.activationkey;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Mockito.when;
-
-import java.io.InputStream;
-import java.util.Date;
-import java.util.Locale;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.model.Pool;
@@ -31,12 +25,17 @@ import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.util.Util;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
+
+import java.io.InputStream;
+import java.util.Date;
+import java.util.Locale;
 
 /**
  * ActivationKeyRulesTest

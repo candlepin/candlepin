@@ -14,15 +14,9 @@
  */
 package org.candlepin.resource.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import com.google.inject.Guice;
-import com.google.inject.Injector;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.CandlepinCommonTestingModule;
 import org.candlepin.CandlepinNonServletEnvironmentTestingModule;
@@ -32,6 +26,10 @@ import org.candlepin.auth.PrincipalData;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.EventCurator;
 import org.candlepin.resource.EventResource;
+
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.xnap.commons.i18n.I18n;

@@ -14,7 +14,7 @@
  */
 package org.candlepin.exceptions.mappers;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import org.jboss.resteasy.spi.MethodNotAllowedException;
 import org.junit.Test;

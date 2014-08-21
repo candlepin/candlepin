@@ -15,6 +15,7 @@
 package org.candlepin.resteasy.interceptor;
 
 import org.candlepin.util.VersionUtil;
+
 import org.jboss.resteasy.annotations.interception.Precedence;
 import org.jboss.resteasy.annotations.interception.ServerInterceptor;
 import org.jboss.resteasy.core.ServerResponse;

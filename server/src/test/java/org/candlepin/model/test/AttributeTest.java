@@ -14,12 +14,13 @@
  */
 package org.candlepin.model.test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
+
 import org.junit.Test;
 
 public class AttributeTest extends DatabaseTestFixture {

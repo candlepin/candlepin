@@ -14,16 +14,16 @@
  */
 package org.candlepin.pinsetter.tasks;
 
-import static org.quartz.JobBuilder.newJob;
-
-import java.util.Date;
-import java.util.List;
+import static org.quartz.JobBuilder.*;
 
 import org.candlepin.controller.Entitler;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.util.Util;
+
+import com.google.inject.Inject;
+
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
@@ -31,7 +31,8 @@ import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.Inject;
+import java.util.Date;
+import java.util.List;
 
 /**
  * EntitleByProductsJob

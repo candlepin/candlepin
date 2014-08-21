@@ -14,7 +14,7 @@
  */
 package org.candlepin.exceptions.mappers;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import org.jboss.resteasy.spi.InternalServerErrorException;
 import org.junit.Test;
