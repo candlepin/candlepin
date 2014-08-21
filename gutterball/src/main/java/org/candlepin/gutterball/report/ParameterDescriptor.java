@@ -103,7 +103,7 @@ public class ParameterDescriptor {
      * the specified date format.
      *
      * @param dateFormat the date format the parameter value should follow.
-     * @return
+     * @return a reference to this descriptor
      */
     public ParameterDescriptor mustBeDate(String dateFormat) {
         this.dateFormat = dateFormat;

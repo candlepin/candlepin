@@ -18,13 +18,15 @@ package org.candlepin.gutterball;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.util.Date;
-import java.util.Random;
+import org.candlepin.gutterball.model.Event;
+import org.candlepin.gutterball.report.Report;
+
+import com.mongodb.BasicDBObject;
 
 import org.apache.commons.lang.RandomStringUtils;
 
-import org.candlepin.gutterball.model.Event;
-import org.candlepin.gutterball.report.Report;
+import java.util.Date;
+import java.util.Random;
 
 public class TestUtils {
 
@@ -56,5 +58,25 @@ public class TestUtils {
         when(r.getKey()).thenReturn(key);
         when(r.getDescription()).thenReturn(desc);
         return r;
+    }
+
+    public static BasicDBObject createComplianceSnapshot(Date statusDate, String consumerUuid, String owner,
+            String statusString) {
+        // NOTE: Does not return DBObject interface since the curator needs this BasicDBObject since it
+        //       requires a concrete class when calling setObjectClass().
+        // NOTE: Currently only contains enough data to satisfy the ConsumerStatusReport
+
+        BasicDBObject consumer = new BasicDBObject();
+        consumer.append("uuid", consumerUuid);
+        consumer.append("owner", new BasicDBObject("key", owner));
+
+        BasicDBObject status = new BasicDBObject();
+        status.append("date", statusDate);
+        status.append("status", statusString);
+
+        BasicDBObject snap = new BasicDBObject();
+        snap.append("consumer", consumer);
+        snap.append("status", status);
+        return snap;
     }
 }
