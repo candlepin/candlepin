@@ -14,10 +14,6 @@
  */
 package org.candlepin.guice;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.inject.Inject;
-import com.google.inject.Provider;
-
 import org.candlepin.audit.AMQPBusPublisher;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.Event.Target;
@@ -25,6 +21,11 @@ import org.candlepin.audit.Event.Type;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.util.Util;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.inject.Inject;
+import com.google.inject.Provider;
+
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;

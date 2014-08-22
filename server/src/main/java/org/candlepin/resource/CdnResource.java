@@ -14,6 +14,17 @@
  */
 package org.candlepin.resource;
 
+import org.candlepin.auth.Principal;
+import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.exceptions.NotFoundException;
+import org.candlepin.model.Cdn;
+import org.candlepin.model.CdnCurator;
+
+import com.google.inject.Inject;
+
+import org.apache.commons.lang.StringUtils;
+import org.xnap.commons.i18n.I18n;
+
 import java.util.List;
 
 import javax.ws.rs.Consumes;
@@ -26,16 +37,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-
-import org.apache.commons.lang.StringUtils;
-import org.candlepin.auth.Principal;
-import org.candlepin.exceptions.BadRequestException;
-import org.candlepin.exceptions.NotFoundException;
-import org.candlepin.model.Cdn;
-import org.candlepin.model.CdnCurator;
-import org.xnap.commons.i18n.I18n;
-
-import com.google.inject.Inject;
 
 /**
  * CdnResource

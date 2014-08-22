@@ -14,13 +14,13 @@
  */
 package org.candlepin.auth.permissions;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import org.candlepin.auth.Access;
 import org.candlepin.auth.SubResource;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
+
 import org.junit.Before;
 import org.junit.Test;
 

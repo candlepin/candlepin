@@ -14,10 +14,6 @@
  */
 package org.candlepin.model;
 
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashSet;
-
 import org.candlepin.auth.Principal;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
@@ -25,9 +21,14 @@ import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UniqueIdGenerator;
-import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
+
+import org.xnap.commons.i18n.I18n;
+
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashSet;
 
 /**
  * UeberCertificateGenerator

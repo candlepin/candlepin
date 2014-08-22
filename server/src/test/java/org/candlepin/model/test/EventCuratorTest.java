@@ -14,13 +14,11 @@
  */
 package org.candlepin.model.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 import org.candlepin.audit.Event;
-import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.Event.Type;
+import org.candlepin.audit.EventFactory;
 import org.candlepin.auth.Access;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;

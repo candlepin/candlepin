@@ -17,12 +17,13 @@ package org.candlepin.resteasy.interceptor;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.TrustedUserPrincipal;
 import org.candlepin.service.UserServiceAdapter;
-import org.jboss.resteasy.spi.HttpRequest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+
+import org.jboss.resteasy.spi.HttpRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This auth form allows for a consumer id to be passed in a clear http header.

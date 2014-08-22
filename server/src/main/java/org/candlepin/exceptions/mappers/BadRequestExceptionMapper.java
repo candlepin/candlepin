@@ -14,6 +14,13 @@
  */
 package org.candlepin.exceptions.mappers;
 
+import org.candlepin.exceptions.CandlepinParamterParseException;
+import org.candlepin.exceptions.ExceptionMessage;
+import org.candlepin.util.VersionUtil;
+
+import org.apache.commons.lang.StringUtils;
+import org.jboss.resteasy.spi.BadRequestException;
+
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -23,12 +30,6 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
-
-import org.apache.commons.lang.StringUtils;
-import org.candlepin.exceptions.ExceptionMessage;
-import org.candlepin.exceptions.CandlepinParamterParseException;
-import org.candlepin.util.VersionUtil;
-import org.jboss.resteasy.spi.BadRequestException;
 
 /**
  * BadRequestExceptionMapper maps the RESTEasy BadRequestException

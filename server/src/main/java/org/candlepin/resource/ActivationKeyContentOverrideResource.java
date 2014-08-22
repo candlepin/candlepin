@@ -14,16 +14,17 @@
  */
 package org.candlepin.resource;
 
-import javax.ws.rs.Path;
-
-import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.model.activationkeys.ActivationKey;
-import org.candlepin.model.activationkeys.ActivationKeyContentOverrideCurator;
 import org.candlepin.model.activationkeys.ActivationKeyContentOverride;
+import org.candlepin.model.activationkeys.ActivationKeyContentOverrideCurator;
+import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.util.ContentOverrideValidator;
-import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
+
+import org.xnap.commons.i18n.I18n;
+
+import javax.ws.rs.Path;
 
 /**
  * ActivationKeyContentOverrideResource

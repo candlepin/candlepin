@@ -14,6 +14,8 @@
  */
 package org.candlepin.model;
 
+import org.hibernate.annotations.GenericGenerator;
+
 import java.security.PrivateKey;
 import java.security.PublicKey;
 
@@ -23,8 +25,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
-
-import org.hibernate.annotations.GenericGenerator;
 
 /**
  * KeyPair: Simple wrapper for a Java security keypair. We need to store these in

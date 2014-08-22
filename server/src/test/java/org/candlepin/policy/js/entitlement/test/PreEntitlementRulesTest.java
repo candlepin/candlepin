@@ -14,14 +14,8 @@
  */
 package org.candlepin.policy.js.entitlement.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.when;
-
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
@@ -33,7 +27,12 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.test.TestUtil;
+
 import org.junit.Test;
+
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 
 public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
 

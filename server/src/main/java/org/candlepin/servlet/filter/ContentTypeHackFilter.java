@@ -14,6 +14,8 @@
  */
 package org.candlepin.servlet.filter;
 
+import com.google.inject.Singleton;
+
 import java.io.IOException;
 
 import javax.servlet.Filter;
@@ -24,8 +26,6 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
-
-import com.google.inject.Singleton;
 
 /**
  * ContentTypeHackFilter

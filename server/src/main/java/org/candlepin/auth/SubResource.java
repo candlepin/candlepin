@@ -16,7 +16,7 @@ package org.candlepin.auth;
 
 /**
  * Enumeration of the sub-targets used in the Candlepin permission model.
- * @see AuthInterceptor
+ * See AuthInterceptor
  */
 public enum SubResource {
     NONE,

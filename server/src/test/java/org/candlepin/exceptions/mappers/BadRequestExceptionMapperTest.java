@@ -14,8 +14,7 @@
  */
 package org.candlepin.exceptions.mappers;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 import org.jboss.resteasy.spi.BadRequestException;
 import org.junit.Test;

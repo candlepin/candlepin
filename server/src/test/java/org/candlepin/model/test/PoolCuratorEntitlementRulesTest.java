@@ -14,8 +14,7 @@
  */
 package org.candlepin.model.test;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.model.Consumer;
@@ -30,11 +29,12 @@ import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
-import org.junit.Before;
-import org.junit.Test;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
+
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * PoolCuratorEntitlementRulesTest

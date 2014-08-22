@@ -14,6 +14,13 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.auth.Access;
+import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
+
+import org.hibernate.annotations.ForeignKey;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Index;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -25,12 +32,6 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlTransient;
-
-import org.candlepin.auth.Access;
-import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
-import org.hibernate.annotations.ForeignKey;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Index;
 
 /**
  * A representation of a permission to be stored in the database. Used by the

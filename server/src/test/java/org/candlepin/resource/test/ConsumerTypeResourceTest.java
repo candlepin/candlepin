@@ -14,16 +14,16 @@
  */
 package org.candlepin.resource.test;
 
-import java.util.List;
+import static org.junit.Assert.*;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.resource.ConsumerTypeResource;
 import org.candlepin.test.DatabaseTestFixture;
+
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.List;
 
 /**
  * ConsumerTypeResourceTest

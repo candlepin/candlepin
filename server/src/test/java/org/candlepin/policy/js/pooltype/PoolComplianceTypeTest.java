@@ -14,14 +14,14 @@
  */
 package org.candlepin.policy.js.pooltype;
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.Locale;
+import static org.junit.Assert.*;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
+
+import java.util.Locale;
 
 /**
  * PoolTypeTest

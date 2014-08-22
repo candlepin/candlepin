@@ -14,10 +14,10 @@
  */
 package org.candlepin;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
+
+import java.util.concurrent.atomic.AtomicBoolean;
 
 
 /**

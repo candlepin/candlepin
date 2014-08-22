@@ -14,13 +14,14 @@
  */
 package org.candlepin.audit;
 
+import org.candlepin.audit.Event.Target;
+import org.candlepin.audit.Event.Type;
+import org.candlepin.util.Util;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 
-import org.candlepin.audit.Event.Target;
-import org.candlepin.audit.Event.Type;
-import org.candlepin.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

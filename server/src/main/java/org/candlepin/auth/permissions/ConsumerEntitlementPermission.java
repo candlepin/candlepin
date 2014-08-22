@@ -19,6 +19,7 @@ import org.candlepin.auth.SubResource;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
+
 import org.hibernate.criterion.Criterion;
 
 /**

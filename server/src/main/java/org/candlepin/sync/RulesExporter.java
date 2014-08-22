@@ -14,12 +14,12 @@
  */
 package org.candlepin.sync;
 
-import java.io.IOException;
-import java.io.Writer;
-
 import org.candlepin.model.RulesCurator;
 
 import com.google.inject.Inject;
+
+import java.io.IOException;
+import java.io.Writer;
 
 /**
  * RulesExporter

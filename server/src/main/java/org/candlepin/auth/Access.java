@@ -16,7 +16,7 @@ package org.candlepin.auth;
 
 /**
  * Enumeration of the access rights used in the Candlepin permission model.
- * @see AuthInterceptor
+ * See AuthInterceptor
  */
 public enum Access {
     // TODO: NONE - kind of a hack for Verify to have a default access type...

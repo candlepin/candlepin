@@ -14,6 +14,10 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.policy.js.RuleParseException;
+
+import org.hibernate.annotations.GenericGenerator;
+
 import java.io.Serializable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -31,10 +35,6 @@ import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlTransient;
-
-import org.candlepin.policy.js.RuleParseException;
-
-import org.hibernate.annotations.GenericGenerator;
 
 /**
  * Rules

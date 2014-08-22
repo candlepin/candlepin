@@ -14,13 +14,13 @@
  */
 package org.candlepin.auth.interceptor;
 
+import org.candlepin.auth.Access;
+import org.candlepin.auth.SubResource;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-
-import org.candlepin.auth.Access;
-import org.candlepin.auth.SubResource;
 
 /**
  * Annotation for specifying RESTful parameters that represent some protected

@@ -14,14 +14,14 @@
  */
 package org.candlepin.test;
 
+import org.candlepin.pki.PKIReader;
+
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Set;
-
-import org.candlepin.pki.PKIReader;
 
 /**
  * PKIReaderForTesting

@@ -15,12 +15,12 @@
 package org.candlepin.pinsetter.core;
 
 
-import static org.quartz.CronScheduleBuilder.cronSchedule;
-import static org.quartz.JobBuilder.newJob;
-import static org.quartz.JobKey.jobKey;
-import static org.quartz.TriggerBuilder.newTrigger;
-import static org.quartz.TriggerKey.triggerKey;
-import static org.quartz.impl.matchers.GroupMatcher.jobGroupEquals;
+import static org.quartz.CronScheduleBuilder.*;
+import static org.quartz.JobBuilder.*;
+import static org.quartz.JobKey.*;
+import static org.quartz.TriggerBuilder.*;
+import static org.quartz.TriggerKey.*;
+import static org.quartz.impl.matchers.GroupMatcher.*;
 
 import org.candlepin.auth.SystemPrincipal;
 import org.candlepin.config.Config;

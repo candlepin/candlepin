@@ -14,8 +14,8 @@
  */
 package org.candlepin.policy.js.quantity;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
@@ -29,6 +29,7 @@ import org.candlepin.model.RulesCurator;
 import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;

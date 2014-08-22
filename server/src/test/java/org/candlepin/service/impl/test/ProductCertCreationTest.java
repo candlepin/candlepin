@@ -19,11 +19,12 @@ import org.candlepin.model.ProductCertificate;
 import org.candlepin.pki.PKIReader;
 import org.candlepin.pki.impl.BouncyCastlePKIReader;
 import org.candlepin.test.DatabaseTestFixture;
-import org.junit.Assert;
-import org.junit.Test;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
+
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * DefaultProductServiceAdapterTest

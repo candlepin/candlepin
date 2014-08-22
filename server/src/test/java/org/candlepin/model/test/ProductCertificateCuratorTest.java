@@ -14,11 +14,12 @@
  */
 package org.candlepin.model.test;
 
-import junit.framework.Assert;
+import static org.junit.Assert.*;
 
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
 import org.candlepin.test.DatabaseTestFixture;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -39,12 +40,12 @@ public class ProductCertificateCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void emptyFindForProduct() {
-        Assert.assertNull(productCertificateCurator.findForProduct(product));
+        assertNull(productCertificateCurator.findForProduct(product));
     }
 
     @Test
     public void nullForNull() {
-        Assert.assertNull(productCertificateCurator.findForProduct(null));
+        assertNull(productCertificateCurator.findForProduct(null));
     }
 
     @Test
@@ -56,6 +57,6 @@ public class ProductCertificateCuratorTest extends DatabaseTestFixture {
 
         productCertificateCurator.create(cert);
 
-        Assert.assertEquals(cert, productCertificateCurator.findForProduct(product));
+        assertEquals(cert, productCertificateCurator.findForProduct(product));
     }
 }

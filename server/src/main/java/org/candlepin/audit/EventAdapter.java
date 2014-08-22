@@ -14,11 +14,11 @@
  */
 package org.candlepin.audit;
 
-import java.util.List;
+import com.google.inject.ImplementedBy;
 
 import org.jboss.resteasy.plugins.providers.atom.Feed;
 
-import com.google.inject.ImplementedBy;
+import java.util.List;
 
 /**
  * EventAdapter

@@ -15,20 +15,21 @@
 
 package org.candlepin.gutterball.mongodb;
 
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.candlepin.common.config.Configuration;
 import org.candlepin.gutterball.config.ConfigProperties;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.mongodb.DB;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoCredential;
 import com.mongodb.MongoException;
 import com.mongodb.ServerAddress;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Encapsulates the MongoDB Java driver connection details. All configuration is

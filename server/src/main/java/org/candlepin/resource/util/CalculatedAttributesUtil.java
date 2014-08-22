@@ -20,9 +20,10 @@ import org.candlepin.policy.js.pooltype.PoolComplianceType;
 import org.candlepin.policy.js.pooltype.PoolComplianceTypeRules;
 import org.candlepin.policy.js.quantity.QuantityRules;
 import org.candlepin.policy.js.quantity.SuggestedQuantity;
-import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
+
+import org.xnap.commons.i18n.I18n;
 
 import java.util.Date;
 import java.util.HashMap;

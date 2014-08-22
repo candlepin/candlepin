@@ -14,16 +14,17 @@
  */
 package org.candlepin.pinsetter.tasks;
 
-import com.google.inject.Inject;
-
-import java.util.List;
-
 import org.candlepin.model.ImportRecord;
 import org.candlepin.model.ImportRecordCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
+
+import com.google.inject.Inject;
+
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+
+import java.util.List;
 
 /**
  * Deletes all but the oldest N records, defined by the

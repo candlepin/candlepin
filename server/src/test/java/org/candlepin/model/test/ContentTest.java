@@ -15,12 +15,15 @@
 package org.candlepin.model.test;
 
 
-import java.util.HashSet;
+import static org.hamcrest.collection.IsCollectionContaining.*;
+import static org.junit.Assert.*;
+
 import org.candlepin.model.Content;
 import org.candlepin.test.DatabaseTestFixture;
+
 import org.junit.Test;
-import static org.junit.Assert.*;
-import static org.hamcrest.collection.IsCollectionContaining.hasItem;
+
+import java.util.HashSet;
 
 
 /**

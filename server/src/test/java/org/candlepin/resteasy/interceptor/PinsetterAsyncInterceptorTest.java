@@ -14,14 +14,9 @@
  */
 package org.candlepin.resteasy.interceptor;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.quartz.JobBuilder.newJob;
-
-import com.google.inject.Provider;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
+import static org.quartz.JobBuilder.*;
 
 import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
@@ -34,6 +29,9 @@ import org.candlepin.pinsetter.core.PinsetterException;
 import org.candlepin.pinsetter.core.PinsetterJobListener;
 import org.candlepin.pinsetter.core.PinsetterKernel;
 import org.candlepin.pinsetter.core.model.JobStatus;
+
+import com.google.inject.Provider;
+
 import org.jboss.resteasy.core.ServerResponse;
 import org.junit.Assert;
 import org.junit.Before;

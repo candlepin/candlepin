@@ -14,10 +14,8 @@
  */
 package org.candlepin.exceptions.mappers;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.exceptions.ExceptionMessage;
 import org.candlepin.guice.I18nProvider;

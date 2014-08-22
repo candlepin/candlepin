@@ -14,10 +14,7 @@
  */
 package org.candlepin.model.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
-import javax.persistence.PersistenceException;
+import static org.junit.Assert.*;
 
 import org.candlepin.model.Content;
 import org.candlepin.model.Environment;
@@ -29,6 +26,8 @@ import org.candlepin.test.TestUtil;
 
 import org.junit.Before;
 import org.junit.Test;
+
+import javax.persistence.PersistenceException;
 
 
 public class EnvironmentContentCuratorTest extends DatabaseTestFixture {

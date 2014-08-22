@@ -14,10 +14,10 @@
  */
 package org.candlepin.sync;
 
+import org.candlepin.model.EntitlementCertificate;
+
 import java.io.IOException;
 import java.io.Writer;
-
-import org.candlepin.model.EntitlementCertificate;
 
 /**
  * EntitlementCertExporter

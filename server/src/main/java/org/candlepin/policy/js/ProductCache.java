@@ -14,11 +14,6 @@
  */
 package org.candlepin.policy.js;
 
-import java.lang.ref.SoftReference;
-import java.util.LinkedHashMap;
-import java.util.Map.Entry;
-import java.util.Set;
-
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.guice.CandlepinSingletonScoped;
@@ -26,6 +21,11 @@ import org.candlepin.model.Product;
 import org.candlepin.service.ProductServiceAdapter;
 
 import com.google.inject.Inject;
+
+import java.lang.ref.SoftReference;
+import java.util.LinkedHashMap;
+import java.util.Map.Entry;
+import java.util.Set;
 
 /**
  * ProductCache

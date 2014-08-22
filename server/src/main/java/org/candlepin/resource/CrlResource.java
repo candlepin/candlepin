@@ -14,8 +14,6 @@
  */
 package org.candlepin.resource;
 
-import com.google.inject.Inject;
-
 import org.candlepin.auth.Principal;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
@@ -24,6 +22,8 @@ import org.candlepin.exceptions.IseException;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.util.CrlFileUtil;
+
+import com.google.inject.Inject;
 
 import java.io.File;
 import java.io.IOException;

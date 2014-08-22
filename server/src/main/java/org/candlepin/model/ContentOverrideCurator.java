@@ -14,11 +14,11 @@
  */
 package org.candlepin.model;
 
-import java.util.List;
+import com.google.inject.persist.Transactional;
 
 import org.hibernate.criterion.Restrictions;
 
-import com.google.inject.persist.Transactional;
+import java.util.List;
 
 /**
  * ContentOverrideCurator

@@ -14,8 +14,7 @@
  */
 package org.candlepin.exceptions.mappers;
 
-import static org.jboss.resteasy.util.MediaTypeHelper.getBestMatch;
-import static org.jboss.resteasy.util.MediaTypeHelper.parseHeader;
+import static org.jboss.resteasy.util.MediaTypeHelper.*;
 
 import org.candlepin.exceptions.ExceptionMessage;
 import org.candlepin.util.VersionUtil;

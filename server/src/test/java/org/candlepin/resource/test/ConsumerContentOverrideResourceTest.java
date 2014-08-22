@@ -14,17 +14,8 @@
  */
 package org.candlepin.resource.test;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Locale;
-
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.UriInfo;
-
-import static org.mockito.Matchers.eq;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
@@ -40,6 +31,7 @@ import org.candlepin.policy.js.override.OverrideRules;
 import org.candlepin.resource.ConsumerContentOverrideResource;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.util.ContentOverrideValidator;
+
 import org.jboss.resteasy.specimpl.MultivaluedMapImpl;
 import org.junit.Before;
 import org.junit.Test;
@@ -49,6 +41,13 @@ import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
+
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
+
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.UriInfo;
 
 /**
  * ConsumerContentOverrideResourceTest

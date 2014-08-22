@@ -14,6 +14,11 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.util.Util;
+
+import org.hibernate.annotations.Formula;
+import org.hibernate.annotations.GenericGenerator;
+
 import java.math.BigInteger;
 import java.util.Date;
 
@@ -22,10 +27,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
-
-import org.candlepin.util.Util;
-import org.hibernate.annotations.Formula;
-import org.hibernate.annotations.GenericGenerator;
 
 /**
  * CertificateSerial: A simple database sequence used to ensure certificates receive

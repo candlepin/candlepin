@@ -14,14 +14,15 @@
  */
 package org.candlepin.model.activationkeys;
 
-import java.util.List;
-
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.model.AbstractHibernateCurator;
 import org.candlepin.model.Owner;
-import org.hibernate.criterion.Restrictions;
 
 import com.google.inject.persist.Transactional;
+
+import org.hibernate.criterion.Restrictions;
+
+import java.util.List;
 
 /**
  * SubscriptionTokenCurator

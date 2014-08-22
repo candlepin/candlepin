@@ -14,6 +14,13 @@
  */
 package org.candlepin.audit;
 
+import org.candlepin.auth.Principal;
+import org.candlepin.auth.PrincipalData;
+import org.candlepin.model.Persisted;
+import org.candlepin.util.Util;
+
+import org.hibernate.annotations.GenericGenerator;
+
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -30,12 +37,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-
-import org.candlepin.auth.Principal;
-import org.candlepin.auth.PrincipalData;
-import org.candlepin.model.Persisted;
-import org.candlepin.util.Util;
-import org.hibernate.annotations.GenericGenerator;
 
 /**
  * Event - Base class for Candlepin events. Serves as both our semi-permanent

@@ -14,14 +14,14 @@
  */
 package org.candlepin.util;
 
-import java.util.Calendar;
-import java.util.Date;
-
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 
 import com.google.common.base.Function;
 import com.google.inject.Inject;
+
+import java.util.Calendar;
+import java.util.Date;
 
 /**
  * ExpiryDateFunction

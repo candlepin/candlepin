@@ -14,20 +14,20 @@
  */
 package org.candlepin.gutterball.receiver;
 
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageListener;
-import javax.jms.TextMessage;
-
 import org.candlepin.gutterball.bsoncallback.EventCallback;
 import org.candlepin.gutterball.eventhandler.EventManager;
 import org.candlepin.gutterball.model.Event;
 
+import com.google.inject.Inject;
+import com.mongodb.util.JSON;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.Inject;
-import com.mongodb.util.JSON;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageListener;
+import javax.jms.TextMessage;
 
 /**
  * A JMS message listener that is invoked when Gutterball receives an

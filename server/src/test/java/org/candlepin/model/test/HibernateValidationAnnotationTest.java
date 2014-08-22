@@ -14,15 +14,7 @@
  */
 package org.candlepin.model.test;
 
-import static org.junit.Assert.assertTrue;
-
-import java.lang.reflect.AnnotatedElement;
-import java.lang.reflect.Field;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
+import static org.junit.Assert.*;
 
 import org.candlepin.model.AbstractCertificate;
 import org.candlepin.model.Branding;
@@ -67,10 +59,19 @@ import org.candlepin.model.SubscriptionsCertificate;
 import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.model.User;
 import org.candlepin.model.activationkeys.ActivationKey;
-import org.junit.Test;
 
 import com.google.inject.matcher.Matcher;
 import com.google.inject.matcher.Matchers;
+
+import org.junit.Test;
+
+import java.lang.reflect.AnnotatedElement;
+import java.lang.reflect.Field;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 /**
  * HibernateAnnotationTest

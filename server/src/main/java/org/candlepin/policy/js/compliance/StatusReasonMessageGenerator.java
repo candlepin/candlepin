@@ -14,16 +14,18 @@
  */
 package org.candlepin.policy.js.compliance;
 
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
-
-import org.apache.commons.lang.StringUtils;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.Entitlement;
-import org.xnap.commons.i18n.I18n;
+
 import com.google.inject.Inject;
+
+import org.apache.commons.lang.StringUtils;
+import org.xnap.commons.i18n.I18n;
+
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * StatusReasonMessageGenerator

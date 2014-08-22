@@ -14,20 +14,21 @@
  */
 package org.candlepin.pinsetter.tasks;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Date;
-
-import org.apache.commons.io.FileUtils;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.util.Util;
+
+import com.google.inject.Inject;
+
+import org.apache.commons.io.FileUtils;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.Inject;
+import java.io.File;
+import java.io.IOException;
+import java.util.Date;
 
 /**
  * ExportCleaner

@@ -14,13 +14,19 @@
  */
 package org.candlepin.pinsetter.tasks;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
+
+import org.candlepin.controller.Entitler;
+import org.candlepin.model.Entitlement;
+import org.candlepin.pinsetter.core.model.JobStatus;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.quartz.JobDetail;
+import org.quartz.JobExecutionContext;
+import org.quartz.JobExecutionException;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -29,15 +35,6 @@ import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
-import org.candlepin.controller.Entitler;
-import org.candlepin.model.Entitlement;
-import org.candlepin.pinsetter.core.model.JobStatus;
-import org.junit.Before;
-import org.junit.Test;
-import org.quartz.JobDetail;
-import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
 
 /**
  * EntitleByProductsJobTest

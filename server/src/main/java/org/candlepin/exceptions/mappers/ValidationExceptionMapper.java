@@ -14,6 +14,9 @@
  */
 package org.candlepin.exceptions.mappers;
 
+import org.candlepin.exceptions.ExceptionMessage;
+import org.candlepin.util.VersionUtil;
+
 import java.util.Map;
 
 import javax.validation.ConstraintViolation;
@@ -24,9 +27,6 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
-
-import org.candlepin.exceptions.ExceptionMessage;
-import org.candlepin.util.VersionUtil;
 
 /**
  * ValidationExceptionMapper maps the RESTEasy BadRequestException

@@ -18,6 +18,7 @@ import org.candlepin.auth.interceptor.SecurityHole;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
+
 import org.jboss.resteasy.spi.HttpRequest;
 
 import java.lang.annotation.Annotation;

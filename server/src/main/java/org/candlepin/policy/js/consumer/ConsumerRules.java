@@ -14,14 +14,14 @@
  */
 package org.candlepin.policy.js.consumer;
 
-import java.util.List;
-
-import com.google.inject.Inject;
-
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
+
+import com.google.inject.Inject;
+
+import java.util.List;
 
 /**
  * ConsumerRules

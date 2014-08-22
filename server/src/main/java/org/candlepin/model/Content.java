@@ -14,6 +14,12 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.service.UniqueIdGenerator;
+
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.hibernate.annotations.Type;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -29,11 +35,6 @@ import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
-
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.candlepin.service.UniqueIdGenerator;
-import org.hibernate.annotations.Type;
 
 /**
  * ProductContent

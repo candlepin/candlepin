@@ -14,8 +14,7 @@
  */
 package org.candlepin.client;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.model.Owner;

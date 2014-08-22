@@ -14,7 +14,7 @@
  */
 package org.candlepin.resource.test;
 
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.auth.Access;
 import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
@@ -24,6 +24,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.Role;
 import org.candlepin.model.User;
+
 import org.junit.Test;
 
 /**

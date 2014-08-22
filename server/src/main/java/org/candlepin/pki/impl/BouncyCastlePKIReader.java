@@ -14,6 +14,17 @@
  */
 package org.candlepin.pki.impl;
 
+import org.candlepin.config.Config;
+import org.candlepin.config.ConfigProperties;
+import org.candlepin.pki.PKIReader;
+import org.candlepin.util.Util;
+
+import com.google.inject.Inject;
+
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.openssl.PEMReader;
+import org.bouncycastle.openssl.PasswordFinder;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -28,16 +39,6 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.HashSet;
 import java.util.Set;
-
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.bouncycastle.openssl.PEMReader;
-import org.bouncycastle.openssl.PasswordFinder;
-import org.candlepin.config.Config;
-import org.candlepin.config.ConfigProperties;
-import org.candlepin.pki.PKIReader;
-import org.candlepin.util.Util;
-
-import com.google.inject.Inject;
 
 /**
  * The default {@link PKIReader} for Candlepin.  This reads the file paths for

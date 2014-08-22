@@ -21,11 +21,12 @@ import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsonJsContext;
 import org.candlepin.policy.js.RulesObjectMapper;
+
+import com.google.inject.Inject;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
-
-import com.google.inject.Inject;
 
 /**
  * ActivationKeyRules

@@ -14,14 +14,14 @@
  */
 package org.candlepin.logging;
 
+import org.slf4j.MDC;
+import org.slf4j.Marker;
+
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.turbo.MatchingFilter;
 import ch.qos.logback.core.spi.FilterReply;
 import ch.qos.logback.core.util.OptionHelper;
-
-import org.slf4j.MDC;
-import org.slf4j.Marker;
 
 /**
  * This filter accepts events based on whether the log event is greater than

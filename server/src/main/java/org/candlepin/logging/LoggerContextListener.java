@@ -14,10 +14,10 @@
  */
 package org.candlepin.logging;
 
-import ch.qos.logback.classic.LoggerContext;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import ch.qos.logback.classic.LoggerContext;
 
 /**
  * In order to release the resources used by logback-classic, it is always a

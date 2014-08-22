@@ -14,14 +14,11 @@
  */
 package org.candlepin.pinsetter.tasks;
 
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import java.util.HashSet;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.PinsetterKernel;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Matchers;
@@ -30,6 +27,8 @@ import org.mockito.MockitoAnnotations;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
 import org.quartz.SchedulerException;
+
+import java.util.HashSet;
 
 /**
  * SweepBarJobTest

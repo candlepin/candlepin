@@ -14,12 +14,12 @@
  */
 package org.candlepin.pinsetter.tasks;
 
-import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
+import org.candlepin.controller.PoolManager;
 
 import com.google.inject.Inject;
 
-import org.candlepin.controller.PoolManager;
+import org.quartz.JobExecutionContext;
+import org.quartz.JobExecutionException;
 
 /**
  * The Class RegenEntitlementCertsJob.

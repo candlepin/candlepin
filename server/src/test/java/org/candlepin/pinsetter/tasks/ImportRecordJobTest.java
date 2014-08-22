@@ -14,18 +14,21 @@
  */
 package org.candlepin.pinsetter.tasks;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import java.util.List;
 import org.candlepin.CandlepinCommonTestingModule;
 import org.candlepin.CandlepinNonServletEnvironmentTestingModule;
 import org.candlepin.model.ImportRecord;
 import org.candlepin.model.ImportRecordCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
+
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.List;
 
 /**
  *

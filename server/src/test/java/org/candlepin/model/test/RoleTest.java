@@ -14,12 +14,8 @@
  */
 package org.candlepin.model.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
-import java.util.List;
-
-import org.apache.commons.lang.RandomStringUtils;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
 import org.candlepin.model.Owner;
@@ -28,8 +24,12 @@ import org.candlepin.model.Role;
 import org.candlepin.model.User;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
+
+import org.apache.commons.lang.RandomStringUtils;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.List;
 
 public class RoleTest extends DatabaseTestFixture {
 

@@ -17,8 +17,8 @@ package org.candlepin.gutterball.receiver;
 import org.apache.qpid.AMQException;
 import org.apache.qpid.client.AMQAnyDestination;
 import org.apache.qpid.client.AMQConnection;
-import org.junit.Test;
 import org.junit.Ignore;
+import org.junit.Test;
 
 import java.net.URISyntaxException;
 

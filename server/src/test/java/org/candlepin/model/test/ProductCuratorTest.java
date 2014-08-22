@@ -14,12 +14,8 @@
  */
 package org.candlepin.model.test;
 
-import static org.hamcrest.collection.IsCollectionContaining.hasItem;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.collection.IsCollectionContaining.*;
+import static org.junit.Assert.*;
 
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.Config;

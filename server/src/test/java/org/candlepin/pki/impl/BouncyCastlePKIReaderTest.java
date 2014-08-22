@@ -16,6 +16,7 @@ package org.candlepin.pki.impl;
 
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
+
 import org.junit.Test;
 
 import java.security.cert.CertificateException;

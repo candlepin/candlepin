@@ -14,14 +14,14 @@
  */
 package org.candlepin.gutterball.util;
 
+import org.candlepin.gutterball.eventhandler.EventHandler;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
-
-import org.candlepin.gutterball.eventhandler.EventHandler;
 
 /**
  * EventHandlerLoader Loads subclasses of EventHandler from the package
