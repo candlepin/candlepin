@@ -8,7 +8,10 @@
 
 
     <changeSet id="20140815131046" author="wpoteat">
-        <dropNotNullConstraint tableName="cp_event" columnName="entityid"/>
+        <dropNotNullConstraint
+            tableName="cp_event"
+            columnName="entityid"
+            columnDataType="VARCHAR(255)"/>
         <!-- See http://www.liquibase.org/manual/refactoring_commands -->
     </changeSet>
 
