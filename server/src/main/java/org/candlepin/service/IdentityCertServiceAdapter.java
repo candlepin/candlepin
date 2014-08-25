@@ -14,11 +14,11 @@
  */
 package org.candlepin.service;
 
-import java.io.IOException;
-import java.security.GeneralSecurityException;
-
 import org.candlepin.model.Consumer;
 import org.candlepin.model.IdentityCertificate;
+
+import java.io.IOException;
+import java.security.GeneralSecurityException;
 
 /**
  * Interface to the Certificate Service.

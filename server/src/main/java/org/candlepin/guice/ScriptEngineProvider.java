@@ -14,10 +14,10 @@
  */
 package org.candlepin.guice;
 
+import com.google.inject.Provider;
+
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
-
-import com.google.inject.Provider;
 
 /**
  * ScriptEngineProvider

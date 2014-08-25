@@ -14,10 +14,10 @@
  */
 package org.candlepin.service;
 
-import java.util.List;
-
 import org.candlepin.model.Role;
 import org.candlepin.model.User;
+
+import java.util.List;
 
 /**
  * UserServiceAdapter

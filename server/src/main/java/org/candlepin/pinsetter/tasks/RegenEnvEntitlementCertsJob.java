@@ -14,15 +14,15 @@
  */
 package org.candlepin.pinsetter.tasks;
 
-import java.util.Set;
+import org.candlepin.controller.PoolManager;
+import org.candlepin.model.Environment;
+
+import com.google.inject.Inject;
 
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
-import com.google.inject.Inject;
-
-import org.candlepin.controller.PoolManager;
-import org.candlepin.model.Environment;
+import java.util.Set;
 
 /**
  * RegenEnvEntitlementCertsJob

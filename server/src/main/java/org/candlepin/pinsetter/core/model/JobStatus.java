@@ -14,6 +14,15 @@
  */
 package org.candlepin.pinsetter.core.model;
 
+import org.candlepin.auth.Principal;
+import org.candlepin.model.AbstractHibernateObject;
+import org.candlepin.pinsetter.core.PinsetterJobListener;
+import org.candlepin.pinsetter.tasks.KingpinJob;
+
+import org.quartz.JobDetail;
+import org.quartz.JobExecutionContext;
+import org.quartz.JobKey;
+
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -26,14 +35,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-
-import org.candlepin.auth.Principal;
-import org.candlepin.model.AbstractHibernateObject;
-import org.candlepin.pinsetter.core.PinsetterJobListener;
-import org.candlepin.pinsetter.tasks.KingpinJob;
-import org.quartz.JobDetail;
-import org.quartz.JobExecutionContext;
-import org.quartz.JobKey;
 /**
  * Represents the current status for a long-running job.
  */

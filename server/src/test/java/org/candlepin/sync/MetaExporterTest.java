@@ -14,7 +14,7 @@
  */
 package org.candlepin.sync;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import org.candlepin.config.Config;
 import org.candlepin.test.TestUtil;

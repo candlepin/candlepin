@@ -14,14 +14,14 @@
  */
 package org.candlepin.policy.criteria;
 
-import java.util.LinkedList;
-import java.util.List;
-
 import org.candlepin.config.Config;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.PoolAttribute;
 import org.candlepin.model.PoolFilterBuilder;
+
+import com.google.inject.Inject;
+
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Projections;
@@ -29,7 +29,8 @@ import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.Subqueries;
 
-import com.google.inject.Inject;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * CriteriaRules

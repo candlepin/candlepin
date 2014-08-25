@@ -14,24 +14,19 @@
  */
 package org.candlepin.pinsetter.core;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
-import static org.mockito.Mockito.when;
-import static org.quartz.JobKey.jobKey;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
+import static org.quartz.JobKey.*;
 
-import com.google.inject.persist.UnitOfWork;
-
-import org.apache.commons.lang.RandomStringUtils;
 import org.candlepin.auth.Principal;
 import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.pinsetter.core.model.JobStatus.JobState;
+
+import com.google.inject.persist.UnitOfWork;
+
+import org.apache.commons.lang.RandomStringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.quartz.JobDataMap;

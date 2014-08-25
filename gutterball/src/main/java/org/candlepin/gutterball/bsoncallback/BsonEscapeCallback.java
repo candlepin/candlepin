@@ -14,11 +14,11 @@
  */
 package org.candlepin.gutterball.bsoncallback;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import com.mongodb.DBCallback;
 import com.mongodb.util.JSONCallback;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * BsonEscapeCallback used to replace dots with a character

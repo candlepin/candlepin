@@ -14,8 +14,7 @@
  */
 package org.candlepin.auth.permissions;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
@@ -25,6 +24,7 @@ import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Owner;
 import org.candlepin.model.User;
 import org.candlepin.test.DatabaseTestFixture;
+
 import org.junit.Before;
 import org.junit.Test;
 

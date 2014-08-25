@@ -14,8 +14,6 @@
  */
 package org.candlepin.test;
 
-import java.util.List;
-
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
@@ -23,6 +21,8 @@ import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.PreUnbindHelper;
 import org.candlepin.policy.js.pool.PoolHelper;
+
+import java.util.List;
 
 
 /**

@@ -14,15 +14,6 @@
  */
 package org.candlepin.test;
 
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashSet;
-
-import javax.inject.Provider;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.servlet.http.HttpServletRequest;
-
 import org.candlepin.CandlepinCommonTestingModule;
 import org.candlepin.CandlepinNonServletEnvironmentTestingModule;
 import org.candlepin.TestingInterceptor;
@@ -86,6 +77,14 @@ import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.util.DateSource;
 import org.candlepin.util.ServiceLevelValidator;
+
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Module;
+import com.google.inject.persist.PersistFilter;
+import com.google.inject.persist.UnitOfWork;
+import com.google.inject.util.Modules;
+
 import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
 import org.hibernate.ejb.HibernateEntityManagerFactory;
 import org.hibernate.event.service.spi.EventListenerRegistry;
@@ -95,12 +94,14 @@ import org.junit.After;
 import org.junit.Before;
 import org.xnap.commons.i18n.I18n;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Module;
-import com.google.inject.persist.PersistFilter;
-import com.google.inject.persist.UnitOfWork;
-import com.google.inject.util.Modules;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashSet;
+
+import javax.inject.Provider;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * Test fixture for test classes requiring access to the database.

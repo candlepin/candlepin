@@ -14,17 +14,18 @@
  */
 package org.candlepin.policy.test;
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.Arrays;
-import java.util.Collection;
+import static org.junit.Assert.*;
 
 import org.candlepin.model.Rules;
 import org.candlepin.policy.js.RuleParseException;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
+
+import java.util.Arrays;
+import java.util.Collection;
 
 /**
  * RulesVersionmatchingTest

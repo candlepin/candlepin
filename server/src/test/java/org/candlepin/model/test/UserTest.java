@@ -14,9 +14,7 @@
  */
 package org.candlepin.model.test;
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.Set;
+import static org.junit.Assert.*;
 
 import org.candlepin.auth.Access;
 import org.candlepin.auth.SubResource;
@@ -24,8 +22,11 @@ import org.candlepin.auth.permissions.Permission;
 import org.candlepin.model.Owner;
 import org.candlepin.model.User;
 import org.candlepin.test.DatabaseTestFixture;
+
 import org.hibernate.criterion.Criterion;
 import org.junit.Test;
+
+import java.util.Set;
 
 public class UserTest extends DatabaseTestFixture {
 

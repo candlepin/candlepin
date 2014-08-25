@@ -14,15 +14,15 @@
  */
 package org.candlepin.service;
 
-import java.io.IOException;
-import java.security.GeneralSecurityException;
-import java.util.List;
-
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.Product;
 import org.candlepin.model.Subscription;
+
+import java.io.IOException;
+import java.security.GeneralSecurityException;
+import java.util.List;
 
 /**
  * Interface to the Certificate Service.

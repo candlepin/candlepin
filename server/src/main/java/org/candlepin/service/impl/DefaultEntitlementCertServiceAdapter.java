@@ -14,19 +14,6 @@
  */
 package org.candlepin.service.impl;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.math.BigInteger;
-import java.net.URLEncoder;
-import java.security.GeneralSecurityException;
-import java.security.KeyPair;
-import java.security.cert.X509Certificate;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
-
 import org.candlepin.config.Config;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
@@ -55,12 +42,26 @@ import org.candlepin.util.Util;
 import org.candlepin.util.X509ExtensionUtil;
 import org.candlepin.util.X509Util;
 import org.candlepin.util.X509V3ExtensionUtil;
+
+import com.google.common.collect.Collections2;
+import com.google.inject.Inject;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
-import com.google.common.collect.Collections2;
-import com.google.inject.Inject;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.math.BigInteger;
+import java.net.URLEncoder;
+import java.security.GeneralSecurityException;
+import java.security.KeyPair;
+import java.security.cert.X509Certificate;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * DefaultEntitlementCertServiceAdapter

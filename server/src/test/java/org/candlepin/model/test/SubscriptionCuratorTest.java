@@ -14,14 +14,7 @@
  */
 package org.candlepin.model.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import static org.junit.Assert.*;
 
 import org.candlepin.model.Branding;
 import org.candlepin.model.Owner;
@@ -31,8 +24,13 @@ import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.impl.DefaultSubscriptionServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
+
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /*
  * Yes, this is called SubscriptionCuratorTest, but it uses the

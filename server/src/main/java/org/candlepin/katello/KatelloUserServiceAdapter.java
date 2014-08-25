@@ -14,11 +14,11 @@
  */
 package org.candlepin.katello;
 
-import java.util.List;
-
 import org.candlepin.model.Role;
 import org.candlepin.model.User;
 import org.candlepin.service.UserServiceAdapter;
+
+import java.util.List;
 
 /**
  * KatelloUserServiceAdapter

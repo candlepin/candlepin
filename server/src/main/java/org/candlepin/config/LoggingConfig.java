@@ -14,12 +14,12 @@
  */
 package org.candlepin.config;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.LoggerContext;
-
 import com.google.inject.Inject;
 
 import org.slf4j.LoggerFactory;
+
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.LoggerContext;
 
 import java.util.Map;
 import java.util.Map.Entry;

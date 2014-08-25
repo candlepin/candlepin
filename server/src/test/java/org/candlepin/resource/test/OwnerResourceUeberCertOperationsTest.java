@@ -14,11 +14,7 @@
  */
 package org.candlepin.resource.test;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.util.ArrayList;
+import static org.junit.Assert.*;
 
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
@@ -34,8 +30,11 @@ import org.candlepin.model.User;
 import org.candlepin.resource.OwnerResource;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.util.ContentOverrideValidator;
+
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.ArrayList;
 
 /**
  * OwnerResourceUeberCertOperationsTest

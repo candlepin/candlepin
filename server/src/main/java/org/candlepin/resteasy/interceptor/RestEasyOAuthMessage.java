@@ -14,12 +14,12 @@
  */
 package org.candlepin.resteasy.interceptor;
 
-import net.oauth.OAuth;
-import net.oauth.OAuthMessage;
-
 import org.jboss.resteasy.spi.HttpRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import net.oauth.OAuth;
+import net.oauth.OAuthMessage;
 
 import java.util.ArrayList;
 import java.util.Collection;

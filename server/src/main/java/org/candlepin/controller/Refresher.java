@@ -14,10 +14,6 @@
  */
 package org.candlepin.controller;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
@@ -27,6 +23,10 @@ import org.candlepin.util.Util;
 
 import com.google.inject.persist.Transactional;
 import com.google.inject.persist.UnitOfWork;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Refresher

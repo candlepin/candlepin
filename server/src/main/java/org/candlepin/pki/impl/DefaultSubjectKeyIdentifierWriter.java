@@ -14,16 +14,17 @@
  */
 package org.candlepin.pki.impl;
 
+import org.candlepin.pki.SubjectKeyIdentifierWriter;
+import org.candlepin.pki.X509ExtensionWrapper;
+
+import org.bouncycastle.asn1.DEREncodable;
+import org.bouncycastle.x509.extension.SubjectKeyIdentifierStructure;
+
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.cert.CertificateParsingException;
 import java.util.Set;
-
-import org.candlepin.pki.SubjectKeyIdentifierWriter;
-import org.candlepin.pki.X509ExtensionWrapper;
-import org.bouncycastle.asn1.DEREncodable;
-import org.bouncycastle.x509.extension.SubjectKeyIdentifierStructure;
 
 /**
  * SubjectKeyIdentifierWriter

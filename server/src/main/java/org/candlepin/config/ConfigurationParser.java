@@ -16,8 +16,8 @@
 package org.candlepin.config;
 
 import java.util.Map;
-import java.util.Properties;
 import java.util.Map.Entry;
+import java.util.Properties;
 
 /**
  * ConfigurationParser

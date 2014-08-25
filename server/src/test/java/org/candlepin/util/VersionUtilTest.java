@@ -14,10 +14,10 @@
  */
 package org.candlepin.util;
 
-import static junit.framework.Assert.assertFalse;
-import static junit.framework.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import org.candlepin.model.Rules;
+
 import org.junit.After;
 import org.junit.Test;
 

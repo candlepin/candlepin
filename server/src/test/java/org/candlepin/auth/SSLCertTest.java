@@ -14,7 +14,10 @@
  */
 package org.candlepin.auth;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
+
+import org.junit.Before;
+import org.junit.Test;
 
 import java.security.cert.CertPath;
 import java.security.cert.CertPathValidator;
@@ -26,9 +29,6 @@ import java.security.cert.TrustAnchor;
 import java.security.cert.X509Certificate;
 import java.util.Collections;
 import java.util.LinkedList;
-
-import org.junit.Before;
-import org.junit.Test;
 
 /**
  * some useful sources of certificate-related information:

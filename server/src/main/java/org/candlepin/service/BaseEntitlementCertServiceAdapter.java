@@ -14,11 +14,11 @@
  */
 package org.candlepin.service;
 
-import java.util.List;
-
 import org.candlepin.model.Consumer;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCertificateCurator;
+
+import java.util.List;
 
 /**
  * BaseEntitlementCertServiceAdapter

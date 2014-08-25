@@ -14,6 +14,14 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.jackson.HateoasInclude;
+
+import com.fasterxml.jackson.annotation.JsonFilter;
+
+import org.hibernate.annotations.ForeignKey;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Index;
+
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -32,17 +40,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-
-import org.candlepin.jackson.HateoasInclude;
-import org.candlepin.json.model.ConsumerProperty;
-
-import org.hibernate.annotations.ForeignKey;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Index;
-
-import com.fasterxml.jackson.annotation.JsonFilter;
-
-
 
 /**
  * Entitlements are documents either signed XML or other certificate which

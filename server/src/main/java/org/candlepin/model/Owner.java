@@ -14,6 +14,14 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.jackson.HateoasInclude;
+import org.candlepin.model.activationkeys.ActivationKey;
+import org.candlepin.resteasy.InfoProperty;
+
+import com.fasterxml.jackson.annotation.JsonFilter;
+
+import org.hibernate.annotations.GenericGenerator;
+
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
@@ -33,14 +41,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-
-import org.candlepin.jackson.HateoasInclude;
-import org.candlepin.model.activationkeys.ActivationKey;
-import org.candlepin.resteasy.InfoProperty;
-
-import org.hibernate.annotations.GenericGenerator;
-
-import com.fasterxml.jackson.annotation.JsonFilter;
 
 /**
  * Represents the owner of entitlements. This is akin to an organization,

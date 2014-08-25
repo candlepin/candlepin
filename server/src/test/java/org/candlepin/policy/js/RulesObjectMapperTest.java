@@ -14,16 +14,7 @@
  */
 package org.candlepin.policy.js;
 
-import java.io.InputStream;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.*;
 
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
@@ -35,8 +26,18 @@ import org.candlepin.model.PoolAttribute;
 import org.candlepin.model.ProductPoolAttribute;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.util.Util;
+
 import org.junit.Before;
 import org.junit.Test;
+
+import java.io.InputStream;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * RulesObjectMapperTest

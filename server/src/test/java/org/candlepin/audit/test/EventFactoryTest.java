@@ -14,9 +14,8 @@
  */
 package org.candlepin.audit.test;
 
-import static org.junit.Assert.assertNotNull;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventFactory;
@@ -25,6 +24,7 @@ import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.Owner;
+
 import org.junit.Before;
 import org.junit.Test;
 

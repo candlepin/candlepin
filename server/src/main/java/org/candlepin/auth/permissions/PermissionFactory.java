@@ -14,14 +14,14 @@
  */
 package org.candlepin.auth.permissions;
 
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-
 import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.User;
 
 import com.google.inject.Inject;
+
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * PermissionFactory: Creates concrete Java permission classes based on the

@@ -29,13 +29,14 @@ package org.candlepin.gutterball.curator;
  * in this software or its documentation.
  */
 
-import org.bson.types.ObjectId;
 import org.candlepin.gutterball.mongodb.MongoConnection;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
+
+import org.bson.types.ObjectId;
 
 /**
  *

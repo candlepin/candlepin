@@ -15,9 +15,10 @@
 package org.candlepin.guice;
 
 import org.candlepin.auth.Principal;
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
 import com.google.inject.Provider;
+
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
 /**
  *

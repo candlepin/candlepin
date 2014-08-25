@@ -14,10 +14,10 @@
  */
 package org.candlepin.sync;
 
+import org.candlepin.model.ProductCertificate;
+
 import java.io.FileWriter;
 import java.io.IOException;
-
-import org.candlepin.model.ProductCertificate;
 
 /**
  * ProductCertExporter

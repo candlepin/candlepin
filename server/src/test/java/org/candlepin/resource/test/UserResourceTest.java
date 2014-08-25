@@ -14,14 +14,7 @@
  */
 package org.candlepin.resource.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import static org.junit.Assert.*;
 
 import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
@@ -38,8 +31,13 @@ import org.candlepin.model.User;
 import org.candlepin.resource.UserResource;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
+
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * UserResourceTest

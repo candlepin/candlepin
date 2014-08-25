@@ -14,23 +14,25 @@
  */
 package org.candlepin.resource.test;
 
-import javax.servlet.http.HttpServletResponse;
-import org.candlepin.model.Consumer;
-import java.util.Locale;
-import org.xnap.commons.i18n.I18nFactory;
+import static org.mockito.Mockito.*;
+
 import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.resource.SubscriptionResource;
 import org.candlepin.service.SubscriptionServiceAdapter;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.xnap.commons.i18n.I18n;
+import org.xnap.commons.i18n.I18nFactory;
 
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.verify;
+import java.util.Locale;
+
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * SubscriptionResourceTest

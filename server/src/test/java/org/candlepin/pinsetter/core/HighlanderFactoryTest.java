@@ -14,14 +14,13 @@
  */
 package org.candlepin.pinsetter.core;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
-import static org.quartz.CronScheduleBuilder.cronSchedule;
-import static org.quartz.JobBuilder.newJob;
-import static org.quartz.TriggerBuilder.newTrigger;
+import static org.junit.Assert.*;
+import static org.quartz.CronScheduleBuilder.*;
+import static org.quartz.JobBuilder.*;
+import static org.quartz.TriggerBuilder.*;
 
 import org.candlepin.test.DatabaseTestFixture;
+
 import org.junit.Test;
 import org.quartz.Job;
 import org.quartz.JobDetail;

@@ -14,17 +14,9 @@
  */
 package org.candlepin.controller;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
-import org.bouncycastle.asn1.x509.CRLNumber;
-import org.bouncycastle.asn1.x509.X509Extensions;
-import org.bouncycastle.x509.X509V2CRLGenerator;
-import org.bouncycastle.x509.X509V3CertificateGenerator;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.pki.PKIReader;
@@ -33,6 +25,11 @@ import org.candlepin.pki.X509CRLEntryWrapper;
 import org.candlepin.pki.impl.BouncyCastlePKIUtility;
 import org.candlepin.pki.impl.DefaultSubjectKeyIdentifierWriter;
 import org.candlepin.util.Util;
+
+import org.bouncycastle.asn1.x509.CRLNumber;
+import org.bouncycastle.asn1.x509.X509Extensions;
+import org.bouncycastle.x509.X509V2CRLGenerator;
+import org.bouncycastle.x509.X509V3CertificateGenerator;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;

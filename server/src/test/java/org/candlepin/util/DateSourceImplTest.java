@@ -14,9 +14,11 @@
  */
 package org.candlepin.util;
 
-import java.util.Date;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
+
 import org.junit.Test;
+
+import java.util.Date;
 
 /**
  * Test Class for the DateSourceImpl class

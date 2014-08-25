@@ -14,16 +14,17 @@
  */
 package org.candlepin.resource;
 
-import javax.ws.rs.Path;
-
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerContentOverride;
 import org.candlepin.model.ConsumerContentOverrideCurator;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.util.ContentOverrideValidator;
-import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
+
+import org.xnap.commons.i18n.I18n;
+
+import javax.ws.rs.Path;
 
 /**
  * API Gateway for Consumers Content Overrides

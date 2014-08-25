@@ -14,15 +14,8 @@
  */
 package org.candlepin.model.test;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertTrue;
-import static org.candlepin.util.Util.addDaysToDt;
-import static org.candlepin.util.Util.addToFields;
-import static org.candlepin.util.Util.newSet;
-import static org.candlepin.util.Util.toDate;
-import static org.candlepin.util.Util.tomorrow;
-import static org.candlepin.util.Util.yesterday;
-import static org.junit.Assert.assertNotNull;
+import static org.candlepin.util.Util.*;
+import static org.junit.Assert.*;
 
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Consumer;
@@ -33,6 +26,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
+
 import org.junit.Test;
 
 import java.math.BigInteger;

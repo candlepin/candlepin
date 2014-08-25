@@ -18,6 +18,7 @@ import org.candlepin.auth.Access;
 import org.candlepin.auth.SubResource;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
+
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Restrictions;
 

@@ -16,11 +16,8 @@
 package org.candlepin.gutterball.report;
 
 import static org.candlepin.gutterball.TestUtils.createComplianceSnapshot;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.gutterball.EmbeddedMongoRule;
 import org.candlepin.gutterball.curator.ComplianceDataCurator;

@@ -15,12 +15,13 @@
 package org.candlepin.model;
 
 
-import java.util.List;
-
 import org.candlepin.audit.Event;
+
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
+
+import java.util.List;
 
 /**
  * AttributeCurator

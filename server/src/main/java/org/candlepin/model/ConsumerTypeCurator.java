@@ -14,14 +14,15 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.exceptions.BadRequestException;
+
+import org.apache.commons.lang.StringUtils;
+import org.hibernate.criterion.Restrictions;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-
-import org.apache.commons.lang.StringUtils;
-import org.candlepin.exceptions.BadRequestException;
-import org.hibernate.criterion.Restrictions;
 
 /**
  * ConsumerTypeCurator

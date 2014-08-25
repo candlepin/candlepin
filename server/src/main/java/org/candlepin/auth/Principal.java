@@ -16,6 +16,7 @@ package org.candlepin.auth;
 
 import org.candlepin.auth.permissions.Permission;
 import org.candlepin.util.Util;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

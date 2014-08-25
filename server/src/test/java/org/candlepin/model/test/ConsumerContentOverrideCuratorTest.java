@@ -14,12 +14,7 @@
  */
 package org.candlepin.model.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
-import java.util.List;
+import static org.junit.Assert.*;
 
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerContentOverride;
@@ -27,8 +22,11 @@ import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.Owner;
 import org.candlepin.test.DatabaseTestFixture;
+
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.List;
 
 /**
  * ConsumerContentOverrideCuratorTest

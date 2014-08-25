@@ -14,11 +14,11 @@
  */
 package org.candlepin.model;
 
-import java.security.NoSuchAlgorithmException;
-
 import org.candlepin.pki.PKIUtility;
 
 import com.google.inject.Inject;
+
+import java.security.NoSuchAlgorithmException;
 
 /**
  * KeyPairCurator

@@ -14,15 +14,9 @@
  */
 package org.candlepin.resource.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-
-import java.util.Date;
-import java.util.List;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.auth.Access;
 import org.candlepin.auth.ConsumerPrincipal;
@@ -39,11 +33,15 @@ import org.candlepin.resource.PoolResource;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
+
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+
+import java.util.Date;
+import java.util.List;
 
 
 /**

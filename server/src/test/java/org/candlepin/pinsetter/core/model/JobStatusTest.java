@@ -14,13 +14,13 @@
  */
 package org.candlepin.pinsetter.core.model;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
-import org.apache.commons.lang.RandomStringUtils;
 import org.candlepin.auth.Principal;
 import org.candlepin.pinsetter.core.PinsetterJobListener;
+
+import org.apache.commons.lang.RandomStringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.quartz.JobDataMap;

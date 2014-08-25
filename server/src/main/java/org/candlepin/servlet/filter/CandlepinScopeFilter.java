@@ -14,6 +14,14 @@
  */
 package org.candlepin.servlet.filter;
 
+import org.candlepin.guice.CandlepinSingletonScope;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 
 import javax.servlet.Filter;
@@ -22,13 +30,6 @@ import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
-
-import org.candlepin.guice.CandlepinSingletonScope;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 /**
  * CandlepinScopeFilter

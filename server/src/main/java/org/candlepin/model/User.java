@@ -14,6 +14,14 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.auth.Access;
+import org.candlepin.auth.SubResource;
+import org.candlepin.auth.permissions.Permission;
+import org.candlepin.auth.permissions.PermissionFactory;
+import org.candlepin.util.Util;
+
+import org.hibernate.annotations.GenericGenerator;
+
 import java.util.Formatter;
 import java.util.HashSet;
 import java.util.Set;
@@ -31,13 +39,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-
-import org.candlepin.auth.Access;
-import org.candlepin.auth.SubResource;
-import org.candlepin.auth.permissions.Permission;
-import org.candlepin.auth.permissions.PermissionFactory;
-import org.candlepin.util.Util;
-import org.hibernate.annotations.GenericGenerator;
 
 /**
  * Represents the user.

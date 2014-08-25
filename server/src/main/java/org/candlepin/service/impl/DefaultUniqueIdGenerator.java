@@ -14,9 +14,9 @@
  */
 package org.candlepin.service.impl;
 
-import java.util.Date;
-
 import org.candlepin.service.UniqueIdGenerator;
+
+import java.util.Date;
 
 /**
  * DefaultUniqueIdGenerator

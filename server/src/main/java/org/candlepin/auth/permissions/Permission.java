@@ -17,6 +17,7 @@ package org.candlepin.auth.permissions;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.SubResource;
 import org.candlepin.model.Owner;
+
 import org.hibernate.criterion.Criterion;
 
 /**
@@ -28,7 +29,7 @@ public interface Permission {
 
     /**
      * Permissions have the ability to add restrictions to a hibernate queries which use
-     * {@link AbstractHibernateCurator#createSecureCriteria createSecureCriteria}.
+     * AbstractHibernateCurator#createSecureCriteria.
      *
      * This allows us to do things like limit the results from a database query based
      * on the principal, while still allowing the database to do the filtering and

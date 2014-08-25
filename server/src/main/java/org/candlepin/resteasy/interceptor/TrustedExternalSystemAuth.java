@@ -16,6 +16,7 @@ package org.candlepin.resteasy.interceptor;
 
 import org.candlepin.auth.ExternalSystemPrincipal;
 import org.candlepin.auth.Principal;
+
 import org.jboss.resteasy.spi.HttpRequest;
 
 /**

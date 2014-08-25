@@ -14,9 +14,7 @@
  */
 package org.candlepin.hibernate;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import org.hibernate.annotations.Type;
 import org.hibernate.ejb.Ejb3Configuration;

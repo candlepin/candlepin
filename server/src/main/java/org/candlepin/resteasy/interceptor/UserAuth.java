@@ -16,12 +16,12 @@ package org.candlepin.resteasy.interceptor;
 
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
+import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.model.User;
 import org.candlepin.service.UserServiceAdapter;
 
 import com.google.inject.Injector;
 
-import org.candlepin.exceptions.BadRequestException;
-import org.candlepin.model.User;
 import org.xnap.commons.i18n.I18n;
 
 /**

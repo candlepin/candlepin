@@ -14,10 +14,10 @@
  */
 package org.candlepin.model;
 
+import org.hibernate.criterion.Restrictions;
+
 import java.util.List;
 import java.util.Set;
-
-import org.hibernate.criterion.Restrictions;
 
 /**
  * EnvironmentCurator

@@ -14,18 +14,9 @@
  */
 package org.candlepin.resource.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.when;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.verify;
-
-import java.net.URISyntaxException;
-import java.util.LinkedList;
-import java.util.List;
-
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.UriInfo;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
@@ -38,6 +29,7 @@ import org.candlepin.model.activationkeys.ActivationKeyContentOverrideCurator;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.resource.ActivationKeyContentOverrideResource;
 import org.candlepin.util.ContentOverrideValidator;
+
 import org.jboss.resteasy.specimpl.MultivaluedMapImpl;
 import org.junit.Before;
 import org.junit.Test;
@@ -46,6 +38,13 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.xnap.commons.i18n.I18n;
+
+import java.net.URISyntaxException;
+import java.util.LinkedList;
+import java.util.List;
+
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.UriInfo;
 
 /**
  * ActivationKeyContentOverrideResourceTest

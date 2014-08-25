@@ -12,7 +12,18 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.gutterball.receive;
+package org.candlepin.gutterball.receiver;
+
+import org.candlepin.common.config.Configuration;
+import org.candlepin.gutterball.config.ConfigProperties;
+
+import com.google.inject.Inject;
+
+import org.apache.qpid.AMQException;
+import org.apache.qpid.client.AMQAnyDestination;
+import org.apache.qpid.client.AMQConnection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.URISyntaxException;
 
@@ -21,16 +32,6 @@ import javax.jms.JMSException;
 import javax.jms.Session;
 import javax.jms.Topic;
 import javax.jms.TopicSubscriber;
-
-import org.apache.qpid.AMQException;
-import org.apache.qpid.client.AMQAnyDestination;
-import org.apache.qpid.client.AMQConnection;
-import org.candlepin.gutterball.config.ConfigProperties;
-import org.candlepin.common.config.Configuration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.inject.Inject;
 
 
 /**

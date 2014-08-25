@@ -14,6 +14,10 @@
  */
 package org.candlepin.model;
 
+import org.hibernate.annotations.ForeignKey;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Index;
+
 import java.io.Serializable;
 
 import javax.persistence.Column;
@@ -32,10 +36,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-
-import org.hibernate.annotations.ForeignKey;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Index;
 
 /**
  * HypervisorId represents a hypervisor host, unique per organization

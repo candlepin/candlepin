@@ -14,13 +14,13 @@
  */
 package org.candlepin.sync;
 
+import org.candlepin.exceptions.CandlepinException;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import javax.ws.rs.core.Response.Status;
-
-import org.candlepin.exceptions.CandlepinException;
 
 /**
  * ImportConflictException: An exception thrown when we encounter import conflicts

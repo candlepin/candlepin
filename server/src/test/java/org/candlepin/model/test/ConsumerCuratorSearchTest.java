@@ -14,25 +14,26 @@
  */
 package org.candlepin.model.test;
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import static org.junit.Assert.*;
 
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
-import org.candlepin.model.Owner;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.candlepin.model.Owner;
 import org.candlepin.paging.Page;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.test.DatabaseTestFixture;
+
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * ConsumerCuratorSearchTest

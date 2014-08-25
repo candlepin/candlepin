@@ -14,13 +14,14 @@
  */
 package org.candlepin.model.test;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import org.candlepin.model.Owner;
 import org.candlepin.model.User;
 import org.candlepin.test.DatabaseTestFixture;
+
 import org.junit.Test;
+
+import java.util.HashSet;
+import java.util.Set;
 
 public class MembershipTest extends DatabaseTestFixture {
 

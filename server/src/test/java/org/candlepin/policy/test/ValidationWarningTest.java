@@ -14,9 +14,10 @@
  */
 package org.candlepin.policy.test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import org.candlepin.policy.ValidationWarning;
+
 import org.junit.Test;
 
 

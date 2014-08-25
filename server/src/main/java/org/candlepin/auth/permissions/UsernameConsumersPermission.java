@@ -14,16 +14,17 @@
  */
 package org.candlepin.auth.permissions;
 
-import java.io.Serializable;
-
 import org.candlepin.auth.Access;
 import org.candlepin.auth.SubResource;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.User;
+
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Restrictions;
+
+import java.io.Serializable;
 
 /**
  * A permission allowing a user access to consumers in their org only if they were the ones

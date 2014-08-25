@@ -15,6 +15,7 @@
 package org.candlepin.model;
 
 import org.candlepin.util.Util;
+
 import org.hibernate.criterion.Conjunction;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.DetachedCriteria;

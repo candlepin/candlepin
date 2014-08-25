@@ -14,10 +14,10 @@
  */
 package org.candlepin.resteasy.parameter;
 
+import org.jboss.resteasy.annotations.StringParameterUnmarshallerBinder;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-
-import org.jboss.resteasy.annotations.StringParameterUnmarshallerBinder;
 
 /**
  * CandlepinParam

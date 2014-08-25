@@ -14,9 +14,30 @@
  */
 package org.candlepin.model.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
+
+import org.candlepin.auth.NoAuthPrincipal;
+import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.candlepin.model.Entitlement;
+import org.candlepin.model.Owner;
+import org.candlepin.model.Pool;
+import org.candlepin.model.PoolFilterBuilder;
+import org.candlepin.model.Product;
+import org.candlepin.model.ProductAttribute;
+import org.candlepin.model.ProvidedProduct;
+import org.candlepin.model.SourceStack;
+import org.candlepin.model.SourceSubscription;
+import org.candlepin.model.Subscription;
+import org.candlepin.model.activationkeys.ActivationKey;
+import org.candlepin.paging.Page;
+import org.candlepin.paging.PageRequest;
+import org.candlepin.test.DatabaseTestFixture;
+import org.candlepin.test.TestUtil;
+
+import org.junit.Before;
+import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,28 +45,6 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import org.candlepin.auth.NoAuthPrincipal;
-import org.candlepin.model.Consumer;
-import org.candlepin.model.ConsumerType;
-import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
-import org.candlepin.model.activationkeys.ActivationKey;
-import org.candlepin.model.Entitlement;
-import org.candlepin.model.PoolFilterBuilder;
-import org.candlepin.model.Owner;
-import org.candlepin.model.Pool;
-import org.candlepin.model.Product;
-import org.candlepin.model.ProductAttribute;
-import org.candlepin.model.ProvidedProduct;
-import org.candlepin.model.SourceStack;
-import org.candlepin.model.SourceSubscription;
-import org.candlepin.model.Subscription;
-import org.candlepin.paging.Page;
-import org.candlepin.paging.PageRequest;
-import org.candlepin.test.DatabaseTestFixture;
-import org.candlepin.test.TestUtil;
-import org.junit.Before;
-import org.junit.Test;
 
 
 public class PoolCuratorTest extends DatabaseTestFixture {

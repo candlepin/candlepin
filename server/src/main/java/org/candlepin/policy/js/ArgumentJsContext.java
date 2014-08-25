@@ -14,9 +14,9 @@
  */
 package org.candlepin.policy.js;
 
-import java.util.Map.Entry;
-
 import org.mozilla.javascript.Scriptable;
+
+import java.util.Map.Entry;
 
 /**
  * ArguementRuleContext

@@ -17,7 +17,7 @@ package org.candlepin.gutterball.guice;
 import org.candlepin.gutterball.eventhandler.EventHandler;
 import org.candlepin.gutterball.eventhandler.EventManager;
 import org.candlepin.gutterball.eventhandler.HandlerTarget;
-import org.candlepin.gutterball.receive.EventReceiver;
+import org.candlepin.gutterball.receiver.EventReceiver;
 import org.candlepin.gutterball.report.ConsumerStatusReport;
 import org.candlepin.gutterball.report.Report;
 import org.candlepin.gutterball.report.ReportFactory;
@@ -28,8 +28,8 @@ import org.candlepin.gutterball.resteasy.JsonProvider;
 import org.candlepin.gutterball.util.EventHandlerLoader;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.MapBinder;
+import com.google.inject.multibindings.Multibinder;
 import com.google.inject.servlet.ServletScopes;
 
 import org.xnap.commons.i18n.I18n;

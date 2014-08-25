@@ -15,15 +15,9 @@
 package org.candlepin.policy.js.entitlement.test;
 
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import java.util.HashSet;
-import java.util.Set;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCapability;
@@ -39,7 +33,11 @@ import org.candlepin.policy.ValidationWarning;
 import org.candlepin.policy.js.entitlement.Enforcer.CallerType;
 import org.candlepin.policy.js.pool.PoolHelper;
 import org.candlepin.test.TestUtil;
+
 import org.junit.Test;
+
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * ManifestEntitlementRulesTest

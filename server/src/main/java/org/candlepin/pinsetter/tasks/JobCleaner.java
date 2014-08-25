@@ -14,14 +14,15 @@
  */
 package org.candlepin.pinsetter.tasks;
 
-import java.util.Date;
-
 import org.candlepin.model.JobCurator;
 import org.candlepin.util.Util;
+
+import com.google.inject.Inject;
+
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
-import com.google.inject.Inject;
+import java.util.Date;
 
 /**
  * JobCleaner removes finished jobs older than yesterday, and failed

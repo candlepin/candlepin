@@ -14,29 +14,30 @@
  */
 package org.candlepin.policy.js.pool;
 
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-
-import org.apache.commons.lang.StringUtils;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Attribute;
+import org.candlepin.model.DerivedProductPoolAttribute;
+import org.candlepin.model.DerivedProvidedProduct;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductPoolAttribute;
 import org.candlepin.model.ProvidedProduct;
-import org.candlepin.model.DerivedProductPoolAttribute;
-import org.candlepin.model.DerivedProvidedProduct;
 import org.candlepin.model.SourceStack;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.Subscription;
 import org.candlepin.policy.js.AttributeHelper;
 import org.candlepin.policy.js.ProductCache;
+
+import org.apache.commons.lang.StringUtils;
+
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 /**
  * Post Entitlement Helper, this object is provided as a global variable to the

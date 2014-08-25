@@ -15,13 +15,13 @@
 
 package org.candlepin.model;
 
+import org.candlepin.model.Rules.RulesSourceEnum;
+
 import java.util.Date;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
-
-import org.candlepin.model.Rules.RulesSourceEnum;
 
 /**
  * Status

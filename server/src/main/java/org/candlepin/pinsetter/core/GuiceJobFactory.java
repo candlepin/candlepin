@@ -15,6 +15,11 @@
 package org.candlepin.pinsetter.core;
 
 import org.candlepin.guice.CandlepinSingletonScope;
+
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+import com.google.inject.persist.UnitOfWork;
+
 import org.quartz.Job;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
@@ -22,10 +27,6 @@ import org.quartz.spi.JobFactory;
 import org.quartz.spi.TriggerFiredBundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-import com.google.inject.persist.UnitOfWork;
 
 /**
  * GuiceJobFactory is a custom Quartz JobFactory implementation which

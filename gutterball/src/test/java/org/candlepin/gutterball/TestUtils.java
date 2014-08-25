@@ -15,8 +15,7 @@
 
 package org.candlepin.gutterball;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.gutterball.model.Event;
 import org.candlepin.gutterball.report.Report;

@@ -14,6 +14,9 @@
  */
 package org.candlepin.servlet.filter;
 
+import com.google.inject.Inject;
+import com.google.inject.persist.UnitOfWork;
+
 import java.io.IOException;
 
 import javax.inject.Singleton;
@@ -23,9 +26,6 @@ import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
-
-import com.google.inject.Inject;
-import com.google.inject.persist.UnitOfWork;
 
 /**
  * CandlepinPersistFilter Custom servlet filter for guice-persist that doesn't

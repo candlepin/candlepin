@@ -14,10 +14,7 @@
  */
 package org.candlepin.pinsetter.tasks;
 
-import static org.quartz.JobBuilder.newJob;
-
-import java.util.Date;
-import java.util.List;
+import static org.quartz.JobBuilder.*;
 
 import org.candlepin.controller.Entitler;
 import org.candlepin.model.Consumer;
@@ -27,6 +24,9 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.util.Util;
 
+import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
+
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
@@ -34,8 +34,8 @@ import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
+import java.util.Date;
+import java.util.List;
 
 /**
  * HealEntireOrgJob

@@ -14,23 +14,18 @@
  */
 package org.candlepin.resteasy.interceptor;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import java.security.Principal;
-import java.security.cert.X509Certificate;
-import java.util.Locale;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.Owner;
-import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
+
 import org.jboss.resteasy.spi.HttpRequest;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,6 +33,10 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
+
+import java.security.Principal;
+import java.security.cert.X509Certificate;
+import java.util.Locale;
 
 public class SSLAuthTest {
 

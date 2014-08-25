@@ -12,9 +12,8 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.json.model;
+package org.candlepin.model;
 
-import org.candlepin.model.Consumer;
 
 /**
  * Interface for Objects with a consumer

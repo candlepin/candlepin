@@ -14,20 +14,21 @@
  */
 package org.candlepin.pinsetter.tasks;
 
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.when;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
-import java.io.File;
-
-import org.apache.commons.io.FileUtils;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.util.Util;
+
+import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+
+import java.io.File;
 
 
 /**

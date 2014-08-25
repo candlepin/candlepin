@@ -14,7 +14,7 @@
  */
 package org.candlepin.pinsetter.tasks;
 
-import static org.quartz.JobBuilder.newJob;
+import static org.quartz.JobBuilder.*;
 
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Product;

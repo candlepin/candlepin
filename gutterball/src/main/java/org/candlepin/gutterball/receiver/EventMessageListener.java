@@ -12,22 +12,22 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.gutterball.receive;
-
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageListener;
-import javax.jms.TextMessage;
+package org.candlepin.gutterball.receiver;
 
 import org.candlepin.gutterball.bsoncallback.EventCallback;
 import org.candlepin.gutterball.eventhandler.EventManager;
 import org.candlepin.gutterball.model.Event;
 
+import com.google.inject.Inject;
+import com.mongodb.util.JSON;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.Inject;
-import com.mongodb.util.JSON;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageListener;
+import javax.jms.TextMessage;
 
 /**
  * A JMS message listener that is invoked when Gutterball receives an

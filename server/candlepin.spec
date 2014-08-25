@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.24
+Version: 0.9.26
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -390,6 +390,17 @@ fi
 
 
 %changelog
+* Mon Aug 25 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.26-1
+- Drop null needs type for mysql (wpoteat@redhat.com)
+- Reorganize all imports according to the Candlepin import order. (awood@redhat.com)
+- Substitution not properly encoded in messages (wpoteat@redhat.com)
+
+* Thu Aug 21 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.25-1
+- Move ConsumerProperty to model from json.model (jesusr@redhat.com)
+- Fire a compliance event when a consumers entitlements activate (ckozak@redhat.com)
+- Ensure proper object population in events (wpoteat@redhat.com)
+- regenerate entitlements when branding changes (ckozak@redhat.com)
+
 * Mon Aug 18 2014 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.24-1
 - Leverage @Transactional annotation (ckozak@redhat.com)
 - track entitlement ids to refresh (ckozak@redhat.com)
