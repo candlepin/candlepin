@@ -46,7 +46,7 @@ public class JsRunnerProvider implements Provider<JsRunner> {
 
     private Script script;
     private Scriptable scope;
-    private Date updated;
+    private volatile Date updated;
     // Use this lock to access script, scope and updated
     private ReadWriteLock scriptLock = new ReentrantReadWriteLock();
 
