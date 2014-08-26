@@ -42,7 +42,7 @@ public class ComplianceHandler implements EventHandler {
 
     @Override
     public void handleCreated(Event event) {
-        curator.insert(new BasicDBObject(event.getNewEntity().toMap()));
+        curator.insert((BasicDBObject) event.getNewEntity());
     }
 
     @Override
