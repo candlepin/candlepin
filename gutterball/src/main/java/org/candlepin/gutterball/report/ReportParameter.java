@@ -15,85 +15,54 @@
 
 package org.candlepin.gutterball.report;
 
+import javax.ws.rs.core.MultivaluedMap;
+
 /**
  *
- * Report parameter metadata.
+ * A report parameter. A parameter's descriptor describes all properties and
+ * validations of this parameter.
  *
  */
 public class ReportParameter {
-    private String name;
-    private String desc;
-    private boolean mandatory;
-    private boolean multiValued;
+
+    private ParameterDescriptor descriptor;
 
     /**
-    * @param name
-    * @param desc
-    * @param mandatory
-    * @param multiValued
+    * @param descriptor the {@link ParameterDescriptor} describing this parameter.
     */
-    public ReportParameter(String name, String desc, boolean mandatory,
-        boolean multiValued) {
-        this.name = name;
-        this.desc = desc;
-        this.mandatory = mandatory;
-        this.multiValued = multiValued;
+    public ReportParameter(ParameterDescriptor descriptor) {
+        this.descriptor = descriptor;
     }
 
     /**
     * @return the name
     */
     public String getName() {
-        return name;
-    }
-
-    /**
-    * @param name the name to set
-    */
-    public void setName(String name) {
-        this.name = name;
+        return this.descriptor.getName();
     }
 
     /**
     * @return the desc
     */
-    public String getDesc() {
-        return desc;
-    }
-
-    /**
-    * @param desc the desc to set
-    */
-    public void setDesc(String desc) {
-        this.desc = desc;
+    public String getDescription() {
+        return this.descriptor.getDescription();
     }
 
     /**
     * @return the mandatory
     */
     public boolean isMandatory() {
-        return mandatory;
-    }
-
-    /**
-    * @param mandatory the mandatory to set
-    */
-    public void setMandatory(boolean mandatory) {
-        this.mandatory = mandatory;
+        return this.descriptor.isMandatory();
     }
 
     /**
     * @return the multiValued
     */
     public boolean isMultiValued() {
-        return multiValued;
+        return descriptor.isMultiValued();
     }
 
-    /**
-    * @param multiValued the multiValued to set
-    */
-    public void setMultiValued(boolean multiValued) {
-        this.multiValued = multiValued;
+    public void validate(MultivaluedMap<String, String> queryParams) throws ParameterValidationException {
+        this.descriptor.validate(queryParams);
     }
-
 }

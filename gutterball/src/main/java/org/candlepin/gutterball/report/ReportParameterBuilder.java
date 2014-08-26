@@ -15,15 +15,23 @@
 
 package org.candlepin.gutterball.report;
 
-import java.util.LinkedList;
+import org.xnap.commons.i18n.I18n;
 
 /**
- * A {@link ReportResult} implementation that stores its results as a list of rows.
- *
- * @param <R> an object representing a row of data.
+ * A utility class that helps with building {@link ParameterDescriptor}.
+ * The primary purpose of this class is to encapsulate the internationalization
+ * class.
  */
-public class MultiRowResult<R> extends LinkedList<R> implements ReportResult {
+public class ReportParameterBuilder {
 
-    public MultiRowResult() {
+    private I18n i18n;
+
+    public ReportParameterBuilder(I18n i18n) {
+        this.i18n = i18n;
     }
+
+    public ParameterDescriptor init(String name, String desc) {
+        return new ParameterDescriptor(i18n, name, desc);
+    }
+
 }

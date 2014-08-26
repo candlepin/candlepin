@@ -15,18 +15,28 @@
 
 package org.candlepin.gutterball.report;
 
+import org.candlepin.gutterball.curator.ComplianceDataCurator;
 import org.candlepin.gutterball.guice.I18nProvider;
 
 import com.google.inject.Inject;
+import com.mongodb.DBObject;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 
 import javax.ws.rs.core.MultivaluedMap;
 
 /**
  * ConsumerStatusListReport
  */
-public class ConsumerStatusReport extends Report {
+public class ConsumerStatusReport extends Report<MultiRowResult<DBObject>> {
+
+    protected static final String REPORT_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
+
+    private ComplianceDataCurator complianceDataCurator;
 
     /**
      * @param i18nProvider
@@ -34,92 +44,108 @@ public class ConsumerStatusReport extends Report {
      * @param description
      */
     @Inject
-    public ConsumerStatusReport(I18nProvider i18nProvider) {
+    public ConsumerStatusReport(I18nProvider i18nProvider, ComplianceDataCurator curator) {
         super(i18nProvider, "consumer_status_report",
                 i18nProvider.get().tr("List the status of all consumers"));
-    }
-
-    /* (non-Javadoc)
-     * @see org.candlepin.gutterball.Report#validateParameters()
-     */
-    @Override
-    protected void validateParameters(MultivaluedMap<String, String> params)
-        throws ParameterValidationException {
-        if (params.containsKey("hours")) {
-
-            if (params.containsKey("start_date") || params.containsKey("end_date")) {
-                throw new ParameterValidationException("hours",
-                        i18n.tr("Can not be used with {0} or {1} parameters", "start_date", "end_date"));
-            }
-
-            String hours = params.getFirst("hours");
-            try {
-                Integer.parseInt(hours);
-            }
-            catch (NumberFormatException nfe) {
-                throw new ParameterValidationException("hours",
-                        i18n.tr("Parameter must be an Integer value"));
-            }
-        }
-
-        if (params.containsKey("start_date") && !params.containsKey("end_date")) {
-            throw new ParameterValidationException("end_date",
-                    i18n.tr("Missing required parameter. Must be used with {0}",
-                            "start_date"));
-        }
-
-        if (params.containsKey("end_date") && !params.containsKey("start_date")) {
-            throw new ParameterValidationException("start_date",
-                    i18n.tr("Missing required parameter. Must be used with {0}",
-                            "end_date"));
-        }
+        this.complianceDataCurator = curator;
     }
 
     @Override
     protected void initParameters() {
-        addParameter("owner", i18n.tr("The Owner key(s) to filter on."), false, true);
-        addParameter("status", i18n.tr("The subscription status to filter on."),
-                false, true);
-        addParameter("satalite_server", i18n.tr("The target satalite server"),
-                false, false);
-        addParameter("life_cycle_state",
-                i18n.tr("The host life cycle state to filter on.") + " [active, inactive]",
-                false, true);
-        addParameter("hours",
-                i18n.tr("The number of hours to filter on (used indepent of date range)."),
-                false, false);
-        addParameter("start_date",
-                i18n.tr("The start date to filter on (used with {0}).", "end_date"),
-                false, false);
-        addParameter("end_date",
-                i18n.tr("The end date to filter on (used with {0})", "end_date"),
-                false, false);
+        ReportParameterBuilder builder = new ReportParameterBuilder(i18n);
+
+        addParameter(
+            builder.init("consumer_uuid", i18n.tr("Filters the results by the specified consumer UUID."))
+                .multiValued()
+                .getParameter()
+        );
+
+        addParameter(
+            builder.init("hours", i18n.tr("The number of hours to filter on (used indepent of date range)."))
+                   .mustBeInteger()
+                   .mustNotHave("start_date", "end_date")
+                   .getParameter()
+        );
+
+        addParameter(
+            builder.init("owner", i18n.tr("The Owner key(s) to filter on."))
+                .multiValued()
+                .getParameter());
+
+        addParameter(
+            builder.init("status", i18n.tr("The subscription status to filter on."))
+                .multiValued()
+                .getParameter()
+        );
+
+        addParameter(
+            builder.init("start_date", i18n.tr("The start date to filter on (used with {0}).", "end_date"))
+                .mustNotHave("hours")
+                .mustHave("end_date")
+                .mustBeDate(REPORT_DATE_FORMAT)
+                .getParameter()
+        );
+
+        addParameter(
+            builder.init("end_date", i18n.tr("The end date to filter on (used with {0})", "start_date"))
+                .mustNotHave("hours")
+                .mustHave("start_date")
+                .mustBeDate(REPORT_DATE_FORMAT)
+                .getParameter()
+        );
     }
 
     @Override
-    protected ReportResult execute(MultivaluedMap<String, String> queryParameters) {
+    protected MultiRowResult<DBObject> execute(MultivaluedMap<String, String> queryParams) {
         // At this point we would execute a lookup against the DW data store to formulate
         // the report result set.
-        //
-        // FIXME: Hard coded result data.
-        MultiRowResult<ConsumerStatusReportRow> result = new MultiRowResult<ConsumerStatusReportRow>();
-        result.addRow(new ConsumerStatusReportRow(
-                "devbox.bugsquat.net",
-                "112112-1221-23-3",
-                "Current",
-                "dhcp-8-29-250.lab.eng.rdu2.redhat.com",
-                "ACME_Corporation",
-                new Date(),
-                "Active"));
-        result.addRow(new ConsumerStatusReportRow(
-                "devbox3.bugsquat.net",
-                "112112-1222-333",
-                "Invalid",
-                "dhcp-8-29-250.lab.eng.rdu2.redhat.com",
-                "ACME_Corporation",
-                new Date(),
-                "Inactive"));
+        MultiRowResult<DBObject> result = new MultiRowResult<DBObject>();
+
+        List<String> consumerIds = queryParams.get("consumer_uuid");
+        List<String> statusFilers = queryParams.get("status");
+        List<String> ownerFilters = queryParams.get("owner");
+
+        Iterable<DBObject> complianceSnapshots = null;
+
+        // Determine if we should lookup for the last x hours.
+        if (queryParams.containsKey("hours")) {
+            Calendar cal = Calendar.getInstance();
+            Date startDate = cal.getTime();
+
+            int hours = Integer.parseInt(queryParams.getFirst("hours"));
+            cal.add(Calendar.HOUR, hours * -1);
+            Date endDate = cal.getTime();
+
+            complianceSnapshots = complianceDataCurator.getComplianceForTimespan(startDate, endDate,
+                    consumerIds, ownerFilters, statusFilers);
+        }
+        else if (queryParams.containsKey("start_date") && queryParams.containsKey("end_date")) {
+            complianceSnapshots = complianceDataCurator.getComplianceForTimespan(
+                parseDate(queryParams.getFirst("start_date")), parseDate(queryParams.getFirst("end_date")),
+                consumerIds, ownerFilters, statusFilers);
+        }
+        else {
+            complianceSnapshots = complianceDataCurator.getComplianceForAllConsumers(consumerIds,
+                ownerFilters, statusFilers);
+        }
+
+        for (DBObject snapshot : complianceSnapshots) {
+            result.add(snapshot);
+        }
         return result;
     }
 
+    private Date parseDate(String date) {
+        if (date == null || date.isEmpty()) {
+            return null;
+        }
+
+        try {
+            SimpleDateFormat formatter = new SimpleDateFormat(REPORT_DATE_FORMAT);
+            return formatter.parse(date);
+        }
+        catch (ParseException e) {
+            throw new RuntimeException("Could not parse date parameter.");
+        }
+    }
 }

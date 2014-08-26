@@ -18,6 +18,7 @@ import org.candlepin.gutterball.curator.ComplianceDataCurator;
 import org.candlepin.gutterball.model.Event;
 
 import com.google.inject.Inject;
+import com.mongodb.BasicDBObject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,7 +42,7 @@ public class ComplianceHandler implements EventHandler {
 
     @Override
     public void handleCreated(Event event) {
-        curator.insert(event.getNewEntity());
+        curator.insert((BasicDBObject) event.getNewEntity());
     }
 
     @Override
