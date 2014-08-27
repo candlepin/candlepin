@@ -27,6 +27,13 @@ import java.util.Date;
  */
 public class Consumer extends BasicDBObject {
 
+    /**
+     * Required by Mongo Java Driver.
+     */
+    public Consumer() {
+        super();
+    }
+
     public Consumer(String uuid, Date created, DBObject owner) {
         put("uuid", uuid);
         put("created", created);

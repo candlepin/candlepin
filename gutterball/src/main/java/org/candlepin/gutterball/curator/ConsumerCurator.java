@@ -19,10 +19,13 @@ import org.candlepin.gutterball.mongodb.MongoConnection;
 
 import com.google.inject.Inject;
 import com.mongodb.BasicDBObject;
+import com.mongodb.BasicDBObjectBuilder;
+import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.WriteResult;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * A curator that manages DB operations on the 'consumers' collection.
@@ -48,5 +51,23 @@ public class ConsumerCurator extends MongoDBCurator<Consumer> {
         DBObject query = new BasicDBObject("uuid", uuid);
         DBObject update = new BasicDBObject("$set", new BasicDBObject("deleted", deleted));
         return collection.update(query, update);
+    }
+
+    public List<String> getDeletedUuids(Date targetDate, List<String> owners, List<String> uuids) {
+        BasicDBObjectBuilder queryBuilder = BasicDBObjectBuilder.start();
+
+        if (owners != null && !owners.isEmpty()) {
+            queryBuilder.append("owner", new BasicDBObject("$in", owners));
+        }
+
+        if (uuids != null && !uuids.isEmpty()) {
+            queryBuilder.append("uuid", new BasicDBObject("$in", uuids));
+        }
+
+        if (targetDate != null) {
+            queryBuilder.append("deleted", new BasicDBObject("$lte", targetDate));
+        }
+
+        return collection.distinct("uuid", queryBuilder.get());
     }
 }

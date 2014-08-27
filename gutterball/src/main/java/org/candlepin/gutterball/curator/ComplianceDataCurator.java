@@ -34,9 +34,12 @@ public class ComplianceDataCurator extends MongoDBCurator<BasicDBObject> {
 
     public static final String COLLECTION = "compliance";
 
+    private ConsumerCurator consumerCurator;
+
     @Inject
-    public ComplianceDataCurator(MongoConnection mongo) {
+    public ComplianceDataCurator(MongoConnection mongo, ConsumerCurator consumerCurator) {
         super(BasicDBObject.class, mongo);
+        this.consumerCurator = consumerCurator;
     }
 
     @Override
@@ -44,14 +47,19 @@ public class ComplianceDataCurator extends MongoDBCurator<BasicDBObject> {
         return COLLECTION;
     }
 
-    public Iterable<DBObject> getComplianceForTimespan(Date startDate, Date endDate,
-            List<String> consumerIds, List<String> owners, List<String> statusFilers) {
+    public Iterable<DBObject> getComplianceForTimespan(Date targetDate, List<String> consumerIds,
+            List<String> owners, List<String> statusFilers) {
 
         // Build the match statement
         BasicDBObjectBuilder queryBuilder = BasicDBObjectBuilder.start();
+
+        BasicDBObject consumerUuidFilter = new BasicDBObject("$nin", consumerCurator.getDeletedUuids(
+            targetDate, owners, consumerIds));
+
         if (consumerIds != null && !consumerIds.isEmpty()) {
-            queryBuilder.add("consumer.uuid", new BasicDBObject("$in", consumerIds));
+            consumerUuidFilter.append("$in", consumerIds);
         }
+        queryBuilder.add("consumer.uuid", consumerUuidFilter);
 
         if (owners != null && !owners.isEmpty()) {
             queryBuilder.add("consumer.owner.key", new BasicDBObject("$in", owners));
@@ -60,22 +68,7 @@ public class ComplianceDataCurator extends MongoDBCurator<BasicDBObject> {
         if (statusFilers != null && !statusFilers.isEmpty()) {
             queryBuilder.add("status.status", new BasicDBObject("$in", statusFilers));
         }
-
-        BasicDBObject statusDateCriteria = new BasicDBObject();
-        if (endDate == null) {
-            // Search all latest status records.
-            statusDateCriteria.append("$lte", startDate);
-        }
-        else {
-            boolean flip = startDate.after(endDate);
-            String startDateFilter = flip ? "$lte" : "$gte";
-            String endDateFilter = flip ? "$gte" : "$lte";
-
-            statusDateCriteria.append(startDateFilter, startDate);
-            statusDateCriteria.append(endDateFilter, endDate);
-        }
-
-        queryBuilder.add("status.date", statusDateCriteria);
+        queryBuilder.add("status.date", new BasicDBObject("$lte", targetDate));
 
         // Build the projections
         BasicDBObject projections = new BasicDBObject();
@@ -100,11 +93,5 @@ public class ComplianceDataCurator extends MongoDBCurator<BasicDBObject> {
 
         AggregationOutput output = collection.aggregate(Arrays.asList(match, project, sort, group));
         return output.results();
-    }
-
-    public Iterable<DBObject> getComplianceForAllConsumers(
-            List<String> consumerIds, List<String> ownerFilters,
-            List<String> statusFilters) {
-        return this.getComplianceForTimespan(new Date(), null, consumerIds, ownerFilters, statusFilters);
     }
 }
