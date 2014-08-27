@@ -14,9 +14,9 @@
  */
 package org.candlepin.service.impl;
 
+import org.candlepin.common.exceptions.ServiceUnavailableException;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.exceptions.ServiceUnavailableException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Product;

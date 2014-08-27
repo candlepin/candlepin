@@ -23,7 +23,7 @@ import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.permissions.OwnerPermission;
 import org.candlepin.auth.permissions.Permission;
-import org.candlepin.exceptions.ServiceUnavailableException;
+import org.candlepin.common.exceptions.ServiceUnavailableException;
 import org.candlepin.model.Owner;
 import org.candlepin.pinsetter.core.PinsetterException;
 import org.candlepin.pinsetter.core.PinsetterJobListener;

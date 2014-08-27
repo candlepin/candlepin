@@ -14,8 +14,8 @@
  */
 package org.candlepin.util;
 
+import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.controller.PoolManager;
-import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.model.Owner;
 
 import com.google.inject.Inject;

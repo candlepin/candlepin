@@ -14,7 +14,7 @@
  */
 package org.candlepin.policy.js.activationkey;
 
-import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.model.Pool;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.policy.ValidationResult;

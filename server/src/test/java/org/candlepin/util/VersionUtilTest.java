@@ -16,6 +16,7 @@ package org.candlepin.util;
 
 import static org.junit.Assert.*;
 
+import org.candlepin.common.util.VersionUtil;
 import org.candlepin.model.Rules;
 
 import org.junit.After;
@@ -42,7 +43,7 @@ public class VersionUtilTest {
     @Test
     public void unknown() throws Exception {
         PrintStream ps = new PrintStream(new File(this.getClass()
-            .getClassLoader().getResource("candlepin_info.properties").toURI()));
+            .getClassLoader().getResource("version.properties").toURI()));
         ps.println("corrupted");
         ps.close();
 
@@ -80,7 +81,7 @@ public class VersionUtilTest {
 
     public static void writeoutVersion(String version, String release) throws Exception {
         PrintStream ps = new PrintStream(new File(new Rules().getClass()
-            .getClassLoader().getResource("candlepin_info.properties").toURI()));
+            .getClassLoader().getResource("version.properties").toURI()));
         ps.println("version=" + version);
         ps.println("release=" + release);
         ps.close();

@@ -15,10 +15,10 @@
 package org.candlepin.resource;
 
 import org.candlepin.auth.Principal;
+import org.candlepin.common.exceptions.IseException;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.CrlGenerator;
-import org.candlepin.exceptions.IseException;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.util.CrlFileUtil;

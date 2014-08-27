@@ -16,7 +16,7 @@ package org.candlepin.resteasy.interceptor;
 
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
-import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.model.User;
 import org.candlepin.service.UserServiceAdapter;
 

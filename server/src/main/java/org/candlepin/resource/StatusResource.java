@@ -15,10 +15,10 @@
 package org.candlepin.resource;
 
 import org.candlepin.auth.interceptor.SecurityHole;
+import org.candlepin.common.util.VersionUtil;
 import org.candlepin.config.Config;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.Status;
-import org.candlepin.util.VersionUtil;
 
 import com.google.inject.Inject;
 

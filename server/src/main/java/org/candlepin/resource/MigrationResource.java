@@ -14,7 +14,7 @@
  */
 package org.candlepin.resource;
 
-import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.pinsetter.tasks.MigrateOwnerJob;
 
 import com.google.inject.Inject;

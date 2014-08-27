@@ -59,7 +59,7 @@ public class StatusResourceTest {
     @Test
     public void status() throws Exception {
         PrintStream ps = new PrintStream(new File(this.getClass()
-            .getClassLoader().getResource("candlepin_info.properties").toURI()));
+            .getClassLoader().getResource("version.properties").toURI()));
         ps.println("version=${version}");
         ps.println("release=${release}");
         StatusResource sr = new StatusResource(rulesCurator, config);
@@ -74,7 +74,7 @@ public class StatusResourceTest {
     @Test
     public void unknown() throws Exception {
         PrintStream ps = new PrintStream(new File(this.getClass()
-            .getClassLoader().getResource("candlepin_info.properties").toURI()));
+            .getClassLoader().getResource("version.properties").toURI()));
         ps.println("foo");
         StatusResource sr = new StatusResource(rulesCurator, config);
         Status s = sr.status();
@@ -88,7 +88,7 @@ public class StatusResourceTest {
     @Test
     public void testDBDown() throws Exception {
         PrintStream ps = new PrintStream(new File(this.getClass()
-            .getClassLoader().getResource("candlepin_info.properties").toURI()));
+            .getClassLoader().getResource("version.properties").toURI()));
         ps.println("version=${version}");
         ps.println("release=${release}");
         when(rulesCurator.listAll()).thenThrow(new RuntimeException());
@@ -112,7 +112,7 @@ public class StatusResourceTest {
         ArgumentCaptor<LoggingEvent> message = ArgumentCaptor.forClass(LoggingEvent.class);
 
         PrintStream ps = new PrintStream(new File(this.getClass()
-            .getClassLoader().getResource("candlepin_info.properties").toURI()));
+            .getClassLoader().getResource("version.properties").toURI()));
         ps.println("version=${version}");
         ps.println("release=${release}");
         StatusResource sr = new StatusResource(rulesCurator, null);

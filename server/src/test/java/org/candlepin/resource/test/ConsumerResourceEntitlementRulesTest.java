@@ -14,7 +14,7 @@
  */
 package org.candlepin.resource.test;
 
-import org.candlepin.exceptions.ForbiddenException;
+import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Owner;

@@ -23,7 +23,7 @@ import org.candlepin.CandlepinNonServletEnvironmentTestingModule;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventAdapter;
 import org.candlepin.auth.PrincipalData;
-import org.candlepin.exceptions.NotFoundException;
+import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.model.EventCurator;
 import org.candlepin.resource.EventResource;
 

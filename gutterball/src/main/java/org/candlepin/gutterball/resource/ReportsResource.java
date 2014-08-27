@@ -15,6 +15,7 @@
 
 package org.candlepin.gutterball.resource;
 
+import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.gutterball.report.Report;
 import org.candlepin.gutterball.report.ReportFactory;
 import org.candlepin.gutterball.report.ReportResult;
@@ -68,7 +69,7 @@ public class ReportsResource {
         if (r == null) {
             // TODO: Throw an appropriate exception once they are moved
             //       into candlepin-common.
-            throw new RuntimeException("Report " + reportKey + " not found.");
+            throw new BadRequestException("Report " + reportKey + " not found.");
         }
         return r.run(uriInfo.getQueryParameters());
     }
