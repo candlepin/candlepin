@@ -17,7 +17,7 @@ package org.candlepin.policy.js.activationkey;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
-import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;

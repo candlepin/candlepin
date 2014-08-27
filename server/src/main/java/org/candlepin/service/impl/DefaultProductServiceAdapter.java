@@ -14,7 +14,7 @@
  */
 package org.candlepin.service.impl;
 
-import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Product;

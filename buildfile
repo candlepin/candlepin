@@ -76,23 +76,24 @@ SLF4J = 'org.slf4j:slf4j-api:jar:1.7.5'
 
 LOGGING = [LOGBACK, SLF4J_BRIDGES, SLF4J]
 
+JAVAX = ['org.hibernate.javax.persistence:hibernate-jpa-2.0-api:jar:1.0.1.Final',
+         'javax.validation:validation-api:jar:1.0.0.GA',
+         'javax.transaction:jta:jar:1.1']
+
 HIBERNATE = [group('hibernate-core', 'hibernate-entitymanager', 'hibernate-c3p0',
                    :under => 'org.hibernate',
                    :version => '4.2.5.Final'),
              'org.hibernate.common:hibernate-commons-annotations:jar:4.0.1.Final',
              'org.hibernate:hibernate-tools:jar:3.2.4.GA',
              'org.hibernate:hibernate-validator:jar:4.3.1.Final',
-             'org.hibernate.javax.persistence:hibernate-jpa-2.0-api:jar:1.0.1.Final',
              'antlr:antlr:jar:2.7.7',
              'asm:asm:jar:3.0',
              'cglib:cglib:jar:2.2',
              'javassist:javassist:jar:3.12.0.GA',
-             'javax.transaction:jta:jar:1.1',
              'org.freemarker:freemarker:jar:2.3.15',
              'c3p0:c3p0:jar:0.9.1.2',
              'dom4j:dom4j:jar:1.6.1',
-             'org.jboss.logging:jboss-logging:jar:3.1.1.GA',
-             'javax.validation:validation-api:jar:1.0.0.GA']
+             'org.jboss.logging:jboss-logging:jar:3.1.1.GA'] + JAVAX
 
 POSTGRESQL = 'postgresql:postgresql:jar:9.0-801.jdbc4'
 
@@ -204,10 +205,10 @@ define "candlepin" do
     checkstyle.eclipse_xml = checkstyle_eclipse_xml
     rpmlint.rpmlint_conf = rpmlint_conf
 
-    compile_classpath = [COMMONS, LOGGING, GUICE, GETTEXT_COMMONS, COLLECTIONS, PROVIDED, RESTEASY, JACKSON]
+    compile_classpath = [COMMONS, LOGGING, GUICE, GETTEXT_COMMONS, COLLECTIONS, PROVIDED, RESTEASY, JACKSON, JAVAX]
     compile.with(compile_classpath)
 
-    test.with(TESTING)
+    test.with(TESTING, JUKITO)
     test.using :java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ]
 
     common_jar = package(:jar)
@@ -362,7 +363,7 @@ define "candlepin" do
     # kept getting complaints about circular dependencies.
     api_jar = package(:jar, :id=>'candlepin-api').tap do |jar|
       jar.clean
-      pkgs = %w{auth config exceptions jackson model paging pki resteasy service util}.map { |pkg| "#{compiled_cp_path}/#{pkg}" }
+      pkgs = %w{auth config jackson model paging pki resteasy service util}.map { |pkg| "#{compiled_cp_path}/#{pkg}" }
       p = jar.path(candlepin_path)
       p.include(pkgs).exclude("#{compiled_cp_path}/util/apicrawl")
     end
@@ -370,7 +371,7 @@ define "candlepin" do
 
     package(:jar, :id=>"candlepin-certgen").tap do |jar|
       jar.clean
-      pkgs = %w{config exceptions jackson model pinsetter pki service util}.map { |pkg| "#{compiled_cp_path}/#{pkg}" }
+      pkgs = %w{config jackson model pinsetter pki service util}.map { |pkg| "#{compiled_cp_path}/#{pkg}" }
       p = jar.path(candlepin_path)
       p.include(pkgs).exclude("#{compiled_cp_path}/util/apicrawl")
     end

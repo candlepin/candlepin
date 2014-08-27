@@ -14,7 +14,7 @@
  */
 package org.candlepin.resteasy.interceptor;
 
-import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.paging.PageRequest.Order;
 import org.candlepin.paging.Paginate;

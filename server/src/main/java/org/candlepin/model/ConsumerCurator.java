@@ -14,10 +14,10 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.common.exceptions.BadRequestException;
+import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.exceptions.BadRequestException;
-import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.resteasy.parameter.KeyValueParameter;

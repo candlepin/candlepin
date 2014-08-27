@@ -15,8 +15,8 @@
 package org.candlepin.resource;
 
 import org.candlepin.auth.interceptor.Verify;
+import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.controller.PoolManager;
-import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.model.Pool;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;

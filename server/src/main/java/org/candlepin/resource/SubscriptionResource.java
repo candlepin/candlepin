@@ -15,7 +15,7 @@
 package org.candlepin.resource;
 
 import org.candlepin.auth.interceptor.Verify;
-import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Subscription;

@@ -14,16 +14,14 @@
  */
 package org.candlepin.gutterball.guice;
 
+import org.candlepin.common.guice.CommonI18nProvider;
+
 import com.google.inject.Provider;
 import com.google.inject.servlet.RequestScoped;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
-import org.xnap.commons.i18n.I18nFactory;
-
-import java.util.Locale;
-import java.util.concurrent.ConcurrentHashMap;
 
 import javax.inject.Inject;
 import javax.servlet.ServletRequest;
@@ -42,39 +40,17 @@ import javax.servlet.ServletRequest;
  * for more information.
  */
 @RequestScoped
-public class I18nProvider implements Provider<I18n> {
-    public static final String BASENAME = "org.candlepin.gutterball.i18n.Messages";
+public class I18nProvider extends CommonI18nProvider implements Provider<I18n> {
 
     private static Logger log = LoggerFactory.getLogger(I18nProvider.class);
 
-    private static ConcurrentHashMap<Locale, I18n> cache = new ConcurrentHashMap<Locale, I18n>();
-
-    private ServletRequest request;
-
     @Inject
     public I18nProvider(ServletRequest request) {
-        this.request = request;
+        super(request);
     }
 
     @Override
-    public I18n get() {
-        Locale locale = (request.getLocale() == null) ? Locale.US : request.getLocale();
-        I18n i18n;
-
-        // If the locale does not exist, xnap is pretty inefficient.
-        // This cache will hold the records more efficiently.
-        //
-        // Make sure to keep the access wrapped in synchronized so we can
-        // share across threads!
-        synchronized (cache) {
-            i18n = cache.get(locale);
-            if (i18n == null) {
-                i18n = I18nFactory.getI18n(getClass(), BASENAME, locale, I18nFactory.FALLBACK);
-                cache.put(locale, i18n);
-                log.debug("Getting i18n engine for locale {}", locale);
-            }
-        }
-        return i18n;
+    public String getBaseName() {
+        return "org.candlepin.gutterball.i18n.Messages";
     }
-
 }

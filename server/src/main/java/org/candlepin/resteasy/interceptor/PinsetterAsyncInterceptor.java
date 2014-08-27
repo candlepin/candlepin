@@ -15,7 +15,7 @@
 package org.candlepin.resteasy.interceptor;
 
 import org.candlepin.auth.Principal;
-import org.candlepin.exceptions.ServiceUnavailableException;
+import org.candlepin.common.exceptions.ServiceUnavailableException;
 import org.candlepin.pinsetter.core.PinsetterException;
 import org.candlepin.pinsetter.core.PinsetterJobListener;
 import org.candlepin.pinsetter.core.PinsetterKernel;

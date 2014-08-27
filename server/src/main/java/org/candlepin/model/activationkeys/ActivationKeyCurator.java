@@ -14,7 +14,7 @@
  */
 package org.candlepin.model.activationkeys;
 
-import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.model.AbstractHibernateCurator;
 import org.candlepin.model.Owner;
 

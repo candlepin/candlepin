@@ -14,6 +14,8 @@
  */
 package org.candlepin.guice;
 
+import org.candlepin.common.guice.CommonI18nProvider;
+
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Provider;
@@ -32,10 +34,8 @@ import javax.servlet.http.HttpServletRequest;
 /**
  * I18nProvider
  */
-public class I18nProvider implements Provider<I18n> {
+public class I18nProvider extends CommonI18nProvider implements Provider<I18n> {
     private I18n i18n;
-
-    public static final String BASENAME = "org.candlepin.i18n.Messages";
 
     private static Logger log = LoggerFactory.getLogger(I18nProvider.class);
 
@@ -70,7 +70,7 @@ public class I18nProvider implements Provider<I18n> {
         synchronized (cache) {
             i18n = cache.get(locale);
             if (i18n == null) {
-                i18n = I18nFactory.getI18n(getClass(), BASENAME, locale,
+                i18n = I18nFactory.getI18n(getClass(), getBaseName(), locale,
                     I18nFactory.FALLBACK);
 
                 if (log.isDebugEnabled()) {
@@ -89,5 +89,10 @@ public class I18nProvider implements Provider<I18n> {
 
     public String getTestString() {
         return i18n.tr("Bad Request");
+    }
+
+    @Override
+    public String getBaseName() {
+        return "org.candlepin.i18n.Messages";
     }
 }
