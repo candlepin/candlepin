@@ -20,7 +20,6 @@ import org.candlepin.gutterball.mongodb.MongoConnection;
 import com.google.inject.Inject;
 import com.mongodb.BasicDBObject;
 import com.mongodb.BasicDBObjectBuilder;
-import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.WriteResult;
 

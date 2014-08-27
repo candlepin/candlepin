@@ -23,7 +23,6 @@ import com.mongodb.DBObject;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -90,9 +89,9 @@ public class ConsumerStatusReport extends Report<MultiRowResult<DBObject>> {
         List<String> ownerFilters = queryParams.get("owner");
 
         Date targetDate = queryParams.containsKey("on_date") ?
-                parseDate(queryParams.getFirst("on_date")) : new Date();
-                Iterable<DBObject> complianceSnapshots = complianceDataCurator.getComplianceForTimespan(
-                        targetDate, consumerIds, ownerFilters, statusFilters);
+            parseDate(queryParams.getFirst("on_date")) : new Date();
+        Iterable<DBObject> complianceSnapshots = complianceDataCurator.getComplianceForTimespan(
+            targetDate, consumerIds, ownerFilters, statusFilters);
         for (DBObject snapshot : complianceSnapshots) {
             result.add(snapshot);
         }

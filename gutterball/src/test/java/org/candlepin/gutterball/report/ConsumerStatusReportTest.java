@@ -15,13 +15,9 @@
 
 package org.candlepin.gutterball.report;
 
-import static org.candlepin.gutterball.TestUtils.createComplianceSnapshot;
-import static org.candlepin.gutterball.TestUtils.createOwner;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.candlepin.gutterball.TestUtils.*;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.gutterball.EmbeddedMongoRule;
 import org.candlepin.gutterball.curator.ComplianceDataCurator;
@@ -29,7 +25,6 @@ import org.candlepin.gutterball.curator.ConsumerCurator;
 import org.candlepin.gutterball.guice.I18nProvider;
 import org.candlepin.gutterball.model.Consumer;
 
-import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 import org.jukito.JukitoRunner;
@@ -119,10 +114,11 @@ public class ConsumerStatusReportTest {
 
     @Test
     public void testGetAllLatestStatusReports() {
-        MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
+        MultiRowResult<DBObject> results = report.run(mock(MultivaluedMap.class));
 
-        MultiRowResult<DBObject> results = report.run(params);
-        assertEquals(2, results.size());
+        // c1 was deleted before the report date.
+        List<String> expectedConsumerUuids = Arrays.asList("c2", "c3", "c4");
+        assertEquals(expectedConsumerUuids.size(), results.size());
 
         // Make sure that both consumer instances are found and that the correct
         // snapshots are used.
@@ -131,16 +127,15 @@ public class ConsumerStatusReportTest {
             DBObject consumer = (DBObject) snap.get("consumer");
             consumerUuids.add((String) consumer.get("uuid"));
         }
-        // c1 was deleted before the report date.
-        assertTrue(consumerUuids.containsAll(Arrays.asList("c2", "c3")));
+        assertTrue(consumerUuids.containsAll(expectedConsumerUuids));
     }
 
     @Test
     public void testDeletedConsumerNotIncludedInLatestResults() {
-        MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
+        MultiRowResult<DBObject> results = report.run(mock(MultivaluedMap.class));
 
-        MultiRowResult<DBObject> results = report.run(params);
-        assertEquals(2, results.size());
+        List<String> expectedConsumerUuids = Arrays.asList("c2", "c3", "c4");
+        assertEquals(expectedConsumerUuids.size(), results.size());
 
         // Make sure that both consumer instances are found and that the correct
         // snapshots are used.
@@ -149,7 +144,7 @@ public class ConsumerStatusReportTest {
             DBObject consumer = (DBObject) snap.get("consumer");
             consumerUuids.add((String) consumer.get("uuid"));
         }
-        assertTrue(consumerUuids.containsAll(Arrays.asList("c2", "c3")));
+        assertTrue(consumerUuids.containsAll(expectedConsumerUuids));
     }
 
     @Test
@@ -167,7 +162,9 @@ public class ConsumerStatusReportTest {
         when(params.getFirst("on_date")).thenReturn(targetDateString);
 
         MultiRowResult<DBObject> results = report.run(params);
-        assertEquals(3, results.size());
+
+        List<String> expectedConsumerUuids = Arrays.asList("c1", "c2", "c3", "c4");
+        assertEquals(expectedConsumerUuids.size(), results.size());
 
         // Make sure that both consumer instances are found and that the correct
         // snapshots are used.
@@ -176,7 +173,7 @@ public class ConsumerStatusReportTest {
             DBObject consumer = (DBObject) snap.get("consumer");
             consumerUuids.add((String) consumer.get("uuid"));
         }
-        assertTrue(consumerUuids.containsAll(Arrays.asList("c1", "c2", "c3")));
+        assertTrue(consumerUuids.containsAll(expectedConsumerUuids));
     }
 
     @Test
@@ -220,6 +217,11 @@ public class ConsumerStatusReportTest {
         assertEquals("c3", consumer.get("uuid"));
     }
 
+    @Test
+    public void testReportCurrentlyRegisteredConsumersThatAreValid() {
+
+    }
+
     private void setupTestData() {
         Calendar cal = Calendar.getInstance();
 
@@ -246,6 +248,13 @@ public class ConsumerStatusReportTest {
         createInitialConsumer(cal.getTime(), "c3", "o2", "invalid");
         cal.set(Calendar.MONTH, Calendar.JUNE);
         createSnapshot(cal.getTime(), "c3", "o2", "partial");
+
+        cal.set(Calendar.MONTH, Calendar.MAY);
+        createInitialConsumer(cal.getTime(), "c4", "o3", "invalid");
+        cal.set(Calendar.MONTH, Calendar.JUNE);
+        createSnapshot(cal.getTime(), "c4", "o3", "partial");
+        cal.set(Calendar.MONTH, Calendar.JULY);
+        createSnapshot(cal.getTime(), "c4", "o3", "valid");
     }
 
     private void createInitialConsumer(Date createdOn, String uuid, String owner, String status) {
