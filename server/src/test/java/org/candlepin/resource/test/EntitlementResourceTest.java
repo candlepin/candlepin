@@ -18,10 +18,10 @@ import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
+import org.candlepin.common.exceptions.BadRequestException;
+import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.Entitler;
-import org.candlepin.exceptions.BadRequestException;
-import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;

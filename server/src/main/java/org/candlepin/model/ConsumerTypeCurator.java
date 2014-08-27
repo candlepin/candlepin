@@ -14,7 +14,7 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.common.exceptions.BadRequestException;
 
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.criterion.Restrictions;

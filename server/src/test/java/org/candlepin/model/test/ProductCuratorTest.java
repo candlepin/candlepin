@@ -17,10 +17,10 @@ package org.candlepin.model.test;
 import static org.hamcrest.collection.IsCollectionContaining.*;
 import static org.junit.Assert.*;
 
+import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.model.Content;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Product;

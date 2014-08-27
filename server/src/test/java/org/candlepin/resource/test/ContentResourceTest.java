@@ -17,9 +17,9 @@ import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
+import org.candlepin.common.exceptions.BadRequestException;
+import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.controller.PoolManager;
-import org.candlepin.exceptions.BadRequestException;
-import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Environment;

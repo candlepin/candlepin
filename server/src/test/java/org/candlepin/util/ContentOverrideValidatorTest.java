@@ -16,7 +16,7 @@ package org.candlepin.util;
 
 import static org.junit.Assert.*;
 
-import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.model.ContentOverride;
 import org.candlepin.policy.js.override.OverrideRules;
 import org.candlepin.test.DatabaseTestFixture;

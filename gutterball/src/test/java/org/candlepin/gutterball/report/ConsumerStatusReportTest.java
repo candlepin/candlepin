@@ -49,7 +49,7 @@ public class ConsumerStatusReportTest {
         when(params.containsKey("hours")).thenReturn(true);
         when(params.containsKey("start_date")).thenReturn(true);
 
-        validateParams(params, "hours", "Can not be used with start_date or end_date parameters");
+        validateParams(params, "Parameter hours cannot be used with start_date or end_date parameters");
 
     }
 
@@ -59,7 +59,7 @@ public class ConsumerStatusReportTest {
         when(params.containsKey("hours")).thenReturn(true);
         when(params.containsKey("end_date")).thenReturn(true);
 
-        validateParams(params, "hours", "Can not be used with start_date or end_date parameters");
+        validateParams(params, "Parameter hours cannot be used with start_date or end_date parameters");
     }
 
     @Test
@@ -68,7 +68,7 @@ public class ConsumerStatusReportTest {
         when(params.containsKey("hours")).thenReturn(true);
         when(params.getFirst("hours")).thenReturn("a");
 
-        validateParams(params, "hours", "Parameter must be an Integer value");
+        validateParams(params, "Parameter hours must be an Integer value");
     }
 
     @Test
@@ -78,7 +78,7 @@ public class ConsumerStatusReportTest {
         when(params.containsKey("start_date")).thenReturn(true);
         when(params.containsKey("end_date")).thenReturn(false);
 
-        validateParams(params, "end_date", "Missing required parameter. Must be used with start_date");
+        validateParams(params, "Missing required parameter end_date. Must be used with start_date");
     }
 
     @Test
@@ -88,18 +88,16 @@ public class ConsumerStatusReportTest {
         when(params.containsKey("start_date")).thenReturn(false);
         when(params.containsKey("end_date")).thenReturn(true);
 
-        validateParams(params, "start_date", "Missing required parameter. Must be used with end_date");
+        validateParams(params, "Missing required parameter start_date. Must be used with end_date");
     }
 
-    private void validateParams(MultivaluedMap<String, String> params, String expectedParam,
-            String expectedMessage) {
+    private void validateParams(MultivaluedMap<String, String> params, String expectedMessage) {
         try {
             report.validateParameters(params);
             fail("Expected param validation error.");
         }
         catch (ParameterValidationException e) {
-            assertEquals(expectedParam, e.getParamName());
-            assertEquals(expectedParam + ": " + expectedMessage, e.getMessage());
+            assertEquals(expectedMessage, e.getMessage());
         }
     }
 

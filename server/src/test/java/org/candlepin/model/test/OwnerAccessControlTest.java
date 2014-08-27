@@ -18,7 +18,7 @@ import static org.junit.Assert.*;
 
 import org.candlepin.auth.Access;
 import org.candlepin.auth.ConsumerPrincipal;
-import org.candlepin.exceptions.ForbiddenException;
+import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
 import org.candlepin.resource.OwnerResource;

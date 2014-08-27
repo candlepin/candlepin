@@ -15,9 +15,9 @@
 package org.candlepin.resteasy.interceptor;
 
 import org.candlepin.auth.Principal;
-import org.candlepin.exceptions.CandlepinException;
-import org.candlepin.exceptions.ServiceUnavailableException;
-import org.candlepin.exceptions.UnauthorizedException;
+import org.candlepin.common.exceptions.CandlepinException;
+import org.candlepin.common.exceptions.ServiceUnavailableException;
+import org.candlepin.common.exceptions.UnauthorizedException;
 import org.candlepin.service.UserServiceAdapter;
 
 import com.google.inject.Inject;

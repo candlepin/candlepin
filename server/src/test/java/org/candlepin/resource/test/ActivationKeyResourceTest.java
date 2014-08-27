@@ -18,8 +18,8 @@ import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
+import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.controller.PoolManager;
-import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;

@@ -16,7 +16,7 @@ package org.candlepin.model;
 
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.permissions.Permission;
-import org.candlepin.exceptions.ConcurrentModificationException;
+import org.candlepin.common.exceptions.ConcurrentModificationException;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;

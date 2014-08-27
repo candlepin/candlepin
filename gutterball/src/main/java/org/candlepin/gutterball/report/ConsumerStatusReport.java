@@ -48,8 +48,9 @@ public class ConsumerStatusReport extends Report {
         if (params.containsKey("hours")) {
 
             if (params.containsKey("start_date") || params.containsKey("end_date")) {
-                throw new ParameterValidationException("hours",
-                        i18n.tr("Can not be used with {0} or {1} parameters", "start_date", "end_date"));
+                throw new ParameterValidationException(
+                        i18n.tr("Parameter {0} cannot be used with {1} or {2} parameters",
+                                "hours", "start_date", "end_date"));
             }
 
             String hours = params.getFirst("hours");
@@ -57,21 +58,21 @@ public class ConsumerStatusReport extends Report {
                 Integer.parseInt(hours);
             }
             catch (NumberFormatException nfe) {
-                throw new ParameterValidationException("hours",
-                        i18n.tr("Parameter must be an Integer value"));
+                throw new ParameterValidationException(
+                        i18n.tr("Parameter {0} must be an Integer value", "hours"));
             }
         }
 
         if (params.containsKey("start_date") && !params.containsKey("end_date")) {
-            throw new ParameterValidationException("end_date",
-                    i18n.tr("Missing required parameter. Must be used with {0}",
-                            "start_date"));
+            throw new ParameterValidationException(
+                    i18n.tr("Missing required parameter {0}. Must be used with {1}",
+                            "end_date", "start_date"));
         }
 
         if (params.containsKey("end_date") && !params.containsKey("start_date")) {
-            throw new ParameterValidationException("start_date",
-                    i18n.tr("Missing required parameter. Must be used with {0}",
-                            "end_date"));
+            throw new ParameterValidationException(
+                    i18n.tr("Missing required parameter {0}. Must be used with {1}",
+                            "start_date", "end_date"));
         }
     }
 
