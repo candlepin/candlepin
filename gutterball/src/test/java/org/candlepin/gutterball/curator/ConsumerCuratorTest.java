@@ -22,6 +22,8 @@ import org.candlepin.gutterball.EmbeddedMongoRule;
 import org.candlepin.gutterball.MongoCollectionCleanupRule;
 import org.candlepin.gutterball.model.Consumer;
 
+import com.mongodb.DBObject;
+
 import org.jukito.JukitoRunner;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -76,30 +78,55 @@ public class ConsumerCuratorTest {
     }
 
     @Test
-    public void testGetDeletedConsumerUuids() {
-        Calendar cal = Calendar.getInstance();
-        cal.set(Calendar.YEAR, 2012);
-        cal.set(Calendar.MONTH, Calendar.JANUARY);
-        cal.set(Calendar.DAY_OF_MONTH, 15);
-
-        Date creationDate = cal.getTime();
-        Consumer toInsert = new Consumer("bbb-222", creationDate, createOwner("TO1", "Test Owner 1"));
-        curator.insert(toInsert);
-
-        cal.add(Calendar.MONTH, 2);
-        Date targetDate = cal.getTime();
-        assertTrue(curator.getDeletedUuids(targetDate, null, null).isEmpty());
-
-        cal.add(Calendar.MONTH, -1);
-        curator.setConsumerDeleted(toInsert.getUUID(), cal.getTime());
-
-        List<String> deletedUuids = curator.getDeletedUuids(targetDate, null, null);
-        assertEquals(deletedUuids.size(), 1);
-        assertTrue(deletedUuids.contains(toInsert.getUUID()));
+    public void testUuidIncludedWhenNotDeletedAndWasCreatedOnTargetDate() {
+        Calendar cal = getPrimedCalendar();
+        Consumer consumer = new Consumer("consumer1", cal.getTime(), createOwner("TO1", "Test Owner 1"));
+        curator.insert(consumer);
+        List<String> uuids = curator.getUuidsOnDate(cal.getTime(), null, null);
+        assertEquals(1, uuids.size());
+        assertTrue(uuids.contains(consumer.getUUID()));
     }
 
     @Test
-    public void testGetDeletedConsumerUuidsFilteredByOwner() {
+    public void testUuidIncludedWhenNotDeletedAndWasCreatedBeforeTargetDate() {
+        Calendar cal = getPrimedCalendar();
+        Consumer consumer = new Consumer("consumer1", cal.getTime(), createOwner("TO1", "Test Owner 1"));
+        curator.insert(consumer);
+
+        cal.add(Calendar.DAY_OF_MONTH, 1);
+        List<String> uuids = curator.getUuidsOnDate(cal.getTime(), null, null);
+        assertEquals(1, uuids.size());
+        assertTrue(uuids.contains(consumer.getUUID()));
+    }
+
+    @Test
+    public void testUuidNotIncludedWhenDeletedBeforeTargetDate() {
+        Calendar cal = getPrimedCalendar();
+        Consumer consumer = new Consumer("consumer1", cal.getTime(), createOwner("TO1", "Test Owner 1"));
+        curator.insert(consumer);
+
+        cal.add(Calendar.DAY_OF_MONTH, 1);
+        curator.setConsumerDeleted(consumer.getUUID(), cal.getTime());
+        assertTrue(curator.getUuidsOnDate(cal.getTime(), null, null).isEmpty());
+    }
+
+    @Test
+    public void testUuidIncludedWhenTargetDateIsBetweenConsumerCreateAndDeleteDates() {
+        Calendar cal = getPrimedCalendar();
+        Consumer consumer = new Consumer("consumer1", cal.getTime(), createOwner("TO1", "Test Owner 1"));
+        curator.insert(consumer);
+
+        cal.add(Calendar.MONTH, 1);
+        curator.setConsumerDeleted(consumer.getUUID(), cal.getTime());
+
+        cal.add(Calendar.DAY_OF_MONTH, -2);
+        List<String> uuids = curator.getUuidsOnDate(cal.getTime(), null, null);
+        assertEquals(1, uuids.size());
+        assertTrue(uuids.contains(consumer.getUUID()));
+    }
+
+    @Test
+    public void testConsumerUuidsFilteredByOwner() {
         Calendar cal = Calendar.getInstance();
         cal.set(Calendar.YEAR, 2012);
         cal.set(Calendar.MONTH, Calendar.JANUARY);
@@ -113,22 +140,27 @@ public class ConsumerCuratorTest {
         cal.add(Calendar.MONTH, 1);
         Date targetDate = cal.getTime();
 
+        // Should be filtered out due to different owner.
         String targetOwnerKey = "TO2";
         Consumer c1 = new Consumer("bbb-222", creationDate, createOwner("TO1", "Test Owner 1"));
         curator.insert(c1);
-        curator.setConsumerDeleted(c1.getUUID(), deletionDate);
 
-        Consumer c2 = new Consumer("ccc-333", creationDate, createOwner(targetOwnerKey, "Test Owner 2"));
+        DBObject owner2 = createOwner(targetOwnerKey, "Test Owner 2");
+        Consumer c2 = new Consumer("ccc-333", creationDate, owner2);
         curator.insert(c2);
-        curator.setConsumerDeleted(c2.getUUID(), deletionDate);
 
-        List<String> deletedUuids = curator.getDeletedUuids(targetDate, Arrays.asList(targetOwnerKey), null);
-        assertEquals(1, deletedUuids.size());
-        assertTrue(deletedUuids.contains(c2.getUUID()));
+        // Should not be returned as it is deleted
+        Consumer c3 = new Consumer("ddd-444", creationDate, owner2);
+        curator.insert(c3);
+        curator.setConsumerDeleted(c3.getUUID(), deletionDate);
+
+        List<String> uuids = curator.getUuidsOnDate(targetDate, Arrays.asList(targetOwnerKey), null);
+        assertEquals(1, uuids.size());
+        assertTrue(uuids.contains(c2.getUUID()));
     }
 
     @Test
-    public void testGetDeletedConsumerUuidsFilteredByUuids() {
+    public void testGetConsumerUuidsFilteredByUuids() {
         Calendar cal = Calendar.getInstance();
         cal.set(Calendar.YEAR, 2012);
         cal.set(Calendar.MONTH, Calendar.JANUARY);
@@ -144,14 +176,20 @@ public class ConsumerCuratorTest {
 
         Consumer c1 = new Consumer("bbb-222", creationDate, createOwner("TO1", "Test Owner 1"));
         curator.insert(c1);
-        curator.setConsumerDeleted(c1.getUUID(), deletionDate);
 
         Consumer c2 = new Consumer("ccc-333", creationDate, createOwner("TO2", "Test Owner 2"));
         curator.insert(c2);
-        curator.setConsumerDeleted(c2.getUUID(), deletionDate);
 
-        List<String> deletedUuids = curator.getDeletedUuids(targetDate, null, Arrays.asList(c1.getUUID()));
-        assertEquals(1, deletedUuids.size());
-        assertTrue(deletedUuids.contains(c1.getUUID()));
+        List<String> uuids = curator.getUuidsOnDate(targetDate, null, Arrays.asList(c1.getUUID()));
+        assertEquals(1, uuids.size());
+        assertTrue(uuids.contains(c1.getUUID()));
+    }
+
+    private Calendar getPrimedCalendar() {
+        Calendar cal = Calendar.getInstance();
+        cal.set(Calendar.YEAR, 2012);
+        cal.set(Calendar.MONTH, Calendar.JANUARY);
+        cal.set(Calendar.DAY_OF_MONTH, 15);
+        return cal;
     }
 }

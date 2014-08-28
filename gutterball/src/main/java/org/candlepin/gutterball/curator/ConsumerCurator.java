@@ -18,6 +18,7 @@ import org.candlepin.gutterball.model.Consumer;
 import org.candlepin.gutterball.mongodb.MongoConnection;
 
 import com.google.inject.Inject;
+import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DBObject;
@@ -52,7 +53,7 @@ public class ConsumerCurator extends MongoDBCurator<Consumer> {
         return collection.update(query, update);
     }
 
-    public List<String> getDeletedUuids(Date targetDate, List<String> owners, List<String> uuids) {
+    public List<String> getUuidsOnDate(Date targetDate, List<String> owners, List<String> uuids) {
         BasicDBObjectBuilder queryBuilder = BasicDBObjectBuilder.start();
 
         if (owners != null && !owners.isEmpty()) {
@@ -63,9 +64,21 @@ public class ConsumerCurator extends MongoDBCurator<Consumer> {
             queryBuilder.append("uuid", new BasicDBObject("$in", uuids));
         }
 
-        if (targetDate != null) {
-            queryBuilder.append("deleted", new BasicDBObject("$lte", targetDate));
-        }
+
+        Date toCheck = targetDate == null ? new Date() : targetDate;
+
+        BasicDBObject deletedShouldBeNull = new BasicDBObject("deleted", null);
+        BasicDBObject deletedGreaterThanTarget =
+                new BasicDBObject("deleted", new BasicDBObject("$gt", toCheck));
+
+        BasicDBList or = new BasicDBList();
+        or.add(deletedShouldBeNull);
+        or.add(deletedGreaterThanTarget);
+
+        queryBuilder.append("$or", or);
+
+        // Valid uuids must have been created before/on the target date.
+        queryBuilder.append("created", new BasicDBObject("$lte", toCheck));
 
         return collection.distinct("uuid", queryBuilder.get());
     }

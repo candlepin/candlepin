@@ -24,7 +24,9 @@ import com.mongodb.DBObject;
 
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * ComplianceDataCurator database curator to save and query
@@ -55,13 +57,14 @@ public class ComplianceDataCurator extends MongoDBCurator<BasicDBObject> {
         // and consists of properties that do not change across snapshots.
         BasicDBObjectBuilder queryBuilder = BasicDBObjectBuilder.start();
 
-        BasicDBObject consumerUuidFilter = new BasicDBObject("$nin", consumerCurator.getDeletedUuids(
-            targetDate, owners, consumerIds));
 
-        if (consumerIds != null && !consumerIds.isEmpty()) {
-            consumerUuidFilter.append("$in", consumerIds);
+        Set<String> uuidsToLimit = new HashSet<String>(consumerCurator.getUuidsOnDate(
+                targetDate, owners, consumerIds));
+
+        if (consumerIds != null) {
+            uuidsToLimit.addAll(consumerIds);
         }
-        queryBuilder.add("consumer.uuid", consumerUuidFilter);
+        queryBuilder.add("consumer.uuid", new BasicDBObject("$in", uuidsToLimit));
 
         if (owners != null && !owners.isEmpty()) {
             queryBuilder.add("consumer.owner.key", new BasicDBObject("$in", owners));
