@@ -47,7 +47,7 @@ public class ComplianceDataCurator extends MongoDBCurator<BasicDBObject> {
         return COLLECTION;
     }
 
-    public Iterable<DBObject> getComplianceForTimespan(Date targetDate, List<String> consumerIds,
+    public Iterable<DBObject> getComplianceOnDate(Date targetDate, List<String> consumerIds,
             List<String> owners, List<String> statusFilers) {
 
         // Anything added to the main query will filter the initial result set. This should

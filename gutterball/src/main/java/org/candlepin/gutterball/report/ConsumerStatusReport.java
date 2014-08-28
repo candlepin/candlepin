@@ -90,7 +90,7 @@ public class ConsumerStatusReport extends Report<MultiRowResult<DBObject>> {
 
         Date targetDate = queryParams.containsKey("on_date") ?
             parseDate(queryParams.getFirst("on_date")) : new Date();
-        Iterable<DBObject> complianceSnapshots = complianceDataCurator.getComplianceForTimespan(
+        Iterable<DBObject> complianceSnapshots = complianceDataCurator.getComplianceOnDate(
             targetDate, consumerIds, ownerFilters, statusFilters);
         for (DBObject snapshot : complianceSnapshots) {
             result.add(snapshot);
