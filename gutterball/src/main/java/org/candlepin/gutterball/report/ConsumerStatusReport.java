@@ -71,7 +71,7 @@ public class ConsumerStatusReport extends Report<MultiRowResult<DBObject>> {
         );
 
         addParameter(
-            builder.init("on_date", i18n.tr("The date to filter on."))
+            builder.init("on_date", i18n.tr("The date to filter on. Defaults to NOW."))
                 .mustBeDate(REPORT_DATE_FORMAT)
                 .getParameter()
         );
