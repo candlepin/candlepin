@@ -43,7 +43,7 @@ public class ConsumerCurator extends MongoDBCurator<Consumer> {
     }
 
     public Consumer findByUuid(String uuid) {
-        return findByKey("uuid", uuid);
+        return (Consumer) collection.findOne(new BasicDBObject("uuid", uuid));
     }
 
     public WriteResult setConsumerDeleted(String uuid, Date deleted) {
@@ -56,7 +56,7 @@ public class ConsumerCurator extends MongoDBCurator<Consumer> {
         BasicDBObjectBuilder queryBuilder = BasicDBObjectBuilder.start();
 
         if (owners != null && !owners.isEmpty()) {
-            queryBuilder.append("owner", new BasicDBObject("$in", owners));
+            queryBuilder.append("owner.key", new BasicDBObject("$in", owners));
         }
 
         if (uuids != null && !uuids.isEmpty()) {
