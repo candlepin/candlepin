@@ -64,7 +64,6 @@ public class ConsumerCurator extends MongoDBCurator<Consumer> {
             queryBuilder.append("uuid", new BasicDBObject("$in", uuids));
         }
 
-
         Date toCheck = targetDate == null ? new Date() : targetDate;
 
         BasicDBObject deletedShouldBeNull = new BasicDBObject("deleted", null);

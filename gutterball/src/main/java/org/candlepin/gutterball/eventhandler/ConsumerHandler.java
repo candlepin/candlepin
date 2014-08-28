@@ -52,7 +52,7 @@ public class ConsumerHandler implements EventHandler {
 
     @Override
     public void handleDeleted(Event event) {
-        BasicDBObject targetConsumer = (BasicDBObject) event.getNewEntity();
+        BasicDBObject targetConsumer = (BasicDBObject) event.getOldEntity();
         consumerCurator.setConsumerDeleted(targetConsumer.getString("uuid"), event.getTimestamp());
     }
 }
