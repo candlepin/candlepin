@@ -14,23 +14,19 @@
  */
 package org.candlepin.guice;
 
-import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
-
-import org.aopalliance.intercept.MethodInvocation;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * Invoker used to automatically open a transaction on any methods which match the
- * criteria defined in {@link CandlepinModule}. (i.e. any REST api methods)
+ * Annotation used in {@link CandlepinModule} to avoid automatically wrapping the
+ * request in a transaction.
+ *
+ * In rare cases we want to actually commit things despite a failed request.
  */
-public class TransactionalInvoker {
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.METHOD})
+public @interface NonTransactional {
 
-    @Inject
-    public TransactionalInvoker() {
-    }
-
-    @Transactional
-    public Object invoke(MethodInvocation invocation) throws Throwable {
-        return invocation.proceed();
-    }
 }

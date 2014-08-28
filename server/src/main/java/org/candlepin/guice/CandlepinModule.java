@@ -261,8 +261,11 @@ public class CandlepinModule extends AbstractModule {
         CandlepinResourceTxnInterceptor txni = new CandlepinResourceTxnInterceptor();
         // Creates the nested object with a @Transactional annotation
         requestInjection(txni);
-        Matcher<AnnotatedElement> notMarked = Matchers.not(Matchers.annotatedWith(Transactional.class));
-        bindInterceptor(Matchers.inSubpackage("org.candlepin.resource").and(notMarked), notMarked, txni);
+        Matcher<AnnotatedElement> notMarked = Matchers.not(
+                Matchers.annotatedWith(Transactional.class)).
+                and(Matchers.not(Matchers.annotatedWith(NonTransactional.class)));
+        bindInterceptor(Matchers.inSubpackage("org.candlepin.resource").and(notMarked),
+                notMarked, txni);
     }
 
     @Provides @Named("ValidationProperties")
