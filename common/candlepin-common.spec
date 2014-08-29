@@ -8,6 +8,8 @@
 # re-call initjars with the correct destination for both tomcat and jboss.
 %global distlibdir %{buildroot}/%{_tmppath}/distlibdir/
 
+%{?fedora:%global reqcpdeps 1}
+
 # Ideally we would just use %{dist} for the deps_suffix, but %dist isn't just always
 # the major version.  E.g. rpm --eval "%{dist}" returns ".el6_5" in the RHEL 6
 # candlepin buildroot and ".el6" in other environments.
@@ -32,6 +34,10 @@ BuildRequires: java-devel >= 0:1.6.0
 BuildRequires: ant >= 0:1.7.0
 BuildRequires: gettext
 
+%if 0%{?reqcpdeps}
+%global distlibdir %{_datadir}/%{parent_proj}/common/lib/
+%global usecpdeps "usecpdeps"
+%else
 BuildRequires: resteasy >= 0:2.3.7
 BuildRequires: jakarta-commons-io
 BuildRequires: jakarta-commons-lang
@@ -70,7 +76,9 @@ BuildRequires: jakarta-commons-httpclient
 BuildRequires: apache-commons-codec
 BuildRequires: javax.inject
 %endif
+%endif # end reqcpdeps
 
+%if !0%{?reqcpdeps}
 # Runtime deps
 %if 0%{?rhel} >= 7
 Requires: apache-commons-codec-eap6
@@ -106,6 +114,7 @@ Requires: jackson-jaxrs-json-provider >= %{jackson_version}
 Requires: jackson-module-jaxb-annotations >= %{jackson_version}
 Requires: jakarta-commons-io
 Requires: jakarta-commons-lang
+%endif # end reqcpdeps
 
 %description
 Common code for Candlepin and related projects
@@ -115,7 +124,7 @@ Common code for Candlepin and related projects
 mkdir -p %{distlibdir}
 
 %build
-ant -Ddeps.file=deps/%{deps_suffix}.txt -Dlibdir=%{libdir} -Ddistlibdir=%{distlibdir} clean package
+ant %{?rhel:-Ddeps.file=deps/%{deps_suffix}.txt} -Ddistlibdir=%{distlibdir} clean %{?reqcpdeps:usecpdeps} package
 
 %install
 rm -rf %{buildroot}
