@@ -14,15 +14,14 @@
  */
 package org.candlepin.guice;
 
+import org.candlepin.servlet.filter.EventFilter;
+
 import org.candlepin.common.filter.LoggingFilter;
 import org.candlepin.servlet.filter.CandlepinPersistFilter;
 import org.candlepin.servlet.filter.CandlepinScopeFilter;
 import org.candlepin.servlet.filter.ContentTypeHackFilter;
-
 import com.google.inject.servlet.ServletModule;
-
 import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -40,8 +39,8 @@ public class CandlepinFilterModule extends ServletModule {
         filter("/*").through(CandlepinPersistFilter.class);
         filter("/*").through(LoggingFilter.class);
         filter("/*").through(ContentTypeHackFilter.class);
+        filter("/*").through(EventFilter.class);
 
         serve("/*").with(HttpServletDispatcher.class);
     }
-
 }

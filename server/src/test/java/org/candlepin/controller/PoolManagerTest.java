@@ -416,7 +416,7 @@ public class PoolManagerTest {
 
         verify(entCertAdapterMock).generateEntitlementCert(eq(e), eq(s),
             eq(product));
-        verify(mockEventSink, times(1)).sendEvent(any(Event.class));
+        verify(mockEventSink, times(1)).queueEvent(any(Event.class));
     }
 
     /**
@@ -603,7 +603,7 @@ public class PoolManagerTest {
 
         // Check that appropriate events were sent out:
         verify(eventFactory).poolDeleted(p);
-        verify(mockEventSink, times(3)).sendEvent((Event) any());
+        verify(mockEventSink, times(3)).queueEvent((Event) any());
     }
 
     @Test

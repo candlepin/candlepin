@@ -297,7 +297,6 @@ public class OwnerResource {
                 owner, parent));
         }
         Owner toReturn = ownerCurator.create(owner);
-
         sink.emitOwnerCreated(owner);
 
         log.info("Created owner: " + owner);
@@ -325,7 +324,7 @@ public class OwnerResource {
 
         cleanupAndDelete(owner, revoke);
 
-        sink.sendEvent(e);
+        sink.queueEvent(e);
     }
 
     private void cleanupAndDelete(Owner owner, boolean revokeCerts) {
@@ -912,7 +911,7 @@ public class OwnerResource {
 
         ownerCurator.merge(toUpdate);
         Event e = eventBuilder.setNewEntity(toUpdate).buildEvent();
-        sink.sendEvent(e);
+        sink.queueEvent(e);
         return toUpdate;
     }
 

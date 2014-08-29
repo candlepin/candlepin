@@ -18,6 +18,8 @@ import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
+import com.google.inject.Provider;
+
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
 import org.candlepin.audit.EventBuilder;
@@ -45,7 +47,6 @@ import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.util.ServiceLevelValidator;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -55,7 +56,6 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
-
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -86,7 +86,7 @@ public class HypervisorResourceTest {
     private OwnerCurator ownerCurator;
 
     @Mock
-    private EventSink sink;
+    private Provider<EventSink> sink;
 
     @Mock
     private EventFactory eventFactory;

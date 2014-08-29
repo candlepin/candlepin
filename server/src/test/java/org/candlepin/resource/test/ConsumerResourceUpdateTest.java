@@ -18,6 +18,8 @@ import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
+import com.google.inject.Provider;
+
 import org.candlepin.audit.Event;
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
@@ -52,7 +54,6 @@ import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.ServiceLevelValidator;
-
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -61,7 +62,6 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -78,6 +78,7 @@ public class ConsumerResourceUpdateTest {
     @Mock private ConsumerCurator consumerCurator;
     @Mock private ConsumerTypeCurator consumerTypeCurator;
     @Mock private EventSink sink;
+    @Mock private Provider<EventSink> sinkProvider;
     @Mock private EventFactory eventFactory;
     @Mock private ActivationKeyCurator activationKeyCurator;
     @Mock private PoolManager poolManager;
@@ -96,9 +97,10 @@ public class ConsumerResourceUpdateTest {
     public void init() throws Exception {
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
 
+        when(sinkProvider.get()).thenReturn(sink);
         this.resource = new ConsumerResource(this.consumerCurator,
             this.consumerTypeCurator, null, this.subscriptionService, null,
-            this.idCertService, null, this.i18n, this.sink, this.eventFactory, null, null,
+            this.idCertService, null, this.i18n, this.sinkProvider, this.eventFactory, null, null,
             this.userService, null, poolManager, null, null,
             this.activationKeyCurator, this.entitler, this.complianceRules,
             this.deletedConsumerCurator, this.environmentCurator, null,
@@ -124,7 +126,7 @@ public class ConsumerResourceUpdateTest {
     public void nothingChanged() throws Exception {
         Consumer consumer = getFakeConsumer();
         this.resource.updateConsumer(consumer.getUuid(), consumer);
-        verify(sink, never()).sendEvent((Event) any());
+        verify(sink, never()).queueEvent((Event) any());
     }
 
     private Consumer getFakeConsumer() {
@@ -168,7 +170,7 @@ public class ConsumerResourceUpdateTest {
 
         this.resource.updateConsumer(consumer.getUuid(), incoming);
         if (verify) {
-            verify(sink).sendEvent((Event) any());
+            verify(sink).queueEvent((Event) any());
         }
         assertEquals(consumer.getReleaseVer().getReleaseVer(),
             incoming.getReleaseVer().getReleaseVer());
@@ -209,7 +211,7 @@ public class ConsumerResourceUpdateTest {
         incoming.addInstalledProduct(c);
 
         this.resource.updateConsumer(consumer.getUuid(), incoming);
-        verify(sink).sendEvent((Event) any());
+        verify(sink).queueEvent((Event) any());
     }
 
     @Test
@@ -227,7 +229,7 @@ public class ConsumerResourceUpdateTest {
         incoming.addInstalledProduct(c);
 
         this.resource.updateConsumer(consumer.getUuid(), incoming);
-        verify(sink).sendEvent((Event) any());
+        verify(sink).queueEvent((Event) any());
         verify(complianceRules).getStatus(eq(consumer), any(Date.class),
                 any(Boolean.class), any(Boolean.class));
     }
@@ -346,7 +348,7 @@ public class ConsumerResourceUpdateTest {
             .thenReturn(expectedEvent);
 
         this.resource.updateConsumer(existing.getUuid(), updated);
-        verify(sink).sendEvent(eq(expectedEvent));
+        verify(sink).queueEvent(eq(expectedEvent));
     }
 
     @Test
@@ -365,7 +367,7 @@ public class ConsumerResourceUpdateTest {
             .thenReturn(expectedEvent);
 
         this.resource.updateConsumer(existing.getUuid(), updated);
-        verify(sink).sendEvent(eq(expectedEvent));
+        verify(sink).queueEvent(eq(expectedEvent));
     }
 
     @Test
@@ -384,7 +386,7 @@ public class ConsumerResourceUpdateTest {
         when(this.eventFactory.consumerModified(existing, updated)).thenReturn(event);
 
         this.resource.updateConsumer(existing.getUuid(), updated);
-        verify(sink, never()).sendEvent(any(Event.class));
+        verify(sink, never()).queueEvent(any(Event.class));
     }
 
     @Test
@@ -404,7 +406,7 @@ public class ConsumerResourceUpdateTest {
         when(this.eventFactory.consumerModified(existing, updated)).thenReturn(event);
 
         this.resource.updateConsumer(existing.getUuid(), updated);
-        verify(sink, never()).sendEvent(any(Event.class));
+        verify(sink, never()).queueEvent(any(Event.class));
     }
 
     // ignored out per mkhusid, see 768872 comment #41
@@ -663,7 +665,7 @@ public class ConsumerResourceUpdateTest {
         resource.updateConsumer(existing.getUuid(), updated);
 
         verify(poolManager, atMost(1)).regenerateEntitlementCertificates(existing, true);
-        verify(sink).sendEvent((Event) any());
+        verify(sink).queueEvent((Event) any());
     }
 
     @Test(expected = NotFoundException.class)

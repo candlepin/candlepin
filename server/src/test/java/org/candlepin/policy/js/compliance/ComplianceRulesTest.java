@@ -18,6 +18,8 @@ import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
+import com.google.inject.Provider;
+
 import org.candlepin.audit.EventSink;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -37,14 +39,12 @@ import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
-
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -77,6 +77,7 @@ public class ComplianceRulesTest {
     @Mock private EntitlementCurator entCurator;
     @Mock private RulesCurator rulesCuratorMock;
     @Mock private EventSink eventSink;
+    @Mock private Provider<EventSink> eventSinkProvider;
     private I18n i18n;
     private JsRunnerProvider provider;
 
@@ -95,8 +96,10 @@ public class ComplianceRulesTest {
         when(rulesCuratorMock.getUpdated()).thenReturn(new Date());
         when(rulesCuratorMock.getRules()).thenReturn(rules);
         provider = new JsRunnerProvider(rulesCuratorMock);
+        when(eventSinkProvider.get()).thenReturn(eventSink);
         compliance = new ComplianceRules(provider.get(),
-            entCurator, new StatusReasonMessageGenerator(i18n), eventSink, consumerCurator);
+            entCurator, new StatusReasonMessageGenerator(i18n), eventSinkProvider,
+            consumerCurator);
         owner = new Owner("test");
         activeGuestAttrs = new HashMap<String, String>();
         activeGuestAttrs.put("virtWhoType", "libvirt");
@@ -111,7 +114,8 @@ public class ComplianceRulesTest {
     public void additivePropertiesCanStillDeserialize() {
         JsRunner mockRunner = mock(JsRunner.class);
         compliance = new ComplianceRules(mockRunner,
-            entCurator, new StatusReasonMessageGenerator(i18n), eventSink, consumerCurator);
+            entCurator, new StatusReasonMessageGenerator(i18n), eventSinkProvider,
+            consumerCurator);
         when(mockRunner.runJsFunction(any(Class.class), eq("get_status"),
             any(JsContext.class))).thenReturn("{\"unknown\": \"thing\"}");
         Consumer c = mockConsumerWithTwoProductsAndNoEntitlements();

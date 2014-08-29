@@ -222,7 +222,7 @@ public class GuestIdResource {
             unregisterConsumer(toDelete, principal);
         }
 
-        sink.sendEvent(eventFactory.guestIdDeleted(toDelete));
+        sink.queueEvent(eventFactory.guestIdDeleted(toDelete));
         guestIdCurator.delete(toDelete);
     }
 

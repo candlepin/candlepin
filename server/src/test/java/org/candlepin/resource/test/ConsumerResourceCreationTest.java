@@ -17,6 +17,8 @@ package org.candlepin.resource.test;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
+import com.google.inject.Provider;
+
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.NoAuthPrincipal;
@@ -53,7 +55,6 @@ import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.util.ServiceLevelValidator;
-
 import org.apache.commons.lang.StringUtils;
 import org.junit.Assert;
 import org.junit.Before;
@@ -65,7 +66,6 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -94,7 +94,7 @@ public class ConsumerResourceCreationTest {
     @Mock private ConsumerCurator consumerCurator;
     @Mock private ConsumerTypeCurator consumerTypeCurator;
     @Mock private OwnerCurator ownerCurator;
-    @Mock private EventSink sink;
+    @Mock private Provider<EventSink> sink;
     @Mock private ActivationKeyCurator activationKeyCurator;
     @Mock private ComplianceRules complianceRules;
     @Mock private DeletedConsumerCurator deletedConsumerCurator;

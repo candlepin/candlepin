@@ -398,7 +398,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
             collectEntitlementCertIds(this.childVirtSystem);
         poolManager.regenerateEntitlementCertificates(childVirtSystem, false);
         Mockito.verify(this.eventSink, Mockito.times(oldsIds.size()))
-            .sendEvent(any(Event.class));
+            .queueEvent(any(Event.class));
         Set<EntitlementCertificate> newIds =
             collectEntitlementCertIds(this.childVirtSystem);
         assertFalse(containsAny(transform(oldsIds, invokerTransformer("getId")),

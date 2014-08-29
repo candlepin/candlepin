@@ -83,8 +83,9 @@ public class EventSinkImplTest {
      * @return
      */
     private EventSinkImpl createEventSink(final ClientSessionFactory sessionFactory) {
-        return new EventSinkImpl(factory, mapper, new CandlepinCommonTestConfig()) {
-            @Override
+        return new EventSinkImpl(factory,
+                new HornetqEventDispatcher(mapper, new CandlepinCommonTestConfig())) {
+//            @Override
             protected ClientSessionFactory createClientSessionFactory() {
                 return sessionFactory;
             }
@@ -126,7 +127,7 @@ public class EventSinkImplTest {
         doReturn(content).when(mapper).writeValueAsString(anyObject());
         ArgumentCaptor<ClientMessage> argumentCaptor = ArgumentCaptor
             .forClass(ClientMessage.class);
-        eventSinkImpl.sendEvent(mock(Event.class));
+        eventSinkImpl.queueEvent(mock(Event.class));
         verify(mockClientProducer).send(argumentCaptor.capture());
         assertEquals(content, argumentCaptor.getValue().getBodyBuffer()
             .readString());
@@ -139,7 +140,7 @@ public class EventSinkImplTest {
             .when(mapper).writeValueAsString(any());
         Event event = mock(Event.class);
 
-        eventSinkImpl.sendEvent(event);
+        eventSinkImpl.queueEvent(event);
         verify(mockClientProducer, never()).send(any(ClientMessage.class));
     }
 

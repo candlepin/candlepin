@@ -14,6 +14,8 @@
  */
 package org.candlepin.resource;
 
+import com.google.inject.Provider;
+
 import org.candlepin.audit.Event;
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
@@ -100,10 +102,8 @@ import org.candlepin.sync.Exporter;
 import org.candlepin.util.ServiceLevelValidator;
 import org.candlepin.util.Util;
 import org.candlepin.version.CertVersionConflictException;
-
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
-
 import org.apache.commons.lang.StringUtils;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
@@ -112,7 +112,6 @@ import org.quartz.JobDetail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
-
 import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -127,7 +126,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
-
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -162,7 +160,7 @@ public class ConsumerResource {
     private EntitlementCertServiceAdapter entCertService;
     private UserServiceAdapter userService;
     private I18n i18n;
-    private EventSink sink;
+    private Provider<EventSink> sink;
     private EventFactory eventFactory;
     private EventCurator eventCurator;
     private EventAdapter eventAdapter;
@@ -192,7 +190,7 @@ public class ConsumerResource {
         EntitlementCurator entitlementCurator,
         IdentityCertServiceAdapter identityCertService,
         EntitlementCertServiceAdapter entCertServiceAdapter, I18n i18n,
-        EventSink sink, EventFactory eventFactory, EventCurator eventCurator,
+        Provider<EventSink> sink, EventFactory eventFactory, EventCurator eventCurator,
         EventAdapter eventAdapter, UserServiceAdapter userService,
         Exporter exporter, PoolManager poolManager,
         ConsumerRules consumerRules, OwnerCurator ownerCurator,
@@ -499,7 +497,7 @@ public class ConsumerResource {
             IdentityCertificate idCert = generateIdCert(consumer, false);
             consumer.setIdCert(idCert);
 
-            sink.emitConsumerCreated(consumer);
+            sink.get().emitConsumerCreated(consumer);
 
             handleActivationKeys(consumer, keys);
 
@@ -959,7 +957,7 @@ public class ConsumerResource {
             complianceRules.getStatus(toUpdate, null, false, false);
 
             Event event = eventBuilder.setNewEntity(toUpdate).buildEvent();
-            sink.sendEvent(event);
+            sink.get().queueEvent(event);
         }
         return changesMade;
     }
@@ -1105,7 +1103,7 @@ public class ConsumerResource {
                 if (log.isDebugEnabled()) {
                     log.debug("New guest ID added: " + guestId.getGuestId());
                 }
-                sink.sendEvent(eventFactory.guestIdCreated(guestId));
+                sink.get().queueEvent(eventFactory.guestIdCreated(guestId));
             }
 
             // The guest has not registered. No need to process entitlements.
@@ -1144,7 +1142,7 @@ public class ConsumerResource {
             if (log.isDebugEnabled()) {
                 log.debug("Guest ID removed: " + guestId.getGuestId());
             }
-            sink.sendEvent(eventFactory.guestIdDeleted(guestId));
+            sink.get().queueEvent(eventFactory.guestIdDeleted(guestId));
 
         }
 
@@ -1256,7 +1254,7 @@ public class ConsumerResource {
         Event event = eventFactory.consumerDeleted(toDelete);
         consumerCurator.delete(toDelete);
         identityCertService.deleteIdentityCert(toDelete);
-        sink.sendEvent(event);
+        sink.get().queueEvent(event);
     }
 
     /**
@@ -1871,7 +1869,7 @@ public class ConsumerResource {
             response.addHeader("Content-Disposition", "attachment; filename=" +
                 archive.getName());
 
-            sink.sendEvent(eventFactory.exportCreated(consumer));
+            sink.get().queueEvent(eventFactory.exportCreated(consumer));
             return archive;
         }
         catch (ExportCreationException e) {
@@ -1903,7 +1901,7 @@ public class ConsumerResource {
         IdentityCertificate ic = generateIdCert(c, true);
         c.setIdCert(ic);
         consumerCurator.update(c);
-        this.sink.sendEvent(eventBuilder.setNewEntity(c).buildEvent());
+        this.sink.get().queueEvent(eventBuilder.setNewEntity(c).buildEvent());
         return c;
     }
 
