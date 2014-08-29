@@ -163,6 +163,8 @@ public class EventAdapterImpl implements EventAdapter {
             I18n.marktr("{0} updated the rules in the databse to version {1}"));
         MESSAGES.put("RULESDELETED",
             I18n.marktr("{0} removed the rules from the database"));
+        MESSAGES.put("COMPLIANCECREATED",
+                I18n.marktr("Compliance recalculated for consumer {1}"));
     }
 
 }
