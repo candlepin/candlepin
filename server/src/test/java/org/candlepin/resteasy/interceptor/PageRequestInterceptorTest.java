@@ -17,7 +17,7 @@ package org.candlepin.resteasy.interceptor;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
-import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.paging.PageRequest;
 
 import org.jboss.resteasy.core.ResourceMethod;

@@ -14,7 +14,7 @@
  */
 package org.candlepin.resource.util;
 
-import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.common.exceptions.BadRequestException;
 
 import org.apache.commons.lang.StringUtils;
 

@@ -15,11 +15,11 @@
 package org.candlepin.resteasy.interceptor;
 
 import org.candlepin.auth.Principal;
+import org.candlepin.common.exceptions.BadRequestException;
+import org.candlepin.common.exceptions.CandlepinException;
+import org.candlepin.common.exceptions.IseException;
+import org.candlepin.common.exceptions.UnauthorizedException;
 import org.candlepin.config.Config;
-import org.candlepin.exceptions.BadRequestException;
-import org.candlepin.exceptions.CandlepinException;
-import org.candlepin.exceptions.IseException;
-import org.candlepin.exceptions.UnauthorizedException;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;

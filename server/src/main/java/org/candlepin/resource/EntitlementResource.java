@@ -17,10 +17,10 @@ package org.candlepin.resource;
 import static org.quartz.JobBuilder.*;
 
 import org.candlepin.auth.interceptor.Verify;
+import org.candlepin.common.exceptions.BadRequestException;
+import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.PoolManager;
-import org.candlepin.exceptions.BadRequestException;
-import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;

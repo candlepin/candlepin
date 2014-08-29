@@ -18,8 +18,8 @@ import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
+import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.controller.Entitler;
-import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.model.Entitlement;
 import org.candlepin.pinsetter.core.model.JobStatus;
 

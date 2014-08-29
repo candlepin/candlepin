@@ -19,7 +19,7 @@ import static org.mockito.Mockito.*;
 import static org.quartz.JobBuilder.*;
 
 import org.candlepin.auth.Principal;
-import org.candlepin.exceptions.NotFoundException;
+import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.pinsetter.core.PinsetterJobListener;
 import org.candlepin.pinsetter.core.PinsetterKernel;
 import org.candlepin.pinsetter.core.model.JobStatus;

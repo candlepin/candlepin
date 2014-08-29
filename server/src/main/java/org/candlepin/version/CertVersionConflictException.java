@@ -14,7 +14,7 @@
  */
 package org.candlepin.version;
 
-import org.candlepin.exceptions.ConflictException;
+import org.candlepin.common.exceptions.ConflictException;
 
 /**
  * Throw when a consumer's supported certificate version conflicts with

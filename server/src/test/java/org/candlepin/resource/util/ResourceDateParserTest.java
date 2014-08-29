@@ -16,7 +16,7 @@ package org.candlepin.resource.util;
 
 import static org.junit.Assert.*;
 
-import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.common.exceptions.BadRequestException;
 
 import org.junit.Test;
 

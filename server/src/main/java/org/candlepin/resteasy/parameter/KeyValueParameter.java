@@ -14,7 +14,7 @@
  */
 package org.candlepin.resteasy.parameter;
 
-import org.candlepin.exceptions.CandlepinParamterParseException;
+import org.candlepin.common.exceptions.CandlepinParamterParseException;
 
 /**
  * KeyValueParameter

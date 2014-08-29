@@ -19,7 +19,7 @@ import static org.junit.Assert.*;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.permissions.Permission;
-import org.candlepin.exceptions.NotFoundException;
+import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.EntitlementCertificate;
