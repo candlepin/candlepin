@@ -18,11 +18,14 @@ import org.candlepin.gutterball.model.Consumer;
 import org.candlepin.gutterball.mongodb.MongoConnection;
 
 import com.google.inject.Inject;
+import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
+import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DBObject;
 import com.mongodb.WriteResult;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * A curator that manages DB operations on the 'consumers' collection.
@@ -41,12 +44,41 @@ public class ConsumerCurator extends MongoDBCurator<Consumer> {
     }
 
     public Consumer findByUuid(String uuid) {
-        return findByKey("uuid", uuid);
+        return (Consumer) collection.findOne(new BasicDBObject("uuid", uuid));
     }
 
     public WriteResult setConsumerDeleted(String uuid, Date deleted) {
         DBObject query = new BasicDBObject("uuid", uuid);
         DBObject update = new BasicDBObject("$set", new BasicDBObject("deleted", deleted));
         return collection.update(query, update);
+    }
+
+    public List<String> getUuidsOnDate(Date targetDate, List<String> owners, List<String> uuids) {
+        BasicDBObjectBuilder queryBuilder = BasicDBObjectBuilder.start();
+
+        if (owners != null && !owners.isEmpty()) {
+            queryBuilder.append("owner.key", new BasicDBObject("$in", owners));
+        }
+
+        if (uuids != null && !uuids.isEmpty()) {
+            queryBuilder.append("uuid", new BasicDBObject("$in", uuids));
+        }
+
+        Date toCheck = targetDate == null ? new Date() : targetDate;
+
+        BasicDBObject deletedShouldBeNull = new BasicDBObject("deleted", null);
+        BasicDBObject deletedGreaterThanTarget =
+                new BasicDBObject("deleted", new BasicDBObject("$gt", toCheck));
+
+        BasicDBList or = new BasicDBList();
+        or.add(deletedShouldBeNull);
+        or.add(deletedGreaterThanTarget);
+
+        queryBuilder.append("$or", or);
+
+        // Valid uuids must have been created before/on the target date.
+        queryBuilder.append("created", new BasicDBObject("$lte", toCheck));
+
+        return collection.distinct("uuid", queryBuilder.get());
     }
 }

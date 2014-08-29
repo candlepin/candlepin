@@ -21,6 +21,7 @@ import org.candlepin.gutterball.model.Event;
 import org.candlepin.gutterball.report.Report;
 
 import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 
 import org.apache.commons.lang.RandomStringUtils;
 
@@ -67,7 +68,7 @@ public class TestUtils {
 
         BasicDBObject consumer = new BasicDBObject();
         consumer.append("uuid", consumerUuid);
-        consumer.append("owner", new BasicDBObject("key", owner));
+        consumer.append("owner", createOwner(owner, owner));
 
         BasicDBObject status = new BasicDBObject();
         status.append("date", statusDate);
@@ -77,5 +78,13 @@ public class TestUtils {
         snap.append("consumer", consumer);
         snap.append("status", status);
         return snap;
+    }
+
+    public static DBObject createOwner(String key, String displayName) {
+        BasicDBObject owner = new BasicDBObject("key", key);
+        owner.append("displayName", displayName);
+        owner.append("id", key);
+        owner.append("href", "/owners/" + key);
+        return owner;
     }
 }

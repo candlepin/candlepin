@@ -15,13 +15,15 @@
 
 package org.candlepin.gutterball.report;
 
-import static org.candlepin.gutterball.TestUtils.createComplianceSnapshot;
+import static org.candlepin.gutterball.TestUtils.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.gutterball.EmbeddedMongoRule;
 import org.candlepin.gutterball.curator.ComplianceDataCurator;
+import org.candlepin.gutterball.curator.ConsumerCurator;
 import org.candlepin.gutterball.guice.I18nProvider;
+import org.candlepin.gutterball.model.Consumer;
 
 import com.mongodb.DBObject;
 
@@ -58,10 +60,14 @@ public class ConsumerStatusReportTest {
     private ComplianceDataCurator complianceDataCurator;
     private ConsumerStatusReport report;
 
+    private ConsumerCurator consumerCurator;
+
     @Before
     public void setUp() throws Exception {
         I18nProvider i18nProvider = new I18nProvider(mockReq);
-        complianceDataCurator = new ComplianceDataCurator(serverRule.getMongoConnection());
+
+        consumerCurator = new ConsumerCurator(serverRule.getMongoConnection());
+        complianceDataCurator = new ComplianceDataCurator(serverRule.getMongoConnection(), consumerCurator);
         report = new ConsumerStatusReport(i18nProvider, complianceDataCurator);
 
         // Ensure test data is only created once. Ran into issues when using @BeforeClass
@@ -73,73 +79,201 @@ public class ConsumerStatusReportTest {
     }
 
     @Test
-    public void startDateCanNotBeUsedWithHoursParam() {
-        MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
-        when(params.containsKey("hours")).thenReturn(true);
-        when(params.get("hours")).thenReturn(new ArrayList<String>());
-        when(params.containsKey("start_date")).thenReturn(true);
-
-        validateParams(params, "hours", "Parameter must not be used with start_date.");
-    }
-
-    @Test
-    public void endDateCanNotBeUsedWithHoursParam() {
-        MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
-        when(params.containsKey("hours")).thenReturn(true);
-        when(params.get("hours")).thenReturn(new ArrayList<String>());
-        when(params.containsKey("end_date")).thenReturn(true);
-
-        validateParams(params, "hours", "Parameter must not be used with end_date.");
-    }
-
-    @Test
-    public void hoursParamMustBeAnInteger() {
-        MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
-        when(params.containsKey("hours")).thenReturn(true);
-        when(params.get("hours")).thenReturn(Arrays.asList("24a"));
-
-        validateParams(params, "hours", "Parameter must be an Integer value.");
-    }
-
-    @Test
-    public void endDateMustBeSpecifiedWithStartDate() {
-        MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
-        when(params.containsKey("start_date")).thenReturn(true);
-        when(params.get("start_date")).thenReturn(Arrays.asList("2014-08-16T00:00:00.000+0000"));
-        when(params.containsKey("end_date")).thenReturn(false);
-
-        validateParams(params, "start_date", "Parameter must be used with end_date.");
-    }
-
-    @Test
-    public void startDateMustBeSpecifiedWithEndDate() {
-        MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
-        when(params.containsKey("start_date")).thenReturn(false);
-        when(params.containsKey("end_date")).thenReturn(true);
-        when(params.get("end_date")).thenReturn(Arrays.asList("2014-08-16T00:00:00.000+0000"));
-
-        validateParams(params, "end_date", "Parameter must be used with start_date.");
-    }
-
-    @Test
-    public void testDateFormatValidatedOnStartDate() {
+    public void testDateFormatValidatedOnOnDateParameter() {
         MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
 
-        when(params.containsKey("start_date")).thenReturn(true);
-        when(params.get("start_date")).thenReturn(Arrays.asList("13-21-2010"));
+        when(params.containsKey("on_date")).thenReturn(true);
+        when(params.get("on_date")).thenReturn(Arrays.asList("13-21-2010"));
 
-        validateParams(params, "start_date", "Invalid date string. Expected format: " +
+        validateParams(params, "on_date", "Invalid date string. Expected format: " +
                 ConsumerStatusReport.REPORT_DATE_FORMAT);
     }
 
     @Test
-    public void testDateFormatValidatedOnEndDate() {
-        MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
-        when(params.containsKey("end_date")).thenReturn(true);
-        when(params.get("end_date")).thenReturn(Arrays.asList("2010-18-4"));
+    public void testReportOnTargetDate() {
+        Calendar cal = Calendar.getInstance();
+        cal.set(Calendar.YEAR, 2012);
+        cal.set(Calendar.MONTH, Calendar.APRIL);
+        cal.set(Calendar.DAY_OF_MONTH, 12);
 
-        validateParams(params, "end_date", "Invalid date string. Expected format: " +
-                ConsumerStatusReport.REPORT_DATE_FORMAT);
+        MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
+        String onDateString = formatDate(cal.getTime());
+        when(params.containsKey("on_date")).thenReturn(true);
+        when(params.getFirst("on_date")).thenReturn(onDateString);
+        when(params.get("on_date")).thenReturn(Arrays.asList(onDateString));
+
+        MultiRowResult<DBObject> results = report.run(params);
+        assertEquals(2, results.size());
+
+        List<String> foundConsumers = new ArrayList<String>();
+        for (DBObject snap : results) {
+            foundConsumers.add((String) ((DBObject) snap.get("consumer")).get("uuid"));
+        }
+        assertTrue(foundConsumers.containsAll(Arrays.asList("c1", "c2")));
+    }
+
+    @Test
+    public void testGetAllLatestStatusReports() {
+        MultiRowResult<DBObject> results = report.run(mock(MultivaluedMap.class));
+
+        // c1 was deleted before the report date.
+        List<String> expectedConsumerUuids = Arrays.asList("c2", "c3", "c4");
+        assertEquals(expectedConsumerUuids.size(), results.size());
+
+        // Make sure that both consumer instances are found and that the correct
+        // snapshots are used.
+        List<String> consumerUuids = new ArrayList<String>();
+        for (DBObject snap : results) {
+            DBObject consumer = (DBObject) snap.get("consumer");
+            consumerUuids.add((String) consumer.get("uuid"));
+        }
+        assertTrue(consumerUuids.containsAll(expectedConsumerUuids));
+    }
+
+    @Test
+    public void testDeletedConsumerNotIncludedInLatestResults() {
+        MultiRowResult<DBObject> results = report.run(mock(MultivaluedMap.class));
+
+        List<String> expectedConsumerUuids = Arrays.asList("c2", "c3", "c4");
+        assertEquals(expectedConsumerUuids.size(), results.size());
+
+        // Make sure that both consumer instances are found and that the correct
+        // snapshots are used.
+        List<String> consumerUuids = new ArrayList<String>();
+        for (DBObject snap : results) {
+            DBObject consumer = (DBObject) snap.get("consumer");
+            consumerUuids.add((String) consumer.get("uuid"));
+        }
+        assertTrue(consumerUuids.containsAll(expectedConsumerUuids));
+    }
+
+    @Test
+    public void testDeletedConsumerIncludedIfDeletedAfterTargetDate() {
+        // May, June, July 10 -- 2014
+        Calendar cal = Calendar.getInstance();
+        cal.set(Calendar.YEAR, 2012);
+        cal.set(Calendar.MONTH, Calendar.MAY);
+        cal.set(Calendar.DAY_OF_MONTH, 12);
+
+        MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
+        when(params.containsKey("on_date")).thenReturn(true);
+        String targetDateString = formatDate(cal.getTime());
+        when(params.get("on_date")).thenReturn(Arrays.asList(targetDateString));
+        when(params.getFirst("on_date")).thenReturn(targetDateString);
+
+        MultiRowResult<DBObject> results = report.run(params);
+
+        List<String> expectedConsumerUuids = Arrays.asList("c1", "c2", "c3", "c4");
+        assertEquals(expectedConsumerUuids.size(), results.size());
+
+        // Make sure that both consumer instances are found and that the correct
+        // snapshots are used.
+        List<String> consumerUuids = new ArrayList<String>();
+        for (DBObject snap : results) {
+            DBObject consumer = (DBObject) snap.get("consumer");
+            consumerUuids.add((String) consumer.get("uuid"));
+        }
+        assertTrue(consumerUuids.containsAll(expectedConsumerUuids));
+    }
+
+    @Test
+    public void testGetByOwner() {
+        MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
+        when(params.containsKey("owner")).thenReturn(true);
+        when(params.get("owner")).thenReturn(Arrays.asList("o2"));
+
+        MultiRowResult<DBObject> results = report.run(params);
+        assertEquals(1, results.size());
+        DBObject r = results.get(0);
+        DBObject consumer = (DBObject) r.get("consumer");
+        DBObject owner = (DBObject) consumer.get("owner");
+        assertEquals("o2", owner.get("key"));
+        assertEquals("c3", consumer.get("uuid"));
+    }
+
+    @Test
+    public void testGetByConsumerUuid() {
+        MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
+        when(params.containsKey("consumer_uuid")).thenReturn(true);
+        when(params.get("consumer_uuid")).thenReturn(Arrays.asList("c1", "c2"));
+
+        MultiRowResult<DBObject> results = report.run(params);
+        // C1 should get filtered out since it was deleted before the target date.
+        assertEquals(1, results.size());
+        DBObject row = results.get(0);
+        DBObject consumer = (DBObject) row.get("consumer");
+        assertEquals("c2", consumer.get("uuid"));
+    }
+
+    @Test
+    public void testGetByStatus() {
+        MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
+        when(params.containsKey("status")).thenReturn(true);
+        when(params.get("status")).thenReturn(Arrays.asList("partial"));
+
+        MultiRowResult<DBObject> results = report.run(params);
+        assertEquals(1, results.size());
+        DBObject consumer = (DBObject) results.get(0).get("consumer");
+        assertEquals("c3", consumer.get("uuid"));
+    }
+
+    @Test
+    public void testReportCurrentlyRegisteredConsumersThatAreValid() {
+
+    }
+
+    private void setupTestData() {
+        Calendar cal = Calendar.getInstance();
+
+        // Set up deleted consumer test data
+        cal.set(Calendar.YEAR, 2012);
+        cal.set(Calendar.MONTH, Calendar.MARCH);
+        cal.set(Calendar.DAY_OF_MONTH, 10);
+
+        // Consumer created
+        createInitialConsumer(cal.getTime(), "c1", "o1", "invalid");
+
+        // Simulate status change
+        cal.set(Calendar.MONTH, Calendar.MAY);
+        createSnapshot(cal.getTime(), "c1", "o1", "valid");
+
+        // Consumer was deleted
+        cal.set(Calendar.MONTH, Calendar.JUNE);
+        setConsumerDeleted(cal.getTime(), "c1", "o1");
+
+        cal.set(Calendar.MONTH, Calendar.APRIL);
+        createInitialConsumer(cal.getTime(), "c2", "o1", "invalid");
+
+        cal.set(Calendar.MONTH, Calendar.MAY);
+        createInitialConsumer(cal.getTime(), "c3", "o2", "invalid");
+        cal.set(Calendar.MONTH, Calendar.JUNE);
+        createSnapshot(cal.getTime(), "c3", "o2", "partial");
+
+        cal.set(Calendar.MONTH, Calendar.MAY);
+        createInitialConsumer(cal.getTime(), "c4", "o3", "invalid");
+        cal.set(Calendar.MONTH, Calendar.JUNE);
+        createSnapshot(cal.getTime(), "c4", "o3", "partial");
+        cal.set(Calendar.MONTH, Calendar.JULY);
+        createSnapshot(cal.getTime(), "c4", "o3", "valid");
+    }
+
+    private void createInitialConsumer(Date createdOn, String uuid, String owner, String status) {
+        createSnapshot(createdOn, uuid, owner, status);
+        consumerCurator.insert(new Consumer(uuid, createdOn, createOwner(owner, owner)));
+    }
+
+    private void createSnapshot(Date date, String uuid, String owner, String status) {
+        complianceDataCurator.insert(createComplianceSnapshot(date, uuid, owner, status));
+    }
+
+    private String formatDate(Date date) {
+        SimpleDateFormat formatter = new SimpleDateFormat(ConsumerStatusReport.REPORT_DATE_FORMAT);
+        return formatter.format(date);
+    }
+
+    private void setConsumerDeleted(Date deletedOn, String uuid, String owner) {
+        createSnapshot(deletedOn, uuid, owner, "invalid");
+        consumerCurator.setConsumerDeleted(uuid, deletedOn);
     }
 
     private void validateParams(MultivaluedMap<String, String> params, String expectedParam,
@@ -152,179 +286,5 @@ public class ConsumerStatusReportTest {
             assertEquals(expectedParam, e.getParamName());
             assertEquals(expectedParam + ": " + expectedMessage, e.getMessage());
         }
-    }
-
-    @Test
-    public void testGetStartEndDate() {
-
-        Calendar cal = Calendar.getInstance();
-        cal.set(Calendar.YEAR, 2004);
-        Date startDate = cal.getTime();
-
-        cal.set(Calendar.YEAR, 2010);
-        Date endDate = cal.getTime();
-
-        MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
-        String startDateString = formatDate(startDate);
-        when(params.containsKey("start_date")).thenReturn(true);
-        when(params.getFirst("start_date")).thenReturn(startDateString);
-        when(params.get("start_date")).thenReturn(Arrays.asList(startDateString));
-
-        String endDateString = formatDate(endDate);
-        when(params.containsKey("end_date")).thenReturn(true);
-        when(params.getFirst("end_date")).thenReturn(endDateString);
-        when(params.get("end_date")).thenReturn(Arrays.asList(endDateString));
-
-        MultiRowResult<DBObject> results = report.run(params);
-        assertEquals(2, results.size());
-
-        List<String> foundConsumers = new ArrayList<String>();
-        for (DBObject snap : results) {
-            foundConsumers.add((String) ((DBObject) snap.get("consumer")).get("uuid"));
-        }
-        assertTrue(foundConsumers.containsAll(Arrays.asList("c3", "c4")));
-    }
-
-    @Test
-    public void testGetStartEndDateSameDate() {
-        DBObject snapshot = complianceDataCurator.all().next();
-        Date target = (Date) ((DBObject) snapshot.get("status")).get("date");
-        String targetDate = formatDate(target);
-
-        String consumerUuid = (String) ((DBObject) snapshot.get("consumer")).get("uuid");
-
-        MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
-        when(params.containsKey("start_date")).thenReturn(true);
-        when(params.getFirst("start_date")).thenReturn(targetDate);
-        when(params.get("start_date")).thenReturn(Arrays.asList(targetDate));
-
-        when(params.containsKey("end_date")).thenReturn(true);
-        when(params.getFirst("end_date")).thenReturn(targetDate);
-        when(params.get("end_date")).thenReturn(Arrays.asList(targetDate));
-
-        MultiRowResult<DBObject> results = report.run(params);
-        assertEquals(1, results.size());
-
-        DBObject result = results.get(0);
-        DBObject consumer = (DBObject) result.get("consumer");
-        assertEquals(consumerUuid, consumer.get("uuid"));
-    }
-
-    @Test
-    public void testGetByOwner() {
-        MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
-        when(params.containsKey("start_date")).thenReturn(false);
-        when(params.containsKey("end_date")).thenReturn(false);
-
-        when(params.containsKey("owner")).thenReturn(true);
-        when(params.get("owner")).thenReturn(Arrays.asList("o3"));
-
-        MultiRowResult<DBObject> results = report.run(params);
-        assertEquals(1, results.size());
-        DBObject r = results.get(0);
-        DBObject consumer = (DBObject) r.get("consumer");
-        DBObject owner = (DBObject) consumer.get("owner");
-        assertEquals("o3", owner.get("key"));
-    }
-
-    @Test
-    public void testGetByConsumerUuid() {
-        MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
-        when(params.containsKey("start_date")).thenReturn(false);
-        when(params.containsKey("end_date")).thenReturn(false);
-
-        when(params.containsKey("consumer_uuid")).thenReturn(true);
-        when(params.get("consumer_uuid")).thenReturn(Arrays.asList("c1"));
-
-        MultiRowResult<DBObject> results = report.run(params);
-        assertEquals(1, results.size());
-        DBObject row = results.get(0);
-        DBObject consumer = (DBObject) row.get("consumer");
-        assertEquals("c1", consumer.get("uuid"));
-    }
-
-    @Test
-    public void testGetByStatus() {
-        MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
-        when(params.containsKey("start_date")).thenReturn(false);
-        when(params.containsKey("end_date")).thenReturn(false);
-        when(params.containsKey("status")).thenReturn(true);
-        when(params.get("status")).thenReturn(Arrays.asList("valid"));
-
-        MultiRowResult<DBObject> results = report.run(params);
-        assertEquals(2, results.size());
-        for (DBObject r : results) {
-            DBObject status = (DBObject) r.get("status");
-            assertEquals("valid", status.get("status"));
-        }
-    }
-
-    @Test
-    public void testGetAllLatestStatusReports() {
-        MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
-        when(params.containsKey("start_date")).thenReturn(false);
-        when(params.containsKey("end_date")).thenReturn(false);
-
-        MultiRowResult<DBObject> results = report.run(params);
-        assertEquals(4, results.size());
-
-        // Make sure that both consumer instances are found and that the correct
-        // snapshots are used.
-        List<String> consumerUuids = new ArrayList<String>();
-        for (DBObject snap : results) {
-            DBObject consumer = (DBObject) snap.get("consumer");
-            consumerUuids.add((String) consumer.get("uuid"));
-        }
-        assertTrue(consumerUuids.containsAll(Arrays.asList("c1", "c2", "c3", "c4")));
-    }
-
-    @Test
-    public void testGetByHours() {
-        MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
-
-        String hours = "5";
-        when(params.containsKey("hours")).thenReturn(true);
-        when(params.getFirst("hours")).thenReturn(hours);
-        when(params.get("hours")).thenReturn(Arrays.asList(hours));
-
-        MultiRowResult<DBObject> results = report.run(params);
-        assertEquals(1, results.size());
-        DBObject row = results.get(0);
-        DBObject consumer = (DBObject) row.get("consumer");
-        DBObject status = (DBObject) row.get("status");
-        assertEquals("c1", consumer.get("uuid"));
-        assertEquals("invalid", status.get("status"));
-    }
-
-    private void setupTestData() {
-        Calendar cal = Calendar.getInstance();
-
-        // Created within the last 4 hours.
-        cal.add(Calendar.HOUR_OF_DAY, -4);
-        complianceDataCurator.insert(createComplianceSnapshot(cal.getTime(), "c1", "o1", "invalid"));
-
-        cal.set(Calendar.DAY_OF_MONTH, -2);
-        complianceDataCurator.insert(createComplianceSnapshot(cal.getTime(), "c1", "o1", "partial"));
-
-        // Values for c1 and c2 are set to the same so that we
-        // can verify that the latest snapshot is being for c1.
-        cal.add(Calendar.MINUTE, 4);
-        Date expectedDate = cal.getTime();
-        complianceDataCurator.insert(createComplianceSnapshot(expectedDate, "c1", "o2", "valid"));
-        complianceDataCurator.insert(createComplianceSnapshot(expectedDate, "c2", "o2", "valid"));
-
-        cal.set(Calendar.YEAR, 2008);
-        cal.set(Calendar.MONTH, 8);
-        cal.set(Calendar.DAY_OF_MONTH, 18);
-
-        complianceDataCurator.insert(createComplianceSnapshot(cal.getTime(), "c3", "o2", "invalid"));
-        cal.set(Calendar.DAY_OF_MONTH, 19);
-        Date time = cal.getTime();
-        complianceDataCurator.insert(createComplianceSnapshot(time, "c4", "o3", "invalid"));
-    }
-
-    private String formatDate(Date date) {
-        SimpleDateFormat formatter = new SimpleDateFormat(ConsumerStatusReport.REPORT_DATE_FORMAT);
-        return formatter.format(date);
     }
 }

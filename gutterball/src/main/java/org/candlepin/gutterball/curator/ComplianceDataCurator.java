@@ -34,9 +34,12 @@ public class ComplianceDataCurator extends MongoDBCurator<BasicDBObject> {
 
     public static final String COLLECTION = "compliance";
 
+    private ConsumerCurator consumerCurator;
+
     @Inject
-    public ComplianceDataCurator(MongoConnection mongo) {
+    public ComplianceDataCurator(MongoConnection mongo, ConsumerCurator consumerCurator) {
         super(BasicDBObject.class, mongo);
+        this.consumerCurator = consumerCurator;
     }
 
     @Override
@@ -44,38 +47,34 @@ public class ComplianceDataCurator extends MongoDBCurator<BasicDBObject> {
         return COLLECTION;
     }
 
-    public Iterable<DBObject> getComplianceForTimespan(Date startDate, Date endDate,
-            List<String> consumerIds, List<String> owners, List<String> statusFilers) {
+    public Iterable<DBObject> getComplianceOnDate(Date targetDate, List<String> consumerIds,
+            List<String> owners, List<String> statusFilers) {
 
-        // Build the match statement
+        // Anything added to the main query will filter the initial result set. This should
+        // include anything that helps narrow down the query of the latest snapshots reported
+        // and consists of properties that do not change across snapshots.
         BasicDBObjectBuilder queryBuilder = BasicDBObjectBuilder.start();
-        if (consumerIds != null && !consumerIds.isEmpty()) {
-            queryBuilder.add("consumer.uuid", new BasicDBObject("$in", consumerIds));
-        }
+
+        queryBuilder.add("consumer.uuid", new BasicDBObject("$in",
+                consumerCurator.getUuidsOnDate(targetDate, owners, consumerIds)));
 
         if (owners != null && !owners.isEmpty()) {
             queryBuilder.add("consumer.owner.key", new BasicDBObject("$in", owners));
         }
 
+        queryBuilder.add("status.date", new BasicDBObject("$lte", targetDate));
+
+        // The filter aggregate is a post result filter that is applied to the set of
+        // snapshots returned by the query. The post filter should include any properties that
+        // are changable, and are shared amongst a snapshot record. For example, status will change
+        // often over time.
+        //
+        // This post filtering is required since the initial query could match on a snapshot
+        // that was not the consumer's latest snapshot record.
+        BasicDBObjectBuilder filterBuilder = BasicDBObjectBuilder.start();
         if (statusFilers != null && !statusFilers.isEmpty()) {
-            queryBuilder.add("status.status", new BasicDBObject("$in", statusFilers));
+            filterBuilder.add("status.status", new BasicDBObject("$in", statusFilers));
         }
-
-        BasicDBObject statusDateCriteria = new BasicDBObject();
-        if (endDate == null) {
-            // Search all latest status records.
-            statusDateCriteria.append("$lte", startDate);
-        }
-        else {
-            boolean flip = startDate.after(endDate);
-            String startDateFilter = flip ? "$lte" : "$gte";
-            String endDateFilter = flip ? "$gte" : "$lte";
-
-            statusDateCriteria.append(startDateFilter, startDate);
-            statusDateCriteria.append(endDateFilter, endDate);
-        }
-
-        queryBuilder.add("status.date", statusDateCriteria);
 
         // Build the projections
         BasicDBObject projections = new BasicDBObject();
@@ -89,8 +88,8 @@ public class ComplianceDataCurator extends MongoDBCurator<BasicDBObject> {
         groups.put("consumer", new BasicDBObject("$first", "$consumer"));
         groups.put("status", new BasicDBObject("$first", "$status"));
 
-
-        DBObject match = new BasicDBObject("$match", queryBuilder.get());
+        DBObject query = new BasicDBObject("$match", queryBuilder.get());
+        DBObject postResultFilter = new BasicDBObject("$match", filterBuilder.get());
         DBObject group = new BasicDBObject("$group", groups);
         DBObject sort = new BasicDBObject("$sort", new BasicDBObject("status.date", -1));
 
@@ -98,13 +97,9 @@ public class ComplianceDataCurator extends MongoDBCurator<BasicDBObject> {
         // DBObject limit = new BasicDBObject("$limit", 10);
         // DBObject skip = new BasicDBObject("$skip", 1);
 
-        AggregationOutput output = collection.aggregate(Arrays.asList(match, project, sort, group));
+        // NOTE: The order of the aggregate actions is very important.
+        AggregationOutput output = collection.aggregate(Arrays.asList(
+            query, project, sort, group, postResultFilter /* skip, limit */));
         return output.results();
-    }
-
-    public Iterable<DBObject> getComplianceForAllConsumers(
-            List<String> consumerIds, List<String> ownerFilters,
-            List<String> statusFilters) {
-        return this.getComplianceForTimespan(new Date(), null, consumerIds, ownerFilters, statusFilters);
     }
 }

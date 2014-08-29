@@ -23,7 +23,6 @@ import com.mongodb.DBObject;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -61,13 +60,6 @@ public class ConsumerStatusReport extends Report<MultiRowResult<DBObject>> {
         );
 
         addParameter(
-            builder.init("hours", i18n.tr("The number of hours to filter on (used indepent of date range)."))
-                   .mustBeInteger()
-                   .mustNotHave("start_date", "end_date")
-                   .getParameter()
-        );
-
-        addParameter(
             builder.init("owner", i18n.tr("The Owner key(s) to filter on."))
                 .multiValued()
                 .getParameter());
@@ -79,20 +71,11 @@ public class ConsumerStatusReport extends Report<MultiRowResult<DBObject>> {
         );
 
         addParameter(
-            builder.init("start_date", i18n.tr("The start date to filter on (used with {0}).", "end_date"))
-                .mustNotHave("hours")
-                .mustHave("end_date")
+            builder.init("on_date", i18n.tr("The date to filter on. Defaults to NOW."))
                 .mustBeDate(REPORT_DATE_FORMAT)
                 .getParameter()
         );
 
-        addParameter(
-            builder.init("end_date", i18n.tr("The end date to filter on (used with {0})", "start_date"))
-                .mustNotHave("hours")
-                .mustHave("start_date")
-                .mustBeDate(REPORT_DATE_FORMAT)
-                .getParameter()
-        );
     }
 
     @Override
@@ -102,33 +85,13 @@ public class ConsumerStatusReport extends Report<MultiRowResult<DBObject>> {
         MultiRowResult<DBObject> result = new MultiRowResult<DBObject>();
 
         List<String> consumerIds = queryParams.get("consumer_uuid");
-        List<String> statusFilers = queryParams.get("status");
+        List<String> statusFilters = queryParams.get("status");
         List<String> ownerFilters = queryParams.get("owner");
 
-        Iterable<DBObject> complianceSnapshots = null;
-
-        // Determine if we should lookup for the last x hours.
-        if (queryParams.containsKey("hours")) {
-            Calendar cal = Calendar.getInstance();
-            Date startDate = cal.getTime();
-
-            int hours = Integer.parseInt(queryParams.getFirst("hours"));
-            cal.add(Calendar.HOUR, hours * -1);
-            Date endDate = cal.getTime();
-
-            complianceSnapshots = complianceDataCurator.getComplianceForTimespan(startDate, endDate,
-                    consumerIds, ownerFilters, statusFilers);
-        }
-        else if (queryParams.containsKey("start_date") && queryParams.containsKey("end_date")) {
-            complianceSnapshots = complianceDataCurator.getComplianceForTimespan(
-                parseDate(queryParams.getFirst("start_date")), parseDate(queryParams.getFirst("end_date")),
-                consumerIds, ownerFilters, statusFilers);
-        }
-        else {
-            complianceSnapshots = complianceDataCurator.getComplianceForAllConsumers(consumerIds,
-                ownerFilters, statusFilers);
-        }
-
+        Date targetDate = queryParams.containsKey("on_date") ?
+            parseDate(queryParams.getFirst("on_date")) : new Date();
+        Iterable<DBObject> complianceSnapshots = complianceDataCurator.getComplianceOnDate(
+            targetDate, consumerIds, ownerFilters, statusFilters);
         for (DBObject snapshot : complianceSnapshots) {
             result.add(snapshot);
         }

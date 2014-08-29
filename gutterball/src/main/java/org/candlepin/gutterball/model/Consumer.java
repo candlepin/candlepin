@@ -27,11 +27,31 @@ import java.util.Date;
  */
 public class Consumer extends BasicDBObject {
 
+    private static final String UUID_FIELD = "uuid";
+    private static final String CREATED_FIELD = "created";
+    private static final String OWNER_FIELD = "owner";
+    private static final String DELETED_FIELD = "deleted";
+
+    /**
+     * Required by Mongo Java Driver.
+     */
+    public Consumer() {
+        super();
+    }
+
     public Consumer(String uuid, Date created, DBObject owner) {
-        put("uuid", uuid);
-        put("created", created);
-        put("owner", owner);
-        put("deleted", null);
+        put(UUID_FIELD, uuid);
+        put(CREATED_FIELD, created);
+        put(OWNER_FIELD, owner);
+        put(DELETED_FIELD, null);
+    }
+
+    public String getUUID() {
+        return getString(UUID_FIELD);
+    }
+
+    public Date getDeleted() {
+        return getDate(DELETED_FIELD);
     }
 
 }

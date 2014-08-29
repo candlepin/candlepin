@@ -39,7 +39,7 @@ public class ConsumerHandler implements EventHandler {
     @Override
     public void handleCreated(Event event) {
         BasicDBObject newConsumer = (BasicDBObject) event.getNewEntity();
-        Consumer toAdd = new Consumer(event.getConsumerId(),
+        Consumer toAdd = new Consumer(newConsumer.getString("uuid"),
                 newConsumer.getDate("created"),
                 (DBObject) newConsumer.get("owner"));
         consumerCurator.insert(toAdd);
@@ -52,6 +52,7 @@ public class ConsumerHandler implements EventHandler {
 
     @Override
     public void handleDeleted(Event event) {
-        consumerCurator.setConsumerDeleted(event.getConsumerId(), event.getTimestamp());
+        BasicDBObject targetConsumer = (BasicDBObject) event.getOldEntity();
+        consumerCurator.setConsumerDeleted(targetConsumer.getString("uuid"), event.getTimestamp());
     }
 }
