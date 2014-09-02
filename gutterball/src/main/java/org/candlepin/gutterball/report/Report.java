@@ -32,6 +32,9 @@ import javax.ws.rs.core.MultivaluedMap;
  *
  */
 public abstract class Report<R extends ReportResult> {
+
+    protected static final String REPORT_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
+
     protected I18n i18n;
     protected String key;
     protected String description;

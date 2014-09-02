@@ -12,27 +12,25 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-
 package org.candlepin.gutterball.report;
 
 import org.candlepin.gutterball.curator.ComplianceDataCurator;
 import org.candlepin.gutterball.guice.I18nProvider;
 
 import com.google.inject.Inject;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
 import javax.ws.rs.core.MultivaluedMap;
 
 /**
- * ConsumerStatusListReport
+ * ConsumerTrendReport
  */
-public class ConsumerStatusReport extends Report<MultiRowResult<DBObject>> {
+public class ConsumerTrendReport extends Report<StatusTrendReportResult> {
 
     private ComplianceDataCurator complianceDataCurator;
 
@@ -42,9 +40,9 @@ public class ConsumerStatusReport extends Report<MultiRowResult<DBObject>> {
      * @param description
      */
     @Inject
-    public ConsumerStatusReport(I18nProvider i18nProvider, ComplianceDataCurator curator) {
-        super(i18nProvider, "consumer_status_report",
-                i18nProvider.get().tr("List the status of all consumers"));
+    public ConsumerTrendReport(I18nProvider i18nProvider, ComplianceDataCurator curator) {
+        super(i18nProvider, "consumer_trend_report",
+                i18nProvider.get().tr("Lists the status of each consumer over a date range"));
         this.complianceDataCurator = curator;
     }
 
@@ -63,38 +61,60 @@ public class ConsumerStatusReport extends Report<MultiRowResult<DBObject>> {
                 .multiValued()
                 .getParameter());
 
+        /*
+         * Do we want to query for consumers who have been "yellow" at any point in the date range?
         addParameter(
             builder.init("status", i18n.tr("The subscription status to filter on."))
                 .multiValued()
                 .getParameter()
-        );
+        );*/
 
         addParameter(
-            builder.init("on_date", i18n.tr("The date to filter on. Defaults to NOW."))
-                .mustBeDate(REPORT_DATE_FORMAT)
-                .getParameter()
-        );
+            builder.init("hours", i18n.tr("The number of hours to filter on (used indepent of date range)."))
+                   .mustBeInteger()
+                   .mustNotHave("start_date", "end_date")
+                   .getParameter());
 
+        addParameter(
+            builder.init("start_date", i18n.tr("The start date to filter on (used with {0}).", "end_date"))
+                .mustNotHave("hours")
+                .mustHave("end_date")
+                .mustBeDate(REPORT_DATE_FORMAT)
+                .getParameter());
+
+        addParameter(
+            builder.init("end_date", i18n.tr("The end date to filter on (used with {0})", "start_date"))
+                .mustNotHave("hours")
+                .mustHave("start_date")
+                .mustBeDate(REPORT_DATE_FORMAT)
+                .getParameter());
     }
 
     @Override
-    protected MultiRowResult<DBObject> execute(MultivaluedMap<String, String> queryParams) {
-        // At this point we would execute a lookup against the DW data store to formulate
-        // the report result set.
-        MultiRowResult<DBObject> result = new MultiRowResult<DBObject>();
+    protected StatusTrendReportResult execute(MultivaluedMap<String, String> queryParams) {
 
         List<String> consumerIds = queryParams.get("consumer_uuid");
-        List<String> statusFilters = queryParams.get("status");
+        //List<String> statusFilters = queryParams.get("status"); // TODO delete if not needed
         List<String> ownerFilters = queryParams.get("owner");
 
-        Date targetDate = queryParams.containsKey("on_date") ?
-            parseDate(queryParams.getFirst("on_date")) : new Date();
-        DBCursor complianceSnapshots = complianceDataCurator.getComplianceOnDate(
-            targetDate, consumerIds, ownerFilters, statusFilters);
-        while (complianceSnapshots.hasNext()) {
-            result.add(complianceSnapshots.next());
+        Date startDate = null;
+        Date endDate = null;
+        // Determine if we should lookup for the last x hours.
+        if (queryParams.containsKey("hours")) {
+            Calendar cal = Calendar.getInstance();
+            endDate = cal.getTime();
+
+            int hours = Integer.parseInt(queryParams.getFirst("hours"));
+            cal.add(Calendar.HOUR, hours * -1);
+            startDate = cal.getTime();
         }
-        return result;
+        else if (queryParams.containsKey("start_date") && queryParams.containsKey("end_date")) {
+            startDate = parseDate(queryParams.getFirst("start_date"));
+            endDate = parseDate(queryParams.getFirst("end_date"));
+        }
+
+        return complianceDataCurator.getFullComplianceForTimespan(startDate, endDate,
+                consumerIds, ownerFilters);
     }
 
     private Date parseDate(String date) {
