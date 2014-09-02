@@ -19,8 +19,6 @@ import org.candlepin.gutterball.guice.I18nProvider;
 
 import com.google.inject.Inject;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -61,14 +59,6 @@ public class ConsumerTrendReport extends Report<StatusTrendReportResult> {
                 .multiValued()
                 .getParameter());
 
-        /*
-         * Do we want to query for consumers who have been "yellow" at any point in the date range?
-        addParameter(
-            builder.init("status", i18n.tr("The subscription status to filter on."))
-                .multiValued()
-                .getParameter()
-        );*/
-
         addParameter(
             builder.init("hours", i18n.tr("The number of hours to filter on (used indepent of date range)."))
                    .mustBeInteger()
@@ -94,7 +84,6 @@ public class ConsumerTrendReport extends Report<StatusTrendReportResult> {
     protected StatusTrendReportResult execute(MultivaluedMap<String, String> queryParams) {
 
         List<String> consumerIds = queryParams.get("consumer_uuid");
-        //List<String> statusFilters = queryParams.get("status"); // TODO delete if not needed
         List<String> ownerFilters = queryParams.get("owner");
 
         Date startDate = null;
@@ -115,19 +104,5 @@ public class ConsumerTrendReport extends Report<StatusTrendReportResult> {
 
         return complianceDataCurator.getFullComplianceForTimespan(startDate, endDate,
                 consumerIds, ownerFilters);
-    }
-
-    private Date parseDate(String date) {
-        if (date == null || date.isEmpty()) {
-            return null;
-        }
-
-        try {
-            SimpleDateFormat formatter = new SimpleDateFormat(REPORT_DATE_FORMAT);
-            return formatter.parse(date);
-        }
-        catch (ParseException e) {
-            throw new RuntimeException("Could not parse date parameter.");
-        }
     }
 }

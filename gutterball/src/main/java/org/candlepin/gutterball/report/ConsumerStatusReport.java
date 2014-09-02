@@ -22,8 +22,6 @@ import com.google.inject.Inject;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
@@ -95,19 +93,5 @@ public class ConsumerStatusReport extends Report<MultiRowResult<DBObject>> {
             result.add(complianceSnapshots.next());
         }
         return result;
-    }
-
-    private Date parseDate(String date) {
-        if (date == null || date.isEmpty()) {
-            return null;
-        }
-
-        try {
-            SimpleDateFormat formatter = new SimpleDateFormat(REPORT_DATE_FORMAT);
-            return formatter.parse(date);
-        }
-        catch (ParseException e) {
-            throw new RuntimeException("Could not parse date parameter.");
-        }
     }
 }

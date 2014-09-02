@@ -121,7 +121,7 @@ public class ComplianceDataCurator extends MongoDBCurator<BasicDBObject> {
 
     public Iterable<DBObject> getComplianceForTimespan(Date startDate,
             Date endDate, List<String> consumerIds, List<String> owners) {
-     // Anything added to the main query will filter the initial result set. This should
+        // Anything added to the main query will filter the initial result set. This should
         // include anything that helps narrow down the query of the latest snapshots reported
         // and consists of properties that do not change across snapshots.
         BasicDBObjectBuilder queryBuilder = BasicDBObjectBuilder.start();
@@ -140,18 +140,6 @@ public class ComplianceDataCurator extends MongoDBCurator<BasicDBObject> {
             queryBuilder.add("status.date", new BasicDBObject("$lte", endDate));
         }
 
-        // The filter aggregate is a post result filter that is applied to the set of
-        // snapshots returned by the query. The post filter should include any properties that
-        // are changable, and are shared amongst a snapshot record. For example, status will change
-        // often over time.
-        //
-        // This post filtering is required since the initial query could match on a snapshot
-        // that was not the consumer's latest snapshot record.
-        //BasicDBObjectBuilder filterBuilder = BasicDBObjectBuilder.start();
-        //if (statusFilers != null && !statusFilers.isEmpty()) {
-        //    filterBuilder.add("status.status", new BasicDBObject("$in", statusFilers));
-        //}
-
         // Build the projections
         BasicDBObject projections = new BasicDBObject();
         projections.put("consumer", 1);
@@ -159,23 +147,10 @@ public class ComplianceDataCurator extends MongoDBCurator<BasicDBObject> {
         projections.put("_id", 0);
         BasicDBObject project = new BasicDBObject("$project", projections);
 
-        // Build the result groups.
-        /*BasicDBObject groups = new BasicDBObject("_id", "$consumer.uuid");
-        groups.put("consumer", new BasicDBObject("$first", "$consumer"));
-        groups.put("status", new BasicDBObject("$first", "$status"));*/
-
         DBObject query = new BasicDBObject("$match", queryBuilder.get());
-        //DBObject postResultFilter = new BasicDBObject("$match", filterBuilder.get());
-        //DBObject group = new BasicDBObject("$group", groups);
         DBObject sort = new BasicDBObject("$sort", new BasicDBObject("status.date", 1));
 
-        // TODO Support paging.
-        // DBObject limit = new BasicDBObject("$limit", 10);
-        // DBObject skip = new BasicDBObject("$skip", 1);
-
         // NOTE: The order of the aggregate actions is very important.
-        //AggregationOutput output = collection.aggregate(Arrays.asList(
-        //    query, project, sort, group, postResultFilter /* skip, limit */));
         AggregationOutput output = collection.aggregate(Arrays.asList(
             query, project, sort/*, group, postResultFilter, skip, limit */));
         return output.results();
