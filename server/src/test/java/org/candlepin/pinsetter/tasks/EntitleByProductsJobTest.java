@@ -54,7 +54,7 @@ public class EntitleByProductsJobTest {
     public void bindByProductsSetup() {
         String[] pids = {"pid1", "pid2", "pid3"};
 
-        JobDetail detail = EntitleByProductsJob.bindByProducts(pids, consumerUuid, null);
+        JobDetail detail = EntitleByProductsJob.bindByProducts(pids, consumerUuid, null, null);
         assertNotNull(detail);
         String[] resultpids = (String[]) detail.getJobDataMap().get("product_ids");
         assertEquals("pid2", resultpids[1]);
@@ -66,17 +66,17 @@ public class EntitleByProductsJobTest {
     public void bindByProductsExec() throws JobExecutionException {
         String[] pids = {"pid1", "pid2", "pid3"};
 
-        JobDetail detail = EntitleByProductsJob.bindByProducts(pids, consumerUuid, null);
+        JobDetail detail = EntitleByProductsJob.bindByProducts(pids, consumerUuid, null, null);
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
 
         List<Entitlement> ents = new ArrayList<Entitlement>();
         when(e.bindByProducts(eq(pids), eq(consumerUuid),
-            eq((Date) null))).thenReturn(ents);
+            eq((Date) null), null)).thenReturn(ents);
 
         EntitleByProductsJob job = new EntitleByProductsJob(e, null);
         job.execute(ctx);
-        verify(e).bindByProducts(eq(pids), eq(consumerUuid), eq((Date) null));
+        verify(e).bindByProducts(eq(pids), eq(consumerUuid), eq((Date) null), null);
         verify(e).sendEvents(eq(ents));
     }
 
@@ -91,7 +91,7 @@ public class EntitleByProductsJobTest {
     @Test
     public void serializeJobDataMapForProducts() throws IOException {
         String[] pids = {"pid1", "pid2", "pid3"};
-        JobDetail detail = EntitleByProductsJob.bindByProducts(pids, consumerUuid, null);
+        JobDetail detail = EntitleByProductsJob.bindByProducts(pids, consumerUuid, null, null);
         serialize(detail.getJobDataMap());
     }
 

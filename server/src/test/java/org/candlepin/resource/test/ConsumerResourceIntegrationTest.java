@@ -142,7 +142,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     public void testGetCerts() {
 
         consumerResource.bind(consumer.getUuid(), pool.getId().toString(),
-            null, 1, null, null, false, null);
+            null, 1, null, null, false, null, null);
         List<EntitlementCertificate> serials = consumerResource
             .getEntitlementCertificates(consumer.getUuid(), null);
         assertEquals(1, serials.size());
@@ -151,13 +151,13 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     @Test
     public void testGetSerialFiltering() {
         consumerResource.bind(consumer.getUuid(), pool.getId().toString(),
-            null, 1, null, null, false, null);
+            null, 1, null, null, false, null, null);
         consumerResource.bind(consumer.getUuid(), pool.getId().toString(),
-            null, 1, null, null, false, null);
+            null, 1, null, null, false, null, null);
         consumerResource.bind(consumer.getUuid(), pool.getId().toString(),
-            null, 1, null, null, false, null);
+            null, 1, null, null, false, null, null);
         consumerResource.bind(consumer.getUuid(), pool.getId().toString(),
-            null, 1, null, null, false, null);
+            null, 1, null, null, false, null, null);
         List<EntitlementCertificate> certificates = consumerResource
             .getEntitlementCertificates(consumer.getUuid(), null);
         assertEquals(4, certificates.size());
@@ -287,7 +287,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
         Response rsp = consumerResource.bind(
             consumer.getUuid(), pool.getId().toString(), null, 1, null,
-            null, false, null);
+            null, false, null, null);
 
         List<Entitlement> resultList = (List<Entitlement>) rsp.getEntity();
 
@@ -337,7 +337,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     @Test
     public void unbindBySerialWithExistingCertificateShouldPass() {
         consumerResource.bind(consumer.getUuid(), pool.getId().toString(),
-            null, 1, null, null, false, null);
+            null, 1, null, null, false, null, null);
         List<EntitlementCertificate> serials = consumerResource
             .getEntitlementCertificates(consumer.getUuid(), null);
         assertEquals(1, serials.size());
@@ -351,11 +351,11 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     @Test(expected = NotFoundException.class)
     public void testCannotGetAnotherConsumersCerts() {
         consumerResource.bind(consumer.getUuid(), pool.getId().toString(),
-            null, 1, null, null, false, null);
+            null, 1, null, null, false, null, null);
         consumerResource.bind(consumer.getUuid(), pool.getId().toString(),
-            null, 1, null, null, false, null);
+            null, 1, null, null, false, null, null);
         consumerResource.bind(consumer.getUuid(), pool.getId().toString(),
-            null, 1, null, null, false, null);
+            null, 1, null, null, false, null, null);
 
         Consumer evilConsumer = TestUtil.createConsumer(standardSystemType,
             owner);
@@ -370,11 +370,11 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     @Test
     public void testCanGetOwnedConsumersCerts() {
         consumerResource.bind(consumer.getUuid(), pool.getId().toString(),
-            null, 1, null, null, false, null);
+            null, 1, null, null, false, null, null);
         consumerResource.bind(consumer.getUuid(), pool.getId().toString(),
-            null, 1, null, null, false, null);
+            null, 1, null, null, false, null, null);
         consumerResource.bind(consumer.getUuid(), pool.getId().toString(),
-            null, 1, null, null, false, null);
+            null, 1, null, null, false, null, null);
 
         setupPrincipal(new ConsumerPrincipal(consumer));
 
@@ -462,11 +462,11 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     @Test
     public void consumerShouldSeeOwnEntitlements() {
         consumerResource.bind(consumer.getUuid(), pool.getId().toString(),
-            null, 1, null, null, false, null);
+            null, 1, null, null, false, null, null);
         consumerResource.bind(consumer.getUuid(), pool.getId().toString(),
-            null, 1, null, null, false, null);
+            null, 1, null, null, false, null, null);
         consumerResource.bind(consumer.getUuid(), pool.getId().toString(),
-            null, 1, null, null, false, null);
+            null, 1, null, null, false, null, null);
 
         setupPrincipal(new ConsumerPrincipal(consumer));
         securityInterceptor.enable();
@@ -482,11 +482,11 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         consumerCurator.create(evilConsumer);
 
         consumerResource.bind(consumer.getUuid(), pool.getId().toString(),
-            null, 1, null, null, false, null);
+            null, 1, null, null, false, null, null);
         consumerResource.bind(consumer.getUuid(), pool.getId().toString(),
-            null, 1, null, null, false, null);
+            null, 1, null, null, false, null, null);
         consumerResource.bind(evilConsumer.getUuid(), pool.getId().toString(),
-            null, 1, null, null, false, null);
+            null, 1, null, null, false, null, null);
 
         setupPrincipal(new ConsumerPrincipal(evilConsumer));
         securityInterceptor.enable();
@@ -497,11 +497,11 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     @Test(expected = NotFoundException.class)
     public void ownerShouldNotSeeOtherOwnerEntitlements() {
         consumerResource.bind(consumer.getUuid(), pool.getId().toString(),
-            null, 1, null, null, false, null);
+            null, 1, null, null, false, null, null);
         consumerResource.bind(consumer.getUuid(), pool.getId().toString(),
-            null, 1, null, null, false, null);
+            null, 1, null, null, false, null, null);
         consumerResource.bind(consumer.getUuid(), pool.getId().toString(),
-            null, 1, null, null, false, null);
+            null, 1, null, null, false, null, null);
 
         Owner evilOwner = ownerCurator.create(new Owner("another-owner"));
         ownerCurator.create(evilOwner);
@@ -515,11 +515,11 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     @Test
     public void ownerShouldSeeOwnEntitlements() {
         consumerResource.bind(consumer.getUuid(), pool.getId().toString(),
-            null, 1, null, null, false, null);
+            null, 1, null, null, false, null, null);
         consumerResource.bind(consumer.getUuid(), pool.getId().toString(),
-            null, 1, null, null, false, null);
+            null, 1, null, null, false, null, null);
         consumerResource.bind(consumer.getUuid(), pool.getId().toString(),
-            null, 1, null, null, false, null);
+            null, 1, null, null, false, null, null);
 
         securityInterceptor.enable();
 
@@ -580,7 +580,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
         Response rsp = consumerResource.bind(
             consumer.getUuid(), pool.getId().toString(), null, 1, null,
-            null, false, null);
+            null, false, null, null);
 
         List<Entitlement> resultList = (List<Entitlement>) rsp.getEntity();
         Entitlement ent = resultList.get(0);
@@ -596,7 +596,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     @Test(expected = BadRequestException.class)
     public void testInvalidProductId() {
         consumerResource.bind(consumer.getUuid(), "JarjarBinks", null,
-            null, null, null, false, null);
+            null, null, null, false, null, null);
     }
 
     private static class ProductCertCreationModule extends AbstractModule {

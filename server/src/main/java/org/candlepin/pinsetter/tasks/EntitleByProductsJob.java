@@ -32,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -49,6 +50,7 @@ public class EntitleByProductsJob extends KingpinJob {
         consumerCurator = c;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void toExecute(JobExecutionContext ctx) throws JobExecutionException {
         try {
@@ -56,7 +58,9 @@ public class EntitleByProductsJob extends KingpinJob {
             String uuid = (String) map.get(JobStatus.TARGET_ID);
             Date entitleDate = (Date) map.get("entitle_date");
             String[] prodIds = (String[]) map.get("product_ids");
-            List<Entitlement> ents = entitler.bindByProducts(prodIds, uuid, entitleDate);
+            HashSet<String> fromPools = (HashSet<String>) map.get("from_pools");
+
+            List<Entitlement> ents = entitler.bindByProducts(prodIds, uuid, entitleDate, fromPools);
             entitler.sendEvents(ents);
             ctx.setResult("Entitlements created for owner");
         }
@@ -70,12 +74,13 @@ public class EntitleByProductsJob extends KingpinJob {
     }
 
     public static JobDetail bindByProducts(String[] prodIds, String uuid,
-        Date entitleDate) {
+        Date entitleDate, HashSet<String> fromPools) {
         JobDataMap map = new JobDataMap();
         map.put("product_ids", prodIds);
         map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.CONSUMER);
         map.put(JobStatus.TARGET_ID, uuid);
         map.put("entitle_date", entitleDate);
+        map.put("from_pools", fromPools);
 
         JobDetail detail = newJob(EntitleByProductsJob.class)
             .withIdentity("bind_by_products_" + Util.generateUUID())

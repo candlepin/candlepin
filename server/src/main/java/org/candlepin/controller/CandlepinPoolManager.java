@@ -450,13 +450,13 @@ public class CandlepinPoolManager implements PoolManager {
     @Override
     @Transactional
     public List<Entitlement> entitleByProducts(Consumer consumer,
-        String[] productIds, Date entitleDate)
+        String[] productIds, Date entitleDate, HashSet<String> fromPools)
         throws EntitlementRefusedException {
         Owner owner = consumer.getOwner();
         List<Entitlement> entitlements = new LinkedList<Entitlement>();
 
         List<PoolQuantity> bestPools = getBestPools(consumer, productIds,
-            entitleDate, owner, null);
+            entitleDate, owner, null, fromPools);
 
         if (bestPools == null) {
             throw new RuntimeException("No entitlements for products: " +
@@ -491,7 +491,7 @@ public class CandlepinPoolManager implements PoolManager {
     @Override
     @Transactional
     public List<Entitlement> entitleByProductsForHost(Consumer guest,
-        Consumer host, Date entitleDate)
+        Consumer host, Date entitleDate, HashSet<String> fromPools)
         throws EntitlementRefusedException {
         List<Entitlement> entitlements = new LinkedList<Entitlement>();
         if (!host.getOwner().equals(guest.getOwner())) {
@@ -507,7 +507,7 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         List<PoolQuantity> bestPools = getBestPoolsForHost(guest, host,
-            entitleDate, owner, null);
+            entitleDate, owner, null, fromPools);
 
         if (bestPools == null) {
             throw new RuntimeException("No entitlements for host: " + host.getUuid());
@@ -538,7 +538,7 @@ public class CandlepinPoolManager implements PoolManager {
     @Override
     public List<PoolQuantity> getBestPoolsForHost(Consumer guest,
         Consumer host, Date entitleDate, Owner owner,
-        String serviceLevelOverride)
+        String serviceLevelOverride, HashSet<String> fromPools)
         throws EntitlementRefusedException {
 
         ValidationResult failedResult = null;
@@ -590,6 +590,9 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         for (Pool pool : allOwnerPools) {
+            if (fromPools != null && !fromPools.isEmpty() && !fromPools.contains(pool.getId())) {
+                continue;
+            }
             boolean providesProduct = false;
             // Would parse the int here, but it can be 'unlimited'
             // and we only need to check that it's non-zero
@@ -638,7 +641,7 @@ public class CandlepinPoolManager implements PoolManager {
     @Override
     public List<PoolQuantity> getBestPools(Consumer consumer,
         String[] productIds, Date entitleDate, Owner owner,
-        String serviceLevelOverride)
+        String serviceLevelOverride, HashSet<String> fromPools)
         throws EntitlementRefusedException {
 
 
@@ -674,6 +677,9 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         for (Pool pool : allOwnerPools) {
+            if (fromPools != null && !fromPools.isEmpty() && !fromPools.contains(pool.getId())) {
+                continue;
+            }
             boolean providesProduct = false;
             // If We want to complete partial stacks if possible,
             // even if they do not provide any products

@@ -1448,7 +1448,8 @@ public class ConsumerResource {
         @QueryParam("email") String email,
         @QueryParam("email_locale") String emailLocale,
         @QueryParam("async") @DefaultValue("false") boolean async,
-        @QueryParam("entitle_date") String entitleDateStr) {
+        @QueryParam("entitle_date") String entitleDateStr,
+        @QueryParam("from_pool") HashSet<String> fromPools) {
 
         // Check that only one query param was set:
         if (poolIdString != null && productIds != null && productIds.length > 0) {
@@ -1465,6 +1466,11 @@ public class ConsumerResource {
         if (poolIdString != null && entitleDateStr != null) {
             throw new BadRequestException(
                 i18n.tr("Cannot bind by multiple parameters."));
+        }
+
+        if (fromPools != null && !fromPools.isEmpty() && poolIdString != null) {
+            throw new BadRequestException(
+                    i18n.tr("Cannot bind by multiple parameters."));
         }
 
         // TODO: really should do this in a before we get to this call
@@ -1509,7 +1515,7 @@ public class ConsumerResource {
             }
             else {
                 detail = EntitleByProductsJob.bindByProducts(productIds,
-                        consumerUuid, entitleDate);
+                        consumerUuid, entitleDate, fromPools);
             }
 
             // events will be triggered by the job
@@ -1528,7 +1534,7 @@ public class ConsumerResource {
         }
         else {
             try {
-                entitlements = entitler.bindByProducts(productIds, consumer, entitleDate);
+                entitlements = entitler.bindByProducts(productIds, consumer, entitleDate, fromPools);
             }
             catch (ForbiddenException fe) {
                 throw fe;

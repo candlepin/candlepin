@@ -520,7 +520,7 @@ public class PoolManagerTest {
             .thenReturn(bestPools);
 
         List<Entitlement> e = manager.entitleByProducts(TestUtil.createConsumer(o),
-            new String[] { product.getId() }, now);
+            new String[] { product.getId() }, now, null);
 
         assertNotNull(e);
         assertEquals(e.size(), 1);
@@ -719,7 +719,7 @@ public class PoolManagerTest {
 
         // Make the call but provide a null array of product IDs (simulates healing):
         manager.entitleByProducts(TestUtil.createConsumer(o),
-            null, now);
+            null, now, null);
 
         verify(autobindRules).selectBestPools(any(Consumer.class), eq(installedPids),
             any(List.class), eq(mockCompliance), any(String.class),

@@ -36,6 +36,7 @@ import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -120,9 +121,9 @@ public class Entitler {
     }
 
     public List<Entitlement> bindByProducts(String[] productIds,
-        String consumeruuid, Date entitleDate) {
+        String consumeruuid, Date entitleDate, HashSet<String> fromPools) {
         Consumer c = consumerCurator.findByUuid(consumeruuid);
-        return bindByProducts(productIds, c, entitleDate);
+        return bindByProducts(productIds, c, entitleDate, fromPools);
     }
 
     /**
@@ -136,8 +137,8 @@ public class Entitler {
      * @return List of Entitlements
      */
     public List<Entitlement> bindByProducts(String[] productIds,
-        Consumer consumer, Date entitleDate) {
-        return bindByProducts(productIds, consumer, entitleDate, false);
+        Consumer consumer, Date entitleDate, HashSet<String> fromPools) {
+        return bindByProducts(productIds, consumer, entitleDate, false, fromPools);
     }
 
     /**
@@ -151,7 +152,7 @@ public class Entitler {
      * @return List of Entitlements
      */
     public List<Entitlement> bindByProducts(String[] productIds,
-        Consumer consumer, Date entitleDate, boolean force) {
+        Consumer consumer, Date entitleDate, boolean force, HashSet<String> fromPools) {
         // If the consumer is a guest, and has a host, try to heal the host first
         if (consumer.hasFact("virt.uuid")) {
             String guestUuid = consumer.getFact("virt.uuid");
@@ -161,7 +162,7 @@ public class Entitler {
                     host.getUuid() + " for guest with UUID " + consumer.getUuid());
                 try {
                     List<Entitlement> hostEntitlements =
-                        poolManager.entitleByProductsForHost(consumer, host, entitleDate);
+                        poolManager.entitleByProductsForHost(consumer, host, entitleDate, fromPools);
                     log.debug("Granted host {} entitlements", hostEntitlements.size());
                     sendEvents(hostEntitlements);
                 }
@@ -177,8 +178,9 @@ public class Entitler {
 
         // Attempt to create entitlements:
         try {
+            // the pools are only used to bind the guest
             List<Entitlement> entitlements = poolManager.entitleByProducts(
-                consumer, productIds, entitleDate);
+                consumer, productIds, entitleDate, fromPools);
             log.debug("Created entitlements: " + entitlements);
             return entitlements;
         }
@@ -205,7 +207,7 @@ public class Entitler {
             Owner owner = consumer.getOwner();
 
             result = poolManager.getBestPools(
-                consumer, null, null, owner, serviceLevelOverride);
+                consumer, null, null, owner, serviceLevelOverride, null);
             log.debug("Created Pool Quantity list: " + result);
         }
         catch (EntitlementRefusedException e) {

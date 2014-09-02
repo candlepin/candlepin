@@ -363,7 +363,7 @@ public class ConsumerResourceTest {
             when(c.getOwner()).thenReturn(o);
             when(sa.hasUnacceptedSubscriptionTerms(eq(o))).thenReturn(false);
             when(cc.verifyAndLookupConsumer(eq("fakeConsumer"))).thenReturn(c);
-            when(e.bindByProducts(eq(prodIds), eq(c), eq((Date) null)))
+            when(e.bindByProducts(eq(prodIds), eq(c), eq((Date) null), null))
                 .thenThrow(new RuntimeException());
 
             ConsumerResource cr = new ConsumerResource(cc, null,
@@ -371,7 +371,7 @@ public class ConsumerResourceTest {
                 null, null, null, null, null, e, null, null, null, null,
                 new CandlepinCommonTestConfig(), null, null, null, null, null,
                 mockedServiceLevelValidator);
-            cr.bind("fakeConsumer", null, prodIds, null, null, null, false, null);
+            cr.bind("fakeConsumer", null, prodIds, null, null, null, false, null, null);
         }
         catch (Throwable t) {
             fail("Runtime exception should be caught in ConsumerResource.bind");
@@ -401,8 +401,8 @@ public class ConsumerResourceTest {
             mockedServiceLevelValidator);
         String dtStr = "2011-09-26T18:10:50.184081+00:00";
         Date dt = ResourceDateParser.parseDateString(dtStr);
-        cr.bind("fakeConsumer", null, null, null, null, null, false, dtStr);
-        verify(e).bindByProducts(eq((String []) null), eq(c), eq(dt));
+        cr.bind("fakeConsumer", null, null, null, null, null, false, dtStr, null);
+        verify(e).bindByProducts(eq((String []) null), eq(c), eq(dt), null);
     }
 
     @Test(expected = NotFoundException.class)
@@ -434,7 +434,7 @@ public class ConsumerResourceTest {
             mockedServiceLevelValidator);
 
         consumerResource.bind("fake uuid", "fake pool uuid",
-            new String[]{"12232"}, 1, null, null, false, null);
+            new String[]{"12232"}, 1, null, null, false, null, null);
     }
 
 
@@ -450,7 +450,7 @@ public class ConsumerResourceTest {
             mockedServiceLevelValidator);
 
         consumerResource.bind("notarealuuid", "fake pool uuid", null, null, null,
-            null, false, null);
+            null, false, null, null);
     }
 
     /**

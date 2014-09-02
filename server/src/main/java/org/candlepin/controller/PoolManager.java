@@ -29,6 +29,7 @@ import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.js.pool.PoolUpdate;
 
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -92,11 +93,11 @@ public interface PoolManager {
      * @throws EntitlementRefusedException if entitlement is refused
      */
     List<Entitlement> entitleByProducts(Consumer consumer, String[] productIds,
-        Date entitleDate)
+        Date entitleDate, HashSet<String> fromPools)
         throws EntitlementRefusedException;
 
     List<PoolQuantity> getBestPools(Consumer consumer, String[] productIds,
-        Date entitleDate, Owner owner, String serviceLevelOverride)
+        Date entitleDate, Owner owner, String serviceLevelOverride, HashSet<String> fromPools)
         throws EntitlementRefusedException;
 
     Pool find(String poolId);
@@ -218,7 +219,7 @@ public interface PoolManager {
      */
     List<PoolQuantity> getBestPoolsForHost(Consumer guest,
         Consumer host, Date entitleDate, Owner owner,
-        String serviceLevelOverride) throws EntitlementRefusedException;
+        String serviceLevelOverride, HashSet<String> fromPools) throws EntitlementRefusedException;
 
     /**
      * @param consumer
@@ -228,6 +229,6 @@ public interface PoolManager {
      * @throws EntitlementRefusedException if unable to bind
      */
     List<Entitlement> entitleByProductsForHost(Consumer consumer,
-        Consumer host, Date entitleDate)
+        Consumer host, Date entitleDate, HashSet<String> fromPools)
         throws EntitlementRefusedException;
 }

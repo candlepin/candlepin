@@ -90,7 +90,7 @@ public class HealEntireOrgJob extends UniqueByOwnerJob {
     @Transactional
     private void healSingleConsumer(Consumer consumer, Date date) {
         List<Entitlement> ents = entitler.bindByProducts(null, consumer,
-                date, true);
+                date, true, null);
         entitler.sendEvents(ents);
     }
 

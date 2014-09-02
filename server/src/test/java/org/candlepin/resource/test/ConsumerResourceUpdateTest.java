@@ -441,7 +441,7 @@ public class ConsumerResourceUpdateTest {
             createConsumerWithGuests("Guest 1"));
 
         verify(poolManager).revokeEntitlement(eq(entitlement));
-        verify(entitler).bindByProducts(null, guest1, null);
+        verify(entitler).bindByProducts(null, guest1, null, null);
     }
 
     @Test

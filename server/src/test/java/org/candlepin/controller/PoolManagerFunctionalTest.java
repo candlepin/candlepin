@@ -154,14 +154,14 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         assertEquals(Long.valueOf(5), monitoringPool.getQuantity());
         for (int i = 0; i < 5; i++) {
             List<Entitlement> entitlements = poolManager.entitleByProducts(parentSystem,
-                new String [] {monitoring.getId()}, new Date());
+                new String [] {monitoring.getId()}, new Date(), null);
             assertEquals(1, entitlements.size());
         }
 
         // The cert should specify 5 monitoring entitlements, taking a 6th should fail:
         try {
             poolManager.entitleByProducts(parentSystem, new String[] {monitoring.getId()},
-                new Date());
+                new Date(), null);
             fail();
         }
         // With criteria filtered pools we end up with a RuntimeException
@@ -176,7 +176,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     @Test
     public void testRevocation() throws Exception {
         Entitlement e = poolManager.entitleByProducts(parentSystem,
-            new String[] {monitoring.getId()}, new Date()).get(0);
+            new String[] {monitoring.getId()}, new Date(), null).get(0);
         poolManager.revokeEntitlement(e);
 
         List<Entitlement> entitlements = entitlementCurator.listByConsumer(parentSystem);
@@ -201,7 +201,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     public void testRegenerateEntitlementCertificatesWithSingleEntitlement()
         throws Exception {
         this.entitlementCurator.refresh(poolManager.entitleByProducts(this.childVirtSystem,
-            new String[] {provisioning.getId()}, new Date()).get(0));
+            new String[] {provisioning.getId()}, new Date(), null).get(0));
         regenerateECAndAssertNotSameCertificates();
     }
 
@@ -209,9 +209,9 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     public void testRegenerateEntitlementCertificatesWithMultipleEntitlements()
         throws EntitlementRefusedException {
         this.entitlementCurator.refresh(poolManager.entitleByProducts(
-            this.childVirtSystem, new String[] {provisioning.getId()}, new Date()).get(0));
+            this.childVirtSystem, new String[] {provisioning.getId()}, new Date(), null).get(0));
         this.entitlementCurator.refresh(poolManager.entitleByProducts(this.childVirtSystem,
-            new String[] {monitoring.getId()}, new Date()).get(0));
+            new String[] {monitoring.getId()}, new Date(), null).get(0));
         regenerateECAndAssertNotSameCertificates();
     }
 
@@ -251,11 +251,11 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         // but it hasn't been saved yet). Since getting the pool ordering right is tricky
         // inside an entitleByProducts call, we do it in two singular calls here.
         poolManager.entitleByProducts(this.parentSystem, new String[] {"modifier"},
-            new Date());
+            new Date(), null);
 
         try {
             poolManager.entitleByProducts(this.parentSystem,
-                new String[] {PRODUCT_VIRT_HOST}, new Date());
+                new String[] {PRODUCT_VIRT_HOST}, new Date(), null);
         }
         catch (EntityNotFoundException e) {
             throw e;
