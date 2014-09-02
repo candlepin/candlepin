@@ -16,15 +16,15 @@ package org.candlepin.pinsetter.tasks;
 
 import static org.quartz.impl.matchers.NameMatcher.*;
 
+import org.candlepin.audit.EventSink;
+
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.PinsetterJobListener;
 import org.candlepin.pinsetter.core.model.JobStatus;
-
 import com.google.inject.Inject;
 import com.google.inject.persist.UnitOfWork;
-
 import org.quartz.Job;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
@@ -35,7 +35,6 @@ import org.quartz.Trigger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
-
 import javax.persistence.EntityExistsException;
 import javax.persistence.PersistenceException;
 
@@ -50,6 +49,7 @@ public abstract class KingpinJob implements Job {
     private static Logger log = LoggerFactory.getLogger(KingpinJob.class);
     @Inject protected UnitOfWork unitOfWork;
     @Inject protected Config config;
+    @Inject private EventSink eventSink;
     protected static String prefix = "job";
 
     @Override
@@ -72,6 +72,8 @@ public abstract class KingpinJob implements Job {
         boolean startedUow = startUnitOfWork();
         try {
             toExecute(context);
+
+            eventSink.sendEvents();
         }
         catch (PersistenceException e) {
             // Multiple refreshpools running at once can cause the following:
@@ -106,14 +108,17 @@ public abstract class KingpinJob implements Job {
         }
     }
 
+    private void dispatchEvents() {
+
+    }
+
     /**
      * Method for actual execution, execute handles unitOfWork for us
      * @param context
      * @throws JobExecutionException if there's a problem executing the job
      */
-    public void toExecute(JobExecutionContext context)
-        throws JobExecutionException {
-    }
+    public abstract void toExecute(JobExecutionContext context)
+        throws JobExecutionException;
 
     public static JobStatus scheduleJob(JobCurator jobCurator,
             Scheduler scheduler, JobDetail detail,

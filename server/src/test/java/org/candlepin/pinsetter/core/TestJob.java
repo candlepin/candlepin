@@ -28,7 +28,7 @@ public class TestJob extends KingpinJob {
     private boolean ran = false;
 
     @Override
-    public void toExecute(JobExecutionContext arg0In)
+    public void toExecute(JobExecutionContext context)
         throws JobExecutionException {
         ran = true;
     }
