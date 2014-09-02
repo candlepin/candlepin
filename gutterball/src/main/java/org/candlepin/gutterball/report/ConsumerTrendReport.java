@@ -28,7 +28,7 @@ import javax.ws.rs.core.MultivaluedMap;
 /**
  * ConsumerTrendReport
  */
-public class ConsumerTrendReport extends Report<StatusTrendReportResult> {
+public class ConsumerTrendReport extends Report<ConsumerTrendReportResult> {
 
     private ComplianceDataCurator complianceDataCurator;
 
@@ -81,7 +81,7 @@ public class ConsumerTrendReport extends Report<StatusTrendReportResult> {
     }
 
     @Override
-    protected StatusTrendReportResult execute(MultivaluedMap<String, String> queryParams) {
+    protected ConsumerTrendReportResult execute(MultivaluedMap<String, String> queryParams) {
 
         List<String> consumerIds = queryParams.get("consumer_uuid");
         List<String> ownerFilters = queryParams.get("owner");

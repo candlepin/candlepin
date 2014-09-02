@@ -19,9 +19,9 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 /**
- * StatusTrendReportResult map of consumer uuid -> collection of compliance data
+ * ConsumerTrendReportResult map of consumer uuid -> collection of compliance data
  */
-public class StatusTrendReportResult extends BasicDBObject implements ReportResult {
+public class ConsumerTrendReportResult extends BasicDBObject implements ReportResult {
 
     public BasicDBObject add(String key, DBObject value) {
         BasicDBList appendTo = getList(key);
@@ -34,7 +34,7 @@ public class StatusTrendReportResult extends BasicDBObject implements ReportResu
         return this;
     }
 
-    protected BasicDBList getList(String key) {
+    public BasicDBList getList(String key) {
         return (BasicDBList) get(key);
     }
 }

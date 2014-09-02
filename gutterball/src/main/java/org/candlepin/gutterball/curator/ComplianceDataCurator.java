@@ -15,7 +15,7 @@
 package org.candlepin.gutterball.curator;
 
 import org.candlepin.gutterball.mongodb.MongoConnection;
-import org.candlepin.gutterball.report.StatusTrendReportResult;
+import org.candlepin.gutterball.report.ConsumerTrendReportResult;
 
 import com.google.inject.Inject;
 import com.mongodb.BasicDBObject;
@@ -131,13 +131,17 @@ public class ComplianceDataCurator extends MongoDBCurator<BasicDBObject> {
             queryBuilder.add("consumer.owner.key", new BasicDBObject("$in", owners));
         }
 
+        BasicDBObjectBuilder dateQueryBuilder = BasicDBObjectBuilder.start();
         if (startDate != null) {
             // Use greater than (not equals) because we've already looked up status for <= the start date
             // $gte will open the door for duplicates
-            queryBuilder.add("status.date", new BasicDBObject("$gt", endDate));
+            dateQueryBuilder.add("$gt", startDate);
         }
         if (endDate != null) {
-            queryBuilder.add("status.date", new BasicDBObject("$lte", endDate));
+            dateQueryBuilder.add("$lte", endDate);
+        }
+        if (startDate != null || endDate != null) {
+            queryBuilder.add("status.date", dateQueryBuilder.get());
         }
 
         // Build the projections
@@ -156,12 +160,14 @@ public class ComplianceDataCurator extends MongoDBCurator<BasicDBObject> {
         return output.results();
     }
 
-    public StatusTrendReportResult getFullComplianceForTimespan(Date startDate,
+    // NOTE: the compliance data returned from getComplianceForTimespan must match the format
+    // of getComplianceOnDate
+    public ConsumerTrendReportResult getFullComplianceForTimespan(Date startDate,
             Date endDate, List<String> consumerIds, List<String> owners) {
         // If the start date is null, we can return all status updates.
         // Otherwise, we need to get every consumers
         // latest compliance info at that point.
-        StatusTrendReportResult result = new StatusTrendReportResult();
+        ConsumerTrendReportResult result = new ConsumerTrendReportResult();
         if (startDate != null) {
             // Don't restrict by status here, it may not match to begin with, we only care if it matches
             for (DBObject dbo : getComplianceOnDate(startDate, consumerIds, owners, null)) {
@@ -169,8 +175,10 @@ public class ComplianceDataCurator extends MongoDBCurator<BasicDBObject> {
             }
         }
 
+        System.out.println("timeframe: " + startDate + " : " + endDate);
         for (DBObject dbo : getComplianceForTimespan(startDate, endDate, consumerIds, owners)) {
             result.add(getUuidFromCompliance(dbo), dbo);
+            System.out.println("Added another status for: " + getUuidFromCompliance(dbo));
         }
         return result;
     }
