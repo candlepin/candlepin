@@ -14,7 +14,7 @@
  */
 package org.candlepin.policy.js;
 
-import org.candlepin.exceptions.IseException;
+import org.candlepin.common.exceptions.IseException;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;

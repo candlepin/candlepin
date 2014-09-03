@@ -15,7 +15,7 @@
 package org.candlepin.resteasy.interceptor;
 
 import org.candlepin.auth.interceptor.SecurityHole;
-import org.candlepin.exceptions.NotFoundException;
+import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 

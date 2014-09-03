@@ -16,7 +16,7 @@ package org.candlepin.resteasy.parameter;
 
 import static org.junit.Assert.*;
 
-import org.candlepin.exceptions.CandlepinParamterParseException;
+import org.candlepin.common.exceptions.CandlepinParamterParseException;
 
 import org.junit.Test;
 

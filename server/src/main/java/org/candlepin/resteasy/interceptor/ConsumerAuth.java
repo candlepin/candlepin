@@ -15,7 +15,7 @@
 package org.candlepin.resteasy.interceptor;
 
 import org.candlepin.auth.ConsumerPrincipal;
-import org.candlepin.exceptions.GoneException;
+import org.candlepin.common.exceptions.GoneException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.DeletedConsumerCurator;

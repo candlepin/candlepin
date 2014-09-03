@@ -14,9 +14,9 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.exceptions.BadRequestException;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;

@@ -14,7 +14,7 @@
  */
 package org.candlepin.resource;
 
-import org.candlepin.exceptions.ServiceUnavailableException;
+import org.candlepin.common.exceptions.ServiceUnavailableException;
 import org.candlepin.model.StatisticCurator;
 
 import com.google.inject.Inject;

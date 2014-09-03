@@ -15,11 +15,13 @@
 
 package org.candlepin.gutterball.report;
 
+import org.candlepin.common.exceptions.BadRequestException;
+
 /**
  * Thrown when a parameter validation fails when a report is run.
  *
  */
-public class ParameterValidationException extends RuntimeException {
+public class ParameterValidationException extends BadRequestException {
 
     private String paramName;
 

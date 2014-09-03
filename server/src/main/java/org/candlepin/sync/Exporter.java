@@ -14,6 +14,7 @@
  */
 package org.candlepin.sync;
 
+import org.candlepin.common.util.VersionUtil;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.guice.PrincipalProvider;
@@ -36,7 +37,6 @@ import org.candlepin.pki.PKIUtility;
 import org.candlepin.policy.js.export.ExportRules;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
-import org.candlepin.util.VersionUtil;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;

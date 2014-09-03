@@ -14,9 +14,9 @@
  */
 package org.candlepin.resource;
 
-import org.candlepin.exceptions.BadRequestException;
-import org.candlepin.exceptions.IseException;
-import org.candlepin.exceptions.NotFoundException;
+import org.candlepin.common.exceptions.BadRequestException;
+import org.candlepin.common.exceptions.IseException;
+import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.model.JobCurator;
 import org.candlepin.model.SchedulerStatus;
 import org.candlepin.pinsetter.core.PinsetterException;

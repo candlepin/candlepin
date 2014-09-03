@@ -87,7 +87,7 @@ public class ImporterTest {
         tempDir = new SyncUtils(config).makeTempDir("ImporterTest");
 
         PrintStream ps = new PrintStream(new File(this.getClass()
-            .getClassLoader().getResource("candlepin_info.properties").toURI()));
+            .getClassLoader().getResource("version.properties").toURI()));
         ps.println("version=0.0.3");
         ps.println("release=1");
         ps.close();
@@ -556,7 +556,7 @@ public class ImporterTest {
     @After
     public void tearDown() throws Exception {
         PrintStream ps = new PrintStream(new File(this.getClass()
-            .getClassLoader().getResource("candlepin_info.properties").toURI()));
+            .getClassLoader().getResource("version.properties").toURI()));
         ps.println("version=${version}");
         ps.println("release=${release}");
         ps.close();

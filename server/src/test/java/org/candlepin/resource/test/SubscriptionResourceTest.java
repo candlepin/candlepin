@@ -16,7 +16,7 @@ package org.candlepin.resource.test;
 
 import static org.mockito.Mockito.*;
 
-import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.resource.SubscriptionResource;

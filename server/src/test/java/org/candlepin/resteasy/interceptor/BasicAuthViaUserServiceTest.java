@@ -21,7 +21,7 @@ import org.candlepin.auth.Access;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.permissions.OwnerPermission;
 import org.candlepin.auth.permissions.Permission;
-import org.candlepin.exceptions.UnauthorizedException;
+import org.candlepin.common.exceptions.UnauthorizedException;
 import org.candlepin.model.Owner;
 import org.candlepin.model.User;
 import org.candlepin.service.UserServiceAdapter;

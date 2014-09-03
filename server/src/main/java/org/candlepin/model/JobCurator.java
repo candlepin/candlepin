@@ -14,9 +14,9 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.pinsetter.core.PinsetterKernel;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.pinsetter.core.model.JobStatus.JobState;

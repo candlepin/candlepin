@@ -14,6 +14,25 @@
  */
 package org.candlepin.gutterball.guice;
 
+import org.candlepin.common.exceptions.mappers.BadRequestExceptionMapper;
+import org.candlepin.common.exceptions.mappers.CandlepinExceptionMapper;
+import org.candlepin.common.exceptions.mappers.DefaultOptionsMethodExceptionMapper;
+import org.candlepin.common.exceptions.mappers.FailureExceptionMapper;
+import org.candlepin.common.exceptions.mappers.InternalServerErrorExceptionMapper;
+import org.candlepin.common.exceptions.mappers.JAXBMarshalExceptionMapper;
+import org.candlepin.common.exceptions.mappers.JAXBUnmarshalExceptionMapper;
+import org.candlepin.common.exceptions.mappers.MethodNotAllowedExceptionMapper;
+import org.candlepin.common.exceptions.mappers.NoLogWebApplicationExceptionMapper;
+import org.candlepin.common.exceptions.mappers.NotAcceptableExceptionMapper;
+import org.candlepin.common.exceptions.mappers.NotFoundExceptionMapper;
+import org.candlepin.common.exceptions.mappers.ReaderExceptionMapper;
+import org.candlepin.common.exceptions.mappers.RollbackExceptionMapper;
+import org.candlepin.common.exceptions.mappers.RuntimeExceptionMapper;
+import org.candlepin.common.exceptions.mappers.UnauthorizedExceptionMapper;
+import org.candlepin.common.exceptions.mappers.UnsupportedMediaTypeExceptionMapper;
+import org.candlepin.common.exceptions.mappers.ValidationExceptionMapper;
+import org.candlepin.common.exceptions.mappers.WebApplicationExceptionMapper;
+import org.candlepin.common.exceptions.mappers.WriterExceptionMapper;
 import org.candlepin.gutterball.eventhandler.EventHandler;
 import org.candlepin.gutterball.eventhandler.EventManager;
 import org.candlepin.gutterball.eventhandler.HandlerTarget;
@@ -63,6 +82,26 @@ public class GutterballModule extends AbstractModule {
         bind(StatusResource.class);
         bind(EventResource.class);
         bind(ReportsResource.class);
+
+        bind(UnsupportedMediaTypeExceptionMapper.class);
+        bind(UnauthorizedExceptionMapper.class);
+        bind(NotFoundExceptionMapper.class);
+        bind(NotAcceptableExceptionMapper.class);
+        bind(NoLogWebApplicationExceptionMapper.class);
+        bind(MethodNotAllowedExceptionMapper.class);
+        bind(InternalServerErrorExceptionMapper.class);
+        bind(DefaultOptionsMethodExceptionMapper.class);
+        bind(BadRequestExceptionMapper.class);
+        bind(RollbackExceptionMapper.class);
+        bind(ValidationExceptionMapper.class);
+        bind(WebApplicationExceptionMapper.class);
+        bind(FailureExceptionMapper.class);
+        bind(ReaderExceptionMapper.class);
+        bind(WriterExceptionMapper.class);
+        bind(CandlepinExceptionMapper.class);
+        bind(RuntimeExceptionMapper.class);
+        bind(JAXBUnmarshalExceptionMapper.class);
+        bind(JAXBMarshalExceptionMapper.class);
     }
 
     private void configureEventHandlers() {
