@@ -14,6 +14,19 @@
  */
 package org.candlepin.guice;
 
+import com.google.inject.Binding;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Module;
+import com.google.inject.util.Modules;
+import java.lang.reflect.Type;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
+import javax.persistence.EntityManagerFactory;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletContextEvent;
+import javax.ws.rs.ext.Provider;
 import org.candlepin.audit.AMQPBusPublisher;
 import org.candlepin.audit.HornetqContextListener;
 import org.candlepin.config.Config;
@@ -21,13 +34,6 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.logging.LoggerContextListener;
 import org.candlepin.pinsetter.core.PinsetterContextListener;
 import org.candlepin.util.Util;
-
-import com.google.inject.Binding;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Module;
-import com.google.inject.util.Modules;
-
 import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
 import org.hibernate.ejb.HibernateEntityManagerFactory;
 import org.hibernate.event.service.spi.EventListenerRegistry;
@@ -42,16 +48,6 @@ import org.jboss.resteasy.util.GetRestful;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18nManager;
-
-import java.lang.reflect.Type;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Locale;
-
-import javax.persistence.EntityManagerFactory;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletContextEvent;
-import javax.ws.rs.ext.Provider;
 
 /**
  * Customized Candlepin version of
@@ -129,7 +125,9 @@ public class CandlepinContextListener extends
         modules.add(Modules.override(new DefaultConfig()).with(
                 new CustomizableModules().load()));
 
-        modules.add(new CandlepinModule());
+        modules.add(Modules.override(new CandlepinModule()).with(
+                new PinsetterModule()));
+
         modules.add(new CandlepinFilterModule());
 
         return modules;

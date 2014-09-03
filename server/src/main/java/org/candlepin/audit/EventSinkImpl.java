@@ -14,8 +14,6 @@
  */
 package org.candlepin.audit;
 
-import com.google.inject.Singleton;
-
 import java.util.LinkedList;
 import java.util.List;
 import org.candlepin.model.Consumer;
@@ -34,7 +32,6 @@ import java.util.Set;
 /**
  * EventSink - Reliably dispatches events to all configured listeners.
  */
-@Singleton
 public class EventSinkImpl implements EventSink {
 
     private static Logger log = LoggerFactory.getLogger(EventSinkImpl.class);
@@ -42,20 +39,16 @@ public class EventSinkImpl implements EventSink {
     private HornetqEventDispatcher dispatcher;
 
     // Hold onto events we will send on successful completion of request/job:
-    private ThreadLocal<List<Event>> eventQueues = new ThreadLocal<List<Event>>();
+    private List<Event> eventQueue;
 
     @Inject
     public EventSinkImpl(EventFactory eventFactory, HornetqEventDispatcher dispatcher) {
         this.eventFactory = eventFactory;
         this.dispatcher = dispatcher;
+        this.eventQueue = new LinkedList<Event>();
     }
 
     private List<Event> getEventQueue() {
-        List<Event> eventQueue = eventQueues.get();
-        if (eventQueue == null) {
-            eventQueue = new LinkedList<Event>();
-            eventQueues.set(eventQueue);
-        }
         return eventQueue;
     }
 

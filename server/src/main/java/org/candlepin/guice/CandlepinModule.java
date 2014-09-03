@@ -14,6 +14,8 @@
  */
 package org.candlepin.guice;
 
+import com.google.inject.servlet.RequestScoped;
+
 import org.candlepin.audit.AMQPBusPublisher;
 import org.candlepin.audit.EventSink;
 import org.candlepin.audit.EventSinkImpl;
@@ -114,7 +116,6 @@ import org.candlepin.util.DateSource;
 import org.candlepin.util.DateSourceImpl;
 import org.candlepin.util.ExpiryDateFunction;
 import org.candlepin.util.X509ExtensionUtil;
-
 import com.google.common.base.Function;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provider;
@@ -126,23 +127,20 @@ import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import com.google.inject.persist.Transactional;
 import com.google.inject.persist.jpa.JpaPersistModule;
-
 import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
 import org.hibernate.validator.HibernateValidator;
 import org.hibernate.validator.HibernateValidatorConfiguration;
 import org.quartz.JobListener;
 import org.quartz.spi.JobFactory;
 import org.xnap.commons.i18n.I18n;
-
 import java.lang.reflect.AnnotatedElement;
 import java.util.Properties;
-
 import javax.validation.MessageInterpolator;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 
 /**
- * CandlepinProductionConfiguration
+ * CandlepinModule
  */
 public class CandlepinModule extends AbstractModule {
 
@@ -234,7 +232,11 @@ public class CandlepinModule extends AbstractModule {
 
         this.configureInterceptors();
         bind(JsonProvider.class);
-        bind(EventSink.class).to(EventSinkImpl.class);
+
+        // Bind event sink in request scope, it will hold onto events which we will
+        // only dispatch if the request is successful.
+        bind(EventSink.class).to(EventSinkImpl.class).in(RequestScoped.class);
+
         this.configurePinsetter();
 
         this.configureExporter();
