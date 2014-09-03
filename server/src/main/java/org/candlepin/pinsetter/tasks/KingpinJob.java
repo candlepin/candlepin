@@ -17,14 +17,16 @@ package org.candlepin.pinsetter.tasks;
 import static org.quartz.impl.matchers.NameMatcher.*;
 
 import org.candlepin.audit.EventSink;
-
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.guice.SimpleScope;
 import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.PinsetterJobListener;
 import org.candlepin.pinsetter.core.model.JobStatus;
+
 import com.google.inject.Inject;
 import com.google.inject.persist.UnitOfWork;
+
 import org.quartz.Job;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
@@ -35,6 +37,8 @@ import org.quartz.Trigger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+
+import javax.inject.Named;
 import javax.persistence.EntityExistsException;
 import javax.persistence.PersistenceException;
 
@@ -50,6 +54,8 @@ public abstract class KingpinJob implements Job {
     @Inject protected UnitOfWork unitOfWork;
     @Inject protected Config config;
     @Inject private EventSink eventSink;
+
+    @Inject @Named("PinsetterJobScope") private SimpleScope pinsetterJobScope;
     protected static String prefix = "job";
 
     @Override
@@ -69,8 +75,12 @@ public abstract class KingpinJob implements Job {
          * Execute our 'real' job inside a custom unit of work scope, instead
          * of the guice provided one, which is HTTP request scoped.
          */
+        pinsetterJobScope.enter();
         boolean startedUow = startUnitOfWork();
         try {
+            // It might be nice at some point to auto-insert the job context into
+            // the PinsetterJobScope
+            // pinsetterJobScope.seed(Key.get(JobExecutionContext.class), context);
             toExecute(context);
 
             eventSink.sendEvents();
@@ -105,6 +115,7 @@ public abstract class KingpinJob implements Job {
             if (startedUow) {
                 endUnitOfWork();
             }
+            pinsetterJobScope.exit();
         }
     }
 

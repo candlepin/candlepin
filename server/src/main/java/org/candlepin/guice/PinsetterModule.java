@@ -14,8 +14,6 @@
  */
 package org.candlepin.guice;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Singleton;
 import org.candlepin.audit.EventSink;
 import org.candlepin.audit.EventSinkImpl;
 import org.candlepin.pinsetter.core.GuiceJobFactory;
@@ -26,6 +24,12 @@ import org.candlepin.pinsetter.tasks.ExportCleaner;
 import org.candlepin.pinsetter.tasks.JobCleaner;
 import org.candlepin.pinsetter.tasks.SweepBarJob;
 import org.candlepin.pinsetter.tasks.UnpauseJob;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.Injector;
+import com.google.inject.Provides;
+import com.google.inject.name.Names;
+
 import org.quartz.JobListener;
 import org.quartz.spi.JobFactory;
 
@@ -37,11 +41,17 @@ public class PinsetterModule extends AbstractModule {
 
     @Override
     public void configure() {
-
-        // TODO: Update for PinsetterScope when it's ready:
-        bind(EventSink.class).to(EventSinkImpl.class).in(Singleton.class);
+        SimpleScope pinsetterJobScope = new SimpleScope();
+        bindScope(PinsetterJobScoped.class, pinsetterJobScope);
+        bind(SimpleScope.class).annotatedWith(Names.named("PinsetterJobScope")).toInstance(pinsetterJobScope);
 
         this.configurePinsetter();
+    }
+
+    @Provides
+    @PinsetterJobScoped
+    protected EventSink getScopedEventSink(Injector injector) {
+        return injector.getInstance(EventSinkImpl.class);
     }
 
     private void configurePinsetter() {
