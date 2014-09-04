@@ -184,8 +184,8 @@ public class ConsumerStatusReportTest {
 
         MultiRowResult<DBObject> results = report.run(params);
         assertEquals(1, results.size());
-        DBObject r = results.get(0);
-        DBObject consumer = (DBObject) r.get("consumer");
+        DBObject snap = results.get(0);
+        DBObject consumer = (DBObject) snap.get("consumer");
         DBObject owner = (DBObject) consumer.get("owner");
         assertEquals("o2", owner.get("key"));
         assertEquals("c3", consumer.get("uuid"));
@@ -195,14 +195,14 @@ public class ConsumerStatusReportTest {
     public void testGetByConsumerUuid() {
         MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
         when(params.containsKey("consumer_uuid")).thenReturn(true);
-        when(params.get("consumer_uuid")).thenReturn(Arrays.asList("c1", "c2"));
+        when(params.get("consumer_uuid")).thenReturn(Arrays.asList("c1", "c4"));
 
         MultiRowResult<DBObject> results = report.run(params);
         // C1 should get filtered out since it was deleted before the target date.
         assertEquals(1, results.size());
-        DBObject row = results.get(0);
-        DBObject consumer = (DBObject) row.get("consumer");
-        assertEquals("c2", consumer.get("uuid"));
+        DBObject snap = results.get(0);
+        DBObject consumer = (DBObject) snap.get("consumer");
+        assertEquals("c4", consumer.get("uuid"));
     }
 
     @Test
@@ -215,11 +215,6 @@ public class ConsumerStatusReportTest {
         assertEquals(1, results.size());
         DBObject consumer = (DBObject) results.get(0).get("consumer");
         assertEquals("c3", consumer.get("uuid"));
-    }
-
-    @Test
-    public void testReportCurrentlyRegisteredConsumersThatAreValid() {
-
     }
 
     private void setupTestData() {
