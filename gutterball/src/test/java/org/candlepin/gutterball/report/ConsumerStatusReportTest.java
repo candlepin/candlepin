@@ -193,16 +193,20 @@ public class ConsumerStatusReportTest {
 
     @Test
     public void testGetByConsumerUuid() {
-        MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
-        when(params.containsKey("consumer_uuid")).thenReturn(true);
-        when(params.get("consumer_uuid")).thenReturn(Arrays.asList("c1", "c4"));
+        performGetByIdTest();
+    }
 
-        MultiRowResult<DBObject> results = report.run(params);
-        // C1 should get filtered out since it was deleted before the target date.
-        assertEquals(1, results.size());
-        DBObject snap = results.get(0);
-        DBObject consumer = (DBObject) snap.get("consumer");
-        assertEquals("c4", consumer.get("uuid"));
+    @Test
+    public void assertLatestStatusIsReturnedForConsumer() {
+        DBObject snap = performGetByIdTest();
+        DBObject status = (DBObject) snap.get("status");
+
+        Calendar cal = Calendar.getInstance();
+        cal.setTime((Date) status.get("date"));
+
+        assertEquals(2012, cal.get(Calendar.YEAR));
+        assertEquals(10, cal.get(Calendar.DAY_OF_MONTH));
+        assertEquals(Calendar.JULY, cal.get(Calendar.MONTH));
     }
 
     @Test
@@ -224,6 +228,9 @@ public class ConsumerStatusReportTest {
         cal.set(Calendar.YEAR, 2012);
         cal.set(Calendar.MONTH, Calendar.MARCH);
         cal.set(Calendar.DAY_OF_MONTH, 10);
+        cal.set(Calendar.HOUR, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
 
         // Consumer created
         createInitialConsumer(cal.getTime(), "c1", "o1", "invalid");
@@ -281,5 +288,19 @@ public class ConsumerStatusReportTest {
             assertEquals(expectedParam, e.getParamName());
             assertEquals(expectedParam + ": " + expectedMessage, e.getMessage());
         }
+    }
+
+    private DBObject performGetByIdTest() {
+        MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
+        when(params.containsKey("consumer_uuid")).thenReturn(true);
+        when(params.get("consumer_uuid")).thenReturn(Arrays.asList("c1", "c4"));
+
+        MultiRowResult<DBObject> results = report.run(params);
+        // C1 should get filtered out since it was deleted before the target date.
+        assertEquals(1, results.size());
+        DBObject snap = results.get(0);
+        DBObject consumer = (DBObject) snap.get("consumer");
+        assertEquals("c4", consumer.get("uuid"));
+        return snap;
     }
 }

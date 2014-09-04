@@ -74,18 +74,22 @@ public class ComplianceDataCurator extends MongoDBCurator<BasicDBObject> {
 
         queryBuilder.add("status.date", new BasicDBObject("$lte", targetDate));
 
-        StringBuffer m = new StringBuffer();
-        m.append("function () {");
-        m.append("    emit(this.consumer.uuid, {'id': this._id, 'date': this.status.date});");
-        m.append("}");
+        String mapFunction =
+            "function () {" +
+            "  emit(this.consumer.uuid, {'id': this._id, 'date': this.status.date});" +
+            "}";
 
-        StringBuffer r = new StringBuffer();
-        r.append("function (consumerUuid, statusInfo) {");
-        r.append("    statusInfo.sort(function(s1, s2) { return s1.date < s2.date });");
-        r.append("    return statusInfo[0];");
-        r.append("}");
+        String reduceFunction =
+            "function (consumerUuid, statusInfo) {" +
+            "  var selected = null;" +
+            "  for (var i = 0; i < statusInfo.length; i++) {" +
+            "    var status = statusInfo[i];" +
+            "    if (selected == null || status.date > selected.date) { selected = status; }" +
+            "  }" +
+            "  return selected;" +
+            "}";
 
-        MapReduceCommand command = new MapReduceCommand(collection, m.toString(), r.toString(),
+        MapReduceCommand command = new MapReduceCommand(collection, mapFunction, reduceFunction,
                 null, MapReduceCommand.OutputType.INLINE, queryBuilder.get());
 
         List<ObjectId> ids = new LinkedList<ObjectId>();
@@ -99,7 +103,7 @@ public class ComplianceDataCurator extends MongoDBCurator<BasicDBObject> {
         // all compliance snapshots by id as well as applies any post filtering required
         // such as status.
         //
-        // The post filter should include any properties that are changable, and are shared
+        // The post filter should include any properties that are changeable, and are shared
         // amongst a snapshot record. For example, status will change often over time.
         BasicDBObjectBuilder filterQueryBuilder = BasicDBObjectBuilder.start();
         filterQueryBuilder.add("_id", new BasicDBObject("$in", ids));
