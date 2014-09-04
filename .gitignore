@@ -41,3 +41,8 @@ conf/eclipse/bin
 conf/eclipse/.project
 buildconf/scripts/import_products_ipa.json
 buildconf/scripts/import_products.json
+
+# rvm / other ruby version managers
+.rvmrc
+.ruby-version
+.ruby-gemset
