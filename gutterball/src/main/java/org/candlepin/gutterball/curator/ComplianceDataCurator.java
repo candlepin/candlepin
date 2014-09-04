@@ -26,6 +26,7 @@ import com.mongodb.MapReduceOutput;
 
 import org.bson.types.ObjectId;
 
+import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -144,10 +145,7 @@ public class ComplianceDataCurator extends MongoDBCurator<BasicDBObject> {
         }
 
         // Build the projections
-        BasicDBObject projections = new BasicDBObject();
-        projections.put("consumer", 1);
-        projections.put("status", 1);
-        projections.put("_id", 0);
+        BasicDBObject projections = new BasicDBObject("_id", 1);
         BasicDBObject project = new BasicDBObject("$project", projections);
 
         DBObject query = new BasicDBObject("$match", queryBuilder.get());
@@ -156,6 +154,12 @@ public class ComplianceDataCurator extends MongoDBCurator<BasicDBObject> {
         // NOTE: The order of the aggregate actions is very important.
         AggregationOutput output = collection.aggregate(Arrays.asList(
             query, project, sort/*, group, postResultFilter, skip, limit */));
-        return output.results();
+
+        List<ObjectId> resultIds = new LinkedList<ObjectId>();
+        for (DBObject dbo : output.results()) {
+            resultIds.add((ObjectId) dbo.get("_id"));
+        }
+        projections = new BasicDBObject("_id", 0).append("consumer", 1).append("status", 1);
+        return collection.find(new BasicDBObject("_id", new BasicDBObject("$in", resultIds)), projections);
     }
 }
