@@ -51,6 +51,9 @@ public class ComplianceDataCurator extends MongoDBCurator<BasicDBObject> {
         this.collection.createIndex(new BasicDBObject("consumer.owner.key", 1));
         this.collection.createIndex(new BasicDBObject("status.date", -1));
         this.collection.createIndex(new BasicDBObject("status.status", 1));
+
+        // Setting the decoder factory may clobber the collections objectClass
+        collection.setDBDecoderFactory(EscapingDBDecoder.FACTORY);
     }
 
     @Override
