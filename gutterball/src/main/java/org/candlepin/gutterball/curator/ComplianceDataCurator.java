@@ -15,7 +15,6 @@
 package org.candlepin.gutterball.curator;
 
 import org.candlepin.gutterball.mongodb.MongoConnection;
-import org.candlepin.gutterball.report.ConsumerTrendReportResult;
 
 import com.google.inject.Inject;
 import com.mongodb.BasicDBObject;
@@ -158,33 +157,5 @@ public class ComplianceDataCurator extends MongoDBCurator<BasicDBObject> {
         AggregationOutput output = collection.aggregate(Arrays.asList(
             query, project, sort/*, group, postResultFilter, skip, limit */));
         return output.results();
-    }
-
-    // NOTE: the compliance data returned from getComplianceForTimespan must match the format
-    // of getComplianceOnDate
-    public ConsumerTrendReportResult getFullComplianceForTimespan(Date startDate,
-            Date endDate, List<String> consumerIds, List<String> owners) {
-        // If the start date is null, we can return all status updates.
-        // Otherwise, we need to get every consumers
-        // latest compliance info at that point.
-        ConsumerTrendReportResult result = new ConsumerTrendReportResult();
-        if (startDate != null) {
-            // Don't restrict by status here, it may not match to begin with, we only care if it matches
-            for (DBObject dbo : getComplianceOnDate(startDate, consumerIds, owners, null)) {
-                result.add(getUuidFromCompliance(dbo), dbo);
-            }
-        }
-
-        System.out.println("timeframe: " + startDate + " : " + endDate);
-        for (DBObject dbo : getComplianceForTimespan(startDate, endDate, consumerIds, owners)) {
-            result.add(getUuidFromCompliance(dbo), dbo);
-            System.out.println("Added another status for: " + getUuidFromCompliance(dbo));
-        }
-        return result;
-    }
-
-    private String getUuidFromCompliance(DBObject dbo) {
-        BasicDBObject consumer = (BasicDBObject) dbo.get("consumer");
-        return consumer.getString("uuid");
     }
 }

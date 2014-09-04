@@ -18,6 +18,8 @@ import org.candlepin.gutterball.curator.ComplianceDataCurator;
 import org.candlepin.gutterball.guice.I18nProvider;
 
 import com.google.inject.Inject;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -102,7 +104,27 @@ public class ConsumerTrendReport extends Report<ConsumerTrendReportResult> {
             endDate = parseDate(queryParams.getFirst("end_date"));
         }
 
-        return complianceDataCurator.getFullComplianceForTimespan(startDate, endDate,
-                consumerIds, ownerFilters);
+        // If the start date is null, we can return all status updates.
+        // Otherwise, we need to get every consumers
+        // latest compliance info at that point.
+        ConsumerTrendReportResult result = new ConsumerTrendReportResult();
+        if (startDate != null) {
+            // Don't restrict by status here, it may not match to begin with, we only care if it matches
+            for (DBObject dbo : complianceDataCurator.getComplianceOnDate(
+                    startDate, consumerIds, ownerFilters, null)) {
+                result.add(getUuidFromCompliance(dbo), dbo);
+            }
+        }
+
+        for (DBObject dbo : complianceDataCurator.getComplianceForTimespan(
+                startDate, endDate, consumerIds, ownerFilters)) {
+            result.add(getUuidFromCompliance(dbo), dbo);
+        }
+        return result;
+    }
+
+    private String getUuidFromCompliance(DBObject dbo) {
+        BasicDBObject consumer = (BasicDBObject) dbo.get("consumer");
+        return consumer.getString("uuid");
     }
 }
