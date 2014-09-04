@@ -116,8 +116,10 @@ import org.candlepin.util.DateSource;
 import org.candlepin.util.DateSourceImpl;
 import org.candlepin.util.ExpiryDateFunction;
 import org.candlepin.util.X509ExtensionUtil;
+
 import com.google.common.base.Function;
 import com.google.inject.AbstractModule;
+import com.google.inject.Injector;
 import com.google.inject.Provider;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
@@ -127,14 +129,17 @@ import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import com.google.inject.persist.Transactional;
 import com.google.inject.persist.jpa.JpaPersistModule;
+
 import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
 import org.hibernate.validator.HibernateValidator;
 import org.hibernate.validator.HibernateValidatorConfiguration;
 import org.quartz.JobListener;
 import org.quartz.spi.JobFactory;
 import org.xnap.commons.i18n.I18n;
+
 import java.lang.reflect.AnnotatedElement;
 import java.util.Properties;
+
 import javax.validation.MessageInterpolator;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
@@ -302,6 +307,10 @@ public class CandlepinModule extends AbstractModule {
     }
 
     private void configurePinsetter() {
+        SimpleScope pinsetterJobScope = new SimpleScope();
+        bindScope(PinsetterJobScoped.class, pinsetterJobScope);
+        bind(SimpleScope.class).annotatedWith(Names.named("PinsetterJobScope")).toInstance(pinsetterJobScope);
+
         bind(JobFactory.class).to(GuiceJobFactory.class);
         bind(JobListener.class).to(PinsetterJobListener.class);
         bind(PinsetterKernel.class);
@@ -310,6 +319,12 @@ public class CandlepinModule extends AbstractModule {
         bind(ExportCleaner.class);
         bind(UnpauseJob.class);
         bind(SweepBarJob.class);
+    }
+
+    @Provides
+    @Named("PinsetterSink")
+    protected EventSink getScopedEventSink(Injector injector) {
+        return injector.getInstance(EventSinkImpl.class);
     }
 
     private void configureExporter() {

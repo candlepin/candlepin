@@ -125,8 +125,7 @@ public class CandlepinContextListener extends
         modules.add(Modules.override(new DefaultConfig()).with(
                 new CustomizableModules().load()));
 
-        modules.add(Modules.override(new CandlepinModule()).with(
-                new PinsetterModule()));
+        modules.add(new CandlepinModule());
 
         modules.add(new CandlepinFilterModule());
 
