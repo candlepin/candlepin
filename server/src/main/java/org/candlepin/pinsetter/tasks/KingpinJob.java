@@ -25,6 +25,7 @@ import org.candlepin.pinsetter.core.PinsetterJobListener;
 import org.candlepin.pinsetter.core.model.JobStatus;
 
 import com.google.inject.Inject;
+import com.google.inject.Key;
 import com.google.inject.persist.UnitOfWork;
 
 import org.quartz.Job;
@@ -39,6 +40,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 import javax.inject.Named;
+import javax.inject.Provider;
 import javax.persistence.EntityExistsException;
 import javax.persistence.PersistenceException;
 
@@ -53,7 +55,7 @@ public abstract class KingpinJob implements Job {
     private static Logger log = LoggerFactory.getLogger(KingpinJob.class);
     @Inject protected UnitOfWork unitOfWork;
     @Inject protected Config config;
-    @Inject private EventSink eventSink;
+    @Inject @Named("PinsetterSink") private Provider<EventSink> eventSinkProvider;
 
     @Inject @Named("PinsetterJobScope") private SimpleScope pinsetterJobScope;
     protected static String prefix = "job";
@@ -80,10 +82,11 @@ public abstract class KingpinJob implements Job {
         try {
             // It might be nice at some point to auto-insert the job context into
             // the PinsetterJobScope
-            // pinsetterJobScope.seed(Key.get(JobExecutionContext.class), context);
+            EventSink sink = eventSinkProvider.get();
+            pinsetterJobScope.seed(Key.get(EventSink.class), sink);
             toExecute(context);
 
-            eventSink.sendEvents();
+            sink.sendEvents();
         }
         catch (PersistenceException e) {
             // Multiple refreshpools running at once can cause the following:

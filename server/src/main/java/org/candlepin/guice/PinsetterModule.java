@@ -33,6 +33,8 @@ import com.google.inject.name.Names;
 import org.quartz.JobListener;
 import org.quartz.spi.JobFactory;
 
+import javax.inject.Named;
+
 /**
  * PinsetterModule - Guice module specific to pinsetter jobs, overrides the usual
  * {@link CandlepinModule}.
@@ -49,7 +51,7 @@ public class PinsetterModule extends AbstractModule {
     }
 
     @Provides
-    @PinsetterJobScoped
+    @Named("PinsetterSink")
     protected EventSink getScopedEventSink(Injector injector) {
         return injector.getInstance(EventSinkImpl.class);
     }
