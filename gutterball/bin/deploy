@@ -2,6 +2,12 @@
 
 APP="gutterball"
 
+# use tomcat 6, unless it doesnt exist and tomcat does
+TC=tomcat6
+if [[ -f /usr/sbin/tomcat && ! -f /usr/sbin/tomcat6 ]]; then
+    TC=tomcat
+fi
+
 usage() {
     cat <<HELP
     usage: deploy [options]
@@ -26,12 +32,6 @@ build() {
 deploy() {
     VERSION="$(grep Version: $PROJECT_DIR/${APP}.spec | cut --delim=' ' -f2)"
 
-    # use tomcat 6, unless it doesnt exist and tomcat does
-    TC=tomcat6
-    if [[ -f /usr/sbin/tomcat && ! -f /usr/sbin/tomcat6 ]]; then
-        TC=tomcat
-    fi
-
     # delete the exploded directory otherwise app won't reload
     if [ -d /var/lib/${TC}/webapps/${APP}/ ]; then
         sudo rm -rf /var/lib/${TC}/webapps/${APP}/
@@ -47,7 +47,7 @@ start_container() {
 
     sudo install -o tomcat -g tomcat -d -m 755 /var/log/gutterball
 
-    sudo service tomcat start
+    sudo service ${TC} start
 }
 
 stop_container() {
@@ -55,7 +55,7 @@ stop_container() {
         return
     fi
 
-    sudo service tomcat stop
+    sudo service ${TC} stop
 }
 
 notify() {
