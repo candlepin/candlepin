@@ -127,9 +127,11 @@ install -m 644 conf/logrotate.conf %{buildroot}%{_sysconfdir}/logrotate.d/%{name
 install -d -m 755 %{buildroot}/%{_localstatedir}/lib/%{tomcat}/webapps/%{name}/
 %{__unzip} target/%{name}-%{version}.war -d %{buildroot}/%{_sharedstatedir}/%{tomcat}/webapps/%{name}/
 
+%if !0%{?reqcpdeps}
 #remove the copied jars and resymlink
 rm %{buildroot}/%{_localstatedir}/lib/%{tomcat}/webapps/%{name}/WEB-INF/lib/*.jar
 ant -Ddist.name=%{dist_name} -Dlib.dir=%{buildroot}/%{_sharedstatedir}/%{tomcat}/webapps/%{name}/WEB-INF/lib/ initjars
+%endif
 
 %clean
 rm -rf %{buildroot}

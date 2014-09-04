@@ -129,8 +129,12 @@ ant %{?rhel:-Ddeps.file=deps/%{deps_suffix}.txt} -Ddistlibdir=%{distlibdir} clea
 %install
 rm -rf %{buildroot}
 install -d -m 755 %{buildroot}/%{_javadir}
+install -d -m 755 %{buildroot}/%{_datadir}/%{parent_proj}/lib/
+install -d -m 755 %{buildroot}/%{_datadir}/%{parent_proj}/gutterball/lib/
 install -m 644 target/%{name}-%{version}.jar %{buildroot}/%{_javadir}
 ln -s %{_javadir}/%{name}-%{version}.jar %{buildroot}/%{_javadir}/%{name}.jar
+ln -s %{_javadir}/%{name}-%{version}.jar %{buildroot}/%{_datadir}/%{parent_proj}/lib/%{name}.jar
+ln -s %{_javadir}/%{name}-%{version}.jar %{buildroot}/%{_datadir}/%{parent_proj}/gutterball/lib/%{name}.jar
 
 %clean
 rm -rf %{buildroot}
@@ -140,6 +144,8 @@ rm -rf %{_tmppath}/distlibdir
 %defattr(644,root,root,775)
 %{_javadir}/%{name}-%{version}.jar
 %{_javadir}/%{name}.jar
+%{_datadir}/%{parent_proj}/lib/%{name}.jar
+%{_datadir}/%{parent_proj}/gutterball/lib/%{name}.jar
 
 %changelog
 * Wed Aug 06 2014 jesus m. rodriguez <jesusr@redhat.com> 1.0.1-1
