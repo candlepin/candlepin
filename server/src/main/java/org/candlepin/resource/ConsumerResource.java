@@ -866,6 +866,7 @@ public class ConsumerResource {
         }
     }
 
+    @Transactional
     protected boolean performConsumerUpdates(Consumer updated, Consumer toUpdate) {
         if (log.isDebugEnabled()) {
             log.debug("Updating consumer: " + toUpdate.getUuid());

@@ -14,17 +14,7 @@
  */
 package org.candlepin.model.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import static org.junit.Assert.*;
 
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.Config;
@@ -41,8 +31,16 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
 import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.test.DatabaseTestFixture;
+
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * ConsumerCuratorTest JUnit tests for Consumer database code
@@ -592,34 +590,4 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         assertEquals(consumer, results.get(0));
     }
 
-    @Test
-    public void testisHypervisorIdUsed() {
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        consumer.setHypervisorId(new HypervisorId("hypervisor"));
-        consumer = consumerCurator.create(consumer);
-        Owner otherOwner = ownerCurator.create(new Owner("other owner"));
-        Consumer consumer2 = new Consumer("testConsumer2", "testUser2", otherOwner, ct);
-        consumer2.setHypervisorId(new HypervisorId("hypervisor"));
-        consumer2 = consumerCurator.create(consumer2);
-
-        // Also test the lookup is case insensitive
-        boolean result = consumerCurator.isHypervisorIdUsed("hyperVIsor");
-        assertTrue(result);
-    }
-
-
-    @Test
-    public void testisHypervisorIdUsedNoMatches() {
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        consumer.setHypervisorId(new HypervisorId("hypervisor"));
-        consumer = consumerCurator.create(consumer);
-        Owner otherOwner = ownerCurator.create(new Owner("other owner"));
-        Consumer consumer2 = new Consumer("testConsumer2", "testUser2", otherOwner, ct);
-        consumer2.setHypervisorId(new HypervisorId("hypervisor"));
-        consumer2 = consumerCurator.create(consumer2);
-
-        // Should return zero
-        boolean result = consumerCurator.isHypervisorIdUsed("different id");
-        assertFalse(result);
-    }
 }
