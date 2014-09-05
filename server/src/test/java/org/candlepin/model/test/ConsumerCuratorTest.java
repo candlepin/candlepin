@@ -594,37 +594,6 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testisHypervisorIdUsed() {
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        consumer.setHypervisorId(new HypervisorId("hypervisor"));
-        consumer = consumerCurator.create(consumer);
-        Owner otherOwner = ownerCurator.create(new Owner("other owner"));
-        Consumer consumer2 = new Consumer("testConsumer2", "testUser2", otherOwner, ct);
-        consumer2.setHypervisorId(new HypervisorId("hypervisor"));
-        consumer2 = consumerCurator.create(consumer2);
-
-        // Also test the lookup is case insensitive
-        boolean result = consumerCurator.isHypervisorIdUsed("hyperVIsor");
-        assertTrue(result);
-    }
-
-
-    @Test
-    public void testisHypervisorIdUsedNoMatches() {
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        consumer.setHypervisorId(new HypervisorId("hypervisor"));
-        consumer = consumerCurator.create(consumer);
-        Owner otherOwner = ownerCurator.create(new Owner("other owner"));
-        Consumer consumer2 = new Consumer("testConsumer2", "testUser2", otherOwner, ct);
-        consumer2.setHypervisorId(new HypervisorId("hypervisor"));
-        consumer2 = consumerCurator.create(consumer2);
-
-        // Should return zero
-        boolean result = consumerCurator.isHypervisorIdUsed("different id");
-        assertFalse(result);
-    }
-
-    @Test
     public void testGetConsumerIdsWithStartedEnts() {
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
         consumerCurator.create(consumer);
