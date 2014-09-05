@@ -36,6 +36,10 @@ public class ConsumerCurator extends MongoDBCurator<Consumer> {
     @Inject
     public ConsumerCurator(MongoConnection mongo) {
         super(Consumer.class, mongo);
+        this.collection.createIndex(new BasicDBObject("deleted", -1));
+        this.collection.createIndex(new BasicDBObject("created", -1));
+        this.collection.createIndex(new BasicDBObject("uuid", 1));
+        this.collection.createIndex(new BasicDBObject("owner.key", 1));
     }
 
     @Override

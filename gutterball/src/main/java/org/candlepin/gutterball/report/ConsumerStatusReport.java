@@ -19,6 +19,7 @@ import org.candlepin.gutterball.curator.ComplianceDataCurator;
 import org.candlepin.gutterball.guice.I18nProvider;
 
 import com.google.inject.Inject;
+import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 
 import java.text.ParseException;
@@ -90,10 +91,10 @@ public class ConsumerStatusReport extends Report<MultiRowResult<DBObject>> {
 
         Date targetDate = queryParams.containsKey("on_date") ?
             parseDate(queryParams.getFirst("on_date")) : new Date();
-        Iterable<DBObject> complianceSnapshots = complianceDataCurator.getComplianceOnDate(
+        DBCursor complianceSnapshots = complianceDataCurator.getComplianceOnDate(
             targetDate, consumerIds, ownerFilters, statusFilters);
-        for (DBObject snapshot : complianceSnapshots) {
-            result.add(snapshot);
+        while (complianceSnapshots.hasNext()) {
+            result.add(complianceSnapshots.next());
         }
         return result;
     }

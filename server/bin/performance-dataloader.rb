@@ -51,10 +51,12 @@ end
 
 def create_systems(cp, owner_key, count, facts)
   installed_products = []
-  INSTALLED_PRODUCTS.each do |pid|
-    installed_products << {'productId' => pid, 'productName' => pid}
-  end
   (1..count).each do |i|
+    installed_pids = []
+    random_provided_products().each do |pid|
+      installed_pids << pid
+      installed_products << {'productId' => pid, 'productName' => pid}
+    end
     sys = cp.register(random_string("sys-#{i}"), :system, nil, facts, nil, owner_key, [], installed_products)
     # Do an autobind:
     ents = nil
@@ -68,6 +70,8 @@ def create_systems(cp, owner_key, count, facts)
       end
     end
     puts "#{i} - (#{sys['uuid']}) ents=#{(ents.nil? ? 0 : ents.size)} quantity=#{quantity} time=#{time}\n"
+    puts "  Installed Products: #{installed_pids}"
+
   end
 end
 
@@ -80,7 +84,7 @@ def create_pools(cp, owner_key, count, attributes, quantity)
         :attributes => attributes,
       })
       sub1 = cp.create_subscription(owner_key, mkt_prod['id'], quantity,
-        random_provided_products(), rand(10000), rand(10000), nil, end_date)
+        random_provided_products(), rand(10000), rand(10000), rand(10000), nil, end_date)
     end
   end
   puts "   #{time} seconds"
