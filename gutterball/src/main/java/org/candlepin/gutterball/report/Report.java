@@ -19,7 +19,10 @@ import org.candlepin.gutterball.guice.I18nProvider;
 
 import org.xnap.commons.i18n.I18n;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import javax.ws.rs.core.MultivaluedMap;
@@ -32,6 +35,9 @@ import javax.ws.rs.core.MultivaluedMap;
  *
  */
 public abstract class Report<R extends ReportResult> {
+
+    protected static final String REPORT_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
+
     protected I18n i18n;
     protected String key;
     protected String description;
@@ -101,5 +107,19 @@ public abstract class Report<R extends ReportResult> {
 
     protected void addParameter(ReportParameter param) {
         this.parameters.add(param);
+    }
+
+    protected Date parseDate(String date) {
+        if (date == null || date.isEmpty()) {
+            return null;
+        }
+
+        try {
+            SimpleDateFormat formatter = new SimpleDateFormat(REPORT_DATE_FORMAT);
+            return formatter.parse(date);
+        }
+        catch (ParseException e) {
+            throw new RuntimeException("Could not parse date parameter.");
+        }
     }
 }

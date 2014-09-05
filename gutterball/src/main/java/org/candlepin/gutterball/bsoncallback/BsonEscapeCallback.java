@@ -17,6 +17,8 @@ package org.candlepin.gutterball.bsoncallback;
 import com.mongodb.DBCallback;
 import com.mongodb.util.JSONCallback;
 
+import org.bson.BSONCallback;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -83,5 +85,10 @@ public class BsonEscapeCallback extends JSONCallback implements DBCallback {
     @Override
     public void objectStart(boolean array, String name) {
         super.objectStart(array, sanitizeName(name));
+    }
+
+    @Override
+    public BSONCallback createBSONCallback() {
+        return new BsonEscapeCallback(write);
     }
 }

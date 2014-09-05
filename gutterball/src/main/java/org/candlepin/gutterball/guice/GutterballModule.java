@@ -38,6 +38,7 @@ import org.candlepin.gutterball.eventhandler.EventManager;
 import org.candlepin.gutterball.eventhandler.HandlerTarget;
 import org.candlepin.gutterball.receiver.EventReceiver;
 import org.candlepin.gutterball.report.ConsumerStatusReport;
+import org.candlepin.gutterball.report.ConsumerTrendReport;
 import org.candlepin.gutterball.report.Report;
 import org.candlepin.gutterball.report.ReportFactory;
 import org.candlepin.gutterball.resource.EventResource;
@@ -76,6 +77,7 @@ public class GutterballModule extends AbstractModule {
         // Map our report classes so that they can be picked up by the ReportFactory.
         Multibinder<Report> reports = Multibinder.newSetBinder(binder(), Report.class);
         reports.addBinding().to(ConsumerStatusReport.class);
+        reports.addBinding().to(ConsumerTrendReport.class);
         bind(ReportFactory.class);
 
         // RestEasy API resources

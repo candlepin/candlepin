@@ -29,6 +29,9 @@ package org.candlepin.gutterball.curator;
  * in this software or its documentation.
  */
 
+import java.util.LinkedList;
+import java.util.List;
+
 import org.candlepin.gutterball.mongodb.MongoConnection;
 
 import com.mongodb.BasicDBObject;
@@ -84,5 +87,13 @@ public abstract class MongoDBCurator<M extends DBObject> {
     @SuppressWarnings("unchecked")
     public M findByKey(String key, String value) {
         return (M) collection.findOne(new BasicDBObject(key, new ObjectId(value)));
+    }
+
+    protected List<ObjectId> getObjectIds(Iterable<DBObject> dbos) {
+        List<ObjectId> results = new LinkedList<ObjectId>();
+        for (DBObject obj : dbos) {
+            results.add((ObjectId) obj.get("_id"));
+        }
+        return results;
     }
 }

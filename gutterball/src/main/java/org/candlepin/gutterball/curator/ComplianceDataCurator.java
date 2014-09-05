@@ -17,6 +17,7 @@ package org.candlepin.gutterball.curator;
 import org.candlepin.gutterball.mongodb.MongoConnection;
 
 import com.google.inject.Inject;
+import com.mongodb.AggregationOutput;
 import com.mongodb.BasicDBObject;
 import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DBCursor;
@@ -26,6 +27,7 @@ import com.mongodb.MapReduceOutput;
 
 import org.bson.types.ObjectId;
 
+import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -50,6 +52,9 @@ public class ComplianceDataCurator extends MongoDBCurator<BasicDBObject> {
         this.collection.createIndex(new BasicDBObject("consumer.owner.key", 1));
         this.collection.createIndex(new BasicDBObject("status.date", -1));
         this.collection.createIndex(new BasicDBObject("status.status", 1));
+
+        // Setting the decoder factory may clobber the collections objectClass
+        collection.setDBDecoderFactory(EscapingDBDecoder.FACTORY);
     }
 
     @Override
@@ -116,5 +121,45 @@ public class ComplianceDataCurator extends MongoDBCurator<BasicDBObject> {
         DBCursor all = collection.find(filterQueryBuilder.get());
         // TODO Add paging support by using the max() and limit() methods of the DBCursor
         return all;
+    }
+
+    public DBCursor getComplianceForTimespan(Date startDate,
+            Date endDate, List<String> consumerIds, List<String> owners) {
+        // Anything added to the main query will filter the initial result set. This should
+        // include anything that helps narrow down the query of the latest snapshots reported
+        // and consists of properties that do not change across snapshots.
+        BasicDBObjectBuilder queryBuilder = BasicDBObjectBuilder.start();
+
+
+        if (owners != null && !owners.isEmpty()) {
+            queryBuilder.add("consumer.owner.key", new BasicDBObject("$in", owners));
+        }
+
+        BasicDBObjectBuilder dateQueryBuilder = BasicDBObjectBuilder.start();
+        if (startDate != null) {
+            // Use greater than (not equals) because we've already looked up status for <= the start date
+            // $gte will open the door for duplicates
+            dateQueryBuilder.add("$gt", startDate);
+        }
+        if (endDate != null) {
+            dateQueryBuilder.add("$lte", endDate);
+        }
+        if (startDate != null || endDate != null) {
+            queryBuilder.add("status.date", dateQueryBuilder.get());
+        }
+
+        // Build the projections
+        BasicDBObject projections = new BasicDBObject("_id", 1);
+        BasicDBObject project = new BasicDBObject("$project", projections);
+
+        DBObject query = new BasicDBObject("$match", queryBuilder.get());
+        DBObject sort = new BasicDBObject("$sort", new BasicDBObject("status.date", 1));
+
+        // NOTE: The order of the aggregate actions is very important.
+        AggregationOutput output = collection.aggregate(Arrays.asList(
+            query, project, sort/*, group, postResultFilter, skip, limit */));
+
+        List<ObjectId> resultIds = getObjectIds(output.results());
+        return collection.find(new BasicDBObject("_id", new BasicDBObject("$in", resultIds)));
     }
 }
