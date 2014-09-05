@@ -42,6 +42,7 @@ BuildRequires: resteasy >= 0:2.3.7
 BuildRequires: jakarta-commons-io
 BuildRequires: jakarta-commons-lang
 BuildRequires: servlet
+BuildRequires: gettext-commons
 
 %global jackson_version 0:2.3.0
 BuildRequires: jackson-annotations >= %{jackson_version}
@@ -53,6 +54,8 @@ BuildRequires: jackson-module-jaxb-annotations >= %{jackson_version}
 %if 0%{?rhel} >= 7
 BuildRequires: apache-commons-codec-eap6
 BuildRequires: apache-commons-collections
+BuildRequires: candlepin-guice >= 0:3.0
+BuildRequires: guava >= 0:13.0
 BuildRequires: mvn(org.apache.httpcomponents:httpclient) >= 0:4.1.2
 BuildRequires: mvn(org.slf4j:slf4j-api)  >= 0:1.7.4
 BuildRequires: mvn(org.slf4j:jcl-over-slf4j)  >= 0:1.7.4
@@ -63,6 +66,8 @@ BuildRequires: mvn(javax.inject:javax.inject)
 %if 0%{?rhel} < 7
 BuildRequires: ant-nodeps >= 0:1.7.0
 BuildRequires: apache-commons-codec-eap6
+BuildRequires: google-guice >= 0:3.0
+BuildRequires: google-collections >= 0:1.0
 BuildRequires: slf4j-api >= 0:1.7.5
 BuildRequires: jcl-over-slf4j >= 0:1.7.5
 BuildRequires: httpclient >= 0:4.1.2
@@ -83,6 +88,8 @@ BuildRequires: javax.inject
 %if 0%{?rhel} >= 7
 Requires: apache-commons-codec-eap6
 Requires: apache-commons-collections
+Requires: candlepin-guice >= 0:3.0
+Requires: guava >= 0:13.0
 Requires: mvn(org.apache.httpcomponents:httpclient) >= 0:4.1.2
 Requires: mvn(org.slf4j:slf4j-api)  >= 0:1.7.4
 Requires: mvn(org.slf4j:jcl-over-slf4j)  >= 0:1.7.4
@@ -91,6 +98,8 @@ Requires: mvn(javax.inject:javax.inject)
 %endif
 
 %if 0%{?rhel} < 7
+Requires: google-guice >= 0:3.0
+Requires: google-collections >= 0:1.0
 Requires: slf4j-api >= 0:1.7.5-4
 Requires: jcl-over-slf4j >= 0:1.7.5
 Requires: httpclient >= 0:4.1.2
@@ -114,6 +123,7 @@ Requires: jackson-jaxrs-json-provider >= %{jackson_version}
 Requires: jackson-module-jaxb-annotations >= %{jackson_version}
 Requires: jakarta-commons-io
 Requires: jakarta-commons-lang
+Requires: gettext-commons
 %endif # end reqcpdeps
 
 %description

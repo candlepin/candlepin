@@ -2,9 +2,12 @@
 // Each item should be an artifact name or coordinate that
 // build-jar-repository can understand.
 atinject
+candlepin-guice // This will pull in all the jars under candlepin-guice
 commons-codec-eap6/commons-codec
 commons-io
 commons-lang
+gettext-commons
+guava
 httpcomponents/httpclient
 jackson-annotations
 jackson-core

@@ -4,6 +4,11 @@
 commons-codec-eap6/commons-codec
 commons-io
 commons-lang
+gettext-commons
+google-collections
+guice
+guice-servlet
+guice-throwingproviders
 httpclient
 jackson-annotations
 jackson-core
