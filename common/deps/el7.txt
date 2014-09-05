@@ -15,6 +15,7 @@ jackson-databind
 jackson-jaxrs-providers/jackson-jaxrs-base
 jackson-jaxrs-providers/jackson-jaxrs-json-provider
 jackson-module-jaxb-annotations
+jta
 resteasy/jaxrs-api
 resteasy/resteasy-atom-provider
 resteasy/resteasy-jaxb-provider
@@ -23,3 +24,4 @@ resteasy/resteasy-multipart-provider
 servlet
 slf4j/api
 slf4j/jcl-over-slf4j
+validation-api

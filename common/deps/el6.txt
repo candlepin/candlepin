@@ -18,6 +18,7 @@ jackson-jaxrs-providers/jackson-jaxrs-json-provider
 jackson-module-jaxb-annotations
 javax.inject
 jcl-over-slf4j
+jta
 resteasy/jaxrs-api
 resteasy/resteasy-atom-provider
 resteasy/resteasy-jaxb-provider
@@ -25,3 +26,4 @@ resteasy/resteasy-jaxrs
 resteasy/resteasy-multipart-provider
 servlet
 slf4j-api
+validation-api
