@@ -19,13 +19,12 @@ import static org.quartz.impl.matchers.NameMatcher.*;
 import org.candlepin.audit.EventSink;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.guice.SimpleScope;
+import org.candlepin.guice.PinsetterJobScoped;
 import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.PinsetterJobListener;
 import org.candlepin.pinsetter.core.model.JobStatus;
 
 import com.google.inject.Inject;
-import com.google.inject.Key;
 import com.google.inject.persist.UnitOfWork;
 
 import org.quartz.Job;
@@ -39,7 +38,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
-import javax.inject.Named;
 import javax.inject.Provider;
 import javax.persistence.EntityExistsException;
 import javax.persistence.PersistenceException;
@@ -50,14 +48,14 @@ import javax.persistence.PersistenceException;
  * Quartz Job type gives us more freedom to define behavior.
  * Every candlepin job must extend KingpinJob
  */
+@PinsetterJobScoped
 public abstract class KingpinJob implements Job {
 
     private static Logger log = LoggerFactory.getLogger(KingpinJob.class);
     @Inject protected UnitOfWork unitOfWork;
     @Inject protected Config config;
-    @Inject @Named("PinsetterSink") private Provider<EventSink> eventSinkProvider;
+    @Inject private Provider<EventSink> eventSinkProvider;
 
-    @Inject @Named("PinsetterJobScope") private SimpleScope pinsetterJobScope;
     protected static String prefix = "job";
 
     @Override
@@ -77,16 +75,10 @@ public abstract class KingpinJob implements Job {
          * Execute our 'real' job inside a custom unit of work scope, instead
          * of the guice provided one, which is HTTP request scoped.
          */
-        pinsetterJobScope.enter();
         boolean startedUow = startUnitOfWork();
         try {
-            // It might be nice at some point to auto-insert the job context into
-            // the PinsetterJobScope
-            EventSink sink = eventSinkProvider.get();
-            pinsetterJobScope.seed(Key.get(EventSink.class), sink);
             toExecute(context);
-
-            sink.sendEvents();
+            eventSinkProvider.get().sendEvents();
         }
         catch (PersistenceException e) {
             // Multiple refreshpools running at once can cause the following:
@@ -118,7 +110,6 @@ public abstract class KingpinJob implements Job {
             if (startedUow) {
                 endUnitOfWork();
             }
-            pinsetterJobScope.exit();
         }
     }
 
