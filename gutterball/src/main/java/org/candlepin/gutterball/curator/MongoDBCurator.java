@@ -89,11 +89,15 @@ public abstract class MongoDBCurator<M extends DBObject> {
         return (M) collection.findOne(new BasicDBObject(key, new ObjectId(value)));
     }
 
-    protected List<ObjectId> getObjectIds(Iterable<DBObject> dbos) {
+    protected List<ObjectId> getObjectIds(String fromKey, Iterable<DBObject> dbos) {
         List<ObjectId> results = new LinkedList<ObjectId>();
         for (DBObject obj : dbos) {
-            results.add((ObjectId) obj.get("_id"));
+            results.add((ObjectId) obj.get(fromKey));
         }
         return results;
+    }
+
+    protected List<ObjectId> getObjectIds(Iterable<DBObject> dbos) {
+        return getObjectIds("_id", dbos);
     }
 }
