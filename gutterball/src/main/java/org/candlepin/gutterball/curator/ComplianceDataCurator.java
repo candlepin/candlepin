@@ -17,6 +17,7 @@ package org.candlepin.gutterball.curator;
 import org.candlepin.gutterball.mongodb.MongoConnection;
 
 import com.google.inject.Inject;
+import com.mongodb.AggregationOutput;
 import com.mongodb.BasicDBObject;
 import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DBCursor;
@@ -122,7 +123,7 @@ public class ComplianceDataCurator extends MongoDBCurator<BasicDBObject> {
         return all;
     }
 
-    public Iterable<DBObject> getComplianceForTimespan(Date startDate,
+    public DBCursor getComplianceForTimespan(Date startDate,
             Date endDate, List<String> consumerIds, List<String> owners) {
         // Anything added to the main query will filter the initial result set. This should
         // include anything that helps narrow down the query of the latest snapshots reported
@@ -158,11 +159,7 @@ public class ComplianceDataCurator extends MongoDBCurator<BasicDBObject> {
         AggregationOutput output = collection.aggregate(Arrays.asList(
             query, project, sort/*, group, postResultFilter, skip, limit */));
 
-        List<ObjectId> resultIds = new LinkedList<ObjectId>();
-        for (DBObject dbo : output.results()) {
-            resultIds.add((ObjectId) dbo.get("_id"));
-        }
-        projections = new BasicDBObject("_id", 0).append("consumer", 1).append("status", 1);
-        return collection.find(new BasicDBObject("_id", new BasicDBObject("$in", resultIds)), projections);
+        List<ObjectId> resultIds = getObjectIds(output.results());
+        return collection.find(new BasicDBObject("_id", new BasicDBObject("$in", resultIds)));
     }
 }
