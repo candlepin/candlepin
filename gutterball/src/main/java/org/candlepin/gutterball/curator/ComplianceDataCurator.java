@@ -22,14 +22,11 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
-import com.mongodb.MapReduceCommand;
-import com.mongodb.MapReduceOutput;
 
 import org.bson.types.ObjectId;
 
 import java.util.Arrays;
 import java.util.Date;
-import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -79,30 +76,24 @@ public class ComplianceDataCurator extends MongoDBCurator<BasicDBObject> {
 
         queryBuilder.add("status.date", new BasicDBObject("$lte", targetDate));
 
-        String mapFunction =
-            "function () {" +
-            "  emit(this.consumer.uuid, {'id': this._id, 'date': this.status.date});" +
-            "}";
+        // Build the projections
+        BasicDBObject projections = new BasicDBObject();
+        projections.put("_id", 1);
+        projections.put("consumer.uuid", 1);
+        projections.put("status.date", 1);
+        BasicDBObject project = new BasicDBObject("$project", projections);
 
-        String reduceFunction =
-            "function (consumerUuid, statusInfo) {" +
-            "  var selected = null;" +
-            "  for (var i = 0; i < statusInfo.length; i++) {" +
-            "    var status = statusInfo[i];" +
-            "    if (selected == null || status.date > selected.date) { selected = status; }" +
-            "  }" +
-            "  return selected;" +
-            "}";
+        // Build the result groups.
+        BasicDBObject groups = new BasicDBObject("_id", "$consumer.uuid");
+        groups.put("snapshot_id", new BasicDBObject("$first", "$_id"));
 
-        MapReduceCommand command = new MapReduceCommand(collection, mapFunction, reduceFunction,
-                null, MapReduceCommand.OutputType.INLINE, queryBuilder.get());
+        DBObject query = new BasicDBObject("$match", queryBuilder.get());
+        DBObject group = new BasicDBObject("$group", groups);
+        DBObject sort = new BasicDBObject("$sort", new BasicDBObject("status.date", -1));
 
-        List<ObjectId> ids = new LinkedList<ObjectId>();
-        MapReduceOutput output = collection.mapReduce(command);
-        for (DBObject row : output.results()) {
-            DBObject value = (DBObject) row.get("value");
-            ids.add((ObjectId) value.get("id"));
-        }
+        // NOTE: The order of the aggregate actions is very important.
+        AggregationOutput output = collection.aggregate(Arrays.asList(
+            query, project, sort, group));
 
         // This query builder defines the post filters for the lookup. It looks up
         // all compliance snapshots by id as well as applies any post filtering required
@@ -111,7 +102,8 @@ public class ComplianceDataCurator extends MongoDBCurator<BasicDBObject> {
         // The post filter should include any properties that are changeable, and are shared
         // amongst a snapshot record. For example, status will change often over time.
         BasicDBObjectBuilder filterQueryBuilder = BasicDBObjectBuilder.start();
-        filterQueryBuilder.add("_id", new BasicDBObject("$in", ids));
+        filterQueryBuilder.add("_id", new BasicDBObject("$in",
+                getValuesByKey("snapshot_id", output.results())));
 
         // Filter results by status if required.
         if (statusFilers != null && !statusFilers.isEmpty()) {
