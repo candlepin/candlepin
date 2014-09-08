@@ -9,6 +9,7 @@ google-collections
 guice
 guice-servlet
 guice-throwingproviders
+hibernate-jpa-2.0-api
 httpclient
 jackson-annotations
 jackson-core

@@ -45,6 +45,7 @@ BuildRequires: servlet
 BuildRequires: gettext-commons
 BuildRequires: jta
 BuildRequires: hibernate-beanvalidation-api >= 1.0.0
+BuildRequires: hibernate-jpa-2.0-api >= 1.0.1
 
 %global jackson_version 0:2.3.0
 BuildRequires: jackson-annotations >= %{jackson_version}
@@ -128,6 +129,7 @@ Requires: jakarta-commons-lang
 Requires: gettext-commons
 Requires: jta
 Requires: hibernate-beanvalidation-api >= 1.0.0
+Requires: hibernate-jpa-2.0-api >= 1.0.1
 %endif # end reqcpdeps
 
 %description

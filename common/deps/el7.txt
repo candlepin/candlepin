@@ -8,6 +8,7 @@ commons-io
 commons-lang
 gettext-commons
 guava
+hibernate-jpa-2.0-api
 httpcomponents/httpclient
 jackson-annotations
 jackson-core
