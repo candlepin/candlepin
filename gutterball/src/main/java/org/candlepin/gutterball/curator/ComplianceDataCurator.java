@@ -103,7 +103,7 @@ public class ComplianceDataCurator extends MongoDBCurator<BasicDBObject> {
         // amongst a snapshot record. For example, status will change often over time.
         BasicDBObjectBuilder filterQueryBuilder = BasicDBObjectBuilder.start();
         filterQueryBuilder.add("_id", new BasicDBObject("$in",
-                getObjectIds("snapshot_id", output.results())));
+                getValuesByKey("snapshot_id", output.results())));
 
         // Filter results by status if required.
         if (statusFilers != null && !statusFilers.isEmpty()) {
