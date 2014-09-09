@@ -33,6 +33,9 @@ BuildArch: noarch
 BuildRequires: java-devel >= 0:1.6.0
 BuildRequires: ant >= 0:1.7.0
 BuildRequires: gettext
+%if 0%{?rhel} < 7
+BuildRequires: ant-nodeps >= 0:1.7.0
+%endif
 
 %if 0%{?reqcpdeps}
 %global distlibdir %{_datadir}/%{parent_proj}/common/lib/
@@ -68,7 +71,6 @@ BuildRequires: mvn(javax.inject:javax.inject)
 %endif
 
 %if 0%{?rhel} < 7
-BuildRequires: ant-nodeps >= 0:1.7.0
 BuildRequires: apache-commons-codec-eap6
 BuildRequires: google-guice >= 0:3.0
 BuildRequires: google-collections >= 0:1.0
