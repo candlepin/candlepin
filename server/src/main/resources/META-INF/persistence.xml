@@ -3,8 +3,31 @@
     xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd"
     version="2.0">
 
-    <!--  default persistence uses an in-memory hsqldb. -->
     <persistence-unit name="default" transaction-type="RESOURCE_LOCAL">
+        <provider>org.hibernate.ejb.HibernatePersistence</provider>
+        <validation-mode>NONE</validation-mode>
+        <properties>
+            <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
+            <property name="hibernate.connection.driver_class" value="org.postgresql.Driver"/>
+            <property name="hibernate.connection.url" value="jdbc:postgresql:candlepin"/>
+            <property name="hibernate.connection.username" value="candlepin"/>
+            <property name="hibernate.connection.password" value=""/>
+            <property name="hibernate.show_sql" value="false" />
+            <property name="hibernate.ejb.interceptor" value="org.candlepin.hibernate.EmptyStringInterceptor"/>
+            <property name="hibernate.connection.provider_class" value="org.hibernate.connection.C3P0ConnectionProvider" />
+            <!-- c3p0 connection manager settings -->
+            <property name="hibernate.c3p0.min_size" value="5" />
+            <property name="hibernate.c3p0.max_size" value="20" />
+            <property name="hibernate.c3p0.timeout" value="300" />
+            <!-- test period in seconds -->
+            <property name="hibernate.c3p0.idle_test_period" value="300" />
+            <!-- max_statements should always be 0 -->
+            <property name="hibernate.c3p0.max_statements" value="0" />
+        </properties>
+    </persistence-unit>
+
+    <!--  testing persistence uses an in-memory hsqldb. -->
+    <persistence-unit name="testing" transaction-type="RESOURCE_LOCAL">
         <provider>org.hibernate.ejb.HibernatePersistence</provider>
         <validation-mode>NONE</validation-mode>
         <properties>
@@ -15,34 +38,7 @@
             <property name="hibernate.connection.username" value="sa"/>
             <property name="hibernate.connection.password" value=""/>
             <property name="hibernate.show_sql" value="false" />
-            <property name="hibernate.ejb.interceptor" value="org.candlepin.hibernate.EmptyStringInterceptor"/>
-        </properties>
-    </persistence-unit>
 
-    <persistence-unit name="production" transaction-type="RESOURCE_LOCAL">
-        <provider>org.hibernate.ejb.HibernatePersistence</provider>
-        <validation-mode>NONE</validation-mode>
-        <properties>
-            <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
-            <property name="hibernate.connection.driver_class" value="org.postgresql.Driver"/>
-            <property name="hibernate.connection.url" value="jdbc:postgresql:candlepin"/>
-
-             <!-- Note this line wipes the DB every restart, only used for testing. -->
-             <!-- property name="hibernate.hbm2ddl.auto" value="create-drop"-->
-
-            <property name="hibernate.connection.username" value="candlepin"/>
-            <property name="hibernate.connection.password" value=""/>
-            <property name="hibernate.show_sql" value="false" />
-
-            <property name="hibernate.connection.provider_class" value="org.hibernate.connection.C3P0ConnectionProvider" />
-            <!-- c3p0 connection manager settings -->
-            <property name="hibernate.c3p0.min_size" value="5" />
-            <property name="hibernate.c3p0.max_size" value="20" />
-            <property name="hibernate.c3p0.timeout" value="300" />
-            <!-- test period in seconds -->
-            <property name="hibernate.c3p0.idle_test_period" value="300" />
-            <!-- max_statements should always be 0 -->
-            <property name="hibernate.c3p0.max_statements" value="0" />
             <property name="hibernate.ejb.interceptor" value="org.candlepin.hibernate.EmptyStringInterceptor"/>
         </properties>
     </persistence-unit>

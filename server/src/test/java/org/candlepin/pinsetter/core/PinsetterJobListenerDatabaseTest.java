@@ -103,7 +103,7 @@ public class PinsetterJobListenerDatabaseTest {
 
         @Override
         protected void configure() {
-            install(new JpaPersistModule("default"));
+            install(new JpaPersistModule("testing"));
             bind(I18n.class).toProvider(I18nProvider.class);
             bind(JPAInitializer.class).asEagerSingleton();
             bind(JobFactory.class).to(GuiceJobFactory.class);
