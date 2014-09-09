@@ -120,8 +120,11 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provider;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.matcher.Matcher;
+import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
+import com.google.inject.persist.Transactional;
 import com.google.inject.persist.jpa.JpaPersistModule;
 
 import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
@@ -131,6 +134,7 @@ import org.quartz.JobListener;
 import org.quartz.spi.JobFactory;
 import org.xnap.commons.i18n.I18n;
 
+import java.lang.reflect.AnnotatedElement;
 import java.util.Properties;
 
 import javax.validation.MessageInterpolator;
@@ -157,6 +161,7 @@ public class CandlepinModule extends AbstractModule {
         bind(Config.class).asEagerSingleton();
         install(new JpaPersistModule("default").properties(config
             .jpaConfiguration(config)));
+
         bind(JPAInitializer.class).asEagerSingleton();
 
         bind(PKIUtility.class).to(BouncyCastlePKIUtility.class)
@@ -245,6 +250,22 @@ public class CandlepinModule extends AbstractModule {
             .to(ExpiryDateFunction.class).in(Singleton.class);
 
         this.configureAmqp();
+
+
+        // Match methods on classes in org.candlepin.resource as long as neither class nor method
+        // is annotated with transactional.  This way the default @Transactional annotation we use
+        // by default may be overridden with more specific options,
+        // For example: @Transactional(rollbackOn = IOException.class)
+        // in a resource will produce the desired behavior
+        bind(TransactionalInvoker.class);
+        CandlepinResourceTxnInterceptor txni = new CandlepinResourceTxnInterceptor();
+        // Creates the nested object with a @Transactional annotation
+        requestInjection(txni);
+        Matcher<AnnotatedElement> notMarked = Matchers.not(
+                Matchers.annotatedWith(Transactional.class)).
+                and(Matchers.not(Matchers.annotatedWith(NonTransactional.class)));
+        bindInterceptor(Matchers.inSubpackage("org.candlepin.resource").and(notMarked),
+                notMarked, txni);
     }
 
     @Provides @Named("ValidationProperties")

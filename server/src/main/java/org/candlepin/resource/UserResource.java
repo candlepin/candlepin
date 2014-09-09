@@ -119,11 +119,18 @@ public class UserResource {
     public List<Role> getUserRoles(@PathParam("username")
         @Verify(User.class) String username) {
         User myUser = userService.findByLogin(username);
-        List<Role> roles = new LinkedList<Role>(myUser.getRoles());
+        List<Role> roles = new LinkedList<Role>();
         Set<User> s = new HashSet<User>();
         s.add(myUser);
-        for (Role r : roles) {
-            r.setUsers(s);
+
+        for (Role r : myUser.getRoles()) {
+            // Copy onto a detached role object so we can omit users list, which could
+            // technically leak information here.
+            Role copy = new Role(r.getName());
+            copy.setId(r.getId());
+            copy.setPermissions(r.getPermissions());
+            copy.setUsers(s);
+            roles.add(copy);
         }
         return roles;
     }
