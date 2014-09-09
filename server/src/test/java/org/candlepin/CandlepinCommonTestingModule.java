@@ -102,7 +102,7 @@ public class CandlepinCommonTestingModule extends CandlepinModule {
         bind(BeanValidationEventListener.class).toProvider(ValidationListenerProvider.class);
         bind(MessageInterpolator.class).to(CandlepinMessageInterpolator.class);
 
-        install(new JpaPersistModule("default"));
+        install(new JpaPersistModule("testing"));
         bind(JPAInitializer.class).asEagerSingleton();
 
         bind(X509ExtensionUtil.class);
