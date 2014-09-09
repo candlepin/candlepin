@@ -49,6 +49,9 @@ BuildRequires: ant >= 0:1.7.0
 BuildRequires: gettext
 BuildRequires: selinux-policy-doc
 BuildRequires: candlepin-common
+%if 0%{?rhel} < 7
+BuildRequires: ant-nodeps >= 0:1.7.0
+%endif
 
 %if 0%{?reqcpdeps}
 %global distlibdir %{_datadir}/%{name}/lib/
@@ -76,7 +79,6 @@ BuildRequires: mvn(org.slf4j:slf4j-api)  >= 0:1.7.4
 BuildRequires: mvn(org.slf4j:jcl-over-slf4j)  >= 0:1.7.4
 BuildRequires: mvn(ch.qos.logback:logback-classic)
 %else
-BuildRequires: ant-nodeps >= 0:1.7.0
 BuildRequires: jaxb-impl
 BuildRequires: google-guice >= 0:3.0
 BuildRequires: google-collections >= 0:1.0
