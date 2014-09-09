@@ -14,13 +14,9 @@
  */
 package org.candlepin.servlet.filter;
 
-import com.google.inject.Provider;
-
-import org.candlepin.audit.EventSink;
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 import com.google.inject.Singleton;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -28,6 +24,11 @@ import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletResponse;
+import org.candlepin.audit.EventSink;
+import org.candlepin.common.filter.TeeHttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * CandlepinScopeFilter
@@ -59,7 +60,15 @@ public class EventFilter implements Filter {
         chain.doFilter(request, response);
 
         // Won't trigger if an exception is thrown:
-        eventSinkProvider.get().sendEvents();
+        TeeHttpServletResponse resp = new TeeHttpServletResponse(
+                (HttpServletResponse) response);
+
+        if (resp.getStatus() >= 200 && resp.getStatus() < 300) {
+            eventSinkProvider.get().sendEvents();
+        }
+        else {
+            log.debug("Request failed, skipping event sending.");
+        }
     }
 
     @Override
