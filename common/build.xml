@@ -11,6 +11,7 @@
   <property name="pkgname" value="org.candlepin.common" />
 
   <!-- Destination for Candlepin jar dependencies in a regular build. -->
+  <!-- or points to jars from candlepin-deps -->
   <property name="dist.lib.dir" location="${distlibdir}" />
 
   <!-- A newline delimited list of all the JAR dependencies -->
@@ -110,9 +111,14 @@
     </javac>
   </target>
 
-  <target name="initjars">
-      <echo>Initializing jars</echo>
-      <echo>dist.lib.dir: ${dist.lib.dir}</echo>
+  <target name="usecpdeps">
+    <property name="usecpdeps" value="true" />
+  </target>
+
+  <!-- don't copy jars if we're using cpdeps -->
+  <target name="initjars" unless="usecpdeps">
+    <echo>Initializing jars</echo>
+    <echo>dist.lib.dir: ${dist.lib.dir}</echo>
 
     <!-- Handle the jars in /usr/share/java -->
     <jpackage-deps jars="${jar.deps}" dir="${dist.lib.dir}" />

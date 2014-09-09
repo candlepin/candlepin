@@ -18,7 +18,7 @@
     <not><isset property="lib.dir"/></not>
   </condition>
 
-  <target name="prereqs">
+  <target name="prereqs" unless="usecpdeps">
     <fail message="The dist.name property must be defined." unless="dist.name"/>
 
     <property name="deps.file" value="deps/${dist.name}.txt"/>
@@ -93,7 +93,11 @@
     </copy>
   </target>
 
-  <target name="initjars" depends="prereqs">
+  <target name="usecpdeps">
+    <property name="usecpdeps" value="true" />
+  </target>
+
+  <target name="initjars" depends="prereqs" unless="usecpdeps">
     <mkdir dir="${lib.dir}" />
     <loadlist src="${deps.file}" prop="jar.deps" negate="true">
       <regexp pattern="${scl.regexp}"/>

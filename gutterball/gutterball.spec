@@ -3,11 +3,20 @@
 %global _binary_payload w9.gzdio
 %global _source_payload w9.gzdio
 
+# This is technically just a temporary directory to get us through
+# the compilation phase. It is later destroyed and the spec file will
+# re-call initjars with the correct destination for both tomcat and jboss.
+%global distlibdir %{buildroot}/%{_tmppath}/distlibdir/
+
+%{?fedora:%global reqcpdeps 1}
+
 # Ideally we would just use %{dist} for the deps_suffix, but %dist isn't just
 # always the major version.  E.g. rpm --eval "%{dist}" returns ".el6_5" in the
 # RHEL 6 candlepin buildroot and ".el6" in other environments.
 %{?fedora:%global dist_name fc%{fedora}}
 %{?rhel:%global dist_name el%{rhel}}
+
+%global parent_proj candlepin
 
 %if 0%{?fedora} >= 19 || 0%{?rhel} >= 7
 %global tomcat tomcat
@@ -30,7 +39,13 @@ BuildArch: noarch
 
 # Universal build requires
 BuildRequires: java-devel >= 0:1.6.0
+BuildRequires: ant >= 0:1.7.0
 BuildRequires: gettext
+
+%if 0%{?reqcpdeps}
+%global distlibdir %{_datadir}/%{parent_proj}/%{name}/lib/
+%global usecpdeps "usecpdeps"
+%else
 BuildRequires: servlet
 BuildRequires: gettext-commons
 BuildRequires: qpid-java-client >= 0:0.22
@@ -48,7 +63,7 @@ BuildRequires: jackson-jaxrs-json-provider >= %{jackson_version}
 BuildRequires: jackson-module-jaxb-annotations >= %{jackson_version}
 
 # Version dependent build requires
-%if 0%{?rhel} == 6
+%if 0%{?rhel} < 7
 BuildRequires: jpackage-utils
 BuildRequires: ant-nodeps >= 0:1.7.0
 BuildRequires: jaxb-impl
@@ -59,9 +74,8 @@ BuildRequires: apache-commons-codec-eap6
 BuildRequires: jakarta-commons-lang
 %endif
 
-%if 0%{?rhel} == 7
+%if 0%{?rhel} >= 7
 BuildRequires: javapackages-tools
-BuildRequires: ant >= 0:1.7.0
 BuildRequires: glassfish-jaxb
 BuildRequires: candlepin-guice >= 0:3.0
 BuildRequires: mvn(org.apache.httpcomponents:httpclient) >= 0:4.1.2
@@ -69,7 +83,9 @@ BuildRequires: mvn(org.apache.commons:commons-lang)
 BuildRequires: mvn(org.slf4j:slf4j-api) >= 0:1.7.4
 BuildRequires: mvn(ch.qos.logback:logback-classic)
 %endif
+%endif # end reqcpdeps
 
+%if !0%{?reqcpdeps}
 # Universal requires
 Requires: java >= 0:1.6.0
 Requires: servlet
@@ -100,6 +116,7 @@ Requires: mvn(ch.qos.logback:logback-classic)
 Requires: mvn(net.sf.cglib:cglib)
 Requires: mvn(asm:asm)
 %endif
+%endif # end reqcpdeps
 
 %description
 Gutterball is a data aggregator for the Candlepin entitlement
@@ -109,7 +126,7 @@ engine.
 %setup -q
 
 %build
-ant -Ddist.name=%{dist_name} clean package
+ant -Ddist.name=%{dist_name} clean %{?reqcpdeps:usecpdeps} %{?reqcpdeps:-Dlib.dir=%{distlibdir}} package
 
 %install
 rm -rf %{buildroot}
@@ -127,9 +144,11 @@ install -m 644 conf/logrotate.conf %{buildroot}%{_sysconfdir}/logrotate.d/%{name
 install -d -m 755 %{buildroot}/%{_localstatedir}/lib/%{tomcat}/webapps/%{name}/
 %{__unzip} target/%{name}-%{version}.war -d %{buildroot}/%{_sharedstatedir}/%{tomcat}/webapps/%{name}/
 
+%if !0%{?reqcpdeps}
 #remove the copied jars and resymlink
 rm %{buildroot}/%{_localstatedir}/lib/%{tomcat}/webapps/%{name}/WEB-INF/lib/*.jar
 ant -Ddist.name=%{dist_name} -Dlib.dir=%{buildroot}/%{_sharedstatedir}/%{tomcat}/webapps/%{name}/WEB-INF/lib/ initjars
+%endif
 
 %clean
 rm -rf %{buildroot}
