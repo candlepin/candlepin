@@ -21,7 +21,7 @@
 Name: %{parent_proj}-common
 Summary: Common code for Candlepin and related projects
 License: GPLv2
-Version: 1.0.4
+Version: 1.0.5
 Release: 1%{?dist}
 URL: http://www.candlepinproject.org
 Source: %{name}-%{version}.tar.gz
@@ -166,6 +166,9 @@ rm -rf %{_tmppath}/distlibdir
 %{_datadir}/%{parent_proj}/gutterball/lib/%{name}.jar
 
 %changelog
+* Tue Sep 09 2014 jesus m. rodriguez <jesusr@redhat.com> 1.0.5-1
+- rhel6 requires ant-nodeps. (jesusr@redhat.com)
+
 * Tue Sep 09 2014 jesus m. rodriguez <jesusr@redhat.com> 1.0.4-1
 - use candlepin-deps-common instead of *-deps (jesusr@redhat.com)
 
