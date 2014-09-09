@@ -138,7 +138,7 @@ Common code for Candlepin and related projects
 
 %prep
 %setup -q
-mkdir -p %{distlibdir}
+#mkdir -p %{distlibdir}
 
 %build
 ant %{?rhel:-Ddeps.file=deps/%{deps_suffix}.txt} -Ddistlibdir=%{distlibdir} clean %{?reqcpdeps:usecpdeps} package
