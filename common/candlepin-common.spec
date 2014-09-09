@@ -21,7 +21,7 @@
 Name: %{parent_proj}-common
 Summary: Common code for Candlepin and related projects
 License: GPLv2
-Version: 1.0.2
+Version: 1.0.3
 Release: 1%{?dist}
 URL: http://www.candlepinproject.org
 Source: %{name}-%{version}.tar.gz
@@ -164,6 +164,9 @@ rm -rf %{_tmppath}/distlibdir
 %{_datadir}/%{parent_proj}/gutterball/lib/%{name}.jar
 
 %changelog
+* Tue Sep 09 2014 jesus m. rodriguez <jesusr@redhat.com> 1.0.3-1
+- remove the mkdir (jesusr@redhat.com)
+
 * Tue Sep 09 2014 jesus m. rodriguez <jesusr@redhat.com> 1.0.2-1
 - Update candlepin-deps (jesusr@redhat.com)
 - common: put jar in cpdeps location as well (jesusr@redhat.com)
