@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.26
+Version: 0.9.27
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -390,6 +390,16 @@ fi
 
 
 %changelog
+* Tue Sep 09 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.27-1
+- Update candlepin-deps (jesusr@redhat.com)
+- Move deps creation script (jesusr@redhat.com)
+- Remove duplicate hypervisor check outside of org (ckozak@redhat.com)
+- Small fixes to the performance data script. (mstead@redhat.com)
+- Fixed path issue for API lib. (mstead@redhat.com)
+- Add a friendly description for compliance event. (dgoodwin@redhat.com)
+- Move REST exceptions to common package (wpoteat@redhat.com)
+- Mark JsRunnerProvider.updated volatile (ckozak@redhat.com)
+
 * Mon Aug 25 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.26-1
 - Drop null needs type for mysql (wpoteat@redhat.com)
 - Reorganize all imports according to the Candlepin import order. (awood@redhat.com)
