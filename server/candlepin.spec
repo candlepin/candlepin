@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.27
+Version: 0.9.28
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -392,6 +392,10 @@ fi
 
 
 %changelog
+* Tue Sep 09 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.28-1
+- move ant-nodeps to work with community builds (jesusr@redhat.com)
+- By default, we should configure and use c3p0 (ckozak@redhat.com)
+
 * Tue Sep 09 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.27-1
 - Update candlepin-deps (jesusr@redhat.com)
 - Move deps creation script (jesusr@redhat.com)
