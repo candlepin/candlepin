@@ -37,7 +37,7 @@ BuildRequires: gettext
 %if 0%{?reqcpdeps}
 %global distlibdir %{_datadir}/%{parent_proj}/common/lib/
 %global usecpdeps "usecpdeps"
-BuildRequires: candlepin-deps >= 0:0.3.1
+BuildRequires: candlepin-deps-common >= 0:0.3.1
 %else
 BuildRequires: resteasy >= 0:2.3.7
 BuildRequires: jakarta-commons-io
