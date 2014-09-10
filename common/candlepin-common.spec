@@ -33,7 +33,7 @@ BuildArch: noarch
 BuildRequires: java-devel >= 0:1.6.0
 BuildRequires: ant >= 0:1.7.0
 BuildRequires: gettext
-%if 0%{?rhel} < 7
+%if 0%{?rhel} && 0%{?rhel} < 7
 BuildRequires: ant-nodeps >= 0:1.7.0
 %endif
 
