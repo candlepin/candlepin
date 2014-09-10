@@ -14,16 +14,15 @@
  */
 package org.candlepin.guice;
 
-import org.candlepin.servlet.filter.EventFilter;
-
+import com.google.inject.servlet.ServletModule;
+import java.util.HashMap;
+import java.util.Map;
 import org.candlepin.common.filter.LoggingFilter;
 import org.candlepin.servlet.filter.CandlepinPersistFilter;
 import org.candlepin.servlet.filter.CandlepinScopeFilter;
 import org.candlepin.servlet.filter.ContentTypeHackFilter;
-import com.google.inject.servlet.ServletModule;
+import org.candlepin.servlet.filter.EventFilter;
 import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Candlepin-specific {@link ServletModule} that configures servlet filters.

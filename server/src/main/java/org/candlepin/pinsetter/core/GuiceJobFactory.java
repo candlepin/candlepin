@@ -14,13 +14,12 @@
  */
 package org.candlepin.pinsetter.core;
 
-import org.candlepin.guice.CandlepinSingletonScope;
-import org.candlepin.guice.SimpleScope;
-
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.persist.UnitOfWork;
-
+import javax.inject.Named;
+import org.candlepin.guice.CandlepinSingletonScope;
+import org.candlepin.guice.SimpleScope;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -30,8 +29,6 @@ import org.quartz.spi.JobFactory;
 import org.quartz.spi.TriggerFiredBundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.inject.Named;
 
 /**
  * GuiceJobFactory is a custom Quartz JobFactory implementation which
@@ -73,19 +70,27 @@ public class GuiceJobFactory implements JobFactory {
 
         @Override
         public void execute(JobExecutionContext context) throws JobExecutionException {
+
+            // Enter custom scopes and start a unit of work just for the injection done
+            // when creating the job:
             pinsetterJobScope.enter();
             candlepinSingletonScope.enter();
             boolean startedUow = startUnitOfWork();
             try {
                 decorated = injector.getInstance(decoratedJobClass);
-                decorated.execute(context);
             }
             finally {
                 candlepinSingletonScope.exit();
-                pinsetterJobScope.exit();
                 if (startedUow) {
                     endUnitOfWork();
                 }
+            }
+
+            try {
+                decorated.execute(context);
+            }
+            finally {
+                pinsetterJobScope.exit();
             }
         }
 

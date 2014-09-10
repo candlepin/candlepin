@@ -57,17 +57,17 @@ public class EventFilter implements Filter {
     public void doFilter(ServletRequest request, ServletResponse response,
         FilterChain chain) throws IOException, ServletException {
 
-        chain.doFilter(request, response);
-
-        // Won't trigger if an exception is thrown:
         TeeHttpServletResponse resp = new TeeHttpServletResponse(
                 (HttpServletResponse) response);
-
+        chain.doFilter(request, resp);
         if (resp.getStatus() >= 200 && resp.getStatus() < 300) {
             eventSinkProvider.get().sendEvents();
         }
         else {
-            log.debug("Request failed, skipping event sending.");
+            if (log.isDebugEnabled()) {
+                log.debug("Request failed, skipping event sending, status=" +
+                        resp.getStatus());
+            }
         }
     }
 
