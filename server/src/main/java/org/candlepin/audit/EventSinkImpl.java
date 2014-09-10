@@ -14,8 +14,10 @@
  */
 package org.candlepin.audit;
 
+import com.google.inject.Inject;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
@@ -24,10 +26,8 @@ import org.candlepin.model.Rules;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
-import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.util.Set;
 
 /**
  * EventSink - Reliably dispatches events to all configured listeners.
@@ -70,7 +70,6 @@ public class EventSinkImpl implements EventSink {
      */
     @Override
     public void sendEvents() {
-        log.info("Dispatching " + getEventQueue().size() + " events");
         for (Event e : getEventQueue()) {
             dispatcher.sendEvent(e);
         }

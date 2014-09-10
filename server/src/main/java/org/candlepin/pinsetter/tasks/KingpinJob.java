@@ -112,10 +112,6 @@ public abstract class KingpinJob implements Job {
         }
     }
 
-    private void dispatchEvents() {
-
-    }
-
     /**
      * Method for actual execution, execute handles unitOfWork for us
      * @param context
