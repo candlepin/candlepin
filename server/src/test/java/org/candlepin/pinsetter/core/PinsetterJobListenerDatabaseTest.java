@@ -15,15 +15,14 @@
 package org.candlepin.pinsetter.core;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.quartz.JobKey.jobKey;
 
 import org.candlepin.CandlepinNonServletEnvironmentTestingModule;
 import org.candlepin.auth.Principal;
 import org.candlepin.common.config.Configuration;
+import org.candlepin.common.guice.JPAInitializer;
 import org.candlepin.guice.I18nProvider;
-import org.candlepin.guice.JPAInitializer;
 import org.candlepin.guice.PinsetterJobScoped;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.guice.SimpleScope;

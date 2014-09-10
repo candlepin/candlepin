@@ -175,7 +175,7 @@ public class GutterballContextListener extends
             }
         });
         modules.add(new GutterballServletModule());
-        modules.add(new GutterballModule());
+        modules.add(new GutterballModule(config));
 
         return modules;
     }

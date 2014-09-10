@@ -37,6 +37,12 @@ public class ConfigProperties {
     public static final String MONGODB_USERNAME = "gutterball.mongodb.username";
     public static final String MONGODB_PASSWORD = "gutterball.mongodb.password";
 
+    public static final String JPA_DRIVER = "jpa.config.hibernate.connection.driver_class";
+    public static final String JPA_CONNECTION_URL = "jpa.config.hibernate.connection.url";
+    public static final String JPA_DIALECT = "jpa.config.hibernate.dialect";
+    public static final String JPA_DB_USERNAME = "jpa.config.hibernate.connection.username";
+    public static final String JPA_DB_PASSWORD = "jpa.config.hibernate.connection.password";
+
     public static final Map<String, String> DEFAULT_PROPERTIES =
         new HashMap<String, String>() {
 
@@ -56,6 +62,19 @@ public class ConfigProperties {
                 this.put(MONGODB_HOST, "localhost");
                 this.put(MONGODB_PORT, "27017");
                 this.put(MONGODB_DATABASE, "gutterball");
+
+                this.put(JPA_DRIVER, "org.postgresql.Driver");
+                this.put(JPA_CONNECTION_URL, "jdbc:postgresql:gutterball");
+                this.put(JPA_DIALECT, "org.hibernate.dialect.PostgreSQLDialect");
+                this.put(JPA_DB_USERNAME, "gutterball");
+                this.put(JPA_DB_PASSWORD, "");
             }
+                    //jpa.config.hibernate.connection.driver_class=org.postgresql.Driver
+                    //jpa.config.hibernate.connection.url=jdbc:postgresql:candlepin
+                    //jpa.config.hibernate.connection.username=candlepin
+                    //jpa.config.hibernate.connection.password=
+
+                    //jpa.config.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+                    //jpa.config.hibernate.show_sql=false
         };
 }

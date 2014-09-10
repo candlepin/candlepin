@@ -38,6 +38,7 @@ import org.candlepin.common.exceptions.mappers.UnsupportedMediaTypeExceptionMapp
 import org.candlepin.common.exceptions.mappers.ValidationExceptionMapper;
 import org.candlepin.common.exceptions.mappers.WebApplicationExceptionMapper;
 import org.candlepin.common.exceptions.mappers.WriterExceptionMapper;
+import org.candlepin.common.guice.JPAInitializer;
 import org.candlepin.common.resteasy.interceptor.DynamicFilterInterceptor;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.CandlepinPoolManager;
