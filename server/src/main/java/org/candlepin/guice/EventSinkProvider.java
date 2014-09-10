@@ -14,21 +14,27 @@
  */
 package org.candlepin.guice;
 
-import org.candlepin.audit.EventSink;
-
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.OutOfScopeException;
 import com.google.inject.ProvisionException;
 import com.google.inject.name.Names;
-
 import javax.inject.Inject;
 import javax.inject.Provider;
+import org.candlepin.audit.EventSink;
+import org.candlepin.common.exceptions.IseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
+ * Provider which returns the correct event sink for the current context.
  *
+ * Return either the request or pinsetter scoped event sink, which allows us to queue
+ * events and send them only if the request or job is successful.
  */
 public class EventSinkProvider implements Provider<EventSink> {
+
+    private static Logger log = LoggerFactory.getLogger(EventSinkProvider.class);
 
     private EventSink requestSink;
     private EventSink pinsetterSink;
@@ -38,14 +44,16 @@ public class EventSinkProvider implements Provider<EventSink> {
         // Guice doesn't surface any way to tell what scope you're in.  So we just have to
         // ask for the object and deal with any consequences if it isn't available.
         try {
-            requestSink = injector.getInstance(Key.get(EventSink.class, Names.named("RequestSink")));
+            requestSink = injector.getInstance(Key.get(EventSink.class,
+                    Names.named("RequestSink")));
         }
         catch (ProvisionException e) {
             requestSink = null;
         }
 
         try {
-            pinsetterSink = injector.getInstance(Key.get(EventSink.class, Names.named("PinsetterSink")));
+            pinsetterSink = injector.getInstance(Key.get(EventSink.class,
+                    Names.named("PinsetterSink")));
         }
         catch (ProvisionException e) {
             pinsetterSink = null;
@@ -54,6 +62,13 @@ public class EventSinkProvider implements Provider<EventSink> {
 
     @Override
     public EventSink get() {
+
+        // These should not both be null, if so something is very wrong:
+        if (requestSink != null && pinsetterSink != null) {
+            log.error("Request sink and pinsetter sink are both non-null.");
+            throw new IseException("Scope configuration error.");
+        }
+
         if (requestSink != null) {
             return requestSink;
         }
