@@ -14,13 +14,11 @@
  */
 package org.candlepin.audit;
 
-import org.candlepin.config.Config;
-import org.candlepin.config.ConfigProperties;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-
+import org.candlepin.config.Config;
+import org.candlepin.config.ConfigProperties;
 import org.hornetq.api.core.HornetQException;
 import org.hornetq.api.core.TransportConfiguration;
 import org.hornetq.api.core.client.ClientMessage;
@@ -63,7 +61,7 @@ public class HornetqEventDispatcher  {
         }
     }
 
-    private ClientSessionFactory createClientSessionFactory() throws Exception {
+    protected ClientSessionFactory createClientSessionFactory() throws Exception {
         ServerLocator locator = HornetQClient.createServerLocatorWithoutHA(
             new TransportConfiguration(InVMConnectorFactory.class.getName()));
         locator.setMinLargeMessageSize(largeMsgSize);

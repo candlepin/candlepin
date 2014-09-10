@@ -14,10 +14,23 @@
  */
 package org.candlepin.audit;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+import com.fasterxml.jackson.core.JsonGenerationException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.ArrayList;
 import org.candlepin.auth.Principal;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.guice.PrincipalProvider;
@@ -27,10 +40,6 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Rules;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.test.TestUtil;
-
-import com.fasterxml.jackson.core.JsonGenerationException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.hornetq.api.core.HornetQBuffers;
 import org.hornetq.api.core.HornetQException;
 import org.hornetq.api.core.client.ClientMessage;
@@ -44,8 +53,6 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-
-import java.util.ArrayList;
 
 /**
  * EventSinkImplTest
@@ -84,12 +91,13 @@ public class EventSinkImplTest {
      */
     private EventSinkImpl createEventSink(final ClientSessionFactory sessionFactory) {
         return new EventSinkImpl(factory,
-                new HornetqEventDispatcher(mapper, new CandlepinCommonTestConfig())) {
-//            @Override
-            protected ClientSessionFactory createClientSessionFactory() {
-                return sessionFactory;
+                new HornetqEventDispatcher(mapper, new CandlepinCommonTestConfig()) {
+                @Override
+                protected ClientSessionFactory createClientSessionFactory() {
+                    return sessionFactory;
+                }
             }
-        };
+        );
     }
 
     /**Set up the {@link ClientSessionFactory} to throw an exception when
@@ -128,6 +136,7 @@ public class EventSinkImplTest {
         ArgumentCaptor<ClientMessage> argumentCaptor = ArgumentCaptor
             .forClass(ClientMessage.class);
         eventSinkImpl.queueEvent(mock(Event.class));
+        eventSinkImpl.sendEvents();
         verify(mockClientProducer).send(argumentCaptor.capture());
         assertEquals(content, argumentCaptor.getValue().getBodyBuffer()
             .readString());
@@ -149,6 +158,7 @@ public class EventSinkImplTest {
         throws Exception {
         Consumer consumer = TestUtil.createConsumer();
         eventSinkImpl.emitConsumerCreated(consumer);
+        eventSinkImpl.sendEvents();
         verify(mockClientProducer).send(any(ClientMessage.class));
     }
 
@@ -157,6 +167,7 @@ public class EventSinkImplTest {
         throws Exception {
         Owner owner = new Owner("Test Owner ");
         eventSinkImpl.emitOwnerCreated(owner);
+        eventSinkImpl.sendEvents();
         verify(mockClientProducer).send(any(ClientMessage.class));
     }
 
@@ -165,6 +176,7 @@ public class EventSinkImplTest {
         throws Exception {
         Pool pool = TestUtil.createPool(TestUtil.createProduct());
         eventSinkImpl.emitPoolCreated(pool);
+        eventSinkImpl.sendEvents();
         verify(mockClientProducer).send(any(ClientMessage.class));
     }
 
@@ -173,6 +185,7 @@ public class EventSinkImplTest {
         throws Exception {
         Consumer consumer = TestUtil.createConsumer();
         eventSinkImpl.emitExportCreated(consumer);
+        eventSinkImpl.sendEvents();
         verify(mockClientProducer).send(any(ClientMessage.class));
     }
 
@@ -181,6 +194,7 @@ public class EventSinkImplTest {
         throws Exception {
         Owner owner = new Owner("Import guy");
         eventSinkImpl.emitImportCreated(owner);
+        eventSinkImpl.sendEvents();
         verify(mockClientProducer).send(any(ClientMessage.class));
     }
 
@@ -189,6 +203,7 @@ public class EventSinkImplTest {
         throws Exception {
         ActivationKey key = TestUtil.createActivationKey(new Owner("deadbeef"), null);
         eventSinkImpl.emitActivationKeyCreated(key);
+        eventSinkImpl.sendEvents();
         verify(mockClientProducer).send(any(ClientMessage.class));
     }
 
@@ -200,6 +215,7 @@ public class EventSinkImplTest {
         pools.add(TestUtil.createPool(TestUtil.createProduct()));
         ActivationKey key = TestUtil.createActivationKey(new Owner("deadbeef"), pools);
         eventSinkImpl.emitActivationKeyCreated(key);
+        eventSinkImpl.sendEvents();
         verify(mockClientProducer).send(any(ClientMessage.class));
     }
 
@@ -209,6 +225,7 @@ public class EventSinkImplTest {
         Rules oldRules = new Rules(TestUtil.createRulesBlob(1));
         Rules newRules = new Rules(TestUtil.createRulesBlob(2));
         eventSinkImpl.emitRulesModified(oldRules, newRules);
+        eventSinkImpl.sendEvents();
         verify(mockClientProducer).send(any(ClientMessage.class));
     }
 
@@ -217,6 +234,7 @@ public class EventSinkImplTest {
         throws Exception {
         Rules oldRules = new Rules(TestUtil.createRulesBlob(1));
         eventSinkImpl.emitRulesDeleted(oldRules);
+        eventSinkImpl.sendEvents();
         verify(mockClientProducer).send(any(ClientMessage.class));
     }
 

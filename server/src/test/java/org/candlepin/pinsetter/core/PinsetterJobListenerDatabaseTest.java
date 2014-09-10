@@ -14,26 +14,28 @@
  */
 package org.candlepin.pinsetter.core;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
-import static org.quartz.JobKey.*;
-
-import org.candlepin.CandlepinNonServletEnvironmentTestingModule;
-import org.candlepin.auth.Principal;
-import org.candlepin.guice.I18nProvider;
-import org.candlepin.guice.JPAInitializer;
-import org.candlepin.guice.PrincipalProvider;
-import org.candlepin.guice.TestPrincipalProvider;
-import org.candlepin.model.JobCurator;
-import org.candlepin.pinsetter.core.model.JobStatus;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.quartz.JobKey.jobKey;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.name.Names;
 import com.google.inject.persist.UnitOfWork;
 import com.google.inject.persist.jpa.JpaPersistModule;
-
 import org.apache.commons.lang.RandomStringUtils;
+import org.candlepin.CandlepinNonServletEnvironmentTestingModule;
+import org.candlepin.auth.Principal;
+import org.candlepin.guice.I18nProvider;
+import org.candlepin.guice.JPAInitializer;
+import org.candlepin.guice.PinsetterJobScoped;
+import org.candlepin.guice.PrincipalProvider;
+import org.candlepin.guice.SimpleScope;
+import org.candlepin.guice.TestPrincipalProvider;
+import org.candlepin.model.JobCurator;
+import org.candlepin.pinsetter.core.model.JobStatus;
 import org.junit.Before;
 import org.junit.Test;
 import org.quartz.JobDataMap;
@@ -110,6 +112,11 @@ public class PinsetterJobListenerDatabaseTest {
             bind(JobListener.class).to(PinsetterJobListener.class);
             bind(PrincipalProvider.class).to(TestPrincipalProvider.class);
             bind(Principal.class).toProvider(TestPrincipalProvider.class);
+
+            SimpleScope pinsetterJobScope = new SimpleScope();
+            bindScope(PinsetterJobScoped.class, pinsetterJobScope);
+            bind(SimpleScope.class).annotatedWith(Names.named("PinsetterJobScope"))
+                .toInstance(pinsetterJobScope);
         }
     }
 }

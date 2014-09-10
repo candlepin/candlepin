@@ -14,8 +14,13 @@
  */
 package org.candlepin.pinsetter.tasks;
 
-import static org.quartz.impl.matchers.NameMatcher.*;
+import static org.quartz.impl.matchers.NameMatcher.jobNameEquals;
 
+import com.google.inject.Inject;
+import com.google.inject.persist.UnitOfWork;
+import javax.inject.Provider;
+import javax.persistence.EntityExistsException;
+import javax.persistence.PersistenceException;
 import org.candlepin.audit.EventSink;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
@@ -23,10 +28,6 @@ import org.candlepin.guice.PinsetterJobScoped;
 import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.PinsetterJobListener;
 import org.candlepin.pinsetter.core.model.JobStatus;
-
-import com.google.inject.Inject;
-import com.google.inject.persist.UnitOfWork;
-
 import org.quartz.Job;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
@@ -37,10 +38,6 @@ import org.quartz.Trigger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
-
-import javax.inject.Provider;
-import javax.persistence.EntityExistsException;
-import javax.persistence.PersistenceException;
 
 /**
  * KingpinJob replaces TransactionalPinsetterJob, which encapsulated
@@ -78,7 +75,9 @@ public abstract class KingpinJob implements Job {
         boolean startedUow = startUnitOfWork();
         try {
             toExecute(context);
-            eventSinkProvider.get().sendEvents();
+            if (eventSinkProvider != null) {
+                eventSinkProvider.get().sendEvents();
+            }
         }
         catch (PersistenceException e) {
             // Multiple refreshpools running at once can cause the following:
