@@ -16,6 +16,7 @@ package org.candlepin;
 
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Principal;
+import org.candlepin.common.guice.JPAInitializer;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.Config;
 import org.candlepin.config.LoggingConfig;
@@ -26,7 +27,6 @@ import org.candlepin.guice.CandlepinSingletonScope;
 import org.candlepin.guice.CandlepinSingletonScoped;
 import org.candlepin.guice.HttpMethodMatcher;
 import org.candlepin.guice.I18nProvider;
-import org.candlepin.guice.JPAInitializer;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.guice.ScriptEngineProvider;
 import org.candlepin.guice.TestPrincipalProvider;

@@ -14,6 +14,7 @@
  */
 package org.candlepin.gutterball.guice;
 
+import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.mappers.BadRequestExceptionMapper;
 import org.candlepin.common.exceptions.mappers.CandlepinExceptionMapper;
 import org.candlepin.common.exceptions.mappers.DefaultOptionsMethodExceptionMapper;
@@ -33,6 +34,8 @@ import org.candlepin.common.exceptions.mappers.UnsupportedMediaTypeExceptionMapp
 import org.candlepin.common.exceptions.mappers.ValidationExceptionMapper;
 import org.candlepin.common.exceptions.mappers.WebApplicationExceptionMapper;
 import org.candlepin.common.exceptions.mappers.WriterExceptionMapper;
+import org.candlepin.common.guice.JPAInitializer;
+import org.candlepin.gutterball.config.JPAConfigurationParser;
 import org.candlepin.gutterball.eventhandler.EventHandler;
 import org.candlepin.gutterball.eventhandler.EventManager;
 import org.candlepin.gutterball.eventhandler.HandlerTarget;
@@ -50,6 +53,7 @@ import org.candlepin.gutterball.util.EventHandlerLoader;
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.persist.jpa.JpaPersistModule;
 import com.google.inject.servlet.ServletScopes;
 
 import org.xnap.commons.i18n.I18n;
@@ -59,6 +63,12 @@ import org.xnap.commons.i18n.I18n;
  * GutterballModule configures the modules used by Gutterball using Guice.
  */
 public class GutterballModule extends AbstractModule {
+
+    private Configuration config;
+
+    public GutterballModule(Configuration config) {
+        this.config = config;
+    }
 
     /**
      * {@inheritDoc}
@@ -70,6 +80,7 @@ public class GutterballModule extends AbstractModule {
         bind(JsonProvider.class);
 
         // Backend classes
+        configureHibernate();
         configureEventHandlers();
         bind(EventManager.class).asEagerSingleton();
         bind(EventReceiver.class).asEagerSingleton();
@@ -104,6 +115,12 @@ public class GutterballModule extends AbstractModule {
         bind(RuntimeExceptionMapper.class);
         bind(JAXBUnmarshalExceptionMapper.class);
         bind(JAXBMarshalExceptionMapper.class);
+    }
+
+    private void configureHibernate() {
+        JPAConfigurationParser parser = new JPAConfigurationParser(this.config);
+        install(new JpaPersistModule("default").properties(parser.parseConfig()));
+        bind(JPAInitializer.class).asEagerSingleton();
     }
 
     private void configureEventHandlers() {

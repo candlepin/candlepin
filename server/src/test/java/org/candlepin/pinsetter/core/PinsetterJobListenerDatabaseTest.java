@@ -20,8 +20,8 @@ import static org.quartz.JobKey.*;
 
 import org.candlepin.CandlepinNonServletEnvironmentTestingModule;
 import org.candlepin.auth.Principal;
+import org.candlepin.common.guice.JPAInitializer;
 import org.candlepin.guice.I18nProvider;
-import org.candlepin.guice.JPAInitializer;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.guice.TestPrincipalProvider;
 import org.candlepin.model.JobCurator;

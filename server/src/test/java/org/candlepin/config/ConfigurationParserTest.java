@@ -16,6 +16,8 @@ package org.candlepin.config;
 
 import static org.junit.Assert.*;
 
+import org.candlepin.common.config.ConfigurationParser;
+
 import org.junit.Test;
 
 import java.util.HashMap;

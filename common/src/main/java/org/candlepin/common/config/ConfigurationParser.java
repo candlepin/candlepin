@@ -13,7 +13,7 @@
  * in this software or its documentation.
  */
 
-package org.candlepin.config;
+package org.candlepin.common.config;
 
 import java.util.Map;
 import java.util.Map.Entry;
@@ -22,7 +22,7 @@ import java.util.Properties;
 /**
  * ConfigurationParser
  */
-abstract class ConfigurationParser {
+public abstract class ConfigurationParser {
 
     /**
      * Converts the given Map into a Properties object.
