@@ -7,7 +7,7 @@
 #
 # Can be run and re-run against a typical dev deployment without any arguments.
 
-require  "../../client/ruby/candlepin_api"
+require  "../client/ruby/candlepin_api"
 require 'pp'
 
 require 'benchmark'

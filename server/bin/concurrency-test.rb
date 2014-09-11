@@ -8,7 +8,7 @@
 # watch the progress bar in terminal 2 (green dot for consumed ent, red N for not)
 # watch the details in terminal 1
 
-require "../../client/ruby/candlepin_api"
+require "../client/ruby/candlepin_api"
 require 'pp'
 require 'optparse'
 
