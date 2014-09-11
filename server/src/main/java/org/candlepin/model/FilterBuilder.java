@@ -20,6 +20,7 @@ import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.LikeExpression;
 import org.hibernate.criterion.Restrictions;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -34,27 +35,55 @@ import java.util.Map.Entry;
 public abstract class FilterBuilder {
 
     private Map<String, List<String>> attributeFilters;
+    private List<String> idFilters;
 
     public FilterBuilder() {
         this.attributeFilters = new HashMap<String, List<String>>();
+        this.idFilters = new LinkedList<String>();
     }
 
-    public void addAttributeFilter(String attrName, String attrValue) {
+    public FilterBuilder addIdFilter(String id) {
+        idFilters.add(id);
+        return this;
+    }
+
+    public FilterBuilder addIdFilters(Collection<String> ids) {
+        idFilters.addAll(ids);
+        return this;
+    }
+
+    public FilterBuilder addAttributeFilter(String attrName, String attrValue) {
         if (!attributeFilters.containsKey(attrName)) {
             attributeFilters.put(attrName, new LinkedList<String>());
         }
         attributeFilters.get(attrName).add(attrValue);
+        return this;
     }
 
     public void applyTo(Criteria parentCriteria) {
         // Only apply attribute filters if any were specified.
         if (!attributeFilters.isEmpty()) {
-            parentCriteria.add(buildAttributeCriteria());
+            parentCriteria.add(buildCriteria());
         }
     }
 
     public Criterion getCriteria() {
-        return buildAttributeCriteria();
+        return buildCriteria();
+    }
+
+    private Criterion buildCriteria() {
+        Conjunction all = Restrictions.conjunction();
+        if (!attributeFilters.isEmpty()) {
+            all.add(buildAttributeCriteria());
+        }
+        if (!idFilters.isEmpty()) {
+            all.add(buildIdFilters());
+        }
+        return all;
+    }
+
+    private Criterion buildIdFilters() {
+        return Restrictions.in("id", idFilters);
     }
 
     private Criterion buildAttributeCriteria() {

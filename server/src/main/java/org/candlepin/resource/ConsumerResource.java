@@ -85,6 +85,7 @@ import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.consumer.ConsumerRules;
 import org.candlepin.policy.js.quantity.QuantityRules;
 import org.candlepin.policy.js.quantity.SuggestedQuantity;
+import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ConsumerInstalledProductEnricher;
 import org.candlepin.resource.util.ResourceDateParser;
@@ -1449,7 +1450,7 @@ public class ConsumerResource {
         @QueryParam("email_locale") String emailLocale,
         @QueryParam("async") @DefaultValue("false") boolean async,
         @QueryParam("entitle_date") String entitleDateStr,
-        @QueryParam("from_pool") HashSet<String> fromPools) {
+        @QueryParam("from_pool") LinkedList<String> fromPools) {
 
         // Check that only one query param was set:
         if (poolIdString != null && productIds != null && productIds.length > 0) {
@@ -1534,7 +1535,9 @@ public class ConsumerResource {
         }
         else {
             try {
-                entitlements = entitler.bindByProducts(productIds, consumer, entitleDate, fromPools);
+                AutobindData autobindData = AutobindData.create(consumer).on(entitleDate)
+                        .forProducts(productIds).withPools(fromPools);
+                entitlements = entitler.bindByProducts(autobindData);
             }
             catch (ForbiddenException fe) {
                 throw fe;

@@ -27,9 +27,10 @@ import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.js.pool.PoolUpdate;
+import org.candlepin.resource.dto.AutobindData;
 
+import java.util.Collection;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -84,20 +85,15 @@ public interface PoolManager {
      *
      * TODO: Throw exception if entitlement not granted. Report why.
      *
-     * @param consumer
-     * consumer requesting to be entitled
-     * @param productIds
-     * products to be entitled.
-     * @param entitleDate specific date to entitle by.
+     * @param data AutobindData encapsulating data required for an autobind request
      * @return Entitlement
      * @throws EntitlementRefusedException if entitlement is refused
      */
-    List<Entitlement> entitleByProducts(Consumer consumer, String[] productIds,
-        Date entitleDate, HashSet<String> fromPools)
+    List<Entitlement> entitleByProducts(AutobindData data)
         throws EntitlementRefusedException;
 
     List<PoolQuantity> getBestPools(Consumer consumer, String[] productIds,
-        Date entitleDate, Owner owner, String serviceLevelOverride, HashSet<String> fromPools)
+        Date entitleDate, Owner owner, String serviceLevelOverride, Collection<String> fromPools)
         throws EntitlementRefusedException;
 
     Pool find(String poolId);
@@ -219,7 +215,7 @@ public interface PoolManager {
      */
     List<PoolQuantity> getBestPoolsForHost(Consumer guest,
         Consumer host, Date entitleDate, Owner owner,
-        String serviceLevelOverride, HashSet<String> fromPools) throws EntitlementRefusedException;
+        String serviceLevelOverride, Collection<String> fromPools) throws EntitlementRefusedException;
 
     /**
      * @param consumer
@@ -228,7 +224,7 @@ public interface PoolManager {
      * @return list of entitlements to bind
      * @throws EntitlementRefusedException if unable to bind
      */
-    List<Entitlement> entitleByProductsForHost(Consumer consumer,
-        Consumer host, Date entitleDate, HashSet<String> fromPools)
+    List<Entitlement> entitleByProductsForHost(Consumer guest, Consumer host,
+            Date entitleDate, Collection<String> possiblePools)
         throws EntitlementRefusedException;
 }

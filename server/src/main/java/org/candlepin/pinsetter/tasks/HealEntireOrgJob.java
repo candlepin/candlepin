@@ -22,6 +22,7 @@ import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.pinsetter.core.model.JobStatus;
+import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
@@ -89,8 +90,7 @@ public class HealEntireOrgJob extends UniqueByOwnerJob {
      */
     @Transactional
     private void healSingleConsumer(Consumer consumer, Date date) {
-        List<Entitlement> ents = entitler.bindByProducts(null, consumer,
-                date, true, null);
+        List<Entitlement> ents = entitler.bindByProducts(AutobindData.create(consumer).on(date), true);
         entitler.sendEvents(ents);
     }
 
