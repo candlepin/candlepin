@@ -72,4 +72,5 @@
     <include file="db/changelog/20140616140315-remove-reliant-product.xml" />
     <include file="db/changelog/20140815131046-drop-event-entity-id-not-null.xml" />
     <include file="db/changelog/20140811163932-compliance-on-startdate.xml" />
+    <include file="db/changelog/20140911164800-add_activation_key_description.xml" />
 </databaseChangeLog>

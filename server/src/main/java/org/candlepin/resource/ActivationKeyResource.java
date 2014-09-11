@@ -78,8 +78,9 @@ public class ActivationKeyResource {
      *   "pools" : [ ],
      *   "contentOverrides" : [ ],
      *   "releaseVer" : {},
-      *  "serviceLevel" : null,
-      *  "updated" : [date]
+     *   "serviceLevel" : null,
+     *   "description" : null,
+     *   "updated" : [date]
      *   "created" : [date],
      * }
      * </pre>
@@ -143,6 +144,9 @@ public class ActivationKeyResource {
         }
         if (key.getReleaseVer() != null) {
             toUpdate.setReleaseVer(key.getReleaseVer());
+        }
+        if (key.getDescription() != null) {
+            toUpdate.setDescription(key.getDescription());
         }
         activationKeyCurator.merge(toUpdate);
 
