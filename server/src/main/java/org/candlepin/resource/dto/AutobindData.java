@@ -16,8 +16,12 @@ package org.candlepin.resource.dto;
 
 import org.candlepin.model.Consumer;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+
 import java.util.Collection;
 import java.util.Date;
+import java.util.LinkedList;
 
 /**
  * Encapsulates data for an autobind
@@ -32,6 +36,7 @@ public class AutobindData {
     public AutobindData(Consumer consumer) {
         // Consumer is always required
         this.consumer = consumer;
+        possiblePools = new LinkedList<String>();
     }
 
     public static AutobindData create(Consumer consumer) {
@@ -44,7 +49,12 @@ public class AutobindData {
     }
 
     public AutobindData withPools(Collection<String> possiblePools) {
-        this.possiblePools = possiblePools;
+        if (possiblePools != null && !possiblePools.isEmpty()) {
+            this.possiblePools = possiblePools;
+        }
+        else {
+            this.possiblePools.clear();
+        }
         return this;
     }
 
@@ -83,5 +93,29 @@ public class AutobindData {
 
     public void setConsumer(Consumer consumer) {
         this.consumer = consumer;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (!(other instanceof AutobindData)) {
+            return false;
+        }
+        AutobindData that = (AutobindData) other;
+        return new EqualsBuilder()
+            .append(this.onDate, that.onDate)
+            .append(this.productIds, that.productIds)
+            .append(this.consumer, that.consumer)
+            .append(this.possiblePools, that.possiblePools)
+            .isEquals();
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder()
+            .append(onDate)
+            .append(productIds)
+            .append(consumer)
+            .append(possiblePools)
+            .hashCode();
     }
 }

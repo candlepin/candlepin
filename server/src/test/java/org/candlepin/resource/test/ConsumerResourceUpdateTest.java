@@ -47,6 +47,7 @@ import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.resource.ConsumerResource;
+import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
@@ -441,7 +442,7 @@ public class ConsumerResourceUpdateTest {
             createConsumerWithGuests("Guest 1"));
 
         verify(poolManager).revokeEntitlement(eq(entitlement));
-        verify(entitler).bindByProducts(null, guest1, null, null);
+        verify(entitler).bindByProducts(AutobindData.create(guest1));
     }
 
     @Test

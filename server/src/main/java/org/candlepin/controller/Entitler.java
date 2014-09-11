@@ -36,8 +36,8 @@ import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -122,7 +122,7 @@ public class Entitler {
     }
 
     public List<Entitlement> bindByProducts(String[] productIds,
-        String consumeruuid, Date entitleDate, HashSet<String> fromPools) {
+        String consumeruuid, Date entitleDate, Collection<String> fromPools) {
         Consumer c = consumerCurator.findByUuid(consumeruuid);
         AutobindData data = AutobindData.create(c).on(entitleDate)
                 .forProducts(productIds).withPools(fromPools);

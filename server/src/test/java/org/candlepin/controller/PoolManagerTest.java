@@ -57,6 +57,7 @@ import org.candlepin.policy.js.entitlement.Enforcer.CallerType;
 import org.candlepin.policy.js.entitlement.PreUnbindHelper;
 import org.candlepin.policy.js.pool.PoolRules;
 import org.candlepin.policy.js.pool.PoolUpdate;
+import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
@@ -519,8 +520,9 @@ public class PoolManagerTest {
             any(Set.class), eq(false)))
             .thenReturn(bestPools);
 
-        List<Entitlement> e = manager.entitleByProducts(TestUtil.createConsumer(o),
-            new String[] { product.getId() }, now, null);
+        AutobindData data = AutobindData.create(TestUtil.createConsumer(o))
+                .forProducts(new String[] { product.getId() }).on(now);
+        List<Entitlement> e = manager.entitleByProducts(data);
 
         assertNotNull(e);
         assertEquals(e.size(), 1);
@@ -718,8 +720,8 @@ public class PoolManagerTest {
             .thenReturn(bestPools);
 
         // Make the call but provide a null array of product IDs (simulates healing):
-        manager.entitleByProducts(TestUtil.createConsumer(o),
-            null, now, null);
+        AutobindData data = AutobindData.create(TestUtil.createConsumer(o)).on(now);
+        manager.entitleByProducts(data);
 
         verify(autobindRules).selectBestPools(any(Consumer.class), eq(installedPids),
             any(List.class), eq(mockCompliance), any(String.class),

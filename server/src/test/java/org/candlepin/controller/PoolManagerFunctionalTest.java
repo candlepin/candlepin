@@ -40,6 +40,7 @@ import org.candlepin.paging.PageRequest;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
+import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
@@ -152,16 +153,16 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         Pool monitoringPool = poolCurator.listByOwnerAndProduct(o,
                 monitoring.getId()).get(0);
         assertEquals(Long.valueOf(5), monitoringPool.getQuantity());
+        AutobindData data = AutobindData.create(parentSystem).on(new Date())
+                .forProducts(new String [] {monitoring.getId()});
         for (int i = 0; i < 5; i++) {
-            List<Entitlement> entitlements = poolManager.entitleByProducts(parentSystem,
-                new String [] {monitoring.getId()}, new Date(), null);
+            List<Entitlement> entitlements = poolManager.entitleByProducts(data);
             assertEquals(1, entitlements.size());
         }
 
         // The cert should specify 5 monitoring entitlements, taking a 6th should fail:
         try {
-            poolManager.entitleByProducts(parentSystem, new String[] {monitoring.getId()},
-                new Date(), null);
+            poolManager.entitleByProducts(data);
             fail();
         }
         // With criteria filtered pools we end up with a RuntimeException
@@ -175,8 +176,9 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
     @Test
     public void testRevocation() throws Exception {
-        Entitlement e = poolManager.entitleByProducts(parentSystem,
-            new String[] {monitoring.getId()}, new Date(), null).get(0);
+        AutobindData data = AutobindData.create(parentSystem).on(new Date())
+                .forProducts(new String [] {monitoring.getId()});
+        Entitlement e = poolManager.entitleByProducts(data).get(0);
         poolManager.revokeEntitlement(e);
 
         List<Entitlement> entitlements = entitlementCurator.listByConsumer(parentSystem);
@@ -200,18 +202,19 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     @Test
     public void testRegenerateEntitlementCertificatesWithSingleEntitlement()
         throws Exception {
-        this.entitlementCurator.refresh(poolManager.entitleByProducts(this.childVirtSystem,
-            new String[] {provisioning.getId()}, new Date(), null).get(0));
+        AutobindData data = AutobindData.create(childVirtSystem).on(new Date())
+                .forProducts(new String [] {provisioning.getId()});
+        this.entitlementCurator.refresh(poolManager.entitleByProducts(data).get(0));
         regenerateECAndAssertNotSameCertificates();
     }
 
     @Test
     public void testRegenerateEntitlementCertificatesWithMultipleEntitlements()
         throws EntitlementRefusedException {
-        this.entitlementCurator.refresh(poolManager.entitleByProducts(
-            this.childVirtSystem, new String[] {provisioning.getId()}, new Date(), null).get(0));
-        this.entitlementCurator.refresh(poolManager.entitleByProducts(this.childVirtSystem,
-            new String[] {monitoring.getId()}, new Date(), null).get(0));
+        AutobindData data = AutobindData.create(childVirtSystem).on(new Date())
+                .forProducts(new String [] {provisioning.getId()});
+        this.entitlementCurator.refresh(poolManager.entitleByProducts(data).get(0));
+        this.entitlementCurator.refresh(poolManager.entitleByProducts(data).get(0));
         regenerateECAndAssertNotSameCertificates();
     }
 
@@ -250,12 +253,14 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         // this ends up causing a hibernate failure (the old cert is asked to be deleted,
         // but it hasn't been saved yet). Since getting the pool ordering right is tricky
         // inside an entitleByProducts call, we do it in two singular calls here.
-        poolManager.entitleByProducts(this.parentSystem, new String[] {"modifier"},
-            new Date(), null);
+        AutobindData data = AutobindData.create(parentSystem).on(new Date())
+                .forProducts(new String [] {"modifier"});
+        poolManager.entitleByProducts(data);
 
         try {
-            poolManager.entitleByProducts(this.parentSystem,
-                new String[] {PRODUCT_VIRT_HOST}, new Date(), null);
+            data = AutobindData.create(parentSystem).on(new Date())
+                    .forProducts(new String [] {PRODUCT_VIRT_HOST});
+            poolManager.entitleByProducts(data);
         }
         catch (EntityNotFoundException e) {
             throw e;

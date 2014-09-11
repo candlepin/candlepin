@@ -59,6 +59,7 @@ import org.candlepin.policy.js.activationkey.ActivationKeyRules;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.resource.ConsumerResource;
+import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.IdentityCertServiceAdapter;
@@ -363,7 +364,7 @@ public class ConsumerResourceTest {
             when(c.getOwner()).thenReturn(o);
             when(sa.hasUnacceptedSubscriptionTerms(eq(o))).thenReturn(false);
             when(cc.verifyAndLookupConsumer(eq("fakeConsumer"))).thenReturn(c);
-            when(e.bindByProducts(eq(prodIds), eq(c), eq((Date) null), null))
+            when(e.bindByProducts(any(AutobindData.class)))
                 .thenThrow(new RuntimeException());
 
             ConsumerResource cr = new ConsumerResource(cc, null,
@@ -402,7 +403,8 @@ public class ConsumerResourceTest {
         String dtStr = "2011-09-26T18:10:50.184081+00:00";
         Date dt = ResourceDateParser.parseDateString(dtStr);
         cr.bind("fakeConsumer", null, null, null, null, null, false, dtStr, null);
-        verify(e).bindByProducts(eq((String []) null), eq(c), eq(dt), null);
+        AutobindData data = AutobindData.create(c).on(dt);
+        verify(e).bindByProducts(eq(data));
     }
 
     @Test(expected = NotFoundException.class)

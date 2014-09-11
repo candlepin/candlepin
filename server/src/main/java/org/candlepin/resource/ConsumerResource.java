@@ -1450,7 +1450,7 @@ public class ConsumerResource {
         @QueryParam("email_locale") String emailLocale,
         @QueryParam("async") @DefaultValue("false") boolean async,
         @QueryParam("entitle_date") String entitleDateStr,
-        @QueryParam("from_pool") LinkedList<String> fromPools) {
+        @QueryParam("from_pool") List<String> fromPools) {
 
         // Check that only one query param was set:
         if (poolIdString != null && productIds != null && productIds.length > 0) {

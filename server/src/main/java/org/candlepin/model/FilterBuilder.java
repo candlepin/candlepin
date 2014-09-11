@@ -48,7 +48,9 @@ public abstract class FilterBuilder {
     }
 
     public FilterBuilder addIdFilters(Collection<String> ids) {
-        idFilters.addAll(ids);
+        if (ids != null) {
+            idFilters.addAll(ids);
+        }
         return this;
     }
 
