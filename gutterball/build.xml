@@ -38,7 +38,7 @@
     <property name="war.file" value="${target.dir}/gutterball-${version}.war"/>
   </target>
 
-  <target name="msgfmt">
+  <target name="da_popo">
     <mkdir dir="${target.dir}/generated-source" />
     <apply executable="msgfmt" failonerror="true" relative="true">
       <arg value="--java2"/>
@@ -64,7 +64,7 @@
     </apply>
   </target>
 
-  <target name="compile" depends="prereqs, setvr, msgfmt, initjars">
+  <target name="compile" depends="prereqs, setvr, da_popo, initjars">
     <mkdir dir="${target.dir}/classes" />
     <mkdir dir="${target.dir}/resources" />
     <javac destdir="${target.dir}/classes"

@@ -61,7 +61,7 @@
               value="${target.dir}/candlepin-common-${version}.jar" />
   </target>
 
-  <target name="msgfmt">
+  <target name="da_popo">
     <mkdir dir="${target.dir}/generated-source" />
     <apply executable="msgfmt" failonerror="true" relative="true">
       <arg value="--java2"/>
@@ -87,7 +87,7 @@
     </apply>
   </target>
 
-  <target name="init" depends="setvr, msgfmt" />
+  <target name="init" depends="setvr, da_popo" />
 
   <target name="compile" depends="init">
     <mkdir dir="${target.dir}/classes" />
