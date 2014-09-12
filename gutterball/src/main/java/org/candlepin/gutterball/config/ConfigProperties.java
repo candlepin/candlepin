@@ -69,12 +69,5 @@ public class ConfigProperties {
                 this.put(JPA_DB_USERNAME, "gutterball");
                 this.put(JPA_DB_PASSWORD, "");
             }
-                    //jpa.config.hibernate.connection.driver_class=org.postgresql.Driver
-                    //jpa.config.hibernate.connection.url=jdbc:postgresql:candlepin
-                    //jpa.config.hibernate.connection.username=candlepin
-                    //jpa.config.hibernate.connection.password=
-
-                    //jpa.config.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
-                    //jpa.config.hibernate.show_sql=false
         };
 }

@@ -36,6 +36,8 @@ import org.candlepin.common.exceptions.mappers.WebApplicationExceptionMapper;
 import org.candlepin.common.exceptions.mappers.WriterExceptionMapper;
 import org.candlepin.common.guice.JPAInitializer;
 import org.candlepin.gutterball.config.JPAConfigurationParser;
+import org.candlepin.gutterball.curator.jpa.ComplianceSnapshotCurator;
+import org.candlepin.gutterball.curator.jpa.ConsumerStateCurator;
 import org.candlepin.gutterball.eventhandler.EventHandler;
 import org.candlepin.gutterball.eventhandler.EventManager;
 import org.candlepin.gutterball.eventhandler.HandlerTarget;
@@ -121,6 +123,9 @@ public class GutterballModule extends AbstractModule {
         JPAConfigurationParser parser = new JPAConfigurationParser(this.config);
         install(new JpaPersistModule("default").properties(parser.parseConfig()));
         bind(JPAInitializer.class).asEagerSingleton();
+
+        bind(ComplianceSnapshotCurator.class);
+        bind(ConsumerStateCurator.class);
     }
 
     private void configureEventHandlers() {

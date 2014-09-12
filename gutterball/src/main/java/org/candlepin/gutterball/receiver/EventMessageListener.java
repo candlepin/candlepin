@@ -19,6 +19,7 @@ import org.candlepin.gutterball.eventhandler.EventManager;
 import org.candlepin.gutterball.model.Event;
 
 import com.google.inject.Inject;
+import com.google.inject.persist.UnitOfWork;
 import com.mongodb.util.JSON;
 
 import org.slf4j.Logger;
@@ -37,11 +38,13 @@ public class EventMessageListener implements MessageListener {
 
     private static Logger log = LoggerFactory.getLogger(EventMessageListener.class);
 
+    private UnitOfWork unitOfWork;
     private EventManager eventManager;
     private EventCallback eventCallback;
 
     @Inject
-    public EventMessageListener(EventManager eventManager, EventCallback eventCallback) {
+    public EventMessageListener(UnitOfWork unitOfWork, EventManager eventManager, EventCallback eventCallback) {
+        this.unitOfWork = unitOfWork;
         this.eventManager = eventManager;
         this.eventCallback = eventCallback;
     }
@@ -53,11 +56,15 @@ public class EventMessageListener implements MessageListener {
         try {
             String messageBody = getMessageBody(message);
             Event event = (Event) JSON.parse(messageBody, eventCallback);
+            unitOfWork.begin();
             eventManager.handle(event);
             log.info("Received Event: " + event);
         }
         catch (Exception e) {
             log.error("Failed to decode and store event ", e);
+        }
+        finally {
+            unitOfWork.end();
         }
     }
 
