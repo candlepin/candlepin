@@ -49,7 +49,7 @@ BuildRequires: ant >= 0:1.7.0
 BuildRequires: gettext
 BuildRequires: selinux-policy-doc
 BuildRequires: candlepin-common
-%if 0%{?rhel} < 7
+%if 0%{?rhel} && 0%{?rhel} < 7
 BuildRequires: ant-nodeps >= 0:1.7.0
 %endif
 
