@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.29
+Version: 0.9.30
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -392,6 +392,9 @@ fi
 
 
 %changelog
+* Fri Sep 12 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.30-1
+- fix buildrequires for community builds (jesusr@redhat.com)
+
 * Fri Sep 12 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.29-1
 - Updated translations. (dgoodwin@redhat.com)
 - keep da_popo alive. It's part of our history. (jesusr@redhat.com)
