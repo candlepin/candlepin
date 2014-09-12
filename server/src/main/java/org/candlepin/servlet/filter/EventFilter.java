@@ -14,10 +14,18 @@
  */
 package org.candlepin.servlet.filter;
 
+import org.candlepin.audit.EventSink;
+import org.candlepin.common.filter.TeeHttpServletResponse;
+
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
+
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -25,10 +33,7 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletResponse;
-import org.candlepin.audit.EventSink;
-import org.candlepin.common.filter.TeeHttpServletResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import javax.ws.rs.core.Response.Status;
 
 /**
  * CandlepinScopeFilter
@@ -56,14 +61,12 @@ public class EventFilter implements Filter {
         TeeHttpServletResponse resp = new TeeHttpServletResponse(
                 (HttpServletResponse) response);
         chain.doFilter(request, resp);
-        if (resp.getStatus() >= 200 && resp.getStatus() < 300) {
+        Status status = Status.fromStatusCode(resp.getStatus());
+        if (status.getFamily() == Status.Family.SUCCESSFUL) {
             eventSinkProvider.get().sendEvents();
         }
         else {
-            if (log.isDebugEnabled()) {
-                log.debug("Request failed, skipping event sending, status=" +
-                        resp.getStatus());
-            }
+            log.debug("Request failed, skipping event sending, status={}", status);
         }
     }
 
