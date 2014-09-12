@@ -38,6 +38,8 @@ import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
+import com.google.inject.Provider;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -77,6 +79,7 @@ public class ComplianceRulesTest {
     @Mock private EntitlementCurator entCurator;
     @Mock private RulesCurator rulesCuratorMock;
     @Mock private EventSink eventSink;
+    @Mock private Provider<EventSink> eventSinkProvider;
     private I18n i18n;
     private JsRunnerProvider provider;
 
@@ -95,8 +98,10 @@ public class ComplianceRulesTest {
         when(rulesCuratorMock.getUpdated()).thenReturn(new Date());
         when(rulesCuratorMock.getRules()).thenReturn(rules);
         provider = new JsRunnerProvider(rulesCuratorMock);
+        when(eventSinkProvider.get()).thenReturn(eventSink);
         compliance = new ComplianceRules(provider.get(),
-            entCurator, new StatusReasonMessageGenerator(i18n), eventSink, consumerCurator);
+            entCurator, new StatusReasonMessageGenerator(i18n), eventSinkProvider,
+            consumerCurator);
         owner = new Owner("test");
         activeGuestAttrs = new HashMap<String, String>();
         activeGuestAttrs.put("virtWhoType", "libvirt");
@@ -111,7 +116,8 @@ public class ComplianceRulesTest {
     public void additivePropertiesCanStillDeserialize() {
         JsRunner mockRunner = mock(JsRunner.class);
         compliance = new ComplianceRules(mockRunner,
-            entCurator, new StatusReasonMessageGenerator(i18n), eventSink, consumerCurator);
+            entCurator, new StatusReasonMessageGenerator(i18n), eventSinkProvider,
+            consumerCurator);
         when(mockRunner.runJsFunction(any(Class.class), eq("get_status"),
             any(JsContext.class))).thenReturn("{\"unknown\": \"thing\"}");
         Consumer c = mockConsumerWithTwoProductsAndNoEntitlements();

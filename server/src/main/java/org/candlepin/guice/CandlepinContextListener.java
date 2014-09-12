@@ -130,6 +130,7 @@ public class CandlepinContextListener extends
                 new CustomizableModules().load()));
 
         modules.add(new CandlepinModule());
+
         modules.add(new CandlepinFilterModule());
 
         return modules;

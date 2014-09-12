@@ -83,12 +83,14 @@ public class EventSinkImplTest {
      * @return
      */
     private EventSinkImpl createEventSink(final ClientSessionFactory sessionFactory) {
-        return new EventSinkImpl(factory, mapper, new CandlepinCommonTestConfig()) {
-            @Override
-            protected ClientSessionFactory createClientSessionFactory() {
-                return sessionFactory;
+        return new EventSinkImpl(factory,
+                new HornetqEventDispatcher(mapper, new CandlepinCommonTestConfig()) {
+                @Override
+                protected ClientSessionFactory createClientSessionFactory() {
+                    return sessionFactory;
+                }
             }
-        };
+        );
     }
 
     /**Set up the {@link ClientSessionFactory} to throw an exception when
@@ -126,7 +128,8 @@ public class EventSinkImplTest {
         doReturn(content).when(mapper).writeValueAsString(anyObject());
         ArgumentCaptor<ClientMessage> argumentCaptor = ArgumentCaptor
             .forClass(ClientMessage.class);
-        eventSinkImpl.sendEvent(mock(Event.class));
+        eventSinkImpl.queueEvent(mock(Event.class));
+        eventSinkImpl.sendEvents();
         verify(mockClientProducer).send(argumentCaptor.capture());
         assertEquals(content, argumentCaptor.getValue().getBodyBuffer()
             .readString());
@@ -139,7 +142,7 @@ public class EventSinkImplTest {
             .when(mapper).writeValueAsString(any());
         Event event = mock(Event.class);
 
-        eventSinkImpl.sendEvent(event);
+        eventSinkImpl.queueEvent(event);
         verify(mockClientProducer, never()).send(any(ClientMessage.class));
     }
 
@@ -148,6 +151,7 @@ public class EventSinkImplTest {
         throws Exception {
         Consumer consumer = TestUtil.createConsumer();
         eventSinkImpl.emitConsumerCreated(consumer);
+        eventSinkImpl.sendEvents();
         verify(mockClientProducer).send(any(ClientMessage.class));
     }
 
@@ -156,6 +160,7 @@ public class EventSinkImplTest {
         throws Exception {
         Owner owner = new Owner("Test Owner ");
         eventSinkImpl.emitOwnerCreated(owner);
+        eventSinkImpl.sendEvents();
         verify(mockClientProducer).send(any(ClientMessage.class));
     }
 
@@ -164,6 +169,7 @@ public class EventSinkImplTest {
         throws Exception {
         Pool pool = TestUtil.createPool(TestUtil.createProduct());
         eventSinkImpl.emitPoolCreated(pool);
+        eventSinkImpl.sendEvents();
         verify(mockClientProducer).send(any(ClientMessage.class));
     }
 
@@ -172,6 +178,7 @@ public class EventSinkImplTest {
         throws Exception {
         Consumer consumer = TestUtil.createConsumer();
         eventSinkImpl.emitExportCreated(consumer);
+        eventSinkImpl.sendEvents();
         verify(mockClientProducer).send(any(ClientMessage.class));
     }
 
@@ -180,6 +187,7 @@ public class EventSinkImplTest {
         throws Exception {
         Owner owner = new Owner("Import guy");
         eventSinkImpl.emitImportCreated(owner);
+        eventSinkImpl.sendEvents();
         verify(mockClientProducer).send(any(ClientMessage.class));
     }
 
@@ -188,6 +196,7 @@ public class EventSinkImplTest {
         throws Exception {
         ActivationKey key = TestUtil.createActivationKey(new Owner("deadbeef"), null);
         eventSinkImpl.emitActivationKeyCreated(key);
+        eventSinkImpl.sendEvents();
         verify(mockClientProducer).send(any(ClientMessage.class));
     }
 
@@ -199,6 +208,7 @@ public class EventSinkImplTest {
         pools.add(TestUtil.createPool(TestUtil.createProduct()));
         ActivationKey key = TestUtil.createActivationKey(new Owner("deadbeef"), pools);
         eventSinkImpl.emitActivationKeyCreated(key);
+        eventSinkImpl.sendEvents();
         verify(mockClientProducer).send(any(ClientMessage.class));
     }
 
@@ -208,6 +218,7 @@ public class EventSinkImplTest {
         Rules oldRules = new Rules(TestUtil.createRulesBlob(1));
         Rules newRules = new Rules(TestUtil.createRulesBlob(2));
         eventSinkImpl.emitRulesModified(oldRules, newRules);
+        eventSinkImpl.sendEvents();
         verify(mockClientProducer).send(any(ClientMessage.class));
     }
 
@@ -216,6 +227,7 @@ public class EventSinkImplTest {
         throws Exception {
         Rules oldRules = new Rules(TestUtil.createRulesBlob(1));
         eventSinkImpl.emitRulesDeleted(oldRules);
+        eventSinkImpl.sendEvents();
         verify(mockClientProducer).send(any(ClientMessage.class));
     }
 

@@ -124,7 +124,7 @@ public class ConsumerResourceUpdateTest {
     public void nothingChanged() throws Exception {
         Consumer consumer = getFakeConsumer();
         this.resource.updateConsumer(consumer.getUuid(), consumer);
-        verify(sink, never()).sendEvent((Event) any());
+        verify(sink, never()).queueEvent((Event) any());
     }
 
     private Consumer getFakeConsumer() {
@@ -168,7 +168,7 @@ public class ConsumerResourceUpdateTest {
 
         this.resource.updateConsumer(consumer.getUuid(), incoming);
         if (verify) {
-            verify(sink).sendEvent((Event) any());
+            verify(sink).queueEvent((Event) any());
         }
         assertEquals(consumer.getReleaseVer().getReleaseVer(),
             incoming.getReleaseVer().getReleaseVer());
@@ -209,7 +209,7 @@ public class ConsumerResourceUpdateTest {
         incoming.addInstalledProduct(c);
 
         this.resource.updateConsumer(consumer.getUuid(), incoming);
-        verify(sink).sendEvent((Event) any());
+        verify(sink).queueEvent((Event) any());
     }
 
     @Test
@@ -227,7 +227,7 @@ public class ConsumerResourceUpdateTest {
         incoming.addInstalledProduct(c);
 
         this.resource.updateConsumer(consumer.getUuid(), incoming);
-        verify(sink).sendEvent((Event) any());
+        verify(sink).queueEvent((Event) any());
         verify(complianceRules).getStatus(eq(consumer), any(Date.class),
                 any(Boolean.class), any(Boolean.class));
     }
@@ -346,7 +346,7 @@ public class ConsumerResourceUpdateTest {
             .thenReturn(expectedEvent);
 
         this.resource.updateConsumer(existing.getUuid(), updated);
-        verify(sink).sendEvent(eq(expectedEvent));
+        verify(sink).queueEvent(eq(expectedEvent));
     }
 
     @Test
@@ -365,7 +365,7 @@ public class ConsumerResourceUpdateTest {
             .thenReturn(expectedEvent);
 
         this.resource.updateConsumer(existing.getUuid(), updated);
-        verify(sink).sendEvent(eq(expectedEvent));
+        verify(sink).queueEvent(eq(expectedEvent));
     }
 
     @Test
@@ -384,7 +384,7 @@ public class ConsumerResourceUpdateTest {
         when(this.eventFactory.consumerModified(existing, updated)).thenReturn(event);
 
         this.resource.updateConsumer(existing.getUuid(), updated);
-        verify(sink, never()).sendEvent(any(Event.class));
+        verify(sink, never()).queueEvent(any(Event.class));
     }
 
     @Test
@@ -404,7 +404,7 @@ public class ConsumerResourceUpdateTest {
         when(this.eventFactory.consumerModified(existing, updated)).thenReturn(event);
 
         this.resource.updateConsumer(existing.getUuid(), updated);
-        verify(sink, never()).sendEvent(any(Event.class));
+        verify(sink, never()).queueEvent(any(Event.class));
     }
 
     // ignored out per mkhusid, see 768872 comment #41
@@ -663,7 +663,7 @@ public class ConsumerResourceUpdateTest {
         resource.updateConsumer(existing.getUuid(), updated);
 
         verify(poolManager, atMost(1)).regenerateEntitlementCertificates(existing, true);
-        verify(sink).sendEvent((Event) any());
+        verify(sink).queueEvent((Event) any());
     }
 
     @Test(expected = NotFoundException.class)

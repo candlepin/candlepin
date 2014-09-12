@@ -959,7 +959,7 @@ public class ConsumerResource {
             complianceRules.getStatus(toUpdate, null, false, false);
 
             Event event = eventBuilder.setNewEntity(toUpdate).buildEvent();
-            sink.sendEvent(event);
+            sink.queueEvent(event);
         }
         return changesMade;
     }
@@ -1105,7 +1105,7 @@ public class ConsumerResource {
                 if (log.isDebugEnabled()) {
                     log.debug("New guest ID added: " + guestId.getGuestId());
                 }
-                sink.sendEvent(eventFactory.guestIdCreated(guestId));
+                sink.queueEvent(eventFactory.guestIdCreated(guestId));
             }
 
             // The guest has not registered. No need to process entitlements.
@@ -1144,7 +1144,7 @@ public class ConsumerResource {
             if (log.isDebugEnabled()) {
                 log.debug("Guest ID removed: " + guestId.getGuestId());
             }
-            sink.sendEvent(eventFactory.guestIdDeleted(guestId));
+            sink.queueEvent(eventFactory.guestIdDeleted(guestId));
 
         }
 
@@ -1256,7 +1256,7 @@ public class ConsumerResource {
         Event event = eventFactory.consumerDeleted(toDelete);
         consumerCurator.delete(toDelete);
         identityCertService.deleteIdentityCert(toDelete);
-        sink.sendEvent(event);
+        sink.queueEvent(event);
     }
 
     /**
@@ -1871,7 +1871,7 @@ public class ConsumerResource {
             response.addHeader("Content-Disposition", "attachment; filename=" +
                 archive.getName());
 
-            sink.sendEvent(eventFactory.exportCreated(consumer));
+            sink.queueEvent(eventFactory.exportCreated(consumer));
             return archive;
         }
         catch (ExportCreationException e) {
@@ -1903,7 +1903,7 @@ public class ConsumerResource {
         IdentityCertificate ic = generateIdCert(c, true);
         c.setIdCert(ic);
         consumerCurator.update(c);
-        this.sink.sendEvent(eventBuilder.setNewEntity(c).buildEvent());
+        sink.queueEvent(eventBuilder.setNewEntity(c).buildEvent());
         return c;
     }
 

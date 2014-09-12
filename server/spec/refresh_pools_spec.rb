@@ -26,7 +26,6 @@ describe 'Refresh Pools' do
   end
 
   it 'creates the correct number of pools' do
-    # ------- Given ---------
     owner = create_owner random_string('some-owner')
 
     # Create 6 subscriptions to different products
@@ -37,11 +36,27 @@ describe 'Refresh Pools' do
       @cp.create_subscription(owner['key'], product.id)
     end
 
-    # -------- When ----------
     @cp.refresh_pools(owner['key'])
 
-    # -------- Then ----------
     @cp.list_pools({:owner => owner.id}).length.should == 6
+  end
+
+  it 'dispatches the correct number of events' do
+    owner = create_owner random_string('some-owner')
+
+    # Create 6 subscriptions to different products
+    6.times do |i|
+      name = random_string("product-#{i}")
+      product = create_product(name, name)
+
+      @cp.create_subscription(owner['key'], product.id)
+    end
+
+    @cp.refresh_pools(owner['key'])
+
+    events = @cp.list_owner_events(owner['key'])
+    pool_created_events = events.find_all { |event| event['target'] == 'POOL' && event['type'] == 'CREATED'}
+    pool_created_events.size.should == 6
   end
 
   it 'detects changes in provided products' do

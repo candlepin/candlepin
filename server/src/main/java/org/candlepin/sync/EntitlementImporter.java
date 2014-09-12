@@ -317,7 +317,7 @@ public class EntitlementImporter {
             for (Subscription subscription : map.values()) {
                 Event e = sink.createSubscriptionDeleted(subscription);
                 subscriptionCurator.delete(subscription);
-                sink.sendEvent(e);
+                sink.queueEvent(e);
                 log.info("Delete subscription with entitlement id [" +
                     subscription.getUpstreamEntitlementId() +
                     "]");

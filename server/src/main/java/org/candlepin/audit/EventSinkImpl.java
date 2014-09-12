@@ -14,8 +14,6 @@
  */
 package org.candlepin.audit;
 
-import org.candlepin.config.Config;
-import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
@@ -25,148 +23,107 @@ import org.candlepin.model.Subscription;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import org.hornetq.api.core.HornetQException;
-import org.hornetq.api.core.TransportConfiguration;
-import org.hornetq.api.core.client.ClientMessage;
-import org.hornetq.api.core.client.ClientProducer;
-import org.hornetq.api.core.client.ClientSession;
-import org.hornetq.api.core.client.ClientSessionFactory;
-import org.hornetq.api.core.client.HornetQClient;
-import org.hornetq.api.core.client.ServerLocator;
-import org.hornetq.core.remoting.impl.invm.InVMConnectorFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
+
+import javax.inject.Inject;
+
 /**
- * EventSink - Reliably dispatches events to all configured listeners.
+ * EventSink - Holds onto a queue of events to be sent if the request or job
+ * is successful.
+ *
+ * Uses guice's RequestScope for requests, and a custom PinsetterScope for jobs. See
+ * EventSinkProvider for details.
  */
-@Singleton
 public class EventSinkImpl implements EventSink {
 
     private static Logger log = LoggerFactory.getLogger(EventSinkImpl.class);
     private EventFactory eventFactory;
-    private ClientSessionFactory factory;
-    private int largeMsgSize;
-    private ObjectMapper mapper;
-    private ThreadLocal<ClientSession> sessions = new ThreadLocal<ClientSession>();
-    private ThreadLocal<ClientProducer> producers = new ThreadLocal<ClientProducer>();
+    private HornetqEventDispatcher dispatcher;
+
+    // Hold onto events we will send on successful completion of request/job:
+    private List<Event> eventQueue;
 
     @Inject
-    public EventSinkImpl(EventFactory eventFactory, ObjectMapper mapper, Config config) {
+    public EventSinkImpl(EventFactory eventFactory, HornetqEventDispatcher dispatcher) {
         this.eventFactory = eventFactory;
-        this.mapper = mapper;
-        try {
-            largeMsgSize = config.getInt(ConfigProperties.HORNETQ_LARGE_MSG_SIZE);
-
-            factory =  createClientSessionFactory();
-        }
-        catch (HornetQException e) {
-            throw new RuntimeException(e);
-        }
-        catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        this.dispatcher = dispatcher;
+        this.eventQueue = new LinkedList<Event>();
     }
 
-    protected ClientSessionFactory createClientSessionFactory() throws Exception {
-        ServerLocator locator = HornetQClient.createServerLocatorWithoutHA(
-            new TransportConfiguration(InVMConnectorFactory.class.getName()));
-        locator.setMinLargeMessageSize(largeMsgSize);
-        return locator.createSessionFactory();
+    private List<Event> getEventQueue() {
+        return eventQueue;
     }
 
-    protected ClientSession getClientSession() {
-        ClientSession session = sessions.get();
-        if (session == null) {
-            try {
-                session = factory.createSession();
-            }
-            catch (HornetQException e) {
-                throw new RuntimeException(e);
-            }
-            sessions.set(session);
-        }
-        return session;
-    }
-
-    protected ClientProducer getClientProducer() {
-        ClientProducer producer = producers.get();
-        if (producer == null) {
-            try {
-                producer = getClientSession().createProducer(EventSource.QUEUE_ADDRESS);
-            }
-            catch (HornetQException e) {
-                throw new RuntimeException(e);
-            }
-            producers.set(producer);
-        }
-        return producer;
-    }
-
+    /**
+     * Adds an event to the queue. Event will not be sent until sendEvents is called,
+     * typically after a successful request or job execution.
+     */
     @Override
-    public void sendEvent(Event event) {
-        if (log.isDebugEnabled()) {
-            log.debug("Sending event - " + event);
+    public void queueEvent(Event event) {
+        log.debug("Queuing event: " + event);
+        getEventQueue().add(event);
+    }
+
+    /**
+     * Dispatch all queued events. Typically only called after a successful request or
+     * job execution.
+     */
+    @Override
+    public void sendEvents() {
+        for (Event e : getEventQueue()) {
+            dispatcher.sendEvent(e);
         }
-        try {
-            ClientMessage message = getClientSession().createMessage(true);
-            String eventString = mapper.writeValueAsString(event);
-            message.getBodyBuffer().writeString(eventString);
-            getClientProducer().send(message);
-        }
-        catch (Exception e) {
-            log.error("Error while trying to send event: " + event, e);
-        }
+        getEventQueue().clear();
     }
 
     public void emitConsumerCreated(Consumer newConsumer) {
         Event e = eventFactory.consumerCreated(newConsumer);
-        sendEvent(e);
+        queueEvent(e);
     }
 
     public void emitOwnerCreated(Owner newOwner) {
         Event e = eventFactory.ownerCreated(newOwner);
-        sendEvent(e);
+        queueEvent(e);
     }
 
     public void emitOwnerMigrated(Owner owner) {
         Event e = eventFactory.ownerMigrated(owner);
-        sendEvent(e);
+        queueEvent(e);
     }
 
     public void emitPoolCreated(Pool newPool) {
         Event e = eventFactory.poolCreated(newPool);
-        sendEvent(e);
+        queueEvent(e);
     }
 
     public void emitExportCreated(Consumer consumer) {
         Event e = eventFactory.exportCreated(consumer);
-        sendEvent(e);
+        queueEvent(e);
     }
 
     public void emitImportCreated(Owner owner) {
         Event e = eventFactory.importCreated(owner);
-        sendEvent(e);
+        queueEvent(e);
     }
 
     public void emitActivationKeyCreated(ActivationKey key) {
         Event e = eventFactory.activationKeyCreated(key);
-        sendEvent(e);
+        queueEvent(e);
     }
 
     @Override
     public void emitSubscriptionCreated(Subscription subscription) {
         Event e = eventFactory.subscriptionCreated(subscription);
-        sendEvent(e);
+        queueEvent(e);
     }
 
     public void emitSubscriptionModified(Subscription old, Subscription newSub) {
-        sendEvent(eventFactory.subscriptionModified(old, newSub));
+        queueEvent(eventFactory.subscriptionModified(old, newSub));
     }
 
     public Event createSubscriptionDeleted(Subscription todelete) {
@@ -175,17 +132,17 @@ public class EventSinkImpl implements EventSink {
 
     @Override
     public void emitRulesModified(Rules oldRules, Rules newRules) {
-        sendEvent(eventFactory.rulesUpdated(oldRules, newRules));
+        queueEvent(eventFactory.rulesUpdated(oldRules, newRules));
     }
 
     @Override
     public void emitRulesDeleted(Rules rules) {
-        sendEvent(eventFactory.rulesDeleted(rules));
+        queueEvent(eventFactory.rulesDeleted(rules));
     }
 
     @Override
     public void emitCompliance(Consumer consumer,
             Set<Entitlement> entitlements, ComplianceStatus compliance) {
-        sendEvent(eventFactory.complianceCreated(consumer, entitlements, compliance));
+        queueEvent(eventFactory.complianceCreated(consumer, entitlements, compliance));
     }
 }

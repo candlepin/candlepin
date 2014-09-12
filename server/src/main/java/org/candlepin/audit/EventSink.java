@@ -30,7 +30,9 @@ import java.util.Set;
  */
 public interface EventSink {
 
-    void sendEvent(Event event);
+    void queueEvent(Event event);
+
+    void sendEvents();
 
     void emitConsumerCreated(Consumer newConsumer);
 

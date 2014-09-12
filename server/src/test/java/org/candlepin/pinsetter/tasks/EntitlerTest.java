@@ -291,20 +291,20 @@ public class EntitlerTest {
             .thenReturn(evt2);
         entitler.sendEvents(ents);
 
-        verify(sink).sendEvent(eq(evt1));
-        verify(sink).sendEvent(eq(evt2));
+        verify(sink).queueEvent(eq(evt1));
+        verify(sink).queueEvent(eq(evt2));
     }
 
     @Test
     public void noEventsWhenEntitlementsNull() {
         entitler.sendEvents(null);
-        verify(sink, never()).sendEvent(any(Event.class));
+        verify(sink, never()).queueEvent(any(Event.class));
     }
 
     @Test
     public void noEventsWhenListEmpty() {
         List<Entitlement> ents = new ArrayList<Entitlement>();
         entitler.sendEvents(ents);
-        verify(sink, never()).sendEvent(any(Event.class));
+        verify(sink, never()).queueEvent(any(Event.class));
     }
 }

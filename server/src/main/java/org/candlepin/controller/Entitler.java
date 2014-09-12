@@ -225,7 +225,7 @@ public class Entitler {
         if (entitlements != null) {
             for (Entitlement e : entitlements) {
                 Event event = evtFactory.entitlementCreated(e);
-                sink.sendEvent(event);
+                sink.queueEvent(event);
             }
         }
     }

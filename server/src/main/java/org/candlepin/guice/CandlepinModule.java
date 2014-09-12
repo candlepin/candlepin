@@ -117,8 +117,8 @@ import org.candlepin.util.X509ExtensionUtil;
 
 import com.google.common.base.Function;
 import com.google.inject.AbstractModule;
-import com.google.inject.Provider;
 import com.google.inject.Provides;
+import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.matcher.Matcher;
 import com.google.inject.matcher.Matchers;
@@ -126,6 +126,7 @@ import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import com.google.inject.persist.Transactional;
 import com.google.inject.persist.jpa.JpaPersistModule;
+import com.google.inject.servlet.RequestScoped;
 
 import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
 import org.hibernate.validator.HibernateValidator;
@@ -137,12 +138,13 @@ import org.xnap.commons.i18n.I18n;
 import java.lang.reflect.AnnotatedElement;
 import java.util.Properties;
 
+import javax.inject.Provider;
 import javax.validation.MessageInterpolator;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 
 /**
- * CandlepinProductionConfiguration
+ * CandlepinModule
  */
 public class CandlepinModule extends AbstractModule {
 
@@ -154,7 +156,8 @@ public class CandlepinModule extends AbstractModule {
         bind(CandlepinSingletonScope.class).toInstance(singletonScope);
 
         bind(I18n.class).toProvider(I18nProvider.class);
-        bind(BeanValidationEventListener.class).toProvider(ValidationListenerProvider.class);
+        bind(BeanValidationEventListener.class).toProvider(
+                ValidationListenerProvider.class);
         bind(MessageInterpolator.class).to(CandlepinMessageInterpolator.class);
 
         Config config = new Config();
@@ -231,12 +234,18 @@ public class CandlepinModule extends AbstractModule {
         bind(CdnResource.class);
         bind(GuestIdResource.class);
 
-        this.configureInterceptors();
+        configureInterceptors();
         bind(JsonProvider.class);
-        bind(EventSink.class).to(EventSinkImpl.class);
-        this.configurePinsetter();
 
-        this.configureExporter();
+        bind(EventSink.class).annotatedWith(Names.named("RequestSink"))
+            .to(EventSinkImpl.class).in(RequestScoped.class);
+        bind(EventSink.class).annotatedWith(Names.named("PinsetterSink"))
+            .to(EventSinkImpl.class).in(PinsetterJobScoped.class);
+        bind(EventSink.class).toProvider(EventSinkProvider.class);
+
+        configurePinsetter();
+
+        configureExporter();
 
         // Async Jobs
         bind(RefreshPoolsJob.class);
@@ -251,9 +260,15 @@ public class CandlepinModule extends AbstractModule {
 
         this.configureAmqp();
 
+        configureMethodInterceptors();
 
-        // Match methods on classes in org.candlepin.resource as long as neither class nor method
-        // is annotated with transactional.  This way the default @Transactional annotation we use
+    }
+
+    private void configureMethodInterceptors() {
+        // Match methods on classes in org.candlepin.resource as long as neither class
+        // nor method
+        // is annotated with transactional.  This way the default @Transactional
+        // annotation we use
         // by default may be overridden with more specific options,
         // For example: @Transactional(rollbackOn = IOException.class)
         // in a resource will produce the desired behavior
@@ -274,7 +289,8 @@ public class CandlepinModule extends AbstractModule {
     }
 
     @Provides
-    protected ValidatorFactory getValidationFactory(Provider<MessageInterpolator> interpolatorProvider) {
+    protected ValidatorFactory getValidationFactory(
+            Provider<MessageInterpolator> interpolatorProvider) {
         HibernateValidatorConfiguration configure =
             Validation.byProvider(HibernateValidator.class).configure();
 
@@ -292,7 +308,11 @@ public class CandlepinModule extends AbstractModule {
     }
 
     private void configurePinsetter() {
-        bind(JobFactory.class).to(GuiceJobFactory.class);
+        SimpleScope pinsetterJobScope = new SimpleScope();
+        bindScope(PinsetterJobScoped.class, pinsetterJobScope);
+        bind(SimpleScope.class).annotatedWith(Names.named("PinsetterJobScope")).toInstance(pinsetterJobScope);
+
+        bind(JobFactory.class).to(GuiceJobFactory.class).in(Scopes.SINGLETON);
         bind(JobListener.class).to(PinsetterJobListener.class);
         bind(PinsetterKernel.class);
         bind(CertificateRevocationListTask.class);

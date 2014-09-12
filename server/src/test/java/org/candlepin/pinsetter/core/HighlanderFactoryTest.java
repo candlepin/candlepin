@@ -15,9 +15,9 @@
 package org.candlepin.pinsetter.core;
 
 import static org.junit.Assert.*;
-import static org.quartz.CronScheduleBuilder.*;
-import static org.quartz.JobBuilder.*;
-import static org.quartz.TriggerBuilder.*;
+import static org.quartz.CronScheduleBuilder.cronSchedule;
+import static org.quartz.JobBuilder.newJob;
+import static org.quartz.TriggerBuilder.newTrigger;
 
 import org.candlepin.test.DatabaseTestFixture;
 
@@ -34,7 +34,6 @@ import java.text.ParseException;
 
 /**
  * HighlanderFactoryTest
- * @version $Rev$
  */
 public class HighlanderFactoryTest extends DatabaseTestFixture {
 
@@ -64,7 +63,5 @@ public class HighlanderFactoryTest extends DatabaseTestFixture {
             false, null, null, null, null);
         Job j = hf.newJob(tfb, null);
         assertNotNull(j);
-        //We no longer encapsulate the job
-        assertEquals(TestJob.class, j.getClass());
     }
 }
