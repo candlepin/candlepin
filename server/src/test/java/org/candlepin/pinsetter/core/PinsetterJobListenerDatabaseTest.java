@@ -15,17 +15,9 @@
 package org.candlepin.pinsetter.core;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.quartz.JobKey.jobKey;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.name.Names;
-import com.google.inject.persist.UnitOfWork;
-import com.google.inject.persist.jpa.JpaPersistModule;
-import org.apache.commons.lang.RandomStringUtils;
 import org.candlepin.CandlepinNonServletEnvironmentTestingModule;
 import org.candlepin.auth.Principal;
 import org.candlepin.guice.I18nProvider;
@@ -36,6 +28,15 @@ import org.candlepin.guice.SimpleScope;
 import org.candlepin.guice.TestPrincipalProvider;
 import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.model.JobStatus;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.name.Names;
+import com.google.inject.persist.UnitOfWork;
+import com.google.inject.persist.jpa.JpaPersistModule;
+
+import org.apache.commons.lang.RandomStringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.quartz.JobDataMap;

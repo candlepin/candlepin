@@ -14,8 +14,6 @@
  */
 package org.candlepin.policy.js.compliance;
 
-import com.google.inject.Provider;
-
 import org.candlepin.audit.EventSink;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -25,9 +23,13 @@ import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsonJsContext;
 import org.candlepin.policy.js.RuleExecutionException;
 import org.candlepin.policy.js.RulesObjectMapper;
+
 import com.google.inject.Inject;
+import com.google.inject.Provider;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.util.Date;
 import java.util.List;
 

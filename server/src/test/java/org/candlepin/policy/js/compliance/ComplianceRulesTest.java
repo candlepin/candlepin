@@ -18,8 +18,6 @@ import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
-import com.google.inject.Provider;
-
 import org.candlepin.audit.EventSink;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -39,12 +37,16 @@ import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
+
+import com.google.inject.Provider;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
+
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Calendar;

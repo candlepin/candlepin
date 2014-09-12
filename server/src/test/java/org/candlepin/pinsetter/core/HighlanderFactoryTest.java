@@ -14,14 +14,13 @@
  */
 package org.candlepin.pinsetter.core;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 import static org.quartz.CronScheduleBuilder.cronSchedule;
 import static org.quartz.JobBuilder.newJob;
 import static org.quartz.TriggerBuilder.newTrigger;
 
-import java.text.ParseException;
 import org.candlepin.test.DatabaseTestFixture;
+
 import org.junit.Test;
 import org.quartz.Job;
 import org.quartz.JobDetail;
@@ -30,6 +29,8 @@ import org.quartz.Trigger;
 import org.quartz.spi.JobFactory;
 import org.quartz.spi.OperableTrigger;
 import org.quartz.spi.TriggerFiredBundle;
+
+import java.text.ParseException;
 
 /**
  * HighlanderFactoryTest

@@ -14,17 +14,20 @@
  */
 package org.candlepin.guice;
 
+import org.candlepin.audit.EventSink;
+import org.candlepin.common.exceptions.IseException;
+
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.OutOfScopeException;
 import com.google.inject.ProvisionException;
 import com.google.inject.name.Names;
-import javax.inject.Inject;
-import javax.inject.Provider;
-import org.candlepin.audit.EventSink;
-import org.candlepin.common.exceptions.IseException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.inject.Inject;
+import javax.inject.Provider;
 
 /**
  * Provider which returns the correct event sink for the current context.

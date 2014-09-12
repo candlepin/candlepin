@@ -14,10 +14,6 @@
  */
 package org.candlepin.audit;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-import javax.inject.Inject;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
@@ -26,8 +22,15 @@ import org.candlepin.model.Rules;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+
+import javax.inject.Inject;
 
 /**
  * EventSink - Holds onto a queue of events to be sent if the request or job
