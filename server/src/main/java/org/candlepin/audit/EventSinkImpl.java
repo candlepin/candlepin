@@ -14,10 +14,10 @@
  */
 package org.candlepin.audit;
 
-import com.google.inject.Inject;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import javax.inject.Inject;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
@@ -62,9 +62,7 @@ public class EventSinkImpl implements EventSink {
      */
     @Override
     public void queueEvent(Event event) {
-        if (log.isDebugEnabled()) {
-            log.debug("Queuing event: " + event);
-        }
+        log.debug("Queuing event: " + event);
         getEventQueue().add(event);
     }
 

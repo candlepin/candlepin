@@ -16,7 +16,7 @@ package org.candlepin.audit;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import javax.inject.Singleton;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.hornetq.api.core.HornetQException;
@@ -52,9 +52,6 @@ public class HornetqEventDispatcher  {
             largeMsgSize = config.getInt(ConfigProperties.HORNETQ_LARGE_MSG_SIZE);
 
             factory =  createClientSessionFactory();
-        }
-        catch (HornetQException e) {
-            throw new RuntimeException(e);
         }
         catch (Exception e) {
             throw new RuntimeException(e);
@@ -97,9 +94,7 @@ public class HornetqEventDispatcher  {
     }
 
     public void sendEvent(Event event) {
-        if (log.isDebugEnabled()) {
-            log.debug("Sending event: " + event);
-        }
+        log.debug("Sending event: " + event);
         try {
             ClientMessage message = getClientSession().createMessage(true);
             String eventString = mapper.writeValueAsString(event);
