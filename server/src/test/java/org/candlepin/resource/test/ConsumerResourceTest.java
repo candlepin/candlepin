@@ -15,31 +15,10 @@
 package org.candlepin.resource.test;
 
 import static org.candlepin.test.TestUtil.createIdCert;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
-import com.google.inject.Provider;
-import java.io.IOException;
-import java.io.Serializable;
-import java.math.BigInteger;
-import java.security.GeneralSecurityException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
 import org.candlepin.audit.EventBuilder;
@@ -87,6 +66,7 @@ import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.ServiceLevelValidator;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -95,6 +75,19 @@ import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
+
+import java.io.IOException;
+import java.io.Serializable;
+import java.math.BigInteger;
+import java.security.GeneralSecurityException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * ConsumerResourceTest
@@ -244,8 +237,7 @@ public class ConsumerResourceTest {
         IdentityCertServiceAdapter mockedIdSvc = Mockito
             .mock(IdentityCertServiceAdapter.class);
 
-        Provider<EventSink> sink = Mockito.mock(Provider.class);
-        when(sink.get()).thenReturn(Mockito.mock(EventSinkImpl.class));
+        EventSink sink = Mockito.mock(EventSinkImpl.class);
 
         Consumer consumer = createConsumer();
         consumer.setIdCert(createIdCert());
@@ -278,8 +270,7 @@ public class ConsumerResourceTest {
         IdentityCertServiceAdapter mockedIdSvc = Mockito
             .mock(IdentityCertServiceAdapter.class);
 
-        Provider<EventSink> sink = Mockito.mock(Provider.class);
-        when(sink.get()).thenReturn(Mockito.mock(EventSinkImpl.class));
+        EventSink sink = Mockito.mock(EventSinkImpl.class);
 
         SubscriptionServiceAdapter ssa = Mockito.mock(SubscriptionServiceAdapter.class);
         ComplianceRules rules = Mockito.mock(ComplianceRules.class);
