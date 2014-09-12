@@ -19,6 +19,7 @@ import static org.mockito.Mockito.*;
 
 import org.candlepin.gutterball.curator.ConsumerCurator;
 import org.candlepin.gutterball.curator.EventCurator;
+import org.candlepin.gutterball.curator.jpa.ConsumerStateCurator;
 import org.candlepin.gutterball.eventhandler.ConsumerHandler;
 import org.candlepin.gutterball.eventhandler.EventHandler;
 import org.candlepin.gutterball.eventhandler.EventManager;
@@ -47,13 +48,16 @@ public class EventManagerTest {
     @Mock
     private ConsumerCurator consumerCurator;
 
+    @Mock
+    private ConsumerStateCurator consumerStateCurator;
+
     private ConsumerHandler consumerHandler;
 
     private EventManager eventManager;
 
     @Before
     public void before() {
-        consumerHandler = new ConsumerHandler(consumerCurator);
+        consumerHandler = new ConsumerHandler(consumerCurator, consumerStateCurator);
         Map<String, EventHandler> handlers = new HashMap<String, EventHandler>();
         handlers.put(ConsumerHandler.class.getAnnotation(HandlerTarget.class).value(), consumerHandler);
         eventManager = new TestingEventManager(eventCurator, handlers);
