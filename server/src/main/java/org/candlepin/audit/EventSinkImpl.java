@@ -30,7 +30,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * EventSink - Reliably dispatches events to all configured listeners.
+ * EventSink - Holds onto a queue of events to be sent if the request or job
+ * is successful.
+ *
+ * Uses guice's RequestScope for requests, and a custom PinsetterScope for jobs. See
+ * EventSinkProvider for details.
  */
 public class EventSinkImpl implements EventSink {
 

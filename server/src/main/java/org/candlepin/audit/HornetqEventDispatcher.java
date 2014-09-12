@@ -32,8 +32,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * HornetqEventDispatcher - Singleton responsible for managing horneq sessions and
- * producers and actually sending events once our request/job is successful.
+ * HornetqEventDispatcher - Singleton responsible for managing hornetq sessions and
+ * producers and dispatching events to all configured listeners.
  */
 @Singleton
 public class HornetqEventDispatcher  {

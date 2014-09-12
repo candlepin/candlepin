@@ -33,11 +33,7 @@ import org.slf4j.LoggerFactory;
 /**
  * CandlepinScopeFilter
  *
- * A servlet filter used to wrap a request in a custom guice scope providing
- * a custom per request injection. Our object graph has been loaded by guice
- * before the filtering is complete.
- *
- * NOTE: It is important that this filter is the first to be processed.
+ * A servlet filter used to dispatch queued events *if* the request was successful.
  *
  */
 
