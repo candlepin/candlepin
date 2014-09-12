@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.28
+Version: 0.9.29
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -392,6 +392,17 @@ fi
 
 
 %changelog
+* Fri Sep 12 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.29-1
+- Updated translations. (dgoodwin@redhat.com)
+- keep da_popo alive. It's part of our history. (jesusr@redhat.com)
+- export event mistakenly targeted pool (ckozak@redhat.com)
+- Fix path to ruby client library in some scripts. (dgoodwin@redhat.com)
+- Allow NonTransactional on classes as well to match Transactional. (dgoodwin@redhat.com)
+- Translations on Gutterball and Common (wpoteat@redhat.com)
+- Fix bug with listing users roles. (dgoodwin@redhat.com)
+- Add support for non-transactional API methods. (dgoodwin@redhat.com)
+- Wrap all REST API requests in a transaction. (ckozak@redhat.com)
+
 * Tue Sep 09 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.28-1
 - move ant-nodeps to work with community builds (jesusr@redhat.com)
 - By default, we should configure and use c3p0 (ckozak@redhat.com)
