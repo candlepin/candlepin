@@ -185,7 +185,7 @@ public class EventFactory {
     }
 
     public Event exportCreated(Consumer consumer) {
-        return getEventBuilder(Target.POOL, Type.CREATED)
+        return getEventBuilder(Target.EXPORT, Type.CREATED)
                 .setNewEntity(consumer)
                 .buildEvent();
     }
