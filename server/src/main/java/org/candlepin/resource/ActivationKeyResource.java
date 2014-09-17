@@ -18,10 +18,12 @@ import org.candlepin.auth.interceptor.Verify;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Pool;
+import org.candlepin.model.Product;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.model.activationkeys.ActivationKeyPool;
 import org.candlepin.policy.js.activationkey.ActivationKeyRules;
+import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.util.ServiceLevelValidator;
 
 import com.google.inject.Inject;
@@ -50,6 +52,7 @@ import javax.ws.rs.core.MediaType;
 public class ActivationKeyResource {
     private static Logger log = LoggerFactory.getLogger(ActivationKeyResource.class);
     private ActivationKeyCurator activationKeyCurator;
+    private ProductServiceAdapter productAdapter;
     private PoolManager poolManager;
     private I18n i18n;
     private ServiceLevelValidator serviceLevelValidator;
@@ -59,12 +62,14 @@ public class ActivationKeyResource {
     public ActivationKeyResource(ActivationKeyCurator activationKeyCurator,
         I18n i18n, PoolManager poolManager,
         ServiceLevelValidator serviceLevelValidator,
-        ActivationKeyRules activationKeyRules) {
+        ActivationKeyRules activationKeyRules,
+        ProductServiceAdapter productAdapter) {
         this.activationKeyCurator = activationKeyCurator;
         this.i18n = i18n;
         this.poolManager = poolManager;
         this.serviceLevelValidator = serviceLevelValidator;
         this.activationKeyRules = activationKeyRules;
+        this.productAdapter = productAdapter;
     }
 
     /**
@@ -76,6 +81,8 @@ public class ActivationKeyResource {
      *   "name" : "default_key",
      *   "owner" : {},
      *   "pools" : [ ],
+     *   "productIds" : [ ],
+     *   "autoAttach" : false,
      *   "contentOverrides" : [ ],
      *   "releaseVer" : {},
      *   "serviceLevel" : null,
@@ -148,6 +155,7 @@ public class ActivationKeyResource {
         if (key.getDescription() != null) {
             toUpdate.setDescription(key.getDescription());
         }
+        toUpdate.setAutoAttach(key.isAutoAttach());
         activationKeyCurator.merge(toUpdate);
 
         return toUpdate;
@@ -200,6 +208,43 @@ public class ActivationKeyResource {
     }
 
     /**
+     * Adds an Product ID to an Activation Key
+     *
+     * @httpcode 400
+     * @httpcode 200
+     */
+    @POST
+    @Path("{activation_key_id}/product/{product_id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public void addProductIdToKey(
+        @PathParam("activation_key_id") @Verify(ActivationKey.class) String activationKeyId,
+        @PathParam("product_id") String productId) {
+
+        ActivationKey key = activationKeyCurator.verifyAndLookupKey(activationKeyId);
+        Product product = confirmProduct(productId);
+        key.addProduct(product);
+        activationKeyCurator.update(key);
+    }
+
+    /**
+     * Removes a Product ID from an Activation Key
+     *
+     * @httpcode 400
+     * @httpcode 200
+     */
+    @DELETE
+    @Path("{activation_key_id}/product/{product_id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public void removeProductIdFromKey(
+        @PathParam("activation_key_id") @Verify(ActivationKey.class) String activationKeyId,
+        @PathParam("product_id") String productId) {
+        ActivationKey key = activationKeyCurator.verifyAndLookupKey(activationKeyId);
+        Product product = confirmProduct(productId);
+        key.removeProduct(product);
+        activationKeyCurator.update(key);
+    }
+
+    /**
      * Retrieves a list of Activation Keys
      *
      * @return a list of ActivationKey objects
@@ -240,4 +285,15 @@ public class ActivationKeyResource {
         }
         return pool;
     }
+
+    private Product confirmProduct(String prodId) {
+        Product prod = productAdapter.getProductById(prodId);
+
+        if (prod == null) {
+            throw new BadRequestException(i18n.tr(
+                "Product with id {0} could not be found.", prodId));
+        }
+        return prod;
+    }
+
 }

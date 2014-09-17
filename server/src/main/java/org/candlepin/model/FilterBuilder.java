@@ -63,8 +63,7 @@ public abstract class FilterBuilder {
     }
 
     public void applyTo(Criteria parentCriteria) {
-        // Only apply attribute filters if any were specified.
-        if (!attributeFilters.isEmpty()) {
+        if (!attributeFilters.isEmpty() || !idFilters.isEmpty()) {
             parentCriteria.add(buildCriteria());
         }
     }

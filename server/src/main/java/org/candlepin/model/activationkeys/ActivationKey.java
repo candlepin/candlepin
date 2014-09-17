@@ -19,6 +19,7 @@ import org.candlepin.model.Named;
 import org.candlepin.model.Owned;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
+import org.candlepin.model.Product;
 import org.candlepin.model.Release;
 
 import org.hibernate.annotations.Cascade;
@@ -86,6 +87,11 @@ public class ActivationKey extends AbstractHibernateObject implements Owned, Nam
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
     private Set<ActivationKeyPool> pools = new HashSet<ActivationKeyPool>();
 
+    @OneToMany(mappedBy = "key")
+    @Cascade({org.hibernate.annotations.CascadeType.ALL,
+        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+    private Set<ActivationKeyProduct> productIds = new HashSet<ActivationKeyProduct>();
+
     @OneToMany(targetEntity = ActivationKeyContentOverride.class, mappedBy = "key")
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
@@ -99,6 +105,9 @@ public class ActivationKey extends AbstractHibernateObject implements Owned, Nam
     @Column(length = 255, nullable =  true)
     @Size(max = 255)
     private String serviceLevel;
+
+    @Column(name = "auto_attach")
+    private boolean autoAttach = false;
 
     public ActivationKey() {
     }
@@ -137,17 +146,31 @@ public class ActivationKey extends AbstractHibernateObject implements Owned, Nam
     }
 
     /**
-     * @return the pool
+     * @return the set of Pools
      */
     public Set<ActivationKeyPool> getPools() {
         return pools;
     }
 
     /**
-     * @param pools the pool to set
+     * @param pools the set of Pools to set
      */
     public void setPools(Set<ActivationKeyPool> pools) {
         this.pools = pools;
+    }
+
+    /**
+     * @return the product ids
+     */
+    public Set<ActivationKeyProduct> getProductIds() {
+        return productIds;
+    }
+
+    /**
+     * @param productIds the set of product Ids to set
+     */
+    public void setProductIds(Set<ActivationKeyProduct> productIds) {
+        this.productIds = productIds;
     }
 
     /**
@@ -162,6 +185,23 @@ public class ActivationKey extends AbstractHibernateObject implements Owned, Nam
      */
     public void setOwner(Owner owner) {
         this.owner = owner;
+    }
+
+    public void addProduct(Product product) {
+        ActivationKeyProduct akpid = new ActivationKeyProduct(this, product);
+        this.getProductIds().add(akpid);
+    }
+
+    public void removeProduct(Product product) {
+        ActivationKeyProduct toRemove = null;
+
+        for (ActivationKeyProduct akpid : this.getProductIds()) {
+            if (akpid.getProduct().getId().equals(product.getId())) {
+                toRemove = akpid;
+                break;
+            }
+        }
+        this.getProductIds().remove(toRemove);
     }
 
     public void addPool(Pool pool, Long quantity) {
@@ -283,4 +323,13 @@ public class ActivationKey extends AbstractHibernateObject implements Owned, Nam
             this.getContentOverrides().add(override);
         }
     }
+
+    public void setAutoAttach(boolean autoAttach) {
+        this.autoAttach = autoAttach;
+    }
+
+    public boolean isAutoAttach() {
+        return autoAttach;
+    }
+
 }

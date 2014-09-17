@@ -9,15 +9,18 @@ describe 'Activation Keys' do
   before(:each) do
     @owner = create_owner random_string('test_owner')
     @some_product = create_product(nil, random_string('some_product'))
+    @some_product_2 = create_product(nil, random_string('some_product'))
 
     #this owner is used to test restrictions
     mallory = create_owner random_string('test_owner')
     @mallory_client = user_client(mallory, random_string('testuser'))
 
     @sub = @cp.create_subscription(@owner['key'], @some_product['id'], 37)
+    @sub = @cp.create_subscription(@owner['key'], @some_product_2['id'], 37)
     @cp.refresh_pools(@owner['key'])
 
-    @pool = @cp.list_pools(:owner => @owner.id).first
+    @pool = @cp.list_pools(:owner => @owner.id, :product => @some_product['id']).first
+    @pool_2 = @cp.list_pools(:owner => @owner.id, :product => @some_product_2['id']).first
 
     @activation_key = @cp.create_activation_key(@owner['key'], random_string('test_token'))
     @activation_key['id'].should_not be_nil
@@ -62,7 +65,7 @@ describe 'Activation Keys' do
     }.should raise_exception(RestClient::ResourceNotFound)
   end
 
-  it 'should allow pools to be added and removed to activation keys' do
+  it 'should allow pools to be added to and removed from activation keys' do
     @cp.add_pool_to_key(@activation_key['id'], @pool['id'], 1)
     key = @cp.get_activation_key(@activation_key['id'])
     key['pools'].length.should == 1
@@ -82,6 +85,24 @@ describe 'Activation Keys' do
       @mallory_client.add_pool_to_key(@activation_key['id'], @pool['id'])
     }.should raise_exception(RestClient::ResourceNotFound)
 
+  end
+
+  it 'should allow product ids to be added to and removed from activation keys' do
+    @cp.add_prod_id_to_key(@activation_key['id'], @some_product['id'])
+    key = @cp.get_activation_key(@activation_key['id'])
+    key['productIds'].length.should == 1
+    @cp.remove_prod_id_from_key(@activation_key['id'], @some_product['id'])
+    key = @cp.get_activation_key(@activation_key['id'])
+    key['productIds'].length.should == 0
+  end
+
+  it 'should allow auto attach flag to be set on activation keys' do
+    @cp.update_activation_key({'id' => @activation_key['id'], "autoAttach" => "true"})
+    key = @cp.get_activation_key(@activation_key['id'])
+    key['autoAttach'].should be_true
+    @cp.update_activation_key({'id' => @activation_key['id'], "autoAttach" => "false"})
+    key = @cp.get_activation_key(@activation_key['id'])
+    key['autoAttach'].should be_false
   end
 
   it 'should allow overrides to be added to keys' do

@@ -647,7 +647,7 @@ public class CandlepinPoolManager implements PoolManager {
         String serviceLevelOverride, Collection<String> fromPools)
         throws EntitlementRefusedException {
 
-
+        boolean hasFromPools = fromPools != null && !fromPools.isEmpty();
         ValidationResult failedResult = null;
 
         Date activePoolDate = entitleDate;

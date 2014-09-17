@@ -75,6 +75,7 @@ import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyContentOverride;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.model.activationkeys.ActivationKeyPool;
+import org.candlepin.model.activationkeys.ActivationKeyProduct;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.paging.Paginate;
@@ -527,23 +528,26 @@ public class ConsumerResource {
 
     private void handleActivationKeys(Consumer consumer, List<ActivationKey> keys) {
         // Process activation keys.
-        handleActivationKeyPools(consumer, keys);
-        for (ActivationKey ak : keys) {
-            handleActivationKeyOverrides(consumer, ak.getContentOverrides());
-            handleActivationKeyRelease(consumer, ak.getReleaseVer());
-            handleActivationKeyServiceLevel(consumer, ak.getServiceLevel(), ak.getOwner());
+        for (ActivationKey key : keys) {
+            handleActivationKeyOverrides(consumer, key.getContentOverrides());
+            handleActivationKeyRelease(consumer, key.getReleaseVer());
+            handleActivationKeyServiceLevel(consumer, key.getServiceLevel(), key.getOwner());
+            if (key.isAutoAttach()) {
+                handleActivationKeyAutoBind(consumer, key);
+            }
+            else {
+                handleActivationKeyPools(consumer, key);
+            }
         }
     }
 
     private void handleActivationKeyPools(Consumer consumer,
-        List<ActivationKey> keys) {
+        ActivationKey key) {
         List<ActivationKeyPool> toBind = new LinkedList<ActivationKeyPool>();
-        for (ActivationKey key : keys) {
-            for (ActivationKeyPool akp : key.getPools()) {
-                Util.assertNotNull(akp.getPool().getId(),
-                    i18n.tr("Pool ID must be provided"));
-                toBind.add(akp);
-            }
+        for (ActivationKeyPool akp : key.getPools()) {
+            Util.assertNotNull(akp.getPool().getId(),
+                i18n.tr("Pool ID must be provided"));
+            toBind.add(akp);
         }
 
         // Sort pools before binding to avoid deadlocks
@@ -554,6 +558,37 @@ public class ConsumerResource {
                     akp.getQuantity().intValue();
             entitler.sendEvents(entitler.bindByPool(
                 akp.getPool().getId(), consumer, quantity));
+        }
+    }
+
+    private void handleActivationKeyAutoBind(Consumer consumer, ActivationKey key) {
+        try {
+            Set<String> productIds = new HashSet<String>();
+            List<String> poolIds = new ArrayList<String>();
+            for (ActivationKeyProduct akpid : key.getProductIds()) {
+                productIds.add(akpid.getProduct().getId());
+            }
+            for (ConsumerInstalledProduct cip : consumer.getInstalledProducts()) {
+                productIds.add(cip.getProductId());
+            }
+            for (ActivationKeyPool p : key.getPools()) {
+                poolIds.add(p.getPool().getId());
+            }
+            AutobindData autobindData = AutobindData.create(consumer)
+                    .forProducts(productIds.toArray(new String[0]))
+                    .withPools(poolIds);
+            List<Entitlement> ents = entitler.bindByProducts(autobindData);
+            entitler.sendEvents(ents);
+        }
+        catch (ForbiddenException fe) {
+            throw fe;
+        }
+        catch (CertVersionConflictException cvce) {
+            throw cvce;
+        }
+        catch (RuntimeException re) {
+            log.warn("Unable to attach a subscription for a product that " +
+                "has no pool: " + re.getMessage());
         }
     }
 
@@ -2130,4 +2165,5 @@ public class ConsumerResource {
             calculatedAttributesUtil.buildCalculatedAttributes(ent.getPool(), null, null);
         ent.getPool().setCalculatedAttributes(calculatedAttributes);
     }
+
 }

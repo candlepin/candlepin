@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
@@ -72,11 +73,12 @@ public class EntitleByProductsJobTest {
 
         List<Entitlement> ents = new ArrayList<Entitlement>();
         when(e.bindByProducts(eq(pids), eq(consumerUuid),
-            eq((Date) null), null)).thenReturn(ents);
+            eq((Date) null), eq((Collection<String>) null))).thenReturn(ents);
 
         EntitleByProductsJob job = new EntitleByProductsJob(e, null);
         job.execute(ctx);
-        verify(e).bindByProducts(eq(pids), eq(consumerUuid), eq((Date) null), null);
+        verify(e).bindByProducts(eq(pids), eq(consumerUuid), eq((Date) null),
+                eq((Collection<String>) null));
         verify(e).sendEvents(eq(ents));
     }
 

@@ -15,7 +15,7 @@
 package org.candlepin.model.activationkeys;
 
 import org.candlepin.model.AbstractHibernateObject;
-import org.candlepin.model.Pool;
+import org.candlepin.model.Product;
 
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
@@ -41,10 +41,10 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlRootElement
 @Entity
 @XmlAccessorType(XmlAccessType.PROPERTY)
-@Table(name = "cp_activationkey_pool",
-    uniqueConstraints = {@UniqueConstraint(columnNames = {"key_id", "pool_id"})}
+@Table(name = "cp_activationkey_product",
+    uniqueConstraints = {@UniqueConstraint(columnNames = {"key_id", "product_id"})}
 )
-public class ActivationKeyPool extends AbstractHibernateObject implements Comparable<ActivationKeyPool> {
+public class ActivationKeyProduct extends AbstractHibernateObject {
 
     @Id
     @GeneratedValue(generator = "system-uuid")
@@ -54,29 +54,24 @@ public class ActivationKeyPool extends AbstractHibernateObject implements Compar
     private String id;
 
     @ManyToOne
-    @ForeignKey(name = "fk_activation_key_pool_k")
     @JoinColumn(nullable = false)
-    @Index(name = "cp_activation_key_pool_k_fk_idx")
+    @Index(name = "cp_activation_key_prod_k_fk_idx")
     @NotNull
     private ActivationKey key;
 
     @ManyToOne
-    @ForeignKey(name = "fk_activation_key_pool_p")
+    @ForeignKey(name = "fk_activation_key_product_p")
     @JoinColumn(nullable = false)
-    @Index(name = "cp_activation_key_pool_p_fk_idx")
+    @Index(name = "cp_activation_key_product_p_fk_idx")
     @NotNull
-    private Pool pool;
+    private Product product;
 
-    @Column(nullable = true, name = "quantity")
-    private Long quantity;
-
-    public ActivationKeyPool() {
+    public ActivationKeyProduct() {
     }
 
-    public ActivationKeyPool(ActivationKey key, Pool pool, Long quantity) {
+    public ActivationKeyProduct(ActivationKey key, Product product) {
         this.key = key;
-        this.pool = pool;
-        this.quantity = quantity;
+        this.product = product;
     }
 
     public String getId() {
@@ -103,48 +98,22 @@ public class ActivationKeyPool extends AbstractHibernateObject implements Compar
     }
 
     /**
-     * @return the pool_Id
+     * @return the Product
      */
-    public Pool getPool() {
-        return pool;
+    public Product getProduct() {
+        return product;
     }
 
     /**
-     * @param pool the pool to set
+     * @param product the Product to set
      */
-    public void setPool(Pool pool) {
-        this.pool = pool;
-    }
-
-    /**
-     * @return the quantity
-     */
-    public Long getQuantity() {
-        return quantity;
-    }
-
-    /**
-     * @param quantity the quantity to set
-     */
-    public void setQuantity(Long quantity) {
-        this.quantity = quantity;
-    }
-
-    @Override
-    public int compareTo(ActivationKeyPool other) {
-        int compare = this.getPool().compareTo(other.getPool());
-        if (compare == 0) {
-            return (this.getId() == null ^ other.getId() == null) ?
-                (this.getId() == null ? -1 : 1) :
-                    this.getId() == other.getId() ? 0 :
-                        this.getId().compareTo(other.getId());
-        }
-        return compare;
+    public void setProduct(Product product) {
+        this.product = product;
     }
 
     @Override
     public String toString() {
-        return "Activation key: " + this.getKey().getName() + ", Product ID: " + this.getPool().getId();
+        return "Activation key: " + this.getKey().getName() + ", Product ID: " +
+                this.getProduct().getId();
     }
-
 }

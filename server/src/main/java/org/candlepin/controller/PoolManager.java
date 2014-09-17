@@ -210,6 +210,7 @@ public interface PoolManager {
      * @param entitleDate
      * @param owner
      * @param serviceLevelOverride
+     * @param fromPools
      * @return list of entitlements to bind
      * @throws EntitlementRefusedException if unable to bind
      */
@@ -221,6 +222,7 @@ public interface PoolManager {
      * @param consumer
      * @param host
      * @param entitleDate
+     * @param possiblePools
      * @return list of entitlements to bind
      * @throws EntitlementRefusedException if unable to bind
      */
