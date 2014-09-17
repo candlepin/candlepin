@@ -134,15 +134,6 @@ public class Config {
     }
 
     /**
-     * Returns the Database Basic Authentication Configuration properties
-     *
-     * @return the Database Basic Authentication Configuration properties
-     */
-    public Properties dbBasicAuthConfiguration(Config config) {
-        return new DbBasicAuthConfigParser(config).parseConfig(configuration);
-    }
-
-    /**
      * to disable SSLAuthFilter add to candlepin.conf:
      * candlepin.auth.ssl.enabled=no
      *
