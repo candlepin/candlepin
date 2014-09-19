@@ -5,9 +5,12 @@ import org.candlepin.gutterball.model.jpa.ConsumerState;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
+import org.hibernate.Criteria;
+import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
 
 import java.util.Date;
+import java.util.List;
 
 public class ConsumerStateCurator extends BaseCurator<ConsumerState> {
 
@@ -38,4 +41,23 @@ public class ConsumerStateCurator extends BaseCurator<ConsumerState> {
         save(consumer);
     }
 
+    public List<String> getConsumerUuidsOnDate(Date targetDate, List<String> ownerKeys, List<String> uuids) {
+        Criteria find = currentSession().createCriteria(ConsumerState.class);
+        if (ownerKeys != null && !ownerKeys.isEmpty()) {
+            find.add(Restrictions.in("ownerKey", ownerKeys));
+        }
+        if (uuids != null && !uuids.isEmpty()) {
+            find.add(Restrictions.in("uuid", uuids));
+        }
+
+        Date toCheck = targetDate == null ? new Date() : targetDate;
+        find.add(Restrictions.or(
+            Restrictions.isNull("deleted"),
+            Restrictions.gt("deleted", toCheck)
+        ));
+        find.add(Restrictions.le("created", toCheck));
+        find.setProjection(Property.forName("uuid"));
+
+        return find.list();
+    }
 }

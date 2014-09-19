@@ -15,7 +15,6 @@
 
 package org.candlepin.gutterball.resource;
 
-import org.candlepin.gutterball.curator.EventCurator;
 import org.candlepin.gutterball.model.Event;
 
 import com.google.inject.Inject;
@@ -38,27 +37,24 @@ import javax.ws.rs.core.MediaType;
 @Path("events")
 public class EventResource {
 
-    private EventCurator eventCurator;
-
     @Inject
-    public EventResource(EventCurator eventCurator) {
-        this.eventCurator = eventCurator;
+    public EventResource() {
     }
 
     @GET
     @Produces({ MediaType.APPLICATION_JSON })
     public List<Map> getEvents() {
         List<Map> events = new ArrayList<Map>();
-        DBCursor cursor = eventCurator.all();
-        try {
-            while (cursor.hasNext()) {
-                Event next = (Event) cursor.next();
-                events.add(next);
-            }
-        }
-        finally {
-            cursor.close();
-        }
+//        DBCursor cursor = eventCurator.all();
+//        try {
+//            while (cursor.hasNext()) {
+//                Event next = (Event) cursor.next();
+//                events.add(next);
+//            }
+//        }
+//        finally {
+//            cursor.close();
+//        }
         return events;
     }
 

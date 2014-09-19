@@ -14,15 +14,12 @@
  */
 package org.candlepin.gutterball.eventhandler;
 
-import org.candlepin.gutterball.curator.ConsumerCurator;
 import org.candlepin.gutterball.curator.jpa.ConsumerStateCurator;
-import org.candlepin.gutterball.model.Consumer;
 import org.candlepin.gutterball.model.Event;
 import org.candlepin.gutterball.model.jpa.ConsumerState;
 
 import com.google.inject.Inject;
 import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 
 /**
  * ConsumerHandler to properly update the database when
@@ -31,12 +28,10 @@ import com.mongodb.DBObject;
 @HandlerTarget("CONSUMER")
 public class ConsumerHandler implements EventHandler {
 
-    protected ConsumerCurator consumerCurator;
     protected ConsumerStateCurator consumerStateCurator;
 
     @Inject
-    public ConsumerHandler(ConsumerCurator consumerCurator, ConsumerStateCurator stateCurator) {
-        this.consumerCurator = consumerCurator;
+    public ConsumerHandler(ConsumerStateCurator stateCurator) {
         this.consumerStateCurator = stateCurator;
     }
 
@@ -49,12 +44,6 @@ public class ConsumerHandler implements EventHandler {
         ConsumerState consumerState = new ConsumerState(newConsumer.getString("uuid"),
                 owner.getString("key"), newConsumer.getDate("created"));
         consumerStateCurator.create(consumerState);
-
-        // Mongo Insertion
-        Consumer toAdd = new Consumer(newConsumer.getString("uuid"),
-                newConsumer.getDate("created"),
-                (DBObject) newConsumer.get("owner"));
-        consumerCurator.insert(toAdd);
     }
 
     @Override
@@ -65,7 +54,6 @@ public class ConsumerHandler implements EventHandler {
     @Override
     public void handleDeleted(Event event) {
         BasicDBObject targetConsumer = (BasicDBObject) event.getOldEntity();
-        consumerCurator.setConsumerDeleted(targetConsumer.getString("uuid"), event.getTimestamp());
         consumerStateCurator.setConsumerDeleted(targetConsumer.getString("uuid"), event.getTimestamp());
     }
 }

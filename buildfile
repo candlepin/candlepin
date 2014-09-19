@@ -106,7 +106,7 @@ MONGODB_EMBEDDED = ['de.flapdoodle.embed:de.flapdoodle.embed.mongo:jar:1.46.0',
 
 DB = [POSTGRESQL, MYSQL, MONGODB]
 
-HSQLDB = 'hsqldb:hsqldb:jar:1.8.0.10'
+HSQLDB = 'org.hsqldb:hsqldb:jar:2.3.2'
 
 ORACLE = ['com.oracle:ojdbc6:jar:11.2.0', 'org.quartz-scheduler:quartz-oracle:jar:2.1.5']
 
@@ -257,6 +257,10 @@ define "candlepin" do
     }
     resources.filter.using(resource_substitutions)
     test.resources.filter.using(resource_substitutions)
+
+    test.setup do |task|
+        filter(path_to(:src, :main, :resources, 'META-INF')).into(path_to(:target, :classes, 'META-INF')).run
+    end
 
     test.with(TESTING, JUKITO, HSQLDB, MONGODB_EMBEDDED)
     test.using :java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ]

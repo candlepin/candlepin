@@ -14,7 +14,6 @@
  */
 package org.candlepin.gutterball.eventhandler;
 
-import org.candlepin.gutterball.curator.ComplianceDataCurator;
 import org.candlepin.gutterball.curator.jpa.ComplianceSnapshotCurator;
 import org.candlepin.gutterball.model.Event;
 import org.candlepin.gutterball.model.jpa.ComplianceSnapshot;
@@ -44,12 +43,10 @@ public class ComplianceHandler implements EventHandler {
 
     private static Logger log = LoggerFactory.getLogger(ComplianceHandler.class);
 
-    private ComplianceDataCurator mongoCurator;
     private ComplianceSnapshotCurator jpaCurator;
 
     @Inject
-    public ComplianceHandler(ComplianceDataCurator mongoCurator, ComplianceSnapshotCurator jpaCurator) {
-        this.mongoCurator = mongoCurator;
+    public ComplianceHandler(ComplianceSnapshotCurator jpaCurator) {
         this.jpaCurator = jpaCurator;
     }
 
@@ -77,9 +74,6 @@ public class ComplianceHandler implements EventHandler {
 
 
         jpaCurator.create(snap);
-
-        // Mongo cruft.
-        mongoCurator.insert(entity);
     }
 
     @Override
