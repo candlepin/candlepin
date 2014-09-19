@@ -66,7 +66,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class GutterballModule extends AbstractModule {
 
-    private Configuration config;
+    protected Configuration config;
 
     public GutterballModule(Configuration config) {
         this.config = config;
@@ -78,14 +78,16 @@ public class GutterballModule extends AbstractModule {
     @Override
     protected void configure() {
         // See JavaDoc on I18nProvider for more information of RequestScope
-        bind(I18n.class).toProvider(I18nProvider.class).in(ServletScopes.REQUEST);
+        bindI18n();
         bind(JsonProvider.class);
 
-        // Backend classes
-        configureHibernate();
+        configureJPA();
+        bind(ComplianceSnapshotCurator.class);
+        bind(ConsumerStateCurator.class);
+
         configureEventHandlers();
         bind(EventManager.class).asEagerSingleton();
-        bind(EventReceiver.class).asEagerSingleton();
+        configureEventReciever();
 
         // Map our report classes so that they can be picked up by the ReportFactory.
         Multibinder<Report> reports = Multibinder.newSetBinder(binder(), Report.class);
@@ -119,16 +121,21 @@ public class GutterballModule extends AbstractModule {
         bind(JAXBMarshalExceptionMapper.class);
     }
 
-    private void configureHibernate() {
+    protected void configureEventReciever() {
+        bind(EventReceiver.class).asEagerSingleton();
+    }
+
+    protected void bindI18n() {
+        bind(I18n.class).toProvider(I18nProvider.class).in(ServletScopes.REQUEST);
+    }
+
+    protected void configureJPA() {
         JPAConfigurationParser parser = new JPAConfigurationParser(this.config);
         install(new JpaPersistModule("default").properties(parser.parseConfig()));
         bind(JPAInitializer.class).asEagerSingleton();
-
-        bind(ComplianceSnapshotCurator.class);
-        bind(ConsumerStateCurator.class);
     }
 
-    private void configureEventHandlers() {
+    protected void configureEventHandlers() {
         MapBinder<String, EventHandler> eventBinder =
                 MapBinder.newMapBinder(binder(), String.class, EventHandler.class);
         for (Class<? extends EventHandler> clazz : EventHandlerLoader.getClasses()) {

@@ -20,8 +20,10 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * EventHandlerLoader Loads subclasses of EventHandler from the package
@@ -43,7 +45,7 @@ public class EventHandlerLoader {
      *
      * @return list of subclasses of EventHandler
      */
-    public static List<Class<? extends EventHandler>> getClasses() {
+    public static Set<Class<? extends EventHandler>> getClasses() {
         String packageName = EventHandler.class.getPackage().getName();
         ClassLoader loader = Thread.currentThread().getContextClassLoader();
         String scannedPath = EventHandler.class.getPackage().getName().replace(DOT, SLASH);
@@ -54,7 +56,7 @@ public class EventHandlerLoader {
         catch (IOException e) {
             throw new IllegalArgumentException("Unable to load " + scannedPath, e);
         }
-        List<Class<? extends EventHandler>> classes = new LinkedList<Class<? extends EventHandler>>();
+        Set<Class<? extends EventHandler>> classes = new HashSet<Class<? extends EventHandler>>();
         while (resources.hasMoreElements()) {
             File file = new File(resources.nextElement().getFile());
             classes.addAll(find(file, packageName));
@@ -62,8 +64,8 @@ public class EventHandlerLoader {
         return classes;
     }
 
-    private static List<Class<? extends EventHandler>> find(File file, String scannedPackage) {
-        List<Class<? extends EventHandler>> classes = new LinkedList<Class<? extends EventHandler>>();
+    private static Set<Class<? extends EventHandler>> find(File file, String scannedPackage) {
+        Set<Class<? extends EventHandler>> classes = new HashSet<Class<? extends EventHandler>>();
         String resource = scannedPackage + DOT + file.getName();
         if (file.isDirectory()) {
             for (File nestedFile : file.listFiles()) {

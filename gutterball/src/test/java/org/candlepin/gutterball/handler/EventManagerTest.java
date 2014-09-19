@@ -17,15 +17,13 @@ package org.candlepin.gutterball.handler;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
-import org.candlepin.gutterball.curator.ConsumerCurator;
-import org.candlepin.gutterball.curator.EventCurator;
 import org.candlepin.gutterball.curator.jpa.ConsumerStateCurator;
 import org.candlepin.gutterball.eventhandler.ConsumerHandler;
 import org.candlepin.gutterball.eventhandler.EventHandler;
 import org.candlepin.gutterball.eventhandler.EventManager;
 import org.candlepin.gutterball.eventhandler.HandlerTarget;
-import org.candlepin.gutterball.model.Consumer;
 import org.candlepin.gutterball.model.Event;
+import org.candlepin.gutterball.model.jpa.ConsumerState;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -43,12 +41,6 @@ public class EventManagerTest {
     public static final String CONSUMER_JSON = "{\"id\": \"someId\"}";
 
     @Mock
-    private EventCurator eventCurator;
-
-    @Mock
-    private ConsumerCurator consumerCurator;
-
-    @Mock
     private ConsumerStateCurator consumerStateCurator;
 
     private ConsumerHandler consumerHandler;
@@ -57,10 +49,10 @@ public class EventManagerTest {
 
     @Before
     public void before() {
-        consumerHandler = new ConsumerHandler(consumerCurator, consumerStateCurator);
+        consumerHandler = new ConsumerHandler(consumerStateCurator);
         Map<String, EventHandler> handlers = new HashMap<String, EventHandler>();
         handlers.put(ConsumerHandler.class.getAnnotation(HandlerTarget.class).value(), consumerHandler);
-        eventManager = new TestingEventManager(eventCurator, handlers);
+        eventManager = new TestingEventManager(handlers);
     }
 
     @Test
@@ -68,24 +60,23 @@ public class EventManagerTest {
         Event toHandle = new Event();
         toHandle.setTarget("UNKNOWN_EVENT_TARGET");
         eventManager.handle(toHandle);
-        verify(eventCurator, times(1)).insert(eq(toHandle));
-        verify(consumerCurator, never()).insert(any(Consumer.class));
+        verify(consumerStateCurator, never()).create(any(ConsumerState.class));
     }
 
     @Test
     public void testEventManagerNullTarget() {
         Event toHandle = new Event();
         eventManager.handle(toHandle);
-        verify(eventCurator, times(1)).insert(eq(toHandle));
-        verify(consumerCurator, never()).insert(any(Consumer.class));
+        verify(consumerStateCurator, never()).create(any(ConsumerState.class));
     }
 
     // Class allows us to override loadEventHandlers, so we can supply mocks
     // We aren't testing the DB, so we want to avoid the curators
     private class TestingEventManager extends EventManager {
 
-        public TestingEventManager(EventCurator eventCurator, Map<String, EventHandler> handlers) {
-            super(eventCurator, handlers);
+        public TestingEventManager(Map<String, EventHandler> handlers) {
+//            super(eventCurator, handlers);
+            super(handlers);
         }
     }
 }
