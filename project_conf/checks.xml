@@ -215,7 +215,10 @@
         <property name="allowStaticMemberImports" value="true"/>
     </module>
     <!-- <module name="AvoidStaticImport"/> -->
-    <module name="IllegalImport"/>
+    <module name="IllegalImport">
+      <!-- Ban Junit 3 namespace -->
+      <property name="illegalPkgs" value="junit"/>
+    </module>
     <module name="RedundantImport"/>
     <module name="UnusedImports"/>
     <module name="ImportOrder">
