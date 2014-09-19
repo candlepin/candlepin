@@ -477,7 +477,7 @@ public class PoolManagerTest {
         PreUnbindHelper preHelper =  mock(PreUnbindHelper.class);
         ValidationResult result = new ValidationResult();
         when(preHelper.getResult()).thenReturn(result);
-        when(mockConfig.standalone()).thenReturn(true);
+        when(mockConfig.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
 
         when(mockPoolCurator.lockAndLoad(any(Pool.class))).thenReturn(pool);
 
@@ -838,7 +838,7 @@ public class PoolManagerTest {
         subscriptions.add(s);
         when(mockSubAdapter.getSubscriptions(any(Owner.class))).thenReturn(
             subscriptions);
-        when(mockConfig.standalone()).thenReturn(false);
+        when(mockConfig.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
 
         List<Pool> existingPools = new LinkedList<Pool>();
         List<Pool> newPools = pRules.createPools(s, existingPools);
@@ -867,7 +867,7 @@ public class PoolManagerTest {
         subscriptions.add(s);
         when(mockSubAdapter.getSubscriptions(any(Owner.class))).thenReturn(
             subscriptions);
-        when(mockConfig.standalone()).thenReturn(false);
+        when(mockConfig.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
 
         List<Pool> existingPools = new LinkedList<Pool>();
         Pool p = TestUtil.createPool(s.getProduct());
@@ -893,7 +893,7 @@ public class PoolManagerTest {
         subscriptions.add(s);
         when(mockSubAdapter.getSubscriptions(any(Owner.class))).thenReturn(
             subscriptions);
-        when(mockConfig.standalone()).thenReturn(false);
+        when(mockConfig.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
 
         List<Pool> existingPools = new LinkedList<Pool>();
         Pool p = TestUtil.createPool(s.getProduct());

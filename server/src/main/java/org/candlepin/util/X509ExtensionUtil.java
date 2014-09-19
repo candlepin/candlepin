@@ -15,6 +15,7 @@
 package org.candlepin.util;
 
 import org.candlepin.config.Config;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EnvironmentContent;
@@ -211,7 +212,7 @@ public class X509ExtensionUtil  extends X509Util{
         Set<ProductContent> productContent = new HashSet<ProductContent>(productContentList);
         Set<X509ExtensionWrapper> toReturn = new LinkedHashSet<X509ExtensionWrapper>();
 
-        boolean enableEnvironmentFiltering = config.environmentFilteringEnabled();
+        boolean enableEnvironmentFiltering = config.getBoolean(ConfigProperties.ENV_CONTENT_FILTERING);
 
         // For V1 certificates we're going to error out if we exceed a limit which is
         // likely going to generate a certificate too large for the CDN, and return an

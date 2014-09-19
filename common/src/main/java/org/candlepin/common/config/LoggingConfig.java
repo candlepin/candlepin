@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.config;
+package org.candlepin.common.config;
 
 import com.google.inject.Inject;
 
@@ -33,21 +33,25 @@ import java.util.Map.Entry;
  *
  * See http://slf4j.org/faq.html#when
  */
-public class LoggingConfig {
+public class LoggingConfig extends ConfigurationParser {
 
     public static final String PREFIX = "log4j.logger.";
 
     @Inject
-    public LoggingConfig(Config config) {
+    public LoggingConfig(Configuration config) {
         configure(config);
     }
 
-    public void configure(Config config) {
+    public void configure(Configuration config) {
         LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
-        Map<String, String> logLevels = config.configurationWithPrefix(PREFIX);
+        Map<String, String> logLevels = config.subset(PREFIX);
         for (Entry<String, String> entry : logLevels.entrySet()) {
             String key = entry.getKey().replace(PREFIX, "");
             lc.getLogger(key).setLevel(Level.toLevel(entry.getValue()));
         }
+    }
+
+    public String getPrefix() {
+        return PREFIX;
     }
 }

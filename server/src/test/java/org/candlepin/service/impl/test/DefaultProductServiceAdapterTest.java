@@ -20,6 +20,7 @@ import static org.mockito.Mockito.*;
 
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.config.Config;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Product;
@@ -62,7 +63,7 @@ public class DefaultProductServiceAdapterTest {
         pki = mock(PKIUtility.class);
         cc = mock(ContentCurator.class);
         Config config = mock(Config.class);
-        when(config.environmentFilteringEnabled()).thenReturn(false);
+        when(config.getBoolean(ConfigProperties.ENV_CONTENT_FILTERING)).thenReturn(false);
         extUtil = new X509ExtensionUtil(config);
         dpsa = new DefaultProductServiceAdapter(pc, pcc, pki, extUtil, cc, idgen);
     }

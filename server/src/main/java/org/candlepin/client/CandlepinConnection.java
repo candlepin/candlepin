@@ -14,7 +14,7 @@
  */
 package org.candlepin.client;
 
-import org.candlepin.config.Config;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.resteasy.JsonProvider;
 
 import com.google.inject.Inject;
@@ -36,7 +36,7 @@ import org.jboss.resteasy.spi.ResteasyProviderFactory;
 public class CandlepinConnection {
 
     @Inject
-    public CandlepinConnection(Config config) {
+    public CandlepinConnection(Configuration config) {
         ResteasyProviderFactory rpf = ResteasyProviderFactory.getInstance();
         JsonProvider jsonprovider = new JsonProvider(config);
         rpf.addMessageBodyReader(jsonprovider);

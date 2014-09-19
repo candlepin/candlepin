@@ -14,9 +14,16 @@
  */
 package org.candlepin.policy.js.entitlement.test;
 
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
+import static org.mockito.Matchers.anyLong;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.Entitlement;
@@ -42,7 +49,7 @@ public class PostEntitlementRulesTest extends EntitlementRulesTestFixture {
         PoolHelper postHelper = mock(PoolHelper.class);
         when(postHelper.getFlattenedAttributes(eq(pool))).thenReturn(
             attrHelper.getFlattenedAttributes(pool));
-        when(config.standalone()).thenReturn(true);
+        when(config.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
         enforcer.postEntitlement(consumer, postHelper, e);
 
         // Pool quantity should be virt_limit:
@@ -59,7 +66,7 @@ public class PostEntitlementRulesTest extends EntitlementRulesTestFixture {
         PoolHelper postHelper = mock(PoolHelper.class);
         when(postHelper.getFlattenedAttributes(eq(pool))).thenReturn(
             attrHelper.getFlattenedAttributes(pool));
-        when(config.standalone()).thenReturn(true);
+        when(config.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
         enforcer.postEntitlement(consumer, postHelper, e);
 
         // Pool quantity should be virt_limit * entitlement quantity:
@@ -70,7 +77,7 @@ public class PostEntitlementRulesTest extends EntitlementRulesTestFixture {
     // Sub-pools should not be created when distributors bind:
     @Test
     public void noSubPoolsForDistributorBinds() {
-        when(config.standalone()).thenReturn(true);
+        when(config.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
         consumer.setType(new ConsumerType(ConsumerTypeEnum.CANDLEPIN));
         Pool pool = setupVirtLimitPool();
         Entitlement e = new Entitlement(pool, consumer, 1);
@@ -89,7 +96,7 @@ public class PostEntitlementRulesTest extends EntitlementRulesTestFixture {
     // Sub-pools should not be created when guests bind:
     @Test
     public void noSubPoolsForGuestBinds() {
-        when(config.standalone()).thenReturn(true);
+        when(config.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
         Pool pool = setupVirtLimitPool();
         consumer.setFact("virt.is_guest", "true");
         Entitlement e = new Entitlement(pool, consumer, 1);

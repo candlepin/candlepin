@@ -15,6 +15,7 @@
 package org.candlepin.policy.js.pool;
 
 import org.candlepin.config.Config;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Consumer;
@@ -157,7 +158,7 @@ public class PoolRules {
         boolean hostLimited = attributes.containsKey("host_limited") &&
             attributes.get("host_limited").equals("true");
         // Check if we need to create a virt-only pool for this subscription:
-        if (attributes.containsKey("virt_limit") && !config.standalone() &&
+        if (attributes.containsKey("virt_limit") && !config.getBoolean(ConfigProperties.STANDALONE) &&
             !hostLimited && !hasBonusPool(existingPools)) {
             HashMap<String, String> virtAttributes = new HashMap<String, String>();
             virtAttributes.put("virt_only", "true");
@@ -630,7 +631,7 @@ public class PoolRules {
                 else {
                     try {
                         int virtLimit = Integer.parseInt(virtLimitStr);
-                        if (config.standalone()) {
+                        if (config.getBoolean(ConfigProperties.STANDALONE)) {
                             // this is how we determined the quantity
                             expectedQuantity = virtLimit;
                         }

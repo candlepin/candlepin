@@ -87,6 +87,7 @@ public class Config {
         return configuration.subMap(prefix, prefix + Character.MAX_VALUE);
     }
 
+
     /**
      * Returns all of the entries with the given prefix.
      *
@@ -139,29 +140,29 @@ public class Config {
      *
      * @return if ssl authentication should be enabled
      */
-    public boolean sslAuthEnabled() {
-        return getBoolean(ConfigProperties.SSL_AUTHENTICATION);
-    }
+//    public boolean sslAuthEnabled() {
+//        return getBoolean(ConfigProperties.SSL_AUTHENTICATION);
+//    }
 
-    public boolean indentJson() {
-        return getBoolean(ConfigProperties.PRETTY_PRINT);
-    }
+//    public boolean indentJson() {
+//        return getBoolean(ConfigProperties.PRETTY_PRINT);
+//    }
 
-    public boolean trustedAuthEnabled() {
-        return getBoolean(ConfigProperties.TRUSTED_AUTHENTICATION);
-    }
+//    public boolean trustedAuthEnabled() {
+//        return getBoolean(ConfigProperties.TRUSTED_AUTHENTICATION);
+//    }
 
-    public boolean oAuthEnabled() {
-        return getBoolean(ConfigProperties.OAUTH_AUTHENTICATION);
-    }
+//    public boolean oAuthEnabled() {
+//        return getBoolean(ConfigProperties.OAUTH_AUTHENTICATION);
+//    }
 
-    public boolean basicAuthEnabled() {
-        return getBoolean(ConfigProperties.BASIC_AUTHENTICATION);
-    }
+//    public boolean basicAuthEnabled() {
+//        return getBoolean(ConfigProperties.BASIC_AUTHENTICATION);
+//    }
 
-    public boolean failOnUnknownImportProperties() {
-        return getBoolean(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES);
-    }
+//    public boolean failOnUnknownImportProperties() {
+//        return getBoolean(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES);
+//    }
 
     /**
      * Use to make decisions on behavior. Hosted vs. Standalone Default is
@@ -169,9 +170,9 @@ public class Config {
      *
      * @return if system is standalone.
      */
-    public boolean standalone() {
-        return getBoolean(ConfigProperties.STANDALONE);
-    }
+//    public boolean standalone() {
+//        return getBoolean(ConfigProperties.STANDALONE);
+//    }
 
     /**
      * Returns true if candlpin should support per environment content filtering
@@ -181,9 +182,9 @@ public class Config {
      *
      * @return if system should filter content by environment.
      */
-    public boolean environmentFilteringEnabled() {
-        return getBoolean(ConfigProperties.ENV_CONTENT_FILTERING);
-    }
+//    public boolean environmentFilteringEnabled() {
+//        return getBoolean(ConfigProperties.ENV_CONTENT_FILTERING);
+//    }
 
 
     protected Map<String, String> loadProperties() {

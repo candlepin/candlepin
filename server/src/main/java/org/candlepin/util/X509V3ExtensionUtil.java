@@ -15,6 +15,7 @@
 package org.candlepin.util;
 
 import org.candlepin.config.Config;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.json.model.Content;
 import org.candlepin.json.model.EntitlementBody;
 import org.candlepin.json.model.Order;
@@ -357,7 +358,7 @@ public class X509V3ExtensionUtil extends X509Util {
 
         List<Content> toReturn = new ArrayList<Content>();
 
-        boolean enableEnvironmentFiltering = config.environmentFilteringEnabled();
+        boolean enableEnvironmentFiltering = config.getBoolean(ConfigProperties.ENV_CONTENT_FILTERING);
 
         // Return only the contents that are arch appropriate
         Set<ProductContent> archApproriateProductContent = filterContentByContentArch(

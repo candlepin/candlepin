@@ -13,16 +13,23 @@
  * in this software or its documentation.
  */
 
-package org.candlepin.config;
+package org.candlepin.common.config;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 
 /**
- * ConfigurationParser
+ * ConfigurationParser will take a given prefix and pull out that section of
+ * the configuration as a Properties object. This class needs to be extended
+ * and the getPrefix method should be overridden.
  */
 abstract class ConfigurationParser {
+
+    private static Logger log = LoggerFactory.getLogger(ConfigurationParser.class);
 
     /**
      * Converts the given Map into a Properties object.
@@ -31,11 +38,9 @@ abstract class ConfigurationParser {
      * @return config as a Properties file
      */
     public Properties parseConfig(Map<String, String> inputConfiguration) {
-
         Properties toReturn = new Properties();
         toReturn.putAll(stripPrefixFromConfigKeys(inputConfiguration));
         return toReturn;
-
     }
 
     /**

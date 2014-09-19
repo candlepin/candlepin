@@ -35,27 +35,27 @@ public class JsonProviderTest {
 
     @Mock private Config config;
 
-    @Test
-    public void noIndentation() {
-        when(config.indentJson()).thenReturn(false);
+//    @Test
+//    public void noIndentation() {
+//        when(config.indentJson()).thenReturn(false);
+//
+//        JsonProvider provider = new JsonProvider(config);
+//        boolean indentEnabled = isEnabled(provider,
+//                SerializationFeature.INDENT_OUTPUT);
+//
+//        assertFalse(indentEnabled);
+//    }
 
-        JsonProvider provider = new JsonProvider(config);
-        boolean indentEnabled = isEnabled(provider,
-                SerializationFeature.INDENT_OUTPUT);
-
-        assertFalse(indentEnabled);
-    }
-
-    @Test
-    public void indentation() {
-        when(config.indentJson()).thenReturn(true);
-
-        JsonProvider provider = new JsonProvider(config);
-        boolean indentEnabled = isEnabled(provider,
-                SerializationFeature.INDENT_OUTPUT);
-
-        assertTrue(indentEnabled);
-    }
+//    @Test
+//    public void indentation() {
+//        when(config.indentJson()).thenReturn(true);
+//
+//        JsonProvider provider = new JsonProvider(config);
+//        boolean indentEnabled = isEnabled(provider,
+//                SerializationFeature.INDENT_OUTPUT);
+//
+//        assertTrue(indentEnabled);
+//    }
 
     // This is kind of silly - basically just testing an initial setting...
     @Test

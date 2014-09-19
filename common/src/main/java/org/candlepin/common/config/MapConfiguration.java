@@ -15,7 +15,10 @@
 package org.candlepin.common.config;
 
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.NoSuchElementException;
+import java.util.Properties;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -23,6 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class MapConfiguration extends AbstractConfiguration {
     private ConcurrentHashMap<String, Object> configMap;
+
 
     public MapConfiguration() {
         configMap = new ConcurrentHashMap<String, Object>();
@@ -34,11 +38,15 @@ public class MapConfiguration extends AbstractConfiguration {
 
     @Override
     public Configuration subset(String prefix) {
-        Configuration subset = new MapConfiguration();
+        return new MapConfiguration(subsetMap(prefix));
+    }
+
+    protected Map<String, Object> subsetMap(String prefix) {
+        Map<String, Object> subset = new TreeMap<String, Object>();
+
         for (Map.Entry<String, Object> e : configMap.entrySet()) {
-            String k = e.getKey();
-            if (k.startsWith(prefix)) {
-                subset.setProperty(k, e.getValue());
+            if (e.getKey() != null && e.getKey().startsWith(prefix)) {
+                subset.put(e.getKey(), e.getValue());
             }
         }
 
@@ -104,5 +112,45 @@ public class MapConfiguration extends AbstractConfiguration {
     @Override
     public String toString() {
         return configMap.toString();
+    }
+
+    @Override
+    public Map<String, Object> getNamespaceMap(String prefix) {
+        return getNamespaceMap(prefix, null);
+    }
+
+    @Override
+    public Map<String, Object> getNamespaceMap(String prefix, Map<String, Object> defaults) {
+        Map<String, Object> m = new TreeMap<String, Object>();
+
+        if (defaults != null) {
+            for (Entry<String, Object> entry : defaults.entrySet()) {
+                if (entry.getKey() != null && entry.getKey().startsWith(prefix)) {
+                    m.put(entry.getKey(), entry.getValue());
+                }
+            }
+        }
+        m.putAll(subsetMap(prefix));
+        return m;
+    }
+
+    @Override
+    public Properties getNamespaceProperties(String prefix) {
+        return getNamespaceProperties(prefix, null);
+    }
+
+    @Override
+    public Properties getNamespaceProperties(String prefix, Map<String, Object> defaults) {
+        Properties p = new Properties();
+
+        if (defaults != null) {
+            for (Entry<String, Object> entry : defaults.entrySet()) {
+                if (entry.getKey() != null && entry.getKey().startsWith(prefix)) {
+                    p.put(entry.getKey(), entry.getValue());
+                }
+            }
+        }
+        p.putAll(subsetMap(prefix));
+        return p;
     }
 }

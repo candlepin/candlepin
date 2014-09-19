@@ -14,9 +14,12 @@
  */
 package org.candlepin.policy.js.entitlement.test;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.when;
 
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
@@ -548,7 +551,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
 
     @Test
     public void virtOnlyPoolGuestHostDoesNotMatch() {
-        when(config.standalone()).thenReturn(true);
+        when(config.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
         // Parent consumer of our guest:
         Consumer parent = new Consumer("test parent consumer", "test user", owner,
             new ConsumerType(ConsumerTypeEnum.SYSTEM));
@@ -573,7 +576,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
 
     @Test
     public void virtOnlyPoolGuestNoHost() {
-        when(config.standalone()).thenReturn(true);
+        when(config.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
 
         // Another parent we'll make a virt only pool for:
         Consumer otherParent = new Consumer("test parent consumer", "test user", owner,

@@ -16,16 +16,21 @@ package org.candlepin.guice;
 
 import org.candlepin.audit.AMQPBusPublisher;
 import org.candlepin.audit.HornetqContextListener;
+import org.candlepin.common.config.Configuration;
+import org.candlepin.common.config.ConfigurationException;
+import org.candlepin.common.config.MapConfiguration;
+import org.candlepin.common.config.PropertiesFileConfiguration;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.logging.LoggerContextListener;
 import org.candlepin.pinsetter.core.PinsetterContextListener;
 import org.candlepin.util.Util;
 
-import com.google.inject.Binding;
+import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
+import com.google.inject.Stage;
 import com.google.inject.util.Modules;
 
 import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
@@ -33,17 +38,12 @@ import org.hibernate.ejb.HibernateEntityManagerFactory;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.internal.SessionFactoryImpl;
-import org.jboss.resteasy.plugins.guice.GuiceResourceFactory;
-import org.jboss.resteasy.plugins.guice.GuiceResteasyBootstrapServletContextListener;
-import org.jboss.resteasy.spi.Registry;
-import org.jboss.resteasy.spi.ResourceFactory;
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
-import org.jboss.resteasy.util.GetRestful;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18nManager;
 
-import java.lang.reflect.Type;
+import java.io.File;
+import java.nio.charset.Charset;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -51,7 +51,6 @@ import java.util.Locale;
 import javax.persistence.EntityManagerFactory;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
-import javax.ws.rs.ext.Provider;
 
 /**
  * Customized Candlepin version of
@@ -63,8 +62,9 @@ import javax.ws.rs.ext.Provider;
  * This context listener overrides some of the module initialization code to
  * allow for module specification beyond simply listing class names.
  */
-public class CandlepinContextListener extends
-        GuiceResteasyBootstrapServletContextListener {
+public class CandlepinContextListener extends CandlepinGuiceResteasyBootstrap {
+    public static final String CONFIGURATION_NAME = Configuration.class.getName();
+
     private HornetqContextListener hornetqListener;
     private PinsetterContextListener pinsetterListener;
     private LoggerContextListener loggerListener;
@@ -75,35 +75,78 @@ public class CandlepinContextListener extends
     static {
         I18nManager.getInstance().setDefaultLocale(Locale.US);
     }
-    private static Logger log = LoggerFactory.getLogger(CandlepinContextListener.class);
 
+    private static Logger log = LoggerFactory.getLogger(CandlepinContextListener.class);
+    private Configuration config;
+
+    // getServletContext() from the GuiceServletContextListener is deprecated.
+    // See
+    // https://github.com/google/guice/blob/bf0e7ce902dd97e62ef16679c587d78d59200450
+    // /extensions/servlet/src/com/google/inject/servlet/GuiceServletContextListener.java#L43-L45
+    // A typical way of doing this then is to cache the context ourselves:
+    // https://github.com/google/guice/issues/603
+    // Currently only needed for access to the Configuration.
+    private ServletContext servletContext;
+
+//    @Override
+//    public void contextInitialized(final ServletContextEvent event) {
+//        super.contextInitialized(event);
+//
+//        // this is pulled almost verbatim from the superclass - if only they
+//        // had made their internal getModules() method protected, then this
+//        // would not be necessary.
+//        final ServletContext context = event.getServletContext();
+//        final Registry registry = (Registry) context.getAttribute(
+//                Registry.class.getName());
+//        final ResteasyProviderFactory providerFactory =
+//                (ResteasyProviderFactory) context.getAttribute(
+//                    ResteasyProviderFactory.class.getName());
+//
+//        injector = Guice.createInjector(getModules());
+//        processInjector(registry, providerFactory, injector);
+//
+//        insertValidationEventListeners(injector);
+//        hornetqListener = injector.getInstance(HornetqContextListener.class);
+//        hornetqListener.contextInitialized(injector);
+//        pinsetterListener = injector.getInstance(PinsetterContextListener.class);
+//        pinsetterListener.contextInitialized();
+//    }
 
     @Override
-    public void contextInitialized(final ServletContextEvent event) {
-        super.contextInitialized(event);
+    public void contextInitialized(ServletContextEvent sce) {
+        log.info("Gutterball initializing context.");
+        I18nManager.getInstance().setDefaultLocale(Locale.US);
+        servletContext = sce.getServletContext();
 
-        // this is pulled almost verbatim from the superclass - if only they
-        // had made their internal getModules() method protected, then this
-        // would not be necessary.
-        final ServletContext context = event.getServletContext();
-        final Registry registry = (Registry) context.getAttribute(
-                Registry.class.getName());
-        final ResteasyProviderFactory providerFactory =
-                (ResteasyProviderFactory) context.getAttribute(
-                    ResteasyProviderFactory.class.getName());
+        try {
+            log.info("Gutterball reading configuration.");
+            config = readConfiguration(servletContext);
+        }
+        catch (ConfigurationException e) {
+            log.error("Could not read configuration file.  Aborting initialization.", e);
+            throw new RuntimeException(e);
+        }
 
-        injector = Guice.createInjector(getModules());
-        processInjector(registry, providerFactory, injector);
+        log.debug("Candlepin stored config on context.");
 
+        servletContext.setAttribute(CONFIGURATION_NAME, config);
+
+        // set things up BEFORE calling the super class' initialize method.
+        super.contextInitialized(sce);
+
+        // Must call super.contextInitialized() before accessing injector
         insertValidationEventListeners(injector);
         hornetqListener = injector.getInstance(HornetqContextListener.class);
         hornetqListener.contextInitialized(injector);
         pinsetterListener = injector.getInstance(PinsetterContextListener.class);
         pinsetterListener.contextInitialized();
+
+        log.info("Candlepin context initialized.");
     }
 
     @Override
     public void contextDestroyed(ServletContextEvent event) {
+        super.contextDestroyed(event);
         hornetqListener.contextDestroyed();
         pinsetterListener.contextDestroyed();
         loggerListener = injector.getInstance(LoggerContextListener.class);
@@ -119,18 +162,93 @@ public class CandlepinContextListener extends
         }
     }
 
+    @Override
+    protected Injector getInjector(Stage stage, List<Module> modules) {
+        return Guice.createInjector(stage, modules);
+    }
+
+    protected Configuration readConfiguration(ServletContext context)
+        throws ConfigurationException {
+
+        // Use StandardCharsets.UTF_8 when we move to Java 7
+        Charset utf8 = Charset.forName("UTF-8");
+        PropertiesFileConfiguration systemConfig = new PropertiesFileConfiguration();
+        systemConfig.setEncoding(utf8);
+        File configFile = new File(ConfigProperties.DEFAULT_CONFIG_FILE);
+
+        if (configFile.canRead()) {
+            log.debug("Loading system configuration");
+            // First, read the system configuration
+            systemConfig.load(configFile);
+            log.debug("System configuration: " + systemConfig);
+        }
+
+        // load the defaults
+        MapConfiguration defaults = new MapConfiguration(
+            ConfigProperties.DEFAULT_PROPERTIES);
+
+        log.debug("Loading default configuration values");
+
+        log.debug("Default config: " + defaults);
+        // merge the defaults with the system configuration. ORDER MATTERS.
+        // system config must be read FIRST otherwise settings won't be applied.
+
+        // merge does NOT affect systemConfig, it just returns a new object
+        // not sure I like that.
+        Configuration merged = systemConfig.merge(defaults);
+
+        log.debug("Configuration: " + merged);
+        return merged;
+    }
+
+    @Override
+    protected Stage getStage(ServletContext context) {
+        // RESTEasy 3.0 has a getState with a context that we can override.
+        // Right now we don't use context for our need but when we do switch
+        // we'll be able to add an @Override to this method.
+
+        // see https://github.com/google/guice/wiki/Bootstrap for information
+        // on Stage.
+        return Stage.PRODUCTION;
+    }
+
+//    /**
+//     * Returns a list of Guice modules to initialize.
+//     * @return a list of Guice modules to initialize.
+//     */
+//    protected List<Module> getModules() {
+//        List<Module> modules = new LinkedList<Module>();
+//
+//        modules.add(Modules.override(new DefaultConfig()).with(
+//                new CustomizableModules().load()));
+//
+//        modules.add(new CandlepinModule());
+//
+//        modules.add(new CandlepinFilterModule());
+//
+//        return modules;
+//    }
+
     /**
      * Returns a list of Guice modules to initialize.
      * @return a list of Guice modules to initialize.
      */
-    protected List<Module> getModules() {
+    @Override
+    protected List<Module> getModules(ServletContext context) {
         List<Module> modules = new LinkedList<Module>();
 
         modules.add(Modules.override(new DefaultConfig()).with(
                 new CustomizableModules().load()));
 
-        modules.add(new CandlepinModule());
+        modules.add(new AbstractModule() {
 
+            @Override
+            protected void configure() {
+                bind(Configuration.class).toInstance(config);
+            }
+        });
+
+        modules.add(new CandlepinModule(config));
         modules.add(new CandlepinFilterModule());
 
         return modules;
@@ -159,28 +277,32 @@ public class CandlepinContextListener extends
         registry.getEventListenerGroup(EventType.PRE_DELETE).appendListener(listenerProvider.get());
     }
 
-    /**
-     * This is what RESTEasy's ModuleProcessor does, but we need the injector
-     * afterwards.
-     * @param inj - guice injector
-     */
-    @SuppressWarnings("rawtypes")
-    private void processInjector(Registry registry,
-        ResteasyProviderFactory providerFactory, Injector inj) {
-        for (final Binding<?> binding : inj.getBindings().values()) {
-            final Type type = binding.getKey().getTypeLiteral().getType();
-            if (type instanceof Class) {
-                final Class<?> beanClass = (Class) type;
-                if (GetRestful.isRootResource(beanClass)) {
-                    final ResourceFactory resourceFactory =
-                        new GuiceResourceFactory(binding.getProvider(), beanClass);
-                    registry.addResourceFactory(resourceFactory);
-                }
-                if (beanClass.isAnnotationPresent(Provider.class)) {
-                    log.debug("register:  " + beanClass.getName());
-                    providerFactory.registerProviderInstance(binding.getProvider().get());
-                }
-            }
-        }
+//    /**
+//     * This is what RESTEasy's ModuleProcessor does, but we need the injector
+//     * afterwards.
+//     * @param inj - guice injector
+//     */
+//    @SuppressWarnings("rawtypes")
+//    private void processInjector(Registry registry,
+//        ResteasyProviderFactory providerFactory, Injector inj) {
+//        for (final Binding<?> binding : inj.getBindings().values()) {
+//            final Type type = binding.getKey().getTypeLiteral().getType();
+//            if (type instanceof Class) {
+//                final Class<?> beanClass = (Class) type;
+//                if (GetRestful.isRootResource(beanClass)) {
+//                    final ResourceFactory resourceFactory =
+//                        new GuiceResourceFactory(binding.getProvider(), beanClass);
+//                    registry.addResourceFactory(resourceFactory);
+//                }
+//                if (beanClass.isAnnotationPresent(Provider.class)) {
+//                    log.debug("register:  " + beanClass.getName());
+//                    providerFactory.registerProviderInstance(binding.getProvider().get());
+//                }
+//            }
+//        }
+//    }
+    protected void processInjector(ServletContext context, Injector inj) {
+        injector = inj;
+        super.processInjector(context, injector);
     }
 }

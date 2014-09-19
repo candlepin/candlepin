@@ -15,6 +15,7 @@
 package org.candlepin.policy.js.entitlement;
 
 import org.candlepin.config.Config;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Pool;
@@ -82,7 +83,7 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
         args.put("consumer", consumer);
         args.put("hostConsumer", host);
         args.put("consumerEntitlements", consumer.getEntitlements());
-        args.put("standalone", config.standalone());
+        args.put("standalone", config.getBoolean(ConfigProperties.STANDALONE));
         args.put("pool", entitlementPool);
         args.put("quantity", quantity);
         args.put("caller", caller.getLabel());

@@ -12,10 +12,12 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.config;
+package org.candlepin.common.config;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
+
+import org.candlepin.config.Config;
 
 import org.junit.Before;
 import org.junit.Test;

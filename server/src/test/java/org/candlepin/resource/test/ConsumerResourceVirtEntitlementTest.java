@@ -224,7 +224,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
         @Override
         protected void configure() {
             Config config = mock(Config.class);
-            when(config.standalone()).thenReturn(false);
+            when(config.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
             when(config.getString(eq(ConfigProperties.CONSUMER_FACTS_MATCHER)))
                 .thenReturn("^virt.*");
             when(config.getString(eq(ConfigProperties.CONSUMER_SYSTEM_NAME_PATTERN)))

@@ -16,9 +16,9 @@ package org.candlepin;
 
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Principal;
+import org.candlepin.common.config.LoggingConfig;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.Config;
-import org.candlepin.config.LoggingConfig;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.guice.CandlepinModule;

@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.config;
+package org.candlepin.common.config;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -35,47 +35,56 @@ import javax.crypto.spec.SecretKeySpec;
 /**
  * EncryptedValueConfigurationParser
  */
-public abstract class EncryptedValueConfigurationParser extends
-    ConfigurationParser {
-    private String passphrase = null;
+public abstract class EncryptedValueConfigurationParser extends ConfigurationParser {
+
     private static Logger log =
         LoggerFactory.getLogger(EncryptedValueConfigurationParser.class);
 
-    public EncryptedValueConfigurationParser(Config config) {
-        String secretFile = config
-            .getString(ConfigProperties.PASSPHRASE_SECRET_FILE);
+    private String passphrase = null;
+
+    public EncryptedValueConfigurationParser(Configuration config) {
+        super();
+
+        String secretFile = config.getString("candlepin.passphrase.path");
 
         log.debug("reading secret file: " +  secretFile);
+
+        BufferedReader in = null;
+
         try {
-            BufferedReader in = new BufferedReader(new FileReader(secretFile));
-            String str;
+            in = new BufferedReader(new FileReader(secretFile));
             StringBuilder tmpPassphrase = new StringBuilder();
-            while ((str = in.readLine()) != null) {
-                log.debug("str passphrase: " + str);
-                tmpPassphrase.append(str);
+
+            String line = null;
+            while ((line = in.readLine()) != null) {
+                log.debug("str passphrase: " + line);
+                tmpPassphrase.append(line);
             }
-            in.close();
+
             log.debug("tmpPassphrase: " + tmpPassphrase.toString());
             passphrase = tmpPassphrase.toString();
         }
         catch (FileNotFoundException e) {
             log.debug("File not found: " + secretFile);
             passphrase = null;
-            // FIXME: log, complain, etc
         }
         catch (IOException e) {
             log.debug("IOException while reading: " + secretFile);
             passphrase = null;
         }
+        finally {
+            if (in != null) {
+                try {
+                    in.close();
+                }
+                catch (IOException ioe) {
+                    // just closing
+                }
+            }
+        }
 
         log.debug("Using katello-passwd passphrase: " + passphrase);
     }
-
-    /*
-     * (non-Javadoc)
-     * @see org.candlepin.config.ConfigurationParser#getPrefix()
-     */
-    public abstract String getPrefix();
 
     public Properties parseConfig(Map<String, String> inputConfiguration) {
         // pull out properties that we know might be crypted passwords
@@ -85,32 +94,18 @@ public abstract class EncryptedValueConfigurationParser extends
         // provide there own implementation of crypt/decrypt
         //
         Properties toReturn = new Properties();
-        Properties toDecrypt = stripPrefixFromConfigKeys(inputConfiguration);
-        toReturn.putAll(toDecrypt);
+        Properties toDecrypt = super.parseConfig(inputConfiguration);
 
-        if (encryptedConfigKeys() != null) {
-            for (String encConfigKey : encryptedConfigKeys()) {
+        if (getEncryptedConfigKeys() != null) {
+            for (String encConfigKey : getEncryptedConfigKeys()) {
                 String passwordString = toDecrypt.getProperty(encConfigKey);
                 if (passwordString != null) {
-                    String deCryptedValue = decryptValue(passwordString, getPassphrase());
-                    toReturn.setProperty(encConfigKey, deCryptedValue);
-
+                    toReturn.setProperty(encConfigKey,
+                            decryptValue(passwordString, getPassphrase()));
                 }
             }
         }
         return toReturn;
-    }
-
-    /*
-     * returns a Set of config keys that should be decrypted if need be
-     */
-    public abstract Set<String> encryptedConfigKeys();
-
-    /* encrypt config value, such as a password */
-    public String encryptValue(String toEnc) {
-
-        // FIXME: clearly this needs a real implementation
-        return toEnc;
     }
 
     /* encrypt config value, such as a password */
@@ -127,8 +122,7 @@ public abstract class EncryptedValueConfigurationParser extends
 
 
         try {
-            Cipher cipher;
-            cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
 
             // NOTE: we are creating a 64byte digest here,
             // but only the first 16 bytes are used as the iv
@@ -146,9 +140,7 @@ public abstract class EncryptedValueConfigurationParser extends
 
             // NOTE: the encrypted password is stored hex base64
             byte[] b64bytes = Base64.decodeBase64(toDecrypt);
-            String plaintext = new String(cipher.doFinal(b64bytes));
-
-            return plaintext;
+            return new String(cipher.doFinal(b64bytes));
         }
         catch (Exception e) {
             log.info("Failure trying to decrypt" + toDecrypt , e);
@@ -166,10 +158,8 @@ public abstract class EncryptedValueConfigurationParser extends
         return passphrase;
     }
 
-    /**
-     * @param passphrase the passphrase to set
+    /*
+     * returns a Set of config keys that should be decrypted if need be
      */
-    public void setPassphrase(String passphrase) {
-        this.passphrase = passphrase;
-    }
+    public abstract Set<String> getEncryptedConfigKeys();
 }

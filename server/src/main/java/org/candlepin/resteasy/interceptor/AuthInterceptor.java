@@ -21,6 +21,7 @@ import org.candlepin.auth.Principal;
 import org.candlepin.auth.SubResource;
 import org.candlepin.auth.interceptor.SecurityHole;
 import org.candlepin.auth.interceptor.Verify;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.common.exceptions.GoneException;
 import org.candlepin.common.exceptions.IseException;
@@ -29,7 +30,7 @@ import org.candlepin.common.exceptions.UnauthorizedException;
 import org.candlepin.common.filter.LoggingFilter;
 import org.candlepin.common.filter.ServletLogger;
 import org.candlepin.common.filter.TeeHttpServletRequest;
-import org.candlepin.config.Config;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.guice.HttpMethodMatcher;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -101,7 +102,7 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
     private Injector injector;
     private ConsumerCurator consumerCurator;
     private DeletedConsumerCurator deletedConsumerCurator;
-    private Config config;
+    private Configuration config;
     private UserServiceAdapter userService;
     private List<AuthProvider> providers = new ArrayList<AuthProvider>();
     private I18n i18n;
@@ -111,7 +112,7 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
     private final Map<Class, EntityStore> storeMap = new HashMap<Class, EntityStore>();
 
     @Inject
-    public AuthInterceptor(Config config, UserServiceAdapter userService,
+    public AuthInterceptor(Configuration config, UserServiceAdapter userService,
         ConsumerCurator consumerCurator,
         DeletedConsumerCurator deletedConsumerCurator, Injector injector,
         I18n i18n) {
@@ -144,7 +145,8 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
      */
     public void setupAuthStrategies() {
         // use oauth
-        if (config.oAuthEnabled()) {
+        //if (config.oAuthEnabled()) {
+        if (config.getBoolean(ConfigProperties.OAUTH_AUTHENTICATION)) {
             log.debug("OAuth Authentication is enabled.");
             TrustedConsumerAuth consumerAuth =
                 new TrustedConsumerAuth(consumerCurator, deletedConsumerCurator, i18n);
@@ -155,12 +157,14 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
         }
 
         // basic http access
-        if (config.basicAuthEnabled()) {
+        //if (config.basicAuthEnabled()) {
+        if (config.getBoolean(ConfigProperties.BASIC_AUTHENTICATION)) {
             log.debug("Basic Authentication is enabled.");
             providers.add(new BasicAuth(userService, injector));
         }
         // consumer certificates
-        if (config.sslAuthEnabled()) {
+        //if (config.sslAuthEnabled()) {
+        if (config.getBoolean(ConfigProperties.SSL_AUTHENTICATION)) {
             log.debug("Certificate Based Authentication is enabled.");
             providers.add(
                 new SSLAuth(consumerCurator,
@@ -168,7 +172,8 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
                     i18n));
         }
         // trusted headers
-        if (config.trustedAuthEnabled()) {
+        //if (config.trustedAuthEnabled()) {
+        if (config.getBoolean(ConfigProperties.TRUSTED_AUTHENTICATION)) {
             log.debug("Trusted Authentication is enabled.");
             providers.add(
                 new TrustedConsumerAuth(consumerCurator,

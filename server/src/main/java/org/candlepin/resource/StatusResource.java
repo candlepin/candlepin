@@ -17,6 +17,7 @@ package org.candlepin.resource;
 import org.candlepin.auth.interceptor.SecurityHole;
 import org.candlepin.common.util.VersionUtil;
 import org.candlepin.config.Config;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.Status;
 
@@ -58,7 +59,7 @@ public class StatusResource {
         version = map.get("version");
         release = map.get("release");
 
-        if (config == null || !config.standalone()) {
+        if (config == null || !config.getBoolean(ConfigProperties.STANDALONE)) {
             standalone = false;
         }
     }

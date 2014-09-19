@@ -181,4 +181,26 @@ public class PropertiesFileConfiguration extends AbstractConfiguration
     public String toString() {
         return backingMap.toString();
     }
+
+    @Override
+    public Map<String, Object> getNamespaceMap(String prefix) {
+        return backingMap.getNamespaceMap(prefix);
+    }
+
+    @Override
+    public Map<String, Object> getNamespaceMap(String prefix,
+            Map<String, Object> defaults) {
+        return backingMap.getNamespaceMap(prefix, defaults);
+    }
+
+    @Override
+    public Properties getNamespaceProperties(String prefix) {
+        return backingMap.getNamespaceProperties(prefix);
+    }
+
+    @Override
+    public Properties getNamespaceProperties(String prefix,
+            Map<String, Object> defaults) {
+        return backingMap.getNamespaceProperties(prefix, defaults);
+    }
 }

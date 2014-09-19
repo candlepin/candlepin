@@ -14,7 +14,7 @@
  */
 package org.candlepin.guice;
 
-import org.candlepin.config.LoggingConfig;
+import org.candlepin.common.config.LoggingConfig;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.impl.DefaultSubjectKeyIdentifierWriter;
 import org.candlepin.service.EntitlementCertServiceAdapter;

@@ -14,9 +14,10 @@
  */
 package org.candlepin.resteasy;
 
+import org.candlepin.common.config.Configuration;
 import org.candlepin.common.jackson.DynamicPropertyFilter;
 import org.candlepin.common.jackson.MultiFilter;
-import org.candlepin.config.Config;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.jackson.HateoasBeanPropertyFilter;
 
 import com.fasterxml.jackson.databind.AnnotationIntrospector;
@@ -58,8 +59,8 @@ public class JsonProvider extends JacksonJsonProvider {
     }
 
     @Inject
-    public JsonProvider(Config config) {
-        this(config.indentJson());
+    public JsonProvider(Configuration config) {
+        this(config.getBoolean(ConfigProperties.PRETTY_PRINT));
     }
 
     public JsonProvider(boolean indentJson) {

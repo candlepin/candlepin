@@ -18,6 +18,7 @@ import org.candlepin.audit.AMQPBusPublisher;
 import org.candlepin.audit.EventSink;
 import org.candlepin.audit.EventSinkImpl;
 import org.candlepin.auth.Principal;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.mappers.BadRequestExceptionMapper;
 import org.candlepin.common.exceptions.mappers.CandlepinExceptionMapper;
 import org.candlepin.common.exceptions.mappers.DefaultOptionsMethodExceptionMapper;
@@ -38,7 +39,6 @@ import org.candlepin.common.exceptions.mappers.ValidationExceptionMapper;
 import org.candlepin.common.exceptions.mappers.WebApplicationExceptionMapper;
 import org.candlepin.common.exceptions.mappers.WriterExceptionMapper;
 import org.candlepin.common.resteasy.interceptor.DynamicFilterInterceptor;
-import org.candlepin.config.Config;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.CrlGenerator;
 import org.candlepin.controller.Entitler;
@@ -125,7 +125,6 @@ import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import com.google.inject.persist.Transactional;
-import com.google.inject.persist.jpa.JpaPersistModule;
 import com.google.inject.servlet.RequestScoped;
 
 import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
@@ -147,6 +146,11 @@ import javax.validation.ValidatorFactory;
  * CandlepinModule
  */
 public class CandlepinModule extends AbstractModule {
+    private Configuration config;
+
+    public CandlepinModule(Configuration config) {
+        this.config = config;
+    }
 
     @Override
     public void configure() {
@@ -160,10 +164,11 @@ public class CandlepinModule extends AbstractModule {
                 ValidationListenerProvider.class);
         bind(MessageInterpolator.class).to(CandlepinMessageInterpolator.class);
 
-        Config config = new Config();
-        bind(Config.class).asEagerSingleton();
-        install(new JpaPersistModule("default").properties(config
-            .jpaConfiguration(config)));
+        //Config config = new Config();
+        //bind(Config.class).asEagerSingleton();
+        // TODO:
+//        install(new JpaPersistModule("default").properties(config
+//            .jpaConfiguration(config)));
 
         bind(JPAInitializer.class).asEagerSingleton();
 

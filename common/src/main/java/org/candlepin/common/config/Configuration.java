@@ -15,6 +15,9 @@
 package org.candlepin.common.config;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 
 /** Inspired by Apache's Commons Configuration library.
  * <p>
@@ -42,6 +45,11 @@ public interface Configuration {
      * prefix.  The object will be empty if no matches are found.
      */
     Configuration subset(String prefix);
+
+    Map<String, Object> getNamespaceMap(String prefix);
+    Map<String, Object> getNamespaceMap(String prefix, Map<String, Object> defaults);
+    Properties getNamespaceProperties(String prefix);
+    Properties getNamespaceProperties(String prefix, Map<String, Object> defaults);
 
     /**
      * Begin with the configuration provided by base but for any keys defined in
@@ -94,14 +102,14 @@ public interface Configuration {
     Object getProperty(String key);
     Object getProperty(String key, Object defaultValue);
 
-    Boolean getBoolean(String key);
-    Boolean getBoolean(String key, Boolean defaultValue);
+    boolean getBoolean(String key);
+    boolean getBoolean(String key, boolean defaultValue);
 
-    Integer getInteger(String key);
-    Integer getInteger(String key, Integer defaultValue);
+    int getInteger(String key);
+    int getInteger(String key, int defaultValue);
 
-    Long getLong(String key);
-    Long getLong(String key, Long defaultValue);
+    long getLong(String key);
+    long getLong(String key, long defaultValue);
 
     /**
      * Return a property of type String <b>with all whitespace trimmed!</b>
@@ -123,4 +131,6 @@ public interface Configuration {
 
     List<String> getList(String key);
     List<String> getList(String key, List<String> defaultValue);
+    Set<String> getSet(String key);
+    Set<String> getSet(String key, Set<String> defaultValue);
 }

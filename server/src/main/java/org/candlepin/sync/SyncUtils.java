@@ -64,7 +64,7 @@ class SyncUtils {
 
         if (config != null) {
             mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
-                config.failOnUnknownImportProperties());
+                config.getBoolean(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES));
         }
 
         return mapper;
