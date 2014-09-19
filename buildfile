@@ -195,6 +195,14 @@ define "candlepin" do
   checkstyle_eclipse_xml = path_to(:project_conf, 'eclipse-checkstyle.xml')
   rpmlint_conf = path_to("rpmlint.config")
 
+  use_logdriver = ENV['logdriver']
+  if use_logdriver
+    info "Compiling with logdriver"
+    download artifact(LOGDRIVER) => 'http://jmrodri.fedorapeople.org/ivy/candlepin/logdriver/logdriver/1.0/logdriver-1.0.jar'
+  end
+  download artifact(SCHEMASPY) => 'http://downloads.sourceforge.net/project/schemaspy/schemaspy/SchemaSpy%204.1.1/schemaSpy_4.1.1.jar'
+
+
   desc "Common Candlepin Code"
   define "common" do
     project.version = spec_version('candlepin-common.spec')
@@ -248,7 +256,9 @@ define "candlepin" do
       RHINO,
       SUN_JAXB,
     ]
+
     compile.with(compile_classpath)
+    compile.with(LOGDRIVER, LOG4J_BRIDGE) if use_logdriver
     compile.with(project('common'))
 
     resource_substitutions = {
@@ -292,13 +302,6 @@ define "candlepin" do
     # be exactly the same as the file path.
     tools_location = File.basename(Java.tools_jar)
     eclipse.classpath_variables tools_location.to_sym => tools_location
-
-    use_logdriver = ENV['logdriver']
-    info "Compiling with logdriver" if use_logdriver
-
-    # download the stuff we do not have in the repositories
-    download artifact(SCHEMASPY) => 'http://downloads.sourceforge.net/project/schemaspy/schemaspy/SchemaSpy%204.1.1/schemaSpy_4.1.1.jar'
-    download artifact(LOGDRIVER) => 'http://jmrodri.fedorapeople.org/ivy/candlepin/logdriver/logdriver/1.0/logdriver-1.0.jar' if use_logdriver
 
     resource_substitutions = {
       'version' => project.version,
@@ -351,7 +354,6 @@ define "candlepin" do
 
     # the other dependencies transfer from compile.classpath automagically
     test.with(HSQLDB, TESTING)
-    test.with(LOGDRIVER, LOG4J_BRIDGE) if use_logdriver
     test.using(:java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ])
 
     ### Javadoc
