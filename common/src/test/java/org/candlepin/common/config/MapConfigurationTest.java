@@ -154,14 +154,14 @@ public class MapConfigurationTest {
     @Test
     public void testGetInteger() {
         config.setProperty("x", "1");
-        assertEquals(Integer.valueOf(1), config.getInteger("x"));
+        assertEquals(Integer.valueOf(1), config.getInt("x"));
     }
 
     @Test
     public void testGetMissingInteger() {
         ex.expect(NoSuchElementException.class);
         ex.expectMessage(config.doesNotMapMessage("x"));
-        config.getInteger("x");
+        config.getInt("x");
     }
 
     @Test

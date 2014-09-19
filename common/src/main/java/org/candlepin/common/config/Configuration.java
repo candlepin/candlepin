@@ -105,8 +105,8 @@ public interface Configuration {
     boolean getBoolean(String key);
     boolean getBoolean(String key, boolean defaultValue);
 
-    int getInteger(String key);
-    int getInteger(String key, int defaultValue);
+    int getInt(String key);
+    int getInt(String key, int defaultValue);
 
     long getLong(String key);
     long getLong(String key, long defaultValue);

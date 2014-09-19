@@ -50,7 +50,7 @@ public abstract class AbstractConfiguration implements Configuration {
     }
 
     @Override
-    public int getInteger(String key) {
+    public int getInt(String key) {
         if (containsKey(key)) {
             return PropertyConverter.toInteger(getProperty(key));
         }
@@ -60,7 +60,7 @@ public abstract class AbstractConfiguration implements Configuration {
     }
 
     @Override
-    public int getInteger(String key, int defaultValue) {
+    public int getInt(String key, int defaultValue) {
         if (containsKey(key)) {
             return PropertyConverter.toInteger(getProperty(key));
         }
