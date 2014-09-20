@@ -14,9 +14,9 @@
  */
 package org.candlepin.sync;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
-import org.candlepin.config.Config;
+import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.model.Product;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -34,7 +34,7 @@ public class ProductExporterTest {
     @Test
     public void testProductExport() throws IOException {
         ObjectMapper mapper = SyncUtils.getObjectMapper(
-            new Config(new HashMap<String, String>()));
+            new MapConfiguration(new HashMap<String, String>()));
 
         ProductExporter exporter = new ProductExporter();
 

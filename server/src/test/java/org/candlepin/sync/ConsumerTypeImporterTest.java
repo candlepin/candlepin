@@ -14,10 +14,13 @@
  */
 package org.candlepin.sync;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import org.candlepin.config.Config;
+import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
 
@@ -41,7 +44,7 @@ public class ConsumerTypeImporterTest {
         Reader reader = new StringReader(consumerTypeString);
 
         ConsumerType consumerType = new ConsumerTypeImporter(null).createObject(
-            SyncUtils.getObjectMapper(new Config(new HashMap<String, String>())), reader);
+            SyncUtils.getObjectMapper(new MapConfiguration(new HashMap<String, String>())), reader);
 
         assertEquals("prosumer", consumerType.getLabel());
     }
@@ -53,7 +56,7 @@ public class ConsumerTypeImporterTest {
         Reader reader = new StringReader(consumerTypeString);
 
         ConsumerType consumerType = new ConsumerTypeImporter(null).createObject(
-            SyncUtils.getObjectMapper(new Config(new HashMap<String, String>())), reader);
+            SyncUtils.getObjectMapper(new MapConfiguration(new HashMap<String, String>())), reader);
 
         assertEquals(null, consumerType.getId());
     }

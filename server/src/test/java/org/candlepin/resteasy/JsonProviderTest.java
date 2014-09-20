@@ -14,10 +14,9 @@
  */
 package org.candlepin.resteasy;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertFalse;
 
-import org.candlepin.config.Config;
+import org.candlepin.common.config.Configuration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationConfig;
@@ -33,7 +32,7 @@ import javax.ws.rs.core.MediaType;
 @RunWith(MockitoJUnitRunner.class)
 public class JsonProviderTest {
 
-    @Mock private Config config;
+    @Mock private Configuration config;
 
 //    @Test
 //    public void noIndentation() {

@@ -14,7 +14,7 @@
  */
 package org.candlepin.util;
 
-import org.candlepin.config.Config;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
@@ -44,14 +44,14 @@ import java.util.Set;
 public class X509ExtensionUtil  extends X509Util{
 
     private static Logger log = LoggerFactory.getLogger(X509ExtensionUtil.class);
-    private Config config;
+    private Configuration config;
 
     // If we're generating a cert with more content sets than this limit, we will error
     // out, as the certificate is likely too large for the CDN:
     public static final int V1_CONTENT_LIMIT = 185;
 
     @Inject
-    public X509ExtensionUtil(Config config) {
+    public X509ExtensionUtil(Configuration config) {
         // Output everything in UTC
         this.config = config;
     }

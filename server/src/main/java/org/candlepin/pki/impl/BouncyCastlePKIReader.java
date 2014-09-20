@@ -14,7 +14,7 @@
  */
 package org.candlepin.pki.impl;
 
-import org.candlepin.config.Config;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.pki.PKIReader;
 import org.candlepin.util.Util;
@@ -81,7 +81,7 @@ public class BouncyCastlePKIReader implements PKIReader, PasswordFinder {
     }
 
     @Inject
-    public BouncyCastlePKIReader(Config config) throws CertificateException {
+    public BouncyCastlePKIReader(Configuration config) throws CertificateException {
         certFactory = CertificateFactory.getInstance("X.509");
         this.caCertPath = config.getString(ConfigProperties.CA_CERT);
         this.upstreamCaCertPath = config.getString(ConfigProperties.CA_CERT_UPSTREAM);

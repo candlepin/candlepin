@@ -52,11 +52,12 @@ public class PropertyConverter {
             return (Boolean) value;
         }
         else if (value instanceof String) {
-            Boolean b = BooleanUtils.toBooleanObject((String) value);
-            if (b == null) {
-                throw new ConversionException(formatErrorMessage(value, Boolean.class));
+            if ("1".equalsIgnoreCase((String) value) ||
+                    "y".equalsIgnoreCase((String) value)) {
+                return true;
             }
-            return b;
+
+            return BooleanUtils.toBoolean((String) value);
         }
         else {
             throw new ConversionException(formatErrorMessage(value, Boolean.class));

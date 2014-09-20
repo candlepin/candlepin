@@ -14,8 +14,11 @@
  */
 package org.candlepin.pinsetter.tasks;
 
+import static org.mockito.Mockito.mock;
+
 import org.candlepin.CandlepinCommonTestingModule;
 import org.candlepin.CandlepinNonServletEnvironmentTestingModule;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.model.ImportRecord;
 import org.candlepin.model.ImportRecordCurator;
 import org.candlepin.model.Owner;
@@ -41,7 +44,8 @@ public class ImportRecordJobTest {
 
     @Before
     public void init() {
-        CandlepinCommonTestingModule testingModule = new CandlepinCommonTestingModule();
+        Configuration config = mock(Configuration.class);
+        CandlepinCommonTestingModule testingModule = new CandlepinCommonTestingModule(config);
         Injector injector = Guice.createInjector(
                 testingModule,
                 new CandlepinNonServletEnvironmentTestingModule()

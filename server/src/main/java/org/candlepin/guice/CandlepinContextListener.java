@@ -20,7 +20,6 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.ConfigurationException;
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.common.config.PropertiesFileConfiguration;
-import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.logging.LoggerContextListener;
 import org.candlepin.pinsetter.core.PinsetterContextListener;
@@ -153,7 +152,7 @@ public class CandlepinContextListener extends CandlepinGuiceResteasyBootstrap {
         loggerListener.contextDestroyed();
 
         // if amqp is enabled, close all connections.
-        Config config = injector.getInstance(Config.class);
+        Configuration config = injector.getInstance(Configuration.class);
         if (config.getBoolean(ConfigProperties.AMQP_INTEGRATION_ENABLED)) {
             Util.closeSafely(injector.getInstance(AMQPBusPublisher.class),
                 "AMQPBusPublisher");

@@ -14,7 +14,11 @@
  */
 package org.candlepin.common.config;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import org.candlepin.common.config.Configuration.TrimMode;
 
@@ -26,8 +30,11 @@ import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Properties;
 import java.util.Set;
 
 /**
@@ -136,7 +143,16 @@ public class MapConfigurationTest {
     @Test
     public void testGetBoolean() {
         config.setProperty("x", "true");
-        assertEquals(Boolean.TRUE, config.getBoolean("x"));
+        config.setProperty("bar", "false");
+        config.setProperty("bar1", "1");
+        config.setProperty("bar2", "yes");
+        config.setProperty("no", "n");
+        assertTrue(config.getBoolean("x"));
+        assertTrue(config.getBoolean("bar1"));
+        assertTrue(config.getBoolean("bar2"));
+        assertFalse(config.getBoolean("bar"));
+        //assertFalse(config.getBoolean(null));
+        assertFalse(config.getBoolean("no"));
     }
 
     @Test
@@ -148,13 +164,13 @@ public class MapConfigurationTest {
 
     @Test
     public void testGetBooleanWithDefault() {
-        assertEquals(Boolean.FALSE, config.getBoolean("missing", Boolean.FALSE));
+        assertFalse(config.getBoolean("missing", Boolean.FALSE));
     }
 
     @Test
     public void testGetInteger() {
         config.setProperty("x", "1");
-        assertEquals(Integer.valueOf(1), config.getInt("x"));
+        assertEquals(1, config.getInt("x"));
     }
 
     @Test
@@ -165,14 +181,16 @@ public class MapConfigurationTest {
     }
 
     @Test
-    public void testGetIntegerWithDefault() {
-        assertEquals(Long.valueOf("2"), config.getLong("missing", 2L));
+    public void testGetIntWithDefault() {
+        config.setProperty("threshold", "10");
+        assertEquals(5, config.getInt("nothere", 5));
+        assertEquals(10, config.getInt("threshold", 5));
     }
 
     @Test
     public void testGetLong() {
         config.setProperty("x", "1");
-        assertEquals(Long.valueOf(1), config.getLong("x"));
+        assertEquals(1L, config.getLong("x"));
     }
 
     @Test
@@ -184,7 +202,7 @@ public class MapConfigurationTest {
 
     @Test
     public void testGetLongWithDefault() {
-        assertEquals(Long.valueOf(1), config.getLong("x", 1L));
+        assertEquals(1L, config.getLong("x", 1L));
     }
 
     @Test
@@ -257,5 +275,135 @@ public class MapConfigurationTest {
     @Test
     public void testGetPropertyWithDefault() {
         assertEquals("z", config.getProperty("x", "z"));
+    }
+
+    @SuppressWarnings("serial")
+    @Test
+    public void namespaceWithNull() {
+        Map<String, Object> defaults = new HashMap<String, Object>();
+        defaults.put(null, null);
+
+        config.setProperty("a.c.a.b", "value3");
+        config.setProperty("a.c.c.d", "value4");
+        config.setProperty("a.c.e.f", "value5");
+
+        try {
+            Properties withPrefix = config.getNamespaceProperties("a.c", defaults);
+            assertEquals(3, withPrefix.size());
+            assertTrue(withPrefix.containsKey("a.c.a.b"));
+            assertTrue(withPrefix.containsKey("a.c.c.d"));
+            assertTrue(withPrefix.containsKey("a.c.e.f"));
+            assertEquals("value3", withPrefix.getProperty("a.c.a.b"));
+
+            withPrefix = config.getNamespaceProperties("a.c", null);
+            assertEquals(3, withPrefix.size());
+            assertTrue(withPrefix.containsKey("a.c.a.b"));
+            assertTrue(withPrefix.containsKey("a.c.c.d"));
+            assertTrue(withPrefix.containsKey("a.c.e.f"));
+            assertEquals("value3", withPrefix.getProperty("a.c.a.b"));
+        }
+        catch (NullPointerException npe) {
+            fail("getNamespaceProperties didn't check for null");
+        }
+
+    }
+
+    @SuppressWarnings("serial")
+    @Test
+    public void returnNamespacePropsWithDefaults() {
+        Map<String, Object> defaults = new HashMap<String, Object>();
+        defaults.put("a.c.a.b", "defaultvalue");
+        defaults.put("a.c.not.e", "should have a value");
+        defaults.put("not.here", "is.ignored");
+
+        config.setProperty("a.b.a.b", "value1");
+        config.setProperty("a.b.c.d", "value2");
+        config.setProperty("a.c.a.b", "value3");
+        config.setProperty("a.c.c.d", "value4");
+        config.setProperty("a.c.e.f", "value5");
+
+        Properties withPrefix = config.getNamespaceProperties("a.c", defaults);
+        assertEquals(4, withPrefix.size());
+        assertTrue(withPrefix.containsKey("a.c.a.b"));
+        assertTrue(withPrefix.containsKey("a.c.c.d"));
+        assertTrue(withPrefix.containsKey("a.c.e.f"));
+        assertTrue(withPrefix.containsKey("a.c.not.e"));
+        assertEquals("value3", withPrefix.getProperty("a.c.a.b"));
+        assertEquals("should have a value", withPrefix.getProperty("a.c.not.e"));
+        assertFalse(withPrefix.containsKey("not.here"));
+    }
+
+    @SuppressWarnings("serial")
+    @Test
+    public void returnNamespaceProperties() {
+        config.setProperty("a.b.a.b", "value1");
+        config.setProperty("a.b.c.d", "value2");
+        config.setProperty("a.c.a.b", "value3");
+        config.setProperty("a.c.c.d", "value4");
+        config.setProperty("a.c.e.f", "value5");
+
+        Properties withPrefix = config.getNamespaceProperties("a.c");
+        assertEquals(3, withPrefix.size());
+        assertTrue(withPrefix.containsKey("a.c.a.b"));
+        assertTrue(withPrefix.containsKey("a.c.c.d"));
+        assertTrue(withPrefix.containsKey("a.c.e.f"));
+    }
+
+    @SuppressWarnings("serial")
+    @Test
+    public void returnAllKeysWithAPrefixFromTail() {
+        config.setProperty("a.b.a.b", "value");
+        config.setProperty("a.b.c.d", "value");
+        config.setProperty("a.c.a.b", "value");
+        config.setProperty("a.c.c.d", "value");
+        config.setProperty("a.c.e.f", "value");
+
+
+        Map<String, Object> withPrefix = config.subsetMap("a.c");
+        assertEquals(3, withPrefix.size());
+        assertTrue(withPrefix.containsKey("a.c.a.b"));
+        assertTrue(withPrefix.containsKey("a.c.c.d"));
+        assertTrue(withPrefix.containsKey("a.c.e.f"));
+    }
+
+    @SuppressWarnings("serial")
+    @Test
+    public void returnAllKeysWithAPrefixInTheMiddle() {
+        config.setProperty("a.b.a.b", "value");
+        config.setProperty("a.b.c.d", "value");
+        config.setProperty("a.c.a.b", "value");
+        config.setProperty("a.c.c.d", "value");
+        config.setProperty("a.c.e.f", "value");
+        config.setProperty("a.d.a.b", "value");
+
+
+        Map<String, Object> withPrefix = config.subsetMap("a.c");
+        assertEquals(3, withPrefix.size());
+        assertTrue(withPrefix.containsKey("a.c.a.b"));
+        assertTrue(withPrefix.containsKey("a.c.c.d"));
+        assertTrue(withPrefix.containsKey("a.c.e.f"));
+    }
+
+    @Test
+    public void returnAllKeysWithAPrefixFromHead() {
+        config.setProperty("a.b.a.b", "value");
+        config.setProperty("a.b.c.d", "value");
+        config.setProperty("a.b.e.f", "value");
+        config.setProperty("a.c.a.a", "value");
+
+
+        Map<String, Object> withPrefix = config.subsetMap("a.b");
+        assertEquals(3, withPrefix.size());
+        assertTrue(withPrefix.containsKey("a.b.a.b"));
+        assertTrue(withPrefix.containsKey("a.b.c.d"));
+        assertTrue(withPrefix.containsKey("a.b.e.f"));
+    }
+
+    @Test
+    public void testTrimSpaces() {
+        config.setProperty("good", "good");
+        config.setProperty("bad", "    bad    ");
+        assertEquals("good", config.getString("good"));
+        assertEquals("bad", config.getString("bad"));
     }
 }

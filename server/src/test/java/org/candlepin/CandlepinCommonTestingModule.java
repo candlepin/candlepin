@@ -16,9 +16,9 @@ package org.candlepin;
 
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Principal;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.LoggingConfig;
 import org.candlepin.config.CandlepinCommonTestConfig;
-import org.candlepin.config.Config;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.guice.CandlepinModule;
@@ -92,6 +92,10 @@ import org.xnap.commons.i18n.I18n;
 import javax.validation.MessageInterpolator;
 
 public class CandlepinCommonTestingModule extends CandlepinModule {
+
+    public CandlepinCommonTestingModule(Configuration config) {
+        super(config);
+    }
 
     private TestingInterceptor authMethodInterceptor;
 
@@ -183,6 +187,6 @@ public class CandlepinCommonTestingModule extends CandlepinModule {
      * Allows overriding the Config bind from a test class.
      */
     protected void bindConfig() {
-        bind(Config.class).to(CandlepinCommonTestConfig.class).asEagerSingleton();
+        bind(Configuration.class).to(CandlepinCommonTestConfig.class).asEagerSingleton();
     }
 }

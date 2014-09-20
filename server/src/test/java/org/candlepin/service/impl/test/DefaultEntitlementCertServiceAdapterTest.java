@@ -14,12 +14,21 @@
  */
 package org.candlepin.service.impl.test;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.argThat;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.when;
 
+import org.candlepin.common.config.Configuration;
 import org.candlepin.config.CandlepinCommonTestConfig;
-import org.candlepin.config.Config;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Consumer;
@@ -156,7 +165,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
     @Before
     public void setUp() {
-        Config config = new CandlepinCommonTestConfig();
+        Configuration config = new CandlepinCommonTestConfig();
         extensionUtil = new X509ExtensionUtil(config);
         v3extensionUtil = new X509V3ExtensionUtil(config, entCurator);
 
@@ -652,7 +661,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     @Test
     public void ensureV3CertificateCreationOkWhenConsumerSupportsV3Dot1Certs()
         throws Exception {
-        Config mockConfig = mock(Config.class);
+        Configuration mockConfig = mock(Configuration.class);
 
         when(consumer.getFact(eq("system.certificate_version"))).thenReturn("3.2");
         ProductAttribute attr = new ProductAttribute("ram", "4");
@@ -692,7 +701,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
     @Test
     public void ensureV3CertIsCreatedWhenEnableCertV3ConfigIsTrue() throws Exception {
-        Config mockConfig = mock(Config.class);
+        Configuration mockConfig = mock(Configuration.class);
 
         when(consumer.getFact(eq("system.certificate_version"))).thenReturn("3.0");
 
@@ -718,7 +727,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
     @Test
     public void ensureV3CertIsCreatedWhenV3CapabilityPresent() throws Exception {
-        Config mockConfig = mock(Config.class);
+        Configuration mockConfig = mock(Configuration.class);
 
         when(consumer.getType()).thenReturn(
             new ConsumerType(ConsumerType.ConsumerTypeEnum.CANDLEPIN));
@@ -750,7 +759,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
     @Test
     public void ensureV1CertIsCreatedWhenV3factNotPresent() throws Exception {
-        Config mockConfig = mock(Config.class);
+        Configuration mockConfig = mock(Configuration.class);
 
         when(consumer.getType()).thenReturn(
             new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM));
@@ -775,7 +784,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
     @Test
     public void ensureV3CertIsCreatedWhenHypervisor() throws Exception {
-        Config mockConfig = mock(Config.class);
+        Configuration mockConfig = mock(Configuration.class);
 
         when(consumer.getType()).thenReturn(
             new ConsumerType(ConsumerType.ConsumerTypeEnum.HYPERVISOR));

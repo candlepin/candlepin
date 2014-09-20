@@ -14,15 +14,19 @@
  */
 package org.candlepin.resource.test;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.CandlepinCommonTestingModule;
 import org.candlepin.CandlepinNonServletEnvironmentTestingModule;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventAdapter;
 import org.candlepin.auth.PrincipalData;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.model.EventCurator;
 import org.candlepin.resource.EventResource;
@@ -48,9 +52,10 @@ public class EventResourceTest {
 
     @Before
     public void init() {
+        Configuration config = mock(Configuration.class);
         ec = mock(EventCurator.class);
         injector = Guice.createInjector(
-            new CandlepinCommonTestingModule(),
+            new CandlepinCommonTestingModule(config),
             new CandlepinNonServletEnvironmentTestingModule()
         );
     }

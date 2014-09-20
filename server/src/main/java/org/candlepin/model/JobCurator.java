@@ -14,8 +14,8 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.NotFoundException;
-import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.pinsetter.core.PinsetterKernel;
 import org.candlepin.pinsetter.core.model.JobStatus;
@@ -42,10 +42,10 @@ import java.util.Set;
  */
 public class JobCurator extends AbstractHibernateCurator<JobStatus> {
 
-    private Config config;
+    private Configuration config;
 
     @Inject
-    public JobCurator(Config config) {
+    public JobCurator(Configuration config) {
         super(JobStatus.class);
         this.config = config;
     }

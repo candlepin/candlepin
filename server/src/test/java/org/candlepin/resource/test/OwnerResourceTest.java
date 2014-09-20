@@ -14,9 +14,15 @@
  */
 package org.candlepin.resource.test;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventFactory;
@@ -26,12 +32,12 @@ import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.common.exceptions.IseException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.config.CandlepinCommonTestConfig;
-import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
@@ -113,7 +119,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         productCurator.create(product);
         eventFactory = injector.getInstance(EventFactory.class);
         this.config = (CandlepinCommonTestConfig) injector
-            .getInstance(Config.class);
+            .getInstance(Configuration.class);
         importRecordCurator = injector.getInstance(ImportRecordCurator.class);
         contentOverrideValidator = injector.getInstance(ContentOverrideValidator.class);
     }

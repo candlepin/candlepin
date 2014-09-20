@@ -16,9 +16,6 @@ package org.candlepin.common.config;
 
 import static org.junit.Assert.*;
 
-import org.candlepin.config.CandlepinCommonTestConfig;
-import org.candlepin.config.Config;
-
 import org.junit.Before;
 import org.junit.Test;
 
@@ -36,11 +33,12 @@ public class JPAConfigParserTest {
         "QwGhDv4FSnyTbFJf8O6gvWIsmQX7PZtE64ALMCXx4DcS48s5Sum7RkVcefD0vMe5";
     private String plainPassword = "testpassword";
     private String encPasswordAsStored = "$1$8dg00oV+ZhN74tvxG+kAhw==";
-    private Config config;
+    private Configuration config;
 
     @Before
     public void init() {
-        config = new CandlepinCommonTestConfig();
+        //config = new CandlepinCommonTestConfig();
+        config = null;
     }
 
     @SuppressWarnings("serial")
@@ -84,14 +82,14 @@ public class JPAConfigParserTest {
     @Test
     public void testEncryptedConfigKeys() {
         JPAConfigParser jpac = new JPAConfigParser(config);
-        Set<String> ecks = jpac.encryptedConfigKeys();
+        Set<String> ecks = jpac.getEncryptedConfigKeys();
         assertTrue(ecks.contains("hibernate.connection.password"));
     }
 
     @SuppressWarnings("serial")
     @Test
     public void getStringMethods() {
-        Config config = new Config(new HashMap<String, String>() {
+        Configuration config = new MapConfiguration(new HashMap<String, String>() {
 
             {
                 // NOTE: we decrypt at read time, so the in mem
@@ -105,9 +103,6 @@ public class JPAConfigParserTest {
             config.getString("jpa.config.hibernate.connection.password"));
         assertNull(config.getString("not.exist"));
         assertNull(config.getString("not.exist", null));
-        assertNull(config.getStringArray("not.exist"));
-        assertNull(config.getStringArray(null));
-
     }
 
     @Test
@@ -115,7 +110,7 @@ public class JPAConfigParserTest {
         TreeMap<String, String> testdata = new TreeMap<String, String>();
         testdata.put("jpa.config.hibernate.connection.password",
             encPasswordAsStored);
-        Config config = new Config(testdata);
+        Configuration config = new MapConfiguration(testdata);
         assertFalse(config.containsKey("notthere"));
         assertTrue(config
             .containsKey("jpa.config.hibernate.connection.password"));

@@ -14,7 +14,7 @@
  */
 package org.candlepin.guice;
 
-import org.candlepin.config.Config;
+import org.candlepin.common.config.Configuration;
 
 import com.google.inject.Module;
 
@@ -42,8 +42,8 @@ public class CustomizableModules {
      * @return returns the set of modules to use.
      */
     public Set<Module> load() {
-        Map<String, String> loaded =
-            configuration().configurationWithPrefix(MODULE_CONFIG_PREFIX);
+        Map<String, Object> loaded =
+            configuration().getNamespaceMap(MODULE_CONFIG_PREFIX);
 
         return customizedConfiguration(loaded);
     }
@@ -54,13 +54,13 @@ public class CustomizableModules {
      * @return Set of configured modules.
      */
     @SuppressWarnings("unchecked")
-    public Set<Module> customizedConfiguration(Map<String, String> loadedConfiguration) {
+    public Set<Module> customizedConfiguration(Map<String, Object> loadedConfiguration) {
         try {
             Set toReturn = new HashSet();
 
-            for (Entry<String, String> entry : loadedConfiguration.entrySet()) {
+            for (Entry<String, Object> entry : loadedConfiguration.entrySet()) {
                 log.info("Found custom module " + entry.getKey());
-                toReturn.add(Class.forName(entry.getValue()).newInstance());
+                toReturn.add(Class.forName((String) entry.getValue()).newInstance());
             }
 
             return toReturn;
@@ -85,7 +85,8 @@ public class CustomizableModules {
         return new HashMap(loaded);
     }
 
-    protected Config configuration() {
-        return new Config();
+    protected Configuration configuration() {
+        // FIXME: NOW
+        return null;
     }
 }

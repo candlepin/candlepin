@@ -17,7 +17,7 @@ package org.candlepin.pinsetter.tasks;
 import static org.quartz.impl.matchers.NameMatcher.jobNameEquals;
 
 import org.candlepin.audit.EventSink;
-import org.candlepin.config.Config;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.guice.PinsetterJobScoped;
 import org.candlepin.model.JobCurator;
@@ -54,7 +54,7 @@ public abstract class KingpinJob implements Job {
 
     private static Logger log = LoggerFactory.getLogger(KingpinJob.class);
     @Inject protected UnitOfWork unitOfWork;
-    @Inject protected Config config;
+    @Inject protected Configuration config;
     @Inject private Provider<EventSink> eventSinkProvider;
 
     protected static String prefix = "job";

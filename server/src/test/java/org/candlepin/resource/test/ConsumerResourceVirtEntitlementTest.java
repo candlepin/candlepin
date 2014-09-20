@@ -14,11 +14,13 @@
  */
 package org.candlepin.resource.test;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-import org.candlepin.config.Config;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.PoolManager;
@@ -223,7 +225,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
     private static class ConsumerResourceVirtEntitlementModule extends AbstractModule {
         @Override
         protected void configure() {
-            Config config = mock(Config.class);
+            Configuration config = mock(Configuration.class);
             when(config.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
             when(config.getString(eq(ConfigProperties.CONSUMER_FACTS_MATCHER)))
                 .thenReturn("^virt.*");
@@ -231,7 +233,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
                 .thenReturn("[\\#\\?\\'\\`\\!@{}()\\[\\]\\?&\\w-\\.]+");
             when(config.getString(eq(ConfigProperties.CONSUMER_PERSON_NAME_PATTERN)))
                 .thenReturn("[\\#\\?\\'\\`\\!@{}()\\[\\]\\?&\\w-\\.]+");
-            bind(Config.class).toInstance(config);
+            bind(Configuration.class).toInstance(config);
             bind(Enforcer.class).to(EntitlementRules.class);
         }
     }

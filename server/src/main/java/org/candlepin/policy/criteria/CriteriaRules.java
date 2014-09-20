@@ -14,7 +14,7 @@
  */
 package org.candlepin.policy.criteria;
 
-import org.candlepin.config.Config;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.PoolAttribute;
@@ -42,11 +42,11 @@ import java.util.List;
  */
 public class CriteriaRules  {
 
-    protected Config config;
+    protected Configuration config;
     protected ConsumerCurator consumerCurator;
 
     @Inject
-    public CriteriaRules(Config config,
+    public CriteriaRules(Configuration config,
             ConsumerCurator consumerCurator) {
         this.config = config;
         this.consumerCurator = consumerCurator;

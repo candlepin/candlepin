@@ -14,11 +14,14 @@
  */
 package org.candlepin.policy.test;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.when;
 
-import org.candlepin.config.Config;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
@@ -69,7 +72,7 @@ import java.util.Set;
  */
 public class AutobindRulesTest {
     @Mock private ProductServiceAdapter prodAdapter;
-    @Mock private Config config;
+    @Mock private Configuration config;
     @Mock private RulesCurator rulesCurator;
 
     private ComplianceStatus compliance;

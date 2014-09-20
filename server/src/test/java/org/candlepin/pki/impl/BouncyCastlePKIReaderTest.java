@@ -14,7 +14,8 @@
  */
 package org.candlepin.pki.impl;
 
-import org.candlepin.config.Config;
+import org.candlepin.common.config.Configuration;
+import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
 
 import org.junit.Test;
@@ -30,7 +31,7 @@ public class BouncyCastlePKIReaderTest {
 
     @Test
     public void readkey() throws CertificateException {
-        Config config = new Config(
+        Configuration config = new MapConfiguration(
             new HashMap<String, String>() {
 
                 {

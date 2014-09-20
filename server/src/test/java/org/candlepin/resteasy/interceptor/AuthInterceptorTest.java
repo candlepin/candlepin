@@ -14,9 +14,11 @@
  */
 package org.candlepin.resteasy.interceptor;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.NoAuthPrincipal;
@@ -25,10 +27,10 @@ import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.interceptor.SecurityHole;
 import org.candlepin.auth.interceptor.Verify;
 import org.candlepin.auth.permissions.PermissionFactory;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.common.exceptions.UnauthorizedException;
 import org.candlepin.config.CandlepinCommonTestConfig;
-import org.candlepin.config.Config;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.DeletedConsumerCurator;
@@ -68,7 +70,7 @@ public class AuthInterceptorTest extends DatabaseTestFixture {
     private static Logger log = LoggerFactory.getLogger(AuthInterceptor.class);
 
     private AuthInterceptor interceptor;
-    private Config config;
+    private Configuration config;
     private UserServiceAdapter usa;
     private DeletedConsumerCurator dcc;
     private PermissionFactory permFactory;

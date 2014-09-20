@@ -14,13 +14,17 @@
  */
 package org.candlepin.sync;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.auth.Principal;
+import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.CandlepinCommonTestConfig;
-import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.CdnCurator;
@@ -604,7 +608,7 @@ public class ExporterTest {
             os.flush();
             os.close();
             ObjectMapper om = SyncUtils.getObjectMapper(
-                new Config(new HashMap<String, String>()));
+                new MapConfiguration(new HashMap<String, String>()));
             Meta m = om.readValue(
                 new FileInputStream("/tmp/meta.json"), Meta.class);
             assertNotNull(m);
@@ -692,7 +696,7 @@ public class ExporterTest {
             os.close();
 
             ObjectMapper om = SyncUtils.getObjectMapper(
-                new Config(new HashMap<String, String>()));
+                new MapConfiguration(new HashMap<String, String>()));
 
             ConsumerDto c = om.readValue(
                 new FileInputStream("/tmp/" + filename), ConsumerDto.class);
@@ -721,7 +725,7 @@ public class ExporterTest {
             os.flush();
             os.close();
             ObjectMapper om = SyncUtils.getObjectMapper(
-                new Config(new HashMap<String, String>()));
+                new MapConfiguration(new HashMap<String, String>()));
             DistributorVersion dv = om.readValue(
                 new FileInputStream("/tmp/" + filename),
                 DistributorVersion.class);

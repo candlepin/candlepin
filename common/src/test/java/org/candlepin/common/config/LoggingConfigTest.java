@@ -17,8 +17,6 @@ package org.candlepin.common.config;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
-import org.candlepin.config.Config;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
@@ -35,13 +33,13 @@ import java.util.Map;
  */
 public class LoggingConfigTest {
 
-    private Config config;
+    private Configuration config;
 
     private LoggingConfig lc;
 
     @Before
     public void init() {
-        config = mock(Config.class);
+        config = mock(Configuration.class);
         lc = new LoggingConfig(config);
     }
 
@@ -52,10 +50,10 @@ public class LoggingConfigTest {
         assertNotNull(l);
         assertNull(l.getLevel());
 
-        Map<String, String> loglevels = new HashMap<String, String>();
+        Map<String, Object> loglevels = new HashMap<String, Object>();
         loglevels.put(LoggingConfigTest.class.getName(), "DEBUG");
 
-        when(config.configurationWithPrefix(LoggingConfig.PREFIX)).thenReturn(loglevels);
+        when(config.getNamespaceMap(LoggingConfig.PREFIX)).thenReturn(loglevels);
 
         lc.configure(config);
         assertNotNull(l.getLevel());
@@ -64,7 +62,7 @@ public class LoggingConfigTest {
 
     @Test(expected = NullPointerException.class)
     public void expectNull() {
-        when(config.configurationWithPrefix(LoggingConfig.PREFIX)).thenReturn(null);
+        when(config.getNamespaceMap(LoggingConfig.PREFIX)).thenReturn(null);
         lc.configure(config);
     }
 }

@@ -14,14 +14,20 @@
  */
 package org.candlepin.guice;
 
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.atMost;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.CandlepinCommonTestingModule;
 import org.candlepin.CandlepinNonServletEnvironmentTestingModule;
 import org.candlepin.audit.AMQPBusPublisher;
 import org.candlepin.audit.HornetqContextListener;
-import org.candlepin.config.Config;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.pinsetter.core.PinsetterContextListener;
 
@@ -44,7 +50,7 @@ import javax.servlet.ServletContextEvent;
  * CandlepinContextListenerTest
  */
 public class CandlepinContextListenerTest {
-    private Config config;
+    private Configuration config;
     private CandlepinContextListener listener;
     private HornetqContextListener hqlistener;
     private PinsetterContextListener pinlistener;
@@ -54,7 +60,7 @@ public class CandlepinContextListenerTest {
 
     @Before
     public void init() {
-        config = mock(Config.class);
+        config = mock(Configuration.class);
         hqlistener = mock(HornetqContextListener.class);
         pinlistener = mock(PinsetterContextListener.class);
         buspublisher = mock(AMQPBusPublisher.class);
@@ -70,7 +76,7 @@ public class CandlepinContextListenerTest {
                 // which means the test becomes non-deterministic.
                 // so just load the items we need to verify the
                 // functionality.
-                modules.add(new ConfigModule());
+                modules.add(new ConfigModule(config));
                 modules.add(new CandlepinNonServletEnvironmentTestingModule());
                 modules.add(new TestModule());
                 return modules;
@@ -148,9 +154,14 @@ public class CandlepinContextListenerTest {
      * from this test class. This allows us to override the configuration.
      */
     public class ConfigModule extends CandlepinCommonTestingModule {
+
+        public ConfigModule(Configuration config) {
+            super(config);
+        }
+
         @SuppressWarnings("synthetic-access")
         protected void bindConfig() {
-            bind(Config.class).toInstance(config);
+            bind(Configuration.class).toInstance(config);
         }
     }
 }

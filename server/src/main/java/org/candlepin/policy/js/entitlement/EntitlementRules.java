@@ -14,7 +14,7 @@
  */
 package org.candlepin.policy.js.entitlement;
 
-import org.candlepin.config.Config;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -45,7 +45,7 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
     public EntitlementRules(DateSource dateSource,
         JsRunner jsRules,
         ProductCache productCache,
-        I18n i18n, Config config, ConsumerCurator consumerCurator,
+        I18n i18n, Configuration config, ConsumerCurator consumerCurator,
         PoolCurator poolCurator) {
 
         this.jsRules = jsRules;

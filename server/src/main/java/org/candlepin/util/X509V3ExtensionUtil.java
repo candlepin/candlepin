@@ -14,7 +14,7 @@
  */
 package org.candlepin.util;
 
-import org.candlepin.config.Config;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.json.model.Content;
 import org.candlepin.json.model.EntitlementBody;
@@ -68,7 +68,7 @@ import java.util.zip.InflaterOutputStream;
 public class X509V3ExtensionUtil extends X509Util {
 
     private static Logger log = LoggerFactory.getLogger(X509V3ExtensionUtil.class);
-    private Config config;
+    private Configuration config;
     private EntitlementCurator entCurator;
     private String thisVersion = "3.2";
 
@@ -77,7 +77,7 @@ public class X509V3ExtensionUtil extends X509Util {
     private static final Object END_NODE = new Object();
     private static boolean treeDebug = false;
     @Inject
-    public X509V3ExtensionUtil(Config config, EntitlementCurator entCurator) {
+    public X509V3ExtensionUtil(Configuration config, EntitlementCurator entCurator) {
         // Output everything in UTC
         this.config = config;
         this.entCurator = entCurator;

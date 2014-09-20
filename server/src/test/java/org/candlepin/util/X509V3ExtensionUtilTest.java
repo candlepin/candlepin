@@ -17,7 +17,7 @@ package org.candlepin.util;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
-import org.candlepin.config.Config;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Content;
@@ -45,14 +45,14 @@ import java.util.Set;
  * X509V3ExtensionUtilTest
  */
 public class X509V3ExtensionUtilTest {
-    private Config config;
+    private Configuration config;
     private EntitlementCurator ec;
     private X509V3ExtensionUtil util;
 
 
     @Before
     public void init() {
-        config = mock(Config.class);
+        config = mock(Configuration.class);
         ec = mock(EntitlementCurator.class);
         util = new X509V3ExtensionUtil(config, ec);
     }

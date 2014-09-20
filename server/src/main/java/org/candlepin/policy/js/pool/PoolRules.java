@@ -14,7 +14,7 @@
  */
 package org.candlepin.policy.js.pool;
 
-import org.candlepin.config.Config;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Branding;
@@ -54,12 +54,12 @@ public class PoolRules {
 
     private PoolManager poolManager;
     private ProductCache productCache;
-    private Config config;
+    private Configuration config;
     private EntitlementCurator entCurator;
 
 
     @Inject
-    public PoolRules(PoolManager poolManager, ProductCache productCache, Config config,
+    public PoolRules(PoolManager poolManager, ProductCache productCache, Configuration config,
         EntitlementCurator entCurator) {
         this.poolManager = poolManager;
         this.productCache = productCache;

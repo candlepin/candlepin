@@ -14,11 +14,16 @@
  */
 package org.candlepin.resteasy.interceptor;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import org.candlepin.config.Config;
+import org.candlepin.common.config.Configuration;
+import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
@@ -43,7 +48,7 @@ import javax.ws.rs.core.UriBuilder;
 public class LinkHeaderPostInterceptorTest {
 
     @Mock private HttpServletRequest request;
-    @Mock private Config config;
+    @Mock private Configuration config;
     @Mock private ServerResponse response;
     @Mock private Page page;
     @Mock private PageRequest pageRequest;
@@ -53,7 +58,7 @@ public class LinkHeaderPostInterceptorTest {
     /* We do not want to load candlepin.conf off the filesystem which is what
      * happens in Config's constructor.  Therefore, we subclass.
      */
-    private static class ConfigForTesting extends Config {
+    private static class ConfigForTesting extends MapConfiguration {
         public ConfigForTesting() {
             super(ConfigProperties.DEFAULT_PROPERTIES);
         }

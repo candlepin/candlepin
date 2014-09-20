@@ -14,11 +14,14 @@
  */
 package org.candlepin.audit;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import org.candlepin.CandlepinNonServletEnvironmentTestingModule;
 import org.candlepin.auth.PrincipalData;
-import org.candlepin.config.Config;
+import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.guice.I18nProvider;
 
@@ -102,7 +105,7 @@ public class EventAdapterTest {
         assertTrue(f.getEntries().isEmpty());
     }
 
-    private static class ConfigForTesting extends Config {
+    private static class ConfigForTesting extends MapConfiguration {
         public ConfigForTesting() {
             super(ConfigProperties.DEFAULT_PROPERTIES);
         }

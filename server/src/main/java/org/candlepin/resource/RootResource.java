@@ -19,7 +19,7 @@ package org.candlepin.resource;
  */
 
 import org.candlepin.auth.interceptor.SecurityHole;
-import org.candlepin.config.Config;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 
 import com.google.inject.Inject;
@@ -50,7 +50,7 @@ public class RootResource {
 
     private static Logger log = LoggerFactory.getLogger(RootResource.class);
     public static final Map<Object, String> RESOURCE_CLASSES;
-    private Config config;
+    private Configuration config;
     private static List<Link> links = null;
 
     static {
@@ -87,7 +87,7 @@ public class RootResource {
     }
 
     @Inject
-    public RootResource(Config config) {
+    public RootResource(Configuration config) {
         this.config = config;
     }
 

@@ -14,7 +14,7 @@
  */
 package org.candlepin.resteasy.interceptor;
 
-import org.candlepin.config.Config;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
@@ -54,10 +54,10 @@ public class LinkHeaderPostInterceptor implements PostProcessInterceptor, Accept
     private static Logger log = LoggerFactory.getLogger(LinkHeaderPostInterceptor.class);
     public static final String LINK_HEADER = "Link";
 
-    private Config config;
+    private Configuration config;
 
     @Inject
-    public LinkHeaderPostInterceptor(Config config) {
+    public LinkHeaderPostInterceptor(Configuration config) {
         this.config = config;
     }
 

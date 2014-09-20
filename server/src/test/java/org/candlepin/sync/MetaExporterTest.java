@@ -14,9 +14,9 @@
  */
 package org.candlepin.sync;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
-import org.candlepin.config.Config;
+import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.test.TestUtil;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -36,7 +36,7 @@ public class MetaExporterTest {
     @Test
     public void testMetaExporter() throws IOException {
         ObjectMapper mapper = SyncUtils.getObjectMapper(
-            new Config(new HashMap<String, String>()));
+            new MapConfiguration(new HashMap<String, String>()));
 
         MetaExporter metaEx = new MetaExporter();
         StringWriter writer = new StringWriter();

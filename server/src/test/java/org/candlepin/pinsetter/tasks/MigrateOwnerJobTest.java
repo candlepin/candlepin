@@ -14,17 +14,25 @@
  */
 package org.candlepin.pinsetter.tasks;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.audit.EventSink;
 import org.candlepin.client.CandlepinConnection;
 import org.candlepin.client.ConsumerClient;
 import org.candlepin.client.OwnerClient;
+import org.candlepin.common.config.Configuration;
+import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
-import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -64,7 +72,7 @@ public class MigrateOwnerJobTest {
     private ConsumerCurator consumerCurator;
     private CandlepinConnection conn;
     private MigrateOwnerJob moj;
-    private Config config;
+    private Configuration config;
     private PoolCurator poolCurator;
     private EntitlementCurator entCurator;
     private EventSink sink;
@@ -232,7 +240,7 @@ public class MigrateOwnerJobTest {
         moj.execute(buildContext(map));
     }
 
-    private static class ConfigForTesting extends Config {
+    private static class ConfigForTesting extends MapConfiguration {
         public ConfigForTesting() {
             super(new HashMap<String, String>() {
                 private static final long serialVersionUID = 1L;

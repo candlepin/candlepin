@@ -14,10 +14,15 @@
  */
 package org.candlepin.resource.test;
 
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import org.candlepin.config.Config;
+import org.candlepin.common.config.Configuration;
+import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.CrlGenerator;
 import org.candlepin.model.CertificateSerialCurator;
@@ -42,7 +47,7 @@ public class CrlResourceTest {
         CrlGenerator crlgen = mock(CrlGenerator.class);
         CrlFileUtil fileutil = mock(CrlFileUtil.class);
         CertificateSerialCurator sercur = mock(CertificateSerialCurator.class);
-        Config config = new ConfigForTesting();
+        Configuration config = new ConfigForTesting();
         X509CRL crl = mock(X509CRL.class);
         when(fileutil.readCRLFile(any(File.class))).thenReturn(crl);
         when(crlgen.removeEntries(eq(crl), any(List.class))).thenReturn(crl);
@@ -54,7 +59,7 @@ public class CrlResourceTest {
         verify(fileutil, atLeastOnce()).writeCRLFile(any(File.class), eq(crl));
     }
 
-    private static class ConfigForTesting extends Config {
+    private static class ConfigForTesting extends MapConfiguration {
         public ConfigForTesting() {
             super(new HashMap<String, String>() {
                 private static final long serialVersionUID = 1L;

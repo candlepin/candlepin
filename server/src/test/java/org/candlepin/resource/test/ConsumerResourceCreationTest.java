@@ -14,8 +14,10 @@
  */
 package org.candlepin.resource.test;
 
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
@@ -27,9 +29,10 @@ import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.permissions.OwnerPermission;
 import org.candlepin.auth.permissions.Permission;
 import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
+import org.candlepin.common.config.Configuration;
+import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.ForbiddenException;
-import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerContentOverrideCurator;
@@ -109,7 +112,7 @@ public class ConsumerResourceCreationTest {
 
     private ConsumerResource resource;
     private ConsumerType system;
-    protected Config config;
+    protected Configuration config;
     protected Owner owner;
     protected Role role;
     private User user;
@@ -158,7 +161,7 @@ public class ConsumerResourceCreationTest {
         return systemtype;
     }
 
-    private static class ConfigForTesting extends Config {
+    private static class ConfigForTesting extends MapConfiguration {
         @SuppressWarnings("serial")
         public ConfigForTesting() {
             super(new HashMap<String, String>() {
@@ -172,8 +175,8 @@ public class ConsumerResourceCreationTest {
         }
     }
 
-    public Config initConfig() {
-        Config config = new ConfigForTesting();
+    public Configuration initConfig() {
+        Configuration config = new ConfigForTesting();
         return config;
     }
 

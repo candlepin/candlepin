@@ -39,6 +39,7 @@ import org.candlepin.common.exceptions.mappers.ValidationExceptionMapper;
 import org.candlepin.common.exceptions.mappers.WebApplicationExceptionMapper;
 import org.candlepin.common.exceptions.mappers.WriterExceptionMapper;
 import org.candlepin.common.resteasy.interceptor.DynamicFilterInterceptor;
+//import org.candlepin.config.JPAConfigParser;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.CrlGenerator;
 import org.candlepin.controller.Entitler;
@@ -169,6 +170,16 @@ public class CandlepinModule extends AbstractModule {
         // TODO:
 //        install(new JpaPersistModule("default").properties(config
 //            .jpaConfiguration(config)));
+//
+        // from Config.java
+//        /**
+//         * Returns the JPA Configuration properties.
+//         *
+//         * @return the JPA Configuration properties.
+//         */
+//        public Properties jpaConfiguration(Config config) {
+//            return new JPAConfigParser(config).parseConfig(configuration);
+//        }
 
         bind(JPAInitializer.class).asEagerSingleton();
 

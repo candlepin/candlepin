@@ -14,7 +14,7 @@
  */
 package org.candlepin.service.impl;
 
-import org.candlepin.config.Config;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
@@ -78,7 +78,7 @@ public class DefaultEntitlementCertServiceAdapter extends
     private ProductServiceAdapter productAdapter;
     private EntitlementCurator entCurator;
     private I18n i18n;
-    private Config config;
+    private Configuration config;
 
     private static Logger log =
         LoggerFactory.getLogger(DefaultEntitlementCertServiceAdapter.class);
@@ -92,7 +92,7 @@ public class DefaultEntitlementCertServiceAdapter extends
         CertificateSerialCurator serialCurator,
         ProductServiceAdapter productAdapter,
         EntitlementCurator entCurator, I18n i18n,
-        Config config) {
+        Configuration config) {
 
         this.pki = pki;
         this.extensionUtil = extensionUtil;

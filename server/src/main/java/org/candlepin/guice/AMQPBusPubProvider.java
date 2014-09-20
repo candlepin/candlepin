@@ -18,7 +18,7 @@ import org.candlepin.audit.AMQPBusPublisher;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
-import org.candlepin.config.Config;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.util.Util;
 
@@ -64,7 +64,7 @@ public class AMQPBusPubProvider implements Provider<AMQPBusPublisher> {
     };
 
     @Inject
-    public AMQPBusPubProvider(Config config, ObjectMapper omapper) {
+    public AMQPBusPubProvider(Configuration config, ObjectMapper omapper) {
         try {
             configureSslProperties(config);
 
@@ -89,7 +89,7 @@ public class AMQPBusPubProvider implements Provider<AMQPBusPublisher> {
         }
     }
 
-    private void configureSslProperties(Config config) {
+    private void configureSslProperties(Configuration config) {
         // FIXME: Setting the property here is dangerous,
         // but in theory nothing else is setting/using it
         // http://qpid.apache.org/releases/qpid-0.24/programming/book/ch03s06.html
@@ -109,7 +109,7 @@ public class AMQPBusPubProvider implements Provider<AMQPBusPublisher> {
     /**
      * @return A Properties object containing the amqp configuration for jms
      */
-    private Properties buildConfigurationProperties(Config config) {
+    private Properties buildConfigurationProperties(Configuration config) {
         Properties properties = new Properties();
 
         properties.put("java.naming.factory.initial",

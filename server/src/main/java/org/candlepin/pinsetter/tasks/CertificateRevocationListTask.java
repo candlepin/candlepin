@@ -14,7 +14,7 @@
  */
 package org.candlepin.pinsetter.tasks;
 
-import org.candlepin.config.Config;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.CrlGenerator;
 import org.candlepin.util.CrlFileUtil;
@@ -41,7 +41,7 @@ public class CertificateRevocationListTask extends KingpinJob {
 
     public static final String DEFAULT_SCHEDULE = "0 0 12 * * ?";
 
-    private Config config;
+    private Configuration config;
     private CrlGenerator crlGenerator;
     private CrlFileUtil crlFileUtil;
 
@@ -55,7 +55,7 @@ public class CertificateRevocationListTask extends KingpinJob {
      * @param conf the conf
      */
     @Inject
-    public CertificateRevocationListTask(Config conf,
+    public CertificateRevocationListTask(Configuration conf,
         CrlFileUtil crlFileUtil, CrlGenerator crlGenerator) {
         this.config = conf;
         this.crlFileUtil = crlFileUtil;

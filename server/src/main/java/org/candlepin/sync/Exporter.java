@@ -14,8 +14,8 @@
  */
 package org.candlepin.sync;
 
+import org.candlepin.common.config.Configuration;
 import org.candlepin.common.util.VersionUtil;
-import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.Cdn;
@@ -87,7 +87,7 @@ public class Exporter {
     private ProductServiceAdapter productAdapter;
     private EntitlementCurator entitlementCurator;
     private PKIUtility pki;
-    private Config config;
+    private Configuration config;
     private ExportRules exportRules;
     private PrincipalProvider principalProvider;
 
@@ -100,7 +100,7 @@ public class Exporter {
         EntitlementCertServiceAdapter entCertAdapter, ProductExporter productExporter,
         ProductServiceAdapter productAdapter, ProductCertExporter productCertExporter,
         EntitlementCurator entitlementCurator, EntitlementExporter entExporter,
-        PKIUtility pki, Config config, ExportRules exportRules,
+        PKIUtility pki, Configuration config, ExportRules exportRules,
         PrincipalProvider principalProvider, DistributorVersionCurator distVerCurator,
         DistributorVersionExporter distVerExporter,
         CdnCurator cdnCurator,

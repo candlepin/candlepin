@@ -14,7 +14,7 @@
  */
 package org.candlepin.policy.js.entitlement;
 
-import org.candlepin.config.Config;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -56,7 +56,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
     protected I18n i18n;
     protected Map<String, Set<Rule>> attributesToRules;
     protected JsRunner jsRules;
-    protected Config config;
+    protected Configuration config;
     protected ConsumerCurator consumerCurator;
     protected PoolCurator poolCurator;
 

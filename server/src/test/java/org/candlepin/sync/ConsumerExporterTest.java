@@ -14,9 +14,9 @@
  */
 package org.candlepin.sync;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
-import org.candlepin.config.Config;
+import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.test.TestUtil;
@@ -36,7 +36,7 @@ public class ConsumerExporterTest {
     @Test
     public void testConsumerExport() throws IOException {
         ObjectMapper mapper = SyncUtils.getObjectMapper(
-            new Config(new HashMap<String, String>()));
+            new MapConfiguration(new HashMap<String, String>()));
 
         ConsumerExporter exporter = new ConsumerExporter();
         ConsumerType ctype = new ConsumerType("candlepin");

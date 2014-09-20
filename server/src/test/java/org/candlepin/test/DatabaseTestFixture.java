@@ -160,7 +160,8 @@ public class DatabaseTestFixture {
     @Before
     public void init() {
         Module guiceOverrideModule = getGuiceOverrideModule();
-        CandlepinCommonTestingModule testingModule = new CandlepinCommonTestingModule();
+        // FIXME:
+        CandlepinCommonTestingModule testingModule = new CandlepinCommonTestingModule(null);
         if (guiceOverrideModule == null) {
             injector = Guice.createInjector(testingModule,
                 new CandlepinNonServletEnvironmentTestingModule());

@@ -23,7 +23,7 @@ import static org.quartz.TriggerKey.*;
 import static org.quartz.impl.matchers.GroupMatcher.*;
 
 import org.candlepin.auth.SystemPrincipal;
-import org.candlepin.config.Config;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.model.JobStatus;
@@ -52,7 +52,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -72,7 +71,7 @@ public class PinsetterKernel {
     private static Logger log = LoggerFactory.getLogger(PinsetterKernel.class);
 
     private Scheduler scheduler;
-    private Config config;
+    private Configuration config;
     private JobCurator jobCurator;
 
     /**
@@ -82,7 +81,7 @@ public class PinsetterKernel {
      * initialized.
      */
     @Inject
-    public PinsetterKernel(Config conf, JobFactory jobFactory,
+    public PinsetterKernel(Configuration conf, JobFactory jobFactory,
         JobListener listener, JobCurator jobCurator,
         StdSchedulerFactory fact) throws InstantiationException {
 
@@ -124,9 +123,9 @@ public class PinsetterKernel {
     }
 
     private void addToList(Set<String> impls, String confkey) {
-        String[] jobs = this.config.getStringArray(confkey);
-        if (jobs != null && jobs.length > 0) {
-            impls.addAll(Arrays.asList(jobs));
+        List<String> jobs = config.getList(confkey);
+        if (jobs != null && !jobs.isEmpty()) {
+            impls.addAll(jobs);
         }
     }
 

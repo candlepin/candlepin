@@ -15,7 +15,6 @@
 package org.candlepin.util.apicrawl;
 
 import org.candlepin.auth.interceptor.Verify;
-import org.candlepin.config.Config;
 import org.candlepin.guice.HttpMethodMatcher;
 import org.candlepin.resource.RootResource;
 import org.candlepin.resteasy.JsonProvider;
@@ -49,7 +48,9 @@ import javax.ws.rs.core.MediaType;
  * namespace looking for exposed API calls.
  */
 public class ApiCrawler {
-    private ObjectMapper mapper = new JsonProvider(new Config())
+    // Let's just set it to pretty_print the output instead of having
+    // to construct a configuration only to get a simple value.
+    private ObjectMapper mapper = new JsonProvider(true)
             .locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
     private List<Class> httpClasses;
     private NonRecursiveModule dontRecurse;
@@ -88,7 +89,9 @@ public class ApiCrawler {
 
         // we need a different mapper to write the output, one without our
         // schema hack module installed.
-        ObjectMapper mapper = new JsonProvider(new Config())
+        // Let's just set it to pretty_print the output instead of having
+        // to construct a configuration only to get a simple value.
+        ObjectMapper mapper = new JsonProvider(true)
             .locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
         FileWriter jsonFile = new FileWriter(apiFile);
         try {

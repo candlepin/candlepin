@@ -16,7 +16,7 @@ package org.candlepin.service.impl.test;
 
 import static org.junit.Assert.*;
 
-import org.candlepin.config.Config;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Consumer;
 import org.candlepin.service.SubscriptionServiceAdapter;
@@ -32,7 +32,7 @@ public class DefaultSubscriptionServiceAdapterTest {
 
     @Test
     public void activationPrefix() {
-        Config config = Mockito.mock(Config.class);
+        Configuration config = Mockito.mock(Configuration.class);
         Mockito.when(config.getString(ConfigProperties.ACTIVATION_DEBUG_PREFIX))
                 .thenReturn("mega");
 
@@ -47,7 +47,7 @@ public class DefaultSubscriptionServiceAdapterTest {
 
     @Test
     public void activationPrefixFailure() {
-        Config config = Mockito.mock(Config.class);
+        Configuration config = Mockito.mock(Configuration.class);
         Mockito.when(config.getString(ConfigProperties.ACTIVATION_DEBUG_PREFIX))
                 .thenReturn("mega");
 
@@ -62,7 +62,7 @@ public class DefaultSubscriptionServiceAdapterTest {
 
     @Test
     public void activationPrefixEmpty() {
-        Config config = Mockito.mock(Config.class);
+        Configuration config = Mockito.mock(Configuration.class);
         Mockito.when(config.getString(ConfigProperties.ACTIVATION_DEBUG_PREFIX))
                 .thenReturn("");
 
@@ -77,7 +77,7 @@ public class DefaultSubscriptionServiceAdapterTest {
 
     @Test
     public void activationPrefixNull() {
-        Config config = Mockito.mock(Config.class);
+        Configuration config = Mockito.mock(Configuration.class);
         Mockito.when(config.getString(ConfigProperties.ACTIVATION_DEBUG_PREFIX))
                 .thenReturn(null);
 

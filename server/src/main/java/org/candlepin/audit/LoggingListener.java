@@ -14,7 +14,7 @@
  */
 package org.candlepin.audit;
 
-import org.candlepin.config.Config;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 
 import org.slf4j.LoggerFactory;
@@ -46,7 +46,10 @@ public class LoggingListener implements EventListener {
     private final DateFormat df;
 
     public LoggingListener() throws IOException {
-        Config config = new Config();
+        //Configuration config = new Config();
+        // FIXME: ASAP
+        Configuration config = null;
+
 
         LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
         auditLog = lc.getLogger(LoggingListener.class.getCanonicalName() + ".AuditLog");

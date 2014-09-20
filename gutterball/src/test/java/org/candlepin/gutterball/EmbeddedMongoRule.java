@@ -80,7 +80,7 @@ public class EmbeddedMongoRule extends ExternalResource {
         log.info("Starting embedded mongodb server...");
         mongodExe = STARTER.prepare(new MongodConfigBuilder()
             .version(Version.Main.PRODUCTION)
-            .net(new Net(config.getInteger(ConfigProperties.MONGODB_PORT),
+            .net(new Net(config.getInt(ConfigProperties.MONGODB_PORT),
                     Network.localhostIsIPv6()))
             .build());
         mongod = mongodExe.start();

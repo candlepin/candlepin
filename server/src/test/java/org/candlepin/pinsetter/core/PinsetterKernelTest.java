@@ -24,7 +24,8 @@ import static org.quartz.impl.matchers.GroupMatcher.*;
 import static org.quartz.impl.matchers.NameMatcher.*;
 
 import org.candlepin.auth.Principal;
-import org.candlepin.config.Config;
+import org.candlepin.common.config.Configuration;
+import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.model.JobStatus;
@@ -69,7 +70,7 @@ public class PinsetterKernelTest {
     private JobCurator jcurator;
     private JobListener jlistener;
     private StdSchedulerFactory sfactory;
-    private Config config;
+    private Configuration config;
     private Scheduler sched;
     private ListenerManager lm;
 
@@ -82,7 +83,7 @@ public class PinsetterKernelTest {
         sfactory = mock(StdSchedulerFactory.class);
         lm = mock(ListenerManager.class);
 
-        config = new Config(
+        config = new MapConfiguration(
             new HashMap<String, String>() {
                 {
                     put("org.quartz.threadPool.class",
@@ -128,7 +129,7 @@ public class PinsetterKernelTest {
 
     @Test
     public void disablePinsetter() throws Exception {
-        config = new Config(
+        config = new MapConfiguration(
             new HashMap<String, String>() {
                 {
                     put(ConfigProperties.DEFAULT_TASKS, JobCleaner.class.getName());
@@ -225,7 +226,7 @@ public class PinsetterKernelTest {
         props.put("org.quartz.jobStore.isClustered", "true");
         props.put("pinsetter.org.candlepin.pinsetter.tasks." +
             "JobCleaner.schedule", "*/1 * * * * ?");
-        Config config = new Config(props);
+        Configuration config = new MapConfiguration(props);
         JobDetail jobDetail = mock(JobDetail.class);
 
         String crongrp = "cron group";
@@ -256,7 +257,7 @@ public class PinsetterKernelTest {
         props.put("org.quartz.jobStore.isClustered", "true");
         props.put("pinsetter.org.candlepin.pinsetter.tasks." +
             "JobCleaner.schedule", "*/1 * * * * ?");
-        Config config = new Config(props);
+        Configuration config = new MapConfiguration(props);
         JobDetail jobDetail = mock(JobDetail.class);
 
         // Hack multiple job schedules for same job:
@@ -376,7 +377,7 @@ public class PinsetterKernelTest {
     @Test
     public void clusteredShutdown() throws Exception {
 
-        config = new Config(
+        config = new MapConfiguration(
             new HashMap<String, String>() {
                 {
                     put(ConfigProperties.DEFAULT_TASKS, JobCleaner.class.getName());
@@ -406,7 +407,7 @@ public class PinsetterKernelTest {
 
     @Test
     public void clusteredStartupWithJobs() throws Exception {
-        config = new Config(
+        config = new MapConfiguration(
             new HashMap<String, String>() {
                 {
                     put(ConfigProperties.DEFAULT_TASKS, JobCleaner.class.getName());
@@ -428,7 +429,7 @@ public class PinsetterKernelTest {
 
     @Test
     public void clusteredStartupWithoutJobs() throws Exception {
-        config = new Config(
+        config = new MapConfiguration(
             new HashMap<String, String>() {
                 {
                     put(ConfigProperties.DEFAULT_TASKS, JobCleaner.class.getName());

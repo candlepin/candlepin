@@ -44,10 +44,10 @@ public class LoggingConfig extends ConfigurationParser {
 
     public void configure(Configuration config) {
         LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
-        Map<String, String> logLevels = config.subset(PREFIX);
-        for (Entry<String, String> entry : logLevels.entrySet()) {
+        Map<String, Object> logLevels = config.getNamespaceMap(PREFIX);
+        for (Entry<String, Object> entry : logLevels.entrySet()) {
             String key = entry.getKey().replace(PREFIX, "");
-            lc.getLogger(key).setLevel(Level.toLevel(entry.getValue()));
+            lc.getLogger(key).setLevel(Level.toLevel((String) entry.getValue()));
         }
     }
 

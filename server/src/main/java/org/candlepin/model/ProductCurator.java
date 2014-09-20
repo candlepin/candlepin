@@ -14,8 +14,8 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
-import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 
 import com.google.inject.Inject;
@@ -38,7 +38,7 @@ import java.util.Set;
  */
 public class ProductCurator extends AbstractHibernateCurator<Product> {
 
-    @Inject private Config config;
+    @Inject private Configuration config;
     @Inject private I18n i18n;
 
     /**
@@ -123,13 +123,13 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     }
 
     private void validateAttributeValue(ProductAttribute attr) {
-        Set<String> intAttrs = config.getStringSet(ConfigProperties.INTEGER_ATTRIBUTES);
-        Set<String> posIntAttrs = config.getStringSet(
+        Set<String> intAttrs = config.getSet(ConfigProperties.INTEGER_ATTRIBUTES);
+        Set<String> posIntAttrs = config.getSet(
             ConfigProperties.NON_NEG_INTEGER_ATTRIBUTES);
-        Set<String> longAttrs = config.getStringSet(ConfigProperties.LONG_ATTRIBUTES);
-        Set<String> posLongAttrs = config.getStringSet(
+        Set<String> longAttrs = config.getSet(ConfigProperties.LONG_ATTRIBUTES);
+        Set<String> posLongAttrs = config.getSet(
             ConfigProperties.NON_NEG_LONG_ATTRIBUTES);
-        Set<String> boolAttrs = config.getStringSet(ConfigProperties.BOOLEAN_ATTRIBUTES);
+        Set<String> boolAttrs = config.getSet(ConfigProperties.BOOLEAN_ATTRIBUTES);
 
         if (StringUtils.isBlank(attr.getValue())) { return; }
 

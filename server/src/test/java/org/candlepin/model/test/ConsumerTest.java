@@ -18,7 +18,7 @@ import static org.junit.Assert.*;
 
 import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.config.CandlepinCommonTestConfig;
-import org.candlepin.config.Config;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerInstalledProduct;
@@ -429,7 +429,7 @@ public class ConsumerTest extends DatabaseTestFixture {
     @Test
     public void testConsumerFactsFilter() {
         CandlepinCommonTestConfig config =
-            (CandlepinCommonTestConfig) injector.getInstance(Config.class);
+            (CandlepinCommonTestConfig) injector.getInstance(Configuration.class);
         String oldValue = config.getString(ConfigProperties.CONSUMER_FACTS_MATCHER);
         config.setProperty(ConfigProperties.CONSUMER_FACTS_MATCHER, "^goodkey.*");
 

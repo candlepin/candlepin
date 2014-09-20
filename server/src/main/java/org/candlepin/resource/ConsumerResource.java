@@ -28,12 +28,12 @@ import org.candlepin.auth.SubResource;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.interceptor.SecurityHole;
 import org.candlepin.auth.interceptor.Verify;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.CandlepinException;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.common.exceptions.IseException;
 import org.candlepin.common.exceptions.NotFoundException;
-import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.PoolManager;
@@ -172,7 +172,7 @@ public class ConsumerResource {
     private EnvironmentCurator environmentCurator;
     private DistributorVersionCurator distributorVersionCurator;
     private CdnCurator cdnCurator;
-    private Config config;
+    private Configuration config;
     private CalculatedAttributesUtil calculatedAttributesUtil;
     private ConsumerBindUtil consumerBindUtil;
 
@@ -192,7 +192,7 @@ public class ConsumerResource {
         ComplianceRules complianceRules, DeletedConsumerCurator deletedConsumerCurator,
         EnvironmentCurator environmentCurator,
         DistributorVersionCurator distributorVersionCurator,
-        Config config, ContentCurator contentCurator,
+        Configuration config, ContentCurator contentCurator,
         CdnCurator cdnCurator, CalculatedAttributesUtil calculatedAttributesUtil,
         ConsumerBindUtil consumerBindUtil) {
 
