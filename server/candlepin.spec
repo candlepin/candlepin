@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.30
+Version: 0.9.31
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -392,6 +392,30 @@ fi
 
 
 %changelog
+* Mon Sep 22 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.31-1
+- Require at least candlepin-common 1.0.7 (jesusr@redhat.com)
+- Altered file name to fit the existing pattern (wpoteat@redhat.com)
+- Correct import ordering. (awood@redhat.com)
+- Improve logic for determining if request is successful. (dgoodwin@redhat.com)
+- Return to injecting EventSink normally in ConsumerResource.  (dgoodwin@redhat.com)
+- Fix import ordering and unnecessary log debug guards. (dgoodwin@redhat.com)
+- Comment updates. (dgoodwin@redhat.com)
+- Checkstyle. (dgoodwin@redhat.com)
+- Fix more issues with sending events on successful requests.  (dgoodwin@redhat.com)
+- Minor cleanup. (dgoodwin@redhat.com)
+- Check if both request and pinsetter sinks are non-null and error out.  (dgoodwin@redhat.com)
+- Fix job factory unit test. (dgoodwin@redhat.com)
+- Unit test fixes. (dgoodwin@redhat.com)
+- Dispatch events on successful requests. (dgoodwin@redhat.com)
+- Create an EventSinkProvider that handles scoping correctly.  (awood@redhat.com)
+- Consolidate Guice modules. (awood@redhat.com)
+- Seed PinsetterScope with EventSink. (awood@redhat.com)
+- Add a PinsetterJobScope. (awood@redhat.com)
+- Request scoped event sink, and introducing pinsetter guice module.  (dgoodwin@redhat.com)
+- Send events after successful pinsetter jobs. (dgoodwin@redhat.com)
+- Initial work for sending events on request success only.  (dgoodwin@redhat.com)
+- 1124978: Adds description field to activation_keys.  (csnyder@csnyder.usersys.redhat.com)
+
 * Fri Sep 12 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.30-1
 - fix buildrequires for community builds (jesusr@redhat.com)
 
