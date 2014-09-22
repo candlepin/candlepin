@@ -21,7 +21,6 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-@XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "gb_compliance_status_snapshot")
@@ -49,6 +48,10 @@ public class ComplianceStatusSnapshot {
     @Size(max = 255)
     @NotNull
     private String status;
+
+    public ComplianceStatusSnapshot() {
+        // Required by hibernate.
+    }
 
     public ComplianceStatusSnapshot(Date date, String status) {
         this.date = date;

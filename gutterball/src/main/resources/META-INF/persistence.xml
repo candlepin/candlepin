@@ -13,8 +13,6 @@
             <property name="hibernate.connection.url" value="jdbc:postgresql:gutterball"/>
             <property name="hibernate.connection.username" value="gutterball"/>
             <property name="hibernate.connection.password" value=""/>
-            <property name="hibernate.show_sql" value="true" />
-            <property name="hibernate.format_sql" value="true" />
             <property name="hibernate.connection.provider_class" value="org.hibernate.connection.C3P0ConnectionProvider" />
             <!-- c3p0 connection manager settings -->
             <property name="hibernate.c3p0.min_size" value="5" />
@@ -24,7 +22,7 @@
             <property name="hibernate.c3p0.idle_test_period" value="300" />
             <!-- max_statements should always be 0 -->
             <property name="hibernate.c3p0.max_statements" value="0" />
-            <property name="hibernate.hbm2ddl.auto" value="create-drop"/>
+            <property name="hibernate.hbm2ddl.auto" value="create"/>
         </properties>
     </persistence-unit>
 
