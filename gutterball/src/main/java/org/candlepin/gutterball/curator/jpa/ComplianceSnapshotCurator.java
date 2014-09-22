@@ -10,6 +10,7 @@ import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.Subqueries;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -33,12 +34,13 @@ public class ComplianceSnapshotCurator extends BaseCurator<ComplianceSnapshot> {
         List<String> activeConsumers =
                 consumerStateCurator.getConsumerUuidsOnDate(targetDate, ownerFilters, consumerUuids);
 
+        // https://hibernate.atlassian.net/browse/HHH-2776
+        if (activeConsumers == null || activeConsumers.isEmpty()) {
+            return new ArrayList<ComplianceSnapshot>();
+        }
+
         DetachedCriteria mainQuery = DetachedCriteria.forClass(ComplianceSnapshot.class);
         mainQuery.createAlias("consumerSnapshot", "c");
-
-        if (activeConsumers != null) {
-            mainQuery.add(Restrictions.in("c.uuid", activeConsumers));
-        }
 
         if (ownerFilters != null && !ownerFilters.isEmpty()) {
             mainQuery.createAlias("c.ownerSnapshot", "os");
