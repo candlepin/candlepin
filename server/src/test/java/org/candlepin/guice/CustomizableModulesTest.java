@@ -14,9 +14,11 @@
  */
 package org.candlepin.guice;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import org.candlepin.common.config.Configuration;
+import org.candlepin.common.config.PropertiesFileConfiguration;
 
 import com.google.inject.Module;
 
@@ -29,10 +31,9 @@ public class CustomizableModulesTest {
 
     @Test
     public void shouldLoadAndParseConfigurationFile() throws Exception {
-//        Configuration config = new Configuration(
-//            getAbsolutePath("customizable_modules_test.conf"));
-        Configuration config = null;
-        Set<Module> loaded = new CustomizableModulesForTesting(config).load();
+        Configuration config = new PropertiesFileConfiguration(
+            getAbsolutePath("customizable_modules_test.conf"));
+        Set<Module> loaded = new CustomizableModules().load(config);
 
         assertEquals(1, loaded.size());
         assertTrue(loaded.iterator().next() instanceof DummyModuleForTesting);
@@ -42,25 +43,11 @@ public class CustomizableModulesTest {
     @Test(expected = RuntimeException.class)
     public void shouldFailWhenConfigurationContainsMissingClass()
         throws Exception {
-//        Configuration config = new Config(
-//            getAbsolutePath("customizable_modules_with_missing_class.conf"));
-        Configuration config = null;
 
-        new CustomizableModulesForTesting(config).load();
-    }
+        Configuration config = new PropertiesFileConfiguration(
+            getAbsolutePath("customizable_modules_with_missing_class.conf"));
 
-    public static class CustomizableModulesForTesting extends
-        CustomizableModules {
-
-        private Configuration config;
-
-        public CustomizableModulesForTesting(Configuration config) {
-            this.config = config;
-        }
-
-        protected Configuration configuration() {
-            return config;
-        }
+        new CustomizableModules().load(config);
     }
 
     private String getAbsolutePath(String fileName) throws URISyntaxException {

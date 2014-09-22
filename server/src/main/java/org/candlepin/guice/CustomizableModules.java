@@ -41,9 +41,9 @@ public class CustomizableModules {
     /**
      * @return returns the set of modules to use.
      */
-    public Set<Module> load() {
+    public Set<Module> load(Configuration config) {
         Map<String, Object> loaded =
-            configuration().getNamespaceMap(MODULE_CONFIG_PREFIX);
+            config.getNamespaceMap(MODULE_CONFIG_PREFIX);
 
         return customizedConfiguration(loaded);
     }
@@ -53,7 +53,7 @@ public class CustomizableModules {
      * @param loadedConfiguration configuration to parse.
      * @return Set of configured modules.
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public Set<Module> customizedConfiguration(Map<String, Object> loadedConfiguration) {
         try {
             Set toReturn = new HashSet();
@@ -83,10 +83,5 @@ public class CustomizableModules {
         Properties loaded = new Properties();
         loaded.load(input);
         return new HashMap(loaded);
-    }
-
-    protected Configuration configuration() {
-        // FIXME: NOW
-        return null;
     }
 }

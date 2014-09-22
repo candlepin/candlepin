@@ -66,7 +66,14 @@ public class ConsumerImporterTest {
         idCertCurator = mock(IdentityCertificateCurator.class);
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         importer = new ConsumerImporter(curator, idCertCurator, i18n, serialCurator);
-        mapper = SyncUtils.getObjectMapper(new MapConfiguration(new HashMap<String, String>()));
+        mapper = SyncUtils.getObjectMapper(new MapConfiguration(
+                new HashMap<String, Object>() {
+
+                    {
+                        put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES,
+                                false);
+                    }
+                }));
     }
 
     @Test

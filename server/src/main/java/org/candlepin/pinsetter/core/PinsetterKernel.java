@@ -123,7 +123,7 @@ public class PinsetterKernel {
     }
 
     private void addToList(Set<String> impls, String confkey) {
-        List<String> jobs = config.getList(confkey);
+        List<String> jobs = config.getList(confkey, null);
         if (jobs != null && !jobs.isEmpty()) {
             impls.addAll(jobs);
         }
@@ -143,7 +143,7 @@ public class PinsetterKernel {
         Set<String> jobImpls = new HashSet<String>();
 
         try {
-            if (config.getBoolean(ConfigProperties.ENABLE_PINSETTER)) {
+            if (config.getBoolean(ConfigProperties.ENABLE_PINSETTER, true)) {
                 // get the default tasks first
                 addToList(jobImpls, ConfigProperties.DEFAULT_TASKS);
 
@@ -309,6 +309,7 @@ public class PinsetterKernel {
         }
     }
 
+    @SuppressWarnings("unchecked")
     public void scheduleJob(Class job, String jobName, Trigger trigger)
         throws PinsetterException {
         JobDataMap map = new JobDataMap();

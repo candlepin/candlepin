@@ -65,9 +65,8 @@ public class HornetqContextListener {
 
     public void contextInitialized(Injector injector) {
 
-        //Config candlepinConfig = new Config();
-        org.candlepin.common.config.Configuration candlepinConfig = null;
-
+        org.candlepin.common.config.Configuration candlepinConfig =
+            injector.getInstance(org.candlepin.common.config.Configuration.class);
 
         if (hornetqServer == null) {
 

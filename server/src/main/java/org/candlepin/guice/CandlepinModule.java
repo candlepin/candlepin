@@ -39,7 +39,7 @@ import org.candlepin.common.exceptions.mappers.ValidationExceptionMapper;
 import org.candlepin.common.exceptions.mappers.WebApplicationExceptionMapper;
 import org.candlepin.common.exceptions.mappers.WriterExceptionMapper;
 import org.candlepin.common.resteasy.interceptor.DynamicFilterInterceptor;
-//import org.candlepin.config.JPAConfigParser;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.CrlGenerator;
 import org.candlepin.controller.Entitler;
@@ -126,6 +126,7 @@ import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import com.google.inject.persist.Transactional;
+import com.google.inject.persist.jpa.JpaPersistModule;
 import com.google.inject.servlet.RequestScoped;
 
 import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
@@ -165,22 +166,8 @@ public class CandlepinModule extends AbstractModule {
                 ValidationListenerProvider.class);
         bind(MessageInterpolator.class).to(CandlepinMessageInterpolator.class);
 
-        //Config config = new Config();
-        //bind(Config.class).asEagerSingleton();
-        // TODO:
-//        install(new JpaPersistModule("default").properties(config
-//            .jpaConfiguration(config)));
-//
-        // from Config.java
-//        /**
-//         * Returns the JPA Configuration properties.
-//         *
-//         * @return the JPA Configuration properties.
-//         */
-//        public Properties jpaConfiguration(Config config) {
-//            return new JPAConfigParser(config).parseConfig(configuration);
-//        }
-
+        install(new JpaPersistModule("default").properties(
+            config.getNamespaceProperties("jpa.config")));
         bind(JPAInitializer.class).asEagerSingleton();
 
         bind(PKIUtility.class).to(BouncyCastlePKIUtility.class)
@@ -274,7 +261,10 @@ public class CandlepinModule extends AbstractModule {
         bind(Function.class).annotatedWith(Names.named("endDateGenerator"))
             .to(ExpiryDateFunction.class).in(Singleton.class);
 
-        this.configureAmqp();
+        // only initialize if we've enabled AMQP integration
+        if (config.getBoolean(ConfigProperties.AMQP_INTEGRATION_ENABLED)) {
+            configureAmqp();
+        }
 
         configureMethodInterceptors();
 

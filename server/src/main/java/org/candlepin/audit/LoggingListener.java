@@ -25,7 +25,6 @@ import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.FileAppender;
 
-import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.TimeZone;
@@ -45,12 +44,7 @@ public class LoggingListener implements EventListener {
 
     private final DateFormat df;
 
-    public LoggingListener() throws IOException {
-        //Configuration config = new Config();
-        // FIXME: ASAP
-        Configuration config = null;
-
-
+    public LoggingListener(Configuration config) {
         LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
         auditLog = lc.getLogger(LoggingListener.class.getCanonicalName() + ".AuditLog");
 

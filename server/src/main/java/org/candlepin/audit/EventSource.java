@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
  * EventSource
  */
 public class EventSource {
-    private static  Logger log = LoggerFactory.getLogger(HornetqContextListener.class);
+    private static  Logger log = LoggerFactory.getLogger(EventSource.class);
     static final String QUEUE_ADDRESS = "event";
     private ClientSession session;
     private ObjectMapper mapper;

@@ -607,8 +607,14 @@ public class ExporterTest {
             }
             os.flush();
             os.close();
-            ObjectMapper om = SyncUtils.getObjectMapper(
-                new MapConfiguration(new HashMap<String, String>()));
+            ObjectMapper om = SyncUtils.getObjectMapper(new MapConfiguration(
+                    new HashMap<String, Object>() {
+
+                        {
+                            put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES,
+                                    false);
+                        }
+                    }));
             Meta m = om.readValue(
                 new FileInputStream("/tmp/meta.json"), Meta.class);
             assertNotNull(m);
@@ -695,8 +701,14 @@ public class ExporterTest {
             os.flush();
             os.close();
 
-            ObjectMapper om = SyncUtils.getObjectMapper(
-                new MapConfiguration(new HashMap<String, String>()));
+            ObjectMapper om = SyncUtils.getObjectMapper(new MapConfiguration(
+                    new HashMap<String, Object>() {
+
+                        {
+                            put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES,
+                                    false);
+                        }
+                    }));
 
             ConsumerDto c = om.readValue(
                 new FileInputStream("/tmp/" + filename), ConsumerDto.class);
@@ -724,8 +736,14 @@ public class ExporterTest {
             }
             os.flush();
             os.close();
-            ObjectMapper om = SyncUtils.getObjectMapper(
-                new MapConfiguration(new HashMap<String, String>()));
+            ObjectMapper om = SyncUtils.getObjectMapper(new MapConfiguration(
+                    new HashMap<String, Object>() {
+
+                        {
+                            put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES,
+                                    false);
+                        }
+                    }));
             DistributorVersion dv = om.readValue(
                 new FileInputStream("/tmp/" + filename),
                 DistributorVersion.class);

@@ -17,8 +17,6 @@ package org.candlepin.config;
 import org.candlepin.common.config.MapConfiguration;
 
 import java.net.URISyntaxException;
-import java.util.Map;
-import java.util.TreeMap;
 
 /**
  * CandlepinCommonTestConfig
@@ -26,13 +24,11 @@ import java.util.TreeMap;
 public class CandlepinCommonTestConfig extends MapConfiguration {
 
     public CandlepinCommonTestConfig() {
-        super();
+        super(ConfigProperties.DEFAULT_PROPERTIES);
         loadProperties();
     }
 
-    protected Map<String, String> loadProperties() {
-        Map<String, String> properties = new TreeMap<String, String>();
-
+    protected void loadProperties() {
         // set ssl cert/key path for testing
         try {
             String cert = getClass().getResource("candlepin-ca.crt").toURI().getPath();
@@ -42,13 +38,12 @@ public class CandlepinCommonTestConfig extends MapConfiguration {
             setProperty(ConfigProperties.CA_CERT_UPSTREAM,
                 "target/test/resources/certs/upstream");
             setProperty(ConfigProperties.CA_KEY, key);
+            setProperty(ConfigProperties.CA_KEY_PASSWORD, "password");
             setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp");
             setProperty(ConfigProperties.HORNETQ_LARGE_MSG_SIZE, "0");
         }
         catch (URISyntaxException e) {
             throw new RuntimeException("Error loading cert/key resources!", e);
         }
-
-        return properties;
     }
 }

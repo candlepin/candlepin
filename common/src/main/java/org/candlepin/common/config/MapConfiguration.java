@@ -141,6 +141,11 @@ public class MapConfiguration extends AbstractConfiguration {
 
     @Override
     public Properties getNamespaceProperties(String prefix, Map<String, Object> defaults) {
+        // TODO: HACK HACK HACK
+        if (prefix.startsWith(JPAConfigParser.JPA_CONFIG_PREFIX)) {
+            return new JPAConfigParser().parseConfig(configMap);
+        }
+
         Properties p = new Properties();
 
         if (defaults != null) {

@@ -37,7 +37,7 @@ abstract class ConfigurationParser {
      * @param inputConfiguration Configuration to be converted.
      * @return config as a Properties file
      */
-    public Properties parseConfig(Map<String, String> inputConfiguration) {
+    public Properties parseConfig(Map<String, Object> inputConfiguration) {
         Properties toReturn = new Properties();
         toReturn.putAll(stripPrefixFromConfigKeys(inputConfiguration));
         return toReturn;
@@ -50,10 +50,10 @@ abstract class ConfigurationParser {
      * @return config as a Properties object without the prefixes.
      */
     public Properties stripPrefixFromConfigKeys(
-        Map<String, String> inputConfiguration) {
+        Map<String, Object> inputConfiguration) {
         Properties toReturn = new Properties();
 
-        for (Entry<String, String> entry : inputConfiguration.entrySet()) {
+        for (Entry<String, Object> entry : inputConfiguration.entrySet()) {
             if (entry.getKey().startsWith(getPrefix())) {
                 toReturn.put(entry.getKey().substring(getPrefix().length() + 1),
                     entry.getValue());

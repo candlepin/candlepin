@@ -15,11 +15,13 @@
 package org.candlepin.pinsetter.core;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.quartz.JobKey.jobKey;
 
 import org.candlepin.CandlepinNonServletEnvironmentTestingModule;
 import org.candlepin.auth.Principal;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.guice.I18nProvider;
 import org.candlepin.guice.JPAInitializer;
 import org.candlepin.guice.PinsetterJobScoped;
@@ -56,9 +58,11 @@ public class PinsetterJobListenerDatabaseTest {
     protected Injector injector;
     protected UnitOfWork unitOfWork;
     private JobCurator curator;
+    private Configuration config;
 
     @Before
     public void init() {
+        config = mock(Configuration.class);
         TestModule testingModule = new TestModule();
         injector = Guice.createInjector(testingModule,
             new CandlepinNonServletEnvironmentTestingModule());
@@ -106,6 +110,7 @@ public class PinsetterJobListenerDatabaseTest {
 
         @Override
         protected void configure() {
+            bind(Configuration.class).toInstance(config);
             install(new JpaPersistModule("testing"));
             bind(I18n.class).toProvider(I18nProvider.class);
             bind(JPAInitializer.class).asEagerSingleton();

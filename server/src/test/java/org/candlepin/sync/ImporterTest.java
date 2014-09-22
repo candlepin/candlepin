@@ -89,7 +89,14 @@ public class ImporterTest {
 
     @Before
     public void init() throws URISyntaxException, IOException {
-        mapper = SyncUtils.getObjectMapper(new MapConfiguration(new HashMap<String, String>()));
+        mapper = SyncUtils.getObjectMapper(new MapConfiguration(
+                new HashMap<String, Object>() {
+
+                    {
+                        put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES,
+                                false);
+                    }
+                }));
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         config = new CandlepinCommonTestConfig();
         config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp");

@@ -14,6 +14,8 @@
  */
 package org.candlepin.guice;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atMost;
@@ -28,12 +30,14 @@ import org.candlepin.CandlepinNonServletEnvironmentTestingModule;
 import org.candlepin.audit.AMQPBusPublisher;
 import org.candlepin.audit.HornetqContextListener;
 import org.candlepin.common.config.Configuration;
+import org.candlepin.common.config.ConfigurationException;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.pinsetter.core.PinsetterContextListener;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Module;
+import com.google.inject.Stage;
 
 import org.jboss.resteasy.spi.Registry;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
@@ -57,6 +61,8 @@ public class CandlepinContextListenerTest {
     private AMQPBusPublisher buspublisher;
     private AMQPBusPubProvider busprovider;
     private ServletContextEvent evt;
+    private ServletContext ctx;
+    private VerifyConfigRead configRead;
 
     @Before
     public void init() {
@@ -65,11 +71,13 @@ public class CandlepinContextListenerTest {
         pinlistener = mock(PinsetterContextListener.class);
         buspublisher = mock(AMQPBusPublisher.class);
         busprovider = mock(AMQPBusPubProvider.class);
-        // for testing we override the getModules so we can
-        // insert our mock versions of listeners to verify
+        configRead = mock(VerifyConfigRead.class);
+
+        // for testing we override the getModules and readConfiguration methods
+        // so we can insert our mock versions of listeners to verify
         // they are getting invoked properly.
         listener = new CandlepinContextListener() {
-            protected List<Module> getModules() {
+            protected List<Module> getModules(ServletContext context) {
                 List<Module> modules = new LinkedList<Module>();
                 // tried simply overriding CandlepinModule
                 // but that caused it to read the local config
@@ -81,6 +89,13 @@ public class CandlepinContextListenerTest {
                 modules.add(new TestModule());
                 return modules;
             }
+
+            protected Configuration readConfiguration(ServletContext context)
+                throws ConfigurationException {
+
+                configRead.verify(context);
+                return config;
+            }
         };
     }
 
@@ -90,18 +105,9 @@ public class CandlepinContextListenerTest {
         listener.contextInitialized(evt);
         verify(hqlistener).contextInitialized(any(Injector.class));
         verify(pinlistener).contextInitialized();
-    }
-
-    private void prepareForInitialization() {
-        evt = mock(ServletContextEvent.class);
-        ServletContext ctx = mock(ServletContext.class);
-        Registry registry = mock(Registry.class);
-        ResteasyProviderFactory rpfactory = mock(ResteasyProviderFactory.class);
-        when(evt.getServletContext()).thenReturn(ctx);
-        when(ctx.getAttribute(eq(
-            Registry.class.getName()))).thenReturn(registry);
-        when(ctx.getAttribute(eq(
-            ResteasyProviderFactory.class.getName()))).thenReturn(rpfactory);
+        verify(ctx).setAttribute(
+                eq(CandlepinContextListener.CONFIGURATION_NAME), eq(config));
+        verify(configRead).verify(eq(ctx));
     }
 
     @Test
@@ -109,6 +115,7 @@ public class CandlepinContextListenerTest {
         prepareForInitialization();
         listener.contextInitialized(evt);
 
+        // ^^^
         // we actually have to call contextInitialized before we
         // can call contextDestroyed, otherwise the listener's
         // member variables will be null. So all the above is simply
@@ -116,9 +123,10 @@ public class CandlepinContextListenerTest {
         // proper thing.
 
         listener.contextDestroyed(evt);
-        // make sure we only call it 4 times all from init code
-        verify(evt, atMost(4)).getServletContext();
-        verifyNoMoreInteractions(evt); // destroy shoudln't use it
+
+        // make sure we only call it 5 times all from init code
+        verify(evt, atMost(5)).getServletContext();
+        verifyNoMoreInteractions(evt); // destroy shouldn't use it
         verify(hqlistener).contextDestroyed();
         verify(pinlistener).contextDestroyed();
         verifyZeroInteractions(busprovider);
@@ -127,14 +135,65 @@ public class CandlepinContextListenerTest {
 
     @Test
     public void ensureAMQPClosedProperly() {
-        when(config.getBoolean(eq(ConfigProperties.AMQP_INTEGRATION_ENABLED))).thenReturn(true);
+        when(config.getBoolean(
+                eq(ConfigProperties.AMQP_INTEGRATION_ENABLED))).thenReturn(true);
         prepareForInitialization();
         listener.contextInitialized(evt);
+
+        // ^^^
+        // we actually have to call contextInitialized before we
+        // can call contextDestroyed, otherwise the listener's
+        // member variables will be null. So all the above is simply
+        // to setup the test to validate the destruction is doing the
+        // proper thing.
 
         // test & verify
         listener.contextDestroyed(evt);
         verify(busprovider).close();
         verify(buspublisher).close();
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void tharSheBlows() {
+        listener = new CandlepinContextListener() {
+            protected List<Module> getModules(ServletContext context) {
+                return new LinkedList<Module>();
+            }
+
+            protected Configuration readConfiguration(ServletContext context)
+                throws ConfigurationException {
+
+                throw new ConfigurationException("the ship is sinking");
+            }
+        };
+        prepareForInitialization();
+        listener.contextInitialized(evt);
+    }
+
+    @Test
+    public void exitStageLeft() {
+        assertEquals(Stage.PRODUCTION, listener.getStage(ctx));
+    }
+
+    @Test
+    public void testInjector() {
+        Injector injector = listener.getInjector(Stage.PRODUCTION, listener.getModules(null));
+        assertNotNull(injector);
+        PinsetterContextListener pcl = injector.getInstance(PinsetterContextListener.class);
+        assertNotNull(pcl);
+        assertEquals(pinlistener, pcl);
+    }
+
+    private void prepareForInitialization() {
+        evt = mock(ServletContextEvent.class);
+        ctx = mock(ServletContext.class);
+        Registry registry = mock(Registry.class);
+        ResteasyProviderFactory rpfactory = mock(ResteasyProviderFactory.class);
+        when(evt.getServletContext()).thenReturn(ctx);
+        when(ctx.getAttribute(eq(
+            Registry.class.getName()))).thenReturn(registry);
+        when(ctx.getAttribute(eq(
+            ResteasyProviderFactory.class.getName()))).thenReturn(rpfactory);
     }
 
     public class TestModule extends AbstractModule {
@@ -163,5 +222,14 @@ public class CandlepinContextListenerTest {
         protected void bindConfig() {
             bind(Configuration.class).toInstance(config);
         }
+    }
+
+    /**
+     * VerifyConfigRead fake interface to use with mockito's mock and verify
+     * methods to make sure the correct var was passed in and we called a
+     * method we expected.
+     */
+    interface VerifyConfigRead {
+        void verify(ServletContext ctx);
     }
 }

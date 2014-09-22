@@ -22,6 +22,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.common.config.MapConfiguration;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Product;
@@ -53,7 +54,14 @@ public class ProductImporterTest {
     private ContentCurator contentCuratorMock;
     @Before
     public void setUp() throws IOException {
-        mapper = SyncUtils.getObjectMapper(new MapConfiguration(new HashMap<String, String>()));
+        mapper = SyncUtils.getObjectMapper(new MapConfiguration(
+                new HashMap<String, Object>() {
+
+                    {
+                        put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES,
+                                false);
+                    }
+                }));
         productCuratorMock = mock(ProductCurator.class);
         contentCuratorMock = mock(ContentCurator.class);
         importer = new ProductImporter(productCuratorMock, contentCuratorMock);

@@ -42,11 +42,11 @@ public abstract class EncryptedValueConfigurationParser extends ConfigurationPar
 
     private String passphrase = null;
 
-    public EncryptedValueConfigurationParser(Configuration config) {
+    public EncryptedValueConfigurationParser() {
         super();
+    }
 
-        String secretFile = config.getString("candlepin.passphrase.path");
-
+    protected void readSecretFile(String secretFile) {
         log.debug("reading secret file: " +  secretFile);
 
         BufferedReader in = null;
@@ -86,7 +86,10 @@ public abstract class EncryptedValueConfigurationParser extends ConfigurationPar
         log.debug("Using katello-passwd passphrase: " + passphrase);
     }
 
-    public Properties parseConfig(Map<String, String> inputConfiguration) {
+    public Properties parseConfig(Map<String, Object> inputConfiguration) {
+
+        readSecretFile((String) inputConfiguration.get("candlepin.passphrase.path"));
+
         // pull out properties that we know might be crypted passwords
         // unencrypt them, and update the properties with the new versions
         // do this here so DbBasicAuthConfigParser and JPAConfigParser

@@ -20,10 +20,13 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.MapConfiguration;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -36,6 +39,17 @@ import java.util.HashSet;
  * ConsumerTypeImporterTest
  */
 public class ConsumerTypeImporterTest {
+    private Configuration config;
+
+    @Before
+    public void init() {
+        config = new MapConfiguration(new HashMap<String, Object>() {
+
+            {
+                put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, false);
+            }
+        });
+    }
 
     @Test
     public void testDeserialize() throws IOException {
@@ -44,7 +58,7 @@ public class ConsumerTypeImporterTest {
         Reader reader = new StringReader(consumerTypeString);
 
         ConsumerType consumerType = new ConsumerTypeImporter(null).createObject(
-            SyncUtils.getObjectMapper(new MapConfiguration(new HashMap<String, String>())), reader);
+            SyncUtils.getObjectMapper(config), reader);
 
         assertEquals("prosumer", consumerType.getLabel());
     }
@@ -56,7 +70,7 @@ public class ConsumerTypeImporterTest {
         Reader reader = new StringReader(consumerTypeString);
 
         ConsumerType consumerType = new ConsumerTypeImporter(null).createObject(
-            SyncUtils.getObjectMapper(new MapConfiguration(new HashMap<String, String>())), reader);
+            SyncUtils.getObjectMapper(config), reader);
 
         assertEquals(null, consumerType.getId());
     }

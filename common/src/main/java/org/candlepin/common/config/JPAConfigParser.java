@@ -30,8 +30,8 @@ class JPAConfigParser extends EncryptedValueConfigurationParser {
     /**
      * @param config
      */
-    public JPAConfigParser(Configuration config) {
-        super(config);
+    public JPAConfigParser() {
+        super();
     }
 
     public String getPrefix() {

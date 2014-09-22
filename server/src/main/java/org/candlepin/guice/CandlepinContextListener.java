@@ -87,38 +87,14 @@ public class CandlepinContextListener extends CandlepinGuiceResteasyBootstrap {
     // Currently only needed for access to the Configuration.
     private ServletContext servletContext;
 
-//    @Override
-//    public void contextInitialized(final ServletContextEvent event) {
-//        super.contextInitialized(event);
-//
-//        // this is pulled almost verbatim from the superclass - if only they
-//        // had made their internal getModules() method protected, then this
-//        // would not be necessary.
-//        final ServletContext context = event.getServletContext();
-//        final Registry registry = (Registry) context.getAttribute(
-//                Registry.class.getName());
-//        final ResteasyProviderFactory providerFactory =
-//                (ResteasyProviderFactory) context.getAttribute(
-//                    ResteasyProviderFactory.class.getName());
-//
-//        injector = Guice.createInjector(getModules());
-//        processInjector(registry, providerFactory, injector);
-//
-//        insertValidationEventListeners(injector);
-//        hornetqListener = injector.getInstance(HornetqContextListener.class);
-//        hornetqListener.contextInitialized(injector);
-//        pinsetterListener = injector.getInstance(PinsetterContextListener.class);
-//        pinsetterListener.contextInitialized();
-//    }
-
     @Override
     public void contextInitialized(ServletContextEvent sce) {
-        log.info("Gutterball initializing context.");
+        log.info("Candlepin initializing context.");
         I18nManager.getInstance().setDefaultLocale(Locale.US);
         servletContext = sce.getServletContext();
 
         try {
-            log.info("Gutterball reading configuration.");
+            log.info("Candlepin reading configuration.");
             config = readConfiguration(servletContext);
         }
         catch (ConfigurationException e) {
@@ -188,16 +164,12 @@ public class CandlepinContextListener extends CandlepinGuiceResteasyBootstrap {
 
         log.debug("Loading default configuration values");
 
-        log.debug("Default config: " + defaults);
         // merge the defaults with the system configuration. ORDER MATTERS.
         // system config must be read FIRST otherwise settings won't be applied.
 
         // merge does NOT affect systemConfig, it just returns a new object
         // not sure I like that.
-        Configuration merged = systemConfig.merge(defaults);
-
-        log.debug("Configuration: " + merged);
-        return merged;
+        return systemConfig.merge(defaults);
     }
 
     @Override
@@ -211,23 +183,6 @@ public class CandlepinContextListener extends CandlepinGuiceResteasyBootstrap {
         return Stage.PRODUCTION;
     }
 
-//    /**
-//     * Returns a list of Guice modules to initialize.
-//     * @return a list of Guice modules to initialize.
-//     */
-//    protected List<Module> getModules() {
-//        List<Module> modules = new LinkedList<Module>();
-//
-//        modules.add(Modules.override(new DefaultConfig()).with(
-//                new CustomizableModules().load()));
-//
-//        modules.add(new CandlepinModule());
-//
-//        modules.add(new CandlepinFilterModule());
-//
-//        return modules;
-//    }
-
     /**
      * Returns a list of Guice modules to initialize.
      * @return a list of Guice modules to initialize.
@@ -237,7 +192,7 @@ public class CandlepinContextListener extends CandlepinGuiceResteasyBootstrap {
         List<Module> modules = new LinkedList<Module>();
 
         modules.add(Modules.override(new DefaultConfig()).with(
-                new CustomizableModules().load()));
+                new CustomizableModules().load(config)));
 
         modules.add(new AbstractModule() {
 
@@ -276,30 +231,6 @@ public class CandlepinContextListener extends CandlepinGuiceResteasyBootstrap {
         registry.getEventListenerGroup(EventType.PRE_DELETE).appendListener(listenerProvider.get());
     }
 
-//    /**
-//     * This is what RESTEasy's ModuleProcessor does, but we need the injector
-//     * afterwards.
-//     * @param inj - guice injector
-//     */
-//    @SuppressWarnings("rawtypes")
-//    private void processInjector(Registry registry,
-//        ResteasyProviderFactory providerFactory, Injector inj) {
-//        for (final Binding<?> binding : inj.getBindings().values()) {
-//            final Type type = binding.getKey().getTypeLiteral().getType();
-//            if (type instanceof Class) {
-//                final Class<?> beanClass = (Class) type;
-//                if (GetRestful.isRootResource(beanClass)) {
-//                    final ResourceFactory resourceFactory =
-//                        new GuiceResourceFactory(binding.getProvider(), beanClass);
-//                    registry.addResourceFactory(resourceFactory);
-//                }
-//                if (beanClass.isAnnotationPresent(Provider.class)) {
-//                    log.debug("register:  " + beanClass.getName());
-//                    providerFactory.registerProviderInstance(binding.getProvider().get());
-//                }
-//            }
-//        }
-//    }
     protected void processInjector(ServletContext context, Injector inj) {
         injector = inj;
         super.processInjector(context, injector);
