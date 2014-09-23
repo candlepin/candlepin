@@ -49,7 +49,10 @@ public class EventCurator extends AbstractHibernateCurator<Event> {
      */
     private Criteria createEventCriteria(int limit) {
         return currentSession().createCriteria(Event.class)
-            .setMaxResults(limit).addOrder(Order.desc("timestamp"));
+            .setMaxResults(limit).addOrder(Order.desc("timestamp"))
+            .addOrder(Order.asc("target"))
+            .addOrder(Order.asc("type"))
+            .addOrder(Order.asc("entityId"));
     }
 
     @SuppressWarnings("unchecked")
