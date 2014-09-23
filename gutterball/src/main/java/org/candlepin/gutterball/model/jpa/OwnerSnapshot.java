@@ -17,6 +17,7 @@ import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
@@ -31,6 +32,7 @@ public class OwnerSnapshot {
     @NotNull
     private String id;
 
+    @XmlTransient
     @OneToOne(fetch = FetchType.LAZY)
     @ForeignKey(name = "fk_consumer_snapshot")
     @JoinColumn(nullable = false)
@@ -65,6 +67,7 @@ public class OwnerSnapshot {
         this.id = id;
     }
 
+    @XmlTransient
     public ConsumerSnapshot getConsumerSnapshot() {
         return consumerSnapshot;
     }
