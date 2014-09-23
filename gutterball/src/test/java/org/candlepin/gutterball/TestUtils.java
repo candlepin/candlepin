@@ -81,7 +81,7 @@ public class TestUtils {
     public static List<String> getUuidsFromSnapshots(List<ComplianceSnapshot> snaps) {
         List<String> uuids = new ArrayList<String>();
         for (ComplianceSnapshot cs : snaps) {
-            uuids.add(cs.getConsumerSnapshot().getUuid());
+            uuids.add(cs.getConsumer().getUuid());
         }
         return uuids;
     }

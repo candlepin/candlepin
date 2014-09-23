@@ -21,6 +21,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
+
 /**
  * ConsumerTrendReportResult map of consumer uuid -> collection of compliance data
  */
@@ -42,8 +45,13 @@ public class ConsumerTrendReportResult implements ReportResult {
         return results.get(uuid);
     }
 
+    @XmlTransient
     public Set<String> getUuids() {
         return results.keySet();
+    }
+
+    public Map<String, Set<ComplianceSnapshot>> getResults() {
+        return results;
     }
 
 }
