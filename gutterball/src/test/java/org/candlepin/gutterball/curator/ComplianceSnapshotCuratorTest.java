@@ -104,9 +104,9 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
 
 
         for (ComplianceSnapshot cs : snaps) {
-            String uuid = cs.getConsumerSnapshot().getUuid();
+            String uuid = cs.getConsumer().getUuid();
             assertEquals("Invalid status found for " + uuid,
-                    expectedStatusDates.get(uuid), cs.getComplianceStatusSnapshot().getDate());
+                    expectedStatusDates.get(uuid), cs.getStatus().getDate());
         }
 
     }
@@ -135,8 +135,8 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         assertEquals(1, snaps.size());
         ComplianceSnapshot snap = snaps.get(0);
 
-        ConsumerSnapshot consumerSnapshot = snap.getConsumerSnapshot();
-        assertEquals(expectedOwner, consumerSnapshot.getOwnerSnapshot().getKey());
+        ConsumerSnapshot consumerSnapshot = snap.getConsumer();
+        assertEquals(expectedOwner, consumerSnapshot.getOwner().getKey());
         assertEquals("c3", consumerSnapshot.getUuid());
     }
 
@@ -148,7 +148,7 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
     @Test
     public void assertLatestStatusIsReturnedForConsumer() {
         ComplianceSnapshot snap = performGetByIdTest();
-        ComplianceStatusSnapshot status = snap.getComplianceStatusSnapshot();
+        ComplianceStatusSnapshot status = snap.getStatus();
         assertEquals(snap.getDate(), status.getDate());
 
         Calendar cal = Calendar.getInstance();
@@ -166,7 +166,7 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
                 null, null, Arrays.asList(expectedStatus));
         assertEquals(1, snaps.size());
         ComplianceSnapshot snap = snaps.get(0);
-        assertEquals("c3", snap.getConsumerSnapshot().getUuid());
+        assertEquals("c3", snap.getConsumer().getUuid());
     }
 
     @Test
@@ -234,7 +234,7 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         // C1 should get filtered out since it was deleted before the target date.
         assertEquals(1, snaps.size());
         ComplianceSnapshot snap = snaps.get(0);
-        assertEquals("c4", snap.getConsumerSnapshot().getUuid());
+        assertEquals("c4", snap.getConsumer().getUuid());
         return snap;
     }
 
@@ -256,7 +256,7 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         // Make sure that we find the correct counts.
         HashMap<String, Integer> processed = new HashMap<String, Integer>();
         for (ComplianceSnapshot cs : results) {
-            String uuid = cs.getConsumerSnapshot().getUuid();
+            String uuid = cs.getConsumer().getUuid();
             if (!processed.containsKey(uuid)) {
                 processed.put(uuid, 1);
             }

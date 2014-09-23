@@ -43,27 +43,27 @@ public class ComplianceSnapshot {
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
     @NotNull
-    private ConsumerSnapshot consumerSnapshot;
+    private ConsumerSnapshot consumer;
 
     @OneToOne(mappedBy = "complianceSnapshot", targetEntity = ComplianceStatusSnapshot.class)
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
     @NotNull
-    private ComplianceStatusSnapshot complianceStatusSnapshot;
+    private ComplianceStatusSnapshot status;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "complianceSnapshot", fetch = FetchType.LAZY)
-    private Set<EntitlementSnapshot> entitlementSnapshots;
+    private Set<EntitlementSnapshot> entitlements;
 
     public ComplianceSnapshot() {
-        this.entitlementSnapshots = new HashSet<EntitlementSnapshot>();
+        this.entitlements = new HashSet<EntitlementSnapshot>();
     }
 
     public ComplianceSnapshot(Date date, ConsumerSnapshot consumerSnapshot,
             ComplianceStatusSnapshot statusSnapshot) {
         this();
         this.date = date;
-        setConsumerSnapshot(consumerSnapshot);
-        setComplianceStatusSnapshot(statusSnapshot);
+        setConsumer(consumerSnapshot);
+        setStatus(statusSnapshot);
     }
 
     public String getId() {
@@ -82,41 +82,41 @@ public class ComplianceSnapshot {
         this.date = date;
     }
 
-    public ConsumerSnapshot getConsumerSnapshot() {
-        return consumerSnapshot;
+    public ConsumerSnapshot getConsumer() {
+        return consumer;
     }
 
-    public void setConsumerSnapshot(ConsumerSnapshot consumerSnapshot) {
-        this.consumerSnapshot = consumerSnapshot;
-        this.consumerSnapshot.setComplianceSnapshot(this);
+    public void setConsumer(ConsumerSnapshot consumerSnapshot) {
+        this.consumer = consumerSnapshot;
+        this.consumer.setComplianceSnapshot(this);
     }
 
-    public ComplianceStatusSnapshot getComplianceStatusSnapshot() {
-        return complianceStatusSnapshot;
+    public ComplianceStatusSnapshot getStatus() {
+        return status;
     }
 
-    public void setComplianceStatusSnapshot(
+    public void setStatus(
             ComplianceStatusSnapshot complianceStatusSnapshot) {
-        this.complianceStatusSnapshot = complianceStatusSnapshot;
-        this.complianceStatusSnapshot.setComplianceSnapshot(this);
+        this.status = complianceStatusSnapshot;
+        this.status.setComplianceSnapshot(this);
     }
 
-    public Set<EntitlementSnapshot> getEntitlementSnapshots() {
-        return entitlementSnapshots;
+    public Set<EntitlementSnapshot> getEntitlements() {
+        return entitlements;
     }
 
-    public void setEntitlementSnapshots(
+    public void setEntitlements(
             Set<EntitlementSnapshot> entitlementSnapshots) {
-        this.entitlementSnapshots = entitlementSnapshots;
+        this.entitlements = entitlementSnapshots;
 
-        for (EntitlementSnapshot snapshot : this.entitlementSnapshots) {
+        for (EntitlementSnapshot snapshot : this.entitlements) {
             snapshot.setComplianceSnapshot(this);
         }
     }
 
     public void addEntitlementSnapshot(EntitlementSnapshot snapshot) {
         snapshot.setComplianceSnapshot(this);
-        this.entitlementSnapshots.add(snapshot);
+        this.entitlements.add(snapshot);
     }
 
 }

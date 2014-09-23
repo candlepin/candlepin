@@ -111,7 +111,7 @@ public class ConsumerTrendReport extends Report<ConsumerTrendReportResult> {
         Set<ComplianceSnapshot> forTimeSpan = complianceSnapshotCurator.getComplianceForTimespan(
                 startDate, endDate, consumerIds, ownerFilters);
         for (ComplianceSnapshot cs : forTimeSpan) {
-            result.add(cs.getConsumerSnapshot().getUuid(), cs);
+            result.add(cs.getConsumer().getUuid(), cs);
         }
         return result;
     }

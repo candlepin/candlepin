@@ -50,14 +50,14 @@ public class ConsumerSnapshot {
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
     @NotNull
-    private OwnerSnapshot ownerSnapshot;
+    private OwnerSnapshot owner;
 
     public ConsumerSnapshot() {
     }
 
     public ConsumerSnapshot(String uuid, OwnerSnapshot ownerSnapshot) {
         this.uuid = uuid;
-        setOwnerSnapshot(ownerSnapshot);
+        setOwner(ownerSnapshot);
     }
 
     public String getId() {
@@ -85,13 +85,13 @@ public class ConsumerSnapshot {
         this.complianceSnapshot = complianceSnapshot;
     }
 
-    public OwnerSnapshot getOwnerSnapshot() {
-        return ownerSnapshot;
+    public OwnerSnapshot getOwner() {
+        return owner;
     }
 
-    public void setOwnerSnapshot(OwnerSnapshot ownerSnapshot) {
-        this.ownerSnapshot = ownerSnapshot;
-        this.ownerSnapshot.setConsumerSnapshot(this);
+    public void setOwner(OwnerSnapshot ownerSnapshot) {
+        this.owner = ownerSnapshot;
+        this.owner.setConsumerSnapshot(this);
     }
 
 }

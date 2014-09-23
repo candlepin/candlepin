@@ -13,7 +13,6 @@ import org.hibernate.criterion.Subqueries;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -40,11 +39,12 @@ public class ComplianceSnapshotCurator extends BaseCurator<ComplianceSnapshot> {
         }
 
         DetachedCriteria mainQuery = DetachedCriteria.forClass(ComplianceSnapshot.class);
-        mainQuery.createAlias("consumerSnapshot", "c");
+        mainQuery.createAlias("consumer", "c");
+        mainQuery.add(Restrictions.in("c.uuid", activeConsumers));
 
         if (ownerFilters != null && !ownerFilters.isEmpty()) {
-            mainQuery.createAlias("c.ownerSnapshot", "os");
-            mainQuery.add(Restrictions.in("os.key", ownerFilters));
+            mainQuery.createAlias("c.owner", "o");
+            mainQuery.add(Restrictions.in("o.key", ownerFilters));
         }
 
         Date toCheck = targetDate == null ? new Date() : targetDate;
@@ -56,14 +56,16 @@ public class ComplianceSnapshotCurator extends BaseCurator<ComplianceSnapshot> {
                 .add(Projections.groupProperty("c.uuid"))
         );
 
+        mainQuery.getExecutableCriteria(currentSession()).list();
+
         // Post query filter on Status.
         Criteria postFilter = currentSession().createCriteria(ComplianceSnapshot.class)
-            .createAlias("consumerSnapshot", "consumer")
-            .add(Subqueries.propertiesIn(new String[] {"date", "consumer.uuid"}, mainQuery));
+            .createAlias("consumer", "cs")
+            .add(Subqueries.propertiesIn(new String[] {"date", "cs.uuid"}, mainQuery));
 
         if (statusFilters != null && !statusFilters.isEmpty()) {
-            postFilter.createAlias("complianceStatusSnapshot", "status");
-            postFilter.add(Restrictions.in("status.status", statusFilters));
+            postFilter.createAlias("status", "stat");
+            postFilter.add(Restrictions.in("stat.status", statusFilters));
         }
 
         return postFilter.list();
@@ -81,15 +83,15 @@ public class ComplianceSnapshotCurator extends BaseCurator<ComplianceSnapshot> {
         }
 
         Criteria mainQuery = currentSession().createCriteria(ComplianceSnapshot.class);
-        mainQuery.createAlias("consumerSnapshot", "c");
+        mainQuery.createAlias("consumer", "c");
 
         if (consumerIds != null && !consumerIds.isEmpty()) {
             mainQuery.add(Restrictions.in("c.uuid", consumerIds));
         }
 
         if (owners != null && !owners.isEmpty()) {
-            mainQuery.createAlias("c.ownerSnapshot", "os");
-            mainQuery.add(Restrictions.in("os.key", owners));
+            mainQuery.createAlias("c.owner", "o");
+            mainQuery.add(Restrictions.in("o.key", owners));
         }
 
         if (startDate != null) {
