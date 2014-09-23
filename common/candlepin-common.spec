@@ -21,7 +21,7 @@
 Name: %{parent_proj}-common
 Summary: Common code for Candlepin and related projects
 License: GPLv2
-Version: 1.0.6
+Version: 1.0.7
 Release: 1%{?dist}
 URL: http://www.candlepinproject.org
 Source: %{name}-%{version}.tar.gz
@@ -33,7 +33,7 @@ BuildArch: noarch
 BuildRequires: java-devel >= 0:1.6.0
 BuildRequires: ant >= 0:1.7.0
 BuildRequires: gettext
-%if 0%{?rhel} < 7
+%if 0%{?rhel} && 0%{?rhel} < 7
 BuildRequires: ant-nodeps >= 0:1.7.0
 %endif
 
@@ -167,6 +167,12 @@ rm -rf %{_tmppath}/distlibdir
 %{_datadir}/%{parent_proj}/gutterball/lib/%{name}.jar
 
 %changelog
+* Fri Sep 12 2014 jesus m. rodriguez <jesusr@redhat.com> 1.0.7-1
+- rhel not defined on fedora (jesusr@redhat.com)
+- Updated translations. (dgoodwin@redhat.com)
+- keep da_popo alive. It's part of our history. (jesusr@redhat.com)
+- Translations on Gutterball and Common (wpoteat@redhat.com)
+
 * Wed Sep 10 2014 jesus m. rodriguez <jesusr@redhat.com> 1.0.6-1
 - Revert "remove mkdir" (jesusr@redhat.com)
 

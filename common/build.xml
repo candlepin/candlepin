@@ -88,8 +88,7 @@
     </apply>
   </target>
 
-  <!-- target name="init" depends="setvr, da_popo" / -->
-  <target name="init" depends="setvr" />
+  <target name="init" depends="setvr, da_popo" />
 
   <target name="compile" depends="init">
     <mkdir dir="${target.dir}/classes" />

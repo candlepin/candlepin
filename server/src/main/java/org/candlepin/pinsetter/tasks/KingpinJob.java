@@ -14,10 +14,12 @@
  */
 package org.candlepin.pinsetter.tasks;
 
-import static org.quartz.impl.matchers.NameMatcher.*;
+import static org.quartz.impl.matchers.NameMatcher.jobNameEquals;
 
+import org.candlepin.audit.EventSink;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.guice.PinsetterJobScoped;
 import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.PinsetterJobListener;
 import org.candlepin.pinsetter.core.model.JobStatus;
@@ -36,6 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
+import javax.inject.Provider;
 import javax.persistence.EntityExistsException;
 import javax.persistence.PersistenceException;
 
@@ -45,11 +48,14 @@ import javax.persistence.PersistenceException;
  * Quartz Job type gives us more freedom to define behavior.
  * Every candlepin job must extend KingpinJob
  */
+@PinsetterJobScoped
 public abstract class KingpinJob implements Job {
 
     private static Logger log = LoggerFactory.getLogger(KingpinJob.class);
     @Inject protected UnitOfWork unitOfWork;
     @Inject protected Config config;
+    @Inject private Provider<EventSink> eventSinkProvider;
+
     protected static String prefix = "job";
 
     @Override
@@ -72,6 +78,9 @@ public abstract class KingpinJob implements Job {
         boolean startedUow = startUnitOfWork();
         try {
             toExecute(context);
+            if (eventSinkProvider != null) {
+                eventSinkProvider.get().sendEvents();
+            }
         }
         catch (PersistenceException e) {
             // Multiple refreshpools running at once can cause the following:
@@ -111,9 +120,8 @@ public abstract class KingpinJob implements Job {
      * @param context
      * @throws JobExecutionException if there's a problem executing the job
      */
-    public void toExecute(JobExecutionContext context)
-        throws JobExecutionException {
-    }
+    public abstract void toExecute(JobExecutionContext context)
+        throws JobExecutionException;
 
     public static JobStatus scheduleJob(JobCurator jobCurator,
             Scheduler scheduler, JobDetail detail,

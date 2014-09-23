@@ -45,7 +45,11 @@ public class EventSinkForTesting implements EventSink {
     }
 
     @Override
-    public void sendEvent(Event event) {
+    public void queueEvent(Event event) {
+    }
+
+    @Override
+    public void sendEvents() {
     }
 
     @Override

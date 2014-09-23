@@ -351,7 +351,7 @@ public class CandlepinPoolManager implements PoolManager {
             Event event = poolEvents.get(existingPool.getId())
                     .setNewEntity(existingPool)
                     .buildEvent();
-            sink.sendEvent(event);
+            sink.queueEvent(event);
         }
 
         return entitlementsToRegen;
@@ -994,7 +994,7 @@ public class CandlepinPoolManager implements PoolManager {
             }
 
             // send entitlement changed event.
-            this.sink.sendEvent(this.eventFactory.entitlementChanged(e));
+            this.sink.queueEvent(this.eventFactory.entitlementChanged(e));
             if (log.isDebugEnabled()) {
                 log.debug("Generated entitlementCertificate: #" + generated.getId());
             }
@@ -1113,7 +1113,7 @@ public class CandlepinPoolManager implements PoolManager {
             complianceRules.getStatus(consumer);
         }
 
-        sink.sendEvent(event);
+        sink.queueEvent(event);
     }
 
     @Override
@@ -1162,7 +1162,7 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         poolCurator.delete(pool);
-        sink.sendEvent(event);
+        sink.queueEvent(event);
     }
 
     /**

@@ -27,8 +27,10 @@ import org.candlepin.guice.CandlepinSingletonScope;
 import org.candlepin.guice.CandlepinSingletonScoped;
 import org.candlepin.guice.HttpMethodMatcher;
 import org.candlepin.guice.I18nProvider;
+import org.candlepin.guice.PinsetterJobScoped;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.guice.ScriptEngineProvider;
+import org.candlepin.guice.SimpleScope;
 import org.candlepin.guice.TestPrincipalProvider;
 import org.candlepin.guice.ValidationListenerProvider;
 import org.candlepin.hibernate.CandlepinMessageInterpolator;
@@ -166,6 +168,11 @@ public class CandlepinCommonTestingModule extends CandlepinModule {
 
         bind(Function.class).annotatedWith(Names.named("endDateGenerator"))
             .to(ExpiryDateFunction.class).in(Singleton.class);
+
+        SimpleScope pinsetterJobScope = new SimpleScope();
+        bindScope(PinsetterJobScoped.class, pinsetterJobScope);
+        bind(SimpleScope.class).annotatedWith(Names.named("PinsetterJobScope"))
+            .toInstance(pinsetterJobScope);
     }
 
     public TestingInterceptor securityInterceptor() {

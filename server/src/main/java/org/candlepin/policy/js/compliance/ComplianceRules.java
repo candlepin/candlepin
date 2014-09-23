@@ -25,6 +25,7 @@ import org.candlepin.policy.js.RuleExecutionException;
 import org.candlepin.policy.js.RulesObjectMapper;
 
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,18 +45,18 @@ public class ComplianceRules {
     private RulesObjectMapper mapper;
     private static Logger log = LoggerFactory.getLogger(ComplianceRules.class);
     private StatusReasonMessageGenerator generator;
-    private EventSink eventSink;
+    private Provider<EventSink> eventSinkProvider;
     // Use the curator to update consumer entitlement status every time we run compliance (with null date)
     private ConsumerCurator consumerCurator;
 
     @Inject
     public ComplianceRules(JsRunner jsRules, EntitlementCurator entCurator,
-        StatusReasonMessageGenerator generator, EventSink eventSink,
+        StatusReasonMessageGenerator generator, Provider<EventSink> eventSinkProvider,
         ConsumerCurator consumerCurator) {
         this.entCurator = entCurator;
         this.jsRules = jsRules;
         this.generator = generator;
-        this.eventSink = eventSink;
+        this.eventSinkProvider = eventSinkProvider;
         this.consumerCurator = consumerCurator;
 
         mapper = RulesObjectMapper.instance();
@@ -143,7 +144,7 @@ public class ComplianceRules {
                         consumerCurator.update(c);
                     }
                 }
-                eventSink.emitCompliance(c, c.getEntitlements(), result);
+                eventSinkProvider.get().emitCompliance(c, c.getEntitlements(), result);
             }
             return result;
         }

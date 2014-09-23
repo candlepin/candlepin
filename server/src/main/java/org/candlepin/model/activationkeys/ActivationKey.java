@@ -70,6 +70,10 @@ public class ActivationKey extends AbstractHibernateObject implements Owned, Nam
     @NotNull
     private String name;
 
+    @Column(nullable = true)
+    @Size(max = 255)
+    private String description;
+
     @ManyToOne
     @ForeignKey(name = "fk_activation_key_owner")
     @JoinColumn(nullable = false)
@@ -102,6 +106,12 @@ public class ActivationKey extends AbstractHibernateObject implements Owned, Nam
     public ActivationKey(String name, Owner owner) {
         this.name = name;
         this.owner = owner;
+    }
+
+    public ActivationKey(String name, Owner owner, String description) {
+        this.name = name;
+        this.owner = owner;
+        this.description = description;
     }
 
     public String getId() {
@@ -242,6 +252,20 @@ public class ActivationKey extends AbstractHibernateObject implements Owned, Nam
      */
     public void setServiceLevel(String serviceLevel) {
         this.serviceLevel = serviceLevel;
+    }
+
+    /**
+     * @return the description
+     */
+    public String getDescription() {
+        return description;
+    }
+
+    /**
+     * @param description
+     */
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     private void addOrUpdate(ActivationKeyContentOverride override) {

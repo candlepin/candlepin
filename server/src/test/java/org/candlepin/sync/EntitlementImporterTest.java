@@ -194,7 +194,7 @@ public class EntitlementImporterTest {
         verify(curator, never()).merge(testSub1);
         verify(curator).delete(testSub1);
         verify(sink, atLeastOnce()).createSubscriptionDeleted(testSub1);
-        verify(sink, atLeastOnce()).sendEvent(any(Event.class));
+        verify(sink, atLeastOnce()).queueEvent(any(Event.class));
     }
 
     @Test

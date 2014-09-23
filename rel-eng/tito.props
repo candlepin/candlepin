@@ -7,7 +7,7 @@ disttag = .el6
 blacklist =
 
 [katello-thirdparty-candlepin-rhel7]
-disttag = .el6
+disttag = .el7
 blacklist =
 
 [katello-thirdparty-candlepin-fedora19]

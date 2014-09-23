@@ -14,7 +14,7 @@
  */
 package org.candlepin.resource.test;
 
-import static org.candlepin.test.TestUtil.*;
+import static org.candlepin.test.TestUtil.createIdCert;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
@@ -24,6 +24,7 @@ import org.candlepin.audit.Event.Type;
 import org.candlepin.audit.EventBuilder;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
+import org.candlepin.audit.EventSinkImpl;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.NoAuthPrincipal;
 import org.candlepin.auth.SubResource;
@@ -236,7 +237,7 @@ public class ConsumerResourceTest {
         IdentityCertServiceAdapter mockedIdSvc = Mockito
             .mock(IdentityCertServiceAdapter.class);
 
-        EventSink sink = Mockito.mock(EventSink.class);
+        EventSink sink = Mockito.mock(EventSinkImpl.class);
 
         Consumer consumer = createConsumer();
         consumer.setIdCert(createIdCert());
@@ -269,7 +270,7 @@ public class ConsumerResourceTest {
         IdentityCertServiceAdapter mockedIdSvc = Mockito
             .mock(IdentityCertServiceAdapter.class);
 
-        EventSink sink = Mockito.mock(EventSink.class);
+        EventSink sink = Mockito.mock(EventSinkImpl.class);
 
         SubscriptionServiceAdapter ssa = Mockito.mock(SubscriptionServiceAdapter.class);
         ComplianceRules rules = Mockito.mock(ComplianceRules.class);

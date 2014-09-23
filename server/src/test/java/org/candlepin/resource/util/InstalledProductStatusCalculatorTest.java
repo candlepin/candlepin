@@ -39,6 +39,8 @@ import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.compliance.StatusReasonMessageGenerator;
 import org.candlepin.util.Util;
 
+import com.google.inject.Provider;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -75,6 +77,7 @@ public class InstalledProductStatusCalculatorTest {
     @Mock private EntitlementCurator entCurator;
     @Mock private RulesCurator rulesCuratorMock;
     @Mock private EventSink eventSink;
+    @Mock private Provider<EventSink> eventSinkProvider;
     private JsRunnerProvider provider;
     private I18n i18n;
 
@@ -88,12 +91,14 @@ public class InstalledProductStatusCalculatorTest {
         Rules rules = new Rules(Util.readFile(is));
         when(rulesCuratorMock.getUpdated()).thenReturn(new Date());
         when(rulesCuratorMock.getRules()).thenReturn(rules);
+        when(eventSinkProvider.get()).thenReturn(eventSink);
         provider = new JsRunnerProvider(rulesCuratorMock);
         Locale locale = new Locale("en_US");
         i18n = I18nFactory.getI18n(getClass(), "org.candlepin.i18n.Messages", locale,
             I18nFactory.FALLBACK);
         compliance = new ComplianceRules(provider.get(),
-            entCurator, new StatusReasonMessageGenerator(i18n), eventSink, consumerCurator);
+            entCurator, new StatusReasonMessageGenerator(i18n), eventSinkProvider,
+            consumerCurator);
         owner = new Owner("test");
     }
 

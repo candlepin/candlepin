@@ -12,28 +12,18 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.pinsetter.core;
+package org.candlepin.guice;
 
-import org.candlepin.pinsetter.tasks.KingpinJob;
+import static java.lang.annotation.ElementType.*;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
+import com.google.inject.ScopeAnnotation;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
 /**
- * TestJob
- * @version $Rev$
+ * Items tagged with this annotation will be scoped to a PinsetterJob.
  */
-public class TestJob extends KingpinJob {
-
-    private boolean ran = false;
-
-    @Override
-    public void toExecute(JobExecutionContext context)
-        throws JobExecutionException {
-        ran = true;
-    }
-
-    public boolean verify() {
-        return ran;
-    }
-}
+@Target({ TYPE, METHOD }) @Retention(RUNTIME) @ScopeAnnotation
+public @interface PinsetterJobScoped {}

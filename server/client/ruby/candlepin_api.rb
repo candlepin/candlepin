@@ -988,6 +988,10 @@ class Candlepin
     get_text("/consumers/#{consumer_id}/atom")
   end
 
+  def list_owner_events(owner_key)
+    get("/owners/#{owner_key}/events")
+  end
+
   def list_events
     get '/events'
   end

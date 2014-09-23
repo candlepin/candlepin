@@ -146,6 +146,7 @@ public class HypervisorResource {
                 }
             }
             catch (Exception e) {
+                log.error("Hypervisor checkin failed", e);
                 result.failed(hostEntry.getKey(), e.getMessage());
             }
         }
