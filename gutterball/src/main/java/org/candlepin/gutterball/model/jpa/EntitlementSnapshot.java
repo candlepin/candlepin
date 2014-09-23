@@ -16,7 +16,9 @@ import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
+@XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "gb_entitlement_snapshot")
@@ -29,6 +31,7 @@ public class EntitlementSnapshot {
     @NotNull
     private String id;
 
+    @XmlTransient
     @OneToOne(fetch = FetchType.LAZY)
     @ForeignKey(name = "fk_compliance_snapshot")
     @JoinColumn(nullable = false)
@@ -54,6 +57,7 @@ public class EntitlementSnapshot {
         this.id = id;
     }
 
+    @XmlTransient
     public ComplianceSnapshot getComplianceSnapshot() {
         return complianceSnapshot;
     }

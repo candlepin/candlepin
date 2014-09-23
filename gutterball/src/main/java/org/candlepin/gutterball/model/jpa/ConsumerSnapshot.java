@@ -18,8 +18,9 @@ import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
-
+@XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "gb_consumer_snapshot")
@@ -37,6 +38,7 @@ public class ConsumerSnapshot {
     @NotNull
     private String uuid;
 
+    @XmlTransient
     @OneToOne(fetch = FetchType.LAZY)
     @ForeignKey(name = "fk_compliance_snapshot")
     @JoinColumn(nullable = false)
@@ -74,6 +76,7 @@ public class ConsumerSnapshot {
         this.uuid = uuid;
     }
 
+    @XmlTransient
     public ComplianceSnapshot getComplianceSnapshot() {
         return complianceSnapshot;
     }
