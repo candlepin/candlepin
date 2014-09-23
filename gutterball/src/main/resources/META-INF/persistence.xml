@@ -22,21 +22,6 @@
             <property name="hibernate.c3p0.idle_test_period" value="300" />
             <!-- max_statements should always be 0 -->
             <property name="hibernate.c3p0.max_statements" value="0" />
-            <property name="hibernate.hbm2ddl.auto" value="create"/>
-        </properties>
-    </persistence-unit>
-
-    <persistence-unit name="postgresql-test" transaction-type="RESOURCE_LOCAL">
-        <provider>org.hibernate.ejb.HibernatePersistence</provider>
-        <validation-mode>NONE</validation-mode>
-        <properties>
-            <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
-            <property name="hibernate.connection.driver_class" value="org.postgresql.Driver"/>
-            <property name="hibernate.connection.url" value="jdbc:postgresql:gutterball-test"/>
-            <property name="hibernate.connection.username" value="gutterball"/>
-            <property name="hibernate.connection.password" value=""/>
-            <property name="hibernate.show_sql" value="false" />
-            <property name="hibernate.hbm2ddl.auto" value="create-drop"/>
         </properties>
     </persistence-unit>
 
