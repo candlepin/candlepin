@@ -164,12 +164,12 @@ public class ConsumerTrendReportTest extends DatabaseTestFixture {
         when(params.get("end_date")).thenReturn(Arrays.asList(onDateString));
 
         ConsumerTrendReportResult result = report.run(params);
-        assertEquals(2, result.getUuids().size());
+        assertEquals(2, result.keySet().size());
 
         List<String> foundConsumers = new ArrayList<String>();
-        for (String uuid : result.getUuids()) {
+        for (String uuid : result.keySet()) {
             // There should only be one snapshot
-            Set<ComplianceSnapshot> snapshots = result.getComplianceSnapshotsByUuid(uuid);
+            Set<ComplianceSnapshot> snapshots = result.get(uuid);
             assertEquals(1, snapshots.size());
             foundConsumers.add(uuid);
         }
@@ -189,10 +189,10 @@ public class ConsumerTrendReportTest extends DatabaseTestFixture {
         };
 
         // Ensure consumers are all found
-        assertEquals(expectedUuidsNumReports.keySet(), result.getUuids());
+        assertEquals(expectedUuidsNumReports.keySet(), result.keySet());
 
-        for (String uuid : result.getUuids()) {
-            Set<ComplianceSnapshot> snapshots = result.getComplianceSnapshotsByUuid(uuid);
+        for (String uuid : result.keySet()) {
+            Set<ComplianceSnapshot> snapshots = result.get(uuid);
             assertEquals((int) expectedUuidsNumReports.get(uuid), snapshots.size());
         }
     }
@@ -225,10 +225,10 @@ public class ConsumerTrendReportTest extends DatabaseTestFixture {
         };
 
         // Ensure consumers are all found
-        assertEquals(expectedUuidsNumReports.keySet(), result.getUuids());
+        assertEquals(expectedUuidsNumReports.keySet(), result.keySet());
 
-        for (String uuid : result.getUuids()) {
-            Set<ComplianceSnapshot> snapshots = result.getComplianceSnapshotsByUuid(uuid);
+        for (String uuid : result.keySet()) {
+            Set<ComplianceSnapshot> snapshots = result.get(uuid);
             assertEquals((int) expectedUuidsNumReports.get(uuid), snapshots.size());
         }
     }

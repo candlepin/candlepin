@@ -18,40 +18,20 @@ import org.candlepin.gutterball.model.jpa.ComplianceSnapshot;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
-
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
 
 /**
  * ConsumerTrendReportResult map of consumer uuid -> collection of compliance data
  */
-public class ConsumerTrendReportResult implements ReportResult {
-
-    private Map<String, Set<ComplianceSnapshot>> results = new HashMap<String, Set<ComplianceSnapshot>>();
+public class ConsumerTrendReportResult extends HashMap<String, Set<ComplianceSnapshot>> implements ReportResult {
 
     public void add(String consumerUuid, ComplianceSnapshot snapshotToAdd) {
-        Set<ComplianceSnapshot> appendTo = results.get(consumerUuid);
+        Set<ComplianceSnapshot> appendTo = get(consumerUuid);
         if (appendTo == null) {
             appendTo = new HashSet<ComplianceSnapshot>();
-            results.put(consumerUuid, appendTo);
+            put(consumerUuid, appendTo);
         }
-
         appendTo.add(snapshotToAdd);
-    }
-
-    public Set<ComplianceSnapshot> getComplianceSnapshotsByUuid(String uuid) {
-        return results.get(uuid);
-    }
-
-    @XmlTransient
-    public Set<String> getUuids() {
-        return results.keySet();
-    }
-
-    public Map<String, Set<ComplianceSnapshot>> getResults() {
-        return results;
     }
 
 }
