@@ -43,7 +43,8 @@ public class EventMessageListener implements MessageListener {
     private EventCallback eventCallback;
 
     @Inject
-    public EventMessageListener(UnitOfWork unitOfWork, EventManager eventManager, EventCallback eventCallback) {
+    public EventMessageListener(UnitOfWork unitOfWork, EventManager eventManager,
+            EventCallback eventCallback) {
         this.unitOfWork = unitOfWork;
         this.eventManager = eventManager;
         this.eventCallback = eventCallback;

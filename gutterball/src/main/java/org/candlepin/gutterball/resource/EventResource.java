@@ -15,10 +15,7 @@
 
 package org.candlepin.gutterball.resource;
 
-import org.candlepin.gutterball.model.Event;
-
 import com.google.inject.Inject;
-import com.mongodb.DBCursor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,7 +42,6 @@ public class EventResource {
     @Produces({ MediaType.APPLICATION_JSON })
     public List<Map> getEvents() {
         List<Map> events = new ArrayList<Map>();
-//        DBCursor cursor = eventCurator.all();
 //        try {
 //            while (cursor.hasNext()) {
 //                Event next = (Event) cursor.next();

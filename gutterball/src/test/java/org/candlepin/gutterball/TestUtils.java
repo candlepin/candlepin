@@ -15,7 +15,8 @@
 
 package org.candlepin.gutterball;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.gutterball.model.Event;
 import org.candlepin.gutterball.model.jpa.ComplianceSnapshot;
@@ -24,15 +25,11 @@ import org.candlepin.gutterball.model.jpa.ConsumerSnapshot;
 import org.candlepin.gutterball.model.jpa.OwnerSnapshot;
 import org.candlepin.gutterball.report.Report;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
-
 import org.apache.commons.lang.RandomStringUtils;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 
 public class TestUtils {

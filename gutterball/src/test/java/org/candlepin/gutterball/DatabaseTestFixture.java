@@ -53,7 +53,7 @@ public class DatabaseTestFixture {
 
         complianceSnapshotCurator = injector.getInstance(ComplianceSnapshotCurator.class);
         consumerStateCurator = injector.getInstance(ConsumerStateCurator.class);
-     }
+    }
 
     @After
     public void shutdown() {

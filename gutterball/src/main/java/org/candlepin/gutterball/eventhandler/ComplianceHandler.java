@@ -67,7 +67,7 @@ public class ComplianceHandler implements EventHandler {
 
         BasicDBList ents = (BasicDBList) entity.get("entitlements");
         Iterator<Object> iter = ents.iterator();
-        while(iter.hasNext()) {
+        while (iter.hasNext()) {
             DBObject ent = (DBObject) iter.next();
             snap.addEntitlementSnapshot(new EntitlementSnapshot((Integer) ent.get("quantity")));
         }
