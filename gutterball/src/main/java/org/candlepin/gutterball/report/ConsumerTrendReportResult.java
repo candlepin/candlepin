@@ -23,7 +23,8 @@ import java.util.Set;
 /**
  * ConsumerTrendReportResult map of consumer uuid -> collection of compliance data
  */
-public class ConsumerTrendReportResult extends HashMap<String, Set<ComplianceSnapshot>> implements ReportResult {
+public class ConsumerTrendReportResult extends HashMap<String, Set<ComplianceSnapshot>>
+    implements ReportResult {
 
     public void add(String consumerUuid, ComplianceSnapshot snapshotToAdd) {
         Set<ComplianceSnapshot> appendTo = get(consumerUuid);

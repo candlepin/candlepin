@@ -19,8 +19,6 @@ import org.candlepin.gutterball.guice.I18nProvider;
 import org.candlepin.gutterball.model.jpa.ComplianceSnapshot;
 
 import com.google.inject.Inject;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -34,7 +32,7 @@ import javax.ws.rs.core.MultivaluedMap;
  */
 public class ConsumerTrendReport extends Report<ConsumerTrendReportResult> {
 
-    private ComplianceSnapshotCurator complianceSnapshotCurator;
+    private ComplianceSnapshotCurator snapshotCurator;
 
     /**
      * @param i18nProvider
@@ -42,10 +40,10 @@ public class ConsumerTrendReport extends Report<ConsumerTrendReportResult> {
      * @param description
      */
     @Inject
-    public ConsumerTrendReport(I18nProvider i18nProvider, ComplianceSnapshotCurator complianceSnapshotCurator) {
+    public ConsumerTrendReport(I18nProvider i18nProvider, ComplianceSnapshotCurator snapshotCurator) {
         super(i18nProvider, "consumer_trend_report",
                 i18nProvider.get().tr("Lists the status of each consumer over a date range"));
-        this.complianceSnapshotCurator = complianceSnapshotCurator;
+        this.snapshotCurator = snapshotCurator;
     }
 
     @Override
@@ -108,7 +106,7 @@ public class ConsumerTrendReport extends Report<ConsumerTrendReportResult> {
 
 
         ConsumerTrendReportResult result = new ConsumerTrendReportResult();
-        Set<ComplianceSnapshot> forTimeSpan = complianceSnapshotCurator.getComplianceForTimespan(
+        Set<ComplianceSnapshot> forTimeSpan = snapshotCurator.getComplianceForTimespan(
                 startDate, endDate, consumerIds, ownerFilters);
         for (ComplianceSnapshot cs : forTimeSpan) {
             result.add(cs.getConsumer().getUuid(), cs);
