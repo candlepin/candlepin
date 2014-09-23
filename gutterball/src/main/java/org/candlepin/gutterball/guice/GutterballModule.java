@@ -46,7 +46,6 @@ import org.candlepin.gutterball.report.ConsumerStatusReport;
 import org.candlepin.gutterball.report.ConsumerTrendReport;
 import org.candlepin.gutterball.report.Report;
 import org.candlepin.gutterball.report.ReportFactory;
-import org.candlepin.gutterball.resource.EventResource;
 import org.candlepin.gutterball.resource.ReportsResource;
 import org.candlepin.gutterball.resource.StatusResource;
 import org.candlepin.gutterball.resteasy.JsonProvider;
@@ -97,7 +96,6 @@ public class GutterballModule extends AbstractModule {
 
         // RestEasy API resources
         bind(StatusResource.class);
-        bind(EventResource.class);
         bind(ReportsResource.class);
 
         bind(UnsupportedMediaTypeExceptionMapper.class);
