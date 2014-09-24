@@ -26,6 +26,9 @@ import org.candlepin.gutterball.eventhandler.HandlerTarget;
 import org.candlepin.gutterball.model.jpa.ConsumerState;
 import org.candlepin.gutterball.model.jpa.Event;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -53,7 +56,10 @@ public class EventManagerTest {
 
     @Before
     public void before() {
-        consumerHandler = new ConsumerHandler(consumerStateCurator);
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+        consumerHandler = new ConsumerHandler(mapper, consumerStateCurator);
         Map<String, EventHandler> handlers = new HashMap<String, EventHandler>();
         handlers.put(ConsumerHandler.class.getAnnotation(HandlerTarget.class).value(), consumerHandler);
         eventManager = new TestingEventManager(handlers, eventCurator);

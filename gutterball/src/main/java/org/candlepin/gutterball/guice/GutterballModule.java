@@ -51,6 +51,8 @@ import org.candlepin.gutterball.resource.StatusResource;
 import org.candlepin.gutterball.resteasy.JsonProvider;
 import org.candlepin.gutterball.util.EventHandlerLoader;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.multibindings.Multibinder;
@@ -83,6 +85,13 @@ public class GutterballModule extends AbstractModule {
         configureJPA();
         bind(ComplianceSnapshotCurator.class);
         bind(ConsumerStateCurator.class);
+
+        // ObjectMapper instances are quite expensive to create, bind a single instance.
+        ObjectMapper mapper = new ObjectMapper();
+        // Since JSON will be coming from candlepin and the objects may have different schemas,
+        // don't fail on unknown properties.
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        bind(ObjectMapper.class).toInstance(mapper);
 
         configureEventHandlers();
         bind(EventManager.class).asEagerSingleton();

@@ -18,7 +18,6 @@ import org.candlepin.gutterball.curator.jpa.ComplianceSnapshotCurator;
 import org.candlepin.gutterball.model.jpa.ComplianceSnapshot;
 import org.candlepin.gutterball.model.jpa.Event;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 
@@ -37,15 +36,13 @@ public class ComplianceHandler implements EventHandler {
 
     private static Logger log = LoggerFactory.getLogger(ComplianceHandler.class);
 
-    private ComplianceSnapshotCurator jpaCurator;
+    private ComplianceSnapshotCurator complianceCurator;
     private ObjectMapper mapper;
 
     @Inject
-    public ComplianceHandler(ComplianceSnapshotCurator jpaCurator) {
-        this.jpaCurator = jpaCurator;
-        // FIXME Share the mapper since they are expensive to create.
-        mapper = new ObjectMapper();
-        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    public ComplianceHandler(ObjectMapper mapper, ComplianceSnapshotCurator complianceCurator) {
+        this.complianceCurator = complianceCurator;
+        this.mapper = mapper;
     }
 
     @Override
@@ -59,7 +56,7 @@ public class ComplianceHandler implements EventHandler {
         catch (IOException e) {
             throw new RuntimeException("Could not deserialize compliance snapshot data.", e);
         }
-        jpaCurator.create(snap);
+        complianceCurator.create(snap);
     }
 
     @Override
