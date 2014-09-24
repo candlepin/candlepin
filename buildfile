@@ -99,12 +99,7 @@ POSTGRESQL = 'postgresql:postgresql:jar:9.0-801.jdbc4'
 
 MYSQL = 'mysql:mysql-connector-java:jar:5.1.26'
 
-MONGODB = 'org.mongodb:mongo-java-driver:jar:2.12.2'
-MONGODB_EMBEDDED = ['de.flapdoodle.embed:de.flapdoodle.embed.mongo:jar:1.46.0',
-                    'de.flapdoodle.embed:de.flapdoodle.embed.process:jar:1.39.0',
-                    'org.apache.commons:commons-compress:jar:1.8.1']
-
-DB = [POSTGRESQL, MYSQL, MONGODB]
+DB = [POSTGRESQL, MYSQL]
 
 HSQLDB = 'org.hsqldb:hsqldb:jar:2.3.2'
 
@@ -272,7 +267,7 @@ define "candlepin" do
         filter(path_to(:src, :main, :resources, 'META-INF')).into(path_to(:target, :classes, 'META-INF')).run
     end
 
-    test.with(TESTING, JUKITO, HSQLDB, MONGODB_EMBEDDED)
+    test.with(TESTING, JUKITO, HSQLDB)
     test.using :java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ]
 
     gutterball_war = package(:war, :id=>"gutterball").tap do |war|

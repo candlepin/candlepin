@@ -18,7 +18,6 @@ package org.candlepin.gutterball;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import org.candlepin.gutterball.model.Event;
 import org.candlepin.gutterball.model.jpa.ComplianceSnapshot;
 import org.candlepin.gutterball.model.jpa.ComplianceStatusSnapshot;
 import org.candlepin.gutterball.model.jpa.ConsumerSnapshot;
@@ -45,16 +44,6 @@ public class TestUtils {
 
     public static String randomString(String prefix) {
         return prefix + "-" + RandomStringUtils.randomAlphabetic(16);
-    }
-
-    public static Event createEvent(String type) {
-        Event e = new Event();
-        e.setId(randomString("ID"));
-        e.setConsumerId(randomString("My Test Consumer"));
-        e.setType("CREATE");
-        e.setMessageText("This is a message");
-        e.setTimestamp(new Date());
-        return e;
     }
 
     public static Report mockReport(String key, String desc) {
