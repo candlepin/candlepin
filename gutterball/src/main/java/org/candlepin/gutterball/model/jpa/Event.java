@@ -15,6 +15,11 @@
 
 package org.candlepin.gutterball.model.jpa;
 
+import org.candlepin.gutterball.jackson.PrincipalJsonToStringConverter;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 
@@ -67,6 +72,8 @@ public class Event {
     @Column(nullable = false)
     @Size(max = 255)
     @NotNull
+    @JsonProperty("principal")
+    @JsonDeserialize(converter = PrincipalJsonToStringConverter.class)
     private String principal;
 
     @Column(nullable = false)

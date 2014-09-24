@@ -15,6 +15,12 @@
 
 package org.candlepin.gutterball.model.jpa;
 
+import org.candlepin.gutterball.jackson.OwnerJsonToKeyConverter;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+
 import org.hibernate.annotations.GenericGenerator;
 
 import java.util.Date;
@@ -48,6 +54,7 @@ public class ConsumerState {
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     @Column(length = 32)
     @NotNull
+    @JsonIgnore
     private String id;
 
     @Column(nullable = false, unique = true)
@@ -58,6 +65,8 @@ public class ConsumerState {
     @Column(nullable = false)
     @Size(max = 255)
     @NotNull
+    @JsonProperty("owner")
+    @JsonDeserialize(converter = OwnerJsonToKeyConverter.class)
     private String ownerKey;
 
     @XmlElement
