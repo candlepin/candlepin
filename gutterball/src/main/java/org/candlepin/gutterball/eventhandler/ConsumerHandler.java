@@ -18,17 +18,11 @@ import org.candlepin.gutterball.curator.jpa.ConsumerStateCurator;
 import org.candlepin.gutterball.model.jpa.ConsumerState;
 import org.candlepin.gutterball.model.jpa.Event;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.google.inject.Inject;
 
 import java.io.IOException;
-import java.util.Date;
 
 /**
  * ConsumerHandler to properly update the database when
@@ -43,29 +37,9 @@ public class ConsumerHandler implements EventHandler {
     @Inject
     public ConsumerHandler(ConsumerStateCurator stateCurator) {
         this.consumerStateCurator = stateCurator;
-
-        SimpleModule module = new SimpleModule("ConsumerStatusModule");
-        module.addDeserializer(ConsumerState.class, new JsonDeserializer<ConsumerState>() {
-
-            @Override
-            public ConsumerState deserialize(JsonParser parser,
-                    DeserializationContext context) throws IOException,
-                    JsonProcessingException {
-                JsonNode consumer = parser.getCodec().readTree(parser);
-                JsonNode owner = consumer.get("owner");
-
-                Date createdDate = null;
-                if (consumer.has("created")) {
-                    createdDate = context.parseDate(consumer.get("created").asText());
-                }
-
-                return new ConsumerState(consumer.get("uuid").asText(),
-                        owner.get("key").asText(), createdDate);
-            }
-        });
-
+        // FIXME Share the mapper since they are expensive to create.
         mapper = new ObjectMapper();
-        mapper.registerModule(module);
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
     @Override
@@ -91,6 +65,8 @@ public class ConsumerHandler implements EventHandler {
     public void handleDeleted(Event event) {
         try {
             ConsumerState consumerState = mapper.readValue(event.getOldEntity(), ConsumerState.class);
+            // consumerState is considered a new record here as it is parsed from CP json.
+            // We just want to extract the UUID from the event.
             consumerStateCurator.setConsumerDeleted(consumerState.getUuid(), event.getTimestamp());
         }
         catch (IOException e) {

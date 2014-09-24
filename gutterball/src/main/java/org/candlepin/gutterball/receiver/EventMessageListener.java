@@ -55,38 +55,8 @@ public class EventMessageListener implements MessageListener {
         this.unitOfWork = unitOfWork;
         this.eventManager = eventManager;
 
-
-        SimpleModule module = new SimpleModule("EventModule");
-        module.addDeserializer(Event.class, new JsonDeserializer<Event>() {
-
-            @Override
-            public Event deserialize(JsonParser jp,
-                    DeserializationContext context) throws IOException,
-                    JsonProcessingException {
-
-                JsonNode eventJson = jp.getCodec().readTree(jp);
-                JsonNode principal = eventJson.get("principal");
-                String principalType = principal.get("type").asText();
-                String principalName = principal.get("name").asText();
-
-                Event event = new Event(
-                        eventJson.get("type").asText(),
-                        eventJson.get("target").asText(),
-                        eventJson.get("targetName").asText(),
-                        principalType + "@" + principalName,
-                        eventJson.get("ownerId").asText(),
-                        eventJson.get("consumerId").asText(),
-                        eventJson.get("entityId").asText(),
-                        eventJson.get("oldEntity").asText(),
-                        eventJson.get("newEntity").asText(),
-                        eventJson.get("referenceId").asText(),
-                        eventJson.get("referenceType").asText(),
-                        context.parseDate(eventJson.get("timestamp").asText()));
-                return event;
-            }
-        });
+        // FIXME Share the mapper since they are expensive to create.
         this.mapper = new ObjectMapper();
-        this.mapper.registerModule(module);
         this.mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
