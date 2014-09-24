@@ -14,7 +14,8 @@
  */
 package org.candlepin.gutterball.eventhandler;
 
-import org.candlepin.gutterball.model.Event;
+import org.candlepin.gutterball.curator.jpa.EventCurator;
+import org.candlepin.gutterball.model.jpa.Event;
 
 import com.google.inject.Inject;
 
@@ -37,11 +38,11 @@ public class EventManager {
     private static final String DELETED = "DELETED";
 
     protected Map<String, EventHandler> targetHandlers;
-//    private EventCurator eventCurator;
+    private EventCurator eventCurator;
 
     @Inject
-    public EventManager(Map<String, EventHandler> targetHandlers) {
-//        this.eventCurator = eventCurator;
+    public EventManager(Map<String, EventHandler> targetHandlers, EventCurator eventCurator) {
+        this.eventCurator = eventCurator;
         this.targetHandlers = targetHandlers;
     }
 
@@ -52,7 +53,7 @@ public class EventManager {
      */
     public void handle(Event event) {
         // Store every event
-//        eventCurator.insert(event);
+        eventCurator.create(event);
 
         EventHandler handler = targetHandlers.get(event.getTarget());
         if (handler != null) {

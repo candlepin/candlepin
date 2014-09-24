@@ -15,11 +15,20 @@
 package org.candlepin.gutterball.eventhandler;
 
 import org.candlepin.gutterball.curator.jpa.ConsumerStateCurator;
-import org.candlepin.gutterball.model.Event;
 import org.candlepin.gutterball.model.jpa.ConsumerState;
+import org.candlepin.gutterball.model.jpa.Event;
 
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.google.inject.Inject;
-import com.mongodb.BasicDBObject;
+
+import java.io.IOException;
+import java.util.Date;
 
 /**
  * ConsumerHandler to properly update the database when
@@ -29,21 +38,48 @@ import com.mongodb.BasicDBObject;
 public class ConsumerHandler implements EventHandler {
 
     protected ConsumerStateCurator consumerStateCurator;
+    private ObjectMapper mapper;
 
     @Inject
     public ConsumerHandler(ConsumerStateCurator stateCurator) {
         this.consumerStateCurator = stateCurator;
+
+        SimpleModule module = new SimpleModule("ConsumerStatusModule");
+        module.addDeserializer(ConsumerState.class, new JsonDeserializer<ConsumerState>() {
+
+            @Override
+            public ConsumerState deserialize(JsonParser parser,
+                    DeserializationContext context) throws IOException,
+                    JsonProcessingException {
+                JsonNode consumer = parser.getCodec().readTree(parser);
+                JsonNode owner = consumer.get("owner");
+
+                Date createdDate = null;
+                if (consumer.has("created")) {
+                    createdDate = context.parseDate(consumer.get("created").asText());
+                }
+
+                return new ConsumerState(consumer.get("uuid").asText(),
+                        owner.get("key").asText(), createdDate);
+            }
+        });
+
+        mapper = new ObjectMapper();
+        mapper.registerModule(module);
     }
 
     @Override
     public void handleCreated(Event event) {
-        BasicDBObject newConsumer = (BasicDBObject) event.getNewEntity();
-        BasicDBObject owner = (BasicDBObject) newConsumer.get("owner");
+        String newConsumerJson = event.getNewEntity();
 
         // JPA Insertion
-        ConsumerState consumerState = new ConsumerState(newConsumer.getString("uuid"),
-                owner.getString("key"), newConsumer.getDate("created"));
-        consumerStateCurator.create(consumerState);
+        try {
+            ConsumerState consumerState = mapper.readValue(newConsumerJson, ConsumerState.class);
+            consumerStateCurator.create(consumerState);
+        }
+        catch (IOException e) {
+            throw new RuntimeException("Unable to deserialize Consumer Created Event.", e);
+        }
     }
 
     @Override
@@ -53,7 +89,12 @@ public class ConsumerHandler implements EventHandler {
 
     @Override
     public void handleDeleted(Event event) {
-        BasicDBObject targetConsumer = (BasicDBObject) event.getOldEntity();
-        consumerStateCurator.setConsumerDeleted(targetConsumer.getString("uuid"), event.getTimestamp());
+        try {
+            ConsumerState consumerState = mapper.readValue(event.getOldEntity(), ConsumerState.class);
+            consumerStateCurator.setConsumerDeleted(consumerState.getUuid(), event.getTimestamp());
+        }
+        catch (IOException e) {
+            throw new RuntimeException("Unable to deserialize Consumer Deleted Event.", e);
+        }
     }
 }

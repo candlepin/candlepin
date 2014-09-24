@@ -12,32 +12,22 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.gutterball.eventhandler;
+
+package org.candlepin.gutterball.curator.jpa;
 
 import org.candlepin.gutterball.model.jpa.Event;
 
+import com.google.inject.Inject;
 
 /**
- * EventHandler interface which provides a structure for
- * handling various types of events
+ * Responsible for managing {@link Event} model objects and storing/retrieving to/from
+ * the database.
  */
-public interface EventHandler {
+public class EventCurator extends BaseCurator<Event> {
 
-    /**
-     * Handles creation events
-     * @param event Event to store
-     */
-    void handleCreated(Event event);
+    @Inject
+    public EventCurator() {
+        super(Event.class);
+    }
 
-    /**
-     * Handles modification events
-     * @param event Event to store
-     */
-    void handleUpdated(Event event);
-
-    /**
-     * Handles deletion events
-     * @param event Event to store
-     */
-    void handleDeleted(Event event);
 }

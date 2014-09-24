@@ -18,12 +18,13 @@ import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.gutterball.curator.jpa.ConsumerStateCurator;
+import org.candlepin.gutterball.curator.jpa.EventCurator;
 import org.candlepin.gutterball.eventhandler.ConsumerHandler;
 import org.candlepin.gutterball.eventhandler.EventHandler;
 import org.candlepin.gutterball.eventhandler.EventManager;
 import org.candlepin.gutterball.eventhandler.HandlerTarget;
-import org.candlepin.gutterball.model.Event;
 import org.candlepin.gutterball.model.jpa.ConsumerState;
+import org.candlepin.gutterball.model.jpa.Event;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -43,6 +44,9 @@ public class EventManagerTest {
     @Mock
     private ConsumerStateCurator consumerStateCurator;
 
+    @Mock
+    private EventCurator eventCurator;
+
     private ConsumerHandler consumerHandler;
 
     private EventManager eventManager;
@@ -52,7 +56,7 @@ public class EventManagerTest {
         consumerHandler = new ConsumerHandler(consumerStateCurator);
         Map<String, EventHandler> handlers = new HashMap<String, EventHandler>();
         handlers.put(ConsumerHandler.class.getAnnotation(HandlerTarget.class).value(), consumerHandler);
-        eventManager = new TestingEventManager(handlers);
+        eventManager = new TestingEventManager(handlers, eventCurator);
     }
 
     @Test
@@ -61,6 +65,7 @@ public class EventManagerTest {
         toHandle.setTarget("UNKNOWN_EVENT_TARGET");
         eventManager.handle(toHandle);
         verify(consumerStateCurator, never()).create(any(ConsumerState.class));
+        verify(eventCurator).create(eq(toHandle));
     }
 
     @Test
@@ -68,15 +73,15 @@ public class EventManagerTest {
         Event toHandle = new Event();
         eventManager.handle(toHandle);
         verify(consumerStateCurator, never()).create(any(ConsumerState.class));
+        verify(eventCurator).create(eq(toHandle));
     }
 
     // Class allows us to override loadEventHandlers, so we can supply mocks
     // We aren't testing the DB, so we want to avoid the curators
     private class TestingEventManager extends EventManager {
 
-        public TestingEventManager(Map<String, EventHandler> handlers) {
-//            super(eventCurator, handlers);
-            super(handlers);
+        public TestingEventManager(Map<String, EventHandler> handlers, EventCurator curator) {
+            super(handlers, curator);
         }
     }
 }
