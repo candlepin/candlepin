@@ -17,21 +17,12 @@ package org.candlepin.gutterball.receiver;
 import org.candlepin.gutterball.eventhandler.EventManager;
 import org.candlepin.gutterball.model.jpa.Event;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.google.inject.Inject;
 import com.google.inject.persist.UnitOfWork;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -51,13 +42,10 @@ public class EventMessageListener implements MessageListener {
     private ObjectMapper mapper;
 
     @Inject
-    public EventMessageListener(UnitOfWork unitOfWork, EventManager eventManager) {
+    public EventMessageListener(UnitOfWork unitOfWork, ObjectMapper mapper, EventManager eventManager) {
         this.unitOfWork = unitOfWork;
         this.eventManager = eventManager;
-
-        // FIXME Share the mapper since they are expensive to create.
-        this.mapper = new ObjectMapper();
-        this.mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        this.mapper = mapper;
     }
 
     @Override

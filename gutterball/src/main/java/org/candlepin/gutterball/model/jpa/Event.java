@@ -105,7 +105,7 @@ public class Event {
     private String referenceType;
 
     @Lob
-    @Type(type="org.hibernate.type.MaterializedClobType")
+    @Type(type = "org.hibernate.type.MaterializedClobType")
     private String messageText;
 
     /**
@@ -115,11 +115,11 @@ public class Event {
      * later date to pull in the new data.
      */
     @Lob
-    @Type(type="org.hibernate.type.MaterializedClobType")
+    @Type(type = "org.hibernate.type.MaterializedClobType")
     private String oldEntity;
 
     @Lob
-    @Type(type="org.hibernate.type.MaterializedClobType")
+    @Type(type = "org.hibernate.type.MaterializedClobType")
     private String newEntity;
 
     public Event() {

@@ -18,7 +18,6 @@ import org.candlepin.gutterball.curator.jpa.ConsumerStateCurator;
 import org.candlepin.gutterball.model.jpa.ConsumerState;
 import org.candlepin.gutterball.model.jpa.Event;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 
@@ -35,11 +34,9 @@ public class ConsumerHandler implements EventHandler {
     private ObjectMapper mapper;
 
     @Inject
-    public ConsumerHandler(ConsumerStateCurator stateCurator) {
+    public ConsumerHandler(ObjectMapper mapper, ConsumerStateCurator stateCurator) {
         this.consumerStateCurator = stateCurator;
-        // FIXME Share the mapper since they are expensive to create.
-        mapper = new ObjectMapper();
-        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        this.mapper = mapper;
     }
 
     @Override
