@@ -14,6 +14,8 @@
  */
 package org.candlepin.gutterball.model.jpa;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Index;
@@ -48,6 +50,7 @@ public class OwnerSnapshot {
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     @Column(length = 32)
     @NotNull
+    @JsonIgnore
     private String id;
 
     @XmlTransient

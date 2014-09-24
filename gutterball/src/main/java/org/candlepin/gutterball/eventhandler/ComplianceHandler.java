@@ -16,27 +16,16 @@ package org.candlepin.gutterball.eventhandler;
 
 import org.candlepin.gutterball.curator.jpa.ComplianceSnapshotCurator;
 import org.candlepin.gutterball.model.jpa.ComplianceSnapshot;
-import org.candlepin.gutterball.model.jpa.ComplianceStatusSnapshot;
-import org.candlepin.gutterball.model.jpa.ConsumerSnapshot;
-import org.candlepin.gutterball.model.jpa.EntitlementSnapshot;
 import org.candlepin.gutterball.model.jpa.Event;
-import org.candlepin.gutterball.model.jpa.OwnerSnapshot;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.google.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.Date;
-import java.util.Iterator;
 
 /**
  * Handler for Compliance Events.  Currently we only send ComplianceCreated events.
@@ -54,47 +43,9 @@ public class ComplianceHandler implements EventHandler {
     @Inject
     public ComplianceHandler(ComplianceSnapshotCurator jpaCurator) {
         this.jpaCurator = jpaCurator;
-
-        SimpleModule module = new SimpleModule("ComplianceSnapshotModule");
-        module.addDeserializer(ComplianceSnapshot.class, new JsonDeserializer<ComplianceSnapshot>() {
-
-            @Override
-            public ComplianceSnapshot deserialize(JsonParser jp,
-                    DeserializationContext context) throws IOException,
-                    JsonProcessingException {
-
-                JsonNode complianceEventJson = jp.getCodec().readTree(jp);
-                JsonNode consumer = complianceEventJson.get("consumer");
-                JsonNode owner = consumer.get("owner");
-                JsonNode status = complianceEventJson.get("status");
-                JsonNode entitlements = complianceEventJson.get("entitlements");
-
-                Date statusDate = context.parseDate(status.get("date").asText());
-
-                OwnerSnapshot ownerSnap = new OwnerSnapshot(owner.get("key").asText(),
-                        owner.get("displayName").asText());
-
-                ConsumerSnapshot consumerSnap = new ConsumerSnapshot(consumer.get("uuid").asText(),
-                        ownerSnap);
-
-                ComplianceStatusSnapshot statusSnap = new ComplianceStatusSnapshot(statusDate,
-                        status.get("status").asText());
-
-                ComplianceSnapshot snapshot = new ComplianceSnapshot(statusDate, consumerSnap, statusSnap);
-
-                Iterator<JsonNode> entIter = entitlements.elements();
-                while (entIter.hasNext()) {
-                    JsonNode ent = entIter.next();
-                    EntitlementSnapshot entSnap = new EntitlementSnapshot(ent.get("quanty").asInt());
-                    snapshot.addEntitlementSnapshot(entSnap);
-                }
-
-                return snapshot;
-            }
-        });
-
+        // FIXME Share the mapper since they are expensive to create.
         mapper = new ObjectMapper();
-        mapper.registerModule(module);
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
     @Override
@@ -102,11 +53,13 @@ public class ComplianceHandler implements EventHandler {
         ComplianceSnapshot snap;
         try {
             snap = mapper.readValue(event.getNewEntity(), ComplianceSnapshot.class);
-            jpaCurator.create(snap);
+            // Not picked up from the event.
+            snap.setDate(snap.getStatus().getDate());
         }
         catch (IOException e) {
             throw new RuntimeException("Could not deserialize compliance snapshot data.", e);
         }
+        jpaCurator.create(snap);
     }
 
     @Override

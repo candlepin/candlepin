@@ -15,6 +15,8 @@
 
 package org.candlepin.gutterball.model.jpa;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
@@ -50,6 +52,9 @@ public class ConsumerSnapshot {
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     @Column(length = 32)
     @NotNull
+    // Ignore the id when building from JSON so that the CP id
+    // is not set from the CP record.
+    @JsonIgnore
     private String id;
 
     @Column(nullable = false)
