@@ -41,6 +41,7 @@ import org.candlepin.gutterball.curator.jpa.ConsumerStateCurator;
 import org.candlepin.gutterball.eventhandler.EventHandler;
 import org.candlepin.gutterball.eventhandler.EventManager;
 import org.candlepin.gutterball.eventhandler.HandlerTarget;
+import org.candlepin.gutterball.jackson.GutterballObjectMapper;
 import org.candlepin.gutterball.receiver.EventReceiver;
 import org.candlepin.gutterball.report.ConsumerStatusReport;
 import org.candlepin.gutterball.report.ConsumerTrendReport;
@@ -86,12 +87,7 @@ public class GutterballModule extends AbstractModule {
         bind(ComplianceSnapshotCurator.class);
         bind(ConsumerStateCurator.class);
 
-        // ObjectMapper instances are quite expensive to create, bind a single instance.
-        ObjectMapper mapper = new ObjectMapper();
-        // Since JSON will be coming from candlepin and the objects may have different schemas,
-        // don't fail on unknown properties.
-        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        bind(ObjectMapper.class).toInstance(mapper);
+        bind(ObjectMapper.class).toInstance(new GutterballObjectMapper());
 
         configureEventHandlers();
         bind(EventManager.class).asEagerSingleton();
