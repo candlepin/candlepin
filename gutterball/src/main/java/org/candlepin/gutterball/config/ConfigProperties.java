@@ -31,12 +31,6 @@ public class ConfigProperties {
     public static final String AMQP_TRUSTSTORE = "gutterball.amqp.truststore";
     public static final String AMQP_TRUSTSTORE_PASSWORD = "gutterball.amqp.truststore_password";
 
-    public static final String MONGODB_HOST = "gutterball.mongodb.host";
-    public static final String MONGODB_PORT = "gutterball.mongodb.port";
-    public static final String MONGODB_DATABASE = "gutterball.mongodb.database";
-    public static final String MONGODB_USERNAME = "gutterball.mongodb.username";
-    public static final String MONGODB_PASSWORD = "gutterball.mongodb.password";
-
     public static final String JPA_DRIVER = "jpa.config.hibernate.connection.driver_class";
     public static final String JPA_CONNECTION_URL = "jpa.config.hibernate.connection.url";
     public static final String JPA_DIALECT = "jpa.config.hibernate.dialect";
@@ -58,11 +52,7 @@ public class ConfigProperties {
                         "/etc/gutterball/certs/amqp/gutterball.truststore");
                 this.put(AMQP_TRUSTSTORE_PASSWORD, "password");
 
-                // Mongo defaults
-                this.put(MONGODB_HOST, "localhost");
-                this.put(MONGODB_PORT, "27017");
-                this.put(MONGODB_DATABASE, "gutterball");
-
+                // JPA/hibernate Configuration
                 this.put(JPA_DRIVER, "org.postgresql.Driver");
                 this.put(JPA_CONNECTION_URL, "jdbc:postgresql:gutterball");
                 this.put(JPA_DIALECT, "org.hibernate.dialect.PostgreSQLDialect");

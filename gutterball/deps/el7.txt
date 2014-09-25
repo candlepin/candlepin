@@ -29,7 +29,5 @@ resteasy/resteasy-guice
 resteasy/resteasy-jaxb-provider
 resteasy/resteasy-jaxrs
 resteasy/resteasy-multipart-provider
-scl:mongodb24:bson
-scl:mongodb24:mongo
 servlet
 slf4j/api

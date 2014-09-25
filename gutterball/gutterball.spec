@@ -51,8 +51,6 @@ BuildRequires: gettext-commons
 BuildRequires: qpid-java-client >= 0:0.22
 BuildRequires: qpid-java-common >= 0:0.22
 BuildRequires: resteasy >= 0:2.3.7
-BuildRequires: mongodb24-mongo-java-driver
-BuildRequires: mongodb24-mongo-java-driver-bson
 BuildRequires: candlepin-common
 BuildRequires: jms
 %global jackson_version 0:2.3.0
@@ -92,8 +90,6 @@ Requires: servlet
 Requires: qpid-java-client >= 0:0.22
 Requires: qpid-java-common >= 0:0.22
 Requires: gettext-commons
-Requires: mongodb24-mongo-java-driver
-Requires: mongodb24-mongo-java-driver-bson
 Requires: jms
 Requires: candlepin-common
 
