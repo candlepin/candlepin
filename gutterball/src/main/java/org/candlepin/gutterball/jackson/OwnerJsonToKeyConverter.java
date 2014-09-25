@@ -29,7 +29,7 @@ public class OwnerJsonToKeyConverter extends StdConverter<Map<String, Object>, S
 
     @Override
     public String convert(Map<String, Object> ownerData) {
-        return ownerData.containsKey("key") ? (String) ownerData.get("key") : "Unknown";
+        return ownerData != null && ownerData.containsKey("key") ? (String) ownerData.get("key") : "Unknown";
     }
 
 }

@@ -29,8 +29,13 @@ public class PrincipalJsonToStringConverter extends StdConverter<Map<String, Obj
 
     @Override
     public String convert(Map<String, Object> principal) {
+        if (principal == null || (!principal.containsKey("name") && !principal.containsKey("type"))) {
+            return "Unknown";
+        }
+
         String type = (String) principal.get("type");
         String name = (String) principal.get("name");
+
         // Nothing special about this format, just a way to concat both
         // into the same field.
         return type + "@" + name;
