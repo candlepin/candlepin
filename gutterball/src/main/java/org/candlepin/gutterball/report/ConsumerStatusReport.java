@@ -17,7 +17,7 @@ package org.candlepin.gutterball.report;
 
 import org.candlepin.gutterball.curator.ComplianceSnapshotCurator;
 import org.candlepin.gutterball.guice.I18nProvider;
-import org.candlepin.gutterball.model.snapshot.ComplianceSnapshot;
+import org.candlepin.gutterball.model.snapshot.Compliance;
 
 import com.google.inject.Inject;
 
@@ -29,7 +29,7 @@ import javax.ws.rs.core.MultivaluedMap;
 /**
  * ConsumerStatusListReport
  */
-public class ConsumerStatusReport extends Report<MultiRowResult<ComplianceSnapshot>> {
+public class ConsumerStatusReport extends Report<MultiRowResult<Compliance>> {
 
     private ComplianceSnapshotCurator complianceSnapshotCurator;
 
@@ -75,7 +75,7 @@ public class ConsumerStatusReport extends Report<MultiRowResult<ComplianceSnapsh
     }
 
     @Override
-    protected MultiRowResult<ComplianceSnapshot> execute(MultivaluedMap<String, String> queryParams) {
+    protected MultiRowResult<Compliance> execute(MultivaluedMap<String, String> queryParams) {
         // At this point we would execute a lookup against the DW data store to formulate
         // the report result set.
 
@@ -86,9 +86,9 @@ public class ConsumerStatusReport extends Report<MultiRowResult<ComplianceSnapsh
         Date targetDate = queryParams.containsKey("on_date") ?
             parseDate(queryParams.getFirst("on_date")) : new Date();
 
-        List<ComplianceSnapshot> snaps = complianceSnapshotCurator.getSnapshotsOnDate(targetDate,
+        List<Compliance> snaps = complianceSnapshotCurator.getSnapshotsOnDate(targetDate,
                 consumerIds, ownerFilters, statusFilters);
 
-        return new MultiRowResult<ComplianceSnapshot>(snaps);
+        return new MultiRowResult<Compliance>(snaps);
     }
 }

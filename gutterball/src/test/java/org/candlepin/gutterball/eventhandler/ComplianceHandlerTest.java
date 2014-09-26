@@ -21,9 +21,9 @@ import static org.mockito.Mockito.*;
 
 import org.candlepin.gutterball.curator.ComplianceSnapshotCurator;
 import org.candlepin.gutterball.model.Event;
-import org.candlepin.gutterball.model.snapshot.ComplianceSnapshot;
-import org.candlepin.gutterball.model.snapshot.ComplianceStatusSnapshot;
-import org.candlepin.gutterball.model.snapshot.ConsumerSnapshot;
+import org.candlepin.gutterball.model.snapshot.Compliance;
+import org.candlepin.gutterball.model.snapshot.ComplianceStatus;
+import org.candlepin.gutterball.model.snapshot.Consumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -53,11 +53,11 @@ public class ComplianceHandlerTest {
         event.setNewEntity("test-string");
 
         Date expectedDate = new Date();
-        ComplianceStatusSnapshot status = new ComplianceStatusSnapshot(expectedDate, "VALID");
+        ComplianceStatus status = new ComplianceStatus(expectedDate, "VALID");
         // Date is null here -- expected to be filled in with the status date.
-        ComplianceSnapshot snap = new ComplianceSnapshot(null, new ConsumerSnapshot(), status);
+        Compliance snap = new Compliance(null, new Consumer(), status);
 
-        when(mapper.readValue(eq(event.getNewEntity()), eq(ComplianceSnapshot.class))).thenReturn(snap);
+        when(mapper.readValue(eq(event.getNewEntity()), eq(Compliance.class))).thenReturn(snap);
         handler.handleCreated(event);
 
         verify(complianceCurator).create(eq(snap));

@@ -21,9 +21,9 @@ import static org.junit.Assert.*;
 import org.candlepin.gutterball.DatabaseTestFixture;
 import org.candlepin.gutterball.TestUtils;
 import org.candlepin.gutterball.model.ConsumerState;
-import org.candlepin.gutterball.model.snapshot.ComplianceSnapshot;
-import org.candlepin.gutterball.model.snapshot.ComplianceStatusSnapshot;
-import org.candlepin.gutterball.model.snapshot.ConsumerSnapshot;
+import org.candlepin.gutterball.model.snapshot.Compliance;
+import org.candlepin.gutterball.model.snapshot.ComplianceStatus;
+import org.candlepin.gutterball.model.snapshot.Consumer;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -86,7 +86,7 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
     public void testGetAllLatestStatusReports() {
         // c1 was deleted before the report date.
         List<String> expectedConsumerUuids = Arrays.asList("c2", "c3", "c4");
-        List<ComplianceSnapshot> snaps = complianceSnapshotCurator.getSnapshotsOnDate(null,
+        List<Compliance> snaps = complianceSnapshotCurator.getSnapshotsOnDate(null,
                 null, null, null);
         assertEquals(expectedConsumerUuids.size(), snaps.size());
         assertTrue(getUuidsFromSnapshots(snaps).containsAll(expectedConsumerUuids));
@@ -99,7 +99,7 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         cal.set(Calendar.MONTH, Calendar.JUNE);
         cal.set(Calendar.DAY_OF_MONTH, 12);
 
-        List<ComplianceSnapshot> snaps =
+        List<Compliance> snaps =
             complianceSnapshotCurator.getSnapshotsOnDate(cal.getTime(), null, null, null);
         assertEquals(3, snaps.size());
 
@@ -118,7 +118,7 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         expectedStatusDates.put("c4", cal.getTime());
 
 
-        for (ComplianceSnapshot cs : snaps) {
+        for (Compliance cs : snaps) {
             String uuid = cs.getConsumer().getUuid();
             assertEquals("Invalid status found for " + uuid,
                     expectedStatusDates.get(uuid), cs.getStatus().getDate());
@@ -135,7 +135,7 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         cal.set(Calendar.DAY_OF_MONTH, 12);
 
         List<String> expectedConsumerUuids = Arrays.asList("c1", "c2", "c3", "c4");
-        List<ComplianceSnapshot> snaps = complianceSnapshotCurator.getSnapshotsOnDate(cal.getTime(),
+        List<Compliance> snaps = complianceSnapshotCurator.getSnapshotsOnDate(cal.getTime(),
                 null, null, null);
         assertEquals(expectedConsumerUuids.size(), snaps.size());
         assertTrue(getUuidsFromSnapshots(snaps).containsAll(expectedConsumerUuids));
@@ -145,12 +145,12 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
     public void testGetByOwner() {
         String expectedOwner = "o2";
 
-        List<ComplianceSnapshot> snaps = complianceSnapshotCurator.getSnapshotsOnDate(new Date(),
+        List<Compliance> snaps = complianceSnapshotCurator.getSnapshotsOnDate(new Date(),
                 null, Arrays.asList(expectedOwner), null);
         assertEquals(1, snaps.size());
-        ComplianceSnapshot snap = snaps.get(0);
+        Compliance snap = snaps.get(0);
 
-        ConsumerSnapshot consumerSnapshot = snap.getConsumer();
+        Consumer consumerSnapshot = snap.getConsumer();
         assertEquals(expectedOwner, consumerSnapshot.getOwner().getKey());
         assertEquals("c3", consumerSnapshot.getUuid());
     }
@@ -162,8 +162,8 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void assertLatestStatusIsReturnedForConsumer() {
-        ComplianceSnapshot snap = performGetByIdTest();
-        ComplianceStatusSnapshot status = snap.getStatus();
+        Compliance snap = performGetByIdTest();
+        ComplianceStatus status = snap.getStatus();
         assertEquals(snap.getDate(), status.getDate());
 
         Calendar cal = Calendar.getInstance();
@@ -177,10 +177,10 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
     @Test
     public void testGetByStatus() {
         String expectedStatus = "partial";
-        List<ComplianceSnapshot> snaps = complianceSnapshotCurator.getSnapshotsOnDate(null,
+        List<Compliance> snaps = complianceSnapshotCurator.getSnapshotsOnDate(null,
                 null, null, Arrays.asList(expectedStatus));
         assertEquals(1, snaps.size());
-        ComplianceSnapshot snap = snaps.get(0);
+        Compliance snap = snaps.get(0);
         assertEquals("c3", snap.getConsumer().getUuid());
     }
 
@@ -192,10 +192,10 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         cal.set(Calendar.DAY_OF_MONTH, 12);
 
         Date onDate = cal.getTime();
-        Set<ComplianceSnapshot> results = complianceSnapshotCurator.getComplianceForTimespan(
+        Set<Compliance> results = complianceSnapshotCurator.getComplianceForTimespan(
                 onDate, onDate, null, null);
         assertEquals(2, results.size());
-        List<String> foundUuids = TestUtils.getUuidsFromSnapshots(new ArrayList<ComplianceSnapshot>(results));
+        List<String> foundUuids = TestUtils.getUuidsFromSnapshots(new ArrayList<Compliance>(results));
         assertTrue(foundUuids.containsAll(Arrays.asList("c1", "c2")));
     }
 
@@ -210,7 +210,7 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
             }
         };
 
-        Set<ComplianceSnapshot> results = complianceSnapshotCurator.getComplianceForTimespan(null, null,
+        Set<Compliance> results = complianceSnapshotCurator.getComplianceForTimespan(null, null,
                 null, null);
 
         // Ensure consumers are all found
@@ -235,7 +235,7 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
             }
         };
 
-        Set<ComplianceSnapshot> results = complianceSnapshotCurator.getComplianceForTimespan(startDate,
+        Set<Compliance> results = complianceSnapshotCurator.getComplianceForTimespan(startDate,
                 endDate, null, null);
 
         // Ensure consumers are all found
@@ -243,12 +243,12 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         processAndCheckResults(expectedUuidsNumReports, results);
     }
 
-    private ComplianceSnapshot performGetByIdTest() {
-        List<ComplianceSnapshot> snaps = complianceSnapshotCurator.getSnapshotsOnDate(new Date(),
+    private Compliance performGetByIdTest() {
+        List<Compliance> snaps = complianceSnapshotCurator.getSnapshotsOnDate(new Date(),
                 Arrays.asList("c1", "c4"), null, null);
         // C1 should get filtered out since it was deleted before the target date.
         assertEquals(1, snaps.size());
-        ComplianceSnapshot snap = snaps.get(0);
+        Compliance snap = snaps.get(0);
         assertEquals("c4", snap.getConsumer().getUuid());
         return snap;
     }
@@ -267,10 +267,10 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         consumerStateCurator.setConsumerDeleted(uuid, deletedOn);
     }
 
-    private void processAndCheckResults(Map<String, Integer> expected, Set<ComplianceSnapshot> results) {
+    private void processAndCheckResults(Map<String, Integer> expected, Set<Compliance> results) {
         // Make sure that we find the correct counts.
         HashMap<String, Integer> processed = new HashMap<String, Integer>();
-        for (ComplianceSnapshot cs : results) {
+        for (Compliance cs : results) {
             String uuid = cs.getConsumer().getUuid();
             if (!processed.containsKey(uuid)) {
                 processed.put(uuid, 1);

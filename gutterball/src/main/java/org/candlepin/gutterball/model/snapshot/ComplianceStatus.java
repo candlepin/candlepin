@@ -12,6 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
+
 package org.candlepin.gutterball.model.snapshot;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -19,6 +20,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Index;
+
+import java.util.Date;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -32,18 +35,18 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 /**
- * A model object representing a snapshot of an Owner at a given point in time.
- *
+ * Model object that represents a consumer's status at a given point in time.
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "gb_owner_snapshot")
-public class OwnerSnapshot {
+@Table(name = "gb_compliance_status_snapshot")
+public class ComplianceStatus {
 
     @Id
     @GeneratedValue(generator = "system-uuid")
@@ -55,29 +58,28 @@ public class OwnerSnapshot {
 
     @XmlTransient
     @OneToOne(fetch = FetchType.LAZY)
-    @ForeignKey(name = "fk_consumer_snapshot")
+    @ForeignKey(name = "fk_compliance_snapshot")
     @JoinColumn(nullable = false)
-    @Index(name = "cp_consumer_snapshot_fk_idx")
+    @Index(name = "cp_compliance_snapshot_fk_idx")
     @NotNull
-    private ConsumerSnapshot consumerSnapshot;
+    private Compliance complianceSnapshot;
 
-    @Column(name = "account", nullable = false)
-    @Size(max = 255)
-    @NotNull
-    private String key;
+    @XmlElement
+    @Column(nullable = false, unique = false)
+    private Date date;
 
     @Column(nullable = false)
     @Size(max = 255)
     @NotNull
-    private String displayName;
+    private String status;
 
-    public OwnerSnapshot() {
-
+    public ComplianceStatus() {
+        // Required by hibernate.
     }
 
-    public OwnerSnapshot(String key, String displayName) {
-        this.key = key;
-        this.displayName = displayName;
+    public ComplianceStatus(Date date, String status) {
+        this.date = date;
+        this.status = status;
     }
 
     public String getId() {
@@ -89,28 +91,28 @@ public class OwnerSnapshot {
     }
 
     @XmlTransient
-    public ConsumerSnapshot getConsumerSnapshot() {
-        return consumerSnapshot;
+    public Compliance getComplianceSnapshot() {
+        return complianceSnapshot;
     }
 
-    public void setConsumerSnapshot(ConsumerSnapshot consumerSnapshot) {
-        this.consumerSnapshot = consumerSnapshot;
+    public void setComplianceSnapshot(Compliance complianceSnapshot) {
+        this.complianceSnapshot = complianceSnapshot;
     }
 
-    public String getKey() {
-        return key;
+    public Date getDate() {
+        return date;
     }
 
-    public void setKey(String key) {
-        this.key = key;
+    public void setDate(Date date) {
+        this.date = date;
     }
 
-    public String getDisplayName() {
-        return displayName;
+    public String getStatus() {
+        return status;
     }
 
-    public void setDisplayName(String displayName) {
-        this.displayName = displayName;
+    public void setStatus(String status) {
+        this.status = status;
     }
 
 }

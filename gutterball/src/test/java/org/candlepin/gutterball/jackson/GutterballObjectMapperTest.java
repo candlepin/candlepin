@@ -23,11 +23,11 @@ import static org.junit.Assert.assertTrue;
 
 import org.candlepin.gutterball.model.ConsumerState;
 import org.candlepin.gutterball.model.Event;
-import org.candlepin.gutterball.model.snapshot.ComplianceSnapshot;
-import org.candlepin.gutterball.model.snapshot.ComplianceStatusSnapshot;
-import org.candlepin.gutterball.model.snapshot.ConsumerSnapshot;
-import org.candlepin.gutterball.model.snapshot.EntitlementSnapshot;
-import org.candlepin.gutterball.model.snapshot.OwnerSnapshot;
+import org.candlepin.gutterball.model.snapshot.Compliance;
+import org.candlepin.gutterball.model.snapshot.ComplianceStatus;
+import org.candlepin.gutterball.model.snapshot.Consumer;
+import org.candlepin.gutterball.model.snapshot.Entitlement;
+import org.candlepin.gutterball.model.snapshot.Owner;
 
 import org.junit.Test;
 
@@ -74,28 +74,28 @@ public class GutterballObjectMapperTest {
         assertEquals("CREATED", event.getType());
         assertEquals("COMPLIANCE", event.getTarget());
 
-        ComplianceSnapshot cs = mapper.readValue(event.getNewEntity(), ComplianceSnapshot.class);
+        Compliance cs = mapper.readValue(event.getNewEntity(), Compliance.class);
         assertNotNull(cs);
 
-        ConsumerSnapshot consumer = cs.getConsumer();
+        Consumer consumer = cs.getConsumer();
         assertNotNull(consumer);
         assertEquals("23cfbf0f-be71-4c74-8906-5e4c685af5fd", consumer.getUuid());
 
-        OwnerSnapshot owner = consumer.getOwner();
+        Owner owner = consumer.getOwner();
         assertNotNull(owner);
         assertEquals("admin", owner.getKey());
         assertEquals("Admin Owner", owner.getDisplayName());
 
-        ComplianceStatusSnapshot status = cs.getStatus();
+        ComplianceStatus status = cs.getStatus();
         assertNotNull(status);
         assertEquals("valid", status.getStatus());
 
-        Set<EntitlementSnapshot> entitlements = cs.getEntitlements();
+        Set<Entitlement> entitlements = cs.getEntitlements();
         assertNotNull(entitlements);
         assertFalse(entitlements.isEmpty());
         assertEquals(1, entitlements.size());
 
-        EntitlementSnapshot ent = entitlements.iterator().next();
+        Entitlement ent = entitlements.iterator().next();
         assertEquals(1, ent.getQuantity());
     }
 

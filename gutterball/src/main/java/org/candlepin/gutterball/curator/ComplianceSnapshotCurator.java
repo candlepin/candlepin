@@ -15,7 +15,7 @@
 
 package org.candlepin.gutterball.curator;
 
-import org.candlepin.gutterball.model.snapshot.ComplianceSnapshot;
+import org.candlepin.gutterball.model.snapshot.Compliance;
 
 import com.google.inject.Inject;
 
@@ -32,20 +32,20 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * The curator responsible for managing {@link ComplianceSnapshot} objects.
+ * The curator responsible for managing {@link Compliance} objects.
  *
  */
-public class ComplianceSnapshotCurator extends BaseCurator<ComplianceSnapshot> {
+public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
 
     private ConsumerStateCurator consumerStateCurator;
 
     @Inject
     public ComplianceSnapshotCurator(ConsumerStateCurator consumerStateCurator) {
-        super(ComplianceSnapshot.class);
+        super(Compliance.class);
         this.consumerStateCurator = consumerStateCurator;
     }
 
-    public List<ComplianceSnapshot> getSnapshotsOnDate(
+    public List<Compliance> getSnapshotsOnDate(
             Date targetDate, List<String> consumerUuids,
             List<String> ownerFilters, List<String> statusFilters) {
 
@@ -54,10 +54,10 @@ public class ComplianceSnapshotCurator extends BaseCurator<ComplianceSnapshot> {
 
         // https://hibernate.atlassian.net/browse/HHH-2776
         if (activeConsumers == null || activeConsumers.isEmpty()) {
-            return new ArrayList<ComplianceSnapshot>();
+            return new ArrayList<Compliance>();
         }
 
-        DetachedCriteria mainQuery = DetachedCriteria.forClass(ComplianceSnapshot.class);
+        DetachedCriteria mainQuery = DetachedCriteria.forClass(Compliance.class);
         mainQuery.createAlias("consumer", "c");
         mainQuery.add(Restrictions.in("c.uuid", activeConsumers));
 
@@ -78,7 +78,7 @@ public class ComplianceSnapshotCurator extends BaseCurator<ComplianceSnapshot> {
         mainQuery.getExecutableCriteria(currentSession()).list();
 
         // Post query filter on Status.
-        Criteria postFilter = currentSession().createCriteria(ComplianceSnapshot.class)
+        Criteria postFilter = currentSession().createCriteria(Compliance.class)
             .createAlias("consumer", "cs")
             .add(Subqueries.propertiesIn(new String[] {"date", "cs.uuid"}, mainQuery));
 
@@ -90,18 +90,18 @@ public class ComplianceSnapshotCurator extends BaseCurator<ComplianceSnapshot> {
         return postFilter.list();
     }
 
-    public Set<ComplianceSnapshot> getComplianceForTimespan(Date startDate, Date endDate,
+    public Set<Compliance> getComplianceForTimespan(Date startDate, Date endDate,
             List<String> consumerIds, List<String> owners) {
 
         // If the start date is null, we can return all status updates.
         // Otherwise, we need to get every consumers latest compliance info at that point.
-        Set<ComplianceSnapshot> snaps = new HashSet<ComplianceSnapshot>();
+        Set<Compliance> snaps = new HashSet<Compliance>();
         if (startDate != null) {
             // Don't restrict by status here, it may not match to begin with, we only care if it matches
             snaps.addAll(getSnapshotsOnDate(startDate, consumerIds, owners, null));
         }
 
-        Criteria mainQuery = currentSession().createCriteria(ComplianceSnapshot.class);
+        Criteria mainQuery = currentSession().createCriteria(Compliance.class);
         mainQuery.createAlias("consumer", "c");
 
         if (consumerIds != null && !consumerIds.isEmpty()) {

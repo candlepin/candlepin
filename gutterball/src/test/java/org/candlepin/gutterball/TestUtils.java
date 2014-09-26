@@ -18,10 +18,10 @@ package org.candlepin.gutterball;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import org.candlepin.gutterball.model.snapshot.ComplianceSnapshot;
-import org.candlepin.gutterball.model.snapshot.ComplianceStatusSnapshot;
-import org.candlepin.gutterball.model.snapshot.ConsumerSnapshot;
-import org.candlepin.gutterball.model.snapshot.OwnerSnapshot;
+import org.candlepin.gutterball.model.snapshot.Compliance;
+import org.candlepin.gutterball.model.snapshot.ComplianceStatus;
+import org.candlepin.gutterball.model.snapshot.Consumer;
+import org.candlepin.gutterball.model.snapshot.Owner;
 import org.candlepin.gutterball.report.Report;
 
 import org.apache.commons.lang.RandomStringUtils;
@@ -53,20 +53,20 @@ public class TestUtils {
         return r;
     }
 
-    public static ComplianceSnapshot createComplianceSnapshot(Date statusDate, String consumerUuid,
+    public static Compliance createComplianceSnapshot(Date statusDate, String consumerUuid,
             String owner, String statusString) {
-        ConsumerSnapshot consumerSnap = new ConsumerSnapshot(consumerUuid, createOwnerSnapshot(owner, owner));
-        ComplianceStatusSnapshot statusSnap = new ComplianceStatusSnapshot(statusDate, statusString);
-        return new ComplianceSnapshot(statusDate, consumerSnap, statusSnap);
+        Consumer consumerSnap = new Consumer(consumerUuid, createOwnerSnapshot(owner, owner));
+        ComplianceStatus statusSnap = new ComplianceStatus(statusDate, statusString);
+        return new Compliance(statusDate, consumerSnap, statusSnap);
     }
 
-    public static OwnerSnapshot createOwnerSnapshot(String key, String displayName) {
-        return new OwnerSnapshot(key, displayName);
+    public static Owner createOwnerSnapshot(String key, String displayName) {
+        return new Owner(key, displayName);
     }
 
-    public static List<String> getUuidsFromSnapshots(List<ComplianceSnapshot> snaps) {
+    public static List<String> getUuidsFromSnapshots(List<Compliance> snaps) {
         List<String> uuids = new ArrayList<String>();
-        for (ComplianceSnapshot cs : snaps) {
+        for (Compliance cs : snaps) {
             uuids.add(cs.getConsumer().getUuid());
         }
         return uuids;
