@@ -21,7 +21,7 @@ import static org.junit.Assert.assertTrue;
 
 import org.candlepin.gutterball.DatabaseTestFixture;
 import org.candlepin.gutterball.TestUtils;
-import org.candlepin.gutterball.model.jpa.ConsumerState;
+import org.candlepin.gutterball.model.ConsumerState;
 
 import org.junit.Test;
 

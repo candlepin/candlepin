@@ -13,9 +13,9 @@
  * in this software or its documentation.
  */
 
-package org.candlepin.gutterball.curator.jpa;
+package org.candlepin.gutterball.curator;
 
-import org.candlepin.gutterball.model.jpa.ConsumerState;
+import org.candlepin.gutterball.model.ConsumerState;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;

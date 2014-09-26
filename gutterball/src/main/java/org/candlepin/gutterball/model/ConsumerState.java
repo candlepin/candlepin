@@ -13,23 +13,22 @@
  * in this software or its documentation.
  */
 
-package org.candlepin.gutterball.model.jpa;
+package org.candlepin.gutterball.model;
+
+import org.candlepin.gutterball.jackson.OwnerJsonToKeyConverter;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
-import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Index;
 
 import java.util.Date;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -37,16 +36,18 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
 
 /**
- * Model object that represents a consumer's status at a given point in time.
+ * Consumer master record to store created/deleted/owner info
+ * to narrow our search space
+ *
+ * We should only add info here that cannot be modified
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "gb_compliance_status_snapshot")
-public class ComplianceStatusSnapshot {
+@Table(name = "gb_consumer_state")
+public class ConsumerState {
 
     @Id
     @GeneratedValue(generator = "system-uuid")
@@ -56,30 +57,34 @@ public class ComplianceStatusSnapshot {
     @JsonIgnore
     private String id;
 
-    @XmlTransient
-    @OneToOne(fetch = FetchType.LAZY)
-    @ForeignKey(name = "fk_compliance_snapshot")
-    @JoinColumn(nullable = false)
-    @Index(name = "cp_compliance_snapshot_fk_idx")
+    @Column(nullable = false, unique = true)
+    @Size(max = 255)
     @NotNull
-    private ComplianceSnapshot complianceSnapshot;
-
-    @XmlElement
-    @Column(nullable = false, unique = false)
-    private Date date;
+    private String uuid;
 
     @Column(nullable = false)
     @Size(max = 255)
     @NotNull
-    private String status;
+    @JsonProperty("owner")
+    @JsonDeserialize(converter = OwnerJsonToKeyConverter.class)
+    private String ownerKey;
 
-    public ComplianceStatusSnapshot() {
-        // Required by hibernate.
+    @XmlElement
+    @Column(nullable = false, unique = false)
+    private Date created;
+
+    @XmlElement
+    @Column(nullable = true, unique = false)
+    private Date deleted;
+
+    public ConsumerState() {
+
     }
 
-    public ComplianceStatusSnapshot(Date date, String status) {
-        this.date = date;
-        this.status = status;
+    public ConsumerState(String uuid, String ownerKey, Date created) {
+        this.uuid = uuid;
+        this.ownerKey = ownerKey;
+        this.created = created;
     }
 
     public String getId() {
@@ -90,29 +95,36 @@ public class ComplianceStatusSnapshot {
         this.id = id;
     }
 
-    @XmlTransient
-    public ComplianceSnapshot getComplianceSnapshot() {
-        return complianceSnapshot;
+    public String getUuid() {
+        return uuid;
     }
 
-    public void setComplianceSnapshot(ComplianceSnapshot complianceSnapshot) {
-        this.complianceSnapshot = complianceSnapshot;
+    public void setUuid(String uuid) {
+        this.uuid = uuid;
     }
 
-    public Date getDate() {
-        return date;
+    public String getOwnerKey() {
+        return ownerKey;
     }
 
-    public void setDate(Date date) {
-        this.date = date;
+    public void setOwnerKey(String ownerKey) {
+        this.ownerKey = ownerKey;
     }
 
-    public String getStatus() {
-        return status;
+    public Date getCreated() {
+        return created;
     }
 
-    public void setStatus(String status) {
-        this.status = status;
+    public void setCreated(Date created) {
+        this.created = created;
+    }
+
+    public Date getDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(Date deleted) {
+        this.deleted = deleted;
     }
 
 }

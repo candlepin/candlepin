@@ -16,8 +16,8 @@
 package org.candlepin.gutterball;
 
 import org.candlepin.common.config.MapConfiguration;
-import org.candlepin.gutterball.curator.jpa.ComplianceSnapshotCurator;
-import org.candlepin.gutterball.curator.jpa.ConsumerStateCurator;
+import org.candlepin.gutterball.curator.ComplianceSnapshotCurator;
+import org.candlepin.gutterball.curator.ConsumerStateCurator;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;

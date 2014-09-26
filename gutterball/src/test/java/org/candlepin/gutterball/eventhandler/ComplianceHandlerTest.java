@@ -19,11 +19,11 @@ import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
-import org.candlepin.gutterball.curator.jpa.ComplianceSnapshotCurator;
-import org.candlepin.gutterball.model.jpa.ComplianceSnapshot;
-import org.candlepin.gutterball.model.jpa.ComplianceStatusSnapshot;
-import org.candlepin.gutterball.model.jpa.ConsumerSnapshot;
-import org.candlepin.gutterball.model.jpa.Event;
+import org.candlepin.gutterball.curator.ComplianceSnapshotCurator;
+import org.candlepin.gutterball.model.Event;
+import org.candlepin.gutterball.model.snapshot.ComplianceSnapshot;
+import org.candlepin.gutterball.model.snapshot.ComplianceStatusSnapshot;
+import org.candlepin.gutterball.model.snapshot.ConsumerSnapshot;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 

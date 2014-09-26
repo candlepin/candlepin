@@ -13,9 +13,9 @@
  * in this software or its documentation.
  */
 
-package org.candlepin.gutterball.curator.jpa;
+package org.candlepin.gutterball.curator;
 
-import org.candlepin.gutterball.model.jpa.ComplianceSnapshot;
+import org.candlepin.gutterball.model.snapshot.ComplianceSnapshot;
 
 import com.google.inject.Inject;
 

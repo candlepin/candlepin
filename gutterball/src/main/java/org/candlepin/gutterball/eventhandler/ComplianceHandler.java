@@ -14,9 +14,9 @@
  */
 package org.candlepin.gutterball.eventhandler;
 
-import org.candlepin.gutterball.curator.jpa.ComplianceSnapshotCurator;
-import org.candlepin.gutterball.model.jpa.ComplianceSnapshot;
-import org.candlepin.gutterball.model.jpa.Event;
+import org.candlepin.gutterball.curator.ComplianceSnapshotCurator;
+import org.candlepin.gutterball.model.Event;
+import org.candlepin.gutterball.model.snapshot.ComplianceSnapshot;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;

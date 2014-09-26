@@ -12,12 +12,10 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-
-package org.candlepin.gutterball.model.jpa;
+package org.candlepin.gutterball.model.snapshot;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Index;
@@ -31,36 +29,27 @@ import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 /**
- * A model object representing a snapshot of a consumer at a given point in time.
- *
+ * A model representing a snapshot of an Entitlement at a given point in time.
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "gb_consumer_snapshot")
-public class ConsumerSnapshot {
+@Table(name = "gb_entitlement_snapshot")
+public class EntitlementSnapshot {
 
     @Id
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     @Column(length = 32)
     @NotNull
-    // Ignore the id when building from JSON so that the CP id
-    // is not set from the CP record.
     @JsonIgnore
     private String id;
-
-    @Column(nullable = false)
-    @Size(max = 255)
-    @NotNull
-    private String uuid;
 
     @XmlTransient
     @OneToOne(fetch = FetchType.LAZY)
@@ -70,18 +59,14 @@ public class ConsumerSnapshot {
     @NotNull
     private ComplianceSnapshot complianceSnapshot;
 
-    @OneToOne(mappedBy = "consumerSnapshot", targetEntity = OwnerSnapshot.class)
-    @Cascade({org.hibernate.annotations.CascadeType.ALL,
-        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
-    @NotNull
-    private OwnerSnapshot owner;
+    private int quantity;
 
-    public ConsumerSnapshot() {
+    public EntitlementSnapshot() {
+
     }
 
-    public ConsumerSnapshot(String uuid, OwnerSnapshot ownerSnapshot) {
-        this.uuid = uuid;
-        setOwner(ownerSnapshot);
+    public EntitlementSnapshot(int quantity) {
+        this.quantity = quantity;
     }
 
     public String getId() {
@@ -90,14 +75,6 @@ public class ConsumerSnapshot {
 
     public void setId(String id) {
         this.id = id;
-    }
-
-    public String getUuid() {
-        return uuid;
-    }
-
-    public void setUuid(String uuid) {
-        this.uuid = uuid;
     }
 
     @XmlTransient
@@ -109,13 +86,12 @@ public class ConsumerSnapshot {
         this.complianceSnapshot = complianceSnapshot;
     }
 
-    public OwnerSnapshot getOwner() {
-        return owner;
+    public int getQuantity() {
+        return quantity;
     }
 
-    public void setOwner(OwnerSnapshot ownerSnapshot) {
-        this.owner = ownerSnapshot;
-        this.owner.setConsumerSnapshot(this);
+    public void setQuantity(int quantity) {
+        this.quantity = quantity;
     }
 
 }

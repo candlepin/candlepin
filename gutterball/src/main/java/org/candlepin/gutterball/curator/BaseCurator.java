@@ -13,7 +13,7 @@
  * in this software or its documentation.
  */
 
-package org.candlepin.gutterball.curator.jpa;
+package org.candlepin.gutterball.curator;
 
 import org.candlepin.common.exceptions.ConcurrentModificationException;
 

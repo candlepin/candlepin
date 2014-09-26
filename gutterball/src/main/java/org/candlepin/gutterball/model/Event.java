@@ -13,7 +13,7 @@
  * in this software or its documentation.
  */
 
-package org.candlepin.gutterball.model.jpa;
+package org.candlepin.gutterball.model;
 
 import org.candlepin.gutterball.jackson.PrincipalJsonToStringConverter;
 

@@ -17,10 +17,10 @@ package org.candlepin.gutterball.handler;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
-import org.candlepin.gutterball.curator.jpa.EventCurator;
+import org.candlepin.gutterball.curator.EventCurator;
 import org.candlepin.gutterball.eventhandler.EventHandler;
 import org.candlepin.gutterball.eventhandler.EventManager;
-import org.candlepin.gutterball.model.jpa.Event;
+import org.candlepin.gutterball.model.Event;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
