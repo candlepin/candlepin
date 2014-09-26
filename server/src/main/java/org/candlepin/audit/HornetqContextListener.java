@@ -69,7 +69,6 @@ public class HornetqContextListener {
             injector.getInstance(org.candlepin.common.config.Configuration.class);
 
         if (hornetqServer == null) {
-
             Configuration config = new ConfigurationImpl();
 
             HashSet<TransportConfiguration> transports =
@@ -126,6 +125,17 @@ public class HornetqContextListener {
             catch (Exception e) {
                 log.warn("Unable to load audit listener " + listeners.get(i), e);
             }
+        }
+
+        // Initialize the Event Dispatcher AFTER the internal server has been
+        // created and started.
+        HornetqEventDispatcher eventDispatcher = injector.getInstance(HornetqEventDispatcher.class);
+        try {
+            eventDispatcher.initialize();
+        }
+        catch (Exception e) {
+            log.error("Failed to initialize hornetq event dispatcher:", e);
+            throw new RuntimeException(e);
         }
     }
 

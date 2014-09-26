@@ -51,14 +51,15 @@ public class HornetqEventDispatcher  {
     @Inject
     public HornetqEventDispatcher(ObjectMapper mapper, Configuration config) {
         this.mapper = mapper;
-        try {
-            largeMsgSize = config.getInt(ConfigProperties.HORNETQ_LARGE_MSG_SIZE);
+        largeMsgSize = config.getInt(ConfigProperties.HORNETQ_LARGE_MSG_SIZE);
+    }
 
-            factory =  createClientSessionFactory();
-        }
-        catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+    /**
+     * Initializes the Singleton from the ContextListener not from the ctor.
+     * @throws Exception thrown if there's a problem creating the session factory.
+     */
+    public void initialize() throws Exception {
+        factory =  createClientSessionFactory();
     }
 
     protected ClientSessionFactory createClientSessionFactory() throws Exception {

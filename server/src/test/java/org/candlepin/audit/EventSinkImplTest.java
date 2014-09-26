@@ -81,16 +81,21 @@ public class EventSinkImplTest {
 
     /**
      * @return
+     * @throws Exception
      */
-    private EventSinkImpl createEventSink(final ClientSessionFactory sessionFactory) {
-        return new EventSinkImpl(factory,
-                new HornetqEventDispatcher(mapper, new CandlepinCommonTestConfig()) {
-                @Override
-                protected ClientSessionFactory createClientSessionFactory() {
-                    return sessionFactory;
-                }
-            }
-        );
+    private EventSinkImpl createEventSink(
+            final ClientSessionFactory sessionFactory) throws Exception {
+        HornetqEventDispatcher dispatcher =
+                new HornetqEventDispatcher(mapper,
+                        new CandlepinCommonTestConfig()) {
+
+                    @Override
+                    protected ClientSessionFactory createClientSessionFactory() {
+                        return sessionFactory;
+                    }
+                };
+        dispatcher.initialize();
+        return new EventSinkImpl(factory, dispatcher);
     }
 
     /**Set up the {@link ClientSessionFactory} to throw an exception when

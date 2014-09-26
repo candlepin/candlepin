@@ -17,6 +17,8 @@ package org.candlepin.audit;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 
+import com.google.inject.Inject;
+
 import org.slf4j.LoggerFactory;
 
 import ch.qos.logback.classic.Logger;
@@ -44,6 +46,7 @@ public class LoggingListener implements EventListener {
 
     private final DateFormat df;
 
+    @Inject
     public LoggingListener(Configuration config) {
         LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
         auditLog = lc.getLogger(LoggingListener.class.getCanonicalName() + ".AuditLog");
