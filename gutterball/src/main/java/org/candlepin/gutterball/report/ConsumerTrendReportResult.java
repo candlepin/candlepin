@@ -14,7 +14,7 @@
  */
 package org.candlepin.gutterball.report;
 
-import org.candlepin.gutterball.model.snapshot.ComplianceSnapshot;
+import org.candlepin.gutterball.model.snapshot.Compliance;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -23,13 +23,13 @@ import java.util.Set;
 /**
  * ConsumerTrendReportResult map of consumer uuid -> collection of compliance data
  */
-public class ConsumerTrendReportResult extends HashMap<String, Set<ComplianceSnapshot>>
+public class ConsumerTrendReportResult extends HashMap<String, Set<Compliance>>
     implements ReportResult {
 
-    public void add(String consumerUuid, ComplianceSnapshot snapshotToAdd) {
-        Set<ComplianceSnapshot> appendTo = get(consumerUuid);
+    public void add(String consumerUuid, Compliance snapshotToAdd) {
+        Set<Compliance> appendTo = get(consumerUuid);
         if (appendTo == null) {
-            appendTo = new HashSet<ComplianceSnapshot>();
+            appendTo = new HashSet<Compliance>();
             put(consumerUuid, appendTo);
         }
         appendTo.add(snapshotToAdd);

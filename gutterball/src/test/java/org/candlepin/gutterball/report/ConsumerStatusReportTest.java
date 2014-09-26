@@ -20,7 +20,7 @@ import static org.mockito.Mockito.*;
 
 import org.candlepin.gutterball.curator.ComplianceSnapshotCurator;
 import org.candlepin.gutterball.guice.I18nProvider;
-import org.candlepin.gutterball.model.snapshot.ComplianceSnapshot;
+import org.candlepin.gutterball.model.snapshot.Compliance;
 
 import org.jukito.JukitoModule;
 import org.jukito.JukitoRunner;
@@ -125,7 +125,7 @@ public class ConsumerStatusReportTest {
         List<String> uuids = null;
         List<String> owners = null;
 
-        MultiRowResult<ComplianceSnapshot> results = report.run(params);
+        MultiRowResult<Compliance> results = report.run(params);
         verify(complianceSnapshotCurator).getSnapshotsOnDate(any(Date.class),
                 eq(uuids), eq(owners),
                 eq(Arrays.asList("partial")));

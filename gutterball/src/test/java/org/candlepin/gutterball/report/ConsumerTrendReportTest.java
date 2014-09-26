@@ -21,7 +21,7 @@ import static org.mockito.Mockito.*;
 import org.candlepin.gutterball.DatabaseTestFixture;
 import org.candlepin.gutterball.guice.I18nProvider;
 import org.candlepin.gutterball.model.ConsumerState;
-import org.candlepin.gutterball.model.snapshot.ComplianceSnapshot;
+import org.candlepin.gutterball.model.snapshot.Compliance;
 
 import org.jukito.JukitoRunner;
 import org.junit.Before;
@@ -169,7 +169,7 @@ public class ConsumerTrendReportTest extends DatabaseTestFixture {
         List<String> foundConsumers = new ArrayList<String>();
         for (String uuid : result.keySet()) {
             // There should only be one snapshot
-            Set<ComplianceSnapshot> snapshots = result.get(uuid);
+            Set<Compliance> snapshots = result.get(uuid);
             assertEquals(1, snapshots.size());
             foundConsumers.add(uuid);
         }
@@ -192,7 +192,7 @@ public class ConsumerTrendReportTest extends DatabaseTestFixture {
         assertEquals(expectedUuidsNumReports.keySet(), result.keySet());
 
         for (String uuid : result.keySet()) {
-            Set<ComplianceSnapshot> snapshots = result.get(uuid);
+            Set<Compliance> snapshots = result.get(uuid);
             assertEquals((int) expectedUuidsNumReports.get(uuid), snapshots.size());
         }
     }
@@ -228,7 +228,7 @@ public class ConsumerTrendReportTest extends DatabaseTestFixture {
         assertEquals(expectedUuidsNumReports.keySet(), result.keySet());
 
         for (String uuid : result.keySet()) {
-            Set<ComplianceSnapshot> snapshots = result.get(uuid);
+            Set<Compliance> snapshots = result.get(uuid);
             assertEquals((int) expectedUuidsNumReports.get(uuid), snapshots.size());
         }
     }

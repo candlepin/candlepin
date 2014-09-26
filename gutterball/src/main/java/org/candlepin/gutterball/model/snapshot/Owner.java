@@ -12,12 +12,10 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-
 package org.candlepin.gutterball.model.snapshot;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Index;
@@ -38,50 +36,48 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 /**
- * A model object representing a snapshot of a consumer at a given point in time.
+ * A model object representing a snapshot of an Owner at a given point in time.
  *
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "gb_consumer_snapshot")
-public class ConsumerSnapshot {
+@Table(name = "gb_owner_snapshot")
+public class Owner {
 
     @Id
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     @Column(length = 32)
     @NotNull
-    // Ignore the id when building from JSON so that the CP id
-    // is not set from the CP record.
     @JsonIgnore
     private String id;
+
+    @XmlTransient
+    @OneToOne(fetch = FetchType.LAZY)
+    @ForeignKey(name = "fk_consumer_snapshot")
+    @JoinColumn(nullable = false)
+    @Index(name = "cp_consumer_snapshot_fk_idx")
+    @NotNull
+    private Consumer consumerSnapshot;
+
+    @Column(name = "account", nullable = false)
+    @Size(max = 255)
+    @NotNull
+    private String key;
 
     @Column(nullable = false)
     @Size(max = 255)
     @NotNull
-    private String uuid;
+    private String displayName;
 
-    @XmlTransient
-    @OneToOne(fetch = FetchType.LAZY)
-    @ForeignKey(name = "fk_compliance_snapshot")
-    @JoinColumn(nullable = false)
-    @Index(name = "cp_compliance_snapshot_fk_idx")
-    @NotNull
-    private ComplianceSnapshot complianceSnapshot;
+    public Owner() {
 
-    @OneToOne(mappedBy = "consumerSnapshot", targetEntity = OwnerSnapshot.class)
-    @Cascade({org.hibernate.annotations.CascadeType.ALL,
-        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
-    @NotNull
-    private OwnerSnapshot owner;
-
-    public ConsumerSnapshot() {
     }
 
-    public ConsumerSnapshot(String uuid, OwnerSnapshot ownerSnapshot) {
-        this.uuid = uuid;
-        setOwner(ownerSnapshot);
+    public Owner(String key, String displayName) {
+        this.key = key;
+        this.displayName = displayName;
     }
 
     public String getId() {
@@ -92,30 +88,29 @@ public class ConsumerSnapshot {
         this.id = id;
     }
 
-    public String getUuid() {
-        return uuid;
-    }
-
-    public void setUuid(String uuid) {
-        this.uuid = uuid;
-    }
-
     @XmlTransient
-    public ComplianceSnapshot getComplianceSnapshot() {
-        return complianceSnapshot;
+    public Consumer getConsumerSnapshot() {
+        return consumerSnapshot;
     }
 
-    public void setComplianceSnapshot(ComplianceSnapshot complianceSnapshot) {
-        this.complianceSnapshot = complianceSnapshot;
+    public void setConsumerSnapshot(Consumer consumerSnapshot) {
+        this.consumerSnapshot = consumerSnapshot;
     }
 
-    public OwnerSnapshot getOwner() {
-        return owner;
+    public String getKey() {
+        return key;
     }
 
-    public void setOwner(OwnerSnapshot ownerSnapshot) {
-        this.owner = ownerSnapshot;
-        this.owner.setConsumerSnapshot(this);
+    public void setKey(String key) {
+        this.key = key;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
     }
 
 }

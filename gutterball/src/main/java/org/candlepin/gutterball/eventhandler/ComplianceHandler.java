@@ -16,7 +16,7 @@ package org.candlepin.gutterball.eventhandler;
 
 import org.candlepin.gutterball.curator.ComplianceSnapshotCurator;
 import org.candlepin.gutterball.model.Event;
-import org.candlepin.gutterball.model.snapshot.ComplianceSnapshot;
+import org.candlepin.gutterball.model.snapshot.Compliance;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
@@ -47,9 +47,9 @@ public class ComplianceHandler implements EventHandler {
 
     @Override
     public void handleCreated(Event event) {
-        ComplianceSnapshot snap;
+        Compliance snap;
         try {
-            snap = mapper.readValue(event.getNewEntity(), ComplianceSnapshot.class);
+            snap = mapper.readValue(event.getNewEntity(), Compliance.class);
             // Not picked up from the event.
             snap.setDate(snap.getStatus().getDate());
         }

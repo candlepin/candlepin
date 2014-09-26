@@ -48,7 +48,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "gb_compliance_snapshot")
-public class ComplianceSnapshot {
+public class Compliance {
 
     @Id
     @GeneratedValue(generator = "system-uuid")
@@ -62,27 +62,27 @@ public class ComplianceSnapshot {
     @Column(nullable = false, unique = false)
     private Date date;
 
-    @OneToOne(mappedBy = "complianceSnapshot", targetEntity = ConsumerSnapshot.class)
+    @OneToOne(mappedBy = "complianceSnapshot", targetEntity = Consumer.class)
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
     @NotNull
-    private ConsumerSnapshot consumer;
+    private Consumer consumer;
 
-    @OneToOne(mappedBy = "complianceSnapshot", targetEntity = ComplianceStatusSnapshot.class)
+    @OneToOne(mappedBy = "complianceSnapshot", targetEntity = ComplianceStatus.class)
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
     @NotNull
-    private ComplianceStatusSnapshot status;
+    private ComplianceStatus status;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "complianceSnapshot", fetch = FetchType.LAZY)
-    private Set<EntitlementSnapshot> entitlements;
+    private Set<Entitlement> entitlements;
 
-    public ComplianceSnapshot() {
-        this.entitlements = new HashSet<EntitlementSnapshot>();
+    public Compliance() {
+        this.entitlements = new HashSet<Entitlement>();
     }
 
-    public ComplianceSnapshot(Date date, ConsumerSnapshot consumerSnapshot,
-            ComplianceStatusSnapshot statusSnapshot) {
+    public Compliance(Date date, Consumer consumerSnapshot,
+            ComplianceStatus statusSnapshot) {
         this();
         this.date = date;
         setConsumer(consumerSnapshot);
@@ -105,39 +105,39 @@ public class ComplianceSnapshot {
         this.date = date;
     }
 
-    public ConsumerSnapshot getConsumer() {
+    public Consumer getConsumer() {
         return consumer;
     }
 
-    public void setConsumer(ConsumerSnapshot consumerSnapshot) {
+    public void setConsumer(Consumer consumerSnapshot) {
         this.consumer = consumerSnapshot;
         this.consumer.setComplianceSnapshot(this);
     }
 
-    public ComplianceStatusSnapshot getStatus() {
+    public ComplianceStatus getStatus() {
         return status;
     }
 
     public void setStatus(
-            ComplianceStatusSnapshot complianceStatusSnapshot) {
+            ComplianceStatus complianceStatusSnapshot) {
         this.status = complianceStatusSnapshot;
         this.status.setComplianceSnapshot(this);
     }
 
-    public Set<EntitlementSnapshot> getEntitlements() {
+    public Set<Entitlement> getEntitlements() {
         return entitlements;
     }
 
     public void setEntitlements(
-            Set<EntitlementSnapshot> entitlementSnapshots) {
+            Set<Entitlement> entitlementSnapshots) {
         this.entitlements = entitlementSnapshots;
 
-        for (EntitlementSnapshot snapshot : this.entitlements) {
+        for (Entitlement snapshot : this.entitlements) {
             snapshot.setComplianceSnapshot(this);
         }
     }
 
-    public void addEntitlementSnapshot(EntitlementSnapshot snapshot) {
+    public void addEntitlementSnapshot(Entitlement snapshot) {
         snapshot.setComplianceSnapshot(this);
         this.entitlements.add(snapshot);
     }

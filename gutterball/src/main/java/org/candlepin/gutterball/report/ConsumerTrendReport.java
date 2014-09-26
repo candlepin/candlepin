@@ -16,7 +16,7 @@ package org.candlepin.gutterball.report;
 
 import org.candlepin.gutterball.curator.ComplianceSnapshotCurator;
 import org.candlepin.gutterball.guice.I18nProvider;
-import org.candlepin.gutterball.model.snapshot.ComplianceSnapshot;
+import org.candlepin.gutterball.model.snapshot.Compliance;
 
 import com.google.inject.Inject;
 
@@ -106,9 +106,9 @@ public class ConsumerTrendReport extends Report<ConsumerTrendReportResult> {
 
 
         ConsumerTrendReportResult result = new ConsumerTrendReportResult();
-        Set<ComplianceSnapshot> forTimeSpan = snapshotCurator.getComplianceForTimespan(
+        Set<Compliance> forTimeSpan = snapshotCurator.getComplianceForTimespan(
                 startDate, endDate, consumerIds, ownerFilters);
-        for (ComplianceSnapshot cs : forTimeSpan) {
+        for (Compliance cs : forTimeSpan) {
             result.add(cs.getConsumer().getUuid(), cs);
         }
         return result;
