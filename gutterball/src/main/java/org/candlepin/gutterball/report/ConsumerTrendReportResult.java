@@ -14,7 +14,7 @@
  */
 package org.candlepin.gutterball.report;
 
-import org.candlepin.gutterball.model.jpa.ComplianceSnapshot;
+import org.candlepin.gutterball.model.snapshot.ComplianceSnapshot;
 
 import java.util.HashMap;
 import java.util.HashSet;

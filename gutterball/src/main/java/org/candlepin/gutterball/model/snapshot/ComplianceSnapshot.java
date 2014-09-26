@@ -13,7 +13,7 @@
  * in this software or its documentation.
  */
 
-package org.candlepin.gutterball.model.jpa;
+package org.candlepin.gutterball.model.snapshot;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 

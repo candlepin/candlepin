@@ -20,8 +20,8 @@ import static org.mockito.Mockito.*;
 
 import org.candlepin.gutterball.DatabaseTestFixture;
 import org.candlepin.gutterball.guice.I18nProvider;
-import org.candlepin.gutterball.model.jpa.ComplianceSnapshot;
-import org.candlepin.gutterball.model.jpa.ConsumerState;
+import org.candlepin.gutterball.model.ConsumerState;
+import org.candlepin.gutterball.model.snapshot.ComplianceSnapshot;
 
 import org.jukito.JukitoRunner;
 import org.junit.Before;

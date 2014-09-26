@@ -21,13 +21,13 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import org.candlepin.gutterball.model.jpa.ComplianceSnapshot;
-import org.candlepin.gutterball.model.jpa.ComplianceStatusSnapshot;
-import org.candlepin.gutterball.model.jpa.ConsumerSnapshot;
-import org.candlepin.gutterball.model.jpa.ConsumerState;
-import org.candlepin.gutterball.model.jpa.EntitlementSnapshot;
-import org.candlepin.gutterball.model.jpa.Event;
-import org.candlepin.gutterball.model.jpa.OwnerSnapshot;
+import org.candlepin.gutterball.model.ConsumerState;
+import org.candlepin.gutterball.model.Event;
+import org.candlepin.gutterball.model.snapshot.ComplianceSnapshot;
+import org.candlepin.gutterball.model.snapshot.ComplianceStatusSnapshot;
+import org.candlepin.gutterball.model.snapshot.ConsumerSnapshot;
+import org.candlepin.gutterball.model.snapshot.EntitlementSnapshot;
+import org.candlepin.gutterball.model.snapshot.OwnerSnapshot;
 
 import org.junit.Test;
 

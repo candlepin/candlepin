@@ -18,9 +18,9 @@ package org.candlepin.gutterball.report;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
-import org.candlepin.gutterball.curator.jpa.ComplianceSnapshotCurator;
+import org.candlepin.gutterball.curator.ComplianceSnapshotCurator;
 import org.candlepin.gutterball.guice.I18nProvider;
-import org.candlepin.gutterball.model.jpa.ComplianceSnapshot;
+import org.candlepin.gutterball.model.snapshot.ComplianceSnapshot;
 
 import org.jukito.JukitoModule;
 import org.jukito.JukitoRunner;

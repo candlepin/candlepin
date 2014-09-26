@@ -12,13 +12,16 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.gutterball.model.jpa;
+
+package org.candlepin.gutterball.model.snapshot;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Index;
+
+import java.util.Date;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -29,19 +32,21 @@ import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 /**
- * A model representing a snapshot of an Entitlement at a given point in time.
+ * Model object that represents a consumer's status at a given point in time.
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "gb_entitlement_snapshot")
-public class EntitlementSnapshot {
+@Table(name = "gb_compliance_status_snapshot")
+public class ComplianceStatusSnapshot {
 
     @Id
     @GeneratedValue(generator = "system-uuid")
@@ -59,14 +64,22 @@ public class EntitlementSnapshot {
     @NotNull
     private ComplianceSnapshot complianceSnapshot;
 
-    private int quantity;
+    @XmlElement
+    @Column(nullable = false, unique = false)
+    private Date date;
 
-    public EntitlementSnapshot() {
+    @Column(nullable = false)
+    @Size(max = 255)
+    @NotNull
+    private String status;
 
+    public ComplianceStatusSnapshot() {
+        // Required by hibernate.
     }
 
-    public EntitlementSnapshot(int quantity) {
-        this.quantity = quantity;
+    public ComplianceStatusSnapshot(Date date, String status) {
+        this.date = date;
+        this.status = status;
     }
 
     public String getId() {
@@ -86,12 +99,20 @@ public class EntitlementSnapshot {
         this.complianceSnapshot = complianceSnapshot;
     }
 
-    public int getQuantity() {
-        return quantity;
+    public Date getDate() {
+        return date;
     }
 
-    public void setQuantity(int quantity) {
-        this.quantity = quantity;
+    public void setDate(Date date) {
+        this.date = date;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 
 }

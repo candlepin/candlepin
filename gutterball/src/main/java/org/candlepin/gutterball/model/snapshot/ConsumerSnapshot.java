@@ -13,78 +13,75 @@
  * in this software or its documentation.
  */
 
-package org.candlepin.gutterball.model.jpa;
-
-import org.candlepin.gutterball.jackson.OwnerJsonToKeyConverter;
+package org.candlepin.gutterball.model.snapshot;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
-
-import java.util.Date;
+import org.hibernate.annotations.Index;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 /**
- * Consumer master record to store created/deleted/owner info
- * to narrow our search space
+ * A model object representing a snapshot of a consumer at a given point in time.
  *
- * We should only add info here that cannot be modified
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "gb_consumer_state")
-public class ConsumerState {
+@Table(name = "gb_consumer_snapshot")
+public class ConsumerSnapshot {
 
     @Id
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     @Column(length = 32)
     @NotNull
+    // Ignore the id when building from JSON so that the CP id
+    // is not set from the CP record.
     @JsonIgnore
     private String id;
-
-    @Column(nullable = false, unique = true)
-    @Size(max = 255)
-    @NotNull
-    private String uuid;
 
     @Column(nullable = false)
     @Size(max = 255)
     @NotNull
-    @JsonProperty("owner")
-    @JsonDeserialize(converter = OwnerJsonToKeyConverter.class)
-    private String ownerKey;
+    private String uuid;
 
-    @XmlElement
-    @Column(nullable = false, unique = false)
-    private Date created;
+    @XmlTransient
+    @OneToOne(fetch = FetchType.LAZY)
+    @ForeignKey(name = "fk_compliance_snapshot")
+    @JoinColumn(nullable = false)
+    @Index(name = "cp_compliance_snapshot_fk_idx")
+    @NotNull
+    private ComplianceSnapshot complianceSnapshot;
 
-    @XmlElement
-    @Column(nullable = true, unique = false)
-    private Date deleted;
+    @OneToOne(mappedBy = "consumerSnapshot", targetEntity = OwnerSnapshot.class)
+    @Cascade({org.hibernate.annotations.CascadeType.ALL,
+        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+    @NotNull
+    private OwnerSnapshot owner;
 
-    public ConsumerState() {
-
+    public ConsumerSnapshot() {
     }
 
-    public ConsumerState(String uuid, String ownerKey, Date created) {
+    public ConsumerSnapshot(String uuid, OwnerSnapshot ownerSnapshot) {
         this.uuid = uuid;
-        this.ownerKey = ownerKey;
-        this.created = created;
+        setOwner(ownerSnapshot);
     }
 
     public String getId() {
@@ -103,28 +100,22 @@ public class ConsumerState {
         this.uuid = uuid;
     }
 
-    public String getOwnerKey() {
-        return ownerKey;
+    @XmlTransient
+    public ComplianceSnapshot getComplianceSnapshot() {
+        return complianceSnapshot;
     }
 
-    public void setOwnerKey(String ownerKey) {
-        this.ownerKey = ownerKey;
+    public void setComplianceSnapshot(ComplianceSnapshot complianceSnapshot) {
+        this.complianceSnapshot = complianceSnapshot;
     }
 
-    public Date getCreated() {
-        return created;
+    public OwnerSnapshot getOwner() {
+        return owner;
     }
 
-    public void setCreated(Date created) {
-        this.created = created;
-    }
-
-    public Date getDeleted() {
-        return deleted;
-    }
-
-    public void setDeleted(Date deleted) {
-        this.deleted = deleted;
+    public void setOwner(OwnerSnapshot ownerSnapshot) {
+        this.owner = ownerSnapshot;
+        this.owner.setConsumerSnapshot(this);
     }
 
 }

@@ -15,9 +15,9 @@
 
 package org.candlepin.gutterball.report;
 
-import org.candlepin.gutterball.curator.jpa.ComplianceSnapshotCurator;
+import org.candlepin.gutterball.curator.ComplianceSnapshotCurator;
 import org.candlepin.gutterball.guice.I18nProvider;
-import org.candlepin.gutterball.model.jpa.ComplianceSnapshot;
+import org.candlepin.gutterball.model.snapshot.ComplianceSnapshot;
 
 import com.google.inject.Inject;
 

@@ -14,7 +14,7 @@
  */
 package org.candlepin.gutterball.eventhandler;
 
-import org.candlepin.gutterball.model.jpa.Event;
+import org.candlepin.gutterball.model.Event;
 
 
 /**

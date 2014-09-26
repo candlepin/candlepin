@@ -14,9 +14,9 @@
  */
 package org.candlepin.gutterball.eventhandler;
 
-import org.candlepin.gutterball.curator.jpa.ConsumerStateCurator;
-import org.candlepin.gutterball.model.jpa.ConsumerState;
-import org.candlepin.gutterball.model.jpa.Event;
+import org.candlepin.gutterball.curator.ConsumerStateCurator;
+import org.candlepin.gutterball.model.ConsumerState;
+import org.candlepin.gutterball.model.Event;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;

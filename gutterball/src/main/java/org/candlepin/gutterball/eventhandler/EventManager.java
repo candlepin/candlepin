@@ -14,8 +14,8 @@
  */
 package org.candlepin.gutterball.eventhandler;
 
-import org.candlepin.gutterball.curator.jpa.EventCurator;
-import org.candlepin.gutterball.model.jpa.Event;
+import org.candlepin.gutterball.curator.EventCurator;
+import org.candlepin.gutterball.model.Event;
 
 import com.google.inject.Inject;
 

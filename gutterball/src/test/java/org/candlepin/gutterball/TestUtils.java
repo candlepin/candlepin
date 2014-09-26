@@ -18,10 +18,10 @@ package org.candlepin.gutterball;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import org.candlepin.gutterball.model.jpa.ComplianceSnapshot;
-import org.candlepin.gutterball.model.jpa.ComplianceStatusSnapshot;
-import org.candlepin.gutterball.model.jpa.ConsumerSnapshot;
-import org.candlepin.gutterball.model.jpa.OwnerSnapshot;
+import org.candlepin.gutterball.model.snapshot.ComplianceSnapshot;
+import org.candlepin.gutterball.model.snapshot.ComplianceStatusSnapshot;
+import org.candlepin.gutterball.model.snapshot.ConsumerSnapshot;
+import org.candlepin.gutterball.model.snapshot.OwnerSnapshot;
 import org.candlepin.gutterball.report.Report;
 
 import org.apache.commons.lang.RandomStringUtils;

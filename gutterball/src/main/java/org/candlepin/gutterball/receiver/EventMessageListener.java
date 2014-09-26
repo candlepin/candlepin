@@ -15,7 +15,7 @@
 package org.candlepin.gutterball.receiver;
 
 import org.candlepin.gutterball.eventhandler.EventManager;
-import org.candlepin.gutterball.model.jpa.Event;
+import org.candlepin.gutterball.model.Event;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
