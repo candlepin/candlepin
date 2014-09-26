@@ -18,7 +18,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
- *	Gutterball's ObjectMapper that ensures that it is configured the
+ *  Gutterball's ObjectMapper that ensures that it is configured the
  *  same in the app and in tests.
  */
 public class GutterballObjectMapper extends ObjectMapper {

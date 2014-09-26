@@ -52,7 +52,6 @@ import org.candlepin.gutterball.resource.StatusResource;
 import org.candlepin.gutterball.resteasy.JsonProvider;
 import org.candlepin.gutterball.util.EventHandlerLoader;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.MapBinder;
