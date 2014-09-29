@@ -41,8 +41,6 @@ import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerialDto;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCapability;
-import org.candlepin.model.ConsumerContentOverride;
-import org.candlepin.model.ConsumerContentOverrideCurator;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
@@ -72,10 +70,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.Release;
 import org.candlepin.model.User;
 import org.candlepin.model.activationkeys.ActivationKey;
-import org.candlepin.model.activationkeys.ActivationKeyContentOverride;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
-import org.candlepin.model.activationkeys.ActivationKeyPool;
-import org.candlepin.model.activationkeys.ActivationKeyProduct;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.paging.Paginate;
@@ -84,10 +79,9 @@ import org.candlepin.pinsetter.tasks.EntitlerJob;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.consumer.ConsumerRules;
-import org.candlepin.policy.js.quantity.QuantityRules;
-import org.candlepin.policy.js.quantity.SuggestedQuantity;
 import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
+import org.candlepin.resource.util.ConsumerBindUtil;
 import org.candlepin.resource.util.ConsumerInstalledProductEnricher;
 import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.resteasy.parameter.CandlepinParam;
@@ -99,7 +93,6 @@ import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.sync.ExportCreationException;
 import org.candlepin.sync.Exporter;
-import org.candlepin.util.ServiceLevelValidator;
 import org.candlepin.util.Util;
 import org.candlepin.version.CertVersionConflictException;
 
@@ -119,7 +112,6 @@ import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -181,10 +173,8 @@ public class ConsumerResource {
     private DistributorVersionCurator distributorVersionCurator;
     private CdnCurator cdnCurator;
     private Config config;
-    private QuantityRules quantityRules;
     private CalculatedAttributesUtil calculatedAttributesUtil;
-    private ConsumerContentOverrideCurator consumerContentOverrideCurator;
-    private ServiceLevelValidator serviceLevelValidator;
+    private ConsumerBindUtil consumerBindUtil;
 
     @Inject
     public ConsumerResource(ConsumerCurator consumerCurator,
@@ -202,11 +192,9 @@ public class ConsumerResource {
         ComplianceRules complianceRules, DeletedConsumerCurator deletedConsumerCurator,
         EnvironmentCurator environmentCurator,
         DistributorVersionCurator distributorVersionCurator,
-        Config config, QuantityRules quantityRules,
-        ContentCurator contentCurator,
+        Config config, ContentCurator contentCurator,
         CdnCurator cdnCurator, CalculatedAttributesUtil calculatedAttributesUtil,
-        ConsumerContentOverrideCurator consumerContentOverrideCurator,
-        ServiceLevelValidator serviceLevelValidator) {
+        ConsumerBindUtil consumerBindUtil) {
 
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -237,10 +225,8 @@ public class ConsumerResource {
         this.consumerSystemNamePattern = Pattern.compile(config.getString(
             ConfigProperties.CONSUMER_SYSTEM_NAME_PATTERN));
         this.config = config;
-        this.quantityRules = quantityRules;
         this.calculatedAttributesUtil = calculatedAttributesUtil;
-        this.consumerContentOverrideCurator = consumerContentOverrideCurator;
-        this.serviceLevelValidator = serviceLevelValidator;
+        this.consumerBindUtil = consumerBindUtil;
     }
 
     /**
@@ -494,7 +480,7 @@ public class ConsumerResource {
             hvsrId.setConsumer(consumer);
         }
 
-        serviceLevelValidator.validate(owner, consumer.getServiceLevel());
+        consumerBindUtil.validateServiceLevel(owner, consumer.getServiceLevel());
 
         try {
             consumer = consumerCurator.create(consumer);
@@ -503,7 +489,7 @@ public class ConsumerResource {
 
             sink.emitConsumerCreated(consumer);
 
-            handleActivationKeys(consumer, keys);
+            consumerBindUtil.handleActivationKeys(consumer, keys);
 
             // Don't allow complianceRules to update entitlementStatus, because we're about to perform
             // an update unconditionally.
@@ -523,96 +509,6 @@ public class ConsumerResource {
             log.error("Problem creating unit:", e);
             throw new BadRequestException(i18n.tr(
                 "Problem creating unit {0}", consumer));
-        }
-    }
-
-    private void handleActivationKeys(Consumer consumer, List<ActivationKey> keys) {
-        // Process activation keys.
-        for (ActivationKey key : keys) {
-            handleActivationKeyOverrides(consumer, key.getContentOverrides());
-            handleActivationKeyRelease(consumer, key.getReleaseVer());
-            handleActivationKeyServiceLevel(consumer, key.getServiceLevel(), key.getOwner());
-            if (key.isAutoAttach()) {
-                handleActivationKeyAutoBind(consumer, key);
-            }
-            else {
-                handleActivationKeyPools(consumer, key);
-            }
-        }
-    }
-
-    private void handleActivationKeyPools(Consumer consumer,
-        ActivationKey key) {
-        List<ActivationKeyPool> toBind = new LinkedList<ActivationKeyPool>();
-        for (ActivationKeyPool akp : key.getPools()) {
-            Util.assertNotNull(akp.getPool().getId(),
-                i18n.tr("Pool ID must be provided"));
-            toBind.add(akp);
-        }
-
-        // Sort pools before binding to avoid deadlocks
-        Collections.sort(toBind);
-        for (ActivationKeyPool akp : toBind) {
-            int quantity = (akp.getQuantity() == null) ?
-                getQuantityToBind(akp.getPool(), consumer) :
-                    akp.getQuantity().intValue();
-            entitler.sendEvents(entitler.bindByPool(
-                akp.getPool().getId(), consumer, quantity));
-        }
-    }
-
-    private void handleActivationKeyAutoBind(Consumer consumer, ActivationKey key) {
-        try {
-            Set<String> productIds = new HashSet<String>();
-            List<String> poolIds = new ArrayList<String>();
-            for (ActivationKeyProduct akpid : key.getProductIds()) {
-                productIds.add(akpid.getProduct().getId());
-            }
-            for (ConsumerInstalledProduct cip : consumer.getInstalledProducts()) {
-                productIds.add(cip.getProductId());
-            }
-            for (ActivationKeyPool p : key.getPools()) {
-                poolIds.add(p.getPool().getId());
-            }
-            AutobindData autobindData = AutobindData.create(consumer)
-                    .forProducts(productIds.toArray(new String[0]))
-                    .withPools(poolIds);
-            List<Entitlement> ents = entitler.bindByProducts(autobindData);
-            entitler.sendEvents(ents);
-        }
-        catch (ForbiddenException fe) {
-            throw fe;
-        }
-        catch (CertVersionConflictException cvce) {
-            throw cvce;
-        }
-        catch (RuntimeException re) {
-            log.warn("Unable to attach a subscription for a product that " +
-                "has no pool: " + re.getMessage());
-        }
-    }
-
-    private void handleActivationKeyOverrides(Consumer consumer,
-            Set<ActivationKeyContentOverride> overrides) {
-        for (ActivationKeyContentOverride akco : overrides) {
-            ConsumerContentOverride consumerOverride =
-                akco.buildConsumerContentOverride(consumer);
-            this.consumerContentOverrideCurator.addOrUpdate(consumer, consumerOverride);
-        }
-    }
-
-    private void handleActivationKeyRelease(Consumer consumer, Release release) {
-        String relVerString = release.getReleaseVer();
-        if (relVerString != null && !relVerString.isEmpty()) {
-            consumer.setReleaseVer(release);
-        }
-    }
-
-    private void handleActivationKeyServiceLevel(Consumer consumer,
-            String level, Owner owner) {
-        if (!StringUtils.isBlank(level)) {
-            serviceLevelValidator.validate(owner, level);
-            consumer.setServiceLevel(level);
         }
     }
 
@@ -947,7 +843,7 @@ public class ConsumerResource {
             if (log.isDebugEnabled()) {
                 log.debug("   Updating consumer service level setting.");
             }
-            serviceLevelValidator.validate(toUpdate.getOwner(), level);
+            consumerBindUtil.validateServiceLevel(toUpdate.getOwner(), level);
             toUpdate.setServiceLevel(level);
             changesMade = true;
         }
@@ -1534,7 +1430,7 @@ public class ConsumerResource {
         if (poolIdString != null && quantity == null) {
             Pool pool = poolManager.find(poolIdString);
             if (pool != null) {
-                quantity = getQuantityToBind(pool, consumer);
+                quantity = consumerBindUtil.getQuantityToBind(pool, consumer);
             }
             else {
                 quantity = 1;
@@ -1628,7 +1524,7 @@ public class ConsumerResource {
         List<PoolQuantity> dryRunPools = new ArrayList<PoolQuantity>();
 
         try {
-            serviceLevelValidator.validate(consumer.getOwner(), serviceLevel);
+            consumerBindUtil.validateServiceLevel(consumer.getOwner(), serviceLevel);
             dryRunPools = entitler.getDryRun(consumer, serviceLevel);
         }
         catch (ForbiddenException fe) {
@@ -2142,21 +2038,6 @@ public class ConsumerResource {
                 "Deletion record for hypervisor ''{0}'' not found.", uuid));
         }
         deletedConsumerCurator.delete(dc);
-    }
-
-    private int getQuantityToBind(Pool pool, Consumer consumer) {
-        Date now = new Date();
-        // If the pool is being attached in the future, calculate
-        // suggested quantity on the start date
-        Date onDate = now.before(pool.getStartDate()) ?
-            pool.getStartDate() : now;
-        SuggestedQuantity suggested = quantityRules.getSuggestedQuantity(pool,
-            consumer, onDate);
-        int quantity = Math.max(suggested.getIncrement().intValue(),
-            suggested.getSuggested().intValue());
-        //It's possible that increment is greater than the number available
-        //but whatever we do here, the bind will fail
-        return quantity;
     }
 
     private void addCalculatedAttributes(Entitlement ent) {
