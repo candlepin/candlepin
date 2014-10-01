@@ -20,6 +20,7 @@ import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.PinsetterJobListener;
+import org.candlepin.pinsetter.core.RetryJobException;
 import org.candlepin.pinsetter.core.model.JobStatus;
 
 import com.google.inject.Inject;
@@ -73,37 +74,42 @@ public abstract class KingpinJob implements Job {
         try {
             toExecute(context);
         }
+        /*
+         * Very important exception handling here, in some cases we want to allow the
+         * possibility of re-trying jobs which fail for a variety of reasons. (typically
+         * refresh pools job) Possible re-try scenarios:
+         *
+         *  - one job attempts to delete a pool that was deleted by another job
+         *  - one job attempts to add a pool that was already added
+         *  - one job attempts to update a pool that was already updated
+         *  - concurrent inserts deadlocking due to mysql gap locking
+         *
+         *  These can surface as a PersistenceException, also as other runtime exceptions
+         *  from specific JDBC drivers which wrap SQLException. We let the jobs themselves
+         *  sort this out and throw a specific exception to indicate a retry is an option.
+         */
         catch (PersistenceException e) {
-            // Multiple refreshpools running at once can cause the following:
-            // one job attempts to delete a pool that was deleted by another job
-            // one job attempts to add a pool that was already added
-            // one job attempts to update a pool that was already updated
-            // all 3 of these conditions will cause some form of JPA/hibernate
-            // exception to bubble up.  the exception seems to vary based on the
-            // underlying db, so just catch the top level exception. We then
-            // throw an exception that will let pinsetter/quartz know  that
-            // there was a race condition detected, and get it to reschedule
-            // the job. the other job will have completed successfully, and
-            // this one can then run (and possibly use new information, which
-            // is why there could be two jobs in the queue for  the same owner).
-            //
-            // I guess if other jobs fail its ok to restart them, too?
-            // note that we have to catch at this level rather than inside the
-            // job for any update collisions, which will only be detected
-            // on commit.
-
-            int maxRefires = getMaxRetries();
-            // If the maximum is sub-zero, do not enforce any limit
-            boolean refire = maxRefires < 0 || context.getRefireCount() < maxRefires;
-            log.error("Persistence exception caught running pinsetter task. Attempt: " +
-                context.getRefireCount() + ", Refire: " + refire, e);
-            throw new JobExecutionException(e, refire);
+            refireCheck(context, e);
+        }
+        catch (RetryJobException e) {
+            refireCheck(context, e);
         }
         finally {
             if (startedUow) {
                 endUnitOfWork();
             }
         }
+    }
+
+    private void refireCheck(JobExecutionContext context, Exception e)
+        throws JobExecutionException {
+
+        int maxRefires = getMaxRetries();
+        // If the maximum is sub-zero, do not enforce any limit
+        boolean refire = maxRefires < 0 || context.getRefireCount() < maxRefires;
+        log.error("Persistence exception caught running pinsetter task. Attempt: " +
+            context.getRefireCount() + ", Refire: " + refire, e);
+        throw new JobExecutionException(e, refire);
     }
 
     /**
