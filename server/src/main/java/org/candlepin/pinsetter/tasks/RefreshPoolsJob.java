@@ -14,11 +14,12 @@
  */
 package org.candlepin.pinsetter.tasks;
 
-import static org.quartz.JobBuilder.*;
+import static org.quartz.JobBuilder.newJob;
 
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.pinsetter.core.RetryJobException;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.util.Util;
 
@@ -30,6 +31,10 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.sql.SQLException;
+
+import javax.persistence.PersistenceException;
 
 /**
  * Asynchronous job for refreshing the entitlement pools for specific
@@ -73,7 +78,26 @@ public class RefreshPoolsJob extends UniqueByOwnerJob {
             poolManager.getRefresher(lazy).setUnitOfWork(unitOfWork).add(owner).run();
             context.setResult("Pools refreshed for owner " + owner.getDisplayName());
         }
-        // Catch any exception that is fired and re-throw as a
+        catch (PersistenceException e) {
+            throw new RetryJobException("RefreshPoolsJob encountered a problem.", e);
+        }
+        catch (RuntimeException e) {
+            Throwable cause = e.getCause();
+            while (cause != null) {
+                if (SQLException.class.isAssignableFrom(cause.getClass())) {
+                    log.warn("Caught a runtime exception wrapping an SQLException.");
+                    throw new RetryJobException("RefreshPoolsJob encountered a problem.",
+                            e);
+                }
+                cause = cause.getCause();
+            }
+
+            // Otherwise throw as we would normally for any generic Exception:
+            log.error("RefreshPoolsJob encountered a problem.", e);
+            context.setResult(e.getMessage());
+            throw new JobExecutionException(e.getMessage(), e, false);
+        }
+        // Catch any other exception that is fired and re-throw as a
         // JobExecutionException so that the job will be properly
         // cleaned up on failure.
         catch (Exception e) {

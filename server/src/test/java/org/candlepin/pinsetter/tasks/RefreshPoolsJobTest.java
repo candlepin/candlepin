@@ -25,26 +25,35 @@ import org.candlepin.pinsetter.core.model.JobStatus;
 
 import com.google.inject.persist.UnitOfWork;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
+import java.sql.SQLException;
+
 /**
  * RefreshPoolsJobTest
  */
 public class RefreshPoolsJobTest {
 
-    @Test
-    public void execute() throws Exception {
-        // prep
-        CandlepinPoolManager pm = mock(CandlepinPoolManager.class);
-        OwnerCurator oc = mock(OwnerCurator.class);
-        Owner owner = mock(Owner.class);
-        JobExecutionContext ctx = mock(JobExecutionContext.class);
-        JobDataMap jdm = mock(JobDataMap.class);
-        Refresher refresher = mock(Refresher.class);
+    private CandlepinPoolManager pm;
+    private OwnerCurator oc;
+    private Owner owner;
+    private JobExecutionContext ctx;
+    private JobDataMap jdm;
+    private Refresher refresher;
+
+    @Before
+    public void setUp() {
+        pm = mock(CandlepinPoolManager.class);
+        oc = mock(OwnerCurator.class);
+        owner = mock(Owner.class);
+        ctx = mock(JobExecutionContext.class);
+        jdm = mock(JobDataMap.class);
+        refresher = mock(Refresher.class);
 
         when(ctx.getMergedJobDataMap()).thenReturn(jdm);
         when(jdm.getString(eq(JobStatus.TARGET_ID))).thenReturn("someownerkey");
@@ -54,7 +63,10 @@ public class RefreshPoolsJobTest {
         when(pm.getRefresher(eq(true))).thenReturn(refresher);
         when(refresher.add(eq(owner))).thenReturn(refresher);
         when(refresher.setUnitOfWork(any(UnitOfWork.class))).thenReturn(refresher);
+    }
 
+    @Test
+    public void execute() throws Exception {
         // test
         RefreshPoolsJob rpj = new RefreshPoolsJob(oc, pm);
         rpj.execute(ctx);
@@ -78,28 +90,68 @@ public class RefreshPoolsJobTest {
         assertEquals("owner key", detail.getJobDataMap().get(JobStatus.TARGET_ID));
     }
 
-    @Test(expected = JobExecutionException.class)
+    @Test
     public void handleException() throws JobExecutionException {
-        // prep
-        CandlepinPoolManager pm = mock(CandlepinPoolManager.class);
-        OwnerCurator oc = mock(OwnerCurator.class);
-        Owner owner = mock(Owner.class);
-        JobExecutionContext ctx = mock(JobExecutionContext.class);
-        JobDataMap jdm = mock(JobDataMap.class);
-        Refresher refresher = mock(Refresher.class);
-
-        when(ctx.getMergedJobDataMap()).thenReturn(jdm);
-        when(jdm.getString(eq(JobStatus.TARGET_ID))).thenReturn("someownerkey");
-        when(jdm.getBoolean(eq(RefreshPoolsJob.LAZY_REGEN))).thenReturn(true);
-        when(oc.lookupByKey(eq("someownerkey"))).thenReturn(owner);
-        when(pm.getRefresher(eq(true))).thenReturn(refresher);
-        when(refresher.add(eq(owner))).thenReturn(refresher);
-
         // the real thing we want to handle
         doThrow(new NullPointerException()).when(refresher).run();
 
-        // test
         RefreshPoolsJob rpj = new RefreshPoolsJob(oc, pm);
-        rpj.execute(ctx);
+        try {
+            rpj.execute(ctx);
+            fail("Expected exception not thrown");
+        }
+        catch (JobExecutionException ex) {
+            assertFalse(ex.refireImmediately());
+        }
+    }
+
+    // If we encounter a runtime job exception, wrapping a SQLException, we should see
+    // a refire job exception thrown:
+    @Test
+    public void refireOnWrappedSQLException() throws JobExecutionException {
+        RuntimeException e = new RuntimeException("uh oh", new SQLException("not good"));
+        doThrow(e).when(refresher).run();
+
+        RefreshPoolsJob rpj = new RefreshPoolsJob(oc, pm);
+        try {
+            rpj.execute(ctx);
+            fail("Expected exception not thrown");
+        }
+        catch (JobExecutionException ex) {
+            assertTrue(ex.refireImmediately());
+        }
+    }
+
+    // If we encounter a runtime job exception, wrapping a SQLException, we should see
+    // a refire job exception thrown:
+    @Test
+    public void refireOnMultiLayerWrappedSQLException() throws JobExecutionException {
+        RuntimeException e = new RuntimeException("uh oh", new SQLException("not good"));
+        RuntimeException e2 = new RuntimeException("trouble!", e);
+        doThrow(e2).when(refresher).run();
+
+        RefreshPoolsJob rpj = new RefreshPoolsJob(oc, pm);
+        try {
+            rpj.execute(ctx);
+            fail("Expected exception not thrown");
+        }
+        catch (JobExecutionException ex) {
+            assertTrue(ex.refireImmediately());
+        }
+    }
+
+    @Test
+    public void noRefireOnRegularRuntimeException() throws JobExecutionException {
+        RuntimeException e = new RuntimeException("uh oh", new NullPointerException());
+        doThrow(e).when(refresher).run();
+
+        RefreshPoolsJob rpj = new RefreshPoolsJob(oc, pm);
+        try {
+            rpj.execute(ctx);
+            fail("Expected exception not thrown");
+        }
+        catch (JobExecutionException ex) {
+            assertFalse(ex.refireImmediately());
+        }
     }
 }

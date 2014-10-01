@@ -193,6 +193,7 @@ public class CandlepinPoolManager implements PoolManager {
         // BUG 1012386 This will regenerate master/derived for bonus scenarios
         //  if only one of the pair still exists.
         createPoolsForSubscription(sub, subscriptionPools);
+
         regenerateCertificatesByEntIds(
             // don't update floating here, we'll do that later
             // so we don't update anything twice
