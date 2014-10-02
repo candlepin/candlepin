@@ -16,6 +16,7 @@ package org.candlepin.common.exceptions.mappers;
 
 import static org.jboss.resteasy.util.MediaTypeHelper.*;
 
+import org.candlepin.common.exceptions.CandlepinException;
 import org.candlepin.common.exceptions.ExceptionMessage;
 import org.candlepin.common.util.VersionUtil;
 
@@ -109,7 +110,9 @@ public class CandlepinExceptionMapper {
             message = i18n.get().tr("Runtime Error {0}", exception.getMessage());
         }
 
-        log.error(message, exception);
+        if(!(exception instanceof CandlepinException) || ((CandlepinException) exception).isLogException()){
+            log.error(message, exception);
+        }
         if (status == null) {
             status = Status.INTERNAL_SERVER_ERROR;
         }
