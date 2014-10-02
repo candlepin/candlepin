@@ -22,6 +22,7 @@
 **/.syntastic_javac_config
 **/.zanata-cache
 **/tags
+**/.settings
 
 **/build/
 **/custom.yaml

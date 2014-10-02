@@ -28,6 +28,11 @@ public class UnauthorizedException extends CandlepinException {
         super(Status.UNAUTHORIZED, message);
     }
 
+    public UnauthorizedException(String message, boolean logException) {
+        super(Status.UNAUTHORIZED, message, logException);
+    }
+
+    @Override
     public Map<String, String> headers() {
         HashMap<String, String> negHeaders = new HashMap<String, String>();
         negHeaders.put("WWW-Authenticate", "Negotiate");

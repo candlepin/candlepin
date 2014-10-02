@@ -109,7 +109,9 @@ public class CandlepinExceptionMapper {
             message = i18n.get().tr("Runtime Error {0}", exception.getMessage());
         }
 
-        log.error(message, exception);
+        if(!(exception instanceof CandlepinException) || ((CandlepinException) exception).isLogException()){
+            log.error(message, exception);
+        }
         if (status == null) {
             status = Status.INTERNAL_SERVER_ERROR;
         }
