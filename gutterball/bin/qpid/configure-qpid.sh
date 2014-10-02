@@ -32,6 +32,10 @@ create_ca_cert() {
     # prep for creating certificates
     mkdir -p "$CA_DB"
 
+    if sudo certutil -L -d /etc/qpid/brokerdb -n broker &>> $LOG; then
+        CA_DB="/etc/qpid/brokerdb"
+    fi
+
     local existing_ca="$(fp_nss "$CA_DB" "$CA_NAME")"
     local generated_ca="$(fp_file "$CERT_LOC/qpid_ca.crt")"
 
@@ -74,7 +78,7 @@ create_client_certs() {
         local existing_jks="$(fp_jks "/etc/$client/certs/amqp/$client.jks" "$nss_nick")"
 
         # The NSS DB can have multiple certs with the same nickname.
-        local occurrences=$(certutil -L -d "$CA_DB" | grep "$client" | wc -l)
+        local occurrences=$(sudo certutil -L -d "$CA_DB" | grep "$client" | wc -l)
 
         # Skip if everything is equal and there are no duplicates
         if [ "$existing_nss" == "$existing_generated" -a "$existing_jks" == "$existing_generated" -a $occurrences -eq 1 ]; then
@@ -88,8 +92,8 @@ create_client_certs() {
         if [ -z "$existing_generated" -a $occurrences -gt 0 -o "$existing_nss" != "$existing_generated" -o $occurrences -gt 1 ]; then
             warn_msg "Cert mismatch in NSS DB for $client.  Removing unknown cert if neccessary."
             # Certutil can have multiple certs with the same alias.  Kill them all.
-            while certutil -L -d "$CA_DB" -n "$nss_nick" &> /dev/null; do
-                certutil -D -d "$CA_DB" -n "$nss_nick" &>> $LOG
+            while sudo certutil -L -d "$CA_DB" -n "$nss_nick" &> /dev/null; do
+                sudo certutil -D -d "$CA_DB" -n "$nss_nick" &>> $LOG
             done
         fi
 
@@ -97,8 +101,9 @@ create_client_certs() {
             # Generate the key and certificate signing request in DER format (certutil requires it for some stupid reason)
             openssl req -nodes -new -newkey rsa:2048 -out "$dest.der.csr" -keyout "$dest.key" -subj "$SUBJ/OU=$client/CN=$CN_NAME" -passin pass:$JAVA_PASS  -outform DER &>> $LOG
 
-            # Sign the CSR with the Qpid CA from the NSS DB
-            certutil -C -c "$CA_NAME" -i "$dest.der.csr" -o "$dest.der.crt" -v 120 -f "$CA_PASS_FILE" -d "$CA_DB" &>> $LOG
+            # Sign the CSR with the Qpid CA from the NSS DB.  Don't use the -o option to give an output file name because
+            # with sudo the file will get the wrong permissions.
+            sudo certutil -C -c "$CA_NAME" -i "$dest.der.csr" -v 120 -f "$CA_PASS_FILE" -d "$CA_DB" > "$dest.der.crt"  2>> $LOG
 
             # Converting to PEM isn't strictly necessary but it's nice for future operations
             openssl x509 -in "$dest.der.crt" -inform DER -out "$dest.crt" -outform PEM &>> $LOG
@@ -148,9 +153,11 @@ is_rpm_installed() {
 }
 
 make_cert_db() {
-    sudo mkdir -p /etc/qpid/brokerdb
-    sudo cp "$CA_DB"/* /etc/qpid/brokerdb/
-    sudo cp "$CA_PASS_FILE" /etc/qpid/brokerdb/qpid_ca.password
+    if [ "$CA_DB" != "/etc/qpid/brokerdb" ]; then
+        sudo mkdir -p /etc/qpid/brokerdb
+        sudo cp "$CA_DB"/* /etc/qpid/brokerdb/
+        sudo cp "$CA_PASS_FILE" /etc/qpid/brokerdb/qpid_ca.password
+    fi
     sudo chown -R qpidd:qpidd /etc/qpid/brokerdb
 }
 
