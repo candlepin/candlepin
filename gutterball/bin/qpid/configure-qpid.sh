@@ -28,60 +28,6 @@ define_variables() {
     CA_PASS="$(cat $CA_PASS_FILE)"
 }
 
-# Note that this function takes certificate strings as parameters
-# and not the file names of certificate files!  Also note that when
-# dealing with a certificate string, you should always quote the
-# variable to preserve the newlines.
-fingerprint() {
-    local cert="$1"
-    if [ -n "$cert" ]; then
-        echo "$cert" | openssl x509 -noout -fingerprint | cut -d= -f2
-    else
-        echo ""
-    fi
-}
-
-fp_file() {
-    echo "$(fingerprint "$(cert_from_file "$@")")"
-}
-
-fp_nss() {
-    echo "$(fingerprint "$(cert_from_nss "$@")")"
-}
-
-fp_jks() {
-    echo "$(fingerprint "$(cert_from_jks "$@")")"
-}
-
-cert_from_file() {
-    if [ -e "$1" ]; then
-        # Some cert files have other human readable junk in them.  I'm looking at you, Katello.
-        openssl x509 -in "$1"
-    else
-        echo ""
-    fi
-}
-
-cert_from_nss() {
-    local db="$1"
-    local cert_alias="$2"
-    if [ -d "$db" ]; then
-        sudo certutil -L -d "$db" -n "$cert_alias" -a 2> /dev/null || echo ""
-    else
-        echo ""
-    fi
-}
-
-cert_from_jks() {
-    local jks="$1"
-    local cert_alias="$2"
-    if [ -e "$jks" ]; then
-        sudo keytool -exportcert -alias "$cert_alias" -keystore "$jks" -rfc -storepass "$JAVA_PASS"
-    else
-        echo ""
-    fi
-}
-
 create_ca_cert() {
     # prep for creating certificates
     mkdir -p $CA_DB
