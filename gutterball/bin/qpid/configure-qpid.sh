@@ -8,7 +8,7 @@ source "$LOCATION/../../../bin/bash_functions"
 
 SUBJ="/C=US/O=Candlepin"
 CERT_LOC="$LOCATION/keys"
-LOG=$CERT_LOC/keys.log
+LOG="$CERT_LOC/keys.log"
 
 CA_NAME="broker"
 
@@ -21,16 +21,16 @@ define_variables() {
         JAVA_PASS="/etc/pki/katello/keystore_password-file"
     else
         CA_PASS_FILE="$CERT_LOC/ca_password.txt"
-        CA_DB=$CERT_LOC/CA_db
+        CA_DB="$CERT_LOC/CA_db"
         JAVA_PASS="password"
         echo -n "$JAVA_PASS" > $CA_PASS_FILE
     fi
-    CA_PASS="$(cat $CA_PASS_FILE)"
+    CA_PASS="$(cat "$CA_PASS_FILE")"
 }
 
 create_ca_cert() {
     # prep for creating certificates
-    mkdir -p $CA_DB
+    mkdir -p "$CA_DB"
 
     local existing_ca="$(fp_nss "$CA_DB" "$CA_NAME")"
     local generated_ca="$(fp_file "$CERT_LOC/qpid_ca.crt")"
@@ -38,8 +38,8 @@ create_ca_cert() {
     if [ -z "$existing_ca" ]; then
         if [ -z "$generated_ca" ]; then
             openssl genrsa -out $CERT_LOC/qpid_ca.key 2048 &>> $LOG
-            openssl req -new -x509 -days 3650 -out $CERT_LOC/qpid_ca.crt -key $CERT_LOC/qpid_ca.key -subj "$SUBJ/CN=$CA_NAME" -extensions v3_ca -passin file:$CA_PASS_FILE &>> $LOG
-            openssl pkcs12 -export -in $CERT_LOC/qpid_ca.crt -inkey $CERT_LOC/qpid_ca.key -out $CERT_LOC/qpid_ca.p12 -name "$CA_NAME" -password file:$CA_PASS_FILE &>> $LOG
+            openssl req -new -x509 -days 3650 -out "$CERT_LOC/qpid_ca.crt" -key "$CERT_LOC/qpid_ca.key" -subj "$SUBJ/CN=$CA_NAME" -extensions v3_ca -passin file:"$CA_PASS_FILE" &>> $LOG
+            openssl pkcs12 -export -in "$CERT_LOC/qpid_ca.crt" -inkey "$CERT_LOC/qpid_ca.key" -out "$CERT_LOC/qpid_ca.p12" -name "$CA_NAME" -password file:"$CA_PASS_FILE" &>> $LOG
         fi
         convert_to_nssdb
     else
@@ -48,11 +48,11 @@ create_ca_cert() {
 }
 
 convert_to_nssdb() {
-    rm -rf $CA_DB
-    mkdir $CA_DB
+    rm -rf "$CA_DB"
+    mkdir -p "$CA_DB"
     # The only way to import a private key to an NSS DB is by converting from a PKCS12
-    pk12util -i $CERT_LOC/qpid_ca.p12 -d $CA_DB -w $CA_PASS_FILE -k $CA_PASS_FILE &>> $LOG
-    sudo certutil -M -d $CA_DB -f $CA_PASS_FILE -n "$CA_NAME" -t 'CT,CT,CT' &>> $LOG
+    pk12util -i "$CERT_LOC/qpid_ca.p12" -d "$CA_DB" -w "$CA_PASS_FILE" -k "$CA_PASS_FILE" &>> $LOG
+    sudo certutil -M -d "$CA_DB" -f "$CA_PASS_FILE" -n "$CA_NAME" -t 'CT,CT,CT' &>> $LOG
 }
 
 create_client_certs() {
@@ -95,24 +95,24 @@ create_client_certs() {
 
         if [ ! -e "$dest.crt" -a ! -e "$dest.key" ]; then
             # Generate the key and certificate signing request in DER format (certutil requires it for some stupid reason)
-            openssl req -nodes -new -newkey rsa:2048 -out $dest.der.csr -keyout $dest.key -subj "$SUBJ/OU=$client/CN=$CN_NAME" -passin pass:$JAVA_PASS  -outform DER &>> $LOG
+            openssl req -nodes -new -newkey rsa:2048 -out "$dest.der.csr" -keyout "$dest.key" -subj "$SUBJ/OU=$client/CN=$CN_NAME" -passin pass:$JAVA_PASS  -outform DER &>> $LOG
 
             # Sign the CSR with the Qpid CA from the NSS DB
-            certutil -C -c "$CA_NAME" -i $dest.der.csr -o $dest.der.crt -v 120 -f $CA_PASS_FILE -d "$CA_DB" &>> $LOG
+            certutil -C -c "$CA_NAME" -i "$dest.der.csr" -o "$dest.der.crt" -v 120 -f "$CA_PASS_FILE" -d "$CA_DB" &>> $LOG
 
             # Converting to PEM isn't strictly necessary but it's nice for future operations
-            openssl x509 -in $dest.der.crt -inform DER -out $dest.crt -outform PEM &>> $LOG
+            openssl x509 -in "$dest.der.crt" -inform DER -out "$dest.crt" -outform PEM &>> $LOG
         fi
 
         # Import the signed cert into the NSS DB
-        sudo certutil -A -d $CA_DB -t ',,' -f $CA_PASS_FILE -a -n "$nss_nick" -i $dest.crt &>> $LOG
+        sudo certutil -A -d "$CA_DB" -t ',,' -f "$CA_PASS_FILE" -a -n "$nss_nick" -i "$dest.crt" &>> $LOG
 
         # Stupid keytool doesn't allow you to import a keypair. You can only
         # import a cert. Hence, we have to create the store as an PKCS12 and
         # convert to JKS. See http://stackoverflow.com/a/8224863
-        openssl pkcs12 -export -name "$nss_nick" -in $dest.crt -inkey $dest.key -out $dest.p12 -passout pass:$JAVA_PASS &>> $LOG
-        keytool -importkeystore -destkeystore $dest.jks -srckeystore $dest.p12 -srcstoretype pkcs12 -alias "$nss_nick" -storepass $JAVA_PASS -srcstorepass $JAVA_PASS -noprompt &>> $LOG
-        sudo cp $dest.jks /etc/$client/certs/amqp/
+        openssl pkcs12 -export -name "$nss_nick" -in "$dest.crt" -inkey "$dest.key" -out "$dest.p12" -passout pass:$JAVA_PASS &>> $LOG
+        keytool -importkeystore -destkeystore "$dest.jks" -srckeystore "$dest.p12" -srcstoretype "pkcs12" -alias "$nss_nick" -storepass $JAVA_PASS -srcstorepass $JAVA_PASS -noprompt &>> $LOG
+        sudo cp "$dest.jks" /etc/$client/certs/amqp/
 
         write_trust_store $client
     done
@@ -131,15 +131,15 @@ write_trust_store() {
     fi
 
     if [ -f $dest.truststore  ]; then
-        keytool -delete -alias "$CA_NAME" -keystore $dest.truststore -storepass $JAVA_PASS &>> $LOG
+        keytool -delete -alias "$CA_NAME" -keystore "$dest.truststore" -storepass $JAVA_PASS &>> $LOG
     fi
-    echo "$(cert_from_nss "$CA_DB" "$CA_NAME")" | keytool -import -v -keystore $dest.truststore -storepass $JAVA_PASS -alias "$CA_NAME" -noprompt &>> $LOG
-    sudo cp $dest.truststore /etc/$client/certs/amqp/
+    echo "$(cert_from_nss "$CA_DB" "$CA_NAME")" | keytool -import -v -keystore "$dest.truststore" -storepass $JAVA_PASS -alias "$CA_NAME" -noprompt &>> $LOG
+    sudo cp "$dest.truststore" /etc/$client/certs/amqp/
 }
 
 set_cert_permissions() {
-    local client=$1
-    sudo chown -R tomcat:tomcat /etc/$client/certs/amqp/
+    local client="$1"
+    sudo chown -R tomcat:tomcat "/etc/$client/certs/amqp/"
 }
 
 is_rpm_installed() {
@@ -149,8 +149,8 @@ is_rpm_installed() {
 
 make_cert_db() {
     sudo mkdir -p /etc/qpid/brokerdb
-    sudo cp -R $CA_DB/* /etc/qpid/brokerdb/
-    sudo cp $CA_PASS_FILE /etc/qpid/brokerdb/qpid_ca.password
+    sudo cp "$CA_DB"/* /etc/qpid/brokerdb/
+    sudo cp "$CA_PASS_FILE" /etc/qpid/brokerdb/qpid_ca.password
     sudo chown -R qpidd:qpidd /etc/qpid/brokerdb
 }
 
@@ -175,8 +175,8 @@ CONF
 
 copy_in_existing_cp_certs() {
     echo "Copying in Candlepin certs from Katello."
-    sudo cp /etc/pki/katello/certs/java-client.crt $CERT_LOC/candlepin.crt
-    sudo cp /etc/pki/katello/private/java-client.key $CERT_LOC/candlepin.key
+    sudo cp /etc/pki/katello/certs/java-client.crt "$CERT_LOC/candlepin.crt"
+    sudo cp /etc/pki/katello/private/java-client.key "$CERT_LOC/candlepin.key"
 }
 
 create_exchange() {
@@ -185,13 +185,13 @@ create_exchange() {
     if [ $IS_KATELLO -eq 0 ]; then
         config_args+="--ssl-certificate /etc/pki/katello/qpid_client_striped.crt"
     else
-        config_args+="--ssl-certificate $CERT_LOC/qpid_ca.crt --ssl-key $CERT_LOC/qpid_ca.key"
+        config_args+="--ssl-certificate \"$CERT_LOC/qpid_ca.crt\" --ssl-key \"$CERT_LOC/qpid_ca.key\""
     fi
 
     # Only create the exchange if it does not exist
-    if ! qpid-config $config_args exchanges event &>> $LOG; then
-        echo "Creating event exchange"
-        qpid-config $config_args add exchange topic event --durable &>> $LOG
+    if ! qpid-config $config_args exchanges "$exchange_name" &>> $LOG; then
+        echo "Creating $exchange_name exchange"
+        qpid-config $config_args add exchange topic "$exchange_name" --durable &>> $LOG
     fi
 }
 
@@ -214,7 +214,7 @@ if ! is_rpm_installed qpid-cpp-server qpid-tools qpid-cpp-server; then
 fi
 
 # create working directory
-mkdir -p $CERT_LOC
+mkdir -p "$CERT_LOC"
 IS_KATELLO="$(test -e /etc/katello; echo $?)"
 
 define_variables
