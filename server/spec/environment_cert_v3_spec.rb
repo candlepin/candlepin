@@ -27,11 +27,12 @@ describe 'Environments Certificate V3' do
     @cp.add_content_to_product(product['id'], content2['id'])
 
     # Override enabled to false:
-    @org_admin.promote_content(@env['id'],
+    job = @org_admin.promote_content(@env['id'],
         [{
           :contentId => content['id'],
           :enabled => false,
         }])
+    wait_for_job(job['id'], 15)
 
     @cp.create_subscription(@owner['key'], product['id'], 10)
     @cp.refresh_pools(@owner['key'])
@@ -64,10 +65,11 @@ describe 'Environments Certificate V3' do
     @cp.add_content_to_product(product['id'], content2['id'])
 
     # Override enabled to false:
-    @org_admin.promote_content(@env['id'],
+    job = @org_admin.promote_content(@env['id'],
         [{
           :contentId => content['id'],
         }])
+    wait_for_job(job['id'], 15)
 
     @cp.create_subscription(@owner['key'], product['id'], 10)
     @cp.refresh_pools(@owner['key'])
@@ -85,11 +87,11 @@ describe 'Environments Certificate V3' do
     serial = ent['certificates'][0]['serial']['serial']
 
     # Promote the other content set and make sure certs were regenerated:
-    @org_admin.promote_content(@env['id'],
+    job = @org_admin.promote_content(@env['id'],
         [{
           :contentId => content2['id'],
         }])
-    sleep 1
+    wait_for_job(job['id'], 15)
     ent = consumer_cp.list_entitlements()[0]
 
     json_body = extract_payload(ent['certificates'][0]['cert'])
@@ -102,8 +104,8 @@ describe 'Environments Certificate V3' do
     new_serial.should_not == serial
 
     # Demote it and check again:
-    @org_admin.demote_content(@env['id'], [content2['id']])
-    sleep 1
+    job = @org_admin.demote_content(@env['id'], [content2['id']])
+    wait_for_job(job['id'], 15)
     ent = consumer_cp.list_entitlements()[0]
 
     json_body = extract_payload(ent['certificates'][0]['cert'])
