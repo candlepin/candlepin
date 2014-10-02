@@ -66,6 +66,10 @@ describe 'Consumer Facts' do
     }
     @consumer_api.update_consumer({:facts => updated_facts})
 
+    # Event needs to be received by hornetq listener and stored to db, a
+    # second should be plenty time.
+    sleep 1
+
     events = @consumer_api.list_consumer_events(@consumer.uuid)
     # Look for a consumer modified event:
     events.find { |e| e['type'] == 'MODIFIED' and e['target'] == 'CONSUMER' }.should_not be_nil
