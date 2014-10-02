@@ -19,6 +19,7 @@ import org.candlepin.model.Consumer;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.LinkedList;
@@ -59,7 +60,7 @@ public class AutobindData {
     }
 
     public AutobindData forProducts(String[] productIds) {
-        this.productIds = productIds;
+        this.setProductIds(productIds);
         return this;
     }
 
@@ -76,6 +77,9 @@ public class AutobindData {
     }
 
     public void setProductIds(String[] productIds) {
+        if (productIds != null) {
+            Arrays.sort(productIds);
+        }
         this.productIds = productIds;
     }
 
@@ -117,5 +121,19 @@ public class AutobindData {
             .append(consumer)
             .append(possiblePools)
             .hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return new StringBuffer()
+            .append("onDate: ")
+            .append(this.onDate)
+            .append(", productIds: ")
+            .append(this.productIds)
+            .append(", consumer: ")
+            .append(this.consumer)
+            .append(", possiblePools: ")
+            .append(this.possiblePools)
+            .toString();
     }
 }

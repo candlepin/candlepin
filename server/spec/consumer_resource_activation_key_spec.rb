@@ -31,7 +31,7 @@ describe 'Consumer Resource Activation Key' do
     @cp.get_pool(pool1.id).consumed.should == 3
   end
 
-  it 'should allow a consumer to register with an activation key with a pool and a product id auto-attach' do
+  it 'should allow a consumer to register with an activation key with an auto-attach' do
     # create extra product/pool to show selectivity
     prod1 = create_product(random_string('product1'), random_string('product1'))
     prod2 = create_product(random_string('product2'), random_string('product2'))
@@ -46,84 +46,6 @@ describe 'Consumer Resource Activation Key' do
     @cp.add_prod_id_to_key(key1['id'], prod1.id)
     consumer = @client.register(random_string('machine1'), :system, nil, {}, nil,
       @owner['key'], ["key1"])
-    consumer.uuid.should_not be_nil
-    @cp.get_pool(pool1.id).consumed.should == 1
-  end
-
-  it 'should allow a consumer to register with an activation key with a pool auto-attach' do
-    # create extra product/pool to show selectivity
-    prod1 = create_product(random_string('product1'), random_string('product1'))
-    prod2 = create_product(random_string('product2'), random_string('product2'))
-    subs1 = @cp.create_subscription(@owner['key'], prod1.id, 10)
-    subs2 = @cp.create_subscription(@owner['key'], prod2.id, 10)
-    @cp.refresh_pools(@owner['key'])
-    pool1 = @cp.list_pools(:owner => @owner['id'], :product => prod1.id).first
-
-    key1 = @cp.create_activation_key(@owner['key'], 'key1')
-    @cp.update_activation_key({'id' => key1['id'], "autoAttach" => "true"})
-    @cp.add_pool_to_key(key1['id'], pool1['id'])
-    installed = [
-        {'productId' => prod1.id, 'productName' => prod1.name}
-    ]
-    consumer = @client.register(random_string('machine1'), :system, nil, {}, nil,
-      @owner['key'], ["key1"], installed)
-    consumer.uuid.should_not be_nil
-    @cp.get_pool(pool1.id).consumed.should == 1
-  end
-
-  it 'should allow a consumer to register with an activation key with a product id auto-attach' do
-    # create extra product/pool to show selectivity
-    prod1 = create_product(random_string('product1'), random_string('product1'))
-    prod2 = create_product(random_string('product2'), random_string('product2'))
-    subs1 = @cp.create_subscription(@owner['key'], prod1.id, 10)
-    subs2 = @cp.create_subscription(@owner['key'], prod2.id, 10)
-    @cp.refresh_pools(@owner['key'])
-    pool1 = @cp.list_pools(:owner => @owner['id'], :product => prod1.id).first
-
-    key1 = @cp.create_activation_key(@owner['key'], 'key1')
-    @cp.update_activation_key({'id' => key1['id'], "autoAttach" => "true"})
-    @cp.add_prod_id_to_key(key1['id'], prod1.id)
-    consumer = @client.register(random_string('machine1'), :system, nil, {}, nil,
-      @owner['key'], ["key1"])
-    consumer.uuid.should_not be_nil
-    @cp.get_pool(pool1.id).consumed.should == 1
-  end
-
-  it 'should allow a consumer to register with an activation key and only auto-attach with the pool specified' do
-    # create extra product/pool to show selectivity
-    prod1 = create_product(random_string('product1'), random_string('product1'))
-    subs1 = @cp.create_subscription(@owner['key'], prod1.id, 5)
-    subs2 = @cp.create_subscription(@owner['key'], prod1.id, 10)
-    subs3 = @cp.create_subscription(@owner['key'], prod1.id, 15)
-    @cp.refresh_pools(@owner['key'])
-    pool = @cp.list_pools(:owner => @owner['id'], :product => prod1.id).first
-
-    key1 = @cp.create_activation_key(@owner['key'], 'key1')
-    @cp.update_activation_key({'id' => key1['id'], "autoAttach" => "true"})
-    @cp.add_pool_to_key(key1['id'], pool['id'])
-    @cp.add_prod_id_to_key(key1['id'], prod1.id)
-    consumer = @client.register(random_string('machine1'), :system, nil, {}, nil,
-      @owner['key'], ["key1"])
-    consumer.uuid.should_not be_nil
-    @cp.get_pool(pool.id).consumed.should == 1
-  end
-
-  it 'should allow a consumer to register with an activation key with auto-attach' do
-    # create extra product/pool to show selectivity
-    prod1 = create_product(random_string('product1'), random_string('product1'))
-    prod2 = create_product(random_string('product2'), random_string('product2'))
-    subs1 = @cp.create_subscription(@owner['key'], prod1.id, 10)
-    subs2 = @cp.create_subscription(@owner['key'], prod2.id, 10)
-    @cp.refresh_pools(@owner['key'])
-    pool1 = @cp.list_pools(:owner => @owner['id'], :product => prod1.id).first
-
-    key1 = @cp.create_activation_key(@owner['key'], 'key1')
-    @cp.update_activation_key({'id' => key1['id'], "autoAttach" => "true"})
-    installed = [
-        {'productId' => prod1.id, 'productName' => prod1.name}
-    ]
-    consumer = @client.register(random_string('machine1'), :system, nil, {}, nil,
-      @owner['key'], ["key1"], installed)
     consumer.uuid.should_not be_nil
     @cp.get_pool(pool1.id).consumed.should == 1
   end

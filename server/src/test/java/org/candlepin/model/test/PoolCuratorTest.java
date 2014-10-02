@@ -182,6 +182,44 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void availablePoolsCanBeFilteredByPoolId() throws Exception {
+        Date activeDate = TestUtil.createDate(2000, 3, 2);
+
+        Pool pool1 = createPoolAndSub(owner, product, 100L,
+            activeDate, TestUtil.createDate(2005, 3, 2));
+        poolCurator.create(pool1);
+
+        Pool pool2 = createPoolAndSub(owner, product, 100L,
+            activeDate, TestUtil.createDate(2005, 3, 2));
+        poolCurator.create(pool2);
+
+        PageRequest req = new PageRequest();
+        req.setPage(1);
+        req.setPerPage(10);
+        req.setOrder(PageRequest.Order.ASCENDING);
+        req.setSortBy("id");
+
+        PoolFilterBuilder filters = new PoolFilterBuilder();
+        filters.addIdFilter(pool2.getId());
+
+        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
+            null, owner, null, activeDate, false, filters,
+            req, false);
+        List<Pool> results = page.getPageData();
+        assertEquals(1, results.size());
+        assertEquals(pool2.getId(), results.get(0).getId());
+
+        filters = new PoolFilterBuilder();
+        filters.addIdFilter(pool1.getId());
+        filters.addIdFilter(pool2.getId());
+
+        page = poolCurator.listAvailableEntitlementPools(
+            null, owner, null, activeDate, false, filters,
+            req, false);
+        results = page.getPageData();
+        assertEquals(2, results.size());
+    }
+    @Test
     public void availablePoolsCanNotBeFilteredByOverriddenAttribute() throws Exception {
         Date activeDate = TestUtil.createDate(2000, 3, 2);
 

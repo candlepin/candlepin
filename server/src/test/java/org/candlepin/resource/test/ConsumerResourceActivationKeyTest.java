@@ -22,19 +22,19 @@ import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.NoAuthPrincipal;
 import org.candlepin.auth.Principal;
-import org.candlepin.auth.TrustedUserPrincipal;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.permissions.OwnerPermission;
 import org.candlepin.auth.permissions.Permission;
 import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
 import org.candlepin.common.exceptions.BadRequestException;
-import org.candlepin.common.exceptions.ForbiddenException;
+import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.Entitler;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerContentOverrideCurator;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.DeletedConsumerCurator;
@@ -42,7 +42,8 @@ import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.PermissionBlueprint;
-import org.candlepin.model.Release;
+import org.candlepin.model.Pool;
+import org.candlepin.model.Product;
 import org.candlepin.model.Role;
 import org.candlepin.model.User;
 import org.candlepin.model.activationkeys.ActivationKey;
@@ -50,14 +51,15 @@ import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.resource.ConsumerResource;
+import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.resource.util.ConsumerBindUtil;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
+import org.candlepin.test.TestUtil;
 import org.candlepin.util.ServiceLevelValidator;
 
 import org.apache.commons.lang.StringUtils;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -68,6 +70,7 @@ import org.mockito.stubbing.Answer;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -76,6 +79,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 
 /**
@@ -86,7 +90,7 @@ import java.util.Locale;
  * FIXME: this seems to only test creating
  * system consumers.
  */
-public class ConsumerResourceCreationTest {
+public class ConsumerResourceActivationKeyTest {
 
     private static final String USER = "testuser";
 
@@ -193,97 +197,20 @@ public class ConsumerResourceCreationTest {
         List<String> activationKeys) {
         Consumer consumer = new Consumer(consumerName, null, null, system);
         return this.resource.create(consumer, principal, USER, owner.getKey(),
-            null);
-    }
-
-    @Test
-    public void acceptedConsumerName() {
-        Assert.assertNotNull(createConsumer("test_user"));
-    }
-
-    @Test
-    public void camelCaseName() {
-        Assert.assertNotNull(createConsumer("ConsumerTest32953"));
-    }
-
-    @Test
-    public void startsWithUnderscore() {
-        Assert.assertNotNull(createConsumer("__init__"));
-    }
-
-    @Test
-    public void startsWithDash() {
-        Assert.assertNotNull(createConsumer("-dash"));
-    }
-
-    @Test
-    public void containsNumbers() {
-        Assert.assertNotNull(createConsumer("testmachine99"));
-    }
-
-    @Test
-    public void startsWithNumbers() {
-        Assert.assertNotNull(createConsumer("001test7"));
-    }
-
-    @Test
-    public void containsPeriods() {
-        Assert.assertNotNull(createConsumer("test-system.resource.net"));
-    }
-
-    @Test
-    public void containsUserServiceChars() {
-        Assert.assertNotNull(createConsumer("{bob}'s_b!g_#boi.`?uestlove!x"));
-    }
-
-    // These fail with the default consumer name pattern
-    @Test(expected = BadRequestException.class)
-    public void containsMultibyteKorean() {
-        createConsumer("서브스크립션 ");
-    }
-
-    @Test(expected = BadRequestException.class)
-    public void containsMultibyteOriya() {
-        createConsumer("ପରିବେଶ");
-    }
-
-    @Test(expected = BadRequestException.class)
-    public void startsWithPound() {
-        createConsumer("#pound");
-    }
-
-    @Test(expected = BadRequestException.class)
-    public void emptyConsumerName() {
-        createConsumer("");
-    }
-
-    @Test(expected = BadRequestException.class)
-    public void nullConsumerName() {
-        createConsumer(null);
-    }
-
-    @Test(expected = BadRequestException.class)
-    public void startsWithBadCharacter() {
-        createConsumer("#foo");
-    }
-
-    @Test(expected = BadRequestException.class)
-    public void containsBadCharacter() {
-        createConsumer("bar$%camp");
-    }
-
-    @Test(expected = ForbiddenException.class)
-    public void authRequired() {
-        Principal p = new NoAuthPrincipal();
-        List<String> empty = Collections.emptyList();
-        createConsumer("sys.example.com", p, empty);
+            createKeysString(activationKeys));
     }
 
     private List<String> mockActivationKeys() {
         ActivationKey key1 = new ActivationKey("key1", owner);
         when(activationKeyCurator.lookupForOwner("key1", owner)).thenReturn(key1);
+        ActivationKey key2 = new ActivationKey("key2", owner);
+        when(activationKeyCurator.lookupForOwner("key2", owner)).thenReturn(key2);
+        ActivationKey key3 = new ActivationKey("key3", owner);
+        when(activationKeyCurator.lookupForOwner("key3", owner)).thenReturn(key3);
         List<String> keys = new LinkedList<String>();
         keys.add(key1.getName());
+        keys.add(key2.getName());
+        keys.add(key3.getName());
         return keys;
     }
 
@@ -293,14 +220,6 @@ public class ConsumerResourceCreationTest {
             return StringUtils.join(activationKeys, ',');
         }
         return null;
-    }
-
-    @Test
-    public void oauthRegistrationSupported() {
-        // Should be able to register successfully with as a trusted user principal:
-        Principal p = new TrustedUserPrincipal("anyuser");
-        Consumer consumer = new Consumer("sys.example.com", null, null, system);
-        resource.create(consumer, p, null, owner.getKey(), null);
     }
 
     @Test
@@ -315,54 +234,116 @@ public class ConsumerResourceCreationTest {
         }
     }
 
-    @Test
-    public void registerWithNoInstalledProducts() {
-        Principal p = new TrustedUserPrincipal("anyuser");
-        Consumer consumer = new Consumer();
-        consumer.setType(system);
-        consumer.setName("consumername");
-        resource.create(consumer, p, USER, owner.getKey(), null);
+    @Test(expected = BadRequestException.class)
+    public void orgRequiredWithActivationKeys() {
+        Principal p = new NoAuthPrincipal();
+        List<String> keys = mockActivationKeys();
+        Consumer consumer = new Consumer("sys.example.com", null, null, system);
+        resource.create(consumer, p, null, null, createKeysString(keys));
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void cannotMixUsernameWithActivationKeys() {
+        Principal p = new NoAuthPrincipal();
+        List<String> keys = mockActivationKeys();
+        Consumer consumer = new Consumer("sys.example.com", null, null, system);
+        resource.create(consumer, p, USER, owner.getKey(), createKeysString(keys));
+    }
+
+    @Test(expected = NotFoundException.class)
+    public void failIfAnyActivationKeyDoesNotExistForOrg() {
+        Principal p = new NoAuthPrincipal();
+        List<String> keys = mockActivationKeys();
+        keys.add("NoSuchKey");
+        Consumer consumer = new Consumer("sys.example.com", null, null, system);
+        resource.create(consumer, p, null, owner.getKey(), createKeysString(keys));
     }
 
     @Test
-    public void registerWithNullReleaseVer() {
-        Principal p = new TrustedUserPrincipal("anyuser");
-        Consumer consumer = new Consumer();
-        consumer.setType(system);
-        consumer.setName("consumername");
-        consumer.setReleaseVer(null);
-        resource.create(consumer, p, USER, owner.getKey(), null);
+    public void registerWithKeyWithPoolAndInstalledProductsAutoAttach() {
+        // No auth should be required for registering with keys:
+        Principal p = new NoAuthPrincipal();
 
+        Product prod = TestUtil.createProduct();
+        String[] prodIds = new String[]{prod.getId()};
+
+        Pool pool = TestUtil.createPool(owner, prod);
+        pool.setId("id-string");
+        List<String> poolIds = new ArrayList<String>();
+        poolIds.add(pool.getId());
+
+        List<String> keys = new ArrayList<String>();
+        ActivationKey key1 = new ActivationKey("key1", owner);
+        key1.addPool(pool, 0L);
+        key1.setAutoAttach(true);
+        keys.add(key1.getName());
+        when(activationKeyCurator.lookupForOwner("key1", owner)).thenReturn(key1);
+
+        Consumer consumer = new Consumer("sys.example.com", null, null, system);
+        Set<ConsumerInstalledProduct> cips = new HashSet<ConsumerInstalledProduct>();
+        ConsumerInstalledProduct cip = new ConsumerInstalledProduct(prod.getId(), prod.getName());
+        cips.add(cip);
+        consumer.setInstalledProducts(cips);
+
+        AutobindData ad = new AutobindData(consumer).withPools(poolIds).forProducts(prodIds);
+
+        resource.create(consumer, p, null, owner.getKey(), createKeysString(keys));
+        verify(entitler).bindByProducts(eq(ad));
     }
 
     @Test
-    public void registerWithEmptyReleaseVer() {
-        Principal p = new TrustedUserPrincipal("anyuser");
-        Consumer consumer = new Consumer();
-        consumer.setType(system);
-        consumer.setName("consumername");
-        consumer.setReleaseVer(new Release(""));
-        resource.create(consumer, p, USER, owner.getKey(), null);
+    public void registerWithKeyWithInstalledProductsAutoAttach() {
+        // No auth should be required for registering with keys:
+        Principal p = new NoAuthPrincipal();
+
+        Product prod = TestUtil.createProduct();
+        String[] prodIds = new String[]{prod.getId()};
+
+        List<String> keys = new ArrayList<String>();
+        ActivationKey key1 = new ActivationKey("key1", owner);
+        key1.setAutoAttach(true);
+        keys.add(key1.getName());
+        when(activationKeyCurator.lookupForOwner("key1", owner)).thenReturn(key1);
+
+        Consumer consumer = new Consumer("sys.example.com", null, null, system);
+        Set<ConsumerInstalledProduct> cips = new HashSet<ConsumerInstalledProduct>();
+        ConsumerInstalledProduct cip = new ConsumerInstalledProduct(prod.getId(), prod.getName());
+        cips.add(cip);
+        consumer.setInstalledProducts(cips);
+
+        AutobindData ad = new AutobindData(consumer).forProducts(prodIds);
+
+        resource.create(consumer, p, null, owner.getKey(), createKeysString(keys));
+        verify(entitler).bindByProducts(eq(ad));
     }
 
     @Test
-    public void registerWithNoReleaseVer() {
-        Principal p = new TrustedUserPrincipal("anyuser");
-        Consumer consumer = new Consumer();
-        consumer.setType(system);
-        consumer.setName("consumername");
-        resource.create(consumer, p, USER, owner.getKey(), null);
-    }
+    public void registerWithKeyWithInstalledProductsPlusAutoAttach() {
+        // No auth should be required for registering with keys:
+        Principal p = new NoAuthPrincipal();
 
-    @Test
-    public void setStatusOnCreate() {
-        Principal p = new TrustedUserPrincipal("anyuser");
-        Consumer consumer = new Consumer();
-        consumer.setType(system);
-        consumer.setName("consumername");
-        resource.create(consumer, p, USER, owner.getKey(), null);
-        // Should be called with the consumer, null date (now),
-        // no compliantUntil, and not update the consumer record
-        verify(complianceRules).getStatus(eq(consumer), eq((Date) null), eq(false), eq(false));
+        // installed product
+        Product prod1 = TestUtil.createProduct();
+        // key product
+        Product prod2 = TestUtil.createProduct();
+        String[] prodIds = new String[]{prod1.getId(), prod2.getId()};
+
+        List<String> keys = new ArrayList<String>();
+        ActivationKey key1 = new ActivationKey("key1", owner);
+        key1.addProduct(prod2);
+        key1.setAutoAttach(true);
+        keys.add(key1.getName());
+        when(activationKeyCurator.lookupForOwner("key1", owner)).thenReturn(key1);
+
+        Consumer consumer = new Consumer("sys.example.com", null, null, system);
+        Set<ConsumerInstalledProduct> cips = new HashSet<ConsumerInstalledProduct>();
+        ConsumerInstalledProduct cip = new ConsumerInstalledProduct(prod1.getId(), prod1.getName());
+        cips.add(cip);
+        consumer.setInstalledProducts(cips);
+
+        AutobindData ad = new AutobindData(consumer).forProducts(prodIds);
+
+        resource.create(consumer, p, null, owner.getKey(), createKeysString(keys));
+        verify(entitler).bindByProducts(eq(ad));
     }
 }
