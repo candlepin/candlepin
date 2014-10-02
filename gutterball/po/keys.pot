@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-09-12 13:15-0300\n"
+"POT-Creation-Date: 2014-10-02 11:15-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -29,29 +29,6 @@ msgstr ""
 
 #: /home/dgoodwin/src/candlepin/gutterball/src/main/java/org/candlepin/gutterball/model/Status.java:41
 msgid "gutterball.version"
-msgstr ""
-
-#: /home/dgoodwin/src/candlepin/gutterball/src/main/java/org/candlepin/gutterball/report/ParameterDescriptor.java:141
-msgid "Required parameter."
-msgstr ""
-
-#: /home/dgoodwin/src/candlepin/gutterball/src/main/java/org/candlepin/gutterball/report/ParameterDescriptor.java:168
-#, java-format
-msgid "Parameter must not be used with {0}."
-msgstr ""
-
-#: /home/dgoodwin/src/candlepin/gutterball/src/main/java/org/candlepin/gutterball/report/ParameterDescriptor.java:177
-#, java-format
-msgid "Parameter must be used with {0}."
-msgstr ""
-
-#: /home/dgoodwin/src/candlepin/gutterball/src/main/java/org/candlepin/gutterball/report/ParameterDescriptor.java:189
-msgid "Parameter must be an Integer value."
-msgstr ""
-
-#: /home/dgoodwin/src/candlepin/gutterball/src/main/java/org/candlepin/gutterball/report/ParameterDescriptor.java:202
-#, java-format
-msgid "Invalid date string. Expected format: {0}"
 msgstr ""
 
 #: /home/dgoodwin/src/candlepin/gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerStatusReport.java:45
@@ -92,4 +69,27 @@ msgstr ""
 #: /home/dgoodwin/src/candlepin/gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerTrendReport.java:78
 #, java-format
 msgid "The end date to filter on (used with {0})"
+msgstr ""
+
+#: /home/dgoodwin/src/candlepin/gutterball/src/main/java/org/candlepin/gutterball/report/ParameterDescriptor.java:141
+msgid "Required parameter."
+msgstr ""
+
+#: /home/dgoodwin/src/candlepin/gutterball/src/main/java/org/candlepin/gutterball/report/ParameterDescriptor.java:168
+#, java-format
+msgid "Parameter must not be used with {0}."
+msgstr ""
+
+#: /home/dgoodwin/src/candlepin/gutterball/src/main/java/org/candlepin/gutterball/report/ParameterDescriptor.java:177
+#, java-format
+msgid "Parameter must be used with {0}."
+msgstr ""
+
+#: /home/dgoodwin/src/candlepin/gutterball/src/main/java/org/candlepin/gutterball/report/ParameterDescriptor.java:189
+msgid "Parameter must be an Integer value."
+msgstr ""
+
+#: /home/dgoodwin/src/candlepin/gutterball/src/main/java/org/candlepin/gutterball/report/ParameterDescriptor.java:202
+#, java-format
+msgid "Invalid date string. Expected format: {0}"
 msgstr ""
