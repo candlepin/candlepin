@@ -70,16 +70,18 @@ describe 'Environments' do
 
   it 'can have promoted content' do
     content = create_content
-    @org_admin.promote_content(@env['id'],
+    job = @org_admin.promote_content(@env['id'],
         [{:contentId => content['id']}])
+    wait_for_job(job['id'], 15)
     @env = @org_admin.get_environment(@env['id'])
     @env['environmentContent'].size.should == 1
   end
 
   it 'cleans up env content when content is deleted' do
     content = create_content
-    @org_admin.promote_content(@env['id'],
+    job = @org_admin.promote_content(@env['id'],
         [{:contentId => content['id']}])
+    wait_for_job(job['id'], 15)
     @env = @org_admin.get_environment(@env['id'])
     @env['environmentContent'].size.should == 1
     @cp.delete_content(content['id'])
@@ -90,11 +92,14 @@ describe 'Environments' do
   it 'can demote content' do
     content = create_content
     content2 = create_content
-    @org_admin.promote_content(@env['id'],
+    job = @org_admin.promote_content(@env['id'],
         [{:contentId => content['id']}])
-    @org_admin.promote_content(@env['id'],
+    wait_for_job(job['id'], 15)
+    job = @org_admin.promote_content(@env['id'],
         [{:contentId => content2['id']}])
-    @org_admin.demote_content(@env['id'], [content['id'], content2['id']])
+    wait_for_job(job['id'], 15)
+    job = @org_admin.demote_content(@env['id'], [content['id'], content2['id']])
+    wait_for_job(job['id'], 15)
     @env = @org_admin.get_environment(@env['id'])
     @env['environmentContent'].size.should == 0
   end
@@ -113,11 +118,12 @@ describe 'Environments' do
     @cp.add_content_to_product(product['id'], content2['id'])
 
     # Override enabled to false:
-    @org_admin.promote_content(@env['id'],
+    job = @org_admin.promote_content(@env['id'],
         [{
           :contentId => content['id'],
           :enabled => false,
         }])
+    wait_for_job(job['id'], 15)
 
     @cp.create_subscription(@owner['key'], product['id'], 10)
     @cp.refresh_pools(@owner['key'])
@@ -149,10 +155,11 @@ describe 'Environments' do
     @cp.add_content_to_product(product['id'], content2['id'])
 
     # Override enabled to false:
-    @org_admin.promote_content(@env['id'],
+    job = @org_admin.promote_content(@env['id'],
         [{
           :contentId => content['id'],
         }])
+    wait_for_job(job['id'], 15)
 
     @cp.create_subscription(@owner['key'], product['id'], 10)
     @cp.refresh_pools(@owner['key'])
@@ -167,11 +174,12 @@ describe 'Environments' do
     serial = ent['certificates'][0]['serial']['serial']
 
     # Promote the other content set and make sure certs were regenerated:
-    @org_admin.promote_content(@env['id'],
+    job = @org_admin.promote_content(@env['id'],
         [{
           :contentId => content2['id'],
         }])
-    sleep 1
+    wait_for_job(job['id'], 15)
+
     ent = consumer_cp.list_entitlements()[0]
     x509 = OpenSSL::X509::Certificate.new(ent['certificates'][0]['cert'])
     extensions_hash = Hash[x509.extensions.collect { |ext| [ext.oid, ext.value] }]
@@ -181,8 +189,8 @@ describe 'Environments' do
     new_serial.should_not == serial
 
     # Demote it and check again:
-    @org_admin.demote_content(@env['id'], [content2['id']])
-    sleep 1
+    job = @org_admin.demote_content(@env['id'], [content2['id']])
+    wait_for_job(job['id'], 15)
     ent = consumer_cp.list_entitlements()[0]
     x509 = OpenSSL::X509::Certificate.new(ent['certificates'][0]['cert'])
     extensions_hash = Hash[x509.extensions.collect { |ext| [ext.oid, ext.value] }]
