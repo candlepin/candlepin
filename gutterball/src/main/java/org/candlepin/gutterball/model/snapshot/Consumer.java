@@ -15,19 +15,29 @@
 
 package org.candlepin.gutterball.model.snapshot;
 
+import org.candlepin.gutterball.jackson.ReleaseVersionToStringConverter;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Index;
 
+import java.util.Date;
+import java.util.Map;
+
+import javax.persistence.CascadeType;
+import javax.persistence.CollectionTable;
 import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
@@ -57,10 +67,34 @@ public class Consumer {
     @JsonIgnore
     private String id;
 
-    @Column(nullable = false)
     @Size(max = 255)
-    @NotNull
     private String uuid;
+
+    @Size(max = 255)
+    private String name;
+
+    // Represents the username used to register this consumer
+    @Column
+    @Size(max = 255)
+    private String username;
+
+    @Column(length = 32)
+    @Size(max = 32)
+    private String entitlementStatus;
+
+    @Column(length = 255, nullable = true)
+    @Size(max = 255)
+    private String serviceLevel;
+
+    // for selecting Y/Z stream
+    @Column(length = 255, nullable =  true)
+    @Size(max = 255)
+    @JsonDeserialize(converter = ReleaseVersionToStringConverter.class)
+    private String releaseVer;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @ForeignKey(name = "fk_gb_consumer_consumer_type")
+    private ConsumerType type;
 
     @XmlTransient
     @OneToOne(fetch = FetchType.LAZY)
@@ -75,6 +109,18 @@ public class Consumer {
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
     @NotNull
     private Owner owner;
+
+    private Long entitlementCount;
+
+    private Date lastCheckin;
+
+    @ElementCollection
+    @CollectionTable(name = "gb_consumer_facts_snap",
+                     joinColumns = @JoinColumn(name = "gb_consumer_snap_id"))
+    @MapKeyColumn(name = "mapkey")
+    @Column(name = "element")
+    @Cascade({org.hibernate.annotations.CascadeType.ALL})
+    private Map<String, String> facts;
 
     public Consumer() {
     }
@@ -116,6 +162,78 @@ public class Consumer {
     public void setOwner(Owner ownerSnapshot) {
         this.owner = ownerSnapshot;
         this.owner.setConsumerSnapshot(this);
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getEntitlementStatus() {
+        return entitlementStatus;
+    }
+
+    public void setEntitlementStatus(String entitlementStatus) {
+        this.entitlementStatus = entitlementStatus;
+    }
+
+    public String getServiceLevel() {
+        return serviceLevel;
+    }
+
+    public void setServiceLevel(String serviceLevel) {
+        this.serviceLevel = serviceLevel;
+    }
+
+    public String getReleaseVer() {
+        return releaseVer;
+    }
+
+    public void setReleaseVer(String releaseVer) {
+        this.releaseVer = releaseVer;
+    }
+
+    public ConsumerType getType() {
+        return type;
+    }
+
+    public void setType(ConsumerType type) {
+        this.type = type;
+    }
+
+    public Long getEntitlementCount() {
+        return entitlementCount;
+    }
+
+    public void setEntitlementCount(Long entitlementCount) {
+        this.entitlementCount = entitlementCount;
+    }
+
+    public Date getLastCheckin() {
+        return lastCheckin;
+    }
+
+    public void setLastCheckin(Date lastCheckin) {
+        this.lastCheckin = lastCheckin;
+    }
+
+    public Map<String, String> getFacts() {
+        return facts;
+    }
+
+    public void setFacts(Map<String, String> facts) {
+        this.facts = facts;
     }
 
 }
