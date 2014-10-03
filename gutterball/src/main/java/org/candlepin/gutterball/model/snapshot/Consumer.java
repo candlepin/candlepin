@@ -26,6 +26,9 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Index;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -136,6 +139,9 @@ public class Consumer {
     private List<GuestId> guestIds;
 
     public Consumer() {
+        this.facts = new HashMap<String, String>();
+        this.installedProducts = new HashSet<ConsumerInstalledProduct>();
+        this.guestIds = new LinkedList<GuestId>();
     }
 
     public Consumer(String uuid, Owner ownerSnapshot) {
