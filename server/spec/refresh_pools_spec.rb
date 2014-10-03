@@ -53,6 +53,7 @@ describe 'Refresh Pools' do
     end
 
     @cp.refresh_pools(owner['key'])
+    sleep 1
 
     events = @cp.list_owner_events(owner['key'])
     pool_created_events = events.find_all { |event| event['target'] == 'POOL' && event['type'] == 'CREATED'}
