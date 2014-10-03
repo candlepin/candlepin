@@ -102,7 +102,12 @@ update_keystore() {
         echo "Symlinking keystore for tomcat"
         sudo ln -s /etc/candlepin/certs/keystore $CONTAINER_CONF_DIR/keystore
     else
-        echo "Using existing keystore"
+        warn_msg "Using existing keystore"
+        local candlepin_fp="$(fp_pkcs12 "/etc/candlepin/certs/keystore" "tomcat" "password")"
+        local tomcat_fp="$(fp_pkcs12 "$CONTAINER_CONF_DIR/keystore" "tomcat" "password")"
+        if [ "$candlepin_fp" != "$tomcat_fp" ]; then
+          err_msg "The keys in the Tomcat keystore don't match Candlepin's!"
+        fi
     fi
 }
 
@@ -209,7 +214,7 @@ done
 shift $(($OPTIND - 1))
 
 if [ "$USE_ORACLE" == "1" -a "$USE_MYSQL" == "1" ]; then
-    echo "You can't use Oracle and MySQL at the same time."
+    err_msg "You can't use Oracle and MySQL at the same time."
     exit 1
 fi
 
