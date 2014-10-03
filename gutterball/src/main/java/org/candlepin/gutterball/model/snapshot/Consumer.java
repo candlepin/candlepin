@@ -27,6 +27,7 @@ import org.hibernate.annotations.Index;
 
 import java.util.Date;
 import java.util.Map;
+import java.util.Set;
 
 import javax.persistence.CascadeType;
 import javax.persistence.CollectionTable;
@@ -38,6 +39,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.MapKeyColumn;
+import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
@@ -121,6 +123,11 @@ public class Consumer {
     @Column(name = "element")
     @Cascade({org.hibernate.annotations.CascadeType.ALL})
     private Map<String, String> facts;
+
+    @OneToMany(mappedBy = "consumer", targetEntity = ConsumerInstalledProduct.class)
+    @Cascade({org.hibernate.annotations.CascadeType.ALL,
+        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+    private Set<ConsumerInstalledProduct> installedProducts;
 
     public Consumer() {
     }
@@ -234,6 +241,18 @@ public class Consumer {
 
     public void setFacts(Map<String, String> facts) {
         this.facts = facts;
+    }
+
+    public Set<ConsumerInstalledProduct> getInstalledProducts() {
+        return installedProducts;
+    }
+
+    public void setInstalledProducts(Set<ConsumerInstalledProduct> installedProducts) {
+        this.installedProducts = installedProducts;
+
+        for (ConsumerInstalledProduct p : this.installedProducts) {
+            p.setConsumer(this);
+        }
     }
 
 }
