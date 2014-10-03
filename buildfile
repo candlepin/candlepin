@@ -285,6 +285,7 @@ define "candlepin" do
     checkstyle.config_directory = checkstyle_config_directory
     checkstyle.eclipse_xml = checkstyle_eclipse_xml
     rpmlint.rpmlint_conf = rpmlint_conf
+    liquibase.changelogs = ['changelog-update.xml', 'changelog-create.xml']
 
     # eclipse settings
     # http://buildr.apache.org/more_stuff.html#eclipse
