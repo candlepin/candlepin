@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-10-02 11:15-0300\n"
+"POT-Creation-Date: 2014-10-03 16:20-0400\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,79 +17,69 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: /home/dgoodwin/src/candlepin/gutterball/src/main/java/org/candlepin/gutterball/eventhandler/ConsumerHandler.java:42
-#: /home/dgoodwin/src/candlepin/gutterball/src/main/java/org/candlepin/gutterball/eventhandler/ConsumerHandler.java:56
-#: /home/dgoodwin/src/candlepin/gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerTrendReport.java:128
-msgid "uuid"
-msgstr ""
-
-#: /home/dgoodwin/src/candlepin/gutterball/src/main/java/org/candlepin/gutterball/model/Status.java:41
-msgid "Unknown"
-msgstr ""
-
-#: /home/dgoodwin/src/candlepin/gutterball/src/main/java/org/candlepin/gutterball/model/Status.java:41
-msgid "gutterball.version"
-msgstr ""
-
-#: /home/dgoodwin/src/candlepin/gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerStatusReport.java:45
-msgid "List the status of all consumers"
-msgstr ""
-
-#: /home/dgoodwin/src/candlepin/gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerStatusReport.java:54
-#: /home/dgoodwin/src/candlepin/gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerTrendReport.java:54
-msgid "Filters the results by the specified consumer UUID."
-msgstr ""
-
-#: /home/dgoodwin/src/candlepin/gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerStatusReport.java:60
-#: /home/dgoodwin/src/candlepin/gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerTrendReport.java:60
-msgid "The Owner key(s) to filter on."
-msgstr ""
-
-#: /home/dgoodwin/src/candlepin/gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerStatusReport.java:65
-msgid "The subscription status to filter on."
-msgstr ""
-
-#: /home/dgoodwin/src/candlepin/gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerStatusReport.java:71
-msgid "The date to filter on. Defaults to NOW."
-msgstr ""
-
-#: /home/dgoodwin/src/candlepin/gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerTrendReport.java:45
-msgid "Lists the status of each consumer over a date range"
-msgstr ""
-
-#: /home/dgoodwin/src/candlepin/gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerTrendReport.java:65
-msgid "The number of hours to filter on (used indepent of date range)."
-msgstr ""
-
-#: /home/dgoodwin/src/candlepin/gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerTrendReport.java:71
-#, java-format
-msgid "The start date to filter on (used with {0})."
-msgstr ""
-
-#: /home/dgoodwin/src/candlepin/gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerTrendReport.java:78
-#, java-format
-msgid "The end date to filter on (used with {0})"
-msgstr ""
-
-#: /home/dgoodwin/src/candlepin/gutterball/src/main/java/org/candlepin/gutterball/report/ParameterDescriptor.java:141
+#: gutterball/src/main/java/org/candlepin/gutterball/report/ParameterDescriptor.java:141
 msgid "Required parameter."
 msgstr ""
 
-#: /home/dgoodwin/src/candlepin/gutterball/src/main/java/org/candlepin/gutterball/report/ParameterDescriptor.java:168
+#: gutterball/src/main/java/org/candlepin/gutterball/report/ParameterDescriptor.java:168
 #, java-format
 msgid "Parameter must not be used with {0}."
 msgstr ""
 
-#: /home/dgoodwin/src/candlepin/gutterball/src/main/java/org/candlepin/gutterball/report/ParameterDescriptor.java:177
+#: gutterball/src/main/java/org/candlepin/gutterball/report/ParameterDescriptor.java:177
 #, java-format
 msgid "Parameter must be used with {0}."
 msgstr ""
 
-#: /home/dgoodwin/src/candlepin/gutterball/src/main/java/org/candlepin/gutterball/report/ParameterDescriptor.java:189
+#: gutterball/src/main/java/org/candlepin/gutterball/report/ParameterDescriptor.java:189
 msgid "Parameter must be an Integer value."
 msgstr ""
 
-#: /home/dgoodwin/src/candlepin/gutterball/src/main/java/org/candlepin/gutterball/report/ParameterDescriptor.java:202
+#: gutterball/src/main/java/org/candlepin/gutterball/report/ParameterDescriptor.java:202
 #, java-format
 msgid "Invalid date string. Expected format: {0}"
+msgstr ""
+
+#: gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerStatusReport.java:45
+msgid "List the status of all consumers"
+msgstr ""
+
+#: gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerStatusReport.java:54
+#: gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerTrendReport.java:54
+msgid "Filters the results by the specified consumer UUID."
+msgstr ""
+
+#: gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerStatusReport.java:60
+#: gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerTrendReport.java:60
+msgid "The Owner key(s) to filter on."
+msgstr ""
+
+#: gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerStatusReport.java:65
+msgid "The subscription status to filter on."
+msgstr ""
+
+#: gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerStatusReport.java:71
+msgid "The date to filter on. Defaults to NOW."
+msgstr ""
+
+#: gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerTrendReport.java:45
+msgid "Lists the status of each consumer over a date range"
+msgstr ""
+
+#: gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerTrendReport.java:65
+msgid "The number of hours to filter on (used indepent of date range)."
+msgstr ""
+
+#: gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerTrendReport.java:71
+#, java-format
+msgid "The start date to filter on (used with {0})."
+msgstr ""
+
+#: gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerTrendReport.java:78
+#, java-format
+msgid "The end date to filter on (used with {0})"
+msgstr ""
+
+#: gutterball/src/main/java/org/candlepin/gutterball/model/Status.java:41
+msgid "Unknown"
 msgstr ""
