@@ -260,6 +260,24 @@
             "gpg_url": "/path/to/awesomeos/gpg/",
             "metadata_expire": 3600,
             "modified_products": ["27060"]
+        },
+        {
+            "name": "awesomeos-docker-images",
+            "id": 3801,
+            "label": "awesomeos-docker-images",
+            "type": "containerImage",
+            "vendor": "Red Hat",
+            "content_url": "/path/to/awesomeos-docker-images",
+            "gpg_url": "/path/to/awesomeos/gpg/"
+        },
+        {
+            "name": "awesomeos-ostree",
+            "id": 3802,
+            "label": "awesomeos-ostree",
+            "type": "ostree",
+            "vendor": "Red Hat",
+            "content_url": "/path/to/awesomeos-ostree",
+            "gpg_url": "/path/to/awesomeos/gpg/"
         }
     ],
     "owners": [
@@ -621,6 +639,36 @@
             "version": "6.1",
             "content": [
                 [1112, false]
+            ]
+        },
+        {
+            "name": "Awesome OS Docker Bits",
+            "id": "37090",
+            "content": [
+                [3801, true]
+            ]
+        },
+        {
+            "name": "Awesome OS Docker",
+            "id": "awesomeos-docker",
+            "type": "MKT",
+            "provided_products": [
+                "37090"
+            ]
+        },
+        {
+            "name": "Awesome OS OStree Bits",
+            "id": "37091",
+            "content": [
+                [3802, true]
+            ]
+        },
+        {
+            "name": "Awesome OS OSTree",
+            "id": "awesomeos-ostree",
+            "type": "MKT",
+            "provided_products": [
+                "37091"
             ]
         },
         {

@@ -27,7 +27,7 @@ end
 cp = Candlepin.new(ADMIN_USERNAME, ADMIN_PASSWORD, nil, nil, HOST, PORT)
 owner = cp.get_owner(ARGV[0])
 
-capabilities = ["cores", "instance_multiplier", "ram"]
+capabilities = ["cores", "instance_multiplier", "ram", "derived_product"]
 consumer = cp.register(random_string('dummyconsumer'), "candlepin",
   nil, {"system.certificate_version" => "3.9"}, nil, owner['key'],
   [], [], nil, capabilities)
