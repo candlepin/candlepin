@@ -20,7 +20,9 @@ import static org.junit.Assert.*;
 
 import org.candlepin.gutterball.DatabaseTestFixture;
 import org.candlepin.gutterball.TestUtils;
+import org.candlepin.gutterball.jackson.GutterballObjectMapper;
 import org.candlepin.gutterball.model.ConsumerState;
+import org.candlepin.gutterball.model.Event;
 import org.candlepin.gutterball.model.snapshot.Compliance;
 import org.candlepin.gutterball.model.snapshot.ComplianceStatus;
 import org.candlepin.gutterball.model.snapshot.Consumer;
@@ -28,6 +30,9 @@ import org.candlepin.gutterball.model.snapshot.Consumer;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.File;
+import java.net.URL;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -80,6 +85,17 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         createSnapshot(cal.getTime(), "c4", "o3", "partial");
         cal.set(Calendar.MONTH, Calendar.JULY);
         createSnapshot(cal.getTime(), "c4", "o3", "valid");
+    }
+
+    @Test
+    public void ensurePersistableFromJson() throws Exception {
+        String eventJson = loadJsonFile("org/candlepin/gutterball/jackson/compliance-created.json");
+        GutterballObjectMapper mapper = new GutterballObjectMapper();
+        Event event = mapper.readValue(eventJson, Event.class);
+        Compliance complianceSnap = mapper.readValue(event.getNewEntity(), Compliance.class);
+        // This is normally done by the event handlers.
+        complianceSnap.setDate(complianceSnap.getStatus().getDate());
+        complianceSnapshotCurator.create(complianceSnap);
     }
 
     @Test
@@ -285,5 +301,13 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
             assertTrue(processed.containsKey(uuid));
             assertEquals(expected.get(uuid), processed.get(uuid));
         }
+    }
+
+    private String loadJsonFile(String testFile) throws Exception {
+        URL fileUrl = Thread.currentThread().getContextClassLoader().getResource(testFile);
+        assertNotNull(fileUrl);
+        File f = new File(fileUrl.toURI());
+        assertTrue(f.exists());
+        return new String(Files.readAllBytes(f.toPath()));
     }
 }
