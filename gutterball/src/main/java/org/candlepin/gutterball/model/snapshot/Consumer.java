@@ -26,6 +26,7 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Index;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -128,6 +129,11 @@ public class Consumer {
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
     private Set<ConsumerInstalledProduct> installedProducts;
+
+    @OneToMany(mappedBy = "consumer", targetEntity = GuestId.class)
+    @Cascade({org.hibernate.annotations.CascadeType.ALL,
+        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+    private List<GuestId> guestIds;
 
     public Consumer() {
     }
@@ -254,5 +260,18 @@ public class Consumer {
             p.setConsumer(this);
         }
     }
+
+    public List<GuestId> getGuestIds() {
+        return guestIds;
+    }
+
+    public void setGuestIds(List<GuestId> guestIds) {
+        this.guestIds = guestIds;
+
+        for (GuestId gid : this.guestIds) {
+            gid.setConsumer(this);
+        }
+    }
+
 
 }
