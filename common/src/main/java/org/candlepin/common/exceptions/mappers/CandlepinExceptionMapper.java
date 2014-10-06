@@ -16,6 +16,7 @@ package org.candlepin.common.exceptions.mappers;
 
 import static org.jboss.resteasy.util.MediaTypeHelper.*;
 
+import org.candlepin.common.exceptions.CandlepinException;
 import org.candlepin.common.exceptions.ExceptionMessage;
 import org.candlepin.common.util.VersionUtil;
 
