@@ -62,5 +62,9 @@ public class PersonConsumerResourceCreationTest extends
         }
     }
 
+    @Test
+    public void passIfOnlyOneActivationKeyDoesNotExistForOrg() {
+        // person consumer needs to by-pass this test.
+    }
 }
 

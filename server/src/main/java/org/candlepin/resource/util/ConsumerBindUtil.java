@@ -51,8 +51,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Responsible for enriching a {@link ConsumerInstalledProduct} with
- * product data.
+ * Responsible for handling activation keys for the Consumer creation in  {@link ConsumerResource}
  */
 public class ConsumerBindUtil {
 
