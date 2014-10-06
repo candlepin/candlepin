@@ -89,6 +89,7 @@ public class ConsumerResourceUpdateTest {
     @Mock private EnvironmentCurator environmentCurator;
     @Mock private ServiceLevelValidator serviceLevelValidator;
     @Mock private EventBuilder consumerEventBuilder;
+    @Mock private ConsumerBindUtil consumerBindUtil;
 
     private I18n i18n;
 
@@ -98,15 +99,13 @@ public class ConsumerResourceUpdateTest {
     public void init() throws Exception {
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
 
-        ConsumerBindUtil consumerBindUtil = new ConsumerBindUtil(null, i18n,
-                null, null, serviceLevelValidator);
         this.resource = new ConsumerResource(this.consumerCurator,
             this.consumerTypeCurator, null, this.subscriptionService, null,
             this.idCertService, null, this.i18n, this.sink, this.eventFactory, null, null,
             this.userService, null, poolManager, null, null,
             this.activationKeyCurator, this.entitler, this.complianceRules,
             this.deletedConsumerCurator, this.environmentCurator, null,
-            new CandlepinCommonTestConfig(), null, null, null, consumerBindUtil);
+            new CandlepinCommonTestConfig(), null, null, null, this.consumerBindUtil);
 
         when(complianceRules.getStatus(any(Consumer.class), any(Date.class),
                 any(Boolean.class), any(Boolean.class)))

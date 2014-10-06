@@ -15,9 +15,7 @@
 package org.candlepin.model.activationkeys;
 
 import org.candlepin.model.AbstractHibernateObject;
-import org.candlepin.model.Product;
 
-import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Index;
 
@@ -30,6 +28,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -59,19 +58,17 @@ public class ActivationKeyProduct extends AbstractHibernateObject {
     @NotNull
     private ActivationKey key;
 
-    @ManyToOne
-    @ForeignKey(name = "fk_activation_key_product_p")
-    @JoinColumn(nullable = false)
-    @Index(name = "cp_activation_key_product_p_fk_idx")
+    @Column(name = "product_id", nullable = false)
+    @Size(max = 255)
     @NotNull
-    private Product product;
+    private String productId;
 
     public ActivationKeyProduct() {
     }
 
-    public ActivationKeyProduct(ActivationKey key, Product product) {
+    public ActivationKeyProduct(ActivationKey key, String productId) {
         this.key = key;
-        this.product = product;
+        this.productId = productId;
     }
 
     public String getId() {
@@ -100,20 +97,20 @@ public class ActivationKeyProduct extends AbstractHibernateObject {
     /**
      * @return the Product
      */
-    public Product getProduct() {
-        return product;
+    public String getProductId() {
+        return productId;
     }
 
     /**
-     * @param product the Product to set
+     * @param productId the Product Id to set
      */
-    public void setProduct(Product product) {
-        this.product = product;
+    public void setProductId(String productId) {
+        this.productId = productId;
     }
 
     @Override
     public String toString() {
         return "Activation key: " + this.getKey().getName() + ", Product ID: " +
-                this.getProduct().getId();
+                this.getProductId();
     }
 }

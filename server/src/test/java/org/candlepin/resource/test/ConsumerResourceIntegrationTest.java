@@ -573,13 +573,11 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     @SuppressWarnings("unchecked")
     @Test
     public void testRegenerateEntitlementCertificateWithValidConsumerByEntitlement() {
-        ConsumerBindUtil consumerBindUtil = new ConsumerBindUtil(null, i18n,
-                consumerContentOverrideCurator, null, serviceLevelValidator);
         ConsumerResource cr = new ConsumerResource(this.consumerCurator, null,
                 null, null, this.entitlementCurator, null, null, null, null, null,
                 null, null, null, null, this.poolManager, null, null, null,
                 null, null, null, null, null, new CandlepinCommonTestConfig(), null,
-                null, null, consumerBindUtil);
+                null, null, mock(ConsumerBindUtil.class));
 
         Response rsp = consumerResource.bind(
             consumer.getUuid(), pool.getId().toString(), null, 1, null,

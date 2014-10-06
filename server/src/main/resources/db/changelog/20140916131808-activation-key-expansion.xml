@@ -55,7 +55,7 @@
         <addUniqueConstraint columnNames="key_id, product_id" constraintName="cp_activationkey_product_ukey" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_activationkey_product"/>
     </changeSet>
     <changeSet author="wpoteat" id="20140916131808-5">
-        <addForeignKeyConstraint baseColumnNames="product_id" baseTableName="cp_activationkey_product" constraintName="fk_activation_key_product_p" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_product" referencesUniqueColumn="false"/>
+        <addForeignKeyConstraint baseColumnNames="key_id" baseTableName="cp_activationkey_product" constraintName="fk_activation_key_product_p" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_activation_key" referencesUniqueColumn="false"/>
     </changeSet>
 
     <changeSet  author="wpoteat" id="20140916131808-6">

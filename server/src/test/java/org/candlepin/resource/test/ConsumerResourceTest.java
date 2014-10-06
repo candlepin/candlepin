@@ -98,7 +98,6 @@ import java.util.Set;
 public class ConsumerResourceTest {
 
     private I18n i18n;
-    private ConsumerBindUtil consumerBindUtil;
 
     @Mock
     private ConsumerCurator mockedConsumerCurator;
@@ -122,11 +121,12 @@ public class ConsumerResourceTest {
     private EventFactory eventFactory;
     @Mock
     private EventBuilder eventBuilder;
+    @Mock
+    private ConsumerBindUtil consumerBindUtil;
 
     @Before
     public void setUp() {
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
-        consumerBindUtil = new ConsumerBindUtil(null, null, null, null, mockedServiceLevelValidator);
         when(eventBuilder.setOldEntity(any(Consumer.class)))
             .thenReturn(eventBuilder);
         when(eventBuilder.setNewEntity(any(Consumer.class)))
@@ -341,11 +341,10 @@ public class ConsumerResourceTest {
         when(c.getName()).thenReturn("testConsumer");
         when(ctc.lookupByLabel(eq("person"))).thenReturn(cType);
 
-        ConsumerBindUtil cbu = new ConsumerBindUtil(null, null, ccoc, null, mockedServiceLevelValidator);
         ConsumerResource cr = new ConsumerResource(null, ctc,
             null, null, null, null, null, i18n, null, null, null, null,
             null, null, null, null, oc, akc, null, null, null, null,
-            null, new CandlepinCommonTestConfig(), null, null, null, cbu);
+            null, new CandlepinCommonTestConfig(), null, null, null, consumerBindUtil);
         cr.create(c, nap, null, "testOwner", "testKey");
     }
 

@@ -84,7 +84,7 @@ public class ConsumerBindUtil {
             handleActivationKeyOverrides(consumer, key.getContentOverrides());
             handleActivationKeyRelease(consumer, key.getReleaseVer());
             keySuccess &= handleActivationKeyServiceLevel(consumer, key.getServiceLevel(), key.getOwner());
-            if (key.isAutoAttach()) {
+            if (key.isAutoAttach() != null && key.isAutoAttach()) {
                 handleActivationKeyAutoBind(consumer, key);
             }
             else {
@@ -132,7 +132,7 @@ public class ConsumerBindUtil {
             Set<String> productIds = new HashSet<String>();
             List<String> poolIds = new ArrayList<String>();
             for (ActivationKeyProduct akpid : key.getProductIds()) {
-                productIds.add(akpid.getProduct().getId());
+                productIds.add(akpid.getProductId());
             }
             for (ConsumerInstalledProduct cip : consumer.getInstalledProducts()) {
                 productIds.add(cip.getProductId());

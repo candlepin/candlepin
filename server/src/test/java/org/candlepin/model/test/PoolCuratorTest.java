@@ -219,6 +219,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         results = page.getPageData();
         assertEquals(2, results.size());
     }
+
     @Test
     public void availablePoolsCanNotBeFilteredByOverriddenAttribute() throws Exception {
         Date activeDate = TestUtil.createDate(2000, 3, 2);

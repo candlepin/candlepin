@@ -106,8 +106,9 @@ public class ActivationKey extends AbstractHibernateObject implements Owned, Nam
     @Size(max = 255)
     private String serviceLevel;
 
+    // must allow null state to determine if an update intended to alter
     @Column(name = "auto_attach")
-    private boolean autoAttach = false;
+    private Boolean autoAttach;
 
     public ActivationKey() {
     }
@@ -188,7 +189,7 @@ public class ActivationKey extends AbstractHibernateObject implements Owned, Nam
     }
 
     public void addProduct(Product product) {
-        ActivationKeyProduct akpid = new ActivationKeyProduct(this, product);
+        ActivationKeyProduct akpid = new ActivationKeyProduct(this, product.getId());
         this.getProductIds().add(akpid);
     }
 
@@ -196,7 +197,7 @@ public class ActivationKey extends AbstractHibernateObject implements Owned, Nam
         ActivationKeyProduct toRemove = null;
 
         for (ActivationKeyProduct akpid : this.getProductIds()) {
-            if (akpid.getProduct().getId().equals(product.getId())) {
+            if (akpid.getProductId().equals(product.getId())) {
                 toRemove = akpid;
                 break;
             }
@@ -324,11 +325,11 @@ public class ActivationKey extends AbstractHibernateObject implements Owned, Nam
         }
     }
 
-    public void setAutoAttach(boolean autoAttach) {
+    public void setAutoAttach(Boolean autoAttach) {
         this.autoAttach = autoAttach;
     }
 
-    public boolean isAutoAttach() {
+    public Boolean isAutoAttach() {
         return autoAttach;
     }
 

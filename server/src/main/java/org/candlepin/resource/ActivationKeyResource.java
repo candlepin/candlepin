@@ -46,7 +46,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 /**
- * SubscriptionTokenResource
+ * ActivationKeyResource
  */
 @Path("/activation_keys")
 public class ActivationKeyResource {
@@ -155,7 +155,9 @@ public class ActivationKeyResource {
         if (key.getDescription() != null) {
             toUpdate.setDescription(key.getDescription());
         }
-        toUpdate.setAutoAttach(key.isAutoAttach());
+        if (key.isAutoAttach() != null) {
+            toUpdate.setAutoAttach(key.isAutoAttach());
+        }
         activationKeyCurator.merge(toUpdate);
 
         return toUpdate;
@@ -164,14 +166,14 @@ public class ActivationKeyResource {
     /**
      * Adds a Pool to an Activation Key
      *
-     * @return a Pool object
+     * @return an ActivationKey object
      * @httpcode 400
      * @httpcode 200
      */
     @POST
     @Path("{activation_key_id}/pools/{pool_id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Pool addPoolToKey(
+    public ActivationKey addPoolToKey(
         @PathParam("activation_key_id") @Verify(ActivationKey.class) String activationKeyId,
         @PathParam("pool_id") @Verify(Pool.class) String poolId,
         @QueryParam("quantity") Long quantity) {
@@ -183,20 +185,20 @@ public class ActivationKeyResource {
         activationKeyRules.validatePoolForActKey(key, pool, quantity);
         key.addPool(pool, quantity);
         activationKeyCurator.update(key);
-        return pool;
+        return key;
     }
 
     /**
      * Removes a Pool from an Activation Key
      *
-     * @return a Pool object
+     * @return an ActivationKey object
      * @httpcode 400
      * @httpcode 200
      */
     @DELETE
     @Path("{activation_key_id}/pools/{pool_id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Pool removePoolFromKey(
+    public ActivationKey removePoolFromKey(
         @PathParam("activation_key_id") @Verify(ActivationKey.class) String activationKeyId,
         @PathParam("pool_id")
         @Verify(Pool.class) String poolId) {
@@ -204,19 +206,20 @@ public class ActivationKeyResource {
         Pool pool = findPool(poolId);
         key.removePool(pool);
         activationKeyCurator.update(key);
-        return pool;
+        return key;
     }
 
     /**
      * Adds an Product ID to an Activation Key
      *
+     * @return an Activation Key object
      * @httpcode 400
      * @httpcode 200
      */
     @POST
     @Path("{activation_key_id}/product/{product_id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public void addProductIdToKey(
+    public ActivationKey addProductIdToKey(
         @PathParam("activation_key_id") @Verify(ActivationKey.class) String activationKeyId,
         @PathParam("product_id") String productId) {
 
@@ -224,24 +227,27 @@ public class ActivationKeyResource {
         Product product = confirmProduct(productId);
         key.addProduct(product);
         activationKeyCurator.update(key);
+        return key;
     }
 
     /**
      * Removes a Product ID from an Activation Key
      *
+     * @return an ActivationKey object
      * @httpcode 400
      * @httpcode 200
      */
     @DELETE
     @Path("{activation_key_id}/product/{product_id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public void removeProductIdFromKey(
+    public ActivationKey removeProductIdFromKey(
         @PathParam("activation_key_id") @Verify(ActivationKey.class) String activationKeyId,
         @PathParam("product_id") String productId) {
         ActivationKey key = activationKeyCurator.verifyAndLookupKey(activationKeyId);
         Product product = confirmProduct(productId);
         key.removeProduct(product);
         activationKeyCurator.update(key);
+        return key;
     }
 
     /**

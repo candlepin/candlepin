@@ -39,7 +39,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 /**
- * SubscriptionTokenResourceTest
+ * ActivationKeyResourceTest
  */
 public class ActivationKeyResourceTest extends DatabaseTestFixture {
     protected ActivationKeyResource activationKeyResource;

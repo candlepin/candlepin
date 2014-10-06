@@ -31,7 +31,6 @@ import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.controller.Entitler;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerContentOverrideCurator;
 import org.candlepin.model.ConsumerCurator;
@@ -104,7 +103,6 @@ public class ConsumerResourceCreationTest {
     @Mock private DeletedConsumerCurator deletedConsumerCurator;
     @Mock private ConsumerContentOverrideCurator consumerContentOverrideCurator;
     @Mock private ServiceLevelValidator serviceLevelValidator;
-    @Mock private Entitler entitler;
     @Mock private ConsumerBindUtil consumerBindUtil;
 
     private I18n i18n;
@@ -127,7 +125,7 @@ public class ConsumerResourceCreationTest {
             this.userService, null, null, null, this.ownerCurator,
             this.activationKeyCurator,
             null, this.complianceRules, this.deletedConsumerCurator,
-            null, null, this.config, null, null, null, consumerBindUtil);
+            null, null, this.config, null, null, null, this.consumerBindUtil);
 
         this.system = initSystem();
 
@@ -314,6 +312,39 @@ public class ConsumerResourceCreationTest {
             verify(activationKeyCurator).lookupForOwner(keyName, owner);
         }
     }
+    @Test(expected = BadRequestException.class)
+    public void orgRequiredWithActivationKeys() {
+        Principal p = new NoAuthPrincipal();
+        List<String> keys = mockActivationKeys();
+        Consumer consumer = new Consumer("sys.example.com", null, null, system);
+        resource.create(consumer, p, null, null, createKeysString(keys));
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void cannotMixUsernameWithActivationKeys() {
+        Principal p = new NoAuthPrincipal();
+        List<String> keys = mockActivationKeys();
+        Consumer consumer = new Consumer("sys.example.com", null, null, system);
+        resource.create(consumer, p, USER, owner.getKey(), createKeysString(keys));
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void failIfOnlyActivationKeyDoesNotExistForOrg() {
+        Principal p = new NoAuthPrincipal();
+        List<String> keys = new ArrayList<String>();
+        keys.add("NoSuchKey");
+        Consumer consumer = new Consumer("sys.example.com", null, null, system);
+        resource.create(consumer, p, null, owner.getKey(), createKeysString(keys));
+    }
+
+    @Test
+    public void passIfOnlyOneActivationKeyDoesNotExistForOrg() {
+        Principal p = new NoAuthPrincipal();
+        List<String> keys = mockActivationKeys();
+        keys.add("NoSuchKey");
+        Consumer consumer = new Consumer("sys.example.com", null, null, system);
+        resource.create(consumer, p, null, owner.getKey(), createKeysString(keys));
+    }
 
     @Test
     public void registerWithNoInstalledProducts() {
@@ -364,39 +395,5 @@ public class ConsumerResourceCreationTest {
         // Should be called with the consumer, null date (now),
         // no compliantUntil, and not update the consumer record
         verify(complianceRules).getStatus(eq(consumer), eq((Date) null), eq(false), eq(false));
-    }
-
-    @Test(expected = BadRequestException.class)
-    public void orgRequiredWithActivationKeys() {
-        Principal p = new NoAuthPrincipal();
-        List<String> keys = mockActivationKeys();
-        Consumer consumer = new Consumer("sys.example.com", null, null, system);
-        resource.create(consumer, p, null, null, createKeysString(keys));
-    }
-
-    @Test(expected = BadRequestException.class)
-    public void cannotMixUsernameWithActivationKeys() {
-        Principal p = new NoAuthPrincipal();
-        List<String> keys = mockActivationKeys();
-        Consumer consumer = new Consumer("sys.example.com", null, null, system);
-        resource.create(consumer, p, USER, owner.getKey(), createKeysString(keys));
-    }
-
-    @Test(expected = BadRequestException.class)
-    public void failIfOnlyActivationKeyDoesNotExistForOrg() {
-        Principal p = new NoAuthPrincipal();
-        List<String> keys = new ArrayList<String>();
-        keys.add("NoSuchKey");
-        Consumer consumer = new Consumer("sys.example.com", null, null, system);
-        resource.create(consumer, p, null, owner.getKey(), createKeysString(keys));
-    }
-
-    @Test
-    public void passIfOnlyOneActivationKeyDoesNotExistForOrg() {
-        Principal p = new NoAuthPrincipal();
-        List<String> keys = mockActivationKeys();
-        keys.add("NoSuchKey");
-        Consumer consumer = new Consumer("sys.example.com", null, null, system);
-        resource.create(consumer, p, null, owner.getKey(), createKeysString(keys));
     }
 }

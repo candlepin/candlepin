@@ -45,7 +45,6 @@ import org.candlepin.resource.util.ConsumerBindUtil;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
-import org.candlepin.util.ServiceLevelValidator;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -105,7 +104,7 @@ public class HypervisorResourceTest {
     private DeletedConsumerCurator deletedConsumerCurator;
 
     @Mock
-    private ServiceLevelValidator mockedServiceLevelValidator;
+    private ConsumerBindUtil consumerBindUtil;
 
     @Mock
     private EventBuilder consumerEventBuilder;
@@ -122,15 +121,13 @@ public class HypervisorResourceTest {
     public void setupTest() {
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         this.hypervisorType = new ConsumerType(ConsumerTypeEnum.HYPERVISOR);
-        ConsumerBindUtil consumerBindUtil = new ConsumerBindUtil(
-                null, null, null, null, mockedServiceLevelValidator);
         this.consumerResource = new ConsumerResource(this.consumerCurator,
             this.consumerTypeCurator, null, this.subscriptionService, null,
             this.idCertService, null, this.i18n, this.sink, this.eventFactory, null, null,
             this.userService, null, null, null, this.ownerCurator,
             this.activationKeyCurator, null, this.complianceRules,
             this.deletedConsumerCurator, null, null, new CandlepinCommonTestConfig(),
-            null, null, null, consumerBindUtil);
+            null, null, null, this.consumerBindUtil);
 
         hypervisorResource = new HypervisorResource(consumerResource,
             consumerCurator, i18n, ownerCurator);

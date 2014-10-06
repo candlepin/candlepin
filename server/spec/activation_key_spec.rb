@@ -174,12 +174,6 @@ describe 'Activation Keys' do
     service_activation_key['serviceLevel'].should == 'Ultra-VIP'
   end
 
-  it 'should not allow service level to be set on keys if service level is not available' do
-    lambda {
-      @cp.create_activation_key(@owner['key'], random_string('test_token'), 'Not There')
-    }.should raise_exception(RestClient::BadRequest)
-  end
-
   it 'should return correct exception for contraint violations' do
     lambda {
       @cp.create_activation_key(@owner['key'], nil)
