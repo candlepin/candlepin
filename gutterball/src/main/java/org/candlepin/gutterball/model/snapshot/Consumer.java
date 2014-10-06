@@ -259,9 +259,12 @@ public class Consumer {
         return installedProducts;
     }
 
-    public void setInstalledProducts(Set<ConsumerInstalledProduct> installedProducts) {
-        this.installedProducts = installedProducts;
+    public void setInstalledProducts(Set<ConsumerInstalledProduct> installed) {
+        if (installed == null) {
+            installed = new HashSet<ConsumerInstalledProduct>();
+        }
 
+        this.installedProducts = installed;
         for (ConsumerInstalledProduct p : this.installedProducts) {
             p.setConsumer(this);
         }
@@ -271,13 +274,15 @@ public class Consumer {
         return guestIds;
     }
 
-    public void setGuestIds(List<GuestId> guestIds) {
-        this.guestIds = guestIds;
+    public void setGuestIds(List<GuestId> ids) {
+        if (ids == null) {
+            ids = new LinkedList<GuestId>();
+        }
 
+        this.guestIds = ids;
         for (GuestId gid : this.guestIds) {
             gid.setConsumer(this);
         }
     }
-
 
 }

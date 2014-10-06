@@ -154,6 +154,7 @@ public class ConsumerInstalledProduct {
         this.endDate = endDate;
     }
 
+    @XmlTransient
     public Consumer getConsumer() {
         return consumer;
     }
