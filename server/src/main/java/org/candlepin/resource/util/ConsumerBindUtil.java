@@ -14,6 +14,7 @@
  */
 package org.candlepin.resource.util;
 
+import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.controller.Entitler;
 import org.candlepin.model.Consumer;
@@ -32,7 +33,6 @@ import org.candlepin.policy.js.quantity.QuantityRules;
 import org.candlepin.policy.js.quantity.SuggestedQuantity;
 import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.util.ServiceLevelValidator;
-import org.candlepin.util.Util;
 import org.candlepin.version.CertVersionConflictException;
 
 import com.google.inject.Inject;
@@ -56,8 +56,6 @@ import java.util.Set;
  */
 public class ConsumerBindUtil {
 
-    private Consumer consumer;
-    private List<ActivationKey> keys;
     private Entitler entitler;
     private I18n i18n;
     private ConsumerContentOverrideCurator consumerContentOverrideCurator;
@@ -80,26 +78,35 @@ public class ConsumerBindUtil {
 
     public void handleActivationKeys(Consumer consumer, List<ActivationKey> keys) {
         // Process activation keys.
+
+        boolean listSuccess = false;
         for (ActivationKey key : keys) {
+            boolean keySuccess = true;
             handleActivationKeyOverrides(consumer, key.getContentOverrides());
             handleActivationKeyRelease(consumer, key.getReleaseVer());
-            handleActivationKeyServiceLevel(consumer, key.getServiceLevel(), key.getOwner());
+            keySuccess &= handleActivationKeyServiceLevel(consumer, key.getServiceLevel(), key.getOwner());
             if (key.isAutoAttach()) {
                 handleActivationKeyAutoBind(consumer, key);
             }
             else {
-                handleActivationKeyPools(consumer, key);
+                keySuccess &= handleActivationKeyPools(consumer, key);
             }
+            listSuccess |= keySuccess;
+        }
+        if (!listSuccess) {
+            throw new BadRequestException(i18n.tr("No activation key was applied successfully."));
         }
     }
 
-    private void handleActivationKeyPools(Consumer consumer,
+    private boolean handleActivationKeyPools(Consumer consumer,
         ActivationKey key) {
+        if (key.getPools().size() == 0) { return true; }
+        boolean onePassed = false;
         List<ActivationKeyPool> toBind = new LinkedList<ActivationKeyPool>();
         for (ActivationKeyPool akp : key.getPools()) {
-            Util.assertNotNull(akp.getPool().getId(),
-                i18n.tr("Pool ID must be provided"));
-            toBind.add(akp);
+            if (akp.getPool().getId() != null) {
+                toBind.add(akp);
+            }
         }
 
         // Sort pools before binding to avoid deadlocks
@@ -108,9 +115,17 @@ public class ConsumerBindUtil {
             int quantity = (akp.getQuantity() == null) ?
                 getQuantityToBind(akp.getPool(), consumer) :
                     akp.getQuantity().intValue();
-            entitler.sendEvents(entitler.bindByPool(
-                akp.getPool().getId(), consumer, quantity));
+            try {
+                entitler.sendEvents(entitler.bindByPool(
+                    akp.getPool().getId(), consumer, quantity));
+                onePassed = true;
+            }
+            catch (ForbiddenException e) {
+                log.warn(i18n.tr("Cannot bind to pool ''{0}'' in activation key ''{1}'': {2}",
+                        akp.getPool().getId(), akp.getKey().getName(), e.getMessage()));
+            }
         }
+        return onePassed;
     }
 
     private void handleActivationKeyAutoBind(Consumer consumer, ActivationKey key) {
@@ -160,11 +175,21 @@ public class ConsumerBindUtil {
         }
     }
 
-    private void handleActivationKeyServiceLevel(Consumer consumer,
+    private boolean handleActivationKeyServiceLevel(Consumer consumer,
             String level, Owner owner) {
         if (!StringUtils.isBlank(level)) {
-            serviceLevelValidator.validate(owner, level);
-            consumer.setServiceLevel(level);
+            try {
+                serviceLevelValidator.validate(owner, level);
+                consumer.setServiceLevel(level);
+                return true;
+            }
+            catch (BadRequestException bre) {
+                log.warn(bre.getMessage());
+                return false;
+            }
+        }
+        else  {
+            return true;
         }
     }
 

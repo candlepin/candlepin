@@ -144,7 +144,7 @@ public class ActivationKeyPool extends AbstractHibernateObject implements Compar
 
     @Override
     public String toString() {
-        return "Activation key: " + this.getKey().getName() + ", Product ID: " + this.getPool().getId();
+        return "Activation key: " + this.getKey().getName() + ", Pool ID: " + this.getPool().getId();
     }
 
 }

@@ -403,22 +403,30 @@ public class ConsumerResource {
 
         if (!keyStrings.isEmpty()) {
             if (ownerKey == null) {
-                throw new BadRequestException(
-                    i18n.tr("Must specify an org to register with activation keys."));
+                throw new BadRequestException(i18n.tr(
+                        "Must specify an org to register with activation keys."));
             }
             if (userName != null) {
-                throw new BadRequestException(
-                    i18n.tr("Cannot specify username with activation keys."));
+                throw new BadRequestException(i18n.tr("Cannot specify username with activation keys."));
             }
         }
 
         Owner owner = setupOwner(principal, ownerKey);
-        // Raise an exception if any keys were specified which do not exist
-        // for this owner.
+        // Raise an exception if none of the keys specified exist for this owner.
         List<ActivationKey> keys = new ArrayList<ActivationKey>();
         for (String keyString : keyStrings) {
-            ActivationKey key = findKey(keyString, owner);
-            keys.add(key);
+            ActivationKey key = null;
+            try {
+                key = findKey(keyString, owner);
+                keys.add(key);
+            }
+            catch (NotFoundException e) {
+                log.warn(e.getMessage());
+            }
+        }
+        if ((principal instanceof NoAuthPrincipal) && keys.isEmpty()) {
+            throw new BadRequestException(i18n.tr(
+                    "None of the activation keys specified exist for this org."));
         }
 
         userName = setUserName(consumer, principal, userName);
@@ -428,13 +436,12 @@ public class ConsumerResource {
         ConsumerType type = lookupConsumerType(consumer.getType().getLabel());
         if (type.isType(ConsumerTypeEnum.PERSON)) {
             if (keys.size() > 0) {
-                throw new BadRequestException(
-                    i18n.tr("A unit type of 'person' cannot be" +
-                        " used with activation keys"));
+                throw new BadRequestException(i18n.tr(
+                        "A unit type of 'person' cannot be used with activation keys"));
             }
             if (!isConsumerPersonNameValid(consumer.getName())) {
-                throw new BadRequestException(
-                    i18n.tr("System name cannot contain most special characters."));
+                throw new BadRequestException(i18n.tr(
+                        "System name cannot contain most special characters."));
             }
 
             verifyPersonConsumer(consumer, type, owner, userName, principal);
@@ -443,16 +450,13 @@ public class ConsumerResource {
         if (type.isType(ConsumerTypeEnum.SYSTEM) &&
             !isConsumerSystemNameValid(consumer.getName())) {
 
-            throw new BadRequestException(
-                i18n.tr("System name cannot contain most special characters."));
+            throw new BadRequestException(i18n.tr("System name cannot contain most special characters."));
         }
         consumer.setOwner(owner);
         consumer.setType(type);
         consumer.setCanActivate(subAdapter.canActivateSubscription(consumer));
         consumer.setAutoheal(true); // this is the default
-        if (consumer.getServiceLevel() == null) {
-            consumer.setServiceLevel("");
-        }
+        if (consumer.getServiceLevel() == null) { consumer.setServiceLevel(""); }
 
         // If no service level was specified, and the owner has a default set, use it:
         if (consumer.getServiceLevel().equals("") &&
@@ -474,8 +478,7 @@ public class ConsumerResource {
             }
         }
         HypervisorId hvsrId = consumer.getHypervisorId();
-        if (hvsrId != null && hvsrId.getHypervisorId() != null &&
-                !hvsrId.getHypervisorId().isEmpty()) {
+        if (hvsrId != null && hvsrId.getHypervisorId() != null && !hvsrId.getHypervisorId().isEmpty()) {
             // If a hypervisorId is supplied, make sure the consumer and owner are correct
             hvsrId.setConsumer(consumer);
         }
@@ -489,15 +492,16 @@ public class ConsumerResource {
 
             sink.emitConsumerCreated(consumer);
 
-            consumerBindUtil.handleActivationKeys(consumer, keys);
+            if (keys.size() > 0) {
+                consumerBindUtil.handleActivationKeys(consumer, keys);
+            }
 
             // Don't allow complianceRules to update entitlementStatus, because we're about to perform
             // an update unconditionally.
             complianceRules.getStatus(consumer, null, false, false);
             consumerCurator.update(consumer);
 
-            log.info("Consumer " + consumer.getUuid() + " created in org " +
-                consumer.getOwner().getKey());
+            log.info("Consumer " + consumer.getUuid() + " created in org " + consumer.getOwner().getKey());
 
             return consumer;
         }

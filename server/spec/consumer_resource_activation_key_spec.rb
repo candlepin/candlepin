@@ -98,26 +98,6 @@ describe 'Consumer Resource Activation Key' do
     consumer.serviceLevel.should == "VIP"
   end
 
-  it 'should fail a consumer registration for activation keys with missing service level' do
-    prod1 = create_product(random_string('product1'), random_string('product1'),
-                           :attributes => { :'support_level' => 'VIP'})
-    subs1 = @cp.create_subscription(@owner['key'], prod1.id, 10)
-    @cp.refresh_pools(@owner['key'])
-
-    key1 = @cp.create_activation_key(@owner['key'], 'key1', 'VIP')
-    key2 = @cp.create_activation_key(@owner['key'], 'key2')
-
-    @cp.update_activation_key({'id' => key1['id'], 'releaseVer' => "Registration Release"})
-
-    @cp.delete_subscription(subs1.id)
-    @cp.refresh_pools(@owner['key'])
-
-    lambda do
-      consumer = @client.register(random_string('machine1'), :system, nil, {}, nil,
-        @owner['key'], ["key1", "key2"])
-    end.should raise_exception(RestClient::BadRequest)
-  end
-
   it 'should allow a consumer to register with multiple activation keys with same content override names' do
     key1 = @cp.create_activation_key(@owner['key'], 'key1')
     key2 = @cp.create_activation_key(@owner['key'], 'key2')
@@ -156,33 +136,5 @@ describe 'Consumer Resource Activation Key' do
 
     consumer.uuid.should_not be_nil
     @cp.get_pool(pool1.id).consumed.should == 4
-  end
-
-  it 'handles failed activation key registration' do
-    consumer1 = consumer_client(@user, random_string("consumer1"))
-    prod1 = create_product(random_string('product1'), random_string('product1'),
-                           :attributes => { :'multi-entitlement' => 'yes'})
-    subs1 = @cp.create_subscription(@owner['key'], prod1.id, 10)
-    @cp.refresh_pools(@owner['key'])
-    pool1 = consumer1.list_pools({:owner => @owner['id']}).first
-
-    # Now we register asking for 9 when only 8 are available
-    key1 = @cp.create_activation_key(@owner['key'], 'key1')
-    @cp.add_pool_to_key(key1['id'], pool1['id'], 9)
-
-    # As another consumer, use 2 of the 10 available, we will then request
-    # registration with the key wanting 9. (the server won't let us create
-    # an activation key with a quantity greater than the pool)
-    consumer1.consume_pool(pool1['id'], {:quantity => 2})
-
-    @cp.list_consumers({:owner => @owner['key']}).size.should == 1
-
-    lambda do
-      consumer = @client.register(random_string('machine1'), :system, nil, {}, nil,
-        @owner['key'], ["key1"])
-    end.should raise_exception(RestClient::Forbidden)
-
-    # No new consumer should have been created:
-    @cp.list_consumers({:owner => @owner['key']}).size.should == 1
   end
 end
