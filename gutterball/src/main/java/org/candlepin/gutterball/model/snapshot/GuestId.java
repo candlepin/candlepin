@@ -99,6 +99,7 @@ public class GuestId {
         this.guestId = guestId;
     }
 
+    @XmlTransient
     public Consumer getConsumer() {
         return consumer;
     }
