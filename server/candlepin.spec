@@ -370,11 +370,13 @@ fi
 %defattr(644,tomcat,tomcat,775)
 %{_localstatedir}/lib/%{tomcat}/webapps/%{name}/*
 %{_localstatedir}/lib/%{name}/
-%{_localstatedir}/log/%{name}
 %{_localstatedir}/cache/%{name}
 %config(noreplace) %{_sysconfdir}/%{tomcat}/keystore
 %defattr(600,tomcat,tomcat,-)
 %config(noreplace) %{_sysconfdir}/%{name}/%{name}.conf
+# log dir needs to be group root or not group writeable
+# else logroate fails
+%attr(775, tomcat, root) %{_localstatedir}/log/%{name}
 
 %files devel
 %defattr(644,root,root,775)
