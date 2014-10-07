@@ -47,7 +47,24 @@ describe 'Activation Keys' do
     lambda {
       @mallory_client.update_activation_key(@activation_key)
     }.should raise_exception(RestClient::ResourceNotFound)
+  end
 
+  it 'should allow updating of descriptions' do
+    @activation_key['description'] = "very descriptive text"
+    @activation_key = @cp.update_activation_key(@activation_key)
+    @activation_key['description'].should == "very descriptive text"
+
+    owner_client = user_client(@owner, random_string('testuser'))
+
+    @activation_key['description'] = "more descriptive text"
+    @activation_key = owner_client.update_activation_key(@activation_key)
+    @activation_key['description'].should == "more descriptive text"
+
+    @activation_key['description'] = "nope"
+
+    lambda {
+      @mallory_client.update_activation_key(@activation_key)
+    }.should raise_exception(RestClient::ResourceNotFound)
   end
 
   it 'should allow superadmin to delete their activation keys' do
