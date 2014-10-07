@@ -45,9 +45,8 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "gb_compliance_status_snapshot")
+@Table(name = "gb_compliance_status_snap")
 public class ComplianceStatus {
-
     @Id
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
@@ -58,9 +57,9 @@ public class ComplianceStatus {
 
     @XmlTransient
     @OneToOne(fetch = FetchType.LAZY)
-    @ForeignKey(name = "fk_compliance_snapshot")
+    @ForeignKey(name = "fk_status_compliance")
     @JoinColumn(nullable = false)
-    @Index(name = "cp_compliance_snapshot_fk_idx")
+    @Index(name = "ix_compliance_snap_fk")
     @NotNull
     private Compliance complianceSnapshot;
 

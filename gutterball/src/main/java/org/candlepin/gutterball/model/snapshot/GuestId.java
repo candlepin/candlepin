@@ -46,9 +46,8 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "gb_consumer_guest_snaps")
+@Table(name = "gb_consumer_guest_snap")
 public class GuestId {
-
     @Id
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
@@ -63,10 +62,10 @@ public class GuestId {
     private String guestId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @ForeignKey(name = "fk_consumer_guests")
+    @ForeignKey(name = "fk_guests_consumer")
     @JoinColumn(nullable = false)
     @XmlTransient
-    @Index(name = "gb_consumerguest_consumer_fk_idx")
+    @Index(name = "ix_consumerguest_consumer_fk")
     @NotNull
     private Consumer consumer;
 

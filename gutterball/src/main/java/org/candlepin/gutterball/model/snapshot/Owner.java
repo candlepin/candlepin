@@ -42,9 +42,8 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "gb_owner_snapshot")
+@Table(name = "gb_owner_snap")
 public class Owner {
-
     @Id
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
@@ -55,9 +54,9 @@ public class Owner {
 
     @XmlTransient
     @OneToOne(fetch = FetchType.LAZY)
-    @ForeignKey(name = "fk_consumer_snapshot")
+    @ForeignKey(name = "fk_owner_consumer")
     @JoinColumn(nullable = false)
-    @Index(name = "cp_consumer_snapshot_fk_idx")
+    @Index(name = "ix_consumer_snap_fk")
     @NotNull
     private Consumer consumerSnapshot;
 
