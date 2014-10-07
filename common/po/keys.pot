@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-10-02 11:15-0300\n"
+"POT-Creation-Date: 2014-10-07 09:30-0400\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,26 +17,26 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: /home/dgoodwin/src/candlepin/common/src/main/java/org/candlepin/common/exceptions/mappers/BadRequestExceptionMapper.java:58
+#: common/src/main/java/org/candlepin/common/exceptions/mappers/BadRequestExceptionMapper.java:82
+msgid "Bad Request"
+msgstr ""
+
+#: common/src/main/java/org/candlepin/common/exceptions/mappers/BadRequestExceptionMapper.java:58
 #, java-format
 msgid "Invalid format for query parameter {0}. Expected format: {1}"
 msgstr ""
 
-#: /home/dgoodwin/src/candlepin/common/src/main/java/org/candlepin/common/exceptions/mappers/BadRequestExceptionMapper.java:78
+#: common/src/main/java/org/candlepin/common/exceptions/mappers/CandlepinExceptionMapper.java:109
 #, java-format
-msgid "{0} is not a valid value for {1}"
+msgid "Runtime Error {0}"
 msgstr ""
 
-#: /home/dgoodwin/src/candlepin/common/src/main/java/org/candlepin/common/exceptions/mappers/BadRequestExceptionMapper.java:82
-msgid "Bad Request"
-msgstr ""
-
-#: /home/dgoodwin/src/candlepin/common/src/main/java/org/candlepin/common/exceptions/mappers/CandlepinExceptionMapper.java:104
+#: common/src/main/java/org/candlepin/common/exceptions/mappers/CandlepinExceptionMapper.java:104
 #, java-format
 msgid "Runtime Error {0} at {1}.{2}:{3}"
 msgstr ""
 
-#: /home/dgoodwin/src/candlepin/common/src/main/java/org/candlepin/common/exceptions/mappers/CandlepinExceptionMapper.java:109
+#: common/src/main/java/org/candlepin/common/exceptions/mappers/BadRequestExceptionMapper.java:78
 #, java-format
-msgid "Runtime Error {0}"
+msgid "{0} is not a valid value for {1}"
 msgstr ""

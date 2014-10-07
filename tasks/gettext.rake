@@ -1,3 +1,5 @@
+require './tasks/util'
+
 module Gettext
   class Config
     attr_writer :xgettext_args
@@ -39,6 +41,7 @@ module Gettext
 
   module ProjectExtension
     include Extension
+    include ::Candlepin::Util
 
     def gettext
       @gettext ||= Gettext::Config.new(project)
@@ -60,11 +63,14 @@ module Gettext
           mkdir_p(File.dirname(gettext.keys_destination))
 
           java_files = []
+          top_dir = Pathname.new(top_project(project).base_dir)
+
           project.compile.sources.each do |src|
+            src = Pathname.new(src).relative_path_from(top_dir).to_s
             java_files << Dir[File.join(src, '**', '*.java')]
           end
 
-          args = %w[-ktrc:1c,2 -ktrnc:1c,2,3 -ktr -kmarktr -ktrn:1,2]
+          args = %w[-k -F -ktrc:1c,2 -ktrnc:1c,2,3 -ktr -kmarktr -ktrn:1,2]
           args << gettext.xgettext_args
           args << ['-o', gettext.keys_destination]
           args = args.flatten.compact.join(' ')
