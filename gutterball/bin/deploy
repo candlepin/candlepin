@@ -1,4 +1,5 @@
 #! /bin/bash
+# Note that this script requires bash > 4 due to the use of associative arrays.
 
 APP="gutterball"
 
@@ -15,6 +16,9 @@ usage() {
     OPTIONS:
       -q  quiet; no notifications and minimal output
       -t  hot deloy; do not stop and start Tomcat
+      -g  regenerate database
+      -m  deploy to MySQL
+      -o  deploy to Oracle
       -l  logdriver; compile with Logdriver
 HELP
 }
@@ -28,7 +32,7 @@ init() {
 
 build() {
     if [ -n "$LOGDRIVER" ]; then
-      echo "Building with Logdriver."
+      info_msg "Building with logdriver."
     fi
     buildr -s clean package test=no $LOGDRIVER
 }
@@ -42,6 +46,40 @@ deploy() {
     fi
 
     sudo install -o tomcat -g tomcat -m 644 $PROJECT_DIR/target/$APP-$VERSION.war /var/lib/${TC}/webapps/${APP}.war
+}
+
+generate_db() {
+    if [ -n "$USE_ORACLE" ]; then
+        init_oracle_jdbc "gutterball"
+        [ -z "$DBPASSWORD" ] && DBPASSWORD="gutterball"
+    elif [ -n "$USE_MYSQL" ]; then
+        init_mysql_jdbc "gutterball"
+    else
+        init_postgresql_jdbc "gutterball"
+    fi
+
+    CHANGELOG="changelog-create.xml"
+    if [ -n "$GENDB" ]; then
+        MESSAGE="Generating New Database"
+        if [ -n "$USE_ORACLE" ]; then
+            recreate_oracle "gutterball"
+        elif [ -n "$USE_MYSQL" ]; then
+            recreate_mysql "gutterball"
+        else
+            recreate_postgresql "gutterball"
+        fi
+    else
+        MESSAGE="Updating Database"
+    fi
+
+    info_msg "$MESSAGE"
+    LQCOMMAND="liquibase --driver=${JDBC['driver']} --classpath=$PROJECT_DIR/src/main/resources/:target/classes/:${JDBC['jar']} --changeLogFile=db/changelog/$CHANGELOG --url=${JDBC['url']} --username=gutterball"
+    if [ -n "$DBPASSWORD" ] ; then
+        LQCOMMAND="$LQCOMMAND --password=$DBPASSWORD "
+    fi
+    LQCOMMAND="$LQCOMMAND update"
+    (cd $PROJECT_DIR && $LQCOMMAND)
+    evalrc $? "Liquibase command failed"
 }
 
 start_container() {
@@ -75,6 +113,13 @@ clean_up() {
     cd "$START_DIR"
 }
 
+validate_options() {
+    if [ -n "$USE_ORACLE" -a -n "$USE_MYSQL" ]; then
+        err_msg "You can't use Oracle and MySQL at the same time."
+        exit 1
+    fi
+}
+
 ### Main
 
 # At the end of the script go back to where we started.
@@ -87,21 +132,26 @@ set -e
 
 LOGDRIVER=""
 
-while getopts ":qtl" opt; do
+while getopts ":qtlmog" opt; do
     case $opt in
         q  ) QUIET="1";;
         t  ) HOTDEPLOY="1";;
         l  ) LOGDRIVER="logdriver=yes";;
+        m  ) USE_MYSQL="1";;
+        o  ) USE_ORACLE="1";;
+        g  ) GENDB="1";;
         ?  ) usage; exit;;
     esac
 done
 
 shift $(($OPTIND - 1))
 
+validate_options
 init
 build
 stop_container
 deploy
+generate_db
 start_container
 notify
 clean_up
