@@ -270,10 +270,9 @@ public class GuestIdResourceTest {
     private class ConsumerResourceForTesting extends ConsumerResource {
 
         public ConsumerResourceForTesting() {
-            super(null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null,
-                null, null, null, null, null, mockedServiceLevelValidator);
+            super(null, null, null, null, null, null, null, null, null,
+                  null, null, null, null, null, null, null, null, null,
+                  null, null, null, null, null, null, null, null, null, null);
         }
 
         public boolean performConsumerUpdates(Consumer updated, Consumer toUpdate) {

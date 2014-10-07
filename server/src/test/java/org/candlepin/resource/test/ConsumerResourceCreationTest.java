@@ -17,6 +17,7 @@ package org.candlepin.resource.test;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
+import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.NoAuthPrincipal;
@@ -28,7 +29,6 @@ import org.candlepin.auth.permissions.Permission;
 import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.ForbiddenException;
-import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Consumer;
@@ -49,6 +49,7 @@ import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.resource.ConsumerResource;
+import org.candlepin.resource.util.ConsumerBindUtil;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
@@ -66,6 +67,7 @@ import org.mockito.stubbing.Answer;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -95,11 +97,13 @@ public class ConsumerResourceCreationTest {
     @Mock private ConsumerTypeCurator consumerTypeCurator;
     @Mock private OwnerCurator ownerCurator;
     @Mock private EventSink sink;
+    @Mock private EventFactory factory;
     @Mock private ActivationKeyCurator activationKeyCurator;
     @Mock private ComplianceRules complianceRules;
     @Mock private DeletedConsumerCurator deletedConsumerCurator;
     @Mock private ConsumerContentOverrideCurator consumerContentOverrideCurator;
     @Mock private ServiceLevelValidator serviceLevelValidator;
+    @Mock private ConsumerBindUtil consumerBindUtil;
 
     private I18n i18n;
 
@@ -121,8 +125,7 @@ public class ConsumerResourceCreationTest {
             this.userService, null, null, null, this.ownerCurator,
             this.activationKeyCurator,
             null, this.complianceRules, this.deletedConsumerCurator,
-            null, null, this.config, null, null, null, null,
-            consumerContentOverrideCurator, serviceLevelValidator);
+            null, null, this.config, null, null, null, this.consumerBindUtil);
 
         this.system = initSystem();
 
@@ -188,7 +191,7 @@ public class ConsumerResourceCreationTest {
         List<String> activationKeys) {
         Consumer consumer = new Consumer(consumerName, null, null, system);
         return this.resource.create(consumer, principal, USER, owner.getKey(),
-            createKeysString(activationKeys));
+            null);
     }
 
     @Test
@@ -277,14 +280,8 @@ public class ConsumerResourceCreationTest {
     private List<String> mockActivationKeys() {
         ActivationKey key1 = new ActivationKey("key1", owner);
         when(activationKeyCurator.lookupForOwner("key1", owner)).thenReturn(key1);
-        ActivationKey key2 = new ActivationKey("key2", owner);
-        when(activationKeyCurator.lookupForOwner("key2", owner)).thenReturn(key2);
-        ActivationKey key3 = new ActivationKey("key3", owner);
-        when(activationKeyCurator.lookupForOwner("key3", owner)).thenReturn(key3);
         List<String> keys = new LinkedList<String>();
         keys.add(key1.getName());
-        keys.add(key2.getName());
-        keys.add(key3.getName());
         return keys;
     }
 
@@ -315,7 +312,6 @@ public class ConsumerResourceCreationTest {
             verify(activationKeyCurator).lookupForOwner(keyName, owner);
         }
     }
-
     @Test(expected = BadRequestException.class)
     public void orgRequiredWithActivationKeys() {
         Principal p = new NoAuthPrincipal();
@@ -332,8 +328,17 @@ public class ConsumerResourceCreationTest {
         resource.create(consumer, p, USER, owner.getKey(), createKeysString(keys));
     }
 
-    @Test(expected = NotFoundException.class)
-    public void failIfAnyActivationKeyDoesNotExistForOrg() {
+    @Test(expected = BadRequestException.class)
+    public void failIfOnlyActivationKeyDoesNotExistForOrg() {
+        Principal p = new NoAuthPrincipal();
+        List<String> keys = new ArrayList<String>();
+        keys.add("NoSuchKey");
+        Consumer consumer = new Consumer("sys.example.com", null, null, system);
+        resource.create(consumer, p, null, owner.getKey(), createKeysString(keys));
+    }
+
+    @Test
+    public void passIfOnlyOneActivationKeyDoesNotExistForOrg() {
         Principal p = new NoAuthPrincipal();
         List<String> keys = mockActivationKeys();
         keys.add("NoSuchKey");

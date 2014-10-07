@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <changeSet author="wpoteat" id="20140916131808-1" dbms="postgresql">
+        <createTable tableName="cp_activationkey_product">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_activationkey_product_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="key_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="product_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="wpoteat" id="20140916131808-2" dbms="oracle">
+        <createTable tableName="cp_activationkey_product">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_activationkey_product_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="key_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="product_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="wpoteat" id="20140916131808-3" dbms="mysql">
+        <createTable tableName="cp_activationkey_product">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_activationkey_product_pkey"/>
+            </column>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
+            <column name="key_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="product_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="wpoteat" id="20140916131808-4">
+        <addUniqueConstraint columnNames="key_id, product_id" constraintName="cp_activationkey_product_ukey" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_activationkey_product"/>
+    </changeSet>
+    <changeSet author="wpoteat" id="20140916131808-5">
+        <addForeignKeyConstraint baseColumnNames="key_id" baseTableName="cp_activationkey_product" constraintName="fk_activation_key_product_p" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_activation_key" referencesUniqueColumn="false"/>
+    </changeSet>
+
+    <changeSet  author="wpoteat" id="20140916131808-6">
+        <addColumn tableName="cp_activation_key">
+            <column name="auto_attach"
+                    type="BOOLEAN"/>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>

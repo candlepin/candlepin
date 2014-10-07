@@ -27,6 +27,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.js.entitlement.EntitlementRulesTranslator;
+import org.candlepin.resource.dto.AutobindData;
 
 import com.google.inject.Inject;
 
@@ -35,6 +36,7 @@ import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -120,9 +122,11 @@ public class Entitler {
     }
 
     public List<Entitlement> bindByProducts(String[] productIds,
-        String consumeruuid, Date entitleDate) {
+        String consumeruuid, Date entitleDate, Collection<String> fromPools) {
         Consumer c = consumerCurator.findByUuid(consumeruuid);
-        return bindByProducts(productIds, c, entitleDate);
+        AutobindData data = AutobindData.create(c).on(entitleDate)
+                .forProducts(productIds).withPools(fromPools);
+        return bindByProducts(data);
     }
 
     /**
@@ -130,28 +134,23 @@ public class Entitler {
      * which provide access to this product, either directly or as a child, and
      * select the best one based on a call to the rules engine.
      *
-     * @param productIds List of product ids.
-     * @param consumer The consumer being entitled.
-     * @param entitleDate specific date to entitle by.
+     * @param data AutobindData encapsulating data required for an autobind request
      * @return List of Entitlements
      */
-    public List<Entitlement> bindByProducts(String[] productIds,
-        Consumer consumer, Date entitleDate) {
-        return bindByProducts(productIds, consumer, entitleDate, false);
+    public List<Entitlement> bindByProducts(AutobindData data) {
+        return bindByProducts(data, false);
     }
 
     /**
      *
      * Force option is used to heal entire org
      *
-     * @param productIds List of product ids.
-     * @param consumer The consumer being entitled.
-     * @param entitleDate specific date to entitle by.
+     * @param data AutobindData encapsulating data required for an autobind request
      * @param force heal host even if it has autoheal disabled
      * @return List of Entitlements
      */
-    public List<Entitlement> bindByProducts(String[] productIds,
-        Consumer consumer, Date entitleDate, boolean force) {
+    public List<Entitlement> bindByProducts(AutobindData data, boolean force) {
+        Consumer consumer = data.getConsumer();
         // If the consumer is a guest, and has a host, try to heal the host first
         if (consumer.hasFact("virt.uuid")) {
             String guestUuid = consumer.getFact("virt.uuid");
@@ -161,7 +160,8 @@ public class Entitler {
                     host.getUuid() + " for guest with UUID " + consumer.getUuid());
                 try {
                     List<Entitlement> hostEntitlements =
-                        poolManager.entitleByProductsForHost(consumer, host, entitleDate);
+                        poolManager.entitleByProductsForHost(consumer, host,
+                                data.getOnDate(), data.getPossiblePools());
                     log.debug("Granted host {} entitlements", hostEntitlements.size());
                     sendEvents(hostEntitlements);
                 }
@@ -177,14 +177,18 @@ public class Entitler {
 
         // Attempt to create entitlements:
         try {
-            List<Entitlement> entitlements = poolManager.entitleByProducts(
-                consumer, productIds, entitleDate);
+            // the pools are only used to bind the guest
+            List<Entitlement> entitlements = poolManager.entitleByProducts(data);
             log.debug("Created entitlements: " + entitlements);
             return entitlements;
         }
         catch (EntitlementRefusedException e) {
             // TODO: Could be multiple errors, but we'll just report the first one for now
-            throw new ForbiddenException(messageTranslator.productErrorToMessage(productIds[0],
+            String productId = "Unknown Product";
+            if (data.getProductIds().length > 0) {
+                productId = data.getProductIds()[0];
+            }
+            throw new ForbiddenException(messageTranslator.productErrorToMessage(productId,
                     e.getResult().getErrors().get(0)));
         }
     }
@@ -205,7 +209,7 @@ public class Entitler {
             Owner owner = consumer.getOwner();
 
             result = poolManager.getBestPools(
-                consumer, null, null, owner, serviceLevelOverride);
+                consumer, null, null, owner, serviceLevelOverride, null);
             log.debug("Created Pool Quantity list: " + result);
         }
         catch (EntitlementRefusedException e) {

@@ -14,9 +14,9 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
@@ -41,10 +41,10 @@ import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.resource.dto.HypervisorCheckInResult;
+import org.candlepin.resource.util.ConsumerBindUtil;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
-import org.candlepin.util.ServiceLevelValidator;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -104,7 +104,7 @@ public class HypervisorResourceTest {
     private DeletedConsumerCurator deletedConsumerCurator;
 
     @Mock
-    private ServiceLevelValidator mockedServiceLevelValidator;
+    private ConsumerBindUtil consumerBindUtil;
 
     @Mock
     private EventBuilder consumerEventBuilder;
@@ -127,7 +127,7 @@ public class HypervisorResourceTest {
             this.userService, null, null, null, this.ownerCurator,
             this.activationKeyCurator, null, this.complianceRules,
             this.deletedConsumerCurator, null, null, new CandlepinCommonTestConfig(),
-            null, null, null, null, null, mockedServiceLevelValidator);
+            null, null, null, this.consumerBindUtil);
 
         hypervisorResource = new HypervisorResource(consumerResource,
             consumerCurator, i18n, ownerCurator);
