@@ -15,9 +15,12 @@
 
 package org.candlepin.gutterball.model.snapshot;
 
+import org.candlepin.gutterball.jackson.EnvironmentNameConverter;
+import org.candlepin.gutterball.jackson.HypervisorIdToStringConverter;
 import org.candlepin.gutterball.jackson.ReleaseVersionToStringConverter;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import org.hibernate.annotations.Cascade;
@@ -137,6 +140,15 @@ public class Consumer {
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
     private List<GuestId> guestIds;
+
+    @Size(max = 255)
+    @JsonProperty("environment")
+    @JsonDeserialize(converter = EnvironmentNameConverter.class)
+    private String environmentName;
+
+    @Size(max = 255)
+    @JsonDeserialize(converter = HypervisorIdToStringConverter.class)
+    private String hypervisorId;
 
     public Consumer() {
         this.facts = new HashMap<String, String>();
@@ -283,6 +295,22 @@ public class Consumer {
         for (GuestId gid : this.guestIds) {
             gid.setConsumer(this);
         }
+    }
+
+    public String getEnvironmentName() {
+        return environmentName;
+    }
+
+    public void setEnvironmentName(String environmentName) {
+        this.environmentName = environmentName;
+    }
+
+    public String getHypervisorId() {
+        return hypervisorId;
+    }
+
+    public void setHypervisorId(String hypervisorId) {
+        this.hypervisorId = hypervisorId;
     }
 
 }
