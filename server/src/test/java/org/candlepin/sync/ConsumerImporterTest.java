@@ -67,11 +67,11 @@ public class ConsumerImporterTest {
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         importer = new ConsumerImporter(curator, idCertCurator, i18n, serialCurator);
         mapper = SyncUtils.getObjectMapper(new MapConfiguration(
-                new HashMap<String, Object>() {
+                new HashMap<String, String>() {
 
                     {
                         put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES,
-                                false);
+                                "false");
                     }
                 }));
     }

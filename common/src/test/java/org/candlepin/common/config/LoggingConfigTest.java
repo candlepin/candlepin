@@ -50,7 +50,7 @@ public class LoggingConfigTest {
         assertNotNull(l);
         assertNull(l.getLevel());
 
-        Map<String, Object> loglevels = new HashMap<String, Object>();
+        Map<String, String> loglevels = new HashMap<String, String>();
         loglevels.put(LoggingConfigTest.class.getName(), "DEBUG");
 
         when(config.getNamespaceMap(LoggingConfig.PREFIX)).thenReturn(loglevels);

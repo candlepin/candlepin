@@ -42,7 +42,7 @@ public class CustomizableModules {
      * @return returns the set of modules to use.
      */
     public Set<Module> load(Configuration config) {
-        Map<String, Object> loaded =
+        Map<String, String> loaded =
             config.getNamespaceMap(MODULE_CONFIG_PREFIX);
 
         return customizedConfiguration(loaded);
@@ -54,11 +54,11 @@ public class CustomizableModules {
      * @return Set of configured modules.
      */
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public Set<Module> customizedConfiguration(Map<String, Object> loadedConfiguration) {
+    public Set<Module> customizedConfiguration(Map<String, String> loadedConfiguration) {
         try {
             Set toReturn = new HashSet();
 
-            for (Entry<String, Object> entry : loadedConfiguration.entrySet()) {
+            for (Entry<String, String> entry : loadedConfiguration.entrySet()) {
                 log.info("Found custom module " + entry.getKey());
                 toReturn.add(Class.forName((String) entry.getValue()).newInstance());
             }

@@ -46,10 +46,10 @@ public interface Configuration {
      */
     Configuration subset(String prefix);
 
-    Map<String, Object> getNamespaceMap(String prefix);
-    Map<String, Object> getNamespaceMap(String prefix, Map<String, Object> defaults);
+    Map<String, String> getNamespaceMap(String prefix);
+    Map<String, String> getNamespaceMap(String prefix, Map<String, String> defaults);
     Properties getNamespaceProperties(String prefix);
-    Properties getNamespaceProperties(String prefix, Map<String, Object> defaults);
+    Properties getNamespaceProperties(String prefix, Map<String, String> defaults);
 
     /**
      * Begin with the configuration provided by base but for any keys defined in
@@ -84,7 +84,7 @@ public interface Configuration {
      * @param key The key of the property to change
      * @param value The new value
      */
-    void setProperty(String key, Object value);
+    void setProperty(String key, String value);
 
     /**
      * Remove all properties from the configuration.
@@ -99,8 +99,8 @@ public interface Configuration {
 
     Iterable<String> getKeys();
 
-    Object getProperty(String key);
-    Object getProperty(String key, Object defaultValue);
+    String getProperty(String key);
+    String getProperty(String key, String defaultValue);
 
     boolean getBoolean(String key);
     boolean getBoolean(String key, boolean defaultValue);

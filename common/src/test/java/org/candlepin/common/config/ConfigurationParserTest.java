@@ -35,7 +35,7 @@ public class ConfigurationParserTest {
             }
         };
 
-        Properties props = cp.parseConfig(new HashMap<String, Object>() {
+        Properties props = cp.parseConfig(new HashMap<String, String>() {
             {
                 put("a.b.a.b", "value");
                 put("a.b.c.d", "value");

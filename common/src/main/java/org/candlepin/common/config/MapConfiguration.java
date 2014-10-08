@@ -25,15 +25,15 @@ import java.util.concurrent.ConcurrentHashMap;
  * In-memory Configuration implementation.
  */
 public class MapConfiguration extends AbstractConfiguration {
-    private ConcurrentHashMap<String, Object> configMap;
+    private ConcurrentHashMap<String, String> configMap;
 
 
     public MapConfiguration() {
-        configMap = new ConcurrentHashMap<String, Object>();
+        configMap = new ConcurrentHashMap<String, String>();
     }
 
-    public MapConfiguration(Map<String, ?> configMap) {
-        this.configMap = new ConcurrentHashMap<String, Object>(configMap);
+    public MapConfiguration(Map<String, String> configMap) {
+        this.configMap = new ConcurrentHashMap<String, String>(configMap);
     }
 
     @Override
@@ -41,10 +41,10 @@ public class MapConfiguration extends AbstractConfiguration {
         return new MapConfiguration(subsetMap(prefix));
     }
 
-    protected Map<String, Object> subsetMap(String prefix) {
-        Map<String, Object> subset = new TreeMap<String, Object>();
+    protected Map<String, String> subsetMap(String prefix) {
+        Map<String, String> subset = new TreeMap<String, String>();
 
-        for (Map.Entry<String, Object> e : configMap.entrySet()) {
+        for (Map.Entry<String, String> e : configMap.entrySet()) {
             if (e.getKey() != null && e.getKey().startsWith(prefix)) {
                 subset.put(e.getKey(), e.getValue());
             }
@@ -58,7 +58,7 @@ public class MapConfiguration extends AbstractConfiguration {
         MapConfiguration mergedConfig = new MapConfiguration(configMap);
         for (String key : base.getKeys()) {
             if (!containsKey(key)) {
-                mergedConfig.setProperty(key, base.getProperty(key));
+                mergedConfig.setProperty(key, base.getProperty(key).toString());
             }
         }
         return mergedConfig;
@@ -75,7 +75,7 @@ public class MapConfiguration extends AbstractConfiguration {
     }
 
     @Override
-    public void setProperty(String key, Object value) {
+    public void setProperty(String key, String value) {
         configMap.put(key, value);
     }
 
@@ -95,7 +95,7 @@ public class MapConfiguration extends AbstractConfiguration {
     }
 
     @Override
-    public Object getProperty(String key) {
+    public String getProperty(String key) {
         if (containsKey(key)) {
             return configMap.get(key);
         }
@@ -105,7 +105,7 @@ public class MapConfiguration extends AbstractConfiguration {
     }
 
     @Override
-    public Object getProperty(String key, Object defaultValue) {
+    public String getProperty(String key, String defaultValue) {
         return (containsKey(key)) ? configMap.get(key) : defaultValue;
     }
 
@@ -115,16 +115,16 @@ public class MapConfiguration extends AbstractConfiguration {
     }
 
     @Override
-    public Map<String, Object> getNamespaceMap(String prefix) {
+    public Map<String, String> getNamespaceMap(String prefix) {
         return getNamespaceMap(prefix, null);
     }
 
     @Override
-    public Map<String, Object> getNamespaceMap(String prefix, Map<String, Object> defaults) {
-        Map<String, Object> m = new TreeMap<String, Object>();
+    public Map<String, String> getNamespaceMap(String prefix, Map<String, String> defaults) {
+        Map<String, String> m = new TreeMap<String, String>();
 
         if (defaults != null) {
-            for (Entry<String, Object> entry : defaults.entrySet()) {
+            for (Entry<String, String> entry : defaults.entrySet()) {
                 if (entry.getKey() != null && entry.getKey().startsWith(prefix)) {
                     m.put(entry.getKey(), entry.getValue());
                 }
@@ -140,8 +140,8 @@ public class MapConfiguration extends AbstractConfiguration {
     }
 
     @Override
-    public Properties getNamespaceProperties(String prefix, Map<String, Object> defaults) {
-        // TODO: HACK HACK HACK
+    public Properties getNamespaceProperties(String prefix, Map<String, String> defaults) {
+
         if (prefix.startsWith(JPAConfigParser.JPA_CONFIG_PREFIX)) {
             return new JPAConfigParser().parseConfig(configMap);
         }
@@ -149,7 +149,7 @@ public class MapConfiguration extends AbstractConfiguration {
         Properties p = new Properties();
 
         if (defaults != null) {
-            for (Entry<String, Object> entry : defaults.entrySet()) {
+            for (Entry<String, String> entry : defaults.entrySet()) {
                 if (entry.getKey() != null && entry.getKey().startsWith(prefix)) {
                     p.put(entry.getKey(), entry.getValue());
                 }

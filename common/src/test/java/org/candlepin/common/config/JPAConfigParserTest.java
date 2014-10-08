@@ -42,7 +42,7 @@ public class JPAConfigParserTest {
         final String key1 = "key1";
         final String key2 = "key1.key2";
 
-        Map<String, Object> configuraton = new HashMap<String, Object>() {
+        Map<String, String> configuraton = new HashMap<String, String>() {
 
             {
                 put(JPAConfigParser.JPA_CONFIG_PREFIX + "." + key1, "value");

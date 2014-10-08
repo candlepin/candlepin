@@ -608,11 +608,11 @@ public class ExporterTest {
             os.flush();
             os.close();
             ObjectMapper om = SyncUtils.getObjectMapper(new MapConfiguration(
-                    new HashMap<String, Object>() {
+                    new HashMap<String, String>() {
 
                         {
                             put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES,
-                                    false);
+                                    "false");
                         }
                     }));
             Meta m = om.readValue(
@@ -702,11 +702,11 @@ public class ExporterTest {
             os.close();
 
             ObjectMapper om = SyncUtils.getObjectMapper(new MapConfiguration(
-                    new HashMap<String, Object>() {
+                    new HashMap<String, String>() {
 
                         {
                             put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES,
-                                    false);
+                                    "false");
                         }
                     }));
 
@@ -737,11 +737,11 @@ public class ExporterTest {
             os.flush();
             os.close();
             ObjectMapper om = SyncUtils.getObjectMapper(new MapConfiguration(
-                    new HashMap<String, Object>() {
+                    new HashMap<String, String>() {
 
                         {
                             put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES,
-                                    false);
+                                    "false");
                         }
                     }));
             DistributorVersion dv = om.readValue(

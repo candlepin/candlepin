@@ -90,11 +90,11 @@ public class ImporterTest {
     @Before
     public void init() throws URISyntaxException, IOException {
         mapper = SyncUtils.getObjectMapper(new MapConfiguration(
-                new HashMap<String, Object>() {
+                new HashMap<String, String>() {
 
                     {
                         put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES,
-                                false);
+                                "false");
                     }
                 }));
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);

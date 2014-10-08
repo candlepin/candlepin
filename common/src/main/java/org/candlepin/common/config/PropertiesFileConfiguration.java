@@ -92,7 +92,7 @@ public class PropertiesFileConfiguration extends AbstractConfiguration
     }
 
     @Override
-    public void setProperty(String key, Object value) {
+    public void setProperty(String key, String value) {
         backingMap.setProperty(key, value);
     }
 
@@ -112,12 +112,12 @@ public class PropertiesFileConfiguration extends AbstractConfiguration
     }
 
     @Override
-    public Object getProperty(String key) {
+    public String getProperty(String key) {
         return backingMap.getProperty(key);
     }
 
     @Override
-    public Object getProperty(String key, Object defaultValue) {
+    public String getProperty(String key, String defaultValue) {
         return backingMap.getProperty(key, defaultValue);
     }
 
@@ -183,13 +183,13 @@ public class PropertiesFileConfiguration extends AbstractConfiguration
     }
 
     @Override
-    public Map<String, Object> getNamespaceMap(String prefix) {
+    public Map<String, String> getNamespaceMap(String prefix) {
         return backingMap.getNamespaceMap(prefix);
     }
 
     @Override
-    public Map<String, Object> getNamespaceMap(String prefix,
-            Map<String, Object> defaults) {
+    public Map<String, String> getNamespaceMap(String prefix,
+            Map<String, String> defaults) {
         return backingMap.getNamespaceMap(prefix, defaults);
     }
 
@@ -200,7 +200,7 @@ public class PropertiesFileConfiguration extends AbstractConfiguration
 
     @Override
     public Properties getNamespaceProperties(String prefix,
-            Map<String, Object> defaults) {
+            Map<String, String> defaults) {
         return backingMap.getNamespaceProperties(prefix, defaults);
     }
 }

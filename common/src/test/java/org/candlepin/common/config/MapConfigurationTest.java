@@ -259,11 +259,11 @@ public class MapConfigurationTest {
         assertEquals(null, config.getList("x", null));
     }
 
-    @Test
-    public void testGetProperty() {
-        config.setProperty("x", new HashSet<String>(Arrays.asList("y")));
-        assertEquals(new HashSet<String>(Arrays.asList("y")), config.getProperty("x"));
-    }
+//    @Test
+//    public void testGetProperty() {
+//        config.setProperty("x", new HashSet<String>(Arrays.asList("y")));
+//        assertEquals(new HashSet<String>(Arrays.asList("y")), config.getProperty("x"));
+//    }
 
     @Test
     public void testGetMissingProperty() {
@@ -280,7 +280,7 @@ public class MapConfigurationTest {
     @SuppressWarnings("serial")
     @Test
     public void namespaceWithNull() {
-        Map<String, Object> defaults = new HashMap<String, Object>();
+        Map<String, String> defaults = new HashMap<String, String>();
         defaults.put(null, null);
 
         config.setProperty("a.c.a.b", "value3");
@@ -311,7 +311,7 @@ public class MapConfigurationTest {
     @SuppressWarnings("serial")
     @Test
     public void returnNamespacePropsWithDefaults() {
-        Map<String, Object> defaults = new HashMap<String, Object>();
+        Map<String, String> defaults = new HashMap<String, String>();
         defaults.put("a.c.a.b", "defaultvalue");
         defaults.put("a.c.not.e", "should have a value");
         defaults.put("not.here", "is.ignored");
@@ -359,7 +359,7 @@ public class MapConfigurationTest {
         config.setProperty("a.c.e.f", "value");
 
 
-        Map<String, Object> withPrefix = config.subsetMap("a.c");
+        Map<String, String> withPrefix = config.subsetMap("a.c");
         assertEquals(3, withPrefix.size());
         assertTrue(withPrefix.containsKey("a.c.a.b"));
         assertTrue(withPrefix.containsKey("a.c.c.d"));
@@ -377,7 +377,7 @@ public class MapConfigurationTest {
         config.setProperty("a.d.a.b", "value");
 
 
-        Map<String, Object> withPrefix = config.subsetMap("a.c");
+        Map<String, String> withPrefix = config.subsetMap("a.c");
         assertEquals(3, withPrefix.size());
         assertTrue(withPrefix.containsKey("a.c.a.b"));
         assertTrue(withPrefix.containsKey("a.c.c.d"));
@@ -392,7 +392,7 @@ public class MapConfigurationTest {
         config.setProperty("a.c.a.a", "value");
 
 
-        Map<String, Object> withPrefix = config.subsetMap("a.b");
+        Map<String, String> withPrefix = config.subsetMap("a.b");
         assertEquals(3, withPrefix.size());
         assertTrue(withPrefix.containsKey("a.b.a.b"));
         assertTrue(withPrefix.containsKey("a.b.c.d"));

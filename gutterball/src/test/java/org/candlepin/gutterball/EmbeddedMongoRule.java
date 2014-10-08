@@ -61,7 +61,7 @@ public class EmbeddedMongoRule extends ExternalResource {
         Configuration config = readConfigOverride();
         if (config == null) {
             config = new MapConfiguration();
-            config.setProperty(ConfigProperties.MONGODB_PORT, TEST_PORT);
+            config.setProperty(ConfigProperties.MONGODB_PORT, Integer.toString(TEST_PORT));
             config.setProperty(ConfigProperties.MONGODB_DATABASE, TEST_DATABASE);
         }
         this.config = config;

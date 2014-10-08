@@ -86,7 +86,7 @@ public abstract class EncryptedValueConfigurationParser extends ConfigurationPar
         log.debug("Using katello-passwd passphrase: " + passphrase);
     }
 
-    public Properties parseConfig(Map<String, Object> inputConfiguration) {
+    public Properties parseConfig(Map<String, String> inputConfiguration) {
 
         readSecretFile((String) inputConfiguration.get("candlepin.passphrase.path"));
 

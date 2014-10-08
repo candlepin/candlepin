@@ -43,10 +43,10 @@ public class ConsumerTypeImporterTest {
 
     @Before
     public void init() {
-        config = new MapConfiguration(new HashMap<String, Object>() {
+        config = new MapConfiguration(new HashMap<String, String>() {
 
             {
-                put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, false);
+                put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
             }
         });
     }
