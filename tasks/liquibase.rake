@@ -38,7 +38,7 @@ module Liquibase
 
     attr_writer :changelogs
     def changelogs
-      @changelogs || ['changelog-create.xml']
+      @changelogs || ['changelog.xml']
     end
 
     attr_writer :include_path
