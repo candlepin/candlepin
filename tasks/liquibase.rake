@@ -46,6 +46,11 @@ module Liquibase
       @include_path || File.join('db', 'changelog')
     end
 
+    attr_writer :file_time_prefix_format
+    def file_time_prefix_format
+      @file_time_prefix_format || '%Y-%m-%d-%H-%M'
+    end
+
     attr_writer :template
     def template
       @template || <<-LIQUIBASE
@@ -122,7 +127,7 @@ module Liquibase
           values.id = now.strftime('%Y%m%d%H%M%S') + "-1"
 
           changeset_slug = values.description.to_url
-          date_slug = now.strftime('%Y-%m-%d-%H-%M')
+          date_slug = now.strftime(liquibase.file_time_prefix_format)
           out_file = "#{date_slug}-#{changeset_slug}.xml"
           out_file = File.join(liquibase.changelog_dir, out_file)
 
