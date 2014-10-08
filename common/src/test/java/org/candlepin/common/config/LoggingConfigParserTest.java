@@ -31,29 +31,29 @@ import java.util.Map;
 /**
  * LoggingConfigTest
  */
-public class LoggingConfigTest {
+public class LoggingConfigParserTest {
 
     private Configuration config;
 
-    private LoggingConfig lc;
+    private LoggingConfigParser lc;
 
     @Before
     public void init() {
         config = mock(Configuration.class);
-        lc = new LoggingConfig(config);
+        lc = new LoggingConfigParser(config);
     }
 
     @Test
     public void configure() {
         LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
-        Logger l = context.getLogger(LoggingConfigTest.class);
+        Logger l = context.getLogger(LoggingConfigParserTest.class);
         assertNotNull(l);
         assertNull(l.getLevel());
 
         Map<String, String> loglevels = new HashMap<String, String>();
-        loglevels.put(LoggingConfigTest.class.getName(), "DEBUG");
+        loglevels.put(LoggingConfigParserTest.class.getName(), "DEBUG");
 
-        when(config.getNamespaceMap(LoggingConfig.PREFIX)).thenReturn(loglevels);
+        when(config.getNamespaceMap(LoggingConfigParser.PREFIX)).thenReturn(loglevels);
 
         lc.configure(config);
         assertNotNull(l.getLevel());
@@ -62,7 +62,7 @@ public class LoggingConfigTest {
 
     @Test(expected = NullPointerException.class)
     public void expectNull() {
-        when(config.getNamespaceMap(LoggingConfig.PREFIX)).thenReturn(null);
+        when(config.getNamespaceMap(LoggingConfigParser.PREFIX)).thenReturn(null);
         lc.configure(config);
     }
 }

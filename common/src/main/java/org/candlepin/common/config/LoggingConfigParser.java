@@ -33,12 +33,12 @@ import java.util.Map.Entry;
  *
  * See http://slf4j.org/faq.html#when
  */
-public class LoggingConfig extends ConfigurationParser {
+public class LoggingConfigParser extends ConfigurationParser {
 
     public static final String PREFIX = "log4j.logger.";
 
     @Inject
-    public LoggingConfig(Configuration config) {
+    public LoggingConfigParser(Configuration config) {
         configure(config);
     }
 

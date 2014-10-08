@@ -14,7 +14,7 @@
  */
 package org.candlepin.guice;
 
-import org.candlepin.common.config.LoggingConfig;
+import org.candlepin.common.config.LoggingConfigParser;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.impl.DefaultSubjectKeyIdentifierWriter;
 import org.candlepin.service.EntitlementCertServiceAdapter;
@@ -42,7 +42,7 @@ class DefaultConfig extends AbstractModule {
     @Override
     public void configure() {
         bind(HttpServletDispatcher.class).asEagerSingleton();
-        bind(LoggingConfig.class).asEagerSingleton();
+        bind(LoggingConfigParser.class).asEagerSingleton();
         bind(ScriptEngineProvider.class);
         bind(SubscriptionServiceAdapter.class).to(
             DefaultSubscriptionServiceAdapter.class);
