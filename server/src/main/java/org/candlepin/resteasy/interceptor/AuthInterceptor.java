@@ -145,7 +145,6 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
      */
     public void setupAuthStrategies() {
         // use oauth
-        //if (config.oAuthEnabled()) {
         if (config.getBoolean(ConfigProperties.OAUTH_AUTHENTICATION)) {
             log.debug("OAuth Authentication is enabled.");
             TrustedConsumerAuth consumerAuth =
@@ -157,13 +156,11 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
         }
 
         // basic http access
-        //if (config.basicAuthEnabled()) {
         if (config.getBoolean(ConfigProperties.BASIC_AUTHENTICATION)) {
             log.debug("Basic Authentication is enabled.");
             providers.add(new BasicAuth(userService, injector));
         }
         // consumer certificates
-        //if (config.sslAuthEnabled()) {
         if (config.getBoolean(ConfigProperties.SSL_AUTHENTICATION)) {
             log.debug("Certificate Based Authentication is enabled.");
             providers.add(
@@ -172,7 +169,6 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
                     i18n));
         }
         // trusted headers
-        //if (config.trustedAuthEnabled()) {
         if (config.getBoolean(ConfigProperties.TRUSTED_AUTHENTICATION)) {
             log.debug("Trusted Authentication is enabled.");
             providers.add(

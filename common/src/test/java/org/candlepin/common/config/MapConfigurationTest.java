@@ -14,11 +14,7 @@
  */
 package org.candlepin.common.config;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import org.candlepin.common.config.Configuration.TrimMode;
 
@@ -151,7 +147,6 @@ public class MapConfigurationTest {
         assertTrue(config.getBoolean("bar1"));
         assertTrue(config.getBoolean("bar2"));
         assertFalse(config.getBoolean("bar"));
-        //assertFalse(config.getBoolean(null));
         assertFalse(config.getBoolean("no"));
     }
 
@@ -258,12 +253,6 @@ public class MapConfigurationTest {
     public void testGetListWithDefault() {
         assertEquals(null, config.getList("x", null));
     }
-
-//    @Test
-//    public void testGetProperty() {
-//        config.setProperty("x", new HashSet<String>(Arrays.asList("y")));
-//        assertEquals(new HashSet<String>(Arrays.asList("y")), config.getProperty("x"));
-//    }
 
     @Test
     public void testGetMissingProperty() {

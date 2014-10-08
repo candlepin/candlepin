@@ -147,15 +147,7 @@ public class MapConfiguration extends AbstractConfiguration {
         }
 
         Properties p = new Properties();
-
-        if (defaults != null) {
-            for (Entry<String, String> entry : defaults.entrySet()) {
-                if (entry.getKey() != null && entry.getKey().startsWith(prefix)) {
-                    p.put(entry.getKey(), entry.getValue());
-                }
-            }
-        }
-        p.putAll(subsetMap(prefix));
+        p.putAll(getNamespaceMap(prefix, defaults));
         return p;
     }
 }

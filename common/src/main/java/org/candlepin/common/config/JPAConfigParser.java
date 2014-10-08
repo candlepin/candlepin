@@ -27,13 +27,6 @@ class JPAConfigParser extends EncryptedValueConfigurationParser {
     /** JPA configuration prefix */
     public static final String JPA_CONFIG_PREFIX = "jpa.config";
 
-    /**
-     * @param config
-     */
-    public JPAConfigParser() {
-        super();
-    }
-
     public String getPrefix() {
         return JPA_CONFIG_PREFIX;
     }

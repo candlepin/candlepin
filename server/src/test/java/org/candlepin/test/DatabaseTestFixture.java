@@ -161,7 +161,6 @@ public class DatabaseTestFixture {
     @Before
     public void init() {
         Module guiceOverrideModule = getGuiceOverrideModule();
-        // FIXME:
         CandlepinCommonTestConfig config = new CandlepinCommonTestConfig();
         CandlepinCommonTestingModule testingModule = new CandlepinCommonTestingModule(config);
         if (guiceOverrideModule == null) {

@@ -113,15 +113,13 @@ public class CandlepinContextListenerTest {
     @Test
     public void contextDestroyed() {
         prepareForInitialization();
-        listener.contextInitialized(evt);
 
-        // ^^^
         // we actually have to call contextInitialized before we
         // can call contextDestroyed, otherwise the listener's
-        // member variables will be null. So all the above is simply
-        // to setup the test to validate the destruction is doing the
-        // proper thing.
+        // member variables will be null.
+        listener.contextInitialized(evt);
 
+        // what we really want to test.
         listener.contextDestroyed(evt);
 
         // make sure we only call it 5 times all from init code
@@ -138,14 +136,10 @@ public class CandlepinContextListenerTest {
         when(config.getBoolean(
                 eq(ConfigProperties.AMQP_INTEGRATION_ENABLED))).thenReturn(true);
         prepareForInitialization();
-        listener.contextInitialized(evt);
-
-        // ^^^
         // we actually have to call contextInitialized before we
         // can call contextDestroyed, otherwise the listener's
-        // member variables will be null. So all the above is simply
-        // to setup the test to validate the destruction is doing the
-        // proper thing.
+        // member variables will be null.
+        listener.contextInitialized(evt);
 
         // test & verify
         listener.contextDestroyed(evt);

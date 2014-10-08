@@ -42,10 +42,6 @@ public abstract class EncryptedValueConfigurationParser extends ConfigurationPar
 
     private String passphrase = null;
 
-    public EncryptedValueConfigurationParser() {
-        super();
-    }
-
     protected void readSecretFile(String secretFile) {
         log.debug("reading secret file: " +  secretFile);
 
@@ -57,11 +53,9 @@ public abstract class EncryptedValueConfigurationParser extends ConfigurationPar
 
             String line = null;
             while ((line = in.readLine()) != null) {
-                log.debug("str passphrase: " + line);
                 tmpPassphrase.append(line);
             }
 
-            log.debug("tmpPassphrase: " + tmpPassphrase.toString());
             passphrase = tmpPassphrase.toString();
         }
         catch (FileNotFoundException e) {
@@ -82,8 +76,6 @@ public abstract class EncryptedValueConfigurationParser extends ConfigurationPar
                 }
             }
         }
-
-        log.debug("Using katello-passwd passphrase: " + passphrase);
     }
 
     public Properties parseConfig(Map<String, String> inputConfiguration) {
