@@ -47,6 +47,8 @@ import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.resource.ConsumerResource;
+import org.candlepin.resource.dto.AutobindData;
+import org.candlepin.resource.util.ConsumerBindUtil;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
@@ -87,6 +89,7 @@ public class ConsumerResourceUpdateTest {
     @Mock private EnvironmentCurator environmentCurator;
     @Mock private ServiceLevelValidator serviceLevelValidator;
     @Mock private EventBuilder consumerEventBuilder;
+    @Mock private ConsumerBindUtil consumerBindUtil;
 
     private I18n i18n;
 
@@ -102,8 +105,7 @@ public class ConsumerResourceUpdateTest {
             this.userService, null, poolManager, null, null,
             this.activationKeyCurator, this.entitler, this.complianceRules,
             this.deletedConsumerCurator, this.environmentCurator, null,
-            new CandlepinCommonTestConfig(), null, null, null, null, null,
-            serviceLevelValidator);
+            new CandlepinCommonTestConfig(), null, null, null, this.consumerBindUtil);
 
         when(complianceRules.getStatus(any(Consumer.class), any(Date.class),
                 any(Boolean.class), any(Boolean.class)))
@@ -441,7 +443,7 @@ public class ConsumerResourceUpdateTest {
             createConsumerWithGuests("Guest 1"));
 
         verify(poolManager).revokeEntitlement(eq(entitlement));
-        verify(entitler).bindByProducts(null, guest1, null);
+        verify(entitler).bindByProducts(AutobindData.create(guest1));
     }
 
     @Test

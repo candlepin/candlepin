@@ -88,7 +88,8 @@ class Candlepin
       path = "/environments/#{environment}/consumers?"
     end
     path += "username=#{username}&" if username
-    path += "activation_keys=" + activation_keys.join(",") if activation_keys.length > 0
+    path += "activation_keys=" + activation_keys.join(",") if activation_keys.length > 1
+    path += "activation_keys=" + activation_keys[0] if activation_keys.length == 1
     @consumer = post(path, consumer)
     return @consumer
   end
@@ -912,6 +913,14 @@ class Candlepin
 
   def remove_pool_from_key(key_id, pool_id)
     return delete("/activation_keys/#{key_id}/pools/#{pool_id}")
+  end
+
+  def add_prod_id_to_key(key_id, prod_id)
+    return post("/activation_keys/#{key_id}/product/#{prod_id}")
+  end
+
+  def remove_prod_id_from_key(key_id, prod_id)
+    return delete("/activation_keys/#{key_id}/product/#{prod_id}")
   end
 
   def add_content_overrides_to_key(key_id, overrides)

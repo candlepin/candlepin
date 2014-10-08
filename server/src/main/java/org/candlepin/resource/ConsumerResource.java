@@ -41,8 +41,6 @@ import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerialDto;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCapability;
-import org.candlepin.model.ConsumerContentOverride;
-import org.candlepin.model.ConsumerContentOverrideCurator;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
@@ -72,9 +70,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.Release;
 import org.candlepin.model.User;
 import org.candlepin.model.activationkeys.ActivationKey;
-import org.candlepin.model.activationkeys.ActivationKeyContentOverride;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
-import org.candlepin.model.activationkeys.ActivationKeyPool;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.paging.Paginate;
@@ -83,9 +79,9 @@ import org.candlepin.pinsetter.tasks.EntitlerJob;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.consumer.ConsumerRules;
-import org.candlepin.policy.js.quantity.QuantityRules;
-import org.candlepin.policy.js.quantity.SuggestedQuantity;
+import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
+import org.candlepin.resource.util.ConsumerBindUtil;
 import org.candlepin.resource.util.ConsumerInstalledProductEnricher;
 import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.resteasy.parameter.CandlepinParam;
@@ -97,7 +93,6 @@ import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.sync.ExportCreationException;
 import org.candlepin.sync.Exporter;
-import org.candlepin.util.ServiceLevelValidator;
 import org.candlepin.util.Util;
 import org.candlepin.version.CertVersionConflictException;
 
@@ -117,7 +112,6 @@ import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -179,10 +173,8 @@ public class ConsumerResource {
     private DistributorVersionCurator distributorVersionCurator;
     private CdnCurator cdnCurator;
     private Config config;
-    private QuantityRules quantityRules;
     private CalculatedAttributesUtil calculatedAttributesUtil;
-    private ConsumerContentOverrideCurator consumerContentOverrideCurator;
-    private ServiceLevelValidator serviceLevelValidator;
+    private ConsumerBindUtil consumerBindUtil;
 
     @Inject
     public ConsumerResource(ConsumerCurator consumerCurator,
@@ -200,11 +192,9 @@ public class ConsumerResource {
         ComplianceRules complianceRules, DeletedConsumerCurator deletedConsumerCurator,
         EnvironmentCurator environmentCurator,
         DistributorVersionCurator distributorVersionCurator,
-        Config config, QuantityRules quantityRules,
-        ContentCurator contentCurator,
+        Config config, ContentCurator contentCurator,
         CdnCurator cdnCurator, CalculatedAttributesUtil calculatedAttributesUtil,
-        ConsumerContentOverrideCurator consumerContentOverrideCurator,
-        ServiceLevelValidator serviceLevelValidator) {
+        ConsumerBindUtil consumerBindUtil) {
 
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -235,10 +225,8 @@ public class ConsumerResource {
         this.consumerSystemNamePattern = Pattern.compile(config.getString(
             ConfigProperties.CONSUMER_SYSTEM_NAME_PATTERN));
         this.config = config;
-        this.quantityRules = quantityRules;
         this.calculatedAttributesUtil = calculatedAttributesUtil;
-        this.consumerContentOverrideCurator = consumerContentOverrideCurator;
-        this.serviceLevelValidator = serviceLevelValidator;
+        this.consumerBindUtil = consumerBindUtil;
     }
 
     /**
@@ -415,22 +403,30 @@ public class ConsumerResource {
 
         if (!keyStrings.isEmpty()) {
             if (ownerKey == null) {
-                throw new BadRequestException(
-                    i18n.tr("Must specify an org to register with activation keys."));
+                throw new BadRequestException(i18n.tr(
+                        "Must specify an org to register with activation keys."));
             }
             if (userName != null) {
-                throw new BadRequestException(
-                    i18n.tr("Cannot specify username with activation keys."));
+                throw new BadRequestException(i18n.tr("Cannot specify username with activation keys."));
             }
         }
 
         Owner owner = setupOwner(principal, ownerKey);
-        // Raise an exception if any keys were specified which do not exist
-        // for this owner.
+        // Raise an exception if none of the keys specified exist for this owner.
         List<ActivationKey> keys = new ArrayList<ActivationKey>();
         for (String keyString : keyStrings) {
-            ActivationKey key = findKey(keyString, owner);
-            keys.add(key);
+            ActivationKey key = null;
+            try {
+                key = findKey(keyString, owner);
+                keys.add(key);
+            }
+            catch (NotFoundException e) {
+                log.warn(e.getMessage());
+            }
+        }
+        if ((principal instanceof NoAuthPrincipal) && keys.isEmpty()) {
+            throw new BadRequestException(i18n.tr(
+                    "None of the activation keys specified exist for this org."));
         }
 
         userName = setUserName(consumer, principal, userName);
@@ -440,13 +436,12 @@ public class ConsumerResource {
         ConsumerType type = lookupConsumerType(consumer.getType().getLabel());
         if (type.isType(ConsumerTypeEnum.PERSON)) {
             if (keys.size() > 0) {
-                throw new BadRequestException(
-                    i18n.tr("A unit type of 'person' cannot be" +
-                        " used with activation keys"));
+                throw new BadRequestException(i18n.tr(
+                        "A unit type of 'person' cannot be used with activation keys"));
             }
             if (!isConsumerPersonNameValid(consumer.getName())) {
-                throw new BadRequestException(
-                    i18n.tr("System name cannot contain most special characters."));
+                throw new BadRequestException(i18n.tr(
+                        "System name cannot contain most special characters."));
             }
 
             verifyPersonConsumer(consumer, type, owner, userName, principal);
@@ -455,16 +450,13 @@ public class ConsumerResource {
         if (type.isType(ConsumerTypeEnum.SYSTEM) &&
             !isConsumerSystemNameValid(consumer.getName())) {
 
-            throw new BadRequestException(
-                i18n.tr("System name cannot contain most special characters."));
+            throw new BadRequestException(i18n.tr("System name cannot contain most special characters."));
         }
         consumer.setOwner(owner);
         consumer.setType(type);
         consumer.setCanActivate(subAdapter.canActivateSubscription(consumer));
         consumer.setAutoheal(true); // this is the default
-        if (consumer.getServiceLevel() == null) {
-            consumer.setServiceLevel("");
-        }
+        if (consumer.getServiceLevel() == null) { consumer.setServiceLevel(""); }
 
         // If no service level was specified, and the owner has a default set, use it:
         if (consumer.getServiceLevel().equals("") &&
@@ -486,13 +478,12 @@ public class ConsumerResource {
             }
         }
         HypervisorId hvsrId = consumer.getHypervisorId();
-        if (hvsrId != null && hvsrId.getHypervisorId() != null &&
-                !hvsrId.getHypervisorId().isEmpty()) {
+        if (hvsrId != null && hvsrId.getHypervisorId() != null && !hvsrId.getHypervisorId().isEmpty()) {
             // If a hypervisorId is supplied, make sure the consumer and owner are correct
             hvsrId.setConsumer(consumer);
         }
 
-        serviceLevelValidator.validate(owner, consumer.getServiceLevel());
+        consumerBindUtil.validateServiceLevel(owner, consumer.getServiceLevel());
 
         try {
             consumer = consumerCurator.create(consumer);
@@ -501,15 +492,16 @@ public class ConsumerResource {
 
             sink.emitConsumerCreated(consumer);
 
-            handleActivationKeys(consumer, keys);
+            if (keys.size() > 0) {
+                consumerBindUtil.handleActivationKeys(consumer, keys);
+            }
 
             // Don't allow complianceRules to update entitlementStatus, because we're about to perform
             // an update unconditionally.
             complianceRules.getStatus(consumer, null, false, false);
             consumerCurator.update(consumer);
 
-            log.info("Consumer " + consumer.getUuid() + " created in org " +
-                consumer.getOwner().getKey());
+            log.info("Consumer " + consumer.getUuid() + " created in org " + consumer.getOwner().getKey());
 
             return consumer;
         }
@@ -521,62 +513,6 @@ public class ConsumerResource {
             log.error("Problem creating unit:", e);
             throw new BadRequestException(i18n.tr(
                 "Problem creating unit {0}", consumer));
-        }
-    }
-
-    private void handleActivationKeys(Consumer consumer, List<ActivationKey> keys) {
-        // Process activation keys.
-        handleActivationKeyPools(consumer, keys);
-        for (ActivationKey ak : keys) {
-            handleActivationKeyOverrides(consumer, ak.getContentOverrides());
-            handleActivationKeyRelease(consumer, ak.getReleaseVer());
-            handleActivationKeyServiceLevel(consumer, ak.getServiceLevel(), ak.getOwner());
-        }
-    }
-
-    private void handleActivationKeyPools(Consumer consumer,
-        List<ActivationKey> keys) {
-        List<ActivationKeyPool> toBind = new LinkedList<ActivationKeyPool>();
-        for (ActivationKey key : keys) {
-            for (ActivationKeyPool akp : key.getPools()) {
-                Util.assertNotNull(akp.getPool().getId(),
-                    i18n.tr("Pool ID must be provided"));
-                toBind.add(akp);
-            }
-        }
-
-        // Sort pools before binding to avoid deadlocks
-        Collections.sort(toBind);
-        for (ActivationKeyPool akp : toBind) {
-            int quantity = (akp.getQuantity() == null) ?
-                getQuantityToBind(akp.getPool(), consumer) :
-                    akp.getQuantity().intValue();
-            entitler.sendEvents(entitler.bindByPool(
-                akp.getPool().getId(), consumer, quantity));
-        }
-    }
-
-    private void handleActivationKeyOverrides(Consumer consumer,
-            Set<ActivationKeyContentOverride> overrides) {
-        for (ActivationKeyContentOverride akco : overrides) {
-            ConsumerContentOverride consumerOverride =
-                akco.buildConsumerContentOverride(consumer);
-            this.consumerContentOverrideCurator.addOrUpdate(consumer, consumerOverride);
-        }
-    }
-
-    private void handleActivationKeyRelease(Consumer consumer, Release release) {
-        String relVerString = release.getReleaseVer();
-        if (relVerString != null && !relVerString.isEmpty()) {
-            consumer.setReleaseVer(release);
-        }
-    }
-
-    private void handleActivationKeyServiceLevel(Consumer consumer,
-            String level, Owner owner) {
-        if (!StringUtils.isBlank(level)) {
-            serviceLevelValidator.validate(owner, level);
-            consumer.setServiceLevel(level);
         }
     }
 
@@ -911,7 +847,7 @@ public class ConsumerResource {
             if (log.isDebugEnabled()) {
                 log.debug("   Updating consumer service level setting.");
             }
-            serviceLevelValidator.validate(toUpdate.getOwner(), level);
+            consumerBindUtil.validateServiceLevel(toUpdate.getOwner(), level);
             toUpdate.setServiceLevel(level);
             changesMade = true;
         }
@@ -1448,7 +1384,8 @@ public class ConsumerResource {
         @QueryParam("email") String email,
         @QueryParam("email_locale") String emailLocale,
         @QueryParam("async") @DefaultValue("false") boolean async,
-        @QueryParam("entitle_date") String entitleDateStr) {
+        @QueryParam("entitle_date") String entitleDateStr,
+        @QueryParam("from_pool") List<String> fromPools) {
 
         // Check that only one query param was set:
         if (poolIdString != null && productIds != null && productIds.length > 0) {
@@ -1465,6 +1402,11 @@ public class ConsumerResource {
         if (poolIdString != null && entitleDateStr != null) {
             throw new BadRequestException(
                 i18n.tr("Cannot bind by multiple parameters."));
+        }
+
+        if (fromPools != null && !fromPools.isEmpty() && poolIdString != null) {
+            throw new BadRequestException(
+                    i18n.tr("Cannot bind by multiple parameters."));
         }
 
         // TODO: really should do this in a before we get to this call
@@ -1492,7 +1434,7 @@ public class ConsumerResource {
         if (poolIdString != null && quantity == null) {
             Pool pool = poolManager.find(poolIdString);
             if (pool != null) {
-                quantity = getQuantityToBind(pool, consumer);
+                quantity = consumerBindUtil.getQuantityToBind(pool, consumer);
             }
             else {
                 quantity = 1;
@@ -1509,7 +1451,7 @@ public class ConsumerResource {
             }
             else {
                 detail = EntitleByProductsJob.bindByProducts(productIds,
-                        consumerUuid, entitleDate);
+                        consumerUuid, entitleDate, fromPools);
             }
 
             // events will be triggered by the job
@@ -1528,7 +1470,9 @@ public class ConsumerResource {
         }
         else {
             try {
-                entitlements = entitler.bindByProducts(productIds, consumer, entitleDate);
+                AutobindData autobindData = AutobindData.create(consumer).on(entitleDate)
+                        .forProducts(productIds).withPools(fromPools);
+                entitlements = entitler.bindByProducts(autobindData);
             }
             catch (ForbiddenException fe) {
                 throw fe;
@@ -1584,7 +1528,7 @@ public class ConsumerResource {
         List<PoolQuantity> dryRunPools = new ArrayList<PoolQuantity>();
 
         try {
-            serviceLevelValidator.validate(consumer.getOwner(), serviceLevel);
+            consumerBindUtil.validateServiceLevel(consumer.getOwner(), serviceLevel);
             dryRunPools = entitler.getDryRun(consumer, serviceLevel);
         }
         catch (ForbiddenException fe) {
@@ -2100,25 +2044,11 @@ public class ConsumerResource {
         deletedConsumerCurator.delete(dc);
     }
 
-    private int getQuantityToBind(Pool pool, Consumer consumer) {
-        Date now = new Date();
-        // If the pool is being attached in the future, calculate
-        // suggested quantity on the start date
-        Date onDate = now.before(pool.getStartDate()) ?
-            pool.getStartDate() : now;
-        SuggestedQuantity suggested = quantityRules.getSuggestedQuantity(pool,
-            consumer, onDate);
-        int quantity = Math.max(suggested.getIncrement().intValue(),
-            suggested.getSuggested().intValue());
-        //It's possible that increment is greater than the number available
-        //but whatever we do here, the bind will fail
-        return quantity;
-    }
-
     private void addCalculatedAttributes(Entitlement ent) {
         // With no consumer/date, this will not build suggested quantity
         Map<String, String> calculatedAttributes =
             calculatedAttributesUtil.buildCalculatedAttributes(ent.getPool(), null, null);
         ent.getPool().setCalculatedAttributes(calculatedAttributes);
     }
+
 }

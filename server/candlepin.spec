@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.31
+Version: 0.9.32
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -392,6 +392,16 @@ fi
 
 
 %changelog
+* Fri Oct 03 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.32-1
+- Add test data for containers and ostree. (dgoodwin@redhat.com)
+- Compare the keys in the Tomcat keystore with the Candlepin keystore.  (awood@redhat.com)
+- Attempt to fix intermittent fact update test failure. (dgoodwin@redhat.com)
+- Fix test failures if content promotion/demotion is slow.  (dgoodwin@redhat.com)
+- Updated translations. (dgoodwin@redhat.com)
+- Install the auto-generated config if no config file exists.  (awood@redhat.com)
+- Use proper c3p0 class (jesusr@redhat.com)
+- Add secondary sorting on events list. (dgoodwin@redhat.com)
+
 * Mon Sep 22 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.31-1
 - Require at least candlepin-common 1.0.7 (jesusr@redhat.com)
 - Altered file name to fit the existing pattern (wpoteat@redhat.com)

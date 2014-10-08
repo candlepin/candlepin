@@ -21,7 +21,7 @@
 Name: %{parent_proj}-common
 Summary: Common code for Candlepin and related projects
 License: GPLv2
-Version: 1.0.7
+Version: 1.0.8
 Release: 1%{?dist}
 URL: http://www.candlepinproject.org
 Source: %{name}-%{version}.tar.gz
@@ -167,6 +167,9 @@ rm -rf %{_tmppath}/distlibdir
 %{_datadir}/%{parent_proj}/gutterball/lib/%{name}.jar
 
 %changelog
+* Fri Oct 03 2014 jesus m. rodriguez <jesusr@redhat.com> 1.0.8-1
+- Updated translations. (dgoodwin@redhat.com)
+
 * Fri Sep 12 2014 jesus m. rodriguez <jesusr@redhat.com> 1.0.7-1
 - rhel not defined on fedora (jesusr@redhat.com)
 - Updated translations. (dgoodwin@redhat.com)

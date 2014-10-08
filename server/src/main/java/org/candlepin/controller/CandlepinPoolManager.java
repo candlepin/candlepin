@@ -53,6 +53,7 @@ import org.candlepin.policy.js.entitlement.Enforcer.CallerType;
 import org.candlepin.policy.js.pool.PoolHelper;
 import org.candlepin.policy.js.pool.PoolRules;
 import org.candlepin.policy.js.pool.PoolUpdate;
+import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.util.CertificateSizeException;
@@ -67,6 +68,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -193,6 +195,7 @@ public class CandlepinPoolManager implements PoolManager {
         // BUG 1012386 This will regenerate master/derived for bonus scenarios
         //  if only one of the pair still exists.
         createPoolsForSubscription(sub, subscriptionPools);
+
         regenerateCertificatesByEntIds(
             // don't update floating here, we'll do that later
             // so we don't update anything twice
@@ -436,9 +439,7 @@ public class CandlepinPoolManager implements PoolManager {
      * null will be returned. TODO: Throw exception if entitlement not granted.
      * Report why.
      *
-     * @param consumer consumer requesting to be entitled
-     * @param productIds products to be entitled.
-     * @param entitleDate specific date to entitle by.
+     * @param data Autobind data containing consumer, date, etc..
      * @return Entitlement
      * @throws EntitlementRefusedException if entitlement is refused
      */
@@ -449,14 +450,18 @@ public class CandlepinPoolManager implements PoolManager {
     //
     @Override
     @Transactional
-    public List<Entitlement> entitleByProducts(Consumer consumer,
-        String[] productIds, Date entitleDate)
+    public List<Entitlement> entitleByProducts(AutobindData data)
         throws EntitlementRefusedException {
+        Consumer consumer = data.getConsumer();
+        String[] productIds = data.getProductIds();
+        Collection<String> fromPools = data.getPossiblePools();
+        Date entitleDate = data.getOnDate();
         Owner owner = consumer.getOwner();
+
         List<Entitlement> entitlements = new LinkedList<Entitlement>();
 
         List<PoolQuantity> bestPools = getBestPools(consumer, productIds,
-            entitleDate, owner, null);
+            entitleDate, owner, null, fromPools);
 
         if (bestPools == null) {
             throw new RuntimeException("No entitlements for products: " +
@@ -490,8 +495,8 @@ public class CandlepinPoolManager implements PoolManager {
     //
     @Override
     @Transactional
-    public List<Entitlement> entitleByProductsForHost(Consumer guest,
-        Consumer host, Date entitleDate)
+    public List<Entitlement> entitleByProductsForHost(Consumer guest, Consumer host,
+            Date entitleDate, Collection<String> possiblePools)
         throws EntitlementRefusedException {
         List<Entitlement> entitlements = new LinkedList<Entitlement>();
         if (!host.getOwner().equals(guest.getOwner())) {
@@ -507,7 +512,7 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         List<PoolQuantity> bestPools = getBestPoolsForHost(guest, host,
-            entitleDate, owner, null);
+            entitleDate, owner, null, possiblePools);
 
         if (bestPools == null) {
             throw new RuntimeException("No entitlements for host: " + host.getUuid());
@@ -538,7 +543,7 @@ public class CandlepinPoolManager implements PoolManager {
     @Override
     public List<PoolQuantity> getBestPoolsForHost(Consumer guest,
         Consumer host, Date entitleDate, Owner owner,
-        String serviceLevelOverride)
+        String serviceLevelOverride, Collection<String> fromPools)
         throws EntitlementRefusedException {
 
         ValidationResult failedResult = null;
@@ -547,12 +552,14 @@ public class CandlepinPoolManager implements PoolManager {
         if (entitleDate == null) {
             activePoolDate = new Date();
         }
+        PoolFilterBuilder poolFilter = new PoolFilterBuilder();
+        poolFilter.addIdFilters(fromPools);
         List<Pool> allOwnerPools = this.listAvailableEntitlementPools(
             host, null, owner, (String) null, activePoolDate, true, false,
-            new PoolFilterBuilder(), null).getPageData();
+            poolFilter, null).getPageData();
         List<Pool> allOwnerPoolsForGuest = this.listAvailableEntitlementPools(
             guest, null, owner, (String) null, activePoolDate,
-            true, false, new PoolFilterBuilder(),
+            true, false, poolFilter,
             null).getPageData();
         for (Entitlement ent : host.getEntitlements()) {
             //filter out pools that are attached, there is no need to
@@ -638,19 +645,22 @@ public class CandlepinPoolManager implements PoolManager {
     @Override
     public List<PoolQuantity> getBestPools(Consumer consumer,
         String[] productIds, Date entitleDate, Owner owner,
-        String serviceLevelOverride)
+        String serviceLevelOverride, Collection<String> fromPools)
         throws EntitlementRefusedException {
 
-
+        boolean hasFromPools = fromPools != null && !fromPools.isEmpty();
         ValidationResult failedResult = null;
 
         Date activePoolDate = entitleDate;
         if (entitleDate == null) {
             activePoolDate = new Date();
         }
+
+        PoolFilterBuilder poolFilter = new PoolFilterBuilder();
+        poolFilter.addIdFilters(fromPools);
         List<Pool> allOwnerPools = this.listAvailableEntitlementPools(
             consumer, null, owner, (String) null, activePoolDate, true, false,
-            new PoolFilterBuilder(), null).getPageData();
+            poolFilter, null).getPageData();
         List<Pool> filteredPools = new LinkedList<Pool>();
 
         // We have to check compliance status here so we can replace an empty

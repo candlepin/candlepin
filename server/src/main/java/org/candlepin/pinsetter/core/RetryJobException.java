@@ -15,29 +15,18 @@
 package org.candlepin.pinsetter.core;
 
 /**
- * PinsetterException thrown if there are any problems with the batch engine.
+ * Thrown by a job which wishes to signal to the framework that a retry is an option.
+ * i.e. database exceptions which could be deadlocks
  */
-public class PinsetterException extends Exception {
+public class RetryJobException extends RuntimeException {
 
-    private static final long serialVersionUID = 6869383124721674885L;
+    private static final long serialVersionUID = -6074233607630692329L;
 
-    /**
-     * Constructor
-     * @param message exception message
-     */
-    public PinsetterException(String message) {
+    public RetryJobException(String message) {
         super(message);
     }
 
-    /**
-     * Constructor
-     * @param message exception message
-     * @param cause the cause (which is saved for later retrieval
-     * by the Throwable.getCause() method). (A null value is
-     * permitted, and indicates that the cause is nonexistent or
-     * unknown.)
-     */
-    public PinsetterException(String message , Throwable cause) {
+    public RetryJobException(String message , Throwable cause) {
         super(message, cause);
     }
 }

@@ -33,6 +33,7 @@ import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.entitlement.EntitlementRulesTranslator;
+import org.candlepin.resource.dto.AutobindData;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -40,7 +41,6 @@ import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 /**
@@ -112,15 +112,17 @@ public class EntitlerTest {
     public void bindByProductsString() throws EntitlementRefusedException {
         String[] pids = {"prod1", "prod2", "prod3"};
         when(cc.findByUuid(eq("abcd1234"))).thenReturn(consumer);
-        entitler.bindByProducts(pids, "abcd1234", null);
-        verify(pm).entitleByProducts(eq(consumer), eq(pids), eq((Date) null));
+        entitler.bindByProducts(pids, "abcd1234", null, null);
+        AutobindData data = AutobindData.create(consumer).forProducts(pids);
+        verify(pm).entitleByProducts(eq(data));
     }
 
     @Test
     public void bindByProducts() throws EntitlementRefusedException {
         String[] pids = {"prod1", "prod2", "prod3"};
-        entitler.bindByProducts(pids, consumer, null);
-        verify(pm).entitleByProducts(eq(consumer), eq(pids), eq((Date) null));
+        AutobindData data = AutobindData.create(consumer).forProducts(pids);
+        entitler.bindByProducts(data);
+        verify(pm).entitleByProducts(data);
     }
 
     @Test(expected = BadRequestException.class)
@@ -269,9 +271,9 @@ public class EntitlerTest {
             String[] pids = {"prod1", "prod2", "prod3"};
             EntitlementRefusedException ere = new EntitlementRefusedException(
                 fakeOutResult(msg));
-            when(pm.entitleByProducts(eq(consumer), eq(pids),
-                eq((Date) null))).thenThrow(ere);
-            entitler.bindByProducts(pids, consumer, null);
+            AutobindData data = AutobindData.create(consumer).forProducts(pids);
+            when(pm.entitleByProducts(data)).thenThrow(ere);
+            entitler.bindByProducts(data);
         }
         catch (EntitlementRefusedException e) {
             fail(msg + ": threw unexpected error");
