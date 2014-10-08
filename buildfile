@@ -286,6 +286,7 @@ define "candlepin" do
     checkstyle.eclipse_xml = checkstyle_eclipse_xml
     rpmlint.rpmlint_conf = rpmlint_conf
     liquibase.changelogs = ['changelog-update.xml', 'changelog-create.xml']
+    liquibase.file_time_prefix_format = "%Y%m%d%H%M%S"
 
     # eclipse settings
     # http://buildr.apache.org/more_stuff.html#eclipse
