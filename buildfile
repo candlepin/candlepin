@@ -211,7 +211,7 @@ define "candlepin" do
     compile_classpath = [COMMONS, LOGGING, GUICE, GETTEXT_COMMONS, COLLECTIONS, PROVIDED, RESTEASY, JACKSON, JAVAX]
     compile.with(compile_classpath)
 
-    test.with(TESTING, JUKITO)
+    test.with(TESTING, JUKITO, LIQUIBASE)
     test.using :java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ]
 
     common_jar = package(:jar)
@@ -264,10 +264,10 @@ define "candlepin" do
     test.resources.filter.using(resource_substitutions)
 
     test.setup do |task|
-        filter(path_to(:src, :main, :resources, 'META-INF')).into(path_to(:target, :classes, 'META-INF')).run
+      filter(path_to(:src, :main, :resources)).into(path_to(:target, :classes)).run
     end
 
-    test.with(TESTING, JUKITO, HSQLDB)
+    test.with(TESTING, JUKITO, HSQLDB, LIQUIBASE, project('common'))
     test.using :java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ]
 
     gutterball_war = package(:war, :id=>"gutterball").tap do |war|
@@ -346,11 +346,11 @@ define "candlepin" do
 
     ### Testing
     test.setup do |task|
-      filter(path_to(:src, :main, :resources, 'META-INF')).into(path_to(:target, :classes, 'META-INF')).run
+      filter(path_to(:src, :main, :resources)).into(path_to(:target, :classes)).run
     end
 
     # the other dependencies transfer from compile.classpath automagically
-    test.with(HSQLDB, TESTING)
+    test.with(HSQLDB, TESTING, LIQUIBASE)
     test.using(:java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ])
 
     ### Javadoc

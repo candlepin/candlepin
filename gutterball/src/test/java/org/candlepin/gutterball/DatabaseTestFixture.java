@@ -18,6 +18,7 @@ package org.candlepin.gutterball;
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.gutterball.curator.ComplianceSnapshotCurator;
 import org.candlepin.gutterball.curator.ConsumerStateCurator;
+import org.candlepin.gutterball.junit.LiquibaseResource;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -25,6 +26,7 @@ import com.google.inject.persist.PersistFilter;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -33,10 +35,13 @@ import javax.persistence.EntityManagerFactory;
  * Test fixture for test classes requiring access to the database.
  */
 public class DatabaseTestFixture {
-
     protected EntityManagerFactory emf;
     protected EntityManager em;
     protected Injector injector;
+
+    @SuppressWarnings("checkstyle:visibilitymodifier")
+    @Rule
+    public LiquibaseResource liquibase = new LiquibaseResource();
 
     protected ComplianceSnapshotCurator complianceSnapshotCurator;
     protected ConsumerStateCurator consumerStateCurator;
