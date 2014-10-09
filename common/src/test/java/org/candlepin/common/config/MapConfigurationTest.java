@@ -76,7 +76,7 @@ public class MapConfigurationTest {
         // Add a conflicting property; config will trump config2
         config2.setProperty("x.1", "b");
 
-        Configuration mergedConfig = config.merge(config2);
+        Configuration mergedConfig = MapConfiguration.merge(config, config2);
         assertNotSame(config, mergedConfig);
 
         Set<String> keySet = (Set<String>) mergedConfig.getKeys();

@@ -169,7 +169,7 @@ public class CandlepinContextListener extends CandlepinGuiceResteasyBootstrap {
 
         // merge does NOT affect systemConfig, it just returns a new object
         // not sure I like that.
-        return systemConfig.merge(defaults);
+        return PropertiesFileConfiguration.merge(systemConfig, defaults);
     }
 
     @Override

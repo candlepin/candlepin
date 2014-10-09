@@ -131,9 +131,18 @@ public class PropertiesFileConfiguration extends AbstractConfiguration
         this.encoding = encoding;
     }
 
-    @Override
-    public Configuration merge(Configuration base) {
-        return backingMap.merge(base);
+    public static PropertiesFileConfiguration merge(Configuration ... configs) {
+        PropertiesFileConfiguration mergedConfig = new PropertiesFileConfiguration();
+
+        for (Configuration c : configs) {
+            for (String key : c.getKeys()) {
+                if (!mergedConfig.containsKey(key)) {
+                    mergedConfig.setProperty(key, c.getProperty(key));
+                }
+            }
+        }
+
+        return mergedConfig;
     }
 
     @Override

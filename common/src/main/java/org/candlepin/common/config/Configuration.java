@@ -52,14 +52,6 @@ public interface Configuration {
     Properties getNamespaceProperties(String prefix, Map<String, String> defaults);
 
     /**
-     * Begin with the configuration provided by base but for any keys defined in
-     * both objects, use the values in this object.
-     * @param base
-     * @return the merged configuration
-     */
-    Configuration merge(Configuration base);
-
-    /**
      * Check if the configuration is empty.
      *
      * @return {@code true} if the configuration contains no property,

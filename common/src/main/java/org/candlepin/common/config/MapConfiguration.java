@@ -53,12 +53,19 @@ public class MapConfiguration extends AbstractConfiguration {
         return subset;
     }
 
-    @Override
-    public Configuration merge(Configuration base) {
-        MapConfiguration mergedConfig = new MapConfiguration(configMap);
-        for (String key : base.getKeys()) {
-            if (!containsKey(key)) {
-                mergedConfig.setProperty(key, base.getProperty(key).toString());
+    /**
+     * Begin with the configuration provided by base but for any keys defined in
+     * both objects, use the values in this object.
+     * @param configs
+     * @return the merged configuration
+     */
+    public static MapConfiguration merge(Configuration ... configs) {
+        MapConfiguration mergedConfig = new MapConfiguration();
+        for (Configuration c : configs) {
+            for (String key : c.getKeys()) {
+                if (!mergedConfig.containsKey(key)) {
+                    mergedConfig.setProperty(key, c.getProperty(key));
+                }
             }
         }
         return mergedConfig;

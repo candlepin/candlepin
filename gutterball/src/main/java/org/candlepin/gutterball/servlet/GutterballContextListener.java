@@ -134,7 +134,7 @@ public class GutterballContextListener extends
 
         // merge does NOT affect systemConfig, it just returns a new object
         // not sure I like that.
-        Configuration merged = systemConfig.merge(defaults);
+        Configuration merged = PropertiesFileConfiguration.merge(systemConfig, defaults);
 
         log.debug("Configuration: " + merged);
         return merged;
