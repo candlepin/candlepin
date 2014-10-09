@@ -36,10 +36,12 @@ public abstract class FilterBuilder {
 
     private Map<String, List<String>> attributeFilters;
     private List<String> idFilters;
+    protected List<Criterion> otherCriteria;
 
     public FilterBuilder() {
         this.attributeFilters = new HashMap<String, List<String>>();
         this.idFilters = new LinkedList<String>();
+        this.otherCriteria = new LinkedList<Criterion>();
     }
 
     public FilterBuilder addIdFilter(String id) {
@@ -54,31 +56,32 @@ public abstract class FilterBuilder {
         return this;
     }
 
-    public FilterBuilder addAttributeFilter(String attrName, String attrValue) {
+    public void addAttributeFilter(String attrName, String attrValue) {
         if (!attributeFilters.containsKey(attrName)) {
             attributeFilters.put(attrName, new LinkedList<String>());
         }
         attributeFilters.get(attrName).add(attrValue);
-        return this;
     }
 
     public void applyTo(Criteria parentCriteria) {
-        if (!attributeFilters.isEmpty() || !idFilters.isEmpty()) {
-            parentCriteria.add(buildCriteria());
+        if (!attributeFilters.isEmpty() || !idFilters.isEmpty() ||
+                !otherCriteria.isEmpty()) {
+            parentCriteria.add(getCriteria());
         }
     }
 
     public Criterion getCriteria() {
-        return buildCriteria();
-    }
-
-    private Criterion buildCriteria() {
         Conjunction all = Restrictions.conjunction();
         if (!attributeFilters.isEmpty()) {
             all.add(buildAttributeCriteria());
         }
         if (!idFilters.isEmpty()) {
             all.add(buildIdFilters());
+        }
+        if (!otherCriteria.isEmpty()) {
+            for (Criterion c : otherCriteria) {
+                all.add(c);
+            }
         }
         return all;
     }

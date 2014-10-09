@@ -16,6 +16,7 @@ package org.candlepin.model;
 
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
@@ -31,6 +32,21 @@ import java.util.List;
  * Builds criteria to find pools based upon their attributes and product attributes
  */
 public class PoolFilterBuilder extends FilterBuilder {
+
+    /**
+     * Add filters to search only for pools containing the given text. A number of
+     * fields on the pool are searched including it's SKU, SKU product name, and provided
+     * (engineering) product IDs and their names.
+     *
+     * @param containsText Text to search for in various fields on the pool. Basic
+     * wildcards are supported for everything or a single character. (* and ? respectively)
+     */
+    public void addContainsTextFilter(String containsText) {
+        Disjunction textOr = Restrictions.disjunction();
+        textOr.add(Restrictions.ilike("productName", "%" + containsText + "%"));
+        textOr.add(Restrictions.ilike("productId", "%" + containsText + "%"));
+        this.otherCriteria.add(textOr);
+    }
 
     @Override
     protected Criterion buildCriteriaForKey(String key, List<String> values) {
