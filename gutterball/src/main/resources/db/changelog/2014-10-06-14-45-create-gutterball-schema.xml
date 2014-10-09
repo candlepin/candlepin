@@ -38,7 +38,9 @@
             <column name="name" type="varchar(255)"/>
             <column name="releasever" type="varchar(255)"/>
             <column name="servicelevel" type="varchar(255)"/>
+            <column name="environmentname" type="varchar(255)"/>
             <column name="username" type="varchar(255)"/>
+            <column name="hypervisorid" type="varchar(255)"/>
             <column name="uuid" type="varchar(255)"/>
             <column name="compliance_snap_id" type="varchar(32)">
                 <constraints foreignKeyName="fk_consumer_compliance" references="gb_compliance_snap(id)" nullable="false"/>
@@ -194,7 +196,7 @@
             </column>
         </createTable>
     </changeSet>
-    
+
     <changeSet id="20141006144514-13" author="awood">
         <createIndex indexName="ix_compliance_snap_fk" tableName="gb_compliance_status_snap" unique="false">
             <column name="compliance_snap_id"/>

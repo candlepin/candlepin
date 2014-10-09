@@ -24,9 +24,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Index;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -63,7 +61,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "gb_consumer_snapshot")
+@Table(name = "gb_consumer_snap")
 public class Consumer {
 
     @Id
@@ -102,14 +100,11 @@ public class Consumer {
     private String releaseVer;
 
     @OneToOne(cascade = CascadeType.ALL)
-    @ForeignKey(name = "fk_gb_consumer_consumer_type")
     private ConsumerType type;
 
     @XmlTransient
     @OneToOne(fetch = FetchType.LAZY)
-    @ForeignKey(name = "fk_compliance_snapshot")
-    @JoinColumn(nullable = false)
-    @Index(name = "cp_compliance_snapshot_fk_idx")
+    @JoinColumn(name = "compliance_snap_id", nullable = false)
     @NotNull
     private Compliance complianceSnapshot;
 
@@ -125,7 +120,7 @@ public class Consumer {
 
     @ElementCollection
     @CollectionTable(name = "gb_consumer_facts_snap",
-                     joinColumns = @JoinColumn(name = "gb_consumer_snap_id"))
+                     joinColumns = @JoinColumn(name = "consumer_snap_id"))
     @MapKeyColumn(name = "mapkey")
     @Column(name = "element")
     @Cascade({org.hibernate.annotations.CascadeType.ALL})

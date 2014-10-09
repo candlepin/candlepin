@@ -17,9 +17,7 @@ package org.candlepin.gutterball.model.snapshot;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Index;
 
 import java.util.Date;
 
@@ -57,9 +55,7 @@ public class ComplianceStatus {
 
     @XmlTransient
     @OneToOne(fetch = FetchType.LAZY)
-    @ForeignKey(name = "fk_status_compliance")
-    @JoinColumn(nullable = false)
-    @Index(name = "ix_compliance_snap_fk")
+    @JoinColumn(name = "compliance_snap_id", nullable = false)
     @NotNull
     private Compliance complianceSnapshot;
 

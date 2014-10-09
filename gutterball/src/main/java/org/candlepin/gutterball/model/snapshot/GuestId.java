@@ -18,9 +18,7 @@ package org.candlepin.gutterball.model.snapshot;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Index;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -65,10 +63,8 @@ public class GuestId {
     private String guestId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @ForeignKey(name = "fk_guests_consumer")
     @JoinColumn(nullable = false)
     @XmlTransient
-    @Index(name = "ix_consumerguest_consumer_fk")
     @NotNull
     private Consumer consumer;
 
