@@ -17,9 +17,7 @@ package org.candlepin.gutterball.model.snapshot;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Index;
 
 import java.util.Date;
 
@@ -45,7 +43,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "gb_installed_product_snaps")
+@Table(name = "gb_installed_product_snap")
 public class ConsumerInstalledProduct {
 
     @Id
@@ -83,10 +81,8 @@ public class ConsumerInstalledProduct {
     private Date endDate;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @ForeignKey(name = "fk_consumer_installed_product")
     @JoinColumn(nullable = false)
     @XmlTransient
-    @Index(name = "gb_installedproduct_consumer_fk_idx")
     private Consumer consumer;
 
     public ConsumerInstalledProduct() {
