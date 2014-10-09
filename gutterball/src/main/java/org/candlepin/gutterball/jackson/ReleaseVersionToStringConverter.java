@@ -12,18 +12,20 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-
 package org.candlepin.gutterball.jackson;
 
 import com.fasterxml.jackson.databind.util.StdConverter;
 
 import java.util.Map;
 
+/**
+ *
+ */
 public class ReleaseVersionToStringConverter extends StdConverter<Map<String, Object>, String> {
 
     @Override
     public String convert(Map<String, Object> releaseVerIn) {
-        return releaseVerIn != null && releaseVerIn.containsKey("releaseVer")
-                ? (String) releaseVerIn.get("releaseVer") : "";
+        return releaseVerIn != null &&
+            releaseVerIn.containsKey("releaseVer") ? (String) releaseVerIn.get("releaseVer") : "";
     }
 }
