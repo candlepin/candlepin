@@ -58,7 +58,7 @@ generate_db() {
         init_postgresql_jdbc "gutterball"
     fi
 
-    CHANGELOG="changelog-create.xml"
+    CHANGELOG="changelog.xml"
     if [ -n "$GENDB" ]; then
         MESSAGE="Generating New Database"
         if [ -n "$USE_ORACLE" ]; then
