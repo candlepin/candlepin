@@ -214,5 +214,34 @@
             <column name="consumer_id"/>
         </createIndex>
     </changeSet>
+
+    <changeSet id="20141006144514-16" author="mstead">
+        <createTable tableName="gb_compliance_reason_snap">
+            <column name="id" type="varchar(32)">
+                <constraints primaryKeyName="pk_compliance_reason_snap" primaryKey="true" nullable="false"/>
+            </column>
+            <column name="key" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="message" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="compliancestatus_id" type="varchar(32)">
+                <constraints foreignKeyName="fk_reason_status" references="gb_compliance_status_snap(id)" nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20141006144514-17" author="mstead">
+        <createTable tableName="gb_reason_attr_snap">
+            <column name="reason_snap_id" type="varchar(32)">
+                <constraints foreignKeyName="fk_attr_reason" references="gb_compliance_reason_snap(id)" nullable="false"/>
+            </column>
+            <column name="element" type="varchar(255)"/>
+            <column name="mapkey" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
 </databaseChangeLog>
 <!-- vim: set expandtab sts=4 sw=4 ai: -->

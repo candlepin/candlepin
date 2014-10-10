@@ -19,6 +19,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.gutterball.model.snapshot.Compliance;
+import org.candlepin.gutterball.model.snapshot.ComplianceReason;
 import org.candlepin.gutterball.model.snapshot.ComplianceStatus;
 import org.candlepin.gutterball.model.snapshot.Consumer;
 import org.candlepin.gutterball.model.snapshot.Owner;
@@ -57,6 +58,12 @@ public class TestUtils {
             String owner, String statusString) {
         Consumer consumerSnap = new Consumer(consumerUuid, createOwnerSnapshot(owner, owner));
         ComplianceStatus statusSnap = new ComplianceStatus(statusDate, statusString);
+
+        if (statusString.toLowerCase().equals("invalid")) {
+            ComplianceReason reason = new ComplianceReason("reason-key", "Test message");
+            reason.setComplianceStatus(statusSnap);
+            statusSnap.getReasons().add(reason);
+        }
         return new Compliance(statusDate, consumerSnap, statusSnap);
     }
 

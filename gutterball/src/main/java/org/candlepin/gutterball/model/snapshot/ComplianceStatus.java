@@ -17,16 +17,23 @@ package org.candlepin.gutterball.model.snapshot;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
 
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
+import javax.persistence.CollectionTable;
 import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
@@ -68,11 +75,18 @@ public class ComplianceStatus {
     @NotNull
     private String status;
 
+    @OneToMany(mappedBy = "complianceStatus", targetEntity = ComplianceReason.class)
+    @Cascade({org.hibernate.annotations.CascadeType.ALL,
+        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+    private Set<ComplianceReason> reasons;
+
     public ComplianceStatus() {
         // Required by hibernate.
+        reasons = new HashSet<ComplianceReason>();
     }
 
     public ComplianceStatus(Date date, String status) {
+        this();
         this.date = date;
         this.status = status;
     }
@@ -108,6 +122,21 @@ public class ComplianceStatus {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public Set<ComplianceReason> getReasons() {
+        return reasons;
+    }
+
+    public void setReasons(Set<ComplianceReason> reasons) {
+        if (reasons == null) {
+            reasons = new HashSet<ComplianceReason>();
+        }
+        this.reasons = reasons;
+
+        for (ComplianceReason r : this.reasons) {
+            r.setComplianceStatus(this);
+        }
     }
 
 }
