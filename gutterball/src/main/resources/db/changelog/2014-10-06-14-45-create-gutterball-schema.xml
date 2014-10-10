@@ -81,23 +81,23 @@
     </changeSet>
 
     <changeSet id="20141006144514-6" author="awood">
-        <createTable tableName="gb_consumer_guests_snap">
+        <createTable tableName="gb_consumer_guest_snap">
             <column name="id" type="varchar(32)">
-                <constraints primaryKeyName="pk_consumer_guests_snap" primaryKey="true" nullable="false"/>
+                <constraints primaryKeyName="pk_consumer_guest_snap" primaryKey="true" nullable="false"/>
             </column>
             <column name="guest_id" type="varchar(255)">
                 <constraints nullable="false"/>
             </column>
             <column name="consumer_id" type="varchar(32)">
-                <constraints foreignKeyName="fk_guests_consumer" references="gb_consumer_snap(id)" nullable="false"/>
+                <constraints foreignKeyName="fk_guest_consumer" references="gb_consumer_snap(id)" nullable="false"/>
             </column>
         </createTable>
     </changeSet>
 
     <changeSet id="20141006144514-7" author="awood">
-        <createTable tableName="gb_consumer_guests_attributes">
+        <createTable tableName="gb_consumer_guest_attributes">
             <column name="consumer_guest_id" type="varchar(32)">
-                <constraints foreignKeyName="fk_guests_attrs_consumer" references="gb_consumer_guests_snap(id)" nullable="false"/>
+                <constraints foreignKeyName="fk_guest_attrs_consumer" references="gb_consumer_guest_snap(id)" nullable="false"/>
             </column>
             <column name="element" type="varchar(255)"/>
             <column name="mapkey" type="varchar(255)">
@@ -204,7 +204,7 @@
     </changeSet>
 
     <changeSet id="20141006144514-14" author="awood">
-        <createIndex indexName="ix_consumerguest_consumer_fk" tableName="gb_consumer_guests_snap" unique="false">
+        <createIndex indexName="ix_consumerguest_consumer_fk" tableName="gb_consumer_guest_snap" unique="false">
             <column name="consumer_id"/>
         </createIndex>
     </changeSet>

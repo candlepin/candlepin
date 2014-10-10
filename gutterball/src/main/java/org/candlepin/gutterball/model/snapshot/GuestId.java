@@ -69,7 +69,7 @@ public class GuestId {
     private Consumer consumer;
 
     @ElementCollection
-    @CollectionTable(name = "gb_consumer_guests_attributes",
+    @CollectionTable(name = "gb_consumer_guest_attributes",
                      joinColumns = @JoinColumn(name = "gb_consumer_guest_id"))
     @MapKeyColumn(name = "mapkey")
     @Column(name = "element")
