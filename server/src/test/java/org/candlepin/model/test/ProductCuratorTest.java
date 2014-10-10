@@ -17,9 +17,9 @@ package org.candlepin.model.test;
 import static org.hamcrest.collection.IsCollectionContaining.*;
 import static org.junit.Assert.*;
 
+import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.config.CandlepinCommonTestConfig;
-import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Content;
 import org.candlepin.model.Owner;
@@ -60,7 +60,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
     @Before
     public void setUp() {
-        config = (CandlepinCommonTestConfig) injector.getInstance(Config.class);
+        config = (CandlepinCommonTestConfig) injector.getInstance(Configuration.class);
         config.setProperty(ConfigProperties.INTEGER_ATTRIBUTES,
             "product.count, product.multiplier");
         config.setProperty(ConfigProperties.NON_NEG_INTEGER_ATTRIBUTES,

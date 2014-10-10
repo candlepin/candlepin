@@ -14,12 +14,17 @@
  */
 package org.candlepin.policy.test;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.auth.UserPrincipal;
-import org.candlepin.config.Config;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Branding;
@@ -68,7 +73,7 @@ public class PoolRulesTest {
     @Mock private RulesCurator rulesCuratorMock;
     @Mock private ProductServiceAdapter productAdapterMock;
     @Mock private PoolManager poolManagerMock;
-    @Mock private Config configMock;
+    @Mock private Configuration configMock;
     @Mock private EntitlementCurator entCurMock;
 
     private ProductCache productCache;
@@ -96,7 +101,7 @@ public class PoolRulesTest {
 
     @Test
     public void hostedVirtLimitBadValueDoesntTraceBack() {
-        when(configMock.standalone()).thenReturn(false);
+        when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
         Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
         s.getProduct().addAttribute(new ProductAttribute("virt_limit", "badvalue"));
         s.setQuantity(10L);
@@ -602,7 +607,7 @@ public class PoolRulesTest {
      */
     @Test
     public void hostedVirtLimitWithHostLimitedSkipsBonusPools() {
-        when(configMock.standalone()).thenReturn(false);
+        when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
         Subscription s = createVirtLimitSub("virtLimitProduct", 10, 10);
         s.getProduct().setAttribute("host_limited", "true");
         List<Pool> pools = poolRules.createPools(s);
@@ -612,7 +617,7 @@ public class PoolRulesTest {
     // Make sure host_limited false is working:
     @Test
     public void hostedVirtLimitWithHostLimitedFalseCreatesBonusPools() {
-        when(configMock.standalone()).thenReturn(false);
+        when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
         Subscription s = createVirtLimitSub("virtLimitProduct", 10, 10);
         s.getProduct().setAttribute("host_limited", "false");
         List<Pool> pools = poolRules.createPools(s);
@@ -621,7 +626,7 @@ public class PoolRulesTest {
 
     @Test
     public void hostedVirtLimitSubCreatesBonusVirtOnlyPool() {
-        when(configMock.standalone()).thenReturn(false);
+        when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
         Subscription s = createVirtLimitSub("virtLimitProduct", 10, 10);
         List<Pool> pools = poolRules.createPools(s);
         assertEquals(2, pools.size());
@@ -640,7 +645,7 @@ public class PoolRulesTest {
 
     @Test
     public void hostedVirtLimitSubCreatesUnlimitedBonusVirtOnlyPool() {
-        when(configMock.standalone()).thenReturn(false);
+        when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
         Subscription s = createVirtLimitSub("virtLimitProduct", 10, 10);
         s.getProduct().setAttribute("virt_limit", "unlimited");
         List<Pool> pools = poolRules.createPools(s);
@@ -654,7 +659,7 @@ public class PoolRulesTest {
 
     @Test
     public void hostedVirtLimitSubUpdatesUnlimitedBonusVirtOnlyPool() {
-        when(configMock.standalone()).thenReturn(false);
+        when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
         Subscription s = createVirtLimitSub("virtLimitProduct", 10, 10);
         s.getProduct().setAttribute("virt_limit", "unlimited");
         List<Pool> pools = poolRules.createPools(s);
@@ -676,7 +681,7 @@ public class PoolRulesTest {
 
     @Test
     public void hostedVirtLimitRemoved() {
-        when(configMock.standalone()).thenReturn(false);
+        when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
         Subscription s = createVirtLimitSub("virtLimitProduct", 10, 10);
         s.getProduct().setAttribute("virt_limit", "4");
         List<Pool> pools = poolRules.createPools(s);
@@ -701,7 +706,7 @@ public class PoolRulesTest {
 
     @Test
     public void hostedVirtLimitSubWithMultiplierCreatesUnlimitedBonusVirtOnlyPool() {
-        when(configMock.standalone()).thenReturn(false);
+        when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
         Subscription s = createVirtLimitSub("virtLimitProduct", 10, 10);
         s.getProduct().setAttribute("virt_limit", "unlimited");
         s.getProduct().setMultiplier(5L);
@@ -716,7 +721,7 @@ public class PoolRulesTest {
 
     @Test
     public void hostedVirtLimitSubCreateAttributesTest() {
-        when(configMock.standalone()).thenReturn(false);
+        when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
         Subscription s = createVirtLimitSub("virtLimitProduct", 10, 10);
         s.getProduct().setAttribute("physical_only", "true");
         List<Pool> pools = poolRules.createPools(s);
@@ -737,7 +742,7 @@ public class PoolRulesTest {
 
     @Test
     public void standaloneVirtLimitSubCreate() {
-        when(configMock.standalone()).thenReturn(true);
+        when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
         Subscription s = createVirtLimitSub("virtLimitProduct", 10, 10);
         List<Pool> pools = poolRules.createPools(s);
 
@@ -750,7 +755,7 @@ public class PoolRulesTest {
 
     @Test
     public void standaloneVirtLimitSubUpdate() {
-        when(configMock.standalone()).thenReturn(true);
+        when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
         Subscription s = createVirtLimitSub("virtLimitProduct", 10, 10);
         List<Pool> pools = poolRules.createPools(s);
 
@@ -779,7 +784,7 @@ public class PoolRulesTest {
 
     @Test
     public void hostedVirtOnlySubCreate() {
-        when(configMock.standalone()).thenReturn(true);
+        when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
         Subscription s = createVirtOnlySub("virtOnlyProduct", 10);
         List<Pool> pools = poolRules.createPools(s);
         assertEquals(1, pools.size());
@@ -789,7 +794,7 @@ public class PoolRulesTest {
 
     @Test
     public void hostedVirtOnlySubCreateWithMultiplier() {
-        when(configMock.standalone()).thenReturn(true);
+        when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
         Subscription s = createVirtOnlySub("virtOnlyProduct", 10);
         s.getProduct().setMultiplier(new Long(5));
         List<Pool> pools = poolRules.createPools(s);
@@ -800,7 +805,7 @@ public class PoolRulesTest {
 
     @Test
     public void hostedVirtOnlySubUpdate() {
-        when(configMock.standalone()).thenReturn(true);
+        when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
         Subscription s = createVirtOnlySub("virtOnlyProduct", 10);
         List<Pool> pools = poolRules.createPools(s);
         assertEquals(1, pools.size());
@@ -814,7 +819,7 @@ public class PoolRulesTest {
 
     @Test
     public void standaloneVirtSubPoolUpdateNoChanges() {
-        when(configMock.standalone()).thenReturn(true);
+        when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
         Subscription s = createVirtLimitSub("virtLimitProduct", 10, 10);
         List<Pool> pools = poolRules.createPools(s);
         assertEquals(1, pools.size());
@@ -837,7 +842,7 @@ public class PoolRulesTest {
 
     @Test
     public void standaloneVirtSubPoolUpdateVirtLimitChanged() {
-        when(configMock.standalone()).thenReturn(true);
+        when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
         Subscription s = createVirtLimitSub("virtLimitProduct", 10, 10);
         List<Pool> pools = poolRules.createPools(s);
         assertEquals(1, pools.size());
@@ -866,7 +871,7 @@ public class PoolRulesTest {
 
     @Test
     public void dontUpdateVirtOnlyNoVirtLimit() {
-        when(configMock.standalone()).thenReturn(false);
+        when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
         Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
         s.setQuantity(10L);
         when(productAdapterMock.getProductById(s.getProduct().getId()))
@@ -887,7 +892,7 @@ public class PoolRulesTest {
 
     @Test
     public void updateVirtOnlyNoVirtLimit() {
-        when(configMock.standalone()).thenReturn(false);
+        when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
         Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
         s.setQuantity(10L);
 

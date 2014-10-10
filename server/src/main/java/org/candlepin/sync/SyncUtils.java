@@ -14,8 +14,8 @@
  */
 package org.candlepin.sync;
 
+import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.IseException;
-import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 
 import com.fasterxml.jackson.databind.AnnotationIntrospector;
@@ -37,7 +37,7 @@ import java.io.IOException;
 class SyncUtils {
 
     private final File baseDir;
-    SyncUtils(Config config) {
+    SyncUtils(Configuration config) {
         baseDir = new File(config.getString(ConfigProperties.SYNC_WORK_DIR));
         if (!baseDir.exists() && !baseDir.mkdirs()) {
             throw new IseException(
@@ -45,7 +45,7 @@ class SyncUtils {
         }
     }
 
-    static ObjectMapper getObjectMapper(Config config) {
+    static ObjectMapper getObjectMapper(Configuration config) {
         ObjectMapper mapper = new ObjectMapper();
         AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
         AnnotationIntrospector secondary =
@@ -64,7 +64,7 @@ class SyncUtils {
 
         if (config != null) {
             mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
-                config.failOnUnknownImportProperties());
+                config.getBoolean(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES));
         }
 
         return mapper;

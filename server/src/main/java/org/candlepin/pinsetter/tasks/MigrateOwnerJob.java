@@ -20,9 +20,9 @@ import org.candlepin.audit.EventSink;
 import org.candlepin.client.CandlepinConnection;
 import org.candlepin.client.ConsumerClient;
 import org.candlepin.client.OwnerClient;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
-import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -71,7 +71,7 @@ public class MigrateOwnerJob extends KingpinJob {
     private EntitlementCurator entCurator;
     private ConsumerCurator consumerCurator;
     private CandlepinConnection conn;
-    private Config config;
+    private Configuration config;
     private HashMap<String, String> entMap = new HashMap<String, String>();
     private EventSink sink;
 
@@ -87,7 +87,7 @@ public class MigrateOwnerJob extends KingpinJob {
      * @param cc database layer for Consumer
      */
     @Inject
-    public MigrateOwnerJob(CandlepinConnection connection, Config conf,
+    public MigrateOwnerJob(CandlepinConnection connection, Configuration conf,
         OwnerCurator oc, PoolCurator pc, EntitlementCurator ec,
         ConsumerCurator cc, EventSink es) {
         ownerCurator = oc;

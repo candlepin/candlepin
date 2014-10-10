@@ -14,7 +14,8 @@
  */
 package org.candlepin.policy.js.entitlement;
 
-import org.candlepin.config.Config;
+import org.candlepin.common.config.Configuration;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Entitlement;
@@ -55,7 +56,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
     protected I18n i18n;
     protected Map<String, Set<Rule>> attributesToRules;
     protected JsRunner jsRules;
-    protected Config config;
+    protected Configuration config;
     protected ConsumerCurator consumerCurator;
     protected PoolCurator poolCurator;
 
@@ -294,7 +295,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         log.debug("Running virt_limit post unbind.");
         boolean hostLimited = attributes.containsKey("host_limited") &&
             attributes.get("host_limited").equals("true");
-        if (!config.standalone() && !hostLimited &&
+        if (!config.getBoolean(ConfigProperties.STANDALONE) && !hostLimited &&
                 c.getType().isManifest()) {
             String virtLimit = attributes.get("virt_limit");
             if (!"unlimited".equals(virtLimit)) {
@@ -342,7 +343,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
             attributes.get("host_limited").equals("true");
         if (!c.getType().isManifest() &&
             !"true".equalsIgnoreCase(c.getFact("virt.is_guest")) &&
-            (config.standalone() || hostLimited)) {
+            (config.getBoolean(ConfigProperties.STANDALONE) || hostLimited)) {
             String productId = pool.getProductId();
             String virtLimit = attributes.get("virt_limit");
 
@@ -384,7 +385,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         Map<String, String> attributes) {
         boolean hostLimited = attributes.containsKey("host_limited") &&
             attributes.get("host_limited").equals("true");
-        if (c.getType().isManifest() && !config.standalone() &&
+        if (c.getType().isManifest() && !config.getBoolean(ConfigProperties.STANDALONE) &&
                 !hostLimited) {
             String virtLimit = attributes.get("virt_limit");
             if (!"unlimited".equals(virtLimit)) {

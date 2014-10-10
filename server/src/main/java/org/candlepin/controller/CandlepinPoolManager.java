@@ -20,7 +20,7 @@ import org.candlepin.audit.Event.Type;
 import org.candlepin.audit.EventBuilder;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
-import org.candlepin.config.Config;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -90,7 +90,7 @@ public class CandlepinPoolManager implements PoolManager {
     private SubscriptionServiceAdapter subAdapter;
     private EventSink sink;
     private EventFactory eventFactory;
-    private Config config;
+    private Configuration config;
     private Enforcer enforcer;
     private PoolRules poolRules;
     private EntitlementCurator entitlementCurator;
@@ -114,7 +114,7 @@ public class CandlepinPoolManager implements PoolManager {
         SubscriptionServiceAdapter subAdapter,
         ProductCache productCache,
         EntitlementCertServiceAdapter entCertAdapter, EventSink sink,
-        EventFactory eventFactory, Config config, Enforcer enforcer,
+        EventFactory eventFactory, Configuration config, Enforcer enforcer,
         PoolRules poolRules, EntitlementCurator curator1, ConsumerCurator consumerCurator,
         EntitlementCertificateCurator ecC, ComplianceRules complianceRules,
         AutobindRules autobindRules, ActivationKeyRules activationKeyRules) {

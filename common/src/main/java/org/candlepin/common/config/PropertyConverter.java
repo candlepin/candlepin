@@ -19,7 +19,9 @@ import org.apache.commons.lang.BooleanUtils;
 import java.lang.reflect.Constructor;
 import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * PropertyConverter. Inspired by
@@ -50,11 +52,12 @@ public class PropertyConverter {
             return (Boolean) value;
         }
         else if (value instanceof String) {
-            Boolean b = BooleanUtils.toBooleanObject((String) value);
-            if (b == null) {
-                throw new ConversionException(formatErrorMessage(value, Boolean.class));
+            if ("1".equalsIgnoreCase((String) value) ||
+                    "y".equalsIgnoreCase((String) value)) {
+                return true;
             }
-            return b;
+
+            return BooleanUtils.toBoolean((String) value);
         }
         else {
             throw new ConversionException(formatErrorMessage(value, Boolean.class));
@@ -133,6 +136,16 @@ public class PropertyConverter {
         }
         else {
             throw new ConversionException(formatErrorMessage(value, List.class));
+        }
+    }
+
+    public static Set<String> toSet(Object value) {
+        if (value instanceof String) {
+            String[] parts = ((String) value).split("\\s*,\\s*");
+            return new HashSet<String>(Arrays.asList(parts));
+        }
+        else {
+            throw new ConversionException(formatErrorMessage(value, Set.class));
         }
     }
 }

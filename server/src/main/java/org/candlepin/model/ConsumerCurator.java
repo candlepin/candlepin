@@ -14,9 +14,9 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
-import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
@@ -56,7 +56,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     @Inject private EntitlementCurator entitlementCurator;
     @Inject private ConsumerTypeCurator consumerTypeCurator;
     @Inject private DeletedConsumerCurator deletedConsumerCurator;
-    @Inject private Config config;
+    @Inject private Configuration config;
 
     private static final int MAX_FACT_STR_LENGTH = 255;
     private static final int NAME_LENGTH = 250;
@@ -313,10 +313,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         Map<String, String> factsIn = consumer.getFacts();
         Map<String, String> facts = new HashMap<String, String>();
         String factMatch = config.getString(ConfigProperties.CONSUMER_FACTS_MATCHER);
-        Set<String> intFacts = config.getStringSet(
-            ConfigProperties.INTEGER_FACTS);
-        Set<String> posFacts = config.getStringSet(
-            ConfigProperties.NON_NEG_INTEGER_FACTS);
+        Set<String> intFacts = config.getSet(ConfigProperties.INTEGER_FACTS);
+        Set<String> posFacts = config.getSet(ConfigProperties.NON_NEG_INTEGER_FACTS);
 
         for (Entry<String, String> entry : factsIn.entrySet()) {
             if (entry.getKey().matches(factMatch)) {

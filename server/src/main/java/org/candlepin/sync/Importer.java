@@ -15,7 +15,7 @@
 package org.candlepin.sync;
 
 import org.candlepin.audit.EventSink;
-import org.candlepin.config.Config;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.Refresher;
 import org.candlepin.model.Cdn;
@@ -123,7 +123,7 @@ public class Importer {
     private IdentityCertificateCurator idCertCurator;
     private PoolManager poolManager;
     private PKIUtility pki;
-    private Config config;
+    private Configuration config;
     private ExporterMetadataCurator expMetaCurator;
     private CertificateSerialCurator csCurator;
     private CdnCurator cdnCurator;
@@ -136,7 +136,7 @@ public class Importer {
         RulesImporter rulesImporter, OwnerCurator ownerCurator,
         IdentityCertificateCurator idCertCurator,
         ContentCurator contentCurator, SubscriptionCurator subCurator, PoolManager pm,
-        PKIUtility pki, Config config, ExporterMetadataCurator emc,
+        PKIUtility pki, Configuration config, ExporterMetadataCurator emc,
         CertificateSerialCurator csc, EventSink sink, I18n i18n,
         DistributorVersionCurator distVerCurator,
         CdnCurator cdnCurator) {

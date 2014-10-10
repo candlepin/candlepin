@@ -14,10 +14,9 @@
  */
 package org.candlepin.resteasy;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertFalse;
 
-import org.candlepin.config.Config;
+import org.candlepin.common.config.Configuration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationConfig;
@@ -33,29 +32,7 @@ import javax.ws.rs.core.MediaType;
 @RunWith(MockitoJUnitRunner.class)
 public class JsonProviderTest {
 
-    @Mock private Config config;
-
-    @Test
-    public void noIndentation() {
-        when(config.indentJson()).thenReturn(false);
-
-        JsonProvider provider = new JsonProvider(config);
-        boolean indentEnabled = isEnabled(provider,
-                SerializationFeature.INDENT_OUTPUT);
-
-        assertFalse(indentEnabled);
-    }
-
-    @Test
-    public void indentation() {
-        when(config.indentJson()).thenReturn(true);
-
-        JsonProvider provider = new JsonProvider(config);
-        boolean indentEnabled = isEnabled(provider,
-                SerializationFeature.INDENT_OUTPUT);
-
-        assertTrue(indentEnabled);
-    }
+    @Mock private Configuration config;
 
     // This is kind of silly - basically just testing an initial setting...
     @Test

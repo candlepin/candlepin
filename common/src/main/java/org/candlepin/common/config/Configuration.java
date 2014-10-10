@@ -15,6 +15,9 @@
 package org.candlepin.common.config;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 
 /** Inspired by Apache's Commons Configuration library.
  * <p>
@@ -43,13 +46,10 @@ public interface Configuration {
      */
     Configuration subset(String prefix);
 
-    /**
-     * Begin with the configuration provided by base but for any keys defined in
-     * both objects, use the values in this object.
-     * @param base
-     * @return the merged configuration
-     */
-    Configuration merge(Configuration base);
+    Map<String, String> getNamespaceMap(String prefix);
+    Map<String, String> getNamespaceMap(String prefix, Map<String, String> defaults);
+    Properties getNamespaceProperties(String prefix);
+    Properties getNamespaceProperties(String prefix, Map<String, String> defaults);
 
     /**
      * Check if the configuration is empty.
@@ -76,7 +76,7 @@ public interface Configuration {
      * @param key The key of the property to change
      * @param value The new value
      */
-    void setProperty(String key, Object value);
+    void setProperty(String key, String value);
 
     /**
      * Remove all properties from the configuration.
@@ -91,17 +91,17 @@ public interface Configuration {
 
     Iterable<String> getKeys();
 
-    Object getProperty(String key);
-    Object getProperty(String key, Object defaultValue);
+    String getProperty(String key);
+    String getProperty(String key, String defaultValue);
 
-    Boolean getBoolean(String key);
-    Boolean getBoolean(String key, Boolean defaultValue);
+    boolean getBoolean(String key);
+    boolean getBoolean(String key, boolean defaultValue);
 
-    Integer getInteger(String key);
-    Integer getInteger(String key, Integer defaultValue);
+    int getInt(String key);
+    int getInt(String key, int defaultValue);
 
-    Long getLong(String key);
-    Long getLong(String key, Long defaultValue);
+    long getLong(String key);
+    long getLong(String key, long defaultValue);
 
     /**
      * Return a property of type String <b>with all whitespace trimmed!</b>
@@ -123,4 +123,6 @@ public interface Configuration {
 
     List<String> getList(String key);
     List<String> getList(String key, List<String> defaultValue);
+    Set<String> getSet(String key);
+    Set<String> getSet(String key, Set<String> defaultValue);
 }

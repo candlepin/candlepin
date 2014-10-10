@@ -14,9 +14,12 @@
  */
 package org.candlepin.resource.test;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.CandlepinCommonTestingModule;
 import org.candlepin.CandlepinNonServletEnvironmentTestingModule;
@@ -26,7 +29,8 @@ import org.candlepin.audit.Event.Type;
 import org.candlepin.audit.EventAdapter;
 import org.candlepin.audit.EventAdapterImpl;
 import org.candlepin.auth.PrincipalData;
-import org.candlepin.config.Config;
+import org.candlepin.common.config.Configuration;
+import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.EventCurator;
 import org.candlepin.resource.AtomFeedResource;
@@ -55,8 +59,9 @@ public class AtomFeedResourceTest {
 
     @Before
     public void setUp() {
+        Configuration config = mock(Configuration.class);
         injector = Guice.createInjector(
-            new CandlepinCommonTestingModule(),
+            new CandlepinCommonTestingModule(config),
             new CandlepinNonServletEnvironmentTestingModule()
         );
         i18n = injector.getInstance(I18n.class);
@@ -97,7 +102,7 @@ public class AtomFeedResourceTest {
         return list;
     }
 
-    private static class ConfigForTesting extends Config {
+    private static class ConfigForTesting extends MapConfiguration {
         public ConfigForTesting() {
             super(ConfigProperties.DEFAULT_PROPERTIES);
         }

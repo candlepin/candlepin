@@ -15,8 +15,8 @@
 package org.candlepin.resource;
 
 import org.candlepin.auth.Principal;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.IseException;
-import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.CrlGenerator;
 import org.candlepin.model.CertificateSerial;
@@ -48,13 +48,13 @@ public class CrlResource {
 
     private CrlGenerator crlGenerator;
     private CrlFileUtil crlFileUtil;
-    private Config config;
+    private Configuration config;
     private CertificateSerialCurator certificateSerialCurator;
 
 
     @Inject
     public CrlResource(CrlGenerator crlGenerator,
-        CrlFileUtil crlFileUtil, Config config,
+        CrlFileUtil crlFileUtil, Configuration config,
         CertificateSerialCurator certificateSerialCurator) {
 
         this.crlGenerator = crlGenerator;

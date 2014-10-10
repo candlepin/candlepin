@@ -71,11 +71,6 @@ public class GutterballContextListenerTest {
                             put(ConfigProperties.AMQP_TRUSTSTORE,
                                     "/etc/gutterball/certs/amqp/gutterball.truststore");
                             put(ConfigProperties.AMQP_TRUSTSTORE_PASSWORD, "password");
-
-                            // Mongo defaults
-                            //this.put(ConfigProperties.MONGODB_HOST, "localhost");
-                            //this.put(ConfigProperties.MONGODB_PORT, "27017");
-                            //this.put(ConfigProperties.MONGODB_DATABASE, "gutterball");
                         }
                     });
             }
@@ -106,7 +101,7 @@ public class GutterballContextListenerTest {
 
     @Test
     public void readConfiguration(ServletContext ctx) throws Exception {
-        Configuration config = listener.readConfiguration(ctx);
+        listener.readConfiguration(ctx);
         verifyZeroInteractions(ctx);
 
     }

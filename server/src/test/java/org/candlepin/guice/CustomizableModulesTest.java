@@ -14,9 +14,11 @@
  */
 package org.candlepin.guice;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-import org.candlepin.config.Config;
+import org.candlepin.common.config.Configuration;
+import org.candlepin.common.config.PropertiesFileConfiguration;
 
 import com.google.inject.Module;
 
@@ -29,9 +31,9 @@ public class CustomizableModulesTest {
 
     @Test
     public void shouldLoadAndParseConfigurationFile() throws Exception {
-        Config config = new Config(
+        Configuration config = new PropertiesFileConfiguration(
             getAbsolutePath("customizable_modules_test.conf"));
-        Set<Module> loaded = new CustomizableModulesForTesting(config).load();
+        Set<Module> loaded = new CustomizableModules().load(config);
 
         assertEquals(1, loaded.size());
         assertTrue(loaded.iterator().next() instanceof DummyModuleForTesting);
@@ -41,24 +43,11 @@ public class CustomizableModulesTest {
     @Test(expected = RuntimeException.class)
     public void shouldFailWhenConfigurationContainsMissingClass()
         throws Exception {
-        Config config = new Config(
+
+        Configuration config = new PropertiesFileConfiguration(
             getAbsolutePath("customizable_modules_with_missing_class.conf"));
 
-        new CustomizableModulesForTesting(config).load();
-    }
-
-    public static class CustomizableModulesForTesting extends
-        CustomizableModules {
-
-        private Config config;
-
-        public CustomizableModulesForTesting(Config config) {
-            this.config = config;
-        }
-
-        protected Config configuration() {
-            return config;
-        }
+        new CustomizableModules().load(config);
     }
 
     private String getAbsolutePath(String fileName) throws URISyntaxException {

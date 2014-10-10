@@ -14,8 +14,8 @@
  */
 package org.candlepin.service.impl;
 
+import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.ServiceUnavailableException;
-import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
@@ -51,7 +51,7 @@ public class DefaultSubscriptionServiceAdapter implements
 
     @Inject
     public DefaultSubscriptionServiceAdapter(SubscriptionCurator subCurator,
-            Config config, I18n i18n, ProductCurator prodCurator) {
+            Configuration config, I18n i18n, ProductCurator prodCurator) {
         this.subCurator = subCurator;
         this.i18n = i18n;
         this.prodCurator = prodCurator;

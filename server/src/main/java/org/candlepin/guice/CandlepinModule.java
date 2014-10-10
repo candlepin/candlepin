@@ -18,6 +18,7 @@ import org.candlepin.audit.AMQPBusPublisher;
 import org.candlepin.audit.EventSink;
 import org.candlepin.audit.EventSinkImpl;
 import org.candlepin.auth.Principal;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.mappers.BadRequestExceptionMapper;
 import org.candlepin.common.exceptions.mappers.CandlepinExceptionMapper;
 import org.candlepin.common.exceptions.mappers.DefaultOptionsMethodExceptionMapper;
@@ -38,7 +39,7 @@ import org.candlepin.common.exceptions.mappers.ValidationExceptionMapper;
 import org.candlepin.common.exceptions.mappers.WebApplicationExceptionMapper;
 import org.candlepin.common.exceptions.mappers.WriterExceptionMapper;
 import org.candlepin.common.resteasy.interceptor.DynamicFilterInterceptor;
-import org.candlepin.config.Config;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.CrlGenerator;
 import org.candlepin.controller.Entitler;
@@ -147,6 +148,11 @@ import javax.validation.ValidatorFactory;
  * CandlepinModule
  */
 public class CandlepinModule extends AbstractModule {
+    private Configuration config;
+
+    public CandlepinModule(Configuration config) {
+        this.config = config;
+    }
 
     @Override
     public void configure() {
@@ -160,11 +166,8 @@ public class CandlepinModule extends AbstractModule {
                 ValidationListenerProvider.class);
         bind(MessageInterpolator.class).to(CandlepinMessageInterpolator.class);
 
-        Config config = new Config();
-        bind(Config.class).asEagerSingleton();
-        install(new JpaPersistModule("default").properties(config
-            .jpaConfiguration(config)));
-
+        install(new JpaPersistModule("default").properties(
+            config.getNamespaceProperties("jpa.config")));
         bind(JPAInitializer.class).asEagerSingleton();
 
         bind(PKIUtility.class).to(BouncyCastlePKIUtility.class)
@@ -258,7 +261,10 @@ public class CandlepinModule extends AbstractModule {
         bind(Function.class).annotatedWith(Names.named("endDateGenerator"))
             .to(ExpiryDateFunction.class).in(Singleton.class);
 
-        this.configureAmqp();
+        // only initialize if we've enabled AMQP integration
+        if (config.getBoolean(ConfigProperties.AMQP_INTEGRATION_ENABLED)) {
+            configureAmqp();
+        }
 
         configureMethodInterceptors();
 

@@ -12,11 +12,10 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.config;
+package org.candlepin.common.config;
 
 import static org.junit.Assert.*;
 
-import org.junit.Before;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -33,12 +32,6 @@ public class JPAConfigParserTest {
         "QwGhDv4FSnyTbFJf8O6gvWIsmQX7PZtE64ALMCXx4DcS48s5Sum7RkVcefD0vMe5";
     private String plainPassword = "testpassword";
     private String encPasswordAsStored = "$1$8dg00oV+ZhN74tvxG+kAhw==";
-    private Config config;
-
-    @Before
-    public void init() {
-        config = new CandlepinCommonTestConfig();
-    }
 
     @SuppressWarnings("serial")
     @Test
@@ -54,7 +47,7 @@ public class JPAConfigParserTest {
             }
         };
 
-        Properties stripped = new JPAConfigParser(config)
+        Properties stripped = new JPAConfigParser()
             .stripPrefixFromConfigKeys(configuraton);
 
         assertEquals(2, stripped.size());
@@ -64,15 +57,14 @@ public class JPAConfigParserTest {
 
     @Test
     public void testDecryptValue() {
-        JPAConfigParser jpac = new JPAConfigParser(config);
-        String res = null;
-        res = jpac.decryptValue(encPasswordAsStored, passphrase);
+        JPAConfigParser jpac = new JPAConfigParser();
+        String res = jpac.decryptValue(encPasswordAsStored, passphrase);
         assertEquals(plainPassword, res);
     }
 
     @Test
     public void testDecryptValueNotEncrypted() {
-        JPAConfigParser jpac = new JPAConfigParser(config);
+        JPAConfigParser jpac = new JPAConfigParser();
         String res = null;
         res = jpac.decryptValue("password", passphrase);
         assertEquals("password", res);
@@ -80,15 +72,15 @@ public class JPAConfigParserTest {
 
     @Test
     public void testEncryptedConfigKeys() {
-        JPAConfigParser jpac = new JPAConfigParser(config);
-        Set<String> ecks = jpac.encryptedConfigKeys();
+        JPAConfigParser jpac = new JPAConfigParser();
+        Set<String> ecks = jpac.getEncryptedConfigKeys();
         assertTrue(ecks.contains("hibernate.connection.password"));
     }
 
     @SuppressWarnings("serial")
     @Test
     public void getStringMethods() {
-        Config config = new Config(new HashMap<String, String>() {
+        Configuration localconf = new MapConfiguration(new HashMap<String, String>() {
 
             {
                 // NOTE: we decrypt at read time, so the in mem
@@ -99,12 +91,8 @@ public class JPAConfigParserTest {
         });
 
         assertEquals(plainPassword,
-            config.getString("jpa.config.hibernate.connection.password"));
-        assertNull(config.getString("not.exist"));
-        assertNull(config.getString("not.exist", null));
-        assertNull(config.getStringArray("not.exist"));
-        assertNull(config.getStringArray(null));
-
+            localconf.getString("jpa.config.hibernate.connection.password"));
+        assertNull(localconf.getString("not.exist", null));
     }
 
     @Test
@@ -112,9 +100,20 @@ public class JPAConfigParserTest {
         TreeMap<String, String> testdata = new TreeMap<String, String>();
         testdata.put("jpa.config.hibernate.connection.password",
             encPasswordAsStored);
-        Config config = new Config(testdata);
-        assertFalse(config.containsKey("notthere"));
-        assertTrue(config
+        Configuration localconf = new MapConfiguration(testdata);
+        assertFalse(localconf.containsKey("notthere"));
+        assertTrue(localconf
             .containsKey("jpa.config.hibernate.connection.password"));
+    }
+
+    private static class ConfigForTesting extends MapConfiguration {
+        public ConfigForTesting() {
+            super(new HashMap<String, String>() {
+                private static final long serialVersionUID = 1L;
+                {
+                    this.put("candlepin.passphrase.path", "/etc/katello/secure/passphrase");
+                }
+            });
+        }
     }
 }

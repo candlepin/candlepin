@@ -15,11 +15,11 @@
 package org.candlepin.resteasy.interceptor;
 
 import org.candlepin.auth.Principal;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.CandlepinException;
 import org.candlepin.common.exceptions.IseException;
 import org.candlepin.common.exceptions.UnauthorizedException;
-import org.candlepin.config.Config;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -58,7 +58,7 @@ public class OAuth implements AuthProvider {
     protected static final String SIGNATURE_TYPE = "HMAC-SHA1";
 
     private static Logger log = LoggerFactory.getLogger(OAuth.class);;
-    private Config config;
+    private Configuration config;
     private TrustedUserAuth userAuth;
     private TrustedConsumerAuth consumerAuth;
     private TrustedExternalSystemAuth systemAuth;
@@ -68,7 +68,7 @@ public class OAuth implements AuthProvider {
 
     @Inject
     OAuth(TrustedConsumerAuth consumerAuth, TrustedUserAuth userAuth,
-        TrustedExternalSystemAuth systemAuth, Injector injector, Config config) {
+        TrustedExternalSystemAuth systemAuth, Injector injector, Configuration config) {
         this.config = config;
         this.injector = injector;
         this.userAuth = userAuth;

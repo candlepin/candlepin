@@ -92,7 +92,7 @@ public class PropertiesFileConfiguration extends AbstractConfiguration
     }
 
     @Override
-    public void setProperty(String key, Object value) {
+    public void setProperty(String key, String value) {
         backingMap.setProperty(key, value);
     }
 
@@ -112,12 +112,12 @@ public class PropertiesFileConfiguration extends AbstractConfiguration
     }
 
     @Override
-    public Object getProperty(String key) {
+    public String getProperty(String key) {
         return backingMap.getProperty(key);
     }
 
     @Override
-    public Object getProperty(String key, Object defaultValue) {
+    public String getProperty(String key, String defaultValue) {
         return backingMap.getProperty(key, defaultValue);
     }
 
@@ -131,9 +131,18 @@ public class PropertiesFileConfiguration extends AbstractConfiguration
         this.encoding = encoding;
     }
 
-    @Override
-    public Configuration merge(Configuration base) {
-        return backingMap.merge(base);
+    public static PropertiesFileConfiguration merge(Configuration ... configs) {
+        PropertiesFileConfiguration mergedConfig = new PropertiesFileConfiguration();
+
+        for (Configuration c : configs) {
+            for (String key : c.getKeys()) {
+                if (!mergedConfig.containsKey(key)) {
+                    mergedConfig.setProperty(key, c.getProperty(key));
+                }
+            }
+        }
+
+        return mergedConfig;
     }
 
     @Override
@@ -180,5 +189,27 @@ public class PropertiesFileConfiguration extends AbstractConfiguration
 
     public String toString() {
         return backingMap.toString();
+    }
+
+    @Override
+    public Map<String, String> getNamespaceMap(String prefix) {
+        return backingMap.getNamespaceMap(prefix);
+    }
+
+    @Override
+    public Map<String, String> getNamespaceMap(String prefix,
+            Map<String, String> defaults) {
+        return backingMap.getNamespaceMap(prefix, defaults);
+    }
+
+    @Override
+    public Properties getNamespaceProperties(String prefix) {
+        return backingMap.getNamespaceProperties(prefix);
+    }
+
+    @Override
+    public Properties getNamespaceProperties(String prefix,
+            Map<String, String> defaults) {
+        return backingMap.getNamespaceProperties(prefix, defaults);
     }
 }

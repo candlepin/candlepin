@@ -23,6 +23,7 @@ import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.permissions.OwnerPermission;
 import org.candlepin.auth.permissions.Permission;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.common.exceptions.NotFoundException;
@@ -603,6 +604,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     private static class ProductCertCreationModule extends AbstractModule {
         @Override
         protected void configure() {
+            bind(Configuration.class).to(CandlepinCommonTestConfig.class);
             bind(PKIReader.class).to(BouncyCastlePKIReader.class)
                 .asEagerSingleton();
         }

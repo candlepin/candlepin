@@ -14,10 +14,10 @@
  */
 package org.candlepin.pinsetter.tasks;
 
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.when;
 
-import org.candlepin.config.Config;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.util.Util;
 
@@ -37,7 +37,7 @@ import java.io.File;
 @RunWith(MockitoJUnitRunner.class)
 public class ExportCleanerTest {
 
-    @Mock private Config config;
+    @Mock private Configuration config;
     private ExportCleaner cleaner;
 
     @Before

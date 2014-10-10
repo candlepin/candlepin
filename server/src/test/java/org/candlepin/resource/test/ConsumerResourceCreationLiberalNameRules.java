@@ -14,7 +14,8 @@
  */
 package org.candlepin.resource.test;
 
-import org.candlepin.config.Config;
+import org.candlepin.common.config.Configuration;
+import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
 
 import org.junit.Assert;
@@ -27,7 +28,7 @@ import java.util.HashMap;
  */
 public class ConsumerResourceCreationLiberalNameRules extends
     ConsumerResourceCreationTest {
-    private static class ConfigForTesting extends Config {
+    private static class ConfigForTesting extends MapConfiguration {
         @SuppressWarnings("serial")
         public ConfigForTesting() {
             super(new HashMap<String, String>() {
@@ -38,8 +39,8 @@ public class ConsumerResourceCreationLiberalNameRules extends
             });
         }
     }
-    public Config initConfig() {
-        Config config = new ConfigForTesting();
+    public Configuration initConfig() {
+        Configuration config = new ConfigForTesting();
         return config;
     }
 

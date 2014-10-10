@@ -14,7 +14,8 @@
  */
 package org.candlepin.service.impl;
 
-import org.candlepin.config.Config;
+import org.candlepin.common.config.Configuration;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Consumer;
@@ -77,7 +78,7 @@ public class DefaultEntitlementCertServiceAdapter extends
     private ProductServiceAdapter productAdapter;
     private EntitlementCurator entCurator;
     private I18n i18n;
-    private Config config;
+    private Configuration config;
 
     private static Logger log =
         LoggerFactory.getLogger(DefaultEntitlementCertServiceAdapter.class);
@@ -91,7 +92,7 @@ public class DefaultEntitlementCertServiceAdapter extends
         CertificateSerialCurator serialCurator,
         ProductServiceAdapter productAdapter,
         EntitlementCurator entCurator, I18n i18n,
-        Config config) {
+        Configuration config) {
 
         this.pki = pki;
         this.extensionUtil = extensionUtil;
@@ -259,7 +260,7 @@ public class DefaultEntitlementCertServiceAdapter extends
         Set<X509ExtensionWrapper> result =  new LinkedHashSet<X509ExtensionWrapper>();
 
         int contentCounter = 0;
-        boolean enableEnvironmentFiltering = config.environmentFilteringEnabled();
+        boolean enableEnvironmentFiltering = config.getBoolean(ConfigProperties.ENV_CONTENT_FILTERING);
         for (Product prod : Collections2
             .filter(products, X509Util.PROD_FILTER_PREDICATE)) {
             result.addAll(extensionUtil.productExtensions(prod));

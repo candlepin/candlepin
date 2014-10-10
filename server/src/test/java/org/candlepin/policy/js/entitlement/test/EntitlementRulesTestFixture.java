@@ -14,10 +14,10 @@
  */
 package org.candlepin.policy.js.entitlement.test;
 
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.when;
 
-import org.candlepin.config.Config;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Consumer;
@@ -62,7 +62,7 @@ public class EntitlementRulesTestFixture {
     @Mock
     protected ProductServiceAdapter prodAdapter;
     @Mock
-    protected Config config;
+    protected Configuration config;
     @Mock
     protected ConsumerCurator consumerCurator;
     @Mock

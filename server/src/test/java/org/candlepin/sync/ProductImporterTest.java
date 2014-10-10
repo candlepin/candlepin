@@ -14,10 +14,15 @@
  */
 package org.candlepin.sync;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import org.candlepin.config.Config;
+import org.candlepin.common.config.MapConfiguration;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Product;
@@ -49,7 +54,14 @@ public class ProductImporterTest {
     private ContentCurator contentCuratorMock;
     @Before
     public void setUp() throws IOException {
-        mapper = SyncUtils.getObjectMapper(new Config(new HashMap<String, String>()));
+        mapper = SyncUtils.getObjectMapper(new MapConfiguration(
+                new HashMap<String, String>() {
+
+                    {
+                        put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES,
+                                "false");
+                    }
+                }));
         productCuratorMock = mock(ProductCurator.class);
         contentCuratorMock = mock(ContentCurator.class);
         importer = new ProductImporter(productCuratorMock, contentCuratorMock);

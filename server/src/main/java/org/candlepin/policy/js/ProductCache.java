@@ -14,7 +14,7 @@
  */
 package org.candlepin.policy.js;
 
-import org.candlepin.config.Config;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.guice.CandlepinSingletonScoped;
 import org.candlepin.model.Product;
@@ -50,7 +50,7 @@ public class ProductCache {
     protected ProductMapping products;
 
     @Inject
-    public ProductCache(Config config, ProductServiceAdapter productAdapter) {
+    public ProductCache(Configuration config, ProductServiceAdapter productAdapter) {
         products = new ProductMapping(config.getInt(ConfigProperties.PRODUCT_CACHE_MAX));
         this.productAdapter = productAdapter;
     }

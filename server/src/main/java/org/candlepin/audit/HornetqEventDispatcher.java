@@ -14,11 +14,12 @@
  */
 package org.candlepin.audit;
 
+import org.candlepin.common.config.Configuration;
+import org.candlepin.config.ConfigProperties;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
-import javax.inject.Singleton;
-import org.candlepin.config.Config;
-import org.candlepin.config.ConfigProperties;
+
 import org.hornetq.api.core.HornetQException;
 import org.hornetq.api.core.TransportConfiguration;
 import org.hornetq.api.core.client.ClientMessage;
@@ -30,6 +31,8 @@ import org.hornetq.api.core.client.ServerLocator;
 import org.hornetq.core.remoting.impl.invm.InVMConnectorFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.inject.Singleton;
 
 /**
  * HornetqEventDispatcher - Singleton responsible for managing hornetq sessions and
@@ -46,16 +49,17 @@ public class HornetqEventDispatcher  {
     private ThreadLocal<ClientProducer> producers = new ThreadLocal<ClientProducer>();
 
     @Inject
-    public HornetqEventDispatcher(ObjectMapper mapper, Config config) {
+    public HornetqEventDispatcher(ObjectMapper mapper, Configuration config) {
         this.mapper = mapper;
-        try {
-            largeMsgSize = config.getInt(ConfigProperties.HORNETQ_LARGE_MSG_SIZE);
+        largeMsgSize = config.getInt(ConfigProperties.HORNETQ_LARGE_MSG_SIZE);
+    }
 
-            factory =  createClientSessionFactory();
-        }
-        catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+    /**
+     * Initializes the Singleton from the ContextListener not from the ctor.
+     * @throws Exception thrown if there's a problem creating the session factory.
+     */
+    public void initialize() throws Exception {
+        factory =  createClientSessionFactory();
     }
 
     protected ClientSessionFactory createClientSessionFactory() throws Exception {

@@ -14,10 +14,12 @@
  */
 package org.candlepin.pinsetter.tasks;
 
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import org.candlepin.config.Config;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.CrlGenerator;
 import org.candlepin.util.CrlFileUtil;
@@ -39,7 +41,7 @@ import java.security.cert.X509CRL;
 public class CertificateRevocationListTaskTest {
     private CertificateRevocationListTask task;
 
-    @Mock private Config config;
+    @Mock private Configuration config;
     @Mock private CrlFileUtil crlFileUtil;
     @Mock private CrlGenerator generator;
     @Mock private X509CRL crl;

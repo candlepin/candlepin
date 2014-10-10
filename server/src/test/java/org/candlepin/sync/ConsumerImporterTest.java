@@ -14,10 +14,15 @@
  */
 package org.candlepin.sync;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import org.candlepin.config.Config;
+import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
@@ -61,7 +66,14 @@ public class ConsumerImporterTest {
         idCertCurator = mock(IdentityCertificateCurator.class);
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         importer = new ConsumerImporter(curator, idCertCurator, i18n, serialCurator);
-        mapper = SyncUtils.getObjectMapper(new Config(new HashMap<String, String>()));
+        mapper = SyncUtils.getObjectMapper(new MapConfiguration(
+                new HashMap<String, String>() {
+
+                    {
+                        put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES,
+                                "false");
+                    }
+                }));
     }
 
     @Test
@@ -79,7 +91,7 @@ public class ConsumerImporterTest {
         // Override default config to error out on unknown properties:
         Map<String, String> configProps = new HashMap<String, String>();
         configProps.put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
-        mapper = SyncUtils.getObjectMapper(new Config(configProps));
+        mapper = SyncUtils.getObjectMapper(new MapConfiguration(configProps));
 
         ConsumerDto consumer =
             importer.createObject(mapper, new StringReader(
@@ -92,7 +104,7 @@ public class ConsumerImporterTest {
         // Override default config to error out on unknown properties:
         Map<String, String> configProps = new HashMap<String, String>();
         configProps.put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "true");
-        mapper = SyncUtils.getObjectMapper(new Config(configProps));
+        mapper = SyncUtils.getObjectMapper(new MapConfiguration(configProps));
 
         importer.createObject(mapper, new StringReader(
             "{\"uuid\":\"test-uuid\", \"unknown\":\"notreal\"}"));

@@ -14,13 +14,17 @@
  */
 package org.candlepin.sync;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.auth.Principal;
+import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.CandlepinCommonTestConfig;
-import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.CdnCurator;
@@ -603,8 +607,14 @@ public class ExporterTest {
             }
             os.flush();
             os.close();
-            ObjectMapper om = SyncUtils.getObjectMapper(
-                new Config(new HashMap<String, String>()));
+            ObjectMapper om = SyncUtils.getObjectMapper(new MapConfiguration(
+                    new HashMap<String, String>() {
+
+                        {
+                            put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES,
+                                    "false");
+                        }
+                    }));
             Meta m = om.readValue(
                 new FileInputStream("/tmp/meta.json"), Meta.class);
             assertNotNull(m);
@@ -691,8 +701,14 @@ public class ExporterTest {
             os.flush();
             os.close();
 
-            ObjectMapper om = SyncUtils.getObjectMapper(
-                new Config(new HashMap<String, String>()));
+            ObjectMapper om = SyncUtils.getObjectMapper(new MapConfiguration(
+                    new HashMap<String, String>() {
+
+                        {
+                            put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES,
+                                    "false");
+                        }
+                    }));
 
             ConsumerDto c = om.readValue(
                 new FileInputStream("/tmp/" + filename), ConsumerDto.class);
@@ -720,8 +736,14 @@ public class ExporterTest {
             }
             os.flush();
             os.close();
-            ObjectMapper om = SyncUtils.getObjectMapper(
-                new Config(new HashMap<String, String>()));
+            ObjectMapper om = SyncUtils.getObjectMapper(new MapConfiguration(
+                    new HashMap<String, String>() {
+
+                        {
+                            put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES,
+                                    "false");
+                        }
+                    }));
             DistributorVersion dv = om.readValue(
                 new FileInputStream("/tmp/" + filename),
                 DistributorVersion.class);

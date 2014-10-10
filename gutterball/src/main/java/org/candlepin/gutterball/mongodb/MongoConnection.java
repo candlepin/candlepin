@@ -50,7 +50,7 @@ public class MongoConnection {
 
     public MongoConnection(Configuration config) throws MongoException {
         String host = config.getString(ConfigProperties.MONGODB_HOST, DEFAULT_HOST);
-        int port = config.getInteger(ConfigProperties.MONGODB_PORT, DEFAULT_PORT);
+        int port = config.getInt(ConfigProperties.MONGODB_PORT, DEFAULT_PORT);
         databaseName = config.getString(ConfigProperties.MONGODB_DATABASE,
                 DEFAULT_DB);
         String username = config.getString(ConfigProperties.MONGODB_USERNAME, "");

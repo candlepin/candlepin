@@ -14,7 +14,7 @@
  */
 package org.candlepin.util;
 
-import org.candlepin.config.Config;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 
 import com.google.common.base.Function;
@@ -36,7 +36,7 @@ public class ExpiryDateFunction implements Function<Date, Date> {
     }
 
     @Inject
-    public ExpiryDateFunction(Config config) {
+    public ExpiryDateFunction(Configuration config) {
         this(config.getInt(ConfigProperties.IDENTITY_CERT_YEAR_ADDENDUM));
     }
     /* (non-Javadoc)

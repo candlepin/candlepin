@@ -24,6 +24,7 @@ import org.candlepin.auth.permissions.OwnerPermission;
 import org.candlepin.auth.permissions.Permission;
 import org.candlepin.auth.permissions.PermissionFactory;
 import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
+import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.guice.CandlepinSingletonScope;
 import org.candlepin.guice.TestPrincipalProviderSetter;
@@ -160,7 +161,8 @@ public class DatabaseTestFixture {
     @Before
     public void init() {
         Module guiceOverrideModule = getGuiceOverrideModule();
-        CandlepinCommonTestingModule testingModule = new CandlepinCommonTestingModule();
+        CandlepinCommonTestConfig config = new CandlepinCommonTestConfig();
+        CandlepinCommonTestingModule testingModule = new CandlepinCommonTestingModule(config);
         if (guiceOverrideModule == null) {
             injector = Guice.createInjector(testingModule,
                 new CandlepinNonServletEnvironmentTestingModule());
@@ -373,7 +375,6 @@ public class DatabaseTestFixture {
     }
 
     protected Principal setupPrincipal(Principal p) {
-        // TODO: might be good to get rid of this singleton
         TestPrincipalProviderSetter.get().setPrincipal(p);
         return p;
     }
@@ -390,11 +391,11 @@ public class DatabaseTestFixture {
      * There's no way to really get Guice to perform injections on stuff that
      * the JpaPersistModule is creating, so we resort to grabbing the EntityManagerFactory
      * after the fact and adding the Validation EventListener ourselves.
-     * @param injector
+     * @param inj
      */
-    private void insertValidationEventListeners(Injector injector) {
+    private void insertValidationEventListeners(Injector inj) {
         Provider<EntityManagerFactory> emfProvider =
-            injector.getProvider(EntityManagerFactory.class);
+            inj.getProvider(EntityManagerFactory.class);
         HibernateEntityManagerFactory hibernateEntityManagerFactory =
             (HibernateEntityManagerFactory) emfProvider.get();
         SessionFactoryImpl sessionFactoryImpl =
@@ -403,7 +404,7 @@ public class DatabaseTestFixture {
             sessionFactoryImpl.getServiceRegistry().getService(EventListenerRegistry.class);
 
         Provider<BeanValidationEventListener> listenerProvider =
-            injector.getProvider(BeanValidationEventListener.class);
+            inj.getProvider(BeanValidationEventListener.class);
         registry.getEventListenerGroup(EventType.PRE_INSERT).appendListener(listenerProvider.get());
         registry.getEventListenerGroup(EventType.PRE_UPDATE).appendListener(listenerProvider.get());
         registry.getEventListenerGroup(EventType.PRE_DELETE).appendListener(listenerProvider.get());

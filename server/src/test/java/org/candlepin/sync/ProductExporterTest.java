@@ -14,9 +14,10 @@
  */
 package org.candlepin.sync;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
-import org.candlepin.config.Config;
+import org.candlepin.common.config.MapConfiguration;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Product;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -33,8 +34,14 @@ import java.util.HashMap;
 public class ProductExporterTest {
     @Test
     public void testProductExport() throws IOException {
-        ObjectMapper mapper = SyncUtils.getObjectMapper(
-            new Config(new HashMap<String, String>()));
+        ObjectMapper mapper = SyncUtils.getObjectMapper(new MapConfiguration(
+                new HashMap<String, String>() {
+
+                    {
+                        put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES,
+                                "false");
+                    }
+                }));
 
         ProductExporter exporter = new ProductExporter();
 

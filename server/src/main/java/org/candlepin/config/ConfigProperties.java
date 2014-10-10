@@ -39,6 +39,8 @@ public class ConfigProperties {
     private ConfigProperties() {
     }
 
+    public static final String DEFAULT_CONFIG_FILE = "/etc/candlepin/candlepin.conf";
+
     public static final String CANDLEPIN_URL = "candlepin.url";
 
     public static final String CA_KEY = "candlepin.ca_key";

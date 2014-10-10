@@ -68,7 +68,7 @@ public class MongoConnectionTest {
     private void verifyCommonConfig() {
         verify(config).getString(eq(ConfigProperties.MONGODB_HOST),
                 eq(MongoConnection.DEFAULT_HOST));
-        verify(config).getInteger(eq(ConfigProperties.MONGODB_PORT),
+        verify(config).getInt(eq(ConfigProperties.MONGODB_PORT),
                 eq(MongoConnection.DEFAULT_PORT));
         verify(config).getString(eq(ConfigProperties.MONGODB_DATABASE),
                 eq(MongoConnection.DEFAULT_DB));

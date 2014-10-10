@@ -38,13 +38,17 @@ public class PropertyConverterTest {
 
     @Test
     public void testToBoolean() {
-        assertEquals(Boolean.TRUE, toBoolean("true"));
-        assertEquals(Boolean.TRUE, toBoolean("yes"));
-        assertEquals(Boolean.TRUE, toBoolean("on"));
+        assertTrue(toBoolean("true"));
+        assertTrue(toBoolean("yes"));
+        assertTrue(toBoolean("on"));
 
-        assertEquals(Boolean.FALSE, toBoolean("false"));
-        assertEquals(Boolean.FALSE, toBoolean("no"));
-        assertEquals(Boolean.FALSE, toBoolean("off"));
+        assertFalse(toBoolean("false"));
+        assertFalse(toBoolean("no"));
+        assertFalse(toBoolean("off"));
+
+        assertTrue(toBoolean("1"));
+        assertTrue(toBoolean("y"));
+        assertFalse(toBoolean("n"));
     }
 
     @Test

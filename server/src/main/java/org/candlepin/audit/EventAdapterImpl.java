@@ -15,7 +15,7 @@
 package org.candlepin.audit;
 
 import org.candlepin.auth.PrincipalData;
-import org.candlepin.config.Config;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 
 import com.google.inject.Inject;
@@ -42,10 +42,10 @@ public class EventAdapterImpl implements EventAdapter {
     private static final HashMap<String, String> MESSAGES;
 
     private I18n i18n;
-    private Config config;
+    private Configuration config;
 
     @Inject
-    public EventAdapterImpl(Config config, I18n i18n) {
+    public EventAdapterImpl(Configuration config, I18n i18n) {
         this.config = config;
         this.i18n = i18n;
     }

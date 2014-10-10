@@ -14,11 +14,17 @@
  */
 package org.candlepin.policy.js;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import org.candlepin.config.Config;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Product;
 import org.candlepin.service.ProductServiceAdapter;
@@ -37,7 +43,7 @@ public class ProductCacheTest {
     private ProductServiceAdapter mockProductAdapter;
 
     @Mock
-    private Config config;
+    private Configuration config;
 
     private TestingProductCache cache;
 
@@ -52,7 +58,7 @@ public class ProductCacheTest {
     @Test
     public void ensureCacheMaxIsConfigurable() {
         int maxProducts = 200;
-        Config testConfigMock = mock(Config.class);
+        Configuration testConfigMock = mock(Configuration.class);
         when(testConfigMock.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX)))
             .thenReturn(maxProducts);
         ProductCache testCache = new ProductCache(testConfigMock, mockProductAdapter);
@@ -187,7 +193,7 @@ public class ProductCacheTest {
 
     private class TestingProductCache extends ProductCache {
 
-        public TestingProductCache(Config config, ProductServiceAdapter productAdapter) {
+        public TestingProductCache(Configuration config, ProductServiceAdapter productAdapter) {
             super(config, productAdapter);
         }
 

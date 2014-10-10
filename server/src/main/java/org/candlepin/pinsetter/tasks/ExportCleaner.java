@@ -14,7 +14,7 @@
  */
 package org.candlepin.pinsetter.tasks;
 
-import org.candlepin.config.Config;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.util.Util;
 
@@ -41,11 +41,11 @@ import java.util.Date;
 public class ExportCleaner extends KingpinJob {
 
     public static final String DEFAULT_SCHEDULE = "0 0 12 * * ?";
-    private Config config;
+    private Configuration config;
     private static Logger log = LoggerFactory.getLogger(ExportCleaner.class);
 
     @Inject
-    public ExportCleaner(Config config) {
+    public ExportCleaner(Configuration config) {
         this.config = config;
     }
 

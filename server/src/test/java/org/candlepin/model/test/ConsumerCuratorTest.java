@@ -14,11 +14,14 @@
  */
 package org.candlepin.model.test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
+import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.config.CandlepinCommonTestConfig;
-import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
@@ -62,7 +65,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         ct = consumerTypeCurator.create(ct);
 
         CandlepinCommonTestConfig config =
-            (CandlepinCommonTestConfig) injector.getInstance(Config.class);
+            (CandlepinCommonTestConfig) injector.getInstance(Configuration.class);
         config.setProperty(ConfigProperties.INTEGER_FACTS,
             "system.count, system.multiplier");
         config.setProperty(ConfigProperties.NON_NEG_INTEGER_FACTS, "system.count");

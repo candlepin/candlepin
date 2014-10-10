@@ -16,6 +16,7 @@ package org.candlepin.common.config;
 
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Set;
 
 /**
  * AbstractConfiguration with basic methods to get typed values.
@@ -29,10 +30,9 @@ public abstract class AbstractConfiguration implements Configuration {
     }
 
     @Override
-    public Boolean getBoolean(String key) {
-        Boolean b = getBoolean(key, null);
-        if (b != null) {
-            return b;
+    public boolean getBoolean(String key) {
+        if (containsKey(key)) {
+            return PropertyConverter.toBoolean(getProperty(key));
         }
         else {
             throw new NoSuchElementException(doesNotMapMessage(key));
@@ -40,7 +40,7 @@ public abstract class AbstractConfiguration implements Configuration {
     }
 
     @Override
-    public Boolean getBoolean(String key, Boolean defaultValue) {
+    public boolean getBoolean(String key, boolean defaultValue) {
         if (containsKey(key)) {
             return PropertyConverter.toBoolean(getProperty(key));
         }
@@ -50,10 +50,9 @@ public abstract class AbstractConfiguration implements Configuration {
     }
 
     @Override
-    public Integer getInteger(String key) {
-        Integer i = getInteger(key, null);
-        if (i != null) {
-            return i;
+    public int getInt(String key) {
+        if (containsKey(key)) {
+            return PropertyConverter.toInteger(getProperty(key));
         }
         else {
             throw new NoSuchElementException(doesNotMapMessage(key));
@@ -61,7 +60,7 @@ public abstract class AbstractConfiguration implements Configuration {
     }
 
     @Override
-    public Integer getInteger(String key, Integer defaultValue) {
+    public int getInt(String key, int defaultValue) {
         if (containsKey(key)) {
             return PropertyConverter.toInteger(getProperty(key));
         }
@@ -71,10 +70,9 @@ public abstract class AbstractConfiguration implements Configuration {
     }
 
     @Override
-    public Long getLong(String key) {
-        Long l = getLong(key, null);
-        if (l != null) {
-            return l;
+    public long getLong(String key) {
+        if (containsKey(key)) {
+            return PropertyConverter.toLong(getProperty(key));
         }
         else {
             throw new NoSuchElementException(doesNotMapMessage(key));
@@ -82,7 +80,7 @@ public abstract class AbstractConfiguration implements Configuration {
     }
 
     @Override
-    public Long getLong(String key, Long defaultValue) {
+    public long getLong(String key, long defaultValue) {
         if (containsKey(key)) {
             return PropertyConverter.toLong(getProperty(key));
         }
@@ -122,18 +120,35 @@ public abstract class AbstractConfiguration implements Configuration {
     @Override
     public List<String> getList(String key) {
         List<String> list = getList(key, null);
-        if (list != null) {
-            return list;
-        }
-        else {
+        if (list == null) {
             throw new NoSuchElementException(doesNotMapMessage(key));
         }
+        return list;
     }
 
     @Override
     public List<String> getList(String key, List<String> defaultValue) {
         if (containsKey(key)) {
             return PropertyConverter.toList(getProperty(key));
+        }
+        else {
+            return defaultValue;
+        }
+    }
+
+    @Override
+    public Set<String> getSet(String key) {
+        Set<String> set = getSet(key, null);
+        if (set == null) {
+            throw new NoSuchElementException(doesNotMapMessage(key));
+        }
+        return set;
+    }
+
+    @Override
+    public Set<String> getSet(String key, Set<String> defaultValue) {
+        if (containsKey(key)) {
+            return PropertyConverter.toSet(getProperty(key));
         }
         else {
             return defaultValue;
