@@ -19,7 +19,6 @@ import static org.mockito.Mockito.*;
 
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.ForbiddenException;
-import org.candlepin.config.Config;
 import org.candlepin.controller.Entitler;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerContentOverrideCurator;
@@ -68,7 +67,6 @@ public class ConsumerBindUtilTest {
     private I18n i18n;
 
     private ConsumerType system;
-    protected Config config;
     protected Owner owner;
     protected Role role;
 
