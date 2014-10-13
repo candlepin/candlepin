@@ -102,7 +102,9 @@ update_keystore() {
         echo "Symlinking keystore for tomcat"
         sudo ln -s /etc/candlepin/certs/keystore $CONTAINER_CONF_DIR/keystore
     else
-        warn_msg "Using existing keystore"
+        if [ ! -L "$CONTAINER_CONF_DIR/keystore" -a "$(readlink $CONTAINER_CONF_DIR/keystore)" != "/etc/candlepin/certs/keystore" ]; then
+          warn_msg "Using existing keystore"
+        fi
         local candlepin_fp="$(fp_pkcs12 "/etc/candlepin/certs/keystore" "tomcat" "password")"
         local tomcat_fp="$(fp_pkcs12 "$CONTAINER_CONF_DIR/keystore" "tomcat" "password")"
         if [ "$candlepin_fp" != "$tomcat_fp" ]; then
