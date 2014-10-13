@@ -16,6 +16,7 @@ package org.candlepin.audit;
 
 import org.candlepin.config.ConfigProperties;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Injector;
 
 import org.hornetq.api.core.HornetQException;
@@ -108,7 +109,8 @@ public class HornetqContextListener {
         cleanupOldQueues();
 
         //AMQP integration here - If it is disabled, don't add it to listeners.
-        List<String> listeners = candlepinConfig.getList(ConfigProperties.AUDIT_LISTENERS);
+        List<String> listeners = Lists.newArrayList(
+                candlepinConfig.getList(ConfigProperties.AUDIT_LISTENERS));
 
         if (candlepinConfig
             .getBoolean(ConfigProperties.AMQP_INTEGRATION_ENABLED)) {

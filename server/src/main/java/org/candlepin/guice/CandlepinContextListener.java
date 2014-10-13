@@ -166,9 +166,6 @@ public class CandlepinContextListener extends CandlepinGuiceResteasyBootstrap {
 
         // merge the defaults with the system configuration. ORDER MATTERS.
         // system config must be read FIRST otherwise settings won't be applied.
-
-        // merge does NOT affect systemConfig, it just returns a new object
-        // not sure I like that.
         return PropertiesFileConfiguration.merge(systemConfig, defaults);
     }
 

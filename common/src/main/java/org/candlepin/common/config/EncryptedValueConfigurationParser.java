@@ -138,7 +138,7 @@ public abstract class EncryptedValueConfigurationParser extends ConfigurationPar
             return new String(cipher.doFinal(b64bytes));
         }
         catch (Exception e) {
-            log.info("Failure trying to decrypt" + toDecrypt , e);
+            log.warn("Failure trying to decrypt " + toDecrypt , e);
             throw new RuntimeException(e);
         }
     }

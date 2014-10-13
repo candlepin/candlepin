@@ -15,6 +15,8 @@
 package org.candlepin.common.config;
 
 import org.apache.commons.lang.BooleanUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Constructor;
 import java.math.BigInteger;
@@ -28,6 +30,8 @@ import java.util.Set;
  * org.apache.commons.configuration.PropertyConverter.
  */
 public class PropertyConverter {
+    private static Logger log = LoggerFactory.getLogger(PropertyConverter.class);
+
     private static final String HEX_PREFIX = "0x";
     private static final int HEX_RADIX = 16;
 
@@ -60,7 +64,9 @@ public class PropertyConverter {
             return BooleanUtils.toBoolean((String) value);
         }
         else {
-            throw new ConversionException(formatErrorMessage(value, Boolean.class));
+            String msg = formatErrorMessage(value, Boolean.class);
+            log.warn(msg);
+            throw new ConversionException(msg);
         }
     }
 
@@ -105,7 +111,9 @@ public class PropertyConverter {
                     return new BigInteger(str.substring(HEX_PREFIX.length()), HEX_RADIX);
                 }
                 catch (NumberFormatException nex) {
-                    throw new ConversionException(formatErrorMessage(str, clazz));
+                    String msg = formatErrorMessage(value, clazz);
+                    log.warn(msg);
+                    throw new ConversionException(msg, nex);
                 }
             }
 
@@ -114,7 +122,9 @@ public class PropertyConverter {
                     return new BigInteger(str.substring(BIN_PREFIX.length()), BIN_RADIX);
                 }
                 catch (NumberFormatException nex) {
-                    throw new ConversionException(formatErrorMessage(str, clazz));
+                    String msg = formatErrorMessage(value, clazz);
+                    log.warn(msg);
+                    throw new ConversionException(msg, nex);
                 }
             }
 
@@ -124,7 +134,9 @@ public class PropertyConverter {
             }
             catch (Exception ex) {
                 // Treat all possible exceptions the same way
-                throw new ConversionException(formatErrorMessage(str, clazz), ex);
+                String msg = formatErrorMessage(value, clazz);
+                log.warn(msg);
+                throw new ConversionException(msg, ex);
             }
         }
     }
@@ -135,7 +147,9 @@ public class PropertyConverter {
             return Arrays.asList(parts);
         }
         else {
-            throw new ConversionException(formatErrorMessage(value, List.class));
+            String msg = formatErrorMessage(value, List.class);
+            log.warn(msg);
+            throw new ConversionException(msg);
         }
     }
 
@@ -145,7 +159,9 @@ public class PropertyConverter {
             return new HashSet<String>(Arrays.asList(parts));
         }
         else {
-            throw new ConversionException(formatErrorMessage(value, Set.class));
+            String msg = formatErrorMessage(value, Set.class);
+            log.warn(msg);
+            throw new ConversionException(msg);
         }
     }
 }
