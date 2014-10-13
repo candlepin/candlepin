@@ -14,6 +14,9 @@
  */
 package org.candlepin.common.config;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -24,9 +27,15 @@ import java.util.Set;
  */
 public abstract class AbstractConfiguration implements Configuration {
     protected static final String ERROR_MESSAGE = "\"%s\" doesn't map to an existing object";
+    protected static final String MISSING_MESSAGE = "\"%s\" not present in configuration";
+    private static Logger log = LoggerFactory.getLogger(AbstractConfiguration.class);
 
     protected String doesNotMapMessage(String key) {
         return String.format(ERROR_MESSAGE, key);
+    }
+
+    protected String missingMessage(String key) {
+        return String.format(MISSING_MESSAGE, key);
     }
 
     @Override
@@ -35,6 +44,7 @@ public abstract class AbstractConfiguration implements Configuration {
             return PropertyConverter.toBoolean(getProperty(key));
         }
         else {
+            log.warn(missingMessage(key));
             throw new NoSuchElementException(doesNotMapMessage(key));
         }
     }
@@ -55,6 +65,7 @@ public abstract class AbstractConfiguration implements Configuration {
             return PropertyConverter.toInteger(getProperty(key));
         }
         else {
+            log.warn(missingMessage(key));
             throw new NoSuchElementException(doesNotMapMessage(key));
         }
     }
@@ -75,6 +86,7 @@ public abstract class AbstractConfiguration implements Configuration {
             return PropertyConverter.toLong(getProperty(key));
         }
         else {
+            log.warn(missingMessage(key));
             throw new NoSuchElementException(doesNotMapMessage(key));
         }
     }
@@ -96,6 +108,7 @@ public abstract class AbstractConfiguration implements Configuration {
             return s;
         }
         else {
+            log.warn(missingMessage(key));
             throw new NoSuchElementException(doesNotMapMessage(key));
         }
     }
@@ -121,6 +134,7 @@ public abstract class AbstractConfiguration implements Configuration {
     public List<String> getList(String key) {
         List<String> list = getList(key, null);
         if (list == null) {
+            log.warn(missingMessage(key));
             throw new NoSuchElementException(doesNotMapMessage(key));
         }
         return list;
@@ -140,6 +154,7 @@ public abstract class AbstractConfiguration implements Configuration {
     public Set<String> getSet(String key) {
         Set<String> set = getSet(key, null);
         if (set == null) {
+            log.warn(missingMessage(key));
             throw new NoSuchElementException(doesNotMapMessage(key));
         }
         return set;

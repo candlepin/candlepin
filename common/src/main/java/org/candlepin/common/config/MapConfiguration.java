@@ -107,6 +107,7 @@ public class MapConfiguration extends AbstractConfiguration {
             return configMap.get(key);
         }
         else {
+            super.missingMessage(key);
             throw new NoSuchElementException(doesNotMapMessage(key));
         }
     }
