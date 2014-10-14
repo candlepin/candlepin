@@ -143,11 +143,13 @@ public class PoolCuratorFilterTest extends DatabaseTestFixture {
         searchTest("os-ser", 1, searchPool.getId());
     }
 
-//    @Test
-//    public void availablePoolsCanBeFilteredByProvidedProducts() throws Exception {
-//        searchTest("erv???Bi?s", 1, searchPool.getId());
-//        searchTest("202", 1, searchPool.getId());
-//        searchTest("2?2", 1, searchPool.getId());
-//    }
+    @Test
+    public void availablePoolsCanBeFilteredByProvidedProducts() throws Exception {
+        searchTest("Server Bits", 1, searchPool.getId());
+        searchTest("erv???Bi?s", 1, searchPool.getId());
+        searchTest("202", 1, searchPool.getId());
+        searchTest("2?2", 1, searchPool.getId());
+        searchTest("2*2", 1, searchPool.getId());
+    }
 
 }

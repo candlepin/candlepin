@@ -49,6 +49,7 @@ public class PoolFilterBuilder extends FilterBuilder {
      */
     public void addContainsTextFilter(String containsText) {
 
+        // Possibly could merge this with FilterBuilder.FilterLikeExpression:
         String regex = "((?:[^*?\\\\]*(?:\\\\.?)*)*)([*?]|\\z)";
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(containsText);
@@ -86,7 +87,28 @@ public class PoolFilterBuilder extends FilterBuilder {
         Disjunction textOr = Restrictions.disjunction();
         textOr.add(Restrictions.ilike("productName", searchString));
         textOr.add(Restrictions.ilike("productId", searchString));
+        textOr.add(Subqueries.exists(
+                createProvidedProductCriteria(searchString)));
         this.otherCriteria.add(textOr);
+    }
+
+    private DetachedCriteria createProvidedProductCriteria(String searchString) {
+
+        DetachedCriteria attrMatch = DetachedCriteria.forClass(
+            ProvidedProduct.class, "provided");
+
+        List<Criterion> providedOrs = new ArrayList<Criterion>();
+        providedOrs.add(Restrictions.ilike("productId", searchString));
+        providedOrs.add(Restrictions.ilike("productName", searchString));
+
+        attrMatch.add(Restrictions.or(
+            providedOrs.toArray(new Criterion[providedOrs.size()]))
+        );
+
+        attrMatch.add(Property.forName("this.id").eqProperty("provided.pool.id"));
+        attrMatch.setProjection(Projections.property("provided.id"));
+
+        return attrMatch;
     }
 
     @Override

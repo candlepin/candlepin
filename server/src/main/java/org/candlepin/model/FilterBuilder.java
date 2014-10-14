@@ -119,7 +119,9 @@ public abstract class FilterBuilder {
                 // Escape anything that would be a wildcard
                 .replace("_", "!_").replace("%", "!%")
                 // Now use * as wildcard
-                .replace("*", "%");
+                .replace("*", "%")
+                // And ? as a single character
+                .replace("?", "_");
         }
     }
 }
