@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.26.0
+Version: 0.9.26.1
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -390,6 +390,10 @@ fi
 
 
 %changelog
+* Tue Oct 14 2014 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.26.1-1
+- Stop picking up openjdk 1.8.0 on RHEL 6.5, ant is broken there.
+  (dgoodwin@redhat.com)
+
 * Wed Oct 08 2014 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.26.0-1
 - Correctly re-fire failed jobs. (dgoodwin@redhat.com)
 
