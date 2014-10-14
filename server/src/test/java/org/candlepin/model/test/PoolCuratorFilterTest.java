@@ -14,7 +14,7 @@
  */
 package org.candlepin.model.test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
@@ -40,9 +40,11 @@ public class PoolCuratorFilterTest extends DatabaseTestFixture {
     private Product product;
     private Consumer consumer;
     private PageRequest req = new PageRequest();
+    private Pool searchPool;
 
     @Before
     public void setUp() {
+        // TODO: remove unused stuff here:
         owner = createOwner();
         ownerCurator.create(owner);
 
@@ -66,6 +68,7 @@ public class PoolCuratorFilterTest extends DatabaseTestFixture {
         req.setOrder(PageRequest.Order.ASCENDING);
         req.setSortBy("id");
 
+        searchPool = createSearchPools();
     }
 
     private Pool createSearchPools() {
@@ -91,30 +94,60 @@ public class PoolCuratorFilterTest extends DatabaseTestFixture {
         return searchPool;
     }
 
-    @Test
-    public void availablePoolsCanBeFilteredBySkuName() throws Exception {
-        Pool searchPool = createSearchPools();
+    private void searchTest(String searchFor, int expectedResults, String ... expectedIds) {
         PoolFilterBuilder filters = new PoolFilterBuilder();
-        filters.addContainsTextFilter("Server Premium");
+        filters.addContainsTextFilter(searchFor);
         Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
                 null, owner, null, null, false, filters,
                 req, false);
         List<Pool> results = page.getPageData();
-        assertEquals(1, results.size());
-        assertEquals(searchPool.getId(), results.get(0).getId());
+        assertEquals(expectedResults, results.size());
+        for (String id : expectedIds) {
+            boolean found = false;
+            for (Pool p : results) {
+                if (p.getId().equals(id)) {
+                    found = true;
+                    continue;
+                }
+            }
+            assertTrue("Missing expected pool: " + id, found);
+        }
+    }
+
+    @Test
+    public void availablePoolsCanBeFilteredBySkuNameExactMatch() throws Exception {
+        searchTest("Awesome OS Server Premium", 1, searchPool.getId());
+    }
+
+    @Test
+    public void availablePoolsCanBeFilteredBySkuName() throws Exception {
+        searchTest("Server Premium", 1, searchPool.getId());
+    }
+
+    @Test
+    public void availablePoolsCanBeFilteredBySkuNameWildcard() throws Exception {
+        searchTest("Ser*emium", 1, searchPool.getId());
+        searchTest("Ser*emiumaroni", 0, new String [] {});
+        searchTest("*Ser*emium*", 1, searchPool.getId());
+        searchTest("Ser**emium", 1, searchPool.getId());
+    }
+
+    @Test
+    public void availablePoolsCanBeFilteredBySkuNameSingleCharWildcard() throws Exception {
+        searchTest("Ser?er P?emium", 1, searchPool.getId());
+        searchTest("Ser??? P?emium", 1, searchPool.getId());
     }
 
     @Test
     public void availablePoolsCanBeFilteredBySku() throws Exception {
-        Pool searchPool = createSearchPools();
-        PoolFilterBuilder filters = new PoolFilterBuilder();
-        filters.addContainsTextFilter("os-ser");
-        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
-                null, owner, null, null, false, filters,
-                req, false);
-        List<Pool> results = page.getPageData();
-        assertEquals(1, results.size());
-        assertEquals(searchPool.getId(), results.get(0).getId());
+        searchTest("os-ser", 1, searchPool.getId());
     }
+
+//    @Test
+//    public void availablePoolsCanBeFilteredByProvidedProducts() throws Exception {
+//        searchTest("erv???Bi?s", 1, searchPool.getId());
+//        searchTest("202", 1, searchPool.getId());
+//        searchTest("2?2", 1, searchPool.getId());
+//    }
 
 }

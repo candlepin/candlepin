@@ -7,7 +7,7 @@
     </encoder>
   </appender>
   <logger name="org.candlepin.util.filters.DumpFilter" level="INFO"/>
-  <logger name="org.candlepin" level="INFO"/>
+  <logger name="org.candlepin" level="DEBUG"/>
   <logger name="org.candlepin.policy.js" level="INFO"/>
   <logger name="org.hibernate.tool.hbm2ddl" level="WARN"/>
   <root level="WARN">

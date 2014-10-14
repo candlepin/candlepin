@@ -21,9 +21,13 @@ import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.Subqueries;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 /**
@@ -32,6 +36,8 @@ import java.util.List;
  * Builds criteria to find pools based upon their attributes and product attributes
  */
 public class PoolFilterBuilder extends FilterBuilder {
+
+    private static Logger log = LoggerFactory.getLogger(PoolFilterBuilder.class);
 
     /**
      * Add filters to search only for pools containing the given text. A number of
@@ -42,9 +48,44 @@ public class PoolFilterBuilder extends FilterBuilder {
      * wildcards are supported for everything or a single character. (* and ? respectively)
      */
     public void addContainsTextFilter(String containsText) {
+
+        String regex = "((?:[^*?\\\\]*(?:\\\\.?)*)*)([*?]|\\z)";
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(containsText);
+        StringBuffer searchBuf = new StringBuffer("%");
+        while (matcher.find()) {
+            log.debug("found match");
+            log.debug("  0 = {}", matcher.group(0));
+            log.debug("  1 = {}", matcher.group(1));
+            log.debug("  2 = {}", matcher.group(2));
+
+            if (!matcher.group(1).isEmpty()) {
+                searchBuf.append(matcher.group(1));
+            }
+            if (matcher.group(2).equals("*")) {
+                searchBuf.append("%");
+            }
+            else if (matcher.group(2).equals("?")) {
+                searchBuf.append("_");
+            }
+            else {
+                log.warn("Unknown matcher character: {}", matcher.group(2));
+            }
+        }
+        // We didn't find anything to match on (the one character is the assumed %), must
+        // be a plain search string.
+        if (searchBuf.length() == 1) {
+            searchBuf.append(containsText);
+        }
+        searchBuf.append("%");
+        String searchString = searchBuf.toString();
+
+        log.debug("Build database search string: {} -> {}", containsText,
+                searchString.toString());
+
         Disjunction textOr = Restrictions.disjunction();
-        textOr.add(Restrictions.ilike("productName", "%" + containsText + "%"));
-        textOr.add(Restrictions.ilike("productId", "%" + containsText + "%"));
+        textOr.add(Restrictions.ilike("productName", searchString));
+        textOr.add(Restrictions.ilike("productId", searchString));
         this.otherCriteria.add(textOr);
     }
 
