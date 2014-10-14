@@ -164,7 +164,16 @@ public class CandlepinPoolManager implements PoolManager {
                 continue;
             }
 
-            refreshPoolsForSubscription(sub, lazy);
+            try {
+              refreshPoolsForSubscription(sub, lazy);
+            }
+            catch(RuntimeException e){
+              log.error("Unable to refresh subscription: " + subId, e);
+
+              //Not technically a deleted sub, but we don't want to delete a sub
+              // that was not refreshed.
+              deletedSubs.add(subId);
+            }
         }
 
         // We deleted some, need to take that into account so we
