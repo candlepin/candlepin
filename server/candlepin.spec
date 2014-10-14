@@ -44,7 +44,7 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 Vendor: Red Hat, Inc.
 BuildArch: noarch
 
-BuildRequires: java-devel >= 0:1.6.0
+BuildRequires: java-devel >= 0:1.6.0, java-devel < 0:1.8.0
 BuildRequires: ant >= 0:1.7.0
 BuildRequires: gettext
 BuildRequires: selinux-policy-doc
@@ -131,7 +131,7 @@ BuildRequires: qpid-java-client >= 0:0.22
 %endif
 
 # Common requires go here
-Requires: java >= 0:1.6.0
+Requires: java >= 0:1.6.0, java < 0:1.8.0
 #until cpsetup is removed
 Requires: wget
 Requires: liquibase >= 0:2.0.5
