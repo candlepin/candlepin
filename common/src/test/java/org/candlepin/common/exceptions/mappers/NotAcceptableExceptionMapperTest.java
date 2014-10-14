@@ -37,7 +37,7 @@ public class NotAcceptableExceptionMapperTest extends TestExceptionMapperBase {
     }
 
     @Override
-    public Class getMapperClass() {
+    public Class<NotAcceptableExceptionMapper> getMapperClass() {
         return NotAcceptableExceptionMapper.class;
     }
 }

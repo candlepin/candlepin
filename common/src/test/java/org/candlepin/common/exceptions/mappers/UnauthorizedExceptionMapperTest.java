@@ -37,7 +37,7 @@ public class UnauthorizedExceptionMapperTest extends TestExceptionMapperBase {
     }
 
     @Override
-    public Class getMapperClass() {
+    public Class<UnauthorizedExceptionMapper> getMapperClass() {
         return UnauthorizedExceptionMapper.class;
     }
 }

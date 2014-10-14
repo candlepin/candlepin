@@ -53,7 +53,7 @@ public class DefaultOptionsMethodExceptionMapperTest extends
     }
 
     @Override
-    public Class getMapperClass() {
+    public Class<DefaultOptionsMethodExceptionMapper> getMapperClass() {
         return DefaultOptionsMethodExceptionMapper.class;
     }
 }

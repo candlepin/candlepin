@@ -47,7 +47,7 @@ public class ReaderExceptionMapperTest extends TestExceptionMapperBase {
     }
 
     @Override
-    public Class getMapperClass() {
+    public Class<ReaderExceptionMapper> getMapperClass() {
         return ReaderExceptionMapper.class;
     }
 }

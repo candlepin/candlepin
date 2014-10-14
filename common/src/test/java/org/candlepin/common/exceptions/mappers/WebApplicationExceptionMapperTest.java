@@ -40,7 +40,7 @@ public class WebApplicationExceptionMapperTest extends TestExceptionMapperBase {
     }
 
     @Override
-    public Class getMapperClass() {
+    public Class<WebApplicationExceptionMapper> getMapperClass() {
         return WebApplicationExceptionMapper.class;
     }
 }

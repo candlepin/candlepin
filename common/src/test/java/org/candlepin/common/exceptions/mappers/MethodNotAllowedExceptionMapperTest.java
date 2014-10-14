@@ -38,7 +38,7 @@ public class MethodNotAllowedExceptionMapperTest extends
     }
 
     @Override
-    public Class getMapperClass() {
+    public Class<MethodNotAllowedExceptionMapper> getMapperClass() {
         return MethodNotAllowedExceptionMapper.class;
     }
 }

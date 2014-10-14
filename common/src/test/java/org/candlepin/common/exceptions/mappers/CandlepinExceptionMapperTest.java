@@ -59,7 +59,6 @@ public class CandlepinExceptionMapperTest {
 
     @Test
     public void defaultBuilder() {
-        I18n i18n = injector.getInstance(I18n.class);
         IOException ioe = new IOException("fake io exception");
         RuntimeException re = new RuntimeException("oops", ioe);
         ResponseBuilder bldr = cem.getDefaultBuilder(re, null,

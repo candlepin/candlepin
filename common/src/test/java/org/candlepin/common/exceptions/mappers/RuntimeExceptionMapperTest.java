@@ -145,7 +145,7 @@ public class RuntimeExceptionMapperTest extends TestExceptionMapperBase {
     }
 
     @Override
-    public Class getMapperClass() {
+    public Class<RuntimeExceptionMapper> getMapperClass() {
         return RuntimeExceptionMapper.class;
     }
 }
