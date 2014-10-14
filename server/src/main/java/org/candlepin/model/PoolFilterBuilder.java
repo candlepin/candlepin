@@ -87,6 +87,8 @@ public class PoolFilterBuilder extends FilterBuilder {
         Disjunction textOr = Restrictions.disjunction();
         textOr.add(Restrictions.ilike("productName", searchString));
         textOr.add(Restrictions.ilike("productId", searchString));
+        textOr.add(Restrictions.ilike("contractNumber", searchString));
+        textOr.add(Restrictions.ilike("orderNumber", searchString));
         textOr.add(Subqueries.exists(
                 createProvidedProductCriteria(searchString)));
         this.otherCriteria.add(textOr);

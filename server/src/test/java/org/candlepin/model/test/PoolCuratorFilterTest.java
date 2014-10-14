@@ -77,9 +77,12 @@ public class PoolCuratorFilterTest extends DatabaseTestFixture {
         productCurator.create(searchProduct);
         Pool searchPool = createPoolAndSub(owner, searchProduct, 100L,
                 TestUtil.createDate(2005, 3, 2), TestUtil.createDate(2050, 3, 2));
-        searchPool.addProvidedProduct(TestUtil.createProvidedProduct("101", "Server Bits"));
-        searchPool.addProvidedProduct(TestUtil.createProvidedProduct("202",
+        searchPool.addProvidedProduct(TestUtil.createProvidedProduct("101111", "Server Bits"));
+        searchPool.addProvidedProduct(TestUtil.createProvidedProduct("202222",
                 "Containers In This One"));
+        searchPool.setContractNumber("mycontract");
+        searchPool.setOrderNumber("myorder");
+
         poolCurator.create(searchPool);
 
         // Create another we don't intend to see in the results:
@@ -147,9 +150,20 @@ public class PoolCuratorFilterTest extends DatabaseTestFixture {
     public void availablePoolsCanBeFilteredByProvidedProducts() throws Exception {
         searchTest("Server Bits", 1, searchPool.getId());
         searchTest("erv???Bi?s", 1, searchPool.getId());
-        searchTest("202", 1, searchPool.getId());
-        searchTest("2?2", 1, searchPool.getId());
-        searchTest("2*2", 1, searchPool.getId());
+        searchTest("202222", 1, searchPool.getId());
+        searchTest("2?2222", 1, searchPool.getId());
+        searchTest("2*2222", 1, searchPool.getId());
     }
 
+    @Test
+    public void availablePoolsCanBeFilteredByContractNumber() throws Exception {
+        searchTest("mycontract", 1, searchPool.getId());
+        searchTest("my*cont??ct", 1, searchPool.getId());
+    }
+
+    @Test
+    public void availablePoolsCanBeFilteredByOrderNumber() throws Exception {
+        searchTest("myorder", 1, searchPool.getId());
+        searchTest("my*ord??", 1, searchPool.getId());
+    }
 }
