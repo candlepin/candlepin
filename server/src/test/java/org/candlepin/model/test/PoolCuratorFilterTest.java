@@ -40,7 +40,6 @@ public class PoolCuratorFilterTest extends DatabaseTestFixture {
 
     @Before
     public void setUp() {
-        // TODO: remove unused stuff here:
         owner = createOwner();
         ownerCurator.create(owner);
 
@@ -61,7 +60,8 @@ public class PoolCuratorFilterTest extends DatabaseTestFixture {
         productCurator.create(searchProduct);
         Pool searchPool = createPoolAndSub(owner, searchProduct, 100L,
                 TestUtil.createDate(2005, 3, 2), TestUtil.createDate(2050, 3, 2));
-        searchPool.addProvidedProduct(TestUtil.createProvidedProduct("101111", "Server Bits"));
+        searchPool.addProvidedProduct(TestUtil.createProvidedProduct("101111",
+                "Server Bits"));
         searchPool.addProvidedProduct(TestUtil.createProvidedProduct("202222",
                 "Containers In This One"));
         searchPool.setContractNumber("mycontract");
@@ -111,17 +111,28 @@ public class PoolCuratorFilterTest extends DatabaseTestFixture {
         searchPool.setContractNumber("got_con%tract_");
         poolCurator.merge(searchPool);
         searchTest("got_con%tract_", 1, searchPool.getId());
+        searchTest("got_con%tract_*", 1, searchPool.getId());
         searchTest("got_c%ct_", 0, new String [] {});
+        searchTest("got_con%tra_t_", 0, new String [] {});
+    }
+
+    @Test
+    public void availablePoolsObscureFiltering() {
+        searchTest("*", 2, searchPool.getId());
     }
 
     @Test
     public void availablePoolsCanBeFilteredBySkuName() throws Exception {
         searchTest("Awesome OS Server Premium", 1, searchPool.getId());
+        searchTest("Server", 0, new String [] {});
     }
 
     @Test
     public void availablePoolsCanBeFilteredBySkuNameWildcard() throws Exception {
         searchTest("*Ser*emium", 1, searchPool.getId());
+        searchTest("*sER*emIum", 1, searchPool.getId()); // ignore case
+        searchTest("*Ser*emium?", 0, new String [] {});
+        searchTest("*Ser*emiu?", 1, searchPool.getId());
         searchTest("*Ser*emiumaroni", 0, new String [] {});
         searchTest("*Ser*emium*", 1, searchPool.getId());
         searchTest("*Ser**emium", 1, searchPool.getId());
