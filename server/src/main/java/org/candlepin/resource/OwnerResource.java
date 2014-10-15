@@ -710,7 +710,7 @@ public class OwnerResource {
         @QueryParam("product") String productId,
         @QueryParam("listall") @DefaultValue("false") boolean listAll,
         @QueryParam("activeon") String activeOn,
-        @QueryParam("contains_text") String containsText,
+        @QueryParam("containstext") String containsText,
         @QueryParam("attribute") @CandlepinParam(type = KeyValueParameter.class)
             List<KeyValueParameter> attrFilters,
         @Context Principal principal,
@@ -756,6 +756,9 @@ public class OwnerResource {
         PoolFilterBuilder poolFilters = new PoolFilterBuilder();
         for (KeyValueParameter filterParam : attrFilters) {
             poolFilters.addAttributeFilter(filterParam.key(), filterParam.value());
+        }
+        if (!StringUtils.isEmpty(containsText)) {
+            poolFilters.addContainsTextFilter(containsText);
         }
 
         Page<List<Pool>> page = poolManager.listAvailableEntitlementPools(c, key, owner,
