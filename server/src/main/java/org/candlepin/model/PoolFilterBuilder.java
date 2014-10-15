@@ -53,7 +53,7 @@ public class PoolFilterBuilder extends FilterBuilder {
         String regex = "((?:[^*?\\\\]*(?:\\\\.?)*)*)([*?]|\\z)";
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(containsText);
-        StringBuffer searchBuf = new StringBuffer("%");
+        StringBuffer searchBuf = new StringBuffer();
         while (matcher.find()) {
             log.debug("found match");
             log.debug("  0 = {}", matcher.group(0));
@@ -78,7 +78,6 @@ public class PoolFilterBuilder extends FilterBuilder {
         if (searchBuf.length() == 1) {
             searchBuf.append(containsText);
         }
-        searchBuf.append("%");
         String searchString = searchBuf.toString();
 
         log.debug("Build database search string: {} -> {}", containsText,

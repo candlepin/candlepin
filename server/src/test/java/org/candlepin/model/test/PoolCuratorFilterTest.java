@@ -16,9 +16,6 @@ package org.candlepin.model.test;
 
 import static org.junit.Assert.*;
 
-import org.candlepin.model.Consumer;
-import org.candlepin.model.ConsumerType;
-import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolFilterBuilder;
@@ -37,8 +34,6 @@ import java.util.List;
 public class PoolCuratorFilterTest extends DatabaseTestFixture {
 
     private Owner owner;
-    private Product product;
-    private Consumer consumer;
     private PageRequest req = new PageRequest();
     private Pool searchPool;
 
@@ -47,20 +42,6 @@ public class PoolCuratorFilterTest extends DatabaseTestFixture {
         // TODO: remove unused stuff here:
         owner = createOwner();
         ownerCurator.create(owner);
-
-        ConsumerType systemType = new ConsumerType(ConsumerTypeEnum.SYSTEM);
-        consumerTypeCurator.create(systemType);
-
-        ConsumerType ueberCertType = new ConsumerType(ConsumerTypeEnum.UEBER_CERT);
-        consumerTypeCurator.create(ueberCertType);
-
-        product = TestUtil.createProduct();
-        productCurator.create(product);
-
-        consumer = TestUtil.createConsumer(owner);
-        consumer.setFact("cpu_cores", "4");
-        consumerTypeCurator.create(consumer.getType());
-        consumerCurator.create(consumer);
 
         req = new PageRequest();
         req.setPage(1);
@@ -124,32 +105,32 @@ public class PoolCuratorFilterTest extends DatabaseTestFixture {
 
     @Test
     public void availablePoolsCanBeFilteredBySkuName() throws Exception {
-        searchTest("Server Premium", 1, searchPool.getId());
+        searchTest("Awesome OS Server Premium", 1, searchPool.getId());
     }
 
     @Test
     public void availablePoolsCanBeFilteredBySkuNameWildcard() throws Exception {
-        searchTest("Ser*emium", 1, searchPool.getId());
-        searchTest("Ser*emiumaroni", 0, new String [] {});
+        searchTest("*Ser*emium", 1, searchPool.getId());
+        searchTest("*Ser*emiumaroni", 0, new String [] {});
         searchTest("*Ser*emium*", 1, searchPool.getId());
-        searchTest("Ser**emium", 1, searchPool.getId());
+        searchTest("*Ser**emium", 1, searchPool.getId());
     }
 
     @Test
     public void availablePoolsCanBeFilteredBySkuNameSingleCharWildcard() throws Exception {
-        searchTest("Ser?er P?emium", 1, searchPool.getId());
-        searchTest("Ser??? P?emium", 1, searchPool.getId());
+        searchTest("Awesome OS Ser?er P?emium", 1, searchPool.getId());
+        searchTest("*Ser??? P?emium", 1, searchPool.getId());
     }
 
     @Test
     public void availablePoolsCanBeFilteredBySku() throws Exception {
-        searchTest("os-ser", 1, searchPool.getId());
+        searchTest("*os-ser*", 1, searchPool.getId());
     }
 
     @Test
     public void availablePoolsCanBeFilteredByProvidedProducts() throws Exception {
         searchTest("Server Bits", 1, searchPool.getId());
-        searchTest("erv???Bi?s", 1, searchPool.getId());
+        searchTest("*erv???Bi?s", 1, searchPool.getId());
         searchTest("202222", 1, searchPool.getId());
         searchTest("2?2222", 1, searchPool.getId());
         searchTest("2*2222", 1, searchPool.getId());
