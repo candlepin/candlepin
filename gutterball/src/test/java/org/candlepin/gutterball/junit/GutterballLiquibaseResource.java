@@ -14,6 +14,7 @@
  */
 package org.candlepin.gutterball.junit;
 
+import org.hibernate.ejb.Ejb3Configuration;
 import org.junit.rules.ExternalResource;
 
 import liquibase.Liquibase;
@@ -26,26 +27,24 @@ import liquibase.resource.ResourceAccessor;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.util.Collections;
 
 
-public class LiquibaseResource extends ExternalResource {
+public class GutterballLiquibaseResource extends ExternalResource {
     private Liquibase liquibase;
     private ResourceAccessor accessor;
     private Database database;
     private String changelogFile;
 
-    public LiquibaseResource() {
+    public GutterballLiquibaseResource() {
         this("db/changelog/changelog.xml");
     }
 
-    public LiquibaseResource(String changelogFile) {
-        this(changelogFile, "jdbc:hsqldb:mem:unit-testing-jpa");
-    }
-
-    public LiquibaseResource(String changelogFile, String connectionUrl) {
+    public GutterballLiquibaseResource(String changelogFile) {
         this.changelogFile = changelogFile;
 
         try {
+            String connectionUrl = getJdbcUrl("testing");
             Connection jdbcConnection = DriverManager.getConnection(connectionUrl, "sa", "");
             DatabaseConnection conn = new JdbcConnection(jdbcConnection);
             database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(conn);
@@ -54,6 +53,18 @@ public class LiquibaseResource extends ExternalResource {
         catch (Exception e) {
             throw new IllegalStateException(e);
         }
+    }
+
+    @SuppressWarnings("deprecation")
+    private String getJdbcUrl(String persistenceUnit) {
+        /* JPA basically makes it impossible to get configuration information out of persistence.xml
+         * and the only non-deprecated Hibernate class (Configuration) wants to use hibernate.cfg.xml
+         * so without resorting to XML parsing, this is about the best we can do.
+         */
+
+        Ejb3Configuration ejbConf = new Ejb3Configuration();
+        ejbConf.configure(persistenceUnit, Collections.EMPTY_MAP);
+        return (String) ejbConf.getProperties().get("hibernate.connection.url");
     }
 
     @Override

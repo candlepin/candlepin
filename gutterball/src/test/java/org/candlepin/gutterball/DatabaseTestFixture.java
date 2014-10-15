@@ -18,7 +18,7 @@ package org.candlepin.gutterball;
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.gutterball.curator.ComplianceSnapshotCurator;
 import org.candlepin.gutterball.curator.ConsumerStateCurator;
-import org.candlepin.gutterball.junit.LiquibaseResource;
+import org.candlepin.gutterball.junit.GutterballLiquibaseResource;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -41,7 +41,7 @@ public class DatabaseTestFixture {
 
     @SuppressWarnings("checkstyle:visibilitymodifier")
     @Rule
-    public LiquibaseResource liquibase = new LiquibaseResource();
+    public GutterballLiquibaseResource liquibase = new GutterballLiquibaseResource();
 
     protected ComplianceSnapshotCurator complianceSnapshotCurator;
     protected ConsumerStateCurator consumerStateCurator;
