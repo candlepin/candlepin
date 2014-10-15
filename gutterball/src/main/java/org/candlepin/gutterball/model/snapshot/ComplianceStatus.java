@@ -15,7 +15,10 @@
 
 package org.candlepin.gutterball.model.snapshot;
 
+import org.candlepin.gutterball.jackson.MapToKeysConverter;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.ForeignKey;
@@ -70,6 +73,10 @@ public class ComplianceStatus {
     @Column(nullable = false, unique = false)
     private Date date;
 
+    @XmlElement
+    @Column(nullable = true, unique = false)
+    private Date compliantUntil;
+
     @Column(nullable = false)
     @Size(max = 255)
     @NotNull
@@ -80,9 +87,36 @@ public class ComplianceStatus {
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
     private Set<ComplianceReason> reasons;
 
+    @ElementCollection
+    @CollectionTable(name="gb_noncompprod_snap", joinColumns=@JoinColumn(name="comp_status_id"))
+    @Column(name="product_id")
+    private Set<String> nonCompliantProducts;
+
+    @ElementCollection
+    @CollectionTable(name="gb_compprod_snap", joinColumns=@JoinColumn(name="comp_status_id"))
+    @Column(name="product_id")
+    @JsonDeserialize(converter = MapToKeysConverter.class)
+    private Set<String> compliantProducts;
+
+    @ElementCollection
+    @CollectionTable(name="gb_partcompprod_snap", joinColumns=@JoinColumn(name="comp_status_id"))
+    @Column(name="product_id")
+    @JsonDeserialize(converter = MapToKeysConverter.class)
+    private Set<String> partiallyCompliantProducts;
+
+    @ElementCollection
+    @CollectionTable(name="gb_partialstack_snap", joinColumns=@JoinColumn(name="comp_status_id"))
+    @Column(name="stacking_id")
+    @JsonDeserialize(converter = MapToKeysConverter.class)
+    private Set<String> partialStacks;
+
     public ComplianceStatus() {
         // Required by hibernate.
         reasons = new HashSet<ComplianceReason>();
+        this.nonCompliantProducts = new HashSet<String>();
+        this.compliantProducts = new HashSet<String>();
+        this.partiallyCompliantProducts = new HashSet<String>();
+        this.partialStacks = new HashSet<String>();
     }
 
     public ComplianceStatus(Date date, String status) {
@@ -137,6 +171,46 @@ public class ComplianceStatus {
         for (ComplianceReason r : this.reasons) {
             r.setComplianceStatus(this);
         }
+    }
+
+    public Date getCompliantUntil() {
+        return compliantUntil;
+    }
+
+    public void setCompliantUntil(Date compliantUntil) {
+        this.compliantUntil = compliantUntil;
+    }
+
+    public Set<String> getNonCompliantProducts() {
+        return nonCompliantProducts;
+    }
+
+    public void setNonCompliantProducts(Set<String> nonCompliantProducts) {
+        this.nonCompliantProducts = nonCompliantProducts;
+    }
+
+    public Set<String> getCompliantProducts() {
+        return compliantProducts;
+    }
+
+    public void setCompliantProducts(Set<String> compliantProducts) {
+        this.compliantProducts = compliantProducts;
+    }
+
+    public Set<String> getPartiallyCompliantProducts() {
+        return partiallyCompliantProducts;
+    }
+
+    public void setPartiallyCompliantProducts(Set<String> partiallyCompliantProducts) {
+        this.partiallyCompliantProducts = partiallyCompliantProducts;
+    }
+
+    public Set<String> getPartialStacks() {
+        return partialStacks;
+    }
+
+    public void setPartialStacks(Set<String> partialStacks) {
+        this.partialStacks = partialStacks;
     }
 
 }

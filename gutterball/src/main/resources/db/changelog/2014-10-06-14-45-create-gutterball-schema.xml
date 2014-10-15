@@ -59,6 +59,9 @@
             <column name="date" type="datetime">
                 <constraints nullable="false"/>
             </column>
+            <column name="compliantUntil" type="datetime">
+                <constraints nullable="true"/>
+            </column>
             <column name="status" type="varchar(255)">
                 <constraints nullable="false"/>
             </column>
@@ -239,6 +242,44 @@
             </column>
             <column name="element" type="varchar(255)"/>
             <column name="mapkey" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20141006144514-18" author="mstead">
+        <createTable tableName="gb_compprod_snap">
+            <column name="comp_status_id" type="varchar(32)">
+                <constraints foreignKeyName="fk_compprod_status" references="gb_compliance_status_snap(id)" nullable="false"/>
+            </column>
+            <column name="product_id" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="gb_noncompprod_snap">
+            <column name="comp_status_id" type="varchar(32)">
+                <constraints foreignKeyName="fk_noncompprod_status" references="gb_compliance_status_snap(id)" nullable="false"/>
+            </column>
+            <column name="product_id" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="gb_partcompprod_snap">
+            <column name="comp_status_id" type="varchar(32)">
+                <constraints foreignKeyName="fk_partcompprod_status" references="gb_compliance_status_snap(id)" nullable="false"/>
+            </column>
+            <column name="product_id" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="gb_partialstack_snap">
+            <column name="comp_status_id" type="varchar(32)">
+                <constraints foreignKeyName="fk_partialstack_status" references="gb_compliance_status_snap(id)" nullable="false"/>
+            </column>
+            <column name="stacking_id" type="varchar(255)">
                 <constraints nullable="false"/>
             </column>
         </createTable>
