@@ -102,6 +102,7 @@ MYSQL = 'mysql:mysql-connector-java:jar:5.1.26'
 DB = [POSTGRESQL, MYSQL]
 
 HSQLDB = 'org.hsqldb:hsqldb:jar:2.3.2'
+HSQLDB_OLD = 'org.hsqldb:hsqldb:jar:1.8.0.10'
 
 ORACLE = ['com.oracle:ojdbc6:jar:11.2.0', 'org.quartz-scheduler:quartz-oracle:jar:2.1.5']
 
@@ -350,7 +351,7 @@ define "candlepin" do
     end
 
     # the other dependencies transfer from compile.classpath automagically
-    test.with(HSQLDB, TESTING, LIQUIBASE)
+    test.with(HSQLDB_OLD, TESTING)
     test.using(:java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ])
 
     ### Javadoc
@@ -380,7 +381,7 @@ define "candlepin" do
     end
 
     package(:war, :id=>"candlepin").tap do |war|
-      war.libs += artifacts(HSQLDB)
+      war.libs += artifacts(HSQLDB_OLD)
       war.libs -= artifacts(PROVIDED)
       war.libs -= artifacts(JAVA_TOOLS)
       war.classes.clear
