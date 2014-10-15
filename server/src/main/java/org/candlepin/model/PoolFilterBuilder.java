@@ -25,9 +25,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 
 /**
@@ -49,47 +48,16 @@ public class PoolFilterBuilder extends FilterBuilder {
      */
     public void addContainsTextFilter(String containsText) {
 
-        // Possibly could merge this with FilterBuilder.FilterLikeExpression:
-        String regex = "((?:[^*?\\\\]*(?:\\\\.?)*)*)([*?]|\\z)";
-        Pattern pattern = Pattern.compile(regex);
-        Matcher matcher = pattern.matcher(containsText);
-        StringBuffer searchBuf = new StringBuffer();
-        while (matcher.find()) {
-            log.debug("found match");
-            log.debug("  0 = {}", matcher.group(0));
-            log.debug("  1 = {}", matcher.group(1));
-            log.debug("  2 = {}", matcher.group(2));
-
-            if (!matcher.group(1).isEmpty()) {
-                searchBuf.append(matcher.group(1));
-            }
-            if (matcher.group(2).equals("*")) {
-                searchBuf.append("%");
-            }
-            else if (matcher.group(2).equals("?")) {
-                searchBuf.append("_");
-            }
-            else {
-                log.warn("Unknown matcher character: {}", matcher.group(2));
-            }
-        }
-        // We didn't find anything to match on (the one character is the assumed %), must
-        // be a plain search string.
-        if (searchBuf.length() == 1) {
-            searchBuf.append(containsText);
-        }
-        String searchString = searchBuf.toString();
-
-        log.debug("Build database search string: {} -> {}", containsText,
-                searchString.toString());
-
         Disjunction textOr = Restrictions.disjunction();
-        textOr.add(Restrictions.ilike("productName", searchString));
-        textOr.add(Restrictions.ilike("productId", searchString));
-        textOr.add(Restrictions.ilike("contractNumber", searchString));
-        textOr.add(Restrictions.ilike("orderNumber", searchString));
+        textOr.add(new FilterLikeExpression("productName", containsText, true));
+        textOr.add(new FilterLikeExpression("productId", containsText, true));
+        textOr.add(new FilterLikeExpression("contractNumber", containsText, true));
+        textOr.add(new FilterLikeExpression("orderNumber", containsText, true));
         textOr.add(Subqueries.exists(
-                createProvidedProductCriteria(searchString)));
+                createProvidedProductCriteria(containsText)));
+        textOr.add(Subqueries.exists(
+                createAttributeCriteria(ProductPoolAttribute.class, "support_level",
+                Arrays.asList(containsText))));
         this.otherCriteria.add(textOr);
     }
 
@@ -99,8 +67,8 @@ public class PoolFilterBuilder extends FilterBuilder {
             ProvidedProduct.class, "provided");
 
         List<Criterion> providedOrs = new ArrayList<Criterion>();
-        providedOrs.add(Restrictions.ilike("productId", searchString));
-        providedOrs.add(Restrictions.ilike("productName", searchString));
+        providedOrs.add(new FilterLikeExpression("productId", searchString, true));
+        providedOrs.add(new FilterLikeExpression("productName", searchString, true));
 
         attrMatch.add(Restrictions.or(
             providedOrs.toArray(new Criterion[providedOrs.size()]))

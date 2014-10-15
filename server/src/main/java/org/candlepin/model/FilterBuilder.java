@@ -19,6 +19,8 @@ import org.hibernate.criterion.Conjunction;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.LikeExpression;
 import org.hibernate.criterion.Restrictions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -26,6 +28,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * FilterBuilder
@@ -33,6 +37,11 @@ import java.util.Map.Entry;
  * Contains the logic to apply filter Criterion to a base criteria.
  */
 public abstract class FilterBuilder {
+
+    private static Logger log = LoggerFactory.getLogger(FilterBuilder.class);
+    public static final String WILDCARD_REGEX = "((?:[^*?\\\\]*(?:\\\\.?)*)*)([*?]|\\z)";
+    public static final Pattern WILDCARD_PATTERN = Pattern.compile(WILDCARD_REGEX);
+
 
     private Map<String, List<String>> attributeFilters;
     private List<String> idFilters;
@@ -115,13 +124,39 @@ public abstract class FilterBuilder {
 
         private static String escape(String raw) {
             // If our escape char is already here, escape it
-            return raw.replace("!", "!!")
-                // Escape anything that would be a wildcard
-                .replace("_", "!_").replace("%", "!%")
-                // Now use * as wildcard
-                .replace("*", "%")
-                // And ? as a single character
-                .replace("?", "_");
+            log.debug("Searching for entries like: ", raw);
+            String dbEscaped = raw.replace("!", "!!")
+                // Escape anything that would be a database wildcard
+                .replace("_", "!_").replace("%", "!%");
+            log.debug("DB characters excaped: ", dbEscaped);
+
+            // Possibly could merge this with FilterBuilder.FilterLikeExpression:
+            Matcher matcher = WILDCARD_PATTERN.matcher(dbEscaped);
+            StringBuffer searchBuf = new StringBuffer();
+            while (matcher.find()) {
+
+                if (!matcher.group(1).isEmpty()) {
+                    searchBuf.append(matcher.group(1));
+                }
+                if (matcher.group(2).equals("*")) {
+                    searchBuf.append("%");
+                }
+                else if (matcher.group(2).equals("?")) {
+                    searchBuf.append("_");
+                }
+            }
+            // We didn't find anything to match on (the one character is the assumed %), must
+            // be a plain search string.
+            if (searchBuf.length() == 0) {
+                searchBuf.append(dbEscaped);
+            }
+
+            String searchString = searchBuf.toString();
+            log.debug("Final database search string: {} -> {}", raw,
+                    searchString);
+
+
+            return searchString;
         }
     }
 }

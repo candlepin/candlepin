@@ -20,6 +20,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductAttribute;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.test.DatabaseTestFixture;
@@ -55,6 +56,8 @@ public class PoolCuratorFilterTest extends DatabaseTestFixture {
     private Pool createSearchPools() {
         Product searchProduct = new Product("awesomeos-server",
                 "Awesome OS Server Premium");
+        searchProduct.addAttribute(new ProductAttribute("support_level",
+                "CustomSupportLevel"));
         productCurator.create(searchProduct);
         Pool searchPool = createPoolAndSub(owner, searchProduct, 100L,
                 TestUtil.createDate(2005, 3, 2), TestUtil.createDate(2050, 3, 2));
@@ -104,6 +107,14 @@ public class PoolCuratorFilterTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void availablePoolsCanBeFilteredForLiteralWildcardCharacters() {
+        searchPool.setContractNumber("got_con%tract_");
+        poolCurator.merge(searchPool);
+        searchTest("got_con%tract_", 1, searchPool.getId());
+        searchTest("got_c%ct_", 0, new String [] {});
+    }
+
+    @Test
     public void availablePoolsCanBeFilteredBySkuName() throws Exception {
         searchTest("Awesome OS Server Premium", 1, searchPool.getId());
     }
@@ -146,5 +157,13 @@ public class PoolCuratorFilterTest extends DatabaseTestFixture {
     public void availablePoolsCanBeFilteredByOrderNumber() throws Exception {
         searchTest("myorder", 1, searchPool.getId());
         searchTest("my*ord??", 1, searchPool.getId());
+    }
+
+    @Test
+    public void availablePoolsCanBeFilteredBySupportLevel() throws Exception {
+        searchTest("CustomSupportLevel", 1, searchPool.getId());
+        searchTest("*Cus*port*", 1, searchPool.getId());
+        searchTest("*Cus???Su??ortLevel*", 1, searchPool.getId());
+        searchTest("*Self-Service*", 0, new String [] {});
     }
 }
