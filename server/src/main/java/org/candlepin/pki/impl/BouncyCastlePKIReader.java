@@ -90,7 +90,8 @@ public class BouncyCastlePKIReader implements PKIReader, PasswordFinder {
             "caCertPath cannot be null. Unable to load CA Certificate");
         Util.assertNotNull(this.caKeyPath,
             "caKeyPath cannot be null. Unable to load PrivateKey");
-        this.caKeyPassword = config.getString(ConfigProperties.CA_KEY_PASSWORD);
+        this.caKeyPassword = config.getString(ConfigProperties.CA_KEY_PASSWORD, null);
+
         this.x509Certificate = loadCACertificate(this.caCertPath);
         this.upstreamX509Certificates = loadUpstreamCACertificates(upstreamCaCertPath);
         this.privateKey = loadPrivateKey();
@@ -225,7 +226,7 @@ public class BouncyCastlePKIReader implements PKIReader, PasswordFinder {
     @Override
     public char[] getPassword() {
         // just grab the key password that was pulled from the config
-        return caKeyPassword.toCharArray();
+        return (caKeyPassword != null) ? caKeyPassword.toCharArray() : null;
     }
 
 }
