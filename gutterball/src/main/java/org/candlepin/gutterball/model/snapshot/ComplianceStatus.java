@@ -21,7 +21,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
 
 import java.util.Date;
@@ -88,25 +87,25 @@ public class ComplianceStatus {
     private Set<ComplianceReason> reasons;
 
     @ElementCollection
-    @CollectionTable(name="gb_noncompprod_snap", joinColumns=@JoinColumn(name="comp_status_id"))
-    @Column(name="product_id")
+    @CollectionTable(name = "gb_noncompprod_snap", joinColumns = @JoinColumn(name = "comp_status_id"))
+    @Column(name = "product_id")
     private Set<String> nonCompliantProducts;
 
     @ElementCollection
-    @CollectionTable(name="gb_compprod_snap", joinColumns=@JoinColumn(name="comp_status_id"))
-    @Column(name="product_id")
+    @CollectionTable(name = "gb_compprod_snap", joinColumns = @JoinColumn(name = "comp_status_id"))
+    @Column(name = "product_id")
     @JsonDeserialize(converter = MapToKeysConverter.class)
     private Set<String> compliantProducts;
 
     @ElementCollection
-    @CollectionTable(name="gb_partcompprod_snap", joinColumns=@JoinColumn(name="comp_status_id"))
-    @Column(name="product_id")
+    @CollectionTable(name = "gb_partcompprod_snap", joinColumns = @JoinColumn(name = "comp_status_id"))
+    @Column(name = "product_id")
     @JsonDeserialize(converter = MapToKeysConverter.class)
     private Set<String> partiallyCompliantProducts;
 
     @ElementCollection
-    @CollectionTable(name="gb_partialstack_snap", joinColumns=@JoinColumn(name="comp_status_id"))
-    @Column(name="stacking_id")
+    @CollectionTable(name = "gb_partialstack_snap", joinColumns = @JoinColumn(name = "comp_status_id"))
+    @Column(name = "stacking_id")
     @JsonDeserialize(converter = MapToKeysConverter.class)
     private Set<String> partialStacks;
 
