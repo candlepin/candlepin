@@ -49,6 +49,7 @@ BuildRequires: gettext-commons
 BuildRequires: jta
 BuildRequires: hibernate-beanvalidation-api >= 1.0.0
 BuildRequires: hibernate-jpa-2.0-api >= 1.0.1
+BuildRequires: oauth >= 20100601-4
 
 %global jackson_version 0:2.3.0
 BuildRequires: jackson-annotations >= %{jackson_version}
@@ -136,6 +137,8 @@ Requires: gettext-commons
 Requires: jta
 Requires: hibernate-beanvalidation-api >= 1.0.0
 Requires: hibernate-jpa-2.0-api >= 1.0.1
+Requires: oauth >= 20100601-4
+
 %endif # end reqcpdeps
 
 %description

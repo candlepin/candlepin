@@ -20,6 +20,7 @@ import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.CandlepinException;
 import org.candlepin.common.exceptions.IseException;
 import org.candlepin.common.exceptions.UnauthorizedException;
+import org.candlepin.common.resteasy.auth.RestEasyOAuthMessage;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -80,7 +81,7 @@ public class OAuth implements AuthProvider {
     /**
      * Attempt to pull a principal off of an oauth signed message.
      *
-     * @return the principal if it can be created, nil otherwise
+     * @return the principal if it can be created, null otherwise
      */
     public Principal getPrincipal(HttpRequest request) {
         Principal principal = null;
@@ -176,9 +177,8 @@ public class OAuth implements AuthProvider {
             if ((parts.length == 2) && (parts[1].equals("secret"))) {
                 String consumerName = parts[0];
                 String secret = oauthConfig.getString(key);
-                log.debug(String.format(
-                    "Creating consumer '%s' with secret '%s'", consumerName,
-                    secret));
+                log.debug(String.format("Creating consumer '%s'", consumerName));
+
                 OAuthConsumer consumer = new OAuthConsumer("", consumerName,
                     secret, null);
                 OAuthAccessor accessor = new OAuthAccessor(consumer);

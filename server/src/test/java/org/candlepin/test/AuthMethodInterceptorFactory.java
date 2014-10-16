@@ -15,7 +15,7 @@
 package org.candlepin.test;
 
 import org.candlepin.auth.Principal;
-import org.candlepin.auth.interceptor.SecurityHole;
+import org.candlepin.common.auth.SecurityHole;
 import org.candlepin.resteasy.interceptor.AuthInterceptor;
 import org.candlepin.resteasy.interceptor.AuthUtil;
 
