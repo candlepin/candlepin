@@ -94,7 +94,7 @@ public class PoolCuratorFilterTest extends DatabaseTestFixture {
             for (Pool p : results) {
                 if (p.getId().equals(id)) {
                     found = true;
-                    continue;
+                    break;
                 }
             }
             assertTrue("Missing expected pool: " + id, found);
