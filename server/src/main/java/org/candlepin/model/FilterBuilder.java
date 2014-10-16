@@ -134,10 +134,7 @@ public abstract class FilterBuilder {
             Matcher matcher = WILDCARD_PATTERN.matcher(dbEscaped);
             StringBuffer searchBuf = new StringBuffer();
             while (matcher.find()) {
-
-                if (!matcher.group(1).isEmpty()) {
-                    searchBuf.append(matcher.group(1));
-                }
+                searchBuf.append(matcher.group(1));
                 if (matcher.group(2).equals("*")) {
                     searchBuf.append("%");
                 }
@@ -145,16 +142,12 @@ public abstract class FilterBuilder {
                     searchBuf.append("_");
                 }
             }
-            // We didn't find anything to match on (the one character is the assumed %), must
-            // be a plain search string.
-            if (searchBuf.length() == 0) {
-                searchBuf.append(dbEscaped);
-            }
 
-            String searchString = searchBuf.toString();
+            // If regex didn't match anything it must be a plain search string:
+            String searchString = (searchBuf.length() > 0 ? searchBuf.toString() :
+                dbEscaped);
             log.debug("Final database search string: {} -> {}", raw,
                     searchString);
-
 
             return searchString;
         }
