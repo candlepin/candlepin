@@ -14,8 +14,6 @@
  */
 package org.candlepin.common.config;
 
-import org.candlepin.common.config.ConfigurationParser;
-
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.slf4j.Logger;
