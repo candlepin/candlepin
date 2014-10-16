@@ -14,6 +14,7 @@
  */
 package org.candlepin.gutterball.resource;
 
+import org.candlepin.common.auth.SecurityHole;
 import org.candlepin.gutterball.model.Status;
 
 import javax.inject.Inject;
@@ -37,6 +38,7 @@ public class StatusResource {
 
     @GET
     @Produces({ MediaType.APPLICATION_JSON })
+    @SecurityHole(anon = true)
     public Status getStatus() {
         return status;
     }

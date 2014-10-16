@@ -14,7 +14,7 @@
  */
 package org.candlepin.resource;
 
-import org.candlepin.auth.interceptor.SecurityHole;
+import org.candlepin.common.auth.SecurityHole;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.util.VersionUtil;
 import org.candlepin.config.ConfigProperties;

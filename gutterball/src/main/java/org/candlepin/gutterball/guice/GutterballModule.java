@@ -50,6 +50,7 @@ import org.candlepin.gutterball.report.ReportFactory;
 import org.candlepin.gutterball.resource.ReportsResource;
 import org.candlepin.gutterball.resource.StatusResource;
 import org.candlepin.gutterball.resteasy.JsonProvider;
+import org.candlepin.gutterball.resteasy.interceptor.OAuthInterceptor;
 import org.candlepin.gutterball.util.EventHandlerLoader;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -121,6 +122,8 @@ public class GutterballModule extends AbstractModule {
         bind(RuntimeExceptionMapper.class);
         bind(JAXBUnmarshalExceptionMapper.class);
         bind(JAXBMarshalExceptionMapper.class);
+
+        bind(OAuthInterceptor.class);
     }
 
     protected void configureEventReciever() {

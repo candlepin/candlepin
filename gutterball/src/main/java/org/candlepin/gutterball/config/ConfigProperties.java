@@ -37,6 +37,11 @@ public class ConfigProperties {
     public static final String JPA_DB_USERNAME = "jpa.config.hibernate.connection.username";
     public static final String JPA_DB_PASSWORD = "jpa.config.hibernate.connection.password";
 
+    // Authentication
+    public static final String OAUTH_AUTHENTICATION = "gutterball.auth.oauth.enable";
+    public static final String OAUTH_CONSUMER_REGEX =
+        "\\Agutterball\\.auth\\.oauth\\.consumer\\.([^.]+)\\.secret\\z";
+
     public static final Map<String, String> DEFAULT_PROPERTIES =
         new HashMap<String, String>() {
 

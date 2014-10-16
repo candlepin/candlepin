@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.auth.interceptor;
+package org.candlepin.common.auth;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

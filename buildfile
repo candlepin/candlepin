@@ -209,7 +209,7 @@ define "candlepin" do
     checkstyle.eclipse_xml = checkstyle_eclipse_xml
     rpmlint.rpmlint_conf = rpmlint_conf
 
-    compile_classpath = [COMMONS, LOGGING, GUICE, GETTEXT_COMMONS, COLLECTIONS, PROVIDED, RESTEASY, JACKSON, JAVAX]
+    compile_classpath = [COMMONS, LOGGING, GUICE, GETTEXT_COMMONS, COLLECTIONS, PROVIDED, RESTEASY, JACKSON, JAVAX, OAUTH]
     compile.with(compile_classpath)
 
     test.with(TESTING, JUKITO, LIQUIBASE)
@@ -251,6 +251,7 @@ define "candlepin" do
       RESTEASY,
       RHINO,
       SUN_JAXB,
+      OAUTH
     ]
 
     compile.with(compile_classpath)
@@ -387,7 +388,6 @@ define "candlepin" do
       war.classes.clear
       war.classes = [msgfmt.destination, resources.target]
       web_inf = war.path('WEB-INF/classes')
-      web_inf.include("#{compile.target}/net")
       web_inf.path(candlepin_path).include("#{compiled_cp_path}/**").exclude("#{compiled_cp_path}/util/apicrawl")
     end
 

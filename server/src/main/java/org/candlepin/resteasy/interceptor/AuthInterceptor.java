@@ -19,8 +19,8 @@ import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.NoAuthPrincipal;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SubResource;
-import org.candlepin.auth.interceptor.SecurityHole;
 import org.candlepin.auth.interceptor.Verify;
+import org.candlepin.common.auth.SecurityHole;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.common.exceptions.GoneException;
@@ -151,8 +151,7 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
                 new TrustedConsumerAuth(consumerCurator, deletedConsumerCurator, i18n);
             TrustedUserAuth userAuth = new TrustedUserAuth(userService, injector);
             TrustedExternalSystemAuth systemAuth = new TrustedExternalSystemAuth();
-            providers
-                .add(new OAuth(consumerAuth, userAuth, systemAuth, injector, config));
+            providers.add(new OAuth(consumerAuth, userAuth, systemAuth, injector, config));
         }
 
         // basic http access

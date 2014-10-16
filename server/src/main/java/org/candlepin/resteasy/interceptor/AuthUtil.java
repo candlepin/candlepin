@@ -14,7 +14,7 @@
  */
 package org.candlepin.resteasy.interceptor;
 
-import org.candlepin.auth.interceptor.SecurityHole;
+import org.candlepin.common.auth.SecurityHole;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
@@ -56,7 +56,7 @@ public class AuthUtil {
     /**
      * Look up an owner. Throw an NotFoundException if not found.
      * @param owner object not retrieved from the DB.
-     * @param ownerCurator locaion of object in the DB
+     * @param ownerCurator location of object in the DB
      * @return the owner from the DB
      */
     public static Owner lookupOwner(Owner owner, OwnerCurator ownerCurator) {
