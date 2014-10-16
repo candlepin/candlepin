@@ -9,10 +9,15 @@ source "$LOCATION/../../../bin/bash_functions"
 SUBJ="/C=US/O=Candlepin"
 CERT_LOC="$LOCATION/keys"
 LOG="$CERT_LOC/keys.log"
-
 CA_NAME="broker"
-
 CN_NAME="localhost"
+
+trap on_error ERR
+on_error() {
+    local status=${1:-$?}
+    err_msg "Script failed!"
+    exit $status
+}
 
 define_variables() {
     if [ $IS_KATELLO -eq 0 ]; then
@@ -192,7 +197,7 @@ create_exchange() {
     if [ $IS_KATELLO -eq 0 ]; then
         config_args+="--ssl-certificate /etc/pki/katello/qpid_client_striped.crt"
     else
-        config_args+="--ssl-certificate \"$CERT_LOC/qpid_ca.crt\" --ssl-key \"$CERT_LOC/qpid_ca.key\""
+        config_args+="--ssl-certificate $CERT_LOC/qpid_ca.crt --ssl-key $CERT_LOC/qpid_ca.key"
     fi
 
     # Only create the exchange if it does not exist
@@ -205,9 +210,6 @@ create_exchange() {
 ##############
 # main
 ##############
-
-# Stop on errors
-set -e
 
 while getopts ":c" opt; do
     case $opt in
