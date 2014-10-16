@@ -14,8 +14,11 @@
  */
 package org.candlepin.gutterball.jackson;
 
+import org.candlepin.gutterball.model.snapshot.Entitlement;
+
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 
 /**
  *  Gutterball's ObjectMapper that ensures that it is configured the
@@ -29,5 +32,8 @@ public class GutterballObjectMapper extends ObjectMapper {
         // Since JSON will be coming from candlepin and the objects may have different schemas,
         // don't fail on unknown properties.
         configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+        SimpleModule module = new SimpleModule();
+        module.addDeserializer(Entitlement.class, new EntitlementDeserializer(this));
     }
 }

@@ -17,6 +17,9 @@ package org.candlepin.gutterball.model.snapshot;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Index;
+
+import java.util.Date;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -27,6 +30,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -56,12 +60,35 @@ public class Entitlement {
 
     private int quantity;
 
+//    @OneToOne(fetch = FetchType.LAZY)
+//    @JoinColumn(name = "source_ent_id", nullable = true)
+//    private Entitlement sourceEntitlement;
+
+    @Column(nullable = false)
+    @NotNull
+    private Date startDate;
+
+    @Column(nullable = false)
+    @NotNull
+    private Date endDate;
+
+    @Column(nullable = false)
+    @Size(max = 255)
+    @NotNull
+    private String productId;
+
+    @Column
+    @Size(max = 255)
+    private String derivedProductId;
+
     public Entitlement() {
 
     }
 
-    public Entitlement(int quantity) {
+    public Entitlement(int quantity, Date startDate, Date endDate) {
         this.quantity = quantity;
+        this.startDate = startDate;
+        this.endDate = endDate;
     }
 
     public String getId() {
@@ -88,5 +115,31 @@ public class Entitlement {
     public void setQuantity(int quantity) {
         this.quantity = quantity;
     }
+
+    public Date getStartDate() {
+        return startDate;
+    }
+
+    public void setStartDate(Date startDate) {
+        this.startDate = startDate;
+    }
+
+    public Date getEndDate() {
+        return endDate;
+    }
+
+    public void setEndDate(Date endDate) {
+        this.endDate = endDate;
+    }
+
+//    public Entitlement getSourceEntitlement() {
+//        return sourceEntitlement;
+//    }
+//
+//    public void setSourceEntitlement(Entitlement sourceEntitlement) {
+//        this.sourceEntitlement = sourceEntitlement;
+//    }
+
+
 
 }
