@@ -39,7 +39,7 @@ public class UnsupportedMediaTypeExceptionMapperTest extends
     }
 
     @Override
-    public Class getMapperClass() {
+    public Class<UnsupportedMediaTypeExceptionMapper> getMapperClass() {
         return UnsupportedMediaTypeExceptionMapper.class;
     }
 }

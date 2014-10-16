@@ -51,7 +51,7 @@ public class BadRequestExceptionMapperTest extends TestExceptionMapperBase {
     }
 
     @Override
-    public Class getMapperClass() {
+    public Class<BadRequestExceptionMapper> getMapperClass() {
         return BadRequestExceptionMapper.class;
     }
 }

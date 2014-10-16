@@ -38,7 +38,7 @@ public class NoLogWebApplicationExceptionMapperTest extends
     }
 
     @Override
-    public Class getMapperClass() {
+    public Class<NoLogWebApplicationExceptionMapper> getMapperClass() {
         return NoLogWebApplicationExceptionMapper.class;
     }
 }

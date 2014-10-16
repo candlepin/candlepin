@@ -48,7 +48,7 @@ public class FailureExceptionMapperTest extends TestExceptionMapperBase {
         assertEquals(500, r.getStatus());
         verifyMessage(r, rtmsg("unacceptable"));
     }
-    public Class getMapperClass() {
+    public Class<FailureExceptionMapper> getMapperClass() {
         return FailureExceptionMapper.class;
     }
 }

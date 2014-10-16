@@ -36,7 +36,7 @@ public class NotFoundExceptionMapperTest extends TestExceptionMapperBase {
     }
 
     @Override
-    public Class getMapperClass() {
+    public Class<NotFoundExceptionMapper> getMapperClass() {
         return NotFoundExceptionMapper.class;
     }
 }

@@ -77,7 +77,7 @@ public class JPAConfigParserTest {
         assertTrue(ecks.contains("hibernate.connection.password"));
     }
 
-    @SuppressWarnings("serial")
+    @SuppressWarnings({ "serial", "synthetic-access" })
     @Test
     public void getStringMethods() {
         Configuration localconf = new MapConfiguration(new HashMap<String, String>() {
@@ -106,14 +106,14 @@ public class JPAConfigParserTest {
             .containsKey("jpa.config.hibernate.connection.password"));
     }
 
-    private static class ConfigForTesting extends MapConfiguration {
-        public ConfigForTesting() {
-            super(new HashMap<String, String>() {
-                private static final long serialVersionUID = 1L;
-                {
-                    this.put("candlepin.passphrase.path", "/etc/katello/secure/passphrase");
-                }
-            });
-        }
-    }
+//    private static class ConfigForTesting extends MapConfiguration {
+//        public ConfigForTesting() {
+//            super(new HashMap<String, String>() {
+//                private static final long serialVersionUID = 1L;
+//                {
+//                    this.put("candlepin.passphrase.path", "/etc/katello/secure/passphrase");
+//                }
+//            });
+//        }
+//    }
 }

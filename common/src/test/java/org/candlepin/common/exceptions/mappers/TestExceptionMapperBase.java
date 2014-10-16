@@ -61,12 +61,12 @@ public abstract class TestExceptionMapperBase {
             em.getDisplayMessage().startsWith(expectedmsg));
     }
 
-    public abstract Class getMapperClass();
+    public abstract Class<?> getMapperClass();
 
     public static class MapperTestModule extends JukitoModule {
-        private Class mapper;
+        private Class<?> mapper;
 
-        public MapperTestModule(Class clazz) {
+        public MapperTestModule(Class<?> clazz) {
             mapper = clazz;
         }
 
