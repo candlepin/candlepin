@@ -46,5 +46,4 @@ public class BouncyCastlePKIReaderTest {
             });
         new BouncyCastlePKIReader(config);
     }
-
 }
