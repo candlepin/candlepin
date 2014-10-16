@@ -145,14 +145,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     }
 
     @SuppressWarnings("unchecked")
-    @Transactional
-    public List<Pool> listAvailableEntitlementPools(Consumer c, Owner o,
-            String productId, Date activeOn, boolean activeOnly) {
-        return listAvailableEntitlementPools(c, o, productId, activeOn, activeOnly,
-            new PoolFilterBuilder(), null, false).getPageData();
-    }
-
-    @SuppressWarnings("unchecked")
     public List<Pool> listExpiredPools() {
         Date today = new Date();
         Criteria crit = createSecureCriteria().add(
@@ -162,6 +154,14 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             results = new LinkedList<Pool>();
         }
         return results;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Transactional
+    public List<Pool> listAvailableEntitlementPools(Consumer c, Owner o,
+            String productId, Date activeOn, boolean activeOnly) {
+        return listAvailableEntitlementPools(c, o, productId, activeOn, activeOnly,
+            new PoolFilterBuilder(), null, false).getPageData();
     }
 
     /**

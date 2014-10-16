@@ -421,6 +421,15 @@ describe 'Owner Resource Pool Filter Tests' do
     pools = @cp.list_owner_pools(@owner['key'], {}, ["support_level:VIP"])
     pools.length.should == 1
     pools[0].productId.should == @product1.id
+
+    # Now with wildcards:
+    pools = @cp.list_owner_pools(@owner['key'], {}, ["sup*evel:V*P"])
+    pools.length.should == 1
+    pools[0].productId.should == @product1.id
+
+    pools = @cp.list_owner_pools(@owner['key'], {}, ["sup?ort_level:V??"])
+    pools.length.should == 1
+    pools[0].productId.should == @product1.id
   end
 
   it "lets owners filter pools by multiple filter" do
