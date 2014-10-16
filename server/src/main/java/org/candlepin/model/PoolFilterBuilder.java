@@ -21,8 +21,6 @@ import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.Subqueries;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,28 +34,26 @@ import java.util.List;
  */
 public class PoolFilterBuilder extends FilterBuilder {
 
-    private static Logger log = LoggerFactory.getLogger(PoolFilterBuilder.class);
-
     /**
-     * Add filters to search only for pools containing the given text. A number of
-     * fields on the pool are searched including it's SKU, SKU product name, and provided
-     * (engineering) product IDs and their names.
+     * Add filters to search only for pools matching the given text. A number of
+     * fields on the pool are searched including it's SKU, SKU product name,
+     * contract number, SLA, and provided (engineering) product IDs and their names.
      *
-     * @param containsText Text to search for in various fields on the pool. Basic
+     * @param matches Text to search for in various fields on the pool. Basic
      * wildcards are supported for everything or a single character. (* and ? respectively)
      */
-    public void addContainsTextFilter(String containsText) {
+    public void addMatchesFilter(String matches) {
 
         Disjunction textOr = Restrictions.disjunction();
-        textOr.add(new FilterLikeExpression("productName", containsText, true));
-        textOr.add(new FilterLikeExpression("productId", containsText, true));
-        textOr.add(new FilterLikeExpression("contractNumber", containsText, true));
-        textOr.add(new FilterLikeExpression("orderNumber", containsText, true));
+        textOr.add(new FilterLikeExpression("productName", matches, true));
+        textOr.add(new FilterLikeExpression("productId", matches, true));
+        textOr.add(new FilterLikeExpression("contractNumber", matches, true));
+        textOr.add(new FilterLikeExpression("orderNumber", matches, true));
         textOr.add(Subqueries.exists(
-                createProvidedProductCriteria(containsText)));
+                createProvidedProductCriteria(matches)));
         textOr.add(Subqueries.exists(
                 createAttributeCriteria(ProductPoolAttribute.class, "support_level",
-                Arrays.asList(containsText))));
+                Arrays.asList(matches))));
         this.otherCriteria.add(textOr);
     }
 
