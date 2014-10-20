@@ -35,5 +35,6 @@ public class GutterballObjectMapper extends ObjectMapper {
 
         SimpleModule module = new SimpleModule();
         module.addDeserializer(Entitlement.class, new EntitlementDeserializer(this));
+        this.registerModule(module);
     }
 }

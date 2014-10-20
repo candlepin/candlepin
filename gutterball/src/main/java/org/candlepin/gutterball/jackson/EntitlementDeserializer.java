@@ -53,9 +53,9 @@ public class EntitlementDeserializer extends JsonDeserializer<Entitlement> {
 
         JsonNode poolJson = entJson.get("pool");
 
-        int entQuantity = entJson.get("quanity").asInt();
-        Date startDate = context.parseDate(poolJson.get("startDate").textValue());
-        Date endDate = context.parseDate(poolJson.get("endDate").textValue());
+        int entQuantity = entJson.get("quantity").asInt();
+        Date startDate = context.parseDate(poolJson.get("startDate").asText());
+        Date endDate = context.parseDate(poolJson.get("endDate").asText());
 
         Entitlement ent = new Entitlement(entQuantity, startDate, endDate);
         ent.setProductId(getValue(poolJson, "productId"));
@@ -92,6 +92,10 @@ public class EntitlementDeserializer extends JsonDeserializer<Entitlement> {
 
     private Map<String, String> getAttributes(Iterator<JsonNode> elements) {
         HashMap<String, String> attrs = new HashMap<String, String>();
+        while (elements.hasNext()) {
+            JsonNode node = elements.next();
+            attrs.put(node.get("name").textValue(), node.get("value").textValue());
+        }
         return attrs;
     }
 

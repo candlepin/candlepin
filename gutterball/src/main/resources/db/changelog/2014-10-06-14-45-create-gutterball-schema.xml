@@ -131,8 +131,35 @@
                 <constraints primaryKeyName="pk_entitlement_snap" primaryKey="true" nullable="false"/>
             </column>
             <column name="quantity" type="bigint"/>
+
+            <column name="start_date" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="end_date" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="product_id" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="product_name" type="varchar(255)"/>
+            <column name="derived_product_id" type="varchar(255)"/>
+            <column name="derived_product_name" type="varchar(255)"/>
+            <column name="restricted_to_username" type="varchar(255)"/>
+            <column name="contract_number" type="varchar(255)"/>
+            <column name="account_number" type="varchar(255)"/>
+            <column name="order_number" type="varchar(255)"/>
+
             <column name="compliance_snap_id" type="varchar(32)">
                 <constraints foreignKeyName="fk_entitlement_compliance" references="gb_compliance_snap(id)" nullable="false"/>
+            </column>
+        </createTable>
+        <createTable tableName="gb_ent_attr_snap">
+            <column name="ent_snap_id" type="varchar(32)">
+                <constraints foreignKeyName="fk_attribute_ent" references="gb_entitlement_snap(id)" nullable="false"/>
+            </column>
+            <column name="gb_ent_attr_value" type="varchar(255)"/>
+            <column name="gb_ent_attr_name" type="varchar(255)">
+                <constraints nullable="false"/>
             </column>
         </createTable>
     </changeSet>
