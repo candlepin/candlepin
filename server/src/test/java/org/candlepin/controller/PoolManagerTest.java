@@ -362,7 +362,7 @@ public class PoolManagerTest {
         subscriptions.add(s);
         Pool p = TestUtil.createPool(s.getProduct());
         p.setSourceSubscription(new SourceSubscription(s.getId(), "master"));
-        p.setAttribute(PoolManager.DELETE_FLAG, "true");
+        p.setMarkedForDelete(true);
         p.setOwner(s.getOwner());
         pools.add(p);
 

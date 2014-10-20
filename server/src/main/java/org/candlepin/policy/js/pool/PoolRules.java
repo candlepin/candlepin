@@ -275,29 +275,30 @@ public class PoolRules {
             update.setQuantityChanged(
                 checkForQuantityChange(sub, existingPool, existingPools, attributes));
 
-            // Checks product name, ID, and provided products. Attributes are handled
-            // separately.
-            // TODO: should they be separate? ^^
-            update.setProductsChanged(
-                checkForChangedProducts(sub.getProduct().getId(),
-                    sub.getProduct().getName(),
-                    getExpectedProvidedProducts(sub, existingPool),
+            if (!existingPool.isMarkedForDelete()) {
+                // Checks product name, ID, and provided products. Attributes are handled
+                // separately.
+                // TODO: should they be separate? ^^
+                update.setProductsChanged(
+                    checkForChangedProducts(sub.getProduct().getId(),
+                        sub.getProduct().getName(),
+                        getExpectedProvidedProducts(sub, existingPool),
+                        existingPool));
+
+                update.setDerivedProductsChanged(
+                    checkForChangedDerivedProducts(sub, existingPool));
+
+                update.setProductAttributesChanged(checkForProductAttributeChanges(sub,
+                    helper, existingPool));
+
+                update.setDerivedProductAttributesChanged(
+                    checkForSubProductAttributeChanges(sub, helper, existingPool));
+
+                update.setOrderChanged(checkForOrderDataChanges(sub, helper,
                     existingPool));
 
-            update.setDerivedProductsChanged(
-                checkForChangedDerivedProducts(sub, existingPool));
-
-            update.setProductAttributesChanged(checkForProductAttributeChanges(sub,
-                helper, existingPool));
-
-            update.setDerivedProductAttributesChanged(
-                checkForSubProductAttributeChanges(sub, helper, existingPool));
-
-            update.setOrderChanged(checkForOrderDataChanges(sub, helper,
-                existingPool));
-
-            update.setBrandingChanged(checkForBrandingChanges(sub, existingPool));
-
+                update.setBrandingChanged(checkForBrandingChanges(sub, existingPool));
+            }
             // All done, see if we found any changes and return an update object if so:
             if (update.changed()) {
                 poolsUpdated.add(update);
@@ -612,8 +613,8 @@ public class PoolRules {
                     "flagging pool for deletion if supported: " + existingPool.getId());
                 // virt_limit has been removed! We need to clean up this pool. Set
                 // attribute to notify the server of this:
-                existingPool.setAttribute("candlepin.delete_pool", "true");
-                // Older candlepin's won't look at the delete attribute, so we will
+                existingPool.setMarkedForDelete(true);
+                // Older candlepin's won't look at the delete indicator, so we will
                 // set the expected quantity to 0 to effectively disable the pool
                 // on those servers as well.
                 expectedQuantity = 0;

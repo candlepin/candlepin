@@ -690,13 +690,12 @@ public class PoolRulesTest {
         // Regular pool should be in a sane state:
         PoolUpdate baseUpdate = updates.get(0);
         assertEquals(new Long(10), baseUpdate.getPool().getQuantity());
-        assertFalse(baseUpdate.getPool().hasAttribute(PoolManager.DELETE_FLAG));
+        assertFalse(baseUpdate.getPool().isMarkedForDelete());
 
         // Virt bonus pool should have quantity 0 and be flagged for cleanup:
         PoolUpdate virtUpdate = updates.get(1);
         assertEquals(new Long(0), virtUpdate.getPool().getQuantity());
-        assertEquals("true", virtUpdate.getPool().getAttributeValue(
-            PoolManager.DELETE_FLAG));
+        assertTrue(virtUpdate.getPool().isMarkedForDelete());
     }
 
     @Test

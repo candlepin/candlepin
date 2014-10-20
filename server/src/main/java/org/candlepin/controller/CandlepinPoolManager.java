@@ -325,8 +325,7 @@ public class CandlepinPoolManager implements PoolManager {
             log.info("Pool changed: " + updatedPool.toString());
 
             // Delete pools the rules signal needed to be cleaned up:
-            if (existingPool.hasAttribute(PoolManager.DELETE_FLAG) &&
-                existingPool.getAttributeValue(PoolManager.DELETE_FLAG).equals("true")) {
+            if (existingPool.isMarkedForDelete()) {
                 log.warn("Deleting pool as requested by rules: " +
                     existingPool.getId());
                 deletePool(existingPool);
