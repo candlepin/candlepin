@@ -243,6 +243,9 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     @Transient
     private Map<String, String> calculatedAttributes;
 
+    @Transient
+    private boolean markedForDelete = false;
+
     public Pool() {
     }
 
@@ -968,5 +971,14 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     @XmlTransient
     public String getName() {
         return this.getProductName();
+    }
+
+    @XmlTransient
+    public boolean isMarkedForDelete() {
+        return this.markedForDelete;
+    }
+
+    public void setMarkedForDelete(boolean markedForDelete) {
+        this.markedForDelete = markedForDelete;
     }
 }

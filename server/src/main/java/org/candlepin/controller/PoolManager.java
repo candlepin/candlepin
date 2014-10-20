@@ -39,9 +39,6 @@ import java.util.Set;
  */
 public interface PoolManager {
 
-    // WARNING: Changing these will impact rules files in the wild.
-    String DELETE_FLAG = "candlepin.delete_pool";
-
     Pool createPool(Pool p);
 
     /**
