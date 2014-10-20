@@ -26,6 +26,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 public class EntitlementDeserializer extends JsonDeserializer<Entitlement> {
 
@@ -39,21 +42,57 @@ public class EntitlementDeserializer extends JsonDeserializer<Entitlement> {
     public Entitlement deserialize(JsonParser jp, DeserializationContext context)
             throws IOException, JsonProcessingException {
         JsonNode entJson = jp.getCodec().readTree(jp);
-        JsonNode poolJson = entJson.get("pool");
-        JsonNode sourceEntJson = poolJson.get("sourceEntitlement");
+        return getEntitlement(entJson, context);
+    }
 
-//        ent.setSourceEntitlement(sourceEntJson == null ? null :
-//            mapper.readValue(sourceEntJson.binaryValue(), Entitlement.class));
+    private Entitlement getEntitlement(JsonNode entJson, DeserializationContext context) {
+
+        if (entJson == null) {
+            return null;
+        }
+
+        JsonNode poolJson = entJson.get("pool");
 
         int entQuantity = entJson.get("quanity").asInt();
         Date startDate = context.parseDate(poolJson.get("startDate").textValue());
         Date endDate = context.parseDate(poolJson.get("endDate").textValue());
 
         Entitlement ent = new Entitlement(entQuantity, startDate, endDate);
+        ent.setProductId(getValue(poolJson, "productId"));
+        ent.setDerivedProductId(getValue(poolJson, "derivedProductId"));
+        ent.setProductName(getValue(poolJson, "productName"));
+        ent.setDerivedProductName(getValue(poolJson, "derivedProductName"));
+        ent.setRestrictedToUsername(getValue(poolJson, "restrictedToUsername"));
+        ent.setContractNumber(getValue(poolJson, "contractNumber"));
+        ent.setAccountNumber(getValue(poolJson, "accountNumber"));
+        ent.setOrderNumber(getValue(poolJson, "orderNumber"));
+        ent.setAttributes(getFlattenedAttributes(poolJson));
+        //ent.setSourceEntitlement(getEntitlement(poolJson.get("sourceEntitlement"), context));
 
         return ent;
     }
 
+    private String getValue(JsonNode json, String key) {
+        if (!json.has(key)) {
+            return null;
+        }
+        return json.get(key).textValue();
+    }
 
+    private Map<String, String> getFlattenedAttributes(JsonNode poolJson) {
+        Map<String, String> allAttributes = new HashMap<String, String>();
+        if (poolJson.hasNonNull("productAttributes")) {
+            allAttributes.putAll(getAttributes(poolJson.get("productAttributes").elements()));
+        }
+        if (poolJson.hasNonNull("poolAttributes")) {
+            allAttributes.putAll(getAttributes(poolJson.get("poolAttributes").elements()));
+        }
+        return allAttributes;
+    }
+
+    private Map<String, String> getAttributes(Iterator<JsonNode> elements) {
+        HashMap<String, String> attrs = new HashMap<String, String>();
+        return attrs;
+    }
 
 }

@@ -16,17 +16,22 @@ package org.candlepin.gutterball.model.snapshot;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Index;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
+import javax.persistence.CollectionTable;
 import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
@@ -60,29 +65,59 @@ public class Entitlement {
 
     private int quantity;
 
-//    @OneToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "source_ent_id", nullable = true)
-//    private Entitlement sourceEntitlement;
+    // TODO Entitlement sourceEntitlement
 
-    @Column(nullable = false)
+    @Column(name = "start_date", nullable = false)
     @NotNull
     private Date startDate;
 
-    @Column(nullable = false)
+    @Column(name = "end_date", nullable = false)
     @NotNull
     private Date endDate;
 
-    @Column(nullable = false)
+    @Column(name = "product_id", nullable = false)
     @Size(max = 255)
     @NotNull
     private String productId;
 
-    @Column
     @Size(max = 255)
+    @Column(name = "derived_product_id")
     private String derivedProductId;
 
-    public Entitlement() {
+    @Size(max = 255)
+    @Column(name = "product_name")
+    private String productName;
 
+    @Size(max = 255)
+    @Column(name = "derived_product_name")
+    private String derivedProductName;
+
+    @Size(max = 255)
+    @Column(name = "restricted_to_username")
+    private String restrictedToUsername;
+
+    @Size(max = 255)
+    @Column(name = "contract_number")
+    private String contractNumber;
+
+    @Size(max = 255)
+    @Column(name = "account_number")
+    private String accountNumber;
+
+    @Size(max = 255)
+    @Column(name = "order_number")
+    private String orderNumber;
+
+    @ElementCollection
+    @CollectionTable(name = "gb_ent_attr_snap",
+                     joinColumns = @JoinColumn(name = "ent_snap_id"))
+    @MapKeyColumn(name = "gb_ent_attr_name")
+    @Column(name = "gb_ent_attr_value")
+    @Cascade({org.hibernate.annotations.CascadeType.ALL})
+    private Map<String, String> attributes;
+
+    public Entitlement() {
+        attributes = new HashMap<String, String>();
     }
 
     public Entitlement(int quantity, Date startDate, Date endDate) {
@@ -132,14 +167,76 @@ public class Entitlement {
         this.endDate = endDate;
     }
 
-//    public Entitlement getSourceEntitlement() {
-//        return sourceEntitlement;
-//    }
-//
-//    public void setSourceEntitlement(Entitlement sourceEntitlement) {
-//        this.sourceEntitlement = sourceEntitlement;
-//    }
+    public String getProductId() {
+        return productId;
+    }
 
+    public void setProductId(String productId) {
+        this.productId = productId;
+    }
 
+    public String getDerivedProductId() {
+        return derivedProductId;
+    }
+
+    public void setDerivedProductId(String derivedProductId) {
+        this.derivedProductId = derivedProductId;
+    }
+
+    public String getProductName() {
+        return productName;
+    }
+
+    public void setProductName(String productName) {
+        this.productName = productName;
+    }
+
+    public String getDerivedProductName() {
+        return derivedProductName;
+    }
+
+    public void setDerivedProductName(String derivedProductName) {
+        this.derivedProductName = derivedProductName;
+    }
+
+    public String getRestrictedToUsername() {
+        return restrictedToUsername;
+    }
+
+    public void setRestrictedToUsername(String restrictedToUsername) {
+        this.restrictedToUsername = restrictedToUsername;
+    }
+
+    public String getContractNumber() {
+        return contractNumber;
+    }
+
+    public void setContractNumber(String contractNumber) {
+        this.contractNumber = contractNumber;
+    }
+
+    public String getAccountNumber() {
+        return accountNumber;
+    }
+
+    public void setAccountNumber(String accountNumber) {
+        this.accountNumber = accountNumber;
+    }
+
+    public String getOrderNumber() {
+        return orderNumber;
+    }
+
+    public void setOrderNumber(String orderNumber) {
+        this.orderNumber = orderNumber;
+    }
+
+    public Map<String, String> getAttributes() {
+        return attributes;
+    }
+
+    public void setAttributes(Map<String, String> attributes) {
+        this.attributes = attributes;
+    }
 
 }
