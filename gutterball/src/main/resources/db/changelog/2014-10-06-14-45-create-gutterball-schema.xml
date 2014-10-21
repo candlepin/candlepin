@@ -171,6 +171,15 @@
                 <constraints nullable="false"/>
             </column>
         </createTable>
+        <createTable tableName="gb_ent_der_prov_prod_snap">
+            <column name="ent_snap_id" type="varchar(32)">
+                <constraints foreignKeyName="fk_der_prov_prod_ent" references="gb_entitlement_snap(id)" nullable="false"/>
+            </column>
+            <column name="gb_ent_der_prov_prod_name" type="varchar(255)"/>
+            <column name="gb_ent_der_prov_prod_id" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
     </changeSet>
 
     <changeSet id="20141006144514-10" author="awood">
