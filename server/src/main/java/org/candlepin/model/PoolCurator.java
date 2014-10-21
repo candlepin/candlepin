@@ -27,7 +27,7 @@ import com.google.inject.persist.Transactional;
 
 import org.hibernate.Criteria;
 import org.hibernate.Filter;
-import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.Query;
 import org.hibernate.ReplicationMode;
 import org.hibernate.criterion.CriteriaSpecification;
@@ -434,7 +434,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     }
 
     public Pool lockAndLoad(Pool pool) {
-        currentSession().refresh(pool, LockMode.UPGRADE);
+        currentSession().refresh(pool, LockOptions.UPGRADE);
         getEntityManager().refresh(pool);
         return pool;
     }
