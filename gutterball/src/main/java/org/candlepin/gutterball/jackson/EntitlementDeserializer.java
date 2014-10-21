@@ -68,8 +68,24 @@ public class EntitlementDeserializer extends JsonDeserializer<Entitlement> {
         ent.setOrderNumber(getValue(poolJson, "orderNumber"));
         ent.setAttributes(getFlattenedAttributes(poolJson));
         //ent.setSourceEntitlement(getEntitlement(poolJson.get("sourceEntitlement"), context));
+        ent.setProvidedProducts(flattenProvidedProducts(poolJson));
 
         return ent;
+    }
+
+    private Map<String, String> flattenProvidedProducts(JsonNode poolJson) {
+        Map<String, String> provided = new HashMap<String, String>();
+        if (!poolJson.hasNonNull("providedProducts")) {
+            return provided;
+        }
+
+        Iterator<JsonNode> elements = poolJson.get("providedProducts").elements();
+        while (elements.hasNext()) {
+            JsonNode providedProductJson = elements.next();
+            provided.put(providedProductJson.get("productId").textValue(),
+                    getValue(providedProductJson, "productName"));
+        }
+        return provided;
     }
 
     private String getValue(JsonNode json, String key) {

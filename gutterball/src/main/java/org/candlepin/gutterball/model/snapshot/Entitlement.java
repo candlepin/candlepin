@@ -116,11 +116,21 @@ public class Entitlement {
     @Cascade({org.hibernate.annotations.CascadeType.ALL})
     private Map<String, String> attributes;
 
+    @ElementCollection
+    @CollectionTable(name = "gb_ent_prov_prod_snap",
+                     joinColumns = @JoinColumn(name = "ent_snap_id"))
+    @MapKeyColumn(name = "gb_ent_prov_prod_id")
+    @Column(name = "gb_ent_prov_prod_name")
+    @Cascade({org.hibernate.annotations.CascadeType.ALL})
+    private Map<String, String> providedProducts;
+
     public Entitlement() {
         attributes = new HashMap<String, String>();
+        providedProducts = new HashMap<String, String>();
     }
 
     public Entitlement(int quantity, Date startDate, Date endDate) {
+        this();
         this.quantity = quantity;
         this.startDate = startDate;
         this.endDate = endDate;
@@ -237,6 +247,14 @@ public class Entitlement {
 
     public void setAttributes(Map<String, String> attributes) {
         this.attributes = attributes;
+    }
+
+    public Map<String, String> getProvidedProducts() {
+        return providedProducts;
+    }
+
+    public void setProvidedProducts(Map<String, String> providedProducts) {
+        this.providedProducts = providedProducts;
     }
 
 }
