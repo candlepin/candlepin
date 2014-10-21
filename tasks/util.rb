@@ -29,12 +29,8 @@ module Candlepin
         Pathname.new(child).relative_path_from(Pathname.new(parent)).to_s
       end
 
-      def project_path_to(project, path)
-        relative_path_to(project.base_dir, path)
-      end
-
       def top_path_to(project, path)
-        project_path_to(top_project(project), path)
+        top_project(project).path_to(path)
       end
     end
 

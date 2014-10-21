@@ -6,6 +6,8 @@ require 'stringex_lite'
 require './tasks/util'
 
 module Liquibase
+  include ::Candlepin::Util
+
   class << self
     def add_to_changelog(file, liquibase)
       file = File.join(liquibase.include_path, File.basename(file))
@@ -86,67 +88,104 @@ module Liquibase
     end
   end
 
+  class ChangesetTask < Rake::Task
+    attr_reader :now
+    attr_reader :project
+
+    class << self
+      def run_local(description) #:nodoc:
+        Project.local_projects do |local_project|
+          local_project.task('changeset').invoke(description)
+        end
+      end
+    end
+
+    def initialize(*args)
+      super
+      @now = DateTime.now
+    end
+
+    def execute(args)
+      super
+      description = args[:description]
+      liquibase = project.liquibase
+
+      unless liquibase.enabled?
+        fail("Project #{project} does not have Liquibase enabled")
+      end
+
+      values = TemplateValues.new
+      values.description = description
+      values.author = ENV['USER']
+      values.id = now.strftime('%Y%m%d%H%M%S') + "-1"
+
+      changeset_slug = values.description.to_url
+      date_slug = now.strftime(liquibase.file_time_prefix_format)
+
+      out_file = "#{date_slug}-#{changeset_slug}.xml"
+      out_file = File.join(liquibase.changelog_dir, out_file)
+
+      # Set ERB trim mode to omit blank lines ending in -%>
+      erb = ERB.new(Liquibase.strip_heredoc(liquibase.template), nil, '-')
+
+      fail("#{project.path_to(out_file)} exists already!") if File.exists?(out_file)
+
+      File.open(out_file, 'w') do |f|
+        f.write(erb.result(values.binding))
+      end
+
+      Liquibase.add_to_changelog(out_file, liquibase)
+      info("Wrote #{project.path_to(out_file)}")
+    end
+
+    protected
+
+    def associate_with(project)
+      @project = project
+    end
+  end
+
   module ProjectExtension
     include Extension
-    include ::Candlepin::Util
 
     def liquibase
       @liquibase ||= Liquibase::Config.new(project)
     end
 
+    # TODO: Get working with project coordinates?
+    # E.g. buildr candlepin:server:changeset:blah
+    # Something like /^(\w+:)*changeset:(.+)/ maybe and then grab the project from
+    # the first capture group like Buildr.project("candlepin:server")
+    CHANGESET_REGEX = /^changeset:(.+)/
+
     first_time do
       desc "Create a new Liquibase changeset."
-      Project.local_task('liquibase:changeset')
-    end
-
-    CHANGESET_REGEX = /^liquibase:changeset:(.+)/
-
-    after_define do |project|
-      liquibase = project.liquibase
-
-      if liquibase.enabled?
-        task("liquibase:changeset") do |task|
-          help = strip_heredoc(<<-HELP
-          To create a changeset, add a colon to the `liquibase:changeset` task followed
+      task('changeset', :description) do |task, args|
+        if args[:description].nil?
+          help = Liquibase.strip_heredoc(<<-HELP
+          To create a changeset, add a colon to the `changeset` task followed
           by a description.  If your description has multiple words, remember to quote it
           so the shell doesn't break it up.
 
           For example:
-              $ buildr "liquibase:changeset:Create a new table"
+              $ buildr "changeset:Create a new table"
           HELP
           )
           info(help)
-        end
-
-        rule(CHANGESET_REGEX) do |task|
-          now = DateTime.now
-
-          values = TemplateValues.new
-          values.description = CHANGESET_REGEX.match(task.name)[1]
-          values.author = ENV['USER']
-          values.id = now.strftime('%Y%m%d%H%M%S') + "-1"
-
-          changeset_slug = values.description.to_url
-          date_slug = now.strftime(liquibase.file_time_prefix_format)
-          out_file = "#{date_slug}-#{changeset_slug}.xml"
-          out_file = File.join(liquibase.changelog_dir, out_file)
-
-          task('create_changeset') do |t|
-            # Set ERB trim mode to omit blank lines ending in -%>
-            erb = ERB.new(strip_heredoc(liquibase.template), nil, '-')
-
-            fail("#{project_path_to(project, out_file)} exists already!") if File.exists?(out_file)
-
-            File.open(out_file, 'w') do |f|
-              f.write(erb.result(values.binding))
-            end
-
-            Liquibase.add_to_changelog(out_file, liquibase)
-            info("Wrote #{project_path_to(project, out_file)}")
-          end
-          task('create_changeset').invoke
+        else
+          ChangesetTask.run_local(args[:description])
         end
       end
+
+      rule(CHANGESET_REGEX) do |task|
+        description = CHANGESET_REGEX.match(task.name)[1]
+        task('changeset').invoke(description)
+      end
+    end
+
+    before_define do |project|
+      changeset_task = ChangesetTask.define_task('changeset', :description)
+      changeset_task.send(:associate_with, project)
     end
   end
 end
