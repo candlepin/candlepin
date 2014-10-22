@@ -22,7 +22,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.util.Date;
@@ -30,17 +29,15 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+/**
+ * Responsible for transforming a candlepin JSON representation of an Entitlement
+ * to a gutterball Entitlement model object.
+ */
 public class EntitlementDeserializer extends JsonDeserializer<Entitlement> {
-
-    private ObjectMapper mapper;
-
-    public EntitlementDeserializer(ObjectMapper mapper) {
-        this.mapper = mapper;
-    }
 
     @Override
     public Entitlement deserialize(JsonParser jp, DeserializationContext context)
-            throws IOException, JsonProcessingException {
+        throws IOException, JsonProcessingException {
         JsonNode entJson = jp.getCodec().readTree(jp);
         return getEntitlement(entJson, context);
     }

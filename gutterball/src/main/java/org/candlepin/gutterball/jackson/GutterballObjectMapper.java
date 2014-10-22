@@ -34,7 +34,7 @@ public class GutterballObjectMapper extends ObjectMapper {
         configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
         SimpleModule module = new SimpleModule();
-        module.addDeserializer(Entitlement.class, new EntitlementDeserializer(this));
+        module.addDeserializer(Entitlement.class, new EntitlementDeserializer());
         this.registerModule(module);
     }
 }
