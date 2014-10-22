@@ -125,6 +125,14 @@ public class Entitlement {
     private Map<String, String> providedProducts;
 
     @ElementCollection
+    @CollectionTable(name = "gb_ent_der_prod_attr_snap",
+                     joinColumns = @JoinColumn(name = "ent_snap_id"))
+    @MapKeyColumn(name = "gb_ent_der_prod_attr_name")
+    @Column(name = "gb_ent_der_prod_attr_value")
+    @Cascade({org.hibernate.annotations.CascadeType.ALL})
+    private Map<String, String> derivedProductAttributes;
+
+    @ElementCollection
     @CollectionTable(name = "gb_ent_der_prov_prod_snap",
                      joinColumns = @JoinColumn(name = "ent_snap_id"))
     @MapKeyColumn(name = "gb_ent_der_prov_prod_id")
@@ -134,6 +142,7 @@ public class Entitlement {
 
     public Entitlement() {
         attributes = new HashMap<String, String>();
+        derivedProductAttributes = new HashMap<String, String>();
         providedProducts = new HashMap<String, String>();
         derivedProvidedProducts = new HashMap<String, String>();
     }
@@ -273,6 +282,15 @@ public class Entitlement {
     public void setDerivedProvidedProducts(
             Map<String, String> derivedProvidedProducts) {
         this.derivedProvidedProducts = derivedProvidedProducts;
+    }
+
+    public Map<String, String> getDerivedProductAttributes() {
+        return derivedProductAttributes;
+    }
+
+    public void setDerivedProductAttributes(
+            Map<String, String> derivedProductAttributes) {
+        this.derivedProductAttributes = derivedProductAttributes;
     }
 
 }

@@ -66,10 +66,11 @@ public class EntitlementDeserializer extends JsonDeserializer<Entitlement> {
         ent.setContractNumber(getValue(poolJson, "contractNumber"));
         ent.setAccountNumber(getValue(poolJson, "accountNumber"));
         ent.setOrderNumber(getValue(poolJson, "orderNumber"));
-        ent.setAttributes(getFlattenedAttributes(poolJson));
+        ent.setAttributes(getFlattenedProductAttributes(poolJson));
         //ent.setSourceEntitlement(getEntitlement(poolJson.get("sourceEntitlement"), context));
         ent.setProvidedProducts(flattenProvidedProducts(poolJson));
         ent.setDerivedProvidedProducts(flattenDerivedProvidedProducts(poolJson));
+        ent.setDerivedProductAttributes(getDerivedProductAttributes(poolJson));
 
         return ent;
     }
@@ -104,7 +105,7 @@ public class EntitlementDeserializer extends JsonDeserializer<Entitlement> {
         return json.get(key).textValue();
     }
 
-    private Map<String, String> getFlattenedAttributes(JsonNode poolJson) {
+    private Map<String, String> getFlattenedProductAttributes(JsonNode poolJson) {
         Map<String, String> allAttributes = new HashMap<String, String>();
         if (poolJson.hasNonNull("productAttributes")) {
             allAttributes.putAll(getAttributes(poolJson.get("productAttributes").elements()));
@@ -113,6 +114,14 @@ public class EntitlementDeserializer extends JsonDeserializer<Entitlement> {
             allAttributes.putAll(getAttributes(poolJson.get("poolAttributes").elements()));
         }
         return allAttributes;
+    }
+
+    private Map<String, String> getDerivedProductAttributes(JsonNode poolJson) {
+        Map<String, String> attrs = new HashMap<String, String>();
+        if (poolJson.hasNonNull("derivedProductAttributes")) {
+            attrs.putAll(getAttributes(poolJson.get("derivedProductAttributes").elements()));
+        }
+        return attrs;
     }
 
     private Map<String, String> getAttributes(Iterator<JsonNode> elements) {
