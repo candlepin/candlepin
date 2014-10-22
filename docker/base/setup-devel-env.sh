@@ -43,7 +43,7 @@ git clone https://github.com/candlepin/candlepin.git /candlepin
 cd /candlepin
 
 # Allow for grabbing specific pull requests
-git config --add remote.origin.fetch "+refs/pull/*/head:refs/remotes/origin/pull/*"
+git config --add remote.origin.fetch "+refs/pull/*:refs/remotes/origin/pr/*"
 
 # Install all ruby deps:
 gem install bundler

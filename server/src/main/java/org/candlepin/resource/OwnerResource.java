@@ -692,6 +692,8 @@ public class OwnerResource {
      * Retrieves a list of Pools for an Owner
      *
      * @param ownerKey id of the owner whose entitlement pools are sought.
+     * @param matches Find pools matching the given pattern in a variety of fields.
+     * * and ? wildcards are supported.
      * @return a list of Pool objects
      * @httpcode 400
      * @httpcode 404
@@ -709,6 +711,7 @@ public class OwnerResource {
         @QueryParam("product") String productId,
         @QueryParam("listall") @DefaultValue("false") boolean listAll,
         @QueryParam("activeon") String activeOn,
+        @QueryParam("matches") String matches,
         @QueryParam("attribute") @CandlepinParam(type = KeyValueParameter.class)
             List<KeyValueParameter> attrFilters,
         @Context Principal principal,
@@ -754,6 +757,9 @@ public class OwnerResource {
         PoolFilterBuilder poolFilters = new PoolFilterBuilder();
         for (KeyValueParameter filterParam : attrFilters) {
             poolFilters.addAttributeFilter(filterParam.key(), filterParam.value());
+        }
+        if (!StringUtils.isEmpty(matches)) {
+            poolFilters.addMatchesFilter(matches);
         }
 
         Page<List<Pool>> page = poolManager.listAvailableEntitlementPools(c, key, owner,

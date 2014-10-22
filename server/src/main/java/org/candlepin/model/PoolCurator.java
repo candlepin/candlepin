@@ -27,7 +27,7 @@ import com.google.inject.persist.Transactional;
 
 import org.hibernate.Criteria;
 import org.hibernate.Filter;
-import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.Query;
 import org.hibernate.ReplicationMode;
 import org.hibernate.criterion.CriteriaSpecification;
@@ -145,14 +145,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     }
 
     @SuppressWarnings("unchecked")
-    @Transactional
-    public List<Pool> listAvailableEntitlementPools(Consumer c, Owner o,
-            String productId, Date activeOn, boolean activeOnly) {
-        return listAvailableEntitlementPools(c, o, productId, activeOn, activeOnly,
-            new PoolFilterBuilder(), null, false).getPageData();
-    }
-
-    @SuppressWarnings("unchecked")
     public List<Pool> listExpiredPools() {
         Date today = new Date();
         Criteria crit = createSecureCriteria().add(
@@ -162,6 +154,14 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             results = new LinkedList<Pool>();
         }
         return results;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Transactional
+    public List<Pool> listAvailableEntitlementPools(Consumer c, Owner o,
+            String productId, Date activeOn, boolean activeOnly) {
+        return listAvailableEntitlementPools(c, o, productId, activeOn, activeOnly,
+            new PoolFilterBuilder(), null, false).getPageData();
     }
 
     /**
@@ -434,7 +434,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     }
 
     public Pool lockAndLoad(Pool pool) {
-        currentSession().refresh(pool, LockMode.UPGRADE);
+        currentSession().refresh(pool, LockOptions.UPGRADE);
         getEntityManager().refresh(pool);
         return pool;
     }

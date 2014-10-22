@@ -26,25 +26,40 @@ import javax.ws.rs.core.Response.Status;
 public class CandlepinException extends RuntimeException {
     private static final long serialVersionUID = -3430329252623764984L;
     private final Status returnCode;
+    private final boolean logException;
 
     protected final ExceptionMessage message;
 
     public CandlepinException(Status returnCode, String message) {
-       this(returnCode, message, null);
+        this(returnCode, message, null);
+    }
+
+    public CandlepinException(Status returnCode, String message, boolean logException) {
+        this(returnCode, message, logException, null);
     }
 
     // ctor for sending in a subclassed ExceptionMessage
     public CandlepinException(Status returnCode, ExceptionMessage em) {
+        this(returnCode, em, true);
+    }
+
+    public CandlepinException(Status returnCode, ExceptionMessage em, boolean logException) {
         super(em.getDisplayMessage(), null);
         this.returnCode = returnCode;
         this.message = em;
+        this.logException = logException;
     }
 
 
     public CandlepinException(Status returnCode, String message, Throwable e) {
+        this(returnCode, message, true, e);
+    }
+
+    public CandlepinException(Status returnCode, String message, boolean logException, Throwable e) {
         super(message, e);
         this.returnCode = returnCode;
         this.message = new ExceptionMessage(message);
+        this.logException = logException;
     }
 
     public ExceptionMessage message() {
@@ -63,4 +78,9 @@ public class CandlepinException extends RuntimeException {
     public Map<String, String> headers() {
         return new HashMap<String, String>();
     }
+
+    public boolean isLogException() {
+        return logException;
+    }
+
 }

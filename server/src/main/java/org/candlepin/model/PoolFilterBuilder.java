@@ -16,12 +16,14 @@ package org.candlepin.model;
 
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.Subqueries;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 
@@ -31,6 +33,48 @@ import java.util.List;
  * Builds criteria to find pools based upon their attributes and product attributes
  */
 public class PoolFilterBuilder extends FilterBuilder {
+
+    /**
+     * Add filters to search only for pools matching the given text. A number of
+     * fields on the pool are searched including it's SKU, SKU product name,
+     * contract number, SLA, and provided (engineering) product IDs and their names.
+     *
+     * @param matches Text to search for in various fields on the pool. Basic
+     * wildcards are supported for everything or a single character. (* and ? respectively)
+     */
+    public void addMatchesFilter(String matches) {
+
+        Disjunction textOr = Restrictions.disjunction();
+        textOr.add(new FilterLikeExpression("productName", matches, true));
+        textOr.add(new FilterLikeExpression("productId", matches, true));
+        textOr.add(new FilterLikeExpression("contractNumber", matches, true));
+        textOr.add(new FilterLikeExpression("orderNumber", matches, true));
+        textOr.add(Subqueries.exists(
+                createProvidedProductCriteria(matches)));
+        textOr.add(Subqueries.exists(
+                createAttributeCriteria(ProductPoolAttribute.class, "support_level",
+                Arrays.asList(matches))));
+        this.otherCriteria.add(textOr);
+    }
+
+    private DetachedCriteria createProvidedProductCriteria(String searchString) {
+
+        DetachedCriteria attrMatch = DetachedCriteria.forClass(
+            ProvidedProduct.class, "provided");
+
+        List<Criterion> providedOrs = new ArrayList<Criterion>();
+        providedOrs.add(new FilterLikeExpression("productId", searchString, true));
+        providedOrs.add(new FilterLikeExpression("productName", searchString, true));
+
+        attrMatch.add(Restrictions.or(
+            providedOrs.toArray(new Criterion[providedOrs.size()]))
+        );
+
+        attrMatch.add(Property.forName("this.id").eqProperty("provided.pool.id"));
+        attrMatch.setProjection(Projections.property("provided.id"));
+
+        return attrMatch;
+    }
 
     @Override
     protected Criterion buildCriteriaForKey(String key, List<String> values) {
