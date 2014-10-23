@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.26.2
+Version: 0.9.26.3
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -390,6 +390,11 @@ fi
 
 
 %changelog
+* Thu Oct 23 2014 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.26.3-1
+- 1150234: Hibernate error when virt_limit removed from product
+  (wpoteat@redhat.com)
+- Workaround EL6 build failures. (dgoodwin@redhat.com)
+
 * Thu Oct 23 2014 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.26.2-1
 - Revert "Stop picking up openjdk 1.8.0 on RHEL 6.5, ant is broken there."
   (dgoodwin@redhat.com)
