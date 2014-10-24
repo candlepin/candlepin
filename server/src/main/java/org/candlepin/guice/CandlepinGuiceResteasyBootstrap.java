@@ -47,14 +47,18 @@ public abstract class CandlepinGuiceResteasyBootstrap extends ResteasyBootstrap
     implements ServletContextListener {
     private static Logger log = LoggerFactory.getLogger(CandlepinGuiceResteasyBootstrap.class);
 
+    @Override
     public void contextInitialized(final ServletContextEvent event) {
         super.contextInitialized(event);
         final ServletContext context = event.getServletContext();
         final List<Module> modules = getModules(context);
-        log.debug("modules retrieved");
         final Stage stage = getStage(context);
-        log.debug("Processing injector");
-        processInjector(context, getInjector(stage, modules));
+        try {
+            processInjector(context, getInjector(stage, modules));
+        }
+        catch (Exception e) {
+            log.error("Could not create Guice injector.", e);
+        }
         log.debug("Returned from process injector");
     }
 
