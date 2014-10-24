@@ -16,8 +16,13 @@ package org.candlepin.common.config;
 
 import static org.junit.Assert.*;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.Writer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -32,6 +37,34 @@ public class JPAConfigParserTest {
         "QwGhDv4FSnyTbFJf8O6gvWIsmQX7PZtE64ALMCXx4DcS48s5Sum7RkVcefD0vMe5";
     private String plainPassword = "testpassword";
     private String encPasswordAsStored = "$1$8dg00oV+ZhN74tvxG+kAhw==";
+
+    @SuppressWarnings("visibilitymodifier")
+    @Rule
+    public TemporaryFolder temp = new TemporaryFolder();
+
+    @Test
+    public void testParseConfig() throws Exception {
+        final File passphraseFile = temp.newFile("passphrase.txt");
+        Writer w = new FileWriter(passphraseFile);
+        w.write(passphrase);
+        w.close();
+
+        final String prefix = JPAConfigParser.JPA_CONFIG_PREFIX + ".";
+        final String key1 = "hibernate.connection.password";
+        final String key2 = "x";
+
+        Map<String, String> configuration = new HashMap<String, String>() {
+            {
+                put(JPAConfigParser.PASSPHRASE_PROPERTY, passphraseFile.getAbsolutePath());
+                put(prefix + key1, encPasswordAsStored);
+                put(prefix + key2, "y");
+            }
+        };
+
+        Properties results = new JPAConfigParser().parseConfig(configuration);
+        assertEquals(plainPassword, results.get(key1));
+        assertEquals("y", results.get(key2));
+    }
 
     @SuppressWarnings("serial")
     @Test
@@ -77,11 +110,9 @@ public class JPAConfigParserTest {
         assertTrue(ecks.contains("hibernate.connection.password"));
     }
 
-    @SuppressWarnings("serial")
     @Test
     public void getStringMethods() {
         Configuration localconf = new MapConfiguration(new HashMap<String, String>() {
-
             {
                 // NOTE: we decrypt at read time, so the in mem
                 // config class is always in plain text
@@ -104,16 +135,5 @@ public class JPAConfigParserTest {
         assertFalse(localconf.containsKey("notthere"));
         assertTrue(localconf
             .containsKey("jpa.config.hibernate.connection.password"));
-    }
-
-    private static class ConfigForTesting extends MapConfiguration {
-        public ConfigForTesting() {
-            super(new HashMap<String, String>() {
-                private static final long serialVersionUID = 1L;
-                {
-                    this.put("candlepin.passphrase.path", "/etc/katello/secure/passphrase");
-                }
-            });
-        }
     }
 }

@@ -37,6 +37,8 @@ import javax.crypto.spec.SecretKeySpec;
  */
 public abstract class EncryptedValueConfigurationParser extends ConfigurationParser {
 
+    public static final String PASSPHRASE_PROPERTY = "candlepin.passphrase.path";
+
     private static Logger log =
         LoggerFactory.getLogger(EncryptedValueConfigurationParser.class);
 
@@ -78,29 +80,21 @@ public abstract class EncryptedValueConfigurationParser extends ConfigurationPar
         }
     }
 
+    @Override
     public Properties parseConfig(Map<String, String> inputConfiguration) {
+        readSecretFile((String) inputConfiguration.get(PASSPHRASE_PROPERTY));
 
-        readSecretFile((String) inputConfiguration.get("candlepin.passphrase.path"));
+        Properties properties = super.parseConfig(inputConfiguration);
+        Set<String> encryptedProperties = getEncryptedConfigKeys();
 
-        // pull out properties that we know might be crypted passwords
-        // unencrypt them, and update the properties with the new versions
-        // do this here so DbBasicAuthConfigParser and JPAConfigParser
-        // will do it. Split it to a sub method so sub classes can
-        // provide there own implementation of crypt/decrypt
-        //
-        Properties toReturn = new Properties();
-        Properties toDecrypt = super.parseConfig(inputConfiguration);
-
-        if (getEncryptedConfigKeys() != null) {
-            for (String encConfigKey : getEncryptedConfigKeys()) {
-                String passwordString = toDecrypt.getProperty(encConfigKey);
-                if (passwordString != null) {
-                    toReturn.setProperty(encConfigKey,
-                            decryptValue(passwordString, getPassphrase()));
-                }
+        if (encryptedProperties != null) {
+            for (String key : encryptedProperties) {
+                String encryptedValue = properties.getProperty(key);
+                properties.setProperty(key, decryptValue(encryptedValue, getPassphrase()));
             }
         }
-        return toReturn;
+
+        return properties;
     }
 
     /* encrypt config value, such as a password */
@@ -114,7 +108,6 @@ public abstract class EncryptedValueConfigurationParser extends ConfigurationPar
 
         // remove the magic string
         toDecrypt = toDecrypt.substring(3);
-
 
         try {
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
@@ -138,7 +131,7 @@ public abstract class EncryptedValueConfigurationParser extends ConfigurationPar
             return new String(cipher.doFinal(b64bytes));
         }
         catch (Exception e) {
-            log.warn("Failure trying to decrypt " + toDecrypt , e);
+            log.error("Failure trying to decrypt " + toDecrypt , e);
             throw new RuntimeException(e);
         }
     }
@@ -149,7 +142,7 @@ public abstract class EncryptedValueConfigurationParser extends ConfigurationPar
     public String getPassphrase() {
         // read /etc/katello/secure/passphrase and use it's contents as
         // passphrase
-        log.info("getPassphrase: " + passphrase);
+        log.info("getPassphrase: {}", passphrase);
         return passphrase;
     }
 
