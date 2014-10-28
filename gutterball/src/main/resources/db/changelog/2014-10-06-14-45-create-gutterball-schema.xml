@@ -59,7 +59,7 @@
             <column name="date" type="datetime">
                 <constraints nullable="false"/>
             </column>
-            <column name="compliantUntil" type="datetime">
+            <column name="compliant_until" type="datetime">
                 <constraints nullable="true"/>
             </column>
             <column name="status" type="varchar(255)">

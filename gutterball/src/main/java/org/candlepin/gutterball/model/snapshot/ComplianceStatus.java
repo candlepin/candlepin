@@ -73,7 +73,7 @@ public class ComplianceStatus {
     private Date date;
 
     @XmlElement
-    @Column(nullable = true, unique = false)
+    @Column(nullable = true, unique = false, name = "compliant_until")
     private Date compliantUntil;
 
     @Column(nullable = false)
