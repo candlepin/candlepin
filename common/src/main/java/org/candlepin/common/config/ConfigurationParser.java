@@ -43,8 +43,7 @@ public abstract class ConfigurationParser {
      * @param inputConfiguration Configuration to be converted.
      * @return config as a Properties object without the prefixes.
      */
-    public Properties stripPrefixFromConfigKeys(
-        Map<String, String> inputConfiguration) {
+    public Properties stripPrefixFromConfigKeys(Map<String, String> inputConfiguration) {
         Properties toReturn = new Properties();
 
         for (Entry<String, String> entry : inputConfiguration.entrySet()) {
