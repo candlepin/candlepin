@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.32
+Version: 0.9.33
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -394,6 +394,32 @@ fi
 
 
 %changelog
+* Tue Oct 28 2014 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.33-1
+- Updated translations. (dgoodwin@redhat.com)
+- Print message and halt deployment on injector creation errors.
+  (awood@redhat.com)
+- 1150234: Hibernate error when virt_limit removed from product
+  (wpoteat@redhat.com)
+- Change dev deploy SSL defaults to disable SSLv3 (alikins@redhat.com)
+- Remove unnecessary CA key entry. (awood@redhat.com)
+- Enable contains text pool searching in API. (dgoodwin@redhat.com)
+- mimic old config behavior by defaulting to null (jesusr@redhat.com)
+- Provided the CA key password in the ERB template. (awood@redhat.com)
+- Do not put an extra newline on the end of the password file.
+  (awood@redhat.com)
+- Major config refactoring (jmrodri@gmail.com)
+- 1142677: fix logrotate perm errors (alikins@redhat.com)
+- Correctly re-fire failed jobs. (dgoodwin@redhat.com)
+- 1124978: Added rspec test for activation key desc. modification.
+  (crog@redhat.com)
+- Modified paths displayed in gettext output. (crog@redhat.com)
+- 1142824: Fixed Java gettext extract task (crog@redhat.com)
+- Better use of bind utility and product id instead of product Autobind flag is
+  now Boolean object (wpoteat@redhat.com)
+- Expand activation key capabilities (wpoteat@redhat.com)
+- cleanup and let the db filter pools by ID (ckozak@redhat.com)
+- autobind by pools (ckozak@redhat.com)
+
 * Fri Oct 03 2014 jesus m. rodriguez <jesusr@redhat.com> 0.9.32-1
 - Add test data for containers and ostree. (dgoodwin@redhat.com)
 - Compare the keys in the Tomcat keystore with the Candlepin keystore.  (awood@redhat.com)
