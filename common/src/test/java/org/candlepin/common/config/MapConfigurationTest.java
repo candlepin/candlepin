@@ -395,4 +395,25 @@ public class MapConfigurationTest {
         assertEquals("good", config.getString("good"));
         assertEquals("bad", config.getString("bad"));
     }
+
+    @Test
+    public void testToMap() {
+        this.config.setProperty("k1", "v1");
+        this.config.setProperty("k2", "v2");
+        this.config.setProperty("k3", "v3");
+
+        Map<String, String> map = this.config.toMap();
+
+        assertNotNull(map);
+        assertEquals(3, map.size());
+
+        assertTrue(map.containsKey("k1"));
+        assertEquals("v1", map.get("k1"));
+
+        assertTrue(map.containsKey("k2"));
+        assertEquals("v2", map.get("k2"));
+
+        assertTrue(map.containsKey("k3"));
+        assertEquals("v3", map.get("k3"));
+    }
 }

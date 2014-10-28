@@ -125,4 +125,13 @@ public interface Configuration {
     List<String> getList(String key, List<String> defaultValue);
     Set<String> getSet(String key);
     Set<String> getSet(String key, Set<String> defaultValue);
+
+    /**
+     * Returns a mapped representation of this Configuration object. The map returned by this method
+     * does not back the Configuration instance; the caller is free to modify it without impacting
+     * the Configuration object.
+     *
+     * @return A map instance representing the configuration stored by this Configuration instance.
+     */
+    Map<String, String> toMap();
 }
