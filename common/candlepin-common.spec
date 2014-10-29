@@ -21,7 +21,7 @@
 Name: %{parent_proj}-common
 Summary: Common code for Candlepin and related projects
 License: GPLv2
-Version: 1.0.8
+Version: 1.0.9
 Release: 1%{?dist}
 URL: http://www.candlepinproject.org
 Source: %{name}-%{version}.tar.gz
@@ -167,6 +167,22 @@ rm -rf %{_tmppath}/distlibdir
 %{_datadir}/%{parent_proj}/gutterball/lib/%{name}.jar
 
 %changelog
+* Tue Oct 28 2014 Devan Goodwin <dgoodwin@rm-rf.ca> 1.0.9-1
+- Updated translations. (dgoodwin@redhat.com)
+- Fix issue with JPAConfigParser not returning entire config.
+  (awood@redhat.com)
+- Add logging to runtime exceptions in Configuration classes.
+  (awood@redhat.com)
+- Make merge static & implementation dependent. (jesusr@redhat.com)
+- remove Candlepin's Config class & switch to using common Configuration
+  (jmrodri@gmail.com)
+- Major config refactoring (jmrodri@gmail.com)
+- Make it possible for CandlepinExceptions to not log from the
+  CandlepinExceptionMapper. This is useful when a lengthy stacktrace is
+  unnecessary, say for example a failed login attempt (dcrissma@redhat.com)
+- Modified paths displayed in gettext output. (crog@redhat.com)
+- 1142824: Fixed Java gettext extract task (crog@redhat.com)
+
 * Fri Oct 03 2014 jesus m. rodriguez <jesusr@redhat.com> 1.0.8-1
 - Updated translations. (dgoodwin@redhat.com)
 
