@@ -131,7 +131,6 @@ public class GutterballObjectMapperTest {
 
         // For the most part, old consumer state will be the same when the entity was deleted.
         // Really we only care about the UUID.
-        System.err.println(event.getOldEntity());
         ConsumerState state = mapper.readValue(event.getOldEntity(), ConsumerState.class);
         assertNotNull(state);
         assertNotNull(state.getCreated());
