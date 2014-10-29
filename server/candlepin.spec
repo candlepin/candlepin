@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.26.3
+Version: 0.9.26.4
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -390,6 +390,11 @@ fi
 
 
 %changelog
+* Wed Oct 29 2014 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.26.4-1
+- 1150234: Fix refresh pools instance does not yet exist in db error.
+  (dgoodwin@redhat.com)
+- Fix cert revocation during refresh of unlimited pools. (dgoodwin@redhat.com)
+
 * Thu Oct 23 2014 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.26.3-1
 - 1150234: Hibernate error when virt_limit removed from product
   (wpoteat@redhat.com)
