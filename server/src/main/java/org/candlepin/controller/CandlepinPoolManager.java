@@ -332,6 +332,14 @@ public class CandlepinPoolManager implements PoolManager {
                 continue;
             }
 
+            // save changes for the pool
+            this.poolCurator.merge(existingPool);
+
+            // Explicitly call flush to avoid issues with how we sync up the attributes.
+            // This prevents "instance does not yet exist as a row in the database" errors
+            // when we later try to lock the pool if we need to revoke entitlements:
+            this.poolCurator.flush();
+
             // quantity has changed. delete any excess entitlements from pool
             if (updatedPool.getQuantityChanged()) {
                 this.deleteExcessEntitlements(existingPool);
@@ -345,9 +353,6 @@ public class CandlepinPoolManager implements PoolManager {
                     .retrieveFreeEntitlementIdsOfPool(existingPool, true);
                 entitlementsToRegen.addAll(entitlements);
             }
-            // save changes for the pool
-            this.poolCurator.merge(existingPool);
-
             Event event = poolEvents.get(existingPool.getId())
                     .setNewEntity(existingPool)
                     .buildEvent();

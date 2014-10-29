@@ -239,4 +239,87 @@ describe 'Refresh Pools' do
     @cp.list_pools({:owner => owner2.id}).length.should == 1
   end
 
+  it 'can remove virt limit and cleanup derived pool' do
+    owner = create_owner random_string
+    user = user_client(owner, random_string('virt_user'))
+    product = create_product(random_string, random_string,{
+      :attributes => {'multi-entitlement' => "yes",
+                      :virt_limit => 5}})
+    sub = @cp.create_subscription(owner['key'], product.id, 500)
+    user = user_client(owner, random_string("user"))
+    host = consumer_client(user, 'host', :system, nil)
+    guest_uuid = random_string('system.uuid')
+    guest = consumer_client(user, 'virt', :system, nil, {
+      'virt.uuid' => guest_uuid, 'virt.is_guest' => true
+    })
+
+    @cp.refresh_pools(owner['key'], false, false, false)
+    pools = @cp.list_pools({:owner => owner.id, :product => product.id})
+    if is_hosted?
+        pools.length.should == 2
+    else
+        pools.length.should == 1
+        @cp.consume_pool(pools[0]['id'], {:uuid => host.uuid, :quantity => 1})
+        @cp.refresh_pools(owner['key'], false, false, false)
+        pools = @cp.list_pools({:owner => owner.id, :product => product.id})
+        pools.length.should == 2
+        host.update_consumer({:guestIds => [{'guestId' => guest_uuid}]})
+     end
+
+    for pool in pools
+        for att in pool['attributes']
+            if att['name'] == "pool_derived"
+                @cp.consume_pool(pool['id'], {:uuid => guest.uuid, :quantity => 1})
+            end
+        end
+    end
+
+    attrs = product['attributes']
+    for dict in attrs
+        if dict['name'] == "virt_limit"
+            attrs.delete(dict)
+        end
+    end
+
+    @cp.update_product(product.id, :attributes => attrs)
+    @cp.refresh_pools(owner['key'], false, false, false)
+    pools = @cp.list_pools({:owner => owner.id, :product => product.id})
+    pools.length.should == 1
+  end
+
+  # Testing bug #1150234:
+  it 'can change attributes and revoke entitlements at same time' do
+    owner = create_owner random_string
+    user = user_client(owner, random_string('virt_user'))
+    product = create_product(random_string, random_string,{
+      :attributes => {'multi-entitlement' => "yes"}})
+    sub = @cp.create_subscription(owner['key'], product.id, 2)
+    @cp.refresh_pools(owner['key'], false, false, false)
+
+    user = user_client(owner, random_string("user"))
+    host = consumer_client(user, 'host', :system, nil)
+
+    pools = @cp.list_pools({:owner => owner.id, :product => product.id})
+    pools.length.should == 1
+    # We'll consume quantity 2, later we will reduce the pool to 1 forcing a
+    # revoke of this entitlement:
+    @cp.consume_pool(pools[0]['id'], {:uuid => host.uuid, :quantity => 2})
+    @cp.refresh_pools(owner['key'], false, false, false)
+
+    pool = @cp.list_pools({:owner => owner.id, :product => product.id})[0]
+
+    # Modify product attributes:
+    attrs = product['attributes']
+    attrs << {:name => 'newattribute', :value => 'something'}
+    @cp.update_product(product.id, :attributes => attrs)
+
+    # Reduce the subscription quantity:
+    sub['quantity'] = 1
+    @cp.update_subscription(sub)
+
+    @cp.refresh_pools(owner['key'], false, false, false)
+    pools = @cp.list_pools({:owner => owner.id, :product => product.id})
+    pools.length.should == 1
+  end
+
 end
