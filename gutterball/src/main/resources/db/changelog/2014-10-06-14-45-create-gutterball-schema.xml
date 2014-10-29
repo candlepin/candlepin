@@ -111,7 +111,7 @@
 
     <changeSet id="20141006144514-8" author="awood">
         <createTable tableName="gb_consumer_state">
-            <column name="id" type="varchar(32)">
+            <column name="uuid" type="varchar(255)">
                 <constraints primaryKeyName="pk_consumer_state" primaryKey="true" nullable="false"/>
             </column>
             <column name="created" type="timestamp">
@@ -119,9 +119,6 @@
             </column>
             <column name="deleted" type="timestamp"/>
             <column name="ownerkey" type="varchar(255)"/>
-            <column name="uuid" type="varchar(255)">
-                <constraints unique="true" uniqueConstraintName="uq_consumer_state"/>
-            </column>
         </createTable>
     </changeSet>
 
