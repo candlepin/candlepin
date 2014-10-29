@@ -119,12 +119,21 @@ public class PoolTest extends DatabaseTestFixture {
             lookedUp.getDerivedProvidedProducts().iterator().next().getProductId());
     }
 
+    @Test
     public void testMultiplePoolsForOwnerProductAllowed() {
         Pool duplicatePool = createPoolAndSub(owner,
                 prod1, -1L, TestUtil.createDate(2009, 11, 30),
                 TestUtil.createDate(2050, 11, 30));
         // Just need to see no exception is thrown.
         poolCurator.create(duplicatePool);
+    }
+
+    @Test
+    public void testIsOverflowing() {
+        Pool duplicatePool = createPoolAndSub(owner,
+                prod1, -1L, TestUtil.createDate(2009, 11, 30),
+                TestUtil.createDate(2050, 11, 30));
+        assertFalse(duplicatePool.isOverflowing());
     }
 
     @Test

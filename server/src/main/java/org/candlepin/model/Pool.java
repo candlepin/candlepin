@@ -685,6 +685,10 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
      */
     @XmlTransient
     public boolean isOverflowing() {
+        // Unlimited pools can't be overflowing:
+        if (this.quantity == -1) {
+            return false;
+        }
         return getConsumed() > this.quantity;
     }
 
