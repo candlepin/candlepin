@@ -96,10 +96,8 @@ public class EntitlementDeserializer extends JsonDeserializer<Entitlement> {
     }
 
     private String getValue(JsonNode json, String key) {
-        if (!json.has(key)) {
-            return null;
-        }
-        return json.get(key).textValue();
+        JsonNode node = json.get(key);
+        return node != null ? node.textValue() : null;
     }
 
     private Map<String, String> getFlattenedProductAttributes(JsonNode poolJson) {
