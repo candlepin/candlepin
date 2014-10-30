@@ -182,7 +182,7 @@
                 <constraints foreignKeyName="fk_der_prod_attr_ent" references="gb_entitlement_snap(id)" nullable="false"/>
             </column>
             <column name="gb_ent_der_prod_attr_value" type="varchar(255)"/>
-            <column name="gb_ent_der_attr_name" type="varchar(255)">
+            <column name="gb_ent_der_prod_attr_name" type="varchar(255)">
                 <constraints nullable="false"/>
             </column>
         </createTable>
