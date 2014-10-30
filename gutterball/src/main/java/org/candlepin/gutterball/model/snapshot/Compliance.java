@@ -80,9 +80,9 @@ public class Compliance {
         this.entitlements = new HashSet<Entitlement>();
     }
 
-    public Compliance(Date date, Consumer consumerSnapshot,
-            ComplianceStatus statusSnapshot) {
+    public Compliance(Date date, Consumer consumerSnapshot, ComplianceStatus statusSnapshot) {
         this();
+
         this.date = date;
         setConsumer(consumerSnapshot);
         setStatus(statusSnapshot);

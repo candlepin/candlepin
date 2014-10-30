@@ -18,6 +18,7 @@ package org.candlepin.gutterball.model.snapshot;
 import org.candlepin.gutterball.jackson.EnvironmentNameConverter;
 import org.candlepin.gutterball.jackson.HypervisorIdToStringConverter;
 import org.candlepin.gutterball.jackson.ReleaseVersionToStringConverter;
+import org.candlepin.gutterball.model.ConsumerState;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -43,6 +44,7 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
@@ -76,6 +78,11 @@ public class Consumer {
 
     @Size(max = 255)
     private String uuid;
+
+    @ManyToOne
+    @JoinColumn(name = "uuid", insertable = false, updatable = false)
+    @NotNull
+    private ConsumerState consumerState;
 
     @Size(max = 255)
     private String name;
@@ -151,9 +158,12 @@ public class Consumer {
         this.guestIds = new LinkedList<GuestId>();
     }
 
-    public Consumer(String uuid, Owner ownerSnapshot) {
-        this.uuid = uuid;
-        setOwner(ownerSnapshot);
+    public Consumer(String uuid, ConsumerState state, Owner ownerSnapshot) {
+        this();
+
+        this.setUuid(uuid);
+        this.setConsumerState(state);
+        this.setOwner(ownerSnapshot);
     }
 
     public String getId() {
@@ -170,6 +180,14 @@ public class Consumer {
 
     public void setUuid(String uuid) {
         this.uuid = uuid;
+    }
+
+    public ConsumerState getConsumerState() {
+        return this.consumerState;
+    }
+
+    public void setConsumerState(ConsumerState state) {
+        this.consumerState = state;
     }
 
     @XmlTransient

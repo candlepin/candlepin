@@ -56,7 +56,7 @@ public class TestUtils {
 
     public static Compliance createComplianceSnapshot(Date statusDate, String consumerUuid,
             String owner, String statusString) {
-        Consumer consumerSnap = new Consumer(consumerUuid, createOwnerSnapshot(owner, owner));
+        Consumer consumerSnap = new Consumer(consumerUuid, null, createOwnerSnapshot(owner, owner));
         ComplianceStatus statusSnap = new ComplianceStatus(statusDate, statusString);
 
         if (statusString.toLowerCase().equals("invalid")) {

@@ -46,6 +46,7 @@ import org.candlepin.gutterball.jackson.GutterballObjectMapper;
 import org.candlepin.gutterball.receiver.EventReceiver;
 import org.candlepin.gutterball.report.ConsumerStatusReport;
 import org.candlepin.gutterball.report.ConsumerTrendReport;
+import org.candlepin.gutterball.report.StatusTrendReport;
 import org.candlepin.gutterball.report.Report;
 import org.candlepin.gutterball.report.ReportFactory;
 import org.candlepin.gutterball.resource.ReportsResource;
@@ -110,6 +111,7 @@ public class GutterballModule extends AbstractModule {
         Multibinder<Report> reports = Multibinder.newSetBinder(binder(), Report.class);
         reports.addBinding().to(ConsumerStatusReport.class);
         reports.addBinding().to(ConsumerTrendReport.class);
+        reports.addBinding().to(StatusTrendReport.class);
         bind(ReportFactory.class);
 
         // RestEasy API resources

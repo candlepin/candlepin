@@ -61,6 +61,7 @@ SUN_JAXB = 'com.sun.xml.bind:jaxb-impl:jar:2.1.12'
 
 TESTING = Buildr.transitive(['junit:junit:jar:4.11', 'org.mockito:mockito-all:jar:1.9.5'])
 JUKITO = Buildr.transitive(['org.jukito:jukito:jar:1.4'])
+JUNITPARAMS = Buildr.transitive(['pl.pragmatists:JUnitParams:jar:1.0.3'])
 
 NOSQLUNIT_NS = "com.lordofthejars"
 NOSQLUNIT_VERSION = "0.7.9"
@@ -287,6 +288,7 @@ define "candlepin" do
     test.with(
       TESTING,
       JUKITO,
+      JUNITPARAMS,
       HSQLDB,
       LIQUIBASE,
       LIQUIBASE_SLF4J,

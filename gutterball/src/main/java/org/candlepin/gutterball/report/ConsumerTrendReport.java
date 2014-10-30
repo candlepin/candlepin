@@ -71,14 +71,14 @@ public class ConsumerTrendReport extends Report<ConsumerTrendReportResult> {
             builder.init("start_date", i18n.tr("The start date to filter on (used with {0}).", "end_date"))
                 .mustNotHave("hours")
                 .mustHave("end_date")
-                .mustBeDate(REPORT_DATE_FORMAT)
+                .mustBeDate(REPORT_DATETIME_FORMAT)
                 .getParameter());
 
         addParameter(
             builder.init("end_date", i18n.tr("The end date to filter on (used with {0})", "start_date"))
                 .mustNotHave("hours")
                 .mustHave("start_date")
-                .mustBeDate(REPORT_DATE_FORMAT)
+                .mustBeDate(REPORT_DATETIME_FORMAT)
                 .getParameter());
     }
 
@@ -100,8 +100,8 @@ public class ConsumerTrendReport extends Report<ConsumerTrendReportResult> {
             startDate = cal.getTime();
         }
         else if (queryParams.containsKey("start_date") && queryParams.containsKey("end_date")) {
-            startDate = parseDate(queryParams.getFirst("start_date"));
-            endDate = parseDate(queryParams.getFirst("end_date"));
+            startDate = parseDateTime(queryParams.getFirst("start_date"));
+            endDate = parseDateTime(queryParams.getFirst("end_date"));
         }
 
 

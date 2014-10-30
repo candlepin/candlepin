@@ -36,7 +36,8 @@ import javax.ws.rs.core.MultivaluedMap;
  */
 public abstract class Report<R extends ReportResult> {
 
-    protected static final String REPORT_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
+    protected static final String REPORT_DATE_FORMAT = "yyyy-MM-dd";
+    protected static final String REPORT_DATETIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
 
     protected I18n i18n;
     protected String key;
@@ -110,12 +111,20 @@ public abstract class Report<R extends ReportResult> {
     }
 
     protected Date parseDate(String date) {
+        return this.parseFormattedDate(date, REPORT_DATE_FORMAT);
+    }
+
+    protected Date parseDateTime(String date) {
+        return this.parseFormattedDate(date, REPORT_DATETIME_FORMAT);
+    }
+
+    protected Date parseFormattedDate(String date, String format) {
         if (date == null || date.isEmpty()) {
             return null;
         }
 
         try {
-            SimpleDateFormat formatter = new SimpleDateFormat(REPORT_DATE_FORMAT);
+            SimpleDateFormat formatter = new SimpleDateFormat(format);
             return formatter.parse(date);
         }
         catch (ParseException e) {

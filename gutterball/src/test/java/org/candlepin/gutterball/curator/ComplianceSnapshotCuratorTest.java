@@ -17,6 +17,7 @@ package org.candlepin.gutterball.curator;
 
 import static org.candlepin.gutterball.TestUtils.*;
 import static org.junit.Assert.*;
+import static junitparams.JUnitParamsRunner.*;
 
 import org.candlepin.gutterball.DatabaseTestFixture;
 import org.candlepin.gutterball.TestUtils;
@@ -26,9 +27,14 @@ import org.candlepin.gutterball.model.Event;
 import org.candlepin.gutterball.model.snapshot.Compliance;
 import org.candlepin.gutterball.model.snapshot.ComplianceStatus;
 import org.candlepin.gutterball.model.snapshot.Consumer;
+import org.candlepin.gutterball.model.snapshot.Entitlement;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
 
 import java.io.File;
 import java.net.URL;
@@ -38,16 +44,19 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+@RunWith(JUnitParamsRunner.class)
 public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
 
     private Date baseTestingDate;
 
     @Before
     public void initData() {
+        Compliance compliance;
         Calendar cal = Calendar.getInstance();
 
         // Set up deleted consumer test data
@@ -60,31 +69,97 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
 
         baseTestingDate = cal.getTime();
 
-        // Consumer created
-        createInitialConsumer(cal.getTime(), "c1", "o1", "invalid");
+        // Create some entitlements
+        Entitlement entitlement1 = createEntitlement(
+            "testsku1",
+            "test product 1",
+            1,
+            baseTestingDate,
+            new HashMap<String, String>() {
+                {
+                    this.put("attrib1", "val1");
+                    this.put("attrib2", "val2");
+                    this.put("attrib3", "val3");
+                }
+            }
+        );
 
+        Entitlement entitlement2 = createEntitlement(
+            "testsku2",
+            "test product 2",
+            2,
+            baseTestingDate,
+            new HashMap<String, String>() {
+                {
+                    this.put("attrib1", "val1");
+                    this.put("attrib3", "val3");
+                }
+            }
+        );
+
+        Entitlement entitlement3 = createEntitlement(
+            "testsku3",
+            "test product 3",
+            3,
+            baseTestingDate,
+            new HashMap<String, String>() {
+                {
+                    this.put("attrib2", "val2");
+                }
+            }
+        );
+
+        this.beginTransaction();
+
+        // Consumer created
+        cal.set(Calendar.MONTH, Calendar.MARCH);
+        compliance = createInitialConsumer(cal.getTime(), "c1", "o1", "invalid");
+        attachEntitlement(compliance, entitlement1);
         // Simulate status change
         cal.set(Calendar.MONTH, Calendar.MAY);
-        createSnapshot(cal.getTime(), "c1", "o1", "valid");
-
+        compliance = createSnapshot(cal.getTime(), "c1", "o1", "valid");
+        attachEntitlement(compliance, entitlement1);
         // Consumer was deleted
         cal.set(Calendar.MONTH, Calendar.JUNE);
-        setConsumerDeleted(cal.getTime(), "c1", "o1");
+        compliance = setConsumerDeleted(cal.getTime(), "c1", "o1");
+        attachEntitlement(compliance, entitlement1);
 
         cal.set(Calendar.MONTH, Calendar.APRIL);
-        createInitialConsumer(cal.getTime(), "c2", "o1", "invalid");
+        compliance = createInitialConsumer(cal.getTime(), "c2", "o1", "invalid");
+        attachEntitlement(compliance, entitlement1);
+        attachEntitlement(compliance, entitlement2);
 
         cal.set(Calendar.MONTH, Calendar.MAY);
-        createInitialConsumer(cal.getTime(), "c3", "o2", "invalid");
+        compliance = createInitialConsumer(cal.getTime(), "c3", "o2", "invalid");
+        attachEntitlement(compliance, entitlement2);
         cal.set(Calendar.MONTH, Calendar.JUNE);
-        createSnapshot(cal.getTime(), "c3", "o2", "partial");
+        compliance = createSnapshot(cal.getTime(), "c3", "o2", "partial");
+        attachEntitlement(compliance, entitlement2);
 
         cal.set(Calendar.MONTH, Calendar.MAY);
-        createInitialConsumer(cal.getTime(), "c4", "o3", "invalid");
+        compliance = createInitialConsumer(cal.getTime(), "c4", "o3", "invalid");
+        attachEntitlement(compliance, entitlement2);
+        attachEntitlement(compliance, entitlement3);
         cal.set(Calendar.MONTH, Calendar.JUNE);
-        createSnapshot(cal.getTime(), "c4", "o3", "partial");
+        compliance = createSnapshot(cal.getTime(), "c4", "o3", "partial");
+        attachEntitlement(compliance, entitlement2);
+        attachEntitlement(compliance, entitlement3);
         cal.set(Calendar.MONTH, Calendar.JULY);
-        createSnapshot(cal.getTime(), "c4", "o3", "valid");
+        compliance = createSnapshot(cal.getTime(), "c4", "o3", "valid");
+        attachEntitlement(compliance, entitlement2);
+        attachEntitlement(compliance, entitlement3);
+
+        this.commitTransaction();
+
+        /*
+        {
+            Sat Mar 10 00:00:00 EST 2012={invalid=1},
+            Tue Apr 10 00:00:00 EDT 2012={invalid=1},
+            Thu May 10 00:00:00 EDT 2012={valid=1, invalid=2},
+            Sun Jun 10 00:00:00 EDT 2012={partial=2},
+            Tue Jul 10 00:00:00 EDT 2012={valid=1}
+        }
+        */
     }
 
     @Test
@@ -259,6 +334,668 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         processAndCheckResults(expectedUuidsNumReports, results);
     }
 
+    @Test
+    public void testGetComplianceStatusCounts() {
+        Map<Date, Map<String, Long>> expected = this.buildMapForAllStatusCounts();
+        Map<Date, Map<String, Long>> actual = this.complianceSnapshotCurator.getComplianceStatusCounts();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    @Parameters(method = "buildMapForStatusCountsAfterDate")
+    public void testGetComplianceStatusCountsAfterDate(Date date, Map<Date, Map<String, Long>> expected) {
+        Map<Date, Map<String, Long>> actual = this.complianceSnapshotCurator.getComplianceStatusCounts(
+            date,
+            null
+        );
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    @Parameters(method = "buildMapForStatusCountsBeforeDate")
+    public void testGetComplianceStatusCountsBeforeDate(Date date, Map<Date, Map<String, Long>> expected) {
+        Map<Date, Map<String, Long>> actual = this.complianceSnapshotCurator.getComplianceStatusCounts(
+            null,
+            date
+        );
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    @Parameters(method = "buildMapForStatusCountsBetweenDates")
+    public void testGetComplianceStatusCountsBetweenDates(Date startDate, Date endDate,
+        Map<Date, Map<String, Long>> expected) {
+
+        Map<Date, Map<String, Long>> actual = this.complianceSnapshotCurator.getComplianceStatusCounts(
+            startDate,
+            endDate
+        );
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    @Parameters(method = "buildMapForStatusCountsWithSku")
+    public void testGetComplianceStatusCountsWithValidSku(Date startDate, Date endDate, String sku,
+        Map<Date, Map<String, Long>> expected) {
+        Map<Date, Map<String, Long>> actual;
+
+        actual = this.complianceSnapshotCurator.getComplianceStatusCountsBySku(
+            startDate,
+            endDate,
+            sku
+        );
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    @Parameters(method = "buildMapForStatusCountsWithSubscriptionName")
+    public void testGetComplianceStatusCountsWithSubscription(Date startDate, Date endDate,
+        String subscriptionName, Map<Date, Map<String, Long>> expected) {
+        Map<Date, Map<String, Long>> actual;
+
+        actual = this.complianceSnapshotCurator.getComplianceStatusCountsBySubscription(
+            startDate,
+            endDate,
+            subscriptionName
+        );
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    @Parameters(method = "buildMapForStatusCountsWithAttributes")
+    public void testGetComplianceStatusCountsWithAttributes(Date startDate, Date endDate,
+        Map<String, String> attributes, Map<Date, Map<String, Long>> expected) {
+        Map<Date, Map<String, Long>> actual;
+
+        actual = this.complianceSnapshotCurator.getComplianceStatusCountsByAttributes(
+            startDate,
+            endDate,
+            attributes
+        );
+
+        assertEquals(expected, actual);
+    }
+
+    private Map<Date, Map<String, Long>> buildMapForAllStatusCounts() {
+        Calendar cal = Calendar.getInstance();
+        cal.clear();
+        cal.set(Calendar.YEAR, 2012);
+        cal.set(Calendar.DAY_OF_MONTH, 10);
+
+        Map<Date, Map<String, Long>> expected = new HashMap<Date, Map<String, Long>>();
+        HashMap<String, Long> counts;
+
+        cal.set(Calendar.MONTH, Calendar.MARCH);
+        counts = new HashMap<String, Long>();
+        counts.put("invalid", 1L);
+        expected.put(cal.getTime(), counts);
+
+        cal.set(Calendar.MONTH, Calendar.APRIL);
+        counts = new HashMap<String, Long>();
+        counts.put("invalid", 1L);
+        expected.put(cal.getTime(), counts);
+
+        cal.set(Calendar.MONTH, Calendar.MAY);
+        counts = new HashMap<String, Long>();
+        counts.put("valid", 1L);
+        counts.put("invalid", 2L);
+        expected.put(cal.getTime(), counts);
+
+        cal.set(Calendar.MONTH, Calendar.JUNE);
+        counts = new HashMap<String, Long>();
+        counts.put("partial", 2L);
+        expected.put(cal.getTime(), counts);
+
+        cal.set(Calendar.MONTH, Calendar.JULY);
+        counts = new HashMap<String, Long>();
+        counts.put("valid", 1L);
+        expected.put(cal.getTime(), counts);
+
+        return expected;
+    }
+
+    public Object[][] buildMapForStatusCountsBeforeDate() {
+        Calendar cal = Calendar.getInstance();
+        cal.clear();
+        cal.set(Calendar.YEAR, 2012);
+        cal.set(Calendar.DAY_OF_MONTH, 10);
+
+        Map<Date, Map<String, Long>> expected = new HashMap<Date, Map<String, Long>>();
+        HashMap<String, Long> counts;
+
+        Object[][] output = new Object[2][];
+
+        output[0] = $(null, this.buildMapForAllStatusCounts());
+
+        cal.set(Calendar.MONTH, Calendar.MARCH);
+        counts = new HashMap<String, Long>();
+        counts.put("invalid", 1L);
+        expected.put(cal.getTime(), counts);
+
+        cal.set(Calendar.MONTH, Calendar.APRIL);
+        counts = new HashMap<String, Long>();
+        counts.put("invalid", 1L);
+        expected.put(cal.getTime(), counts);
+
+        cal.set(Calendar.MONTH, Calendar.MAY);
+        counts = new HashMap<String, Long>();
+        counts.put("valid", 1L);
+        counts.put("invalid", 2L);
+        expected.put(cal.getTime(), counts);
+
+        cal.set(Calendar.MONTH, Calendar.MAY);
+        Date endDate = cal.getTime();
+
+        output[1] = $(endDate, expected);
+
+        return output;
+    }
+
+    public Object[][] buildMapForStatusCountsAfterDate() {
+        Calendar cal = Calendar.getInstance();
+        cal.clear();
+        cal.set(Calendar.YEAR, 2012);
+        cal.set(Calendar.DAY_OF_MONTH, 10);
+
+        Map<Date, Map<String, Long>> expected = new HashMap<Date, Map<String, Long>>();
+        HashMap<String, Long> counts;
+
+        Object[][] output = new Object[2][];
+
+        output[0] = $(null, this.buildMapForAllStatusCounts());
+
+        cal.set(Calendar.MONTH, Calendar.MAY);
+        counts = new HashMap<String, Long>();
+        counts.put("valid", 1L);
+        counts.put("invalid", 2L);
+        expected.put(cal.getTime(), counts);
+
+        cal.set(Calendar.MONTH, Calendar.JUNE);
+        counts = new HashMap<String, Long>();
+        counts.put("partial", 2L);
+        expected.put(cal.getTime(), counts);
+
+        cal.set(Calendar.MONTH, Calendar.JULY);
+        counts = new HashMap<String, Long>();
+        counts.put("valid", 1L);
+        expected.put(cal.getTime(), counts);
+
+        cal.set(Calendar.MONTH, Calendar.MAY);
+        Date startDate = cal.getTime();
+
+        output[1] = $(startDate, expected);
+
+        return output;
+    }
+
+    public Object[] buildMapForStatusCountsBetweenDates() {
+        LinkedList<Object[]> tests = new LinkedList<Object[]>();
+        Object[][] beforeSet = this.buildMapForStatusCountsBeforeDate();
+        Object[][] afterSet = this.buildMapForStatusCountsAfterDate();
+
+        for (Object[] before : beforeSet) {
+            for (Object[] after : afterSet) {
+                tests.add(new Object[] {
+                    after[0],
+                    before[0],
+                    this.intersect(
+                        (Map<Date, Map<String, Long>>) after[1],
+                        (Map<Date, Map<String, Long>>) before[1]
+                    )
+                });
+            }
+        }
+
+        return tests.toArray();
+    }
+
+    public Object[] buildMapForStatusCountsWithSku() {
+        LinkedList<Object[]> tests = new LinkedList<Object[]>();
+        Object[][] beforeSet = this.buildMapForStatusCountsBeforeDate();
+        Object[][] afterSet = this.buildMapForStatusCountsAfterDate();
+        Object[][] skuSet = this.buildSubMapForStatusCountsWithSku();
+
+        for (Object[] before : beforeSet) {
+            for (Object[] after : afterSet) {
+                for (Object[] sku : skuSet) {
+                    tests.add(new Object[] {
+                        after[0],
+                        before[0],
+                        sku[0],
+                        this.intersect(
+                            (Map<Date, Map<String, Long>>) after[1],
+                            (Map<Date, Map<String, Long>>) before[1],
+                            (Map<Date, Map<String, Long>>) sku[1]
+                        )
+                    });
+                }
+            }
+        }
+
+        return tests.toArray();
+    }
+
+    public Object[] buildMapForStatusCountsWithSubscriptionName() {
+        LinkedList<Object[]> tests = new LinkedList<Object[]>();
+        Object[][] beforeSet = this.buildMapForStatusCountsBeforeDate();
+        Object[][] afterSet = this.buildMapForStatusCountsAfterDate();
+        Object[][] nameSet = this.buildSubMapForStatusCountsWithSubscriptionName();
+
+        for (Object[] before : beforeSet) {
+            for (Object[] after : afterSet) {
+                for (Object[] name : nameSet) {
+                    tests.add(new Object[] {
+                        after[0],
+                        before[0],
+                        name[0],
+                        this.intersect(
+                            (Map<Date, Map<String, Long>>) after[1],
+                            (Map<Date, Map<String, Long>>) before[1],
+                            (Map<Date, Map<String, Long>>) name[1]
+                        )
+                    });
+                }
+            }
+        }
+
+        return tests.toArray();
+    }
+
+    public Object[] buildMapForStatusCountsWithAttributes() {
+        LinkedList<Object[]> tests = new LinkedList<Object[]>();
+        Object[][] beforeSet = this.buildMapForStatusCountsBeforeDate();
+        Object[][] afterSet = this.buildMapForStatusCountsAfterDate();
+        Object[][] attributeSet = this.buildSubMapForStatusCountsWithAttributes();
+
+        for (Object[] before : beforeSet) {
+            for (Object[] after : afterSet) {
+                for (Object[] attribute : attributeSet) {
+                    tests.add(new Object[] {
+                        after[0],
+                        before[0],
+                        attribute[0],
+                        this.intersect(
+                            (Map<Date, Map<String, Long>>) after[1],
+                            (Map<Date, Map<String, Long>>) before[1],
+                            (Map<Date, Map<String, Long>>) attribute[1]
+                        )
+                    });
+                }
+            }
+        }
+
+        return tests.toArray();
+    }
+
+    private Object[][] buildSubMapForStatusCountsWithSku() {
+        Calendar cal = Calendar.getInstance();
+        cal.clear();
+        cal.set(Calendar.YEAR, 2012);
+        cal.set(Calendar.DAY_OF_MONTH, 10);
+
+        Map<Date, Map<String, Long>> expected;
+        Map<Date, Map<String, Long>> actual;
+        HashMap<String, Long> counts;
+
+        Object[][] output = new Object[5][];
+
+        output[0] = $(null, this.buildMapForAllStatusCounts());
+
+
+        expected = new HashMap<Date, Map<String, Long>>();
+
+        cal.set(Calendar.MONTH, Calendar.MARCH);
+        counts = new HashMap<String, Long>();
+        counts.put("invalid", 1L);
+        expected.put(cal.getTime(), counts);
+
+        cal.set(Calendar.MONTH, Calendar.APRIL);
+        counts = new HashMap<String, Long>();
+        counts.put("invalid", 1L);
+        expected.put(cal.getTime(), counts);
+
+        cal.set(Calendar.MONTH, Calendar.MAY);
+        counts = new HashMap<String, Long>();
+        counts.put("valid", 1L);
+        expected.put(cal.getTime(), counts);
+
+        output[1] = $("testsku1", expected);
+
+
+        expected = new HashMap<Date, Map<String, Long>>();
+
+        cal.set(Calendar.MONTH, Calendar.APRIL);
+        counts = new HashMap<String, Long>();
+        counts.put("invalid", 1L);
+        expected.put(cal.getTime(), counts);
+
+        cal.set(Calendar.MONTH, Calendar.MAY);
+        counts = new HashMap<String, Long>();
+        counts.put("invalid", 2L);
+        expected.put(cal.getTime(), counts);
+
+        cal.set(Calendar.MONTH, Calendar.JUNE);
+        counts = new HashMap<String, Long>();
+        counts.put("partial", 2L);
+        expected.put(cal.getTime(), counts);
+
+        cal.set(Calendar.MONTH, Calendar.JULY);
+        counts = new HashMap<String, Long>();
+        counts.put("valid", 1L);
+        expected.put(cal.getTime(), counts);
+
+        output[2] = $("testsku2", expected);
+
+
+        expected = new HashMap<Date, Map<String, Long>>();
+
+        cal.set(Calendar.MONTH, Calendar.MAY);
+        counts = new HashMap<String, Long>();
+        counts.put("invalid", 1L);
+        expected.put(cal.getTime(), counts);
+
+        cal.set(Calendar.MONTH, Calendar.JUNE);
+        counts = new HashMap<String, Long>();
+        counts.put("partial", 1L);
+        expected.put(cal.getTime(), counts);
+
+        cal.set(Calendar.MONTH, Calendar.JULY);
+        counts = new HashMap<String, Long>();
+        counts.put("valid", 1L);
+        expected.put(cal.getTime(), counts);
+
+        output[3] = $("testsku3", expected);
+
+
+        output[4] = $("badsku", new HashMap<Date, Map<String, Long>>());
+
+        return output;
+    }
+
+    private Object[][] buildSubMapForStatusCountsWithSubscriptionName() {
+        Calendar cal = Calendar.getInstance();
+        cal.clear();
+        cal.set(Calendar.YEAR, 2012);
+        cal.set(Calendar.DAY_OF_MONTH, 10);
+
+        Map<Date, Map<String, Long>> expected;
+        Map<Date, Map<String, Long>> actual;
+        HashMap<String, Long> counts;
+
+        Object[][] output = new Object[5][];
+
+        output[0] = $(null, this.buildMapForAllStatusCounts());
+
+        expected = new HashMap<Date, Map<String, Long>>();
+
+        cal.set(Calendar.MONTH, Calendar.MARCH);
+        counts = new HashMap<String, Long>();
+        counts.put("invalid", 1L);
+        expected.put(cal.getTime(), counts);
+
+        cal.set(Calendar.MONTH, Calendar.APRIL);
+        counts = new HashMap<String, Long>();
+        counts.put("invalid", 1L);
+        expected.put(cal.getTime(), counts);
+
+        cal.set(Calendar.MONTH, Calendar.MAY);
+        counts = new HashMap<String, Long>();
+        counts.put("valid", 1L);
+        expected.put(cal.getTime(), counts);
+
+        output[1] = $("test product 1", expected);
+
+
+        expected = new HashMap<Date, Map<String, Long>>();
+
+        cal.set(Calendar.MONTH, Calendar.APRIL);
+        counts = new HashMap<String, Long>();
+        counts.put("invalid", 1L);
+        expected.put(cal.getTime(), counts);
+
+        cal.set(Calendar.MONTH, Calendar.MAY);
+        counts = new HashMap<String, Long>();
+        counts.put("invalid", 2L);
+        expected.put(cal.getTime(), counts);
+
+        cal.set(Calendar.MONTH, Calendar.JUNE);
+        counts = new HashMap<String, Long>();
+        counts.put("partial", 2L);
+        expected.put(cal.getTime(), counts);
+
+        cal.set(Calendar.MONTH, Calendar.JULY);
+        counts = new HashMap<String, Long>();
+        counts.put("valid", 1L);
+        expected.put(cal.getTime(), counts);
+
+        output[2] = $("test product 2", expected);
+
+
+        expected = new HashMap<Date, Map<String, Long>>();
+
+        cal.set(Calendar.MONTH, Calendar.MAY);
+        counts = new HashMap<String, Long>();
+        counts.put("invalid", 1L);
+        expected.put(cal.getTime(), counts);
+
+        cal.set(Calendar.MONTH, Calendar.JUNE);
+        counts = new HashMap<String, Long>();
+        counts.put("partial", 1L);
+        expected.put(cal.getTime(), counts);
+
+        cal.set(Calendar.MONTH, Calendar.JULY);
+        counts = new HashMap<String, Long>();
+        counts.put("valid", 1L);
+        expected.put(cal.getTime(), counts);
+
+        output[3] = $("test product 3", expected);
+
+
+        output[4] = $("bad product name", new HashMap<Date, Map<String, Long>>());
+
+        return output;
+    }
+
+    @SuppressWarnings("checkstyle:methodlength")
+    private Object[][] buildSubMapForStatusCountsWithAttributes() {
+        Calendar cal = Calendar.getInstance();
+        cal.clear();
+        cal.set(Calendar.YEAR, 2012);
+        cal.set(Calendar.DAY_OF_MONTH, 10);
+
+        Map<Date, Map<String, Long>> expected;
+        Map<Date, Map<String, Long>> actual;
+        HashMap<String, Long> counts;
+        Map<String, String> attributes;
+
+        Object[][] output = new Object[7][];
+
+        output[0] = $(null, this.buildMapForAllStatusCounts());
+
+        expected = new HashMap<Date, Map<String, Long>>();
+
+        cal.set(Calendar.MONTH, Calendar.MARCH);
+        counts = new HashMap<String, Long>();
+        counts.put("invalid", 1L);
+        expected.put(cal.getTime(), counts);
+
+        cal.set(Calendar.MONTH, Calendar.APRIL);
+        counts = new HashMap<String, Long>();
+        counts.put("invalid", 1L);
+        expected.put(cal.getTime(), counts);
+
+        cal.set(Calendar.MONTH, Calendar.MAY);
+        counts = new HashMap<String, Long>();
+        counts.put("invalid", 2L);
+        counts.put("valid", 1L);
+        expected.put(cal.getTime(), counts);
+
+        cal.set(Calendar.MONTH, Calendar.JUNE);
+        counts = new HashMap<String, Long>();
+        counts.put("partial", 2L);
+        expected.put(cal.getTime(), counts);
+
+        cal.set(Calendar.MONTH, Calendar.JULY);
+        counts = new HashMap<String, Long>();
+        counts.put("valid", 1L);
+        expected.put(cal.getTime(), counts);
+
+        attributes = new HashMap<String, String>() {
+            {
+                this.put("attrib1", "val1");
+            }
+        };
+
+        output[1] = $(attributes, expected);
+
+
+        expected = new HashMap<Date, Map<String, Long>>();
+
+        cal.set(Calendar.MONTH, Calendar.MARCH);
+        counts = new HashMap<String, Long>();
+        counts.put("invalid", 1L);
+        expected.put(cal.getTime(), counts);
+
+        cal.set(Calendar.MONTH, Calendar.APRIL);
+        counts = new HashMap<String, Long>();
+        counts.put("invalid", 1L);
+        expected.put(cal.getTime(), counts);
+
+        cal.set(Calendar.MONTH, Calendar.MAY);
+        counts = new HashMap<String, Long>();
+        counts.put("invalid", 1L);
+        counts.put("valid", 1L);
+        expected.put(cal.getTime(), counts);
+
+        cal.set(Calendar.MONTH, Calendar.JUNE);
+        counts = new HashMap<String, Long>();
+        counts.put("partial", 1L);
+        expected.put(cal.getTime(), counts);
+
+        cal.set(Calendar.MONTH, Calendar.JULY);
+        counts = new HashMap<String, Long>();
+        counts.put("valid", 1L);
+        expected.put(cal.getTime(), counts);
+
+        attributes = new HashMap<String, String>() {
+            {
+                this.put("attrib2", "val2");
+            }
+        };
+
+        output[2] = $(attributes, expected);
+
+
+        expected = new HashMap<Date, Map<String, Long>>();
+
+        cal.set(Calendar.MONTH, Calendar.MARCH);
+        counts = new HashMap<String, Long>();
+        counts.put("invalid", 1L);
+        expected.put(cal.getTime(), counts);
+
+        cal.set(Calendar.MONTH, Calendar.APRIL);
+        counts = new HashMap<String, Long>();
+        counts.put("invalid", 1L);
+        expected.put(cal.getTime(), counts);
+
+        cal.set(Calendar.MONTH, Calendar.MAY);
+        counts = new HashMap<String, Long>();
+        counts.put("valid", 1L);
+        expected.put(cal.getTime(), counts);
+
+        attributes = new HashMap<String, String>() {
+            {
+                this.put("attrib1", "val1");
+                this.put("attrib2", "val2");
+            }
+        };
+
+        output[3] = $(attributes, expected);
+
+        expected = new HashMap<Date, Map<String, Long>>();
+        attributes = new HashMap<String, String>() {
+            {
+                this.put("badattrib", "val1");
+            }
+        };
+
+        output[4] = $(attributes, expected);
+
+        attributes = new HashMap<String, String>() {
+            {
+                this.put("attrib1", "badval");
+            }
+        };
+
+        output[5] = $(attributes, expected);
+
+        attributes = new HashMap<String, String>() {
+            {
+                this.put("badattrib", "badval");
+            }
+        };
+
+        output[6] = $(attributes, expected);
+
+
+        return output;
+    }
+
+    @SuppressWarnings("checkstyle:indentation")
+    private Map<Date, Map<String, Long>> intersect(Map<Date, Map<String, Long>>... maps) {
+        HashMap<Date, Map<String, Long>> intersection = new HashMap<Date, Map<String, Long>>();
+        HashMap<String, Long> counts;
+        Map<String, Long> control, temp;
+        long mincount, count;
+        boolean insert;
+
+        if (maps.length > 0) {
+            // Note: Checkstyle doesn't gracefully handle loop labels.
+            dateloop: for (Date date : maps[0].keySet()) {
+                for (Map<Date, Map<String, Long>> map : maps) {
+                    if (!map.containsKey(date)) {
+                        continue dateloop;
+                    }
+                }
+
+                counts = new HashMap<String, Long>();
+                control = maps[0].get(date);
+
+                statusloop: for (String status : control.keySet()) {
+                    mincount = Integer.MAX_VALUE;
+                    insert = false;
+
+                    for (Map<Date, Map<String, Long>> map : maps) {
+                        temp = map.get(date);
+                        if (!temp.containsKey(status)) {
+                            continue statusloop;
+                        }
+
+                        count = temp.get(status);
+                        mincount = (count < mincount ? count : mincount);
+                        insert = true;
+                    }
+
+                    if (insert) {
+                        counts.put(status, mincount);
+                    }
+                }
+
+                if (counts.size() > 0) {
+                    intersection.put(date, counts);
+                }
+            }
+        }
+
+        return intersection;
+    }
+
     private Compliance performGetByIdTest() {
         List<Compliance> snaps = complianceSnapshotCurator.getSnapshotsOnDate(new Date(),
                 Arrays.asList("c1", "c4"), null, null);
@@ -269,18 +1006,57 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         return snap;
     }
 
-    private void createInitialConsumer(Date createdOn, String uuid, String owner, String status) {
-        createSnapshot(createdOn, uuid, owner, status);
+    private Compliance createInitialConsumer(Date createdOn, String uuid, String owner, String status) {
+        Compliance snapshot = createSnapshot(createdOn, uuid, owner, status);
         consumerStateCurator.create(new ConsumerState(uuid, owner, createdOn));
+
+        return snapshot;
     }
 
-    private void createSnapshot(Date date, String uuid, String owner, String status) {
-        complianceSnapshotCurator.create(createComplianceSnapshot(date, uuid, owner, status));
+    private Compliance createSnapshot(Date date, String uuid, String owner, String status) {
+        Compliance snapshot = createComplianceSnapshot(date, uuid, owner, status);
+        complianceSnapshotCurator.create(snapshot);
+
+        return snapshot;
     }
 
-    private void setConsumerDeleted(Date deletedOn, String uuid, String owner) {
-        createSnapshot(deletedOn, uuid, owner, "invalid");
+    private Compliance setConsumerDeleted(Date deletedOn, String uuid, String owner) {
+        Compliance snapshot = createSnapshot(deletedOn, uuid, owner, "invalid");
         consumerStateCurator.setConsumerDeleted(uuid, deletedOn);
+
+        return snapshot;
+    }
+
+    private Entitlement createEntitlement(String sku, String productName, int quantity,
+        Date startDate, Map<String, String> attributes) {
+
+        Calendar cal = Calendar.getInstance();
+        cal.clear();
+        cal.setTime(startDate);
+        cal.set(Calendar.YEAR, cal.get(Calendar.YEAR) + 1);
+
+        Entitlement entitlement = new Entitlement(quantity, startDate, cal.getTime());
+        entitlement.setProductId(sku);
+        entitlement.setProductName(productName);
+        entitlement.setAttributes(attributes);
+
+        return entitlement;
+    }
+
+    private void attachEntitlement(Compliance compliance, Entitlement entitlement) {
+        // Make a (shallow) copy of the entitlement...
+        Entitlement copy = new Entitlement(
+            entitlement.getQuantity(),
+            entitlement.getStartDate(),
+            entitlement.getEndDate()
+        );
+
+        copy.setProductId(entitlement.getProductId());
+        copy.setProductName(entitlement.getProductName());
+        copy.setAttributes(entitlement.getAttributes());
+
+        compliance.addEntitlementSnapshot(copy);
+        complianceSnapshotCurator.save(compliance);
     }
 
     private void processAndCheckResults(Map<String, Integer> expected, Set<Compliance> results) {
