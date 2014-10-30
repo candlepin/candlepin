@@ -21,7 +21,7 @@
 Name: %{parent_proj}-common
 Summary: Common code for Candlepin and related projects
 License: GPLv2
-Version: 1.0.9
+Version: 1.0.10
 Release: 1%{?dist}
 URL: http://www.candlepinproject.org
 Source: %{name}-%{version}.tar.gz
@@ -167,6 +167,10 @@ rm -rf %{_tmppath}/distlibdir
 %{_datadir}/%{parent_proj}/gutterball/lib/%{name}.jar
 
 %changelog
+* Thu Oct 30 2014 Devan Goodwin <dgoodwin@rm-rf.ca> 1.0.10-1
+- Update candlepin-common spec to work around JDK 1.8 as well.
+  (dgoodwin@redhat.com)
+
 * Tue Oct 28 2014 Devan Goodwin <dgoodwin@rm-rf.ca> 1.0.9-1
 - Updated translations. (dgoodwin@redhat.com)
 - Fix issue with JPAConfigParser not returning entire config.
