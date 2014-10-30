@@ -155,6 +155,7 @@ public class Entitlement {
 
     public Entitlement(int quantity, Date startDate, Date endDate) {
         this();
+
         this.quantity = quantity;
         this.startDate = startDate;
         this.endDate = endDate;

@@ -141,6 +141,7 @@
      -->
     <module name="VisibilityModifier">
       <property name="protectedAllowed" value="true" />
+      <property name="packageAllowed" value="true" />
     </module>
     <!-- <module name="FinalClass"/> -->
     <module name="InterfaceIsType"/>

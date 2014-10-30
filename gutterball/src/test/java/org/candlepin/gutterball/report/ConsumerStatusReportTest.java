@@ -72,7 +72,7 @@ public class ConsumerStatusReportTest {
         when(params.get("on_date")).thenReturn(Arrays.asList("13-21-2010"));
 
         validateParams(params, "on_date", "Invalid date string. Expected format: " +
-                ConsumerStatusReport.REPORT_DATE_FORMAT);
+                ConsumerStatusReport.REPORT_DATETIME_FORMAT);
     }
 
     @Test
@@ -133,7 +133,7 @@ public class ConsumerStatusReportTest {
     }
 
     private String formatDate(Date date) {
-        SimpleDateFormat formatter = new SimpleDateFormat(ConsumerStatusReport.REPORT_DATE_FORMAT);
+        SimpleDateFormat formatter = new SimpleDateFormat(ConsumerStatusReport.REPORT_DATETIME_FORMAT);
         return formatter.format(date);
     }
 

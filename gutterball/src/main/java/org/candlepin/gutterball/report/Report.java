@@ -20,6 +20,7 @@ import org.candlepin.gutterball.guice.I18nProvider;
 import org.xnap.commons.i18n.I18n;
 
 import java.text.ParseException;
+import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -36,7 +37,8 @@ import javax.ws.rs.core.MultivaluedMap;
  */
 public abstract class Report<R extends ReportResult> {
 
-    protected static final String REPORT_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
+    protected static final String REPORT_DATE_FORMAT = "yyyy-MM-dd";
+    protected static final String REPORT_DATETIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
 
     protected I18n i18n;
     protected String key;
@@ -110,16 +112,34 @@ public abstract class Report<R extends ReportResult> {
     }
 
     protected Date parseDate(String date) {
+        return this.parseFormattedDate(date, REPORT_DATE_FORMAT);
+    }
+
+    protected Date parseDateTime(String date) {
+        return this.parseFormattedDate(date, REPORT_DATETIME_FORMAT);
+    }
+
+    protected Date parseFormattedDate(String date, String format) {
         if (date == null || date.isEmpty()) {
             return null;
         }
 
         try {
-            SimpleDateFormat formatter = new SimpleDateFormat(REPORT_DATE_FORMAT);
-            return formatter.parse(date);
+            SimpleDateFormat formatter = new SimpleDateFormat(format);
+            ParsePosition pos = new ParsePosition(0);
+            formatter.setLenient(false);
+
+            Date result = formatter.parse(date, pos);
+
+            // Check that we exhaused the entire string
+            if (pos.getIndex() < date.length() - 1) {
+                throw new ParseException("Invalid date string. Expected format: " + format, pos.getIndex());
+            }
+
+            return result;
         }
         catch (ParseException e) {
-            throw new RuntimeException("Could not parse date parameter.");
+            throw new RuntimeException("Could not parse date parameter");
         }
     }
 }
