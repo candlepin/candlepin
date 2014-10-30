@@ -75,8 +75,6 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
                 .add(Projections.groupProperty("c.uuid"))
         );
 
-        mainQuery.getExecutableCriteria(currentSession()).list();
-
         // Post query filter on Status.
         Criteria postFilter = currentSession().createCriteria(Compliance.class)
             .createAlias("consumer", "cs")
