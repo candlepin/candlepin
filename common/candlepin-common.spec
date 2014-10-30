@@ -30,7 +30,7 @@ Vendor: Red Hat, Inc.
 BuildArch: noarch
 
 # Build deps
-BuildRequires: java-devel >= 0:1.6.0
+BuildRequires: java-devel >= 1:1.6.0
 BuildRequires: ant >= 0:1.7.0
 BuildRequires: gettext
 %if 0%{?rhel} && 0%{?rhel} < 7
