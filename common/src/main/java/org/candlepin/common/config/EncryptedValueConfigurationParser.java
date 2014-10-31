@@ -45,28 +45,32 @@ public abstract class EncryptedValueConfigurationParser extends ConfigurationPar
     private String passphrase = null;
 
     protected void readSecretFile(String secretFile) {
-        log.debug("reading secret file: " +  secretFile);
-
         BufferedReader in = null;
+        passphrase = null;
 
         try {
-            in = new BufferedReader(new FileReader(secretFile));
-            StringBuilder tmpPassphrase = new StringBuilder();
+            if (secretFile != null) {
+                log.debug("reading secret file: " +  secretFile);
 
-            String line = null;
-            while ((line = in.readLine()) != null) {
-                tmpPassphrase.append(line);
+                in = new BufferedReader(new FileReader(secretFile));
+                StringBuilder tmpPassphrase = new StringBuilder();
+
+                String line = null;
+                while ((line = in.readLine()) != null) {
+                    tmpPassphrase.append(line);
+                }
+
+                passphrase = tmpPassphrase.toString();
             }
-
-            passphrase = tmpPassphrase.toString();
+            else {
+                log.debug("No secret file provided.");
+            }
         }
         catch (FileNotFoundException e) {
             log.debug("File not found: " + secretFile);
-            passphrase = null;
         }
         catch (IOException e) {
             log.debug("IOException while reading: " + secretFile);
-            passphrase = null;
         }
         finally {
             if (in != null) {

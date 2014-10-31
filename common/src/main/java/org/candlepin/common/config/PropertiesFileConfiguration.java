@@ -212,4 +212,9 @@ public class PropertiesFileConfiguration extends AbstractConfiguration
             Map<String, String> defaults) {
         return backingMap.getNamespaceProperties(prefix, defaults);
     }
+
+    @Override
+    public Map<String, String> toMap() {
+        return this.backingMap.toMap();
+    }
 }
