@@ -14,16 +14,16 @@
  */
 package org.candlepin.gutterball.report;
 
-import org.candlepin.gutterball.curator.ComplianceDataCurator;
+import org.candlepin.gutterball.curator.ComplianceSnapshotCurator;
 import org.candlepin.gutterball.guice.I18nProvider;
+import org.candlepin.gutterball.model.snapshot.Compliance;
 
 import com.google.inject.Inject;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 import javax.ws.rs.core.MultivaluedMap;
 
@@ -32,7 +32,7 @@ import javax.ws.rs.core.MultivaluedMap;
  */
 public class ConsumerTrendReport extends Report<ConsumerTrendReportResult> {
 
-    private ComplianceDataCurator complianceDataCurator;
+    private ComplianceSnapshotCurator snapshotCurator;
 
     /**
      * @param i18nProvider
@@ -40,10 +40,10 @@ public class ConsumerTrendReport extends Report<ConsumerTrendReportResult> {
      * @param description
      */
     @Inject
-    public ConsumerTrendReport(I18nProvider i18nProvider, ComplianceDataCurator curator) {
+    public ConsumerTrendReport(I18nProvider i18nProvider, ComplianceSnapshotCurator snapshotCurator) {
         super(i18nProvider, "consumer_trend_report",
                 i18nProvider.get().tr("Lists the status of each consumer over a date range"));
-        this.complianceDataCurator = curator;
+        this.snapshotCurator = snapshotCurator;
     }
 
     @Override
@@ -104,27 +104,14 @@ public class ConsumerTrendReport extends Report<ConsumerTrendReportResult> {
             endDate = parseDate(queryParams.getFirst("end_date"));
         }
 
-        // If the start date is null, we can return all status updates.
-        // Otherwise, we need to get every consumers
-        // latest compliance info at that point.
-        ConsumerTrendReportResult result = new ConsumerTrendReportResult();
-        if (startDate != null) {
-            // Don't restrict by status here, it may not match to begin with, we only care if it matches
-            for (DBObject dbo : complianceDataCurator.getComplianceOnDate(
-                    startDate, consumerIds, ownerFilters, null)) {
-                result.add(getUuidFromCompliance(dbo), dbo);
-            }
-        }
 
-        for (DBObject dbo : complianceDataCurator.getComplianceForTimespan(
-                startDate, endDate, consumerIds, ownerFilters)) {
-            result.add(getUuidFromCompliance(dbo), dbo);
+        ConsumerTrendReportResult result = new ConsumerTrendReportResult();
+        Set<Compliance> forTimeSpan = snapshotCurator.getComplianceForTimespan(
+                startDate, endDate, consumerIds, ownerFilters);
+        for (Compliance cs : forTimeSpan) {
+            result.add(cs.getConsumer().getUuid(), cs);
         }
         return result;
     }
 
-    private String getUuidFromCompliance(DBObject dbo) {
-        BasicDBObject consumer = (BasicDBObject) dbo.get("consumer");
-        return consumer.getString("uuid");
-    }
 }

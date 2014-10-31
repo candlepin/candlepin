@@ -15,12 +15,11 @@
 
 package org.candlepin.gutterball.report;
 
-import org.candlepin.gutterball.curator.ComplianceDataCurator;
+import org.candlepin.gutterball.curator.ComplianceSnapshotCurator;
 import org.candlepin.gutterball.guice.I18nProvider;
+import org.candlepin.gutterball.model.snapshot.Compliance;
 
 import com.google.inject.Inject;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
 
 import java.util.Date;
 import java.util.List;
@@ -30,9 +29,9 @@ import javax.ws.rs.core.MultivaluedMap;
 /**
  * ConsumerStatusListReport
  */
-public class ConsumerStatusReport extends Report<MultiRowResult<DBObject>> {
+public class ConsumerStatusReport extends Report<MultiRowResult<Compliance>> {
 
-    private ComplianceDataCurator complianceDataCurator;
+    private ComplianceSnapshotCurator complianceSnapshotCurator;
 
     /**
      * @param i18nProvider
@@ -40,10 +39,10 @@ public class ConsumerStatusReport extends Report<MultiRowResult<DBObject>> {
      * @param description
      */
     @Inject
-    public ConsumerStatusReport(I18nProvider i18nProvider, ComplianceDataCurator curator) {
+    public ConsumerStatusReport(I18nProvider i18nProvider, ComplianceSnapshotCurator curator) {
         super(i18nProvider, "consumer_status_report",
                 i18nProvider.get().tr("List the status of all consumers"));
-        this.complianceDataCurator = curator;
+        this.complianceSnapshotCurator = curator;
     }
 
     @Override
@@ -76,10 +75,9 @@ public class ConsumerStatusReport extends Report<MultiRowResult<DBObject>> {
     }
 
     @Override
-    protected MultiRowResult<DBObject> execute(MultivaluedMap<String, String> queryParams) {
+    protected MultiRowResult<Compliance> execute(MultivaluedMap<String, String> queryParams) {
         // At this point we would execute a lookup against the DW data store to formulate
         // the report result set.
-        MultiRowResult<DBObject> result = new MultiRowResult<DBObject>();
 
         List<String> consumerIds = queryParams.get("consumer_uuid");
         List<String> statusFilters = queryParams.get("status");
@@ -87,11 +85,10 @@ public class ConsumerStatusReport extends Report<MultiRowResult<DBObject>> {
 
         Date targetDate = queryParams.containsKey("on_date") ?
             parseDate(queryParams.getFirst("on_date")) : new Date();
-        DBCursor complianceSnapshots = complianceDataCurator.getComplianceOnDate(
-            targetDate, consumerIds, ownerFilters, statusFilters);
-        while (complianceSnapshots.hasNext()) {
-            result.add(complianceSnapshots.next());
-        }
-        return result;
+
+        List<Compliance> snaps = complianceSnapshotCurator.getSnapshotsOnDate(targetDate,
+                consumerIds, ownerFilters, statusFilters);
+
+        return new MultiRowResult<Compliance>(snaps);
     }
 }

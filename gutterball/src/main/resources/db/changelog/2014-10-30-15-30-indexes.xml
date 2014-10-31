@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    
+    <changeSet id="20141030153054-1" author="wpoteat">
+        <createIndex indexName="ix_compliance_reason_status_fk" tableName="gb_compliance_reason_snap" unique="false">
+            <column name="compliancestatus_id"/>
+        </createIndex>
+    </changeSet>
+    
+    <changeSet id="20141030153054-2" author="wpoteat">
+        <createIndex indexName="ix_comp_prod_snap_fk" tableName="gb_compprod_snap" unique="false">
+            <column name="comp_status_id"/>
+        </createIndex>
+    </changeSet>
+    
+    <changeSet id="20141030153054-3" author="wpoteat">
+        <createIndex indexName="ix_consumer_facts_snap_fk" tableName="gb_consumer_facts_snap" unique="false">
+            <column name="consumer_snap_id"/>
+        </createIndex>
+    </changeSet>
+    
+    <changeSet id="20141030153054-4" author="wpoteat">
+        <createIndex indexName="ix_consumer_guest_attributes_fk" tableName="gb_consumer_guest_attributes" unique="false">
+            <column name="consumer_guest_id"/>
+        </createIndex>
+    </changeSet>
+    
+    <changeSet id="20141030153054-5" author="wpoteat">
+        <createIndex indexName="ix_consumer_snap_fk" tableName="gb_consumer_snap" unique="false">
+            <column name="compliance_snap_id"/>
+        </createIndex>
+        <createIndex indexName="ix_consumer_snap_fk2" tableName="gb_consumer_snap" unique="false">
+            <column name="type_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20141030153054-6" author="wpoteat">
+        <createIndex indexName="ix_ent_attr_snap_fk" tableName="gb_ent_attr_snap" unique="false">
+            <column name="ent_snap_id"/>
+        </createIndex>
+    </changeSet>
+    
+    <changeSet id="20141030153054-7" author="wpoteat">
+        <createIndex indexName="ix_ent_der_prod_attr_snap_fk" tableName="gb_ent_der_prod_attr_snap" unique="false">
+            <column name="ent_snap_id"/>
+        </createIndex>
+    </changeSet>
+    
+    <changeSet id="20141030153054-8" author="wpoteat">
+        <createIndex indexName="ix_ent_der_prov_prod_snap_fk" tableName="gb_ent_der_prov_prod_snap" unique="false">
+            <column name="ent_snap_id"/>
+        </createIndex>
+    </changeSet>
+    
+    <changeSet id="20141030153054-9" author="wpoteat">
+        <createIndex indexName="ix_ent_prov_prod_snap_fk" tableName="gb_ent_prov_prod_snap" unique="false">
+            <column name="ent_snap_id"/>
+        </createIndex>
+    </changeSet>
+    
+    <changeSet id="20141030153054-10" author="wpoteat">
+        <createIndex indexName="ix_entitlement_snap_fk" tableName="gb_entitlement_snap" unique="false">
+            <column name="compliance_snap_id"/>
+        </createIndex>
+    </changeSet>
+    
+    <changeSet id="20141030153054-11" author="wpoteat">
+        <createIndex indexName="ix_noncompprod_snap_fk" tableName="gb_noncompprod_snap" unique="false">
+            <column name="comp_status_id"/>
+        </createIndex>
+    </changeSet>
+    
+    <changeSet id="20141030153054-12" author="wpoteat">
+        <createIndex indexName="ix_owner_snap_fk" tableName="gb_owner_snap" unique="false">
+            <column name="consumer_snap_id"/>
+        </createIndex>
+    </changeSet>
+    
+    <changeSet id="20141030153054-13" author="wpoteat">
+        <createIndex indexName="ix_partcompprod_snap_fk" tableName="gb_partcompprod_snap" unique="false">
+            <column name="comp_status_id"/>
+        </createIndex>
+    </changeSet>
+    
+    <changeSet id="20141030153054-14" author="wpoteat">
+        <createIndex indexName="ix_partialstack_snap_fk" tableName="gb_partialstack_snap" unique="false">
+            <column name="comp_status_id"/>
+        </createIndex>
+    </changeSet>
+    
+    <changeSet id="20141030153054-15" author="wpoteat">
+        <createIndex indexName="ix_reason_attr_snap_fk" tableName="gb_reason_attr_snap" unique="false">
+            <column name="reason_snap_id"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>
+<!-- vim: set expandtab sts=4 sw=4 ai: -->

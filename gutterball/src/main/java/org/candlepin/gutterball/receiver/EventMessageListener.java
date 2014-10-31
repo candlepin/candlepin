@@ -14,12 +14,12 @@
  */
 package org.candlepin.gutterball.receiver;
 
-import org.candlepin.gutterball.bsoncallback.EventCallback;
 import org.candlepin.gutterball.eventhandler.EventManager;
 import org.candlepin.gutterball.model.Event;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
-import com.mongodb.util.JSON;
+import com.google.inject.persist.UnitOfWork;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,13 +37,15 @@ public class EventMessageListener implements MessageListener {
 
     private static Logger log = LoggerFactory.getLogger(EventMessageListener.class);
 
+    private UnitOfWork unitOfWork;
     private EventManager eventManager;
-    private EventCallback eventCallback;
+    private ObjectMapper mapper;
 
     @Inject
-    public EventMessageListener(EventManager eventManager, EventCallback eventCallback) {
+    public EventMessageListener(UnitOfWork unitOfWork, ObjectMapper mapper, EventManager eventManager) {
+        this.unitOfWork = unitOfWork;
         this.eventManager = eventManager;
-        this.eventCallback = eventCallback;
+        this.mapper = mapper;
     }
 
     @Override
@@ -52,12 +54,16 @@ public class EventMessageListener implements MessageListener {
 
         try {
             String messageBody = getMessageBody(message);
-            Event event = (Event) JSON.parse(messageBody, eventCallback);
+            Event event = mapper.readValue(messageBody, Event.class);
+            unitOfWork.begin();
             eventManager.handle(event);
             log.info("Received Event: " + event);
         }
         catch (Exception e) {
             log.error("Failed to decode and store event ", e);
+        }
+        finally {
+            unitOfWork.end();
         }
     }
 

@@ -14,13 +14,14 @@
  */
 package org.candlepin.gutterball.eventhandler;
 
-import org.candlepin.gutterball.curator.ConsumerCurator;
-import org.candlepin.gutterball.model.Consumer;
+import org.candlepin.gutterball.curator.ConsumerStateCurator;
+import org.candlepin.gutterball.model.ConsumerState;
 import org.candlepin.gutterball.model.Event;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
+
+import java.io.IOException;
 
 /**
  * ConsumerHandler to properly update the database when
@@ -29,20 +30,27 @@ import com.mongodb.DBObject;
 @HandlerTarget("CONSUMER")
 public class ConsumerHandler implements EventHandler {
 
-    protected ConsumerCurator consumerCurator;
+    protected ConsumerStateCurator consumerStateCurator;
+    private ObjectMapper mapper;
 
     @Inject
-    public ConsumerHandler(ConsumerCurator consumerCurator) {
-        this.consumerCurator = consumerCurator;
+    public ConsumerHandler(ObjectMapper mapper, ConsumerStateCurator stateCurator) {
+        this.consumerStateCurator = stateCurator;
+        this.mapper = mapper;
     }
 
     @Override
     public void handleCreated(Event event) {
-        BasicDBObject newConsumer = (BasicDBObject) event.getNewEntity();
-        Consumer toAdd = new Consumer(newConsumer.getString("uuid"),
-                newConsumer.getDate("created"),
-                (DBObject) newConsumer.get("owner"));
-        consumerCurator.insert(toAdd);
+        String newConsumerJson = event.getNewEntity();
+
+        // JPA Insertion
+        try {
+            ConsumerState consumerState = mapper.readValue(newConsumerJson, ConsumerState.class);
+            consumerStateCurator.create(consumerState);
+        }
+        catch (IOException e) {
+            throw new RuntimeException("Unable to deserialize Consumer Created Event.", e);
+        }
     }
 
     @Override
@@ -52,7 +60,14 @@ public class ConsumerHandler implements EventHandler {
 
     @Override
     public void handleDeleted(Event event) {
-        BasicDBObject targetConsumer = (BasicDBObject) event.getOldEntity();
-        consumerCurator.setConsumerDeleted(targetConsumer.getString("uuid"), event.getTimestamp());
+        try {
+            ConsumerState consumerState = mapper.readValue(event.getOldEntity(), ConsumerState.class);
+            // consumerState is considered a new record here as it is parsed from CP json.
+            // We just want to extract the UUID from the event.
+            consumerStateCurator.setConsumerDeleted(consumerState.getUuid(), event.getTimestamp());
+        }
+        catch (IOException e) {
+            throw new RuntimeException("Unable to deserialize Consumer Deleted Event.", e);
+        }
     }
 }

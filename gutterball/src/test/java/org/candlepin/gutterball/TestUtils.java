@@ -15,17 +15,21 @@
 
 package org.candlepin.gutterball;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-import org.candlepin.gutterball.model.Event;
+import org.candlepin.gutterball.model.snapshot.Compliance;
+import org.candlepin.gutterball.model.snapshot.ComplianceReason;
+import org.candlepin.gutterball.model.snapshot.ComplianceStatus;
+import org.candlepin.gutterball.model.snapshot.Consumer;
+import org.candlepin.gutterball.model.snapshot.Owner;
 import org.candlepin.gutterball.report.Report;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 
 import org.apache.commons.lang.RandomStringUtils;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Random;
 
 public class TestUtils {
@@ -43,16 +47,6 @@ public class TestUtils {
         return prefix + "-" + RandomStringUtils.randomAlphabetic(16);
     }
 
-    public static Event createEvent(String type) {
-        Event e = new Event();
-        e.setId(randomString("ID"));
-        e.setConsumerId(randomString("My Test Consumer"));
-        e.setType("CREATE");
-        e.setMessageText("This is a message");
-        e.setTimestamp(new Date());
-        return e;
-    }
-
     public static Report mockReport(String key, String desc) {
         Report r = mock(Report.class);
         when(r.getKey()).thenReturn(key);
@@ -60,31 +54,29 @@ public class TestUtils {
         return r;
     }
 
-    public static BasicDBObject createComplianceSnapshot(Date statusDate, String consumerUuid, String owner,
-            String statusString) {
-        // NOTE: Does not return DBObject interface since the curator needs this BasicDBObject since it
-        //       requires a concrete class when calling setObjectClass().
-        // NOTE: Currently only contains enough data to satisfy the ConsumerStatusReport
+    public static Compliance createComplianceSnapshot(Date statusDate, String consumerUuid,
+            String owner, String statusString) {
+        Consumer consumerSnap = new Consumer(consumerUuid, createOwnerSnapshot(owner, owner));
+        ComplianceStatus statusSnap = new ComplianceStatus(statusDate, statusString);
 
-        BasicDBObject consumer = new BasicDBObject();
-        consumer.append("uuid", consumerUuid);
-        consumer.append("owner", createOwner(owner, owner));
-
-        BasicDBObject status = new BasicDBObject();
-        status.append("date", statusDate);
-        status.append("status", statusString);
-
-        BasicDBObject snap = new BasicDBObject();
-        snap.append("consumer", consumer);
-        snap.append("status", status);
-        return snap;
+        if (statusString.toLowerCase().equals("invalid")) {
+            ComplianceReason reason = new ComplianceReason("reason-key", "Test message");
+            reason.setComplianceStatus(statusSnap);
+            statusSnap.getReasons().add(reason);
+        }
+        return new Compliance(statusDate, consumerSnap, statusSnap);
     }
 
-    public static DBObject createOwner(String key, String displayName) {
-        BasicDBObject owner = new BasicDBObject("key", key);
-        owner.append("displayName", displayName);
-        owner.append("id", key);
-        owner.append("href", "/owners/" + key);
-        return owner;
+    public static Owner createOwnerSnapshot(String key, String displayName) {
+        return new Owner(key, displayName);
     }
+
+    public static List<String> getUuidsFromSnapshots(List<Compliance> snaps) {
+        List<String> uuids = new ArrayList<String>();
+        for (Compliance cs : snaps) {
+            uuids.add(cs.getConsumer().getUuid());
+        }
+        return uuids;
+    }
+
 }

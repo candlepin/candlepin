@@ -3,6 +3,7 @@
 RED=$(tput setaf 1)
 GREEN=$(tput setaf 2)
 YELLOW=$(tput setaf 3)
+BLUE=$(tput setaf 4)
 RESET_COLOR=$(tput sgr0)
 
 err_msg() {
@@ -15,6 +16,10 @@ success_msg() {
 
 warn_msg() {
     echo "${YELLOW}${1}${RESET_COLOR}"
+}
+
+info_msg() {
+    echo "${BLUE}${1}${RESET_COLOR}"
 }
 
 project_directory() {
@@ -40,7 +45,7 @@ qbuildr() {
 
 evalrc() {
     if [ "$1" -ne "0" ]; then
-        echo "$2"
+        err_msg "$2"
         exit $1
     fi
 }
@@ -114,4 +119,63 @@ cert_from_pkcs12() {
     else
         echo ""
     fi
+}
+
+recreate_postgresql() {
+    local db_name="$1"
+    local db_user="${2:-$db_name}"
+    # Check if candlepin db exists and drop it if so:
+    if [[ `psql -U $db_user -tAc "SELECT 1 FROM pg_database WHERE datname='$db_name'"` == "1" ]]; then
+        info_msg "Database '$db_name' exists.  Dropping it."
+        dropdb -w -U "$db_user" "$db_name"
+    fi
+    createdb -w -U "$db_user" "$db_name"
+    evalrc $? "createdb failed"
+}
+
+init_postgresql_jdbc() {
+    local db_name="$1"
+    declare -A -g JDBC
+    JDBC['driver']="org.postgresql.Driver"
+    JDBC['jar']="/usr/share/java/postgresql-jdbc.jar"
+    JDBC['url']="jdbc:postgresql:$db_name"
+}
+
+recreate_mysql() {
+    local db_name="$1"
+    local db_user="${2:-$db_name}"
+    local password="$DBPASSWORD"
+    [ -z "$password" ] && password=''
+    mysqladmin --user="$db_user" --password="$password" --force drop "$db_name"
+    mysqladmin --user="$db_user" --password="$password" create "$db_name"
+    evalrc $? "mysqladmin create failed"
+}
+
+init_mysql_jdbc() {
+    local db_name="$1"
+    declare -A -g JDBC
+    JDBC['driver']="com.mysql.jdbc.Driver"
+    JDBC['jar']="/usr/share/java/mysql-connector-java.jar"
+    JDBC['url']="jdbc:mysql:///$db_name"
+}
+
+recreate_oracle () {
+    local db_name="$1"
+    local db_user="${2:-$db_name}"
+    local password="${DBPASSWORD:-$db_name}"
+    sqlplus -s 'sys/password@//localhost/XE as sysdba'<<EOF
+drop user $db_name cascade;
+create user $db_user identified by $password default tablespace users;
+grant dba to $db_user;
+quit
+EOF
+    evalrc $? "Creating Candlepin user failed"
+}
+
+init_oracle_jdbc() {
+    local db_name="$1"
+    declare -A -g JDBC
+    JDBC['driver']="oracle.jdbc.OracleDriver"
+    JDBC['jar']="/usr/lib/oracle/11.2/client64/lib/ojdbc6.jar"
+    JDBC['url']="jdbc:oracle:thin:@//localhost:1521/XE "
 }

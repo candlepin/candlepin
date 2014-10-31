@@ -45,14 +45,20 @@ module ErbRenderer
   end
 
   class YamlData
-    attr_reader :_project
+    attr_reader :project
     attr_reader :yaml
     attr_accessor :_
 
     def profile
+      return @profile unless @profile.nil?
       if Buildr.settings.profile.empty?
         warn("There is no profile for the environment #{Buildr.environment}!")
       end
+      # Make the profile an OpenStruct so we can use dot notation to grab properties
+      parent_name = @project.parent.name || ''
+      # Just get the name of this subproject minus all parents
+      project_space = @project.name.gsub("#{parent_name}:", '')
+      @profile = ProfileStruct.new(Buildr.settings.profile[project_space])
       @profile
     end
 
@@ -61,10 +67,7 @@ module ErbRenderer
       # variables.
       @_ = OpenStruct.new
 
-      # Make the profile an OpenStruct so we can use dot notation to grab properties
-      @profile = ProfileStruct.new(Buildr.settings.profile)
-
-      @_project = project
+      @project = project
 
       begin
         @yaml = full_yaml.fetch(output_file)

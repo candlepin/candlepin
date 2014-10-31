@@ -1,71 +1,33 @@
-#!/bin/sh
+#!/bin/bash
+# This script requires bash > 4 because we are using associative arrays
 
-recreate_mysql() {
-    mysqladmin --user="$DBUSER" --password="$DBPASSWORD" --force drop candlepin
-    mysqladmin --user="$DBUSER" --password="$DBPASSWORD" create candlepin
-    evalrc $? "mysqladmin create failed"
-}
-
-recreate_postgresql() {
-    # need to setup .pgpass for this to use passwds
-    # something like:
-    #   *:*:candlepin:candlepin:candlepinpasswd
-    #   *:*:postgres:candlepin:candlepinpasswd
-
-    # Check if candlepin db exists and drop it if so:
-    if [[ `psql -U $DBUSER -tAc "SELECT 1 FROM pg_database WHERE datname='candlepin'"` == "1" ]]; then
-        echo "Candlepin database exists, dropping it."
-        dropdb -w -U "$DBUSER" candlepin
+gendb() {
+    if [ "$USE_ORACLE" == "1" ]; then
+        init_oracle_jdbc "candlepin"
+        [ -z "$DBPASSWORD" ] && DBPASSWORD="candlepin"
+    elif [ "$USE_MYSQL" == "1" ]; then
+        init_mysql_jdbc "candlepin"
+    else
+        init_postgresql_jdbc "candlepin"
     fi
-    createdb -w -U "$DBUSER" candlepin
-    evalrc $? "createdb failed"
-}
 
-recreate_oracle () {
-    sqlplus -s 'sys/password@//localhost/XE as sysdba'<<EOF
-drop user candlepin cascade;
-create user candlepin identified by candlepin default tablespace users;
-grant dba to candlepin;
-quit
-EOF
-    evalrc $? "Creating Candlepin user failed"
-}
-
-gendb () {
     if [ "$GENDB" == "1" ]; then
-        MESSAGE="generating a new db"
+        MESSAGE="Generating New Database"
         CHANGELOG="changelog-create.xml"
         if [ "$USE_ORACLE" == "1" ]; then
-            recreate_oracle
+            recreate_oracle "candlepin"
         elif [ "$USE_MYSQL" == "1" ]; then
-            recreate_mysql
+            recreate_mysql "candlepin"
         else
-            recreate_postgresql
+            recreate_postgresql "candlepin"
         fi
     else
-        MESSAGE="updating db"
+        MESSAGE="Updating Database"
         CHANGELOG="changelog-update.xml"
     fi
 
-    if [ "$USE_ORACLE" == "1" ]; then
-        DRIVER="oracle.jdbc.OracleDriver"
-        JDBC_JAR="/usr/lib/oracle/11.2/client64/lib/ojdbc6.jar"
-        JDBC_URL="jdbc:oracle:thin:@//localhost:1521/XE "
-        if [ -z "$DBPASSWORD" ] ; then
-            DBPASSWORD="candlepin"
-        fi
-    elif [ "$USE_MYSQL" == "1" ]; then
-        DRIVER="com.mysql.jdbc.Driver"
-        JDBC_JAR="/usr/share/java/mysql-connector-java.jar"
-        JDBC_URL="jdbc:mysql:///candlepin"
-    else
-        DRIVER="org.postgresql.Driver"
-        JDBC_JAR="/usr/share/java/postgresql-jdbc.jar"
-        JDBC_URL="jdbc:postgresql:candlepin"
-    fi
-
-    echo "============ $MESSAGE =============="
-    LQCOMMAND="liquibase --driver=$DRIVER --classpath=$PROJECT_DIR/src/main/resources/:target/classes/:$JDBC_JAR --changeLogFile=db/changelog/$CHANGELOG --url=$JDBC_URL --username=candlepin"
+    info_msg "$MESSAGE"
+    LQCOMMAND="liquibase --driver=${JDBC['driver']} --classpath=$PROJECT_DIR/src/main/resources/:target/classes/:${JDBC['jar']} --changeLogFile=db/changelog/$CHANGELOG --url=${JDBC['url']} --username=candlepin"
     if [ -n "$DBPASSWORD" ] ; then
         LQCOMMAND="$LQCOMMAND --password=$DBPASSWORD "
     fi
@@ -99,7 +61,7 @@ isrpm() {
 
 update_keystore() {
     if [ ! -f $CONTAINER_CONF_DIR/keystore ]; then
-        echo "Symlinking keystore for tomcat"
+        info_msg "Symlinking keystore for tomcat"
         sudo ln -s /etc/candlepin/certs/keystore $CONTAINER_CONF_DIR/keystore
     else
         if [ ! -L "$CONTAINER_CONF_DIR/keystore" -a "$(readlink $CONTAINER_CONF_DIR/keystore)" != "/etc/candlepin/certs/keystore" ]; then
@@ -174,6 +136,12 @@ notify() {
         echo
         success_msg "Deployment complete!"
     fi
+}
+
+initialize_cp() {
+    info_msg "Initializing Candlepin..."
+    wget --no-check-certificate -qO- https://localhost:8443/candlepin/admin/init
+    echo
 }
 
 init() {
@@ -275,14 +243,14 @@ eval $STOP
 
 # generate the postgresql DB
 if [ "$LOGDRIVER" == "logdriver" ]; then
-    echo "using logdriver"
+    info_msg "Using logdriver"
     LOGDRIVER="logdriver=yes"
 else
     LOGDRIVER=""
 fi
 
 if [ "$USE_ORACLE" == "1" ]; then
-    echo "building with Oracle JDBC jar"
+    info_msg "Building with Oracle JDBC jar"
     ENV_BUILDR="oracle"
 elif [ "$USE_MYSQL" == "1" ]; then
     ENV_BUILDR="mysql"
@@ -295,7 +263,7 @@ fi
 buildr -s -e $ENV_BUILDR clean package test=no $LOGDRIVER
 
 if [ "$?" -ne "0" ]; then
-  echo "ERROR: Compile failed."
+  err_msg "ERROR: Compile failed."
   exit 1
 fi
 
@@ -328,8 +296,7 @@ deploy
 eval $START
 
 sleep 10
-echo "Initializing Candlepin..."
-wget --no-check-certificate -qO- https://localhost:8443/candlepin/admin/init
+initialize_cp
 
 upload_products
 notify

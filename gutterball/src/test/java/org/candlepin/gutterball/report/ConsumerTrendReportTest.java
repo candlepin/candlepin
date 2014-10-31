@@ -14,25 +14,17 @@
  */
 package org.candlepin.gutterball.report;
 
-import static org.candlepin.gutterball.TestUtils.createComplianceSnapshot;
-import static org.candlepin.gutterball.TestUtils.createOwner;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.candlepin.gutterball.TestUtils.*;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
-import org.candlepin.gutterball.EmbeddedMongoRule;
-import org.candlepin.gutterball.curator.ComplianceDataCurator;
-import org.candlepin.gutterball.curator.ConsumerCurator;
+import org.candlepin.gutterball.DatabaseTestFixture;
 import org.candlepin.gutterball.guice.I18nProvider;
-import org.candlepin.gutterball.model.Consumer;
-
-import com.mongodb.BasicDBList;
+import org.candlepin.gutterball.model.ConsumerState;
+import org.candlepin.gutterball.model.snapshot.Compliance;
 
 import org.jukito.JukitoRunner;
 import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -43,6 +35,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -52,37 +45,56 @@ import javax.ws.rs.core.MultivaluedMap;
  * Test ConsumerTrendReport
  */
 @RunWith(JukitoRunner.class)
-public class ConsumerTrendReportTest {
-
-    @SuppressWarnings("checkstyle:visibilitymodifier")
-    @ClassRule
-    public static EmbeddedMongoRule serverRule = new EmbeddedMongoRule();
-
-    // Used to determine if the setup was already run.
-    private static boolean setupComplete = false;
+public class ConsumerTrendReportTest extends DatabaseTestFixture {
 
     @Inject
     private HttpServletRequest mockReq;
 
-    private ComplianceDataCurator complianceDataCurator;
     private ConsumerTrendReport report;
-
-    private ConsumerCurator consumerCurator;
 
     @Before
     public void setUp() throws Exception {
         I18nProvider i18nProvider = new I18nProvider(mockReq);
+        report = new ConsumerTrendReport(i18nProvider, complianceSnapshotCurator);
+    }
 
-        consumerCurator = new ConsumerCurator(serverRule.getMongoConnection());
-        complianceDataCurator = new ComplianceDataCurator(serverRule.getMongoConnection(), consumerCurator);
-        report = new ConsumerTrendReport(i18nProvider, complianceDataCurator);
+    @Before
+    public void initData() {
+        Calendar cal = Calendar.getInstance();
 
-        // Ensure test data is only created once. Ran into issues when using @BeforeClass
-        // as it required everything to become static.
-        if (!setupComplete) {
-            setupTestData();
-            setupComplete = true;
-        }
+        // Set up deleted consumer test data
+        cal.set(Calendar.YEAR, 2012);
+        cal.set(Calendar.MONTH, Calendar.MARCH);
+        cal.set(Calendar.DAY_OF_MONTH, 10);
+        cal.set(Calendar.HOUR, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+
+        // Consumer created
+        createInitialConsumer(cal.getTime(), "c1", "o1", "invalid");
+
+        // Simulate status change
+        cal.set(Calendar.MONTH, Calendar.MAY);
+        createSnapshot(cal.getTime(), "c1", "o1", "valid");
+
+        // Consumer was deleted
+        cal.set(Calendar.MONTH, Calendar.JUNE);
+        setConsumerDeleted(cal.getTime(), "c1", "o1");
+
+        cal.set(Calendar.MONTH, Calendar.APRIL);
+        createInitialConsumer(cal.getTime(), "c2", "o1", "invalid");
+
+        cal.set(Calendar.MONTH, Calendar.MAY);
+        createInitialConsumer(cal.getTime(), "c3", "o2", "invalid");
+        cal.set(Calendar.MONTH, Calendar.JUNE);
+        createSnapshot(cal.getTime(), "c3", "o2", "partial");
+
+        cal.set(Calendar.MONTH, Calendar.MAY);
+        createInitialConsumer(cal.getTime(), "c4", "o3", "invalid");
+        cal.set(Calendar.MONTH, Calendar.JUNE);
+        createSnapshot(cal.getTime(), "c4", "o3", "partial");
+        cal.set(Calendar.MONTH, Calendar.JULY);
+        createSnapshot(cal.getTime(), "c4", "o3", "valid");
     }
 
     @Test
@@ -157,7 +169,7 @@ public class ConsumerTrendReportTest {
         List<String> foundConsumers = new ArrayList<String>();
         for (String uuid : result.keySet()) {
             // There should only be one snapshot
-            BasicDBList snapshots = (BasicDBList) result.get(uuid);
+            Set<Compliance> snapshots = result.get(uuid);
             assertEquals(1, snapshots.size());
             foundConsumers.add(uuid);
         }
@@ -180,10 +192,12 @@ public class ConsumerTrendReportTest {
         assertEquals(expectedUuidsNumReports.keySet(), result.keySet());
 
         for (String uuid : result.keySet()) {
-            BasicDBList snapshots = (BasicDBList) result.get(uuid);
+            Set<Compliance> snapshots = result.get(uuid);
             assertEquals((int) expectedUuidsNumReports.get(uuid), snapshots.size());
         }
     }
+
+
 
     @Test
     public void testGetStatusReportsTimeframe() {
@@ -214,53 +228,9 @@ public class ConsumerTrendReportTest {
         assertEquals(expectedUuidsNumReports.keySet(), result.keySet());
 
         for (String uuid : result.keySet()) {
-            BasicDBList snapshots = (BasicDBList) result.get(uuid);
+            Set<Compliance> snapshots = result.get(uuid);
             assertEquals((int) expectedUuidsNumReports.get(uuid), snapshots.size());
         }
-    }
-
-    private void setupTestData() {
-        Calendar cal = Calendar.getInstance();
-
-        // Set up deleted consumer test data
-        cal.set(Calendar.YEAR, 2012);
-        cal.set(Calendar.MONTH, Calendar.MARCH);
-        cal.set(Calendar.DAY_OF_MONTH, 10);
-
-        // Consumer created
-        createInitialConsumer(cal.getTime(), "c1", "o1", "invalid");
-
-        // Simulate status change
-        cal.set(Calendar.MONTH, Calendar.MAY);
-        createSnapshot(cal.getTime(), "c1", "o1", "valid");
-
-        // Consumer was deleted
-        cal.set(Calendar.MONTH, Calendar.JUNE);
-        setConsumerDeleted(cal.getTime(), "c1", "o1");
-
-        cal.set(Calendar.MONTH, Calendar.APRIL);
-        createInitialConsumer(cal.getTime(), "c2", "o1", "invalid");
-
-        cal.set(Calendar.MONTH, Calendar.MAY);
-        createInitialConsumer(cal.getTime(), "c3", "o2", "invalid");
-        cal.set(Calendar.MONTH, Calendar.JUNE);
-        createSnapshot(cal.getTime(), "c3", "o2", "partial");
-
-        cal.set(Calendar.MONTH, Calendar.MAY);
-        createInitialConsumer(cal.getTime(), "c4", "o3", "invalid");
-        cal.set(Calendar.MONTH, Calendar.JUNE);
-        createSnapshot(cal.getTime(), "c4", "o3", "partial");
-        cal.set(Calendar.MONTH, Calendar.JULY);
-        createSnapshot(cal.getTime(), "c4", "o3", "valid");
-    }
-
-    private void createInitialConsumer(Date createdOn, String uuid, String owner, String status) {
-        createSnapshot(createdOn, uuid, owner, status);
-        consumerCurator.insert(new Consumer(uuid, createdOn, createOwner(owner, owner)));
-    }
-
-    private void createSnapshot(Date date, String uuid, String owner, String status) {
-        complianceDataCurator.insert(createComplianceSnapshot(date, uuid, owner, status));
     }
 
     private String formatDate(Date date) {
@@ -268,9 +238,18 @@ public class ConsumerTrendReportTest {
         return formatter.format(date);
     }
 
+    private void createInitialConsumer(Date createdOn, String uuid, String owner, String status) {
+        createSnapshot(createdOn, uuid, owner, status);
+        consumerStateCurator.create(new ConsumerState(uuid, owner, createdOn));
+    }
+
+    private void createSnapshot(Date date, String uuid, String owner, String status) {
+        complianceSnapshotCurator.create(createComplianceSnapshot(date, uuid, owner, status));
+    }
+
     private void setConsumerDeleted(Date deletedOn, String uuid, String owner) {
         createSnapshot(deletedOn, uuid, owner, "invalid");
-        consumerCurator.setConsumerDeleted(uuid, deletedOn);
+        consumerStateCurator.setConsumerDeleted(uuid, deletedOn);
     }
 
     private void validateParams(MultivaluedMap<String, String> params, String expectedParam,
@@ -284,4 +263,5 @@ public class ConsumerTrendReportTest {
             assertEquals(expectedParam + ": " + expectedMessage, e.getMessage());
         }
     }
+
 }

@@ -33,15 +33,15 @@ public class EventManager {
 
     private static Logger log = LoggerFactory.getLogger(EventManager.class);
 
-    private static final String CREATED = "CREATED";
-    private static final String MODIFIED = "MODIFIED";
-    private static final String DELETED = "DELETED";
+    public static final String CREATED_EVENT_TYPE = "CREATED";
+    public static final String MODIFIED_EVENT_TYPE = "MODIFIED";
+    public static final String DELETED_EVENT_TYPE = "DELETED";
 
     protected Map<String, EventHandler> targetHandlers;
     private EventCurator eventCurator;
 
     @Inject
-    public EventManager(EventCurator eventCurator, Map<String, EventHandler> targetHandlers) {
+    public EventManager(Map<String, EventHandler> targetHandlers, EventCurator eventCurator) {
         this.eventCurator = eventCurator;
         this.targetHandlers = targetHandlers;
     }
@@ -53,19 +53,19 @@ public class EventManager {
      */
     public void handle(Event event) {
         // Store every event
-        eventCurator.insert(event);
+        eventCurator.create(event);
 
         EventHandler handler = targetHandlers.get(event.getTarget());
         if (handler != null) {
             log.info("Handling " + event + " with handler: " + handler.getClass().getSimpleName());
             String eventType = event.getType();
-            if (MODIFIED.equals(eventType)) {
+            if (MODIFIED_EVENT_TYPE.equals(eventType)) {
                 handler.handleUpdated(event);
             }
-            else if (CREATED.equals(eventType)) {
+            else if (CREATED_EVENT_TYPE.equals(eventType)) {
                 handler.handleCreated(event);
             }
-            else if (DELETED.equals(eventType)) {
+            else if (DELETED_EVENT_TYPE.equals(eventType)) {
                 handler.handleDeleted(event);
             }
         }

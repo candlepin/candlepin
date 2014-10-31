@@ -153,6 +153,9 @@ public class ComplianceStatus {
     }
 
     public void setReasons(Set<ComplianceReason> reasons) {
+        if (reasons == null) {
+            reasons = new HashSet<ComplianceReason>();
+        }
         this.reasons = reasons;
     }
 }

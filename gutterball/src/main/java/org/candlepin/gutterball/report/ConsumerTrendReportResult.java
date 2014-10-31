@@ -14,27 +14,25 @@
  */
 package org.candlepin.gutterball.report;
 
-import com.mongodb.BasicDBList;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
+import org.candlepin.gutterball.model.snapshot.Compliance;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * ConsumerTrendReportResult map of consumer uuid -> collection of compliance data
  */
-public class ConsumerTrendReportResult extends BasicDBObject implements ReportResult {
+public class ConsumerTrendReportResult extends HashMap<String, Set<Compliance>>
+    implements ReportResult {
 
-    public BasicDBObject add(String key, DBObject value) {
-        BasicDBList appendTo = getList(key);
+    public void add(String consumerUuid, Compliance snapshotToAdd) {
+        Set<Compliance> appendTo = get(consumerUuid);
         if (appendTo == null) {
-            appendTo = new BasicDBList();
-            this.put(key, appendTo);
-            // Don't need to check equality here
+            appendTo = new HashSet<Compliance>();
+            put(consumerUuid, appendTo);
         }
-        appendTo.add(value);
-        return this;
+        appendTo.add(snapshotToAdd);
     }
 
-    public BasicDBList getList(String key) {
-        return (BasicDBList) get(key);
-    }
 }

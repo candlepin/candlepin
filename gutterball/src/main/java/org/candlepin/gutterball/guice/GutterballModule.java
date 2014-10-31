@@ -14,6 +14,7 @@
  */
 package org.candlepin.gutterball.guice;
 
+import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.mappers.BadRequestExceptionMapper;
 import org.candlepin.common.exceptions.mappers.CandlepinExceptionMapper;
 import org.candlepin.common.exceptions.mappers.DefaultOptionsMethodExceptionMapper;
@@ -33,23 +34,29 @@ import org.candlepin.common.exceptions.mappers.UnsupportedMediaTypeExceptionMapp
 import org.candlepin.common.exceptions.mappers.ValidationExceptionMapper;
 import org.candlepin.common.exceptions.mappers.WebApplicationExceptionMapper;
 import org.candlepin.common.exceptions.mappers.WriterExceptionMapper;
+import org.candlepin.common.guice.JPAInitializer;
+import org.candlepin.gutterball.config.JPAConfigurationParser;
+import org.candlepin.gutterball.curator.ComplianceSnapshotCurator;
+import org.candlepin.gutterball.curator.ConsumerStateCurator;
 import org.candlepin.gutterball.eventhandler.EventHandler;
 import org.candlepin.gutterball.eventhandler.EventManager;
 import org.candlepin.gutterball.eventhandler.HandlerTarget;
+import org.candlepin.gutterball.jackson.GutterballObjectMapper;
 import org.candlepin.gutterball.receiver.EventReceiver;
 import org.candlepin.gutterball.report.ConsumerStatusReport;
 import org.candlepin.gutterball.report.ConsumerTrendReport;
 import org.candlepin.gutterball.report.Report;
 import org.candlepin.gutterball.report.ReportFactory;
-import org.candlepin.gutterball.resource.EventResource;
 import org.candlepin.gutterball.resource.ReportsResource;
 import org.candlepin.gutterball.resource.StatusResource;
 import org.candlepin.gutterball.resteasy.JsonProvider;
 import org.candlepin.gutterball.util.EventHandlerLoader;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.persist.jpa.JpaPersistModule;
 import com.google.inject.servlet.ServletScopes;
 
 import org.xnap.commons.i18n.I18n;
@@ -60,19 +67,30 @@ import org.xnap.commons.i18n.I18n;
  */
 public class GutterballModule extends AbstractModule {
 
+    protected Configuration config;
+
+    public GutterballModule(Configuration config) {
+        this.config = config;
+    }
+
     /**
      * {@inheritDoc}
      */
     @Override
     protected void configure() {
         // See JavaDoc on I18nProvider for more information of RequestScope
-        bind(I18n.class).toProvider(I18nProvider.class).in(ServletScopes.REQUEST);
+        bindI18n();
         bind(JsonProvider.class);
 
-        // Backend classes
+        configureJPA();
+        bind(ComplianceSnapshotCurator.class);
+        bind(ConsumerStateCurator.class);
+
+        bind(ObjectMapper.class).toInstance(new GutterballObjectMapper());
+
         configureEventHandlers();
         bind(EventManager.class).asEagerSingleton();
-        bind(EventReceiver.class).asEagerSingleton();
+        configureEventReciever();
 
         // Map our report classes so that they can be picked up by the ReportFactory.
         Multibinder<Report> reports = Multibinder.newSetBinder(binder(), Report.class);
@@ -82,7 +100,6 @@ public class GutterballModule extends AbstractModule {
 
         // RestEasy API resources
         bind(StatusResource.class);
-        bind(EventResource.class);
         bind(ReportsResource.class);
 
         bind(UnsupportedMediaTypeExceptionMapper.class);
@@ -106,7 +123,21 @@ public class GutterballModule extends AbstractModule {
         bind(JAXBMarshalExceptionMapper.class);
     }
 
-    private void configureEventHandlers() {
+    protected void configureEventReciever() {
+        bind(EventReceiver.class).asEagerSingleton();
+    }
+
+    protected void bindI18n() {
+        bind(I18n.class).toProvider(I18nProvider.class).in(ServletScopes.REQUEST);
+    }
+
+    protected void configureJPA() {
+        JPAConfigurationParser parser = new JPAConfigurationParser(this.config);
+        install(new JpaPersistModule("default").properties(parser.parseConfig()));
+        bind(JPAInitializer.class).asEagerSingleton();
+    }
+
+    protected void configureEventHandlers() {
         MapBinder<String, EventHandler> eventBinder =
                 MapBinder.newMapBinder(binder(), String.class, EventHandler.class);
         for (Class<? extends EventHandler> clazz : EventHandlerLoader.getClasses()) {

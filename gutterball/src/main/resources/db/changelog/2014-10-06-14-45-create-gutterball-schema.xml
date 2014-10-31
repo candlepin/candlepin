@@ -1,0 +1,339 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <changeSet id="20141006144514-1" author="awood">
+        <createTable tableName="gb_compliance_snap">
+            <column name="id" type="varchar(32)">
+                <constraints primaryKeyName="pk_compliance_snap" primaryKey="true" nullable="false"/>
+            </column>
+            <column name="date" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20141006144514-2" author="awood">
+        <createTable tableName="gb_consumer_type_snap">
+            <column name="id" type="varchar(32)">
+                <constraints primaryKeyName="pk_consumer_type_snap" primaryKey="true" nullable="false"/>
+            </column>
+            <column name="label" type="varchar(255)"/>
+            <column name="manifest" type="varchar(1)"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20141006144514-3" author="awood">
+        <createTable tableName="gb_consumer_snap">
+            <column name="id" type="varchar(32)">
+                <constraints primaryKeyName="pk_consumer_snap" primaryKey="true" nullable="false"/>
+            </column>
+            <column name="entitlementcount" type="bigint"/>
+            <column name="entitlementstatus" type="varchar(32)"/>
+            <column name="lastcheckin" type="datetime"/>
+            <column name="name" type="varchar(255)"/>
+            <column name="releasever" type="varchar(255)"/>
+            <column name="servicelevel" type="varchar(255)"/>
+            <column name="environmentname" type="varchar(255)"/>
+            <column name="username" type="varchar(255)"/>
+            <column name="hypervisorid" type="varchar(255)"/>
+            <column name="uuid" type="varchar(255)"/>
+            <column name="compliance_snap_id" type="varchar(32)">
+                <constraints foreignKeyName="fk_consumer_compliance" references="gb_compliance_snap(id)" nullable="false"/>
+            </column>
+            <column name="type_id" type="varchar(32)">
+                <constraints foreignKeyName="fk_consumer_type" references="gb_consumer_type_snap(id)"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20141006144514-4" author="awood">
+        <createTable tableName="gb_compliance_status_snap">
+            <column name="id" type="varchar(32)">
+                <constraints primaryKeyName="pk_compliance_status_snap" primaryKey="true" nullable="false"/>
+            </column>
+            <column name="date" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="compliant_until" type="datetime">
+                <constraints nullable="true"/>
+            </column>
+            <column name="status" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="compliance_snap_id" type="varchar(32)">
+                <constraints foreignKeyName="fk_status_compliance" references="gb_compliance_snap(id)"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20141006144514-5" author="awood">
+        <createTable tableName="gb_consumer_facts_snap">
+            <column name="consumer_snap_id" type="varchar(32)">
+                <constraints foreignKeyName="fk_facts_compliance" references="gb_consumer_snap(id)" nullable="false"/>
+            </column>
+            <column name="element" type="varchar(255)"/>
+            <column name="mapkey" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20141006144514-6" author="awood">
+        <createTable tableName="gb_consumer_guest_snap">
+            <column name="id" type="varchar(32)">
+                <constraints primaryKeyName="pk_consumer_guest_snap" primaryKey="true" nullable="false"/>
+            </column>
+            <column name="guest_id" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="consumer_id" type="varchar(32)">
+                <constraints foreignKeyName="fk_guest_consumer" references="gb_consumer_snap(id)" nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20141006144514-7" author="awood">
+        <createTable tableName="gb_consumer_guest_attributes">
+            <column name="consumer_guest_id" type="varchar(32)">
+                <constraints foreignKeyName="fk_guest_attrs_consumer" references="gb_consumer_guest_snap(id)" nullable="false"/>
+            </column>
+            <column name="element" type="varchar(255)"/>
+            <column name="mapkey" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20141006144514-8" author="awood">
+        <createTable tableName="gb_consumer_state">
+            <column name="uuid" type="varchar(255)">
+                <constraints primaryKeyName="pk_consumer_state" primaryKey="true" nullable="false"/>
+            </column>
+            <column name="created" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="deleted" type="timestamp"/>
+            <column name="ownerkey" type="varchar(255)"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20141006144514-9" author="awood">
+        <createTable tableName="gb_entitlement_snap">
+            <column name="id" type="varchar(32)">
+                <constraints primaryKeyName="pk_entitlement_snap" primaryKey="true" nullable="false"/>
+            </column>
+            <column name="quantity" type="bigint"/>
+
+            <column name="start_date" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="end_date" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="product_id" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="product_name" type="varchar(255)"/>
+            <column name="derived_product_id" type="varchar(255)"/>
+            <column name="derived_product_name" type="varchar(255)"/>
+            <column name="restricted_to_username" type="varchar(255)"/>
+            <column name="contract_number" type="varchar(255)"/>
+            <column name="account_number" type="varchar(255)"/>
+            <column name="order_number" type="varchar(255)"/>
+
+            <column name="compliance_snap_id" type="varchar(32)">
+                <constraints foreignKeyName="fk_entitlement_compliance" references="gb_compliance_snap(id)" nullable="false"/>
+            </column>
+        </createTable>
+        <createTable tableName="gb_ent_attr_snap">
+            <column name="ent_snap_id" type="varchar(32)">
+                <constraints foreignKeyName="fk_attribute_ent" references="gb_entitlement_snap(id)" nullable="false"/>
+            </column>
+            <column name="gb_ent_attr_value" type="varchar(255)"/>
+            <column name="gb_ent_attr_name" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createTable tableName="gb_ent_prov_prod_snap">
+            <column name="ent_snap_id" type="varchar(32)">
+                <constraints foreignKeyName="fk_provided_prod_ent" references="gb_entitlement_snap(id)" nullable="false"/>
+            </column>
+            <column name="gb_ent_prov_prod_name" type="varchar(255)"/>
+            <column name="gb_ent_prov_prod_id" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createTable tableName="gb_ent_der_prov_prod_snap">
+            <column name="ent_snap_id" type="varchar(32)">
+                <constraints foreignKeyName="fk_der_prov_prod_ent" references="gb_entitlement_snap(id)" nullable="false"/>
+            </column>
+            <column name="gb_ent_der_prov_prod_name" type="varchar(255)"/>
+            <column name="gb_ent_der_prov_prod_id" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createTable tableName="gb_ent_der_prod_attr_snap">
+            <column name="ent_snap_id" type="varchar(32)">
+                <constraints foreignKeyName="fk_der_prod_attr_ent" references="gb_entitlement_snap(id)" nullable="false"/>
+            </column>
+            <column name="gb_ent_der_prod_attr_value" type="varchar(255)"/>
+            <column name="gb_ent_der_prod_attr_name" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20141006144514-10" author="awood">
+        <createTable tableName="gb_event">
+            <column name="id" type="varchar(32)">
+                <constraints primaryKeyName="pk_event" primaryKey="true" nullable="false"/>
+            </column>
+            <column name="consumerid" type="varchar(255)"/>
+            <column name="entityid" type="varchar(255)"/>
+            <column name="messagetext" type="clob"/>
+            <column name="newentity" type="clob"/>
+            <column name="oldentity" type="clob"/>
+            <column name="ownerid" type="varchar(255)"/>
+            <column name="principal" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="referenceid" type="varchar(255)"/>
+            <column name="referencetype" type="varchar(255)"/>
+            <column name="target" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="targetname" type="varchar(255)"/>
+            <column name="timestamp" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20141006144514-11" author="awood">
+        <createTable tableName="gb_installed_product_snap">
+            <column name="id" type="varchar(32)">
+                <constraints primaryKeyName="pk_installed_prod_snap" primaryKey="true" nullable="false"/>
+            </column>
+            <column name="product_arch" type="varchar(255)"/>
+            <column name="product_id" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="product_name" type="varchar(255)"/>
+            <column name="product_version" type="varchar(255)"/>
+            <column name="consumer_id" type="varchar(32)">
+                <constraints foreignKeyName="fk_installed_product_consumer" references="gb_consumer_snap(id)" nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20141006144514-12" author="awood">
+        <createTable tableName="gb_owner_snap">
+            <column name="id" type="varchar(32)">
+                <constraints primaryKeyName="pk_owner_snap" primaryKey="true" nullable="false"/>
+            </column>
+            <column name="displayname" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="account" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="consumer_snap_id" type="varchar(32)">
+                <constraints foreignKeyName="fk_owner_consumer" references="gb_consumer_snap(id)" nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20141006144514-13" author="awood">
+        <createIndex indexName="ix_compliance_snap_fk" tableName="gb_compliance_status_snap" unique="false">
+            <column name="compliance_snap_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20141006144514-14" author="awood">
+        <createIndex indexName="ix_consumerguest_consumer_fk" tableName="gb_consumer_guest_snap" unique="false">
+            <column name="consumer_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20141006144514-15" author="awood">
+        <createIndex indexName="ix_installedprod_consumer_fk" tableName="gb_installed_product_snap" unique="false">
+            <column name="consumer_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20141006144514-16" author="mstead">
+        <createTable tableName="gb_compliance_reason_snap">
+            <column name="id" type="varchar(32)">
+                <constraints primaryKeyName="pk_compliance_reason_snap" primaryKey="true" nullable="false"/>
+            </column>
+            <column name="key" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="message" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="compliancestatus_id" type="varchar(32)">
+                <constraints foreignKeyName="fk_reason_status" references="gb_compliance_status_snap(id)" nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20141006144514-17" author="mstead">
+        <createTable tableName="gb_reason_attr_snap">
+            <column name="reason_snap_id" type="varchar(32)">
+                <constraints foreignKeyName="fk_attr_reason" references="gb_compliance_reason_snap(id)" nullable="false"/>
+            </column>
+            <column name="element" type="varchar(255)"/>
+            <column name="mapkey" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20141006144514-18" author="mstead">
+        <createTable tableName="gb_compprod_snap">
+            <column name="comp_status_id" type="varchar(32)">
+                <constraints foreignKeyName="fk_compprod_status" references="gb_compliance_status_snap(id)" nullable="false"/>
+            </column>
+            <column name="product_id" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="gb_noncompprod_snap">
+            <column name="comp_status_id" type="varchar(32)">
+                <constraints foreignKeyName="fk_noncompprod_status" references="gb_compliance_status_snap(id)" nullable="false"/>
+            </column>
+            <column name="product_id" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="gb_partcompprod_snap">
+            <column name="comp_status_id" type="varchar(32)">
+                <constraints foreignKeyName="fk_partcompprod_status" references="gb_compliance_status_snap(id)" nullable="false"/>
+            </column>
+            <column name="product_id" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="gb_partialstack_snap">
+            <column name="comp_status_id" type="varchar(32)">
+                <constraints foreignKeyName="fk_partialstack_status" references="gb_compliance_status_snap(id)" nullable="false"/>
+            </column>
+            <column name="stacking_id" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+</databaseChangeLog>
+<!-- vim: set expandtab sts=4 sw=4 ai: -->

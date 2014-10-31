@@ -217,7 +217,7 @@ public class ConfigProperties {
                 // AMQP (Qpid) configuration used by events
                 this.put(AMQP_INTEGRATION_ENABLED, String.valueOf(false));
                 this.put(AMQP_CONNECT_STRING,
-                    "tcp://localhost:5672?ssl='true'&ssl_cert_alias='candlepin'");
+                    "tcp://localhost:5671?ssl='true'&ssl_cert_alias='candlepin'");
                 this.put(AMQP_KEYSTORE, "/etc/candlepin/certs/amqp/candlepin.jks");
                 this.put(AMQP_KEYSTORE_PASSWORD, "password");
                 this.put(AMQP_TRUSTSTORE, "/etc/candlepin/certs/amqp/candlepin.truststore");

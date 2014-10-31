@@ -10,11 +10,27 @@ module Candlepin
     end
 
     module ClassMethods
+      # Taken from Rails.  Looks for the least indented line in a heredoc and
+      # removes that amount of leading whitespace from each line.
+      def strip_heredoc(s)
+        indent = s.scan(/^[ \t]*(?=\S)/).min
+        indent = (indent.nil?) ? 0 : indent.size
+        s.gsub(/^[ \t]{#{indent}}/, '')
+      end
+
       def top_project(project)
         until project.parent.nil? do
           project = project.parent
         end
         project
+      end
+
+      def relative_path_to(parent, child)
+        Pathname.new(child).relative_path_from(Pathname.new(parent)).to_s
+      end
+
+      def top_path_to(project, path)
+        top_project(project).path_to(path)
       end
     end
 

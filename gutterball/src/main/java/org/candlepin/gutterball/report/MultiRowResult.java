@@ -16,6 +16,7 @@
 package org.candlepin.gutterball.report;
 
 import java.util.LinkedList;
+import java.util.List;
 
 /**
  * A {@link ReportResult} implementation that stores its results as a list of rows.
@@ -25,5 +26,9 @@ import java.util.LinkedList;
 public class MultiRowResult<R> extends LinkedList<R> implements ReportResult {
 
     public MultiRowResult() {
+    }
+
+    public MultiRowResult(List<R> results) {
+        super(results);
     }
 }

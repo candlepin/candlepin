@@ -99,14 +99,10 @@ POSTGRESQL = 'postgresql:postgresql:jar:9.0-801.jdbc4'
 
 MYSQL = 'mysql:mysql-connector-java:jar:5.1.26'
 
-MONGODB = 'org.mongodb:mongo-java-driver:jar:2.12.2'
-MONGODB_EMBEDDED = ['de.flapdoodle.embed:de.flapdoodle.embed.mongo:jar:1.46.0',
-                    'de.flapdoodle.embed:de.flapdoodle.embed.process:jar:1.39.0',
-                    'org.apache.commons:commons-compress:jar:1.8.1']
+DB = [POSTGRESQL, MYSQL]
 
-DB = [POSTGRESQL, MYSQL, MONGODB]
-
-HSQLDB = 'hsqldb:hsqldb:jar:1.8.0.10'
+HSQLDB = 'org.hsqldb:hsqldb:jar:2.3.2'
+HSQLDB_OLD = 'org.hsqldb:hsqldb:jar:1.8.0.10'
 
 ORACLE = ['com.oracle:ojdbc6:jar:11.2.0', 'org.quartz-scheduler:quartz-oracle:jar:2.1.5']
 
@@ -195,6 +191,14 @@ define "candlepin" do
   checkstyle_eclipse_xml = path_to(:project_conf, 'eclipse-checkstyle.xml')
   rpmlint_conf = path_to("rpmlint.config")
 
+  use_logdriver = ENV['logdriver']
+  if use_logdriver
+    info "Compiling with logdriver"
+    download artifact(LOGDRIVER) => 'http://jmrodri.fedorapeople.org/ivy/candlepin/logdriver/logdriver/1.0/logdriver-1.0.jar'
+  end
+  download artifact(SCHEMASPY) => 'http://downloads.sourceforge.net/project/schemaspy/schemaspy/SchemaSpy%204.1.1/schemaSpy_4.1.1.jar'
+
+
   desc "Common Candlepin Code"
   define "common" do
     project.version = spec_version('candlepin-common.spec')
@@ -208,7 +212,7 @@ define "candlepin" do
     compile_classpath = [COMMONS, LOGGING, GUICE, GETTEXT_COMMONS, COLLECTIONS, PROVIDED, RESTEASY, JACKSON, JAVAX]
     compile.with(compile_classpath)
 
-    test.with(TESTING, JUKITO)
+    test.with(TESTING, JUKITO, LIQUIBASE)
     test.using :java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ]
 
     common_jar = package(:jar)
@@ -248,7 +252,9 @@ define "candlepin" do
       RHINO,
       SUN_JAXB,
     ]
+
     compile.with(compile_classpath)
+    compile.with(LOGDRIVER, LOG4J_BRIDGE) if use_logdriver
     compile.with(project('common'))
 
     resource_substitutions = {
@@ -258,7 +264,11 @@ define "candlepin" do
     resources.filter.using(resource_substitutions)
     test.resources.filter.using(resource_substitutions)
 
-    test.with(TESTING, JUKITO, HSQLDB, MONGODB_EMBEDDED)
+    test.setup do |task|
+      filter(path_to(:src, :main, :resources)).into(path_to(:target, :classes)).run
+    end
+
+    test.with(TESTING, JUKITO, HSQLDB, LIQUIBASE, project('common'))
     test.using :java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ]
 
     gutterball_war = package(:war, :id=>"gutterball").tap do |war|
@@ -276,6 +286,8 @@ define "candlepin" do
     checkstyle.config_directory = checkstyle_config_directory
     checkstyle.eclipse_xml = checkstyle_eclipse_xml
     rpmlint.rpmlint_conf = rpmlint_conf
+    liquibase.changelogs = ['changelog-update.xml', 'changelog-create.xml']
+    liquibase.file_time_prefix_format = "%Y%m%d%H%M%S"
 
     # eclipse settings
     # http://buildr.apache.org/more_stuff.html#eclipse
@@ -288,13 +300,6 @@ define "candlepin" do
     # be exactly the same as the file path.
     tools_location = File.basename(Java.tools_jar)
     eclipse.classpath_variables tools_location.to_sym => tools_location
-
-    use_logdriver = ENV['logdriver']
-    info "Compiling with logdriver" if use_logdriver
-
-    # download the stuff we do not have in the repositories
-    download artifact(SCHEMASPY) => 'http://downloads.sourceforge.net/project/schemaspy/schemaspy/SchemaSpy%204.1.1/schemaSpy_4.1.1.jar'
-    download artifact(LOGDRIVER) => 'http://jmrodri.fedorapeople.org/ivy/candlepin/logdriver/logdriver/1.0/logdriver-1.0.jar' if use_logdriver
 
     resource_substitutions = {
       'version' => project.version,
@@ -342,12 +347,11 @@ define "candlepin" do
 
     ### Testing
     test.setup do |task|
-      filter(path_to(:src, :main, :resources, 'META-INF')).into(path_to(:target, :classes, 'META-INF')).run
+      filter(path_to(:src, :main, :resources)).into(path_to(:target, :classes)).run
     end
 
     # the other dependencies transfer from compile.classpath automagically
-    test.with(HSQLDB, TESTING)
-    test.with(LOGDRIVER, LOG4J_BRIDGE) if use_logdriver
+    test.with(HSQLDB_OLD, TESTING)
     test.using(:java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ])
 
     ### Javadoc
@@ -377,7 +381,7 @@ define "candlepin" do
     end
 
     package(:war, :id=>"candlepin").tap do |war|
-      war.libs += artifacts(HSQLDB)
+      war.libs += artifacts(HSQLDB_OLD)
       war.libs -= artifacts(PROVIDED)
       war.libs -= artifacts(JAVA_TOOLS)
       war.classes.clear

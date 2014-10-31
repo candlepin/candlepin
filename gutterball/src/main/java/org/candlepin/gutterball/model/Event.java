@@ -12,186 +12,252 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
+
 package org.candlepin.gutterball.model;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
+import org.candlepin.gutterball.jackson.PrincipalJsonToStringConverter;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Type;
 
 import java.util.Date;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Lob;
+import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlRootElement;
+
 /**
- * Event - Base class for Candlepin events. Serves as both our semi-permanent
- * audit history in the database, as well as an integral part of the event
- * queue.
- *
- * This class should reflect the one in candlepin, except less strict.
- * We also store the original json as a field in this so that we don't
- * lose values when this class is out of sync with the candlepin version
+ * A model representing and Event as recieved from Candlepin via AMQP. An event stores its
+ * candlepin entities as TEXT strings in a single field so that they can be looked up (and
+ * potentially re-processed) at a later date.
  */
-public class Event extends BasicDBObject {
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.PROPERTY)
+@Entity
+@Table(name = "gb_event")
+public class Event {
 
-    private static final String TARGET = "target";
-    private static final String TIMESTAMP = "timestamp";
-    private static final String OWNER_ID = "ownerId";
-    private static final String REFERENCE_ID = "referenceId";
-    private static final String REFERENCE_TYPE = "referenceType";
-    private static final String PRINCIPAL_STORE = "principalStore";
-    private static final String ENTITY_ID = "entityId";
-    private static final String OLD_ENTITY = "oldEntity";
-    private static final String NEW_ENTITY = "newEntity";
-    private static final String CONSUMER_ID = "consumerId";
-    private static final String TARGET_NAME = "targetName";
-    private static final String MESSAGE_TEXT = "messageText";
-    private static final String ID = "id";
-    private static final String TYPE = "type";
+    @Id
+    @GeneratedValue(generator = "system-uuid")
+    @GenericGenerator(name = "system-uuid", strategy = "uuid")
+    @Column(length = 32)
+    @NotNull
+    private String id;
 
-    public Event() {
-    }
+    @Column(nullable = false)
+    @NotNull
+    private String type;
 
-    public Event(DBObject dbObject) {
-        this.putAll(dbObject);
-    }
+    @Column(nullable = false)
+    @NotNull
+    private String target;
 
-    public String getId() {
-        return this.getString(ID);
-    }
+    @Column(nullable = true)
+    @Size(max = 255)
+    private String targetName;
 
-    public void setId(String id) {
-        this.put(ID, id);
-    }
+    // String representation of the principal. We probably should not be
+    // reconstructing any stored principal object.
+    @Column(nullable = false)
+    @Size(max = 255)
+    @NotNull
+    @JsonProperty("principal")
+    @JsonDeserialize(converter = PrincipalJsonToStringConverter.class)
+    private String principal;
 
-    public String getType() {
-        return this.getString(TYPE);
-    }
+    @Column(nullable = false)
+    @NotNull
+    private Date timestamp;
 
-    public void setType(String type) {
-        this.put(TYPE, type);
-    }
+    @Column(nullable = true)
+    @Size(max = 255)
+    private String entityId;
 
-    public String getTarget() {
-        return this.getString(TARGET);
-    }
+    @Column(nullable = true)
+    @Size(max = 255)
+    private String ownerId;
 
-    public void setTarget(String target) {
-        this.put(TARGET, target);
-    }
-
-    public Date getTimestamp() {
-        return this.getDate(TIMESTAMP);
-    }
-
-    public void setTimestamp(Date timestamp) {
-        this.put(TIMESTAMP, timestamp);
-    }
-
-    public String getOwnerId() {
-        return this.getString(OWNER_ID);
-    }
-
-    public void setOwnerId(String ownerId) {
-        this.put(OWNER_ID, ownerId);
-    }
+    @Column(nullable = true)
+    @Size(max = 255)
+    private String consumerId;
 
     // Generic id field in case a cross reference is needed to some other entity
-    // Use with reference type)
-    public String getReferenceId() {
-        return this.getString(REFERENCE_ID);
-    }
-
-    public void setReferenceId(String referenceId) {
-        this.put(REFERENCE_ID, referenceId);
-    }
+    // Use with reference type
+    @Column(nullable = true)
+    @Size(max = 255)
+    private String referenceId;
 
     // Classifies Generic id field in case a cross reference is needed to some
     // other entity
     // Use with reference id
-    public String getReferenceType() {
-        return getString(REFERENCE_TYPE);
+    @Column(nullable = true)
+    private String referenceType;
+
+    @Lob
+    @Type(type = "org.hibernate.type.MaterializedClobType")
+    private String messageText;
+
+    /**
+     * Old and New entity fields are stored as a JSON String so that we
+     * can capture all the data that may not have been stored by the event
+     * handlers. This allows for potentially re-processing the event at a
+     * later date to pull in the new data.
+     */
+    @Lob
+    @Type(type = "org.hibernate.type.MaterializedClobType")
+    private String oldEntity;
+
+    @Lob
+    @Type(type = "org.hibernate.type.MaterializedClobType")
+    private String newEntity;
+
+    public Event() {
     }
 
-    public void setReferenceType(String referenceType) {
-        this.put(REFERENCE_TYPE, referenceType);
+    public Event(String type, String target, String targetName,
+        String principal, String ownerId, String consumerId,
+        String entityId, String oldEntity, String newEntity,
+        String referenceId, String referenceType, Date timestamp) {
+        this.type = type;
+        this.target = target;
+        this.targetName = targetName;
+
+        this.principal = principal;
+        this.ownerId = ownerId;
+
+        this.entityId = entityId;
+        this.oldEntity = oldEntity;
+        this.newEntity = newEntity;
+        this.consumerId = consumerId;
+        this.referenceId = referenceId;
+        this.referenceType = referenceType;
+
+        this.timestamp = timestamp;
     }
 
-    public String getPrincipalStore() {
-        return this.getString(PRINCIPAL_STORE);
+    public String getId() {
+        return id;
     }
 
-    // String representation of the principal. We probably should not be
-    // reconstructing any stored principal object.
-    public void setPrincipalStore(String principalStore) {
-        this.put(PRINCIPAL_STORE, principalStore);
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public String getTarget() {
+        return target;
+    }
+
+    public void setTarget(String target) {
+        this.target = target;
+    }
+
+    public String getTargetName() {
+        return targetName;
+    }
+
+    public void setTargetName(String targetName) {
+        this.targetName = targetName;
+    }
+
+    public String getPrincipal() {
+        return principal;
+    }
+
+    public void setPrincipal(String principal) {
+        this.principal = principal;
+    }
+
+    public Date getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(Date timestamp) {
+        this.timestamp = timestamp;
     }
 
     public String getEntityId() {
-        return this.getString(ENTITY_ID);
+        return entityId;
     }
 
     public void setEntityId(String entityId) {
-        this.put(ENTITY_ID, entityId);
+        this.entityId = entityId;
     }
 
-    // Both old/new may be null for creation/deletion events. These are marked
-    // Transient as we decided we do not necessarily want to store the object
-    // state in our Events table. The Event passing through the message queue will
-    // still carry them.
-    public DBObject getOldEntity() {
-        return (DBObject) this.get(OLD_ENTITY);
+    public String getOwnerId() {
+        return ownerId;
     }
 
-    public void setOldEntity(DBObject oldEntity) {
-        this.put(OLD_ENTITY, oldEntity);
-    }
-
-    public DBObject getNewEntity() {
-        return (DBObject) this.get(NEW_ENTITY);
-    }
-
-    public void setNewEntity(DBObject newEntity) {
-        this.put(NEW_ENTITY, newEntity);
-    }
-
-    @Override
-    public String toString() {
-        return "Event [" + "id=" + getId() + ", target=" + getTarget() +
-            ", type=" + getType() + ", time=" + getTimestamp() + ", entity=" +
-            getEntityId() + "]";
+    public void setOwnerId(String ownerId) {
+        this.ownerId = ownerId;
     }
 
     public String getConsumerId() {
-        return this.getString(CONSUMER_ID);
+        return consumerId;
     }
 
     public void setConsumerId(String consumerId) {
-        this.put(CONSUMER_ID, consumerId);
+        this.consumerId = consumerId;
     }
 
-    /**
-     * @return the targetName
-     */
-    public String getTargetName() {
-        return this.getString(TARGET_NAME);
+    public String getReferenceId() {
+        return referenceId;
     }
 
-    /**
-     * @param targetName the targetName to set
-     */
-    public void setTargetName(String targetName) {
-        this.put(TARGET_NAME, targetName);
+    public void setReferenceId(String referenceId) {
+        this.referenceId = referenceId;
     }
 
-    /**
-     * @return the messageText
-     */
+    public String getReferenceType() {
+        return referenceType;
+    }
+
+    public void setReferenceType(String referenceType) {
+        this.referenceType = referenceType;
+    }
+
+    public String getOldEntity() {
+        return oldEntity;
+    }
+
+    public void setOldEntity(String oldEntity) {
+        this.oldEntity = oldEntity;
+    }
+
+    public String getNewEntity() {
+        return newEntity;
+    }
+
+    public void setNewEntity(String newEntity) {
+        this.newEntity = newEntity;
+    }
+
     public String getMessageText() {
-        return this.getString(MESSAGE_TEXT);
+        return messageText;
     }
 
-    /**
-     * @param messageText the messageText to set
-     */
     public void setMessageText(String messageText) {
-        this.put(MESSAGE_TEXT, messageText);
+        this.messageText = messageText;
     }
-}
 
+
+
+}

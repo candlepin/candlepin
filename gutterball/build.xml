@@ -102,11 +102,7 @@
     <loadlist src="${deps.file}" prop="jar.deps" negate="true">
       <regexp pattern="${scl.regexp}"/>
     </loadlist>
-    <loadlist src="${deps.file}" prop="scl.mongodb24.deps" negate="false">
-      <regexp pattern="${scl.regexp}mongodb24:"/>
-    </loadlist>
     <jpackage-deps jars="${jar.deps}" dir="${lib.dir}" />
-    <scl-deps jars="${scl.mongodb24.deps}" dir="${lib.dir}" scl="mongodb24"/>
   </target>
 
   <target name="package" depends="compile">

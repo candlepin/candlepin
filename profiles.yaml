@@ -2,17 +2,31 @@
 # the "<<" is used to merge two hashes together and the asterisk plus a name dereferences an alias
 # See http://viewsourcecode.org/why/redhanded/bits/yamlSMergeKey.html
 
-common: &common
-  username: "candlepin"
-  password: ""
-  logdriver_class: "net.rkbloom.logdriver.LogDriver"
+common:
+  static: &common_static
+    logdriver_class: "net.rkbloom.logdriver.LogDriver"
+  server: &common_server
+    <<: *common_static
+    username: "candlepin"
+    password: ""
+  gutterball: &common_gutterball
+    <<: *common_static
+    username: "gutterball"
+    password: ""
 
 postgresql: &default
-  <<: *common
-  driver_class: "org.postgresql.Driver"
-  jdbc_url: "jdbc:postgresql:candlepin"
-  dialect: "org.hibernate.dialect.PostgreSQLDialect"
-  quartz_driver: "org.quartz.impl.jdbcjobstore.PostgreSQLDelegate"
+  static: &postgresql_static
+    driver_class: "org.postgresql.Driver"
+    dialect: "org.hibernate.dialect.PostgreSQLDialect"
+    quartz_driver: "org.quartz.impl.jdbcjobstore.PostgreSQLDelegate"
+  server:
+    <<: *common_server
+    <<: *postgresql_static
+    jdbc_url: "jdbc:postgresql:candlepin"
+  gutterball:
+    <<: *common_gutterball
+    <<: *postgresql_static
+    jdbc_url: "jdbc:postgresql:gutterball"
 
 # Buildr's default environment is "development" so
 # by default, go against postgresql.
@@ -20,16 +34,31 @@ development:
   <<: *default
 
 oracle:
-  <<: *common
-  driver_class: "oracle.jdbc.OracleDriver"
-  jdbc_url: "jdbc:oracle:thin:@//localhost:1521/XE"
-  password: "candlepin"
-  dialect: "org.hibernate.dialect.Oracle10gDialect"
-  quartz_driver: "org.quartz.impl.jdbcjobstore.oracle.OracleDelegate"
+  static: &oracle_static
+    driver_class: "oracle.jdbc.OracleDriver"
+    dialect: "org.hibernate.dialect.Oracle10gDialect"
+    quartz_driver: "org.quartz.impl.jdbcjobstore.oracle.OracleDelegate"
+  server:
+    <<: *common_server
+    <<: *oracle_static
+    jdbc_url: "jdbc:oracle:thin:@//localhost:1521/XE"
+    password: "candlepin"
+  gutterball:
+    <<: *common_gutterball
+    <<: *oracle_static
+    jdbc_url: "jdbc:oracle:thin:@//localhost:1521/XE"
+    password: "gutterball"
 
 mysql:
-  <<: *common
-  driver_class: "com.mysql.jdbc.Driver"
-  jdbc_url: "jdbc:mysql:///candlepin"
-  dialect: "org.hibernate.dialect.MySQL5InnoDBDialect"
-  quartz_driver: "org.quartz.impl.jdbcjobstore.StdJDBCDelegate"
+  static: &mysql_static
+    driver_class: "com.mysql.jdbc.Driver"
+    dialect: "org.hibernate.dialect.MySQL5InnoDBDialect"
+    quartz_driver: "org.quartz.impl.jdbcjobstore.StdJDBCDelegate"
+  server:
+    <<: *common_server
+    <<: *mysql_static
+    jdbc_url: "jdbc:mysql:///candlepin"
+  gutterball:
+    <<: *common_server
+    <<: *mysql_static
+    jdbc_url: "jdbc:mysql:///gutterball"

@@ -15,9 +15,6 @@
 
 package org.candlepin.common.config;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
@@ -27,10 +24,7 @@ import java.util.Properties;
  * the configuration as a Properties object. This class needs to be extended
  * and the getPrefix method should be overridden.
  */
-abstract class ConfigurationParser {
-
-    private static Logger log = LoggerFactory.getLogger(ConfigurationParser.class);
-
+public abstract class ConfigurationParser {
     /**
      * Converts the given Map into a Properties object.
      *

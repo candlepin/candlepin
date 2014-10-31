@@ -91,6 +91,13 @@ can then use the `rspec:failures` task to just run failed tests which will then
 update the list of failures again.  Thus, you can keep running `rspec:failures`
 until the list is empty.
 
+## Liquibase
+* `buildr "changeset:my changeset name"`
+  Much like the `rspec` task, the `changeset` task is followed by a
+  colon and an argument.  In this case the argument is a brief description of
+  the nature of the changeset.  Be sure to quote the task name to prevent the
+  shell from interpreting the spaces.
+
 ## ERB
 * `buildr erb` renders any templates found under the `erb` directory
 

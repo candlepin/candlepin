@@ -6,6 +6,13 @@ Now configure qpid to work with SSL:
 
     ./configure-qpid.sh
 
-Now add the exchange for events to be read from:
+The script tries to be as accommodating as possible when it comes to not
+destroying previously set-up certificates.  However, if you run the script and
+have major issues, the best bet is to simply wipe everything and start anew.
+Here's how:
 
-    qpid-config add exchange topic event --durable
+1. `systemctl stop qpidd tomcat`
+2. `rm /etc/{candlepin,gutterball}/certs/amqp/*`
+3. `rm /etc/qpid/brokerdb/*`
+4. `rm keys/*` if the `keys` directory is already present from a previous run
+   of the script.

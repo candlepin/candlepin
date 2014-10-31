@@ -21,14 +21,12 @@ import org.candlepin.common.config.PropertiesFileConfiguration;
 import org.candlepin.gutterball.config.ConfigProperties;
 import org.candlepin.gutterball.guice.GutterballModule;
 import org.candlepin.gutterball.guice.GutterballServletModule;
-import org.candlepin.gutterball.mongodb.MongoConnection;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Stage;
-import com.mongodb.MongoException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,7 +53,6 @@ public class GutterballContextListener extends
     private static Logger log = LoggerFactory.getLogger(GutterballContextListener.class);
 
     private Configuration config;
-    private MongoConnection mongo;
 
     private Injector injector;
 
@@ -86,15 +83,6 @@ public class GutterballContextListener extends
         log.debug("Gutterball stored config on context.");
 
         servletContext.setAttribute(CONFIGURATION_NAME, config);
-
-        // Setup mongodb connection.
-        try {
-            mongo = new MongoConnection(config);
-        }
-        catch (MongoException e) {
-            log.error("Could not connect to mongo database. Aborting initialization.", e);
-            throw new RuntimeException(e);
-        }
 
         // set things up BEFORE calling the super class' initialize method.
         super.contextInitialized(sce);
@@ -171,11 +159,10 @@ public class GutterballContextListener extends
             @Override
             protected void configure() {
                 bind(Configuration.class).toInstance(config);
-                bind(MongoConnection.class).toInstance(mongo);
             }
         });
         modules.add(new GutterballServletModule());
-        modules.add(new GutterballModule());
+        modules.add(new GutterballModule(config));
 
         return modules;
     }

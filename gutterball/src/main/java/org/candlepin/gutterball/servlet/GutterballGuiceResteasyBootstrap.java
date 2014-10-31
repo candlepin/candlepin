@@ -14,8 +14,6 @@
  */
 package org.candlepin.gutterball.servlet;
 
-import org.candlepin.gutterball.mongodb.MongoConnection;
-
 import com.google.inject.Binding;
 import com.google.inject.Injector;
 import com.google.inject.Module;
@@ -102,18 +100,6 @@ public abstract class  GutterballGuiceResteasyBootstrap extends ResteasyBootstra
                 }
             }
         }
-    }
-
-    /**
-     * Do any cleanup required.
-     */
-    @Override
-    public void contextDestroyed(ServletContextEvent servletContextEvent) {
-        super.contextDestroyed(servletContextEvent);
-        final Injector injector = (Injector) servletContextEvent.getServletContext()
-                .getAttribute(Injector.class.getName());
-
-        injector.getInstance(MongoConnection.class).close();
     }
 
 }

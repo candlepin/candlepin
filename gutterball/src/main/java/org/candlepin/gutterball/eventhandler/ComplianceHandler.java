@@ -14,14 +14,17 @@
  */
 package org.candlepin.gutterball.eventhandler;
 
-import org.candlepin.gutterball.curator.ComplianceDataCurator;
+import org.candlepin.gutterball.curator.ComplianceSnapshotCurator;
 import org.candlepin.gutterball.model.Event;
+import org.candlepin.gutterball.model.snapshot.Compliance;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
-import com.mongodb.BasicDBObject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
 
 /**
  * Handler for Compliance Events.  Currently we only send ComplianceCreated events.
@@ -33,16 +36,27 @@ public class ComplianceHandler implements EventHandler {
 
     private static Logger log = LoggerFactory.getLogger(ComplianceHandler.class);
 
-    private ComplianceDataCurator curator;
+    private ComplianceSnapshotCurator complianceCurator;
+    private ObjectMapper mapper;
 
     @Inject
-    public ComplianceHandler(ComplianceDataCurator curator) {
-        this.curator = curator;
+    public ComplianceHandler(ObjectMapper mapper, ComplianceSnapshotCurator complianceCurator) {
+        this.complianceCurator = complianceCurator;
+        this.mapper = mapper;
     }
 
     @Override
     public void handleCreated(Event event) {
-        curator.insert((BasicDBObject) event.getNewEntity());
+        Compliance snap;
+        try {
+            snap = mapper.readValue(event.getNewEntity(), Compliance.class);
+            // Not picked up from the event.
+            snap.setDate(snap.getStatus().getDate());
+        }
+        catch (IOException e) {
+            throw new RuntimeException("Could not deserialize compliance snapshot data.", e);
+        }
+        complianceCurator.create(snap);
     }
 
     @Override

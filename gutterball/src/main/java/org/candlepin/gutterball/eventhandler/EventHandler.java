@@ -16,6 +16,7 @@ package org.candlepin.gutterball.eventhandler;
 
 import org.candlepin.gutterball.model.Event;
 
+
 /**
  * EventHandler interface which provides a structure for
  * handling various types of events
