@@ -20,6 +20,7 @@ import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.CandlepinException;
 import org.candlepin.common.exceptions.IseException;
 import org.candlepin.common.exceptions.UnauthorizedException;
+import org.candlepin.common.resteasy.auth.RestEasyOAuthMessage;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -82,7 +83,7 @@ public class OAuth implements AuthProvider {
     /**
      * Attempt to pull a principal off of an oauth signed message.
      *
-     * @return the principal if it can be created, nil otherwise
+     * @return the principal if it can be created, null otherwise
      */
     public Principal getPrincipal(HttpRequest request) {
         Principal principal = null;

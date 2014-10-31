@@ -17,7 +17,7 @@ package org.candlepin.resource;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SubResource;
-import org.candlepin.auth.interceptor.SecurityHole;
+import org.candlepin.common.auth.SecurityHole;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.model.AbstractHibernateObject;
 import org.candlepin.model.ContentOverride;
