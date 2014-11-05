@@ -7,6 +7,7 @@ commons-lang
 gettext-commons
 google-collections
 guice
+guice-persist
 guice-servlet
 guice-throwingproviders
 hibernate-jpa-2.0-api
