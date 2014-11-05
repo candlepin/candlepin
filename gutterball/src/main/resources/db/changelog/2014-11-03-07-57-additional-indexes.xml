@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <changeSet id="20141103075718-4" author="wpoteat">
+        <createIndex indexName="ix_consumer_state_owner" tableName="gb_consumer_state" unique="false">
+            <column name="ownerkey"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20141103075718-2" author="wpoteat">
+        <createIndex indexName="ix_compliance_status_snap_status" tableName="gb_compliance_status_snap" unique="false">
+            <column name="status"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20141103075718-3" author="wpoteat">
+        <createIndex indexName="ix_compliance_status_snap_date" tableName="gb_compliance_status_snap" unique="false">
+            <column name="date"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>
+<!-- vim: set expandtab sts=4 sw=4 ai: -->

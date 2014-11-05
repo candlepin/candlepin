@@ -15,6 +15,7 @@
 package org.candlepin.gutterball.guice;
 
 import org.candlepin.common.config.Configuration;
+import org.candlepin.common.config.LoggingConfigParser;
 import org.candlepin.common.exceptions.mappers.BadRequestExceptionMapper;
 import org.candlepin.common.exceptions.mappers.CandlepinExceptionMapper;
 import org.candlepin.common.exceptions.mappers.DefaultOptionsMethodExceptionMapper;
@@ -121,6 +122,7 @@ public class GutterballModule extends AbstractModule {
         bind(RuntimeExceptionMapper.class);
         bind(JAXBUnmarshalExceptionMapper.class);
         bind(JAXBMarshalExceptionMapper.class);
+        bind(LoggingConfigParser.class).asEagerSingleton();
     }
 
     protected void configureEventReciever() {

@@ -16,6 +16,7 @@ package org.candlepin.gutterball.model.snapshot;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.GenericGenerator;
 
@@ -108,7 +109,8 @@ public class Entitlement {
     @Column(name = "order_number")
     private String orderNumber;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.LAZY)
+    @BatchSize(size = 100)
     @CollectionTable(name = "gb_ent_attr_snap",
                      joinColumns = @JoinColumn(name = "ent_snap_id"))
     @MapKeyColumn(name = "gb_ent_attr_name")
@@ -116,7 +118,8 @@ public class Entitlement {
     @Cascade({org.hibernate.annotations.CascadeType.ALL})
     private Map<String, String> attributes;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.LAZY)
+    @BatchSize(size = 25)
     @CollectionTable(name = "gb_ent_prov_prod_snap",
                      joinColumns = @JoinColumn(name = "ent_snap_id"))
     @MapKeyColumn(name = "gb_ent_prov_prod_id")
@@ -124,7 +127,8 @@ public class Entitlement {
     @Cascade({org.hibernate.annotations.CascadeType.ALL})
     private Map<String, String> providedProducts;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.LAZY)
+    @BatchSize(size = 100)
     @CollectionTable(name = "gb_ent_der_prod_attr_snap",
                      joinColumns = @JoinColumn(name = "ent_snap_id"))
     @MapKeyColumn(name = "gb_ent_der_prod_attr_name")
@@ -132,7 +136,8 @@ public class Entitlement {
     @Cascade({org.hibernate.annotations.CascadeType.ALL})
     private Map<String, String> derivedProductAttributes;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.LAZY)
+    @BatchSize(size = 25)
     @CollectionTable(name = "gb_ent_der_prov_prod_snap",
                      joinColumns = @JoinColumn(name = "ent_snap_id"))
     @MapKeyColumn(name = "gb_ent_der_prov_prod_id")

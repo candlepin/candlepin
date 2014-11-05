@@ -2,4 +2,5 @@
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
     <include file="db/changelog/2014-10-06-14-45-create-gutterball-schema.xml"/>
     <include file="db/changelog/2014-10-30-15-30-indexes.xml"/>
+    <include file="db/changelog/2014-11-03-07-57-additional-indexes.xml"/>
 </databaseChangeLog>
