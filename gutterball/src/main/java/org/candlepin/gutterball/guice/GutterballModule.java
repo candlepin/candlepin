@@ -35,6 +35,7 @@ import org.candlepin.common.exceptions.mappers.ValidationExceptionMapper;
 import org.candlepin.common.exceptions.mappers.WebApplicationExceptionMapper;
 import org.candlepin.common.exceptions.mappers.WriterExceptionMapper;
 import org.candlepin.common.guice.JPAInitializer;
+import org.candlepin.common.validation.CandlepinMessageInterpolator;
 import org.candlepin.gutterball.config.JPAConfigurationParser;
 import org.candlepin.gutterball.curator.ComplianceSnapshotCurator;
 import org.candlepin.gutterball.curator.ConsumerStateCurator;
@@ -54,12 +55,23 @@ import org.candlepin.gutterball.util.EventHandlerLoader;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.name.Named;
 import com.google.inject.persist.jpa.JpaPersistModule;
 import com.google.inject.servlet.ServletScopes;
 
+import org.hibernate.validator.HibernateValidator;
+import org.hibernate.validator.HibernateValidatorConfiguration;
 import org.xnap.commons.i18n.I18n;
+
+import java.util.Properties;
+
+import javax.inject.Provider;
+import javax.validation.MessageInterpolator;
+import javax.validation.Validation;
+import javax.validation.ValidatorFactory;
 
 
 /**
@@ -83,6 +95,8 @@ public class GutterballModule extends AbstractModule {
         bind(JsonProvider.class);
 
         configureJPA();
+        bind(MessageInterpolator.class).to(CandlepinMessageInterpolator.class);
+
         bind(ComplianceSnapshotCurator.class);
         bind(ConsumerStateCurator.class);
 
@@ -146,5 +160,20 @@ public class GutterballModule extends AbstractModule {
                 eventBinder.addBinding(targetAnnotation.value()).to(clazz).asEagerSingleton();
             }
         }
+    }
+
+    @Provides @Named("ValidationProperties")
+    protected Properties getValidationProperties() {
+        return new Properties();
+    }
+
+    @Provides
+    protected ValidatorFactory getValidationFactory(
+            Provider<MessageInterpolator> interpolatorProvider) {
+        HibernateValidatorConfiguration configure =
+            Validation.byProvider(HibernateValidator.class).configure();
+
+        configure.messageInterpolator(interpolatorProvider.get());
+        return configure.buildValidatorFactory();
     }
 }
