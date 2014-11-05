@@ -50,7 +50,7 @@ public abstract class EncryptedValueConfigurationParser extends ConfigurationPar
 
         try {
             if (secretFile != null) {
-                log.debug("reading secret file: " +  secretFile);
+                log.debug("reading secret file: {}", secretFile);
 
                 in = new BufferedReader(new FileReader(secretFile));
                 StringBuilder tmpPassphrase = new StringBuilder();
@@ -67,10 +67,10 @@ public abstract class EncryptedValueConfigurationParser extends ConfigurationPar
             }
         }
         catch (FileNotFoundException e) {
-            log.debug("File not found: " + secretFile);
+            log.debug("File not found: {}", secretFile);
         }
         catch (IOException e) {
-            log.debug("IOException while reading: " + secretFile);
+            log.debug("IOException while reading: {}", secretFile);
         }
         finally {
             if (in != null) {
@@ -135,7 +135,7 @@ public abstract class EncryptedValueConfigurationParser extends ConfigurationPar
             return new String(cipher.doFinal(b64bytes));
         }
         catch (Exception e) {
-            log.error("Failure trying to decrypt " + toDecrypt , e);
+            log.error("Failure trying to decrypt {}", toDecrypt , e);
             throw new RuntimeException(e);
         }
     }

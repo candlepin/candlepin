@@ -14,7 +14,6 @@
  */
 package org.candlepin.gutterball.guice;
 
-import org.candlepin.common.config.JPAConfigParser;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.mappers.BadRequestExceptionMapper;
 import org.candlepin.common.exceptions.mappers.CandlepinExceptionMapper;
@@ -132,9 +131,7 @@ public class GutterballModule extends AbstractModule {
     }
 
     protected void configureJPA() {
-        JPAConfigParser parser = new JPAConfigParser();
-
-        install(new JpaPersistModule("default").properties(parser.parseConfig(this.config.toMap())));
+        install(new JpaPersistModule("default").properties(this.config.getNamespaceProperties("jpa.config")));
         bind(JPAInitializer.class).asEagerSingleton();
     }
 

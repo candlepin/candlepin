@@ -158,9 +158,4 @@ public class MapConfiguration extends AbstractConfiguration {
         p.putAll(getNamespaceMap(prefix, defaults));
         return p;
     }
-
-    @Override
-    public Map<String, String> toMap() {
-        return new TreeMap<String, String>(this.configMap);
-    }
 }

@@ -22,7 +22,7 @@ import java.util.Set;
  * JPAConfiguration
  * @version $Rev$
  */
-public class JPAConfigParser extends EncryptedValueConfigurationParser {
+class JPAConfigParser extends EncryptedValueConfigurationParser {
 
     /** JPA configuration prefix */
     public static final String JPA_CONFIG_PREFIX = "jpa.config";
