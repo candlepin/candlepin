@@ -64,7 +64,8 @@ public class Entitlement {
     @NotNull
     private Compliance complianceSnapshot;
 
-    private int quantity;
+    @Column(columnDefinition = "bigint")
+    private Integer quantity;
 
     // TODO Entitlement sourceEntitlement
 

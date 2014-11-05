@@ -53,7 +53,7 @@ public class ConsumerType {
     @NotNull
     private String label;
 
-    @Column(nullable = false, length = 1)
+    @Column(nullable = false, length = 1, columnDefinition = "varchar(1)")
     @Type(type = "yes_no")
     @NotNull
     private boolean manifest = false;
