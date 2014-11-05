@@ -78,6 +78,7 @@ BuildRequires: slf4j-api >= 0:1.7.5
 BuildRequires: jcl-over-slf4j >= 0:1.7.5
 BuildRequires: httpclient >= 0:4.1.2
 BuildRequires: javax.inject
+BuildRequires: logback-classic
 %endif
 
 %if 0%{?fedora}
@@ -111,6 +112,7 @@ Requires: jcl-over-slf4j >= 0:1.7.5
 Requires: httpclient >= 0:4.1.2
 Requires: apache-commons-codec-eap6
 Requires: javax.inject
+Requires: logback-classic
 %endif
 
 %if 0%{?fedora}

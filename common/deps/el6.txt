@@ -20,6 +20,8 @@ jackson-module-jaxb-annotations
 javax.inject
 jcl-over-slf4j
 jta
+logback/logback-classic
+logback/logback-core
 resteasy/jaxrs-api
 resteasy/resteasy-atom-provider
 resteasy/resteasy-jaxb-provider
