@@ -21,7 +21,7 @@
 Name: %{parent_proj}-common
 Summary: Common code for Candlepin and related projects
 License: GPLv2
-Version: 1.0.10
+Version: 1.0.11
 Release: 1%{?dist}
 URL: http://www.candlepinproject.org
 Source: %{name}-%{version}.tar.gz
@@ -169,6 +169,11 @@ rm -rf %{_tmppath}/distlibdir
 %{_datadir}/%{parent_proj}/gutterball/lib/%{name}.jar
 
 %changelog
+* Wed Nov 05 2014 Devan Goodwin <dgoodwin@rm-rf.ca> 1.0.11-1
+- Correct logback dependencies. (dgoodwin@redhat.com)
+- Remove redundant imports. (awood@redhat.com)
+- Initial commit for bringing hibernate into GB (mstead@redhat.com)
+
 * Thu Oct 30 2014 Devan Goodwin <dgoodwin@rm-rf.ca> 1.0.10-1
 - Update candlepin-common spec to work around JDK 1.8 as well.
   (dgoodwin@redhat.com)
