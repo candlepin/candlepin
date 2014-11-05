@@ -21,7 +21,7 @@
 Name: %{parent_proj}-common
 Summary: Common code for Candlepin and related projects
 License: GPLv2
-Version: 1.0.12
+Version: 1.0.13
 Release: 1%{?dist}
 URL: http://www.candlepinproject.org
 Source: %{name}-%{version}.tar.gz
@@ -171,6 +171,9 @@ rm -rf %{_tmppath}/distlibdir
 %{_datadir}/%{parent_proj}/gutterball/lib/%{name}.jar
 
 %changelog
+* Wed Nov 05 2014 Devan Goodwin <dgoodwin@rm-rf.ca> 1.0.13-1
+- Fix el6 guice persist dependency. (dgoodwin@redhat.com)
+
 * Wed Nov 05 2014 Devan Goodwin <dgoodwin@rm-rf.ca> 1.0.12-1
 - Fix EL6 logback deps. (dgoodwin@redhat.com)
 
