@@ -14,7 +14,7 @@
  */
 package org.candlepin.resteasy.parameter;
 
-import org.candlepin.common.exceptions.CandlepinParamterParseException;
+import org.candlepin.common.exceptions.CandlepinParameterParseException;
 
 /**
  * CandlepinParameter
@@ -39,8 +39,8 @@ public abstract class CandlepinParameter {
      * This method is run by the {@link CandlepinParameterUnmarshaller} after it creates
      * an instance of this class.
      *
-     * @throws CandlepinParamterParseException when the param value can not be parsed
+     * @throws CandlepinParameterParseException when the param value can not be parsed
      */
-    abstract void parse() throws CandlepinParamterParseException;
+    abstract void parse() throws CandlepinParameterParseException;
 
 }

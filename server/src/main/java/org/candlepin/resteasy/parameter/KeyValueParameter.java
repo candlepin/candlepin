@@ -14,7 +14,7 @@
  */
 package org.candlepin.resteasy.parameter;
 
-import org.candlepin.common.exceptions.CandlepinParamterParseException;
+import org.candlepin.common.exceptions.CandlepinParameterParseException;
 
 /**
  * KeyValueParameter
@@ -40,10 +40,10 @@ public class KeyValueParameter extends CandlepinParameter {
     }
 
     @Override
-    void parse() throws CandlepinParamterParseException {
+    void parse() throws CandlepinParameterParseException {
         String[] parts = this.paramValue.split(":", 2); // Maximum of two parts
         if (parts.length == 1) {
-            throw new CandlepinParamterParseException(this.paramName,
+            throw new CandlepinParameterParseException(this.paramName,
                 this.paramName + "=name:value");
         }
 

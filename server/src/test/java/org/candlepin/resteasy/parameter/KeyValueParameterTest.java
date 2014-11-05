@@ -16,7 +16,7 @@ package org.candlepin.resteasy.parameter;
 
 import static org.junit.Assert.*;
 
-import org.candlepin.common.exceptions.CandlepinParamterParseException;
+import org.candlepin.common.exceptions.CandlepinParameterParseException;
 
 import org.junit.Test;
 
@@ -49,19 +49,19 @@ public class KeyValueParameterTest {
         assertEquals("paramValue:c", param.value());
     }
 
-    @Test(expected = CandlepinParamterParseException.class)
+    @Test(expected = CandlepinParameterParseException.class)
     public void parameterValueCanNotBeEmpty() {
         KeyValueParameter param = new KeyValueParameter("testparam", "");
         param.parse();
     }
 
-    @Test(expected = CandlepinParamterParseException.class)
+    @Test(expected = CandlepinParameterParseException.class)
     public void parameterValueCanNotBePropertyOnly() {
         KeyValueParameter param = new KeyValueParameter("testparam", "param");
         param.parse();
     }
 
-    @Test(expected = CandlepinParamterParseException.class)
+    @Test(expected = CandlepinParameterParseException.class)
     public void throwsExceptionOnInvalidKeyValueFormat() {
         KeyValueParameter param = new KeyValueParameter("testparam", "param|paramValue");
         param.parse();
