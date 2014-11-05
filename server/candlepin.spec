@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.34
+Version: 0.9.35
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -394,6 +394,15 @@ fi
 
 
 %changelog
+* Wed Nov 05 2014 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.35-1
+- Some changes to clean up the branch. (wpoteat@redhat.com)
+- Expanding on ComplianceStatus (mstead@redhat.com)
+- Remove old gen-db-update.py and default to changelog.xml. (awood@redhat.com)
+- Generalized database setup in deploy scripts. (awood@redhat.com)
+- Remove "IE hack" from Liquibase XML. (awood@redhat.com)
+- Remove useless Checkstyle exclude filter. (awood@redhat.com)
+- Initial commit for bringing hibernate into GB (mstead@redhat.com)
+
 * Thu Oct 30 2014 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.34-1
 - 1150234: Fix refresh pools instance does not yet exist in db error.
   (dgoodwin@redhat.com)
