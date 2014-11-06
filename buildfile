@@ -112,6 +112,7 @@ COMMONS = ['commons-codec:commons-codec:jar:1.4',
            'commons-lang:commons-lang:jar:2.5']
 
 LIQUIBASE = 'org.liquibase:liquibase-core:jar:3.1.0'
+LIQUIBASE_SLF4J = 'com.mattbertolini:liquibase-slf4j:jar:1.2.1'
 
 GETTEXT_COMMONS = 'org.xnap.commons:gettext-commons:jar:0.9.6'
 
@@ -209,10 +210,25 @@ define "candlepin" do
     checkstyle.eclipse_xml = checkstyle_eclipse_xml
     rpmlint.rpmlint_conf = rpmlint_conf
 
-    compile_classpath = [COMMONS, LOGGING, GUICE, GETTEXT_COMMONS, COLLECTIONS, PROVIDED, RESTEASY, JACKSON, JAVAX]
+    compile_classpath = [
+      COMMONS,
+      LOGGING,
+      GUICE,
+      GETTEXT_COMMONS,
+      COLLECTIONS,
+      PROVIDED,
+      RESTEASY,
+      JACKSON,
+      JAVAX,
+    ]
     compile.with(compile_classpath)
 
-    test.with(TESTING, JUKITO, LIQUIBASE)
+    test.with(
+      TESTING,
+      JUKITO,
+      LIQUIBASE,
+      LIQUIBASE_SLF4J
+    )
     test.using :java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ]
 
     common_jar = package(:jar)
@@ -268,7 +284,14 @@ define "candlepin" do
       filter(path_to(:src, :main, :resources)).into(path_to(:target, :classes)).run
     end
 
-    test.with(TESTING, JUKITO, HSQLDB, LIQUIBASE, project('common'))
+    test.with(
+      TESTING,
+      JUKITO,
+      HSQLDB,
+      LIQUIBASE,
+      LIQUIBASE_SLF4J,
+      project('common'),
+    )
     test.using :java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ]
 
     gutterball_war = package(:war, :id=>"gutterball").tap do |war|
@@ -351,7 +374,10 @@ define "candlepin" do
     end
 
     # the other dependencies transfer from compile.classpath automagically
-    test.with(HSQLDB_OLD, TESTING)
+    test.with(
+      TESTING,
+      HSQLDB_OLD,
+    )
     test.using(:java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ])
 
     ### Javadoc
