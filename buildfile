@@ -210,7 +210,17 @@ define "candlepin" do
     checkstyle.eclipse_xml = checkstyle_eclipse_xml
     rpmlint.rpmlint_conf = rpmlint_conf
 
-    compile_classpath = [COMMONS, LOGGING, GUICE, GETTEXT_COMMONS, COLLECTIONS, PROVIDED, RESTEASY, JACKSON, JAVAX]
+    compile_classpath = [
+      COMMONS,
+      LOGGING,
+      GUICE,
+      GETTEXT_COMMONS,
+      COLLECTIONS,
+      PROVIDED,
+      RESTEASY,
+      JACKSON,
+      JAVAX,
+    ]
     compile.with(compile_classpath)
 
     test.with(
@@ -364,7 +374,10 @@ define "candlepin" do
     end
 
     # the other dependencies transfer from compile.classpath automagically
-    test.with(HSQLDB_OLD, TESTING)
+    test.with(
+      TESTING,
+      HSQLDB_OLD,
+    )
     test.using(:java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ])
 
     ### Javadoc
