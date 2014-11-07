@@ -14,7 +14,7 @@
  */
 package org.candlepin.common.exceptions.mappers;
 
-import org.candlepin.common.exceptions.CandlepinParamterParseException;
+import org.candlepin.common.exceptions.CandlepinParameterParseException;
 import org.candlepin.common.exceptions.ExceptionMessage;
 import org.candlepin.common.util.VersionUtil;
 
@@ -54,11 +54,11 @@ public class BadRequestExceptionMapper extends CandlepinExceptionMapper
                 map.get("version") + "-" + map.get("release"));
 
         Throwable cause = exception.getCause();
-        if (cause instanceof CandlepinParamterParseException) {
+        if (cause instanceof CandlepinParameterParseException) {
             String msg = i18n.get().tr("Invalid format for query parameter {0}. " +
                 "Expected format: {1}",
-                ((CandlepinParamterParseException) cause).getParamName(),
-                ((CandlepinParamterParseException) cause).getExpectedFormat());
+                ((CandlepinParameterParseException) cause).getParamName(),
+                ((CandlepinParameterParseException) cause).getExpectedFormat());
             bldr.entity(new ExceptionMessage(msg));
         }
         else {

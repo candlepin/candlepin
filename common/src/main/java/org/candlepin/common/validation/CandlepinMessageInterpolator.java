@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.hibernate;
+package org.candlepin.common.validation;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
