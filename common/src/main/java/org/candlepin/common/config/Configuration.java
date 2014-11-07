@@ -46,10 +46,24 @@ public interface Configuration {
      */
     Configuration subset(String prefix);
 
-    Map<String, String> getNamespaceMap(String prefix);
-    Map<String, String> getNamespaceMap(String prefix, Map<String, String> defaults);
-    Properties getNamespaceProperties(String prefix);
-    Properties getNamespaceProperties(String prefix, Map<String, String> defaults);
+    /**
+     * Like subset() but with the additional action of stripping the prefix from the front
+     * of all returned keys.  Note that this method does a strict replacement, so unless you
+     * want a leading period in the stripped keys, use "my.prefix." instead of "my.prefix".
+     *
+     * @param prefix
+     * @return a new Configuration object containing only properties beginning with the provided
+     * prefix.  Additionally the provided prefix will be stripped from each key.  The object will
+     * be empty if no matches are found.
+     */
+    Configuration strippedSubset(String prefix);
+
+    Properties toProperties();
+    Properties toProperties(Map<String, String> defaults);
+    Properties toProperties(Properties defaults);
+
+    Map<String, String> toMap();
+    Map<String, String> toMap(Map<String, String> defaults);
 
     /**
      * Check if the configuration is empty.

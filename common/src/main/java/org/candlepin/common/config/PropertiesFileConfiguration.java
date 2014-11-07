@@ -73,12 +73,18 @@ public class PropertiesFileConfiguration extends AbstractConfiguration
     }
 
     public PropertiesFileConfiguration(Properties properties) {
+        setEncoding(Charset.defaultCharset());
         load(properties);
     }
 
     @Override
     public Configuration subset(String prefix) {
         return backingMap.subset(prefix);
+    }
+
+    @Override
+    public Configuration strippedSubset(String prefix) {
+        return backingMap.strippedSubset(prefix);
     }
 
     @Override
@@ -131,6 +137,13 @@ public class PropertiesFileConfiguration extends AbstractConfiguration
         this.encoding = encoding;
     }
 
+    /**
+     * Merge configuration objects.  Any collisions on keys will use the value
+     * from the leftmost argument.
+     *
+     * @param configs
+     * @return the merged configuration
+     */
     public static PropertiesFileConfiguration merge(Configuration ... configs) {
         PropertiesFileConfiguration mergedConfig = new PropertiesFileConfiguration();
 
@@ -187,29 +200,8 @@ public class PropertiesFileConfiguration extends AbstractConfiguration
         }
     }
 
+    @Override
     public String toString() {
         return backingMap.toString();
-    }
-
-    @Override
-    public Map<String, String> getNamespaceMap(String prefix) {
-        return backingMap.getNamespaceMap(prefix);
-    }
-
-    @Override
-    public Map<String, String> getNamespaceMap(String prefix,
-            Map<String, String> defaults) {
-        return backingMap.getNamespaceMap(prefix, defaults);
-    }
-
-    @Override
-    public Properties getNamespaceProperties(String prefix) {
-        return backingMap.getNamespaceProperties(prefix);
-    }
-
-    @Override
-    public Properties getNamespaceProperties(String prefix,
-            Map<String, String> defaults) {
-        return backingMap.getNamespaceProperties(prefix, defaults);
     }
 }
