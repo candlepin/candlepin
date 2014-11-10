@@ -27,6 +27,9 @@ module Syntastic
     end
 
     first_time do
+      desc "Print a raw classpath. Best when run with '-s'."
+      Project.local_task('classpath')
+
       # Define task not specific to any projet.
       desc "Generate a .syntastic_javac_config for vim/syntastic"
       Project.local_task('syntastic')
@@ -44,21 +47,30 @@ module Syntastic
       # see https://github.com/scrooloose/syntastic/blob/master/syntax_checkers/java/javac.vim
 
       total_cp = project.compile.dependencies +
-        project.test.compile.dependencies +
-        [project.path_to(:target, :classes)]
+        project.test.compile.dependencies
+
+      total_cp += [
+         project.path_to(:target, :classes),
+         project.path_to(:target, :resources),
+         project.path_to(:target, :test, :classes),
+         project.path_to(:target, :test, :resources),
+      ]
 
       total_cp.map!(&:to_s).sort!.uniq!
 
-      # XXX: Maybe this shouldn't be a recursive task?
       # FIXME: This is a bit slow
-      project.recursive_task('syntastic:echo') do |task|
+      project.task('syntastic:echo') do |task|
         puts total_cp
         syntastic.additional_jars.each { |jar| puts jar }
       end
 
-      project.recursive_task('syntastic') do |task|
-        cp_string = total_cp.concat(syntastic.additional_jars).join(':')
+      cp_string = total_cp.concat(syntastic.additional_jars).join(':')
 
+      project.task('classpath') do |task|
+        puts cp_string
+      end
+
+      project.recursive_task('syntastic') do |task|
         File.open(syntastic.classpath_file, "w") do |f|
           f.puts "let g:syntastic_java_javac_classpath = \"#{cp_string}\""
         end

@@ -28,6 +28,11 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Stage;
 
+import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
+import org.hibernate.ejb.HibernateEntityManagerFactory;
+import org.hibernate.event.service.spi.EventListenerRegistry;
+import org.hibernate.event.spi.EventType;
+import org.hibernate.internal.SessionFactoryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18nManager;
@@ -38,6 +43,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 
+import javax.persistence.EntityManagerFactory;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 
@@ -86,12 +92,36 @@ public class GutterballContextListener extends
 
         // set things up BEFORE calling the super class' initialize method.
         super.contextInitialized(sce);
+        insertValidationEventListeners(injector);
         log.info("Gutterball context initialized.");
     }
 
     @Override
     protected Injector getInjector(Stage stage, List<Module> modules) {
         return Guice.createInjector(stage, modules);
+    }
+
+    /**
+     * There's no way to really get Guice to perform injections on stuff that
+     * the JpaPersistModule is creating, so we resort to grabbing the EntityManagerFactory
+     * after the fact and adding the Validation EventListener ourselves.
+     * @param injector
+     */
+    protected void insertValidationEventListeners(Injector injector) {
+        javax.inject.Provider<EntityManagerFactory> emfProvider =
+            injector.getProvider(EntityManagerFactory.class);
+        HibernateEntityManagerFactory hibernateEntityManagerFactory =
+            (HibernateEntityManagerFactory) emfProvider.get();
+        SessionFactoryImpl sessionFactoryImpl =
+            (SessionFactoryImpl) hibernateEntityManagerFactory.getSessionFactory();
+        EventListenerRegistry registry =
+            sessionFactoryImpl.getServiceRegistry().getService(EventListenerRegistry.class);
+
+        javax.inject.Provider<BeanValidationEventListener> listenerProvider =
+            injector.getProvider(BeanValidationEventListener.class);
+        registry.getEventListenerGroup(EventType.PRE_INSERT).appendListener(listenerProvider.get());
+        registry.getEventListenerGroup(EventType.PRE_UPDATE).appendListener(listenerProvider.get());
+        registry.getEventListenerGroup(EventType.PRE_DELETE).appendListener(listenerProvider.get());
     }
 
     protected Configuration readConfiguration(ServletContext context)
