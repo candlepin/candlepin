@@ -14,16 +14,9 @@
  */
 package org.candlepin.guice;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.atMost;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.verifyZeroInteractions;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.CandlepinCommonTestingModule;
 import org.candlepin.CandlepinNonServletEnvironmentTestingModule;
@@ -31,6 +24,8 @@ import org.candlepin.audit.AMQPBusPublisher;
 import org.candlepin.audit.HornetqContextListener;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.ConfigurationException;
+import org.candlepin.common.config.ConfigurationPrefixes;
+import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.pinsetter.core.PinsetterContextListener;
 
@@ -67,6 +62,8 @@ public class CandlepinContextListenerTest {
     @Before
     public void init() {
         config = mock(Configuration.class);
+        when(config.strippedSubset(eq(ConfigurationPrefixes.LOGGING_CONFIG_PREFIX)))
+            .thenReturn(new MapConfiguration());
         hqlistener = mock(HornetqContextListener.class);
         pinlistener = mock(PinsetterContextListener.class);
         buspublisher = mock(AMQPBusPublisher.class);
@@ -77,6 +74,7 @@ public class CandlepinContextListenerTest {
         // so we can insert our mock versions of listeners to verify
         // they are getting invoked properly.
         listener = new CandlepinContextListener() {
+            @Override
             protected List<Module> getModules(ServletContext context) {
                 List<Module> modules = new LinkedList<Module>();
                 // tried simply overriding CandlepinModule
@@ -90,6 +88,7 @@ public class CandlepinContextListenerTest {
                 return modules;
             }
 
+            @Override
             protected Configuration readConfiguration(ServletContext context)
                 throws ConfigurationException {
 

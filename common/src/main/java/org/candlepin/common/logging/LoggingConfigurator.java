@@ -12,17 +12,15 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.common.config;
+package org.candlepin.common.logging;
 
-import com.google.inject.Inject;
+import org.candlepin.common.config.Configuration;
+import org.candlepin.common.config.ConfigurationPrefixes;
 
 import org.slf4j.LoggerFactory;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.LoggerContext;
-
-import java.util.Map;
-import java.util.Map.Entry;
 
 /**
  * Sets the log4j logging levels dynamically based on values from the candlepin.conf file.
@@ -33,25 +31,17 @@ import java.util.Map.Entry;
  *
  * See http://slf4j.org/faq.html#when
  */
-public class LoggingConfigParser extends ConfigurationParser {
-
-    public static final String PREFIX = "log4j.logger.";
-
-    @Inject
-    public LoggingConfigParser(Configuration config) {
-        configure(config);
+public class LoggingConfigurator {
+    private LoggingConfigurator() {
+        // Static methods only
     }
 
-    public void configure(Configuration config) {
+    public static void init(Configuration config) {
         LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
-        Map<String, String> logLevels = config.getNamespaceMap(PREFIX);
-        for (Entry<String, String> entry : logLevels.entrySet()) {
-            String key = entry.getKey().replace(PREFIX, "");
-            lc.getLogger(key).setLevel(Level.toLevel((String) entry.getValue()));
-        }
-    }
+        Configuration logLevels = config.strippedSubset(ConfigurationPrefixes.LOGGING_CONFIG_PREFIX);
 
-    public String getPrefix() {
-        return PREFIX;
+        for (String key : logLevels.getKeys()) {
+            lc.getLogger(key).setLevel(Level.toLevel(logLevels.getString(key)));
+        }
     }
 }

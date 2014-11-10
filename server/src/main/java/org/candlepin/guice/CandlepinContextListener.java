@@ -14,12 +14,15 @@
  */
 package org.candlepin.guice;
 
+import static org.candlepin.config.ConfigProperties.*;
+
 import org.candlepin.audit.AMQPBusPublisher;
 import org.candlepin.audit.HornetqContextListener;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.ConfigurationException;
+import org.candlepin.common.config.EncryptedConfiguration;
 import org.candlepin.common.config.MapConfiguration;
-import org.candlepin.common.config.PropertiesFileConfiguration;
+import org.candlepin.common.logging.LoggingConfigurator;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.logging.LoggerContextListener;
 import org.candlepin.pinsetter.core.PinsetterContextListener;
@@ -102,9 +105,10 @@ public class CandlepinContextListener extends CandlepinGuiceResteasyBootstrap {
             throw new RuntimeException(e);
         }
 
-        log.debug("Candlepin stored config on context.");
+        LoggingConfigurator.init(config);
 
         servletContext.setAttribute(CONFIGURATION_NAME, config);
+        log.debug("Candlepin stored config on context.");
 
         // set things up BEFORE calling the super class' initialize method.
         super.contextInitialized(sce);
@@ -147,7 +151,8 @@ public class CandlepinContextListener extends CandlepinGuiceResteasyBootstrap {
 
         // Use StandardCharsets.UTF_8 when we move to Java 7
         Charset utf8 = Charset.forName("UTF-8");
-        PropertiesFileConfiguration systemConfig = new PropertiesFileConfiguration();
+        EncryptedConfiguration systemConfig = new EncryptedConfiguration();
+
         systemConfig.setEncoding(utf8);
         File configFile = new File(ConfigProperties.DEFAULT_CONFIG_FILE);
 
@@ -158,15 +163,14 @@ public class CandlepinContextListener extends CandlepinGuiceResteasyBootstrap {
             log.debug("System configuration: " + systemConfig);
         }
 
-        // load the defaults
-        MapConfiguration defaults = new MapConfiguration(
-            ConfigProperties.DEFAULT_PROPERTIES);
+        systemConfig.use(PASSPHRASE_SECRET_FILE).toDecrypt(ENCRYPTED_PROPERTIES);
 
-        log.debug("Loading default configuration values");
+        // load the defaults
+        MapConfiguration defaults = new MapConfiguration(ConfigProperties.DEFAULT_PROPERTIES);
 
         // merge the defaults with the system configuration. ORDER MATTERS.
         // system config must be read FIRST otherwise settings won't be applied.
-        return PropertiesFileConfiguration.merge(systemConfig, defaults);
+        return EncryptedConfiguration.merge(systemConfig, defaults);
     }
 
     @Override
@@ -228,6 +232,7 @@ public class CandlepinContextListener extends CandlepinGuiceResteasyBootstrap {
         registry.getEventListenerGroup(EventType.PRE_DELETE).appendListener(listenerProvider.get());
     }
 
+    @Override
     protected void processInjector(ServletContext context, Injector inj) {
         injector = inj;
         super.processInjector(context, injector);

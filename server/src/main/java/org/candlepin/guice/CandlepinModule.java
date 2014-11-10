@@ -19,6 +19,7 @@ import org.candlepin.audit.EventSink;
 import org.candlepin.audit.EventSinkImpl;
 import org.candlepin.auth.Principal;
 import org.candlepin.common.config.Configuration;
+import org.candlepin.common.config.ConfigurationPrefixes;
 import org.candlepin.common.exceptions.mappers.BadRequestExceptionMapper;
 import org.candlepin.common.exceptions.mappers.CandlepinExceptionMapper;
 import org.candlepin.common.exceptions.mappers.DefaultOptionsMethodExceptionMapper;
@@ -167,9 +168,7 @@ public class CandlepinModule extends AbstractModule {
                 ValidationListenerProvider.class);
         bind(MessageInterpolator.class).to(CandlepinMessageInterpolator.class);
 
-        install(new JpaPersistModule("default").properties(
-            config.getNamespaceProperties("jpa.config")));
-        bind(JPAInitializer.class).asEagerSingleton();
+        configureJPA();
 
         bind(PKIUtility.class).to(BouncyCastlePKIUtility.class)
             .asEagerSingleton();
@@ -303,6 +302,12 @@ public class CandlepinModule extends AbstractModule {
 
         configure.messageInterpolator(interpolatorProvider.get());
         return configure.buildValidatorFactory();
+    }
+
+    protected void configureJPA() {
+        Configuration jpaConfig = config.strippedSubset(ConfigurationPrefixes.JPA_CONFIG_PREFIX);
+        install(new JpaPersistModule("default").properties(jpaConfig.toProperties()));
+        bind(JPAInitializer.class).asEagerSingleton();
     }
 
     private void configureInterceptors() {

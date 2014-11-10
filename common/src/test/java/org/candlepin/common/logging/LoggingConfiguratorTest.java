@@ -12,12 +12,13 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.common.config;
+package org.candlepin.common.logging;
 
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
 
-import org.junit.Before;
+import org.candlepin.common.config.ConfigurationPrefixes;
+import org.candlepin.common.config.MapConfiguration;
+
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
 
@@ -31,38 +32,19 @@ import java.util.Map;
 /**
  * LoggingConfigTest
  */
-public class LoggingConfigParserTest {
-
-    private Configuration config;
-
-    private LoggingConfigParser lc;
-
-    @Before
-    public void init() {
-        config = mock(Configuration.class);
-        lc = new LoggingConfigParser(config);
-    }
-
+public class LoggingConfiguratorTest {
     @Test
     public void configure() {
         LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
-        Logger l = context.getLogger(LoggingConfigParserTest.class);
+        Logger l = context.getLogger(LoggingConfiguratorTest.class);
         assertNotNull(l);
         assertNull(l.getLevel());
 
-        Map<String, String> loglevels = new HashMap<String, String>();
-        loglevels.put(LoggingConfigParserTest.class.getName(), "DEBUG");
-
-        when(config.getNamespaceMap(LoggingConfigParser.PREFIX)).thenReturn(loglevels);
-
-        lc.configure(config);
+        Map<String, String> logLevels = new HashMap<String, String>();
+        String key = ConfigurationPrefixes.LOGGING_CONFIG_PREFIX + LoggingConfiguratorTest.class.getName();
+        logLevels.put(key, "DEBUG");
+        LoggingConfigurator.init(new MapConfiguration(logLevels));
         assertNotNull(l.getLevel());
         assertEquals(Level.DEBUG, l.getLevel());
-    }
-
-    @Test(expected = NullPointerException.class)
-    public void expectNull() {
-        when(config.getNamespaceMap(LoggingConfigParser.PREFIX)).thenReturn(null);
-        lc.configure(config);
     }
 }

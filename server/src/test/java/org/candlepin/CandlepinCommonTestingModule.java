@@ -17,7 +17,6 @@ package org.candlepin;
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Principal;
 import org.candlepin.common.config.Configuration;
-import org.candlepin.common.config.LoggingConfigParser;
 import org.candlepin.common.guice.JPAInitializer;
 import org.candlepin.common.validation.CandlepinMessageInterpolator;
 import org.candlepin.config.CandlepinCommonTestConfig;
@@ -116,7 +115,6 @@ public class CandlepinCommonTestingModule extends CandlepinModule {
         // allowing folks to override the config in unit tests.
         bindConfig();
 
-        bind(LoggingConfigParser.class).asEagerSingleton();
         bind(ConsumerResource.class);
         bind(PoolResource.class);
         bind(EntitlementResource.class);

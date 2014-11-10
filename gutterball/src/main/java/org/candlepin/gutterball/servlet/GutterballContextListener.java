@@ -18,6 +18,7 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.ConfigurationException;
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.common.config.PropertiesFileConfiguration;
+import org.candlepin.common.logging.LoggingConfigurator;
 import org.candlepin.gutterball.config.ConfigProperties;
 import org.candlepin.gutterball.guice.GutterballModule;
 import org.candlepin.gutterball.guice.GutterballServletModule;
@@ -86,9 +87,9 @@ public class GutterballContextListener extends
             throw new RuntimeException(e);
         }
 
-        log.debug("Gutterball stored config on context.");
-
+        LoggingConfigurator.init(config);
         servletContext.setAttribute(CONFIGURATION_NAME, config);
+        log.debug("Gutterball stored config on context.");
 
         // set things up BEFORE calling the super class' initialize method.
         super.contextInitialized(sce);

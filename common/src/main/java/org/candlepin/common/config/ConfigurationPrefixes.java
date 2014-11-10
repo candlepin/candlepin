@@ -14,27 +14,15 @@
  */
 package org.candlepin.common.config;
 
-import java.util.HashSet;
-import java.util.Set;
-
 
 /**
- * JPAConfiguration
- * @version $Rev$
+ * Commonly used configuration prefixes
  */
-class JPAConfigParser extends EncryptedValueConfigurationParser {
+public class ConfigurationPrefixes {
+    public static final String JPA_CONFIG_PREFIX = "jpa.config.";
+    public static final String LOGGING_CONFIG_PREFIX = "log4j.logger.";
 
-    /** JPA configuration prefix */
-    public static final String JPA_CONFIG_PREFIX = "jpa.config";
-
-    public String getPrefix() {
-        return JPA_CONFIG_PREFIX;
-    }
-
-    /* returns a list of config keys to check if they are encrypted */
-    public Set<String> getEncryptedConfigKeys() {
-        Set<String> encKeys = new HashSet<String>();
-        encKeys.add("hibernate.connection.password");
-        return encKeys;
+    private ConfigurationPrefixes() {
+        // This class is not meant to be instantiated.
     }
 }

@@ -15,6 +15,8 @@
 
 package org.candlepin.config;
 
+import static org.candlepin.common.config.ConfigurationPrefixes.JPA_CONFIG_PREFIX;
+
 import org.candlepin.pinsetter.tasks.ActiveEntitlementJob;
 import org.candlepin.pinsetter.tasks.CancelJobJob;
 import org.candlepin.pinsetter.tasks.CertificateRevocationListTask;
@@ -51,17 +53,16 @@ public class ConfigProperties {
     public static final String CA_KEY_PASSWORD = "candlepin.ca_key_password";
 
     public static final String HORNETQ_BASE_DIR = "candlepin.audit.hornetq.base_dir";
-    public static final String HORNETQ_LARGE_MSG_SIZE =
-                                      "candlepin.audit.hornetq.large_msg_size";
+    public static final String HORNETQ_LARGE_MSG_SIZE = "candlepin.audit.hornetq.large_msg_size";
     public static final String AUDIT_LISTENERS = "candlepin.audit.listeners";
     public static final String AUDIT_LOG_FILE = "candlepin.audit.log_file";
     public static final String AUDIT_LOG_VERBOSE = "candlepin.audit.log_verbose";
 
     public static final String PRETTY_PRINT = "candlepin.pretty_print";
     public static final String REVOKE_ENTITLEMENT_IN_FIFO_ORDER =
-                                      "candlepin.entitlement.revoke.order.fifo";
+        "candlepin.entitlement.revoke.order.fifo";
     public static final String ACTIVATION_DEBUG_PREFIX =
-                                      "candlepin.subscription.activation.debug_prefix";
+        "candlepin.subscription.activation.debug_prefix";
 
     // Space separated list of resources to hide in the GET / list:
     public static final String HIDDEN_RESOURCES = "candlepin.hidden_resources";
@@ -79,7 +80,13 @@ public class ConfigProperties {
     public static final String AMQP_KEYSTORE_PASSWORD = "candlepin.amqp.keystore_password";
     public static final String AMQP_TRUSTSTORE = "candlepin.amqp.truststore";
     public static final String AMQP_TRUSTSTORE_PASSWORD =
-                                        "candlepin.amqp.truststore_password";
+        "candlepin.amqp.truststore_password";
+
+    public static final String DB_PASSWORD = JPA_CONFIG_PREFIX + "hibernate.connection.password";
+
+    public static final String[] ENCRYPTED_PROPERTIES = new String[] {
+        DB_PASSWORD,
+    };
 
     // Pinsetter
     public static final String TASKS = "pinsetter.tasks";
@@ -99,8 +106,7 @@ public class ConfigProperties {
         ExportCleaner.class.getName(), ActiveEntitlementJob.class.getName()};
 
     public static final String SYNC_WORK_DIR = "candlepin.sync.work_dir";
-    public static final String CONSUMER_FACTS_MATCHER =
-                                  "candlepin.consumer.facts.match_regex";
+    public static final String CONSUMER_FACTS_MATCHER = "candlepin.consumer.facts.match_regex";
 
     public static final String SHARD_USERNAME = "candlepin.shard.username";
     public static final String SHARD_PASSWORD = "candlepin.shard.password";
@@ -111,24 +117,20 @@ public class ConfigProperties {
         "candlepin.environment_content_filtering";
 
     public static final String CONSUMER_SYSTEM_NAME_PATTERN =
-         "candlepin.consumer_system_name_pattern";
+        "candlepin.consumer_system_name_pattern";
     public static final String CONSUMER_PERSON_NAME_PATTERN =
-         "candlepin.consumer_person_name_pattern";
+        "candlepin.consumer_person_name_pattern";
 
     public static final String PREFIX_WEBURL = "candlepin.export.prefix.weburl";
     public static final String PREFIX_APIURL = "candlepin.export.prefix.apiurl";
-    public static final String PASSPHRASE_SECRET_FILE =
-        "candlepin.passphrase.path";
+    public static final String PASSPHRASE_SECRET_FILE = "candlepin.passphrase.path";
 
     public static final String PRODUCT_CACHE_MAX = "candlepin.cache.product_cache_max";
 
-    public static final String INTEGER_FACTS =
-        "candlepin.integer_facts";
-    private static final String INTEGER_FACT_LIST =
-        "";
+    public static final String INTEGER_FACTS = "candlepin.integer_facts";
+    private static final String INTEGER_FACT_LIST = "";
 
-    public static final String NON_NEG_INTEGER_FACTS =
-        "candlepin.positive_integer_facts";
+    public static final String NON_NEG_INTEGER_FACTS = "candlepin.positive_integer_facts";
     private static final String NON_NEG_INTEGER_FACT_LIST =
         "cpu.core(s)_per_socket," +
         "cpu.cpu(s)," +
@@ -139,27 +141,21 @@ public class ConfigProperties {
         "lscpu.socket(s)," +
         "lscpu.thread(s)_per_core";
 
-    public static final String INTEGER_ATTRIBUTES =
-        "candlepin.integer_attributes";
+    public static final String INTEGER_ATTRIBUTES = "candlepin.integer_attributes";
     private static final String INTEGER_ATTRIBUTE_LIST = "";
 
-    public static final String NON_NEG_INTEGER_ATTRIBUTES =
-        "candlepin.positive_integer_attributes";
+    public static final String NON_NEG_INTEGER_ATTRIBUTES = "candlepin.positive_integer_attributes";
     private static final String NON_NEG_INTEGER_ATTRIBUTE_LIST =
         "sockets," +
         "warning_period," +
         "ram," +
         "cores";
 
-    public static final String LONG_ATTRIBUTES =
-        "candlepin.long_attributes";
-    private static final String LONG_ATTRIBUTE_LIST =
-        "";
+    public static final String LONG_ATTRIBUTES = "candlepin.long_attributes";
+    private static final String LONG_ATTRIBUTE_LIST = "";
 
-    public static final String NON_NEG_LONG_ATTRIBUTES =
-        "candlepin.positive_long_attributes";
-    private static final String NON_NEG_LONG_ATTRIBUTE_LIST =
-        "metadata_expire";
+    public static final String NON_NEG_LONG_ATTRIBUTES = "candlepin.positive_long_attributes";
+    private static final String NON_NEG_LONG_ATTRIBUTE_LIST = "metadata_expire";
 
     public static final String BOOLEAN_ATTRIBUTES = "candlepin.boolean_attributes";
     private static final String BOOLEAN_ATTRIBUTE_LIST =
@@ -208,8 +204,7 @@ public class ConfigProperties {
                 // Pinsetter
                 // prevent Quartz from checking for updates
                 this.put("org.quartz.scheduler.skipUpdateCheck", "true");
-                this.put("org.quartz.threadPool.class",
-                    "org.quartz.simpl.SimpleThreadPool");
+                this.put("org.quartz.threadPool.class", "org.quartz.simpl.SimpleThreadPool");
                 this.put("org.quartz.threadPool.threadCount", "15");
                 this.put("org.quartz.threadPool.threadPriority", "5");
                 this.put(DEFAULT_TASKS, StringUtils.join(DEFAULT_TASK_LIST, ","));
@@ -272,12 +267,10 @@ public class ConfigProperties {
             }
         };
     public static final String CRL_FILE_PATH = "candlepin.crl.file";
-    public static final String IDENTITY_CERT_YEAR_ADDENDUM =
-                               "candlepin.identityCert.yr.addendum";
+    public static final String IDENTITY_CERT_YEAR_ADDENDUM = "candlepin.identityCert.yr.addendum";
     /**
      * Identity certificate expiry threshold in days
      */
-    public static final String IDENTITY_CERT_EXPIRY_THRESHOLD =
-                               "candlepin.identityCert.expiry.threshold";
+    public static final String IDENTITY_CERT_EXPIRY_THRESHOLD = "candlepin.identityCert.expiry.threshold";
 
 }
