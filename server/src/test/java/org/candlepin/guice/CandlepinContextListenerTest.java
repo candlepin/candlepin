@@ -27,6 +27,7 @@ import org.candlepin.common.config.ConfigurationException;
 import org.candlepin.common.config.ConfigurationPrefixes;
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.junit.CandlepinLiquibaseResource;
 import org.candlepin.pinsetter.core.PinsetterContextListener;
 
 import com.google.inject.AbstractModule;
@@ -37,6 +38,8 @@ import com.google.inject.Stage;
 import org.jboss.resteasy.spi.Registry;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.LinkedList;
@@ -58,6 +61,11 @@ public class CandlepinContextListenerTest {
     private ServletContextEvent evt;
     private ServletContext ctx;
     private VerifyConfigRead configRead;
+
+    @SuppressWarnings("checkstyle:visibilitymodifier")
+    @ClassRule
+    @Rule
+    public static CandlepinLiquibaseResource liquibase = new CandlepinLiquibaseResource();
 
     @Before
     public void init() {

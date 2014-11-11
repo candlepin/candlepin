@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.gutterball.junit;
+package org.candlepin.junit;
 
 import org.hibernate.ejb.Ejb3Configuration;
 import org.junit.rules.ExternalResource;
@@ -44,7 +44,7 @@ import java.util.Collections;
  * changelog run should not contain any DML statements as those would be lost after the
  * tables are truncated.
  */
-public class GutterballLiquibaseResource extends ExternalResource {
+public class CandlepinLiquibaseResource extends ExternalResource {
     private Liquibase liquibase;
     private ResourceAccessor accessor;
     private Database database;
@@ -55,11 +55,11 @@ public class GutterballLiquibaseResource extends ExternalResource {
     private static final String DROP_SQL =
         "DROP SCHEMA %s CASCADE";
 
-    public GutterballLiquibaseResource() {
-        this("db/changelog/changelog.xml");
+    public CandlepinLiquibaseResource() {
+        this("db/changelog/changelog-testing.xml");
     }
 
-    public GutterballLiquibaseResource(String changelogFile) {
+    public CandlepinLiquibaseResource(String changelogFile) {
         try {
             String connectionUrl = getJdbcUrl("testing");
             Connection jdbcConnection = DriverManager.getConnection(connectionUrl, "sa", "");

@@ -32,6 +32,7 @@ import org.candlepin.auth.PrincipalData;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.junit.CandlepinLiquibaseResource;
 import org.candlepin.model.EventCurator;
 import org.candlepin.resource.AtomFeedResource;
 
@@ -40,6 +41,8 @@ import com.google.inject.Injector;
 
 import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.xnap.commons.i18n.I18n;
 
@@ -56,6 +59,11 @@ public class AtomFeedResourceTest {
     private AtomFeedResource afr;
     private Injector injector;
     private I18n i18n;
+
+    @SuppressWarnings("checkstyle:visibilitymodifier")
+    @ClassRule
+    @Rule
+    public static CandlepinLiquibaseResource liquibase = new CandlepinLiquibaseResource();
 
     @Before
     public void setUp() {

@@ -100,6 +100,7 @@ public class OwnerTest extends DatabaseTestFixture {
         consumerTypeCurator.create(consumerType);
         consumerCurator.create(c1);
         consumerCurator.create(c2);
+        commitTransaction();
 
         assertEquals(2, o.getConsumers().size());
 

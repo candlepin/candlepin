@@ -27,6 +27,7 @@ import org.candlepin.guice.PinsetterJobScoped;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.guice.SimpleScope;
 import org.candlepin.guice.TestPrincipalProvider;
+import org.candlepin.junit.CandlepinLiquibaseResource;
 import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.model.JobStatus;
 
@@ -39,6 +40,8 @@ import com.google.inject.persist.jpa.JpaPersistModule;
 
 import org.apache.commons.lang.RandomStringUtils;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
@@ -58,6 +61,11 @@ public class PinsetterJobListenerDatabaseTest {
     protected UnitOfWork unitOfWork;
     private JobCurator curator;
     private Configuration config;
+
+    @SuppressWarnings("checkstyle:visibilitymodifier")
+    @ClassRule
+    @Rule
+    public static CandlepinLiquibaseResource liquibase = new CandlepinLiquibaseResource();
 
     @Before
     public void init() {

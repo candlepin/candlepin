@@ -59,11 +59,9 @@ JACKSON = [group('jackson-annotations', 'jackson-core', 'jackson-databind',
 
 SUN_JAXB = 'com.sun.xml.bind:jaxb-impl:jar:2.1.12'
 
-TESTING = Buildr.transitive(['junit:junit:jar:4.11', 'org.mockito:mockito-all:jar:1.9.5'])
-JUKITO = Buildr.transitive(['org.jukito:jukito:jar:1.4'])
+CORE_TESTING = Buildr.transitive(['junit:junit:jar:4.12-beta-2', 'org.mockito:mockito-all:jar:1.9.5'])
 
-NOSQLUNIT_NS = "com.lordofthejars"
-NOSQLUNIT_VERSION = "0.7.9"
+JUKITO = Buildr.transitive(['org.jukito:jukito:jar:1.4'])
 
 LOGBACK = [group('logback-core', 'logback-classic',
                  :under => 'ch.qos.logback',
@@ -226,10 +224,10 @@ define "candlepin" do
     compile.with(compile_classpath)
 
     test.with(
-      TESTING,
+      CORE_TESTING,
       JUKITO,
       LIQUIBASE,
-      LIQUIBASE_SLF4J
+      LIQUIBASE_SLF4J,
     )
     test.using :java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ]
 
@@ -288,7 +286,7 @@ define "candlepin" do
     end
 
     test.with(
-      TESTING,
+      CORE_TESTING,
       JUKITO,
       HSQLDB,
       LIQUIBASE,
@@ -312,7 +310,7 @@ define "candlepin" do
     checkstyle.config_directory = checkstyle_config_directory
     checkstyle.eclipse_xml = checkstyle_eclipse_xml
     rpmlint.rpmlint_conf = rpmlint_conf
-    liquibase.changelogs = ['changelog-update.xml', 'changelog-create.xml']
+    liquibase.changelogs = ['changelog-update.xml', 'changelog-create.xml', 'changelog-testing.xml']
     liquibase.file_time_prefix_format = "%Y%m%d%H%M%S"
 
     # eclipse settings
@@ -378,8 +376,9 @@ define "candlepin" do
 
     # the other dependencies transfer from compile.classpath automagically
     test.with(
-      TESTING,
-      HSQLDB_OLD,
+      CORE_TESTING,
+      HSQLDB,
+      LIQUIBASE_SLF4J,
     )
     test.using(:java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ])
 
@@ -410,7 +409,7 @@ define "candlepin" do
     end
 
     package(:war, :id=>"candlepin").tap do |war|
-      war.libs += artifacts(HSQLDB_OLD)
+      war.libs += artifacts(HSQLDB)
       war.libs -= artifacts(PROVIDED)
       war.libs -= artifacts(JAVA_TOOLS)
       war.classes.clear

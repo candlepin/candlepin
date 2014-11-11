@@ -14,15 +14,9 @@
  */
 package org.candlepin.resource.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventFactory;
@@ -70,6 +64,7 @@ import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.ContentOverrideValidator;
 
+import org.hamcrest.core.IsEqual;
 import org.jboss.resteasy.plugins.providers.atom.Entry;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
@@ -77,7 +72,9 @@ import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.jboss.resteasy.specimpl.MultivaluedMapImpl;
 import org.jboss.resteasy.util.GenericType;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.io.File;
 import java.io.IOException;
@@ -107,6 +104,10 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     private CandlepinCommonTestConfig config;
     private ImportRecordCurator importRecordCurator;
     private ContentOverrideValidator contentOverrideValidator;
+
+    @SuppressWarnings("checkstyle:visibilitymodifier")
+    @Rule
+    public ExpectedException ex = ExpectedException.none();
 
     @Before
     public void setUp() {
@@ -373,6 +374,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertEquals(0, entitlementCurator.listByOwner(owner).size());
     }
 
+
     @Test(expected = ForbiddenException.class)
     public void testConsumerRoleCannotGetOwner() {
         Consumer c = TestUtil.createConsumer(owner);
@@ -447,6 +449,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertEquals(pool1, pools.get(0));
     }
 
+
     @Test(expected = NotFoundException.class)
     public void ownerAdminCannotAccessAnotherOwnersPools() {
         Owner evilOwner = new Owner("evilowner");
@@ -516,6 +519,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertEquals(e1.getTimestamp(), entry.getPublished());
     }
 
+
     @Test(expected = NotFoundException.class)
     public void ownerCannotAccessAnotherOwnersAtomFeed() {
         Owner owner2 = new Owner("anotherOwner");
@@ -579,6 +583,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertEquals(0, results.size());
     }
 
+
+    @Test
     public void consumerCannotListConsumersFromAnotherOwner() {
         Consumer c = TestUtil.createConsumer(owner);
         consumerTypeCurator.create(c.getType());
@@ -608,17 +614,13 @@ public class OwnerResourceTest extends DatabaseTestFixture {
      */
     @Test
     public void failWhenListingByBadConsumerType() {
+        ex.expect(BadRequestException.class);
+        ex.expectMessage(IsEqual.<String>equalTo("No such unit type(s): unknown"));
+
         Set<String> types = new HashSet<String>();
         types.add("unknown");
-        try {
-            ownerResource.listConsumers(owner.getKey(), null, types,
-                new ArrayList<String>(), null, null, null);
-            fail("Should have thrown a BadRequestException.");
-        }
-        catch (BadRequestException bre) {
-            assertEquals("No such unit type(s): unknown",
-                bre.getMessage());
-        }
+        ownerResource.listConsumers(owner.getKey(), null, types,
+            new ArrayList<String>(), null, null, null);
     }
 
     @Test
@@ -663,6 +665,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Pool returnedPool = pools.get(0);
         assertNotNull(returnedPool.getCalculatedAttributes());
     }
+
 
     @Test(expected = NotFoundException.class)
     public void testConsumerListPoolsCannotAccessOtherConsumer() {

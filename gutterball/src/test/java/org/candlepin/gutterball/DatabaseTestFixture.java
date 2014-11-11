@@ -26,6 +26,7 @@ import com.google.inject.persist.PersistFilter;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Rule;
 
 import javax.persistence.EntityManager;
@@ -40,8 +41,9 @@ public class DatabaseTestFixture {
     protected Injector injector;
 
     @SuppressWarnings("checkstyle:visibilitymodifier")
+    @ClassRule
     @Rule
-    public GutterballLiquibaseResource liquibase = new GutterballLiquibaseResource();
+    public static GutterballLiquibaseResource liquibase = new GutterballLiquibaseResource();
 
     protected ComplianceSnapshotCurator complianceSnapshotCurator;
     protected ConsumerStateCurator consumerStateCurator;

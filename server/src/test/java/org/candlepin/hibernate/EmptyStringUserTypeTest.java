@@ -29,6 +29,7 @@ import javax.persistence.Entity;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Id;
+import javax.persistence.Table;
 
 /**
  * EmptyStringUserTypeTest
@@ -38,6 +39,7 @@ public class EmptyStringUserTypeTest {
     private EntityManager em;
 
     @Entity
+    @Table(name = "Thing")
     static class Thing {
         @Id
         private int id;

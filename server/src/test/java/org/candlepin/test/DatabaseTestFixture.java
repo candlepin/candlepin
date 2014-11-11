@@ -28,6 +28,7 @@ import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.guice.CandlepinSingletonScope;
 import org.candlepin.guice.TestPrincipalProviderSetter;
+import org.candlepin.junit.CandlepinLiquibaseResource;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Consumer;
@@ -93,6 +94,8 @@ import org.hibernate.event.spi.EventType;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.Arrays;
@@ -112,6 +115,11 @@ public class DatabaseTestFixture {
     private static final String DEFAULT_CONTRACT = "SUB349923";
     private static final String DEFAULT_ACCOUNT = "ACC123";
     private static final String DEFAULT_ORDER = "ORD222";
+
+    @SuppressWarnings("checkstyle:visibilitymodifier")
+    @ClassRule
+    @Rule
+    public static CandlepinLiquibaseResource liquibase = new CandlepinLiquibaseResource();
 
     protected EntityManagerFactory emf;
     protected Injector injector;
@@ -269,6 +277,9 @@ public class DatabaseTestFixture {
     /**
      * Helper to open a new db transaction. Pretty simple for now, but may
      * require additional logic and error handling down the road.
+     *
+     * If you open a transaction, you'd better close it; otherwise, your test will
+     * hang forever.
      */
     protected void beginTransaction() {
         entityManager().getTransaction().begin();

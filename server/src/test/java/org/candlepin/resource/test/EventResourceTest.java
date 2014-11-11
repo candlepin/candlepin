@@ -28,6 +28,7 @@ import org.candlepin.audit.EventAdapter;
 import org.candlepin.auth.PrincipalData;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.junit.CandlepinLiquibaseResource;
 import org.candlepin.model.EventCurator;
 import org.candlepin.resource.EventResource;
 
@@ -35,6 +36,8 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.xnap.commons.i18n.I18n;
 
@@ -49,6 +52,11 @@ import java.util.List;
 public class EventResourceTest {
     protected Injector injector;
     private EventCurator ec;
+
+    @SuppressWarnings("checkstyle:visibilitymodifier")
+    @ClassRule
+    @Rule
+    public static CandlepinLiquibaseResource liquibase = new CandlepinLiquibaseResource();
 
     @Before
     public void init() {
