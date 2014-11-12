@@ -41,7 +41,7 @@ public class ConsumerTrendReport extends Report<ConsumerTrendReportResult> {
      */
     @Inject
     public ConsumerTrendReport(I18nProvider i18nProvider, ComplianceSnapshotCurator snapshotCurator) {
-        super(i18nProvider, "consumer_trend_report",
+        super(i18nProvider, "consumer_trend",
                 i18nProvider.get().tr("Lists the status of each consumer over a date range"));
         this.snapshotCurator = snapshotCurator;
     }
