@@ -17,9 +17,13 @@ package org.candlepin.common.config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * AbstractConfiguration with basic methods to get typed values.
@@ -36,6 +40,41 @@ public abstract class AbstractConfiguration implements Configuration {
 
     protected String missingMessage(String key) {
         return String.format(MISSING_MESSAGE, key);
+    }
+
+    @Override
+    public Map<String, String> toMap() {
+        return toMap(Collections.<String, String>emptyMap());
+    }
+
+    @Override
+    public Map<String, String> toMap(Map<String, String> defaults) {
+        Map<String, String> m = new ConcurrentHashMap<String, String>();
+        m.putAll(defaults);
+        for (String key : getKeys()) {
+            m.put(key, getString(key));
+        }
+        return m;
+    }
+
+    @Override
+    public Properties toProperties() {
+        return toProperties(Collections.<String, String>emptyMap());
+    }
+
+    @Override
+    public Properties toProperties(Map<String, String> defaults) {
+        Properties p = new Properties();
+        p.putAll(defaults);
+        p.putAll(toMap());
+        return p;
+    }
+
+    @Override
+    public Properties toProperties(Properties defaults) {
+        Properties p = new Properties(defaults);
+        p.putAll(toMap());
+        return p;
     }
 
     @Override

@@ -18,6 +18,7 @@ import static org.junit.Assert.*;
 
 import org.candlepin.common.config.Configuration.TrimMode;
 
+import org.hamcrest.core.IsInstanceOf;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -64,6 +65,33 @@ public class MapConfigurationTest {
 
         Set<String> keySet = (Set<String>) newConfig.getKeys();
         assertEquals(new HashSet<String>(Arrays.asList("x.1", "x.2", "x.3")), keySet);
+    }
+
+
+    public void testNullInHashMapProhibited() {
+        ex.expect(RuntimeException.class);
+        ex.expectCause(IsInstanceOf.<Throwable>instanceOf(ConfigurationException.class));
+
+        HashMap<String, String> m = new HashMap<String, String>();
+        m.put(null, "x");
+        m.put("hello", "world");
+        assertTrue(m.containsKey(null));
+        new MapConfiguration(m);
+    }
+
+    @Test
+    public void testStrippedSubset() {
+        config.setProperty("a.b.a.b", "value");
+        config.setProperty("a.b.c.d", "value");
+        config.setProperty("a.c.a.b", "value");
+        config.setProperty("a.d.a.b", "value");
+        Configuration stripped = config.strippedSubset("a.b.");
+
+        assertFalse(stripped.containsKey("a.b.a.b"));
+        assertTrue(stripped.containsKey("a.b"));
+        assertTrue(stripped.containsKey("c.d"));
+        assertFalse(stripped.containsKey("a.c.a.b"));
+        assertFalse(stripped.containsKey("a.d.a.b"));
     }
 
     @Test
@@ -268,74 +296,24 @@ public class MapConfigurationTest {
 
     @SuppressWarnings("serial")
     @Test
-    public void namespaceWithNull() {
+    public void toPropertiesWithDefaults() {
         Map<String, String> defaults = new HashMap<String, String>();
-        defaults.put(null, null);
+        defaults.put("a", "defaultvalue");
+        defaults.put("z", "should have a value");
 
-        config.setProperty("a.c.a.b", "value3");
-        config.setProperty("a.c.c.d", "value4");
-        config.setProperty("a.c.e.f", "value5");
+        config.setProperty("a", "value1");
+        config.setProperty("b", "value2");
+        config.setProperty("c", "value3");
+        config.setProperty("d", "value4");
 
-        try {
-            Properties withPrefix = config.getNamespaceProperties("a.c", defaults);
-            assertEquals(3, withPrefix.size());
-            assertTrue(withPrefix.containsKey("a.c.a.b"));
-            assertTrue(withPrefix.containsKey("a.c.c.d"));
-            assertTrue(withPrefix.containsKey("a.c.e.f"));
-            assertEquals("value3", withPrefix.getProperty("a.c.a.b"));
-
-            withPrefix = config.getNamespaceProperties("a.c", null);
-            assertEquals(3, withPrefix.size());
-            assertTrue(withPrefix.containsKey("a.c.a.b"));
-            assertTrue(withPrefix.containsKey("a.c.c.d"));
-            assertTrue(withPrefix.containsKey("a.c.e.f"));
-            assertEquals("value3", withPrefix.getProperty("a.c.a.b"));
-        }
-        catch (NullPointerException npe) {
-            fail("getNamespaceProperties didn't check for null");
-        }
-
-    }
-
-    @SuppressWarnings("serial")
-    @Test
-    public void returnNamespacePropsWithDefaults() {
-        Map<String, String> defaults = new HashMap<String, String>();
-        defaults.put("a.c.a.b", "defaultvalue");
-        defaults.put("a.c.not.e", "should have a value");
-        defaults.put("not.here", "is.ignored");
-
-        config.setProperty("a.b.a.b", "value1");
-        config.setProperty("a.b.c.d", "value2");
-        config.setProperty("a.c.a.b", "value3");
-        config.setProperty("a.c.c.d", "value4");
-        config.setProperty("a.c.e.f", "value5");
-
-        Properties withPrefix = config.getNamespaceProperties("a.c", defaults);
-        assertEquals(4, withPrefix.size());
-        assertTrue(withPrefix.containsKey("a.c.a.b"));
-        assertTrue(withPrefix.containsKey("a.c.c.d"));
-        assertTrue(withPrefix.containsKey("a.c.e.f"));
-        assertTrue(withPrefix.containsKey("a.c.not.e"));
-        assertEquals("value3", withPrefix.getProperty("a.c.a.b"));
-        assertEquals("should have a value", withPrefix.getProperty("a.c.not.e"));
-        assertFalse(withPrefix.containsKey("not.here"));
-    }
-
-    @SuppressWarnings("serial")
-    @Test
-    public void returnNamespaceProperties() {
-        config.setProperty("a.b.a.b", "value1");
-        config.setProperty("a.b.c.d", "value2");
-        config.setProperty("a.c.a.b", "value3");
-        config.setProperty("a.c.c.d", "value4");
-        config.setProperty("a.c.e.f", "value5");
-
-        Properties withPrefix = config.getNamespaceProperties("a.c");
-        assertEquals(3, withPrefix.size());
-        assertTrue(withPrefix.containsKey("a.c.a.b"));
-        assertTrue(withPrefix.containsKey("a.c.c.d"));
-        assertTrue(withPrefix.containsKey("a.c.e.f"));
+        Properties p = config.toProperties(defaults);
+        assertEquals(5, p.size());
+        assertTrue(p.containsKey("a"));
+        assertTrue(p.containsKey("b"));
+        assertTrue(p.containsKey("c"));
+        assertTrue(p.containsKey("d"));
+        assertEquals("value1", p.getProperty("a"));
+        assertEquals("should have a value", p.getProperty("z"));
     }
 
     @SuppressWarnings("serial")

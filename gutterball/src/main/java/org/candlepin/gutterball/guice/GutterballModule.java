@@ -15,7 +15,7 @@
 package org.candlepin.gutterball.guice;
 
 import org.candlepin.common.config.Configuration;
-import org.candlepin.common.config.LoggingConfigParser;
+import org.candlepin.common.config.ConfigurationPrefixes;
 import org.candlepin.common.exceptions.mappers.BadRequestExceptionMapper;
 import org.candlepin.common.exceptions.mappers.CandlepinExceptionMapper;
 import org.candlepin.common.exceptions.mappers.DefaultOptionsMethodExceptionMapper;
@@ -37,7 +37,6 @@ import org.candlepin.common.exceptions.mappers.WebApplicationExceptionMapper;
 import org.candlepin.common.exceptions.mappers.WriterExceptionMapper;
 import org.candlepin.common.guice.JPAInitializer;
 import org.candlepin.common.validation.CandlepinMessageInterpolator;
-import org.candlepin.gutterball.config.JPAConfigurationParser;
 import org.candlepin.gutterball.curator.ComplianceSnapshotCurator;
 import org.candlepin.gutterball.curator.ConsumerStateCurator;
 import org.candlepin.gutterball.eventhandler.EventHandler;
@@ -136,7 +135,6 @@ public class GutterballModule extends AbstractModule {
         bind(RuntimeExceptionMapper.class);
         bind(JAXBUnmarshalExceptionMapper.class);
         bind(JAXBMarshalExceptionMapper.class);
-        bind(LoggingConfigParser.class).asEagerSingleton();
     }
 
     protected void configureEventReciever() {
@@ -148,8 +146,8 @@ public class GutterballModule extends AbstractModule {
     }
 
     protected void configureJPA() {
-        JPAConfigurationParser parser = new JPAConfigurationParser(this.config);
-        install(new JpaPersistModule("default").properties(parser.parseConfig()));
+        Configuration jpaConfig = config.strippedSubset(ConfigurationPrefixes.JPA_CONFIG_PREFIX);
+        install(new JpaPersistModule("default").properties(jpaConfig.toProperties()));
         bind(JPAInitializer.class).asEagerSingleton();
     }
 

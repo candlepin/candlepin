@@ -21,13 +21,7 @@ import com.google.inject.Module;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Properties;
 import java.util.Set;
 
 /**
@@ -42,25 +36,26 @@ public class CustomizableModules {
      * @return returns the set of modules to use.
      */
     public Set<Module> load(Configuration config) {
-        Map<String, String> loaded =
-            config.getNamespaceMap(MODULE_CONFIG_PREFIX);
+        Configuration moduleConfig = config.subset(MODULE_CONFIG_PREFIX);
 
-        return customizedConfiguration(loaded);
+        return customizedConfiguration(moduleConfig);
     }
 
     /**
      * Reads the given configuration and returns the set of modules.
-     * @param loadedConfiguration configuration to parse.
+     * @param moduleConfig configuration to parse.
      * @return Set of configured modules.
      */
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    public Set<Module> customizedConfiguration(Map<String, String> loadedConfiguration) {
+    @SuppressWarnings("unchecked")
+    public Set<Module> customizedConfiguration(Configuration moduleConfig) {
         try {
-            Set toReturn = new HashSet();
+            Set<Module> toReturn = new HashSet<Module>();
 
-            for (Entry<String, String> entry : loadedConfiguration.entrySet()) {
-                log.info("Found custom module " + entry.getKey());
-                toReturn.add(Class.forName((String) entry.getValue()).newInstance());
+            for (String key : moduleConfig.getKeys()) {
+                log.info("Found custom module " + key);
+                Class<? extends Module> c = (Class<? extends Module>)
+                    Class.forName(moduleConfig.getString(key));
+                toReturn.add(c.newInstance());
             }
 
             return toReturn;
@@ -68,20 +63,5 @@ public class CustomizableModules {
         catch (Exception e) {
             throw new RuntimeException("Exception when instantiation guice module.", e);
         }
-    }
-
-    /**
-     * Load custom configuration from the given input stream.
-     * @param input Stream containing configuration information.
-     * @return Map of the configuration.
-     * @throws IOException thrown if there is a problem reading the stream.
-     */
-    @SuppressWarnings("unchecked")
-    public Map<String, String> loadCustomConfiguration(InputStream input)
-        throws IOException {
-
-        Properties loaded = new Properties();
-        loaded.load(input);
-        return new HashMap(loaded);
     }
 }

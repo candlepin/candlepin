@@ -42,8 +42,6 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Properties;
 
 import javax.ws.rs.core.Response;
 
@@ -171,20 +169,18 @@ public class OAuth implements AuthProvider {
      * create consumers for them.
      */
     protected void setupAccessors() {
-        String prefix = "candlepin.auth.oauth.consumer";
-        Properties props = config.getNamespaceProperties(prefix);
-        for (Entry<Object, Object> entry : props.entrySet()) {
-            String key = (String) entry.getKey();
-            key = key.replace(prefix + ".", "");
+        String prefix = "candlepin.auth.oauth.consumer.";
+        Configuration oauthConfig = config.strippedSubset(prefix);
+        for (String key : oauthConfig.getKeys()) {
             String[] parts = key.split("\\.");
             if ((parts.length == 2) && (parts[1].equals("secret"))) {
                 String consumerName = parts[0];
-                String sekret = (String) entry.getValue();
+                String secret = oauthConfig.getString(key);
                 log.debug(String.format(
                     "Creating consumer '%s' with secret '%s'", consumerName,
-                    sekret));
+                    secret));
                 OAuthConsumer consumer = new OAuthConsumer("", consumerName,
-                    sekret, null);
+                    secret, null);
                 OAuthAccessor accessor = new OAuthAccessor(consumer);
                 accessors.put(consumerName, accessor);
             }

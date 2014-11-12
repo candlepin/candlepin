@@ -14,26 +14,42 @@
  */
 package org.candlepin.common.config;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.NoSuchElementException;
-import java.util.Properties;
-import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
 
 /**
  * In-memory Configuration implementation.
  */
 public class MapConfiguration extends AbstractConfiguration {
-    private ConcurrentHashMap<String, String> configMap;
+    private static Logger log = LoggerFactory.getLogger(MapConfiguration.class);
 
+    private ConcurrentHashMap<String, String> configMap;
 
     public MapConfiguration() {
         configMap = new ConcurrentHashMap<String, String>();
     }
 
     public MapConfiguration(Map<String, String> configMap) {
+        // ConcurrentHashMap doesn't work with null keys but HashMap
+        // supports them.  We have to check the type first because
+        // ConcurrentHashMap will throw a NPE on containsKey(null)
+        if (HashMap.class.isAssignableFrom(configMap.getClass()) &&
+            configMap.containsKey(null)) {
+            log.error("Keys with a null value are not supported!");
+            throw new RuntimeException(
+                new ConfigurationException("Keys with a null value are not supported"));
+        }
         this.configMap = new ConcurrentHashMap<String, String>(configMap);
+    }
+
+    public MapConfiguration(Configuration config) {
+        this(config.toMap());
     }
 
     @Override
@@ -41,10 +57,24 @@ public class MapConfiguration extends AbstractConfiguration {
         return new MapConfiguration(subsetMap(prefix));
     }
 
+    @Override
+    public Configuration strippedSubset(String prefix) {
+        Map<String, String> subset = subsetMap(prefix);
+        Configuration c = new MapConfiguration();
+        for (Map.Entry<String, String> entry : subset.entrySet()) {
+            String strippedKey = entry.getKey().replaceFirst(Pattern.quote(prefix), "");
+            c.setProperty(strippedKey, entry.getValue());
+        }
+        return c;
+    }
+
     protected Map<String, String> subsetMap(String prefix) {
-        Map<String, String> subset = new TreeMap<String, String>();
+        Map<String, String> subset = new ConcurrentHashMap<String, String>();
 
         for (Map.Entry<String, String> e : configMap.entrySet()) {
+            // ConcurrentHashMaps do not allow null as a key but other
+            // implementations do (HashMap) so we'll check to prevent
+            // future bugs should the backing store change.
             if (e.getKey() != null && e.getKey().startsWith(prefix)) {
                 subset.put(e.getKey(), e.getValue());
             }
@@ -54,8 +84,9 @@ public class MapConfiguration extends AbstractConfiguration {
     }
 
     /**
-     * Begin with the configuration provided by base but for any keys defined in
-     * both objects, use the values in this object.
+     * Merge configuration objects.  Any collisions on keys will use the value
+     * from the leftmost argument.
+     *
      * @param configs
      * @return the merged configuration
      */
@@ -78,7 +109,7 @@ public class MapConfiguration extends AbstractConfiguration {
 
     @Override
     public boolean containsKey(String key) {
-        return configMap.containsKey(key);
+        return (null == key) ? false : configMap.containsKey(key);
     }
 
     @Override
@@ -120,42 +151,5 @@ public class MapConfiguration extends AbstractConfiguration {
     @Override
     public String toString() {
         return configMap.toString();
-    }
-
-    @Override
-    public Map<String, String> getNamespaceMap(String prefix) {
-        return getNamespaceMap(prefix, null);
-    }
-
-    @Override
-    public Map<String, String> getNamespaceMap(String prefix, Map<String, String> defaults) {
-        Map<String, String> m = new TreeMap<String, String>();
-
-        if (defaults != null) {
-            for (Entry<String, String> entry : defaults.entrySet()) {
-                if (entry.getKey() != null && entry.getKey().startsWith(prefix)) {
-                    m.put(entry.getKey(), entry.getValue());
-                }
-            }
-        }
-        m.putAll(subsetMap(prefix));
-        return m;
-    }
-
-    @Override
-    public Properties getNamespaceProperties(String prefix) {
-        return getNamespaceProperties(prefix, null);
-    }
-
-    @Override
-    public Properties getNamespaceProperties(String prefix, Map<String, String> defaults) {
-
-        if (prefix.startsWith(JPAConfigParser.JPA_CONFIG_PREFIX)) {
-            return new JPAConfigParser().parseConfig(configMap);
-        }
-
-        Properties p = new Properties();
-        p.putAll(getNamespaceMap(prefix, defaults));
-        return p;
     }
 }
