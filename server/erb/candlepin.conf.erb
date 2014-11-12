@@ -32,6 +32,9 @@ candlepin.auth.oauth.consumer.thumbslug.secret=thumbslug-secret
 candlepin.importer.fail_on_unknown=<%= fail_on_unknown || false %>
 candlepin.pretty_print=<%= cp_pretty_print || true %>
 
+candlepin.amqp.enable=<%= amqp_enabled || false %>
+candlepin.amqp.connect=<%= amqp_server || "tcp://localhost:5671?ssl='true'&ssl_cert_alias='candlepin'" %>
+
 <%- if hidden_resources -%>
 candlepin.hidden_resources=<%= hidden_resources %>
 <%- end -%>
