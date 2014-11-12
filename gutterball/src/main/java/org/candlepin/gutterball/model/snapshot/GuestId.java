@@ -17,6 +17,7 @@ package org.candlepin.gutterball.model.snapshot;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.GenericGenerator;
 
@@ -68,7 +69,8 @@ public class GuestId {
     @NotNull
     private Consumer consumer;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.LAZY)
+    @BatchSize(size = 100)
     @CollectionTable(name = "gb_consumer_guest_attributes",
                      joinColumns = @JoinColumn(name = "gb_consumer_guest_id"))
     @MapKeyColumn(name = "mapkey")

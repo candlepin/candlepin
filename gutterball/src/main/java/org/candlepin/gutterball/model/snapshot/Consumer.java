@@ -23,6 +23,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.GenericGenerator;
 
@@ -118,7 +119,8 @@ public class Consumer {
 
     private Date lastCheckin;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.LAZY)
+    @BatchSize(size = 100)
     @CollectionTable(name = "gb_consumer_facts_snap",
                      joinColumns = @JoinColumn(name = "consumer_snap_id"))
     @MapKeyColumn(name = "mapkey")
@@ -126,12 +128,14 @@ public class Consumer {
     @Cascade({org.hibernate.annotations.CascadeType.ALL})
     private Map<String, String> facts;
 
-    @OneToMany(mappedBy = "consumer", targetEntity = ConsumerInstalledProduct.class)
+    @OneToMany(mappedBy = "consumer", targetEntity = ConsumerInstalledProduct.class, fetch = FetchType.LAZY)
+    @BatchSize(size = 25)
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
     private Set<ConsumerInstalledProduct> installedProducts;
 
-    @OneToMany(mappedBy = "consumer", targetEntity = GuestId.class)
+    @OneToMany(mappedBy = "consumer", targetEntity = GuestId.class, fetch = FetchType.LAZY)
+    @BatchSize(size = 10)
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
     private List<GuestId> guestIds;

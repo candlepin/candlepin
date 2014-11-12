@@ -16,6 +16,7 @@ package org.candlepin.gutterball.model.snapshot;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Index;
@@ -74,7 +75,8 @@ public class ComplianceReason {
     @NotNull
     private String message;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.LAZY)
+    @BatchSize(size = 100)
     @CollectionTable(name = "gb_reason_attr_snap",
                      joinColumns = @JoinColumn(name = "reason_snap_id"))
     @MapKeyColumn(name = "mapkey")

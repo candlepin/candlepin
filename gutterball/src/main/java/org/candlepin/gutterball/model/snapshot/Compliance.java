@@ -17,6 +17,7 @@ package org.candlepin.gutterball.model.snapshot;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.GenericGenerator;
 
@@ -74,6 +75,7 @@ public class Compliance {
     private ComplianceStatus status;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "complianceSnapshot", fetch = FetchType.LAZY)
+    @BatchSize(size = 25)
     private Set<Entitlement> entitlements;
 
     public Compliance() {
