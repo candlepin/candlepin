@@ -40,7 +40,7 @@ public class ConsumerStatusReport extends Report<MultiRowResult<Compliance>> {
      */
     @Inject
     public ConsumerStatusReport(I18nProvider i18nProvider, ComplianceSnapshotCurator curator) {
-        super(i18nProvider, "consumer_status_report",
+        super(i18nProvider, "consumer_status",
                 i18nProvider.get().tr("List the status of all consumers"));
         this.complianceSnapshotCurator = curator;
     }
