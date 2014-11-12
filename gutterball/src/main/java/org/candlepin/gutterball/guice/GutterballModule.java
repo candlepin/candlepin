@@ -62,6 +62,7 @@ import com.google.inject.name.Named;
 import com.google.inject.persist.jpa.JpaPersistModule;
 import com.google.inject.servlet.ServletScopes;
 
+import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
 import org.hibernate.validator.HibernateValidator;
 import org.hibernate.validator.HibernateValidatorConfiguration;
 import org.xnap.commons.i18n.I18n;
@@ -95,6 +96,8 @@ public class GutterballModule extends AbstractModule {
         bind(JsonProvider.class);
 
         configureJPA();
+
+        bind(BeanValidationEventListener.class).toProvider(ValidationListenerProvider.class);
         bind(MessageInterpolator.class).to(CandlepinMessageInterpolator.class);
 
         bind(ComplianceSnapshotCurator.class);
@@ -169,7 +172,7 @@ public class GutterballModule extends AbstractModule {
 
     @Provides
     protected ValidatorFactory getValidationFactory(
-            Provider<MessageInterpolator> interpolatorProvider) {
+        Provider<MessageInterpolator> interpolatorProvider) {
         HibernateValidatorConfiguration configure =
             Validation.byProvider(HibernateValidator.class).configure();
 
