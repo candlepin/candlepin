@@ -383,8 +383,21 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
      *    INNER JOIN "gb_compliance_status_snap" ComplianceStatusSnap
      *      ON ComplianceStatusSnap.compliance_snap_id = ComplianceSnap.id
      *
-     *    WHERE (ConsumerState.deleted IS NULL
-     *      OR ComplianceSnap.date < ConsumerState.deleted)
+     *    WHERE (
+     *      ConsumerState.deleted IS NULL
+     *
+     *      OR date_part('year', ComplianceSnap.date) < date_part('year', ConsumerState.deleted)
+     *
+     *      OR (
+     *          date_part('year', ComplianceSnap.date) = date_part('year', ConsumerState.deleted)
+     *          AND date_part('month', ComplianceSnap.date) < date_part('month', ConsumerState.deleted)
+     *      )
+     *
+     *      OR (
+     *          date_part('year', ComplianceSnap.date) = date_part('year', ConsumerState.deleted)
+     *          AND date_part('month', ComplianceSnap.date) = date_part('month', ConsumerState.deleted)
+     *          AND date_part('day', ComplianceSnap.date) < date_part('day', ConsumerState.deleted)
+     *      ))
      *
      *      -- Selecting the max date for each day
      *      AND ComplianceSnap.id IN (
@@ -497,7 +510,16 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
 
                 "WHERE (" +
                         "ConsumerState.deleted IS NULL " +
-                        "OR ComplianceSnap.date < ConsumerState.deleted" +
+                        "OR year(ComplianceSnap.date) < year(ConsumerState.deleted) " +
+                        "OR (" +
+                            "year(ComplianceSnap.date) = year(ConsumerState.deleted) " +
+                            "AND month(ComplianceSnap.date) < month(ConsumerState.deleted) " +
+                        ") " +
+                        "OR (" +
+                            "year(ComplianceSnap.date) = year(ConsumerState.deleted) " +
+                            " AND month(ComplianceSnap.date) = month(ConsumerState.deleted) " +
+                            " AND day(ComplianceSnap.date) < day(ConsumerState.deleted)" +
+                        ")" +
                     ") " +
 
                     "AND ComplianceSnap.id IN (" +
