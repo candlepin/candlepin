@@ -34,7 +34,6 @@ URL: http://www.candlepinproject.org
 Source0: %{name}-%{version}.tar.gz
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
-Vendor: Red Hat, Inc.
 BuildArch: noarch
 
 # Universal build requires

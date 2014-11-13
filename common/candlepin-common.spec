@@ -26,7 +26,6 @@ Release: 1%{?dist}
 URL: http://www.candlepinproject.org
 Source: %{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
-Vendor: Red Hat, Inc.
 BuildArch: noarch
 
 # Build deps

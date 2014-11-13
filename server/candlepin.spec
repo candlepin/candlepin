@@ -41,7 +41,6 @@ URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
 Source: %{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
-Vendor: Red Hat, Inc.
 BuildArch: noarch
 
 BuildRequires: java-devel >= 1:1.6.0
