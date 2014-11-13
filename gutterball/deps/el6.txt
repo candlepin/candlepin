@@ -16,6 +16,12 @@ guice-multibindings
 guice-persist
 guice-servlet
 guice-throwingproviders
+hibernate4-c3p0
+hibernate4-core
+hibernate4-entitymanager
+hibernate-commons-annotations
+hibernate-jpa-2.0-api
+hibernate-validator
 jackson-annotations
 jackson-core
 jackson-databind
@@ -36,3 +42,4 @@ resteasy/resteasy-jaxrs
 resteasy/resteasy-multipart-provider
 servlet
 slf4j-api
+validation-api

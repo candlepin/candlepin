@@ -60,6 +60,13 @@ BuildRequires: jackson-databind >= %{jackson_version}
 BuildRequires: jackson-jaxrs-json-provider >= %{jackson_version}
 BuildRequires: jackson-module-jaxb-annotations >= %{jackson_version}
 
+BuildRequires: hibernate4-core >= 0:4.2.5
+BuildRequires: hibernate4-entitymanager >= 0:4.2.5
+BuildRequires: hibernate4-c3p0 >= 0:4.2.5
+BuildRequires: hibernate4-validator >= 0:4.2.5
+BuildRequires: hibernate-beanvalidation-api >= 1.0.0
+BuildRequires: hibernate-jpa-2.0-api >= 1.0.1
+
 # Version dependent build requires
 %if 0%{?rhel} < 7
 BuildRequires: jpackage-utils
@@ -92,6 +99,13 @@ Requires: qpid-java-common >= 0:0.22
 Requires: gettext-commons
 Requires: jms
 Requires: candlepin-common
+
+Requires: hibernate4-core >= 0:4.2.5
+Requires: hibernate4-entitymanager >= 0:4.2.5
+Requires: hibernate4-c3p0 >= 0:4.2.5
+Requires: hibernate4-validator >= 0:4.2.5
+Requires: hibernate-beanvalidation-api >= 1.0.0
+Requires: hibernate-jpa-2.0-api >= 0:1.0.1
 
 # Version dependent requires
 %if 0%{?rhel} == 6
