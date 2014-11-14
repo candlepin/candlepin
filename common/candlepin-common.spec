@@ -21,7 +21,7 @@
 Name: %{parent_proj}-common
 Summary: Common code for Candlepin and related projects
 License: GPLv2
-Version: 1.0.13
+Version: 1.0.14
 Release: 1%{?dist}
 URL: http://www.candlepinproject.org
 Source: %{name}-%{version}.tar.gz
@@ -170,6 +170,14 @@ rm -rf %{_tmppath}/distlibdir
 %{_datadir}/%{parent_proj}/gutterball/lib/%{name}.jar
 
 %changelog
+* Fri Nov 14 2014 Alex Wood <awood@redhat.com> 1.0.14-1
+- Remove dependency on Guava. (awood@redhat.com)
+- 1162297: Remove the vendor tag from the spec files (bkearney@redhat.com)
+- Refactor Configuration implementation to be more consistent.
+  (awood@redhat.com)
+- Add Hibernate Validation to Gutterball. (awood@redhat.com)
+- Correct misspelled class name. (awood@redhat.com)
+
 * Wed Nov 05 2014 Devan Goodwin <dgoodwin@rm-rf.ca> 1.0.13-1
 - Fix el6 guice persist dependency. (dgoodwin@redhat.com)
 
