@@ -14,15 +14,16 @@
  */
 package org.candlepin.common.config;
 
-import com.google.common.io.Files;
-
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.Arrays;
@@ -155,7 +156,8 @@ public class EncryptedConfiguration extends PropertiesFileConfiguration {
             /* XXX Maybe it'd be better to use the charset the caller specifies during
              * construction?  But just because the config is in that charset doesn't mean
              * the password file is.  Stick with system default for now. */
-            return Files.toString(new File(secretFile), Charset.defaultCharset());
+            InputStream bs = new FileInputStream(secretFile);
+            return IOUtils.toString(bs, Charset.defaultCharset().name());
         }
         catch (Exception e) {
             String msg = String.format("Could not read: %s", secretFile);

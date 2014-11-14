@@ -117,4 +117,17 @@ public class EncryptedConfigurationTest {
         EncryptedConfiguration c = new EncryptedConfiguration(props);
         c.use("passphrase_file").toDecrypt(key1, key2);
     }
+
+    @Test
+    public void testUnusualPassword() throws Exception {
+        String expected = "Hello\nWorld\n";
+        File passphraseFile = temp.newFile("passphrase.txt");
+        Writer w = new FileWriter(passphraseFile);
+        w.write(expected);
+        w.close();
+
+        props.setProperty("passphrase_file", passphraseFile.getAbsolutePath());
+        EncryptedConfiguration c = new EncryptedConfiguration(props);
+        assertEquals(expected, c.readPassphrase("passphrase_file"));
+    }
 }
