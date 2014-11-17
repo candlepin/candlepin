@@ -18,6 +18,10 @@ module Candlepin
         s.gsub(/^[ \t]{#{indent}}/, '')
       end
 
+      def success(message)
+        puts Buildr::Console.color(message.to_s, :green)
+      end
+
       def top_project(project)
         until project.parent.nil? do
           project = project.parent
