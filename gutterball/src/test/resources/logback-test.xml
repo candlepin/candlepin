@@ -7,7 +7,9 @@
     </encoder>
   </appender>
 
+  <logger name="org.hibernate.id.UUIDHexGenerator" level="ERROR"/>
   <logger name="liquibase" level="ERROR"/>
+
   <logger name="org.candlepin.gutterball" level="INFO"/>
   <root level="WARN">
     <appender-ref ref="RootAppender"/>
