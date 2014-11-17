@@ -17,9 +17,13 @@ package org.candlepin.model.test;
 import static org.junit.Assert.*;
 
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
+import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.activationkeys.ActivationKey;
+import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
@@ -28,10 +32,16 @@ import org.junit.Test;
 
 import java.util.Date;
 
+import javax.inject.Inject;
+
 /**
  * ActivationKeyTest
  */
 public class ActivationKeyTest extends DatabaseTestFixture {
+    @Inject private OwnerCurator ownerCurator;
+    @Inject private ProductCurator productCurator;
+    @Inject private PoolCurator poolCurator;
+    @Inject private ActivationKeyCurator activationKeyCurator;
 
     private Owner owner;
 

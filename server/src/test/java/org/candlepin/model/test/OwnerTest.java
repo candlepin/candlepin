@@ -17,8 +17,11 @@ package org.candlepin.model.test;
 import static org.junit.Assert.*;
 
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.test.DatabaseTestFixture;
@@ -31,7 +34,12 @@ import org.junit.Test;
 
 import java.util.Set;
 
+import javax.inject.Inject;
+
 public class OwnerTest extends DatabaseTestFixture {
+    @Inject private OwnerCurator ownerCurator;
+    @Inject private ConsumerCurator consumerCurator;
+    @Inject private ConsumerTypeCurator consumerTypeCurator;
 
     @Test
     public void testCreate() throws Exception {

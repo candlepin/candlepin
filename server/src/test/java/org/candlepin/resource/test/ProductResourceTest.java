@@ -24,12 +24,12 @@ import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
+import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.Subscription;
 import org.candlepin.resource.ProductResource;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
@@ -38,20 +38,16 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
 
+import javax.inject.Inject;
+
 
 /**
  * ProductResourceTest
  */
 public class ProductResourceTest extends DatabaseTestFixture {
-
-    private ProductResource productResource;
-
-    @Before
-    public void setUp() {
-
-        productResource = injector.getInstance(ProductResource.class);
-        contentCurator = injector.getInstance(ContentCurator.class);
-    }
+    @Inject private ProductCertificateCurator productCertificateCurator;
+    @Inject private ContentCurator contentCurator;
+    @Inject private ProductResource productResource;
 
     private Product createProduct() {
         String label = "test_product";
@@ -63,9 +59,7 @@ public class ProductResourceTest extends DatabaseTestFixture {
         Product prod = new Product(label, name, variant,
                 version, arch, type);
         return prod;
-
     }
-
 
     @Test
     public void testCreateProductResource() {

@@ -18,12 +18,18 @@ import static org.junit.Assert.*;
 
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
+import org.candlepin.model.ProductAttributeCurator;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
 import org.junit.Test;
 
+import javax.inject.Inject;
+
 public class AttributeTest extends DatabaseTestFixture {
+    @Inject private ProductCurator productCurator;
+    @Inject private ProductAttributeCurator attributeCurator;
 
     @Test
     public void testLookup() {

@@ -14,22 +14,24 @@
  */
 package org.candlepin.resource.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Subscription;
+import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
 import org.candlepin.resource.ConsumerResource;
@@ -46,10 +48,20 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
+import javax.inject.Inject;
+
 /**
  * ConsumerResourceVirtEntitlementTest
  */
 public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
+    @Inject private OwnerCurator ownerCurator;
+    @Inject private ProductCurator productCurator;
+    @Inject private ConsumerCurator consumerCurator;
+    @Inject private ConsumerTypeCurator consumerTypeCurator;
+    @Inject private SubscriptionCurator subCurator;
+    @Inject private ConsumerResource consumerResource;
+    @Inject private PoolManager poolManager;
+
     private ConsumerType manifestType;
     private ConsumerType systemType;
     private Consumer manifestConsumer;
@@ -59,8 +71,6 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
     private List<Pool> limitPools;
     private List<Pool> unlimitPools;
 
-    private ConsumerResource consumerResource;
-    private PoolManager poolManager;
     private Owner owner;
 
     @Override
@@ -70,9 +80,6 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
 
     @Before
     public void setUp() {
-        consumerResource = injector.getInstance(ConsumerResource.class);
-        poolManager = injector.getInstance(CandlepinPoolManager.class);
-
         manifestType = consumerTypeCurator.create(
             new ConsumerType(ConsumerType.ConsumerTypeEnum.CANDLEPIN));
         systemType = consumerTypeCurator.create(

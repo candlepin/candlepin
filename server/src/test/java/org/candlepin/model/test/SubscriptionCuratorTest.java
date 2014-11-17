@@ -18,10 +18,12 @@ import static org.junit.Assert.*;
 
 import org.candlepin.model.Branding;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Subscription;
+import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.service.SubscriptionServiceAdapter;
-import org.candlepin.service.impl.DefaultSubscriptionServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
@@ -32,18 +34,23 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.inject.Inject;
+
 /*
  * Yes, this is called SubscriptionCuratorTest, but it uses the
  * SubscriptionServiceAdapter. All the calls  that are in here on the
  * adapter are just thin wrappers around the curator.
  */
 public class SubscriptionCuratorTest extends DatabaseTestFixture {
+    @Inject private OwnerCurator ownerCurator;
+    @Inject private ProductCurator productCurator;
+    @Inject private SubscriptionCurator subCurator;
+    @Inject private SubscriptionServiceAdapter adapter;
 
     private Owner owner;
     private Product parentProduct;
     private Product childProduct;
     private Subscription s1;
-    private SubscriptionServiceAdapter adapter;
 
     @Before
     public void setUp() {
@@ -62,8 +69,6 @@ public class SubscriptionCuratorTest extends DatabaseTestFixture {
                 TestUtil.createDate(2010, 2, 1));
 
         subCurator.create(s1);
-
-        adapter = injector.getInstance(DefaultSubscriptionServiceAdapter.class);
     }
 
     @Test

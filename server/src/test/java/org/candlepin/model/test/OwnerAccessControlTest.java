@@ -21,26 +21,28 @@ import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.resource.OwnerResource;
 import org.candlepin.test.DatabaseTestFixture;
 
 import org.junit.Before;
 import org.junit.Test;
 
+import javax.inject.Inject;
+
 /**
  * OwnerAccessTest
  */
 public class OwnerAccessControlTest extends DatabaseTestFixture {
+    @Inject private OwnerCurator ownerCurator;
+    @Inject private OwnerResource resource;
 
-    private OwnerResource resource;
     private Owner owner;
 
     @Before
     @Override
     public void init() {
         super.init();
-
-        this.resource = this.injector.getInstance(OwnerResource.class);
         this.owner = createOwner();
     }
 

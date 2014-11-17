@@ -16,9 +16,7 @@ package org.candlepin.resteasy.interceptor;
 
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.NoAuthPrincipal;
@@ -39,6 +37,7 @@ import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Injector;
 import com.google.inject.Module;
 
 import org.jboss.resteasy.core.InjectorFactoryImpl;
@@ -53,13 +52,13 @@ import org.jboss.resteasy.spi.MethodInjector;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.xnap.commons.i18n.I18n;
 
 import java.lang.reflect.Method;
 import java.security.cert.X509Certificate;
 import java.util.Enumeration;
 
+import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.WebApplicationException;
 
@@ -67,7 +66,9 @@ import javax.ws.rs.WebApplicationException;
  * AuthInterceptorTest
  */
 public class AuthInterceptorTest extends DatabaseTestFixture {
-    private static Logger log = LoggerFactory.getLogger(AuthInterceptor.class);
+    @Inject private ConsumerCurator consumerCurator;
+    @Inject private I18n i18n;
+    @Inject private Injector injector;
 
     private AuthInterceptor interceptor;
     private Configuration config;

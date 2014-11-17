@@ -17,10 +17,13 @@ package org.candlepin.model.test;
 import static org.junit.Assert.*;
 
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
+import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.test.DatabaseTestFixture;
@@ -31,8 +34,13 @@ import org.junit.Test;
 
 import java.util.List;
 
+import javax.inject.Inject;
+
 
 public class PoolCuratorFilterTest extends DatabaseTestFixture {
+    @Inject private OwnerCurator ownerCurator;
+    @Inject private ProductCurator productCurator;
+    @Inject private PoolCurator poolCurator;
 
     private Owner owner;
     private PageRequest req = new PageRequest();

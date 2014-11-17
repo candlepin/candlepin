@@ -21,22 +21,17 @@ import org.candlepin.model.KeyPairCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.test.DatabaseTestFixture;
 
-import org.junit.Before;
 import org.junit.Test;
 
 import java.security.KeyPair;
+
+import javax.inject.Inject;
 
 /**
  * KeyPairCuratorTest
  */
 public class KeyPairCuratorTest extends DatabaseTestFixture {
-
-    private KeyPairCurator keyPairCurator;
-
-    @Before
-    public void setUp() {
-        keyPairCurator = injector.getInstance(KeyPairCurator.class);
-    }
+    @Inject private KeyPairCurator keyPairCurator;
 
     @Test
     public void testSameConsumerGetsSameKey() {

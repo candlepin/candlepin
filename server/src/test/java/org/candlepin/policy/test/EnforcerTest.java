@@ -14,20 +14,23 @@
  */
 package org.candlepin.policy.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
+import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
+import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.policy.ValidationResult;
@@ -47,6 +50,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.xnap.commons.i18n.I18n;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -59,7 +63,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.inject.Inject;
+
 public class EnforcerTest extends DatabaseTestFixture {
+    @Inject private OwnerCurator ownerCurator;
+    @Inject private ProductCurator productCurator;
+    @Inject private PoolCurator poolCurator;
+    @Inject private ConsumerCurator consumerCurator;
+    @Inject private ConsumerTypeCurator consumerTypeCurator;
+    @Inject private EntitlementCurator entitlementCurator;
+    @Inject private I18n i18n;
 
     @Mock private ProductServiceAdapter productAdapter;
     @Mock private RulesCurator rulesCurator;

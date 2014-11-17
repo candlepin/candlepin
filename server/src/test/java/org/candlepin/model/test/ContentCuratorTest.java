@@ -17,6 +17,7 @@ package org.candlepin.model.test;
 import static org.junit.Assert.*;
 
 import org.candlepin.model.Content;
+import org.candlepin.model.ContentCurator;
 import org.candlepin.test.DatabaseTestFixture;
 
 import org.junit.Before;
@@ -24,10 +25,13 @@ import org.junit.Test;
 
 import java.util.HashSet;
 
+import javax.inject.Inject;
+
 /**
  * ContentCuratorTest
  */
 public class ContentCuratorTest extends DatabaseTestFixture {
+    @Inject private ContentCurator contentCurator;
 
     private Content updates;
 

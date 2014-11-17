@@ -20,22 +20,17 @@ import org.candlepin.model.ConsumerType;
 import org.candlepin.resource.ConsumerTypeResource;
 import org.candlepin.test.DatabaseTestFixture;
 
-import org.junit.Before;
 import org.junit.Test;
 
 import java.util.List;
+
+import javax.inject.Inject;
 
 /**
  * ConsumerTypeResourceTest
  */
 public class ConsumerTypeResourceTest extends DatabaseTestFixture {
-
-    protected ConsumerTypeResource consumerTypeResource;
-
-    @Before
-    public void setUp() {
-        consumerTypeResource = injector.getInstance(ConsumerTypeResource.class);
-    }
+    @Inject private ConsumerTypeResource consumerTypeResource;
 
     @Test
     public void testCRUD() {

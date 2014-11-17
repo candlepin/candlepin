@@ -23,24 +23,35 @@ import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.permissions.OwnerPermission;
 import org.candlepin.auth.permissions.Permission;
+import org.candlepin.auth.permissions.PermissionFactory;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.config.CandlepinCommonTestConfig;
+import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.candlepin.model.CertificateSerialCurator;
+import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
+import org.candlepin.model.EntitlementCertificateCurator;
+import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.IdentityCertificateCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Role;
+import org.candlepin.model.RoleCurator;
 import org.candlepin.model.User;
+import org.candlepin.model.UserCurator;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.pki.PKIReader;
 import org.candlepin.pki.impl.BouncyCastlePKIReader;
@@ -66,6 +77,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.inject.Inject;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Response;
 
@@ -73,11 +85,26 @@ import javax.ws.rs.core.Response;
  * ConsumerResourceTest
  */
 public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
-
     private static final String METADATA_VALUE = "jsontestname";
     private static final String METADATA_NAME = "name";
     private static final String CONSUMER_NAME = "consumer_name";
     private static final String USER_NAME = "testing user";
+
+    @Inject private OwnerCurator ownerCurator;
+    @Inject private UserCurator userCurator;
+    @Inject private ProductCurator productCurator;
+    @Inject private ConsumerCurator consumerCurator;
+    @Inject private ConsumerTypeCurator consumerTypeCurator;
+    @Inject private EntitlementCurator entitlementCurator;
+    @Inject private EntitlementCertificateCurator entCertCurator;
+    @Inject private RoleCurator roleCurator;
+    @Inject private CertificateSerialCurator certSerialCurator;
+    @Inject private CandlepinPoolManager poolManager;
+    @Inject private PermissionFactory permFactory;
+    @Inject private ConsumerResource consumerResource;
+    @Inject private IdentityCertificateCurator idCurator;
+    @Inject private IdentityCertServiceAdapter icsa;
+
 
     private ConsumerType standardSystemType;
     private ConsumerType personType;
@@ -85,7 +112,6 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     private Product product;
     private Pool pool;
 
-    private ConsumerResource consumerResource;
     private Principal principal;
     private Owner owner;
     private Role ownerAdminRole;
@@ -101,8 +127,6 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
     @Before
     public void setUp() {
-        consumerResource = injector.getInstance(ConsumerResource.class);
-
         standardSystemType = consumerTypeCurator.create(new ConsumerType(
             "standard-system"));
 
@@ -268,8 +292,6 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         idCert.setId(null); // needs to be null to persist
         idCert.getSerial().setId(null);  // needs to be null to persist
         certSerialCurator.create(idCert.getSerial());
-        IdentityCertificateCurator idCurator =
-            injector.getInstance(IdentityCertificateCurator.class);
         idCurator.create(idCert);
         consumer.setIdCert(idCert);
 
@@ -407,8 +429,6 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         toSubmit.getFacts().put(METADATA_NAME, METADATA_VALUE);
         Consumer c = consumerCurator.create(toSubmit);
 
-        IdentityCertServiceAdapter icsa = injector
-            .getInstance(IdentityCertServiceAdapter.class);
         IdentityCertificate idCert = icsa.generateIdentityCert(c);
         c.setIdCert(idCert);
         setupPrincipal(new ConsumerPrincipal(c));

@@ -19,13 +19,17 @@ import static org.junit.Assert.*;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
-import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Content;
+import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
+import org.candlepin.model.ProductAttributeCurator;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Subscription;
+import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
@@ -45,11 +49,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.inject.Inject;
 import javax.persistence.PersistenceException;
 
 public class ProductCuratorTest extends DatabaseTestFixture {
-
-    private CandlepinCommonTestConfig config = null;
+    @Inject private OwnerCurator ownerCurator;
+    @Inject private ProductCurator productCurator;
+    @Inject private ProductAttributeCurator attributeCurator;
+    @Inject private SubscriptionCurator subCurator;
+    @Inject private ContentCurator contentCurator;
+    @Inject private Configuration config;
 
     private Product product;
     private Product derivedProduct;
@@ -60,7 +69,6 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
     @Before
     public void setUp() {
-        config = (CandlepinCommonTestConfig) injector.getInstance(Configuration.class);
         config.setProperty(ConfigProperties.INTEGER_ATTRIBUTES,
             "product.count, product.multiplier");
         config.setProperty(ConfigProperties.NON_NEG_INTEGER_ATTRIBUTES,

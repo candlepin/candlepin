@@ -20,6 +20,7 @@ import static org.mockito.Mockito.*;
 
 import org.candlepin.auth.Access;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Role;
 import org.candlepin.model.RoleCurator;
 import org.candlepin.model.User;
@@ -38,30 +39,32 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.inject.Inject;
+
 /**
  * DefaultUserServiceAdapterTest
  */
 public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
+    @Inject private OwnerCurator ownerCurator;
+    @Inject private RoleCurator roleCurator;
+    @Inject private UserCurator userCurator;
 
     private DefaultUserServiceAdapter service;
     private Owner owner;
 
     @Before
+    @Override
     public void init() {
         super.init();
-
-        this.owner = this.ownerCurator.create(new Owner("default_owner"));
-
-        UserCurator curator = this.injector.getInstance(UserCurator.class);
-        this.service = new DefaultUserServiceAdapter(curator, roleCurator);
+        this.owner = ownerCurator.create(new Owner("default_owner"));
+        this.service = new DefaultUserServiceAdapter(userCurator, roleCurator);
     }
 
     @Test
     public void validationPass() {
         User user = new User("test_user", "mypassword");
         this.service.createUser(user);
-        Assert.assertTrue(this.service.validateUser("test_user",
-                           "mypassword"));
+        Assert.assertTrue(this.service.validateUser("test_user", "mypassword"));
     }
 
     @Test

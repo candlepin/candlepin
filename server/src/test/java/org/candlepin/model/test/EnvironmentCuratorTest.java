@@ -18,7 +18,10 @@ import static org.junit.Assert.*;
 
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentContent;
+import org.candlepin.model.EnvironmentContentCurator;
+import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.test.DatabaseTestFixture;
 
 import org.junit.Before;
@@ -28,8 +31,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.inject.Inject;
+
 
 public class EnvironmentCuratorTest extends DatabaseTestFixture {
+    @Inject private OwnerCurator ownerCurator;
+    @Inject private EnvironmentContentCurator envContentCurator;
+    @Inject private EnvironmentCurator envCurator;
+
     private Owner owner;
     private Environment environment;
 

@@ -14,7 +14,7 @@
  */
 package org.candlepin.model.test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.model.Consumer;
@@ -29,12 +29,14 @@ import org.junit.Test;
 import java.util.Date;
 import java.util.List;
 
+import javax.inject.Inject;
+
 /**
  * DeletedConsumerCuratorTest
  */
 public class DeletedConsumerCuratorTest extends DatabaseTestFixture {
+    @Inject private DeletedConsumerCurator dcc;
 
-    private DeletedConsumerCurator dcc;
     private Date twoResultsDate;
     private Date oneResultDate;
 
@@ -42,8 +44,6 @@ public class DeletedConsumerCuratorTest extends DatabaseTestFixture {
     @Before
     public void init() {
         super.init();
-        dcc = injector.getInstance(DeletedConsumerCurator.class);
-
         DeletedConsumer dc = new DeletedConsumer("abcde", "10", "key", "name");
         dcc.create(dc);
         try {

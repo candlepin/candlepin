@@ -17,14 +17,18 @@ package org.candlepin.model.test;
 import static org.junit.Assert.*;
 
 import org.candlepin.model.Rules;
+import org.candlepin.model.RulesCurator;
 import org.candlepin.test.DatabaseTestFixture;
 
 import org.junit.Test;
+
+import javax.inject.Inject;
 
 /**
  * RulesCuratorTest
  */
 public class RulesCuratorTest extends DatabaseTestFixture {
+    @Inject private RulesCurator rulesCurator;
 
     @Test
     public void deleteRules() {

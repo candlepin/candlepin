@@ -24,11 +24,18 @@ import org.candlepin.auth.Principal;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
+import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
+import org.candlepin.model.StatisticCurator;
 import org.candlepin.resource.PoolResource;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.test.DatabaseTestFixture;
@@ -39,15 +46,26 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.xnap.commons.i18n.I18n;
 
 import java.util.Date;
 import java.util.List;
+
+import javax.inject.Inject;
 
 
 /**
  * PoolResourceTest
  */
 public class PoolResourceTest extends DatabaseTestFixture {
+    @Inject private OwnerCurator ownerCurator;
+    @Inject private ProductCurator productCurator;
+    @Inject private PoolCurator poolCurator;
+    @Inject private ConsumerCurator consumerCurator;
+    @Inject private ConsumerTypeCurator consumerTypeCurator;
+    @Inject private StatisticCurator statisticCurator;
+    @Inject private I18n i18n;
+    @Inject private CandlepinPoolManager poolManager;
 
     private Owner owner1;
     private Owner owner2;

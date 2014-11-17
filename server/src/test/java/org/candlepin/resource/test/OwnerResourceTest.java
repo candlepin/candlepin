@@ -31,11 +31,15 @@ import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.common.exceptions.IseException;
 import org.candlepin.common.exceptions.NotFoundException;
-import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
+import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.EventCurator;
 import org.candlepin.model.ExporterMetadata;
 import org.candlepin.model.ExporterMetadataCurator;
 import org.candlepin.model.ImportRecord;
@@ -44,9 +48,12 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.Pool;
+import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Release;
 import org.candlepin.model.Role;
+import org.candlepin.model.RoleCurator;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.model.UpstreamConsumer;
@@ -63,6 +70,7 @@ import org.candlepin.sync.ImporterException;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.ContentOverrideValidator;
+import org.candlepin.util.ServiceLevelValidator;
 
 import org.hamcrest.core.IsEqual;
 import org.jboss.resteasy.plugins.providers.atom.Entry;
@@ -75,6 +83,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.xnap.commons.i18n.I18n;
 
 import java.io.File;
 import java.io.IOException;
@@ -87,23 +96,36 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.inject.Inject;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MultivaluedMap;
 /**
  * OwnerResourceTest
  */
 public class OwnerResourceTest extends DatabaseTestFixture {
-
     private static final String OWNER_NAME = "Jar Jar Binks";
 
-    private OwnerResource ownerResource;
+    @Inject private OwnerCurator ownerCurator;
+    @Inject private ProductCurator productCurator;
+    @Inject private PoolCurator poolCurator;
+    @Inject private ConsumerCurator consumerCurator;
+    @Inject private ConsumerTypeCurator consumerTypeCurator;
+    @Inject private EntitlementCurator entitlementCurator;
+    @Inject private EventCurator eventCurator;
+    @Inject private SubscriptionCurator subCurator;
+    @Inject private RoleCurator roleCurator;
+    @Inject private CandlepinPoolManager poolManager;
+    @Inject private ServiceLevelValidator serviceLevelValidator;
+    @Inject private I18n i18n;
+    @Inject private OwnerResource ownerResource;
+    @Inject private EventFactory eventFactory;
+    @Inject private Configuration config;
+    @Inject private ImportRecordCurator importRecordCurator;
+    @Inject private ContentOverrideValidator contentOverrideValidator;
+
     private Owner owner;
     private List<Owner> owners;
     private Product product;
-    private EventFactory eventFactory;
-    private CandlepinCommonTestConfig config;
-    private ImportRecordCurator importRecordCurator;
-    private ContentOverrideValidator contentOverrideValidator;
 
     @SuppressWarnings("checkstyle:visibilitymodifier")
     @Rule
@@ -111,18 +133,11 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Before
     public void setUp() {
-        this.ownerResource = injector.getInstance(OwnerResource.class);
-
         owner = ownerCurator.create(new Owner(OWNER_NAME));
         owners = new ArrayList<Owner>();
         owners.add(owner);
         product = TestUtil.createProduct();
         productCurator.create(product);
-        eventFactory = injector.getInstance(EventFactory.class);
-        this.config = (CandlepinCommonTestConfig) injector
-            .getInstance(Configuration.class);
-        importRecordCurator = injector.getInstance(ImportRecordCurator.class);
-        contentOverrideValidator = injector.getInstance(ContentOverrideValidator.class);
     }
 
     @Test

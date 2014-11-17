@@ -14,26 +14,27 @@
  */
 package org.candlepin.model.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.NotFoundException;
-import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.DeletedConsumer;
 import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.Entitlement;
+import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.HypervisorId;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.util.Util;
@@ -48,10 +49,19 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import javax.inject.Inject;
+
 /**
  * ConsumerCuratorTest JUnit tests for Consumer database code
  */
 public class ConsumerCuratorTest extends DatabaseTestFixture {
+    @Inject private OwnerCurator ownerCurator;
+    @Inject private ProductCurator productCurator;
+    @Inject private ConsumerCurator consumerCurator;
+    @Inject private ConsumerTypeCurator consumerTypeCurator;
+    @Inject private EntitlementCurator entitlementCurator;
+    @Inject private Configuration config;
+    @Inject private DeletedConsumerCurator dcc;
 
     private Owner owner;
     private ConsumerType ct;
@@ -64,8 +74,6 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         ct = new ConsumerType(ConsumerTypeEnum.SYSTEM);
         ct = consumerTypeCurator.create(ct);
 
-        CandlepinCommonTestConfig config =
-            (CandlepinCommonTestConfig) injector.getInstance(Configuration.class);
         config.setProperty(ConfigProperties.INTEGER_FACTS,
             "system.count, system.multiplier");
         config.setProperty(ConfigProperties.NON_NEG_INTEGER_FACTS, "system.count");
@@ -337,7 +345,6 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         String cid = consumer.getUuid();
 
         consumerCurator.delete(consumer);
-        DeletedConsumerCurator dcc = injector.getInstance(DeletedConsumerCurator.class);
         assertEquals(1, dcc.countByConsumerUuid(cid));
         DeletedConsumer dc = dcc.findByConsumerUuid(cid);
 
@@ -357,7 +364,6 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         consumer = consumerCurator.create(consumer);
 
         consumerCurator.delete(consumer);
-        DeletedConsumerCurator dcc = injector.getInstance(DeletedConsumerCurator.class);
         DeletedConsumer dc = dcc.findByConsumerUuid("Doppelganger");
         Date deletionDate1 = dc.getUpdated();
 

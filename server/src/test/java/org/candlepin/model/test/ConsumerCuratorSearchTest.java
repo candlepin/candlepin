@@ -17,10 +17,12 @@ package org.candlepin.model.test;
 import static org.junit.Assert.assertEquals;
 
 import org.candlepin.common.config.Configuration;
-import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.Owner;
 import org.candlepin.paging.Page;
@@ -35,10 +37,16 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import javax.inject.Inject;
+
 /**
  * ConsumerCuratorSearchTest
  */
 public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
+    @Inject private OwnerCurator ownerCurator;
+    @Inject private ConsumerCurator consumerCurator;
+    @Inject private ConsumerTypeCurator consumerTypeCurator;
+    @Inject private Configuration config;
 
     private Owner owner;
     private ConsumerType ct;
@@ -50,8 +58,6 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         ct = new ConsumerType(ConsumerTypeEnum.SYSTEM);
         ct = consumerTypeCurator.create(ct);
 
-        CandlepinCommonTestConfig config =
-            (CandlepinCommonTestConfig) injector.getInstance(Configuration.class);
         config.setProperty(ConfigProperties.INTEGER_FACTS,
             "system.count, system.multiplier");
         config.setProperty(ConfigProperties.NON_NEG_INTEGER_FACTS, "system.count");

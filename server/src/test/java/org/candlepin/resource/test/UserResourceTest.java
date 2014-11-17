@@ -27,29 +27,26 @@ import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.model.Owner;
 import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.Role;
+import org.candlepin.model.RoleCurator;
 import org.candlepin.model.User;
 import org.candlepin.resource.UserResource;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
-import org.junit.Before;
 import org.junit.Test;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.inject.Inject;
+
 /**
  * UserResourceTest
  */
 public class UserResourceTest extends DatabaseTestFixture {
-
-    private UserResource userResource;
-
-    @Before
-    public void setUp() {
-        userResource = injector.getInstance(UserResource.class);
-    }
+    @Inject private RoleCurator roleCurator;
+    @Inject private UserResource userResource;
 
     @Test
     public void testLookupUser() {

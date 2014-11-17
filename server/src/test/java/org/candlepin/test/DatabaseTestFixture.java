@@ -22,69 +22,40 @@ import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.permissions.OwnerPermission;
 import org.candlepin.auth.permissions.Permission;
-import org.candlepin.auth.permissions.PermissionFactory;
 import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
 import org.candlepin.config.CandlepinCommonTestConfig;
-import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.guice.CandlepinSingletonScope;
 import org.candlepin.guice.TestPrincipalProviderSetter;
 import org.candlepin.junit.CandlepinLiquibaseResource;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Consumer;
-import org.candlepin.model.ConsumerContentOverrideCurator;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
-import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
-import org.candlepin.model.EntitlementCertificateCurator;
-import org.candlepin.model.EntitlementCurator;
-import org.candlepin.model.EnvironmentContentCurator;
-import org.candlepin.model.EnvironmentCurator;
-import org.candlepin.model.EventCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.PermissionBlueprint;
-import org.candlepin.model.PermissionBlueprintCurator;
 import org.candlepin.model.Pool;
-import org.candlepin.model.PoolAttributeCurator;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
-import org.candlepin.model.ProductAttributeCurator;
-import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.ProductPoolAttribute;
-import org.candlepin.model.ProductPoolAttributeCurator;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Role;
-import org.candlepin.model.RoleCurator;
-import org.candlepin.model.RulesCurator;
 import org.candlepin.model.SourceSubscription;
-import org.candlepin.model.StatisticCurator;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.SubscriptionCurator;
-import org.candlepin.model.SubscriptionsCertificateCurator;
-import org.candlepin.model.UeberCertificateGenerator;
-import org.candlepin.model.UserCurator;
 import org.candlepin.model.activationkeys.ActivationKey;
-import org.candlepin.model.activationkeys.ActivationKeyContentOverrideCurator;
-import org.candlepin.model.activationkeys.ActivationKeyCurator;
-import org.candlepin.service.EntitlementCertServiceAdapter;
-import org.candlepin.service.OwnerServiceAdapter;
-import org.candlepin.service.ProductServiceAdapter;
-import org.candlepin.service.SubscriptionServiceAdapter;
-import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.util.DateSource;
-import org.candlepin.util.ServiceLevelValidator;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.persist.PersistFilter;
-import com.google.inject.persist.UnitOfWork;
 import com.google.inject.util.Modules;
 
 import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
@@ -96,16 +67,15 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
-import org.xnap.commons.i18n.I18n;
 
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 
+import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * Test fixture for test classes requiring access to the database.
@@ -121,50 +91,20 @@ public class DatabaseTestFixture {
     @Rule
     public static CandlepinLiquibaseResource liquibase = new CandlepinLiquibaseResource();
 
-    protected EntityManagerFactory emf;
-    protected Injector injector;
+    @Inject private EntityManagerFactory emf;
+    @Inject private OwnerCurator ownerCurator;
+    @Inject private ProductCurator productCurator;
+    @Inject private PoolCurator poolCurator;
+    @Inject private ConsumerCurator consumerCurator;
+    @Inject private ConsumerTypeCurator consumerTypeCurator;
+    @Inject private SubscriptionCurator subCurator;
+    @Inject private CertificateSerialCurator certSerialCurator;
 
-    protected OwnerCurator ownerCurator;
-    protected UserCurator userCurator;
-    protected ProductCurator productCurator;
-    protected ProductCertificateCurator productCertificateCurator;
-    protected ProductServiceAdapter productAdapter;
-    protected SubscriptionServiceAdapter subAdapter;
-    protected OwnerServiceAdapter ownerAdapter;
-    protected ConsumerCurator consumerCurator;
-    protected ConsumerTypeCurator consumerTypeCurator;
-    protected ConsumerContentOverrideCurator consumerContentOverrideCurator;
-    protected SubscriptionsCertificateCurator certificateCurator;
-    protected PoolCurator poolCurator;
-    protected PoolAttributeCurator poolAttributeCurator;
-    protected ProductPoolAttributeCurator productPoolAttributeCurator;
-    protected DateSourceForTesting dateSource;
-    protected EntitlementCurator entitlementCurator;
-    protected EnvironmentContentCurator envContentCurator;
-    protected ProductAttributeCurator attributeCurator;
-    protected RulesCurator rulesCurator;
-    protected EventCurator eventCurator;
-    protected SubscriptionCurator subCurator;
-    protected ActivationKeyCurator activationKeyCurator;
-    protected ContentCurator contentCurator;
-    protected UnitOfWork unitOfWork;
-    protected HttpServletRequest httpServletRequest;
-    protected EntitlementCertificateCurator entCertCurator;
-    protected CertificateSerialCurator certSerialCurator;
-    protected PermissionBlueprintCurator permissionCurator;
-    protected RoleCurator roleCurator;
-    protected EnvironmentCurator envCurator;
-    protected I18n i18n;
+    private Injector injector;
+    private CandlepinSingletonScope cpSingletonScope;
+
     protected TestingInterceptor securityInterceptor;
-    protected EntitlementCertServiceAdapter entitlementCertService;
-    protected CandlepinPoolManager poolManager;
-    protected StatisticCurator statisticCurator;
-    protected UniqueIdGenerator uniqueIdGenerator;
-    protected UeberCertificateGenerator ueberCertGenerator;
-    protected CandlepinSingletonScope cpSingletonScope;
-    protected PermissionFactory permFactory;
-    protected ActivationKeyContentOverrideCurator activationKeyContentOverrideCurator;
-    protected ServiceLevelValidator serviceLevelValidator;
+    protected DateSourceForTesting dateSource;
 
     @Before
     public void init() {
@@ -183,68 +123,18 @@ public class DatabaseTestFixture {
         insertValidationEventListeners(injector);
 
         cpSingletonScope = injector.getInstance(CandlepinSingletonScope.class);
+
         // Because all candlepin operations are running in the CandlepinSingletonScope
         // we'll force the instance creations to be done inside the scope.
         // Exit the scope to make sure that it is clean before starting the test.
         cpSingletonScope.exit();
         cpSingletonScope.enter();
-
-        injector.getInstance(EntityManagerFactory.class);
-        emf = injector.getProvider(EntityManagerFactory.class).get();
-
-        ownerCurator = injector.getInstance(OwnerCurator.class);
-        userCurator = injector.getInstance(UserCurator.class);
-        productCurator = injector.getInstance(ProductCurator.class);
-        productCertificateCurator = injector
-            .getInstance(ProductCertificateCurator.class);
-        consumerCurator = injector.getInstance(ConsumerCurator.class);
-        eventCurator = injector.getInstance(EventCurator.class);
-        permissionCurator = injector.getInstance(PermissionBlueprintCurator.class);
-        roleCurator = injector.getInstance(RoleCurator.class);
-
-        consumerTypeCurator = injector.getInstance(ConsumerTypeCurator.class);
-        consumerContentOverrideCurator = injector.getInstance(
-            ConsumerContentOverrideCurator.class);
-        activationKeyContentOverrideCurator = injector.getInstance(
-            ActivationKeyContentOverrideCurator.class);
-        certificateCurator = injector
-            .getInstance(SubscriptionsCertificateCurator.class);
-        poolCurator = injector.getInstance(PoolCurator.class);
-        poolAttributeCurator = injector.getInstance(PoolAttributeCurator.class);
-        productPoolAttributeCurator = injector
-            .getInstance(ProductPoolAttributeCurator.class);
-        entitlementCurator = injector.getInstance(EntitlementCurator.class);
-        attributeCurator = injector.getInstance(ProductAttributeCurator.class);
-        rulesCurator = injector.getInstance(RulesCurator.class);
-        subCurator = injector.getInstance(SubscriptionCurator.class);
-        activationKeyCurator = injector.getInstance(ActivationKeyCurator.class);
-        contentCurator = injector.getInstance(ContentCurator.class);
-        envCurator = injector.getInstance(EnvironmentCurator.class);
-        envContentCurator = injector.getInstance(EnvironmentContentCurator.class);
-        unitOfWork = injector.getInstance(UnitOfWork.class);
-
-        productAdapter = injector.getInstance(ProductServiceAdapter.class);
-        subAdapter = injector.getInstance(SubscriptionServiceAdapter.class);
-        ownerAdapter = injector.getInstance(OwnerServiceAdapter.class);
-        entCertCurator = injector
-            .getInstance(EntitlementCertificateCurator.class);
-        certSerialCurator = injector
-            .getInstance(CertificateSerialCurator.class);
-        entitlementCertService = injector
-            .getInstance(EntitlementCertServiceAdapter.class);
-        poolManager = injector.getInstance(CandlepinPoolManager.class);
-        statisticCurator = injector.getInstance(StatisticCurator.class);
-        i18n = injector.getInstance(I18n.class);
-        uniqueIdGenerator = injector.getInstance(UniqueIdGenerator.class);
-        ueberCertGenerator = injector.getInstance(UeberCertificateGenerator.class);
-        permFactory = injector.getInstance(PermissionFactory.class);
-
+        injector.injectMembers(this);
         securityInterceptor = testingModule.securityInterceptor();
 
-        dateSource = (DateSourceForTesting) injector
-            .getInstance(DateSource.class);
+        dateSource = (DateSourceForTesting) injector.getInstance(DateSource.class);
         dateSource.currentDate(TestDateUtil.date(2010, 1, 1));
-        serviceLevelValidator = injector.getInstance(ServiceLevelValidator.class);
+
     }
 
     @After
@@ -420,5 +310,4 @@ public class DatabaseTestFixture {
         registry.getEventListenerGroup(EventType.PRE_UPDATE).appendListener(listenerProvider.get());
         registry.getEventListenerGroup(EventType.PRE_DELETE).appendListener(listenerProvider.get());
     }
-
 }

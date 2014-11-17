@@ -14,14 +14,18 @@
  */
 package org.candlepin.policy.test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
+import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
@@ -33,6 +37,8 @@ import org.mockito.runners.MockitoJUnitRunner;
 import java.util.Date;
 import java.util.List;
 
+import javax.inject.Inject;
+
 /*
  * Test the Javascript pool criteria. This works because we configure an enforcer for the
  * unit tests that by default, will always return success. As such if we see pools getting
@@ -40,6 +46,10 @@ import java.util.List;
  */
 @RunWith(MockitoJUnitRunner.class)
 public class CriteriaRulesTest extends DatabaseTestFixture {
+    @Inject private ProductCurator productCurator;
+    @Inject private PoolCurator poolCurator;
+    @Inject private ConsumerCurator consumerCurator;
+    @Inject private ConsumerTypeCurator consumerTypeCurator;
 
     private Owner owner;
     private Consumer consumer;

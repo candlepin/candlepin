@@ -17,12 +17,18 @@ package org.candlepin.model.test;
 import static org.junit.Assert.*;
 
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
+import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Environment;
+import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
+import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.SourceStack;
 import org.candlepin.paging.Page;
@@ -38,10 +44,19 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import javax.inject.Inject;
+
 /**
  * EntitlementCuratorTest
  */
 public class EntitlementCuratorTest extends DatabaseTestFixture {
+    @Inject private OwnerCurator ownerCurator;
+    @Inject private ProductCurator productCurator;
+    @Inject private PoolCurator poolCurator;
+    @Inject private ConsumerCurator consumerCurator;
+    @Inject private EntitlementCurator entitlementCurator;
+    @Inject private EnvironmentCurator envCurator;
+
     private Entitlement secondEntitlement;
     private Entitlement firstEntitlement;
     private EntitlementCertificate firstCertificate;

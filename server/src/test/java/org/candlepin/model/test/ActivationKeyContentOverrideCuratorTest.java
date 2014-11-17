@@ -17,10 +17,14 @@ package org.candlepin.model.test;
 import static org.junit.Assert.*;
 
 import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.Owner;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyContentOverride;
+import org.candlepin.model.activationkeys.ActivationKeyContentOverrideCurator;
+import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.test.DatabaseTestFixture;
 
 import org.junit.Before;
@@ -28,12 +32,19 @@ import org.junit.Test;
 
 import java.util.List;
 
+import javax.inject.Inject;
+
 /**
  * ActivationKeyContentOverrideCuratorTest
  *
  * Slightly modified from ConsumerContentOverrideCuratorTest
  */
 public class ActivationKeyContentOverrideCuratorTest extends DatabaseTestFixture {
+    @Inject private OwnerCurator ownerCurator;
+    @Inject private ConsumerTypeCurator consumerTypeCurator;
+    @Inject private ActivationKeyCurator activationKeyCurator;
+    @Inject private ActivationKeyContentOverrideCurator activationKeyContentOverrideCurator;
+
     private Owner owner;
     private ConsumerType ct;
     private ActivationKey key;

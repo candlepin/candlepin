@@ -17,6 +17,7 @@ package org.candlepin.model.test;
 import static org.junit.Assert.*;
 
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.test.DatabaseTestFixture;
@@ -29,6 +30,8 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.inject.Inject;
 
 /**
  * This class is used to test the pagination capabilities of the AbstractHibernateCurator.
@@ -43,6 +46,7 @@ import java.util.List;
  * to reuse an entity object that Hibernate will pick up automatically.
  */
 public class CuratorPaginationTest extends DatabaseTestFixture {
+    @Inject private OwnerCurator ownerCurator;
 
     private Session session;
 

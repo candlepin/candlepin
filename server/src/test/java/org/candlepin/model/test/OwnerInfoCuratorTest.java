@@ -14,21 +14,27 @@
  */
 package org.candlepin.model.test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.permissions.Permission;
 import org.candlepin.auth.permissions.UsernameConsumersPermission;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
+import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerInfo;
 import org.candlepin.model.OwnerInfoCurator;
 import org.candlepin.model.Pool;
+import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.User;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.test.DatabaseTestFixture;
@@ -43,18 +49,25 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import javax.inject.Inject;
+
 /**
  * OwnerInfoCuratorTest
  */
 public class OwnerInfoCuratorTest extends DatabaseTestFixture {
+    @Inject private OwnerCurator ownerCurator;
+    @Inject private ProductCurator productCurator;
+    @Inject private PoolCurator poolCurator;
+    @Inject private ConsumerCurator consumerCurator;
+    @Inject private ConsumerTypeCurator consumerTypeCurator;
+    @Inject private EntitlementCurator entitlementCurator;
+    @Inject private OwnerInfoCurator ownerInfoCurator;
 
     private Owner owner;
     private Pool pool1;
-    private OwnerInfoCurator ownerInfoCurator;
 
     @Before
     public void setUp() {
-        ownerInfoCurator = injector.getInstance(OwnerInfoCurator.class);
         owner = createOwner();
         ownerCurator.create(owner);
 

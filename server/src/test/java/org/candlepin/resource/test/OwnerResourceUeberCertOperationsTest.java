@@ -19,39 +19,66 @@ import static org.junit.Assert.*;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.permissions.Permission;
+import org.candlepin.auth.permissions.PermissionFactory;
 import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.EntitlementCertificate;
+import org.candlepin.model.EntitlementCertificateCurator;
+import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Role;
+import org.candlepin.model.RoleCurator;
+import org.candlepin.model.UeberCertificateGenerator;
 import org.candlepin.model.User;
 import org.candlepin.resource.OwnerResource;
+import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.util.ContentOverrideValidator;
+import org.candlepin.util.ServiceLevelValidator;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
+
+import javax.inject.Inject;
 
 /**
  * OwnerResourceUeberCertOperationsTest
  */
 public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
-
-    /**
-     *
-     */
     private static final String UEBER_PRODUCT = Product.UEBER_PRODUCT_POSTFIX;
     private static final String OWNER_NAME = "Jar_Jar_Binks";
+
+    @Inject private OwnerCurator ownerCurator;
+    @Inject private ProductCurator productCurator;
+    @Inject private PoolCurator poolCurator;
+    @Inject private SubscriptionServiceAdapter subAdapter;
+    @Inject private ConsumerCurator consumerCurator;
+    @Inject private ConsumerTypeCurator consumerTypeCurator;
+    @Inject private EntitlementCurator entitlementCurator;
+    @Inject private RoleCurator roleCurator;
+    @Inject private EntitlementCertificateCurator entCertCurator;
+    @Inject private CandlepinPoolManager poolManager;
+    @Inject private UeberCertificateGenerator ueberCertGenerator;
+    @Inject private PermissionFactory permFactory;
+    @Inject private ServiceLevelValidator serviceLevelValidator;
+    @Inject private I18n i18n;
+    @Inject private ContentOverrideValidator contentOverrideValidator;
 
     private Owner owner;
     private OwnerResource or;
 
     private Principal principal;
-    private ContentOverrideValidator contentOverrideValidator;
 
     @Before
     public void setUp() {
@@ -68,7 +95,6 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
 
         ConsumerType ueberCertType = new ConsumerType(ConsumerTypeEnum.UEBER_CERT);
         consumerTypeCurator.create(ueberCertType);
-        contentOverrideValidator = injector.getInstance(ContentOverrideValidator.class);
 
         or = new OwnerResource(ownerCurator,
             null, null, consumerCurator, null, i18n, null, null, null,

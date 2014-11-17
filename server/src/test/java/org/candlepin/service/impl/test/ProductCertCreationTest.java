@@ -18,6 +18,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
 import org.candlepin.pki.PKIReader;
 import org.candlepin.pki.impl.BouncyCastlePKIReader;
+import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
 
 import com.google.inject.AbstractModule;
@@ -26,10 +27,13 @@ import com.google.inject.Module;
 import org.junit.Assert;
 import org.junit.Test;
 
+import javax.inject.Inject;
+
 /**
  * DefaultProductServiceAdapterTest
  */
 public class ProductCertCreationTest extends DatabaseTestFixture {
+    @Inject private ProductServiceAdapter productAdapter;
 
     @Override
     protected Module getGuiceOverrideModule() {

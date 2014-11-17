@@ -14,7 +14,7 @@
  */
 package org.candlepin.sync;
 
-import static org.mockito.Matchers.*;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.audit.EventSink;
@@ -32,18 +32,21 @@ import org.mockito.runners.MockitoJUnitRunner;
 import java.io.IOException;
 import java.io.StringReader;
 
+import javax.inject.Inject;
+
 /**
  * RulesImporterTest
  */
 @RunWith(MockitoJUnitRunner.class)
 public class RulesImporterTest extends DatabaseTestFixture {
+    @Inject private EventSink sink;
 
     @Mock private RulesCurator curator;
     private RulesImporter importer;
 
     @Before
     public void setUp() {
-        importer = new RulesImporter(curator, injector.getInstance(EventSink.class));
+        importer = new RulesImporter(curator, sink);
     }
 
     @Test

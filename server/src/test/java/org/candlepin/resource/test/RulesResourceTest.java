@@ -14,7 +14,7 @@
  */
 package org.candlepin.resource.test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
@@ -23,20 +23,16 @@ import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
 import org.apache.commons.codec.binary.Base64;
-import org.junit.Before;
 import org.junit.Test;
+
+import javax.inject.Inject;
 
 /**
  * RulesResourceTest
  */
 public class RulesResourceTest extends DatabaseTestFixture {
-
-    private RulesResource rulesResource;
-
-    @Before
-    public void setUp() {
-        rulesResource = injector.getInstance(RulesResource.class);
-    }
+    @Inject private RulesCurator rulesCurator;
+    @Inject private RulesResource rulesResource;
 
     @Test
     public void testUpload() {

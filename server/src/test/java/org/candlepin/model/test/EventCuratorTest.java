@@ -22,8 +22,12 @@ import org.candlepin.audit.EventBuilder;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.auth.Access;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.EventCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.test.DatabaseTestFixture;
 
@@ -33,11 +37,17 @@ import org.junit.Test;
 import java.util.Date;
 import java.util.List;
 
+import javax.inject.Inject;
+
 
 public class EventCuratorTest extends DatabaseTestFixture {
+    @Inject private OwnerCurator ownerCurator;
+    @Inject private ConsumerCurator consumerCurator;
+    @Inject private ConsumerTypeCurator consumerTypeCurator;
+    @Inject private EventCurator eventCurator;
+    @Inject private EventFactory eventFactory;
 
     private Owner owner;
-
 
     @Before
     public void setUp() {
@@ -53,7 +63,6 @@ public class EventCuratorTest extends DatabaseTestFixture {
         consumerCurator.create(newConsumer);
 
         setupPrincipal(owner, Access.ALL);
-        EventFactory eventFactory = injector.getInstance(EventFactory.class);
         Event event = eventFactory.consumerCreated(newConsumer);
         eventCurator.create(event);
 
@@ -72,7 +81,6 @@ public class EventCuratorTest extends DatabaseTestFixture {
         consumerCurator.create(newConsumer);
 
         setupPrincipal(owner, Access.ALL);
-        EventFactory eventFactory = injector.getInstance(EventFactory.class);
 
         // Force all events to have exact same timestamp:
         Date forcedDate = new Date();

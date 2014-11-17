@@ -16,20 +16,28 @@ package org.candlepin.model.test;
 
 import static org.junit.Assert.*;
 
+import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.DerivedProvidedProduct;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Pool.PoolType;
+import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.PoolAttribute;
+import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.ProductPoolAttribute;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.SourceStack;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.Subscription;
 import org.candlepin.policy.EntitlementRefusedException;
+import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
@@ -42,7 +50,17 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.inject.Inject;
+
 public class PoolTest extends DatabaseTestFixture {
+    @Inject private OwnerCurator ownerCurator;
+    @Inject private ProductCurator productCurator;
+    @Inject private PoolCurator poolCurator;
+    @Inject private SubscriptionServiceAdapter subAdapter;
+    @Inject private ConsumerCurator consumerCurator;
+    @Inject private ConsumerTypeCurator consumerTypeCurator;
+    @Inject private EntitlementCurator entitlementCurator;
+    @Inject private CandlepinPoolManager poolManager;
 
     private Pool pool;
     private Product prod1;

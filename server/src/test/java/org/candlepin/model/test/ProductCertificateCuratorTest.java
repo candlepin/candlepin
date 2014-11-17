@@ -18,19 +18,26 @@ import static org.junit.Assert.*;
 
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
+import org.candlepin.model.ProductCertificateCurator;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.test.DatabaseTestFixture;
 
 import org.junit.Before;
 import org.junit.Test;
 
+import javax.inject.Inject;
+
 /**
  * ProductCertificateCuratorTest
  */
 public class ProductCertificateCuratorTest extends DatabaseTestFixture {
+    @Inject private ProductCurator productCurator;
+    @Inject private ProductCertificateCurator productCertificateCurator;
 
     private Product product;
 
     @Before
+    @Override
     public void init() {
         super.init();
 

@@ -17,20 +17,31 @@ package org.candlepin.model.test;
 import static org.junit.Assert.*;
 
 import org.candlepin.model.Content;
+import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentContent;
+import org.candlepin.model.EnvironmentContentCurator;
+import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
 import org.junit.Before;
 import org.junit.Test;
 
+import javax.inject.Inject;
 import javax.persistence.PersistenceException;
 
 
 public class EnvironmentContentCuratorTest extends DatabaseTestFixture {
+    @Inject private OwnerCurator ownerCurator;
+    @Inject private ProductCurator productCurator;
+    @Inject private EnvironmentContentCurator envContentCurator;
+    @Inject private EnvironmentCurator envCurator;
+    @Inject private ContentCurator contentCurator;
 
     private Owner owner;
     private Environment e;

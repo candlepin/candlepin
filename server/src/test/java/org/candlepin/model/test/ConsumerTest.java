@@ -17,20 +17,25 @@ package org.candlepin.model.test;
 import static org.junit.Assert.*;
 
 import org.candlepin.auth.ConsumerPrincipal;
-import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Role;
+import org.candlepin.model.RoleCurator;
 import org.candlepin.model.User;
+import org.candlepin.model.UserCurator;
 import org.candlepin.resource.ConsumerResource;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
@@ -42,9 +47,18 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.inject.Inject;
 import javax.persistence.PersistenceException;
 
 public class ConsumerTest extends DatabaseTestFixture {
+    @Inject private OwnerCurator ownerCurator;
+    @Inject private UserCurator userCurator;
+    @Inject private ProductCurator productCurator;
+    @Inject private ConsumerCurator consumerCurator;
+    @Inject private ConsumerTypeCurator consumerTypeCurator;
+    @Inject private ConsumerResource consumerResource;
+    @Inject private RoleCurator roleCurator;
+    @Inject private Configuration config;
 
     private Owner owner;
     private Product rhel;
@@ -143,8 +157,6 @@ public class ConsumerTest extends DatabaseTestFixture {
     @Test
     public void ensureUpdatedDateChangesOnUpdate() throws Exception {
         Date beforeUpdateDate = consumer.getUpdated();
-
-        ConsumerResource consumerResource = injector.getInstance(ConsumerResource.class);
 
         // Create a new consumer, can't re-use reference to the old:
         Consumer newConsumer = new Consumer();
@@ -428,8 +440,6 @@ public class ConsumerTest extends DatabaseTestFixture {
 
     @Test
     public void testConsumerFactsFilter() {
-        CandlepinCommonTestConfig config =
-            (CandlepinCommonTestConfig) injector.getInstance(Configuration.class);
         String oldValue = config.getString(ConfigProperties.CONSUMER_FACTS_MATCHER);
         config.setProperty(ConfigProperties.CONSUMER_FACTS_MATCHER, "^goodkey.*");
 

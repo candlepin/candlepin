@@ -19,9 +19,12 @@ import static org.junit.Assert.*;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.GuestIdCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.test.DatabaseTestFixture;
 
 import org.junit.Before;
@@ -29,12 +32,16 @@ import org.junit.Test;
 
 import java.util.List;
 
+import javax.inject.Inject;
+
 /**
  * GuestIdCuratorTest
  */
 public class GuestIdCuratorTest extends DatabaseTestFixture {
-
-    private GuestIdCurator curator;
+    @Inject private OwnerCurator ownerCurator;
+    @Inject private ConsumerCurator consumerCurator;
+    @Inject private ConsumerTypeCurator consumerTypeCurator;
+    @Inject private GuestIdCurator curator;
 
     private Owner owner;
     private ConsumerType ct;
@@ -43,7 +50,6 @@ public class GuestIdCuratorTest extends DatabaseTestFixture {
     @Override
     public void init() {
         super.init();
-        this.curator = this.injector.getInstance(GuestIdCurator.class);
         owner = new Owner("test-owner", "Test Owner");
         owner = ownerCurator.create(owner);
         ct = new ConsumerType(ConsumerTypeEnum.SYSTEM);

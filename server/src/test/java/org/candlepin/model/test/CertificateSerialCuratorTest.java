@@ -18,12 +18,15 @@ import static org.candlepin.util.Util.*;
 import static org.junit.Assert.*;
 
 import org.candlepin.model.CertificateSerial;
+import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
+import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
@@ -37,10 +40,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.inject.Inject;
+
 /**
  * CertificateSerialCuratorTest
  */
 public class CertificateSerialCuratorTest extends DatabaseTestFixture {
+    @Inject private ProductCurator productCurator;
+    @Inject private EntitlementCurator entitlementCurator;
+    @Inject private CertificateSerialCurator certSerialCurator;
 
     private class CertSerialBuilder {
         private Date dt = new Date();

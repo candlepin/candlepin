@@ -18,7 +18,11 @@ import static org.junit.Assert.*;
 
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerContentOverride;
+import org.candlepin.model.ConsumerContentOverrideCurator;
+import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.Owner;
 import org.candlepin.test.DatabaseTestFixture;
@@ -28,10 +32,16 @@ import org.junit.Test;
 
 import java.util.List;
 
+import javax.inject.Inject;
+
 /**
  * ConsumerContentOverrideCuratorTest
  */
 public class ConsumerContentOverrideCuratorTest extends DatabaseTestFixture {
+    @Inject private OwnerCurator ownerCurator;
+    @Inject private ConsumerCurator consumerCurator;
+    @Inject private ConsumerTypeCurator consumerTypeCurator;
+    @Inject private ConsumerContentOverrideCurator consumerContentOverrideCurator;
 
     private Owner owner;
     private ConsumerType ct;

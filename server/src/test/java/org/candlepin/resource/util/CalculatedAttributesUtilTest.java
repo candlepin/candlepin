@@ -20,9 +20,11 @@ import static org.mockito.Mockito.*;
 
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.policy.js.pooltype.PoolComplianceType;
 import org.candlepin.policy.js.pooltype.PoolComplianceTypeRules;
 import org.candlepin.policy.js.quantity.QuantityRules;
@@ -41,10 +43,14 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.Map;
 
+import javax.inject.Inject;
+
 /**
  * CalculatedAttributesUtilTest
  */
 public class CalculatedAttributesUtilTest extends DatabaseTestFixture {
+    @Inject private OwnerCurator ownerCurator;
+    @Inject private ProductCurator productCurator;
 
     private CalculatedAttributesUtil attrUtil;
     private Owner owner1;

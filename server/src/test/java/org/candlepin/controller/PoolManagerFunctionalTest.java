@@ -14,26 +14,34 @@
  */
 package org.candlepin.controller;
 
-import static org.apache.commons.collections.CollectionUtils.*;
-import static org.apache.commons.collections.TransformerUtils.*;
+import static org.apache.commons.collections.CollectionUtils.containsAny;
+import static org.apache.commons.collections.TransformerUtils.invokerTransformer;
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.reset;
 
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventSink;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Content;
+import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
+import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
+import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Subscription;
+import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
@@ -41,6 +49,7 @@ import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
 import org.candlepin.resource.dto.AutobindData;
+import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
@@ -59,15 +68,26 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import javax.inject.Inject;
 import javax.persistence.EntityNotFoundException;
 
 public class PoolManagerFunctionalTest extends DatabaseTestFixture {
-
     public static final String PRODUCT_MONITORING = "monitoring";
     public static final String PRODUCT_PROVISIONING = "provisioning";
     public static final String PRODUCT_VIRT_HOST = "virtualization_host";
     public static final String PRODUCT_VIRT_HOST_PLATFORM = "virtualization_host_platform";
     public static final String PRODUCT_VIRT_GUEST = "virt_guest";
+
+    @Inject private OwnerCurator ownerCurator;
+    @Inject private ProductCurator productCurator;
+    @Inject private ProductServiceAdapter productAdapter;
+    @Inject private PoolCurator poolCurator;
+    @Inject private ConsumerCurator consumerCurator;
+    @Inject private ConsumerTypeCurator consumerTypeCurator;
+    @Inject private EntitlementCurator entitlementCurator;
+    @Inject private SubscriptionCurator subCurator;
+    @Inject private ContentCurator contentCurator;
+    @Inject private CandlepinPoolManager poolManager;
 
     private Product virtHost;
     private Product virtHostPlatform;

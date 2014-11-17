@@ -21,7 +21,9 @@ import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
 import org.candlepin.model.Owner;
 import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.Role;
+import org.candlepin.model.RoleCurator;
 import org.candlepin.model.User;
+import org.candlepin.model.UserCurator;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
@@ -31,7 +33,11 @@ import org.junit.Test;
 
 import java.util.List;
 
+import javax.inject.Inject;
+
 public class RoleTest extends DatabaseTestFixture {
+    @Inject private UserCurator userCurator;
+    @Inject private RoleCurator roleCurator;
 
     private Owner owner;
 

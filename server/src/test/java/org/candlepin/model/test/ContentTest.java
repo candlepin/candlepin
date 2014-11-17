@@ -19,17 +19,21 @@ import static org.hamcrest.collection.IsCollectionContaining.*;
 import static org.junit.Assert.*;
 
 import org.candlepin.model.Content;
+import org.candlepin.model.ContentCurator;
 import org.candlepin.test.DatabaseTestFixture;
 
 import org.junit.Test;
 
 import java.util.HashSet;
 
+import javax.inject.Inject;
+
 
 /**
  * ContentTest
  */
 public class ContentTest extends DatabaseTestFixture {
+    @Inject private ContentCurator contentCurator;
 
     @Test
     public void testContent() {

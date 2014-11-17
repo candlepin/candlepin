@@ -16,14 +16,20 @@ package org.candlepin.resource.test;
 
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
+import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
 import org.candlepin.resource.ConsumerResource;
 import org.candlepin.test.DatabaseTestFixture;
+import org.candlepin.test.DateSourceForTesting;
 import org.candlepin.test.TestDateUtil;
 import org.candlepin.test.TestUtil;
 
@@ -33,22 +39,29 @@ import com.google.inject.Module;
 import org.junit.Before;
 import org.junit.Test;
 
+import javax.inject.Inject;
+
 /**
  * ConsumerResourceEntitlementRulesTest
  */
 public class ConsumerResourceEntitlementRulesTest extends DatabaseTestFixture {
+    @Inject private OwnerCurator ownerCurator;
+    @Inject private ProductCurator productCurator;
+    @Inject private PoolCurator poolCurator;
+    @Inject private ConsumerCurator consumerCurator;
+    @Inject private ConsumerTypeCurator consumerTypeCurator;
+    @Inject private DateSourceForTesting dateSource;
+    @Inject private ConsumerResource consumerResource;
+
     private ConsumerType standardSystemType;
     private Consumer consumer;
     private Product product;
     private Pool pool;
 
-    private ConsumerResource consumerResource;
     private Owner owner;
 
     @Before
     public void setUp() {
-        consumerResource = injector.getInstance(ConsumerResource.class);
-
         standardSystemType = consumerTypeCurator.create(
                 new ConsumerType("standard-system"));
         owner = ownerCurator.create(new Owner("test-owner"));

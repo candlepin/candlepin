@@ -15,7 +15,9 @@
 package org.candlepin.model.test;
 
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.User;
+import org.candlepin.model.UserCurator;
 import org.candlepin.test.DatabaseTestFixture;
 
 import org.junit.Test;
@@ -23,7 +25,11 @@ import org.junit.Test;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.inject.Inject;
+
 public class MembershipTest extends DatabaseTestFixture {
+    @Inject private OwnerCurator ownerCurator;
+    @Inject private UserCurator userCurator;
 
     @Test
     public void testCreate() throws Exception {

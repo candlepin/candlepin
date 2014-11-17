@@ -18,7 +18,9 @@ package org.candlepin.model.test;
 import static org.junit.Assert.*;
 
 import org.candlepin.model.CertificateSerial;
+import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.SubscriptionsCertificate;
+import org.candlepin.model.SubscriptionsCertificateCurator;
 import org.candlepin.test.DatabaseTestFixture;
 
 import org.junit.Test;
@@ -26,7 +28,11 @@ import org.junit.Test;
 import java.util.Date;
 import java.util.List;
 
+import javax.inject.Inject;
+
 public class CertificateTest extends DatabaseTestFixture {
+    @Inject private SubscriptionsCertificateCurator certificateCurator;
+    @Inject private CertificateSerialCurator certSerialCurator;
 
     protected SubscriptionsCertificate createSubCert(String key, String cert) {
         return createSubCert(key, cert, new Date());

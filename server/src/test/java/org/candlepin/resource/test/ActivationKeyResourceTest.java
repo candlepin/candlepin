@@ -15,7 +15,7 @@
 package org.candlepin.resource.test;
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.common.exceptions.BadRequestException;
@@ -23,6 +23,7 @@ import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Release;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
@@ -31,17 +32,29 @@ import org.candlepin.policy.js.activationkey.ActivationKeyRules;
 import org.candlepin.resource.ActivationKeyResource;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
+import org.candlepin.util.ServiceLevelValidator;
+
+import com.google.inject.Injector;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.xnap.commons.i18n.I18n;
 
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
+
+import javax.inject.Inject;
 /**
  * ActivationKeyResourceTest
  */
 public class ActivationKeyResourceTest extends DatabaseTestFixture {
+    @Inject private ProductCurator productCurator;
+    @Inject private ActivationKeyCurator activationKeyCurator;
+    @Inject private ServiceLevelValidator serviceLevelValidator;
+    @Inject private I18n i18n;
+    @Inject private Injector injector;
+
     protected ActivationKeyResource activationKeyResource;
     protected ActivationKeyRules activationKeyRules;
     private static int poolid = 0;

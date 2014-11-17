@@ -14,17 +14,22 @@
  */
 package org.candlepin.pinsetter.tasks;
 
+import org.candlepin.model.StatisticCurator;
 import org.candlepin.test.DatabaseTestFixture;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.quartz.JobExecutionException;
 
+import javax.inject.Inject;
+
 /**
  * StatisticHistoryTaskTest
  */
 
 public class StatisticHistoryTaskTest extends DatabaseTestFixture {
+    @Inject private StatisticCurator statisticCurator;
+
     private StatisticHistoryTask task;
 
     @Before

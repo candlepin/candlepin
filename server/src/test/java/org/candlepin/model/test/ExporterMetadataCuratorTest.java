@@ -21,22 +21,17 @@ import org.candlepin.model.ExporterMetadataCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.test.DatabaseTestFixture;
 
-import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Date;
+
+import javax.inject.Inject;
 
 /**
  * ExporterMetadataCuratorTest
  */
 public class ExporterMetadataCuratorTest extends DatabaseTestFixture {
-
-    private ExporterMetadataCurator emc;
-
-    @Before
-    public void setUp() {
-        emc = injector.getInstance(ExporterMetadataCurator.class);
-    }
+    @Inject private ExporterMetadataCurator emc;
 
     @Test
     public void testCreation() {
