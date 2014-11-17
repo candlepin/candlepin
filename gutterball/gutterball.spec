@@ -25,7 +25,7 @@
 %endif
 
 Name: gutterball
-Version: 1.0.0
+Version: 1.0.1
 Release: 1%{?dist}
 Summary: Data aggregator for Candlepin
 
@@ -174,5 +174,8 @@ rm -rf %{buildroot}
 %{_localstatedir}/log/%{name}
 
 %changelog
+* Mon Nov 17 2014 Alex Wood <awood@redhat.com> 1.0.1-1
+- Initial packaging.
+
 * Tue Jun 03 2014 Alex Wood <awood@redhat.com> 1.0.0-1
 - Initial packaging
