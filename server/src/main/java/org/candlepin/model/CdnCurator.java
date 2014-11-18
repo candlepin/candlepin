@@ -24,7 +24,7 @@ import java.util.List;
 public class CdnCurator
     extends AbstractHibernateCurator<Cdn> {
 
-    protected CdnCurator() {
+    public CdnCurator() {
         super(Cdn.class);
     }
 

@@ -19,7 +19,7 @@ package org.candlepin.model;
  */
 public class PoolAttributeCurator extends AbstractHibernateCurator<PoolAttribute> {
 
-    protected PoolAttributeCurator() {
+    public PoolAttributeCurator() {
         super(PoolAttribute.class);
     }
 

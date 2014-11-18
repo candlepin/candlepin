@@ -24,7 +24,7 @@ import org.hibernate.criterion.Restrictions;
  */
 public class UserCurator extends AbstractHibernateCurator<User> {
 
-    protected UserCurator() {
+    public UserCurator() {
         super(User.class);
     }
 

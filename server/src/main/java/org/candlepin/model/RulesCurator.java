@@ -44,7 +44,7 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
      */
     public static final int RULES_API_VERSION = 5;
 
-    protected RulesCurator() {
+    public RulesCurator() {
         super(Rules.class);
     }
 

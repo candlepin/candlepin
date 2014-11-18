@@ -24,7 +24,7 @@ import java.util.List;
 public class PermissionBlueprintCurator extends
     AbstractHibernateCurator<PermissionBlueprint> {
 
-    protected PermissionBlueprintCurator() {
+    public PermissionBlueprintCurator() {
         super(PermissionBlueprint.class);
     }
 

@@ -31,7 +31,7 @@ public class SubscriptionCurator extends AbstractHibernateCurator<Subscription> 
 
     private static Logger log = LoggerFactory.getLogger(SubscriptionCurator.class);
 
-    protected SubscriptionCurator() {
+    public SubscriptionCurator() {
         super(Subscription.class);
     }
 

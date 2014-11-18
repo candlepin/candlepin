@@ -19,7 +19,7 @@ package org.candlepin.model;
  */
 public class ProductAttributeCurator extends AbstractHibernateCurator<ProductAttribute> {
 
-    protected ProductAttributeCurator() {
+    public ProductAttributeCurator() {
         super(ProductAttribute.class);
     }
 

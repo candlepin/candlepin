@@ -25,7 +25,7 @@ import java.util.List;
  */
 public class ImportRecordCurator extends AbstractHibernateCurator<ImportRecord> {
 
-    protected ImportRecordCurator() {
+    public ImportRecordCurator() {
         super(ImportRecord.class);
     }
 

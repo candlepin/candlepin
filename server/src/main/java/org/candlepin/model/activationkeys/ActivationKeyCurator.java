@@ -29,7 +29,7 @@ import java.util.List;
  */
 public class ActivationKeyCurator extends AbstractHibernateCurator<ActivationKey> {
 
-    protected ActivationKeyCurator() {
+    public ActivationKeyCurator() {
         super(ActivationKey.class);
     }
 

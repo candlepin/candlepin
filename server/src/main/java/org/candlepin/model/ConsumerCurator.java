@@ -62,7 +62,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     private static final int NAME_LENGTH = 250;
     private static Logger log = LoggerFactory.getLogger(ConsumerCurator.class);
 
-    protected ConsumerCurator() {
+    public ConsumerCurator() {
         super(Consumer.class);
     }
 
