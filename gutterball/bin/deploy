@@ -42,13 +42,14 @@ autoconf() {
     # "development" is the default buildr environment.  It has been aliased 
     # to the postgresql environment in profiles.yaml
     local buildr_env="development"
+    local use_logdriver="$1"
     if [ -n "$USE_ORACLE" ]; then
         buildr_env="oracle"
     elif [ -n "$USE_MYSQL" ]; then
         buildr_env="mysql"
     fi
 
-    buildr -s -e $buildr_env erb $2
+    buildr -s -e $buildr_env erb $use_logdriver
 
     if [ "$?" -ne "0" ]; then
         err_msg "ERROR: gutterball.conf generation failed!"
