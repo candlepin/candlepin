@@ -14,15 +14,11 @@
  */
 package org.candlepin.resource.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
-import org.candlepin.CandlepinCommonTestingModule;
-import org.candlepin.CandlepinNonServletEnvironmentTestingModule;
+import org.candlepin.TestingModules;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
@@ -32,7 +28,6 @@ import org.candlepin.auth.PrincipalData;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.junit.CandlepinLiquibaseResource;
 import org.candlepin.model.EventCurator;
 import org.candlepin.resource.AtomFeedResource;
 
@@ -41,14 +36,13 @@ import com.google.inject.Injector;
 
 import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
 import org.junit.Test;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
 /**
  * AtomFeedResourceTest
  */
@@ -60,17 +54,13 @@ public class AtomFeedResourceTest {
     private Injector injector;
     private I18n i18n;
 
-    @SuppressWarnings("checkstyle:visibilitymodifier")
-    @ClassRule
-    @Rule
-    public static CandlepinLiquibaseResource liquibase = new CandlepinLiquibaseResource();
-
     @Before
     public void setUp() {
         Configuration config = mock(Configuration.class);
         injector = Guice.createInjector(
-            new CandlepinCommonTestingModule(config),
-            new CandlepinNonServletEnvironmentTestingModule()
+            new TestingModules.MockJpaModule(),
+            new TestingModules.StandardTest(config),
+            new TestingModules.ServletEnvironmentModule()
         );
         i18n = injector.getInstance(I18n.class);
         ec = mock(EventCurator.class);

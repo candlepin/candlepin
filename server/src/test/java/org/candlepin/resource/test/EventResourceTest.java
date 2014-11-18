@@ -14,21 +14,16 @@
  */
 package org.candlepin.resource.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
-import org.candlepin.CandlepinCommonTestingModule;
-import org.candlepin.CandlepinNonServletEnvironmentTestingModule;
+import org.candlepin.TestingModules;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventAdapter;
 import org.candlepin.auth.PrincipalData;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.NotFoundException;
-import org.candlepin.junit.CandlepinLiquibaseResource;
 import org.candlepin.model.EventCurator;
 import org.candlepin.resource.EventResource;
 
@@ -36,15 +31,11 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 
 import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
 import org.junit.Test;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
 import java.util.List;
-
-
 
 /**
  * EventResourceTest
@@ -53,18 +44,14 @@ public class EventResourceTest {
     protected Injector injector;
     private EventCurator ec;
 
-    @SuppressWarnings("checkstyle:visibilitymodifier")
-    @ClassRule
-    @Rule
-    public static CandlepinLiquibaseResource liquibase = new CandlepinLiquibaseResource();
-
     @Before
     public void init() {
         Configuration config = mock(Configuration.class);
         ec = mock(EventCurator.class);
         injector = Guice.createInjector(
-            new CandlepinCommonTestingModule(config),
-            new CandlepinNonServletEnvironmentTestingModule()
+            new TestingModules.MockJpaModule(),
+            new TestingModules.StandardTest(config),
+            new TestingModules.ServletEnvironmentModule()
         );
     }
 

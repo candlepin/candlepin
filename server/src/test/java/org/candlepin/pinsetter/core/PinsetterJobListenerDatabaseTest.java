@@ -18,11 +18,9 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
 import static org.quartz.JobKey.jobKey;
 
-import org.candlepin.CandlepinNonServletEnvironmentTestingModule;
+import org.candlepin.TestingModules;
 import org.candlepin.auth.Principal;
 import org.candlepin.common.config.Configuration;
-import org.candlepin.common.guice.JPAInitializer;
-import org.candlepin.guice.I18nProvider;
 import org.candlepin.guice.PinsetterJobScoped;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.guice.SimpleScope;
@@ -35,8 +33,6 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.name.Names;
-import com.google.inject.persist.UnitOfWork;
-import com.google.inject.persist.jpa.JpaPersistModule;
 
 import org.apache.commons.lang.RandomStringUtils;
 import org.junit.Before;
@@ -49,7 +45,8 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.quartz.JobListener;
 import org.quartz.spi.JobFactory;
-import org.xnap.commons.i18n.I18n;
+
+import javax.inject.Inject;
 
 /**
  * PinsetterJobListenerDatabaseTest is a unit test that uses a real database to
@@ -57,9 +54,8 @@ import org.xnap.commons.i18n.I18n;
  * mock testing.
  */
 public class PinsetterJobListenerDatabaseTest {
-    protected Injector injector;
-    protected UnitOfWork unitOfWork;
-    private JobCurator curator;
+    @Inject private PinsetterJobListener listener;
+    @Inject private JobCurator curator;
     private Configuration config;
 
     @SuppressWarnings("checkstyle:visibilitymodifier")
@@ -70,16 +66,14 @@ public class PinsetterJobListenerDatabaseTest {
     @Before
     public void init() {
         config = mock(Configuration.class);
-        TestModule testingModule = new TestModule();
-        injector = Guice.createInjector(testingModule,
-            new CandlepinNonServletEnvironmentTestingModule());
-        unitOfWork = injector.getInstance(UnitOfWork.class);
-        curator = injector.getInstance(JobCurator.class);
+        Injector injector = Guice.createInjector(
+            new TestingModules.JpaModule(),
+            new PinsetterModule());
+        injector.injectMembers(this);
     }
 
     @Test
     public void verifyDatabaseConstraintIsNotViolated() {
-        PinsetterJobListener listener = injector.getInstance(PinsetterJobListener.class);
         JobExecutionException e = mock(JobExecutionException.class);
         String longstr = RandomStringUtils.randomAlphanumeric(300);
         when(e.getMessage()).thenReturn(longstr);
@@ -113,14 +107,10 @@ public class PinsetterJobListenerDatabaseTest {
             verify.getResult());
     }
 
-    public class TestModule extends AbstractModule {
-
+    public class PinsetterModule extends AbstractModule {
         @Override
         protected void configure() {
             bind(Configuration.class).toInstance(config);
-            install(new JpaPersistModule("testing"));
-            bind(I18n.class).toProvider(I18nProvider.class);
-            bind(JPAInitializer.class).asEagerSingleton();
             bind(JobFactory.class).to(GuiceJobFactory.class);
             bind(JobListener.class).to(PinsetterJobListener.class);
             bind(PrincipalProvider.class).to(TestPrincipalProvider.class);

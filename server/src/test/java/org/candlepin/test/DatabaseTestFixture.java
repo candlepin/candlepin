@@ -14,9 +14,10 @@
  */
 package org.candlepin.test;
 
-import org.candlepin.CandlepinCommonTestingModule;
-import org.candlepin.CandlepinNonServletEnvironmentTestingModule;
+import static org.mockito.Mockito.*;
+
 import org.candlepin.TestingInterceptor;
+import org.candlepin.TestingModules;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
@@ -52,6 +53,7 @@ import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.util.DateSource;
 
+import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
@@ -64,7 +66,9 @@ import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 
@@ -76,6 +80,8 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * Test fixture for test classes requiring access to the database.
@@ -91,7 +97,6 @@ public class DatabaseTestFixture {
     @Rule
     public static CandlepinLiquibaseResource liquibase = new CandlepinLiquibaseResource();
 
-    @Inject private EntityManagerFactory emf;
     @Inject private OwnerCurator ownerCurator;
     @Inject private ProductCurator productCurator;
     @Inject private PoolCurator poolCurator;
@@ -100,27 +105,27 @@ public class DatabaseTestFixture {
     @Inject private SubscriptionCurator subCurator;
     @Inject private CertificateSerialCurator certSerialCurator;
 
+    private static Injector parentInjector;
     private Injector injector;
     private CandlepinSingletonScope cpSingletonScope;
 
     protected TestingInterceptor securityInterceptor;
     protected DateSourceForTesting dateSource;
 
+
+    @BeforeClass
+    public static void initClass() {
+        parentInjector = Guice.createInjector(new TestingModules.JpaModule());
+        insertValidationEventListeners(parentInjector);
+    }
+
     @Before
     public void init() {
-        Module guiceOverrideModule = getGuiceOverrideModule();
         CandlepinCommonTestConfig config = new CandlepinCommonTestConfig();
-        CandlepinCommonTestingModule testingModule = new CandlepinCommonTestingModule(config);
-        if (guiceOverrideModule == null) {
-            injector = Guice.createInjector(testingModule,
-                new CandlepinNonServletEnvironmentTestingModule());
-        }
-        else {
-            injector = Guice.createInjector(Modules.override(testingModule)
-                .with(guiceOverrideModule),
-                new CandlepinNonServletEnvironmentTestingModule());
-        }
-        insertValidationEventListeners(injector);
+        Module testingModule = new TestingModules.StandardTest(config);
+        injector = parentInjector.createChildInjector(
+            Modules.override(testingModule).with(getGuiceOverrideModule()));
+        securityInterceptor = injector.getInstance(TestingInterceptor.class);
 
         cpSingletonScope = injector.getInstance(CandlepinSingletonScope.class);
 
@@ -130,34 +135,48 @@ public class DatabaseTestFixture {
         cpSingletonScope.exit();
         cpSingletonScope.enter();
         injector.injectMembers(this);
-        securityInterceptor = testingModule.securityInterceptor();
 
         dateSource = (DateSourceForTesting) injector.getInstance(DateSource.class);
         dateSource.currentDate(TestDateUtil.date(2010, 1, 1));
 
+        HttpServletRequest req = parentInjector.getInstance(HttpServletRequest.class);
+        when(req.getAttribute("username")).thenReturn("mock_user");
     }
 
     @After
     public void shutdown() {
+        cpSingletonScope.exit();
+
         // We are using a singleton for the principal in tests. Make sure we clear it out
         // after every test. TestPrincipalProvider controls the default behavior.
         TestPrincipalProviderSetter.get().setPrincipal(null);
-        try {
-            injector.getInstance(PersistFilter.class).destroy();
-            if (entityManager().isOpen()) {
-                entityManager().close();
-            }
-            if (emf.isOpen()) {
-                emf.close();
-            }
+        EntityManager em = parentInjector.getInstance(EntityManager.class);
+        em.clear();
+
+        reset(parentInjector.getInstance(HttpServletRequest.class));
+        reset(parentInjector.getInstance(HttpServletResponse.class));
+    }
+
+    @AfterClass
+    public static void destroy() {
+        parentInjector.getInstance(PersistFilter.class).destroy();
+        EntityManager em = parentInjector.getInstance(EntityManager.class);
+        if (em.isOpen()) {
+            em.close();
         }
-        finally {
-            cpSingletonScope.exit();
+        EntityManager emf = parentInjector.getInstance(EntityManager.class);
+        if (emf.isOpen()) {
+            emf.close();
         }
     }
 
     protected Module getGuiceOverrideModule() {
-        return null;
+        return new AbstractModule() {
+            @Override
+            protected void configure() {
+                // NO OP
+            }
+        };
     }
 
     protected EntityManager entityManager() {
@@ -294,7 +313,7 @@ public class DatabaseTestFixture {
      * after the fact and adding the Validation EventListener ourselves.
      * @param inj
      */
-    private void insertValidationEventListeners(Injector inj) {
+    private static void insertValidationEventListeners(Injector inj) {
         Provider<EntityManagerFactory> emfProvider =
             inj.getProvider(EntityManagerFactory.class);
         HibernateEntityManagerFactory hibernateEntityManagerFactory =
