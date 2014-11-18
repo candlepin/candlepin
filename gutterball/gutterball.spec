@@ -52,6 +52,8 @@ BuildRequires: qpid-java-common >= 0:0.22
 BuildRequires: resteasy >= 0:2.3.7
 BuildRequires: candlepin-common
 BuildRequires: jms
+BuildRequires: oauth >= 20100601-4
+
 %global jackson_version 0:2.3.0
 BuildRequires: jackson-annotations >= %{jackson_version}
 BuildRequires: jackson-core >= %{jackson_version}
@@ -98,6 +100,7 @@ Requires: qpid-java-common >= 0:0.22
 Requires: gettext-commons
 Requires: jms
 Requires: candlepin-common
+Requires: oauth >= 20100601-4
 
 Requires: hibernate4-core >= 0:4.2.5
 Requires: hibernate4-entitymanager >= 0:4.2.5

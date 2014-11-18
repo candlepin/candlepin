@@ -17,8 +17,8 @@ package org.candlepin.resource;
 import static org.quartz.JobBuilder.*;
 
 import org.candlepin.auth.Principal;
-import org.candlepin.auth.interceptor.SecurityHole;
 import org.candlepin.auth.interceptor.Verify;
+import org.candlepin.common.auth.SecurityHole;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.controller.PoolManager;

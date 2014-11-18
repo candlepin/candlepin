@@ -37,6 +37,7 @@ import org.candlepin.common.exceptions.mappers.WebApplicationExceptionMapper;
 import org.candlepin.common.exceptions.mappers.WriterExceptionMapper;
 import org.candlepin.common.guice.JPAInitializer;
 import org.candlepin.common.validation.CandlepinMessageInterpolator;
+import org.candlepin.gutterball.config.ConfigProperties;
 import org.candlepin.gutterball.curator.ComplianceSnapshotCurator;
 import org.candlepin.gutterball.curator.ConsumerStateCurator;
 import org.candlepin.gutterball.eventhandler.EventHandler;
@@ -51,6 +52,7 @@ import org.candlepin.gutterball.report.ReportFactory;
 import org.candlepin.gutterball.resource.ReportsResource;
 import org.candlepin.gutterball.resource.StatusResource;
 import org.candlepin.gutterball.resteasy.JsonProvider;
+import org.candlepin.gutterball.resteasy.interceptor.OAuthInterceptor;
 import org.candlepin.gutterball.util.EventHandlerLoader;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -138,6 +140,8 @@ public class GutterballModule extends AbstractModule {
         bind(RuntimeExceptionMapper.class);
         bind(JAXBUnmarshalExceptionMapper.class);
         bind(JAXBMarshalExceptionMapper.class);
+
+        this.configureOAuth();
     }
 
     protected void configureEventReciever() {
@@ -152,6 +156,12 @@ public class GutterballModule extends AbstractModule {
         Configuration jpaConfig = config.strippedSubset(ConfigurationPrefixes.JPA_CONFIG_PREFIX);
         install(new JpaPersistModule("default").properties(jpaConfig.toProperties()));
         bind(JPAInitializer.class).asEagerSingleton();
+    }
+
+    protected void configureOAuth() {
+        if (this.config.getBoolean(ConfigProperties.OAUTH_AUTHENTICATION, false)) {
+            this.bind(OAuthInterceptor.class);
+        }
     }
 
     protected void configureEventHandlers() {
