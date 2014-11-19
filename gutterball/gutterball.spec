@@ -25,7 +25,7 @@
 %endif
 
 Name: gutterball
-Version: 1.0.1
+Version: 1.0.2
 Release: 1%{?dist}
 Summary: Data aggregator for Candlepin
 
@@ -177,6 +177,15 @@ rm -rf %{buildroot}
 %{_localstatedir}/log/%{name}
 
 %changelog
+* Wed Nov 19 2014 Devan Goodwin <dgoodwin@rm-rf.ca> 1.0.2-1
+- Die if we hit any Guice errors. (awood@redhat.com)
+- Fix deploy script. (awood@redhat.com)
+- Added OAuth support to Gutterball's API (crog@redhat.com)
+- Aligned hibernate types with those specified by liquibase changeset
+  (mstead@redhat.com)
+- Sync liquibase column name with that specifed in annotation.
+  (mstead@redhat.com)
+
 * Mon Nov 17 2014 Alex Wood <awood@redhat.com> 1.0.1-1
 - Initial packaging.
 
