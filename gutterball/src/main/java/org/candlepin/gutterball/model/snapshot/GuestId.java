@@ -72,7 +72,7 @@ public class GuestId {
     @ElementCollection(fetch = FetchType.LAZY)
     @BatchSize(size = 100)
     @CollectionTable(name = "gb_consumer_guest_attributes",
-                     joinColumns = @JoinColumn(name = "gb_consumer_guest_id"))
+                     joinColumns = @JoinColumn(name = "consumer_guest_id"))
     @MapKeyColumn(name = "mapkey")
     @Column(name = "element")
     @Cascade({org.hibernate.annotations.CascadeType.ALL})
