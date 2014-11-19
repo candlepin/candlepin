@@ -20,6 +20,7 @@ import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.User;
 import org.candlepin.test.DatabaseTestFixture;
 
@@ -31,7 +32,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.inject.Inject;
+
 public class OwnerCuratorPermissionsTest extends DatabaseTestFixture {
+    @Inject private OwnerCurator ownerCurator;
 
     private Owner owner1;
     private Owner owner2;

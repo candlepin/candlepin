@@ -21,7 +21,7 @@ package org.candlepin.model;
 public class SubscriptionsCertificateCurator extends
     AbstractHibernateCurator<SubscriptionsCertificate> {
 
-    protected SubscriptionsCertificateCurator() {
+    public SubscriptionsCertificateCurator() {
         super(SubscriptionsCertificate.class);
     }
 }

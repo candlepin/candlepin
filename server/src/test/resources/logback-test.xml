@@ -10,6 +10,8 @@
   <logger name="org.candlepin" level="INFO"/>
   <logger name="org.candlepin.policy.js" level="INFO"/>
   <logger name="org.hibernate.tool.hbm2ddl" level="WARN"/>
+  <logger name="org.hibernate.id.UUIDHexGenerator" level="ERROR"/>
+  <logger name="liquibase" level="ERROR"/>
   <root level="WARN">
     <appender-ref ref="RootAppender"/>
   </root>

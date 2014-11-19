@@ -32,14 +32,16 @@ import org.quartz.spi.TriggerFiredBundle;
 
 import java.text.ParseException;
 
+import javax.inject.Inject;
+
 /**
  * HighlanderFactoryTest
  */
 public class HighlanderFactoryTest extends DatabaseTestFixture {
+    @Inject private JobFactory hf;
 
     @Test
     public void testNewJob() throws SchedulerException, ParseException {
-        JobFactory hf = injector.getInstance(JobFactory.class);
         assertNotNull(hf);
         try {
             hf.newJob(null, null);

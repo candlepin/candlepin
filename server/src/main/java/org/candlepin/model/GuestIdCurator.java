@@ -31,7 +31,7 @@ public class GuestIdCurator extends AbstractHibernateCurator<GuestId> {
 
     private static Logger log = LoggerFactory.getLogger(GuestIdCurator.class);
 
-    protected GuestIdCurator() {
+    public GuestIdCurator() {
         super(GuestId.class);
     }
 

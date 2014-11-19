@@ -14,9 +14,13 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
-import static org.quartz.JobBuilder.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.quartz.JobBuilder.newJob;
 
 import org.candlepin.auth.Principal;
 import org.candlepin.common.exceptions.NotFoundException;
@@ -30,7 +34,6 @@ import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.util.Util;
 
 import org.apache.commons.lang.RandomStringUtils;
-import org.junit.Before;
 import org.junit.Test;
 import org.quartz.Job;
 import org.quartz.JobDataMap;
@@ -40,20 +43,13 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.inject.Inject;
+
 /**
  * JobCuratorTest
  */
 public class JobCuratorTest extends DatabaseTestFixture {
-
-    private JobCurator curator;
-
-    @Before
-    @Override
-    public void init() {
-        super.init();
-        this.curator = this.injector.getInstance(JobCurator.class);
-    }
-
+    @Inject private JobCurator curator;
 
     /**
      *All the job status objects which have executed successfully and

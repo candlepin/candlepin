@@ -14,18 +14,13 @@
  */
 package org.candlepin.audit;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
-import org.candlepin.CandlepinNonServletEnvironmentTestingModule;
+import org.candlepin.TestingModules;
 import org.candlepin.auth.PrincipalData;
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.guice.I18nProvider;
 
-import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
@@ -39,22 +34,23 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.inject.Inject;
+
 
 /**
  * EventAdapterTest
  */
 public class EventAdapterTest {
-
-    private Injector injector;
-    private I18n i18n;
+    @Inject private I18n i18n;
 
     @Before
     public void init() {
-        injector = Guice.createInjector(
-            new I18nModule(),
-            new CandlepinNonServletEnvironmentTestingModule()
+        Injector injector = Guice.createInjector(
+            new TestingModules.MockJpaModule(),
+            new TestingModules.ServletEnvironmentModule(),
+            new TestingModules.StandardTest()
         );
-        i18n = injector.getInstance(I18n.class);
+        injector.injectMembers(this);
     }
 
     @Test
@@ -110,12 +106,4 @@ public class EventAdapterTest {
             super(ConfigProperties.DEFAULT_PROPERTIES);
         }
     }
-
-    private static class I18nModule extends AbstractModule {
-        @Override
-        protected void configure() {
-            bind(I18n.class).toProvider(I18nProvider.class).asEagerSingleton();
-        }
-    }
-
 }

@@ -61,7 +61,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     @Inject private PrincipalProvider principalProvider;
     private static Logger log = LoggerFactory.getLogger(AbstractHibernateCurator.class);
 
-    protected AbstractHibernateCurator(Class<E> entityType) {
+    public AbstractHibernateCurator(Class<E> entityType) {
         //entityType = (Class<E>) ((ParameterizedType)
         //getClass().getGenericSuperclass()).getActualTypeArguments()[0];
         this.entityType = entityType;

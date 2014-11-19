@@ -23,7 +23,7 @@ import java.util.List;
  */
 public class RoleCurator extends AbstractHibernateCurator<Role> {
 
-    protected RoleCurator() {
+    public RoleCurator() {
         super(Role.class);
     }
 

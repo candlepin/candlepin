@@ -20,7 +20,7 @@ package org.candlepin.model;
 public class ProductPoolAttributeCurator
     extends AbstractHibernateCurator<ProductPoolAttribute> {
 
-    protected ProductPoolAttributeCurator() {
+    public ProductPoolAttributeCurator() {
         super(ProductPoolAttribute.class);
     }
 

@@ -18,28 +18,24 @@ import static org.junit.Assert.*;
 
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.model.ContentOverride;
-import org.candlepin.policy.js.override.OverrideRules;
 import org.candlepin.test.DatabaseTestFixture;
 
-import org.junit.Before;
 import org.junit.Test;
+import org.xnap.commons.i18n.I18n;
 
 import java.util.LinkedList;
 import java.util.List;
+
+import javax.inject.Inject;
 
 /**
  * ContentOverrideValidatorTest
  */
 public class ContentOverrideValidatorTest extends DatabaseTestFixture  {
+    @Inject private I18n i18n;
 
-    private OverrideRules overrideRules;
-    private ContentOverrideValidator validator;
-
-    @Before
-    public void setUp() {
-        this.overrideRules = injector.getInstance(OverrideRules.class);
-        validator = new ContentOverrideValidator(i18n, overrideRules);
-    }
+    //@Inject private OverrideRules overrideRules;
+    @Inject private ContentOverrideValidator validator;
 
     @Test
     public void testValidateValidCollection() {

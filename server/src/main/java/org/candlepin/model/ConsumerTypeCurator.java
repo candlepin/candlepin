@@ -29,7 +29,7 @@ import java.util.Set;
  */
 public class ConsumerTypeCurator extends AbstractHibernateCurator<ConsumerType> {
 
-    protected ConsumerTypeCurator() {
+    public ConsumerTypeCurator() {
         super(ConsumerType.class);
     }
 

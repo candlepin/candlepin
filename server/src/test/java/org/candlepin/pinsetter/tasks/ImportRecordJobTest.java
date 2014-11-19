@@ -14,47 +14,26 @@
  */
 package org.candlepin.pinsetter.tasks;
 
-import static org.mockito.Mockito.mock;
-
-import org.candlepin.CandlepinCommonTestingModule;
-import org.candlepin.CandlepinNonServletEnvironmentTestingModule;
-import org.candlepin.common.config.Configuration;
 import org.candlepin.model.ImportRecord;
 import org.candlepin.model.ImportRecordCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
-
-import com.google.inject.Guice;
-import com.google.inject.Injector;
+import org.candlepin.test.DatabaseTestFixture;
 
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.util.List;
 
+import javax.inject.Inject;
+
 /**
  *
  */
-public class ImportRecordJobTest {
-
-    private OwnerCurator ownerCurator;
-    private ImportRecordCurator importRecordCurator;
-    private ImportRecordJob job;
-
-    @Before
-    public void init() {
-        Configuration config = mock(Configuration.class);
-        CandlepinCommonTestingModule testingModule = new CandlepinCommonTestingModule(config);
-        Injector injector = Guice.createInjector(
-                testingModule,
-                new CandlepinNonServletEnvironmentTestingModule()
-        );
-
-        this.ownerCurator = injector.getInstance(OwnerCurator.class);
-        this.importRecordCurator = injector.getInstance(ImportRecordCurator.class);
-        this.job = injector.getInstance(ImportRecordJob.class);
-    }
+public class ImportRecordJobTest extends DatabaseTestFixture {
+    @Inject private OwnerCurator ownerCurator;
+    @Inject private ImportRecordCurator importRecordCurator;
+    @Inject private ImportRecordJob job;
 
     @Test
     public void noRecords() throws Exception {

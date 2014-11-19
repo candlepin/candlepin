@@ -24,7 +24,7 @@ import java.util.Set;
  */
 public class EnvironmentCurator extends AbstractHibernateCurator<Environment> {
 
-    protected EnvironmentCurator() {
+    public EnvironmentCurator() {
         super(Environment.class);
     }
 

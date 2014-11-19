@@ -58,6 +58,7 @@ public abstract class CandlepinGuiceResteasyBootstrap extends ResteasyBootstrap
         }
         catch (Exception e) {
             log.error("Could not create Guice injector.", e);
+            throw new RuntimeException(e);
         }
         log.debug("Returned from process injector");
     }

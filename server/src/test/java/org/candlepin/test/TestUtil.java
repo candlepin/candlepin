@@ -179,11 +179,14 @@ public class TestUtil {
     public static Pool createPool(Owner owner, Product product,
         Set<ProvidedProduct> providedProducts, int quantity) {
 
+        String random = String.valueOf(randomInt());
+
         Pool pool = new Pool(owner, product.getId(), product.getName(),
             providedProducts, Long.valueOf(quantity), TestUtil.createDate(2009,
-                11, 30), TestUtil.createDate(2015, 11, 30), "SUB234598S",
-            "ACC123", "ORD222");
-        pool.setSourceSubscription(new SourceSubscription("SUB234598S", "master"));
+                11, 30), TestUtil.createDate(2015, 11, 30), "SUB234598S" + random,
+            "ACC123" + random, "ORD222" + random);
+        pool.setSourceSubscription(new SourceSubscription(
+            "SUB234598S" + random, "master" + random));
 
         // Simulate copying product attributes to the pool.
         if (product != null) {

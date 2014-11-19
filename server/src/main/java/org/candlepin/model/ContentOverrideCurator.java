@@ -35,7 +35,7 @@ public abstract class ContentOverrideCurator
     /**
      * @param entityType
      */
-    protected ContentOverrideCurator(Class<T> entityType, String parentAttrName) {
+    public ContentOverrideCurator(Class<T> entityType, String parentAttrName) {
         super(entityType);
         this.parentAttr = parentAttrName;
     }

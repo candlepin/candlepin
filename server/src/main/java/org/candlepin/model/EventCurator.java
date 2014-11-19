@@ -28,7 +28,7 @@ import java.util.List;
  */
 public class EventCurator extends AbstractHibernateCurator<Event> {
 
-    protected EventCurator() {
+    public EventCurator() {
         super(Event.class);
     }
 

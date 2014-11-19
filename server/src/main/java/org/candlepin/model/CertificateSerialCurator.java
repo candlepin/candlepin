@@ -36,7 +36,7 @@ public class CertificateSerialCurator extends AbstractHibernateCurator<Certifica
     private static final Class[] CERTCLASSES = {IdentityCertificate.class,
         EntitlementCertificate.class, SubscriptionsCertificate.class, CdnCertificate.class};
 
-    protected CertificateSerialCurator() {
+    public CertificateSerialCurator() {
         super(CertificateSerial.class);
     }
 

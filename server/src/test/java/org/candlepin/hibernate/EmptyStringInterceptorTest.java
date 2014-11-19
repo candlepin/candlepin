@@ -14,7 +14,7 @@
  */
 package org.candlepin.hibernate;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import org.hibernate.ejb.Ejb3Configuration;
 import org.junit.After;
@@ -28,6 +28,7 @@ import javax.persistence.Entity;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Id;
+import javax.persistence.Table;
 
 /**
  * EmptyStringInterceptorTest
@@ -39,6 +40,7 @@ public class EmptyStringInterceptorTest {
     private Properties props;
 
     @Entity
+    @Table(name = "Person")
     static class Person {
         @Id
         private int id;

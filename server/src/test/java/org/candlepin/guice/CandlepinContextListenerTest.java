@@ -18,8 +18,7 @@ import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
-import org.candlepin.CandlepinCommonTestingModule;
-import org.candlepin.CandlepinNonServletEnvironmentTestingModule;
+import org.candlepin.TestingModules;
 import org.candlepin.audit.AMQPBusPublisher;
 import org.candlepin.audit.HornetqContextListener;
 import org.candlepin.common.config.Configuration;
@@ -27,6 +26,7 @@ import org.candlepin.common.config.ConfigurationException;
 import org.candlepin.common.config.ConfigurationPrefixes;
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.junit.CandlepinLiquibaseResource;
 import org.candlepin.pinsetter.core.PinsetterContextListener;
 
 import com.google.inject.AbstractModule;
@@ -37,6 +37,8 @@ import com.google.inject.Stage;
 import org.jboss.resteasy.spi.Registry;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.LinkedList;
@@ -58,6 +60,11 @@ public class CandlepinContextListenerTest {
     private ServletContextEvent evt;
     private ServletContext ctx;
     private VerifyConfigRead configRead;
+
+    @SuppressWarnings("checkstyle:visibilitymodifier")
+    @ClassRule
+    @Rule
+    public static CandlepinLiquibaseResource liquibase = new CandlepinLiquibaseResource();
 
     @Before
     public void init() {
@@ -82,9 +89,9 @@ public class CandlepinContextListenerTest {
                 // which means the test becomes non-deterministic.
                 // so just load the items we need to verify the
                 // functionality.
-                modules.add(new ConfigModule(config));
-                modules.add(new CandlepinNonServletEnvironmentTestingModule());
-                modules.add(new TestModule());
+                modules.add(new TestingModules.JpaModule());
+                modules.add(new TestingModules.StandardTest(config));
+                modules.add(new ContextListenerTestModule());
                 return modules;
             }
 
@@ -189,7 +196,7 @@ public class CandlepinContextListenerTest {
             ResteasyProviderFactory.class.getName()))).thenReturn(rpfactory);
     }
 
-    public class TestModule extends AbstractModule {
+    public class ContextListenerTestModule extends AbstractModule {
 
         @SuppressWarnings("synthetic-access")
         @Override
@@ -198,22 +205,6 @@ public class CandlepinContextListenerTest {
             bind(HornetqContextListener.class).toInstance(hqlistener);
             bind(AMQPBusPublisher.class).toInstance(buspublisher);
             bind(AMQPBusPubProvider.class).toInstance(busprovider);
-        }
-    }
-
-    /**
-     * ConfigModule overrides the config from the testing module with the one
-     * from this test class. This allows us to override the configuration.
-     */
-    public class ConfigModule extends CandlepinCommonTestingModule {
-
-        public ConfigModule(Configuration config) {
-            super(config);
-        }
-
-        @SuppressWarnings("synthetic-access")
-        protected void bindConfig() {
-            bind(Configuration.class).toInstance(config);
         }
     }
 

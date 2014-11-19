@@ -21,7 +21,7 @@ import com.google.inject.persist.Transactional;
  */
 public class ContentCurator extends AbstractHibernateCurator<Content> {
 
-    protected ContentCurator() {
+    public ContentCurator() {
         super(Content.class);
     }
 

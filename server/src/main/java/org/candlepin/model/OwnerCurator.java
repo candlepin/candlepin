@@ -32,7 +32,7 @@ import java.util.List;
  */
 public class OwnerCurator extends AbstractHibernateCurator<Owner> {
 
-    protected OwnerCurator() {
+    public OwnerCurator() {
         super(Owner.class);
     }
 
