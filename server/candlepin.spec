@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.35
+Version: 0.9.36
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -393,6 +393,16 @@ fi
 
 
 %changelog
+* Wed Nov 19 2014 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.36-1
+- Make all curator constructors public. (awood@redhat.com)
+- Die if we hit any Guice errors. (awood@redhat.com)
+- Added OAuth support to Gutterball's API (crog@redhat.com)
+- 1162297: Remove the vendor tag from the spec files (bkearney@redhat.com)
+- Refactor Configuration implementation to be more consistent.
+  (awood@redhat.com)
+- Add Hibernate Validation to Gutterball. (awood@redhat.com)
+- Correct misspelled class name. (awood@redhat.com)
+
 * Wed Nov 05 2014 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.35-1
 - Some changes to clean up the branch. (wpoteat@redhat.com)
 - Expanding on ComplianceStatus (mstead@redhat.com)
