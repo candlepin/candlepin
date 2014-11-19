@@ -23,7 +23,7 @@ define_variables() {
     if [ $IS_KATELLO -eq 0 ]; then
         CA_DB="/etc/pki/katello/nssdb"
         CA_PASS_FILE="${CA_DB}/nss_db_password-file"
-        JAVA_PASS="/etc/pki/katello/keystore_password-file"
+        JAVA_PASS="$(cat /etc/pki/katello/keystore_password-file)"
     else
         CA_PASS_FILE="$CERT_LOC/ca_password.txt"
         CA_DB="$CERT_LOC/CA_db"
@@ -224,7 +224,7 @@ fi
 
 # create working directory
 mkdir -p "$CERT_LOC"
-IS_KATELLO="$(test -e /etc/katello; echo $?)"
+IS_KATELLO="$(test -e /etc/pki/katello; echo $?)"
 
 define_variables
 create_ca_cert
