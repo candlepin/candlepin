@@ -50,7 +50,7 @@ BuildRequires: gettext-commons
 BuildRequires: qpid-java-client >= 0:0.22
 BuildRequires: qpid-java-common >= 0:0.22
 BuildRequires: resteasy >= 0:2.3.7
-BuildRequires: candlepin-common
+BuildRequires: candlepin-common >= 0:1.0.16
 BuildRequires: jms
 BuildRequires: oauth >= 20100601-4
 
@@ -69,7 +69,7 @@ BuildRequires: hibernate-beanvalidation-api >= 1.0.0
 BuildRequires: hibernate-jpa-2.0-api >= 1.0.1
 
 # Version dependent build requires
-%if 0%{?rhel} < 7
+%if 0%{?rhel} == 6
 BuildRequires: jpackage-utils
 BuildRequires: ant-nodeps >= 0:1.7.0
 BuildRequires: jaxb-impl
@@ -99,8 +99,15 @@ Requires: qpid-java-client >= 0:0.22
 Requires: qpid-java-common >= 0:0.22
 Requires: gettext-commons
 Requires: jms
-Requires: candlepin-common
+Requires: candlepin-common >= 0:1.0.16
 Requires: oauth >= 20100601-4
+Requires: resteasy >= 0:2.3.7
+
+Requires: jackson-annotations >= %{jackson_version}
+Requires: jackson-core >= %{jackson_version}
+Requires: jackson-databind >= %{jackson_version}
+Requires: jackson-jaxrs-json-provider >= %{jackson_version}
+Requires: jackson-module-jaxb-annotations >= %{jackson_version}
 
 Requires: hibernate4-core >= 0:4.2.5
 Requires: hibernate4-entitymanager >= 0:4.2.5
@@ -116,10 +123,12 @@ Requires: slf4j-api >= 0:1.7.5-4
 Requires: logback-classic
 Requires: apache-commons-codec-eap6
 Requires: jakarta-commons-lang
+Requires: jaxb-impl
 %endif
 
-%if 0%{?rhel} == 7
+%if 0%{?rhel} >= 7
 Requires: candlepin-guice >= 0:3.0
+Requires: glassfish-jaxb
 Requires: mvn(org.apache.httpcomponents:httpclient) >= 0:4.1.2
 Requires: mvn(org.apache.commons:commons-lang)
 Requires: mvn(org.slf4j:slf4j-api)  >= 0:1.7.4
@@ -145,7 +154,7 @@ rm -rf %{buildroot}
 
 # Conf files
 install -d -m 755 %{buildroot}/%{_sysconfdir}/%{name}/certs/amqp
-install -d -m 640 %{buildroot}/%{_sysconfdir}/%{name}/%{name}.conf
+install -m 640 conf/%{name}.conf %{buildroot}/%{_sysconfdir}/%{name}/%{name}.conf
 
 # Logging
 install -d -m 755 %{buildroot}/%{_localstatedir}/log/%{name}

@@ -28,6 +28,8 @@ jackson-module-jaxb-annotations
 jms
 logback/logback-classic
 logback/logback-core
+oauth/oauth
+oauth/oauth-provider
 qpid-client-0.22
 qpid-common-0.22
 resteasy/jaxrs-api

@@ -127,6 +127,7 @@
     <jar destfile="${common.jar}">
       <fileset dir="${target.dir}/classes">
         <include name="**/candlepin/common/**"/>
+        <include name="**/net/oauth/signature/**"/>
       </fileset>
       <manifest>
         <attribute name="Implementation-Vendor" value="" />

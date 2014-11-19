@@ -32,6 +32,8 @@ BuildArch: noarch
 BuildRequires: java-devel >= 1:1.6.0
 BuildRequires: ant >= 0:1.7.0
 BuildRequires: gettext
+BuildRequires: oauth >= 20100601-4
+
 %if 0%{?rhel} && 0%{?rhel} < 7
 BuildRequires: ant-nodeps >= 0:1.7.0
 %endif
@@ -58,6 +60,18 @@ BuildRequires: jackson-databind >= %{jackson_version}
 BuildRequires: jackson-jaxrs-json-provider >= %{jackson_version}
 BuildRequires: jackson-module-jaxb-annotations >= %{jackson_version}
 
+%if 0%{?rhel} == 6
+BuildRequires: apache-commons-codec-eap6
+BuildRequires: google-guice >= 0:3.0
+BuildRequires: google-collections >= 0:1.0
+BuildRequires: slf4j-api >= 0:1.7.5
+BuildRequires: jcl-over-slf4j >= 0:1.7.5
+BuildRequires: httpclient >= 0:4.1.2
+BuildRequires: javax.inject
+BuildRequires: logback-classic
+BuildRequires: logback-core
+%endif
+
 %if 0%{?rhel} >= 7
 BuildRequires: apache-commons-codec-eap6
 BuildRequires: apache-commons-collections
@@ -68,18 +82,6 @@ BuildRequires: mvn(org.slf4j:slf4j-api)  >= 0:1.7.4
 BuildRequires: mvn(org.slf4j:jcl-over-slf4j)  >= 0:1.7.4
 BuildRequires: mvn(ch.qos.logback:logback-classic)
 BuildRequires: mvn(javax.inject:javax.inject)
-%endif
-
-%if 0%{?rhel} < 7
-BuildRequires: apache-commons-codec-eap6
-BuildRequires: google-guice >= 0:3.0
-BuildRequires: google-collections >= 0:1.0
-BuildRequires: slf4j-api >= 0:1.7.5
-BuildRequires: jcl-over-slf4j >= 0:1.7.5
-BuildRequires: httpclient >= 0:4.1.2
-BuildRequires: javax.inject
-BuildRequires: logback-classic
-BuildRequires: logback-core
 %endif
 
 %if 0%{?fedora}
@@ -93,6 +95,18 @@ BuildRequires: javax.inject
 
 %if !0%{?reqcpdeps}
 # Runtime deps
+%if 0%{?rhel} == 6
+Requires: google-guice >= 0:3.0
+Requires: google-collections >= 0:1.0
+Requires: slf4j-api >= 0:1.7.5-4
+Requires: jcl-over-slf4j >= 0:1.7.5
+Requires: httpclient >= 0:4.1.2
+Requires: apache-commons-codec-eap6
+Requires: javax.inject
+Requires: logback-classic
+Requires: logback-core
+%endif
+
 %if 0%{?rhel} >= 7
 Requires: apache-commons-codec-eap6
 Requires: apache-commons-collections
@@ -103,18 +117,6 @@ Requires: mvn(org.slf4j:slf4j-api)  >= 0:1.7.4
 Requires: mvn(org.slf4j:jcl-over-slf4j)  >= 0:1.7.4
 Requires: mvn(ch.qos.logback:logback-classic)
 Requires: mvn(javax.inject:javax.inject)
-%endif
-
-%if 0%{?rhel} < 7
-Requires: google-guice >= 0:3.0
-Requires: google-collections >= 0:1.0
-Requires: slf4j-api >= 0:1.7.5-4
-Requires: jcl-over-slf4j >= 0:1.7.5
-Requires: httpclient >= 0:4.1.2
-Requires: apache-commons-codec-eap6
-Requires: javax.inject
-Requires: logback-classic
-Requires: logback-core
 %endif
 
 %if 0%{?fedora}
