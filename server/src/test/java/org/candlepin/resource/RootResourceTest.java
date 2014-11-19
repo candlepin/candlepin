@@ -14,7 +14,7 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import org.candlepin.config.CandlepinCommonTestConfig;
 
