@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-10-28 13:24-0300\n"
+"POT-Creation-Date: 2014-11-20 11:44-0400\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -14,7 +14,7 @@ msgstr ""
 "Language-Team: Assamese\n"
 "Language: as\n"
 "Plural-Forms: \n"
-"X-Generator: Zanata 3.4.2\n"
+"X-Generator: Zanata 3.5.1\n"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ngoswami
@@ -223,90 +223,6 @@ msgstr "স্বাক্ষৰণ পুল {0} অস্তিত্ববা
 #: server/src/main/java/org/candlepin/guice/I18nProvider.java:91
 msgid "Bad Request"
 msgstr "বেয়া অনুৰোধ"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:40
-msgid "must be false"
-msgstr "false হ'ব লাগিব"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:42
-msgid "must be true"
-msgstr "true হ'ব লাগিব"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:44
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:57
-#, java-format
-msgid "must be less than or equal to {0}"
-msgstr "{0} ৰ কম অথবা সমান হব লাগিব"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:47
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:60
-#, java-format
-msgid "must be greater than or equal to {0}"
-msgstr "{0} ৰ অধিক অথবা সমান হব লাগিব"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:51
-msgid ""
-"numeric value out of bounds (<{integer} digits>.<{fraction} digits> "
-"expected)"
-msgstr ""
-"সাংখ্যিক মান বন্ধনৰ বাহিৰ (<{integer} digits>.<{fraction} digits> "
-"প্ৰত্যাশিত)"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:55
-msgid "must be in the future"
-msgstr "ভৱিষ্যতত হব লাগিব"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:63
-msgid "may not be null"
-msgstr "null হব নোৱাৰিব"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:65
-msgid "must be null"
-msgstr "null হব লাগিব"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:67
-msgid "must be in the past"
-msgstr "অতিত হব লাগিব"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:69
-msgid "must match ''{regexp}''"
-msgstr "''{regexp}'' ৰ সৈতে মিল খাব লাগিব"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:72
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:79
-#, java-format
-msgid "size must be between {0} and {1}"
-msgstr "আকাৰ {0} আৰু {1} ৰ মাজত হব লাগিব"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:75
-msgid "invalid credit card number"
-msgstr "অবৈধ ক্ৰেডিট কাৰ্ড নম্বৰ"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:77
-msgid "not a well-formed email address"
-msgstr "এটা ভালদৰে-গঠিত ইমেইল ঠিকনা নহয়"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:82
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:84
-msgid "may not be empty"
-msgstr "খালি হব নোৱাৰিব"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:86
-msgid "must be between {min} and {max}"
-msgstr "{min} আৰু {max} ৰ মাজৰ হব লাগিব"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:89
-msgid "may have unsafe html content"
-msgstr "অসুৰক্ষিত html সমল থাকিব পাৰে"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:91
-#, java-format
-msgid "script expression ''{0}'' didn't evaluate to true"
-msgstr "স্ক্ৰিপ্ট অভিবক্তি \"{0}\" ৰ বিশ্লেষণ true নহ'ল"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:94
-msgid "must be a valid URL"
-msgstr "এটা বৈধ URL হব লাগিব"
 
 #: server/src/main/java/org/candlepin/model/AbstractHibernateCurator.java:419
 msgid "Request failed due to concurrent modification, please re-try."
@@ -1306,25 +1222,25 @@ msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ngoswami
-#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:326
+#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:325
 msgid "Unable to verify request."
 msgstr "অনুৰোধ সতাসত্য নিৰূপণ কৰিবলে অক্ষম।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ngoswami
-#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:340
-#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:363
+#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:339
+#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:362
 #, java-format
 msgid "{0} with id {1} could not be found."
 msgstr "আইডি {1} ৰ সৈতে {0} পোৱা নগল।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ngoswami
-#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:357
+#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:356
 msgid "Organization"
 msgstr "সংঘঠন"
 
-#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:551
+#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:550
 #: server/src/main/java/org/candlepin/resteasy/interceptor/ConsumerAuth.java:57
 #, java-format
 msgid "Unit {0} has been deleted"
@@ -1336,26 +1252,26 @@ msgstr "একক {0} মচি পেলোৱা হৈছে"
 msgid "Error contacting user service"
 msgstr "ব্যৱহাৰকাৰী সেৱাক যোগাযোগ কৰোতে ত্ৰুটি"
 
-#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:121
-#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:157
+#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:120
+#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:156
 msgid "Invalid oauth unit or secret"
 msgstr "অবৈধ oauth একক অথবা গোপন"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ngoswami
-#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:125
+#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:124
 #, java-format
 msgid "OAuth problem encountered. Internal message is: {0}"
 msgstr "OAuth সমস্যাৰ সন্মূখিন হোৱা গল। অভ্যন্তৰীক বাৰ্তা হল: {0}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ngoswami
-#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:131
+#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:130
 #, java-format
 msgid "OAuth error encountered. Internal message is: {0}"
 msgstr "OAuth ত্ৰুটিৰ সন্মূখিন হোৱা গল। অভ্যন্তৰীক বাৰ্তা হল: {0}"
 
-#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:162
+#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:161
 msgid "Error getting oauth unit key"
 msgstr "oauth একক কি' প্ৰাপ্ত কৰিবলে ত্ৰুটি"
 

@@ -7,14 +7,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-10-28 13:24-0300\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2014-11-20 11:44-0400\n"
 "PO-Revision-Date: 2014-09-01 12:17-0400\n"
 "Last-Translator: jcarbone <jcarbone@redhat.com>\n"
 "Language-Team: French\n"
 "Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1)\n"
 "X-Generator: Zanata 3.4.2\n"
 
@@ -226,90 +226,6 @@ msgstr "Le pool d'abonnements {0} n'existe pas."
 msgid "Bad Request"
 msgstr "Mauvaise requête"
 
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:40
-msgid "must be false"
-msgstr "doit être faux"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:42
-msgid "must be true"
-msgstr "doit être vrai"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:44
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:57
-#, java-format
-msgid "must be less than or equal to {0}"
-msgstr "doit être inférieur ou égal à {0}"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:47
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:60
-#, java-format
-msgid "must be greater than or equal to {0}"
-msgstr "doit être supérieur ou égal à {0}"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:51
-msgid ""
-"numeric value out of bounds (<{integer} digits>.<{fraction} digits> "
-"expected)"
-msgstr ""
-"valeur numérique hors limites (<{integer} digits>.<{fraction} digits> "
-"attendu)"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:55
-msgid "must be in the future"
-msgstr "doit être dans le futur"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:63
-msgid "may not be null"
-msgstr "ne peut être nul"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:65
-msgid "must be null"
-msgstr "doit être nul"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:67
-msgid "must be in the past"
-msgstr "doit être dans le passé"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:69
-msgid "must match ''{regexp}''"
-msgstr "doit correspondre à ''{regexp}''"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:72
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:79
-#, java-format
-msgid "size must be between {0} and {1}"
-msgstr "la taille doit être comprise entre {0} et {1}"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:75
-msgid "invalid credit card number"
-msgstr "numéro de carte de crédit non valide"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:77
-msgid "not a well-formed email address"
-msgstr "format de l'adresse e-mail incorrect"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:82
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:84
-msgid "may not be empty"
-msgstr "ne peut être vide"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:86
-msgid "must be between {min} and {max}"
-msgstr "doit être compris entre {min} et {max}"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:89
-msgid "may have unsafe html content"
-msgstr "peut avoir un contenu html non sécurisé"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:91
-#, java-format
-msgid "script expression ''{0}'' didn't evaluate to true"
-msgstr "l'expression de script ''{0}'' n'a pas été évaluée comme vraie"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:94
-msgid "must be a valid URL"
-msgstr "doit être une URL valide"
-
 #: server/src/main/java/org/candlepin/model/AbstractHibernateCurator.java:419
 msgid "Request failed due to concurrent modification, please re-try."
 msgstr ""
@@ -369,8 +285,7 @@ msgstr "Type d'unité inconnu : {0}"
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:751
 #, java-format
 msgid "ActivationKey with id {0} could not be found."
-msgstr ""
-"Impossible de trouver la clé d'activation ActivationKey avec l'ID {0}."
+msgstr "Impossible de trouver la clé d'activation ActivationKey avec l'ID {0}."
 
 #: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:78
 msgid ""
@@ -423,8 +338,7 @@ msgstr ""
 # keys, author samfreemanz
 #: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:102
 msgid "The quantity must not be greater than the total allowed for the pool"
-msgstr ""
-"La quantité ne doit pas être supérieure au total autorisé pour le pool"
+msgstr "La quantité ne doit pas être supérieure au total autorisé pour le pool"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author samfreemanz
@@ -444,16 +358,14 @@ msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:117
 #, java-format
-msgid ""
-"Cannot add virtual pool ''{0}'' to activation key for physical systems."
+msgid "Cannot add virtual pool ''{0}'' to activation key for physical systems."
 msgstr ""
 "Impossible d'ajouter le pool virtuel ''{0}'' à la clé d'activation pour les "
 "systèmes physiques."
 
 #: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:121
 #, java-format
-msgid ""
-"Cannot add physical pool ''{0}'' to activation key for virtual systems."
+msgid "Cannot add physical pool ''{0}'' to activation key for virtual systems."
 msgstr ""
 "Impossible d'ajouter le pool physique ''{0}'' à la clé d'activation pour des "
 "systèmes virtuels."
@@ -519,7 +431,6 @@ msgstr "Les abonnements pour {0} expirent le : {1}"
 #, java-format
 msgid ""
 "This unit has already had the subscription matching pool ID ''{0}'' attached."
-""
 msgstr ""
 "Cette unité possède déjà l'ID de pool correspondant à l'abonnement « {0} » "
 "attaché."
@@ -589,8 +500,7 @@ msgstr ""
 #, fuzzy, java-format
 msgid "Unit does not support core calculation required by pool ''{0}''"
 msgstr ""
-"L'unité ne prend pas en charge les calculs de cœur requis par le pool "
-"« {0} »"
+"L'unité ne prend pas en charge les calculs de cœur requis par le pool « {0} »"
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:98
 #, java-format
@@ -614,8 +524,7 @@ msgstr "Impossible d'attacher le pool avec l'ID « {0} ». : {1}."
 #, java-format
 msgid ""
 "This system already has a subscription for the product ''{0}'' attached."
-msgstr ""
-"Ce système possède déjà un abonnement attaché pour le produit « {0} »."
+msgstr "Ce système possède déjà un abonnement attaché pour le produit « {0} »."
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:120
 #, java-format
@@ -802,8 +711,7 @@ msgstr ""
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:666
 #, java-format
 msgid "User ''{0}'' has already registered a personal consumer"
-msgstr ""
-"L'utilisateur « {0} » est déjà enregistré comme consommateur personnel"
+msgstr "L'utilisateur « {0} » est déjà enregistré comme consommateur personnel"
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:683
 msgid "You must specify an organization for new units."
@@ -1063,8 +971,7 @@ msgstr "Mauvaise valeur d'entité."
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:300
 #, java-format
 msgid "Could not create the Owner: {0}. Parent {1} does not exist."
-msgstr ""
-"Impossible de créer le propriétaire : {0}. Le parent {1} n'existe pas."
+msgstr "Impossible de créer le propriétaire : {0}. Le parent {1} n'existe pas."
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:312
 #, java-format
@@ -1290,8 +1197,7 @@ msgstr "Utilisateur inconnu : {0}"
 #: server/src/main/java/org/candlepin/resource/RulesResource.java:90
 msgid "Error decoding the rules. The text should be base 64 encoded"
 msgstr ""
-"Erreur lors du décodage des règles. Le texte devrait être encodé avec base "
-"64"
+"Erreur lors du décodage des règles. Le texte devrait être encodé avec base 64"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -1351,23 +1257,23 @@ msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author samfreemanz
-#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:326
+#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:325
 msgid "Unable to verify request."
 msgstr "Impossible de vérifier la requête."
 
-#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:340
-#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:363
+#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:339
+#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:362
 #, java-format
 msgid "{0} with id {1} could not be found."
 msgstr "{0} avec l'ID {1} est introuvable."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author samfreemanz
-#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:357
+#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:356
 msgid "Organization"
 msgstr "Organisation"
 
-#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:551
+#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:550
 #: server/src/main/java/org/candlepin/resteasy/interceptor/ConsumerAuth.java:57
 #, java-format
 msgid "Unit {0} has been deleted"
@@ -1379,26 +1285,26 @@ msgstr "L'unité {0} a été supprimée"
 msgid "Error contacting user service"
 msgstr "Erreur lors du contact au service utilisateur"
 
-#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:121
-#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:157
+#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:120
+#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:156
 msgid "Invalid oauth unit or secret"
 msgstr "Unité ou secret OAuth non valide"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author samfreemanz
-#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:125
+#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:124
 #, java-format
 msgid "OAuth problem encountered. Internal message is: {0}"
 msgstr "Problème OAuth rencontré. Message interne : {0}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author samfreemanz
-#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:131
+#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:130
 #, java-format
 msgid "OAuth error encountered. Internal message is: {0}"
 msgstr "Erreur OAuth rencontrée. Message interne : {0}"
 
-#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:162
+#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:161
 msgid "Error getting oauth unit key"
 msgstr "Erreur lors de l'obtention de la clé d'unité OAuth"
 
@@ -1421,8 +1327,8 @@ msgstr "Un entier positif était attendu."
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
-"to address this problem. See kbase https://access.redhat.com/knowledge/node/"
-"129003 for more information."
+"to address this problem. See kbase https://access.redhat.com/knowledge/"
+"node/129003 for more information."
 msgstr ""
 "Trop d'ensembles de contenus pour le certificat {0}. Un client plus récent "
 "peut être disponible pour résoudre ce problème. Voir kbase https://access."
@@ -1534,8 +1440,7 @@ msgstr "L'archive ne contient pas le répertoire des droits d'accès requis"
 #, java-format
 msgid "The archive {0} is not a properly compressed file or is empty"
 msgstr ""
-"L'archive {0} est un fichier qui n'est pas compressé correctement ou est "
-"vide"
+"L'archive {0} est un fichier qui n'est pas compressé correctement ou est vide"
 
 #: server/src/main/java/org/candlepin/util/ContentOverrideValidator.java:59
 #, java-format
@@ -1548,3 +1453,61 @@ msgid "Service level ''{0}'' is not available to units of organization {1}."
 msgstr ""
 "Le niveau de service « {0} » n'est pas disponible aux unités de "
 "l'organisation {1}."
+
+#~ msgid "must be false"
+#~ msgstr "doit être faux"
+
+#~ msgid "must be true"
+#~ msgstr "doit être vrai"
+
+#~ msgid "must be less than or equal to {0}"
+#~ msgstr "doit être inférieur ou égal à {0}"
+
+#~ msgid "must be greater than or equal to {0}"
+#~ msgstr "doit être supérieur ou égal à {0}"
+
+#~ msgid ""
+#~ "numeric value out of bounds (<{integer} digits>.<{fraction} digits> "
+#~ "expected)"
+#~ msgstr ""
+#~ "valeur numérique hors limites (<{integer} digits>.<{fraction} digits> "
+#~ "attendu)"
+
+#~ msgid "must be in the future"
+#~ msgstr "doit être dans le futur"
+
+#~ msgid "may not be null"
+#~ msgstr "ne peut être nul"
+
+#~ msgid "must be null"
+#~ msgstr "doit être nul"
+
+#~ msgid "must be in the past"
+#~ msgstr "doit être dans le passé"
+
+#~ msgid "must match ''{regexp}''"
+#~ msgstr "doit correspondre à ''{regexp}''"
+
+#~ msgid "size must be between {0} and {1}"
+#~ msgstr "la taille doit être comprise entre {0} et {1}"
+
+#~ msgid "invalid credit card number"
+#~ msgstr "numéro de carte de crédit non valide"
+
+#~ msgid "not a well-formed email address"
+#~ msgstr "format de l'adresse e-mail incorrect"
+
+#~ msgid "may not be empty"
+#~ msgstr "ne peut être vide"
+
+#~ msgid "must be between {min} and {max}"
+#~ msgstr "doit être compris entre {min} et {max}"
+
+#~ msgid "may have unsafe html content"
+#~ msgstr "peut avoir un contenu html non sécurisé"
+
+#~ msgid "script expression ''{0}'' didn't evaluate to true"
+#~ msgstr "l'expression de script ''{0}'' n'a pas été évaluée comme vraie"
+
+#~ msgid "must be a valid URL"
+#~ msgstr "doit être une URL valide"

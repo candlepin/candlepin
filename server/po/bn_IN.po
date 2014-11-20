@@ -5,16 +5,16 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-10-28 13:24-0300\n"
+"POT-Creation-Date: 2014-11-20 11:44-0400\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2014-06-26 04:20-0400\n"
+"PO-Revision-Date: 2014-11-18 03:49-0500\n"
 "Last-Translator: bnin <sray@redhat.com>\n"
 "Language-Team: Bengali (India)\n"
 "Language: bn-IN\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
-"X-Generator: Zanata 3.4.2\n"
+"X-Generator: Zanata 3.5.1\n"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author runab
@@ -211,7 +211,7 @@ msgstr "ডেটাবেস থেকে {0} নিয়ম সরানো �
 #: server/src/main/java/org/candlepin/audit/EventAdapterImpl.java:167
 #, java-format
 msgid "Compliance recalculated for consumer {1}"
-msgstr ""
+msgstr "{1} উপভোক্তার জন্য সম্মতি পুনঃগণনা করা হয়েছে"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author runab
@@ -225,89 +225,6 @@ msgstr "সাবস্ক্রিপশন পুল {0} বর্তমান
 #: server/src/main/java/org/candlepin/guice/I18nProvider.java:91
 msgid "Bad Request"
 msgstr "বেঠিক অনুরোধ"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:40
-msgid "must be false"
-msgstr "অবশ্যই মিথ্যা হতে হবে"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:42
-msgid "must be true"
-msgstr "অবশ্যই সত্য হতে হবে"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:44
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:57
-#, java-format
-msgid "must be less than or equal to {0}"
-msgstr "অবশ্যই {0} এর কম বা সমান হতে হবে"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:47
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:60
-#, java-format
-msgid "must be greater than or equal to {0}"
-msgstr "অবশ্যই {0} এর থেকে বেশি বা সমান হতে হবে"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:51
-msgid ""
-"numeric value out of bounds (<{integer} digits>.<{fraction} digits> "
-"expected)"
-msgstr ""
-"সাংখ্যিক মান সীমার বাইরে (<{integer} digits>.<{fraction} digits> প্রত্যাশিত)"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:55
-msgid "must be in the future"
-msgstr "অবশ্যই ভবিষ্যতের হতে হবে"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:63
-msgid "may not be null"
-msgstr "নাল হওয়া চলবে বা"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:65
-msgid "must be null"
-msgstr "অবশ্যই নাল হতে হবে"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:67
-msgid "must be in the past"
-msgstr "অবশ্যই অতীতের হতে হবে"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:69
-msgid "must match ''{regexp}''"
-msgstr "অবশ্যই ''{regexp}'' মিলতে হবে"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:72
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:79
-#, java-format
-msgid "size must be between {0} and {1}"
-msgstr "মাপ অবশ্যই {0} এবং {1} এর মধ্যে হতে হবে"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:75
-msgid "invalid credit card number"
-msgstr "ক্রডিট কার্ড নম্বর অবৈধ"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:77
-msgid "not a well-formed email address"
-msgstr "ইমেল ঠিকানাটি সুসংগঠিত নয়"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:82
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:84
-msgid "may not be empty"
-msgstr "খালি থাকলে চলবে না"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:86
-msgid "must be between {min} and {max}"
-msgstr "অবশ্যই {min} এবং {max} এর মধ্যে হতে হবে"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:89
-msgid "may have unsafe html content"
-msgstr "অনিরাপদ html বিষয়বস্তু থাকতে পারে"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:91
-#, java-format
-msgid "script expression ''{0}'' didn't evaluate to true"
-msgstr "স্ক্রিপ্ট এক্সপ্রেশন ''{0}'' সত্যতে মূল্যায়ন করা হয়নি"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:94
-msgid "must be a valid URL"
-msgstr "অবশ্যই একটি বৈধ URL হতে হবে"
 
 #: server/src/main/java/org/candlepin/model/AbstractHibernateCurator.java:419
 msgid "Request failed due to concurrent modification, please re-try."
@@ -675,7 +592,7 @@ msgstr "{0} id বিশিষ্ট পুল পাওয়া যায়নি�
 #: server/src/main/java/org/candlepin/resource/ActivationKeyResource.java:300
 #, java-format
 msgid "Product with id {0} could not be found."
-msgstr ""
+msgstr "id {0} বিশিষ্ট প্রোডাক্ট পাওয়া যায়নি।"
 
 #: server/src/main/java/org/candlepin/resource/CdnResource.java:119
 #, java-format
@@ -730,7 +647,7 @@ msgstr "অ্যাক্টিভেশন-কি-র মাধ্যমে �
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:429
 msgid "None of the activation keys specified exist for this org."
-msgstr ""
+msgstr "উল্লিখিত একটি সক্রিয়করণ কী-ও এই সংগঠনের জন্য বিদ্যমান নেই।"
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:440
 msgid "A unit type of 'person' cannot be used with activation keys"
@@ -936,27 +853,29 @@ msgstr "পরিমাণ 0 থেকে বেশি হওয়া আবশ্
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:301
 #, java-format
 msgid "Unable to find upstream certificate for entitlement: {0}"
-msgstr ""
+msgstr "প্রয়োগের জন্য অাপস্ট্রীম শংসাপত্র খুঁজে পাওয়া গেল না: {0}"
 
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:386
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:391
 #, java-format
 msgid "Entitlement migration is not permissible for units of type ''{0}''"
-msgstr ""
+msgstr "''{0}'' ধরনের এককের জন্য এনটাইটেলমেন্ট মাইগ্রেশন অনুমোদিত নয়।"
 
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:396
 msgid "Source and destination units must belong to the same organization"
-msgstr ""
+msgstr "উত্স এবং গন্তব্য ইউনিট একই সংগঠনের হওয়া অাবশ্যক"
 
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:403
 msgid "The entitlement cannot be utilized by the destination unit: "
-msgstr ""
+msgstr "এনটাইটেলমেন্ট গন্তব্য ইউনিট দ্বারা কাজে লাগানো সম্ভব নয়:"
 
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:424
 msgid ""
 "The quantity specified must be greater than zero and less than or equal to "
 "the total for this entitlement"
 msgstr ""
+"উল্লিখিত পরিমাণ অবশ্যই শূন্যের থেকে বড় এবং এই এনটাইটেলমেন্টের থেকে কম বা "
+"সমান হতে হবে"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author runab
@@ -1299,32 +1218,32 @@ msgstr "{0} ব্যবহারকারী পাওয়া গেল না"
 
 #: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:96
 msgid "No activation key was applied successfully."
-msgstr ""
+msgstr "কোনো সক্রিয়করণ কী সফল ভাবে প্রয়োগ করা হয়নি"
 
 #: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:123
 #, java-format
 msgid "Cannot bind to pool ''{0}'' in activation key ''{1}'': {2}"
-msgstr ""
+msgstr "''{1}'' সক্রিয়করণ কী-তে ''{0}'' পুল বাঁধা গেল না: {2}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author runab
-#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:326
+#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:325
 msgid "Unable to verify request."
 msgstr "অনুরোধ যাচাই করতে ব্যর্থ।"
 
-#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:340
-#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:363
+#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:339
+#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:362
 #, java-format
 msgid "{0} with id {1} could not be found."
 msgstr "{1} id বিশিষ্ট {0} পাওয়া যায়নি।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author runab
-#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:357
+#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:356
 msgid "Organization"
 msgstr "প্রতিষ্ঠান"
 
-#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:551
+#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:550
 #: server/src/main/java/org/candlepin/resteasy/interceptor/ConsumerAuth.java:57
 #, java-format
 msgid "Unit {0} has been deleted"
@@ -1336,26 +1255,26 @@ msgstr "{0} একক মোছা হয়েছে"
 msgid "Error contacting user service"
 msgstr "ব্যবহারকারী পরিসেবার সাথে সংযোগ করতে সমস্যা"
 
-#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:121
-#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:157
+#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:120
+#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:156
 msgid "Invalid oauth unit or secret"
 msgstr "অবৈদ oauth একক অথবা গোপন"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author runab
-#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:125
+#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:124
 #, java-format
 msgid "OAuth problem encountered. Internal message is: {0}"
 msgstr "OAuth-র সমস্যা দেখা দিয়েছে। অভ্যন্তরীণ বার্তা হল: {0}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author runab
-#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:131
+#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:130
 #, java-format
 msgid "OAuth error encountered. Internal message is: {0}"
 msgstr "OAuth-র ত্রুটি দেখা দিয়েছে। অভ্যন্তরীণ বার্তা হল: {0}"
 
-#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:162
+#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:161
 msgid "Error getting oauth unit key"
 msgstr "oauth একক কি প্রাপ্ত করতে ত্রুটি"
 

@@ -6,14 +6,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-10-28 13:24-0300\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2014-11-20 11:44-0400\n"
 "PO-Revision-Date: 2014-09-18 07:37-0400\n"
 "Last-Translator: jimidar <jimidar@gmail.com>\n"
 "Language-Team: Punjabi\n"
 "Language: pa\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 "X-Generator: Zanata 3.4.2\n"
 
@@ -225,93 +225,9 @@ msgstr "ਮੈਂਬਰੀ ਪੂਲ {0} ਮੌਜੂਦ ਨਹੀਂ ਹੈ।"
 msgid "Bad Request"
 msgstr "ਗਲਤ ਬੇਨਤੀ"
 
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:40
-msgid "must be false"
-msgstr "ਲਾਜਮੀ ਗਲਤ ਹੋਵੇ"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:42
-msgid "must be true"
-msgstr "ਲਾਜਮੀ ਸਹੀ ਹੋਵੇ"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:44
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:57
-#, java-format
-msgid "must be less than or equal to {0}"
-msgstr "ਲਾਜਮੀ ਹੀ {0} ਤੋਂ ਛੋਟਾ ਜਾਂ ਬਰਾਬਰ ਹੋਵੇ"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:47
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:60
-#, java-format
-msgid "must be greater than or equal to {0}"
-msgstr "ਲਾਜਮੀ ਹੀ {0} ਤੋਂ ਵੱਡਾ ਜਾਂ ਬਰਾਬਰ ਹੋਵੇ"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:51
-msgid ""
-"numeric value out of bounds (<{integer} digits>.<{fraction} digits> "
-"expected)"
-msgstr ""
-"ਹੱਦ ਤੋਂ ਬਾਹਰ ਦੇ ਅੰਕ ਮੁੱਲ (<{integer} digits>.<{fraction} digits> ਦੀ ਉਮੀਦ ਸੀ)"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:55
-msgid "must be in the future"
-msgstr "ਭਵਿੱਖ ਵਿੱਚ ਲਾਜਮੀ ਹੋਵੇ"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:63
-msgid "may not be null"
-msgstr "ਖਾਲੀ ਨਹੀਂ ਵੀ ਹੋ ਸਕਦਾ"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:65
-msgid "must be null"
-msgstr "ਲਾਜਮੀ ਖਾਲੀ ਹੋਵੇ"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:67
-msgid "must be in the past"
-msgstr "ਲਾਜਮੀ ਪਹਿਲੇ ਸਮੇਂ ਵਿੱਚ ਹੋਵੇ"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:69
-msgid "must match ''{regexp}''"
-msgstr "ਲਾਜਮੀ ''{regexp}'' ਨਾਲ ਮੇਲ ਖਾਵੇ"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:72
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:79
-#, java-format
-msgid "size must be between {0} and {1}"
-msgstr "ਅਕਾਰ {0} ਅਤੇ {1} ਵਿੱਚਕਾਰ ਲਾਜਮੀ ਹੋਵੇ"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:75
-msgid "invalid credit card number"
-msgstr "ਅਢੁਕਵਾਂ ਕਰੈਡਿਟ ਕਾਰਡ ਅੰਕ"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:77
-msgid "not a well-formed email address"
-msgstr "ਇਕ ਚੰਗੀ ਬਣਤਰ ਵਾਲਾ ਈ-ਪੱਤਰ ਪਤਾ ਨਹੀਂ"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:82
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:84
-msgid "may not be empty"
-msgstr "ਖਾਲੀ ਨਹੀਂ ਵੀ ਹੋ ਸਕਦਾ"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:86
-msgid "must be between {min} and {max}"
-msgstr " {min} ਅਤੇ {max} ਵਿੱਚਕਾਰ ਲਾਜਮੀ ਹੋਵੇ"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:89
-msgid "may have unsafe html content"
-msgstr "ਅਣਸੁਰੱਖਿਅਤ html ਸਮੱਗਰੀ ਵੀ ਹੋ ਸਕਦੀ ਹੈ"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:91
-#, java-format
-msgid "script expression ''{0}'' didn't evaluate to true"
-msgstr "''{0}'' ਸਕ੍ਰਿਪਟ ਸਮੀਕਰਣ ਨਤੀਜਾ ਸੱਚ ਨਹੀਂ ਨਿਕਲਿਆ"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:94
-msgid "must be a valid URL"
-msgstr "ਇੱਕ ਯੋਗ URL ਹੋਣਾ ਲਾਜਮੀ ਹੈ"
-
 #: server/src/main/java/org/candlepin/model/AbstractHibernateCurator.java:419
 msgid "Request failed due to concurrent modification, please re-try."
-msgstr ""
-"ਬੇਨਤੀ ਇਕੱਠੇ ਇੱਕੋ ਵੇਲੇ ਸੁਧਾਰਾਂ ਕਰ ਕੇ ਅਸਫਲ ਹੋਈ, ਕਿਰਪਾ ਕਰ ਕੇ ਮੁੜ ਕੋਸ਼ਿਸ਼ ਕਰੋ।"
+msgstr "ਬੇਨਤੀ ਇਕੱਠੇ ਇੱਕੋ ਵੇਲੇ ਸੁਧਾਰਾਂ ਕਰ ਕੇ ਅਸਫਲ ਹੋਈ, ਕਿਰਪਾ ਕਰ ਕੇ ਮੁੜ ਕੋਸ਼ਿਸ਼ ਕਰੋ।"
 
 #: server/src/main/java/org/candlepin/model/ConsumerCurator.java:408
 #, java-format
@@ -371,29 +287,26 @@ msgid ""
 "Activation keys can only use consumer type restricted pools for a single "
 "consumer type."
 msgstr ""
-"ਕਿਰਿਆਸ਼ੀਲਤਾ ਚਾਬੀਆਂ ਸਿਰਫ਼ ਇਕਿਹਰੀ ਗ੍ਰਾਹਕ ਕਿਸਮ ਲਈ ਹੀ ਗ੍ਰਾਹਕ ਕਿਸਮ ਵਰਜਿਤ ਪੂਲ ਵਰਤ "
-"ਸਕਦੀਆਂ ਹਨ।"
+"ਕਿਰਿਆਸ਼ੀਲਤਾ ਚਾਬੀਆਂ ਸਿਰਫ਼ ਇਕਿਹਰੀ ਗ੍ਰਾਹਕ ਕਿਸਮ ਲਈ ਹੀ ਗ੍ਰਾਹਕ ਕਿਸਮ ਵਰਜਿਤ ਪੂਲ ਵਰਤ ਸਕਦੀਆਂ "
+"ਹਨ।"
 
 #: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:82
 msgid ""
 "Cannot add pools that are restricted to unit type 'person' to activation "
 "keys."
-msgstr ""
-"ਇਕਾਈ ਕਿਸਮ 'person' ਲਈ ਪਾਬੰਦ ਪੂਲਾਂ ਨੂੰ ਕਿਰਿਆਸ਼ੀਲਤਾ ਚਾਬੀਆਂ ਵਿੱਚ ਨਹੀਂ ਜੋੜ ਸਕਦਾ।"
+msgstr "ਇਕਾਈ ਕਿਸਮ 'person' ਲਈ ਪਾਬੰਦ ਪੂਲਾਂ ਨੂੰ ਕਿਰਿਆਸ਼ੀਲਤਾ ਚਾਬੀਆਂ ਵਿੱਚ ਨਹੀਂ ਜੋੜ ਸਕਦਾ।"
 
 #: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:86
 msgid ""
 "Cannot use pools with host restriction with physical only pools on a single "
 "activation key"
 msgstr ""
-"ਇੱਕ ਇਕਹਿਰੀ ਕਿਰਿਆਸ਼ੀਲਤਾ ਚਾਬੀ ਉੱਪਰ ਸਿਰਫ ਭੌਤਿਕ ਪੂਲਾਂ ਨਾਲ ਮੇਜਬਾਨ ਪਾਬੰਦੀਆਂ ਨਾਲ ਪੂਲ "
-"ਨਹੀਂ ਵਰਤ ਸਕਦਾ"
+"ਇੱਕ ਇਕਹਿਰੀ ਕਿਰਿਆਸ਼ੀਲਤਾ ਚਾਬੀ ਉੱਪਰ ਸਿਰਫ ਭੌਤਿਕ ਪੂਲਾਂ ਨਾਲ ਮੇਜਬਾਨ ਪਾਬੰਦੀਆਂ ਨਾਲ ਪੂਲ ਨਹੀਂ ਵਰਤ "
+"ਸਕਦਾ"
 
 #: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:90
 msgid "Activation keys can only use host restricted pools from a single host."
-msgstr ""
-"ਕਿਰਿਆਸ਼ੀਲਤਾ ਚਾਬੀਆਂ ਸਿਰਫ਼ ਇਕੱਲੇ ਮੇਜਬਾਨ ਉੰਤੋਂ ਹੀ ਵਰਜਿਤ ਮੇਜਬਾਨ ਪੂਲ ਵਰਤ ਸਕਦੀਆਂ "
-"ਹਨ।"
+msgstr "ਕਿਰਿਆਸ਼ੀਲਤਾ ਚਾਬੀਆਂ ਸਿਰਫ਼ ਇਕੱਲੇ ਮੇਜਬਾਨ ਉੰਤੋਂ ਹੀ ਵਰਜਿਤ ਮੇਜਬਾਨ ਪੂਲ ਵਰਤ ਸਕਦੀਆਂ ਹਨ।"
 
 #: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:94
 #, java-format
@@ -428,22 +341,18 @@ msgid ""
 "Activation keys for physical systems can only use quantities of pool ''{0}'' "
 "evenly divisible by {1}"
 msgstr ""
-"ਭੌਤਿਕ ਸਿਸਟਮਾਂ ਲਈ ਕਿਰਿਆਸ਼ੀਲਤਾ ਚਾਬੀਆਂ ਸਿਰਫ ''{0}'' ਪੂਲ ਦੀਆਂ {1} ਤੇ ਬਰਾਬਰ ਵੰਡੀਆਂ "
-"ਜਾ ਸਕਣ ਵਾਲੀਆਂ ਮਾਤਰਾਵਾਂ ਹੀ ਵਰਤ ਸਕਦੀਆਂ ਹਨ।"
+"ਭੌਤਿਕ ਸਿਸਟਮਾਂ ਲਈ ਕਿਰਿਆਸ਼ੀਲਤਾ ਚਾਬੀਆਂ ਸਿਰਫ ''{0}'' ਪੂਲ ਦੀਆਂ {1} ਤੇ ਬਰਾਬਰ ਵੰਡੀਆਂ ਜਾ ਸਕਣ "
+"ਵਾਲੀਆਂ ਮਾਤਰਾਵਾਂ ਹੀ ਵਰਤ ਸਕਦੀਆਂ ਹਨ।"
 
 #: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:117
 #, java-format
-msgid ""
-"Cannot add virtual pool ''{0}'' to activation key for physical systems."
-msgstr ""
-"ਭੌਤਿਕ ਸਿਸਟਮਾਂ ਲਈ ਕਿਰਿਆਸ਼ੀਲਤਾ ਚਾਬੀਆਂ ਵਿੱਚ ''{0}'' ਆਭਾਸੀ ਪੂਲ ਨਹੀਂ ਜੋੜ ਸਕਦਾ।"
+msgid "Cannot add virtual pool ''{0}'' to activation key for physical systems."
+msgstr "ਭੌਤਿਕ ਸਿਸਟਮਾਂ ਲਈ ਕਿਰਿਆਸ਼ੀਲਤਾ ਚਾਬੀਆਂ ਵਿੱਚ ''{0}'' ਆਭਾਸੀ ਪੂਲ ਨਹੀਂ ਜੋੜ ਸਕਦਾ।"
 
 #: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:121
 #, java-format
-msgid ""
-"Cannot add physical pool ''{0}'' to activation key for virtual systems."
-msgstr ""
-"ਆਭਾਸੀ ਸਿਸਟਮਾਂ ਲਈ ਕਿਰਿਆਸ਼ੀਲਤਾ ਚਾਬੀਆਂ ਵਿੱਚ ''{0}'' ਭੌਤਿਕ ਪੂਲ ਨਹੀਂ ਜੋੜ ਸਕਦਾ।"
+msgid "Cannot add physical pool ''{0}'' to activation key for virtual systems."
+msgstr "ਆਭਾਸੀ ਸਿਸਟਮਾਂ ਲਈ ਕਿਰਿਆਸ਼ੀਲਤਾ ਚਾਬੀਆਂ ਵਿੱਚ ''{0}'' ਭੌਤਿਕ ਪੂਲ ਨਹੀਂ ਜੋੜ ਸਕਦਾ।"
 
 #: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:60
 msgid "Not supported by a valid subscription."
@@ -506,7 +415,6 @@ msgstr "{0} ਲਈ ਮੈਂਬਰੀ ਖਤਮ ਹੋਈ ਇਸ ਵੇਲੇ: {
 #, java-format
 msgid ""
 "This unit has already had the subscription matching pool ID ''{0}'' attached."
-""
 msgstr "ਇਸ ਇਕਾਈ ਕੋਲ ਪਹਿਲਾਂ ਤੋਂ ਹੀ ਮੈਂਬਰੀ ਨਾਲ ਮਿਲਦੀ ਪੂਲ ID ''{0}'' ਨੱਥੀ ਹੈ"
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:51
@@ -552,16 +460,13 @@ msgstr "ਪੂਲ ਭੌਤਿਕ ਸਿਸਟਮਾਂ ਤੱਕ ਸੀਮਿ�
 msgid ""
 "Subscription ''{0}'' must be attached using a quantity evenly divisible by "
 "{1}"
-msgstr ""
-"ਮੈਂਬਰੀ ''{0}'' ਨੂੰ ਲਾਜਮੀ {1} ਨਾਲ ਭਾਗ ਹੋ ਸਕਣ ਵਾਲੀ ਮਾਤਰਾ ਵਰਤ ਕੇ ਨੱਥੀ ਕੀਤਾ "
-"ਜਾਵੇ।"
+msgstr "ਮੈਂਬਰੀ ''{0}'' ਨੂੰ ਲਾਜਮੀ {1} ਨਾਲ ਭਾਗ ਹੋ ਸਕਣ ਵਾਲੀ ਮਾਤਰਾ ਵਰਤ ਕੇ ਨੱਥੀ ਕੀਤਾ ਜਾਵੇ।"
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:90
 #, java-format
 msgid ""
 "Unit does not support instance based calculation required by pool ''{0}''"
-msgstr ""
-" ''{0}'' ਪੂਲ ਦੁਆਰਾ ਲੋੜੀਂਦੀ ਨਮੂਨਾ ਅਧਾਰਿਤ ਗਣਨਾ ਨੂੰ ਇਕਾਈ ਸਮਰਥਨ ਨਹੀਂ ਦਿੰਦੀ"
+msgstr " ''{0}'' ਪੂਲ ਦੁਆਰਾ ਲੋੜੀਂਦੀ ਨਮੂਨਾ ਅਧਾਰਿਤ ਗਣਨਾ ਨੂੰ ਇਕਾਈ ਸਮਰਥਨ ਨਹੀਂ ਦਿੰਦੀ"
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:94
 #, java-format
@@ -576,8 +481,7 @@ msgstr "''{0}'' ਪੂਲ ਦੁਆਰਾ ਲੋੜੀਂਦੀ RAM ਗਣਨਾ
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:102
 #, java-format
 msgid "Unit does not support derived products data required by pool ''{0}''"
-msgstr ""
-"ਇਕਾਈ ਪੂਲ ''{0}'' ਦੁਆਰਾ ਲੋੜੀਂਦੇ ਪ੍ਰਾਪਤ ਕੀਤੇ ਉਤਪਾਦ ਡਾਟਾ ਦਾ ਸਮਰਥਨ ਨਹੀਂ ਕਰਦਾ"
+msgstr "ਇਕਾਈ ਪੂਲ ''{0}'' ਦੁਆਰਾ ਲੋੜੀਂਦੇ ਪ੍ਰਾਪਤ ਕੀਤੇ ਉਤਪਾਦ ਡਾਟਾ ਦਾ ਸਮਰਥਨ ਨਹੀਂ ਕਰਦਾ"
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:106
 #, java-format
@@ -840,8 +744,8 @@ msgid ""
 "Unit {0} cannot be exported. A manifest cannot be made for units of type "
 "''{1}''."
 msgstr ""
-"ਇਕਾਈ {0} ਨਿਰਯਾਤ ਨਹੀਂ ਕੀਤੀ ਜਾ ਸਕਦੀ। ''{1}'' ਜਿਹੀ ਕਿਸਮ ਦੀਆਂ ਇਕਾਈਆਂ ਲਈ ਮੈਨੀਫੈਸਟ "
-"ਨਹੀਂ ਬਣਾਇਆ ਜਾ ਸਕਦਾ"
+"ਇਕਾਈ {0} ਨਿਰਯਾਤ ਨਹੀਂ ਕੀਤੀ ਜਾ ਸਕਦੀ। ''{1}'' ਜਿਹੀ ਕਿਸਮ ਦੀਆਂ ਇਕਾਈਆਂ ਲਈ ਮੈਨੀਫੈਸਟ ਨਹੀਂ "
+"ਬਣਾਇਆ ਜਾ ਸਕਦਾ"
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1806
 #, java-format
@@ -941,9 +845,7 @@ msgstr "ਟਿਕਾਣਾ ਇਕਾਈ ਦੁਆਰਾ ਇੰਟਾਈਟਲਮ
 msgid ""
 "The quantity specified must be greater than zero and less than or equal to "
 "the total for this entitlement"
-msgstr ""
-"ਦਰਸਾਈ ਗਈ ਮਾਤਰਾ ਸਿਫ਼ਰ ਤੋਂ ਵੱਡੀ ਅਤੇ ਇਸ ਇੰਟਾਈਟਲਮੈਂਟ ਦੇ ਕੁੱਲ ਦੇ ਬਰਾਬਰ ਜਾਂ ਇਸ ਤੋਂ "
-"ਵੱਡੀ ਹੋਵੇ"
+msgstr "ਦਰਸਾਈ ਗਈ ਮਾਤਰਾ ਸਿਫ਼ਰ ਤੋਂ ਵੱਡੀ ਅਤੇ ਇਸ ਇੰਟਾਈਟਲਮੈਂਟ ਦੇ ਕੁੱਲ ਦੇ ਬਰਾਬਰ ਜਾਂ ਇਸ ਤੋਂ ਵੱਡੀ ਹੋਵੇ"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author jassy
@@ -990,9 +892,7 @@ msgstr "org ''{0}'' ਵਿੱਚ ਹਾਈਪਰਵਾਈਜ਼ਰ ਲੱਭਣ 
 #: server/src/main/java/org/candlepin/resource/JobResource.java:111
 msgid ""
 "You must specify exactly one of owner key, unit UUID, or principal name."
-msgstr ""
-"ਤੁਹਾਨੂੰ ਮਾਲਕ ਚਾਬੀ, ਇਕਾਈ UUID, ਜਾਂ ਪ੍ਰਿੰਸੀਪਲ ਨਾਂ ਵਿੱਚੋਂ ਬੱਸ ਇੱਕ ਦਰਸਾਉਣਾ ਜਰੂਰੀ "
-"ਹੈ।"
+msgstr "ਤੁਹਾਨੂੰ ਮਾਲਕ ਚਾਬੀ, ਇਕਾਈ UUID, ਜਾਂ ਪ੍ਰਿੰਸੀਪਲ ਨਾਂ ਵਿੱਚੋਂ ਬੱਸ ਇੱਕ ਦਰਸਾਉਣਾ ਜਰੂਰੀ ਹੈ।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author jassy
@@ -1036,8 +936,7 @@ msgid ""
 "The activation key name ''{0}'' must be alphanumeric or include the "
 "characters '-' or '_'"
 msgstr ""
-"''{0}'' ਕਿਰਿਆਸ਼ੀਲਤਾ ਚਾਬੀ ਨਾਂ ਦਾ ਸ਼ਬਦ-ਅੰਕ ਹੋਣਾ ਜਰੂਰੀ ਹੈ ਜਾਂ ਫਿਰ '-' ਜਾਂ '_' "
-"ਸ਼ਾਮਿਲ ਹੋਣ"
+"''{0}'' ਕਿਰਿਆਸ਼ੀਲਤਾ ਚਾਬੀ ਨਾਂ ਦਾ ਸ਼ਬਦ-ਅੰਕ ਹੋਣਾ ਜਰੂਰੀ ਹੈ ਜਾਂ ਫਿਰ '-' ਜਾਂ '_' ਸ਼ਾਮਿਲ ਹੋਣ"
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:545
 #, java-format
@@ -1234,8 +1133,7 @@ msgstr "ਅਜਿਹਾ ਕੋਈ ਯੂਜ਼ਰ ਨਹੀਂ: {0}"
 # keys
 #: server/src/main/java/org/candlepin/resource/RulesResource.java:90
 msgid "Error decoding the rules. The text should be base 64 encoded"
-msgstr ""
-"ਨਿਯਮ ਡੀਕੋਡ ਕਰਨ ਵੇਲੇ ਗਲਤੀ ਆਈ ਹੈ। ਪਾਠ ਨੂੰ ਬੇਸ 64 ਨਾਲ ਡੀਕੋਡ ਕਰਨਾ ਚਾਹੀਦਾ ਹੈ"
+msgstr "ਨਿਯਮ ਡੀਕੋਡ ਕਰਨ ਵੇਲੇ ਗਲਤੀ ਆਈ ਹੈ। ਪਾਠ ਨੂੰ ਬੇਸ 64 ਨਾਲ ਡੀਕੋਡ ਕਰਨਾ ਚਾਹੀਦਾ ਹੈ"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -1294,23 +1192,23 @@ msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author jassy
-#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:326
+#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:325
 msgid "Unable to verify request."
 msgstr "ਬੇਨਤੀ ਜਾਂਚ ਕਰਨ ਤੋਂ ਅਸਮਰੱਥ।"
 
-#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:340
-#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:363
+#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:339
+#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:362
 #, java-format
 msgid "{0} with id {1} could not be found."
 msgstr "id {1} ਵਾਲੀ {0} ਨਹੀਂ ਲੱਭ ਸਕੀ।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author jassy
-#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:357
+#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:356
 msgid "Organization"
 msgstr "ਸੰਗਠਨ"
 
-#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:551
+#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:550
 #: server/src/main/java/org/candlepin/resteasy/interceptor/ConsumerAuth.java:57
 #, java-format
 msgid "Unit {0} has been deleted"
@@ -1322,26 +1220,26 @@ msgstr "ਇਕਾਈ {0} ਮਿਟਾਈ ਜਾ ਚੁੱਕੀ ਹੈ"
 msgid "Error contacting user service"
 msgstr "ਉਪਭੋਗੀ ਸੇਵਾ ਨਾਲ ਸੰਪਰਕ ਸਮੇਂ ਗਲਤੀ"
 
-#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:121
-#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:157
+#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:120
+#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:156
 msgid "Invalid oauth unit or secret"
 msgstr "ਗਲਤ oauth ਇਕਾਈ ਜਾਂ ਰਾਜ਼"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author jassy
-#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:125
+#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:124
 #, java-format
 msgid "OAuth problem encountered. Internal message is: {0}"
 msgstr "OAuth ਸਮੱਸਿਆ ਆਈ ਹੈ। ਅੰਦਰੂਨੀ ਸੁਨੇਹਾ ਹੈ: {0}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author jassy
-#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:131
+#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:130
 #, java-format
 msgid "OAuth error encountered. Internal message is: {0}"
 msgstr "OAuth ਗਲਤੀ ਆਈ ਹੈ। ਅੰਦਰੂਨੀ ਸੁਨੇਹਾ ਹੈ: {0}"
 
-#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:162
+#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:161
 msgid "Error getting oauth unit key"
 msgstr "oauth ਇਕਾਈ ਚਾਬੀ ਪ੍ਰਾਪਤ ਕਰਨ ਵਿੱਚ ਗਲਤੀ"
 
@@ -1361,12 +1259,12 @@ msgstr "ਇੱਕ ਧਨਾਤਮਕ ਅੰਕ ਦੀ ਆਸ ਹੈ।"
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
-"to address this problem. See kbase https://access.redhat.com/knowledge/node/"
-"129003 for more information."
+"to address this problem. See kbase https://access.redhat.com/knowledge/"
+"node/129003 for more information."
 msgstr ""
-"ਪ੍ਰਮਾਣ-ਪੱਤਰ {0} ਲਈ ਬਹੁਤ ਜਿਆਦਾ ਅੰਸ਼ ਸਮੂਹ। ਇਸ ਮੁਸ਼ਕਿਲ ਨੂੰ ਮੁਖਾਤਿਬ ਹੋਣ ਲਈ ਕੋਈ "
-"ਨਵਾਂ ਗ੍ਰਾਹਕ ਉਪਲੱਬਧ ਹੋ ਸਕਦਾ ਹੈ। ਜਿਆਦਾ ਜਾਣਕਾਰੀ ਲਈ kbase https://access.redhat."
-"com/knowledge/node/129003 ਦੇਖੋ।"
+"ਪ੍ਰਮਾਣ-ਪੱਤਰ {0} ਲਈ ਬਹੁਤ ਜਿਆਦਾ ਅੰਸ਼ ਸਮੂਹ। ਇਸ ਮੁਸ਼ਕਿਲ ਨੂੰ ਮੁਖਾਤਿਬ ਹੋਣ ਲਈ ਕੋਈ ਨਵਾਂ ਗ੍ਰਾਹਕ "
+"ਉਪਲੱਬਧ ਹੋ ਸਕਦਾ ਹੈ। ਜਿਆਦਾ ਜਾਣਕਾਰੀ ਲਈ kbase https://access.redhat.com/knowledge/"
+"node/129003 ਦੇਖੋ।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author jassy
@@ -1382,8 +1280,7 @@ msgstr "ਅਪਸਟ੍ਰੀਮ ਮੈਂਬਰੀ ਪ੍ਰਬੰਧਨ ਐਪ
 msgid ""
 "This subscription management application has already been imported by "
 "another owner."
-msgstr ""
-"ਇਹ ਮੈਂਬਰੀ ਪ੍ਰਬੰਧਨ ਐਪਲੀਕੇਸ਼ਨ ਪਹਿਲਾਂ ਹੀ ਇੱਕ ਹੋਰ ਮਾਲਕ ਦੁਆਰਾ ਆਯਾਤ ਕੀਤੀ ਗਈ ਹੈ।"
+msgstr "ਇਹ ਮੈਂਬਰੀ ਪ੍ਰਬੰਧਨ ਐਪਲੀਕੇਸ਼ਨ ਪਹਿਲਾਂ ਹੀ ਇੱਕ ਹੋਰ ਮਾਲਕ ਦੁਆਰਾ ਆਯਾਤ ਕੀਤੀ ਗਈ ਹੈ।"
 
 #: server/src/main/java/org/candlepin/sync/ConsumerImporter.java:85
 msgid ""
@@ -1479,3 +1376,60 @@ msgstr "ਮੁੱਲਾਂ ਨੂੰ ਮੁੜ ਲਿਖਣਾ ਇਸ ਦੇ ਲ
 #, java-format
 msgid "Service level ''{0}'' is not available to units of organization {1}."
 msgstr "''{0}'' ਸੇਵਾ ਪੱਧਰ {1} ਸੰਸਥਾ ਦੀਆਂ ਇਕਾਈਆਂ ਲਈ ਉਪਲੱਬਧ ਨਹੀਂ ਹੈ।"
+
+#~ msgid "must be false"
+#~ msgstr "ਲਾਜਮੀ ਗਲਤ ਹੋਵੇ"
+
+#~ msgid "must be true"
+#~ msgstr "ਲਾਜਮੀ ਸਹੀ ਹੋਵੇ"
+
+#~ msgid "must be less than or equal to {0}"
+#~ msgstr "ਲਾਜਮੀ ਹੀ {0} ਤੋਂ ਛੋਟਾ ਜਾਂ ਬਰਾਬਰ ਹੋਵੇ"
+
+#~ msgid "must be greater than or equal to {0}"
+#~ msgstr "ਲਾਜਮੀ ਹੀ {0} ਤੋਂ ਵੱਡਾ ਜਾਂ ਬਰਾਬਰ ਹੋਵੇ"
+
+#~ msgid ""
+#~ "numeric value out of bounds (<{integer} digits>.<{fraction} digits> "
+#~ "expected)"
+#~ msgstr ""
+#~ "ਹੱਦ ਤੋਂ ਬਾਹਰ ਦੇ ਅੰਕ ਮੁੱਲ (<{integer} digits>.<{fraction} digits> ਦੀ ਉਮੀਦ ਸੀ)"
+
+#~ msgid "must be in the future"
+#~ msgstr "ਭਵਿੱਖ ਵਿੱਚ ਲਾਜਮੀ ਹੋਵੇ"
+
+#~ msgid "may not be null"
+#~ msgstr "ਖਾਲੀ ਨਹੀਂ ਵੀ ਹੋ ਸਕਦਾ"
+
+#~ msgid "must be null"
+#~ msgstr "ਲਾਜਮੀ ਖਾਲੀ ਹੋਵੇ"
+
+#~ msgid "must be in the past"
+#~ msgstr "ਲਾਜਮੀ ਪਹਿਲੇ ਸਮੇਂ ਵਿੱਚ ਹੋਵੇ"
+
+#~ msgid "must match ''{regexp}''"
+#~ msgstr "ਲਾਜਮੀ ''{regexp}'' ਨਾਲ ਮੇਲ ਖਾਵੇ"
+
+#~ msgid "size must be between {0} and {1}"
+#~ msgstr "ਅਕਾਰ {0} ਅਤੇ {1} ਵਿੱਚਕਾਰ ਲਾਜਮੀ ਹੋਵੇ"
+
+#~ msgid "invalid credit card number"
+#~ msgstr "ਅਢੁਕਵਾਂ ਕਰੈਡਿਟ ਕਾਰਡ ਅੰਕ"
+
+#~ msgid "not a well-formed email address"
+#~ msgstr "ਇਕ ਚੰਗੀ ਬਣਤਰ ਵਾਲਾ ਈ-ਪੱਤਰ ਪਤਾ ਨਹੀਂ"
+
+#~ msgid "may not be empty"
+#~ msgstr "ਖਾਲੀ ਨਹੀਂ ਵੀ ਹੋ ਸਕਦਾ"
+
+#~ msgid "must be between {min} and {max}"
+#~ msgstr " {min} ਅਤੇ {max} ਵਿੱਚਕਾਰ ਲਾਜਮੀ ਹੋਵੇ"
+
+#~ msgid "may have unsafe html content"
+#~ msgstr "ਅਣਸੁਰੱਖਿਅਤ html ਸਮੱਗਰੀ ਵੀ ਹੋ ਸਕਦੀ ਹੈ"
+
+#~ msgid "script expression ''{0}'' didn't evaluate to true"
+#~ msgstr "''{0}'' ਸਕ੍ਰਿਪਟ ਸਮੀਕਰਣ ਨਤੀਜਾ ਸੱਚ ਨਹੀਂ ਨਿਕਲਿਆ"
+
+#~ msgid "must be a valid URL"
+#~ msgstr "ਇੱਕ ਯੋਗ URL ਹੋਣਾ ਲਾਜਮੀ ਹੈ"

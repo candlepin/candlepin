@@ -8,14 +8,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-10-28 13:24-0300\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2014-11-20 11:44-0400\n"
 "PO-Revision-Date: 2014-09-25 09:40-0400\n"
 "Last-Translator: kkrothap <kkrothap@fedoraproject.org>\n"
 "Language-Team: Telugu <kde-i18n-doc@kde.org>\n"
 "Language: te\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 "X-Generator: Zanata 3.4.2\n"
 
@@ -227,90 +227,6 @@ msgstr "సబ్‌స్క్రిప్షన్ పూల్ {0} లేద
 msgid "Bad Request"
 msgstr "చెడ్డ అభ్యర్ధన"
 
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:40
-msgid "must be false"
-msgstr "తప్పక false కావాలి"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:42
-msgid "must be true"
-msgstr "తప్పక true కావాలి"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:44
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:57
-#, java-format
-msgid "must be less than or equal to {0}"
-msgstr "తప్పకుండా {0} కు సమానం లేదా తక్కువ కావాలి"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:47
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:60
-#, java-format
-msgid "must be greater than or equal to {0}"
-msgstr "తప్పకుండా {0} కు సమానం లేదా ఎక్కువ కావాలి"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:51
-msgid ""
-"numeric value out of bounds (<{integer} digits>.<{fraction} digits> "
-"expected)"
-msgstr ""
-"సంఖ్యా విలువ పరిధులు దాటింది (<{integer} digits>.<{fraction} digits> "
-"కావలసింది)"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:55
-msgid "must be in the future"
-msgstr "తప్పకుండా భవిష్యత్తలో ఉండాలి"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:63
-msgid "may not be null"
-msgstr "null కాకపోవచ్చు"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:65
-msgid "must be null"
-msgstr "తప్పక null కావాలి"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:67
-msgid "must be in the past"
-msgstr "తప్పక గతంలో ఉండాలి"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:69
-msgid "must match ''{regexp}''"
-msgstr "తప్పక ''{regexp}'' తో సరిపోలాలి"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:72
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:79
-#, java-format
-msgid "size must be between {0} and {1}"
-msgstr "పరిమాణం తప్పక {0} మరియు {1} మధ్యన ఉండాలి"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:75
-msgid "invalid credit card number"
-msgstr "చెల్లని క్రెడిట్ కార్డ్ సంఖ్య"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:77
-msgid "not a well-formed email address"
-msgstr "చక్కగా-రూపొందిన ఈమెయిల్ చిరునామా కాదు"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:82
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:84
-msgid "may not be empty"
-msgstr "ఖాళీ కాలేదు"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:86
-msgid "must be between {min} and {max}"
-msgstr "తప్పక {min} మరియు {max} మధ్యన ఉండాలి"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:89
-msgid "may have unsafe html content"
-msgstr "ఉపయోగకర హెచ్‌టిఎమ్‌ఎల్ కాంటెంట్ కలిగివుండవచ్చు"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:91
-#, java-format
-msgid "script expression ''{0}'' didn't evaluate to true"
-msgstr "స్క్రిప్ట్ ఎక్సుప్రెషన్ ''{0}'' అనునది true కు ఎవాల్యుయేట్ కాలేదు"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:94
-msgid "must be a valid URL"
-msgstr "తప్పక చెల్లునటువంటి యుఆర్‌ఎల్ అవ్వాలి"
-
 #: server/src/main/java/org/candlepin/model/AbstractHibernateCurator.java:419
 msgid "Request failed due to concurrent modification, please re-try."
 msgstr "ప్రస్తుత సవరణ వలన అభ్యర్ధన విఫలమైంది, దయచేసి తిరిగి-ప్రయత్నించు."
@@ -372,9 +288,7 @@ msgstr "ఐడి {0} తో క్రియాశీలకీ కనుగొ�
 msgid ""
 "Activation keys can only use consumer type restricted pools for a single "
 "consumer type."
-msgstr ""
-"క్రియాశీల కీలు ఒక వినియోగదారి రకం కొరకు వినియోగదారి రకం నిర్భందిత పూల్స్ "
-"మాత్రమే ఉపయోగించగలవు."
+msgstr "క్రియాశీల కీలు ఒక వినియోగదారి రకం కొరకు వినియోగదారి రకం నిర్భందిత పూల్స్ మాత్రమే ఉపయోగించగలవు."
 
 #: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:82
 msgid ""
@@ -386,15 +300,11 @@ msgstr "యూనిట్ రకం 'person' కు నిర్భందిం
 msgid ""
 "Cannot use pools with host restriction with physical only pools on a single "
 "activation key"
-msgstr ""
-"ఒక క్రియాశీల కీ పైన భౌతికంగా మాత్రమే హోస్ట్ నిర్భందితమైన పూల్స్‌ "
-"ఉపయోగించలేము."
+msgstr "ఒక క్రియాశీల కీ పైన భౌతికంగా మాత్రమే హోస్ట్ నిర్భందితమైన పూల్స్‌ ఉపయోగించలేము."
 
 #: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:90
 msgid "Activation keys can only use host restricted pools from a single host."
-msgstr ""
-"ఒంటరి అతిధేయ నుండి అతిధేయ నిర్భందిత పూల్సును మాత్రమే క్రియాశీల కీలు "
-"వుపయోగించును."
+msgstr "ఒంటరి అతిధేయ నుండి అతిధేయ నిర్భందిత పూల్సును మాత్రమే క్రియాశీల కీలు వుపయోగించును."
 
 #: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:94
 #, java-format
@@ -408,8 +318,8 @@ msgid ""
 "Error: Only pools with multi-entitlement product subscriptions can be added "
 "to the activation key with a quantity greater than one."
 msgstr ""
-"దోషం: ఒకటి కన్నా యెక్కువ పరిమాణంతో బహుళ-యెన్టైటిల్మెంట్ వుత్పత్తి "
-"సబ్‌స్క్రిప్షన్సుతో వున్న పూల్సు మాత్రమే క్రియాశీల కీకు జతచేయబడును."
+"దోషం: ఒకటి కన్నా యెక్కువ పరిమాణంతో బహుళ-యెన్టైటిల్మెంట్ వుత్పత్తి సబ్‌స్క్రిప్షన్సుతో వున్న పూల్సు మాత్రమే "
+"క్రియాశీల కీకు జతచేయబడును."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author kkrothap
@@ -429,22 +339,18 @@ msgid ""
 "Activation keys for physical systems can only use quantities of pool ''{0}'' "
 "evenly divisible by {1}"
 msgstr ""
-"క్రియాశీల కీలు భౌతిక వ్యవస్థల కొరకు {1} తో నిశ్శేషంగా భాగించగల ''{0}'' పూల్ "
-"మొత్తాలను మాత్రమే ఉపయోగించగలవు"
+"క్రియాశీల కీలు భౌతిక వ్యవస్థల కొరకు {1} తో నిశ్శేషంగా భాగించగల ''{0}'' పూల్ మొత్తాలను మాత్రమే "
+"ఉపయోగించగలవు"
 
 #: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:117
 #, java-format
-msgid ""
-"Cannot add virtual pool ''{0}'' to activation key for physical systems."
-msgstr ""
-"భౌతిక వ్యవస్థల కొరకు క్రియాశీల కీనకు వర్చ్యువల్ పూల్ ''{0}'' జతచేయలేము."
+msgid "Cannot add virtual pool ''{0}'' to activation key for physical systems."
+msgstr "భౌతిక వ్యవస్థల కొరకు క్రియాశీల కీనకు వర్చ్యువల్ పూల్ ''{0}'' జతచేయలేము."
 
 #: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:121
 #, java-format
-msgid ""
-"Cannot add physical pool ''{0}'' to activation key for virtual systems."
-msgstr ""
-"వర్చ్యువల్ వ్యవస్థల కొరకు క్రియాశీల కీనకు భౌతిక పూల్ ''{0}'' జతచేయలేము."
+msgid "Cannot add physical pool ''{0}'' to activation key for virtual systems."
+msgstr "వర్చ్యువల్ వ్యవస్థల కొరకు క్రియాశీల కీనకు భౌతిక పూల్ ''{0}'' జతచేయలేము."
 
 #: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:60
 msgid "Not supported by a valid subscription."
@@ -507,10 +413,7 @@ msgstr "{0} కొరకు సబ్‌స్క్రిప్షన్లు 
 #, java-format
 msgid ""
 "This unit has already had the subscription matching pool ID ''{0}'' attached."
-""
-msgstr ""
-"ఈ యూనిట్ అనునది యిప్పటికే పూల్ ఐడి ''{0}'' పోలు సబ్‌స్క్రిప్షన్ అనుబందించి "
-"కలిగివుంది."
+msgstr "ఈ యూనిట్ అనునది యిప్పటికే పూల్ ఐడి ''{0}'' పోలు సబ్‌స్క్రిప్షన్ అనుబందించి కలిగివుంది."
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:51
 #, java-format
@@ -555,16 +458,13 @@ msgstr "పూల్ అనునది భౌతిక వ్యవస్థల
 msgid ""
 "Subscription ''{0}'' must be attached using a quantity evenly divisible by "
 "{1}"
-msgstr ""
-"సబ్‌స్క్రిప్షన్ \"{0}\" అనునది {1} తో సమంగా భాగించబడు మొత్తంతో "
-"అనుబందించబడాలి"
+msgstr "సబ్‌స్క్రిప్షన్ \"{0}\" అనునది {1} తో సమంగా భాగించబడు మొత్తంతో అనుబందించబడాలి"
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:90
 #, java-format
 msgid ""
 "Unit does not support instance based calculation required by pool ''{0}''"
-msgstr ""
-"పూల్ \"{0}\" కు అవసరమైన ఇన్‌స్టాన్స్ ఆధారిత గణింపును యూనిట్ తోడ్పాటునీయదు"
+msgstr "పూల్ \"{0}\" కు అవసరమైన ఇన్‌స్టాన్స్ ఆధారిత గణింపును యూనిట్ తోడ్పాటునీయదు"
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:94
 #, java-format
@@ -579,9 +479,7 @@ msgstr "పూల్ ''{0}'' కు అవసరమైన RAM గణింపు
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:102
 #, java-format
 msgid "Unit does not support derived products data required by pool ''{0}''"
-msgstr ""
-"పూల్ ''{0}'' చే అభ్యర్ధించబడిన డిరైవ్డ్ ఉత్పత్తుల దత్తాంశంను యూనిట్ "
-"తోడ్పాటునీయదు"
+msgstr "పూల్ ''{0}'' చే అభ్యర్ధించబడిన డిరైవ్డ్ ఉత్పత్తుల దత్తాంశంను యూనిట్ తోడ్పాటునీయదు"
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:106
 #, java-format
@@ -592,17 +490,13 @@ msgstr "ఐడి ''{0}'' తో పూల్ అనుబందించ లే
 #, java-format
 msgid ""
 "This system already has a subscription for the product ''{0}'' attached."
-msgstr ""
-"ఉత్పత్తి ''{0}'' కొరకు వొక సబ్‌స్క్రిప్షన్‌ను ఈ వ్యవస్థ యిప్పటికే అనుబందించి "
-"కలిగివుంది."
+msgstr "ఉత్పత్తి ''{0}'' కొరకు వొక సబ్‌స్క్రిప్షన్‌ను ఈ వ్యవస్థ యిప్పటికే అనుబందించి కలిగివుంది."
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:120
 #, java-format
 msgid ""
 "There are not enough free subscriptions available for the product ''{0}''"
-msgstr ""
-"ఉత్పత్తి ''{0}'' కొరకు అక్కడ సరిపోయినన్ని వుచిత సబ్‌స్క్రిప్షన్లు "
-"అందుబాటులోలేవు"
+msgstr "ఉత్పత్తి ''{0}'' కొరకు అక్కడ సరిపోయినన్ని వుచిత సబ్‌స్క్రిప్షన్లు అందుబాటులోలేవు"
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:124
 #, java-format
@@ -612,9 +506,7 @@ msgstr "ఉత్పత్తి ''{0}'' కొరకు ఈ రకపు యూ
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:129
 #, java-format
 msgid "Only virtual systems can have subscription ''{0}'' attached."
-msgstr ""
-"వర్చ్యువల్ వ్యవస్థలు మాత్రమే సబ్‌స్క్రిప్షన్ ''{0}'' అనుబందించి "
-"కలిగివుండగలవు."
+msgstr "వర్చ్యువల్ వ్యవస్థలు మాత్రమే సబ్‌స్క్రిప్షన్ ''{0}'' అనుబందించి కలిగివుండగలవు."
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:134
 #, java-format
@@ -625,24 +517,19 @@ msgstr "ఉత్పత్తి ''{0}'' కొరకు సబ్‌స్క�
 #, java-format
 msgid ""
 "Insufficient pool quantity available for adjustment to entitlement ''{0}''."
-msgstr ""
-"ఎన్టైటిల్మెంట్ ''{0}'' కు సర్దుబాటు చేయడానికి సరిపోని పూల్ పరిమాణం "
-"అందుబాటులోవుంది."
+msgstr "ఎన్టైటిల్మెంట్ ''{0}'' కు సర్దుబాటు చేయడానికి సరిపోని పూల్ పరిమాణం అందుబాటులోవుంది."
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:150
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:155
 #, java-format
 msgid ""
 "Multi-entitlement not supported for pool connected with entitlement ''{0}''."
-msgstr ""
-"ఎన్టైటిల్మెంట్ ''{0}'' తో అనుసంధానమైవున్న పూల్ కొరకు బహుళ-ఎన్టైటిల్మెంట్ "
-"తోడ్పాటువుండదు."
+msgstr "ఎన్టైటిల్మెంట్ ''{0}'' తో అనుసంధానమైవున్న పూల్ కొరకు బహుళ-ఎన్టైటిల్మెంట్ తోడ్పాటువుండదు."
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:160
 #, java-format
 msgid "Unable to adjust quantity for the entitlement with id ''{0}'': {1}"
-msgstr ""
-"ఐడి ''{0}'' తో వున్న ఎన్టైటిల్మెంట్ కొరకు పరిమాణం సర్దుబాటు చేయలేదు: {1}"
+msgstr "ఐడి ''{0}'' తో వున్న ఎన్టైటిల్మెంట్ కొరకు పరిమాణం సర్దుబాటు చేయలేదు: {1}"
 
 #: server/src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:50
 msgid "Other"
@@ -854,9 +741,7 @@ msgstr "వరుస సంఖ్య ''{0}'' తో ఎన్టైటిల్�
 msgid ""
 "Unit {0} cannot be exported. A manifest cannot be made for units of type "
 "''{1}''."
-msgstr ""
-"యూనిట్ {0} ఎగుమతి చేయలేదు. ''{1}'' రకం యొక్క యూనిట్స్ కొరకు మానిఫెస్ట్ "
-"చేయలేదు."
+msgstr "యూనిట్ {0} ఎగుమతి చేయలేదు. ''{1}'' రకం యొక్క యూనిట్స్ కొరకు మానిఫెస్ట్ చేయలేదు."
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1806
 #, java-format
@@ -927,9 +812,7 @@ msgstr "ఐడి ''{0}'' తో ఆబ్జక్టు కనబడలేద�
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:136
 #, java-format
 msgid "Unit ''{0}'' has no subscription for product ''{1}''."
-msgstr ""
-"యూనిట్ ''{0}'' అనునది ఉత్పత్తి ''{1}'' కొరకు యెటువంటి సబ్‌స్క్రిప్షన్ "
-"కలిగిలేదు."
+msgstr "యూనిట్ ''{0}'' అనునది ఉత్పత్తి ''{1}'' కొరకు యెటువంటి సబ్‌స్క్రిప్షన్ కలిగిలేదు."
 
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:231
 msgid "Quantity value must be greater than 0."
@@ -944,8 +827,7 @@ msgstr "ఎన్టైటిల్మెంట్ కొరకు అప్‌�
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:391
 #, java-format
 msgid "Entitlement migration is not permissible for units of type ''{0}''"
-msgstr ""
-"రకం ''{0}'' యొక్క ప్రమాణాలకు ఎన్టైటిల్మెంట్ మైగ్రేషన్ అనుమతించదగ్గది కాదు"
+msgstr "రకం ''{0}'' యొక్క ప్రమాణాలకు ఎన్టైటిల్మెంట్ మైగ్రేషన్ అనుమతించదగ్గది కాదు"
 
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:396
 msgid "Source and destination units must belong to the same organization"
@@ -960,8 +842,7 @@ msgid ""
 "The quantity specified must be greater than zero and less than or equal to "
 "the total for this entitlement"
 msgstr ""
-"ఈ ఎన్టైటిల్మెంట్ కొరకు తెలిపిన రాశి సున్నా కన్నా ఎక్కువగా మరియు మొత్తం కన్నా "
-"తక్కువగా లేదా సమానంగా ఉండాలి"
+"ఈ ఎన్టైటిల్మెంట్ కొరకు తెలిపిన రాశి సున్నా కన్నా ఎక్కువగా మరియు మొత్తం కన్నా తక్కువగా లేదా సమానంగా ఉండాలి"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author kkrothap
@@ -1008,8 +889,7 @@ msgstr "org ''{0}'' నందు హైపర్విజర్ కనుగొ�
 #: server/src/main/java/org/candlepin/resource/JobResource.java:111
 msgid ""
 "You must specify exactly one of owner key, unit UUID, or principal name."
-msgstr ""
-"యజమాని కీ, యూనిట్ UUID, లేదా ప్రిన్సిపల్ పేరు లలో ఖచ్చితంగా వొకటి తెలుపాలి."
+msgstr "యజమాని కీ, యూనిట్ UUID, లేదా ప్రిన్సిపల్ పేరు లలో ఖచ్చితంగా వొకటి తెలుపాలి."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author kkrothap
@@ -1053,8 +933,7 @@ msgid ""
 "The activation key name ''{0}'' must be alphanumeric or include the "
 "characters '-' or '_'"
 msgstr ""
-"క్రియాశీల కీ పేరు ''{0}'' తప్పక అల్ఫాన్యూమరిక్ అయివుండాలి లేదా '-' లేదా '_' "
-"అక్షరాలను కలిగివుండాలి"
+"క్రియాశీల కీ పేరు ''{0}'' తప్పక అల్ఫాన్యూమరిక్ అయివుండాలి లేదా '-' లేదా '_' అక్షరాలను కలిగివుండాలి"
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:545
 #, java-format
@@ -1201,8 +1080,7 @@ msgstr "UUID \"{0}\" తో వుత్పత్తి కనుగొనలే
 #: server/src/main/java/org/candlepin/resource/ProductResource.java:335
 #, java-format
 msgid "Product with UUID ''{0}'' cannot be deleted while subscriptions exist."
-msgstr ""
-"UUID ''{0}'' తో వుత్పత్తి తొలగించబడలేదు సబ్‌స్క్రిప్షన్లు వున్నప్పుడు."
+msgstr "UUID ''{0}'' తో వుత్పత్తి తొలగించబడలేదు సబ్‌స్క్రిప్షన్లు వున్నప్పుడు."
 
 #: server/src/main/java/org/candlepin/resource/ProductResource.java:398
 msgid "Must specify product ID."
@@ -1311,23 +1189,23 @@ msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author kkrothap
-#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:326
+#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:325
 msgid "Unable to verify request."
 msgstr "అభ్యర్థనను నిర్థారించలేక పోయింది."
 
-#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:340
-#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:363
+#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:339
+#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:362
 #, java-format
 msgid "{0} with id {1} could not be found."
 msgstr "ఐడి {1} తో {0} కనుగొనలేక పోయింది."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author kkrothap
-#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:357
+#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:356
 msgid "Organization"
 msgstr "సంస్థ"
 
-#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:551
+#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:550
 #: server/src/main/java/org/candlepin/resteasy/interceptor/ConsumerAuth.java:57
 #, java-format
 msgid "Unit {0} has been deleted"
@@ -1339,26 +1217,26 @@ msgstr "యూనిట్ {0} తొలగించబడెను"
 msgid "Error contacting user service"
 msgstr "వాడుకరి సేవను సంప్రదించుటలో దోషం"
 
-#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:121
-#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:157
+#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:120
+#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:156
 msgid "Invalid oauth unit or secret"
 msgstr "చెల్లని oauth యూనిట్ లేదా రహస్యం"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author kkrothap
-#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:125
+#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:124
 #, java-format
 msgid "OAuth problem encountered. Internal message is: {0}"
 msgstr "OAuth సమస్య యెదురైంది. అంతర్గత సందేశం: {0}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author kkrothap
-#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:131
+#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:130
 #, java-format
 msgid "OAuth error encountered. Internal message is: {0}"
 msgstr "OAuth దోషం యెదురైంది. అంతర్గత సందేశం: {0}"
 
-#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:162
+#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:161
 msgid "Error getting oauth unit key"
 msgstr "oauth యూనిట్ కీ పొందుటలో దోషం"
 
@@ -1378,19 +1256,18 @@ msgstr "ధన సంఖ్య కావలసివుంది."
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
-"to address this problem. See kbase https://access.redhat.com/knowledge/node/"
-"129003 for more information."
+"to address this problem. See kbase https://access.redhat.com/knowledge/"
+"node/129003 for more information."
 msgstr ""
-"ధృవీకరణపత్రం {0} కొరకు చాలా కాంటెంట్ సమితులు. ఈ సమస్యను గుర్తించుటకు కొత్త "
-"క్లైంట్ అందుబాటులో వుండవచ్చు. మరింత సమాచారం కొరకు కెబేస్  https://access."
-"redhat.com/knowledge/node/129003 చూడండి."
+"ధృవీకరణపత్రం {0} కొరకు చాలా కాంటెంట్ సమితులు. ఈ సమస్యను గుర్తించుటకు కొత్త క్లైంట్ అందుబాటులో "
+"వుండవచ్చు. మరింత సమాచారం కొరకు కెబేస్  https://access.redhat.com/knowledge/"
+"node/129003 చూడండి."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author kkrothap
 #: server/src/main/java/org/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java:110
 msgid "Standalone candlepin does not support redeeming a subscription."
-msgstr ""
-"సబ్‌స్క్రిప్షన్‌ను వెచ్చించుటకు స్టాండెలోన్ కాండిల్‌పిన్ తోడ్పాటునీయదు."
+msgstr "సబ్‌స్క్రిప్షన్‌ను వెచ్చించుటకు స్టాండెలోన్ కాండిల్‌పిన్ తోడ్పాటునీయదు."
 
 #: server/src/main/java/org/candlepin/sync/ConsumerImporter.java:62
 msgid "No ID for upstream subscription management application."
@@ -1400,15 +1277,12 @@ msgstr "అప్‌స్ట్రీమ్ సబ్‌స్క్రిప�
 msgid ""
 "This subscription management application has already been imported by "
 "another owner."
-msgstr ""
-"ఈ సబ్‌స్క్రిప్షన్ నిర్వహణ అనువర్తనం యిప్పటికే వేరొక యజమానిచే దిగుమతి "
-"చేసుకోబడెను."
+msgstr "ఈ సబ్‌స్క్రిప్షన్ నిర్వహణ అనువర్తనం యిప్పటికే వేరొక యజమానిచే దిగుమతి చేసుకోబడెను."
 
 #: server/src/main/java/org/candlepin/sync/ConsumerImporter.java:85
 msgid ""
 "Owner has already imported from another subscription management application."
-msgstr ""
-"యజమాని యిప్పటికే వేరొక సబ్‌స్క్రిప్షన్ నిర్వహణ అనువర్తనం నుండి దిగుమతైను."
+msgstr "యజమాని యిప్పటికే వేరొక సబ్‌స్క్రిప్షన్ నిర్వహణ అనువర్తనం నుండి దిగుమతైను."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author kkrothap
@@ -1499,3 +1373,60 @@ msgstr "విలువులను దీని కొరకు ఓవర్‌
 #, java-format
 msgid "Service level ''{0}'' is not available to units of organization {1}."
 msgstr "సేవా స్థాయి \"{0}\" అనునది సంస్థ {1} యొక్క యూనిట్సుకు అందుబాటులోలేదు"
+
+#~ msgid "must be false"
+#~ msgstr "తప్పక false కావాలి"
+
+#~ msgid "must be true"
+#~ msgstr "తప్పక true కావాలి"
+
+#~ msgid "must be less than or equal to {0}"
+#~ msgstr "తప్పకుండా {0} కు సమానం లేదా తక్కువ కావాలి"
+
+#~ msgid "must be greater than or equal to {0}"
+#~ msgstr "తప్పకుండా {0} కు సమానం లేదా ఎక్కువ కావాలి"
+
+#~ msgid ""
+#~ "numeric value out of bounds (<{integer} digits>.<{fraction} digits> "
+#~ "expected)"
+#~ msgstr ""
+#~ "సంఖ్యా విలువ పరిధులు దాటింది (<{integer} digits>.<{fraction} digits> కావలసింది)"
+
+#~ msgid "must be in the future"
+#~ msgstr "తప్పకుండా భవిష్యత్తలో ఉండాలి"
+
+#~ msgid "may not be null"
+#~ msgstr "null కాకపోవచ్చు"
+
+#~ msgid "must be null"
+#~ msgstr "తప్పక null కావాలి"
+
+#~ msgid "must be in the past"
+#~ msgstr "తప్పక గతంలో ఉండాలి"
+
+#~ msgid "must match ''{regexp}''"
+#~ msgstr "తప్పక ''{regexp}'' తో సరిపోలాలి"
+
+#~ msgid "size must be between {0} and {1}"
+#~ msgstr "పరిమాణం తప్పక {0} మరియు {1} మధ్యన ఉండాలి"
+
+#~ msgid "invalid credit card number"
+#~ msgstr "చెల్లని క్రెడిట్ కార్డ్ సంఖ్య"
+
+#~ msgid "not a well-formed email address"
+#~ msgstr "చక్కగా-రూపొందిన ఈమెయిల్ చిరునామా కాదు"
+
+#~ msgid "may not be empty"
+#~ msgstr "ఖాళీ కాలేదు"
+
+#~ msgid "must be between {min} and {max}"
+#~ msgstr "తప్పక {min} మరియు {max} మధ్యన ఉండాలి"
+
+#~ msgid "may have unsafe html content"
+#~ msgstr "ఉపయోగకర హెచ్‌టిఎమ్‌ఎల్ కాంటెంట్ కలిగివుండవచ్చు"
+
+#~ msgid "script expression ''{0}'' didn't evaluate to true"
+#~ msgstr "స్క్రిప్ట్ ఎక్సుప్రెషన్ ''{0}'' అనునది true కు ఎవాల్యుయేట్ కాలేదు"
+
+#~ msgid "must be a valid URL"
+#~ msgstr "తప్పక చెల్లునటువంటి యుఆర్‌ఎల్ అవ్వాలి"

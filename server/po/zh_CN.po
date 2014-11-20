@@ -5,14 +5,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-10-28 13:24-0300\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2014-11-20 11:44-0400\n"
 "PO-Revision-Date: 2014-09-05 10:09-0400\n"
 "Last-Translator: leahliu <lliu@redhat.com>\n"
 "Language-Team: Chinese (Simplified, China)\n"
 "Language: zh-Hans-CN\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0\n"
 "X-Generator: Zanata 3.4.2\n"
 
@@ -224,88 +224,6 @@ msgstr "订阅池 {0} 不存在。"
 msgid "Bad Request"
 msgstr "坏请求"
 
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:40
-msgid "must be false"
-msgstr "必须为 false"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:42
-msgid "must be true"
-msgstr "必须为 true"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:44
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:57
-#, java-format
-msgid "must be less than or equal to {0}"
-msgstr "必须小于或等于 {0}"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:47
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:60
-#, java-format
-msgid "must be greater than or equal to {0}"
-msgstr "必须大于或等于 {0}"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:51
-msgid ""
-"numeric value out of bounds (<{integer} digits>.<{fraction} digits> "
-"expected)"
-msgstr "数字值超出范围（应为 <{integer} digits>.<{fraction} digits>）"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:55
-msgid "must be in the future"
-msgstr "必须为将来的日期"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:63
-msgid "may not be null"
-msgstr "不得为 null"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:65
-msgid "must be null"
-msgstr "必须为 null"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:67
-msgid "must be in the past"
-msgstr "必须是过去的日期"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:69
-msgid "must match ''{regexp}''"
-msgstr "必须匹配 ''{regexp}''"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:72
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:79
-#, java-format
-msgid "size must be between {0} and {1}"
-msgstr "大小必须在 {0} 和 {1} 之间"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:75
-msgid "invalid credit card number"
-msgstr "无效信用卡号"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:77
-msgid "not a well-formed email address"
-msgstr "非合格电子邮件地址"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:82
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:84
-msgid "may not be empty"
-msgstr "不能为空"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:86
-msgid "must be between {min} and {max}"
-msgstr "必须在 {min} 和 {max} 之间"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:89
-msgid "may have unsafe html content"
-msgstr "可能包含不安全 html 内容"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:91
-#, java-format
-msgid "script expression ''{0}'' didn't evaluate to true"
-msgstr "脚本表达式 ''{0}'' 未评估为 true"
-
-#: server/src/main/java/org/candlepin/hibernate/CandlepinMessageInterpolator.java:94
-msgid "must be a valid URL"
-msgstr "必须是有效 URL"
-
 #: server/src/main/java/org/candlepin/model/AbstractHibernateCurator.java:419
 msgid "Request failed due to concurrent modification, please re-try."
 msgstr "由于同时进行修改导致请求失败，请重试。"
@@ -419,14 +337,12 @@ msgstr "物理系统的激活码只能使用由 {1} 均分的池 ''{0}'' 数量"
 
 #: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:117
 #, java-format
-msgid ""
-"Cannot add virtual pool ''{0}'' to activation key for physical systems."
+msgid "Cannot add virtual pool ''{0}'' to activation key for physical systems."
 msgstr "无法为物理系统在激活码中添加虚拟池 ''{0}''。"
 
 #: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:121
 #, java-format
-msgid ""
-"Cannot add physical pool ''{0}'' to activation key for virtual systems."
+msgid "Cannot add physical pool ''{0}'' to activation key for virtual systems."
 msgstr "无法为虚拟系统在激活码中添加物理池 ''{0}''。"
 
 #: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:60
@@ -490,7 +406,6 @@ msgstr "{0} 的订阅于 {1} 过期"
 #, java-format
 msgid ""
 "This unit has already had the subscription matching pool ID ''{0}'' attached."
-""
 msgstr "这个单元已经附加与池 ID ''{0}'' 匹配的订阅。"
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:51
@@ -1265,23 +1180,23 @@ msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:326
+#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:325
 msgid "Unable to verify request."
 msgstr "无法验证请求。"
 
-#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:340
-#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:363
+#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:339
+#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:362
 #, java-format
 msgid "{0} with id {1} could not be found."
 msgstr "没有找到 id 为 {1} 的 {0}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:357
+#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:356
 msgid "Organization"
 msgstr "机构"
 
-#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:551
+#: server/src/main/java/org/candlepin/resteasy/interceptor/AuthInterceptor.java:550
 #: server/src/main/java/org/candlepin/resteasy/interceptor/ConsumerAuth.java:57
 #, java-format
 msgid "Unit {0} has been deleted"
@@ -1293,26 +1208,26 @@ msgstr "已删除单元 {0}"
 msgid "Error contacting user service"
 msgstr "联系用户服务出错"
 
-#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:121
-#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:157
+#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:120
+#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:156
 msgid "Invalid oauth unit or secret"
 msgstr "无效 oauth 单元或者 secret"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:125
+#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:124
 #, java-format
 msgid "OAuth problem encountered. Internal message is: {0}"
 msgstr "遇到 OAuth 问题。内部信息为：{0}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:131
+#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:130
 #, java-format
 msgid "OAuth error encountered. Internal message is: {0}"
 msgstr "遇到 OAuth 错误。内部信息为：{0}"
 
-#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:162
+#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:161
 msgid "Error getting oauth unit key"
 msgstr "获取 oauth 单元密钥出错"
 
@@ -1332,11 +1247,11 @@ msgstr "预期是正整数。"
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
-"to address this problem. See kbase https://access.redhat.com/knowledge/node/"
-"129003 for more information."
+"to address this problem. See kbase https://access.redhat.com/knowledge/"
+"node/129003 for more information."
 msgstr ""
-"证书 {0} 的内容组过多。较新的客户端可解决这个问题。详情请查看知识库 https://access.redhat.com/knowledge/"
-"node/129003。"
+"证书 {0} 的内容组过多。较新的客户端可解决这个问题。详情请查看知识库 https://"
+"access.redhat.com/knowledge/node/129003。"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author xhuang
@@ -1448,3 +1363,59 @@ msgstr "不允许覆盖值：{0}"
 #, java-format
 msgid "Service level ''{0}'' is not available to units of organization {1}."
 msgstr "机构 {1} 的单元无法使用服务等级 ''{0}'' 。"
+
+#~ msgid "must be false"
+#~ msgstr "必须为 false"
+
+#~ msgid "must be true"
+#~ msgstr "必须为 true"
+
+#~ msgid "must be less than or equal to {0}"
+#~ msgstr "必须小于或等于 {0}"
+
+#~ msgid "must be greater than or equal to {0}"
+#~ msgstr "必须大于或等于 {0}"
+
+#~ msgid ""
+#~ "numeric value out of bounds (<{integer} digits>.<{fraction} digits> "
+#~ "expected)"
+#~ msgstr "数字值超出范围（应为 <{integer} digits>.<{fraction} digits>）"
+
+#~ msgid "must be in the future"
+#~ msgstr "必须为将来的日期"
+
+#~ msgid "may not be null"
+#~ msgstr "不得为 null"
+
+#~ msgid "must be null"
+#~ msgstr "必须为 null"
+
+#~ msgid "must be in the past"
+#~ msgstr "必须是过去的日期"
+
+#~ msgid "must match ''{regexp}''"
+#~ msgstr "必须匹配 ''{regexp}''"
+
+#~ msgid "size must be between {0} and {1}"
+#~ msgstr "大小必须在 {0} 和 {1} 之间"
+
+#~ msgid "invalid credit card number"
+#~ msgstr "无效信用卡号"
+
+#~ msgid "not a well-formed email address"
+#~ msgstr "非合格电子邮件地址"
+
+#~ msgid "may not be empty"
+#~ msgstr "不能为空"
+
+#~ msgid "must be between {min} and {max}"
+#~ msgstr "必须在 {min} 和 {max} 之间"
+
+#~ msgid "may have unsafe html content"
+#~ msgstr "可能包含不安全 html 内容"
+
+#~ msgid "script expression ''{0}'' didn't evaluate to true"
+#~ msgstr "脚本表达式 ''{0}'' 未评估为 true"
+
+#~ msgid "must be a valid URL"
+#~ msgstr "必须是有效 URL"
