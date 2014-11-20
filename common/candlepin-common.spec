@@ -21,7 +21,7 @@
 Name: %{parent_proj}-common
 Summary: Common code for Candlepin and related projects
 License: GPLv2
-Version: 1.0.15
+Version: 1.0.16
 Release: 1%{?dist}
 URL: http://www.candlepinproject.org
 Source: %{name}-%{version}.tar.gz
@@ -175,6 +175,10 @@ rm -rf %{_tmppath}/distlibdir
 %{_datadir}/%{parent_proj}/gutterball/lib/%{name}.jar
 
 %changelog
+* Thu Nov 20 2014 Alex Wood <awood@redhat.com> 1.0.16-1
+- Spec file fixes. (awood@redhat.com)
+- Updated translations. (dgoodwin@redhat.com)
+
 * Wed Nov 19 2014 Devan Goodwin <dgoodwin@rm-rf.ca> 1.0.15-1
 - Added OAuth support to Gutterball's API (crog@redhat.com)
 
