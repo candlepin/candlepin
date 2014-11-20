@@ -19,6 +19,8 @@ jackson-module-jaxb-annotations
 jta
 logback/logback-classic
 logback/logback-core
+oauth/oauth
+oauth/oauth-provider
 resteasy/jaxrs-api
 resteasy/resteasy-atom-provider
 resteasy/resteasy-jaxb-provider

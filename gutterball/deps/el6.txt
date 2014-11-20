@@ -33,6 +33,8 @@ jaxb-impl
 jms
 logback-classic
 logback-core
+oauth/oauth
+oauth/oauth-provider
 qpid-client-0.22
 qpid-common-0.22
 resteasy/jaxrs-api

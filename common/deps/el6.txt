@@ -23,6 +23,8 @@ jcl-over-slf4j
 jta
 logback-classic
 logback-core
+oauth/oauth
+oauth/oauth-provider
 resteasy/jaxrs-api
 resteasy/resteasy-atom-provider
 resteasy/resteasy-jaxb-provider
