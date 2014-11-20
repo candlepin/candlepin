@@ -4,6 +4,11 @@
 
 # Get the directory this script is in. See http://mywiki.wooledge.org/BashFAQ/028
 LOCATION="${BASH_SOURCE%/*}"
+# If LOCATION is unchanged, then the user is calling the script with just the bare
+# file name such as with "bash -x configure-qpid.sh" for example.
+if [ "$LOCATION" == "$BASH_SOURCE" ]; then
+    LOCATION="$(pwd)"
+fi
 source "$LOCATION/../../../bin/bash_functions"
 
 SUBJ="/C=US/O=Candlepin"
