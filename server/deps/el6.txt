@@ -56,6 +56,7 @@ oauth/oauth
 oauth/oauth-provider
 postgresql-jdbc
 qpid-client-0.22
+qpid-common-0.22
 resteasy/jaxrs-api
 resteasy/resteasy-atom-provider
 resteasy/resteasy-guice

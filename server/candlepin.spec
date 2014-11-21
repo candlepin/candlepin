@@ -47,7 +47,7 @@ BuildRequires: java-devel >= 1:1.6.0
 BuildRequires: ant >= 0:1.7.0
 BuildRequires: gettext
 BuildRequires: selinux-policy-doc
-BuildRequires: candlepin-common >= 0:1.0.7
+BuildRequires: candlepin-common >= 0:1.0.16
 %if 0%{?rhel} && 0%{?rhel} < 7
 BuildRequires: ant-nodeps >= 0:1.7.0
 %endif
@@ -137,7 +137,7 @@ Requires: java >= 0:1.6.0
 Requires: wget
 Requires: liquibase >= 0:2.0.5
 Requires: postgresql-jdbc
-Requires: candlepin-common
+Requires: candlepin-common >= 0:1.0.16
 
 # specific requires
 # if not using cpdeps, we'll need real requires
