@@ -120,6 +120,7 @@ Requires: hibernate-jpa-2.0-api >= 0:1.0.1
 %if 0%{?rhel} == 6
 Requires: google-guice >= 0:3.0
 Requires: slf4j-api >= 0:1.7.5-4
+Requires: jcl-over-slf4j >= 0:1.7.5
 Requires: logback-classic
 Requires: apache-commons-codec-eap6
 Requires: jakarta-commons-lang
@@ -179,11 +180,12 @@ rm -rf %{buildroot}
 %doc LICENSE
 %dir %attr(750, root, root) %{_sysconfdir}/%{name}/certs/amqp
 %config(noreplace) %attr(644, root, root) %{_sysconfdir}/logrotate.d/%{name}
-%config(noreplace) %attr(640, root, root) %{_sysconfdir}/%{name}/%{name}.conf
+%config(noreplace) %attr(640, tomcat, tomcat) %{_sysconfdir}/%{name}/%{name}.conf
 
 %defattr(644, tomcat, tomcat, 755)
 %{_sharedstatedir}/%{tomcat}/webapps/%{name}/*
-%{_localstatedir}/log/%{name}
+
+%attr(775, tomcat, root) %{_localstatedir}/log/%{name}
 
 %changelog
 * Wed Nov 19 2014 Devan Goodwin <dgoodwin@rm-rf.ca> 1.0.2-1
