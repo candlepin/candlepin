@@ -60,7 +60,7 @@ public abstract class CandlepinGuiceResteasyBootstrap extends ResteasyBootstrap
             log.error("Could not create Guice injector.", e);
             throw new RuntimeException(e);
         }
-        log.debug("Returned from process injector");
+        log.info("Guice injector creation complete");
     }
 
     protected abstract Injector getInjector(Stage stage, List<Module> modules);
@@ -94,11 +94,11 @@ public abstract class CandlepinGuiceResteasyBootstrap extends ResteasyBootstrap
                 if (GetRestful.isRootResource(beanClass)) {
                     final ResourceFactory resourceFactory = new GuiceResourceFactory(
                             binding.getProvider(), beanClass);
-                    log.info("Registering factory for {}", beanClass.getName());
+                    log.debug("Registering factory for {}", beanClass.getName());
                     registry.addResourceFactory(resourceFactory);
                 }
                 if (beanClass.isAnnotationPresent(Provider.class)) {
-                    log.info("Registering provider instance for {}", beanClass.getName());
+                    log.debug("Registering provider instance for {}", beanClass.getName());
                     providerFactory.registerProviderInstance(binding
                             .getProvider().get());
                 }

@@ -198,6 +198,7 @@ public class GutterballContextListener extends
         return modules;
     }
 
+    @Override
     protected void processInjector(ServletContext context, Injector inj) {
         injector = inj;
         super.processInjector(context, injector);
