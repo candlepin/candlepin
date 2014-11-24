@@ -4,13 +4,12 @@
 
 # Get the directory this script is in. See http://mywiki.wooledge.org/BashFAQ/028
 LOCATION="${BASH_SOURCE%/*}"
+# If LOCATION is unchanged, then the user is calling the script with just the bare
+# file name such as with "bash -x configure-qpid.sh" for example.
+if [ "$LOCATION" == "$BASH_SOURCE" ]; then
+    LOCATION="$(pwd)"
+fi
 source "$LOCATION/../../../bin/bash_functions"
-
-SUBJ="/C=US/O=Candlepin"
-CERT_LOC="$LOCATION/keys"
-LOG="$CERT_LOC/keys.log"
-CA_NAME="broker"
-CN_NAME="localhost"
 
 trap on_error ERR
 on_error() {
@@ -19,11 +18,20 @@ on_error() {
     exit $status
 }
 
+KATELLO_PKI="/etc/pki/katello"
+IS_KATELLO="$(test -e $KATELLO_PKI; echo $?)"
+
+SUBJ="/C=US/O=Candlepin"
+CERT_LOC="$LOCATION/keys"
+LOG="$CERT_LOC/keys.log"
+CA_NAME="ca"
+CN_NAME="localhost"
+
 define_variables() {
     if [ $IS_KATELLO -eq 0 ]; then
-        CA_DB="/etc/pki/katello/nssdb"
+        CA_DB="$KATELLO_PKI/nssdb"
         CA_PASS_FILE="${CA_DB}/nss_db_password-file"
-        JAVA_PASS="$(cat /etc/pki/katello/keystore_password-file)"
+        JAVA_PASS="$(cat $KATELLO_PKI/keystore_password-file)"
     else
         CA_PASS_FILE="$CERT_LOC/ca_password.txt"
         CA_DB="$CERT_LOC/CA_db"
@@ -37,7 +45,7 @@ create_ca_cert() {
     # prep for creating certificates
     mkdir -p "$CA_DB"
 
-    if sudo certutil -L -d /etc/qpid/brokerdb -n broker &>> $LOG; then
+    if sudo certutil -L -d /etc/qpid/brokerdb -n $CA_NAME &>> $LOG; then
         CA_DB="/etc/qpid/brokerdb"
     fi
 
@@ -83,7 +91,7 @@ create_client_certs() {
         local existing_jks="$(fp_jks "/etc/$client/certs/amqp/$client.jks" "$nss_nick")"
 
         # The NSS DB can have multiple certs with the same nickname.
-        local occurrences=$(sudo certutil -L -d "$CA_DB" | grep "$client" | wc -l)
+        local occurrences=$(sudo certutil -L -d "$CA_DB" | grep "$nss_nick" | wc -l)
 
         # Skip if everything is equal and there are no duplicates
         if [ "$existing_nss" == "$existing_generated" -a "$existing_jks" == "$existing_generated" -a $occurrences -eq 1 ]; then
@@ -103,15 +111,21 @@ create_client_certs() {
         fi
 
         if [ ! -e "$dest.crt" -a ! -e "$dest.key" ]; then
-            # Generate the key and certificate signing request in DER format (certutil requires it for some stupid reason)
-            openssl req -nodes -new -newkey rsa:2048 -out "$dest.der.csr" -keyout "$dest.key" -subj "$SUBJ/OU=$client/CN=$CN_NAME" -passin pass:$JAVA_PASS  -outform DER &>> $LOG
+            # Generate the key and certificate signing request
+            openssl req -nodes -new -newkey rsa:2048 -out "$dest.csr" -keyout "$dest.key" -subj "$SUBJ/OU=$client/CN=$CN_NAME" -passin pass:$JAVA_PASS &>> $LOG
 
-            # Sign the CSR with the Qpid CA from the NSS DB.  Don't use the -o option to give an output file name because
-            # with sudo the file will get the wrong permissions.
-            sudo certutil -C -c "$CA_NAME" -i "$dest.der.csr" -v 120 -f "$CA_PASS_FILE" -d "$CA_DB" > "$dest.der.crt"  2>> $LOG
-
-            # Converting to PEM isn't strictly necessary but it's nice for future operations
-            openssl x509 -in "$dest.der.crt" -inform DER -out "$dest.crt" -outform PEM &>> $LOG
+            if [ "$IS_KATELLO" == 0 ]; then
+                # Katello doesn't place the CA private key in the NSS DB
+                sudo openssl x509 -days 3650 -req -CA $KATELLO_PKI/certs/katello-default-ca.crt -CAkey $KATELLO_PKI/private/katello-default-ca.key -CAcreateserial -in "$dest.csr" -inform DER > "$dest.crt" 2>> $LOG
+            else
+                # certutil requires the CSR in DER for some stupid reason
+                openssl req -in "$dest.csr" -inform PEM -out "$dest.der.csr" -outform DER
+                # Sign the CSR with the Qpid CA from the NSS DB.  Don't use the -o option to give an output file name because
+                # with sudo the file will get the wrong permissions.
+                sudo certutil -C -c "$CA_NAME" -i "$dest.der.csr" -v 120 -f "$CA_PASS_FILE" -d "$CA_DB" > "$dest.der.crt"  2>> $LOG
+                # Converting to PEM isn't strictly necessary but it's nice for future operations
+                openssl x509 -in "$dest.der.crt" -inform DER -out "$dest.crt" -outform PEM &>> $LOG
+            fi
         fi
 
         # Import the signed cert into the NSS DB
@@ -187,24 +201,35 @@ CONF
 
 copy_in_existing_cp_certs() {
     echo "Copying in Candlepin certs from Katello."
-    sudo cp /etc/pki/katello/certs/java-client.crt "$CERT_LOC/candlepin.crt"
-    sudo cp /etc/pki/katello/private/java-client.key "$CERT_LOC/candlepin.key"
+    # We don't want copied files to remain owned by root
+    sudo cat $KATELLO_PKI/certs/java-client.crt > "$CERT_LOC/candlepin.crt"
+    sudo cat $KATELLO_PKI/private/java-client.key > "$CERT_LOC/candlepin.key"
 }
 
 create_exchange() {
     exchange_name="$1"
     config_args="-b amqps://localhost:5671 "
     if [ $IS_KATELLO -eq 0 ]; then
-        config_args+="--ssl-certificate /etc/pki/katello/qpid_client_striped.crt"
+        config_args+="--ssl-certificate $KATELLO_PKI/certs/java-client.crt --ssl-key $KATELLO_PKI/private/java-client.key"
     else
         config_args+="--ssl-certificate $CERT_LOC/qpid_ca.crt --ssl-key $CERT_LOC/qpid_ca.key"
     fi
 
     # Only create the exchange if it does not exist
-    if ! qpid-config $config_args exchanges "$exchange_name" &>> $LOG; then
+    if ! sudo qpid-config $config_args exchanges "$exchange_name" &>> $LOG; then
         echo "Creating $exchange_name exchange"
-        qpid-config $config_args add exchange topic "$exchange_name" --durable &>> $LOG
+        sudo qpid-config $config_args add exchange topic "$exchange_name" --durable &>> $LOG
     fi
+}
+
+usage() {
+    cat <<HELP
+    usage: configure-qpid.sh [options]
+
+    OPTIONS:
+      -c  clean the existing qpid setup and exit (not available for Katello)
+      -h  print this message
+HELP
 }
 
 ##############
@@ -214,6 +239,7 @@ create_exchange() {
 while getopts ":c" opt; do
     case $opt in
         c  ) CLEAN="1";;
+        ?  ) usage; exit;;
     esac
 done
 
@@ -224,11 +250,24 @@ fi
 
 # create working directory
 mkdir -p "$CERT_LOC"
-IS_KATELLO="$(test -e /etc/pki/katello; echo $?)"
 
 define_variables
-create_ca_cert
 
+if [ -n "$CLEAN" ]; then
+    if [ "$IS_KATELLO" -eq 0 ]; then
+        warn_msg "Clean is not supported on Katello."
+        exit 0
+    else
+        sudo rm -rf "$CERT_LOC"
+        sudo rm -f /etc/candlepin/certs/amqp/candlepin.*
+        sudo rm -f /etc/gutterball/certs/amqp/gutterball.*
+        sudo rm -f /etc/qpid/brokerdb/*
+        success_msg "Cleaned all AMQP certs"
+        exit 0
+    fi
+fi
+
+create_ca_cert
 if [ $IS_KATELLO -eq 0 ]; then
     copy_in_existing_cp_certs
 fi

@@ -109,9 +109,9 @@
     <war destfile="${war.file}" webxml="${webapp.dir}/WEB-INF/web.xml">
       <classes dir="${target.dir}/classes" />
       <classes dir="${target.dir}/generated-source" />
+      <classes dir="${target.dir}/resources"/>
 
       <fileset dir="${webapp.dir}"/>
-      <fileset dir="${target.dir}/resources"/>
 
       <lib dir="${lib.dir}">
         <exclude name="**/servlet.jar" />

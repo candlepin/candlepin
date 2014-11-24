@@ -10,6 +10,7 @@
     </appender>
 
     <logger name="org.candlepin.gutterball" level="INFO"/>
+    <logger name="org.candlepin.common" level="INFO"/>
 
     <root level="WARN">
         <appender-ref ref="GutterballAppender" />

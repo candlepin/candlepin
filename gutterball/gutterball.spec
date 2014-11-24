@@ -53,6 +53,12 @@ BuildRequires: resteasy >= 0:2.3.7
 BuildRequires: candlepin-common >= 0:1.0.16
 BuildRequires: jms
 BuildRequires: oauth >= 20100601-4
+BuildRequires: scannotation
+BuildRequires: javassist >= 3.12.0
+BuildRequires: c3p0 >= 0.9.1.2
+BuildRequires: postgresql-jdbc
+BuildRequires: jta
+BuildRequires: apache-mime4j = 0:0.6
 
 %global jackson_version 0:2.3.0
 BuildRequires: jackson-annotations >= %{jackson_version}
@@ -74,17 +80,22 @@ BuildRequires: jpackage-utils
 BuildRequires: ant-nodeps >= 0:1.7.0
 BuildRequires: jaxb-impl
 BuildRequires: google-guice >= 0:3.0
+BuildRequires: google-collections >= 0:1.0
 BuildRequires: slf4j-api >= 0:1.7.5
 BuildRequires: logback-classic
 BuildRequires: apache-commons-codec-eap6
+BuildRequires: commons-collections >= 3.1
 BuildRequires: jakarta-commons-lang
+BuildRequires: jakarta-commons-io
 %endif
 
 %if 0%{?rhel} >= 7
 BuildRequires: javapackages-tools
 BuildRequires: glassfish-jaxb
 BuildRequires: candlepin-guice >= 0:3.0
-BuildRequires: mvn(org.apache.httpcomponents:httpclient) >= 0:4.1.2
+BuildRequires: guava >= 0:13.0
+BuildRequires: mvn(org.apache.commons:commons-collections)
+BuildRequires: mvn(org.apache.commons:commons-io)
 BuildRequires: mvn(org.apache.commons:commons-lang)
 BuildRequires: mvn(org.slf4j:slf4j-api) >= 0:1.7.4
 BuildRequires: mvn(ch.qos.logback:logback-classic)
@@ -102,6 +113,13 @@ Requires: jms
 Requires: candlepin-common >= 0:1.0.16
 Requires: oauth >= 20100601-4
 Requires: resteasy >= 0:2.3.7
+Requires: scannotation
+Requires: javamail
+Requires: javassist >= 3.12.0
+Requires: c3p0 >= 0.9.1.2
+Requires: postgresql-jdbc
+Requires: jta
+Requires: apache-mime4j = 0:0.6
 
 Requires: jackson-annotations >= %{jackson_version}
 Requires: jackson-core >= %{jackson_version}
@@ -119,17 +137,22 @@ Requires: hibernate-jpa-2.0-api >= 0:1.0.1
 # Version dependent requires
 %if 0%{?rhel} == 6
 Requires: google-guice >= 0:3.0
+Requires: google-collections >= 0:1.0
 Requires: slf4j-api >= 0:1.7.5-4
+Requires: jcl-over-slf4j >= 0:1.7.5
 Requires: logback-classic
 Requires: apache-commons-codec-eap6
 Requires: jakarta-commons-lang
+Requires: jakarta-commons-io
 Requires: jaxb-impl
 %endif
 
 %if 0%{?rhel} >= 7
 Requires: candlepin-guice >= 0:3.0
 Requires: glassfish-jaxb
-Requires: mvn(org.apache.httpcomponents:httpclient) >= 0:4.1.2
+Requires: guava >= 0:13.0
+Requires: mvn(org.apache.commons:commons-collections)
+Requires: mvn(org.apache.commons:commons-io)
 Requires: mvn(org.apache.commons:commons-lang)
 Requires: mvn(org.slf4j:slf4j-api)  >= 0:1.7.4
 Requires: mvn(org.slf4j:jcl-over-slf4j)  >= 0:1.7.4
@@ -177,13 +200,14 @@ rm -rf %{buildroot}
 %files
 %defattr(-, root, root)
 %doc LICENSE
-%dir %attr(750, root, root) %{_sysconfdir}/%{name}/certs/amqp
 %config(noreplace) %attr(644, root, root) %{_sysconfdir}/logrotate.d/%{name}
-%config(noreplace) %attr(640, root, root) %{_sysconfdir}/%{name}/%{name}.conf
+%dir %attr(750, tomcat, tomcat) %{_sysconfdir}/%{name}/certs/amqp
+%config(noreplace) %attr(640, tomcat, tomcat) %{_sysconfdir}/%{name}/%{name}.conf
 
 %defattr(644, tomcat, tomcat, 755)
 %{_sharedstatedir}/%{tomcat}/webapps/%{name}/*
-%{_localstatedir}/log/%{name}
+
+%attr(775, tomcat, root) %{_localstatedir}/log/%{name}
 
 %changelog
 * Wed Nov 19 2014 Devan Goodwin <dgoodwin@rm-rf.ca> 1.0.2-1

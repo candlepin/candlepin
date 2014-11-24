@@ -6,13 +6,20 @@
 // but note that you must put in special handling for
 // each individual SCL
 
+antlr
+aopalliance
+apache-mime4j
 atinject
 candlepin-common
 candlepin-guice // This will pull in all the jars under candlepin-guice
 commons-codec-eap6/commons-codec
+commons-collections
+commons-io
 commons-lang
+dom4j
 gettext-commons
 glassfish-jaxb/jaxb-impl
+guava
 hibernate4-c3p0
 hibernate4-core
 hibernate4-entitymanager
@@ -25,11 +32,17 @@ jackson-databind
 jackson-jaxrs-providers/jackson-jaxrs-base
 jackson-jaxrs-providers/jackson-jaxrs-json-provider
 jackson-module-jaxb-annotations
+javamail/mail
+javassist
+jboss-logging
 jms
+jta
 logback/logback-classic
 logback/logback-core
 oauth/oauth
 oauth/oauth-provider
+objectweb-asm/asm
+postgresql-jdbc
 qpid-client-0.22
 qpid-common-0.22
 resteasy/jaxrs-api
@@ -37,6 +50,8 @@ resteasy/resteasy-guice
 resteasy/resteasy-jaxb-provider
 resteasy/resteasy-jaxrs
 resteasy/resteasy-multipart-provider
+scannotation
 servlet
+sisu-cglib/cglib
 slf4j/api
 validation-api
