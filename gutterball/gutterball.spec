@@ -25,7 +25,7 @@
 %endif
 
 Name: gutterball
-Version: 1.0.2
+Version: 1.0.3
 Release: 1%{?dist}
 Summary: Data aggregator for Candlepin
 
@@ -210,6 +210,17 @@ rm -rf %{buildroot}
 %attr(775, tomcat, root) %{_localstatedir}/log/%{name}
 
 %changelog
+* Mon Nov 24 2014 Alex Wood <awood@redhat.com> 1.0.3-1
+- Make logging less verbose and more informative. (awood@redhat.com)
+- Add missing Gutterball runtime dependencies. (awood@redhat.com)
+- Fix missing logging configuration in Gutterball. (awood@redhat.com)
+- Fixes to qpid script. (awood@redhat.com)
+- Allow qpid-configure.sh to run when invoked indirectly. (awood@redhat.com)
+- Spec file fixes. (awood@redhat.com)
+- Fix mistakes in Qpid certs deploy script. (awood@redhat.com)
+- Add some sample values in default gutterball.conf (awood@redhat.com)
+- Updated translations. (dgoodwin@redhat.com)
+
 * Wed Nov 19 2014 Devan Goodwin <dgoodwin@rm-rf.ca> 1.0.2-1
 - Die if we hit any Guice errors. (awood@redhat.com)
 - Fix deploy script. (awood@redhat.com)
