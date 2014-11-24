@@ -18,6 +18,7 @@ package org.candlepin.gutterball.report;
 import org.xnap.commons.i18n.I18n;
 
 import java.text.ParseException;
+import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -41,6 +42,7 @@ public class ParameterDescriptor {
     private String dateFormat = null;
     private List<String> mustHaveParams = new ArrayList<String>(0);
     private List<String> mustNotHaveParams = new ArrayList<String>(0);
+    private List<ParameterValidator> validators = new ArrayList<ParameterValidator>(0);
 
     public ParameterDescriptor(I18n i18n, String name, String desc) {
         this.i18n = i18n;
@@ -129,6 +131,17 @@ public class ParameterDescriptor {
     }
 
     /**
+     * Validate this descriptor's parameter using the specified validatiors.
+     *
+     * @return
+     *  a reference to this descriptor.
+     */
+    public ParameterDescriptor mustSatisfy(ParameterValidator... validators) {
+        this.validators = Arrays.asList(validators);
+        return this;
+    }
+
+    /**
      * Validates this descriptor based on the passed query parameters.
      *
      * @param queryParams parameters to validate against
@@ -151,6 +164,10 @@ public class ParameterDescriptor {
 
         if (this.dateFormat != null && !this.dateFormat.isEmpty()) {
             validateDate(queryParams.get(name));
+        }
+
+        if (this.validators.size() > 0) {
+            verifyValidatorsPass(queryParams.get(name));
         }
 
         verifyMustHaves(queryParams);
@@ -179,6 +196,14 @@ public class ParameterDescriptor {
         }
     }
 
+    private void verifyValidatorsPass(List<String> values) {
+        for (String value : values) {
+            for (ParameterValidator validator : this.validators) {
+                validator.validate(this, value);
+            }
+        }
+    }
+
     private void validateInteger(List<String> values) {
         for (String val : values) {
             try {
@@ -194,8 +219,19 @@ public class ParameterDescriptor {
     private void validateDate(List<String> dateStrings) {
         for (String dateString : dateStrings) {
             try {
-                SimpleDateFormat formatter = new SimpleDateFormat(dateFormat);
-                formatter.parse(dateString);
+                SimpleDateFormat formatter = new SimpleDateFormat(this.dateFormat);
+                ParsePosition pos = new ParsePosition(0);
+                formatter.setLenient(false);
+
+                formatter.parse(dateString, pos);
+
+                // Check that we exhaused the entire string
+                if (pos.getIndex() < dateString.length() - 1) {
+                    throw new ParseException(
+                        "Invalid date string. Expected format: " + this.dateFormat,
+                        pos.getIndex()
+                    );
+                }
             }
             catch (ParseException pe) {
                 throw new ParameterValidationException(name,

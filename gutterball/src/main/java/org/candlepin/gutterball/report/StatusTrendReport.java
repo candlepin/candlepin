@@ -63,15 +63,28 @@ public class StatusTrendReport extends Report<StatusTrendReportResult> {
     protected void initParameters() {
         ReportParameterBuilder builder = new ReportParameterBuilder(i18n);
 
+        ParameterValidator yearValidator = new ParameterValidator() {
+            public void validate(ParameterDescriptor descriptor, String value) {
+                if (value == null || !value.matches("\\A20\\d{2}-\\d{1,2}-\\d{1,2}\\z")) {
+                    throw new ParameterValidationException(
+                        descriptor.getName(),
+                        "Invalid year. Year must be between 2000 and 2099, inclusive."
+                    );
+                }
+            }
+        };
+
         this.addParameter(
             builder.init("start_date", i18n.tr("The start date on which to filter."))
                 .mustBeDate(REPORT_DATE_FORMAT)
+                .mustSatisfy(yearValidator)
                 .getParameter()
         );
 
         this.addParameter(
             builder.init("end_date", i18n.tr("The end date on which to filter."))
                 .mustBeDate(REPORT_DATE_FORMAT)
+                .mustSatisfy(yearValidator)
                 .getParameter()
         );
 

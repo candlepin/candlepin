@@ -810,8 +810,6 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
         // Add our grouping...
         hql.append("ORDER BY ComplianceStatusSnap.date ASC");
 
-        // org.candlepin.gutterball.report.StatusTrendReport.log.info(hql.toString());
-
         // Build our query object and set the parameters...
         Query query = this.currentSession().createQuery(hql.toString());
 

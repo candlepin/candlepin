@@ -132,6 +132,31 @@ public class ParameterDescriptorTest {
     }
 
     @Test
+    public void validateExtValidations() {
+        MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
+        when(params.containsKey(desc.getName())).thenReturn(true);
+        when(params.get(desc.getName())).thenReturn(Arrays.asList("tv1", "tv2", "test_value"));
+
+        ParameterValidator validator = new ParameterValidator() {
+            public void validate(ParameterDescriptor descriptor, String value) {
+                if (value.length() < 5) {
+                    return;
+                }
+
+                throw new ParameterValidationException(
+                    desc.getName(),
+                    String.format("Called with descriptor and value: %s, %s", descriptor.getName(), value)
+                );
+            }
+        };
+
+        desc.mustSatisfy(validator);
+        assertInvalidParameter(desc, params,
+            String.format("Called with descriptor and value: %s, %s", desc.getName(), "test_value")
+        );
+    }
+
+    @Test
     public void validatesMustHaves() {
         MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
         when(params.containsKey(desc.getName())).thenReturn(true);
@@ -152,7 +177,6 @@ public class ParameterDescriptorTest {
         desc.mustHave("a", "b");
         assertValidParameter(desc, params);
     }
-
 
     @Test
     public void validatesMustNotHaves() {
