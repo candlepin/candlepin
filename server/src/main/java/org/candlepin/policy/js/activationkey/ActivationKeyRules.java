@@ -74,21 +74,9 @@ public class ActivationKeyRules {
 
     private void handleActkeyValidationError(String error, Pool pool) {
         String msg;
-        if (error.equals("rulefailed.actkey.single.consumertype")) {
-            msg = i18n.tr("Activation keys can only use consumer type restricted " +
-                "pools for a single consumer type.");
-        }
-        else if (error.equals("rulefailed.actkey.cannot.use.person.pools")) {
+        if (error.equals("rulefailed.actkey.cannot.use.person.pools")) {
             msg = i18n.tr("Cannot add pools that are " +
                 "restricted to unit type 'person' to activation keys.");
-        }
-        else if (error.equals("rulefailed.host.restriction.physical.only")) {
-            msg = i18n.tr("Cannot use pools with host restriction with physical" +
-                " only pools on a single activation key");
-        }
-        else if (error.equals("rulefailed.multiple.host.restrictions")) {
-            msg = i18n.tr("Activation keys can only use host restricted pools from " +
-                "a single host.");
         }
         else if (error.equals("rulefailed.already.exists")) {
             msg = i18n.tr("Multi-entitlement not supported for pool ''{0}''", pool.getId());
@@ -98,28 +86,8 @@ public class ActivationKeyRules {
                 " subscriptions can be added to the activation key with" +
                 " a quantity greater than one.");
         }
-        else if (error.equals("rulefailed.insufficient.quantity")) {
-            msg = i18n.tr("The quantity must not be greater than the total " +
-                "allowed for the pool");
-        }
         else if (error.equals("rulefailed.invalid.quantity")) {
             msg = i18n.tr("The quantity must be greater than 0");
-        }
-        else if (error.equals("rulefailed.invalid.quantity.instancebased.physical")) {
-            String multip = null;
-            if (pool.hasMergedAttribute("instance_multiplier")) {
-                multip = pool.getMergedAttribute("instance_multiplier").getValue();
-            }
-            msg = i18n.tr("Activation keys for physical systems can only use " +
-                "quantities of pool ''{0}'' evenly divisible by {1}", pool.getId(), multip);
-        }
-        else if (error.equals("rulefailed.virtonly.on.physical.key")) {
-            msg = i18n.tr("Cannot add virtual pool ''{0}'' to activation key" +
-                " for physical systems.", pool.getId());
-        }
-        else if (error.equals("rulefailed.physicalonly.on.virt.key")) {
-            msg = i18n.tr("Cannot add physical pool ''{0}'' to activation key" +
-                " for virtual systems.", pool.getId());
         }
         else {
             msg = error;

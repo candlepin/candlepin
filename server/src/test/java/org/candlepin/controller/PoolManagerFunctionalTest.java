@@ -379,7 +379,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
                 new PoolFilterBuilder(), new PageRequest());
         assertEquals(4, results.getPageData().size());
 
-        // Creating a pool with no entitlements available, which will trigger
+        // Creating a pool with no entitlements available, which does not trigger
         // a rules error:
         Pool pool = createPoolAndSub(o, p, 0L,
             TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
@@ -390,7 +390,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
             new PageRequest());
         // Pool in error should not be included. Should have the same number of
         // initial pools.
-        assertEquals(4, results.getPageData().size());
+        assertEquals(5, results.getPageData().size());
     }
 
     @Test

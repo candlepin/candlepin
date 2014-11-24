@@ -1205,21 +1205,8 @@ var ActivationKey = {
     },
 
     /*
-     * If the activation key is only for physical machines, the quantity of instance
-     * based pools must be either null or evenly divisible by the instance multiplier
-     */
-    validate_instance: function(key, pool, quantity, result) {
-        if (key.physical_only && quantity !== null && pool.hasAttribute(INSTANCE_ATTRIBUTE)) {
-            var instance_multi = parseInt(pool.getAttribute(INSTANCE_ATTRIBUTE));
-            if (quantity % instance_multi != 0) {
-                result.addError("rulefailed.invalid.quantity.instancebased.physical");
-            }
-        }
-    },
-
-    /*
      * Quantity of the pool we're attaching must be null or positive.
-     * There must be sufficient quantity available if quantity is specified.
+     * Must be multi-entitle pool for quantity to be > 1
      */
     validate_quantity: function(key, pool, quantity, result) {
         if (quantity !== null && quantity < 1) {
@@ -1232,11 +1219,6 @@ var ActivationKey = {
             minRequiredQuantity = parseInt(pool.getAttribute(INSTANCE_ATTRIBUTE));
         }
 
-        if (!pool.isUnlimited() &&
-                (pool.quantity < minRequiredQuantity ||
-                 (quantity !== null && quantity > pool.quantity))) {
-            result.addError("rulefailed.insufficient.quantity");
-        }
         if (!Utils.isMultiEnt(pool)) {
             // If the pool isn't multi-entitlable, we can only accept null quantity and 1
             if (quantity !== null && quantity > 1) {
@@ -1253,48 +1235,13 @@ var ActivationKey = {
     },
 
     /*
-     * We can only allow one required host per activation key, otherwise the key becomes
-     * useless.
-     *
-     * If there are physical only pools, we cannot require hosts, because the attributes
-     * are mutually exclusive.
-     */
-    validate_requires_host: function(key, pool, result) {
-        pool_requires = pool.getAttribute(REQUIRES_HOST_ATTRIBUTE);
-        if (pool_requires !== null && pool_requires != "") {
-            if (key.requires_host !== null && pool_requires != key.requires_host) {
-                result.addError("rulefailed.multiple.host.restrictions");
-            }
-            if (key.physical_only) {
-                result.addError("rulefailed.host.restriction.physical.only");
-            }
-        }
-    },
-
-    /*
      * Do not allow pools that require a "person" type consumer to be added to an activation key.
-     * Do not allow multiple different consumer types to be required on the same activation key.
      */
     validate_consumer_type: function(key, pool, result) {
         pool_consumer_type = pool.getAttribute("requires_consumer_type");
         if (pool_consumer_type == "person") {
             result.addError("rulefailed.actkey.cannot.use.person.pools");
         }
-        else if (key.consumer_type !== null && pool_consumer_type !== null &&
-                key.consumer_type != pool_consumer_type) {
-            result.addError("rulefailed.actkey.single.consumertype");
-        }
-    },
-
-    validate_physical_virtual: function(key, pool, result) {
-       var virt_pool = Utils.equalsIgnoreCase('true', pool.getAttribute(VIRT_ONLY));
-       var phys_pool = Utils.equalsIgnoreCase('true', pool.getAttribute(PHYSICAL_ONLY));
-       if (virt_pool && key.physical_only) {
-           result.addError("rulefailed.virtonly.on.physical.key");
-       }
-       if (phys_pool && key.virt_only) {
-           result.addError("rulefailed.physicalonly.on.virt.key");
-       }
     },
 
     validate_pool: function() {
@@ -1308,9 +1255,6 @@ var ActivationKey = {
 
         this.validate_quantity(key, pool, quantity, result);
         this.validate_consumer_type(key, pool, result);
-        this.validate_requires_host(key, pool, result);
-        this.validate_physical_virtual(key, pool, result);
-        this.validate_instance(key, pool, quantity, result);
         return JSON.stringify(result);
     }
 }
