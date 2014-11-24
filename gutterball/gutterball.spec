@@ -59,6 +59,7 @@ BuildRequires: c3p0 >= 0.9.1.2
 BuildRequires: postgresql-jdbc
 BuildRequires: jta
 BuildRequires: apache-mime4j = 0:0.6
+BuildRequires: antlr >= 0:2.7.7
 
 %global jackson_version 0:2.3.0
 BuildRequires: jackson-annotations >= %{jackson_version}
@@ -120,6 +121,7 @@ Requires: c3p0 >= 0.9.1.2
 Requires: postgresql-jdbc
 Requires: jta
 Requires: apache-mime4j = 0:0.6
+Requires: antlr >= 0:2.7.7
 
 Requires: jackson-annotations >= %{jackson_version}
 Requires: jackson-core >= %{jackson_version}
