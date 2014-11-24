@@ -69,50 +69,50 @@ public class ComplianceHandler implements EventHandler {
 
         try {
             compliance = mapper.readValue(event.getNewEntity(), Compliance.class);
-
-            consumer = compliance.getConsumer();
-            if (consumer == null) {
-                throw new RuntimeException(
-                    "Unable to read consumer information from compliance status event."
-                );
-            }
-
-            status = compliance.getStatus();
-            if (status == null) {
-                throw new RuntimeException(
-                    "Unable to read compliance status from compliance status event."
-                );
-            }
-
-            owner = consumer.getOwner();
-            if (owner == null) {
-                throw new RuntimeException(
-                    "Unable to read owner information from compliance status event."
-                );
-            }
-
-            // Inject the consumer state object...
-            uuid = consumer.getUuid();
-            eventDate = status.getDate();
-            cstate = this.consumerStateCurator.findByUuid(uuid);
-
-            if (cstate == null) {
-                // At this point, we've not received a register event for this consumer, so we need
-                // to create one from the information in this event.
-
-                // TODO: Perhaps we should be validating that the uuid, key and date are properly
-                // set as well...?
-                ownerKey = owner.getKey();
-                cstate = this.consumerStateCurator.create(new ConsumerState(uuid, ownerKey, eventDate));
-            }
-
-            // Not picked up from the event.
-            consumer.setConsumerState(cstate);
-            compliance.setDate(eventDate);
         }
         catch (IOException e) {
             throw new RuntimeException("Could not deserialize compliance snapshot data.", e);
         }
+
+        consumer = compliance.getConsumer();
+        if (consumer == null) {
+            throw new RuntimeException(
+                "Unable to read consumer information from compliance status event."
+            );
+        }
+
+        status = compliance.getStatus();
+        if (status == null) {
+            throw new RuntimeException(
+                "Unable to read compliance status from compliance status event."
+            );
+        }
+
+        owner = consumer.getOwner();
+        if (owner == null) {
+            throw new RuntimeException(
+                "Unable to read owner information from compliance status event."
+            );
+        }
+
+        // Inject the consumer state object...
+        uuid = consumer.getUuid();
+        eventDate = status.getDate();
+        cstate = this.consumerStateCurator.findByUuid(uuid);
+
+        if (cstate == null) {
+            // At this point, we've not received a register event for this consumer, so we need
+            // to create one from the information in this event.
+
+            // TODO: Perhaps we should be validating that the uuid, key and date are properly
+            // set as well...?
+            ownerKey = owner.getKey();
+            cstate = this.consumerStateCurator.create(new ConsumerState(uuid, ownerKey, eventDate));
+        }
+
+        // Not picked up from the event.
+        consumer.setConsumerState(cstate);
+        compliance.setDate(eventDate);
 
         complianceCurator.create(compliance);
     }

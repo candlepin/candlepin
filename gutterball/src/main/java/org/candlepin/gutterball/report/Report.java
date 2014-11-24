@@ -17,11 +17,11 @@ package org.candlepin.gutterball.report;
 
 import org.candlepin.gutterball.guice.I18nProvider;
 
+import org.apache.commons.lang.time.DateUtils;
+
 import org.xnap.commons.i18n.I18n;
 
 import java.text.ParseException;
-import java.text.ParsePosition;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -125,18 +125,7 @@ public abstract class Report<R extends ReportResult> {
         }
 
         try {
-            SimpleDateFormat formatter = new SimpleDateFormat(format);
-            ParsePosition pos = new ParsePosition(0);
-            formatter.setLenient(false);
-
-            Date result = formatter.parse(date, pos);
-
-            // Check that we exhaused the entire string
-            if (pos.getIndex() < date.length()) {
-                throw new ParseException("Invalid date string. Expected format: " + format, pos.getIndex());
-            }
-
-            return result;
+            return DateUtils.parseDateStrictly(date, new String[] { format });
         }
         catch (ParseException e) {
             throw new RuntimeException("Could not parse date parameter");

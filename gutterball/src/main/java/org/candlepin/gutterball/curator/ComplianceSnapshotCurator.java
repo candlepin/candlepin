@@ -354,7 +354,6 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
 
         // Execute & process results...
         Map<Date, Map<String, Integer>> resultmap = new TreeMap<Date, Map<String, Integer>>();
-        Map<String, Integer> statusmap;
         Map<String, Object[]> cstatusmap = new HashMap<String, Object[]>();
 
         // Step through our data and do our manual aggregation bits...
@@ -370,7 +369,6 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
 
             // Prime the calendars here...
             Calendar cdate = Calendar.getInstance();
-            cdate.clear();
             cdate.setTime(startDate != null ? startDate : date.getTime());
             cdate.set(Calendar.HOUR_OF_DAY, 23);
             cdate.set(Calendar.MINUTE, 59);
@@ -378,7 +376,6 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
             cdate.set(Calendar.MILLISECOND, 999);
 
             Calendar end = Calendar.getInstance();
-            end.clear();
             end.setTimeInMillis(endDate != null ? endDate.getTime() : Long.MAX_VALUE);
 
             for (; this.compareCalendarsByDate(cdate, end) <= 0; cdate.add(Calendar.DATE, 1)) {
@@ -401,7 +398,7 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
                 }
 
                 Date hashdate = cdate.getTime();
-                statusmap = new HashMap<String, Integer>();
+                Map<String, Integer> statusmap = new HashMap<String, Integer>();
 
                 // Go through and add up all our counts for the day.
                 for (Object[] cstatus : cstatusmap.values()) {
@@ -459,7 +456,7 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
      *
      *    AND (ComplianceStatusSnap.date, ConsumerSnap.uuid) IN (
      *      SELECT
-     *        max(ComplianceSnap2.date) as maxdate,
+     *        max(ComplianceSnap2.date) AS maxdate,
      *        ConsumerState2.uuid
      *
      *      FROM
@@ -498,7 +495,7 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
      *
      *      OR (ComplianceStatusSnap.date, ConsumerSnap.uuid) IN (
      *        SELECT
-     *          max(ComplianceSnap3.date) as maxdate,
+     *          max(ComplianceSnap3.date) AS maxdate,
      *          ConsumerState3.uuid
      *
      *        FROM
@@ -624,9 +621,9 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
 
             "FROM " +
                 "Consumer AS ConsumerSnap " +
-                "INNER JOIN ConsumerSnap.consumerState as ConsumerState " +
-                "INNER JOIN ConsumerSnap.complianceSnapshot as ComplianceSnap " +
-                "INNER JOIN ComplianceSnap.status as ComplianceStatusSnap " +
+                "INNER JOIN ConsumerSnap.consumerState AS ConsumerState " +
+                "INNER JOIN ConsumerSnap.complianceSnapshot AS ComplianceSnap " +
+                "INNER JOIN ComplianceSnap.status AS ComplianceStatusSnap " +
 
             "WHERE (" +
                     "ConsumerState.deleted IS NULL " +
@@ -644,14 +641,14 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
 
                 "AND (ComplianceStatusSnap.date, ConsumerSnap.uuid) IN (" +
                     "SELECT " +
-                        "max(ComplianceSnap2.date) as maxdate," +
+                        "max(ComplianceSnap2.date) AS maxdate," +
                         "ConsumerState2.uuid " +
 
                     "FROM " +
                         "Consumer AS ConsumerSnap2 " +
-                        "INNER JOIN ConsumerSnap2.consumerState as ConsumerState2 " +
-                        "INNER JOIN ConsumerSnap2.complianceSnapshot as ComplianceSnap2 " +
-                        "INNER JOIN ComplianceSnap2.status as ComplianceStatusSnap2 " +
+                        "INNER JOIN ConsumerSnap2.consumerState AS ConsumerState2 " +
+                        "INNER JOIN ConsumerSnap2.complianceSnapshot AS ComplianceSnap2 " +
+                        "INNER JOIN ComplianceSnap2.status AS ComplianceStatusSnap2 " +
 
                     "GROUP BY " +
                         "year(ComplianceSnap2.date)," +
@@ -669,10 +666,10 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
             StringBuffer inner = new StringBuffer(
                 "AND ComplianceSnap.id IN (" +
                     "SELECT ComplianceSnap3.id " +
-                        "FROM Consumer as ConsumerSnap3 " +
-                        "INNER JOIN ConsumerSnap3.consumerState as ConsumerState3 " +
-                        "INNER JOIN ConsumerSnap3.complianceSnapshot as ComplianceSnap3 " +
-                        "LEFT JOIN ComplianceSnap3.entitlements as EntitlementSnap3 " +
+                        "FROM Consumer AS ConsumerSnap3 " +
+                        "INNER JOIN ConsumerSnap3.consumerState AS ConsumerState3 " +
+                        "INNER JOIN ConsumerSnap3.complianceSnapshot AS ComplianceSnap3 " +
+                        "LEFT JOIN ComplianceSnap3.entitlements AS EntitlementSnap3 " +
 
                         "WHERE " +
                             "ConsumerState3.uuid = ConsumerState.uuid " +
@@ -746,14 +743,14 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
                     ")" +
                     "OR (ComplianceStatusSnap.date, ConsumerSnap.uuid) IN (" +
                         "SELECT " +
-                            "max(ComplianceStatusSnap2.date) as maxdate," +
+                            "max(ComplianceStatusSnap2.date) AS maxdate," +
                             "ConsumerState2.uuid " +
 
                         "FROM " +
                             "Consumer AS ConsumerSnap2 " +
-                            "INNER JOIN ConsumerSnap2.consumerState as ConsumerState2 " +
-                            "INNER JOIN ConsumerSnap2.complianceSnapshot as ComplianceSnap2 " +
-                            "INNER JOIN ComplianceSnap2.status as ComplianceStatusSnap2 " +
+                            "INNER JOIN ConsumerSnap2.consumerState AS ConsumerState2 " +
+                            "INNER JOIN ConsumerSnap2.complianceSnapshot AS ComplianceSnap2 " +
+                            "INNER JOIN ComplianceSnap2.status AS ComplianceStatusSnap2 " +
 
                         "WHERE " +
                             "year(ComplianceStatusSnap2.date) < ?%1$d " +
