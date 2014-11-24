@@ -25,7 +25,7 @@
 %endif
 
 Name: gutterball
-Version: 1.0.3
+Version: 1.0.4
 Release: 1%{?dist}
 Summary: Data aggregator for Candlepin
 
@@ -212,6 +212,9 @@ rm -rf %{buildroot}
 %attr(775, tomcat, root) %{_localstatedir}/log/%{name}
 
 %changelog
+* Mon Nov 24 2014 Alex Wood <awood@redhat.com> 1.0.4-1
+- Add missing requires for gutterball. (awood@redhat.com)
+
 * Mon Nov 24 2014 Alex Wood <awood@redhat.com> 1.0.3-1
 - Make logging less verbose and more informative. (awood@redhat.com)
 - Add missing Gutterball runtime dependencies. (awood@redhat.com)
