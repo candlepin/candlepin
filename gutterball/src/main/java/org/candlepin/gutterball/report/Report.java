@@ -132,7 +132,7 @@ public abstract class Report<R extends ReportResult> {
             Date result = formatter.parse(date, pos);
 
             // Check that we exhaused the entire string
-            if (pos.getIndex() < date.length() - 1) {
+            if (pos.getIndex() < date.length()) {
                 throw new ParseException("Invalid date string. Expected format: " + format, pos.getIndex());
             }
 

@@ -17,6 +17,7 @@ package org.candlepin.gutterball.report;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
+import static junitparams.JUnitParamsRunner.*;
 
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.gutterball.GutterballTestingModule;
@@ -28,6 +29,10 @@ import com.google.inject.Injector;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
 
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -40,6 +45,7 @@ import javax.ws.rs.core.MultivaluedMap;
 
 
 
+@RunWith(JUnitParamsRunner.class)
 public class StatusTrendReportTest {
 
     private Injector injector;
@@ -60,30 +66,45 @@ public class StatusTrendReportTest {
     }
 
     @Test
-    public void testDateFormatValidatedOnOnDateParameter() {
+    @Parameters(method = "invalidDateProvider")
+    public void testDateValidationWithMalformedDate(String date, String expected) {
         MultivaluedMap<String, String> params;
 
         params = mock(MultivaluedMap.class);
         when(params.containsKey("start_date")).thenReturn(true);
-        when(params.getFirst("start_date")).thenReturn("not a date");
-        when(params.get("start_date")).thenReturn(Arrays.asList("not a date"));
+        when(params.getFirst("start_date")).thenReturn(date);
+        when(params.get("start_date")).thenReturn(Arrays.asList(date));
 
         this.validateParams(
             params,
             "start_date",
-            "Invalid date string. Expected format: " + ConsumerStatusReport.REPORT_DATE_FORMAT
+            expected
         );
-
 
         params = mock(MultivaluedMap.class);
         when(params.containsKey("end_date")).thenReturn(true);
-        when(params.getFirst("end_date")).thenReturn("not a date");
-        when(params.get("end_date")).thenReturn(Arrays.asList("not a date"));
+        when(params.getFirst("end_date")).thenReturn(date);
+        when(params.get("end_date")).thenReturn(Arrays.asList(date));
 
         this.validateParams(
             params,
             "end_date",
-            "Invalid date string. Expected format: " + ConsumerStatusReport.REPORT_DATE_FORMAT
+            expected
+        );
+    }
+
+    public Object[] invalidDateProvider() {
+        String dateFormat = ConsumerStatusReport.REPORT_DATE_FORMAT;
+
+        return $(
+            $("not a date", "Invalid date string. Expected format: " + dateFormat),
+            $("2014-10-20asdlkasf", "Invalid date string. Expected format: " + dateFormat),
+            $("2014-1nope0-20", "Invalid date string. Expected format: " + dateFormat),
+            $("20145-10-20", "Invalid year. Year must be between 2000 and 2099 (inclusive)."),
+            $("1999-10-20", "Invalid year. Year must be between 2000 and 2099 (inclusive)."),
+            $("2100-10-20", "Invalid year. Year must be between 2000 and 2099 (inclusive)."),
+            $("2014-13-20", "Invalid date string. Expected format: " + dateFormat),
+            $("2014-12-45", "Invalid date string. Expected format: " + dateFormat)
         );
     }
 

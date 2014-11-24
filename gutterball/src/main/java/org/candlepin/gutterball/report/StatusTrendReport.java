@@ -68,7 +68,7 @@ public class StatusTrendReport extends Report<StatusTrendReportResult> {
                 if (value == null || !value.matches("\\A20\\d{2}-\\d{1,2}-\\d{1,2}\\z")) {
                     throw new ParameterValidationException(
                         descriptor.getName(),
-                        "Invalid year. Year must be between 2000 and 2099, inclusive."
+                        i18n.tr("Invalid year. Year must be between 2000 and 2099 (inclusive).")
                     );
                 }
             }
@@ -108,9 +108,7 @@ public class StatusTrendReport extends Report<StatusTrendReportResult> {
         this.addParameter(
             builder.init(
                 "management_enabled",
-                i18n.tr(
-                    "Whether or not to filter on subscriptions which have management enabled (boolean)."
-                )
+                i18n.tr("Whether or not to filter on subscriptions which have management enabled (boolean).")
             )
                 .mustNotHave("sku", "subscription_name")
                 .getParameter()

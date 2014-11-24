@@ -226,9 +226,9 @@ public class ParameterDescriptor {
                 formatter.parse(dateString, pos);
 
                 // Check that we exhaused the entire string
-                if (pos.getIndex() < dateString.length() - 1) {
+                if (pos.getIndex() < dateString.length()) {
                     throw new ParseException(
-                        "Invalid date string. Expected format: " + this.dateFormat,
+                        i18n.tr("Invalid date string. Expected format: {0}", this.dateFormat),
                         pos.getIndex()
                     );
                 }
