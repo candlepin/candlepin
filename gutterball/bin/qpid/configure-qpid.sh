@@ -116,7 +116,7 @@ create_client_certs() {
 
             if [ "$IS_KATELLO" == 0 ]; then
                 # Katello doesn't place the CA private key in the NSS DB
-                sudo openssl x509 -days 3650 -req -CA $KATELLO_PKI/certs/katello-default-ca.crt -CAkey $KATELLO_PKI/private/katello-default-ca.key -CAcreateserial -in "$dest.csr" -inform DER > "$dest.crt" 2>> $LOG
+                sudo openssl x509 -days 3650 -req -CA $KATELLO_PKI/certs/katello-default-ca.crt -CAkey $KATELLO_PKI/private/katello-default-ca.key -CAcreateserial -in "$dest.csr" > "$dest.crt" 2>> $LOG
             else
                 # certutil requires the CSR in DER for some stupid reason
                 openssl req -in "$dest.csr" -inform PEM -out "$dest.der.csr" -outform DER
