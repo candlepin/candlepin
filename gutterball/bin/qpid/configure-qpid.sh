@@ -31,14 +31,14 @@ define_variables() {
     if [ $IS_KATELLO -eq 0 ]; then
         CA_DB="$KATELLO_PKI/nssdb"
         CA_PASS_FILE="${CA_DB}/nss_db_password-file"
-        JAVA_PASS="$(cat $KATELLO_PKI/keystore_password-file)"
+        JAVA_PASS="$(sudo cat $KATELLO_PKI/keystore_password-file)"
     else
         CA_PASS_FILE="$CERT_LOC/ca_password.txt"
         CA_DB="$CERT_LOC/CA_db"
         JAVA_PASS="password"
         echo -n "$JAVA_PASS" > $CA_PASS_FILE
     fi
-    CA_PASS="$(cat "$CA_PASS_FILE")"
+    CA_PASS="$(sudo cat "$CA_PASS_FILE")"
 }
 
 create_ca_cert() {
