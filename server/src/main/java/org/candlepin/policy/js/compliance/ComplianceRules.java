@@ -23,6 +23,7 @@ import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsonJsContext;
 import org.candlepin.policy.js.RuleExecutionException;
 import org.candlepin.policy.js.RulesObjectMapper;
+import org.candlepin.policy.js.compliance.hash.ComplianceStatusHasher;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -137,14 +138,24 @@ public class ComplianceRules {
                         entCurator.merge(ent);
                     }
                 }
-                if (!result.getStatus().equals(c.getEntitlementStatus())) {
-                    c.setEntitlementStatus(result.getStatus());
-                    // Merge might work better here, but we use update in other places for this
-                    if (updateConsumer) {
-                        consumerCurator.update(c);
-                    }
+
+                String newHash = getComplianceStatusHash(result, c);
+                boolean complianceChanged = !newHash.equals(c.getComplianceStatusHash());
+                if (complianceChanged) {
+                    log.debug("Compliance has changed, sending Compliance event.");
+                    c.setComplianceStatusHash(newHash);
+                    eventSinkProvider.get().emitCompliance(c, c.getEntitlements(), result);
                 }
-                eventSinkProvider.get().emitCompliance(c, c.getEntitlements(), result);
+
+                boolean entStatusChanged = !result.getStatus().equals(c.getEntitlementStatus());
+                if (entStatusChanged) {
+                    c.setEntitlementStatus(result.getStatus());
+                }
+
+                if (updateConsumer && (complianceChanged || entStatusChanged)) {
+                    // Merge might work better here, but we use update in other places for this
+                    consumerCurator.update(c);
+                }
             }
             return result;
         }
@@ -173,4 +184,11 @@ public class ComplianceRules {
         args.put("log", log, false);
         return jsRules.runJsFunction(Boolean.class, "is_ent_compliant", args);
     }
+
+    private String getComplianceStatusHash(ComplianceStatus status, Consumer consumer) {
+        ComplianceStatusHasher hasher = new ComplianceStatusHasher(consumer, status);
+        return hasher.hash();
+    }
+
+
 }

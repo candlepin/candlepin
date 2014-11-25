@@ -138,8 +138,11 @@ public class ComplianceRulesTest {
 
     private Entitlement mockEntitlement(Consumer consumer, String productId,
         String ... providedProductIds) {
-        return mockEntitlement(consumer, productId,
-            TestUtil.createDate(2000, 1, 1), TestUtil.createDate(2050, 1, 1),
+        // Make the end date relative to now so it won't outrun it over time.
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.YEAR, 50);
+
+        return mockEntitlement(consumer, productId, TestUtil.createDate(2000, 1, 1), cal.getTime(),
             providedProductIds);
     }
 
@@ -152,8 +155,14 @@ public class ComplianceRulesTest {
         }
         Pool p = new Pool(owner, productId, productId, provided,
             new Long(1000), start, end, "1000", "1000", "1000");
+        p.setId("pool_" + TestUtil.randomInt());
+        p.setUpdated(new Date());
+        p.setCreated(new Date());
+
         Entitlement e = new Entitlement(p, consumer, 1);
         e.setId("ent_" + TestUtil.randomInt());
+        e.setUpdated(new Date());
+        e.setCreated(new Date());
         return e;
     }
 
@@ -1912,6 +1921,40 @@ public class ComplianceRulesTest {
         }
         assertTrue(reasonKeys.contains("RAM"));
         assertTrue(reasonKeys.contains("VCPU"));
+    }
+
+    @Test
+    public void ensureConsumerEntitlementStatusIsUpdatedWhenChanged() {
+        Consumer c = mockFullyEntitledConsumer();
+        ComplianceStatus originalStatus = compliance.getStatus(c);
+        assertEquals("valid", originalStatus.getStatus());
+
+        verify(consumerCurator).update(eq(c));
+        c.addInstalledProduct(new ConsumerInstalledProduct("tip", "Test Installed Procuct"));
+        ComplianceStatus updated = compliance.getStatus(c);
+        assertNotEquals(originalStatus.getStatus(), updated.getStatus());
+        assertEquals(c.getEntitlementStatus(), updated.getStatus());
+    }
+
+    @Test
+    public void ensureConsumerComplianceStatusHashIsUpdatedWhenComplianceChanges() {
+        Consumer c = mockFullyEntitledConsumer();
+        ComplianceStatus originalStatus = compliance.getStatus(c);
+        assertEquals("valid", originalStatus.getStatus());
+
+        String initialHash = c.getComplianceStatusHash();
+        assertNotNull(initialHash);
+        assertFalse(initialHash.isEmpty());
+
+        verify(consumerCurator).update(eq(c));
+        c.addInstalledProduct(new ConsumerInstalledProduct("tip", "Test Installed Procuct"));
+        ComplianceStatus updated = compliance.getStatus(c);
+        assertNotEquals(originalStatus.getStatus(), updated.getStatus());
+
+        String updatedHash = c.getComplianceStatusHash();
+        assertNotNull(updatedHash);
+        assertFalse(updatedHash.isEmpty());
+        assertNotEquals(initialHash, updatedHash);
     }
 
     private void mockEntCurator(Consumer c, List<Entitlement> ents) {
