@@ -65,10 +65,10 @@ public class StatusTrendReport extends Report<StatusTrendReportResult> {
 
         ParameterValidator yearValidator = new ParameterValidator() {
             public void validate(ParameterDescriptor descriptor, String value) {
-                if (value == null || !value.matches("\\A20\\d{2}-\\d{1,2}-\\d{1,2}\\z")) {
+                if (value == null || !value.matches("\\A[23456789]\\d{3}-\\d{1,2}-\\d{1,2}\\z")) {
                     throw new ParameterValidationException(
                         descriptor.getName(),
-                        i18n.tr("Invalid year. Year must be between 2000 and 2099 (inclusive).")
+                        i18n.tr("Invalid year; years must be no earlier than 2000.")
                     );
                 }
             }

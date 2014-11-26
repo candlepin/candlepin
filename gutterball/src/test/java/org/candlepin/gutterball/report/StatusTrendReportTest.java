@@ -100,9 +100,7 @@ public class StatusTrendReportTest {
             $("not a date", "Invalid date string. Expected format: " + dateFormat),
             $("2014-10-20asdlkasf", "Invalid date string. Expected format: " + dateFormat),
             $("2014-1nope0-20", "Invalid date string. Expected format: " + dateFormat),
-            $("20145-10-20", "Invalid year. Year must be between 2000 and 2099 (inclusive)."),
-            $("1999-10-20", "Invalid year. Year must be between 2000 and 2099 (inclusive)."),
-            $("2100-10-20", "Invalid year. Year must be between 2000 and 2099 (inclusive)."),
+            $("1999-10-20", "Invalid year; years must be no earlier than 2000."),
             $("2014-13-20", "Invalid date string. Expected format: " + dateFormat),
             $("2014-12-45", "Invalid date string. Expected format: " + dateFormat)
         );

@@ -352,6 +352,16 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
             attributes
         );
 
+        // Clamp our dates so they're no further out than "today."
+        Date today = new Date();
+        if (startDate != null && startDate.after(today)) {
+            startDate = today;
+        }
+
+        if (endDate != null && endDate.after(today)) {
+            endDate = today;
+        }
+
         // Execute & process results...
         Map<Date, Map<String, Integer>> resultmap = new TreeMap<Date, Map<String, Integer>>();
         Map<String, Object[]> cstatusmap = new HashMap<String, Object[]>();
