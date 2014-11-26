@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <changeSet id="20141126150611-1" author="awood">
+        <comment>Create content tags table</comment>
+        <createTable tableName="cp_consumer_content_tags">
+            <column name="consumer_id" type="VARCHAR(32)">
+                <constraints nullable="false" references="cp_consumer(id)"
+                    foreignKeyName="cp_content_tags_consumer_fk"/>
+            </column>
+            <column name="content_tag" type="VARCHAR(200)"/>
+        </createTable>
+    </changeSet>
+</databaseChangeLog>
+<!-- vim: set expandtab sts=4 sw=4 ai: -->

@@ -2257,4 +2257,5 @@
         </insert>
     </changeSet> -->
     <include file="db/changelog/20141203123727-add-compliance-status-hash-column.xml"/>
+    <include file="db/changelog/20141126150611-create-content-tags-table.xml"/>
 </databaseChangeLog>

@@ -253,9 +253,22 @@ describe 'Consumer Resource' do
   it "should let a consumer register with a hypervisorId" do
     some_owner = create_owner(random_string('someowner'))
     client = user_client(some_owner, random_string('bob'))
-    consumer = client.register(random_string('system1'), :system, random_string("someuuid"), {}, random_string("uname"), some_owner['key'], [], [], nil, [], "aBcD")
+    consumer = client.register(nil, :system, random_string("someuuid"), {}, random_string("uname"), some_owner['key'], [], [], nil, [], "aBcD")
     # hypervisorId should always be set to lower case for the database constraint
     consumer['hypervisorId']['hypervisorId'].should == "abcd"
+  end
+
+  it 'should let a consumer register with content tags' do
+    some_owner = create_owner(random_string('someowner'))
+    client = user_client(some_owner, random_string('bob'))
+    tags = [
+      { :tags => "awesomeos,awesomeos-workstation" },
+      { :tags => "otherproduct, withspace" },
+    ]
+    consumer = client.register(random_string('system1'), :system, random_string("someuuid"), {}, random_string("uname"), some_owner['key'], [], [], nil, [], nil, tags)
+    consumer['contentTags'].sort_by! { |t| t['tags']}
+    consumer['contentTags'].first['tags'].should == "awesomeos,awesomeos-workstation"
+    consumer['contentTags'].last['tags'].should == "otherproduct, withspace"
   end
 
   it "should not let a consumer register with a used hypervisorId in same the org" do
