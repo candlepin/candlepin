@@ -17,14 +17,15 @@ package org.candlepin.gutterball.report;
 
 import org.candlepin.gutterball.guice.I18nProvider;
 
-import org.apache.commons.lang.time.DateUtils;
-
 import org.xnap.commons.i18n.I18n;
 
 import java.text.ParseException;
+import java.text.ParsePosition;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 
 import javax.ws.rs.core.MultivaluedMap;
 
@@ -111,21 +112,91 @@ public abstract class Report<R extends ReportResult> {
         this.parameters.add(param);
     }
 
+    /**
+     * Parses the time zone from the input string. If the time zone could not be parsed, this method
+     * throws an exception.
+     *
+     * @param timezone
+     *  The time zone string to parse.
+     *
+     * @throws RuntimeException
+     *  if the given time zone does not represent a valid time zone.
+     *
+     * @return
+     *  A TimeZone instance representing the specified time zone, or null if timezone is null or
+     *  empty.
+     */
+    protected TimeZone parseTimeZone(String timezone) {
+        if (timezone == null || timezone.isEmpty()) {
+            return null;
+        }
+
+        // Java's time zones are case-sensitive, which is incredibly inconvenient; so we'll do
+        // something rather clumsy to work around it.
+        boolean found = false;
+        for (String tzid : TimeZone.getAvailableIDs()) {
+            if (tzid.equalsIgnoreCase(timezone)) {
+                timezone = tzid;
+                found = true;
+                break;
+            }
+        }
+
+        // If we didn't find the TZ in the available IDs, it might be a custom offset (GMT-10:00)
+        // We'll convert it to upper case, since it won't match otherwise.
+        if (!found) {
+            timezone = timezone.toUpperCase();
+        }
+
+        TimeZone result = TimeZone.getTimeZone(timezone);
+
+        // If we got GMT back and that's not what we requested, then it's a time zone we don't
+        // support.
+        String tzid = result.getID();
+        if (tzid.equals("GMT") && !timezone.equals(tzid)) {
+            throw new RuntimeException("Unable to parse time zone parameter");
+        }
+
+        return result;
+    }
+
     protected Date parseDate(String date) {
-        return this.parseFormattedDate(date, REPORT_DATE_FORMAT);
+        return this.parseFormattedDate(date, REPORT_DATE_FORMAT, null);
     }
 
     protected Date parseDateTime(String date) {
-        return this.parseFormattedDate(date, REPORT_DATETIME_FORMAT);
+        return this.parseFormattedDate(date, REPORT_DATETIME_FORMAT, null);
     }
 
-    protected Date parseFormattedDate(String date, String format) {
+    protected Date parseDate(String date, TimeZone timezone) {
+        return this.parseFormattedDate(date, REPORT_DATE_FORMAT, timezone);
+    }
+
+    protected Date parseDateTime(String date, TimeZone timezone) {
+        return this.parseFormattedDate(date, REPORT_DATETIME_FORMAT, timezone);
+    }
+
+    protected Date parseFormattedDate(String date, String format, TimeZone timezone) {
         if (date == null || date.isEmpty()) {
             return null;
         }
 
         try {
-            return DateUtils.parseDateStrictly(date, new String[] { format });
+            SimpleDateFormat formatter = new SimpleDateFormat(format);
+            ParsePosition pos = new ParsePosition(0);
+
+            formatter.setLenient(false);
+            if (timezone != null) {
+                formatter.setTimeZone(timezone);
+            }
+
+            Date result = formatter.parse(date, pos);
+
+            if (pos.getIndex() != date.length()) {
+                throw new ParseException("Could not parse date parameter", pos.getIndex());
+            }
+
+            return result;
         }
         catch (ParseException e) {
             throw new RuntimeException("Could not parse date parameter");

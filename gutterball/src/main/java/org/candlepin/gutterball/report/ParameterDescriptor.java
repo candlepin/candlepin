@@ -23,6 +23,7 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.TimeZone;
 
 import javax.ws.rs.core.MultivaluedMap;
 
@@ -40,6 +41,7 @@ public class ParameterDescriptor {
     private boolean isMultiValued = false;
     private boolean mustBeInt = false;
     private String dateFormat = null;
+    private boolean mustBeTimeZone = false;
     private List<String> mustHaveParams = new ArrayList<String>(0);
     private List<String> mustNotHaveParams = new ArrayList<String>(0);
     private List<ParameterValidator> validators = new ArrayList<ParameterValidator>(0);
@@ -113,6 +115,17 @@ public class ParameterDescriptor {
     }
 
     /**
+     * Validate this desctiptor's parameter as a time zone.
+     *
+     * @return
+     *  a reference to this descriptor.
+     */
+    public ParameterDescriptor mustBeTimeZone() {
+        this.mustBeTimeZone = true;
+        return this;
+    }
+
+    /**
      * Validates this descriptor's parameter as a mandatory parameter.
      * @return a reference to this descriptor.
      */
@@ -164,6 +177,10 @@ public class ParameterDescriptor {
 
         if (this.dateFormat != null && !this.dateFormat.isEmpty()) {
             validateDate(queryParams.get(name));
+        }
+
+        if (this.mustBeTimeZone) {
+            validateTimeZone(queryParams.get(name));
         }
 
         if (this.validators.size() > 0) {
@@ -226,6 +243,30 @@ public class ParameterDescriptor {
             catch (ParseException pe) {
                 throw new ParameterValidationException(name,
                         i18n.tr("Invalid date string. Expected format: {0}", dateFormat));
+            }
+        }
+    }
+
+    @SuppressWarnings("checkstyle:indentation")
+    private void validateTimeZone(List<String> timezones) {
+        valueloop: for (String timezone : timezones) {
+            for (String tzid : TimeZone.getAvailableIDs()) {
+                if (tzid.equalsIgnoreCase(timezone)) {
+                    continue valueloop; // Valid time zone
+                }
+            }
+
+            TimeZone result = TimeZone.getTimeZone(timezone.toUpperCase());
+
+            String tzid = result.getID();
+            if (tzid.equals("GMT") && !timezone.equals(tzid)) {
+                throw new ParameterValidationException(
+                    this.name,
+                    i18n.tr(
+                        "Invalid time zone string. Time zones must be recognized time zone names " +
+                        "or offsets specified in the form of \"GMT[+-]HH:?MM\"."
+                    )
+                );
             }
         }
     }

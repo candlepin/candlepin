@@ -14,7 +14,6 @@
  */
 package org.candlepin.gutterball.report;
 
-import java.util.Date;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -26,7 +25,14 @@ import java.util.TreeMap;
  * The result is a map of maps, with the outer map mapping the dates to the inner map which maps the
  * statuses to their respective counts.
  */
-public class StatusTrendReportResult extends TreeMap<Date, Map<String, Integer>> implements ReportResult {
+public class StatusTrendReportResult extends TreeMap<String, Map<String, Integer>> implements ReportResult {
+
+    /**
+     * Creates a new, empty report result.
+     */
+    public StatusTrendReportResult() {
+        super();
+    }
 
     /**
      * Creates a new report results instance pre-populated with the specified results. Once created,
@@ -36,7 +42,7 @@ public class StatusTrendReportResult extends TreeMap<Date, Map<String, Integer>>
      * @param results
      *  A mapping of dates to status counts
      */
-    public StatusTrendReportResult(Map<Date, Map<String, Integer>> results) {
+    public StatusTrendReportResult(Map<String, Map<String, Integer>> results) {
         super(results);
     }
 

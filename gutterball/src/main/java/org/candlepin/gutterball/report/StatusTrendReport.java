@@ -25,9 +25,11 @@ import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TimeZone;
 
 import javax.ws.rs.core.MultivaluedMap;
 
@@ -75,32 +77,32 @@ public class StatusTrendReport extends Report<StatusTrendReportResult> {
         };
 
         this.addParameter(
-            builder.init("start_date", i18n.tr("The start date on which to filter."))
+            builder.init("start_date", i18n.tr("The start date on which to filter"))
                 .mustBeDate(REPORT_DATE_FORMAT)
                 .mustSatisfy(yearValidator)
                 .getParameter()
         );
 
         this.addParameter(
-            builder.init("end_date", i18n.tr("The end date on which to filter."))
+            builder.init("end_date", i18n.tr("The end date on which to filter"))
                 .mustBeDate(REPORT_DATE_FORMAT)
                 .mustSatisfy(yearValidator)
                 .getParameter()
         );
 
         this.addParameter(
-            builder.init("owner", i18n.tr("An owner key on which to filter."))
+            builder.init("owner", i18n.tr("An owner key on which to filter"))
                 .getParameter()
         );
 
         this.addParameter(
-            builder.init("sku", i18n.tr("The entitlement sku on which to filter."))
+            builder.init("sku", i18n.tr("The entitlement sku on which to filter"))
                 .mustNotHave("subscription_name", "management_enabled")
                 .getParameter()
         );
 
         this.addParameter(
-            builder.init("subscription_name", i18n.tr("The name of a subscription on which to filter."))
+            builder.init("subscription_name", i18n.tr("The name of a subscription on which to filter"))
                 .mustNotHave("sku", "management_enabled")
                 .getParameter()
         );
@@ -108,9 +110,18 @@ public class StatusTrendReport extends Report<StatusTrendReportResult> {
         this.addParameter(
             builder.init(
                 "management_enabled",
-                i18n.tr("Whether or not to filter on subscriptions which have management enabled (boolean).")
+                i18n.tr("Whether or not to filter on subscriptions which have management enabled (boolean)")
             )
                 .mustNotHave("sku", "subscription_name")
+                .getParameter()
+        );
+
+        this.addParameter(
+            builder.init(
+                "timezone",
+                i18n.tr("The timezone to use when processing the request and returning results")
+            )
+                .mustBeTimeZone()
                 .getParameter()
         );
     }
@@ -119,11 +130,15 @@ public class StatusTrendReport extends Report<StatusTrendReportResult> {
     protected StatusTrendReportResult execute(MultivaluedMap<String, String> queryParams) {
         Map<String, String> attributes = new HashMap<String, String>();
 
-        Date startDate = this.parseDate(queryParams.getFirst("start_date"));
-        Date endDate = this.parseDate(queryParams.getFirst("end_date"));
+        TimeZone timezone = this.parseTimeZone(queryParams.getFirst("timezone"));
+        Date startDate = this.parseDate(queryParams.getFirst("start_date"), timezone);
+        Date endDate = this.parseDate(queryParams.getFirst("end_date"), timezone);
         String ownerKey = queryParams.getFirst("owner");
         String sku = queryParams.getFirst("sku");
         String subscriptionName = queryParams.getFirst("subscription_name");
+
+        Map<Date, Map<String, Integer>> result;
+        StatusTrendReportResult output = new StatusTrendReportResult();
 
         // TODO:
         // Replace this with something to allow attributes to be specified directly.
@@ -138,8 +153,6 @@ public class StatusTrendReport extends Report<StatusTrendReportResult> {
                 // This shouldn't happen; but if it does, do nothing. Maybe assume false?
             }
         }
-
-        Map<Date, Map<String, Integer>> result;
 
         if (sku != null) {
             result = this.curator.getComplianceStatusCountsBySku(startDate, endDate, ownerKey, sku);
@@ -164,7 +177,17 @@ public class StatusTrendReport extends Report<StatusTrendReportResult> {
             result = this.curator.getComplianceStatusCounts(startDate, endDate, ownerKey);
         }
 
-        return new StatusTrendReportResult(result);
+        // Process query result & convert dates
+        SimpleDateFormat formatter = new SimpleDateFormat(REPORT_DATETIME_FORMAT);
+        if (timezone != null) {
+            formatter.setTimeZone(timezone);
+        }
+
+        for (Map.Entry<Date, Map<String, Integer>> entry : result.entrySet()) {
+            output.put(formatter.format(entry.getKey()), entry.getValue());
+        }
+
+        return output;
     }
 
 }

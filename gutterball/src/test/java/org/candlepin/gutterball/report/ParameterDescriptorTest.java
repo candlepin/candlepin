@@ -132,6 +132,51 @@ public class ParameterDescriptorTest {
     }
 
     @Test
+    public void validatesTimeZone() {
+        MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
+        when(params.containsKey(desc.getName())).thenReturn(true);
+        when(params.get(desc.getName())).thenReturn(Arrays.asList("nope"));
+
+        desc.mustBeTimeZone();
+        assertInvalidParameter(
+            desc,
+            params,
+            "Invalid time zone string. Time zones must be recognized time zone names " +
+            "or offsets specified in the form of \"GMT[+-]HH:?MM\"."
+        );
+    }
+
+    @Test
+    public void validatesValidTimeZones() {
+        MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
+        when(params.containsKey(desc.getName())).thenReturn(true);
+        when(params.get(desc.getName())).thenReturn(Arrays.asList(
+            "gmt",
+            "america/chicago",
+            "GMT-0600",
+            "GMT+17:15"
+        ));
+
+        desc.mustBeTimeZone();
+        assertValidParameter(desc, params);
+    }
+
+    @Test
+    public void validatesMultipleTimeZones() {
+        MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
+        when(params.containsKey(desc.getName())).thenReturn(true);
+        when(params.get(desc.getName())).thenReturn(Arrays.asList("gmt", "america/chicago", "nope"));
+
+        desc.mustBeTimeZone();
+        assertInvalidParameter(
+            desc,
+            params,
+            "Invalid time zone string. Time zones must be recognized time zone names " +
+            "or offsets specified in the form of \"GMT[+-]HH:?MM\"."
+        );
+    }
+
+    @Test
     public void validateExtValidations() {
         MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
         when(params.containsKey(desc.getName())).thenReturn(true);

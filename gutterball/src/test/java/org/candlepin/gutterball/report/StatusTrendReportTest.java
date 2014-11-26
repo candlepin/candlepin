@@ -39,6 +39,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TimeZone;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.MultivaluedMap;
@@ -53,6 +54,9 @@ public class StatusTrendReportTest {
     private ComplianceSnapshotCurator complianceSnapshotCurator;
     private I18nProvider i18nProvider;
 
+    private Date testDate;
+    private String testDateString;
+
     @Before
     public void setUp() throws Exception {
         MapConfiguration config = new MapConfiguration();
@@ -63,6 +67,10 @@ public class StatusTrendReportTest {
         this.complianceSnapshotCurator = this.injector.getInstance(ComplianceSnapshotCurator.class);
 
         this.i18nProvider = new I18nProvider(this.mockRequest);
+
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+        this.testDate = formatter.parse("2014-11-26T00:00:00.000+0000");
+        this.testDateString = formatter.format(this.testDate);
     }
 
     @Test
@@ -167,7 +175,7 @@ public class StatusTrendReportTest {
         HashMap<String, Integer> testcount = new HashMap<String, Integer>();
         HashMap<Date, Map<String, Integer>> testoutput = new HashMap<Date, Map<String, Integer>>();
         testcount.put("testcount1", 1);
-        testoutput.put(new Date(), testcount);
+        testoutput.put(this.testDate, testcount);
 
         MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
 
@@ -177,7 +185,8 @@ public class StatusTrendReportTest {
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
 
         StatusTrendReportResult actual = report.run(params);
-        StatusTrendReportResult expected = new StatusTrendReportResult(testoutput);
+        StatusTrendReportResult expected = new StatusTrendReportResult();
+        expected.put(this.testDateString, testcount);
 
         assertEquals(expected, actual);
 
@@ -190,7 +199,7 @@ public class StatusTrendReportTest {
         HashMap<String, Integer> testcount = new HashMap<String, Integer>();
         HashMap<Date, Map<String, Integer>> testoutput = new HashMap<Date, Map<String, Integer>>();
         testcount.put("testcount1", 1);
-        testoutput.put(new Date(), testcount);
+        testoutput.put(this.testDate, testcount);
 
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
         Date startDate = formatter.parse("2014-11-07");
@@ -210,7 +219,8 @@ public class StatusTrendReportTest {
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
 
         StatusTrendReportResult actual = report.run(params);
-        StatusTrendReportResult expected = new StatusTrendReportResult(testoutput);
+        StatusTrendReportResult expected = new StatusTrendReportResult();
+        expected.put(this.testDateString, testcount);
 
         assertEquals(expected, actual);
 
@@ -223,7 +233,7 @@ public class StatusTrendReportTest {
         HashMap<String, Integer> testcount = new HashMap<String, Integer>();
         HashMap<Date, Map<String, Integer>> testoutput = new HashMap<Date, Map<String, Integer>>();
         testcount.put("testcount1", 1);
-        testoutput.put(new Date(), testcount);
+        testoutput.put(this.testDate, testcount);
 
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
         Date startDate = formatter.parse("2014-11-07");
@@ -247,7 +257,8 @@ public class StatusTrendReportTest {
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
 
         StatusTrendReportResult actual = report.run(params);
-        StatusTrendReportResult expected = new StatusTrendReportResult(testoutput);
+        StatusTrendReportResult expected = new StatusTrendReportResult();
+        expected.put(this.testDateString, testcount);
 
         assertEquals(expected, actual);
 
@@ -260,7 +271,7 @@ public class StatusTrendReportTest {
         HashMap<String, Integer> testcount = new HashMap<String, Integer>();
         HashMap<Date, Map<String, Integer>> testoutput = new HashMap<Date, Map<String, Integer>>();
         testcount.put("testcount1", 1);
-        testoutput.put(new Date(), testcount);
+        testoutput.put(this.testDate, testcount);
 
         MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
         when(params.containsKey("sku")).thenReturn(true);
@@ -274,7 +285,8 @@ public class StatusTrendReportTest {
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
 
         StatusTrendReportResult actual = report.run(params);
-        StatusTrendReportResult expected = new StatusTrendReportResult(testoutput);
+        StatusTrendReportResult expected = new StatusTrendReportResult();
+        expected.put(this.testDateString, testcount);
 
         assertEquals(expected, actual);
 
@@ -287,7 +299,7 @@ public class StatusTrendReportTest {
         HashMap<String, Integer> testcount = new HashMap<String, Integer>();
         HashMap<Date, Map<String, Integer>> testoutput = new HashMap<Date, Map<String, Integer>>();
         testcount.put("testcount1", 1);
-        testoutput.put(new Date(), testcount);
+        testoutput.put(this.testDate, testcount);
 
         String sku = "testsku1";
         String owner = "test_owner";
@@ -306,7 +318,8 @@ public class StatusTrendReportTest {
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
 
         StatusTrendReportResult actual = report.run(params);
-        StatusTrendReportResult expected = new StatusTrendReportResult(testoutput);
+        StatusTrendReportResult expected = new StatusTrendReportResult();
+        expected.put(this.testDateString, testcount);
 
         assertEquals(expected, actual);
 
@@ -319,7 +332,7 @@ public class StatusTrendReportTest {
         HashMap<String, Integer> testcount = new HashMap<String, Integer>();
         HashMap<Date, Map<String, Integer>> testoutput = new HashMap<Date, Map<String, Integer>>();
         testcount.put("testcount1", 1);
-        testoutput.put(new Date(), testcount);
+        testoutput.put(this.testDate, testcount);
 
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
         Date startDate = formatter.parse("2014-11-07");
@@ -344,7 +357,8 @@ public class StatusTrendReportTest {
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
 
         StatusTrendReportResult actual = report.run(params);
-        StatusTrendReportResult expected = new StatusTrendReportResult(testoutput);
+        StatusTrendReportResult expected = new StatusTrendReportResult();
+        expected.put(this.testDateString, testcount);
 
         assertEquals(expected, actual);
 
@@ -357,7 +371,7 @@ public class StatusTrendReportTest {
         HashMap<String, Integer> testcount = new HashMap<String, Integer>();
         HashMap<Date, Map<String, Integer>> testoutput = new HashMap<Date, Map<String, Integer>>();
         testcount.put("testcount1", 1);
-        testoutput.put(new Date(), testcount);
+        testoutput.put(this.testDate, testcount);
 
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
         Date startDate = formatter.parse("2014-11-07");
@@ -387,7 +401,8 @@ public class StatusTrendReportTest {
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
 
         StatusTrendReportResult actual = report.run(params);
-        StatusTrendReportResult expected = new StatusTrendReportResult(testoutput);
+        StatusTrendReportResult expected = new StatusTrendReportResult();
+        expected.put(this.testDateString, testcount);
 
         assertEquals(expected, actual);
 
@@ -400,7 +415,7 @@ public class StatusTrendReportTest {
         HashMap<String, Integer> testcount = new HashMap<String, Integer>();
         HashMap<Date, Map<String, Integer>> testoutput = new HashMap<Date, Map<String, Integer>>();
         testcount.put("testcount1", 1);
-        testoutput.put(new Date(), testcount);
+        testoutput.put(this.testDate, testcount);
 
         String subscription = "test product";
 
@@ -416,7 +431,8 @@ public class StatusTrendReportTest {
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
 
         StatusTrendReportResult actual = report.run(params);
-        StatusTrendReportResult expected = new StatusTrendReportResult(testoutput);
+        StatusTrendReportResult expected = new StatusTrendReportResult();
+        expected.put(this.testDateString, testcount);
 
         assertEquals(expected, actual);
 
@@ -429,7 +445,7 @@ public class StatusTrendReportTest {
         HashMap<String, Integer> testcount = new HashMap<String, Integer>();
         HashMap<Date, Map<String, Integer>> testoutput = new HashMap<Date, Map<String, Integer>>();
         testcount.put("testcount1", 1);
-        testoutput.put(new Date(), testcount);
+        testoutput.put(this.testDate, testcount);
 
         String subscription = "test product";
         String owner = "test_owner";
@@ -449,7 +465,8 @@ public class StatusTrendReportTest {
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
 
         StatusTrendReportResult actual = report.run(params);
-        StatusTrendReportResult expected = new StatusTrendReportResult(testoutput);
+        StatusTrendReportResult expected = new StatusTrendReportResult();
+        expected.put(this.testDateString, testcount);
 
         assertEquals(expected, actual);
 
@@ -462,7 +479,7 @@ public class StatusTrendReportTest {
         HashMap<String, Integer> testcount = new HashMap<String, Integer>();
         HashMap<Date, Map<String, Integer>> testoutput = new HashMap<Date, Map<String, Integer>>();
         testcount.put("testcount1", 1);
-        testoutput.put(new Date(), testcount);
+        testoutput.put(this.testDate, testcount);
 
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
         Date startDate = formatter.parse("2014-11-07");
@@ -487,7 +504,8 @@ public class StatusTrendReportTest {
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
 
         StatusTrendReportResult actual = report.run(params);
-        StatusTrendReportResult expected = new StatusTrendReportResult(testoutput);
+        StatusTrendReportResult expected = new StatusTrendReportResult();
+        expected.put(this.testDateString, testcount);
 
         assertEquals(expected, actual);
 
@@ -500,7 +518,7 @@ public class StatusTrendReportTest {
         HashMap<String, Integer> testcount = new HashMap<String, Integer>();
         HashMap<Date, Map<String, Integer>> testoutput = new HashMap<Date, Map<String, Integer>>();
         testcount.put("testcount1", 1);
-        testoutput.put(new Date(), testcount);
+        testoutput.put(this.testDate, testcount);
 
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
         Date startDate = formatter.parse("2014-11-07");
@@ -529,7 +547,8 @@ public class StatusTrendReportTest {
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
 
         StatusTrendReportResult actual = report.run(params);
-        StatusTrendReportResult expected = new StatusTrendReportResult(testoutput);
+        StatusTrendReportResult expected = new StatusTrendReportResult();
+        expected.put(this.testDateString, testcount);
 
         assertEquals(expected, actual);
 
@@ -544,7 +563,7 @@ public class StatusTrendReportTest {
         HashMap<String, Integer> testcount = new HashMap<String, Integer>();
         HashMap<Date, Map<String, Integer>> testoutput = new HashMap<Date, Map<String, Integer>>();
         testcount.put("testcount1", 1);
-        testoutput.put(new Date(), testcount);
+        testoutput.put(this.testDate, testcount);
 
         MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
         when(params.containsKey("management_enabled")).thenReturn(true);
@@ -561,7 +580,8 @@ public class StatusTrendReportTest {
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
 
         StatusTrendReportResult actual = report.run(params);
-        StatusTrendReportResult expected = new StatusTrendReportResult(testoutput);
+        StatusTrendReportResult expected = new StatusTrendReportResult();
+        expected.put(this.testDateString, testcount);
 
         assertEquals(expected, actual);
 
@@ -574,7 +594,7 @@ public class StatusTrendReportTest {
         HashMap<String, Integer> testcount = new HashMap<String, Integer>();
         HashMap<Date, Map<String, Integer>> testoutput = new HashMap<Date, Map<String, Integer>>();
         testcount.put("testcount1", 1);
-        testoutput.put(new Date(), testcount);
+        testoutput.put(this.testDate, testcount);
 
         String owner = "test_owner";
 
@@ -596,7 +616,8 @@ public class StatusTrendReportTest {
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
 
         StatusTrendReportResult actual = report.run(params);
-        StatusTrendReportResult expected = new StatusTrendReportResult(testoutput);
+        StatusTrendReportResult expected = new StatusTrendReportResult();
+        expected.put(this.testDateString, testcount);
 
         assertEquals(expected, actual);
 
@@ -609,7 +630,7 @@ public class StatusTrendReportTest {
         HashMap<String, Integer> testcount = new HashMap<String, Integer>();
         HashMap<Date, Map<String, Integer>> testoutput = new HashMap<Date, Map<String, Integer>>();
         testcount.put("testcount1", 1);
-        testoutput.put(new Date(), testcount);
+        testoutput.put(this.testDate, testcount);
 
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
         Date startDate = formatter.parse("2014-11-07");
@@ -636,7 +657,8 @@ public class StatusTrendReportTest {
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
 
         StatusTrendReportResult actual = report.run(params);
-        StatusTrendReportResult expected = new StatusTrendReportResult(testoutput);
+        StatusTrendReportResult expected = new StatusTrendReportResult();
+        expected.put(this.testDateString, testcount);
 
         assertEquals(expected, actual);
 
@@ -649,7 +671,7 @@ public class StatusTrendReportTest {
         HashMap<String, Integer> testcount = new HashMap<String, Integer>();
         HashMap<Date, Map<String, Integer>> testoutput = new HashMap<Date, Map<String, Integer>>();
         testcount.put("testcount1", 1);
-        testoutput.put(new Date(), testcount);
+        testoutput.put(this.testDate, testcount);
 
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
         Date startDate = formatter.parse("2014-11-07");
@@ -680,11 +702,47 @@ public class StatusTrendReportTest {
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
 
         StatusTrendReportResult actual = report.run(params);
-        StatusTrendReportResult expected = new StatusTrendReportResult(testoutput);
+        StatusTrendReportResult expected = new StatusTrendReportResult();
+        expected.put(this.testDateString, testcount);
 
         assertEquals(expected, actual);
 
         verify(mockCSCurator).getComplianceStatusCountsByAttributes(startDate, endDate, owner, attributes);
+        verifyNoMoreInteractions(mockCSCurator);
+    }
+
+    @Test
+    public void testReportingWithTimeZoneAdjustmnet() throws Exception {
+        HashMap<String, Integer> testcount = new HashMap<String, Integer>();
+        HashMap<Date, Map<String, Integer>> testoutput = new HashMap<Date, Map<String, Integer>>();
+        testcount.put("testcount1", 1);
+        testoutput.put(this.testDate, testcount);
+
+        String tzString = "GMT+1400";
+        TimeZone timezone = TimeZone.getTimeZone(tzString);
+
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+        formatter.setTimeZone(timezone);
+        String dateString = formatter.format(this.testDate);
+
+        MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
+        when(params.containsKey("timezone")).thenReturn(true);
+        when(params.get("timezone")).thenReturn(Arrays.asList(tzString));
+        when(params.getFirst("timezone")).thenReturn(tzString);
+
+        ComplianceSnapshotCurator mockCSCurator = mock(ComplianceSnapshotCurator.class);
+        when(mockCSCurator.getComplianceStatusCounts(null, null, null)).thenReturn(testoutput);
+
+        StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
+
+        StatusTrendReportResult actual = report.run(params);
+        StatusTrendReportResult expected = new StatusTrendReportResult();
+        expected.put(dateString, testcount);
+
+
+        assertEquals(expected, actual);
+
+        verify(mockCSCurator).getComplianceStatusCounts(null, null, null);
         verifyNoMoreInteractions(mockCSCurator);
     }
 }
