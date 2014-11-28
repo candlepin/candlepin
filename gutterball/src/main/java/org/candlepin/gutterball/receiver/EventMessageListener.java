@@ -61,7 +61,6 @@ public class EventMessageListener implements MessageListener {
             Event event = mapper.readValue(messageBody, Event.class);
             unitOfWork.begin();
             eventManager.handle(event);
-            log.info("Received Event: " + event);
         }
         catch (JsonParseException e) {
             log.error("Error processing event", e);
