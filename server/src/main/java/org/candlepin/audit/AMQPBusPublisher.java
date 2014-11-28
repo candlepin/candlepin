@@ -56,7 +56,7 @@ public class AMQPBusPublisher implements EventListener {
             if (m != null) {
                 TopicPublisher tp = m.get(e.getType());
                 if (tp != null) {
-                    log.debug("Sending event to tp");
+                    log.debug("Sending event to topic publisher: {}", e);
                     tp.send(session.createTextMessage(this.apply(e)));
                 }
                 else {
@@ -65,10 +65,12 @@ public class AMQPBusPublisher implements EventListener {
             }
         }
         catch (JMSException ex) {
-            log.warn("Unable to send event :" + e + " via AMQPBus", ex);
+            log.error("Unable to send event: " + e, ex);
+            throw new RuntimeException("Error sending event to message bus", ex);
         }
         catch (JsonProcessingException jpe) {
-            log.warn("Unable to send event :" + e + " via AMQPBus", jpe);
+            log.error("Unable to send event: " + e, jpe);
+            throw new RuntimeException("Error sending event to message bus", jpe);
         }
     }
 
