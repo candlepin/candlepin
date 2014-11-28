@@ -17,12 +17,16 @@ package org.candlepin.gutterball.receiver;
 import org.candlepin.gutterball.eventhandler.EventManager;
 import org.candlepin.gutterball.model.Event;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.persist.UnitOfWork;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -50,17 +54,29 @@ public class EventMessageListener implements MessageListener {
 
     @Override
     public void onMessage(Message message) {
-        log.info(message.toString());
+        log.debug(message.toString());
 
+        String messageBody = getMessageBody(message);
         try {
-            String messageBody = getMessageBody(message);
             Event event = mapper.readValue(messageBody, Event.class);
             unitOfWork.begin();
             eventManager.handle(event);
             log.info("Received Event: " + event);
         }
-        catch (Exception e) {
-            log.error("Failed to decode and store event ", e);
+        catch (JsonParseException e) {
+            log.error("Error processing event", e);
+            log.error("Event message body: {}", messageBody);
+            throw new RuntimeException("Error processing event", e);
+        }
+        catch (JsonMappingException e) {
+            log.error("Error processing event", e);
+            log.error("Event message body: {}", messageBody);
+            throw new RuntimeException("Error processing event", e);
+        }
+        catch (IOException e) {
+            log.error("Error processing event", e);
+            log.error("Event message body: {}", messageBody);
+            throw new RuntimeException("Error processing event", e);
         }
         finally {
             unitOfWork.end();
