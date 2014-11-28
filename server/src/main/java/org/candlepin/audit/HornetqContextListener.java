@@ -56,9 +56,10 @@ public class HornetqContextListener {
             eventSource.shutDown();
             try {
                 hornetqServer.stop();
+                log.info("Hornetq server stopped.");
             }
             catch (Exception e) {
-                e.printStackTrace();
+                log.error("Error stopping hornetq server", e);
             }
 
         }
@@ -100,6 +101,7 @@ public class HornetqContextListener {
         }
         try {
             hornetqServer.start();
+            log.info("Hornetq server started");
         }
         catch (Exception e) {
             log.error("Failed to start hornetq message server:", e);
@@ -125,7 +127,7 @@ public class HornetqContextListener {
                 eventSource.registerListener((EventListener) injector.getInstance(clazz));
             }
             catch (Exception e) {
-                log.warn("Unable to load audit listener " + listeners.get(i), e);
+                log.warn("Unable to register listener " + listeners.get(i), e);
             }
         }
 
@@ -147,12 +149,12 @@ public class HornetqContextListener {
      */
     private void cleanupOldQueues() {
         log.debug("Cleaning old message queues");
-        String [] queues = hornetqServer.getHornetQServerControl().getQueueNames();
-
-        ServerLocator locator = HornetQClient.createServerLocatorWithoutHA(
-            new TransportConfiguration(InVMConnectorFactory.class.getName()));
-
         try {
+            String [] queues = hornetqServer.getHornetQServerControl().getQueueNames();
+
+            ServerLocator locator = HornetQClient.createServerLocatorWithoutHA(
+                new TransportConfiguration(InVMConnectorFactory.class.getName()));
+
             ClientSessionFactory factory =  locator.createSessionFactory();
             ClientSession session = factory.createSession(true, true);
             session.start();
