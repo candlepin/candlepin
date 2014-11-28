@@ -20,6 +20,7 @@ import org.candlepin.config.ConfigProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 
+import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.hornetq.api.core.HornetQException;
 import org.hornetq.api.core.TransportConfiguration;
 import org.hornetq.api.core.client.ClientMessage;
@@ -28,9 +29,12 @@ import org.hornetq.api.core.client.ClientSession;
 import org.hornetq.api.core.client.ClientSessionFactory;
 import org.hornetq.api.core.client.HornetQClient;
 import org.hornetq.api.core.client.ServerLocator;
+import org.hornetq.core.persistence.impl.journal.XmlDataExporter;
 import org.hornetq.core.remoting.impl.invm.InVMConnectorFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
 
 import javax.inject.Singleton;
 
@@ -43,6 +47,7 @@ public class HornetqEventDispatcher  {
 
     private static Logger log = LoggerFactory.getLogger(HornetqEventDispatcher.class);
     private ClientSessionFactory factory;
+    private Configuration config;
     private ObjectMapper mapper;
     private int largeMsgSize;
     private ThreadLocal<ClientSession> sessions = new ThreadLocal<ClientSession>();
@@ -51,6 +56,7 @@ public class HornetqEventDispatcher  {
     @Inject
     public HornetqEventDispatcher(ObjectMapper mapper, Configuration config) {
         this.mapper = mapper;
+        this.config = config;
         largeMsgSize = config.getInt(ConfigProperties.HORNETQ_LARGE_MSG_SIZE);
     }
 
@@ -109,4 +115,32 @@ public class HornetqEventDispatcher  {
             log.error("Error while trying to send event: " + event, e);
         }
     }
+
+    /**
+     * Export the current contents of the hornetq journal.
+     *
+     * Typically this would just be messages which have failed to be delivered thus far.
+     * @return XML export of hornetq journal
+     */
+    public String getQueueInfo() {
+        try {
+            String baseDir = config.getString(ConfigProperties.HORNETQ_BASE_DIR);
+
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            XmlDataExporter exporter = new XmlDataExporter(outputStream,
+                    new File(baseDir, "bindings").toString(),
+                    new File(baseDir, "journal").toString(),
+                    new File(baseDir, "journal").toString(),
+                    new File(baseDir, "largemsgs").toString());
+            exporter.writeXMLData();
+            String journalContents = outputStream.toString();
+
+            return journalContents;
+        }
+        catch (Exception e) {
+            log.error("Error logging queue info: ", e);
+        }
+        return "ERROR";
+    }
+
 }

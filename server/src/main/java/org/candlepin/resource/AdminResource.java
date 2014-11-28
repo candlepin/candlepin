@@ -14,6 +14,7 @@
  */
 package org.candlepin.resource;
 
+import org.candlepin.audit.HornetqEventDispatcher;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SystemPrincipal;
 import org.candlepin.common.auth.SecurityHole;
@@ -43,11 +44,14 @@ public class AdminResource {
 
     private UserServiceAdapter userService;
     private UserCurator userCurator;
+    private HornetqEventDispatcher dispatcher;
 
     @Inject
-    public AdminResource(UserServiceAdapter userService, UserCurator userCurator) {
+    public AdminResource(UserServiceAdapter userService, UserCurator userCurator,
+            HornetqEventDispatcher dispatcher) {
         this.userService = userService;
         this.userCurator = userCurator;
+        this.dispatcher = dispatcher;
     }
 
     /**
@@ -89,4 +93,12 @@ public class AdminResource {
             return "Already initialized.";
         }
     }
+
+    @GET
+    @Produces({MediaType.TEXT_XML})
+    @Path("hornetq_journal")
+    public String logqueue() {
+        return dispatcher.getQueueInfo();
+    }
+
 }

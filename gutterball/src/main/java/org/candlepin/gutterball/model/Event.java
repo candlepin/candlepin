@@ -259,7 +259,7 @@ public class Event {
     }
 
     public String toString() {
-        return "Event<" + id + " " + target + " " + type + ">";
+        return "Event<" + timestamp + " " + target + " " + type + ">";
     }
 
 }
