@@ -258,6 +258,8 @@ public class Event {
         this.messageText = messageText;
     }
 
-
+    public String toString() {
+        return "Event<" + id + " " + target + " " + type + ">";
+    }
 
 }
