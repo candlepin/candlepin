@@ -29,9 +29,7 @@ describe 'GuestId Resource' do
     consumer.should_not be_nil
     consumer['guestIds'].should be_nil
 
-    consumer_client = Candlepin.new(username=nil, password=nil,
-        cert=consumer['idCert']['cert'],
-        key=consumer['idCert']['key'])
+    consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
     consumer_client.update_guestids(guests)
 
     guest_ids = consumer_client.get_guestids()
@@ -47,9 +45,7 @@ describe 'GuestId Resource' do
     consumer = user_cp.register(random_string('host'), :system, nil,
       {}, nil, nil, [], [])
 
-    consumer_client = Candlepin.new(username=nil, password=nil,
-        cert=consumer['idCert']['cert'],
-        key=consumer['idCert']['key'])
+    consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
     consumer_client.update_guestids(guests)
 
     guest_ids = consumer_client.get_guestids()
@@ -68,9 +64,7 @@ describe 'GuestId Resource' do
     consumer = user_cp.register(random_string('host'), :system, nil,
       {}, nil, nil, [], [])
 
-    consumer_client = Candlepin.new(username=nil, password=nil,
-        cert=consumer['idCert']['cert'],
-        key=consumer['idCert']['key'])
+    consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
     consumer_client.update_guestids(guests)
 
     guest_ids = consumer_client.get_guestids()
@@ -89,14 +83,12 @@ describe 'GuestId Resource' do
     user_cp = user_client(@owner1, random_string('test-user'))
     host_consumer = user_cp.register(random_string('host'), :system, nil,
       {}, nil, nil, [], [])
-    guest_consumer1 = user_cp.register(random_string('guest'), :system, nil,
+    user_cp.register(random_string('guest'), :system, nil,
       {'virt.uuid' => uuid1}, nil, nil, [], [])
-    guest_consumer2 = user_cp.register(random_string('guest'), :system, nil,
+    user_cp.register(random_string('guest'), :system, nil,
       {'virt.uuid' => uuid2}, nil, nil, [], [])
 
-    consumer_client = Candlepin.new(username=nil, password=nil,
-        cert=host_consumer['idCert']['cert'],
-        key=host_consumer['idCert']['key'])
+    consumer_client = Candlepin.new(nil, nil, host_consumer['idCert']['cert'], host_consumer['idCert']['key'])
     consumer_client.update_guestids(guests)
 
     @cp.get_consumer_guests(host_consumer['uuid']).length.should == 2
@@ -115,12 +107,10 @@ describe 'GuestId Resource' do
       {}, nil, nil, [], [])
     guest_consumer1 = user_cp.register(random_string('guest'), :system, nil,
       {'virt.uuid' => uuid1}, nil, nil, [], [])
-    guest_consumer2 = user_cp.register(random_string('guest'), :system, nil,
+    user_cp.register(random_string('guest'), :system, nil,
       {'virt.uuid' => uuid2}, nil, nil, [], [])
 
-    consumer_client1 = Candlepin.new(username=nil, password=nil,
-        cert=host_consumer1['idCert']['cert'],
-        key=host_consumer1['idCert']['key'])
+    consumer_client1 = Candlepin.new(nil, nil, host_consumer1['idCert']['cert'], host_consumer1['idCert']['key'])
     consumer_client1.update_guestids(guests1)
 
     # MySQL before 5.6.4 doesn't store fractional seconds on timestamps
@@ -128,9 +118,7 @@ describe 'GuestId Resource' do
     # host a guest is associated with) sorts results by updated time.
     sleep 1
 
-    consumer_client2 = Candlepin.new(username=nil, password=nil,
-        cert=host_consumer2['idCert']['cert'],
-        key=host_consumer2['idCert']['key'])
+    consumer_client2 = Candlepin.new(nil, nil, host_consumer2['idCert']['cert'], host_consumer2['idCert']['key'])
     consumer_client2.update_guestids(guests2)
 
     guestList = @cp.get_consumer_guests(host_consumer1['uuid'])
@@ -144,9 +132,7 @@ describe 'GuestId Resource' do
     user_cp = user_client(@owner1, random_string('test-user'))
     host_consumer = user_cp.register(random_string('host'), :system, nil,
       {}, nil, @owner1['key'], [], [])
-    consumer_client = Candlepin.new(username=nil, password=nil,
-      cert=host_consumer['idCert']['cert'],
-      key=host_consumer['idCert']['key'])
+    consumer_client = Candlepin.new(nil, nil, host_consumer['idCert']['cert'], host_consumer['idCert']['key'])
     consumer_client.update_guestids(guests)
     consumer_client.get_guestids().length.should == 1
     consumer_client.delete_guestid(guests[0]['guestId'])
@@ -167,18 +153,12 @@ describe 'GuestId Resource' do
     # Create a product/subscription
     super_awesome = create_product(nil, random_string('super_awesome'),
                             :attributes => { "virt_limit" => "10" })
-    sub = @cp.create_subscription(@owner1['key'], super_awesome.id, 20)
+    @cp.create_subscription(@owner1['key'], super_awesome.id, 20)
     @cp.refresh_pools(@owner1['key'])
 
-    consumer_client = Candlepin.new(username=nil, password=nil,
-        cert=host_consumer['idCert']['cert'],
-        key=host_consumer['idCert']['key'])
-    new_consumer_client = Candlepin.new(username=nil, password=nil,
-        cert=new_host_consumer['idCert']['cert'],
-        key=new_host_consumer['idCert']['key'])
-    guest_client = Candlepin.new(username=nil, password=nil,
-        cert=guest_consumer['idCert']['cert'],
-        key=guest_consumer['idCert']['key'])
+    consumer_client = Candlepin.new(nil, nil, host_consumer['idCert']['cert'], host_consumer['idCert']['key'])
+    new_consumer_client = Candlepin.new(nil, nil, new_host_consumer['idCert']['cert'], new_host_consumer['idCert']['key'])
+    guest_client = Candlepin.new(nil, nil, guest_consumer['idCert']['cert'], guest_consumer['idCert']['key'])
     consumer_client.update_guestids(guests)
     pools = consumer_client.list_pools :consumer => host_consumer['uuid']
     pools.length.should == 1
@@ -228,15 +208,11 @@ describe 'GuestId Resource' do
     # Create a product/subscription
     super_awesome = create_product(nil, random_string('super_awesome'),
                             :attributes => { "virt_limit" => "10" })
-    sub = @cp.create_subscription(@owner1['key'], super_awesome.id, 20)
+    @cp.create_subscription(@owner1['key'], super_awesome.id, 20)
     @cp.refresh_pools(@owner1['key'])
 
-    consumer_client = Candlepin.new(username=nil, password=nil,
-        cert=host_consumer['idCert']['cert'],
-        key=host_consumer['idCert']['key'])
-    guest_client = Candlepin.new(username=nil, password=nil,
-        cert=guest_consumer['idCert']['cert'],
-        key=guest_consumer['idCert']['key'])
+    consumer_client = Candlepin.new(nil, nil, host_consumer['idCert']['cert'], host_consumer['idCert']['key'])
+    guest_client = Candlepin.new(nil, nil, guest_consumer['idCert']['cert'], guest_consumer['idCert']['key'])
     consumer_client.update_guestids(guests)
     pools = consumer_client.list_pools :consumer => host_consumer['uuid']
     pools.length.should == 1
@@ -282,9 +258,7 @@ describe 'GuestId Resource' do
     guest_consumer = user_cp.register(random_string('guest'), :system, nil,
       {'virt.uuid' => uuid1, 'virt.is_guest' => 'true'}, nil, @owner1['key'], [], [])
 
-    consumer_client = Candlepin.new(username=nil, password=nil,
-        cert=host_consumer['idCert']['cert'],
-        key=host_consumer['idCert']['key'])
+    consumer_client = Candlepin.new(nil, nil, host_consumer['idCert']['cert'], host_consumer['idCert']['key'])
     consumer_client.update_guestids(guests)
 
     # Should have a host with 1 registered guest
@@ -304,9 +278,7 @@ describe 'GuestId Resource' do
     user_cp = user_client(@owner1, random_string('test-user'))
     host_consumer = user_cp.register(random_string('host'), :system, nil,
       {}, nil, @owner1['key'], [], [])
-    consumer_client = Candlepin.new(username=nil, password=nil,
-        cert=host_consumer['idCert']['cert'],
-        key=host_consumer['idCert']['key'])
+    consumer_client = Candlepin.new(nil, nil, host_consumer['idCert']['cert'], host_consumer['idCert']['key'])
     consumer_client.update_guestids(guests)
 
     guest_to_update = {:guestId => uuid1, :attributes => {'some_attr' => 'some_value'}}
@@ -320,9 +292,7 @@ describe 'GuestId Resource' do
     user_cp = user_client(@owner1, random_string('test-user'))
     host_consumer = user_cp.register(random_string('host'), :system, nil,
       {}, nil, @owner1['key'], [], [])
-    consumer_client = Candlepin.new(username=nil, password=nil,
-        cert=host_consumer['idCert']['cert'],
-        key=host_consumer['idCert']['key'])
+    consumer_client = Candlepin.new(nil, nil, host_consumer['idCert']['cert'], host_consumer['idCert']['key'])
 
     uuid1 = random_string('guestid')
     guest_to_update = {:guestId => uuid1, :attributes => {'some_attr' => 'some_value'}}

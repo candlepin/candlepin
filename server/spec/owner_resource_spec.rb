@@ -15,9 +15,7 @@ describe 'Owner Resource' do
     owner2 = create_owner random_string('owner2')
 
     consumer = owner_admin.register('somesystem')
-    consumer_client = Candlepin.new(username=nil, password=nil,
-        cert=consumer['idCert']['cert'],
-        key=consumer['idCert']['key'])
+    consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
 
     product1 = create_product(random_string("test_id"),
       random_string("test_name"),
@@ -142,7 +140,7 @@ describe 'Owner Resource' do
 
     @cp.update_owner(original_key, owner)
     lambda do
-      new_owner = @cp.get_owner(owner['key'])
+      @cp.get_owner(owner['key'])
     end.should raise_exception(RestClient::ResourceNotFound)
     ## set back local key for delete
     owner['key'] = original_key
@@ -233,7 +231,7 @@ describe 'Owner Resource' do
   end
 
   it 'should allow unicode owner creation' do
-    owner = create_owner random_string('☠pirate org yarr☠')
+    create_owner random_string('☠pirate org yarr☠')
   end
 
   it "lets owners show service levels" do
@@ -261,9 +259,7 @@ describe 'Owner Resource' do
     owner_admin = user_client(owner, random_string('bill'))
 
     consumer = owner_admin.register('somesystem')
-    consumer_client = Candlepin.new(username=nil, password=nil,
-        cert=consumer['idCert']['cert'],
-        key=consumer['idCert']['key'])
+    consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
 
     product1 = create_product(random_string("test_id"),
       random_string("test_name"),
@@ -357,10 +353,10 @@ describe 'Owner Resource' do
     owner = create_owner random_string("type-owner")
     owner_admin = user_client(owner, random_string('type-owner-user'))
 
-    system1 = owner_admin.register("system1-consumer")
-    system2 = owner_admin.register("system2-consumer")
-    hypervisor = owner_admin.register("hypervisor-consumer", type=:hypervisor)
-    distributor = owner_admin.register("distributor-consumer", type=:candlepin)
+    owner_admin.register("system1-consumer")
+    owner_admin.register("system2-consumer")
+    owner_admin.register("hypervisor-consumer", type=:hypervisor)
+    owner_admin.register("distributor-consumer", type=:candlepin)
 
     systems = owner_admin.list_owner_consumers(owner['key'], types=["system"])
     systems.length.should == 2

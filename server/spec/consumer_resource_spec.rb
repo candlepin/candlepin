@@ -22,7 +22,7 @@ describe 'Consumer Resource' do
 
   it "should block consumers from using other org's pools" do
     product1 = create_product
-    sub = @cp.create_subscription(@owner1['key'], product1.id)
+    @cp.create_subscription(@owner1['key'], product1.id)
     @cp.refresh_pools(@owner1['key'])
     pool = @consumer1.list_pools({:owner => @owner1['id']}).first
     lambda {
@@ -74,7 +74,7 @@ describe 'Consumer Resource' do
     @consumer1.update_consumer({:installedProducts => installed})
     @consumer1.get_consumer()['entitlementStatus'].should == "invalid"
 
-    subs = @cp.create_subscription(@owner1['key'], product1.id)
+    @cp.create_subscription(@owner1['key'], product1.id)
     @cp.refresh_pools(@owner1['key'])
     pool = @consumer1.list_pools({:owner => @owner1['id']}).first
 
@@ -125,7 +125,7 @@ describe 'Consumer Resource' do
 
   it 'allows super admins to query consumers by id' do
     # Create a consumer that should not be in the list of returned results
-    consumer3 = consumer_client(@user2, random_string("consumer3"))
+    consumer_client(@user2, random_string("consumer3"))
     returned_uuids = []
     @cp.list_consumers({:uuids => [@consumer1.uuid, @consumer2.uuid]}).each do |c|
       returned_uuids << c['uuid']
@@ -154,7 +154,7 @@ describe 'Consumer Resource' do
 
     username = random_string("user1")
     user1 = user_client(@owner1, username)
-    consumer1 = consumer_client(user1, random_string("consumer1"), 'person')
+    consumer_client(user1, random_string("consumer1"), 'person')
 
     @cp.list_consumers({:type => 'person',
                        :username => username}).length.should == 1
@@ -163,8 +163,8 @@ describe 'Consumer Resource' do
   it 'lets a super admin create person consumer for another user' do
     owner1 = create_owner random_string('test_owner1')
     username = random_string "user1"
-    user1 = user_client(owner1, username)
-    consumer1 = consumer_client(@cp, random_string("consumer1"), 'person',
+    user_client(owner1, username)
+    consumer_client(@cp, random_string("consumer1"), 'person',
                                 username, {}, owner1['key'])
 
     @cp.list_consumers({:type => 'person',
@@ -174,7 +174,7 @@ describe 'Consumer Resource' do
   it 'does not let an owner admin create person consumer for another owner' do
     owner1 = create_owner random_string('test_owner1')
     username = random_string "user1"
-    user1 = user_client(owner1, username)
+    user_client(owner1, username)
 
     owner2 = create_owner random_string('test_owner2')
     user2 = user_client(owner2, random_string("user2"))
@@ -266,7 +266,7 @@ describe 'Consumer Resource' do
     consumer['hypervisorId']['hypervisorId'].should == "abcd"
 
     lambda do
-      consumer2 = client.register(random_string('system2'), :system, random_string("someuuid"), {}, random_string("uname"), some_owner['key'], [], [], nil, [], "abCd")
+      client.register(random_string('system2'), :system, random_string("someuuid"), {}, random_string("uname"), some_owner['key'], [], [], nil, [], "abCd")
     end.should raise_exception(RestClient::BadRequest)
   end
 
@@ -291,7 +291,7 @@ describe 'Consumer Resource' do
                                 nil, 'uname.machine' => 'x86_64')
     prod = create_product(random_string('product'), random_string('product-multiple-arch'),
                           :attributes => { :arch => 'i386, x86_64'})
-    subs = @cp.create_subscription(owner['key'], prod.id)
+    @cp.create_subscription(owner['key'], prod.id)
     @cp.refresh_pools(owner['key'])
     pool = cp_client.list_pools({:owner => owner['id']}).first
 
@@ -300,12 +300,9 @@ describe 'Consumer Resource' do
 
   it 'updates consumer updated timestamp on bind' do
     consumer = @user1.register(random_string("meow"))
-    consumer_client = Candlepin.new(username=nil, password=nil,
-        cert=consumer['idCert']['cert'],
-        key=consumer['idCert']['key'])
-
+    consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
     prod = create_product()
-    subs = @cp.create_subscription(@owner1['key'], prod['id'])
+    @cp.create_subscription(@owner1['key'], prod['id'])
     @cp.refresh_pools(@owner1['key'])
     pool = consumer_client.list_pools({:owner => @owner1['id']}).first
 
@@ -377,9 +374,7 @@ describe 'Consumer Resource' do
         {'productId' => pid1, 'productName' => 'My Installed Product'},
         {'productId' => pid3, 'productName' => 'Third Installed Product'}]
 
-    consumer_client = Candlepin.new(username=nil, password=nil,
-        cert=consumer['idCert']['cert'],
-        key=consumer['idCert']['key'])
+    consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
     consumer_client.update_consumer({:installedProducts => installed})
     consumer = @cp.get_consumer(consumer['uuid'])
     verify_installed_pids(consumer, [pid1, pid3])
@@ -403,7 +398,7 @@ describe 'Consumer Resource' do
     ]
     cp_client.update_consumer({:installedProducts => installed})
 
-    subs1 = @cp.create_subscription(owner['key'], product1.id, 1, [], '', '', '', Date.today, Date.today + 365)
+    @cp.create_subscription(owner['key'], product1.id, 1, [], '', '', '', Date.today, Date.today + 365)
     @cp.refresh_pools(owner['key'])
 
     for pool in @cp.list_owner_pools(owner['key']) do
@@ -430,10 +425,7 @@ describe 'Consumer Resource' do
     user_cp = user_client(@owner1, random_string('billy'))
     consumer = user_cp.register(random_string('system'), :system, nil,
       {}, nil, nil, [], [])
-    consumer_client = Candlepin.new(username=nil, password=nil,
-        cert=consumer['idCert']['cert'],
-        key=consumer['idCert']['key'])
-
+    consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
     consumer = @cp.get_consumer(consumer['uuid'])
     consumer['autoheal'].should == true
 
@@ -451,9 +443,7 @@ describe 'Consumer Resource' do
     user_cp = user_client(@owner1, random_string('billy'))
     consumer = user_cp.register(random_string('system'), :system, nil,
       {}, nil, nil, [], [])
-    consumer_client = Candlepin.new(username=nil, password=nil,
-        cert=consumer['idCert']['cert'],
-        key=consumer['idCert']['key'])
+    consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
 
     consumer = @cp.get_consumer(consumer['uuid'])
     consumer['hypervisorId'].should == nil
@@ -474,10 +464,7 @@ describe 'Consumer Resource' do
       {}, nil, nil, [], [])
     consumer1 = user_cp.register(random_string('system'), :system, nil,
       {}, nil, nil, [], [], nil, [], "hYpervisor")
-    consumer_client = Candlepin.new(username=nil, password=nil,
-        cert=consumer['idCert']['cert'],
-        key=consumer['idCert']['key'])
-
+    consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
     consumer1 =  @cp.get_consumer(consumer1['uuid'])
     consumer1['hypervisorId']['hypervisorId'].should == "hypervisor"
 
@@ -493,9 +480,7 @@ describe 'Consumer Resource' do
     user_cp = user_client(@owner1, random_string('billy'))
     consumer = user_cp.register(random_string('system'), :system, nil,
       {}, nil, nil, [], [])
-    consumer_client = Candlepin.new(username=nil, password=nil,
-        cert=consumer['idCert']['cert'],
-        key=consumer['idCert']['key'])
+    consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
 
     consumer = @cp.get_consumer(consumer['uuid'])
     consumer['hypervisorId'].should == nil
@@ -518,17 +503,14 @@ describe 'Consumer Resource' do
                               random_string('product'),
                               {:attributes => {:support_level => 'Layered',
                                                :support_level_exempt => 'true'}})
-    subs1 = @cp.create_subscription(@owner1['key'], product1.id)
-    subs2 = @cp.create_subscription(@owner1['key'], product2.id)
+    @cp.create_subscription(@owner1['key'], product1.id)
+    @cp.create_subscription(@owner1['key'], product2.id)
     @cp.refresh_pools(@owner1['key'])
 
     user_cp = user_client(@owner1, random_string('billy'))
     consumer = user_cp.register(random_string('system'), :system, nil,
       {}, nil, nil, [], [])
-    consumer_client = Candlepin.new(username=nil, password=nil,
-        cert=consumer['idCert']['cert'],
-        key=consumer['idCert']['key'])
-
+    consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
     consumer = @cp.get_consumer(consumer['uuid'])
     consumer['serviceLevel'].should == ''
 
@@ -585,10 +567,7 @@ describe 'Consumer Resource' do
     user_cp = user_client(@owner1, random_string('billy'))
     consumer = user_cp.register(random_string('system'), :system, nil,
       {}, nil, nil, [], [])
-    consumer_client = Candlepin.new(username=nil, password=nil,
-        cert=consumer['idCert']['cert'],
-        key=consumer['idCert']['key'])
-
+    consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
     installed = [
         {'productId' => product1.id, 'productName' => product1.name},
         {'productId' => product2.id, 'productName' => product2.name}]
@@ -644,16 +623,14 @@ describe 'Consumer Resource' do
                               random_string('product'),
                               {:attributes => {:support_level => 'LAYered'}})
     subs1 = @cp.create_subscription(@owner1['key'], product1.id)
-    subs2 = @cp.create_subscription(@owner1['key'], product2.id)
-    subs3 = @cp.create_subscription(@owner1['key'], product3.id)
+    @cp.create_subscription(@owner1['key'], product2.id)
+    @cp.create_subscription(@owner1['key'], product3.id)
     @cp.refresh_pools(@owner1['key'])
 
     user_cp = user_client(@owner1, random_string('billy'))
     consumer = user_cp.register(random_string('system'), :system, nil,
       {}, nil, nil, [], [])
-    consumer_client = Candlepin.new(username=nil, password=nil,
-        cert=consumer['idCert']['cert'],
-        key=consumer['idCert']['key'])
+    consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
 
     installed = [
         {'productId' => product1.id, 'productName' => product1.name},
@@ -675,7 +652,7 @@ describe 'Consumer Resource' do
 
     # this product should also get pulled, exempt overrides
     # based on name match
-    subs4 = @cp.create_subscription(@owner1['key'], product4.id)
+    @cp.create_subscription(@owner1['key'], product4.id)
     @cp.refresh_pools(@owner1['key'])
     pools = @cp.autobind_dryrun(consumer['uuid'])
     pools.length.should == 2
@@ -694,17 +671,14 @@ describe 'Consumer Resource' do
     product2 = create_product(random_string('product'),
                               random_string('product'),
                               {:attributes => {:requires_consumer_type => :person}})
-    subs1 = @cp.create_subscription(@owner1['key'], product1.id)
-    subs2 = @cp.create_subscription(@owner1['key'], product2.id)
+    @cp.create_subscription(@owner1['key'], product1.id)
+    @cp.create_subscription(@owner1['key'], product2.id)
     @cp.refresh_pools(@owner1['key'])
 
     user_cp = user_client(@owner1, random_string('billy'))
     consumer = user_cp.register(random_string('system'), :system, nil,
       {}, nil, nil, [], [])
-    consumer_client = Candlepin.new(username=nil, password=nil,
-        cert=consumer['idCert']['cert'],
-        key=consumer['idCert']['key'])
-
+    consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
     installed = [
         {'productId' => product1.id, 'productName' => product1.name},
         {'productId' => product2.id, 'productName' => product2.name}]
@@ -754,9 +728,7 @@ describe 'Consumer Resource' do
     consumer.should_not be_nil
     consumer['guestIds'].should be_nil
 
-    consumer_client = Candlepin.new(username=nil, password=nil,
-        cert=consumer['idCert']['cert'],
-        key=consumer['idCert']['key'])
+    consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
     consumer_client.update_consumer({:guestIds => guests})
 
     consumer = @cp.get_consumer(consumer['uuid'])
@@ -772,9 +744,7 @@ describe 'Consumer Resource' do
     consumer = user_cp.register(random_string('host'), :system, nil,
       {}, nil, nil, [], [])
 
-    consumer_client = Candlepin.new(username=nil, password=nil,
-        cert=consumer['idCert']['cert'],
-        key=consumer['idCert']['key'])
+    consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
     consumer_client.update_consumer({:guestIds => guests})
 
     consumer = @cp.get_consumer(consumer['uuid'])
@@ -793,9 +763,7 @@ describe 'Consumer Resource' do
     consumer = user_cp.register(random_string('host'), :system, nil,
       {}, nil, nil, [], [])
 
-    consumer_client = Candlepin.new(username=nil, password=nil,
-        cert=consumer['idCert']['cert'],
-        key=consumer['idCert']['key'])
+    consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
     consumer_client.update_consumer({:guestIds => guests})
 
     consumer = @cp.get_consumer(consumer['uuid'])
@@ -815,9 +783,7 @@ describe 'Consumer Resource' do
     consumer = user_cp.register(random_string('host'), :system, nil,
       {}, nil, nil, [], [])
 
-    consumer_client = Candlepin.new(username=nil, password=nil,
-        cert=consumer['idCert']['cert'],
-        key=consumer['idCert']['key'])
+    consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
     consumer_client.update_consumer({:guestIds => guests})
 
     consumer = @cp.get_consumer(consumer['uuid'])
@@ -836,14 +802,12 @@ describe 'Consumer Resource' do
     user_cp = user_client(@owner1, random_string('test-user'))
     host_consumer = user_cp.register(random_string('host'), :system, nil,
       {}, nil, nil, [], [])
-    guest_consumer1 = user_cp.register(random_string('guest'), :system, nil,
+    user_cp.register(random_string('guest'), :system, nil,
       {'virt.uuid' => uuid1}, nil, nil, [], [])
-    guest_consumer2 = user_cp.register(random_string('guest'), :system, nil,
+    user_cp.register(random_string('guest'), :system, nil,
       {'virt.uuid' => uuid2}, nil, nil, [], [])
 
-    consumer_client = Candlepin.new(username=nil, password=nil,
-        cert=host_consumer['idCert']['cert'],
-        key=host_consumer['idCert']['key'])
+    consumer_client = Candlepin.new(nil, nil, host_consumer['idCert']['cert'], host_consumer['idCert']['key'])
     consumer_client.update_consumer({:guestIds => guests})
 
     @cp.get_consumer_guests(host_consumer['uuid']).length.should == 2
@@ -862,9 +826,7 @@ describe 'Consumer Resource' do
     guest_consumer2 = user_cp.register(random_string('guest'), :system, nil,
       {'virt.uuid' => uuid2}, nil, nil, [], [])
 
-    consumer_client = Candlepin.new(username=nil, password=nil,
-        cert=host_consumer['idCert']['cert'],
-        key=host_consumer['idCert']['key'])
+    consumer_client = Candlepin.new(nil, nil, host_consumer['idCert']['cert'], host_consumer['idCert']['key'])
     consumer_client.update_consumer({:guestIds => guests})
 
     @cp.get_consumer_guests(host_consumer['uuid']).length.should == 2
@@ -886,12 +848,10 @@ describe 'Consumer Resource' do
       {}, nil, nil, [], [])
     guest_consumer1 = user_cp.register(random_string('guest'), :system, nil,
       {'virt.uuid' => uuid1}, nil, nil, [], [])
-    guest_consumer2 = user_cp.register(random_string('guest'), :system, nil,
+    user_cp.register(random_string('guest'), :system, nil,
       {'virt.uuid' => uuid2}, nil, nil, [], [])
 
-    consumer_client1 = Candlepin.new(username=nil, password=nil,
-        cert=host_consumer1['idCert']['cert'],
-        key=host_consumer1['idCert']['key'])
+    consumer_client1 = Candlepin.new(nil, nil, host_consumer1['idCert']['cert'], host_consumer1['idCert']['key'])
     consumer_client1.update_consumer({:guestIds => guests1})
 
     # MySQL before 5.6.4 doesn't store fractional seconds on timestamps
@@ -899,9 +859,7 @@ describe 'Consumer Resource' do
     # host a guest is associated with) sorts results by updated time.
     sleep 1
 
-    consumer_client2 = Candlepin.new(username=nil, password=nil,
-        cert=host_consumer2['idCert']['cert'],
-        key=host_consumer2['idCert']['key'])
+    consumer_client2 = Candlepin.new(nil, nil, host_consumer2['idCert']['cert'], host_consumer2['idCert']['key'])
     consumer_client2.update_consumer({:guestIds => guests2})
 
     guestList = @cp.get_consumer_guests(host_consumer1['uuid'])
@@ -925,9 +883,7 @@ describe 'Consumer Resource' do
     guest_consumer2 = user_cp.register(random_string('guest'), :system, nil,
       {'virt.uuid' => uuid2}, nil, nil, [], [])
 
-    consumer_client1 = Candlepin.new(username=nil, password=nil,
-        cert=host_consumer1['idCert']['cert'],
-        key=host_consumer1['idCert']['key'])
+    consumer_client1 = Candlepin.new(nil, nil, host_consumer1['idCert']['cert'], host_consumer1['idCert']['key'])
     consumer_client1.update_consumer({:guestIds => guests1})
 
     # MySQL before 5.6.4 doesn't store fractional seconds on timestamps
@@ -935,9 +891,7 @@ describe 'Consumer Resource' do
     # host a guest is associated with) sorts results by updated time.
     sleep 1
 
-    consumer_client2 = Candlepin.new(username=nil, password=nil,
-        cert=host_consumer2['idCert']['cert'],
-        key=host_consumer2['idCert']['key'])
+    consumer_client2 = Candlepin.new(nil, nil, host_consumer2['idCert']['cert'], host_consumer2['idCert']['key'])
     consumer_client2.update_consumer({:guestIds => guests2})
 
     host1 = @cp.get_consumer_host(guest_consumer1['uuid'])
@@ -967,9 +921,7 @@ describe 'Consumer Resource' do
       'lscpu.on-line_cpu(s)_list' => '0-3'
    }
 
-    consumer_client = Candlepin.new(username=nil, password=nil,
-        cert=consumer['idCert']['cert'],
-        key=consumer['idCert']['key'])
+    consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
     consumer_client.update_consumer({:facts => facts})
     consumer = @cp.get_consumer(consumer['uuid'])
 
@@ -990,7 +942,7 @@ describe 'Consumer Resource' do
     }
     product1 = create_product(random_string('product'), random_string('product-multiple-arch'),
         :attributes => { :sockets => '1', :'multi-entitlement' => 'yes', :stacking_id => 'consumer-bind-test'})
-    sub = @cp.create_subscription(@owner1['key'], product1.id, 10)
+    @cp.create_subscription(@owner1['key'], product1.id, 10)
     installed = [
         {'productId' => product1.id, 'productName' => product1.name}
     ]
@@ -1007,7 +959,7 @@ describe 'Consumer Resource' do
     }
     product1 = create_product(random_string('product'), random_string('product-multiple-arch'),
         :attributes => { :sockets => '2', :'multi-entitlement' => 'yes', :stacking_id => 'consumer-bind-test'})
-    sub = @cp.create_subscription(@owner1['key'], product1.id, 10)
+    @cp.create_subscription(@owner1['key'], product1.id, 10)
     installed = [
         {'productId' => product1.id, 'productName' => product1.name}
     ]
@@ -1026,9 +978,9 @@ describe 'Consumer Resource' do
     }
     product1 = create_product(random_string('product'), random_string('product-multiple-arch'),
         :attributes => { :sockets => '2', :'multi-entitlement' => 'yes', :stacking_id => 'consumer-bind-test'})
-    sub = @cp.create_subscription(@owner1['key'], product1.id, 10)
+    @cp.create_subscription(@owner1['key'], product1.id, 10)
     start = Date.today + 400
-    future_sub = @cp.create_subscription(@owner1['key'], product1.id, 10, [], '', '', '', start)
+    @cp.create_subscription(@owner1['key'], product1.id, 10, [], '', '', '', start)
     installed = [
         {'productId' => product1.id, 'productName' => product1.name}
     ]
@@ -1050,9 +1002,7 @@ describe 'Consumer Resource' do
     consumer = user_cp.register(random_string('host'), :system, nil,
       {}, nil, nil, [], [])
 
-    consumer_client = Candlepin.new(username=nil, password=nil,
-        cert=consumer['idCert']['cert'],
-        key=consumer['idCert']['key'])
+    consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
     consumer_client.update_consumer({:guestIds => guests})
 
     consumer = @cp.get_consumer(consumer['uuid'])
@@ -1063,17 +1013,17 @@ describe 'Consumer Resource' do
   it 'should return correct exception for contraint violations' do
     lambda {
       user_cp = user_client(@owner1, random_string('test-user'))
-      consumer = user_cp.register("a" * 256, :system, nil,
+      user_cp.register("a" * 256, :system, nil,
       {}, nil, nil, [], [])
     }.should raise_exception(RestClient::BadRequest)
     lambda {
       user_cp = user_client(@owner1, random_string('test-user'))
-      consumer = user_cp.register(random_string('test-consumer'), :system, "a" * 256,
+      user_cp.register(random_string('test-consumer'), :system, "a" * 256,
       {}, nil, nil, [], [])
     }.should raise_exception(RestClient::BadRequest)
     lambda {
       user_cp = user_client(@owner1, random_string('test-user'))
-      consumer = user_cp.register(nil, :system, nil,
+      user_cp.register(nil, :system, nil,
       {}, nil, nil, [], [])
     }.should raise_exception(RestClient::BadRequest)
   end

@@ -292,9 +292,7 @@ describe 'Hypervisor Resource', :type => :virt do
     consumer = user.register(random_string("virt-who"), :system, nil, {},
         nil, nil, [], [{:productId => 'installedprod',
            :productName => "Installed"}])
-    consumer_api = Candlepin.new(username=nil, password=nil,
-                                  cert=consumer['idCert']['cert'],
-                                  key=consumer['idCert']['key'])
-    return consumer_api
+    consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
+    return consumer_client
   end
 end

@@ -55,11 +55,9 @@ describe 'Import', :serial => true do
     consumer = @user.register(random_string("consumer"), :candlepin, nil, {
       'distributor_version' => 'sam-1.3'
     })
-    consumer_client = Candlepin.new(username=nil, password=nil,
-        cert=consumer['idCert']['cert'],
-        key=consumer['idCert']['key'])
+    consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
     # entitlements from data center pool
-    ent = consumer_client.consume_pool(pool['id'], {:quantity => 5})[0]
+    consumer_client.consume_pool(pool['id'], {:quantity => 5})[0]
 
     # make manifest
     @exporter.export_filename = consumer_client.export_consumer(@exporter.tmp_dir)
@@ -77,9 +75,7 @@ describe 'Import', :serial => true do
 
     # make host client to get entitlement from distributor
     dist_consumer_1 = @dist_user.register(random_string("consumer"))
-    dist_consumer_client_1 = Candlepin.new(username=nil, password=nil,
-        cert=dist_consumer_1['idCert']['cert'],
-        key=dist_consumer_1['idCert']['key'])
+    dist_consumer_client_1 = Candlepin.new(nil, nil, dist_consumer_1['idCert']['cert'], dist_consumer_1['idCert']['key'])
     virt_uuid = random_string('system.uuid')
     guests = [{'guestId' => virt_uuid}]
     dist_consumer_client_1.update_consumer({:guestIds => guests})
@@ -90,9 +86,7 @@ describe 'Import', :serial => true do
     # make guest client
     dist_consumer_2 = @dist_user.register(random_string("consumer"), :system, nil,
        {'virt.uuid' => virt_uuid, 'virt.is_guest' => 'true'})
-    dist_consumer_client_2 = Candlepin.new(username=nil, password=nil,
-        cert=dist_consumer_2['idCert']['cert'],
-        key=dist_consumer_2['idCert']['key'])
+    dist_consumer_client_2 = Candlepin.new(nil, nil, dist_consumer_2['idCert']['cert'], dist_consumer_2['idCert']['key'])
 
     # entitle from derived pool
     dist_ent = nil

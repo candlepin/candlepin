@@ -27,18 +27,14 @@ describe 'Derived Products' do
 
     @physical_sys = @user.register(random_string('host'), :system, nil,
       {"cpu.cpu_socket(s)" => 8}, nil, nil, [], [], nil)
-    @physical_client = Candlepin.new(username=nil, password=nil,
-        cert=@physical_sys['idCert']['cert'],
-        key=@physical_sys['idCert']['key'])
+    @physical_client = Candlepin.new(nil, nil, @physical_sys['idCert']['cert'], @physical_sys['idCert']['key'])
     @physical_client.update_consumer({:facts => {"system.certificate_version" => "3.2"},
                                            :guestIds => [{'guestId' => @uuid}]})
 
     @guest1 = @user.register(random_string('guest'), :system, nil,
       {'virt.uuid' => @uuid, 'virt.is_guest' => 'true'}, nil, nil,
       [], installed_prods)
-    @guest_client = Candlepin.new(username=nil, password=nil,
-        cert=@guest1['idCert']['cert'], key=@guest1['idCert']['key'])
-
+    @guest_client = Candlepin.new(nil, nil, @guest1['idCert']['cert'], @guest1['idCert']['key']) 
     # create subscription with sub-pool data:
     @datacenter_product = create_product(nil, nil, {
       :attributes => {
@@ -69,9 +65,7 @@ describe 'Derived Products' do
 
     @distributor = @user.register(random_string('host'), :candlepin, nil,
       {}, nil, nil, [], [], nil)
-    @distributor_client = Candlepin.new(username=nil, password=nil,
-        cert=@distributor['idCert']['cert'],
-        key=@distributor['idCert']['key'])
+    @distributor_client = Candlepin.new(nil, nil, @distributor['idCert']['cert'], @distributor['idCert']['key'])
   end
 
   # Complicated scenario, but we wanted to verify that if a derived SKU and an instance based
@@ -180,13 +174,11 @@ describe 'Derived Products' do
   it 'distributor entitlement cert includes derived content' do
 
     dist_name = random_string("CP Distributor")
-    dist_version = create_distributor_version(dist_name,
+    create_distributor_version(dist_name,
       "Subscription Asset Manager",
       ["cert_v3", "derived_product"])
 
-    facts = { 'distributor_version' => dist_name}
-      @distributor_client.update_consumer(
-        {:facts => {'distributor_version' => dist_name}})
+    @distributor_client.update_consumer({:facts => {'distributor_version' => dist_name}})
 
     entitlement = @distributor_client.consume_pool @main_pool['id']
     entitlement.should_not be_nil

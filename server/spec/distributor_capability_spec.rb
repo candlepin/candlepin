@@ -41,7 +41,7 @@ describe 'Distributor Capability' do
 
   it 'can assign consumer capabilities based on distributor version when creating' do
     name = random_string("WidgetvBillion")
-    dist_version = create_distributor_version(name,
+    create_distributor_version(name,
                                     "Widget Billion",
                                    ["midas touch",
                                     "telepathy",
@@ -56,7 +56,7 @@ describe 'Distributor Capability' do
 
   it 'will assign consumer capabilities based on capability list when creating' do
     name = random_string("WidgetvBillion")
-    dist_version = create_distributor_version(name,
+    create_distributor_version(name,
                                     "Widget Billion",
                                    ["midas touch",
                                     "telepathy",
@@ -104,7 +104,7 @@ describe 'Distributor Capability' do
 
   it 'can update consumer capabilities from capability list' do
     name = random_string("WidgetvBazillion")
-    dist_version = create_distributor_version(name,
+    create_distributor_version(name,
                                     "Widget Bazillion",
                                    ["midas touch",
                                     "telekenesis",
@@ -117,9 +117,7 @@ describe 'Distributor Capability' do
     consumer.capabilities.size.should == 4
     consumer.lastCheckin.should be_nil
 
-    consumer_client = Candlepin.new(username=nil, password=nil,
-        cert=consumer['idCert']['cert'],
-        key=consumer['idCert']['key'])
+    consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
     consumer_client.update_consumer({})
     consumer = @cp.get_consumer(consumer['uuid'])
     consumer.lastCheckin.should_not be_nil
@@ -141,7 +139,7 @@ describe 'Distributor Capability' do
   it 'can stop bind based on consumer capabilities' do
     @product = create_product(nil, nil, :attributes =>
                 {:cores => 8})
-    subscription = @cp.create_subscription(@owner['key'], @product.id, 10, [], '12345', '6789', 'order1')
+    @cp.create_subscription(@owner['key'], @product.id, 10, [], '12345', '6789', 'order1')
     @cp.refresh_pools(@owner['key'])
 
     consumer = @user.register(random_string("consumer"), :candlepin, nil, {})
@@ -149,15 +147,13 @@ describe 'Distributor Capability' do
     nil.should == entitlements
 
     name = random_string("WidgetvBillion")
-    dist_version = create_distributor_version(name,
+    create_distributor_version(name,
                                 "Widget Billion",
                                ["cores"])
     facts = {
       'distributor_version' => name
     }
-    consumer_client = Candlepin.new(username=nil, password=nil,
-        cert=consumer['idCert']['cert'],
-        key=consumer['idCert']['key'])
+    consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
     consumer_client.update_consumer({:uuid => consumer['uuid'], :facts => facts})
     entitlements = @cp.consume_product(@product.id, {:uuid => consumer.uuid})
     entitlements.size.should == 1
