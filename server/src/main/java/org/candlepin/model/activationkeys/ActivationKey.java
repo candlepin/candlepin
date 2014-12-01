@@ -205,6 +205,32 @@ public class ActivationKey extends AbstractHibernateObject implements Owned, Nam
         this.getProductIds().remove(toRemove);
     }
 
+    /**
+     * Checks if the specified product has been added to this activation key.
+     *
+     * @param product
+     *  The product to check
+     *
+     * @throws IllegalArgumentException
+     *  if product is null
+     *
+     * @return
+     *  true if the product has been added to this activation key; false otherwise.
+     */
+    public boolean hasProduct(Product product) {
+        if (product == null) {
+            throw new IllegalArgumentException("product is null");
+        }
+
+        for (ActivationKeyProduct akp : this.getProductIds()) {
+            if (akp.getProductId().equals(product.getId())) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public void addPool(Pool pool, Long quantity) {
         ActivationKeyPool akp = new ActivationKeyPool(this, pool, quantity);
         this.getPools().add(akp);
@@ -220,6 +246,32 @@ public class ActivationKey extends AbstractHibernateObject implements Owned, Nam
             }
         }
         this.getPools().remove(toRemove);
+    }
+
+    /**
+     * Checks if the specified pool has been added to this activation key.
+     *
+     * @param pool
+     *  The pool to check
+     *
+     * @throws IllegalArgumentException
+     *  if pool is null
+     *
+     * @return
+     *  true if the pool has been added to this activation key; false otherwise.
+     */
+    public boolean hasPool(Pool pool) {
+        if (pool == null) {
+            throw new IllegalArgumentException("pool is null");
+        }
+
+        for (ActivationKeyPool akp : this.getPools()) {
+            if (akp.getPool().getId().equals(pool.getId())) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

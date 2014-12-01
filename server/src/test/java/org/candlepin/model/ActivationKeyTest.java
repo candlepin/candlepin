@@ -98,4 +98,40 @@ public class ActivationKeyTest extends DatabaseTestFixture {
         assertTrue("The count of pools should be 1", key.getPools().size() == 1);
         assertEquals(null, key.getPools().iterator().next().getQuantity());
     }
+
+    @Test
+    public void testActivationKeyHasPool() {
+        ActivationKey key = this.createActivationKey(this.owner);
+        Product prod = TestUtil.createProduct();
+        productCurator.create(prod);
+        Pool pool = createPoolAndSub(
+            this.owner,
+            prod,
+            12L,
+            new Date(),
+            new Date(System.currentTimeMillis() + (365 * 24 * 60 * 60 * 1000))
+        );
+
+        assertTrue(!key.hasPool(pool));
+
+        key.addPool(pool, 1L);
+        assertTrue(key.hasPool(pool));
+
+        key.removePool(pool);
+        assertTrue(!key.hasPool(pool));
+    }
+
+    @Test
+    public void testActivationKeyHasProduct() {
+        ActivationKey key = this.createActivationKey(this.owner);
+        Product product = TestUtil.createProduct();
+
+        assertTrue(!key.hasProduct(product));
+
+        key.addProduct(product);
+        assertTrue(key.hasProduct(product));
+
+        key.removeProduct(product);
+        assertTrue(!key.hasProduct(product));
+    }
 }
