@@ -4,7 +4,6 @@ gem 'buildr', '1.4.19'
 # Not a typo - we use both buildr and buildr
 gem 'builder'
 gem 'rspec'
-gem 'rest-client', '~> 1.6.0'
 gem 'mime-types', '~> 1.25.0'
 gem 'oauth'
 gem 'parallel_tests'
@@ -13,3 +12,10 @@ gem 'pmd'
 gem 'stringex'
 gem 'pry'
 gem 'digest-murmurhash'
+
+group :development do
+  gem 'httpclient'
+  gem 'minitest'
+  gem 'shoulda-context'
+  gem 'webrick'
+end
