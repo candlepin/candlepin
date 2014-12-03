@@ -223,12 +223,12 @@ define "candlepin" do
 
     compile.with(compile_classpath)
 
-    test.with(
+    test.with([
       CORE_TESTING,
       JUKITO,
       LIQUIBASE,
       LIQUIBASE_SLF4J,
-    )
+    ])
     test.using :java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ]
 
     common_jar = package(:jar)
@@ -285,14 +285,14 @@ define "candlepin" do
       filter(path_to(:src, :main, :resources)).into(path_to(:target, :classes)).run
     end
 
-    test.with(
+    test.with([
       CORE_TESTING,
       JUKITO,
       HSQLDB,
       LIQUIBASE,
       LIQUIBASE_SLF4J,
       project('common'),
-    )
+    ])
     test.using :java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ]
 
     gutterball_war = package(:war, :id=>"gutterball").tap do |war|
@@ -375,11 +375,11 @@ define "candlepin" do
     end
 
     # the other dependencies transfer from compile.classpath automagically
-    test.with(
+    test.with([
       CORE_TESTING,
       HSQLDB,
       LIQUIBASE_SLF4J,
-    )
+    ])
     test.using(:java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ])
 
     ### Javadoc
