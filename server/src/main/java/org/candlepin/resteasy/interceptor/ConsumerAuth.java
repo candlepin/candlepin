@@ -26,6 +26,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
+import javax.inject.Provider;
+
 /**
  * ConsumerAuth
  */
@@ -35,15 +37,15 @@ public abstract class ConsumerAuth implements AuthProvider {
 
     protected ConsumerCurator consumerCurator;
     protected DeletedConsumerCurator deletedConsumerCurator;
-    protected I18n i18n;
+    private Provider<I18n> i18nProvider;
 
     @Inject
     ConsumerAuth(ConsumerCurator consumerCurator,
         DeletedConsumerCurator deletedConsumerCurator,
-        I18n i18n) {
+        Provider<I18n> i18nProvider) {
         this.consumerCurator = consumerCurator;
         this.deletedConsumerCurator = deletedConsumerCurator;
-        this.i18n = i18n;
+        this.i18nProvider = i18nProvider;
     }
 
     public ConsumerPrincipal createPrincipal(String consumerUuid) {
@@ -54,7 +56,7 @@ public abstract class ConsumerAuth implements AuthProvider {
             if (deletedConsumerCurator.countByConsumerUuid(consumerUuid) > 0) {
                 log.debug("Key " + consumerUuid + " is deleted, throwing GoneException");
                 throw new GoneException(
-                    i18n.tr("Unit {0} has been deleted", consumerUuid), consumerUuid);
+                    i18nProvider.get().tr("Unit {0} has been deleted", consumerUuid), consumerUuid);
             }
 
             Consumer consumer = this.consumerCurator.getConsumer(consumerUuid);
