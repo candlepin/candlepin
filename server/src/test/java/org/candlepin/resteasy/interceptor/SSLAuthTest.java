@@ -32,26 +32,25 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.xnap.commons.i18n.I18n;
-import org.xnap.commons.i18n.I18nFactory;
 
 import java.security.Principal;
 import java.security.cert.X509Certificate;
-import java.util.Locale;
+
+import javax.inject.Provider;
 
 public class SSLAuthTest {
 
     @Mock private HttpRequest request;
     @Mock private ConsumerCurator consumerCurator;
     @Mock private DeletedConsumerCurator deletedConsumerCurator;
+    @Mock private Provider<I18n> i18nProvider;
 
     private SSLAuth auth;
-    private I18n i18n;
 
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
-        i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
-        this.auth = new SSLAuth(this.consumerCurator, this.deletedConsumerCurator, i18n);
+        this.auth = new SSLAuth(this.consumerCurator, this.deletedConsumerCurator, i18nProvider);
     }
 
     /**

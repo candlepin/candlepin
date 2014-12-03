@@ -14,8 +14,8 @@
  */
 package org.candlepin.resteasy.interceptor;
 
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.eq;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.auth.ConsumerPrincipal;
@@ -59,6 +59,7 @@ import java.security.cert.X509Certificate;
 import java.util.Enumeration;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.WebApplicationException;
 
@@ -67,7 +68,7 @@ import javax.ws.rs.WebApplicationException;
  */
 public class AuthInterceptorTest extends DatabaseTestFixture {
     @Inject private ConsumerCurator consumerCurator;
-    @Inject private I18n i18n;
+    @Inject private Provider<I18n> i18nProvider;
     @Inject private Injector injector;
 
     private AuthInterceptor interceptor;
@@ -133,7 +134,7 @@ public class AuthInterceptorTest extends DatabaseTestFixture {
         dcc = mock(DeletedConsumerCurator.class);
         permFactory = mock(PermissionFactory.class);
         interceptor = new AuthInterceptor(config, usa,
-            consumerCurator, dcc, injector, i18n);
+            consumerCurator, dcc, injector, i18nProvider);
 
         ResteasyProviderFactory.getInstance().registerProvider(
             StubInjectorFactoryImpl.class);

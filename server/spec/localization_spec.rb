@@ -15,4 +15,18 @@ describe 'Localization' do
         JSON.parse(error.http_body)["displayMessage"].should == expected
       }
   end
+
+  it 'returns a translated error message for deleted conusmer' do
+      cp = Candlepin.new('admin', 'admin', nil, nil, 'localhost', 8443,
+                             'de-DE')
+      owner = cp.create_owner random_string('test_owner')
+      user = user_client(owner, random_string("user"))
+      consumer = consumer_client(user, random_string("consumer"))
+      consumer.unregister(consumer.uuid)
+      lambda {cp.get_consumer(consumer.uuid)}.should raise_exception(
+        RestClient::Gone) { |exception|
+        expected = "Einheit #{consumer.uuid} wurde gelöscht"
+        JSON.parse(exception.http_body)["displayMessage"].should == expected
+     }
+  end
 end
