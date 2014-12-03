@@ -25,7 +25,7 @@
 %endif
 
 Name: gutterball
-Version: 1.0.3
+Version: 1.0.4
 Release: 1%{?dist}
 Summary: Data aggregator for Candlepin
 
@@ -59,6 +59,7 @@ BuildRequires: c3p0 >= 0.9.1.2
 BuildRequires: postgresql-jdbc
 BuildRequires: jta
 BuildRequires: apache-mime4j = 0:0.6
+BuildRequires: antlr >= 0:2.7.7
 
 %global jackson_version 0:2.3.0
 BuildRequires: jackson-annotations >= %{jackson_version}
@@ -120,6 +121,7 @@ Requires: c3p0 >= 0.9.1.2
 Requires: postgresql-jdbc
 Requires: jta
 Requires: apache-mime4j = 0:0.6
+Requires: antlr >= 0:2.7.7
 
 Requires: jackson-annotations >= %{jackson_version}
 Requires: jackson-core >= %{jackson_version}
@@ -210,6 +212,9 @@ rm -rf %{buildroot}
 %attr(775, tomcat, root) %{_localstatedir}/log/%{name}
 
 %changelog
+* Mon Nov 24 2014 Alex Wood <awood@redhat.com> 1.0.4-1
+- Add missing requires for gutterball. (awood@redhat.com)
+
 * Mon Nov 24 2014 Alex Wood <awood@redhat.com> 1.0.3-1
 - Make logging less verbose and more informative. (awood@redhat.com)
 - Add missing Gutterball runtime dependencies. (awood@redhat.com)
