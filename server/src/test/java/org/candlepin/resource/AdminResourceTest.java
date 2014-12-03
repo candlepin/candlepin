@@ -16,9 +16,7 @@ package org.candlepin.resource;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.model.User;
 import org.candlepin.model.UserCurator;
@@ -42,7 +40,7 @@ public class AdminResourceTest {
     public void init() {
         usa = mock(DefaultUserServiceAdapter.class);
         uc = mock(UserCurator.class);
-        ar = new AdminResource(usa, uc);
+        ar = new AdminResource(usa, uc, null);
     }
 
     @Test
@@ -54,7 +52,7 @@ public class AdminResourceTest {
 
     @Test
     public void initWithNonDefaultUserService() {
-        ar = new AdminResource(mock(UserServiceAdapter.class), uc);
+        ar = new AdminResource(mock(UserServiceAdapter.class), uc, null);
         assertEquals("Already initialized.", ar.initialize());
     }
 
