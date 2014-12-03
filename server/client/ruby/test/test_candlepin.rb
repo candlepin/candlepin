@@ -138,6 +138,42 @@ module Candlepin
           assert_match(/unknown ca/, e.message)
         end
 
+        should 'build a correct base url' do
+          simple_client = NoAuthClient.new(
+            :host => "www.example.com",
+            :port => 8443,
+            :context => "/some_path",
+          )
+          assert_equal("https://www.example.com:8443/some_path", simple_client.base_url)
+        end
+
+        should 'handle a context with no leading slash' do
+          simple_client = NoAuthClient.new(
+            :host => "www.example.com",
+            :port => 8443,
+            :context => "no_slash_path",
+          )
+          assert_equal("https://www.example.com:8443/no_slash_path", simple_client.base_url)
+        end
+
+        should 'reload underlying client when necessary' do
+          simple_client = NoAuthClient.new(
+            :host => "www.example.com",
+            :port => 8443,
+            :context => "/1",
+          )
+          url1 = "https://www.example.com:8443/1"
+          assert_equal(url1, simple_client.base_url)
+          assert_equal(url1, simple_client.raw_client.base_url)
+
+          simple_client.context = "/2"
+          simple_client.reload
+
+          url2 = "https://www.example.com:8443/2"
+          assert_equal(url2, simple_client.base_url)
+          assert_equal(url2, simple_client.raw_client.base_url)
+        end
+
         teardown do
           server.shutdown
           client_cert_server.shutdown

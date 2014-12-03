@@ -2,6 +2,7 @@ require 'httpclient'
 require 'json'
 require 'date'
 require 'openssl'
+require 'uri'
 
 # JSONClient stuff is courtesy of the jsonclient.rb example in the httpclient
 # repo
@@ -71,8 +72,6 @@ end
 
 module Candlepin
   class NoAuthClient
-    include Candlepin
-
     attr_accessor :use_ssl
     attr_accessor :host
     attr_accessor :port
@@ -82,11 +81,25 @@ module Candlepin
     attr_accessor :connection_timeout
     attr_accessor :client
 
+    # Build a connection using an X509 certificate provided as a client certificate
+    #
+    # = Options
+    # * :host:: The host to connect to. Defaults to localhost
+    # * :port:: The port to connect to. Defaults to 8443.
+    #     Should be provided as an integer.
+    # * :context:: The servlet context to use. Defaults to 'candlepin'.
+    #     If you do not provide a leading slash, one will be prepended.
+    # * :use_ssl:: Whether to connect over SSL/TLS. Defaults to true.
+    # * :insecure:: Whether to perform SSL hostname verification and whether to
+    #     require a recognized CA. Defaults to <b>true</b> because in testing we
+    #     are often dealing with self-signed certificates.
+    # * :connection_timeout:: How long in seconds to wait before the connection times
+    #     out. Defaults to <b>3 seconds</b>.
     def initialize(opts = {})
       defaults = {
         :host => 'localhost',
         :port => 8443,
-        :context => 'candlepin',
+        :context => '/candlepin',
         :use_ssl => true,
         :insecure => true,
         :connection_timeout => 3,
@@ -100,15 +113,37 @@ module Candlepin
       reload
     end
 
+    def context=(val)
+      @context = val
+      if !val.nil? && val[0] != '/'
+        @context = "/#{val}"
+      end
+    end
+
+    # Create a new HTTPClient. Useful after making configuration changes through the
+    # accessors.
     def reload
       @client = raw_client
     end
 
+    # Return the base URL that the Client is using.  Consists of protocol, host, port, and context.
     def base_url
-      protocol = (@use_ssl) ? 'https' : 'http'
-      "#{protocol}://#{host}:#{port}/#{context}"
+      components = {
+        :host => host,
+        :port => port,
+        :path => context,
+      }
+      if use_ssl
+        uri = URI::HTTPS.build(components)
+      else
+        uri = URI::HTTP.build(components)
+      end
+      uri.to_s
     end
 
+    # This method provides the raw HTTPClient object that is being used
+    # to communicate with the server.  In most circumstances, you should not
+    # need to access it, but it is there if you need it.
     def raw_client
       client = JSONClient.new(:base_url => base_url)
       # Three seconds is the default and that is pretty aggressive, but this code is mainly
@@ -130,6 +165,12 @@ module Candlepin
     attr_accessor :client_cert
     attr_accessor :client_key
 
+    # Build a connection using an X509 certificate provided as a client certificate
+    #
+    # = Options
+    # * Same as those for NoAuthClient
+    # * :client_cert:: An OpenSSL::X509::Certificate object. Defaults to nil.
+    # * :client_key:: An OpenSSL::PKey::PKey object. Defaults to nil.
     def initialize(opts = {})
       defaults = {
         :client_cert => nil,
@@ -168,6 +209,12 @@ module Candlepin
     attr_accessor :username
     attr_accessor :password
 
+    # Build a connection using HTTP basic authentication.
+    #
+    # = Options
+    # * Same as those for NoAuthClient
+    # * :username:: The username to use. Defaults to 'admin'.
+    # * :password:: The password to use. Defaults to 'admin'.
     def initialize(opts = {})
       defaults = {
         :username => 'admin',
