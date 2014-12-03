@@ -70,7 +70,7 @@ private
 end
 
 module Candlepin
-  class SimpleClient
+  class NoAuthClient
     include Candlepin
 
     attr_accessor :use_ssl
@@ -79,6 +79,8 @@ module Candlepin
     attr_accessor :context
     attr_accessor :insecure
     attr_accessor :ca_path
+    attr_accessor :connection_timeout
+    attr_accessor :client
 
     def initialize(opts = {})
       defaults = {
@@ -87,11 +89,19 @@ module Candlepin
         :context => 'candlepin',
         :use_ssl => true,
         :insecure => true,
+        :connection_timeout => 3,
       }
       opts = defaults.merge(opts)
+      # Subclasses must provide an attr_writer or attr_accessor for every key
+      # in the options hash.  The snippet below sends the values to the setter methods.
       opts.each do |k, v|
         self.send(:"#{k}=", v)
       end
+      reload
+    end
+
+    def reload
+      @client = raw_client
     end
 
     def base_url
@@ -99,8 +109,12 @@ module Candlepin
       "#{protocol}://#{host}:#{port}/#{context}"
     end
 
-    def client
+    def raw_client
       client = JSONClient.new(:base_url => base_url)
+      # Three seconds is the default and that is pretty aggressive, but this code is mainly
+      # meant for spec tests and we don't want to wait all day for connections to timeout
+      # if something is wrong.
+      client.connect_timeout = connection_timeout
       if use_ssl
         if insecure
           client.ssl_config.verify_mode = OpenSSL::SSL::VERIFY_NONE
@@ -112,7 +126,45 @@ module Candlepin
     end
   end
 
-  class UserClient < SimpleClient
+  class ClientCertClient < NoAuthClient
+    attr_accessor :client_cert
+    attr_accessor :client_key
+
+    def initialize(opts = {})
+      defaults = {
+        :client_cert => nil,
+        :client_key => nil,
+      }
+      opts = defaults.merge(opts)
+      super(opts)
+    end
+
+    def raw_client
+      client = super
+      client.ssl_config.client_cert = client_cert
+      client.ssl_config.client_key = client_key
+      client
+    end
+  end
+
+  class OAuthClient < NoAuthClient
+    def initialize(opts = {})
+      defaults = {
+        :oauth_key => nil,
+        :oauth_secret => nil,
+      }
+      opts = defaults.merge(opts)
+      super(opts)
+    end
+
+    def raw_client
+      client = super
+      # TODO OAuth stuff here
+      client
+    end
+  end
+
+  class BasicAuthClient < NoAuthClient
     attr_accessor :username
     attr_accessor :password
 
@@ -125,7 +177,7 @@ module Candlepin
       super(opts)
     end
 
-    def client
+    def raw_client
       client = super
       client.set_auth(base_url, username, password)
       client
