@@ -21,6 +21,7 @@ import com.google.inject.Inject;
 
 import org.xnap.commons.i18n.I18n;
 
+import javax.inject.Provider;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -37,9 +38,9 @@ public class Status {
     private String requestLocale;
 
     @Inject
-    public Status(I18n i18n, Configuration config) {
-        version = config.getString("gutterball.version", i18n.tr("Unknown"));
-        requestLocale = i18n.getLocale().toString();
+    public Status(Provider<I18n> i18nProvider, Configuration config) {
+        version = config.getString("gutterball.version", i18nProvider.get().tr("Unknown"));
+        requestLocale = i18nProvider.get().getLocale().toString();
     }
 
     @JsonProperty("gutterball.version")

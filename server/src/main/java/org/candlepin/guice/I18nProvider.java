@@ -93,6 +93,6 @@ public class I18nProvider extends CommonI18nProvider implements Provider<I18n> {
 
     @Override
     public String getBaseName() {
-        return "org.candlepin.i18n.Messages";
+        return "org.candlepin.server.i18n.Messages";
     }
 }

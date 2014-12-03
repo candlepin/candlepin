@@ -16,14 +16,17 @@
 package org.candlepin.gutterball.report;
 
 import org.candlepin.gutterball.curator.ComplianceSnapshotCurator;
-import org.candlepin.gutterball.guice.I18nProvider;
 import org.candlepin.gutterball.model.snapshot.Compliance;
+import org.candlepin.gutterball.model.snapshot.ComplianceReason;
 
 import com.google.inject.Inject;
+
+import org.xnap.commons.i18n.I18n;
 
 import java.util.Date;
 import java.util.List;
 
+import javax.inject.Provider;
 import javax.ws.rs.core.MultivaluedMap;
 
 /**
@@ -32,6 +35,7 @@ import javax.ws.rs.core.MultivaluedMap;
 public class ConsumerStatusReport extends Report<MultiRowResult<Compliance>> {
 
     private ComplianceSnapshotCurator complianceSnapshotCurator;
+    private StatusReasonMessageGenerator messageGenerator;
 
     /**
      * @param i18nProvider
@@ -39,10 +43,12 @@ public class ConsumerStatusReport extends Report<MultiRowResult<Compliance>> {
      * @param description
      */
     @Inject
-    public ConsumerStatusReport(I18nProvider i18nProvider, ComplianceSnapshotCurator curator) {
+    public ConsumerStatusReport(Provider<I18n> i18nProvider, ComplianceSnapshotCurator curator,
+            StatusReasonMessageGenerator messageGenerator) {
         super(i18nProvider, "consumer_status",
                 i18nProvider.get().tr("List the status of all consumers"));
         this.complianceSnapshotCurator = curator;
+        this.messageGenerator = messageGenerator;
     }
 
     @Override
@@ -88,6 +94,12 @@ public class ConsumerStatusReport extends Report<MultiRowResult<Compliance>> {
 
         List<Compliance> snaps = complianceSnapshotCurator.getSnapshotsOnDate(targetDate,
                 consumerIds, ownerFilters, statusFilters);
+
+        for (Compliance cs : snaps) {
+            for (ComplianceReason cr : cs.getStatus().getReasons()) {
+                messageGenerator.setMessage(cs.getConsumer(), cr);
+            }
+        }
 
         return new MultiRowResult<Compliance>(snaps);
     }

@@ -55,7 +55,8 @@ public class ConsumerTrendReportTest extends DatabaseTestFixture {
     @Before
     public void setUp() throws Exception {
         I18nProvider i18nProvider = new I18nProvider(mockReq);
-        report = new ConsumerTrendReport(i18nProvider, complianceSnapshotCurator);
+        StatusReasonMessageGenerator messageGenerator = mock(StatusReasonMessageGenerator.class);
+        report = new ConsumerTrendReport(i18nProvider, complianceSnapshotCurator, messageGenerator);
     }
 
     @Before

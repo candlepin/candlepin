@@ -212,6 +212,8 @@ define "candlepin" do
     checkstyle.eclipse_xml = checkstyle_eclipse_xml
     rpmlint.rpmlint_conf = rpmlint_conf
 
+    msgfmt.resource = "#{project.group}.common.i18n.Messages"
+
     compile_classpath = [
       COMMONS,
       LOGGING,
@@ -301,6 +303,7 @@ define "candlepin" do
 
     gutterball_war = package(:war, :id=>"gutterball").tap do |war|
       war.libs -= artifacts(PROVIDED)
+      war.classes += [msgfmt.destination, resources.target]
     end
     pom.artifact = gutterball_war
   end
@@ -340,7 +343,7 @@ define "candlepin" do
       pmd.enabled = true
     end
 
-    msgfmt.resource = "#{project.group}.i18n.Messages"
+    msgfmt.resource = "#{project.group}.server.i18n.Messages"
 
     ### Building
     compile_classpath = [

@@ -78,7 +78,7 @@
     <apply executable="msgfmt" failonerror="true" relative="true">
       <arg value="--java2"/>
       <arg value="--resource"/>
-      <arg value="org.candlepin.i18n.Messages"/>
+      <arg value="org.candlepin.server.i18n.Messages"/>
       <arg value="-d"/>
       <arg value="${target.dir}/generated-source"/>
       <arg value="--locale"/>

@@ -16,6 +16,7 @@
 package org.candlepin.gutterball.report;
 
 import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.gutterball.curator.ComplianceSnapshotCurator;
@@ -61,7 +62,8 @@ public class ConsumerStatusReportTest {
     @Before
     public void setUp() throws Exception {
         I18nProvider i18nProvider = new I18nProvider(mockReq);
-        report = new ConsumerStatusReport(i18nProvider, complianceSnapshotCurator);
+        StatusReasonMessageGenerator messageGenerator = mock(StatusReasonMessageGenerator.class);
+        report = new ConsumerStatusReport(i18nProvider, complianceSnapshotCurator, messageGenerator);
     }
 
     @Test
