@@ -104,10 +104,6 @@ public class Event {
     @Column(nullable = true)
     private String referenceType;
 
-    @Lob
-    @Type(type = "org.hibernate.type.MaterializedClobType")
-    private String messageText;
-
     /**
      * Old and New entity fields are stored as a JSON String so that we
      * can capture all the data that may not have been stored by the event
@@ -146,6 +142,10 @@ public class Event {
         this.timestamp = timestamp;
     }
 
+
+    /**
+     * @return The gutterball assigned ID.
+     */
     public String getId() {
         return id;
     }
@@ -248,14 +248,6 @@ public class Event {
 
     public void setNewEntity(String newEntity) {
         this.newEntity = newEntity;
-    }
-
-    public String getMessageText() {
-        return messageText;
-    }
-
-    public void setMessageText(String messageText) {
-        this.messageText = messageText;
     }
 
     public String toString() {
