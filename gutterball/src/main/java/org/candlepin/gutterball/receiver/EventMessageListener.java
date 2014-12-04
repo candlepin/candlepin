@@ -144,7 +144,9 @@ public class EventMessageListener implements MessageListener {
         }
         catch (Exception e) {
             log.error("Error processing event: " + event, e);
-            // NOTE: Do not end unit of work here, if it failed we do not want to commit.
+        }
+        finally {
+            unitOfWork.end();
         }
     }
 

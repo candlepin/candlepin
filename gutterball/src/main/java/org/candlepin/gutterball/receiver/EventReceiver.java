@@ -16,6 +16,7 @@ package org.candlepin.gutterball.receiver;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.gutterball.config.ConfigProperties;
+import org.candlepin.gutterball.guice.GutterballModule;
 
 import com.google.inject.Inject;
 
@@ -35,8 +36,10 @@ import javax.jms.TopicSubscriber;
 
 
 /**
- * Classes implementing FileConfiguration take their configuration from a file source and can
- * therefore specify an encoding.
+ * Maintains the connection to the AMQP message bus and configured the message listener.
+ *
+ * Note that this is currently bound as an eager singleton in the {@link GutterballModule}.
+ * Messages are received in a single thread.
  */
 public class EventReceiver {
     private static Logger log = LoggerFactory.getLogger(EventReceiver.class);
@@ -47,6 +50,12 @@ public class EventReceiver {
     private Connection conn;
     private String connstr;
 
+    /*
+     * TODO: Because we're bound as a singleton and are holding an eventMessageListener, we're
+     * also holding a reference to a unitOfWork, which is not a threadsafe object. At present
+     * we're receiving events in a single thread, but this is still a bit worrisome and should
+     * probably be fixed
+     */
     private EventMessageListener eventMessageListener;
 
     @Inject
