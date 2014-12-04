@@ -14,8 +14,8 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.jackson.HateoasArrayExclude;
-import org.candlepin.jackson.HateoasInclude;
+import org.candlepin.common.jackson.HateoasArrayExclude;
+import org.candlepin.common.jackson.HateoasInclude;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
 

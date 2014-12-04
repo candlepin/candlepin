@@ -15,6 +15,7 @@
 
 package org.candlepin.gutterball.model.snapshot;
 
+import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import org.hibernate.annotations.GenericGenerator;
@@ -44,6 +45,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "gb_installed_product_snap")
+@JsonFilter("ConsumerInstalledProductFilter")
 public class ConsumerInstalledProduct {
 
     @Id

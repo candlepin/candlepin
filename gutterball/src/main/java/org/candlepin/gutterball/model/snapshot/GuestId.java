@@ -15,6 +15,7 @@
 
 package org.candlepin.gutterball.model.snapshot;
 
+import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import org.hibernate.annotations.BatchSize;
@@ -49,6 +50,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "gb_consumer_guest_snap")
+@JsonFilter("GuestIdFilter")
 public class GuestId {
     @Id
     @GeneratedValue(generator = "system-uuid")

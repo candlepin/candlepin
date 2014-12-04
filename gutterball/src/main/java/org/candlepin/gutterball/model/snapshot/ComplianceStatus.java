@@ -15,6 +15,7 @@
 
 package org.candlepin.gutterball.model.snapshot;
 
+import com.fasterxml.jackson.annotation.JsonFilter;
 import org.candlepin.gutterball.jackson.MapToKeysConverter;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -54,6 +55,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "gb_compliance_status_snap")
+@JsonFilter("ComplianceStatusFilter")
 public class ComplianceStatus {
     @Id
     @GeneratedValue(generator = "system-uuid")

@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.jackson;
+package org.candlepin.common.jackson;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -20,11 +20,11 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * HateoasArrayIgnoreField: Annotation used with our HateoasBeanPropertyFilter.
- * Applied to object fields that we want to skip serialization for if we're within the
- * context of an array.
+ * HateoasInclude: Annotation used with JsonFilter and our HateoasBeanPropertyFilter.
+ * Apply to the getter's of properties that are to be included when we trigger
+ * the reduced "HATEOAS" style of serialization for certain nested objects.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD})
-public @interface HateoasArrayExclude {
+public @interface HateoasInclude {
 }

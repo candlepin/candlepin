@@ -16,9 +16,9 @@ package org.candlepin.resteasy;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.jackson.DynamicPropertyFilter;
+import org.candlepin.common.jackson.HateoasBeanPropertyFilter;
 import org.candlepin.common.jackson.MultiFilter;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.jackson.HateoasBeanPropertyFilter;
 
 import com.fasterxml.jackson.databind.AnnotationIntrospector;
 import com.fasterxml.jackson.databind.ObjectMapper;

@@ -12,9 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.jackson;
-
-import org.candlepin.common.jackson.CheckableBeanPropertyFilter;
+package org.candlepin.common.jackson;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
