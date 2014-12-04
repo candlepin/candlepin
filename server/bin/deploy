@@ -1,5 +1,4 @@
 #!/bin/bash
-# This script requires bash > 4 because we are using associative arrays
 
 gendb() {
     if [ "$USE_ORACLE" == "1" ]; then

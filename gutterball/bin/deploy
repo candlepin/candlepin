@@ -1,5 +1,4 @@
 #! /bin/bash
-# Note that this script requires bash > 4 due to the use of associative arrays.
 
 APP="gutterball"
 
