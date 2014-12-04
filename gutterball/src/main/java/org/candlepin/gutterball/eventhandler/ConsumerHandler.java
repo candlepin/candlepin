@@ -17,6 +17,7 @@ package org.candlepin.gutterball.eventhandler;
 import org.candlepin.gutterball.curator.ConsumerStateCurator;
 import org.candlepin.gutterball.model.ConsumerState;
 import org.candlepin.gutterball.model.Event;
+import org.candlepin.gutterball.model.Event.Status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
@@ -28,7 +29,7 @@ import java.io.IOException;
  * a consumer based event is received
  */
 @HandlerTarget("CONSUMER")
-public class ConsumerHandler implements EventHandler {
+public class ConsumerHandler extends EventHandler {
 
     protected ConsumerStateCurator consumerStateCurator;
     private ObjectMapper mapper;
@@ -40,13 +41,14 @@ public class ConsumerHandler implements EventHandler {
     }
 
     @Override
-    public void handleCreated(Event event) {
+    public Status handleCreated(Event event) {
         String newConsumerJson = event.getNewEntity();
 
         // JPA Insertion
         try {
             ConsumerState consumerState = mapper.readValue(newConsumerJson, ConsumerState.class);
             consumerStateCurator.create(consumerState);
+            return Status.PROCESSED;
         }
         catch (IOException e) {
             throw new RuntimeException("Unable to deserialize Consumer Created Event.", e);
@@ -54,17 +56,13 @@ public class ConsumerHandler implements EventHandler {
     }
 
     @Override
-    public void handleUpdated(Event event) {
-        // NO-OP
-    }
-
-    @Override
-    public void handleDeleted(Event event) {
+    public Status handleDeleted(Event event) {
         try {
             ConsumerState consumerState = mapper.readValue(event.getOldEntity(), ConsumerState.class);
             // consumerState is considered a new record here as it is parsed from CP json.
             // We just want to extract the UUID from the event.
             consumerStateCurator.setConsumerDeleted(consumerState.getUuid(), event.getTimestamp());
+            return Status.PROCESSED;
         }
         catch (IOException e) {
             throw new RuntimeException("Unable to deserialize Consumer Deleted Event.", e);

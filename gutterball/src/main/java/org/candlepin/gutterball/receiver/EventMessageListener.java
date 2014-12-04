@@ -16,6 +16,7 @@ package org.candlepin.gutterball.receiver;
 
 import org.candlepin.gutterball.eventhandler.EventManager;
 import org.candlepin.gutterball.model.Event;
+import org.candlepin.gutterball.model.Event.Status;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -54,11 +55,18 @@ public class EventMessageListener implements MessageListener {
 
     @Override
     public void onMessage(Message message) {
-        log.debug(message.toString());
+        log.info(message.toString());
 
         String messageBody = getMessageBody(message);
         try {
             Event event = mapper.readValue(messageBody, Event.class);
+
+            /*
+             * Set initial event state. If event remains in this state, it indicates there
+             * was an error processing it.
+             */
+            event.setStatus(Status.RECEIVED);
+
             unitOfWork.begin();
             eventManager.handle(event);
         }
@@ -87,8 +95,7 @@ public class EventMessageListener implements MessageListener {
             return ((TextMessage) message).getText();
         }
         catch (JMSException e) {
-            log.error("failed to get text out of message");
-            // TODO: use a candlepin exception
+            log.error("failed to get text out of message", e);
             throw new RuntimeException(e);
         }
     }

@@ -16,6 +16,7 @@ package org.candlepin.gutterball.eventhandler;
 
 import org.candlepin.gutterball.curator.ComplianceSnapshotCurator;
 import org.candlepin.gutterball.model.Event;
+import org.candlepin.gutterball.model.Event.Status;
 import org.candlepin.gutterball.model.snapshot.Compliance;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -32,7 +33,7 @@ import java.io.IOException;
  * it's more of a bundle anyhow.
  */
 @HandlerTarget("COMPLIANCE")
-public class ComplianceHandler implements EventHandler {
+public class ComplianceHandler extends EventHandler {
 
     private static Logger log = LoggerFactory.getLogger(ComplianceHandler.class);
 
@@ -46,26 +47,17 @@ public class ComplianceHandler implements EventHandler {
     }
 
     @Override
-    public void handleCreated(Event event) {
+    public Status handleCreated(Event event) {
         Compliance snap;
         try {
             snap = mapper.readValue(event.getNewEntity(), Compliance.class);
             // Not picked up from the event.
             snap.setDate(snap.getStatus().getDate());
+            complianceCurator.create(snap);
         }
         catch (IOException e) {
             throw new RuntimeException("Could not deserialize compliance snapshot data.", e);
         }
-        complianceCurator.create(snap);
-    }
-
-    @Override
-    public void handleUpdated(Event event) {
-        log.warn("Received a COMPLIANCE MODIFIED event, skipping");
-    }
-
-    @Override
-    public void handleDeleted(Event event) {
-        log.warn("Received a COMPLIANCE DELETED event, skipping");
+        return Status.PROCESSED;
     }
 }

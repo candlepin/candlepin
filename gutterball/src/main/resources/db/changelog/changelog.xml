@@ -4,4 +4,5 @@
     <include file="db/changelog/2014-10-30-15-30-indexes.xml"/>
     <include file="db/changelog/2014-11-03-07-57-additional-indexes.xml"/>
     <include file="db/changelog/2014-12-03-15-20-drop-unused-messagetext-event-column.xml"/>
+    <include file="db/changelog/2014-12-03-15-39-add-event-status.xml"/>
 </databaseChangeLog>

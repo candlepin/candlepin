@@ -15,29 +15,39 @@
 package org.candlepin.gutterball.eventhandler;
 
 import org.candlepin.gutterball.model.Event;
+import org.candlepin.gutterball.model.Event.Status;
 
 
 /**
- * EventHandler interface which provides a structure for
- * handling various types of events
+ * EventHandler base class which provides a structure for
+ * handling various types of events.
  */
-public interface EventHandler {
+public abstract class EventHandler {
 
     /**
      * Handles creation events
      * @param event Event to store
+     * @return true if the event was processed, false if we skipped it.
      */
-    void handleCreated(Event event);
+    public Status handleCreated(Event event) {
+        return Status.SKIPPED;
+    }
 
     /**
      * Handles modification events
      * @param event Event to store
+     * @return true if the event was processed, false if we skipped it.
      */
-    void handleUpdated(Event event);
+    public Status handleUpdated(Event event) {
+        return Status.SKIPPED;
+    }
 
     /**
      * Handles deletion events
      * @param event Event to store
+     * @return true if the event was processed, false if we skipped it.
      */
-    void handleDeleted(Event event);
+    public Status handleDeleted(Event event) {
+        return Status.SKIPPED;
+    }
 }

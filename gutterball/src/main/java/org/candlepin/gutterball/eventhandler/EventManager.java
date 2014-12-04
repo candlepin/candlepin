@@ -60,14 +60,22 @@ public class EventManager {
             log.info("Handling " + event + " with handler: " + handler.getClass().getSimpleName());
             String eventType = event.getType();
             if (MODIFIED_EVENT_TYPE.equals(eventType)) {
-                handler.handleUpdated(event);
+                event.setStatus(handler.handleUpdated(event));
             }
             else if (CREATED_EVENT_TYPE.equals(eventType)) {
-                handler.handleCreated(event);
+                event.setStatus(handler.handleCreated(event));
             }
             else if (DELETED_EVENT_TYPE.equals(eventType)) {
-                handler.handleDeleted(event);
+                event.setStatus(handler.handleDeleted(event));
+            }
+            else {
+                log.warn("Got an event of unknown type: " + eventType);
+                event.setStatus(Event.Status.SKIPPED);
             }
         }
+        else {
+            event.setStatus(Event.Status.SKIPPED);
+        }
+        eventCurator.merge(event);
     }
 }
