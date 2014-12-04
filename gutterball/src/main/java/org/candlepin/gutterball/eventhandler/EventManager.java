@@ -52,9 +52,6 @@ public class EventManager {
      * @param event to store
      */
     public void handle(Event event) {
-        // Store every event
-        eventCurator.create(event);
-
         EventHandler handler = targetHandlers.get(event.getTarget());
         if (handler != null) {
             log.info("Handling " + event + " with handler: " + handler.getClass().getSimpleName());

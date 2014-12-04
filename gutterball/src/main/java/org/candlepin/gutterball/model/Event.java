@@ -285,7 +285,8 @@ public class Event {
     }
 
     public String toString() {
-        return "Event<" + timestamp + " " + target + " " + type + ">";
+        return "Event<id=" + id + ", timestamp=" + timestamp + ", target=" +
+                target + ", type=" + type + ">";
     }
 
     public Status getStatus() {
