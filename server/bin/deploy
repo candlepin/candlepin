@@ -27,7 +27,7 @@ gendb() {
     fi
 
     info_msg "$MESSAGE"
-    LQCOMMAND="liquibase --driver=${JDBC['driver']} --classpath=$PROJECT_DIR/src/main/resources/:target/classes/:${JDBC['jar']} --changeLogFile=db/changelog/$CHANGELOG --url=${JDBC['url']} --username=candlepin"
+    LQCOMMAND="liquibase --driver=${JDBC_DRIVER} --classpath=$PROJECT_DIR/src/main/resources/:target/classes/:${JDBC_JAR} --changeLogFile=db/changelog/$CHANGELOG --url=${JDBC_URL} --username=candlepin"
     if [ -n "$DBPASSWORD" ] ; then
         LQCOMMAND="$LQCOMMAND --password=$DBPASSWORD "
     fi
