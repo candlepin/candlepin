@@ -80,7 +80,7 @@ public class ActivationKeyRules {
         }
         else if (error.equals("rulefailed.actkey.cannot.use.person.pools")) {
             msg = i18n.tr("Cannot add pools that are " +
-                "restricted to unit type 'person' to activation keys.");
+                "restricted to unit type ''person'' to activation keys.");
         }
         else if (error.equals("rulefailed.host.restriction.physical.only")) {
             msg = i18n.tr("Cannot use pools with host restriction with physical" +

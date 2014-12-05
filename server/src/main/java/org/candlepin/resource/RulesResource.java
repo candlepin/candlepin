@@ -114,7 +114,7 @@ public class RulesResource {
         }
         catch (CuratorException e) {
             log.error("couldn't read rules file", e);
-            throw new ServiceUnavailableException(i18n.tr("couldn't read rules file"));
+            throw new ServiceUnavailableException(i18n.tr("couldn''t read rules file"));
         }
     }
 

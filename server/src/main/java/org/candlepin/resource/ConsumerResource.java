@@ -437,7 +437,7 @@ public class ConsumerResource {
         if (type.isType(ConsumerTypeEnum.PERSON)) {
             if (keys.size() > 0) {
                 throw new BadRequestException(i18n.tr(
-                        "A unit type of 'person' cannot be used with activation keys"));
+                        "A unit type of ''person'' cannot be used with activation keys"));
             }
             if (!isConsumerPersonNameValid(consumer.getName())) {
                 throw new BadRequestException(i18n.tr(
