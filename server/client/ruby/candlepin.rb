@@ -1,3 +1,4 @@
+require 'forwardable'
 require 'httpclient'
 require 'json'
 require 'date'
@@ -71,7 +72,39 @@ private
 end
 
 module Candlepin
+  module API
+    def list_owners
+      get('/owners')
+    end
+  end
+
   class NoAuthClient
+    include Candlepin::API
+
+    extend Forwardable
+    # By extending Forwardable we can simply take useful HTTPClient methods
+    # and make them available and then for the implementation we just pass
+    # everything through to @client
+    #
+    # HTTPClient has many methods, but the below seemed like the most useful.
+    def_delegators :@client,
+      :delete,
+      :delete_async,
+      :get,
+      :get_async,
+      :get_content,
+      :post,
+      :post_async,
+      :post_content,
+      :post_content_async,
+      :put,
+      :put_async,
+      :head,
+      :options,
+      :request,
+      :request_async,
+      :trace
+
     attr_accessor :use_ssl
     attr_accessor :host
     attr_accessor :port

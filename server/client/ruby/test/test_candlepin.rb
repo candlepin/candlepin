@@ -22,20 +22,20 @@ module Candlepin
     class TestClient < Minitest::Test
       context 'a client' do
         should 'get a status as JSON' do
-          simple_client = NoAuthClient.new.raw_client
+          simple_client = NoAuthClient.new
           res = simple_client.get('/status')
           assert(res.content.key?('version'))
         end
 
         should 'get owners with basic auth' do
-          user_client = BasicAuthClient.new.raw_client
+          user_client = BasicAuthClient.new
           res = user_client.get('/owners')
           refute_empty(res.content)
           assert(res.content.first.key?('id'))
         end
 
         should 'fail with bad password' do
-          user_client = BasicAuthClient.new(:password => nil).raw_client
+          user_client = BasicAuthClient.new(:password => nil)
           res = user_client.get('/owners')
           assert_equal(401, res.status_code)
         end
@@ -92,7 +92,7 @@ module Candlepin
           simple_client = NoAuthClient.new(
             :ca_path => 'certs/test-ca.cert',
             :port => TEST_PORT,
-            :insecure => false).raw_client
+            :insecure => false)
 
           res = simple_client.get('/status')
           assert_equal("Hello", res.content['message'])
@@ -101,7 +101,7 @@ module Candlepin
         should 'fail to connect if no CA given in strict mode' do
           simple_client = NoAuthClient.new(
             :port => TEST_PORT,
-            :insecure => false).raw_client
+            :insecure => false)
 
           assert_raises(OpenSSL::SSL::SSLError) do
             simple_client.get('/status')
@@ -116,7 +116,7 @@ module Candlepin
             :ca_path => 'certs/test-ca.cert',
             :insecure => false,
             :client_cert => client_cert,
-            :client_key => client_key).raw_client
+            :client_key => client_key)
 
           res = cert_client.get('/status')
           assert_equal("Hello", res.content['message'])
@@ -130,7 +130,7 @@ module Candlepin
             :ca_path => 'certs/test-ca.cert',
             :insecure => false,
             :client_cert => client_cert,
-            :client_key => client_key).raw_client
+            :client_key => client_key)
 
           e = assert_raises(OpenSSL::SSL::SSLError) do
             cert_client.get('/status')
@@ -165,6 +165,7 @@ module Candlepin
           url1 = "https://www.example.com:8443/1"
           assert_equal(url1, simple_client.base_url)
           assert_equal(url1, simple_client.raw_client.base_url)
+          assert_kind_of(HTTPClient, simple_client.raw_client)
 
           simple_client.context = "/2"
           simple_client.reload
@@ -181,7 +182,7 @@ module Candlepin
             JSON.load(File.read('json/consumer.json')),
             :port => CLIENT_CERT_TEST_PORT,
             :ca_path => 'certs/test-ca.cert',
-            :insecure => false).raw_client
+            :insecure => false)
 
           res = cert_client.get('/status')
           assert_equal("Hello", res.content['message'])
@@ -207,7 +208,7 @@ module Candlepin
             'certs/client.key',
             :port => CLIENT_CERT_TEST_PORT,
             :ca_path => 'certs/test-ca.cert',
-            :insecure => false).raw_client
+            :insecure => false)
 
           res = cert_client.get('/status')
           assert_equal("Hello", res.content['message'])
