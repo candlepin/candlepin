@@ -22,7 +22,7 @@
 %endif
 
 Name: gutterball
-Version: 1.0.5
+Version: 1.0.6
 Release: 1%{?dist}
 Summary: Data aggregator for Candlepin
 
@@ -214,6 +214,9 @@ rm -rf %{buildroot}
 %attr(775, tomcat, root) %{_localstatedir}/log/%{name}
 
 %changelog
+* Fri Dec 05 2014 Alex Wood <awood@redhat.com> 1.0.6-1
+- Reverted use of DateUtils.parseDateStrictly. (crog@redhat.com)
+
 * Fri Dec 05 2014 Alex Wood <awood@redhat.com> 1.0.5-1
 - Add candlepin-deps as a BuildRequires. (awood@redhat.com)
 - Fixed GB deploy script (mstead@redhat.com)
