@@ -161,9 +161,37 @@ module Candlepin
     end
   end
 
-  class ClientCertClient < NoAuthClient
+  class X509Client < NoAuthClient
     attr_accessor :client_cert
     attr_accessor :client_key
+
+    class << self
+      def from_consumer(consumer_json, opts = {})
+        if opts.key?(:client_cert) || opts.key?(:client_key)
+          raise ArgumentError.new("Cannot specify cert and key for this method")
+        end
+        client_cert = OpenSSL::X509::Certificate.new(consumer_json['idCert']['cert'])
+        client_key = OpenSSL::PKey::RSA.new(consumer_json['idCert']['key'])
+        opts = {
+          :client_cert => client_cert,
+          :client_key => client_key,
+        }.merge(opts)
+        X509Client.new(opts)
+      end
+
+      def from_files(cert, key, opts = {})
+        if opts.key?(:client_cert) || opts.key?(:client_key)
+          raise ArgumentError.new("Cannot specify cert and key for this method")
+        end
+        client_cert = OpenSSL::X509::Certificate.new(File.read(cert))
+        client_key = OpenSSL::PKey::RSA.new(File.read(key))
+        opts = {
+          :client_cert => client_cert,
+          :client_key => client_key,
+        }.merge(opts)
+        X509Client.new(opts)
+      end
+    end
 
     # Build a connection using an X509 certificate provided as a client certificate
     #

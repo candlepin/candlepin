@@ -52,8 +52,8 @@ module Candlepin
 
       context 'a client' do
         setup do
-          key = OpenSSL::PKey::RSA.new(File.read('test-ca.key'))
-          cert = OpenSSL::X509::Certificate.new(File.read('test-ca.cert'))
+          key = OpenSSL::PKey::RSA.new(File.read('certs/test-ca.key'))
+          cert = OpenSSL::X509::Certificate.new(File.read('certs/test-ca.cert'))
 
           server_config = {
             :BindAddress => 'localhost',
@@ -68,7 +68,7 @@ module Candlepin
           @server = WEBrick::HTTPServer.new(server_config)
           @client_cert_server = WEBrick::HTTPServer.new(server_config.merge({
             :SSLVerifyClient => OpenSSL::SSL::VERIFY_PEER | OpenSSL::SSL::VERIFY_FAIL_IF_NO_PEER_CERT,
-            :SSLCACertificateFile => 'test-ca.cert',
+            :SSLCACertificateFile => 'certs/test-ca.cert',
             :Port => CLIENT_CERT_TEST_PORT,
           }))
 
@@ -90,7 +90,7 @@ module Candlepin
 
         should 'use CA if given' do
           simple_client = NoAuthClient.new(
-            :ca_path => 'test-ca.cert',
+            :ca_path => 'certs/test-ca.cert',
             :port => TEST_PORT,
             :insecure => false).raw_client
 
@@ -109,11 +109,11 @@ module Candlepin
         end
 
         should 'allow a connection with a valid client cert' do
-          client_cert = OpenSSL::X509::Certificate.new(File.read('client.cert'))
-          client_key = OpenSSL::PKey::RSA.new(File.read('client.key'))
-          cert_client = ClientCertClient.new(
+          client_cert = OpenSSL::X509::Certificate.new(File.read('certs/client.cert'))
+          client_key = OpenSSL::PKey::RSA.new(File.read('certs/client.key'))
+          cert_client = X509Client.new(
             :port => CLIENT_CERT_TEST_PORT,
-            :ca_path => 'test-ca.cert',
+            :ca_path => 'certs/test-ca.cert',
             :insecure => false,
             :client_cert => client_cert,
             :client_key => client_key).raw_client
@@ -123,11 +123,11 @@ module Candlepin
         end
 
         should 'forbid a connection with an invalid client cert' do
-          client_cert = OpenSSL::X509::Certificate.new(File.read('unsigned.cert'))
-          client_key = OpenSSL::PKey::RSA.new(File.read('unsigned.key'))
-          cert_client = ClientCertClient.new(
+          client_cert = OpenSSL::X509::Certificate.new(File.read('certs/unsigned.cert'))
+          client_key = OpenSSL::PKey::RSA.new(File.read('certs/unsigned.key'))
+          cert_client = X509Client.new(
             :port => CLIENT_CERT_TEST_PORT,
-            :ca_path => 'test-ca.cert',
+            :ca_path => 'certs/test-ca.cert',
             :insecure => false,
             :client_cert => client_cert,
             :client_key => client_key).raw_client
@@ -172,6 +172,60 @@ module Candlepin
           url2 = "https://www.example.com:8443/2"
           assert_equal(url2, simple_client.base_url)
           assert_equal(url2, simple_client.raw_client.base_url)
+        end
+
+        should 'build a client from consumer json' do
+          # Note that the consumer.json file has had the signed client.cert and
+          # client.key contents inserted into it.
+          cert_client = X509Client.from_consumer(
+            JSON.load(File.read('json/consumer.json')),
+            :port => CLIENT_CERT_TEST_PORT,
+            :ca_path => 'certs/test-ca.cert',
+            :insecure => false).raw_client
+
+          res = cert_client.get('/status')
+          assert_equal("Hello", res.content['message'])
+        end
+
+        should 'fail to build client when given both consumer and cert info' do
+          client_cert = OpenSSL::X509::Certificate.new(File.read('certs/unsigned.cert'))
+          client_key = OpenSSL::PKey::RSA.new(File.read('certs/unsigned.key'))
+          assert_raises(ArgumentError) do
+            X509Client.from_consumer(
+              JSON.load(File.read('json/consumer.json')),
+              :port => CLIENT_CERT_TEST_PORT,
+              :ca_path => 'certs/test-ca.cert',
+              :client_cert => client_cert,
+              :client_key => client_key,
+              :insecure => false)
+          end
+        end
+
+        should 'build a client from cert and key files' do
+          cert_client = X509Client.from_files(
+            'certs/client.cert',
+            'certs/client.key',
+            :port => CLIENT_CERT_TEST_PORT,
+            :ca_path => 'certs/test-ca.cert',
+            :insecure => false).raw_client
+
+          res = cert_client.get('/status')
+          assert_equal("Hello", res.content['message'])
+        end
+
+        should 'fail to build client when given both consumer and cert files' do
+          client_cert = OpenSSL::X509::Certificate.new(File.read('certs/unsigned.cert'))
+          client_key = OpenSSL::PKey::RSA.new(File.read('certs/unsigned.key'))
+          assert_raises(ArgumentError) do
+            X509Client.from_files(
+              'certs/client.cert',
+              'certs/client.key',
+              :port => CLIENT_CERT_TEST_PORT,
+              :ca_path => 'certs/test-ca.cert',
+              :client_cert => client_cert,
+              :client_key => client_key,
+              :insecure => false)
+          end
         end
 
         teardown do
