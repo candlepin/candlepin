@@ -9,7 +9,7 @@
     <changeSet id="20141203123727-1" author="mstead">
         <comment>Add complianceStatusHash column to consumer</comment>
         <addColumn tableName="cp_consumer">
-            <column name="compliancestatushash" type="VARCHAR(32)" />
+            <column name="compliancestatushash" type="VARCHAR(64)" />
         </addColumn>
     </changeSet>
 

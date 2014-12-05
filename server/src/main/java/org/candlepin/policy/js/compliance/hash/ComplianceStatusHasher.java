@@ -19,7 +19,7 @@ import org.candlepin.model.Consumer;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 
 /**
- * Creates an MD5 hash of the the important pieces of compliance data
+ * Creates an SHA256 hash of the the important pieces of compliance data
  * that pertains to a compliance change in the context of emitting an
  * event.
  *

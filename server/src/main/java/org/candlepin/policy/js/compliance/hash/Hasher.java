@@ -20,7 +20,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import java.util.Collection;
 
 /**
- * Generates a an MD5 hash of objects via respective {@link HashableStringGenerator}s.
+ * Generates a an SHA256 hash of objects via respective {@link HashableStringGenerator}s.
  */
 public class Hasher {
 
@@ -31,12 +31,14 @@ public class Hasher {
     }
 
     /**
-     * Products an MD5 hash of anything that was put into this hasher.
+     * Products an SHA256 hash of anything that was put into this hasher.
      *
-     * @return an MD5 hex string
+     * @return an SHA256 hex string
      */
     public String hash() {
-        return DigestUtils.md5Hex(sink.toString());
+        // Hash the data with two algorithms to make collisions less likely.
+        String data = sink.toString();
+        return DigestUtils.sha256Hex(DigestUtils.md5Hex(data) + data);
     }
 
     /**
