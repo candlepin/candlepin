@@ -22,7 +22,7 @@
 %endif
 
 Name: gutterball
-Version: 1.0.4
+Version: 1.0.5
 Release: 1%{?dist}
 Summary: Data aggregator for Candlepin
 
@@ -214,6 +214,19 @@ rm -rf %{buildroot}
 %attr(775, tomcat, root) %{_localstatedir}/log/%{name}
 
 %changelog
+* Fri Dec 05 2014 Alex Wood <awood@redhat.com> 1.0.5-1
+- Add candlepin-deps as a BuildRequires. (awood@redhat.com)
+- Fixed GB deploy script (mstead@redhat.com)
+- Removed note about bash version requirement. (crog@redhat.com)
+- Removed JDBC hash from deploy scripts (crog@redhat.com)
+- Added time zone support to the status trend report (crog@redhat.com)
+- Clamped dates and relaxed year validation (crog@redhat.com)
+- Cleaned up and/or removed extraneous code (crog@redhat.com)
+- Added additional date tests and translation wrappers. (crog@redhat.com)
+- Added support for extended validations to ParameterDescriptor
+  (crog@redhat.com)
+- Added the status trend report and API. (crog@redhat.com)
+
 * Mon Nov 24 2014 Alex Wood <awood@redhat.com> 1.0.4-1
 - Add missing requires for gutterball. (awood@redhat.com)
 
