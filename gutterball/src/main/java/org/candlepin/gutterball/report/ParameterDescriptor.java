@@ -15,11 +15,11 @@
 
 package org.candlepin.gutterball.report;
 
-import org.apache.commons.lang.time.DateUtils;
-
 import org.xnap.commons.i18n.I18n;
 
 import java.text.ParseException;
+import java.text.ParsePosition;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -234,11 +234,17 @@ public class ParameterDescriptor {
     }
 
     private void validateDate(List<String> dateStrings) {
-        String[] dateFormats = { this.dateFormat };
+        SimpleDateFormat formatter = new SimpleDateFormat(this.dateFormat);
+        formatter.setLenient(false);
 
         for (String dateString : dateStrings) {
             try {
-                DateUtils.parseDateStrictly(dateString, dateFormats);
+                ParsePosition pos = new ParsePosition(0);
+                formatter.parse(dateString, pos);
+
+                if (pos.getIndex() != dateString.length()) {
+                    throw new ParseException("Could not parse date parameter", pos.getIndex());
+                }
             }
             catch (ParseException pe) {
                 throw new ParameterValidationException(name,
