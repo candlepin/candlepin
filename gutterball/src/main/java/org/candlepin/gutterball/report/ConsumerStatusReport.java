@@ -68,7 +68,7 @@ public class ConsumerStatusReport extends Report<MultiRowResult<Compliance>> {
 
         addParameter(
             builder.init("on_date", i18n.tr("The date to filter on. Defaults to NOW."))
-                .mustBeDate(REPORT_DATE_FORMAT)
+                .mustBeDate(REPORT_DATETIME_FORMAT)
                 .getParameter()
         );
 
@@ -84,7 +84,7 @@ public class ConsumerStatusReport extends Report<MultiRowResult<Compliance>> {
         List<String> ownerFilters = queryParams.get("owner");
 
         Date targetDate = queryParams.containsKey("on_date") ?
-            parseDate(queryParams.getFirst("on_date")) : new Date();
+            parseDateTime(queryParams.getFirst("on_date")) : new Date();
 
         List<Compliance> snaps = complianceSnapshotCurator.getSnapshotsOnDate(targetDate,
                 consumerIds, ownerFilters, statusFilters);

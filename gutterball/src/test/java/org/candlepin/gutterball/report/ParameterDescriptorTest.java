@@ -132,6 +132,76 @@ public class ParameterDescriptorTest {
     }
 
     @Test
+    public void validatesTimeZone() {
+        MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
+        when(params.containsKey(desc.getName())).thenReturn(true);
+        when(params.get(desc.getName())).thenReturn(Arrays.asList("nope"));
+
+        desc.mustBeTimeZone();
+        assertInvalidParameter(
+            desc,
+            params,
+            "Invalid time zone string. Time zones must be recognized time zone names " +
+            "or offsets specified in the form of \"GMT[+-]HH:?MM\"."
+        );
+    }
+
+    @Test
+    public void validatesValidTimeZones() {
+        MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
+        when(params.containsKey(desc.getName())).thenReturn(true);
+        when(params.get(desc.getName())).thenReturn(Arrays.asList(
+            "gmt",
+            "america/chicago",
+            "GMT-0600",
+            "GMT+17:15"
+        ));
+
+        desc.mustBeTimeZone();
+        assertValidParameter(desc, params);
+    }
+
+    @Test
+    public void validatesMultipleTimeZones() {
+        MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
+        when(params.containsKey(desc.getName())).thenReturn(true);
+        when(params.get(desc.getName())).thenReturn(Arrays.asList("gmt", "america/chicago", "nope"));
+
+        desc.mustBeTimeZone();
+        assertInvalidParameter(
+            desc,
+            params,
+            "Invalid time zone string. Time zones must be recognized time zone names " +
+            "or offsets specified in the form of \"GMT[+-]HH:?MM\"."
+        );
+    }
+
+    @Test
+    public void validateExtValidations() {
+        MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
+        when(params.containsKey(desc.getName())).thenReturn(true);
+        when(params.get(desc.getName())).thenReturn(Arrays.asList("tv1", "tv2", "test_value"));
+
+        ParameterValidator validator = new ParameterValidator() {
+            public void validate(ParameterDescriptor descriptor, String value) {
+                if (value.length() < 5) {
+                    return;
+                }
+
+                throw new ParameterValidationException(
+                    desc.getName(),
+                    String.format("Called with descriptor and value: %s, %s", descriptor.getName(), value)
+                );
+            }
+        };
+
+        desc.mustSatisfy(validator);
+        assertInvalidParameter(desc, params,
+            String.format("Called with descriptor and value: %s, %s", desc.getName(), "test_value")
+        );
+    }
+
+    @Test
     public void validatesMustHaves() {
         MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
         when(params.containsKey(desc.getName())).thenReturn(true);
@@ -152,7 +222,6 @@ public class ParameterDescriptorTest {
         desc.mustHave("a", "b");
         assertValidParameter(desc, params);
     }
-
 
     @Test
     public void validatesMustNotHaves() {
