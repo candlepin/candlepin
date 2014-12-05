@@ -29,7 +29,7 @@ module Candlepin
 
         should 'get owners with basic auth' do
           user_client = BasicAuthClient.new
-          res = user_client.get('/owners')
+          res = user_client.get_owners
           refute_empty(res.content)
           assert(res.content.first.key?('id'))
         end
@@ -227,6 +227,41 @@ module Candlepin
               :client_key => client_key,
               :insecure => false)
           end
+        end
+
+        should 'build query hash properly' do
+          params = {
+            :colors => %w(red white blue),
+            :k => {
+              :k2 => 'v'
+            }
+          }
+          expected = "colors=red&colors=white&colors=blue&k#{CGI.escape('[')}k2#{CGI.escape(']')}=v"
+          assert_equal(expected, params.to_query)
+        end
+
+        should 'build query array properly' do
+          params = %w(red white blue)
+          expected = "colors=red&colors=white&colors=blue"
+          assert_equal(expected, params.to_query('colors'))
+
+          params = []
+          expected = 'colors='
+          assert_equal(expected, params.to_query('colors'))
+        end
+
+        should 'build query objects properly' do
+          params = "red"
+          expected = "colors=red"
+          assert_equal(expected, params.to_query('colors'))
+
+          params = true
+          expected = 'colors=true'
+          assert_equal(expected, params.to_query('colors'))
+
+          params = nil
+          expected = 'colors='
+          assert_equal(expected, params.to_query('colors'))
         end
 
         teardown do

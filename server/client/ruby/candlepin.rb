@@ -1,3 +1,4 @@
+require 'cgi'
 require 'forwardable'
 require 'httpclient'
 require 'json'
@@ -71,9 +72,62 @@ private
   end
 end
 
+# These implementations taken from Rails.
+class Array
+  def to_param
+    collect { |e| e.to_param }.join '/'
+  end
+
+  def to_query(key)
+    if empty?
+      nil.to_query(key)
+    else
+      collect { |value| value.to_query(key) }.join '&'
+    end
+  end
+end
+
+class Hash
+  def to_param
+    to_query
+  end
+
+  def to_query(namespace = nil)
+    collect do |key, value|
+      unless (value.is_a?(Hash) || value.is_a?(Array)) && value.empty?
+        value.to_query(namespace ? "#{namespace}[#{key}]" : key)
+      end
+    end.compact.sort! * '&'
+  end
+end
+
+class Object
+  def to_param
+    to_s
+  end
+
+  def to_query(key)
+    "#{CGI.escape(key.to_param)}=#{CGI.escape(to_param.to_s)}"
+  end
+end
+
 module Candlepin
   module API
-    def list_owners
+    # I am attempting to follow strict rules with this API module:
+    #  * API calls with one parameter can use a normal Ruby method parameter.
+    #  * API calls with more than one parameter MUST use an options hash.
+    #  * Methods with options hashes should provide reasonable defaults and
+    #    merge those defaults with the provided options in a manner similar to
+    #      defaults = {:some_parameter => 'sensible default'}
+    #      opts = defaults.merge(opts)
+    #  * Do NOT use Ruby 2.0 style keyword arguments. This API should remain 1.9.3
+    #    compatible.
+    #  * All keys in options hashes MUST be symbols.
+    #  * Methods SHOULD be named so that the first word is the HTTP verb relevant to the API call.
+    #  * URL construction should be performed with the Ruby URI class and/or the
+    #    to_query methods added to Object, Array, and Hash.  No ad hoc string manipulations.
+
+    def get_owners
       get('/owners')
     end
   end
