@@ -16,7 +16,6 @@ package org.candlepin.gutterball.receiver;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.gutterball.config.ConfigProperties;
-import org.candlepin.gutterball.guice.GutterballModule;
 
 import com.google.inject.Inject;
 
@@ -38,8 +37,8 @@ import javax.jms.TopicSubscriber;
 /**
  * Maintains the connection to the AMQP message bus and configured the message listener.
  *
- * Note that this is currently bound as an eager singleton in the {@link GutterballModule}.
- * Messages are received in a single thread.
+ * Note that this is currently bound as an eager singleton, and messages are
+ * received in a single thread.
  */
 public class EventReceiver {
     private static Logger log = LoggerFactory.getLogger(EventReceiver.class);

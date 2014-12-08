@@ -15,6 +15,7 @@
 package org.candlepin.resource;
 
 import org.candlepin.audit.HornetqEventDispatcher;
+import org.candlepin.audit.QueueStatus;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SystemPrincipal;
 import org.candlepin.common.auth.SecurityHole;
@@ -28,6 +29,8 @@ import com.google.inject.Inject;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.List;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -94,10 +97,18 @@ public class AdminResource {
         }
     }
 
+    /**
+     * @return Basic information on the HornetQ queues and how many messages are
+     * pending in each.
+     *
+     * NOTE: This does not report on any pending messages in the AMQP bus.
+     *
+     * @httpcode 200
+     */
     @GET
-    @Produces({MediaType.TEXT_XML})
-    @Path("hornetq_journal")
-    public String logqueue() {
+    @Produces({MediaType.APPLICATION_JSON})
+    @Path("queues")
+    public List<QueueStatus> getQueueStats() {
         return dispatcher.getQueueInfo();
     }
 

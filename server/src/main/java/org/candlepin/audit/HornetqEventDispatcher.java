@@ -20,8 +20,8 @@ import org.candlepin.config.ConfigProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 
-import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.hornetq.api.core.HornetQException;
+import org.hornetq.api.core.SimpleString;
 import org.hornetq.api.core.TransportConfiguration;
 import org.hornetq.api.core.client.ClientMessage;
 import org.hornetq.api.core.client.ClientProducer;
@@ -29,12 +29,12 @@ import org.hornetq.api.core.client.ClientSession;
 import org.hornetq.api.core.client.ClientSessionFactory;
 import org.hornetq.api.core.client.HornetQClient;
 import org.hornetq.api.core.client.ServerLocator;
-import org.hornetq.core.persistence.impl.journal.XmlDataExporter;
 import org.hornetq.core.remoting.impl.invm.InVMConnectorFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
+import java.util.LinkedList;
+import java.util.List;
 
 import javax.inject.Singleton;
 
@@ -116,31 +116,24 @@ public class HornetqEventDispatcher  {
         }
     }
 
-    /**
-     * Export the current contents of the hornetq journal.
-     *
-     * Typically this would just be messages which have failed to be delivered thus far.
-     * @return XML export of hornetq journal
-     */
-    public String getQueueInfo() {
+    public List<QueueStatus> getQueueInfo() {
+        List<QueueStatus> results = new LinkedList<QueueStatus>();
         try {
-            String baseDir = config.getString(ConfigProperties.HORNETQ_BASE_DIR);
 
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            XmlDataExporter exporter = new XmlDataExporter(outputStream,
-                    new File(baseDir, "bindings").toString(),
-                    new File(baseDir, "journal").toString(),
-                    new File(baseDir, "journal").toString(),
-                    new File(baseDir, "largemsgs").toString());
-            exporter.writeXMLData();
-            String journalContents = outputStream.toString();
-
-            return journalContents;
+            ClientSession session = getClientSession();
+            session.start();
+            for (String listenerClassName : HornetqContextListener.getHornetqListeners(
+                    config)) {
+                String queueName = "event." + listenerClassName;
+                long msgCount = session.queueQuery(new SimpleString(queueName))
+                        .getMessageCount();
+                results.add(new QueueStatus(queueName, msgCount));
+            }
         }
         catch (Exception e) {
-            log.error("Error logging queue info: ", e);
+            log.error("Error looking up hornetq queue info: ", e);
         }
-        return "ERROR";
+        return results;
     }
 
 }

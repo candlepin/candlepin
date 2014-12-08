@@ -110,14 +110,7 @@ public class HornetqContextListener {
 
         cleanupOldQueues();
 
-        //AMQP integration here - If it is disabled, don't add it to listeners.
-        List<String> listeners = Lists.newArrayList(
-                candlepinConfig.getList(ConfigProperties.AUDIT_LISTENERS));
-
-        if (candlepinConfig
-            .getBoolean(ConfigProperties.AMQP_INTEGRATION_ENABLED)) {
-            listeners.add(AMQPBusPublisher.class.getName());
-        }
+        List<String> listeners = getHornetqListeners(candlepinConfig);
 
         eventSource = injector.getInstance(EventSource.class);
         for (int i = 0; i < listeners.size(); i++) {
@@ -141,6 +134,23 @@ public class HornetqContextListener {
             log.error("Failed to initialize hornetq event dispatcher:", e);
             throw new RuntimeException(e);
         }
+    }
+
+    /**
+     * @param candlepinConfig
+     * @return List of class names that will be configured as HornetQ listeners.
+     */
+    public static List<String> getHornetqListeners(
+            org.candlepin.common.config.Configuration candlepinConfig) {
+        //AMQP integration here - If it is disabled, don't add it to listeners.
+        List<String> listeners = Lists.newArrayList(
+                candlepinConfig.getList(ConfigProperties.AUDIT_LISTENERS));
+
+        if (candlepinConfig
+            .getBoolean(ConfigProperties.AMQP_INTEGRATION_ENABLED)) {
+            listeners.add(AMQPBusPublisher.class.getName());
+        }
+        return listeners;
     }
 
     /**
