@@ -29,6 +29,8 @@ import java.security.cert.X509Certificate;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.inject.Provider;
+
 /**
  * Pulls the consumer id off off a certificate and creates a principal for that.
  * Remember, certs are easy.
@@ -42,8 +44,8 @@ class SSLAuth extends ConsumerAuth {
     @Inject
     SSLAuth(ConsumerCurator consumerCurator,
         DeletedConsumerCurator deletedConsumerCurator,
-        I18n i18n) {
-        super(consumerCurator, deletedConsumerCurator, i18n);
+        Provider<I18n> i18nProvider) {
+        super(consumerCurator, deletedConsumerCurator, i18nProvider);
     }
 
     public Principal getPrincipal(HttpRequest request) {

@@ -45,13 +45,13 @@ import org.xnap.commons.i18n.I18n;
 public class AuthMethodInterceptorFactory implements MethodInterceptor {
 
     @Inject private Injector injector;
-    @Inject private I18n i18n;
+    @Inject private Provider<I18n> i18nProvider;
     @Inject private Provider<Principal> principalProvider;
 
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
         AuthMethodInterceptor interceptor = new AuthMethodInterceptor(injector,
-            i18n);
+            i18nProvider.get());
         return interceptor.invoke(invocation);
     }
 
@@ -59,7 +59,7 @@ public class AuthMethodInterceptorFactory implements MethodInterceptor {
         MethodInterceptor {
 
         public AuthMethodInterceptor(Injector injector, I18n i18n) {
-            super(null, null, null, null, injector, i18n);
+            super(null, null, null, null, injector, i18nProvider);
         }
 
         public void setupAuthStrategies() {
