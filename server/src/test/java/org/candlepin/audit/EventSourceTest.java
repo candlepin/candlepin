@@ -43,7 +43,7 @@ public class EventSourceTest {
 
     @Before
     public void init() throws Exception {
-        when(clientSessionFactory.createSession(eq(true), eq(true)))
+        when(clientSessionFactory.createSession(eq(true), eq(true), eq(0)))
             .thenReturn(clientSession);
     }
     /**
@@ -75,7 +75,7 @@ public class EventSourceTest {
     public void shouldNotThrowExceptionWhenQueueCreationFails() throws Exception {
         EventSource eventSource = createEventSourceStubbedWithFactoryCreation();
         doThrow(new HornetQException(HornetQExceptionType.QUEUE_DOES_NOT_EXIST))
-            .when(clientSession).createQueue(anyString(), anyString());
+            .when(clientSession).createQueue(anyString(), anyString(), eq(true));
         EventListener eventListener = mock(EventListener.class);
         eventSource.registerListener(eventListener);
 
@@ -93,7 +93,7 @@ public class EventSourceTest {
         eventSource.registerListener(eventListener);
 
         //make sure queue is created.
-        verify(clientSession).createQueue(anyString(), anyString());
+        verify(clientSession).createQueue(anyString(), anyString(), eq(true));
         verify(mockCC).setMessageHandler(any(ListenerWrapper.class));
     }
 

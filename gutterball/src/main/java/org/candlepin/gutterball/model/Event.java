@@ -75,7 +75,7 @@ public class Event {
         /**
          * Event received and processed successfully by a handler.
          */
-        PROCESSED, // Message processed by a handler successfully.
+        PROCESSED,
     }
 
     @Column(nullable = false)

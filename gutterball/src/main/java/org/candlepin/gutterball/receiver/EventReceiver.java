@@ -35,10 +35,11 @@ import javax.jms.TopicSubscriber;
 
 
 /**
- * Maintains the connection to the AMQP message bus and configured the message listener.
+ * Maintains the connection to the AMQP message bus and configures the message listener.
  *
- * Note that this is currently bound as an eager singleton, and messages are
- * received in a single thread.
+ * NOTE: this class is currently bound as an eager singleton, and messages are
+ * received in a single thread. Similarly the EventMessageListener is therefore also
+ * bound as an eager singleton, and is using a non-threadsafe unit of work.
  */
 public class EventReceiver {
     private static Logger log = LoggerFactory.getLogger(EventReceiver.class);
@@ -49,12 +50,6 @@ public class EventReceiver {
     private Connection conn;
     private String connstr;
 
-    /*
-     * TODO: Because we're bound as a singleton and are holding an eventMessageListener, we're
-     * also holding a reference to a unitOfWork, which is not a threadsafe object. At present
-     * we're receiving events in a single thread, but this is still a bit worrisome and should
-     * probably be fixed
-     */
     private EventMessageListener eventMessageListener;
 
     @Inject
