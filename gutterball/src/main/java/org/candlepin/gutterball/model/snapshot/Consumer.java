@@ -298,11 +298,11 @@ public class Consumer {
         }
     }
 
-    public String getEnvironmentName() {
+    public String getEnvironment() {
         return environmentName;
     }
 
-    public void setEnvironmentName(String environmentName) {
+    public void setEnvironment(String environmentName) {
         this.environmentName = environmentName;
     }
 
