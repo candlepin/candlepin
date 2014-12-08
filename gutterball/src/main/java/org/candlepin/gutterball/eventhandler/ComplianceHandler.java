@@ -15,9 +15,14 @@
 package org.candlepin.gutterball.eventhandler;
 
 import org.candlepin.gutterball.curator.ComplianceSnapshotCurator;
+import org.candlepin.gutterball.curator.ConsumerStateCurator;
+import org.candlepin.gutterball.model.ConsumerState;
 import org.candlepin.gutterball.model.Event;
 import org.candlepin.gutterball.model.Event.Status;
 import org.candlepin.gutterball.model.snapshot.Compliance;
+import org.candlepin.gutterball.model.snapshot.ComplianceStatus;
+import org.candlepin.gutterball.model.snapshot.Consumer;
+import org.candlepin.gutterball.model.snapshot.Owner;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
@@ -26,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Date;
 
 /**
  * Handler for Compliance Events.  Currently we only send ComplianceCreated events.
@@ -37,27 +43,79 @@ public class ComplianceHandler extends EventHandler {
 
     private static Logger log = LoggerFactory.getLogger(ComplianceHandler.class);
 
-    private ComplianceSnapshotCurator complianceCurator;
     private ObjectMapper mapper;
+    private ComplianceSnapshotCurator complianceCurator;
+    private ConsumerStateCurator consumerStateCurator;
 
     @Inject
-    public ComplianceHandler(ObjectMapper mapper, ComplianceSnapshotCurator complianceCurator) {
-        this.complianceCurator = complianceCurator;
+    public ComplianceHandler(ObjectMapper mapper, ComplianceSnapshotCurator complianceCurator,
+        ConsumerStateCurator consumerStateCurator) {
+
         this.mapper = mapper;
+        this.complianceCurator = complianceCurator;
+        this.consumerStateCurator = consumerStateCurator;
     }
 
     @Override
     public Status handleCreated(Event event) {
-        Compliance snap;
+        Compliance compliance;
+        ComplianceStatus status;
+        Consumer consumer;
+        Owner owner;
+        ConsumerState cstate;
+
+        String uuid;
+        String ownerKey;
+        Date eventDate;
+
         try {
-            snap = mapper.readValue(event.getNewEntity(), Compliance.class);
-            // Not picked up from the event.
-            snap.setDate(snap.getStatus().getDate());
-            complianceCurator.create(snap);
+            compliance = mapper.readValue(event.getNewEntity(), Compliance.class);
         }
         catch (IOException e) {
             throw new RuntimeException("Could not deserialize compliance snapshot data.", e);
         }
+
+        consumer = compliance.getConsumer();
+        if (consumer == null) {
+            throw new RuntimeException(
+                "Unable to read consumer information from compliance status event."
+            );
+        }
+
+        status = compliance.getStatus();
+        if (status == null) {
+            throw new RuntimeException(
+                "Unable to read compliance status from compliance status event."
+            );
+        }
+
+        owner = consumer.getOwner();
+        if (owner == null) {
+            throw new RuntimeException(
+                "Unable to read owner information from compliance status event."
+            );
+        }
+
+        // Inject the consumer state object...
+        uuid = consumer.getUuid();
+        eventDate = status.getDate();
+        cstate = this.consumerStateCurator.findByUuid(uuid);
+
+        if (cstate == null) {
+            // At this point, we've not received a register event for this consumer, so we need
+            // to create one from the information in this event.
+
+            // TODO: Perhaps we should be validating that the uuid, key and date are properly
+            // set as well...?
+            ownerKey = owner.getKey();
+            cstate = this.consumerStateCurator.create(new ConsumerState(uuid, ownerKey, eventDate));
+        }
+
+        // Not picked up from the event.
+        consumer.setConsumerState(cstate);
+        compliance.setDate(eventDate);
+
+        complianceCurator.create(compliance);
         return Status.PROCESSED;
     }
 }

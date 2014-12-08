@@ -18,10 +18,12 @@ package org.candlepin.gutterball.report;
 import org.xnap.commons.i18n.I18n;
 
 import java.text.ParseException;
+import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.TimeZone;
 
 import javax.ws.rs.core.MultivaluedMap;
 
@@ -39,8 +41,10 @@ public class ParameterDescriptor {
     private boolean isMultiValued = false;
     private boolean mustBeInt = false;
     private String dateFormat = null;
+    private boolean mustBeTimeZone = false;
     private List<String> mustHaveParams = new ArrayList<String>(0);
     private List<String> mustNotHaveParams = new ArrayList<String>(0);
+    private List<ParameterValidator> validators = new ArrayList<ParameterValidator>(0);
 
     public ParameterDescriptor(I18n i18n, String name, String desc) {
         this.i18n = i18n;
@@ -111,6 +115,17 @@ public class ParameterDescriptor {
     }
 
     /**
+     * Validate this desctiptor's parameter as a time zone.
+     *
+     * @return
+     *  a reference to this descriptor.
+     */
+    public ParameterDescriptor mustBeTimeZone() {
+        this.mustBeTimeZone = true;
+        return this;
+    }
+
+    /**
      * Validates this descriptor's parameter as a mandatory parameter.
      * @return a reference to this descriptor.
      */
@@ -125,6 +140,17 @@ public class ParameterDescriptor {
      */
     public ParameterDescriptor multiValued() {
         this.isMultiValued = true;
+        return this;
+    }
+
+    /**
+     * Validate this descriptor's parameter using the specified validatiors.
+     *
+     * @return
+     *  a reference to this descriptor.
+     */
+    public ParameterDescriptor mustSatisfy(ParameterValidator... validators) {
+        this.validators = Arrays.asList(validators);
         return this;
     }
 
@@ -153,6 +179,14 @@ public class ParameterDescriptor {
             validateDate(queryParams.get(name));
         }
 
+        if (this.mustBeTimeZone) {
+            validateTimeZone(queryParams.get(name));
+        }
+
+        if (this.validators.size() > 0) {
+            verifyValidatorsPass(queryParams.get(name));
+        }
+
         verifyMustHaves(queryParams);
         verifyMustNotHaves(queryParams);
     }
@@ -179,6 +213,14 @@ public class ParameterDescriptor {
         }
     }
 
+    private void verifyValidatorsPass(List<String> values) {
+        for (String value : values) {
+            for (ParameterValidator validator : this.validators) {
+                validator.validate(this, value);
+            }
+        }
+    }
+
     private void validateInteger(List<String> values) {
         for (String val : values) {
             try {
@@ -192,14 +234,45 @@ public class ParameterDescriptor {
     }
 
     private void validateDate(List<String> dateStrings) {
+        SimpleDateFormat formatter = new SimpleDateFormat(this.dateFormat);
+        formatter.setLenient(false);
+
         for (String dateString : dateStrings) {
             try {
-                SimpleDateFormat formatter = new SimpleDateFormat(dateFormat);
-                formatter.parse(dateString);
+                ParsePosition pos = new ParsePosition(0);
+                formatter.parse(dateString, pos);
+
+                if (pos.getIndex() != dateString.length()) {
+                    throw new ParseException("Could not parse date parameter", pos.getIndex());
+                }
             }
             catch (ParseException pe) {
                 throw new ParameterValidationException(name,
                         i18n.tr("Invalid date string. Expected format: {0}", dateFormat));
+            }
+        }
+    }
+
+    @SuppressWarnings("checkstyle:indentation")
+    private void validateTimeZone(List<String> timezones) {
+        valueloop: for (String timezone : timezones) {
+            for (String tzid : TimeZone.getAvailableIDs()) {
+                if (tzid.equalsIgnoreCase(timezone)) {
+                    continue valueloop; // Valid time zone
+                }
+            }
+
+            TimeZone result = TimeZone.getTimeZone(timezone.toUpperCase());
+
+            String tzid = result.getID();
+            if (tzid.equals("GMT") && !timezone.equals(tzid)) {
+                throw new ParameterValidationException(
+                    this.name,
+                    i18n.tr(
+                        "Invalid time zone string. Time zones must be recognized time zone names " +
+                        "or offsets specified in the form of \"GMT[+-]HH:?MM\"."
+                    )
+                );
             }
         }
     }

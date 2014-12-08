@@ -59,7 +59,11 @@ JACKSON = [group('jackson-annotations', 'jackson-core', 'jackson-databind',
 
 SUN_JAXB = 'com.sun.xml.bind:jaxb-impl:jar:2.1.12'
 
-CORE_TESTING = Buildr.transitive(['junit:junit:jar:4.12-beta-2', 'org.mockito:mockito-all:jar:1.9.5'])
+CORE_TESTING = Buildr.transitive([
+  'junit:junit:jar:4.12-beta-2',
+  'org.mockito:mockito-all:jar:1.9.5',
+  'pl.pragmatists:JUnitParams:jar:1.0.3'
+])
 
 JUKITO = Buildr.transitive(['org.jukito:jukito:jar:1.4'])
 
@@ -223,12 +227,12 @@ define "candlepin" do
 
     compile.with(compile_classpath)
 
-    test.with(
+    test.with([
       CORE_TESTING,
       JUKITO,
       LIQUIBASE,
       LIQUIBASE_SLF4J,
-    )
+    ])
     test.using :java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ]
 
     common_jar = package(:jar)
@@ -285,14 +289,14 @@ define "candlepin" do
       filter(path_to(:src, :main, :resources)).into(path_to(:target, :classes)).run
     end
 
-    test.with(
+    test.with([
       CORE_TESTING,
       JUKITO,
       HSQLDB,
       LIQUIBASE,
       LIQUIBASE_SLF4J,
       project('common'),
-    )
+    ])
     test.using :java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ]
 
     gutterball_war = package(:war, :id=>"gutterball").tap do |war|
@@ -375,11 +379,11 @@ define "candlepin" do
     end
 
     # the other dependencies transfer from compile.classpath automagically
-    test.with(
+    test.with([
       CORE_TESTING,
       HSQLDB,
       LIQUIBASE_SLF4J,
-    )
+    ])
     test.using(:java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ])
 
     ### Javadoc

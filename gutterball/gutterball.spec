@@ -3,11 +3,8 @@
 %global _binary_payload w9.gzdio
 %global _source_payload w9.gzdio
 
-# This is technically just a temporary directory to get us through
-# the compilation phase. It is later destroyed and the spec file will
-# re-call initjars with the correct destination for both tomcat and jboss.
-%global distlibdir %{buildroot}/%{_tmppath}/distlibdir/
-
+# Note that this value is also set to 1 in the Katello Koji
+# environments!
 %{?fedora:%global reqcpdeps 1}
 
 # Ideally we would just use %{dist} for the deps_suffix, but %dist isn't just
@@ -25,7 +22,7 @@
 %endif
 
 Name: gutterball
-Version: 1.0.4
+Version: 1.0.6
 Release: 1%{?dist}
 Summary: Data aggregator for Candlepin
 
@@ -38,19 +35,24 @@ BuildArch: noarch
 
 # Universal build requires
 BuildRequires: java-devel >= 0:1.6.0
-BuildRequires: ant >= 0:1.7.0
 BuildRequires: gettext
+BuildRequires: candlepin-common >= 0:1.0.16
+
+%if 0%{?rhel} < 7
+BuildRequires: ant-nodeps >= 0:1.7.0
+%else
+BuildRequires: ant >= 0:1.7.0
+%endif
 
 %if 0%{?reqcpdeps}
 %global distlibdir %{_datadir}/%{parent_proj}/%{name}/lib/
-%global usecpdeps "usecpdeps"
+BuildRequires: candlepin-deps-gutterball >= 0:0.3.1
 %else
 BuildRequires: servlet
 BuildRequires: gettext-commons
 BuildRequires: qpid-java-client >= 0:0.22
 BuildRequires: qpid-java-common >= 0:0.22
 BuildRequires: resteasy >= 0:2.3.7
-BuildRequires: candlepin-common >= 0:1.0.16
 BuildRequires: jms
 BuildRequires: oauth >= 20100601-4
 BuildRequires: scannotation
@@ -172,7 +174,7 @@ engine.
 %setup -q
 
 %build
-ant -Ddist.name=%{dist_name} clean %{?reqcpdeps:usecpdeps} %{?reqcpdeps:-Dlib.dir=%{distlibdir}} package
+%{ant} -Ddist.name=%{dist_name} clean %{?reqcpdeps:usecpdeps -Dlib.dir=%{distlibdir}} package
 
 %install
 rm -rf %{buildroot}
@@ -193,7 +195,7 @@ install -d -m 755 %{buildroot}/%{_localstatedir}/lib/%{tomcat}/webapps/%{name}/
 %if !0%{?reqcpdeps}
 #remove the copied jars and resymlink
 rm %{buildroot}/%{_localstatedir}/lib/%{tomcat}/webapps/%{name}/WEB-INF/lib/*.jar
-ant -Ddist.name=%{dist_name} -Dlib.dir=%{buildroot}/%{_sharedstatedir}/%{tomcat}/webapps/%{name}/WEB-INF/lib/ initjars
+%{ant} -Ddist.name=%{dist_name} -Dlib.dir=%{buildroot}/%{_sharedstatedir}/%{tomcat}/webapps/%{name}/WEB-INF/lib/ initjars
 %endif
 
 %clean
@@ -212,6 +214,22 @@ rm -rf %{buildroot}
 %attr(775, tomcat, root) %{_localstatedir}/log/%{name}
 
 %changelog
+* Fri Dec 05 2014 Alex Wood <awood@redhat.com> 1.0.6-1
+- Reverted use of DateUtils.parseDateStrictly. (crog@redhat.com)
+
+* Fri Dec 05 2014 Alex Wood <awood@redhat.com> 1.0.5-1
+- Add candlepin-deps as a BuildRequires. (awood@redhat.com)
+- Fixed GB deploy script (mstead@redhat.com)
+- Removed note about bash version requirement. (crog@redhat.com)
+- Removed JDBC hash from deploy scripts (crog@redhat.com)
+- Added time zone support to the status trend report (crog@redhat.com)
+- Clamped dates and relaxed year validation (crog@redhat.com)
+- Cleaned up and/or removed extraneous code (crog@redhat.com)
+- Added additional date tests and translation wrappers. (crog@redhat.com)
+- Added support for extended validations to ParameterDescriptor
+  (crog@redhat.com)
+- Added the status trend report and API. (crog@redhat.com)
+
 * Mon Nov 24 2014 Alex Wood <awood@redhat.com> 1.0.4-1
 - Add missing requires for gutterball. (awood@redhat.com)
 
