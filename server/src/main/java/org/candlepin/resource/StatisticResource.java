@@ -62,7 +62,7 @@ public class StatisticResource {
         }
         catch (HibernateException e) {
             log.error("Cannot store: ", e);
-            throw new ServiceUnavailableException(i18n.tr("couldn't generate statistics"));
+            throw new ServiceUnavailableException(i18n.tr("couldn''t generate statistics"));
         }
         log.info("Successful statistic generation");
     }

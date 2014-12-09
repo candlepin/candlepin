@@ -537,7 +537,7 @@ public class OwnerResource {
         if (!testName.matches("[a-zA-Z0-9]*")) {
             throw new BadRequestException(
                 i18n.tr("The activation key name ''{0}'' must be alphanumeric or " +
-                    "include the characters '-' or '_'", activationKey.getName()));
+                    "include the characters ''-'' or ''_''", activationKey.getName()));
         }
 
         if (activationKeyCurator.lookupForOwner(activationKey.getName(), owner) != null) {

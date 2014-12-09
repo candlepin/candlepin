@@ -118,7 +118,7 @@ public class PageRequestInterceptor implements PreProcessInterceptor,
         }
 
         throw new BadRequestException(i18n.tr("the order parameter must be either" +
-                " 'ascending' or 'descending'"));
+                " ''ascending'' or ''descending''"));
     }
 
     private Integer readInteger(String value) {

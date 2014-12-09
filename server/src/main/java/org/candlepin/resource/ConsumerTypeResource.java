@@ -92,7 +92,8 @@ public class ConsumerTypeResource {
         }
 
         throw new NotFoundException(
-            i18n.tr("Unit type with id '" + id + "' could not be found."));
+            i18n.tr("Unit type with id ''{0}'' could not be found.", id)
+        );
     }
 
     /**
