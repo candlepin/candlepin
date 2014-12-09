@@ -36,9 +36,7 @@ public class Hasher {
      * @return an SHA256 hex string
      */
     public String hash() {
-        // Hash the data with two algorithms to make collisions less likely.
-        String data = sink.toString();
-        return DigestUtils.sha256Hex(DigestUtils.md5Hex(data) + data);
+        return DigestUtils.sha256Hex(sink.toString());
     }
 
     /**
