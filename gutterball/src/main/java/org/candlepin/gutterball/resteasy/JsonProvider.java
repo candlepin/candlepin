@@ -79,15 +79,16 @@ public class JsonProvider extends JacksonJsonProvider {
         SimpleFilterProvider filterProvider = new SimpleFilterProvider();
 
         String[] filters = {
-            "ComplianceReasonFilter",
-            "ComplianceStatusFilter",
-            "ConsumerFilter",
-            "ConsumerInstalledProductFilter",
-            "ConsumerTypeFilter",
-            "EntitlementFilter",
-            "GuestIdFilter",
-            "OwnerFilter",
-            "ConsumerStateFilter"
+            "GBComplianceFilter",
+            "GBComplianceReasonFilter",
+            "GBComplianceStatusFilter",
+            "GBConsumerFilter",
+            "GBConsumerInstalledProductFilter",
+            "GBConsumerTypeFilter",
+            "GBEntitlementFilter",
+            "GBGuestIdFilter",
+            "GBOwnerFilter",
+            "GBConsumerStateFilter"
         };
 
         for (String filterName : filters) {

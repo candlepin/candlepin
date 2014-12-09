@@ -15,6 +15,7 @@
 
 package org.candlepin.gutterball.model;
 
+import org.candlepin.common.jackson.HateoasInclude;
 import org.candlepin.gutterball.jackson.OwnerJsonToKeyConverter;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
@@ -44,7 +45,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "gb_consumer_state")
-@JsonFilter("ConsumerStateFilter")
+@JsonFilter("GBConsumerStateFilter")
+@HateoasInclude
 public class ConsumerState {
 
     @Id

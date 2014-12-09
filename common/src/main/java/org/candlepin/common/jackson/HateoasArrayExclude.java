@@ -25,6 +25,6 @@ import java.lang.annotation.Target;
  * context of an array.
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.METHOD})
+@Target({ElementType.TYPE, ElementType.LOCAL_VARIABLE, ElementType.METHOD})
 public @interface HateoasArrayExclude {
 }

@@ -19,12 +19,21 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+
+
 /**
- * HateoasInclude: Annotation used with JsonFilter and our HateoasBeanPropertyFilter.
- * Apply to the getter's of properties that are to be included when we trigger
- * the reduced "HATEOAS" style of serialization for certain nested objects.
+ * The HateoasInclude annotation is used in conjunction with the HateoasBeanPropertyFilter and
+ * jackson's JsonFilter annotation to determine which properties are to be included in the
+ * JSON-serialized output of a model object.
+ *
+ * The HateoasInclude annotation may be applied to a class, a property or a method and will be
+ * checked in that order. When applied to the class, all properties within the class will be
+ * included. Otherwise, only the properties with the annotation will be included.
+ *
+ * Additionally, if the annotation is applied to an accessor in the form of "get<property>" or
+ * "is<property>", the property will be included as if it the annotation were applied directly to it.
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.METHOD})
+@Target({ElementType.TYPE, ElementType.LOCAL_VARIABLE, ElementType.METHOD})
 public @interface HateoasInclude {
 }

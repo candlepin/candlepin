@@ -19,40 +19,68 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.lang.reflect.Field;
+
+
 
 /**
  * JsonBeanPropertyFilter
  */
 public abstract class JsonBeanPropertyFilter extends CheckableBeanPropertyFilter {
-
     private static Logger log = LoggerFactory.getLogger(JsonBeanPropertyFilter.class);
 
-    protected Boolean annotationPresent(Object obj, String propertyName,
-        Class<? extends Annotation> clazz) {
+    /**
+     * Checks if the specified annotation has been applied to the given object's class, property
+     * or accessor (in that order).
+     *
+     * @param obj
+     *  The object to check for the annotation
+     *
+     * @param property
+     *  The name of the property to check
+     *
+     * @param annotation
+     *  The annotation for which to check
+     *
+     * @return
+     *  True if the annotation is present either on the class, the property or the property's
+     *  accessor; false otherwise.
+     */
+    protected boolean annotationPresent(Object obj, String property, Class<? extends Annotation> annotation) {
+        // Check for the annotation on the class...
+        if (obj.getClass().getAnnotation(annotation) != null) {
+            return true;
+        }
+
+        // Check the property field
         try {
-            String postFix = propertyName.substring(0, 1).toUpperCase() + propertyName.substring(1);
-            String methodName = "get" + postFix;
-            Method getter = null;
-            try {
-                getter = obj.getClass().getMethod(methodName);
-            }
-            catch (NoSuchMethodException e) {
-                // Look for common boolean pattern of "is"
-                // instead of "get"
-                methodName = "is" + postFix;
-                getter = obj.getClass().getMethod(methodName);
-            }
-            Annotation a = getter.getAnnotation(clazz);
-            if (a != null) {
+            Field field = obj.getClass().getField(property);
+
+            if (field.getAnnotation(annotation) != null) {
                 return true;
             }
         }
-        catch (NoSuchMethodException e) {
-            log.warn("Unable to serialize property '" + propertyName + "' without a getter");
-
-            return false;
+        catch (NoSuchFieldException e) {
+            // Nope. Move on to the accessor check.
         }
+
+        // Check the accessor
+        String[] prefixes = { "get", "is" };
+        property = property.substring(0, 1).toUpperCase() + property.substring(1);
+
+        for (String prefix : prefixes) {
+            try {
+                Method method = obj.getClass().getMethod(prefix + property);
+
+                if (method.getAnnotation(annotation) != null) {
+                    return true;
+                }
+            }
+            catch (NoSuchMethodException e) {
+                // Doesn't exist.
+            }
+        }
+
         return false;
     }
-
 }

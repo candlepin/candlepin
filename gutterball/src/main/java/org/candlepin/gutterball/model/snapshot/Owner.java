@@ -14,6 +14,8 @@
  */
 package org.candlepin.gutterball.model.snapshot;
 
+import org.candlepin.common.jackson.HateoasInclude;
+
 import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -42,7 +44,8 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "gb_owner_snap")
-@JsonFilter("OwnerFilter")
+@JsonFilter("GBOwnerFilter")
+@HateoasInclude
 public class Owner {
     @Id
     @GeneratedValue(generator = "system-uuid")

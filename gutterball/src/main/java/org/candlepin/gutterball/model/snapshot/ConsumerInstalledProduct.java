@@ -15,6 +15,8 @@
 
 package org.candlepin.gutterball.model.snapshot;
 
+import org.candlepin.common.jackson.HateoasInclude;
+
 import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -45,7 +47,8 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "gb_installed_product_snap")
-@JsonFilter("ConsumerInstalledProductFilter")
+@JsonFilter("GBConsumerInstalledProductFilter")
+@HateoasInclude
 public class ConsumerInstalledProduct {
 
     @Id

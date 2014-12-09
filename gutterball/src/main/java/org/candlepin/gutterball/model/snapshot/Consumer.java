@@ -15,6 +15,7 @@
 
 package org.candlepin.gutterball.model.snapshot;
 
+import org.candlepin.common.jackson.HateoasInclude;
 import org.candlepin.gutterball.jackson.EnvironmentNameConverter;
 import org.candlepin.gutterball.jackson.HypervisorIdToStringConverter;
 import org.candlepin.gutterball.jackson.ReleaseVersionToStringConverter;
@@ -64,7 +65,8 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "gb_consumer_snap")
-@JsonFilter("ConsumerFilter")
+@JsonFilter("GBConsumerFilter")
+@HateoasInclude
 public class Consumer {
 
     @Id
