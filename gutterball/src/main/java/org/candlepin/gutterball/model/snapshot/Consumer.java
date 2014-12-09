@@ -300,11 +300,11 @@ public class Consumer {
         }
     }
 
-    public String getEnvironment() {
+    public String getEnvironmentName() {
         return environmentName;
     }
 
-    public void setEnvironment(String environmentName) {
+    public void setEnvironmentName(String environmentName) {
         this.environmentName = environmentName;
     }
 
