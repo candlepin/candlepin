@@ -14,6 +14,8 @@
  */
 package org.candlepin.jackson;
 
+import org.candlepin.common.jackson.HateoasBeanPropertyFilter;
+
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonStreamContext;
 import com.fasterxml.jackson.databind.SerializerProvider;

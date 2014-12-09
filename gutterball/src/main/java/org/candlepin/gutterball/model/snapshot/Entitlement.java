@@ -14,6 +14,9 @@
  */
 package org.candlepin.gutterball.model.snapshot;
 
+import org.candlepin.common.jackson.HateoasInclude;
+
+import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import org.hibernate.annotations.BatchSize;
@@ -49,6 +52,8 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "gb_entitlement_snap")
+@JsonFilter("GBEntitlementFilter")
+@HateoasInclude
 public class Entitlement {
     @Id
     @GeneratedValue(generator = "system-uuid")

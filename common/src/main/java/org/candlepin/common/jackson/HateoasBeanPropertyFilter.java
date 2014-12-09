@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.jackson;
+package org.candlepin.common.jackson;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonStreamContext;
@@ -39,7 +39,7 @@ public class HateoasBeanPropertyFilter extends JsonBeanPropertyFilter {
             }
         }
         // Check if we should trigger reduced HATEOAS serialization for a nested object by
-        // looking for the annotation on the fields getter:
+        // looking for the annotation on the field's getter:
         else if ((context.getParent() != null) && (context.getParent().inObject())) {
             if (annotationPresent(obj, writer.getName(), HateoasInclude.class)) {
                 return true;
@@ -49,6 +49,7 @@ public class HateoasBeanPropertyFilter extends JsonBeanPropertyFilter {
             // Normal serialization:
             return true;
         }
+
         return false;
     }
 }

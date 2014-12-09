@@ -36,6 +36,7 @@ import org.candlepin.common.exceptions.mappers.ValidationExceptionMapper;
 import org.candlepin.common.exceptions.mappers.WebApplicationExceptionMapper;
 import org.candlepin.common.exceptions.mappers.WriterExceptionMapper;
 import org.candlepin.common.guice.JPAInitializer;
+import org.candlepin.common.resteasy.interceptor.DynamicFilterInterceptor;
 import org.candlepin.common.validation.CandlepinMessageInterpolator;
 import org.candlepin.gutterball.config.ConfigProperties;
 import org.candlepin.gutterball.curator.ComplianceSnapshotCurator;
@@ -142,6 +143,9 @@ public class GutterballModule extends AbstractModule {
         bind(RuntimeExceptionMapper.class);
         bind(JAXBUnmarshalExceptionMapper.class);
         bind(JAXBMarshalExceptionMapper.class);
+
+        // Output filter interceptor
+        bind(DynamicFilterInterceptor.class);
 
         this.configureOAuth();
     }

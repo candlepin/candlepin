@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.jackson;
+package org.candlepin.common.jackson;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -25,6 +25,6 @@ import java.lang.annotation.Target;
  * context of an array.
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.METHOD})
+@Target({ElementType.TYPE, ElementType.LOCAL_VARIABLE, ElementType.METHOD})
 public @interface HateoasArrayExclude {
 }

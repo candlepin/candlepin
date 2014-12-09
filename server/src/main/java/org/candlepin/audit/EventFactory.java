@@ -16,8 +16,8 @@ package org.candlepin.audit;
 
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
+import org.candlepin.common.jackson.HateoasBeanPropertyFilter;
 import org.candlepin.guice.PrincipalProvider;
-import org.candlepin.jackson.HateoasBeanPropertyFilter;
 import org.candlepin.jackson.PoolEventFilter;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;

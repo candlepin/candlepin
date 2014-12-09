@@ -14,7 +14,7 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.jackson.HateoasInclude;
+import org.candlepin.common.jackson.HateoasInclude;
 import org.candlepin.util.DateSource;
 
 import com.fasterxml.jackson.annotation.JsonFilter;

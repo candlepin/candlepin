@@ -15,6 +15,8 @@
 package org.candlepin.gutterball.resteasy;
 
 import org.candlepin.common.jackson.DynamicPropertyFilter;
+import org.candlepin.common.jackson.MultiFilter;
+import org.candlepin.common.jackson.HateoasBeanPropertyFilter;
 
 import com.fasterxml.jackson.databind.AnnotationIntrospector;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -75,6 +77,27 @@ public class JsonProvider extends JacksonJsonProvider {
         }
 
         SimpleFilterProvider filterProvider = new SimpleFilterProvider();
+
+        String[] filters = {
+            "GBComplianceFilter",
+            "GBComplianceReasonFilter",
+            "GBComplianceStatusFilter",
+            "GBConsumerFilter",
+            "GBConsumerInstalledProductFilter",
+            "GBConsumerTypeFilter",
+            "GBEntitlementFilter",
+            "GBGuestIdFilter",
+            "GBOwnerFilter",
+            "GBConsumerStateFilter"
+        };
+
+        for (String filterName : filters) {
+            filterProvider = filterProvider.addFilter(
+                filterName,
+                new MultiFilter(new HateoasBeanPropertyFilter(), new DynamicPropertyFilter())
+            );
+        }
+
         filterProvider.setDefaultFilter(new DynamicPropertyFilter());
         filterProvider.setFailOnUnknownId(false);
         mapper.setFilters(filterProvider);
