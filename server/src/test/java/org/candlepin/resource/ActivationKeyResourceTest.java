@@ -118,6 +118,27 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
     }
 
     @Test(expected = BadRequestException.class)
+    public void testReaddingPools() {
+        ActivationKey key = new ActivationKey();
+        Owner owner = createOwner();
+        Product product = TestUtil.createProduct();
+        productCurator.create(product);
+        Pool pool = createPoolAndSub(owner, product, 10L, new Date(), new Date());
+
+        key.setOwner(owner);
+        key.setName("dd");
+        key = activationKeyCurator.create(key);
+
+        assertNotNull(key.getId());
+
+        activationKeyResource.addPoolToKey(key.getId(), pool.getId(), 1L);
+        assertTrue(key.getPools().size() == 1);
+
+        activationKeyResource.addPoolToKey(key.getId(), pool.getId(), 1L);
+        // ^ Kaboom.
+    }
+
+    @Test(expected = BadRequestException.class)
     public void testActivationKeyWithNonMultiPool() {
         ActivationKey ak = genActivationKey();
         ActivationKeyCurator akc = mock(ActivationKeyCurator.class);
@@ -316,6 +337,44 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         key2.setServiceLevel("level1");
         key2.setReleaseVer(new Release(TestUtil.getStringOfSize(256)));
         key = activationKeyResource.updateActivationKey(key.getId(), key2);
+    }
+
+    @Test
+    public void testAddingRemovingProductIDs() {
+        ActivationKey key = new ActivationKey();
+        Owner owner = createOwner();
+        Product product = TestUtil.createProduct();
+        productCurator.create(product);
+
+        key.setOwner(owner);
+        key.setName("dd");
+        key = activationKeyCurator.create(key);
+
+        assertNotNull(key.getId());
+        activationKeyResource.addProductIdToKey(key.getId(), product.getId());
+        assertTrue(key.getProductIds().size() == 1);
+        activationKeyResource.removeProductIdFromKey(key.getId(), product.getId());
+        assertTrue(key.getProductIds().size() == 0);
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void testReaddingProductIDs() {
+        ActivationKey key = new ActivationKey();
+        Owner owner = createOwner();
+        Product product = TestUtil.createProduct();
+        productCurator.create(product);
+
+        key.setOwner(owner);
+        key.setName("dd");
+        key = activationKeyCurator.create(key);
+
+        assertNotNull(key.getId());
+
+        activationKeyResource.addProductIdToKey(key.getId(), product.getId());
+        assertTrue(key.getProductIds().size() == 1);
+
+        activationKeyResource.addProductIdToKey(key.getId(), product.getId());
+        // ^ Kaboom.
     }
 
     private Pool genPool() {

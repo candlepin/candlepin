@@ -183,6 +183,14 @@ public class ActivationKeyResource {
 
         // Throws a BadRequestException if adding pool to key is a bad idea
         activationKeyRules.validatePoolForActKey(key, pool, quantity);
+
+        // Make sure we don't try to register the pool twice.
+        if (key.hasPool(pool)) {
+            throw new BadRequestException(
+                i18n.tr("Pool ID \"{0}\" has already been registered with this activation key", poolId)
+            );
+        }
+
         key.addPool(pool, quantity);
         activationKeyCurator.update(key);
         return key;
@@ -225,6 +233,14 @@ public class ActivationKeyResource {
 
         ActivationKey key = activationKeyCurator.verifyAndLookupKey(activationKeyId);
         Product product = confirmProduct(productId);
+
+        // Make sure we don't try to register the product ID twice.
+        if (key.hasProduct(product)) {
+            throw new BadRequestException(
+                i18n.tr("Product ID \"{0}\" has already been registered with this activation key", productId)
+            );
+        }
+
         key.addProduct(product);
         activationKeyCurator.update(key);
         return key;
