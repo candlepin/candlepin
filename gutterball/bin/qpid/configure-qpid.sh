@@ -31,14 +31,14 @@ define_variables() {
     if [ $IS_KATELLO -eq 0 ]; then
         CA_DB="$KATELLO_PKI/nssdb"
         CA_PASS_FILE="${CA_DB}/nss_db_password-file"
-        JAVA_PASS="$(cat $KATELLO_PKI/keystore_password-file)"
+        JAVA_PASS="$(sudo cat $KATELLO_PKI/keystore_password-file)"
     else
         CA_PASS_FILE="$CERT_LOC/ca_password.txt"
         CA_DB="$CERT_LOC/CA_db"
         JAVA_PASS="password"
         echo -n "$JAVA_PASS" > $CA_PASS_FILE
     fi
-    CA_PASS="$(cat "$CA_PASS_FILE")"
+    CA_PASS="$(sudo cat "$CA_PASS_FILE")"
 }
 
 create_ca_cert() {
@@ -116,7 +116,7 @@ create_client_certs() {
 
             if [ "$IS_KATELLO" == 0 ]; then
                 # Katello doesn't place the CA private key in the NSS DB
-                sudo openssl x509 -days 3650 -req -CA $KATELLO_PKI/certs/katello-default-ca.crt -CAkey $KATELLO_PKI/private/katello-default-ca.key -CAcreateserial -in "$dest.csr" -inform DER > "$dest.crt" 2>> $LOG
+                sudo openssl x509 -days 3650 -req -CA $KATELLO_PKI/certs/katello-default-ca.crt -CAkey $KATELLO_PKI/private/katello-default-ca.key -CAcreateserial -in "$dest.csr" > "$dest.crt" 2>> $LOG
             else
                 # certutil requires the CSR in DER for some stupid reason
                 openssl req -in "$dest.csr" -inform PEM -out "$dest.der.csr" -outform DER
