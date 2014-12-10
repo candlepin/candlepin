@@ -40,6 +40,7 @@ public class HashableStringGenerators {
     public static final EntitlementSetEntryGenerator ENTITLEMENT_SET_ENTRY =
         new EntitlementSetEntryGenerator();
     public static final EntitlementGenerator ENTITLEMENT = new EntitlementGenerator();
+    public static final PoolGenerator POOL = new PoolGenerator();
     public static final ComplianceReasonGenerator COMPLIANCE_REASON = new ComplianceReasonGenerator();
     public static final ConsumerGenerator CONSUMER = new ConsumerGenerator();
     public static final ConsumerInstalledProductGenerator INSTALLED_PRODUCT =
@@ -138,14 +139,23 @@ public class HashableStringGenerators {
                 return null;
             }
 
-            String generated = target.getId() + getTime(target.getUpdated());
-
-            Pool pool = target.getPool();
-            String poolStr = pool == null ? null : pool.getId() + getTime(pool.getUpdated());
-            generated += poolStr;
+            String generated = target.getId() + target.getQuantity();
+            generated += generateFromObject(target.getPool(), POOL);
             return generated;
         }
 
+    }
+
+    private static class PoolGenerator implements HashableStringGenerator<Pool> {
+
+        @Override
+        public String generate(Pool target) {
+            if (target == null) {
+                return null;
+            }
+
+            return target.getId() + getTime(target.getUpdated());
+        }
 
         /**
          * Safely get time from a date. If the specified date is null, return null;

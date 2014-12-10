@@ -16,6 +16,8 @@
 package org.candlepin.policy.js.compliance.hash;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 
@@ -23,7 +25,7 @@ import java.util.Collection;
  * Generates a an SHA256 hash of objects via respective {@link HashableStringGenerator}s.
  */
 public class Hasher {
-
+    private static Logger log = LoggerFactory.getLogger(Hasher.class);
     private StringBuilder sink;
 
     public Hasher() {
@@ -36,7 +38,9 @@ public class Hasher {
      * @return an SHA256 hex string
      */
     public String hash() {
-        return DigestUtils.sha256Hex(sink.toString());
+        String data = sink.toString();
+        log.debug(data);
+        return DigestUtils.sha256Hex(data);
     }
 
     /**

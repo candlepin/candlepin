@@ -32,6 +32,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -259,7 +260,7 @@ public class ComplianceStatusHasherTest {
     }
 
     @Test
-    public void ensureDifferentHashWhenConsumerEntitlementsChange() {
+    public void ensureDifferentHashWhenConsumerEntitlementCountsChange() {
         Consumer consumer = createConsumer(owner);
         ComplianceStatus testStatus = createInitialStatus(consumer);
         assertEquals(initialHash, generateHash(testStatus, consumer));
@@ -277,6 +278,45 @@ public class ComplianceStatusHasherTest {
 
         consumer.getEntitlements().clear();
         assertNotEquals(initialHash, generateHash(testStatus, consumer));
+    }
+
+    @Test
+    public void ensureDifferentHashWhenConsumerEntitlementChanges() {
+        Consumer consumer = createConsumer(owner);
+        ComplianceStatus testStatus = createInitialStatus(consumer);
+        assertEquals(initialHash, generateHash(testStatus, consumer));
+
+        Entitlement ent = consumer.getEntitlements().iterator().next();
+        String id = ent.getId();
+        Integer quantity = ent.getQuantity();
+
+        // Check the ID
+        ent.setId("somethhing_differerent");
+        assertNotEquals(initialHash, generateHash(testStatus, consumer));
+
+        ent.setId(id);
+        assertEquals(initialHash, generateHash(testStatus, consumer));
+
+        // Check the quantity
+        ent.setQuantity(112);
+        assertNotEquals(initialHash, generateHash(testStatus, consumer));
+
+        ent.setQuantity(quantity);
+        assertEquals(initialHash, generateHash(testStatus, consumer));
+    }
+
+    @Test
+    public void ensureDifferentHashWhenEntitlementPoolChanges() {
+        Consumer consumer = createConsumer(owner);
+        ComplianceStatus testStatus = createInitialStatus(consumer);
+        assertEquals(initialHash, generateHash(testStatus, consumer));
+
+        Entitlement ent = consumer.getEntitlements().iterator().next();
+        Pool pool = ent.getPool();
+
+        String poolId = pool.getId();
+        Date poolStartDate = pool.getStartDate();
+        Date poolEndDate = pool.getEndDate();
     }
 
     private Consumer createConsumer(Owner owner) {
