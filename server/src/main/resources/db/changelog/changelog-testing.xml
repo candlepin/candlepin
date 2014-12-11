@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
     <!--
       This file should only run DDL statements.  For performance reasons the
@@ -9,7 +9,6 @@
     <preConditions>
         <dbms type="hsqldb"/>
     </preConditions>
-
     <changeSet author="awood" id="1413225753032-1">
         <createTable tableName="cp_activation_key">
             <column name="id" type="VARCHAR(32)">
@@ -2027,7 +2026,9 @@
         </createIndex>
     </changeSet>
     <changeSet author="awood" id="1413225753032-290">
-        <comment>Add the default quartz lock columns.</comment>
+        <comment>
+            Add the default quartz lock columns.
+        </comment>
         <insert tableName="QRTZ_LOCKS">
             <column name="LOCK_NAME" value="TRIGGER_ACCESS"/>
             <column name="SCHED_NAME" value="TestScheduler"/>
@@ -2255,4 +2256,5 @@
             <column name="name" value="derived_product"/>
         </insert>
     </changeSet> -->
+    <include file="db/changelog/20141203123727-add-compliance-status-hash-column.xml"/>
 </databaseChangeLog>
