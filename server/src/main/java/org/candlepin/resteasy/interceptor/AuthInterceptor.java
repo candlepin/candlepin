@@ -105,7 +105,7 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
     private Configuration config;
     private UserServiceAdapter userService;
     private List<AuthProvider> providers = new ArrayList<AuthProvider>();
-    private I18n i18n;
+    private javax.inject.Provider<I18n> i18nProvider;
     private Marker duplicate;
 
     @SuppressWarnings("rawtypes")
@@ -115,14 +115,14 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
     public AuthInterceptor(Configuration config, UserServiceAdapter userService,
         ConsumerCurator consumerCurator,
         DeletedConsumerCurator deletedConsumerCurator, Injector injector,
-        I18n i18n) {
+        javax.inject.Provider<I18n> i18nProvider) {
         super();
         this.consumerCurator = consumerCurator;
         this.injector = injector;
         this.config = config;
         this.userService = userService;
         this.deletedConsumerCurator = deletedConsumerCurator;
-        this.i18n = i18n;
+        this.i18nProvider = i18nProvider;
         this.duplicate = MarkerFactory.getMarker("DUPLICATE");
 
         createStoreMap();
@@ -148,7 +148,7 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
         if (config.getBoolean(ConfigProperties.OAUTH_AUTHENTICATION)) {
             log.debug("OAuth Authentication is enabled.");
             TrustedConsumerAuth consumerAuth =
-                new TrustedConsumerAuth(consumerCurator, deletedConsumerCurator, i18n);
+                new TrustedConsumerAuth(consumerCurator, deletedConsumerCurator, i18nProvider);
             TrustedUserAuth userAuth = new TrustedUserAuth(userService, injector);
             TrustedExternalSystemAuth systemAuth = new TrustedExternalSystemAuth();
             providers.add(new OAuth(consumerAuth, userAuth, systemAuth, injector, config));
@@ -165,7 +165,7 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
             providers.add(
                 new SSLAuth(consumerCurator,
                     deletedConsumerCurator,
-                    i18n));
+                    i18nProvider));
         }
         // trusted headers
         if (config.getBoolean(ConfigProperties.TRUSTED_AUTHENTICATION)) {
@@ -173,7 +173,7 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
             providers.add(
                 new TrustedConsumerAuth(consumerCurator,
                     deletedConsumerCurator,
-                    i18n));
+                    i18nProvider));
             providers.add(new TrustedUserAuth(userService, injector));
         }
     }
@@ -322,7 +322,7 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
                     // entity with the annotated argument
                     if (!storeMap.containsKey(verifyType)) {
                         log.error("No store configured to verify: " + verifyType);
-                        throw new IseException(i18n.tr("Unable to verify request."));
+                        throw new IseException(i18nProvider.get().tr("Unable to verify request."));
                     }
 
                     List entities = new ArrayList();
@@ -335,7 +335,7 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
                     }
                     else if (argument == null) {
                         log.info("null argument is not allowed");
-                        throw new NotFoundException(i18n.tr(
+                        throw new NotFoundException(i18nProvider.get().tr(
                             "{0} with id {1} could not be found.",
                             Util.getClassName(verifyType), null));
                     }
@@ -353,12 +353,12 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
                             // invoke though.
                             String typeName = Util.getClassName(verifyType);
                             if (typeName.equals("Owner")) {
-                                typeName = i18n.tr("Organization");
+                                typeName = i18nProvider.get().tr("Organization");
                             }
                             log.info("No such entity: " + typeName + " id: " +
                                 verifyParam);
 
-                            throw new NotFoundException(i18n.tr(
+                            throw new NotFoundException(i18nProvider.get().tr(
                                 "{0} with id {1} could not be found.",
                                 typeName, verifyParam));
                         }
@@ -433,7 +433,7 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
                     method.getName());
 
         String error = "Insufficient permissions";
-        throw new ForbiddenException(i18n.tr(error));
+        throw new ForbiddenException(i18nProvider.get().tr(error));
     }
 
     /**
@@ -546,8 +546,7 @@ public class AuthInterceptor implements PreProcessInterceptor, AcceptedByMethod 
             initialize();
             if (deletedConsumerCurator.countByConsumerUuid(key) > 0) {
                 log.debug("Key " + key + " is deleted, throwing GoneException");
-                I18n i18n = injector.getInstance(I18n.class);
-                throw new GoneException(i18n.tr("Unit {0} has been deleted", key), key);
+                throw new GoneException(i18nProvider.get().tr("Unit {0} has been deleted", key), key);
             }
 
             return consumerCurator.findByUuid(key);
