@@ -30,11 +30,25 @@ module Candlepin
       end
 
       def relative_path_to(parent, child)
+        if parent.is_a?(Buildr::Project)
+          parent = parent.base_dir
+        end
+
         Pathname.new(child).relative_path_from(Pathname.new(parent)).to_s
       end
 
       def top_path_to(project, path)
         top_project(project).path_to(path)
+      end
+
+      def in_project(project, path)
+        relative_path = relative_path_to(project, path)
+        return false if relative_path.start_with?('..')
+        pieces = []
+        Pathname.new(relative_path).each_filename do |p|
+          pieces << p.to_s
+        end
+        return Pathname.new(project.path_to(*pieces)).expand_path == Pathname.new(path).expand_path
       end
     end
 

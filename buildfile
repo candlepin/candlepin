@@ -201,7 +201,6 @@ define "candlepin" do
   end
   download artifact(SCHEMASPY) => 'http://downloads.sourceforge.net/project/schemaspy/schemaspy/SchemaSpy%204.1.1/schemaSpy_4.1.1.jar'
 
-
   desc "Common Candlepin Code"
   define "common" do
     project.version = spec_version('candlepin-common.spec')
@@ -250,6 +249,8 @@ define "candlepin" do
     checkstyle.config_directory = checkstyle_config_directory
     checkstyle.eclipse_xml = checkstyle_eclipse_xml
     rpmlint.rpmlint_conf = rpmlint_conf
+
+    gettext.keys_destination = project("common").gettext.keys_destination
 
     eclipse.natures :java
 
@@ -319,6 +320,8 @@ define "candlepin" do
     rpmlint.rpmlint_conf = rpmlint_conf
     liquibase.changelogs = ['changelog-update.xml', 'changelog-create.xml', 'changelog-testing.xml']
     liquibase.file_time_prefix_format = "%Y%m%d%H%M%S"
+
+    gettext.keys_destination = project("common").gettext.keys_destination
 
     # eclipse settings
     # http://buildr.apache.org/more_stuff.html#eclipse

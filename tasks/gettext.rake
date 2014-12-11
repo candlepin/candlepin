@@ -1,4 +1,5 @@
 require './tasks/util'
+require 'tempfile'
 
 module Gettext
   class Config
@@ -14,7 +15,7 @@ module Gettext
 
     attr_writer :keys_destination
     def keys_destination
-      @destination || project.path_to(:po, "keys.pot")
+      @keys_destination || project.path_to(:po, "keys.pot")
     end
 
     attr_writer :po_directory
@@ -57,6 +58,7 @@ module Gettext
 
     after_define do |project|
       gettext = project.gettext
+
       if gettext.extract_enabled?
         project.recursive_task('gettext:extract') do |task|
           info("Extracting keys for #{project}")
@@ -73,8 +75,32 @@ module Gettext
           args = %w[-k -F -ktrc:1c,2 -ktrnc:1c,2,3 -ktr -kmarktr -ktrn:1,2]
           args << gettext.xgettext_args
           args << ['-o', gettext.keys_destination]
+
+          # If the keys file is in some other project then just append to it.
+          # Buildr will take care of running dependent projects after
+          # their dependencies.
+          #
+          # This code is meant to allow us to extract keys from multiple projects
+          # and put them in a pot file under the project lowest in the dependency tree.
+          # E.g. common will run and create keys.pot.  Then server will run and append to
+          # common's keys.pot.  If you don't have a dependency on the keys file you are
+          # writing to, it is possible for xgettext to be run out of order!
+          unless in_project(project, gettext.keys_destination)
+            args << %w[-j]
+          end
+
           args = args.flatten.compact.join(' ')
-          sh("xgettext #{args} #{java_files.join(' ')}")
+          begin
+            # We're writing the source files out to another file to avoid
+            # problems with sending too many arguments to the shell command.
+            file_list = Tempfile.new('xgettext_files')
+            file_list.write(java_files.join("\n"))
+            file_list.close
+
+            sh("xgettext #{args} -f #{file_list.path}")
+          ensure
+            file_list.unlink
+          end
         end
       end
 
