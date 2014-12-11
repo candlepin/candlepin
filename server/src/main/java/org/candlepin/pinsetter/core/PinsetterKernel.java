@@ -240,7 +240,9 @@ public class PinsetterKernel {
          * allow there to be multiple with the same schedule so simpler to just make sure
          * there's only one.
          */
-        log.warn("Cleaning up " + existingCronTriggers.size() + " obsolete triggers.");
+        if (existingCronTriggers.size() > 0) {
+            log.warn("Cleaning up " + existingCronTriggers.size() + " obsolete triggers.");
+        }
         for (CronTrigger t : existingCronTriggers) {
             boolean result = scheduler.deleteJob(t.getJobKey());
             log.warn(t.getJobKey() + " deletion success?: " + result);

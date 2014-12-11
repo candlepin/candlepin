@@ -27,6 +27,8 @@ import java.util.Date;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Lob;
@@ -47,6 +49,38 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Entity
 @Table(name = "gb_event")
 public class Event {
+
+    /**
+     * Represents the state of this event.
+     *
+     * Can be used to scan for events we received but did not have event handlers for (at
+     * that time), or events that failed to process.
+     */
+    public enum Status {
+
+        /**
+         * Event was received and stored only. If an event remains in this state, it
+         * indicates processing failed for some reason. Gutterball can periodically re-try
+         * processing of this event, possibly after an application upgrade.
+         */
+        RECEIVED,
+
+        /**
+         * Event received, but we did not have an event handler for it, or the event
+         * handler did not implement a method for the event's type. Events in this state
+         * may be processed at a later date after gutterball is upgraded.
+         */
+        SKIPPED,
+
+        /**
+         * Event received and processed successfully by a handler.
+         */
+        PROCESSED,
+    }
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private Status status;
 
     @Id
     @GeneratedValue(generator = "system-uuid")
@@ -104,10 +138,6 @@ public class Event {
     @Column(nullable = true)
     private String referenceType;
 
-    @Lob
-    @Type(type = "org.hibernate.type.MaterializedClobType")
-    private String messageText;
-
     /**
      * Old and New entity fields are stored as a JSON String so that we
      * can capture all the data that may not have been stored by the event
@@ -146,6 +176,10 @@ public class Event {
         this.timestamp = timestamp;
     }
 
+
+    /**
+     * @return The gutterball assigned ID.
+     */
     public String getId() {
         return id;
     }
@@ -250,14 +284,17 @@ public class Event {
         this.newEntity = newEntity;
     }
 
-    public String getMessageText() {
-        return messageText;
+    public String toString() {
+        return "Event<id=" + id + ", timestamp=" + timestamp + ", target=" +
+                target + ", type=" + type + ">";
     }
 
-    public void setMessageText(String messageText) {
-        this.messageText = messageText;
+    public Status getStatus() {
+        return status;
     }
 
-
+    public void setStatus(Status status) {
+        this.status = status;
+    }
 
 }

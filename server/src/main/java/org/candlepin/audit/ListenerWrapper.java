@@ -14,6 +14,8 @@
  */
 package org.candlepin.audit;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.hornetq.api.core.HornetQException;
@@ -21,6 +23,8 @@ import org.hornetq.api.core.client.ClientMessage;
 import org.hornetq.api.core.client.MessageHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
 
 /**
  * ListnerWrapper
@@ -39,22 +43,33 @@ public class ListenerWrapper implements MessageHandler {
     public void onMessage(ClientMessage msg) {
         String body = msg.getBodyBuffer().readString();
         if (log.isDebugEnabled()) {
-            log.debug("Got event: " + body);
+            log.debug("Got event: {}", body);
         }
-        Event event;
+
+        // Exceptions thrown here will cause the event to remain in hornetq:
         try {
-            event = mapper.readValue(body, Event.class);
+            Event event = mapper.readValue(body, Event.class);
             listener.onEvent(event);
         }
-        catch (Exception e1) {
-            log.error("Unable to deserialize event object from msg: " + body, e1);
+        catch (JsonMappingException e) {
+            log.error("Unable to deserialize event object from msg: " + body, e);
+            throw new RuntimeException("Error deserializing event", e);
+        }
+        catch (JsonParseException e) {
+            log.error("Unable to deserialize event object from msg: " + body, e);
+            throw new RuntimeException("Error deserializing event", e);
+        }
+        catch (IOException e) {
+            log.error("Unable to deserialize event object from msg: " + body, e);
+            throw new RuntimeException("Error deserializing event", e);
         }
 
         try {
             msg.acknowledge();
+            log.debug("Hornetq message acknowledged for listener: " + listener);
         }
         catch (HornetQException e) {
-            log.error("Unable to ack msg", e);
+            log.error("Unable to acknowledge hornetq msg", e);
         }
     }
 

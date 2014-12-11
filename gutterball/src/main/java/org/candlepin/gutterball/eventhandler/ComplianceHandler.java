@@ -16,12 +16,13 @@ package org.candlepin.gutterball.eventhandler;
 
 import org.candlepin.gutterball.curator.ComplianceSnapshotCurator;
 import org.candlepin.gutterball.curator.ConsumerStateCurator;
+import org.candlepin.gutterball.model.ConsumerState;
 import org.candlepin.gutterball.model.Event;
+import org.candlepin.gutterball.model.Event.Status;
 import org.candlepin.gutterball.model.snapshot.Compliance;
 import org.candlepin.gutterball.model.snapshot.ComplianceStatus;
 import org.candlepin.gutterball.model.snapshot.Consumer;
 import org.candlepin.gutterball.model.snapshot.Owner;
-import org.candlepin.gutterball.model.ConsumerState;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
@@ -38,7 +39,7 @@ import java.util.Date;
  * it's more of a bundle anyhow.
  */
 @HandlerTarget("COMPLIANCE")
-public class ComplianceHandler implements EventHandler {
+public class ComplianceHandler extends EventHandler {
 
     private static Logger log = LoggerFactory.getLogger(ComplianceHandler.class);
 
@@ -56,7 +57,7 @@ public class ComplianceHandler implements EventHandler {
     }
 
     @Override
-    public void handleCreated(Event event) {
+    public Status handleCreated(Event event) {
         Compliance compliance;
         ComplianceStatus status;
         Consumer consumer;
@@ -115,15 +116,6 @@ public class ComplianceHandler implements EventHandler {
         compliance.setDate(eventDate);
 
         complianceCurator.create(compliance);
-    }
-
-    @Override
-    public void handleUpdated(Event event) {
-        log.warn("Received a COMPLIANCE MODIFIED event, skipping");
-    }
-
-    @Override
-    public void handleDeleted(Event event) {
-        log.warn("Received a COMPLIANCE DELETED event, skipping");
+        return Status.PROCESSED;
     }
 }

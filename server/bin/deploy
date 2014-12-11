@@ -20,6 +20,11 @@ gendb() {
         else
             recreate_postgresql "candlepin"
         fi
+
+        # New database implies we probably don't want any events left laying around in the
+        # queue to fire:
+        info_msg "Cleaning hornetq journal"
+        sudo rm -rf /var/lib/candlepin/hornetq/*
     else
         MESSAGE="Updating Database"
         CHANGELOG="changelog-update.xml"

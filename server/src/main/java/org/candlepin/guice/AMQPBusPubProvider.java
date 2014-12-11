@@ -174,7 +174,7 @@ public class AMQPBusPubProvider implements Provider<AMQPBusPublisher> {
 
         String name = getTopicName(type, target);
         Topic topic = (Topic) this.ctx.lookup(name);
-        log.info("Creating publisher for topic: {}", name);
+        log.debug("Creating publisher for topic: {}", name);
         TopicPublisher tp = this.session.createPublisher(topic);
         map.put(type, tp);
     }

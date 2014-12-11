@@ -14,15 +14,21 @@
  */
 package org.candlepin.gutterball.receiver;
 
+import org.candlepin.gutterball.curator.EventCurator;
 import org.candlepin.gutterball.eventhandler.EventManager;
 import org.candlepin.gutterball.model.Event;
+import org.candlepin.gutterball.model.Event.Status;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.persist.UnitOfWork;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -40,27 +46,104 @@ public class EventMessageListener implements MessageListener {
     private UnitOfWork unitOfWork;
     private EventManager eventManager;
     private ObjectMapper mapper;
+    private EventCurator eventCurator;
 
     @Inject
-    public EventMessageListener(UnitOfWork unitOfWork, ObjectMapper mapper, EventManager eventManager) {
+    public EventMessageListener(UnitOfWork unitOfWork, ObjectMapper mapper,
+            EventManager eventManager, EventCurator eventCurator) {
         this.unitOfWork = unitOfWork;
         this.eventManager = eventManager;
         this.mapper = mapper;
+        this.eventCurator = eventCurator;
     }
 
     @Override
     public void onMessage(Message message) {
+        Event event = storeEvent(message);
+
+        processEvent(event);
+    }
+
+    /**
+     * Initial event storage. (first phase)
+     *
+     * In this phase we simply want to get the event into our database.
+     * Any exception thrown here indicates a very serious problem, and will end up
+     * leaving the message on the bus, which will re-try delivery the next time the
+     * application rejoins.
+     *
+     * Exceptions should always bubble up here and never be caught and ignored, as we need
+     * to do everything possible to make sure events never get dropped.
+     *
+     * Once we've parsed the JSON we save to the database and commit the transaction.
+     * Event processing will be handled separately.
+     *
+     * @param message Incoming JMS message from the bus.
+     * @return Event parsed from the message JSON.
+     */
+    private Event storeEvent(Message message) {
+        // TODO: get this down to debug when we have support for viewing debug logging:
         log.info(message.toString());
 
+        String messageBody = getMessageBody(message);
+        Event event = null;
         try {
-            String messageBody = getMessageBody(message);
-            Event event = mapper.readValue(messageBody, Event.class);
+            event = mapper.readValue(messageBody, Event.class);
+
+            /*
+             * Set initial event state. If event remains in this state, it indicates there
+             * was an error processing it.
+             */
+            event.setStatus(Status.RECEIVED);
+
+            unitOfWork.begin();
+            // Store every event
+            eventCurator.create(event);
+        }
+        catch (JsonParseException e) {
+            log.error("Error processing event", e);
+            log.error("Event message body: {}", messageBody);
+            throw new RuntimeException("Error processing event", e);
+        }
+        catch (JsonMappingException e) {
+            log.error("Error processing event", e);
+            log.error("Event message body: {}", messageBody);
+            throw new RuntimeException("Error processing event", e);
+        }
+        catch (IOException e) {
+            log.error("Error processing event", e);
+            log.error("Event message body: {}", messageBody);
+            throw new RuntimeException("Error processing event", e);
+        }
+        finally {
+            unitOfWork.end();
+        }
+        return event;
+    }
+
+    /**
+     * Process the event received. (second phase)
+     *
+     * In this phase we do any more complex processing of the event in a separate
+     * transaction from the one where we first stored the event.
+     *
+     * Exceptions here should always be caught and never bubble up. The transaction
+     * will never be committed and the event will be left in the database with an initial
+     * state that indicates there was some kind of failure in processing. This allows
+     * us to identify problem events and eventually re-try processing them.
+     *
+     * @param event Event to be processed.
+     */
+    private void processEvent(Event event) {
+        try {
             unitOfWork.begin();
             eventManager.handle(event);
-            log.info("Received Event: " + event);
+            // Handlers alter the event status, save it:
+            eventCurator.merge(event);
+            unitOfWork.end();
         }
         catch (Exception e) {
-            log.error("Failed to decode and store event ", e);
+            log.error("Error processing event: " + event, e);
         }
         finally {
             unitOfWork.end();
@@ -72,8 +155,7 @@ public class EventMessageListener implements MessageListener {
             return ((TextMessage) message).getText();
         }
         catch (JMSException e) {
-            log.error("failed to get text out of message");
-            // TODO: use a candlepin exception
+            log.error("failed to get text out of message", e);
             throw new RuntimeException(e);
         }
     }

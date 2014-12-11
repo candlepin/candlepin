@@ -43,7 +43,11 @@ public class EventSource {
 
         try {
             ClientSessionFactory factory =  createSessionFactory();
-            session = factory.createSession(true, true);
+            // Specify a message ack batch size of 0 to have hornetq immediately ack
+            // any message successfully received with the server. Not doing so can lead
+            // to duplicate messages if the server goes down before the batch ack size is
+            // reached.
+            session = factory.createSession(true, true, 0);
             session.start();
         }
         catch (Exception e) {
@@ -76,7 +80,8 @@ public class EventSource {
         log.debug("registering listener for " + queueName);
         try {
             try {
-                session.createQueue(QUEUE_ADDRESS, queueName);
+                // Create a durable queue that will be persisted to disk:
+                session.createQueue(QUEUE_ADDRESS, queueName, true);
                 log.debug("created new event queue " + queueName);
             }
             catch (HornetQException e) {

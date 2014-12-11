@@ -5,7 +5,7 @@
     <appender name="GutterballAppender" class="ch.qos.logback.core.FileAppender">
         <file>/var/log/gutterball/gutterball.log</file>
         <encoder>
-            <pattern>%d{ISO8601} [%X{requestType}=%X{requestUuid}] %-5p %c - %m%n</pattern>
+            <pattern>%d{ISO8601} [%thread] %-5p %c - %m%n</pattern>
         </encoder>
     </appender>
 

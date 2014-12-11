@@ -54,13 +54,12 @@ public class ListenerWrapperTest {
             .thenReturn(hornetQBuffer);
     }
 
-    @Test
-    public void whenMapperReadThrowsExceptionThenOnMessageShouldntFail() throws Exception {
+    @Test(expected = RuntimeException.class)
+    public void whenMapperReadThrowsExceptionThenOnMessageShouldFail() throws Exception {
         doReturn("test123").when(hornetQBuffer).readString();
         doThrow(new JsonMappingException("Induced exception"))
             .when(mapper).readValue(anyString(), eq(Event.class));
         this.listenerWrapper.onMessage(mockClientMessage);
-        verify(this.mockClientMessage).acknowledge();
     }
 
     @Test

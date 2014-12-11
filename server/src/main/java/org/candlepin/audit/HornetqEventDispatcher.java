@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 
 import org.hornetq.api.core.HornetQException;
+import org.hornetq.api.core.SimpleString;
 import org.hornetq.api.core.TransportConfiguration;
 import org.hornetq.api.core.client.ClientMessage;
 import org.hornetq.api.core.client.ClientProducer;
@@ -31,6 +32,9 @@ import org.hornetq.api.core.client.ServerLocator;
 import org.hornetq.core.remoting.impl.invm.InVMConnectorFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.LinkedList;
+import java.util.List;
 
 import javax.inject.Singleton;
 
@@ -43,6 +47,7 @@ public class HornetqEventDispatcher  {
 
     private static Logger log = LoggerFactory.getLogger(HornetqEventDispatcher.class);
     private ClientSessionFactory factory;
+    private Configuration config;
     private ObjectMapper mapper;
     private int largeMsgSize;
     private ThreadLocal<ClientSession> sessions = new ThreadLocal<ClientSession>();
@@ -51,6 +56,7 @@ public class HornetqEventDispatcher  {
     @Inject
     public HornetqEventDispatcher(ObjectMapper mapper, Configuration config) {
         this.mapper = mapper;
+        this.config = config;
         largeMsgSize = config.getInt(ConfigProperties.HORNETQ_LARGE_MSG_SIZE);
     }
 
@@ -109,4 +115,25 @@ public class HornetqEventDispatcher  {
             log.error("Error while trying to send event: " + event, e);
         }
     }
+
+    public List<QueueStatus> getQueueInfo() {
+        List<QueueStatus> results = new LinkedList<QueueStatus>();
+        try {
+
+            ClientSession session = getClientSession();
+            session.start();
+            for (String listenerClassName : HornetqContextListener.getHornetqListeners(
+                    config)) {
+                String queueName = "event." + listenerClassName;
+                long msgCount = session.queueQuery(new SimpleString(queueName))
+                        .getMessageCount();
+                results.add(new QueueStatus(queueName, msgCount));
+            }
+        }
+        catch (Exception e) {
+            log.error("Error looking up hornetq queue info: ", e);
+        }
+        return results;
+    }
+
 }

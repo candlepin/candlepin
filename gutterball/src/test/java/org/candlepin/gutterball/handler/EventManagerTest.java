@@ -54,7 +54,7 @@ public class EventManagerTest {
 
         Map<String, EventHandler> handlers = new HashMap<String, EventHandler>();
         handlers.put(TEST_HANDLER_TARGET, handler);
-        eventManager = new TestingEventManager(handlers, eventCurator);
+        eventManager = new TestingEventManager(handlers);
     }
 
     @Test
@@ -63,7 +63,6 @@ public class EventManagerTest {
         toHandle.setTarget(TEST_HANDLER_TARGET);
         toHandle.setType(EventManager.CREATED_EVENT_TYPE);
         eventManager.handle(toHandle);
-        verify(eventCurator).create(eq(toHandle));
         verify(handler).handleCreated(eq(toHandle));
         verify(handler, never()).handleUpdated(any(Event.class));
         verify(handler, never()).handleDeleted(any(Event.class));
@@ -75,7 +74,6 @@ public class EventManagerTest {
         toHandle.setTarget(TEST_HANDLER_TARGET);
         toHandle.setType(EventManager.MODIFIED_EVENT_TYPE);
         eventManager.handle(toHandle);
-        verify(eventCurator).create(eq(toHandle));
         verify(handler).handleUpdated(eq(toHandle));
         verify(handler, never()).handleCreated(any(Event.class));
         verify(handler, never()).handleDeleted(any(Event.class));
@@ -87,7 +85,6 @@ public class EventManagerTest {
         toHandle.setTarget(TEST_HANDLER_TARGET);
         toHandle.setType(EventManager.DELETED_EVENT_TYPE);
         eventManager.handle(toHandle);
-        verify(eventCurator).create(eq(toHandle));
         verify(handler).handleDeleted(eq(toHandle));
         verify(handler, never()).handleCreated(any(Event.class));
         verify(handler, never()).handleUpdated(any(Event.class));
@@ -98,7 +95,6 @@ public class EventManagerTest {
         Event toHandle = new Event();
         toHandle.setTarget("UNKNOWN_EVENT_TARGET");
         eventManager.handle(toHandle);
-        verify(eventCurator).create(eq(toHandle));
         verify(handler, never()).handleCreated(any(Event.class));
         verify(handler, never()).handleUpdated(any(Event.class));
         verify(handler, never()).handleDeleted(any(Event.class));
@@ -108,7 +104,6 @@ public class EventManagerTest {
     public void testEventManagerNullTarget() {
         Event toHandle = new Event();
         eventManager.handle(toHandle);
-        verify(eventCurator).create(eq(toHandle));
         verify(handler, never()).handleCreated(any(Event.class));
         verify(handler, never()).handleUpdated(any(Event.class));
         verify(handler, never()).handleDeleted(any(Event.class));
@@ -118,8 +113,8 @@ public class EventManagerTest {
     // We aren't testing the DB, so we want to avoid the curators
     private class TestingEventManager extends EventManager {
 
-        public TestingEventManager(Map<String, EventHandler> handlers, EventCurator curator) {
-            super(handlers, curator);
+        public TestingEventManager(Map<String, EventHandler> handlers) {
+            super(handlers);
         }
     }
 }

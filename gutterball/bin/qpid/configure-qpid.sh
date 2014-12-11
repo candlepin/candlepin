@@ -243,9 +243,9 @@ while getopts ":c" opt; do
     esac
 done
 
-if ! is_rpm_installed qpid-cpp-server qpid-tools qpid-cpp-server; then
+if ! is_rpm_installed qpid-cpp-server qpid-tools qpid-cpp-server qpid-cpp-server-store; then
     echo "installing Qpid"
-    sudo yum -y install qpid-cpp-server qpid-tools qpid-cpp-server
+    sudo yum -y install qpid-cpp-server qpid-tools qpid-cpp-server qpid-cpp-server-store
 fi
 
 # create working directory

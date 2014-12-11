@@ -35,8 +35,11 @@ import javax.jms.TopicSubscriber;
 
 
 /**
- * Classes implementing FileConfiguration take their configuration from a file source and can
- * therefore specify an encoding.
+ * Maintains the connection to the AMQP message bus and configures the message listener.
+ *
+ * NOTE: this class is currently bound as an eager singleton, and messages are
+ * received in a single thread. Similarly the EventMessageListener is therefore also
+ * bound as an eager singleton, and is using a non-threadsafe unit of work.
  */
 public class EventReceiver {
     private static Logger log = LoggerFactory.getLogger(EventReceiver.class);

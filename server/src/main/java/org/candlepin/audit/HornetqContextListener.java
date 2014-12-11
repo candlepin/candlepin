@@ -56,9 +56,10 @@ public class HornetqContextListener {
             eventSource.shutDown();
             try {
                 hornetqServer.stop();
+                log.info("Hornetq server stopped.");
             }
             catch (Exception e) {
-                e.printStackTrace();
+                log.error("Error stopping hornetq server", e);
             }
 
         }
@@ -100,6 +101,7 @@ public class HornetqContextListener {
         }
         try {
             hornetqServer.start();
+            log.info("Hornetq server started");
         }
         catch (Exception e) {
             log.error("Failed to start hornetq message server:", e);
@@ -108,14 +110,7 @@ public class HornetqContextListener {
 
         cleanupOldQueues();
 
-        //AMQP integration here - If it is disabled, don't add it to listeners.
-        List<String> listeners = Lists.newArrayList(
-                candlepinConfig.getList(ConfigProperties.AUDIT_LISTENERS));
-
-        if (candlepinConfig
-            .getBoolean(ConfigProperties.AMQP_INTEGRATION_ENABLED)) {
-            listeners.add(AMQPBusPublisher.class.getName());
-        }
+        List<String> listeners = getHornetqListeners(candlepinConfig);
 
         eventSource = injector.getInstance(EventSource.class);
         for (int i = 0; i < listeners.size(); i++) {
@@ -125,7 +120,7 @@ public class HornetqContextListener {
                 eventSource.registerListener((EventListener) injector.getInstance(clazz));
             }
             catch (Exception e) {
-                log.warn("Unable to load audit listener " + listeners.get(i), e);
+                log.warn("Unable to register listener " + listeners.get(i), e);
             }
         }
 
@@ -142,17 +137,34 @@ public class HornetqContextListener {
     }
 
     /**
+     * @param candlepinConfig
+     * @return List of class names that will be configured as HornetQ listeners.
+     */
+    public static List<String> getHornetqListeners(
+            org.candlepin.common.config.Configuration candlepinConfig) {
+        //AMQP integration here - If it is disabled, don't add it to listeners.
+        List<String> listeners = Lists.newArrayList(
+                candlepinConfig.getList(ConfigProperties.AUDIT_LISTENERS));
+
+        if (candlepinConfig
+            .getBoolean(ConfigProperties.AMQP_INTEGRATION_ENABLED)) {
+            listeners.add(AMQPBusPublisher.class.getName());
+        }
+        return listeners;
+    }
+
+    /**
      * Remove any old message queues that have a 0 message count in them.
      * This lets us not worry about changing around the registered listeners.
      */
     private void cleanupOldQueues() {
         log.debug("Cleaning old message queues");
-        String [] queues = hornetqServer.getHornetQServerControl().getQueueNames();
-
-        ServerLocator locator = HornetQClient.createServerLocatorWithoutHA(
-            new TransportConfiguration(InVMConnectorFactory.class.getName()));
-
         try {
+            String [] queues = hornetqServer.getHornetQServerControl().getQueueNames();
+
+            ServerLocator locator = HornetQClient.createServerLocatorWithoutHA(
+                new TransportConfiguration(InVMConnectorFactory.class.getName()));
+
             ClientSessionFactory factory =  locator.createSessionFactory();
             ClientSession session = factory.createSession(true, true);
             session.start();

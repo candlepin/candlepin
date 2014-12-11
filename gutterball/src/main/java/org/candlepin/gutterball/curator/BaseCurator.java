@@ -76,6 +76,11 @@ public class BaseCurator<E> {
         flush();
     }
 
+    @Transactional
+    public E merge(E entity) {
+        return getEntityManager().merge(entity);
+    }
+
     protected final void flush() {
         try {
             getEntityManager().flush();
