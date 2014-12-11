@@ -27,7 +27,7 @@ public abstract class EventHandler {
     /**
      * Handles creation events
      * @param event Event to store
-     * @return true if the event was processed, false if we skipped it.
+     * @return Status of the event to be set in database.
      */
     public Status handleCreated(Event event) {
         return Status.SKIPPED;
@@ -36,7 +36,7 @@ public abstract class EventHandler {
     /**
      * Handles modification events
      * @param event Event to store
-     * @return true if the event was processed, false if we skipped it.
+     * @return Status of the event to be set in database.
      */
     public Status handleUpdated(Event event) {
         return Status.SKIPPED;
@@ -45,7 +45,7 @@ public abstract class EventHandler {
     /**
      * Handles deletion events
      * @param event Event to store
-     * @return true if the event was processed, false if we skipped it.
+     * @return Status of the event to be set in database.
      */
     public Status handleDeleted(Event event) {
         return Status.SKIPPED;
