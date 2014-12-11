@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-11-20 11:44-0400\n"
+"POT-Creation-Date: 2014-12-11 16:49-0500\n"
 "PO-Revision-Date: 2014-09-01 12:17-0400\n"
 "Last-Translator: jcarbone <jcarbone@redhat.com>\n"
 "Language-Team: French\n"
@@ -17,6 +17,263 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1)\n"
 "X-Generator: Zanata 3.4.2\n"
+
+#: common/src/main/java/org/candlepin/common/exceptions/mappers/BadRequestExceptionMapper.java:58
+#, java-format
+msgid "Invalid format for query parameter {0}. Expected format: {1}"
+msgstr ""
+
+#: common/src/main/java/org/candlepin/common/exceptions/mappers/BadRequestExceptionMapper.java:78
+#, java-format
+msgid "{0} is not a valid value for {1}"
+msgstr ""
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: common/src/main/java/org/candlepin/common/exceptions/mappers/BadRequestExceptionMapper.java:82
+#: server/src/main/java/org/candlepin/guice/I18nProvider.java:91
+msgid "Bad Request"
+msgstr "Mauvaise requête"
+
+#: common/src/main/java/org/candlepin/common/exceptions/mappers/CandlepinExceptionMapper.java:105
+#, java-format
+msgid "Runtime Error {0} at {1}.{2}:{3}"
+msgstr ""
+
+#: common/src/main/java/org/candlepin/common/exceptions/mappers/CandlepinExceptionMapper.java:110
+#, java-format
+msgid "Runtime Error {0}"
+msgstr ""
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:40
+msgid "must be false"
+msgstr "doit être faux"
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:42
+msgid "must be true"
+msgstr "doit être vrai"
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:44
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:57
+#, java-format
+msgid "must be less than or equal to {0}"
+msgstr "doit être inférieur ou égal à {0}"
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:47
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:60
+#, java-format
+msgid "must be greater than or equal to {0}"
+msgstr "doit être supérieur ou égal à {0}"
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:51
+msgid ""
+"numeric value out of bounds (<{integer} digits>.<{fraction} digits> expected)"
+msgstr ""
+"valeur numérique hors limites (<{integer} digits>.<{fraction} digits> "
+"attendu)"
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:55
+msgid "must be in the future"
+msgstr "doit être dans le futur"
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:63
+msgid "may not be null"
+msgstr "ne peut être nul"
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:65
+msgid "must be null"
+msgstr "doit être nul"
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:67
+msgid "must be in the past"
+msgstr "doit être dans le passé"
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:69
+msgid "must match ''{regexp}''"
+msgstr "doit correspondre à ''{regexp}''"
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:72
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:79
+#, java-format
+msgid "size must be between {0} and {1}"
+msgstr "la taille doit être comprise entre {0} et {1}"
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:75
+msgid "invalid credit card number"
+msgstr "numéro de carte de crédit non valide"
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:77
+msgid "not a well-formed email address"
+msgstr "format de l'adresse e-mail incorrect"
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:82
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:84
+msgid "may not be empty"
+msgstr "ne peut être vide"
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:86
+msgid "must be between {min} and {max}"
+msgstr "doit être compris entre {min} et {max}"
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:89
+msgid "may have unsafe html content"
+msgstr "peut avoir un contenu html non sécurisé"
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:91
+#, fuzzy, java-format
+msgid "script expression ''{0}'' didn't evaluate to true"
+msgstr "l'expression de script ''{0}'' n'a pas été évaluée comme vraie"
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:94
+msgid "must be a valid URL"
+msgstr "doit être une URL valide"
+
+#: gutterball/src/main/java/org/candlepin/gutterball/model/Status.java:42
+msgid "Unknown"
+msgstr ""
+
+#: gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerStatusReport.java:49
+msgid "List the status of all consumers"
+msgstr ""
+
+#: gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerStatusReport.java:59
+#: gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerTrendReport.java:61
+msgid "Filters the results by the specified consumer UUID."
+msgstr ""
+
+#: gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerStatusReport.java:65
+#: gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerTrendReport.java:67
+msgid "The Owner key(s) to filter on."
+msgstr ""
+
+#: gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerStatusReport.java:70
+msgid "The subscription status to filter on."
+msgstr ""
+
+#: gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerStatusReport.java:76
+msgid "The date to filter on. Defaults to NOW."
+msgstr ""
+
+#: gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerTrendReport.java:51
+msgid "Lists the status of each consumer over a date range"
+msgstr ""
+
+#: gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerTrendReport.java:72
+msgid "The number of hours to filter on (used indepent of date range)."
+msgstr ""
+
+#: gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerTrendReport.java:78
+#, java-format
+msgid "The start date to filter on (used with {0})."
+msgstr ""
+
+#: gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerTrendReport.java:85
+#, java-format
+msgid "The end date to filter on (used with {0})"
+msgstr ""
+
+#: gutterball/src/main/java/org/candlepin/gutterball/report/ParameterDescriptor.java:141
+msgid "Required parameter."
+msgstr ""
+
+#: gutterball/src/main/java/org/candlepin/gutterball/report/ParameterDescriptor.java:168
+#, java-format
+msgid "Parameter must not be used with {0}."
+msgstr ""
+
+#: gutterball/src/main/java/org/candlepin/gutterball/report/ParameterDescriptor.java:177
+#, java-format
+msgid "Parameter must be used with {0}."
+msgstr ""
+
+#: gutterball/src/main/java/org/candlepin/gutterball/report/ParameterDescriptor.java:189
+msgid "Parameter must be an Integer value."
+msgstr ""
+
+#: gutterball/src/main/java/org/candlepin/gutterball/report/ParameterDescriptor.java:202
+#, java-format
+msgid "Invalid date string. Expected format: {0}"
+msgstr ""
+
+#: gutterball/src/main/java/org/candlepin/gutterball/report/StatusReasonMessageGenerator.java:60
+#: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:60
+msgid "Not supported by a valid subscription."
+msgstr "Non pris en charge par un abonnement valide."
+
+#: gutterball/src/main/java/org/candlepin/gutterball/report/StatusReasonMessageGenerator.java:63
+#: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:63
+#, java-format
+msgid "Supports architecture {0} but the system is {1}."
+msgstr "Prend en charge l'architecture {0} mais le système est {1}."
+
+#: gutterball/src/main/java/org/candlepin/gutterball/report/StatusReasonMessageGenerator.java:68
+#: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:68
+#, java-format
+msgid "Only supports {0} of {1} sockets."
+msgstr "Prend en charge {0} sur {1} sockets uniquement."
+
+#: gutterball/src/main/java/org/candlepin/gutterball/report/StatusReasonMessageGenerator.java:73
+#: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:73
+#, java-format
+msgid "Only supports {0} of {1} cores."
+msgstr "Prend en charge {0} sur {1} cœurs uniquement."
+
+#: gutterball/src/main/java/org/candlepin/gutterball/report/StatusReasonMessageGenerator.java:78
+#: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:78
+#, java-format
+msgid "Only supports {0}GB of {1}GB of RAM."
+msgstr "Prend en charge {0}Go sur {1}Go de RAM uniquement."
+
+#: gutterball/src/main/java/org/candlepin/gutterball/report/StatusReasonMessageGenerator.java:83
+#: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:83
+#, java-format
+msgid "Only supports {0} of {1} virtual guests."
+msgstr "Prend en charge {0} sur {1} invités virtuels uniquement."
+
+#: gutterball/src/main/java/org/candlepin/gutterball/report/StatusReasonMessageGenerator.java:88
+#: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:88
+#, java-format
+msgid "Only supports {0} of {1} vCPUs."
+msgstr "Prend en charge {0} sur {1} vCPU uniquement."
+
+#: gutterball/src/main/java/org/candlepin/gutterball/report/StatusReasonMessageGenerator.java:93
+#: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:93
+#, java-format
+msgid "{2} COVERAGE PROBLEM.  Supports {0} of {1}"
+msgstr "PROBLÈME DE COUVERTURE {2}.  Prend en charge {0} sur {1}"
+
+#: gutterball/src/main/java/org/candlepin/gutterball/resteasy/interceptor/OAuthInterceptor.java:162
+msgid "No credentials provided"
+msgstr ""
+
+#: gutterball/src/main/java/org/candlepin/gutterball/resteasy/interceptor/OAuthInterceptor.java:170
+#: gutterball/src/main/java/org/candlepin/gutterball/resteasy/interceptor/OAuthInterceptor.java:183
+msgid "Invalid OAuth unit or secret"
+msgstr ""
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author samfreemanz
+#: gutterball/src/main/java/org/candlepin/gutterball/resteasy/interceptor/OAuthInterceptor.java:187
+#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:124
+#, java-format
+msgid "OAuth problem encountered. Internal message is: {0}"
+msgstr "Problème OAuth rencontré. Message interne : {0}"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author samfreemanz
+#: gutterball/src/main/java/org/candlepin/gutterball/resteasy/interceptor/OAuthInterceptor.java:193
+#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:130
+#, java-format
+msgid "OAuth error encountered. Internal message is: {0}"
+msgstr "Erreur OAuth rencontrée. Message interne : {0}"
+
+#: gutterball/src/main/java/org/candlepin/gutterball/resteasy/interceptor/OAuthInterceptor.java:255
+msgid "message is null"
+msgstr ""
+
+#: gutterball/src/main/java/org/candlepin/gutterball/resteasy/interceptor/OAuthInterceptor.java:262
+msgid "Error getting OAuth unit key"
+msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author samfreemanz
@@ -220,12 +477,6 @@ msgstr ""
 msgid "Subscription pool {0} does not exist."
 msgstr "Le pool d'abonnements {0} n'existe pas."
 
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: server/src/main/java/org/candlepin/guice/I18nProvider.java:91
-msgid "Bad Request"
-msgstr "Mauvaise requête"
-
 #: server/src/main/java/org/candlepin/model/AbstractHibernateCurator.java:419
 msgid "Request failed due to concurrent modification, please re-try."
 msgstr ""
@@ -369,45 +620,6 @@ msgid "Cannot add physical pool ''{0}'' to activation key for virtual systems."
 msgstr ""
 "Impossible d'ajouter le pool physique ''{0}'' à la clé d'activation pour des "
 "systèmes virtuels."
-
-#: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:60
-msgid "Not supported by a valid subscription."
-msgstr "Non pris en charge par un abonnement valide."
-
-#: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:63
-#, java-format
-msgid "Supports architecture {0} but the system is {1}."
-msgstr "Prend en charge l'architecture {0} mais le système est {1}."
-
-#: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:68
-#, java-format
-msgid "Only supports {0} of {1} sockets."
-msgstr "Prend en charge {0} sur {1} sockets uniquement."
-
-#: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:73
-#, java-format
-msgid "Only supports {0} of {1} cores."
-msgstr "Prend en charge {0} sur {1} cœurs uniquement."
-
-#: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:78
-#, java-format
-msgid "Only supports {0}GB of {1}GB of RAM."
-msgstr "Prend en charge {0}Go sur {1}Go de RAM uniquement."
-
-#: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:83
-#, java-format
-msgid "Only supports {0} of {1} virtual guests."
-msgstr "Prend en charge {0} sur {1} invités virtuels uniquement."
-
-#: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:88
-#, java-format
-msgid "Only supports {0} of {1} vCPUs."
-msgstr "Prend en charge {0} sur {1} vCPU uniquement."
-
-#: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:93
-#, java-format
-msgid "{2} COVERAGE PROBLEM.  Supports {0} of {1}"
-msgstr "PROBLÈME DE COUVERTURE {2}.  Prend en charge {0} sur {1}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author samfreemanz
@@ -1290,20 +1502,6 @@ msgstr "Erreur lors du contact au service utilisateur"
 msgid "Invalid oauth unit or secret"
 msgstr "Unité ou secret OAuth non valide"
 
-# translation auto-copied from project Candlepin, version master, document
-# keys, author samfreemanz
-#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:124
-#, java-format
-msgid "OAuth problem encountered. Internal message is: {0}"
-msgstr "Problème OAuth rencontré. Message interne : {0}"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author samfreemanz
-#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:130
-#, java-format
-msgid "OAuth error encountered. Internal message is: {0}"
-msgstr "Erreur OAuth rencontrée. Message interne : {0}"
-
 #: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:161
 msgid "Error getting oauth unit key"
 msgstr "Erreur lors de l'obtention de la clé d'unité OAuth"
@@ -1453,61 +1651,3 @@ msgid "Service level ''{0}'' is not available to units of organization {1}."
 msgstr ""
 "Le niveau de service « {0} » n'est pas disponible aux unités de "
 "l'organisation {1}."
-
-#~ msgid "must be false"
-#~ msgstr "doit être faux"
-
-#~ msgid "must be true"
-#~ msgstr "doit être vrai"
-
-#~ msgid "must be less than or equal to {0}"
-#~ msgstr "doit être inférieur ou égal à {0}"
-
-#~ msgid "must be greater than or equal to {0}"
-#~ msgstr "doit être supérieur ou égal à {0}"
-
-#~ msgid ""
-#~ "numeric value out of bounds (<{integer} digits>.<{fraction} digits> "
-#~ "expected)"
-#~ msgstr ""
-#~ "valeur numérique hors limites (<{integer} digits>.<{fraction} digits> "
-#~ "attendu)"
-
-#~ msgid "must be in the future"
-#~ msgstr "doit être dans le futur"
-
-#~ msgid "may not be null"
-#~ msgstr "ne peut être nul"
-
-#~ msgid "must be null"
-#~ msgstr "doit être nul"
-
-#~ msgid "must be in the past"
-#~ msgstr "doit être dans le passé"
-
-#~ msgid "must match ''{regexp}''"
-#~ msgstr "doit correspondre à ''{regexp}''"
-
-#~ msgid "size must be between {0} and {1}"
-#~ msgstr "la taille doit être comprise entre {0} et {1}"
-
-#~ msgid "invalid credit card number"
-#~ msgstr "numéro de carte de crédit non valide"
-
-#~ msgid "not a well-formed email address"
-#~ msgstr "format de l'adresse e-mail incorrect"
-
-#~ msgid "may not be empty"
-#~ msgstr "ne peut être vide"
-
-#~ msgid "must be between {min} and {max}"
-#~ msgstr "doit être compris entre {min} et {max}"
-
-#~ msgid "may have unsafe html content"
-#~ msgstr "peut avoir un contenu html non sécurisé"
-
-#~ msgid "script expression ''{0}'' didn't evaluate to true"
-#~ msgstr "l'expression de script ''{0}'' n'a pas été évaluée comme vraie"
-
-#~ msgid "must be a valid URL"
-#~ msgstr "doit être une URL valide"

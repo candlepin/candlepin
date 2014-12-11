@@ -5,16 +5,271 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-11-20 11:44-0400\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2014-12-11 16:49-0500\n"
 "PO-Revision-Date: 2014-11-18 03:49-0500\n"
 "Last-Translator: bnin <sray@redhat.com>\n"
 "Language-Team: Bengali (India)\n"
 "Language: bn-IN\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 "X-Generator: Zanata 3.5.1\n"
+
+#: common/src/main/java/org/candlepin/common/exceptions/mappers/BadRequestExceptionMapper.java:58
+#, java-format
+msgid "Invalid format for query parameter {0}. Expected format: {1}"
+msgstr ""
+
+#: common/src/main/java/org/candlepin/common/exceptions/mappers/BadRequestExceptionMapper.java:78
+#, java-format
+msgid "{0} is not a valid value for {1}"
+msgstr ""
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: common/src/main/java/org/candlepin/common/exceptions/mappers/BadRequestExceptionMapper.java:82
+#: server/src/main/java/org/candlepin/guice/I18nProvider.java:91
+msgid "Bad Request"
+msgstr "বেঠিক অনুরোধ"
+
+#: common/src/main/java/org/candlepin/common/exceptions/mappers/CandlepinExceptionMapper.java:105
+#, java-format
+msgid "Runtime Error {0} at {1}.{2}:{3}"
+msgstr ""
+
+#: common/src/main/java/org/candlepin/common/exceptions/mappers/CandlepinExceptionMapper.java:110
+#, java-format
+msgid "Runtime Error {0}"
+msgstr ""
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:40
+msgid "must be false"
+msgstr ""
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:42
+msgid "must be true"
+msgstr ""
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:44
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:57
+#, java-format
+msgid "must be less than or equal to {0}"
+msgstr ""
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:47
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:60
+#, java-format
+msgid "must be greater than or equal to {0}"
+msgstr ""
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:51
+msgid ""
+"numeric value out of bounds (<{integer} digits>.<{fraction} digits> expected)"
+msgstr ""
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:55
+msgid "must be in the future"
+msgstr ""
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:63
+msgid "may not be null"
+msgstr ""
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:65
+msgid "must be null"
+msgstr ""
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:67
+msgid "must be in the past"
+msgstr ""
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:69
+msgid "must match ''{regexp}''"
+msgstr ""
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:72
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:79
+#, java-format
+msgid "size must be between {0} and {1}"
+msgstr ""
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:75
+msgid "invalid credit card number"
+msgstr ""
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:77
+msgid "not a well-formed email address"
+msgstr ""
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:82
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:84
+msgid "may not be empty"
+msgstr ""
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:86
+msgid "must be between {min} and {max}"
+msgstr ""
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:89
+msgid "may have unsafe html content"
+msgstr ""
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:91
+#, java-format
+msgid "script expression ''{0}'' didn't evaluate to true"
+msgstr ""
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:94
+msgid "must be a valid URL"
+msgstr ""
+
+#: gutterball/src/main/java/org/candlepin/gutterball/model/Status.java:42
+msgid "Unknown"
+msgstr ""
+
+#: gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerStatusReport.java:49
+msgid "List the status of all consumers"
+msgstr ""
+
+#: gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerStatusReport.java:59
+#: gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerTrendReport.java:61
+msgid "Filters the results by the specified consumer UUID."
+msgstr ""
+
+#: gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerStatusReport.java:65
+#: gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerTrendReport.java:67
+msgid "The Owner key(s) to filter on."
+msgstr ""
+
+#: gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerStatusReport.java:70
+msgid "The subscription status to filter on."
+msgstr ""
+
+#: gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerStatusReport.java:76
+msgid "The date to filter on. Defaults to NOW."
+msgstr ""
+
+#: gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerTrendReport.java:51
+msgid "Lists the status of each consumer over a date range"
+msgstr ""
+
+#: gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerTrendReport.java:72
+msgid "The number of hours to filter on (used indepent of date range)."
+msgstr ""
+
+#: gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerTrendReport.java:78
+#, java-format
+msgid "The start date to filter on (used with {0})."
+msgstr ""
+
+#: gutterball/src/main/java/org/candlepin/gutterball/report/ConsumerTrendReport.java:85
+#, java-format
+msgid "The end date to filter on (used with {0})"
+msgstr ""
+
+#: gutterball/src/main/java/org/candlepin/gutterball/report/ParameterDescriptor.java:141
+msgid "Required parameter."
+msgstr ""
+
+#: gutterball/src/main/java/org/candlepin/gutterball/report/ParameterDescriptor.java:168
+#, java-format
+msgid "Parameter must not be used with {0}."
+msgstr ""
+
+#: gutterball/src/main/java/org/candlepin/gutterball/report/ParameterDescriptor.java:177
+#, java-format
+msgid "Parameter must be used with {0}."
+msgstr ""
+
+#: gutterball/src/main/java/org/candlepin/gutterball/report/ParameterDescriptor.java:189
+msgid "Parameter must be an Integer value."
+msgstr ""
+
+#: gutterball/src/main/java/org/candlepin/gutterball/report/ParameterDescriptor.java:202
+#, java-format
+msgid "Invalid date string. Expected format: {0}"
+msgstr ""
+
+#: gutterball/src/main/java/org/candlepin/gutterball/report/StatusReasonMessageGenerator.java:60
+#: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:60
+msgid "Not supported by a valid subscription."
+msgstr "কোনো বৈধ সাবস্ক্রিপশন দ্বারা সমর্থিত নয়।"
+
+#: gutterball/src/main/java/org/candlepin/gutterball/report/StatusReasonMessageGenerator.java:63
+#: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:63
+#, java-format
+msgid "Supports architecture {0} but the system is {1}."
+msgstr "অার্কিটেকচার {0} সমর্থন করে কিন্তু সিস্টেম হল {1}।"
+
+#: gutterball/src/main/java/org/candlepin/gutterball/report/StatusReasonMessageGenerator.java:68
+#: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:68
+#, java-format
+msgid "Only supports {0} of {1} sockets."
+msgstr "শুধুমাত্র {1} - এর {0} সকেট সমর্থন করে।"
+
+#: gutterball/src/main/java/org/candlepin/gutterball/report/StatusReasonMessageGenerator.java:73
+#: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:73
+#, java-format
+msgid "Only supports {0} of {1} cores."
+msgstr "শুধুমাত্র {1} - এর  {0} কোরস্ সমর্থন করে।"
+
+#: gutterball/src/main/java/org/candlepin/gutterball/report/StatusReasonMessageGenerator.java:78
+#: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:78
+#, java-format
+msgid "Only supports {0}GB of {1}GB of RAM."
+msgstr "শুধুমাত্র {1} GB RAM- এর {0}GB সমর্থন করে।"
+
+#: gutterball/src/main/java/org/candlepin/gutterball/report/StatusReasonMessageGenerator.java:83
+#: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:83
+#, java-format
+msgid "Only supports {0} of {1} virtual guests."
+msgstr "শুধুমাত্র {1} - এর {0} ভার্টুয়াল গেস্ট সমর্থন করে।"
+
+#: gutterball/src/main/java/org/candlepin/gutterball/report/StatusReasonMessageGenerator.java:88
+#: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:88
+#, java-format
+msgid "Only supports {0} of {1} vCPUs."
+msgstr "শুধুমাত্র {1} - এর {0} vCPU সমর্থন করে।"
+
+#: gutterball/src/main/java/org/candlepin/gutterball/report/StatusReasonMessageGenerator.java:93
+#: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:93
+#, java-format
+msgid "{2} COVERAGE PROBLEM.  Supports {0} of {1}"
+msgstr "{2} অাওতাভুক্ত করায় সমস্যা। {1} - এর {0} সমর্থন করে"
+
+#: gutterball/src/main/java/org/candlepin/gutterball/resteasy/interceptor/OAuthInterceptor.java:162
+msgid "No credentials provided"
+msgstr ""
+
+#: gutterball/src/main/java/org/candlepin/gutterball/resteasy/interceptor/OAuthInterceptor.java:170
+#: gutterball/src/main/java/org/candlepin/gutterball/resteasy/interceptor/OAuthInterceptor.java:183
+msgid "Invalid OAuth unit or secret"
+msgstr ""
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author runab
+#: gutterball/src/main/java/org/candlepin/gutterball/resteasy/interceptor/OAuthInterceptor.java:187
+#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:124
+#, java-format
+msgid "OAuth problem encountered. Internal message is: {0}"
+msgstr "OAuth-র সমস্যা দেখা দিয়েছে। অভ্যন্তরীণ বার্তা হল: {0}"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author runab
+#: gutterball/src/main/java/org/candlepin/gutterball/resteasy/interceptor/OAuthInterceptor.java:193
+#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:130
+#, java-format
+msgid "OAuth error encountered. Internal message is: {0}"
+msgstr "OAuth-র ত্রুটি দেখা দিয়েছে। অভ্যন্তরীণ বার্তা হল: {0}"
+
+#: gutterball/src/main/java/org/candlepin/gutterball/resteasy/interceptor/OAuthInterceptor.java:255
+msgid "message is null"
+msgstr ""
+
+#: gutterball/src/main/java/org/candlepin/gutterball/resteasy/interceptor/OAuthInterceptor.java:262
+msgid "Error getting OAuth unit key"
+msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author runab
@@ -110,9 +365,7 @@ msgstr "{0} দ্বারা {1} এককের একটি রপ্তা�
 #: server/src/main/java/org/candlepin/audit/EventAdapterImpl.java:143
 #, java-format
 msgid "{0} imported a manifest for owner {1}"
-msgstr ""
-"{0} দ্বারা {1} মালিকের জন্য একটি তালিকা অর্থাৎ ম্যানিফেস্ট ইম্পোর্ট করা "
-"হয়েছে"
+msgstr "{0} দ্বারা {1} মালিকের জন্য একটি তালিকা অর্থাৎ ম্যানিফেস্ট ইম্পোর্ট করা হয়েছে"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author runab
@@ -220,16 +473,9 @@ msgstr "{1} উপভোক্তার জন্য সম্মতি পু�
 msgid "Subscription pool {0} does not exist."
 msgstr "সাবস্ক্রিপশন পুল {0} বর্তমানে উপস্থিত নয়।"
 
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: server/src/main/java/org/candlepin/guice/I18nProvider.java:91
-msgid "Bad Request"
-msgstr "বেঠিক অনুরোধ"
-
 #: server/src/main/java/org/candlepin/model/AbstractHibernateCurator.java:419
 msgid "Request failed due to concurrent modification, please re-try."
-msgstr ""
-"বারবার সংশোধনের কারণে অনুরোধ ব্যর্থ হয়েছে, দয়া করে অাবার চেষ্টা করুন।"
+msgstr "বারবার সংশোধনের কারণে অনুরোধ ব্যর্থ হয়েছে, দয়া করে অাবার চেষ্টা করুন।"
 
 #: server/src/main/java/org/candlepin/model/ConsumerCurator.java:408
 #, java-format
@@ -289,8 +535,8 @@ msgid ""
 "Activation keys can only use consumer type restricted pools for a single "
 "consumer type."
 msgstr ""
-"সক্রিয়করণ কী একটি একক কনজিউমার ধরনের জন্য শুধুমাত্র কনজিউমার ধরন সীমাবদ্ধ "
-"পুলই ব্যবহার করতে পারবে।"
+"সক্রিয়করণ কী একটি একক কনজিউমার ধরনের জন্য শুধুমাত্র কনজিউমার ধরন সীমাবদ্ধ পুলই "
+"ব্যবহার করতে পারবে।"
 
 #: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:82
 msgid ""
@@ -304,14 +550,13 @@ msgid ""
 "Cannot use pools with host restriction with physical only pools on a single "
 "activation key"
 msgstr ""
-"একটি একক সক্রিয়করণ কীতে শুধুমাত্র ফিজিক্যাল টুল সমেত হোস্ট সীমাবদ্ধতা সমেত "
-"পুল ব্যবহার করা যাবে না"
+"একটি একক সক্রিয়করণ কীতে শুধুমাত্র ফিজিক্যাল টুল সমেত হোস্ট সীমাবদ্ধতা সমেত পুল ব্যবহার "
+"করা যাবে না"
 
 #: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:90
 msgid "Activation keys can only use host restricted pools from a single host."
 msgstr ""
-"অ্যাক্টিভেশন-কি কোনো একক হোস্ট থেকে শুধুমাত্র হোস্ট সীমাবদ্ধ পুল ব্যবহার "
-"করতে পারে।"
+"অ্যাক্টিভেশন-কি কোনো একক হোস্ট থেকে শুধুমাত্র হোস্ট সীমাবদ্ধ পুল ব্যবহার করতে পারে।"
 
 #: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:94
 #, java-format
@@ -325,16 +570,14 @@ msgid ""
 "Error: Only pools with multi-entitlement product subscriptions can be added "
 "to the activation key with a quantity greater than one."
 msgstr ""
-"ত্রুটি: একাধিক-এনটাইটেলমেন্ট সহ উৎপাদন সাবস্ক্রিপশন বিশিষ্ট পুল-গুলির "
-"ক্ষেত্রেই শুধুমাত্র এক থেকে বেশি সংখ্যা সহ চিহ্নিত অ্যাক্টিভেশন-কিগুলি "
-"ব্যবহার করা যাবে।"
+"ত্রুটি: একাধিক-এনটাইটেলমেন্ট সহ উৎপাদন সাবস্ক্রিপশন বিশিষ্ট পুল-গুলির ক্ষেত্রেই শুধুমাত্র "
+"এক থেকে বেশি সংখ্যা সহ চিহ্নিত অ্যাক্টিভেশন-কিগুলি ব্যবহার করা যাবে।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author runab
 #: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:102
 msgid "The quantity must not be greater than the total allowed for the pool"
-msgstr ""
-"পুলের জন্য অনুমোদিত সম্পূর্ণ পরিমানের থেকে বেশি পরিমাণ ধার্য করা যাবে না"
+msgstr "পুলের জন্য অনুমোদিত সম্পূর্ণ পরিমানের থেকে বেশি পরিমাণ ধার্য করা যাবে না"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author runab
@@ -348,72 +591,27 @@ msgid ""
 "Activation keys for physical systems can only use quantities of pool ''{0}'' "
 "evenly divisible by {1}"
 msgstr ""
-"ফিজিক্যাল সিস্টেমের জন্য সক্রিয়করণ কী শুধুমাত্র ''{0}'' পুলের কোয়ান্টিটি "
-"ব্যবহার করতে পারে {1} দ্বারা সমান ভাবে বিভাজ্য"
+"ফিজিক্যাল সিস্টেমের জন্য সক্রিয়করণ কী শুধুমাত্র ''{0}'' পুলের কোয়ান্টিটি ব্যবহার করতে "
+"পারে {1} দ্বারা সমান ভাবে বিভাজ্য"
 
 #: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:117
 #, java-format
-msgid ""
-"Cannot add virtual pool ''{0}'' to activation key for physical systems."
+msgid "Cannot add virtual pool ''{0}'' to activation key for physical systems."
 msgstr ""
-"ফিজিক্যাল সিস্টেমের জন্য সক্রিয়করণ কীতে ''{0}'' ভার্টুয়াল পুল যোগ করা যাবে "
-"না।"
+"ফিজিক্যাল সিস্টেমের জন্য সক্রিয়করণ কীতে ''{0}'' ভার্টুয়াল পুল যোগ করা যাবে না।"
 
 #: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:121
 #, java-format
-msgid ""
-"Cannot add physical pool ''{0}'' to activation key for virtual systems."
+msgid "Cannot add physical pool ''{0}'' to activation key for virtual systems."
 msgstr ""
-"ভার্টুয়াল সিস্টেমের জন্য সক্রিয়করণ কীতে ''{0}'' ফিজিক্যাল পুল যোগ করা যাবে "
-"না।"
-
-#: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:60
-msgid "Not supported by a valid subscription."
-msgstr "কোনো বৈধ সাবস্ক্রিপশন দ্বারা সমর্থিত নয়।"
-
-#: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:63
-#, java-format
-msgid "Supports architecture {0} but the system is {1}."
-msgstr "অার্কিটেকচার {0} সমর্থন করে কিন্তু সিস্টেম হল {1}।"
-
-#: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:68
-#, java-format
-msgid "Only supports {0} of {1} sockets."
-msgstr "শুধুমাত্র {1} - এর {0} সকেট সমর্থন করে।"
-
-#: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:73
-#, java-format
-msgid "Only supports {0} of {1} cores."
-msgstr "শুধুমাত্র {1} - এর  {0} কোরস্ সমর্থন করে।"
-
-#: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:78
-#, java-format
-msgid "Only supports {0}GB of {1}GB of RAM."
-msgstr "শুধুমাত্র {1} GB RAM- এর {0}GB সমর্থন করে।"
-
-#: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:83
-#, java-format
-msgid "Only supports {0} of {1} virtual guests."
-msgstr "শুধুমাত্র {1} - এর {0} ভার্টুয়াল গেস্ট সমর্থন করে।"
-
-#: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:88
-#, java-format
-msgid "Only supports {0} of {1} vCPUs."
-msgstr "শুধুমাত্র {1} - এর {0} vCPU সমর্থন করে।"
-
-#: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:93
-#, java-format
-msgid "{2} COVERAGE PROBLEM.  Supports {0} of {1}"
-msgstr "{2} অাওতাভুক্ত করায় সমস্যা। {1} - এর {0} সমর্থন করে"
+"ভার্টুয়াল সিস্টেমের জন্য সক্রিয়করণ কীতে ''{0}'' ফিজিক্যাল পুল যোগ করা যাবে না।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author runab
 #: server/src/main/java/org/candlepin/policy/js/entitlement/AbstractEntitlementRules.java:133
 #, java-format
 msgid "''{0}'' Should contain name, priority and at least one attribute"
-msgstr ""
-"''{0}''-র মধ্যে নাম, গুরুত্বের মাত্রা ও অন্তত একটি বৈশিষ্ট্য উপস্থিত থাকা "
-"আবশ্যক"
+msgstr "''{0}''-র মধ্যে নাম, গুরুত্বের মাত্রা ও অন্তত একটি বৈশিষ্ট্য উপস্থিত থাকা আবশ্যক"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -430,7 +628,6 @@ msgstr "{0}-র সাবস্ক্রিপশনের মেয়াদ {1} -
 #, java-format
 msgid ""
 "This unit has already had the subscription matching pool ID ''{0}'' attached."
-""
 msgstr "এই এককে ইতিমধ্যেই সাবস্ক্রিপশন মানানসই পুল  ID ''{0}'' সংযুক্ত।  "
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:51
@@ -464,8 +661,7 @@ msgstr "সাবস্ক্রিপশন পরিচালনা অ্য�
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:72
 #, java-format
 msgid "Pool is restricted to virtual guests: ''{0}''."
-msgstr ""
-"শুধুমাত্র ভার্চুয়াল গেস্টদের ব্যবহারের জন্য পুলটি সংরক্ষিত হয়েছে: ''{0}''."
+msgstr "শুধুমাত্র ভার্চুয়াল গেস্টদের ব্যবহারের জন্য পুলটি সংরক্ষিত হয়েছে: ''{0}''."
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:76
 #, java-format
@@ -478,8 +674,8 @@ msgid ""
 "Subscription ''{0}'' must be attached using a quantity evenly divisible by "
 "{1}"
 msgstr ""
-"সাবস্ক্রিপশন ''{0}'' অবশ্যই একটি {1} দ্বারা সমভাবে বিভাজ্য পরিমাণ ব্যবহার "
-"করতে সংযুক্ত করতে হবে"
+"সাবস্ক্রিপশন ''{0}'' অবশ্যই একটি {1} দ্বারা সমভাবে বিভাজ্য পরিমাণ ব্যবহার করতে "
+"সংযুক্ত করতে হবে"
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:90
 #, java-format
@@ -500,8 +696,7 @@ msgstr "একক পুল ''{0}'' - এর প্রয়োজনীয় RAM গ
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:102
 #, java-format
 msgid "Unit does not support derived products data required by pool ''{0}''"
-msgstr ""
-"''{0}'' পুলের দ্বারা প্রয়োজনীয় প্রাপ্ত প্রোডাক্ট ডেটা ইউনিট সমর্থন করে না"
+msgstr "''{0}'' পুলের দ্বারা প্রয়োজনীয় প্রাপ্ত প্রোডাক্ট ডেটা ইউনিট সমর্থন করে না"
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:106
 #, java-format
@@ -513,8 +708,7 @@ msgstr "''{0}'' ID এর সংগে পুল সংযুক্ত করা
 msgid ""
 "This system already has a subscription for the product ''{0}'' attached."
 msgstr ""
-"এই সিস্টেমে ''{0}'' প্রোডাক্টের একটি সাবস্ক্রিপশন ইতিমধ্যেই সংযুক্ত অবস্থায় "
-"অাছে।"
+"এই সিস্টেমে ''{0}'' প্রোডাক্টের একটি সাবস্ক্রিপশন ইতিমধ্যেই সংযুক্ত অবস্থায় অাছে।"
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:120
 #, java-format
@@ -530,9 +724,7 @@ msgstr "এই ধরনের একক ''{0}'' প্রোডাক্টে�
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:129
 #, java-format
 msgid "Only virtual systems can have subscription ''{0}'' attached."
-msgstr ""
-"শুধুমাত্র ভার্চুয়াল সিস্টেমে ''{0}'' সাবস্ক্রিপশন সংযুক্ত অবস্থায় থাকতে "
-"পারে।"
+msgstr "শুধুমাত্র ভার্চুয়াল সিস্টেমে ''{0}'' সাবস্ক্রিপশন সংযুক্ত অবস্থায় থাকতে পারে।"
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:134
 #, java-format
@@ -551,14 +743,12 @@ msgstr "''{0}'' এনটাইটেলমেন্টে সমতাবিধ
 msgid ""
 "Multi-entitlement not supported for pool connected with entitlement ''{0}''."
 msgstr ""
-"''{0}'' এনটাইটেলমেন্টের সংগে সংযুক্ত পুলের ক্ষেত্রে একাধিক এনটাইটেলমেন্ট "
-"সমর্থিত নয়।"
+"''{0}'' এনটাইটেলমেন্টের সংগে সংযুক্ত পুলের ক্ষেত্রে একাধিক এনটাইটেলমেন্ট সমর্থিত নয়।"
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:160
 #, java-format
 msgid "Unable to adjust quantity for the entitlement with id ''{0}'': {1}"
-msgstr ""
-"''{0}'' id সহ এনটাইটেলমেন্টের ক্ষেত্রে গুণমান সমতাবিধান করতে ব্যর্থ: {1}"
+msgstr "''{0}'' id সহ এনটাইটেলমেন্টের ক্ষেত্রে গুণমান সমতাবিধান করতে ব্যর্থ: {1}"
 
 #: server/src/main/java/org/candlepin/policy/js/pooltype/PoolComplianceType.java:50
 msgid "Other"
@@ -636,8 +826,7 @@ msgstr "অপর্যাপ্ত অনুমতি"
 # keys, author runab
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:407
 msgid "Must specify an org to register with activation keys."
-msgstr ""
-"অ্যাক্টিভেশন-কি সহযোগে নিবন্ধনের জন্য একটি প্রতিষ্ঠা উল্লেখ করা আবশ্যক।"
+msgstr "অ্যাক্টিভেশন-কি সহযোগে নিবন্ধনের জন্য একটি প্রতিষ্ঠা উল্লেখ করা আবশ্যক।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author runab
@@ -772,8 +961,8 @@ msgid ""
 "Unit {0} cannot be exported. A manifest cannot be made for units of type "
 "''{1}''."
 msgstr ""
-"{0} একক এক্সপোর্ট করা সম্ভব নয়। ''{1}'' ধরনের এককের জন্য ম্যানিফেস্ট "
-"প্রস্তুত করা সম্ভব নয়।"
+"{0} একক এক্সপোর্ট করা সম্ভব নয়। ''{1}'' ধরনের এককের জন্য ম্যানিফেস্ট প্রস্তুত করা "
+"সম্ভব নয়।"
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1806
 #, java-format
@@ -874,8 +1063,8 @@ msgid ""
 "The quantity specified must be greater than zero and less than or equal to "
 "the total for this entitlement"
 msgstr ""
-"উল্লিখিত পরিমাণ অবশ্যই শূন্যের থেকে বড় এবং এই এনটাইটেলমেন্টের থেকে কম বা "
-"সমান হতে হবে"
+"উল্লিখিত পরিমাণ অবশ্যই শূন্যের থেকে বড় এবং এই এনটাইটেলমেন্টের থেকে কম বা সমান হতে "
+"হবে"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author runab
@@ -966,14 +1155,13 @@ msgid ""
 "The activation key name ''{0}'' must be alphanumeric or include the "
 "characters '-' or '_'"
 msgstr ""
-"অ্যাক্টিভেশন-কি-র নাম ''{0}'' অবশ্যই বর্ণ সাংখ্যিক হতে হবে বা তাতে '-' অথবা "
-"'_' অক্ষর থাকতে হবে"
+"অ্যাক্টিভেশন-কি-র নাম ''{0}'' অবশ্যই বর্ণ সাংখ্যিক হতে হবে বা তাতে '-' অথবা '_' "
+"অক্ষর থাকতে হবে"
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:545
 #, java-format
 msgid "The activation key name ''{0}'' is already in use for owner {1}"
-msgstr ""
-"''{0}'' অ্যাক্টিভেশন-কি নামটি {1} মালিকের জন্য ইতিমধ্যেই ব্যবহৃত হচ্ছে।"
+msgstr "''{0}'' অ্যাক্টিভেশন-কি নামটি {1} মালিকের জন্য ইতিমধ্যেই ব্যবহৃত হচ্ছে।"
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:629
 #, java-format
@@ -1029,8 +1217,7 @@ msgstr "{0} মালিকের জন্য ueber cert প্রস্তু�
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:1318
 #, java-format
 msgid "ueber certificate for owner {0} was not found. Please generate one."
-msgstr ""
-"{0} মালিকের ueber সার্টিফিকেট পাওয়া যায়নি। অনুগ্রহ করে একটি প্রস্তুত করুন।"
+msgstr "{0} মালিকের ueber সার্টিফিকেট পাওয়া যায়নি। অনুগ্রহ করে একটি প্রস্তুত করুন।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author runab
@@ -1057,8 +1244,7 @@ msgstr "মালিক ও একক উভয়ের উপর একসাথ�
 
 #: server/src/main/java/org/candlepin/resource/PoolResource.java:130
 msgid "A unit or owner is needed to filter on product"
-msgstr ""
-"প্রোডাক্টের উপর ফিল্টার প্রয়োগ করার জন্য একক অথবা মালিক উল্লেখ করা আবশ্যক"
+msgstr "প্রোডাক্টের উপর ফিল্টার প্রয়োগ করার জন্য একক অথবা মালিক উল্লেখ করা আবশ্যক"
 
 #: server/src/main/java/org/candlepin/resource/PoolResource.java:149
 #, java-format
@@ -1167,8 +1353,7 @@ msgstr "এই ধরনের কোনো ব্যবহারকারী �
 # keys
 #: server/src/main/java/org/candlepin/resource/RulesResource.java:90
 msgid "Error decoding the rules. The text should be base 64 encoded"
-msgstr ""
-"নিয়ম ডিকোড করতে সমস্যা। টেক্সটের ক্ষেত্রে base 64 এনকোডিং প্রয়োগ করা আবশ্যক"
+msgstr "নিয়ম ডিকোড করতে সমস্যা। টেক্সটের ক্ষেত্রে base 64 এনকোডিং প্রয়োগ করা আবশ্যক"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -1260,20 +1445,6 @@ msgstr "ব্যবহারকারী পরিসেবার সাথে 
 msgid "Invalid oauth unit or secret"
 msgstr "অবৈদ oauth একক অথবা গোপন"
 
-# translation auto-copied from project Candlepin, version master, document
-# keys, author runab
-#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:124
-#, java-format
-msgid "OAuth problem encountered. Internal message is: {0}"
-msgstr "OAuth-র সমস্যা দেখা দিয়েছে। অভ্যন্তরীণ বার্তা হল: {0}"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author runab
-#: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:130
-#, java-format
-msgid "OAuth error encountered. Internal message is: {0}"
-msgstr "OAuth-র ত্রুটি দেখা দিয়েছে। অভ্যন্তরীণ বার্তা হল: {0}"
-
 #: server/src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:161
 msgid "Error getting oauth unit key"
 msgstr "oauth একক কি প্রাপ্ত করতে ত্রুটি"
@@ -1284,8 +1455,7 @@ msgstr "অফসেট এবং লিমিট প্যারামিটা
 
 #: server/src/main/java/org/candlepin/resteasy/interceptor/PageRequestInterceptor.java:120
 msgid "the order parameter must be either 'ascending' or 'descending'"
-msgstr ""
-"অর্ডার প্যারামিটার অবশ্যই হয় 'মানের 'ঊর্ধ্বক্রমে' বা 'অধক্রমে' হতে হবে "
+msgstr "অর্ডার প্যারামিটার অবশ্যই হয় 'মানের 'ঊর্ধ্বক্রমে' বা 'অধক্রমে' হতে হবে "
 
 #: server/src/main/java/org/candlepin/resteasy/interceptor/PageRequestInterceptor.java:129
 msgid "Expected a positive integer."
@@ -1295,12 +1465,12 @@ msgstr "এক ধনাত্মক পূর্ণসংখ্যা হওয়
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
-"to address this problem. See kbase https://access.redhat.com/knowledge/node/"
-"129003 for more information."
+"to address this problem. See kbase https://access.redhat.com/knowledge/"
+"node/129003 for more information."
 msgstr ""
-"{0} সার্টিফিকেটের অনেকগুলি বিষয়বস্তুর সেট। এই সমস্যার সমাধান করে দিতে "
-"অপেক্ষাকৃত নতুন কোনো ক্লায়েন্ট উপলব্ধ থাকতে পারে। অারো জানতে kbase https://"
-"access.redhat.com/knowledge/node/129003 দেখুন।"
+"{0} সার্টিফিকেটের অনেকগুলি বিষয়বস্তুর সেট। এই সমস্যার সমাধান করে দিতে অপেক্ষাকৃত "
+"নতুন কোনো ক্লায়েন্ট উপলব্ধ থাকতে পারে। অারো জানতে kbase https://access.redhat."
+"com/knowledge/node/129003 দেখুন।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author runab
@@ -1317,15 +1487,14 @@ msgid ""
 "This subscription management application has already been imported by "
 "another owner."
 msgstr ""
-"এই সাবস্ক্রিপশন পরিচালনা অ্যাপ্লিকেশনটি অন্য মালিকের দ্বারা ইতিমধ্যেই "
-"অামদানি করা হয়েছে।"
+"এই সাবস্ক্রিপশন পরিচালনা অ্যাপ্লিকেশনটি অন্য মালিকের দ্বারা ইতিমধ্যেই অামদানি করা "
+"হয়েছে।"
 
 #: server/src/main/java/org/candlepin/sync/ConsumerImporter.java:85
 msgid ""
 "Owner has already imported from another subscription management application."
 msgstr ""
-"মালিক ইতিমধ্যেই অপর সাবস্ক্রিপশন পরিচালনা অ্যাপ্লিকেশন থেকে অামদানি করা "
-"হয়েছে।"
+"মালিক ইতিমধ্যেই অপর সাবস্ক্রিপশন পরিচালনা অ্যাপ্লিকেশন থেকে অামদানি করা হয়েছে।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author runab
