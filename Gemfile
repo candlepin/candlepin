@@ -12,10 +12,9 @@ gem 'pmd'
 gem 'stringex'
 gem 'pry'
 gem 'digest-murmurhash'
+gem 'httpclient'
 
 group :development do
-  gem 'httpclient'
-  gem 'minitest'
-  gem 'shoulda-context'
   gem 'webrick'
+  gem 'pry'
 end
