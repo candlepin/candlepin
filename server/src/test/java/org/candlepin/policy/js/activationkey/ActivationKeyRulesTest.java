@@ -17,7 +17,6 @@ package org.candlepin.policy.js.activationkey;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
-import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
@@ -86,74 +85,6 @@ public class ActivationKeyRulesTest {
         assertTrue(result.getWarnings().isEmpty());
     }
 
-    @Test
-    public void testVirtOnlyOnKeyWithPhysical() {
-        ActivationKey key = new ActivationKey();
-        key.addPool(genPhysOnlyPool(), new Long(1));
-
-        Pool pool = genVirtOnlyPool();
-        ValidationResult result = actKeyRules.runPreActKey(key, pool, new Long(1));
-        assertTrue(result.getWarnings().isEmpty());
-        assertEquals(1, result.getErrors().size());
-        String expected = "rulefailed.virtonly.on.physical.key";
-        assertEquals(expected, result.getErrors().get(0).getResourceKey());
-    }
-
-    @Test
-    public void testPhysicalOnlyOnKeyWithVirt() {
-        ActivationKey key = new ActivationKey();
-        key.addPool(genVirtOnlyPool(), new Long(1));
-
-        Pool pool = genPhysOnlyPool();
-        ValidationResult result = actKeyRules.runPreActKey(key, pool, new Long(1));
-        assertTrue(result.getWarnings().isEmpty());
-        assertEquals(1, result.getErrors().size());
-        String expected = "rulefailed.physicalonly.on.virt.key";
-        assertEquals(expected, result.getErrors().get(0).getResourceKey());
-        try {
-            actKeyRules.validatePoolForActKey(key, pool, new Long(1));
-            fail("Should have thrown an exception");
-        }
-        catch (BadRequestException bre) {
-            String expectedMsg = "Cannot add physical pool '" + pool.getId() +
-                "' to activation key for virtual systems.";
-            assertEquals(expectedMsg, bre.getMessage());
-        }
-    }
-
-    @Test
-    public void testNullQuantityEmptyPool() {
-        ActivationKey key = new ActivationKey();
-        Pool existing = genPool();
-        existing.setConsumed(existing.getQuantity());
-        key.addPool(genVirtOnlyPool(), null);
-
-        Pool pool = genPhysOnlyPool();
-        ValidationResult result = actKeyRules.runPreActKey(key, pool, new Long(1));
-        assertTrue(result.getWarnings().isEmpty());
-        assertEquals(1, result.getErrors().size());
-        String expected = "rulefailed.physicalonly.on.virt.key";
-        assertEquals(expected, result.getErrors().get(0).getResourceKey());
-    }
-
-    /*
-     * This should be identical to the previous test.  Instance based pool
-     * with quantity one can only be used on virtual systems, so the key
-     * should be treated as virt only.
-     */
-    @Test
-    public void testPhysicalOnlyOnKeyWithOneInstanceBased() {
-        ActivationKey key = new ActivationKey();
-        key.addPool(genInstanceBased(), new Long(1));
-
-        Pool pool = genPhysOnlyPool();
-        ValidationResult result = actKeyRules.runPreActKey(key, pool, new Long(1));
-        assertTrue(result.getWarnings().isEmpty());
-        assertEquals(1, result.getErrors().size());
-        String expected = "rulefailed.physicalonly.on.virt.key";
-        assertEquals(expected, result.getErrors().get(0).getResourceKey());
-    }
-
     /*
      * Similar to above, but because quantity of the instance based
      * subscription is null, it will attempt to bind the correct
@@ -169,32 +100,6 @@ public class ActivationKeyRulesTest {
         ValidationResult result = actKeyRules.runPreActKey(key, pool, new Long(1));
         assertTrue(result.getWarnings().isEmpty());
         assertTrue(result.getErrors().isEmpty());
-    }
-
-    /*
-     * Activation key already has a physical only pool, adding an invalid quantity
-     * of an instance based subscription (for physical) should cause a failure.
-     */
-    @Test
-    public void testAlreadyHasPhysAddingVirtQuantityInstanceBased() {
-        ActivationKey key = new ActivationKey();
-        key.addPool(genPhysOnlyPool(), new Long(1));
-
-        Pool pool = genInstanceBased();
-        ValidationResult result = actKeyRules.runPreActKey(key, pool, new Long(1));
-        assertTrue(result.getWarnings().isEmpty());
-        assertEquals(1, result.getErrors().size());
-        String expected = "rulefailed.invalid.quantity.instancebased.physical";
-        assertEquals(expected, result.getErrors().get(0).getResourceKey());
-        try {
-            actKeyRules.validatePoolForActKey(key, pool, new Long(1));
-            fail("Should have thrown an exception");
-        }
-        catch (BadRequestException bre) {
-            String expectedMsg = "Activation keys for physical systems can only" +
-                " use quantities of pool '" + pool.getId() + "' evenly divisible by 2";
-            assertEquals(expectedMsg, bre.getMessage());
-        }
     }
 
     /*
@@ -240,28 +145,6 @@ public class ActivationKeyRulesTest {
         assertTrue(result.getErrors().isEmpty());
     }
 
-    /*
-     * Because the key can only be used on physical consumers, null quantity
-     * should be evaluated to two, and there are at most one available.
-     */
-    @Test
-    public void testActivationKeyRulesinSufficientQuantity() {
-        ActivationKey key = new ActivationKey();
-        Pool pool = genPhysOnlyPool();
-        key.addPool(pool, 1L);
-
-        Pool instanceBased = this.genInstanceBased();
-        instanceBased.setQuantity(1L);
-        instanceBased.setConsumed(0L);
-
-        // Attempting to overconsume the pool
-        ValidationResult result = actKeyRules.runPreActKey(key, instanceBased, null);
-        assertTrue(result.getWarnings().isEmpty());
-        assertEquals(1, result.getErrors().size());
-        String expected = "rulefailed.insufficient.quantity";
-        assertEquals(expected, result.getErrors().get(0).getResourceKey());
-    }
-
     @Test
     public void testActivationKeyRulesUnlimitedQuantity() {
         ActivationKey key = new ActivationKey();
@@ -288,20 +171,6 @@ public class ActivationKeyRulesTest {
     }
 
     @Test
-    public void testDoesntAllowMismatchedConsumerTypePools() {
-        ActivationKey key = new ActivationKey();
-        key.addPool(genPoolForType("system"), 1L);
-
-        Pool pool = genPoolForType("hypervisor");
-
-        ValidationResult result = actKeyRules.runPreActKey(key, pool, new Long(1));
-        assertTrue(result.getWarnings().isEmpty());
-        assertEquals(1, result.getErrors().size());
-        String expected = "rulefailed.actkey.single.consumertype";
-        assertEquals(expected, result.getErrors().get(0).getResourceKey());
-    }
-
-    @Test
     public void testDoesAllowSameConsumerTypePools() {
         ActivationKey key = new ActivationKey();
         key.addPool(genPoolForType("system"), 1L);
@@ -310,20 +179,6 @@ public class ActivationKeyRulesTest {
         ValidationResult result = actKeyRules.runPreActKey(key, pool, new Long(1));
         assertTrue(result.getWarnings().isEmpty());
         assertTrue(result.getErrors().isEmpty());
-    }
-
-    @Test
-    public void testDoesntAllowMismatchedHostRequires() {
-        ActivationKey key = new ActivationKey();
-        key.addPool(genHostRestricted("host1"), 1L);
-
-        Pool pool = genHostRestricted("host2");
-
-        ValidationResult result = actKeyRules.runPreActKey(key, pool, new Long(1));
-        assertTrue(result.getWarnings().isEmpty());
-        assertEquals(1, result.getErrors().size());
-        String expected = "rulefailed.multiple.host.restrictions";
-        assertEquals(expected, result.getErrors().get(0).getResourceKey());
     }
 
     @Test
