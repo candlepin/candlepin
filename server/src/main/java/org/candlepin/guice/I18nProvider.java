@@ -90,9 +90,4 @@ public class I18nProvider extends CommonI18nProvider implements Provider<I18n> {
     public String getTestString() {
         return i18n.tr("Bad Request");
     }
-
-    @Override
-    public String getBaseName() {
-        return "org.candlepin.server.i18n.Messages";
-    }
 }

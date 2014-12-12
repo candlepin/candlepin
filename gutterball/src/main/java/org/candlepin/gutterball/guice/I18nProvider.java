@@ -48,9 +48,4 @@ public class I18nProvider extends CommonI18nProvider implements Provider<I18n> {
     public I18nProvider(ServletRequest request) {
         super(request);
     }
-
-    @Override
-    public String getBaseName() {
-        return "org.candlepin.gutterball.i18n.Messages";
-    }
 }
