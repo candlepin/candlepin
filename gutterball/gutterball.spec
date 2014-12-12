@@ -22,7 +22,7 @@
 %endif
 
 Name: gutterball
-Version: 1.0.6
+Version: 1.0.7
 Release: 1%{?dist}
 Summary: Data aggregator for Candlepin
 
@@ -214,6 +214,21 @@ rm -rf %{buildroot}
 %attr(775, tomcat, root) %{_localstatedir}/log/%{name}
 
 %changelog
+* Fri Dec 12 2014 Devan Goodwin <dgoodwin@rm-rf.ca> 1.0.7-1
+- Fixed an issue with data being filtered erroneously (crog@redhat.com)
+- Fixed an issue with serializing the "environment" property. (crog@redhat.com)
+- Added JSON filtering to GB's model objects. (crog@redhat.com)
+- Log the thread ID instead of the request UUID / owner info we don't have in
+  gb. (dgoodwin@redhat.com)
+- Move to two phase event processing in gutterball. (dgoodwin@redhat.com)
+- Store status on event in gutterball. (dgoodwin@redhat.com)
+- Drop unused messagetext column. (dgoodwin@redhat.com)
+- Allow gutterball message listener to throw exceptions. (dgoodwin@redhat.com)
+- Add a toString for gutterball event logging. (dgoodwin@redhat.com)
+- Correct DER vs PEM mix-up. (awood@redhat.com)
+- Handle strict Katello permissions on password files. (awood@redhat.com)
+- Add qpid-cpp-server-store to configure script. (dgoodwin@redhat.com)
+
 * Fri Dec 05 2014 Alex Wood <awood@redhat.com> 1.0.6-1
 - Reverted use of DateUtils.parseDateStrictly. (crog@redhat.com)
 
