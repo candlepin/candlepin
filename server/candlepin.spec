@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.36
+Version: 0.9.37
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -393,6 +393,25 @@ fi
 
 
 %changelog
+* Fri Dec 12 2014 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.37-1
+- Do not check Entitlement.updated when generating hash (mstead@redhat.com)
+- No longer salt compliance with md5 of data (mstead@redhat.com)
+- 1167894: The language translations for "Unit {0} has been deleted" are not
+  rendering. (wpoteat@redhat.com)
+- 1167856: Fixed msgids with unescaped single quotes. (crog@redhat.com)
+- Only send Compliance event when compliance changes (mstead@redhat.com)
+- Added JSON filtering to GB's model objects. (crog@redhat.com)
+- 1150562: Fixed exception in CP when re-registering a pool/product to
+  activation keys (crog@redhat.com)
+- Add a /admin/hornetq_journal API call. (dgoodwin@redhat.com)
+- Major fixes for reliable hornetq message delivery. (dgoodwin@redhat.com)
+- Allow AMQP bus publisher to re-try failed delivery to bus.
+  (dgoodwin@redhat.com)
+- Removed rules for activation key creation. (wpoteat@redhat.com)
+- Make logging less verbose and more informative. (awood@redhat.com)
+- Remove JULI logging configuration file.  We use Logback. (awood@redhat.com)
+- Updated translations. (dgoodwin@redhat.com)
+
 * Wed Nov 19 2014 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.36-1
 - Make all curator constructors public. (awood@redhat.com)
 - Die if we hit any Guice errors. (awood@redhat.com)
