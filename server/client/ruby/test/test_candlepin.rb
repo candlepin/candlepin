@@ -35,6 +35,13 @@ module Candlepin
       attr_accessor :server
       attr_accessor :client_cert_server
 
+      before(:all) do
+        util_test_class = Class.new(Object) do
+          include Util
+        end
+        Candlepin.const_set("UtilTest", util_test_class)
+      end
+
       before(:each) do
         key = OpenSSL::PKey::RSA.new(File.read('certs/test-ca.key'))
         cert = OpenSSL::X509::Certificate.new(File.read('certs/test-ca.cert'))
@@ -222,6 +229,7 @@ module Candlepin
       it 'builds query hash properly' do
         params = {
           :colors => %w(red white blue),
+          :nothing => nil,
           :k => {
             :k2 => 'v'
           }
@@ -252,6 +260,26 @@ module Candlepin
         params = nil
         expected = 'colors='
         expect(params.to_query('colors')).to eq(expected)
+      end
+
+      it 'can select a subset of a hash' do
+        original = {
+          :x => 1,
+          :y => nil,
+          :z => 3,
+        }
+        expected_keys = [:x, :y]
+        selected = UtilTest.new.select_from(original, :x, :y)
+        selected.keys.should =~ expected_keys
+      end
+
+      it 'raises an error if not a proper subset' do
+        original = {
+          :x => 1,
+        }
+        expect do
+          UtilTest.new.select_from(original, :x, :y)
+        end.to raise_error(ArgumentError, /Missing keys.*:y/)
       end
     end
   end

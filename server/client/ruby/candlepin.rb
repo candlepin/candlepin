@@ -94,7 +94,8 @@ class Hash
 
   def to_query(namespace = nil)
     collect do |key, value|
-      unless (value.is_a?(Hash) || value.is_a?(Array)) && value.empty?
+      unless value.nil? ||
+        (value.is_a?(Hash) || value.is_a?(Array)) && value.empty?
         value.to_query(namespace ? "#{namespace}[#{key}]" : key)
       end
     end.compact.sort! * '&'
@@ -112,6 +113,24 @@ class Object
 end
 
 module Candlepin
+  module Util
+    def build_path(*args)
+      URI::Generic.build(*args).to_s
+    end
+
+    def select_from(hash, *args)
+      missing = args.reject { |key| hash.key?(key) }
+      unless missing.empty?
+        raise ArgumentError.new("Missing keys: #{missing}")
+      end
+
+      pairs = args.map do |key|
+          hash.assoc(key)
+      end
+      Hash[pairs]
+    end
+  end
+
   module API
     # I am attempting to follow strict rules with this API module:
     #  * API calls with one parameter can use a normal Ruby method parameter.
@@ -123,9 +142,53 @@ module Candlepin
     #  * Do NOT use Ruby 2.0 style keyword arguments. This API should remain 1.9.3
     #    compatible.
     #  * All keys in options hashes MUST be symbols.
-    #  * Methods SHOULD be named so that the first word is the HTTP verb relevant to the API call.
+    #  * Methods SHOULD generally be named so that the first word is the HTTP verb relevant to the API call.
     #  * URL construction should be performed with the Ruby URI class and/or the
     #    to_query methods added to Object, Array, and Hash.  No ad hoc string manipulations.
+
+    def self.included(klass)
+      klass.class_eval do
+        include Util
+      end
+    end
+
+    def register(opts = {})
+      defaults = {
+        :name => nil,
+        :type => :system,
+        :uuid => nil,
+        :facts => {},
+        :username => nil,
+        :owner_key => nil,
+        :activation_keys => [],
+        :installed_products => [],
+        :environment => nil,
+        :capabilities => [],
+        :hypervisor_id => nil,
+      }
+      opts = defaults.merge(opts)
+
+      consumer_json = select_from(opts, :name, :facts, :uuid)
+      consumer_json = {
+        :type => { :label => opts[:type] },
+        :installedProducts => opts[:installed_products],
+        :hypervisorId => { :hypervisorId => opts[:hypervisor_id] },
+        :capabilities => opts[:capabilities].map { |c| { :name => c } },
+      }.merge(consumer_json)
+
+      if opts[:environment].nil?
+        path = "/consumers"
+      else
+        path = "/environments/#{opts[:environment]}/consumers"
+      end
+
+      query_args = select_from(opts, :username, :owner_key)
+      keys = opts[:activation_keys].join(",")
+      query_args[:activation_keys] = keys unless keys.empty?
+
+      uri = build_path(:path => path, :query => query_args.to_query)
+      post(uri, consumer_json)
+    end
 
     def get_owners
       get('/owners')
