@@ -118,8 +118,15 @@ module Candlepin
       URI::Generic.build(*args).to_s
     end
 
-    def select_from(hash, *args)
-      missing = args.reject { |key| hash.key?(key) }
+    # Create a subset of key-value pairs.  This method yields the subset and the
+    # original hash to a block so that developers can easily add or
+    # tweak key-values.  For example:
+    #     h = {:hello => 'world', :goodbye => 'x' }
+    #     select_from(h, :hello) do |subset, original|
+    #       h[:good_bye] = original[:goodbye]
+    #     end
+    def select_from(hash, *args, &block)
+      missing = args.flatten.reject { |key| hash.key?(key) }
       unless missing.empty?
         raise ArgumentError.new("Missing keys: #{missing}")
       end
@@ -127,7 +134,31 @@ module Candlepin
       pairs = args.map do |key|
           hash.assoc(key)
       end
-      Hash[pairs]
+      h = Hash[pairs]
+      yield h, hash if block_given?
+      h
+    end
+
+    # Verify that a hash supplied as the first argument contains only keys specified
+    # by subsequent arguments.  The purpose of this method is to help developers catch
+    # mistakes and typos in the option hashes supplied to methods.  Suppose a method
+    # expects to receive a hash with a ":name" key in it and the user sends in a hash with
+    # the key ":nsme".  Ordinarily that would be accepted and the incorrect key would be
+    # silently ignored.  Meanwhile, calling verify_keys(hash, :name) would raise an error
+    # to alert the developer to the mistake.
+    #
+    # The valid_keys argument can either be a single array of valid keys or the valid keys
+    # listed inline.  For example:
+    #     verify_keys(hash, defaults.keys)
+    #     verify_keys(hash, :name, :rank, :serial_number)
+    def verify_keys(hash, *valid_keys)
+      keys = Set.new(hash.keys)
+      valid_keys = Set.new(valid_keys.flatten)
+      unless keys == valid_keys || keys.proper_subset?(valid_keys)
+        extra = keys.difference(valid_keys)
+        msg = "Hash #{hash} contains invalid keys: #{extra.to_a}"
+        raise RuntimeError.new(msg)
+      end
     end
   end
 
@@ -159,21 +190,33 @@ module Candlepin
         :uuid => nil,
         :facts => {},
         :username => nil,
-        :owner_key => nil,
+        :owner => nil,
         :activation_keys => [],
         :installed_products => [],
         :environment => nil,
         :capabilities => [],
         :hypervisor_id => nil,
       }
+      verify_keys(opts, defaults.keys)
       opts = defaults.merge(opts)
 
-      consumer_json = select_from(opts, :name, :facts, :uuid)
+      consumer_json = select_from(opts, :name, :facts, :uuid) do |h|
+        if opts[:hypervisor_id]
+          h[:hypervisorId] = {
+            :hypervisorId => opts[:hypervisor_id],
+          }
+        end
+
+        unless opts[:capabilities].empty?
+          h[:capabilities] = opts[:capabilities].map do |c|
+            Hash[:name, c]
+          end
+        end
+      end
+
       consumer_json = {
         :type => { :label => opts[:type] },
         :installedProducts => opts[:installed_products],
-        :hypervisorId => { :hypervisorId => opts[:hypervisor_id] },
-        :capabilities => opts[:capabilities].map { |c| { :name => c } },
       }.merge(consumer_json)
 
       if opts[:environment].nil?
@@ -182,7 +225,7 @@ module Candlepin
         path = "/environments/#{opts[:environment]}/consumers"
       end
 
-      query_args = select_from(opts, :username, :owner_key)
+      query_args = select_from(opts, :username, :owner)
       keys = opts[:activation_keys].join(",")
       query_args[:activation_keys] = keys unless keys.empty?
 
@@ -205,6 +248,7 @@ module Candlepin
     #
     # HTTPClient has many methods, but the below seemed like the most useful.
     def_delegators :@client,
+      :debug_dev=,
       :delete,
       :delete_async,
       :get,
@@ -231,7 +275,7 @@ module Candlepin
     attr_accessor :connection_timeout
     attr_accessor :client
 
-    # Build a connection using an X509 certificate provided as a client certificate
+    # Build a connection without any authentication
     #
     # = Options
     # * :host:: The host to connect to. Defaults to localhost
@@ -267,6 +311,18 @@ module Candlepin
       @context = val
       if !val.nil? && val[0] != '/'
         @context = "/#{val}"
+      end
+    end
+
+    def debug
+      self.debug=(true)
+    end
+
+    def debug=(value)
+      if value
+        client.debug_dev = $stdout
+      else
+        client.debug_dev = nil
       end
     end
 
@@ -404,6 +460,7 @@ module Candlepin
 
     def raw_client
       client = super
+      client.force_basic_auth = true
       client.set_auth(base_url, username, password)
       client
     end

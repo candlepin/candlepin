@@ -3,11 +3,16 @@ require 'net/http'
 require 'webrick'
 require 'webrick/https'
 
-require 'rspec'
+require 'rspec/autorun'
 require '../candlepin'
 
 module Candlepin
   describe "Candlepin" do
+    def rand_string(len = 9)
+      o = [('a'..'z'), ('A'..'z'), ('1'..'9')].map { |range| range.to_a }.flatten
+      (0...len).map { o[rand(o.length)] }.join
+    end
+
     context "in a functional context", :functional => true do
       it 'gets a status as JSON' do
         simple_client = NoAuthClient.new
@@ -26,6 +31,17 @@ module Candlepin
         user_client = BasicAuthClient.new(:password => nil)
         res = user_client.get('/owners')
         expect(res.status_code).to eq(401)
+      end
+
+      it 'registers a consumer' do
+        user_client = BasicAuthClient.new
+        res = user_client.register(
+          :owner => 'admin',
+          :username => 'admin',
+          :name => rand_string,
+        )
+        expect(res.status_code).to eq(200)
+        expect(res.content['uuid'].length).to eq(36)
       end
     end
 
@@ -280,6 +296,39 @@ module Candlepin
         expect do
           UtilTest.new.select_from(original, :x, :y)
         end.to raise_error(ArgumentError, /Missing keys.*:y/)
+      end
+
+      it 'raises an exception on invalid option keys' do
+        valid_keys = [:good, :bad, :ugly]
+        hash = {
+          :good => 'Clint Eastwood',
+          :bad => 'Lee Van Cleef',
+          :weird => 'Steve Buscemi',
+        }
+        msg_regex = /contains invalid keys:.*weird/
+
+        expect do
+          UtilTest.new.verify_keys(hash, *valid_keys)
+        end.to raise_error(RuntimeError, msg_regex)
+
+        expect do
+          UtilTest.new.verify_keys(hash, valid_keys)
+        end.to raise_error(RuntimeError, msg_regex)
+      end
+
+      it 'verifies valid keys' do
+        valid_keys = [:good, :bad, :ugly]
+        hash = {
+          :good => 'Clint Eastwood',
+          :bad => 'Lee Van Cleef',
+        }
+        expect do
+          UtilTest.new.verify_keys(hash, *valid_keys)
+        end.not_to raise_error
+
+        expect do
+          UtilTest.new.verify_keys(hash, valid_keys)
+        end.not_to raise_error
       end
     end
   end
