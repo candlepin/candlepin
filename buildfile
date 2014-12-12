@@ -236,8 +236,9 @@ define "candlepin" do
     ])
     test.using :java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ]
 
-    common_jar = package(:jar)
-    pom.artifact = common_jar
+    pom.artifact = package(:jar).tap do |jar|
+      jar.include(:from => msgfmt.destination)
+    end
   end
 
   desc "The Gutterball Reporting Engine"
