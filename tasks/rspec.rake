@@ -152,7 +152,7 @@ module ModifiedRSpec
       end
 
       if specs_to_run.empty?
-        fail("No specs found matching #{tests}")
+        fail("No specs found matching #{@include}")
       end
       specs_to_run
     end
