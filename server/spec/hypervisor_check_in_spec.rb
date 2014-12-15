@@ -281,6 +281,13 @@ describe 'Hypervisor Resource', :type => :virt do
     end.should raise_exception(RestClient::ResourceNotFound)
   end
 
+  it 'should raise bad request exception if mapping was not provided' do
+    virtwho = create_virtwho_client(@user)
+    lambda do
+      virtwho.hypervisor_check_in(@owner['key'], nil)
+    end.should raise_exception(RestClient::BadRequest)
+  end
+
   def create_virtwho_client(user)
     consumer = user.register(random_string("virt-who"), :system, nil, {},
         nil, nil, [], [{:productId => 'installedprod',

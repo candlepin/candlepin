@@ -18,6 +18,7 @@ import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SubResource;
 import org.candlepin.auth.interceptor.Verify;
+import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -105,6 +106,12 @@ public class HypervisorResource {
             subResource = SubResource.HYPERVISOR) String ownerKey,
         @QueryParam("create_missing") @DefaultValue("true") boolean createMissing) {
         log.info("Hypervisor check-in by principal: " + principal);
+
+        if (hostGuestMap == null) {
+            log.debug("Host/Guest mapping provided during hypervisor checkin was null.");
+            throw new BadRequestException(
+                i18n.tr("Host to guest mapping was not provided for hypervisor checkin."));
+        }
 
         Owner owner = this.getOwner(ownerKey);
 

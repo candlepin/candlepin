@@ -27,6 +27,7 @@ import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.SubResource;
 import org.candlepin.auth.UserPrincipal;
+import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -305,5 +306,10 @@ public class HypervisorResourceTest {
         String failed = result.getFailedUpdate().iterator().next();
         String expected = "test-host: Unable to find hypervisor in org 'admin'";
         assertEquals(expected, failed);
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void ensureBadRequestWhenNoMappingIsIncludedInRequest() {
+        hypervisorResource.hypervisorCheckIn(null, principal, "an-owner", false);
     }
 }
