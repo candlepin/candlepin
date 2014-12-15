@@ -145,7 +145,15 @@ create_client_certs() {
 write_trust_store() {
     local client=$1
     local dest="$CERT_LOC/$client"
-    local existing_truststore="$(fp_jks "/etc/$client/certs/amqp/$client.truststore" "$CA_NAME")"
+    local jks_alias="$CA_NAME"
+
+    # Katello is not consistent in the aliases they use for the CA
+    # in the truststore versus the NSS DB
+    if [ $IS_KATELLO -eq 0 -a "$client" == "candlepin" ]; then
+        jks_alias="katello-default-ca"
+    fi
+
+    local existing_truststore="$(fp_jks "/etc/$client/certs/amqp/$client.truststore" "$jks_alias")"
     local existing_ca="$(fp_nss "$CA_DB" "$CA_NAME")"
 
     # Skip import into truststore if CA is already there
