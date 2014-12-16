@@ -15,7 +15,7 @@
 package org.candlepin.policy.js.quantity;
 
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
@@ -40,6 +40,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -82,6 +84,7 @@ public class QuantityRulesTest {
         owner = new Owner("Test Owner " + TestUtil.randomInt());
         product = TestUtil.createProduct();
         pool = TestUtil.createPool(owner, product);
+        pool.setId("fakepoolid");
 
         consumer = TestUtil.createConsumer(owner);
         Entitlement e = TestUtil.createEntitlement(owner, consumer, pool,
@@ -117,6 +120,19 @@ public class QuantityRulesTest {
         pool.setProductAttribute("multi-entitlement", "no", product.getId());
         SuggestedQuantity suggested = quantityRules.getSuggestedQuantity(pool,
             new Consumer(), new Date());
+        assertEquals(new Long(1), suggested.getSuggested());
+    }
+
+    @Test
+    public void testNonMultiEntitlementPoolMultiPool() {
+        pool.setProductAttribute("multi-entitlement", "no", product.getId());
+        List<Pool> pools = new LinkedList<Pool>();
+        pools.add(pool);
+        Map<String, SuggestedQuantity> results =
+                quantityRules.getSuggestedQuantities(pools,
+            new Consumer(), new Date());
+        assertTrue(results.containsKey(pool.getId()));
+        SuggestedQuantity suggested = results.get(pool.getId());
         assertEquals(new Long(1), suggested.getSuggested());
     }
 
