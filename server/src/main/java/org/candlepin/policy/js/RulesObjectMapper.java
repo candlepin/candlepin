@@ -133,7 +133,7 @@ public class RulesObjectMapper {
             return mapper.readValue(json, typeref);
         }
         catch (Exception e) {
-            log.error("Error parsing JSON from rules");
+            log.error("Error parsing JSON from rules", e);
             log.error(json);
             throw new IseException("Unable to build object from JSON.", e);
         }

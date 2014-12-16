@@ -1,4 +1,4 @@
-// Version: 5.12
+// Version: 5.13
 
 /*
  * Default Candlepin rule set.
@@ -236,7 +236,7 @@ function createPool(pool) {
     };
 
     pool.getAvailable = function() {
-        return pool.quantity - pool.consumed; 
+        return pool.quantity - pool.consumed;
     };
 
     pool.getInstanceMulti = function() {
@@ -2849,7 +2849,17 @@ var Compliance = {
 var Quantity = {
     get_quantity_context: function() {
         context = JSON.parse(json_context);
-        context.pool = createPool(context.pool);
+
+        if ("pool" in context) {
+            context.pool = createPool(context.pool);
+        }
+
+        if ("pools" in context) {
+            for (var i = 0; i < context.pools.length; i++) {
+                context.pools[i] = createPool(context.pools[i]);
+            }
+        }
+
         if ("validEntitlements" in context) {
             for (var i = 0; i < context.validEntitlements.length; i++) {
                 var e = context.validEntitlements[i];
@@ -2860,10 +2870,30 @@ var Quantity = {
     },
 
     get_suggested_quantity: function() {
-        var context = Quantity.get_quantity_context();
+        context = Quantity.get_quantity_context();
         var pool = context.pool;
         var consumer = context.consumer;
         var validEntitlements = context.validEntitlements;
+        return JSON.stringify(Quantity.get_suggested_quantity_worker(pool, consumer, validEntitlements));
+    },
+
+    /* Multi-pool version of the above for large list pools requests. */
+    get_suggested_quantities: function() {
+        context = Quantity.get_quantity_context();
+        var consumer = context.consumer;
+        var validEntitlements = context.validEntitlements;
+
+        var result_map = {};
+        for (var i = 0; i < context.pools.length; i++) {
+            pool = context.pools[i];
+            var result = Quantity.get_suggested_quantity_worker(pool, consumer, validEntitlements);
+            result_map[pool['id']] = result;
+        }
+        return JSON.stringify(result_map);
+    },
+
+    /* Consider this a "private" worker method, not called by java, used by the other methods we do call from Java. */
+    get_suggested_quantity_worker: function(pool, consumer, validEntitlements) {
 
         var result = {
             suggested: 1,
@@ -2872,7 +2902,7 @@ var Quantity = {
 
         // Distributors increment is always 1, suggested is irrelevant
         if (!Utils.isMultiEnt(pool) || consumer.type.manifest) {
-            return JSON.stringify(result);
+            return result;
         }
 
         if (pool.hasProductAttribute("stacking_id")) {
@@ -2896,7 +2926,7 @@ var Quantity = {
             result.increment = parseInt(pool.getProductAttribute("instance_multiplier"));
         }
 
-        return JSON.stringify(result);
+        return result;
     },
 
     get_suggested_pool_quantity: function(pool, consumer, entitlements) {

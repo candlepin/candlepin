@@ -767,10 +767,7 @@ public class OwnerResource {
         List<Pool> poolList = page.getPageData();
 
         if (c != null) {
-            for (Pool p : poolList) {
-                p.setCalculatedAttributes(
-                    calculatedAttributesUtil.buildCalculatedAttributes(p, c, activeOnDate));
-            }
+            calculatedAttributesUtil.setCalculatedAttributes(poolList, c, activeOnDate);
         }
 
         // Store the page for the LinkHeaderPostInterceptor
