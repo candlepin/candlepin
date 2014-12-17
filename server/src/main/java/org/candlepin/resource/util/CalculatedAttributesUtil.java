@@ -27,6 +27,7 @@ import org.xnap.commons.i18n.I18n;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -65,5 +66,32 @@ public class CalculatedAttributesUtil {
             String.valueOf(suggested.getIncrement()));
 
         return attrMap;
+    }
+
+
+    public void setCalculatedAttributes(List<Pool> poolList, Consumer c, Date date) {
+        if (c == null) {
+            return;
+        }
+        Map<String, SuggestedQuantity> results = quantityRules.getSuggestedQuantities(
+                poolList, c, date);
+
+        for (Pool p : poolList) {
+            SuggestedQuantity suggested = results.get(p.getId());
+
+            Map<String, String> attrMap = new HashMap<String, String>();
+
+            PoolComplianceType type = poolTypeRules.getPoolType(p);
+            type.translatePoolType(i18n);
+            attrMap.put("compliance_type", type.getPoolType());
+
+
+            attrMap.put("suggested_quantity",
+                String.valueOf(suggested.getSuggested()));
+            attrMap.put("quantity_increment",
+                String.valueOf(suggested.getIncrement()));
+
+            p.setCalculatedAttributes(attrMap);
+        }
     }
 }
