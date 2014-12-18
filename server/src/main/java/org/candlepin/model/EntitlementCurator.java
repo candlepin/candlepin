@@ -138,6 +138,55 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         return listByCriteria(query);
     }
 
+    /**
+     * List all entitled product IDs from entitlements which overlap the given date range.
+     *
+     * i.e. given start date must be within the entitlements start/end dates, or
+     * the given end date must be within the entitlements start/end dates,
+     * or the given start date must be before the entitlement *and* the given end date
+     * must be after entitlement. (i.e. we are looking for *any* overlap)
+     *
+     * @param c
+     * @param startDate
+     * @param endDate
+     * @return entitled product IDs
+     */
+    public Set<String> listEntitledProductIds(Consumer c, Date startDate, Date endDate) {
+        // TODO: Swap this to a db query if we're worried about memory:
+        Set<String> entitledProductIds = new HashSet<String>();
+        for (Entitlement e : c.getEntitlements()) {
+            Pool p = e.getPool();
+            if (!poolOverlapsRange(p, startDate, endDate)) {
+                // Skip this entitlement:
+                continue;
+            }
+            entitledProductIds.add(e.getPool().getProductId());
+            for (ProvidedProduct pp : e.getPool().getProvidedProducts()) {
+                entitledProductIds.add(pp.getProductId());
+            }
+        }
+        return entitledProductIds;
+
+    }
+
+    private boolean poolOverlapsRange(Pool p, Date startDate, Date endDate) {
+        Date poolStart = p.getStartDate();
+        Date poolEnd = p.getEndDate();
+        // If pool start is within the range we're looking for:
+        if (poolStart.compareTo(startDate) >= 0 && poolStart.compareTo(endDate) <= 0) {
+            return true;
+        }
+        // If pool end is within the range we're looking for:
+        if (poolEnd.compareTo(startDate) >= 0 && poolEnd.compareTo(endDate) <= 0) {
+            return true;
+        }
+        // If pool completely encapsulates the range we're looking for:
+        if (poolStart.compareTo(startDate) <= 0 && poolEnd.compareTo(endDate) >= 0) {
+            return true;
+        }
+        return false;
+    }
+
     /*
      * Creates date filtering criteria to for checking if an entitlement has any overlap
      * with a "modifying" entitlement that has just been granted.
@@ -162,44 +211,6 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
                         Restrictions.le("startDate", startDate),
                         Restrictions.ge("endDate", endDate))));
         return criteria;
-    }
-
-    /**
-     * List all entitlements for the given consumer which provide the given product ID,
-     * and overlap at least partially with the given start and end dates.
-     *
-     * i.e. given start date must be within the entitlements start/end dates, or
-     * the given end date must be within the entitlements start/end dates,
-     * or the given start date must be before the entitlement *and* the given end date
-     * must be after entitlement. (i.e. we are looking for *any* overlap)
-     *
-     * @param consumer Consumer whose entitlements we're checking.
-     * @param productId Find entitlements providing this productId.
-     * @param startDate Find entitlements
-     * @param endDate
-     * @return list of entitlements providing the given product
-     */
-    public Set<Entitlement> listProviding(Consumer consumer, String productId,
-        Date startDate, Date endDate) {
-
-        // Will re-use this criteria for both queries we need to do:
-
-        // Find direct matches on the pool's product ID:
-        Criteria parentProductCrit = createModifiesDateFilteringCriteria(consumer,
-            startDate, endDate, null).add(
-                Restrictions.eq("productId", productId));
-
-        // Using a set to prevent duplicate matches, if somehow
-        Set<Entitlement> finalResults = new HashSet<Entitlement>();
-        finalResults.addAll(parentProductCrit.list());
-
-        Criteria providedCrit = createModifiesDateFilteringCriteria(consumer, startDate,
-            endDate, null)
-            .createCriteria("providedProducts")
-            .add(Restrictions.eq("productId", productId));
-        finalResults.addAll(providedCrit.list());
-
-        return finalResults;
     }
 
     public Set<Entitlement> listModifying(Entitlement entitlement) {

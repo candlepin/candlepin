@@ -276,9 +276,12 @@ public class X509V3ExtensionUtil extends X509Util {
         List<org.candlepin.json.model.Product> toReturn =
             new ArrayList<org.candlepin.json.model.Product>();
 
+        Set<String> entitledProductIds = entCurator.listEntitledProductIds(consumer,
+                ent.getStartDate(), ent.getEndDate());
         for (Product p : Collections2
             .filter(products, PROD_FILTER_PREDICATE)) {
-            toReturn.add(mapProduct(p, contentPrefix, promotedContent, consumer, ent));
+            toReturn.add(mapProduct(p, contentPrefix, promotedContent, consumer, ent,
+                    entitledProductIds));
         }
         return toReturn;
     }
@@ -291,7 +294,7 @@ public class X509V3ExtensionUtil extends X509Util {
 
     private org.candlepin.json.model.Product mapProduct(Product product,
         String contentPrefix, Map<String, EnvironmentContent> promotedContent,
-        Consumer consumer, Entitlement ent) {
+        Consumer consumer, Entitlement ent, Set<String> entitledProductIds) {
 
         org.candlepin.json.model.Product toReturn = new org.candlepin.json.model.Product();
 
@@ -315,7 +318,8 @@ public class X509V3ExtensionUtil extends X509Util {
             archList.add(arch);
         }
         toReturn.setArchitectures(archList);
-        toReturn.setContent(createContent(filterProductContent(product, ent),
+        toReturn.setContent(createContent(filterProductContent(product, ent,
+                entitledProductIds),
             contentPrefix, promotedContent, consumer, product));
 
         return toReturn;
@@ -449,7 +453,8 @@ public class X509V3ExtensionUtil extends X509Util {
      * @param ent
      * @return ProductContent to include in the certificate.
      */
-    public Set<ProductContent> filterProductContent(Product prod, Entitlement ent) {
+    public Set<ProductContent> filterProductContent(Product prod, Entitlement ent,
+            Set<String> entitledProductIds) {
         Set<ProductContent> filtered = new HashSet<ProductContent>();
 
         for (ProductContent pc : prod.getProductContent()) {
@@ -460,9 +465,7 @@ public class X509V3ExtensionUtil extends X509Util {
                 // If consumer has an entitlement to just one of the modified products,
                 // we will include this content set
                 for (String prodId : prodIds) {
-                    Set<Entitlement> entsProviding = entCurator.listProviding(
-                        ent.getConsumer(), prodId, ent.getStartDate(), ent.getEndDate());
-                    if (entsProviding.size() > 0) {
+                    if (entitledProductIds.contains(prodId)) {
                         include = true;
                         break;
                     }
