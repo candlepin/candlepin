@@ -143,10 +143,15 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
      * with a "modifying" entitlement that has just been granted.
      */
     private Criteria createModifiesDateFilteringCriteria(Consumer consumer, Date startDate,
-        Date endDate) {
+        Date endDate, Entitlement excludeEnt) {
         Criteria criteria = currentSession().createCriteria(Entitlement.class)
-            .add(Restrictions.eq("consumer", consumer))
-            .createCriteria("pool")
+            .add(Restrictions.eq("consumer", consumer));
+
+        if (excludeEnt != null) {
+            criteria = criteria.add(Restrictions.ne("id", excludeEnt.getId()));
+        }
+
+        criteria = criteria.createCriteria("pool")
                 .add(Restrictions.or(
                     // Dates overlap if the start or end date is in our range
                     Restrictions.or(
@@ -181,7 +186,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
 
         // Find direct matches on the pool's product ID:
         Criteria parentProductCrit = createModifiesDateFilteringCriteria(consumer,
-            startDate, endDate).add(
+            startDate, endDate, null).add(
                 Restrictions.eq("productId", productId));
 
         // Using a set to prevent duplicate matches, if somehow
@@ -189,7 +194,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         finalResults.addAll(parentProductCrit.list());
 
         Criteria providedCrit = createModifiesDateFilteringCriteria(consumer, startDate,
-            endDate)
+            endDate, null)
             .createCriteria("providedProducts")
             .add(Restrictions.eq("productId", productId));
         finalResults.addAll(providedCrit.list());
@@ -251,7 +256,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     @SuppressWarnings("unchecked")
     public Map<String, Set<Entitlement>> getOverlappingForModifying(Entitlement e) {
         List<Entitlement> overlapEnts = createModifiesDateFilteringCriteria(
-            e.getConsumer(), e.getStartDate(), e.getEndDate()).list();
+            e.getConsumer(), e.getStartDate(), e.getEndDate(), e).list();
         Map<String, Set<Entitlement>> pidEnts = new HashMap<String, Set<Entitlement>>();
         for (Entitlement ent : overlapEnts) {
             addToMap(pidEnts, ent);

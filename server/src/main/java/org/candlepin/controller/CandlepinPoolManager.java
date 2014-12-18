@@ -971,9 +971,7 @@ public class CandlepinPoolManager implements PoolManager {
         boolean lazy) {
 
         if (lazy) {
-            if (log.isDebugEnabled()) {
-                log.debug("Marking certificates dirty for entitlement: " + e);
-            }
+            log.info("Marking certificates dirty for entitlement: " + e);
             e.setDirty(true);
             return;
         }
