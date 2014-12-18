@@ -114,8 +114,18 @@ end
 
 module Candlepin
   module Util
-    def build_path(*args)
-      URI::Generic.build(*args).to_s
+    def camel_case(s)
+      s.to_s.split('_').inject([]) do |buffer, e|
+        buffer.push(buffer.empty? ? e : e.capitalize)
+      end.join.to_sym
+    end
+
+    def build_path(path, query_hash = {})
+      if query_hash.nil? || query_hash.to_query.empty?
+        URI::Generic.build(:path => path).to_s
+      else
+        URI::Generic.build(:path => path, :query => query_hash.to_query).to_s
+      end
     end
 
     # Create a subset of key-value pairs.  This method yields the subset and the
@@ -160,6 +170,11 @@ module Candlepin
         raise RuntimeError.new(msg)
       end
     end
+
+    def verify_and_merge(opts, defaults)
+      verify_keys(opts, defaults.keys)
+      defaults.merge(opts)
+    end
   end
 
   module API
@@ -173,7 +188,11 @@ module Candlepin
     #  * Do NOT use Ruby 2.0 style keyword arguments. This API should remain 1.9.3
     #    compatible.
     #  * All keys in options hashes MUST be symbols.
-    #  * Methods SHOULD generally be named so that the first word is the HTTP verb relevant to the API call.
+    #  * Methods SHOULD generally follow these conventions:
+    #      - If request is a GET, method begins with get_
+    #      - If request is a DELETE, method begins with delete_
+    #      - If request is a POST, method begins with create_ or post_
+    #      - If request is a PUT, method begins with update_ or put_
     #  * URL construction should be performed with the Ruby URI class and/or the
     #    to_query methods added to Object, Array, and Hash.  No ad hoc string manipulations.
 
@@ -181,6 +200,46 @@ module Candlepin
       klass.class_eval do
         include Util
       end
+    end
+
+    def simple_req(verb, path, defaults, opts, *arg_names, &block)
+      opts = verify_and_merge(opts, defaults)
+      if arg_names.empty?
+        query_args = nil
+      else
+        query_args = select_from(opts, *arg_names)
+      end
+
+      uri = build_path(path, query_args)
+
+      if block_given?
+        post_body = yield
+      else
+        post_body = nil
+      end
+
+      send(verb, uri, post_body)
+    end
+
+    def simple_put(*args, &block)
+      simple_req(:put, *args, &block)
+    end
+
+    def simple_post(*args, &block)
+      simple_req(:post, *args, &block)
+    end
+
+    def simple_get(*args)
+      # Technically a GET is allowed to have a body, but the
+      # server is just supposed to ignore it entirely.  I've elected
+      # to prohibit a body to prevent likely programmer errors.
+      # If a programmer simply must have a GET with a body, they
+      # can call simple_req(:get, *args) { block_here }
+      if block_given?
+        raise ArgumentError.new("No body is allowed with GET")
+      end
+
+      simple_req(:get, *args)
     end
 
     def register(opts = {})
@@ -197,8 +256,7 @@ module Candlepin
         :capabilities => [],
         :hypervisor_id => nil,
       }
-      verify_keys(opts, defaults.keys)
-      opts = defaults.merge(opts)
+      opts = verify_and_merge(opts, defaults)
 
       consumer_json = select_from(opts, :name, :facts, :uuid) do |h|
         if opts[:hypervisor_id]
@@ -229,8 +287,61 @@ module Candlepin
       keys = opts[:activation_keys].join(",")
       query_args[:activation_keys] = keys unless keys.empty?
 
-      uri = build_path(:path => path, :query => query_args.to_query)
+      uri = build_path(path, query_args)
       post(uri, consumer_json)
+    end
+
+    def post_hypervisor_check_in(opts = {})
+      defaults = {
+        :owner => nil,
+        :host_guest_mapping => {},
+        :create_missing => nil,
+      }
+      simple_post('/hypervisors', defaults, opts, :owner, :create_missing) do
+        opts[:host_guest_mapping]
+      end
+    end
+
+    def delete_deletion_record(opts = {})
+      defaults = {
+        :deleted_uuid => nil,
+      }
+      opts = verify_and_merge(opts, defaults)
+      uri = "/consumers/#{opts[:deleted_uuid]}/deletionrecord"
+      delete(uri)
+    end
+
+    def get_deleted_consumers(opts = {})
+      defaults = {
+        :date => nil,
+      }
+      simple_get('/deleted_consumers', defaults, opts)
+    end
+
+    def update_consumer(opts = {})
+      defaults = {
+        :uuid => nil,
+        :facts => {},
+        :installed_products => [],
+        :hypervisor_id => nil,
+        :guest_ids => [],
+        :autoheal => true,
+        :service_level => nil,
+        :capabilities => [],
+      }
+      opts = verify_and_merge(opts, defaults)
+
+      #Convert all keys to camel case
+      camelized = opts.each.map do |entry|
+        [camel_case(entry.first), entry.last]
+      end
+      consumer = Hash[camelized]
+      consumer[:capabilities].map! do |name|
+        { :name => name }
+      end
+
+      uri = "/consumers/#{opts[:uuid]}"
+      put(uri, consumer)
     end
 
     def get_owners

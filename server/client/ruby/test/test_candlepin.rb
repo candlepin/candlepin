@@ -6,6 +6,12 @@ require 'webrick/https'
 require 'rspec/autorun'
 require '../candlepin'
 
+RSpec::Matchers.define :be_2xx do |expected|
+  match do |code|
+    (200..206).include?(code)
+  end
+end
+
 module Candlepin
   describe "Candlepin" do
     def rand_string(len = 9)
@@ -40,8 +46,31 @@ module Candlepin
           :username => 'admin',
           :name => rand_string,
         )
-        expect(res.status_code).to eq(200)
+        expect(res.status_code).to be_2xx
         expect(res.content['uuid'].length).to eq(36)
+      end
+
+      it 'gets deleted consumers' do
+        user_client = BasicAuthClient.new
+        res = user_client.get_deleted_consumers
+        expect(res.status_code).to be_2xx
+      end
+
+      it 'updates a consumer' do
+        user_client = BasicAuthClient.new
+        res = user_client.register(
+          :owner => 'admin',
+          :username => 'admin',
+          :name => rand_string,
+        )
+        consumer = res.content
+
+        res = user_client.update_consumer(
+          :autoheal => false,
+          :uuid => consumer['uuid'],
+          :capabilities => ['cores'],
+        )
+        expect(res.status_code).to be_2xx
       end
     end
 
