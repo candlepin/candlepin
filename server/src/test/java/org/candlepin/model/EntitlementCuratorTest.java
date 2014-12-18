@@ -14,11 +14,7 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
@@ -29,6 +25,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Date;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -122,6 +119,41 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
 
     private Date createDate(int year, int month, int day) {
         return TestUtil.createDate(year, month, day);
+    }
+
+    @Test
+    public void listModifyingExcludesEntitlementThatModifiesItself() {
+        Date startDate = createDate(2010, 1, 1);
+        Date endDate = createDate(2050, 1, 1);
+        Pool testPool = createPoolAndSub(owner, parentProduct, 100L,
+            startDate, endDate);
+
+        // Provided product 2 will modify 1, both will be on the pool:
+        Content c = new Content("fakecontent", "fakecontent", "facecontent",
+                "yum", "RH", "http://", "http://", "x86_64");
+        Set<String> modifiedIds = new HashSet<String>();
+        modifiedIds.add(providedProduct1.getId());
+        c.setModifiedProductIds(modifiedIds);
+        contentCurator.create(c);
+        providedProduct2.addContent(c);
+
+        // Add some provided products to this pool:
+        ProvidedProduct p1 = new ProvidedProduct(providedProduct1.getId(),
+            providedProduct1.getName());
+        ProvidedProduct p2 = new ProvidedProduct(providedProduct2.getId(),
+            providedProduct2.getName());
+        testPool.addProvidedProduct(p1);
+        testPool.addProvidedProduct(p2);
+        poolCurator.create(testPool);
+
+        EntitlementCertificate cert = createEntitlementCertificate("key", "certificate");
+
+        Entitlement ent = createEntitlement(owner, consumer, testPool, cert);
+        entitlementCurator.create(ent);
+
+        // The ent we just created should *not* be returned as modifying itself:
+        Set<Entitlement> ents = entitlementCurator.listModifying(ent);
+        assertEquals(0, ents.size());
     }
 
     private Entitlement setupListProvidingEntitlement() {

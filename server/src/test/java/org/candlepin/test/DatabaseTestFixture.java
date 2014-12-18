@@ -34,6 +34,7 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.Owner;
@@ -104,6 +105,7 @@ public class DatabaseTestFixture {
     @Inject private ConsumerTypeCurator consumerTypeCurator;
     @Inject private SubscriptionCurator subCurator;
     @Inject private CertificateSerialCurator certSerialCurator;
+    @Inject protected ContentCurator contentCurator;
 
     private static Injector parentInjector;
     private Injector injector;
