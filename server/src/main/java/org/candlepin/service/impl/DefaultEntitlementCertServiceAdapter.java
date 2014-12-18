@@ -258,6 +258,10 @@ public class DefaultEntitlementCertServiceAdapter extends
         Map<String, EnvironmentContent> promotedContent) {
         Set<X509ExtensionWrapper> result =  new LinkedHashSet<X509ExtensionWrapper>();
 
+        Set<String> entitledProductIds = entCurator.listEntitledProductIds(
+                ent.getConsumer(), ent.getPool().getStartDate(),
+                ent.getPool().getEndDate());
+
         int contentCounter = 0;
         boolean enableEnvironmentFiltering = config.environmentFilteringEnabled();
         for (Product prod : Collections2
@@ -265,7 +269,7 @@ public class DefaultEntitlementCertServiceAdapter extends
             result.addAll(extensionUtil.productExtensions(prod));
             Set<ProductContent> filteredContent =
                 extensionUtil.filterProductContent(prod, ent, entCurator,
-                    promotedContent, enableEnvironmentFiltering);
+                    promotedContent, enableEnvironmentFiltering, entitledProductIds);
 
             filteredContent = extensionUtil.filterContentByContentArch(filteredContent,
                 ent.getConsumer(), prod);

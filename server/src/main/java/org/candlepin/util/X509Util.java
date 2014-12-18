@@ -68,7 +68,7 @@ public abstract class X509Util {
      */
     public Set<ProductContent> filterProductContent(Product prod, Entitlement ent,
         EntitlementCurator entCurator, Map<String, EnvironmentContent> promotedContent,
-        boolean filterEnvironment) {
+        boolean filterEnvironment, Set<String> entitledProductIds) {
         Set<ProductContent> filtered = new HashSet<ProductContent>();
 
         for (ProductContent pc : prod.getProductContent()) {
@@ -89,9 +89,7 @@ public abstract class X509Util {
                 // If consumer has an entitlement to just one of the modified products,
                 // we will include this content set:
                 for (String prodId : prodIds) {
-                    Set<Entitlement> entsProviding = entCurator.listProviding(
-                        ent.getConsumer(), prodId, ent.getStartDate(), ent.getEndDate());
-                    if (entsProviding.size() > 0) {
+                    if (entitledProductIds.contains(prodId)) {
                         include = true;
                         break;
                     }
