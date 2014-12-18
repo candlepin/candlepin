@@ -39,7 +39,7 @@ public class CandlepinFilterModule extends ServletModule {
 
         filter("/*").through(CandlepinScopeFilter.class);
         filter("/*").through(CandlepinPersistFilter.class);
-        filter("/*").through(LoggingFilter.class);
+        filter("/*").through(LoggingFilter.class, loggingFilterConfig);
         filter("/*").through(ContentTypeHackFilter.class);
         filter("/*").through(EventFilter.class);
 
