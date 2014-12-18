@@ -83,7 +83,7 @@ public class QuantityRules {
      * @param pools
      * @param c
      * @param date
-     * @return
+     * @return suggested quantities for all pools requested
      */
     public Map<String, SuggestedQuantity> getSuggestedQuantities(List<Pool> pools,
             Consumer c, Date date) {

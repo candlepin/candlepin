@@ -14,18 +14,9 @@
  */
 package org.candlepin.service.impl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.argThat;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.CandlepinCommonTestConfig;
@@ -511,26 +502,21 @@ public class DefaultEntitlementCertServiceAdapterTest {
         // First check that if we have no entitlements providing the modified
         // products,
         // the content set is filtered out:
-        when(
-            this.entCurator.listProviding(any(Consumer.class), eq("product1"),
-                any(Date.class), any(Date.class))).thenReturn(
-                    new HashSet<Entitlement>());
         // Mod content should get filtered out because we have no ents providing
         // the product it modifies:
         assertEquals(1,
             extensionUtil.filterProductContent(modProduct, entitlement, entCurator,
-                new HashMap<String, EnvironmentContent>(), false)
+                new HashMap<String, EnvironmentContent>(), false, new HashSet<String>())
                 .size());
 
         // Now mock that we have an entitlement providing one of the modified
         // products,
         // and we should see both content sets included in the cert:
-        when(
-            this.entCurator.listProviding(any(Consumer.class), eq("product2"),
-                any(Date.class), any(Date.class))).thenReturn(successResult);
+        Set<String> entitledProdIds = new HashSet<String>();
+        entitledProdIds.add("product2");
         assertEquals(2,
             extensionUtil.filterProductContent(modProduct, entitlement, entCurator,
-                new HashMap<String, EnvironmentContent>(), false)
+                new HashMap<String, EnvironmentContent>(), false, entitledProdIds)
                 .size());
 
         // Make sure that we filter by environment when asked.
@@ -544,7 +530,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         assertEquals(1,
             extensionUtil.filterProductContent(modProduct, entitlement, entCurator,
-                promotedContent, true)
+                promotedContent, true, entitledProdIds)
                 .size());
     }
 

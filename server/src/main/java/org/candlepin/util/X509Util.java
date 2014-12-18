@@ -68,7 +68,7 @@ public abstract class X509Util {
      */
     public Set<ProductContent> filterProductContent(Product prod, Entitlement ent,
         EntitlementCurator entCurator, Map<String, EnvironmentContent> promotedContent,
-        boolean filterEnvironment) {
+        boolean filterEnvironment, Set<String> entitledProductIds) {
         Set<ProductContent> filtered = new HashSet<ProductContent>();
 
         for (ProductContent pc : prod.getProductContent()) {
@@ -89,9 +89,7 @@ public abstract class X509Util {
                 // If consumer has an entitlement to just one of the modified products,
                 // we will include this content set:
                 for (String prodId : prodIds) {
-                    Set<Entitlement> entsProviding = entCurator.listProviding(
-                        ent.getConsumer(), prodId, ent.getStartDate(), ent.getEndDate());
-                    if (entsProviding.size() > 0) {
+                    if (entitledProductIds.contains(prodId)) {
                         include = true;
                         break;
                     }
@@ -143,7 +141,6 @@ public abstract class X509Util {
 
 
         String consumerArch = consumer.getFact(ARCH_FACT);
-        log.debug("consumerArch: " + consumerArch);
 
         if (consumerArch == null) {
             log.debug("consumer: " + consumer.getId() + " has no " +
@@ -159,25 +156,13 @@ public abstract class X509Util {
             Set<String> productArches =
                 Arch.parseArches(product.getAttributeValue(PRODUCT_ARCH_ATTR));
 
-            log.debug("productContent arch list for " +
-                pc.getContent().getLabel());
-
-            log.debug("contentArches: " + contentArches);
-            log.debug("productArches: " + productArches);
-
             // Empty or null Content.arches should result in
             // inheriting the arches from the product
             if (contentArches.isEmpty()) {
-                log.debug("Content set " + pc.getContent().getLabel() +
-                    " does not specify content arches");
-
                 // No content arch, see if there is a Product arch
                 // and if so inherit it.
                 if (!productArches.isEmpty()) {
                     contentArches.addAll(productArches);
-                    log.debug("Using the arches from the product " +
-                        product.toString());
-                    log.debug("productArches: " + productArches.toString());
                 }
                 else {
                     // No Product arches either, log it, but do
@@ -187,21 +172,12 @@ public abstract class X509Util {
             }
 
             for (String contentArch : contentArches) {
-                log.debug("Checking consumerArch " + consumerArch +
-                    " can use content for " + contentArch);
-                log.debug("arch.contentForConsumer" +
-                    Arch.contentForConsumer(contentArch, consumerArch));
 
                 if (Arch.contentForConsumer(contentArch, consumerArch)) {
-                    log.debug("Can use content " +
-                        pc.getContent().getLabel() + " for arch " + contentArch);
                     canUse = true;
                     break;
                 }
                 else {
-                    log.debug("Can not use content " +
-                        pc.getContent().getLabel() + " for arch " +
-                        contentArch);
                     canUse = false;
                 }
             }
@@ -211,18 +187,8 @@ public abstract class X509Util {
             // Content or on Product)
             if (canUse) {
                 filtered.add(pc);
-                log.debug("Including content " +
-                    pc.getContent().getLabel());
-            }
-            else {
-                log.debug("Skipping content " + pc.getContent().getLabel());
             }
 
-        }
-        log.debug("Arch approriate content for " +
-            consumerArch + " includes: ");
-        for (ProductContent apc : filtered) {
-            log.debug("\t " + apc.toString());
         }
         return filtered;
     }

@@ -130,7 +130,7 @@ public class QuantityRulesTest {
         pools.add(pool);
         Map<String, SuggestedQuantity> results =
                 quantityRules.getSuggestedQuantities(pools,
-            new Consumer(), new Date());
+                        new Consumer(), new Date());
         assertTrue(results.containsKey(pool.getId()));
         SuggestedQuantity suggested = results.get(pool.getId());
         assertEquals(new Long(1), suggested.getSuggested());
