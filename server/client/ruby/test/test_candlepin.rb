@@ -63,7 +63,6 @@ module Candlepin
           :username => 'admin',
           :name => rand_string,
         )
-        expect(res).to be_2xx
         expect(res.content['uuid'].length).to eq(36)
       end
 
@@ -130,7 +129,6 @@ module Candlepin
           :super_admin => false,
         )
         user = res.content
-        expect(res).to be_2xx
         expect(user["hashedPassword"].length).to eq(40)
       end
 
@@ -143,7 +141,6 @@ module Candlepin
         user = res.content
 
         res = user_client.get_user(:username => user["username"])
-        expect(res).to be_2xx
         expect(res.content["id"]).to eq(user["id"])
       end
 
@@ -173,6 +170,55 @@ module Candlepin
         res = user_client.get_all_users
         existing_users = res.content.map { |u| u["username"] }
         expect(existing_users).to_not include(user["username"])
+      end
+
+      it 'creates roles' do
+        res = user_client.create_role(
+          :name => rand_string,
+        )
+        role = res.content
+
+        expect(role["id"]).to_not be_nil
+      end
+
+      it 'gets roles' do
+        res = user_client.create_role(
+          :name => rand_string,
+        )
+        role = res.content
+
+        res = user_client.get_role(
+          :id => role["id"],
+        )
+        expect(res.content["id"]).to eq(role["id"])
+      end
+
+      it 'updates roles' do
+        res = user_client.create_role(
+          :name => rand_string,
+        )
+        role = res.content
+
+        res = user_client.update_role(
+          :id => role["id"],
+          :name => rand_string,
+        )
+        expect(res.content["name"]).to_not eq(role["name"])
+      end
+
+
+      it 'deletes roles' do
+        res = user_client.create_role(
+          :name => rand_string,
+        )
+        role = res.content
+
+        expect(role["id"]).to_not be_nil
+
+        res = user_client.delete_role(
+          :id => role["id"],
+        )
+        expect(res).to be_2xx
       end
     end
 

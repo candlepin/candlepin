@@ -212,6 +212,16 @@ module Candlepin
     #  * URL construction should be performed with the Ruby URI class and/or the
     #    to_query methods added to Object, Array, and Hash.  No ad hoc string manipulations.
 
+    # TODO At some point it might make more sense to set up some AOP advice at
+    # the "before method call" joinpoint around defining, merging, and
+    # validating the default options.  (The Aquarium gem seems to be a good fit)
+    # E.g.
+    #
+    # req_defaults :username => nil, :password => nil
+    # def create_user(opts)
+    #   do stuff here
+    # end
+
     def self.included(klass)
       klass.class_eval do
         include Util
@@ -477,6 +487,46 @@ module Candlepin
 
     def get_all_users
       get('/users')
+    end
+
+    def create_role(opts = {})
+      defaults = {
+        :name => nil,
+        :permissions => [],
+      }
+      opts = verify_and_merge(opts, defaults)
+
+      post("/roles", opts)
+    end
+
+    def update_role(opts = {})
+      defaults = {
+        :id => nil,
+        :users => [],
+        :permissions => [],
+        :name => nil,
+      }
+      opts = verify_and_merge(opts, defaults)
+
+      put("/roles/#{opts[:id]}", opts)
+    end
+
+    def get_role(opts = {})
+      defaults = {
+        :id => nil,
+      }
+      opts = verify_and_merge(opts, defaults)
+
+      get("/roles/#{opts[:id]}")
+    end
+
+    def delete_role(opts = {})
+      defaults = {
+        :id => nil,
+      }
+      opts = verify_and_merge(opts, defaults)
+
+      delete("/roles/#{opts[:id]}")
     end
 
     def get_all_owners
