@@ -208,6 +208,7 @@ module Candlepin
     #      - If request is a DELETE, method begins with delete_
     #      - If request is a POST, method begins with create_ or post_
     #      - If request is a PUT, method begins with update_ or put_
+    #      - Aliases are acceptable, but use alias_method instead of just alias
     #  * URL construction should be performed with the Ruby URI class and/or the
     #    to_query methods added to Object, Array, and Hash.  No ad hoc string manipulations.
 
@@ -414,7 +415,71 @@ module Candlepin
       simple_delete(path, opts, :unregister)
     end
 
-    def get_owners
+    def update_entitlement(opts = {})
+      defaults = {
+        :id => nil,
+        :quantity => 1,
+      }
+      opts = verify_and_merge(opts, defaults)
+
+      path = "/entitlements/#{opts[:id]}"
+      put(path, opts)
+    end
+
+    def update_entitlement_consumer(opts = {})
+      defaults = {
+        :id => nil,
+        :to_consumer => nil,
+        :quantity => 1,
+      }
+      opts = verify_and_merge(opts, defaults)
+
+      path = "/entitlements/#{opts[:id]}"
+      simple_put(path, opts, :to_consumer, :quantity)
+    end
+    alias_method :migrate_entitlement, :update_entitlement_consumer
+
+    def create_user(opts = {})
+      defaults = {
+        :username => nil,
+        :password => nil,
+        :super_admin => false,
+      }
+      opts = verify_and_merge(opts, defaults)
+      post("/users", camelize_hash(opts))
+    end
+
+    def update_user(opts = {})
+      defaults = {
+        :username => nil,
+        :password => nil,
+        :super_admin => false,
+      }
+      opts = verify_and_merge(opts, defaults)
+      put("/users/#{opts[:username]}", camelize_hash(opts))
+    end
+
+    def get_user(opts = {})
+      defaults = {
+        :username => nil,
+      }
+      opts = verify_and_merge(opts, defaults)
+      get("/users/#{opts[:username]}")
+    end
+
+    def delete_user(opts = {})
+      defaults = {
+        :username => nil,
+      }
+      opts = verify_and_merge(opts, defaults)
+      delete("/users/#{opts[:username]}")
+    end
+
+    def get_all_users
+      get('/users')
+    end
+
+    def get_all_owners
       get('/owners')
     end
   end

@@ -46,8 +46,8 @@ module Candlepin
         expect(res.content.key?('version')).to be_true
       end
 
-      it 'gets owners with basic auth' do
-        res = user_client.get_owners
+      it 'gets all owners with basic auth' do
+        res = user_client.get_all_owners
         expect(res.content.empty?).to be_false
         expect(res.content.first.key?('id')).to be_true
       end
@@ -123,6 +123,57 @@ module Candlepin
         expect(res).to be_2xx
       end
 
+      it 'creates users' do
+        res = user_client.create_user(
+          :username => rand_string,
+          :password => rand_string,
+          :super_admin => false,
+        )
+        user = res.content
+        expect(res).to be_2xx
+        expect(user["hashedPassword"].length).to eq(40)
+      end
+
+      it 'gets users' do
+        res = user_client.create_user(
+          :username => rand_string,
+          :password => rand_string,
+          :super_admin => false,
+        )
+        user = res.content
+
+        res = user_client.get_user(:username => user["username"])
+        expect(res).to be_2xx
+        expect(res.content["id"]).to eq(user["id"])
+      end
+
+      it 'updates users' do
+        res = user_client.create_user(
+          :username => rand_string,
+          :password => rand_string,
+          :super_admin => false,
+        )
+        user = res.content
+
+        res = user_client.update_user(:username => user["username"], :password => rand_string)
+        expect(res.content["hashedPassword"]).to_not eq(user["hashedPassword"])
+      end
+
+      it 'deletes users' do
+        res = user_client.create_user(
+          :username => rand_string,
+          :password => rand_string,
+          :super_admin => false,
+        )
+        user = res.content
+
+        res = user_client.delete_user(:username => user["username"])
+        expect(res).to be_2xx
+
+        res = user_client.get_all_users
+        existing_users = res.content.map { |u| u["username"] }
+        expect(existing_users).to_not include(user["username"])
+      end
     end
 
     context "in a unit test context", :unit => true do
