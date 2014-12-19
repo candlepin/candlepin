@@ -188,7 +188,7 @@ module Candlepin
         role = res.content
 
         res = user_client.get_role(
-          :id => role["id"],
+          :role_id => role["id"],
         )
         expect(res.content["id"]).to eq(role["id"])
       end
@@ -200,12 +200,11 @@ module Candlepin
         role = res.content
 
         res = user_client.update_role(
-          :id => role["id"],
+          :role_id => role["id"],
           :name => rand_string,
         )
         expect(res.content["name"]).to_not eq(role["name"])
       end
-
 
       it 'deletes roles' do
         res = user_client.create_role(
@@ -216,9 +215,51 @@ module Candlepin
         expect(role["id"]).to_not be_nil
 
         res = user_client.delete_role(
-          :id => role["id"],
+          :role_id => role["id"],
         )
         expect(res).to be_2xx
+      end
+
+      it 'creates role users' do
+        user = user_client.create_user(
+          :username => rand_string,
+          :password => rand_string,
+          :super_admin => false,
+        ).content
+
+        role = user_client.create_role(
+          :name => rand_string,
+        ).content
+
+        res = user_client.add_role_user(
+          :role_id => role["id"],
+          :username => user["username"],
+        )
+        expect(res.content["users"].first["id"]).to eq(user["id"])
+      end
+
+      it 'deletes role users' do
+        user = user_client.create_user(
+          :username => rand_string,
+          :password => rand_string,
+          :super_admin => false,
+        ).content
+
+        role = user_client.create_role(
+          :name => rand_string,
+        ).content
+
+        res = user_client.add_role_user(
+          :role_id => role["id"],
+          :username => user["username"],
+        )
+        expect(res.content["users"].first["id"]).to eq(user["id"])
+
+        res = user_client.delete_role_user(
+          :role_id => role["id"],
+          :username => user["username"],
+        )
+        expect(res.content["users"]).to be_empty
       end
     end
 

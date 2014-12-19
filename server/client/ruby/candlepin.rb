@@ -66,7 +66,7 @@ private
 
   def jsonify(hash)
     if hash.key?(:body)
-      hash[:body] = JSON.generate(hash[:body])
+      hash[:body] = JSON.generate(hash[:body]) unless hash[:body].nil?
     end
     hash
   end
@@ -206,7 +206,7 @@ module Candlepin
     #  * Methods SHOULD generally follow these conventions:
     #      - If request is a GET, method begins with get_
     #      - If request is a DELETE, method begins with delete_
-    #      - If request is a POST, method begins with create_ or post_
+    #      - If request is a POST, method begins with create_, _add, or post_
     #      - If request is a PUT, method begins with update_ or put_
     #      - Aliases are acceptable, but use alias_method instead of just alias
     #  * URL construction should be performed with the Ruby URI class and/or the
@@ -501,32 +501,75 @@ module Candlepin
 
     def update_role(opts = {})
       defaults = {
-        :id => nil,
+        :role_id => nil,
         :users => [],
         :permissions => [],
         :name => nil,
       }
       opts = verify_and_merge(opts, defaults)
 
-      put("/roles/#{opts[:id]}", opts)
+      put("/roles/#{opts[:role_id]}", opts)
     end
 
     def get_role(opts = {})
       defaults = {
-        :id => nil,
+        :role_id => nil,
       }
       opts = verify_and_merge(opts, defaults)
 
-      get("/roles/#{opts[:id]}")
+      get("/roles/#{opts[:role_id]}")
     end
 
     def delete_role(opts = {})
       defaults = {
-        :id => nil,
+        :role_id => nil,
       }
       opts = verify_and_merge(opts, defaults)
 
-      delete("/roles/#{opts[:id]}")
+      delete("/roles/#{opts[:role_id]}")
+    end
+
+    def add_role_user(opts = {})
+      defaults = {
+        :role_id => nil,
+        :username => nil,
+      }
+      opts = verify_and_merge(opts, defaults)
+
+      simple_post("/roles/#{opts[:role_id]}/users/#{opts[:username]}")
+    end
+
+    def delete_role_user(opts = {})
+      defaults = {
+        :role_id => nil,
+        :username => nil,
+      }
+      opts = verify_and_merge(opts, defaults)
+
+      delete("/roles/#{opts[:role_id]}/users/#{opts[:username]}")
+    end
+
+    def add_role_permission(opts = {})
+      defaults = {
+        :role_id => nil,
+        :permission => nil,
+      }
+      opts = verify_and_merge(opts, defaults)
+
+      permission = select_from(opts, :owner, :access)
+      post("/roles/#{opts[:role_id]}/permissions/#{opts[:permission_id]}", permission)
+    end
+
+    def delete_role_permission(opts = {})
+      defaults = {
+        :role_id => nil,
+        :permission_id => nil,
+        :owner => nil,
+        :access => 'READ_ONLY',
+      }
+      opts = verify_and_merge(opts, defaults)
+
+      delete("/roles/#{opts[:role_id]}/permissions/#{opts[:permission_id]}")
     end
 
     def get_all_owners
