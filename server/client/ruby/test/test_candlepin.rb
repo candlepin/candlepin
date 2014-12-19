@@ -83,9 +83,9 @@ module Candlepin
           :name => rand_string,
         )
         consumer = res.content
+        user_client.uuid = consumer['uuid']
 
         res = user_client.update_all_guest_ids(
-          :uuid => consumer['uuid'],
           :guest_ids => ['123', '456'],
         )
         expect(res.status_code).to be_2xx

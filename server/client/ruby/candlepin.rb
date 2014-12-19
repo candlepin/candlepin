@@ -217,8 +217,12 @@ module Candlepin
       end
     end
 
-    def simple_req(verb, path, defaults, opts, *arg_names, &block)
-      opts = verify_and_merge(opts, defaults)
+    attr_writer :uuid
+    def uuid
+      return @uuid || nil
+    end
+
+    def simple_req(verb, path, opts={}, *arg_names, &block)
       if arg_names.empty?
         query_args = nil
       else
@@ -244,6 +248,10 @@ module Candlepin
       simple_req(:post, *args, &block)
     end
 
+    def simple_delete(*args, &block)
+      simple_req(:delete, *args, &block)
+    end
+
     def simple_get(*args)
       # Technically a GET is allowed to have a body, but the
       # server is just supposed to ignore it entirely.  I've elected
@@ -261,7 +269,7 @@ module Candlepin
       defaults = {
         :name => nil,
         :type => :system,
-        :uuid => nil,
+        :uuid => uuid,
         :facts => {},
         :username => nil,
         :owner => nil,
@@ -312,7 +320,9 @@ module Candlepin
         :host_guest_mapping => {},
         :create_missing => nil,
       }
-      simple_post('/hypervisors', defaults, opts, :owner, :create_missing) do
+      opts = verify_and_merge(opts, defaults)
+
+      simple_post('/hypervisors', opts, :owner, :create_missing) do
         opts[:host_guest_mapping]
       end
     end
@@ -331,12 +341,14 @@ module Candlepin
       defaults = {
         :date => nil,
       }
-      simple_get('/deleted_consumers', defaults, opts)
+      opts = verify_and_merge(opts, defaults)
+
+      simple_get('/deleted_consumers')
     end
 
     def update_consumer(opts = {})
       defaults = {
-        :uuid => nil,
+        :uuid => uuid,
         :facts => {},
         :installed_products => [],
         :hypervisor_id => nil,
@@ -364,11 +376,13 @@ module Candlepin
 
     def update_all_guest_ids(opts = {})
       defaults = {
-        :uuid => nil,
+        :uuid => uuid,
         :guest_ids => [],
       }
+      opts = verify_and_merge(opts, defaults)
 
-      simple_put("/consumers/#{opts[:uuid]}/guestids", defaults, opts) do
+      path = "/consumers/#{opts[:uuid]}/guestids"
+      simple_put(path) do
         opts[:guest_ids].map do |id|
           { :guestId => id }
         end
