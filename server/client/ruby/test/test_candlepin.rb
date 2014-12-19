@@ -15,7 +15,7 @@ end
 module Candlepin
   describe "Candlepin" do
     def rand_string(len = 9)
-      o = [('a'..'z'), ('A'..'z'), ('1'..'9')].map { |range| range.to_a }.flatten
+      o = [('a'..'z'), ('A'..'Z'), ('1'..'9')].map { |range| range.to_a }.flatten
       (0...len).map { o[rand(o.length)] }.join
     end
 
