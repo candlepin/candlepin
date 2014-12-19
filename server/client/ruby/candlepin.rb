@@ -114,10 +114,25 @@ end
 
 module Candlepin
   module Util
+    # Converts a string or symbol to a camel case string or symbol
     def camel_case(s)
-      s.to_s.split('_').inject([]) do |buffer, e|
+      conversion = s.to_s.split('_').inject([]) do |buffer, e|
         buffer.push(buffer.empty? ? e : e.capitalize)
-      end.join.to_sym
+      end.join
+
+      if s.is_a?(Symbol)
+        conversion.to_sym
+      else
+        conversion
+      end
+    end
+
+    # Convert all keys to camel case.
+    def camelize_hash(h)
+      camelized = h.each.map do |entry|
+        [camel_case(entry.first), entry.last]
+      end
+      Hash[camelized]
     end
 
     def build_path(path, query_hash = {})

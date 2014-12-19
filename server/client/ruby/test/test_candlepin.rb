@@ -359,6 +359,35 @@ module Candlepin
           UtilTest.new.verify_keys(hash, valid_keys)
         end.not_to raise_error
       end
+
+      it 'turns snake case symbols into camel case symbols' do
+        snake = :hello_world
+        camel = UtilTest.new.camel_case(snake)
+        expect(camel).to eq(:helloWorld)
+
+        snake = :hello
+        camel = UtilTest.new.camel_case(snake)
+        expect(camel).to eq(:hello)
+      end
+
+      it 'turns snake case strings into camel case strings' do
+        snake = "hello_world"
+        camel = UtilTest.new.camel_case(snake)
+        expect(camel).to eq("helloWorld")
+
+        snake = "hello"
+        camel = UtilTest.new.camel_case(snake)
+        expect(camel).to eq("hello")
+      end
+
+      it 'converts hash keys into camel case' do
+        h = {
+          :hello_world => 'x',
+          :y => 'z',
+        }
+        camel_hash = UtilTest.new.camelize_hash(h)
+        expect(camel_hash.keys.sort).to eq([:helloWorld, :y])
+      end
     end
   end
 end
