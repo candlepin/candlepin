@@ -389,6 +389,31 @@ module Candlepin
       end
     end
 
+    def update_guest_id(opts = {})
+      defaults = {
+        :uuid => uuid,
+        :guest_id => nil,
+      }
+      opts = verify_and_merge(opts, defaults)
+
+      path = "/consumers/#{opts[:uuid]}/guestids/#{guest_id}"
+      simple_put(path) do
+        { :guestId => opts[:guest_id] }
+      end
+    end
+
+    def delete_guest_id(opts = {})
+      defaults = {
+        :uuid => uuid,
+        :guest_id => nil,
+        :unregister => false,
+      }
+      opts = verify_and_merge(opts, defaults)
+
+      path = "/consumers/#{opts[:uuid]}/guestids/#{opts[:guest_id]}"
+      simple_delete(path, opts, :unregister)
+    end
+
     def get_owners
       get('/owners')
     end

@@ -90,6 +90,27 @@ module Candlepin
         )
         expect(res.status_code).to be_2xx
       end
+
+      it 'deletes a guest id' do
+        res = user_client.register(
+          :owner => 'admin',
+          :username => 'admin',
+          :name => rand_string,
+        )
+        consumer = res.content
+        user_client.uuid = consumer['uuid']
+
+        user_client.update_consumer(
+          :guest_ids => ['x', 'y', 'z'],
+        )
+        expect(res.status_code).to be_2xx
+
+        res = user_client.delete_guest_id(
+          :guest_id => 'x',
+        )
+        expect(res.status_code).to be_2xx
+      end
+
     end
 
     context "in a unit test context", :unit => true do
