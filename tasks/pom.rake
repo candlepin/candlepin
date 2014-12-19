@@ -37,13 +37,26 @@ module PomTask
         xml.groupId(artifact_spec[:group])
         xml.artifactId(artifact_spec[:id])
         xml.version(artifact_spec[:version])
+
+        version_properties = {}
+
+        # Manage version numbers in a properties section
+        xml.properties do
+          dependencies.each do |dep|
+            h = dep.to_hash
+            prop_name = "#{h[:group]}-#{h[:id]}.version"
+            xml.tag!(prop_name, h[:version])
+            version_properties[h] = "${#{prop_name}}"
+          end
+        end
+
         xml.dependencies do
           dependencies.each do |dep|
             h = dep.to_hash
             xml.dependency do
               xml.groupId(h[:group])
               xml.artifactId(h[:id])
-              xml.version(h[:version])
+              xml.version(version_properties[h])
             end
           end
         end
