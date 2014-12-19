@@ -6,6 +6,12 @@ require 'webrick/https'
 require 'rspec/autorun'
 require '../candlepin'
 
+RSpec.configure do |config|
+  config.expect_with :rspec do |c|
+    c.syntax = :expect
+  end
+end
+
 RSpec::Matchers.define :be_2xx do |expected|
   match do |code|
     (200..206).include?(code)
@@ -20,27 +26,26 @@ module Candlepin
     end
 
     context "in a functional context", :functional => true do
+      let!(:user_client) { BasicAuthClient.new }
+      let!(:no_auth_client) { NoAuthClient.new }
+
       it 'gets a status as JSON' do
-        simple_client = NoAuthClient.new
-        res = simple_client.get('/status')
+        res = no_auth_client.get('/status')
         expect(res.content.key?('version')).to be_true
       end
 
       it 'gets owners with basic auth' do
-        user_client = BasicAuthClient.new
         res = user_client.get_owners
         expect(res.content.empty?).to be_false
         expect(res.content.first.key?('id')).to be_true
       end
 
       it 'fails with bad password' do
-        user_client = BasicAuthClient.new(:password => nil)
-        res = user_client.get('/owners')
+        res = no_auth_client.get('/owners')
         expect(res.status_code).to eq(401)
       end
 
       it 'registers a consumer' do
-        user_client = BasicAuthClient.new
         res = user_client.register(
           :owner => 'admin',
           :username => 'admin',
@@ -51,13 +56,11 @@ module Candlepin
       end
 
       it 'gets deleted consumers' do
-        user_client = BasicAuthClient.new
         res = user_client.get_deleted_consumers
         expect(res.status_code).to be_2xx
       end
 
       it 'updates a consumer' do
-        user_client = BasicAuthClient.new
         res = user_client.register(
           :owner => 'admin',
           :username => 'admin',
@@ -74,7 +77,6 @@ module Candlepin
       end
 
       it 'updates a consumer guest id list' do
-        user_client = BasicAuthClient.new
         res = user_client.register(
           :owner => 'admin',
           :username => 'admin',
@@ -331,7 +333,7 @@ module Candlepin
         }
         expected_keys = [:x, :y]
         selected = UtilTest.new.select_from(original, :x, :y)
-        selected.keys.should =~ expected_keys
+        expect(selected.keys).to match_array(expected_keys)
       end
 
       it 'raises an error if not a proper subset' do
