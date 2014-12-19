@@ -13,8 +13,20 @@ RSpec.configure do |config|
 end
 
 RSpec::Matchers.define :be_2xx do |expected|
-  match do |code|
-    (200..206).include?(code)
+  match do |res|
+    (200..206).include?(res.status_code)
+  end
+end
+
+RSpec::Matchers.define :be_unauthorized do |expected|
+  match do |res|
+    res.status_code == 401
+  end
+end
+
+RSpec::Matchers.define :be_forbidden do |expected|
+  match do |res|
+    res.status_code == 403
   end
 end
 
@@ -42,7 +54,7 @@ module Candlepin
 
       it 'fails with bad password' do
         res = no_auth_client.get('/owners')
-        expect(res.status_code).to eq(401)
+        expect(res).to be_unauthorized
       end
 
       it 'registers a consumer' do
@@ -51,13 +63,13 @@ module Candlepin
           :username => 'admin',
           :name => rand_string,
         )
-        expect(res.status_code).to be_2xx
+        expect(res).to be_2xx
         expect(res.content['uuid'].length).to eq(36)
       end
 
       it 'gets deleted consumers' do
         res = user_client.get_deleted_consumers
-        expect(res.status_code).to be_2xx
+        expect(res).to be_2xx
       end
 
       it 'updates a consumer' do
@@ -73,7 +85,7 @@ module Candlepin
           :uuid => consumer['uuid'],
           :capabilities => ['cores'],
         )
-        expect(res.status_code).to be_2xx
+        expect(res).to be_2xx
       end
 
       it 'updates a consumer guest id list' do
@@ -88,7 +100,7 @@ module Candlepin
         res = user_client.update_all_guest_ids(
           :guest_ids => ['123', '456'],
         )
-        expect(res.status_code).to be_2xx
+        expect(res).to be_2xx
       end
 
       it 'deletes a guest id' do
@@ -103,12 +115,12 @@ module Candlepin
         user_client.update_consumer(
           :guest_ids => ['x', 'y', 'z'],
         )
-        expect(res.status_code).to be_2xx
+        expect(res).to be_2xx
 
         res = user_client.delete_guest_id(
           :guest_id => 'x',
         )
-        expect(res.status_code).to be_2xx
+        expect(res).to be_2xx
       end
 
     end
