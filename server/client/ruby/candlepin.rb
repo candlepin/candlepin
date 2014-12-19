@@ -65,7 +65,7 @@ class JSONClient < HTTPClient
 private
 
   def jsonify(hash)
-    if hash[:body] && hash[:body].is_a?(Hash)
+    if hash.key?(:body)
       hash[:body] = JSON.generate(hash[:body])
     end
     hash
@@ -346,17 +346,32 @@ module Candlepin
       }
       opts = verify_and_merge(opts, defaults)
 
-      #Convert all keys to camel case
-      camelized = opts.each.map do |entry|
-        [camel_case(entry.first), entry.last]
-      end
-      consumer = Hash[camelized]
-      consumer[:capabilities].map! do |name|
+      json_body = opts.dup
+
+      json_body[:capabilities].map! do |name|
         { :name => name }
       end
 
+      json_body[:guest_ids].map! do |id|
+        { :guestId => id }
+      end
+
+      json_body = camelize_hash(json_body)
       uri = "/consumers/#{opts[:uuid]}"
-      put(uri, consumer)
+      put(uri, json_body)
+    end
+
+    def update_all_guest_ids(opts = {})
+      defaults = {
+        :uuid => nil,
+        :guest_ids => [],
+      }
+
+      simple_put("/consumers/#{opts[:uuid]}/guestids", defaults, opts) do
+        opts[:guest_ids].map do |id|
+          { :guestId => id }
+        end
+      end
     end
 
     def get_owners

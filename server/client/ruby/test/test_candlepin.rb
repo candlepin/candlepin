@@ -72,6 +72,22 @@ module Candlepin
         )
         expect(res.status_code).to be_2xx
       end
+
+      it 'updates a consumer guest id list' do
+        user_client = BasicAuthClient.new
+        res = user_client.register(
+          :owner => 'admin',
+          :username => 'admin',
+          :name => rand_string,
+        )
+        consumer = res.content
+
+        res = user_client.update_all_guest_ids(
+          :uuid => consumer['uuid'],
+          :guest_ids => ['123', '456'],
+        )
+        expect(res.status_code).to be_2xx
+      end
     end
 
     context "in a unit test context", :unit => true do
