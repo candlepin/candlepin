@@ -9,10 +9,14 @@
     <changeSet id="20141203153942-1" author="dgoodwin">
         <comment>add event status</comment>
         <addColumn tableName="gb_event">
-            <column name="status" type="varchar(32)">
+            <column name="status" type="varchar(32)" defaultValue="SKIPPED">
                 <constraints nullable="false"/>
             </column>
         </addColumn>
+        <update tableName="gb_event">
+            <column name="status" type="varchar(32)" value="PROCESSED"/>
+            <where>(target='CONSUMER' and (type='DELETED' or type='CREATED')) or (target='COMPLIANCE' and type='CREATED')</where>
+        </update>
     </changeSet>
 
 </databaseChangeLog>
