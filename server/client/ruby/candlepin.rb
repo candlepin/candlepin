@@ -135,7 +135,7 @@ module Candlepin
       Hash[camelized]
     end
 
-    def build_path(path, query_hash = {})
+    def build_uri(path, query_hash = {})
       if query_hash.nil? || query_hash.to_query.empty?
         URI::Generic.build(:path => path).to_s
       else
@@ -225,7 +225,7 @@ module Candlepin
         query_args = select_from(opts, *arg_names)
       end
 
-      uri = build_path(path, query_args)
+      uri = build_uri(path, query_args)
 
       if block_given?
         post_body = yield
@@ -302,7 +302,7 @@ module Candlepin
       keys = opts[:activation_keys].join(",")
       query_args[:activation_keys] = keys unless keys.empty?
 
-      uri = build_path(path, query_args)
+      uri = build_uri(path, query_args)
       post(uri, consumer_json)
     end
 
@@ -322,8 +322,9 @@ module Candlepin
         :deleted_uuid => nil,
       }
       opts = verify_and_merge(opts, defaults)
-      uri = "/consumers/#{opts[:deleted_uuid]}/deletionrecord"
-      delete(uri)
+
+      path = "/consumers/#{opts[:deleted_uuid]}/deletionrecord"
+      delete(path)
     end
 
     def get_deleted_consumers(opts = {})
@@ -357,8 +358,8 @@ module Candlepin
       end
 
       json_body = camelize_hash(json_body)
-      uri = "/consumers/#{opts[:uuid]}"
-      put(uri, json_body)
+      path = "/consumers/#{opts[:uuid]}"
+      put(path, json_body)
     end
 
     def update_all_guest_ids(opts = {})
