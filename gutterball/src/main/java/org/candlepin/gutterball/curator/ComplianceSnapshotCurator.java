@@ -56,24 +56,27 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
     public List<Compliance> getSnapshotsOnDate(Date targetDate, List<String> consumerUuids,
         List<String> ownerFilters, List<String> statusFilters) {
 
-        List<String> activeConsumers =
-                consumerStateCurator.getConsumerUuidsOnDate(targetDate, ownerFilters, consumerUuids);
-
-        // https://hibernate.atlassian.net/browse/HHH-2776
-        if (activeConsumers == null || activeConsumers.isEmpty()) {
-            return new ArrayList<Compliance>();
-        }
-
         DetachedCriteria mainQuery = DetachedCriteria.forClass(Compliance.class);
         mainQuery.createAlias("consumer", "c");
-        mainQuery.add(Restrictions.in("c.uuid", activeConsumers));
+        mainQuery.createAlias("c.consumerState", "state");
+
+        // https://hibernate.atlassian.net/browse/HHH-2776
+        if (consumerUuids != null && !consumerUuids.isEmpty()) {
+            mainQuery.add(Restrictions.in("c.uuid", consumerUuids));
+        }
+
+        Date toCheck = targetDate == null ? new Date() : targetDate;
+        mainQuery.add(Restrictions.or(
+            Restrictions.isNull("state.deleted"),
+            Restrictions.gt("state.deleted", toCheck)
+        ));
+        mainQuery.add(Restrictions.le("state.created", toCheck));
 
         if (ownerFilters != null && !ownerFilters.isEmpty()) {
             mainQuery.createAlias("c.owner", "o");
             mainQuery.add(Restrictions.in("o.key", ownerFilters));
         }
 
-        Date toCheck = targetDate == null ? new Date() : targetDate;
         mainQuery.add(Restrictions.le("date", toCheck));
 
         mainQuery.setProjection(
