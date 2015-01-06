@@ -26,7 +26,6 @@ import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.Subqueries;
 
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -45,12 +44,10 @@ import java.util.TreeMap;
  *
  */
 public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
-    private ConsumerStateCurator consumerStateCurator;
 
     @Inject
-    public ComplianceSnapshotCurator(ConsumerStateCurator consumerStateCurator) {
+    public ComplianceSnapshotCurator() {
         super(Compliance.class);
-        this.consumerStateCurator = consumerStateCurator;
     }
 
     public List<Compliance> getSnapshotsOnDate(Date targetDate, List<String> consumerUuids,

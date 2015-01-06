@@ -20,12 +20,9 @@ import org.candlepin.gutterball.model.ConsumerState;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
-import org.hibernate.Criteria;
-import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
 
 import java.util.Date;
-import java.util.List;
 
 /**
  * A curator responsible for managing {@link ConsumerState} model objects.
