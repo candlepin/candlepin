@@ -73,6 +73,7 @@ import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -150,6 +151,21 @@ public class ConsumerResourceUpdateTest {
         return consumer;
     }
 
+    @Test
+    public void testUpdatesOnContentTagChanges() {
+        HashSet<String> originalTags = new HashSet<String>(Arrays.asList(new String[] {"hello", "world"}));
+        HashSet<String> changedTags = new HashSet<String>(Arrays.asList(new String[] {"x", "y"}));
+
+        Consumer c = getFakeConsumer();
+        c.setContentTags(originalTags);
+
+        Consumer incoming = new Consumer();
+        incoming.setContentTags(changedTags);
+
+        resource.updateConsumer(c.getUuid(), incoming);
+
+        assertEquals(changedTags, c.getContentTags());
+    }
 
     @Test
     public void nullReleaseVer() {
@@ -167,7 +183,6 @@ public class ConsumerResourceUpdateTest {
         this.resource.updateConsumer(consumer2.getUuid(), incoming2);
 
     }
-
 
     private void compareConsumerRelease(String release1, String release2, Boolean verify) {
         Consumer consumer = getFakeConsumer();

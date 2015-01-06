@@ -818,6 +818,13 @@ public class ConsumerResource {
         changesMade = checkForGuestsUpdate(toUpdate, updated) || changesMade;
         changesMade = checkForHypervisorIdUpdate(toUpdate, updated) || changesMade;
 
+        if (updated.getContentTags() != null &&
+            !updated.getContentTags().equals(toUpdate.getContentTags())) {
+            log.debug("   Updating consumer content tags.");
+            toUpdate.setContentTags(updated.getContentTags());
+            changesMade = true;
+        }
+
         // Allow optional setting of the autoheal attribute:
         if (updated.isAutoheal() != null &&
              !updated.isAutoheal().equals(toUpdate.isAutoheal())) {
