@@ -460,42 +460,6 @@ module Candlepin
         end.to raise_error(ArgumentError)
       end
 
-      it 'builds query hash properly' do
-        params = {
-          :colors => %w(red white blue),
-          :nothing => nil,
-          :k => {
-            :k2 => 'v'
-          }
-        }
-        expected = "colors=red&colors=white&colors=blue&k#{CGI.escape('[')}k2#{CGI.escape(']')}=v"
-        expect(params.to_query).to eq(expected)
-      end
-
-      it 'builds query array properly' do
-        params = %w(red white blue)
-        expected = "colors=red&colors=white&colors=blue"
-        expect(params.to_query('colors')).to eq(expected)
-
-        params = []
-        expected = 'colors='
-        expect(params.to_query('colors')).to eq(expected)
-      end
-
-      it 'builds query objects properly' do
-        params = "red"
-        expected = "colors=red"
-        expect(params.to_query('colors')).to eq(expected)
-
-        params = true
-        expected = 'colors=true'
-        expect(params.to_query('colors')).to eq(expected)
-
-        params = nil
-        expected = 'colors='
-        expect(params.to_query('colors')).to eq(expected)
-      end
-
       it 'can select a subset of a hash' do
         original = {
           :x => 1,
@@ -576,6 +540,15 @@ module Candlepin
         }
         camel_hash = UtilTest.new.camelize_hash(h)
         expect(camel_hash.keys.sort).to eq([:helloWorld, :y])
+      end
+
+      it 'converts hash subsets into camel case' do
+        h = {
+          :hello_world => 'x',
+          :y => 'z',
+        }
+        camel_hash = UtilTest.new.camelize_hash(h, :hello_world)
+        expect(camel_hash.keys.sort).to eq([:helloWorld])
       end
     end
   end

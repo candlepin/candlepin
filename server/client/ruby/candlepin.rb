@@ -52,63 +52,44 @@ class JSONClient < HTTPClient
     @content_type_json = 'application/json; charset=utf-8'
   end
 
+  # Takes in a uri, either a hash or individual arguments, and a block
+  # If a hash is given then the body, query string, headers, etc. are just
+  # passed through to HTTPClient's post.  The block is always passed through untouched
+  #
+  # If individual arguments are given they must be provided in the following order:
+  #   body
+  #   query
+  #   header
+  #   follow_redirect
+  #
+  # And any trailing nil arguments can be omitted.
+  #
+  # Examples:
+  # json_body = {...}
+  # query_args = {...}
+  # post('/path', json_body)
+  # post('/path', json_body, query_args)
+  # post('/path', json_body, query_args, {'Accept' => 'text/html'})
+  # post('/path', :query => query_args, :body => json_body)
+
   def post(uri, *args, &block)
     @header_filter.replace = true
-    request(:post, uri, jsonify(argument_to_hash(args, :body, :header, :follow_redirect)), &block)
+    request(:post, uri, jsonify(argument_to_hash(args, :body, :query, :header, :follow_redirect)), &block)
   end
 
+  # See documentation for post
   def put(uri, *args, &block)
     @header_filter.replace = true
-    request(:put, uri, jsonify(argument_to_hash(args, :body, :header)), &block)
+    request(:put, uri, jsonify(argument_to_hash(args, :body, :query, :header)), &block)
   end
 
 private
 
   def jsonify(hash)
-    if hash.key?(:body)
+    if !hash.nil? && hash.key?(:body)
       hash[:body] = JSON.generate(hash[:body]) unless hash[:body].nil?
     end
     hash
-  end
-end
-
-# These implementations taken from Rails.
-class Array
-  def to_param
-    collect { |e| e.to_param }.join '/'
-  end
-
-  def to_query(key)
-    if empty?
-      nil.to_query(key)
-    else
-      collect { |value| value.to_query(key) }.join '&'
-    end
-  end
-end
-
-class Hash
-  def to_param
-    to_query
-  end
-
-  def to_query(namespace = nil)
-    collect do |key, value|
-      unless value.nil? ||
-        (value.is_a?(Hash) || value.is_a?(Array)) && value.empty?
-        value.to_query(namespace ? "#{namespace}[#{key}]" : key)
-      end
-    end.compact.sort! * '&'
-  end
-end
-
-class Object
-  def to_param
-    to_s
-  end
-
-  def to_query(key)
-    "#{CGI.escape(key.to_param)}=#{CGI.escape(to_param.to_s)}"
   end
 end
 
@@ -128,27 +109,20 @@ module Candlepin
     end
 
     # Convert all keys to camel case.
-    def camelize_hash(h)
+    def camelize_hash(h, *args)
+      h = select_from(h, *args) unless args.nil? || args.empty?
       camelized = h.each.map do |entry|
         [camel_case(entry.first), entry.last]
       end
       Hash[camelized]
     end
 
-    def build_uri(path, query_hash = {})
-      if query_hash.nil? || query_hash.to_query.empty?
-        URI::Generic.build(:path => path).to_s
-      else
-        URI::Generic.build(:path => path, :query => query_hash.to_query).to_s
-      end
-    end
-
     # Create a subset of key-value pairs.  This method yields the subset and the
     # original hash to a block so that developers can easily add or
-    # tweak key-values.  For example:
-    #     h = {:hello => 'world', :goodbye => 'x' }
+    # tweak the resultant hash.  For example:
+    #     h = {:hello => 'world', :goodbye => 'bye' }
     #     select_from(h, :hello) do |subset, original|
-    #       h[:good_bye] = original[:goodbye]
+    #       h[:send_off] = original[:goodbye].upcase
     #     end
     def select_from(hash, *args, &block)
       missing = args.flatten.reject { |key| hash.key?(key) }
@@ -169,7 +143,7 @@ module Candlepin
     # mistakes and typos in the option hashes supplied to methods.  Suppose a method
     # expects to receive a hash with a ":name" key in it and the user sends in a hash with
     # the key ":nsme".  Ordinarily that would be accepted and the incorrect key would be
-    # silently ignored.  Meanwhile, calling verify_keys(hash, :name) would raise an error
+    # silently ignored.  However, calling verify_keys(hash, :name) would raise an error
     # to alert the developer to the mistake.
     #
     # The valid_keys argument can either be a single array of valid keys or the valid keys
@@ -233,49 +207,6 @@ module Candlepin
       return @uuid || nil
     end
 
-    def simple_req(verb, path, opts={}, *arg_names, &block)
-      if arg_names.empty?
-        query_args = nil
-      else
-        query_args = select_from(opts, *arg_names)
-      end
-
-      uri = build_uri(path, query_args)
-
-      if block_given?
-        post_body = yield
-      else
-        post_body = nil
-      end
-
-      send(verb, uri, post_body)
-    end
-
-    def simple_put(*args, &block)
-      simple_req(:put, *args, &block)
-    end
-
-    def simple_post(*args, &block)
-      simple_req(:post, *args, &block)
-    end
-
-    def simple_delete(*args, &block)
-      simple_req(:delete, *args, &block)
-    end
-
-    def simple_get(*args)
-      # Technically a GET is allowed to have a body, but the
-      # server is just supposed to ignore it entirely.  I've elected
-      # to prohibit a body to prevent likely programmer errors.
-      # If a programmer simply must have a GET with a body, they
-      # can call simple_req(:get, *args) { block_here }
-      if block_given?
-        raise ArgumentError.new("No body is allowed with GET")
-      end
-
-      simple_req(:get, *args)
-    end
-
     def register(opts = {})
       defaults = {
         :name => nil,
@@ -321,8 +252,7 @@ module Candlepin
       keys = opts[:activation_keys].join(",")
       query_args[:activation_keys] = keys unless keys.empty?
 
-      uri = build_uri(path, query_args)
-      post(uri, consumer_json)
+      post(path, :query => query_args, :body => consumer_json)
     end
 
     def post_hypervisor_check_in(opts = {})
@@ -333,9 +263,8 @@ module Candlepin
       }
       opts = verify_and_merge(opts, defaults)
 
-      simple_post('/hypervisors', opts, :owner, :create_missing) do
-        opts[:host_guest_mapping]
-      end
+      body = opts[:host_guest_mapping]
+      post('/hypervisors', :query => select_from(opts, :owner, :create_missing), :body => body)
     end
 
     def delete_deletion_record(opts = {})
@@ -354,7 +283,7 @@ module Candlepin
       }
       opts = verify_and_merge(opts, defaults)
 
-      simple_get('/deleted_consumers')
+      get('/deleted_consumers')
     end
 
     def update_consumer(opts = {})
@@ -370,19 +299,19 @@ module Candlepin
       }
       opts = verify_and_merge(opts, defaults)
 
-      json_body = opts.dup
+      body = opts.dup
 
-      json_body[:capabilities].map! do |name|
+      body[:capabilities].map! do |name|
         { :name => name }
       end
 
-      json_body[:guest_ids].map! do |id|
+      body[:guest_ids].map! do |id|
         { :guestId => id }
       end
 
-      json_body = camelize_hash(json_body)
+      body = camelize_hash(body)
       path = "/consumers/#{opts[:uuid]}"
-      put(path, json_body)
+      put(path, body)
     end
 
     def update_all_guest_ids(opts = {})
@@ -393,11 +322,10 @@ module Candlepin
       opts = verify_and_merge(opts, defaults)
 
       path = "/consumers/#{opts[:uuid]}/guestids"
-      simple_put(path) do
-        opts[:guest_ids].map do |id|
+      body = opts[:guest_ids].map do |id|
           { :guestId => id }
-        end
       end
+      put(path, body)
     end
 
     def update_guest_id(opts = {})
@@ -407,10 +335,8 @@ module Candlepin
       }
       opts = verify_and_merge(opts, defaults)
 
-      path = "/consumers/#{opts[:uuid]}/guestids/#{guest_id}"
-      simple_put(path) do
-        { :guestId => opts[:guest_id] }
-      end
+      path = "/consumers/#{opts[:uuid]}/guestids/#{opts[:guest_id]}"
+      put(path, camelize_hash(opts, :guest_id))
     end
 
     def delete_guest_id(opts = {})
@@ -422,7 +348,7 @@ module Candlepin
       opts = verify_and_merge(opts, defaults)
 
       path = "/consumers/#{opts[:uuid]}/guestids/#{opts[:guest_id]}"
-      simple_delete(path, opts, :unregister)
+      delete(path, select_from(opts, :unregister))
     end
 
     def update_entitlement(opts = {})
@@ -445,9 +371,8 @@ module Candlepin
       opts = verify_and_merge(opts, defaults)
 
       path = "/entitlements/#{opts[:id]}"
-      simple_put(path, opts, :to_consumer, :quantity)
+      put(path, select_from(opts, :to_consumer, :quantity))
     end
-    alias_method :migrate_entitlement, :update_entitlement_consumer
 
     def create_user(opts = {})
       defaults = {
@@ -536,7 +461,7 @@ module Candlepin
       }
       opts = verify_and_merge(opts, defaults)
 
-      simple_post("/roles/#{opts[:role_id]}/users/#{opts[:username]}")
+      post("/roles/#{opts[:role_id]}/users/#{opts[:username]}")
     end
 
     def delete_role_user(opts = {})
