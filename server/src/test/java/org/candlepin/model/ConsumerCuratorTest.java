@@ -14,10 +14,7 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.NotFoundException;
@@ -30,14 +27,17 @@ import org.candlepin.util.Util;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 import javax.inject.Inject;
+import javax.persistence.EntityManager;
 
 /**
  * ConsumerCuratorTest JUnit tests for Consumer database code
@@ -50,6 +50,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     @Inject private EntitlementCurator entitlementCurator;
     @Inject private Configuration config;
     @Inject private DeletedConsumerCurator dcc;
+    @Inject private EntityManager em;
 
     private Owner owner;
     private ConsumerType ct;
@@ -622,5 +623,21 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
         List<String> results = consumerCurator.getConsumerIdsWithStartedEnts();
         assertTrue(results.isEmpty());
+    }
+
+    @Test
+    public void testConsumerDeleteCascadesToContentTag() {
+        Consumer c = new Consumer("testConsumer", "testUser", owner, ct);
+        c.setContentTags(new HashSet<String>(Arrays.asList(new String[] {"t1", "t2"})));
+
+        String countQuery = "SELECT COUNT(*) FROM cp_consumer_content_tags";
+
+        consumerCurator.create(c);
+        BigInteger i = (BigInteger) em.createNativeQuery(countQuery).getSingleResult();
+        assertEquals(new BigInteger("2"), i);
+
+        consumerCurator.delete(c);
+        i = (BigInteger) em.createNativeQuery(countQuery).getSingleResult();
+        assertEquals(new BigInteger("0"), i);
     }
 }

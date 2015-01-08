@@ -68,12 +68,14 @@ class Candlepin
   # TODO: need to switch to a params hash, getting to be too many arguments.
   def register(name, type=:system, uuid=nil, facts={}, username=nil,
               owner_key=nil, activation_keys=[], installedProducts=[],
-              environment=nil, capabilities=[], hypervisor_id=nil)
+              environment=nil, capabilities=[], hypervisor_id=nil,
+              content_tags=[])
     consumer = {
       :type => {:label => type},
       :name => name,
       :facts => facts,
-      :installedProducts => installedProducts
+      :installedProducts => installedProducts,
+      :contentTags => content_tags,
     }
     consumer[:capabilities] = capabilities.collect { |name| {'name' => name} } if capabilities
 

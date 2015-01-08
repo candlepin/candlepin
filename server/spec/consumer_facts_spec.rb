@@ -18,9 +18,7 @@ describe 'Consumer Facts' do
         nil, nil, [], [{:productId => 'installedprod',
            :productName => "Installed"}])
 
-    @consumer_api = Candlepin.new(username=nil, password=nil,
-                                  cert=@consumer['idCert']['cert'],
-                                  key=@consumer['idCert']['key'])
+    @consumer_api = Candlepin.new(nil, nil, @consumer['idCert']['cert'], @consumer['idCert']['key'])
   end
 
   it 'allows a single fact to be added' do

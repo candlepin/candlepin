@@ -343,14 +343,11 @@ public class ConsumerResource {
             int days = config.getInt(ConfigProperties.IDENTITY_CERT_EXPIRY_THRESHOLD, 90);
             Date futureExpire = Util.addDaysToDt(days);
             // if expiration is within 90 days, regenerate it
-            if (log.isDebugEnabled()) {
-                log.debug("Threshold [" + days + "] expires on [" + expire +
-                    "] futureExpire [" + futureExpire + "]");
-            }
+            log.debug("Threshold [{}] expires on [{}] futureExpire [{}]", days, expire, futureExpire);
 
             if (expire.before(futureExpire)) {
-                log.info("Regenerating identity certificate for consumer: " + uuid +
-                    ", expiry: " + expire);
+                log.info("Regenerating identity certificate for consumer: {}, expiry: {}",
+                    uuid, expire);
                 consumer = this.regenerateIdentityCertificates(uuid);
             }
 
@@ -603,17 +600,17 @@ public class ConsumerResource {
     private void logNewConsumerDebugInfo(Consumer consumer,
         List<ActivationKey> keys, ConsumerType type) {
         if (log.isDebugEnabled()) {
-            log.debug("Got consumerTypeLabel of: " + type.getLabel());
+            log.debug("Got consumerTypeLabel of: {}", type.getLabel());
             if (consumer.getFacts() != null) {
                 log.debug("incoming facts:");
                 for (String key : consumer.getFacts().keySet()) {
-                    log.debug("   " + key + " = " + consumer.getFact(key));
+                    log.debug("   {} = {}", key, consumer.getFact(key));
                 }
             }
 
             log.debug("Activation keys:");
             for (ActivationKey activationKey : keys) {
-                log.debug("   " + activationKey.getName());
+                log.debug("   {}", activationKey.getName());
             }
         }
     }
@@ -749,7 +746,7 @@ public class ConsumerResource {
             Owner existingOwner = ownerCurator.lookupByKey(owner.getKey());
             if (existingOwner == null) {
                 log.info("Principal carries permission for owner that does not exist.");
-                log.info("Creating new owner: " + owner.getKey());
+                log.info("Creating new owner: {}", owner.getKey());
                 existingOwner = ownerCurator.create(owner);
                 poolManager.getRefresher().add(existingOwner).run();
             }
@@ -803,8 +800,9 @@ public class ConsumerResource {
     @Transactional
     protected boolean performConsumerUpdates(Consumer updated, Consumer toUpdate) {
         if (log.isDebugEnabled()) {
-            log.debug("Updating consumer: " + toUpdate.getUuid());
+            log.debug("Updating consumer: {}", toUpdate.getUuid());
         }
+
         // We need a representation of the consumer before making any modifications.
         // If nothing changes we won't send.  The new entity needs to be correct though,
         // so we should get a Jsonstring now, and finish it off if we're going to send
@@ -820,12 +818,17 @@ public class ConsumerResource {
         changesMade = checkForGuestsUpdate(toUpdate, updated) || changesMade;
         changesMade = checkForHypervisorIdUpdate(toUpdate, updated) || changesMade;
 
+        if (updated.getContentTags() != null &&
+            !updated.getContentTags().equals(toUpdate.getContentTags())) {
+            log.debug("   Updating consumer content tags.");
+            toUpdate.setContentTags(updated.getContentTags());
+            changesMade = true;
+        }
+
         // Allow optional setting of the autoheal attribute:
         if (updated.isAutoheal() != null &&
              !updated.isAutoheal().equals(toUpdate.isAutoheal())) {
-            if (log.isDebugEnabled()) {
-                log.debug("   Updating consumer autoheal setting.");
-            }
+            log.debug("   Updating consumer autoheal setting.");
             toUpdate.setAutoheal(updated.isAutoheal());
             changesMade = true;
         }
@@ -833,9 +836,7 @@ public class ConsumerResource {
         if (updated.getReleaseVer() != null &&
             (updated.getReleaseVer().getReleaseVer() != null) &&
             !updated.getReleaseVer().equals(toUpdate.getReleaseVer())) {
-            if (log.isDebugEnabled()) {
-                log.debug("   Updating consumer releaseVer setting.");
-            }
+            log.debug("   Updating consumer releaseVer setting.");
             toUpdate.setReleaseVer(updated.getReleaseVer());
             changesMade = true;
         }
@@ -844,9 +845,7 @@ public class ConsumerResource {
         String level = updated.getServiceLevel();
         if (level != null &&
             !level.equals(toUpdate.getServiceLevel())) {
-            if (log.isDebugEnabled()) {
-                log.debug("   Updating consumer service level setting.");
-            }
+            log.debug("   Updating consumer service level setting.");
             consumerBindUtil.validateServiceLevel(toUpdate.getOwner(), level);
             toUpdate.setServiceLevel(level);
             changesMade = true;
@@ -885,7 +884,7 @@ public class ConsumerResource {
         }
 
         if (changesMade) {
-            log.debug("Consumer " + toUpdate.getUuid() + " updated.");
+            log.debug("Consumer {} updated.", toUpdate.getUuid());
 
             // Set the updated date here b/c @PreUpdate will not get fired
             // since only the facts table will receive the update.
@@ -935,15 +934,11 @@ public class ConsumerResource {
      */
     private boolean checkForFactsUpdate(Consumer existing, Consumer incoming) {
         if (incoming.getFacts() == null) {
-            if (log.isDebugEnabled()) {
-                log.debug("Facts not included in this consumer update, skipping update.");
-            }
+            log.debug("Facts not included in this consumer update, skipping update.");
             return false;
         }
         else if (!existing.factsAreEqual(incoming)) {
-            if (log.isDebugEnabled()) {
-                log.debug("Updating consumer facts.");
-            }
+            log.debug("Updating consumer facts.");
             existing.setFacts(incoming.getFacts());
             return true;
         }
@@ -963,25 +958,18 @@ public class ConsumerResource {
     private boolean checkForInstalledProductsUpdate(Consumer existing, Consumer incoming) {
 
         if (incoming.getInstalledProducts() == null) {
-            if (log.isDebugEnabled()) {
-                log.debug("Installed packages not included in this consumer update, " +
-                    "skipping update.");
-            }
+            log.debug("Installed packages not included in this consumer update, skipping update.");
             return false;
         }
         else if (!existing.getInstalledProducts().equals(incoming.getInstalledProducts())) {
-            if (log.isDebugEnabled()) {
-                log.debug("Updating installed products.");
-            }
+            log.debug("Updating installed products.");
             existing.getInstalledProducts().clear();
             for (ConsumerInstalledProduct cip : incoming.getInstalledProducts()) {
                 existing.addInstalledProduct(cip);
             }
             return true;
         }
-        if (log.isDebugEnabled()) {
-            log.debug("No change to installed products.");
-        }
+        log.debug("No change to installed products.");
         return false;
     }
 
@@ -1002,16 +990,11 @@ public class ConsumerResource {
     private boolean checkForGuestsUpdate(Consumer existing, Consumer incoming) {
 
         if (incoming.getGuestIds() == null) {
-            if (log.isDebugEnabled()) {
-                log.debug("Guests not included in this consumer update, " +
-                    "skipping update.");
-            }
+            log.debug("Guests not included in this consumer update, skipping update.");
             return false;
         }
 
-        if (log.isDebugEnabled()) {
-            log.debug("Updating consumer's guest IDs.");
-        }
+        log.debug("Updating consumer's guest IDs.");
         List<GuestId> removedGuests = getRemovedGuestIds(existing, incoming);
         List<GuestId> addedGuests = getAddedGuestIds(existing, incoming);
 
@@ -1022,9 +1005,7 @@ public class ConsumerResource {
             existing.getGuestIds().clear();
         }
 
-        if (log.isDebugEnabled()) {
-            log.debug("Updating guest entitlements.");
-        }
+        log.debug("Updating guest entitlements.");
 
         // Check guests that are existing/added.
         for (GuestId guestId : incoming.getGuestIds()) {
@@ -1039,7 +1020,7 @@ public class ConsumerResource {
             // If adding a new GuestId send notification.
             if (addedGuests.contains(guestId)) {
                 if (log.isDebugEnabled()) {
-                    log.debug("New guest ID added: " + guestId.getGuestId());
+                    log.debug("New guest ID added: {}", guestId.getGuestId());
                 }
                 sink.queueEvent(eventFactory.guestIdCreated(guestId));
             }
@@ -1054,15 +1035,13 @@ public class ConsumerResource {
                 // If the guest already existed and its host consumer is not the same
                 // as the one being updated, then log a warning.
                 if (!removedGuests.contains(guestId) && !addedGuests.contains(guestId)) {
-                    log.warn("Guest " + guestId.getGuestId() +
-                        " is currently being hosted by two hosts: " +
-                        existing.getName() + " " + host.getName());
+                    log.warn("Guest {} is currently being hosted by two hosts: {} and {}",
+                        guestId.getGuestId(), existing.getName(), host.getName());
                 }
 
                 // Revoke any entitlements related to the other host.
                 log.warn("Guest was associated with another host. Revoking " +
-                        "invalidated host-specific entitlements related to host: " +
-                        host.getName());
+                        "invalidated host-specific entitlements related to host: {}", host.getName());
 
                 revokeGuestEntitlementsNotMatchingHost(existing, guest);
             }
@@ -1078,7 +1057,7 @@ public class ConsumerResource {
         for (GuestId guestId : removedGuests) {
             // Report that the guestId was removed.
             if (log.isDebugEnabled()) {
-                log.debug("Guest ID removed: " + guestId.getGuestId());
+                log.debug("Guest ID removed: {}", guestId.getGuestId());
             }
             sink.queueEvent(eventFactory.guestIdDeleted(guestId));
 
@@ -1130,14 +1109,13 @@ public class ConsumerResource {
 
             String requiredHost = getRequiredHost(pool);
             if (isVirtOnly(pool) && !requiredHost.equals(host.getUuid())) {
-                log.warn("Removing entitlement " + entitlement.getProductId() +
-                    " from guest " + guest.getName());
+                log.warn("Removing entitlement {} from guest {}.",
+                    entitlement.getProductId(), guest.getName());
                 deletableGuestEntitlements.add(entitlement);
             }
             else {
-                log.info("Entitlement " + entitlement.getProductId() +
-                         " on " + guest.getName() +
-                         " is still valid, and will not be removed.");
+                log.info("Entitlement {} on {} is still valid and will not be removed.",
+                    entitlement.getProductId(), guest.getName());
             }
         }
         // perform the entitlement revocation
@@ -1173,9 +1151,7 @@ public class ConsumerResource {
     public void deleteConsumer(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid,
         @Context Principal principal) {
-        if (log.isDebugEnabled()) {
-            log.debug("deleting  consumer_uuid" + uuid);
-        }
+        log.debug("Deleting consumer_uuid {}", uuid);
         Consumer toDelete = consumerCurator.verifyAndLookupConsumer(uuid);
         try {
             this.poolManager.revokeAllEntitlements(toDelete);
@@ -1210,9 +1186,7 @@ public class ConsumerResource {
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         @QueryParam("serials") String serials) {
 
-        if (log.isDebugEnabled()) {
-            log.debug("Getting client certificates for consumer: " + consumerUuid);
-        }
+        log.debug("Getting client certificates for consumer: {}", consumerUuid);
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         poolManager.regenerateDirtyEntitlements(
             entitlementCurator.listByConsumer(consumer));
@@ -1247,10 +1221,7 @@ public class ConsumerResource {
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         @QueryParam("serials") String serials) {
 
-        if (log.isDebugEnabled()) {
-            log.debug("Getting client certificate zip file for consumer: " +
-                consumerUuid);
-        }
+        log.debug("Getting client certificate zip file for consumer: {}", consumerUuid);
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         poolManager.regenerateDirtyEntitlements(
             entitlementCurator.listByConsumer(consumer));
@@ -1279,13 +1250,9 @@ public class ConsumerResource {
     private Set<Long> extractSerials(String serials) {
         Set<Long> serialSet = new HashSet<Long>();
         if (serials != null) {
-            if (log.isDebugEnabled()) {
-                log.debug("Requested serials: " + serials);
-            }
+            log.debug("Requested serials: {}", serials);
             for (String s : serials.split(",")) {
-                if (log.isDebugEnabled()) {
-                    log.debug("   " + s);
-                }
+                log.debug("   {}", s);
                 serialSet.add(Long.valueOf(s));
             }
         }
@@ -1322,10 +1289,7 @@ public class ConsumerResource {
     public List<CertificateSerialDto> getEntitlementCertificateSerials(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
 
-        if (log.isDebugEnabled()) {
-            log.debug("Getting client certificate serials for consumer: " +
-                consumerUuid);
-        }
+        log.debug("Getting client certificate serials for consumer: {}", consumerUuid);
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         poolManager.regenerateDirtyEntitlements(
             entitlementCurator.listByConsumer(consumer));
@@ -1416,7 +1380,7 @@ public class ConsumerResource {
         // Verify consumer exists:
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
 
-        log.debug("Consumer (post verify): " + consumer);
+        log.debug("Consumer (post verify): {}", consumer);
         try {
             // I hate double negatives, but if they have accepted all
             // terms, we want comeToTerms to be true.
@@ -1425,9 +1389,7 @@ public class ConsumerResource {
             }
         }
         catch (CandlepinException e) {
-            if (log.isDebugEnabled()) {
-                log.debug(e.getMessage());
-            }
+            log.debug(e.getMessage());
             throw e;
         }
 
@@ -1482,7 +1444,7 @@ public class ConsumerResource {
             }
             catch (RuntimeException re) {
                 log.warn("Unable to attach a subscription for a product that " +
-                    "has no pool: " + re.getMessage());
+                    "has no pool: {}", re.getMessage());
             }
         }
 
@@ -1641,7 +1603,7 @@ public class ConsumerResource {
         }
 
         int total = poolManager.revokeAllEntitlements(consumer);
-        log.debug("Revoked " + total + " entitlements from " + consumerUuid);
+        log.debug("Revoked {} entitlements from {}", total, consumerUuid);
         return new DeleteResult(total);
 
         // Need to parse off the value of subscriptionNumberArgs, probably

@@ -51,6 +51,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -159,6 +160,8 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
                      joinColumns = @JoinColumn(name = "cp_consumer_id"))
     @MapKeyColumn(name = "mapkey")
     @Column(name = "element")
+    //FIXME A cascade shouldn't be necessary here as ElementCollections cascade by default
+    //See http://stackoverflow.com/a/7696147
     @Cascade({org.hibernate.annotations.CascadeType.ALL})
     private Map<String, String> facts;
 
@@ -167,28 +170,31 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
 
     private Date lastCheckin;
 
-    @OneToMany(mappedBy = "consumer", targetEntity = ConsumerInstalledProduct.class)
-    @Cascade({org.hibernate.annotations.CascadeType.ALL,
-        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+    @OneToMany(mappedBy = "consumer",
+        orphanRemoval = true, cascade = { CascadeType.ALL })
     private Set<ConsumerInstalledProduct> installedProducts;
 
     @Transient
     private boolean canActivate;
 
-    @OneToMany(mappedBy = "consumer", targetEntity = GuestId.class)
-    @Cascade({org.hibernate.annotations.CascadeType.ALL,
-        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+    @OneToMany(mappedBy = "consumer",
+        orphanRemoval = true, cascade = { CascadeType.ALL })
     private List<GuestId> guestIds;
 
-    @OneToMany(mappedBy = "consumer", targetEntity = ConsumerCapability.class)
-    @Cascade({org.hibernate.annotations.CascadeType.ALL,
-        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+    @OneToMany(mappedBy = "consumer",
+        orphanRemoval = true, cascade = { CascadeType.ALL })
     private Set<ConsumerCapability> capabilities;
 
-    @OneToOne(mappedBy = "consumer", targetEntity = HypervisorId.class)
-    @Cascade({org.hibernate.annotations.CascadeType.ALL,
-        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+    @OneToOne(mappedBy = "consumer",
+        orphanRemoval = true, cascade = { CascadeType.ALL })
     private HypervisorId hypervisorId;
+
+    @Valid  // Enable validation.  See http://stackoverflow.com/a/13992948
+    @ElementCollection
+    @CollectionTable(name = "cp_consumer_content_tags",
+                     joinColumns = @JoinColumn(name = "consumer_id"))
+    @Column(name = "content_tag")
+    private Set<String> contentTags;
 
     // An instruction for the client to initiate an autoheal request.
     // WARNING: can't initialize to a default value here, we need to be able to see
@@ -641,6 +647,14 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
 
     public void setComplianceStatusHash(String complianceStatusHash) {
         this.complianceStatusHash = complianceStatusHash;
+    }
+
+    public Set<String> getContentTags() {
+        return contentTags;
+    }
+
+    public void setContentTags(Set<String> contentTags) {
+        this.contentTags = contentTags;
     }
 
     @Override

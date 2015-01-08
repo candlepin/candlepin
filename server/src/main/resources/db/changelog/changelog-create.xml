@@ -1167,4 +1167,5 @@
     <include file="db/changelog/20140911164800-add-activation-key-description.xml"/>
     <include file="db/changelog/20140916131808-activation-key-expansion.xml"/>
     <include file="db/changelog/20141203123727-add-compliance-status-hash-column.xml"/>
+    <include file="db/changelog/20141126150611-create-content-tags-table.xml"/>
 </databaseChangeLog>

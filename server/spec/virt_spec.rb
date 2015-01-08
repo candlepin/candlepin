@@ -13,15 +13,11 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
     # Setup two virt host consumers:
     @host1 = @user.register(random_string('host'), :system, nil,
       {}, nil, nil, [], [])
-    @host1_client = Candlepin.new(username=nil, password=nil,
-        cert=@host1['idCert']['cert'],
-        key=@host1['idCert']['key'])
+    @host1_client = Candlepin.new(nil, nil, @host1['idCert']['cert'], @host1['idCert']['key'])
 
     @host2 = @user.register(random_string('host'), :system, nil,
       {}, nil, nil, [], [])
-    @host2_client = Candlepin.new(username=nil, password=nil,
-        cert=@host2['idCert']['cert'],
-        key=@host2['idCert']['key'])
+    @host2_client = Candlepin.new(nil, nil, @host2['idCert']['cert'], @host2['idCert']['key'])
 
     pools = @host1_client.list_pools :consumer => @host1['uuid']
     @host_ent = @host1_client.consume_pool(@virt_limit_pool['id'], {:quantity => 1})[0]
@@ -31,7 +27,7 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
     pools.length.should == 1
 
     pools = @host2_client.list_pools :consumer => @host2['uuid']
-    host2_ent = @host2_client.consume_pool(@virt_limit_pool['id'], {:quantity => 1})[0]
+    @host2_client.consume_pool(@virt_limit_pool['id'], {:quantity => 1})[0]
     # After binding the host should see no pools available:
     pools = @host2_client.list_pools :consumer => @host2['uuid']
 
@@ -82,12 +78,12 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
         :'multi-entitlement' => 'yes',
         :stacking_id => stack_id,
       })
-    arch_virt_sub = @cp.create_subscription(@owner['key'], arch_virt_product.id, 10)
+    @cp.create_subscription(@owner['key'], arch_virt_product.id, 10)
     @cp.refresh_pools(@owner['key'])
     arch_virt_pools = @user.list_pools(:owner => @owner.id, :product => arch_virt_product.id)
     arch_virt_pool = arch_virt_pools[0]
 
-    host1_ent = @host1_client.consume_pool(arch_virt_pool['id'], {:quantity => 1})[0]
+    @host1_client.consume_pool(arch_virt_pool['id'], {:quantity => 1})[0]
     @cp.refresh_pools(@owner['key'])
 
     # Find the host-restricted pool:
@@ -101,7 +97,7 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
         {'guestId' => 'testing2', 'attributes' => {'active' => '1', 'virtWhoType'=> 'libvirt'}},
         {'guestId' => 'testing1', 'attributes' => {'active' => '1', 'virtWhoType'=> 'libvirt'}}]})
     @guest1_client.consume_pool(guest_pool_with_arch['id'], {:quantity => 1})
-    compliance = @guest1_client.get_compliance(consumer_id=@guest1_client.uuid)
+    compliance = @guest1_client.get_compliance(@guest1_client.uuid)
     compliance.reasons.length.should == 2
     reasonKeys = compliance.reasons.map {|r| r['key']}
     (reasonKeys.include? 'GUEST_LIMIT').should == true
@@ -405,7 +401,7 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
     # Create a sub for a virt limited product:
     product = create_product(random_string('product'), random_string('product'),
                       :attributes => { :virt_limit => 3, :'multi-entitlement' => 'yes'})
-    sub = @cp.create_subscription(@owner['key'], product.id, 10)
+    @cp.create_subscription(@owner['key'], product.id, 10)
     @cp.refresh_pools(@owner['key'])
 
     pools = @user.list_pools :owner => @owner.id, \

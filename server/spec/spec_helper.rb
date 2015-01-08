@@ -80,15 +80,11 @@ RSpec.configure do |config|
     @uuid2 = random_string('system.uuid')
     @guest1 = @user.register(random_string('guest'), :system, nil,
       {'virt.uuid' => @uuid1, 'virt.is_guest' => 'true', 'uname.machine' => 'x86_64'}, nil, nil, [], [])
-    @guest1_client = Candlepin.new(username=nil, password=nil,
-        cert=@guest1['idCert']['cert'],
-        key=@guest1['idCert']['key'])
+    @guest1_client = Candlepin.new(nil, nil, @guest1['idCert']['cert'], @guest1['idCert']['key'])
 
     @guest2 = @user.register(random_string('guest'), :system, nil,
       {'virt.uuid' => @uuid2, 'virt.is_guest' => 'true'}, nil, nil, [], [])
-    @guest2_client = Candlepin.new(username=nil, password=nil,
-        cert=@guest2['idCert']['cert'],
-        key=@guest2['idCert']['key'])
+    @guest2_client = Candlepin.new(nil, nil, @guest2['idCert']['cert'], @guest2['idCert']['key'])
   end
 
   config.after(:each) do
