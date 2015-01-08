@@ -15,16 +15,19 @@
 package org.candlepin.gutterball.report;
 
 import org.candlepin.gutterball.curator.ComplianceSnapshotCurator;
-import org.candlepin.gutterball.guice.I18nProvider;
 import org.candlepin.gutterball.model.snapshot.Compliance;
+import org.candlepin.gutterball.model.snapshot.ComplianceReason;
 
 import com.google.inject.Inject;
+
+import org.xnap.commons.i18n.I18n;
 
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
+import javax.inject.Provider;
 import javax.ws.rs.core.MultivaluedMap;
 
 /**
@@ -33,17 +36,21 @@ import javax.ws.rs.core.MultivaluedMap;
 public class ConsumerTrendReport extends Report<ConsumerTrendReportResult> {
 
     private ComplianceSnapshotCurator snapshotCurator;
+    private StatusReasonMessageGenerator messageGenerator;
 
     /**
      * @param i18nProvider
      * @param key
      * @param description
+     * @param messageGenerator
      */
     @Inject
-    public ConsumerTrendReport(I18nProvider i18nProvider, ComplianceSnapshotCurator snapshotCurator) {
+    public ConsumerTrendReport(Provider<I18n> i18nProvider, ComplianceSnapshotCurator snapshotCurator,
+            StatusReasonMessageGenerator messageGenerator) {
         super(i18nProvider, "consumer_trend",
                 i18nProvider.get().tr("Lists the status of each consumer over a date range"));
         this.snapshotCurator = snapshotCurator;
+        this.messageGenerator = messageGenerator;
     }
 
     @Override
@@ -109,6 +116,9 @@ public class ConsumerTrendReport extends Report<ConsumerTrendReportResult> {
         Set<Compliance> forTimeSpan = snapshotCurator.getComplianceForTimespan(
                 startDate, endDate, consumerIds, ownerFilters);
         for (Compliance cs : forTimeSpan) {
+            for (ComplianceReason cr : cs.getStatus().getReasons()) {
+                messageGenerator.setMessage(cs.getConsumer(), cr);
+            }
             result.add(cs.getConsumer().getUuid(), cs);
         }
         return result;

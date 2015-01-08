@@ -132,6 +132,16 @@ public class ComplianceReason {
     }
 
     @XmlTransient
+    public boolean isStacked() {
+        return attributes.containsKey("stack_id");
+    }
+
+    @XmlTransient
+    public boolean isNonCovered() {
+        return attributes.containsKey("product_id");
+    }
+
+    @XmlTransient
     public ComplianceStatus getComplianceStatus() {
         return complianceStatus;
     }

@@ -201,7 +201,6 @@ define "candlepin" do
   end
   download artifact(SCHEMASPY) => 'http://downloads.sourceforge.net/project/schemaspy/schemaspy/SchemaSpy%204.1.1/schemaSpy_4.1.1.jar'
 
-
   desc "Common Candlepin Code"
   define "common" do
     project.version = spec_version('candlepin-common.spec')
@@ -211,6 +210,8 @@ define "candlepin" do
     checkstyle.config_directory = checkstyle_config_directory
     checkstyle.eclipse_xml = checkstyle_eclipse_xml
     rpmlint.rpmlint_conf = rpmlint_conf
+
+    msgfmt.resource = "#{project.group}.common.i18n.Messages"
 
     compile_classpath = [
       COMMONS,
@@ -235,8 +236,9 @@ define "candlepin" do
     ])
     test.using :java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ]
 
-    common_jar = package(:jar)
-    pom.artifact = common_jar
+    pom.artifact = package(:jar).tap do |jar|
+      jar.include(:from => msgfmt.destination)
+    end
   end
 
   desc "The Gutterball Reporting Engine"
@@ -248,6 +250,8 @@ define "candlepin" do
     checkstyle.config_directory = checkstyle_config_directory
     checkstyle.eclipse_xml = checkstyle_eclipse_xml
     rpmlint.rpmlint_conf = rpmlint_conf
+
+    gettext.keys_destination = project("common").gettext.keys_destination
 
     eclipse.natures :java
 
@@ -301,6 +305,7 @@ define "candlepin" do
 
     gutterball_war = package(:war, :id=>"gutterball").tap do |war|
       war.libs -= artifacts(PROVIDED)
+      war.classes += [msgfmt.destination, resources.target]
     end
     pom.artifact = gutterball_war
   end
@@ -316,6 +321,8 @@ define "candlepin" do
     rpmlint.rpmlint_conf = rpmlint_conf
     liquibase.changelogs = ['changelog-update.xml', 'changelog-create.xml', 'changelog-testing.xml']
     liquibase.file_time_prefix_format = "%Y%m%d%H%M%S"
+
+    gettext.keys_destination = project("common").gettext.keys_destination
 
     # eclipse settings
     # http://buildr.apache.org/more_stuff.html#eclipse
@@ -340,7 +347,7 @@ define "candlepin" do
       pmd.enabled = true
     end
 
-    msgfmt.resource = "#{project.group}.i18n.Messages"
+    msgfmt.resource = "#{project.group}.server.i18n.Messages"
 
     ### Building
     compile_classpath = [

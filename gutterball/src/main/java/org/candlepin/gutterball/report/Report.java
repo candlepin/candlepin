@@ -15,8 +15,6 @@
 
 package org.candlepin.gutterball.report;
 
-import org.candlepin.gutterball.guice.I18nProvider;
-
 import org.xnap.commons.i18n.I18n;
 
 import java.text.ParseException;
@@ -27,6 +25,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 
+import javax.inject.Provider;
 import javax.ws.rs.core.MultivaluedMap;
 
 /**
@@ -50,7 +49,7 @@ public abstract class Report<R extends ReportResult> {
      * @param key
      * @param description
      */
-    public Report(I18nProvider i18nProvider, String key, String description) {
+    public Report(Provider<I18n> i18nProvider, String key, String description) {
         this.i18n = i18nProvider.get();
         this.key = key;
         this.description = description;
