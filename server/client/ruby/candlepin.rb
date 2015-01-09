@@ -180,7 +180,7 @@ module Candlepin
     #  * Methods SHOULD generally follow these conventions:
     #      - If request is a GET, method begins with get_
     #      - If request is a DELETE, method begins with delete_
-    #      - If request is a POST, method begins with create_, _add, or post_
+    #      - If request is a POST, method begins with create_, add_, or post_
     #      - If request is a PUT, method begins with update_ or put_
     #      - Aliases are acceptable, but use alias_method instead of just alias
     #  * URL construction should be performed with the Ruby URI class and/or the
@@ -197,9 +197,20 @@ module Candlepin
     # end
 
     def self.included(klass)
+      # Mixin the Util module's methods into this module
       klass.class_eval do
         include Util
       end
+      # Automatically include child Modules
+      # This type of meta-programming is a little too complicated for my taste,
+      # but the API has so many methods that it becomes difficult to navigate the
+      # file if the methods aren't grouped into logical sections.
+      klass.constants.each do |sym|
+        klass.class_eval do
+          include const_get(sym) if const_get(sym).kind_of?(Module)
+        end
+      end
+
     end
 
     attr_writer :uuid
@@ -207,298 +218,346 @@ module Candlepin
       return @uuid || nil
     end
 
-    def register(opts = {})
-      defaults = {
-        :name => nil,
-        :type => :system,
-        :uuid => uuid,
-        :facts => {},
-        :username => nil,
-        :owner => nil,
-        :activation_keys => [],
-        :installed_products => [],
-        :environment => nil,
-        :capabilities => [],
-        :hypervisor_id => nil,
-      }
-      opts = verify_and_merge(opts, defaults)
+    module ConsumerResource
+      def register(opts = {})
+        defaults = {
+          :name => nil,
+          :type => :system,
+          :uuid => uuid,
+          :facts => {},
+          :username => nil,
+          :owner => nil,
+          :activation_keys => [],
+          :installed_products => [],
+          :environment => nil,
+          :capabilities => [],
+          :hypervisor_id => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
 
-      consumer_json = select_from(opts, :name, :facts, :uuid) do |h|
-        if opts[:hypervisor_id]
-          h[:hypervisorId] = {
-            :hypervisorId => opts[:hypervisor_id],
-          }
-        end
+        consumer_json = select_from(opts, :name, :facts, :uuid) do |h|
+          if opts[:hypervisor_id]
+            h[:hypervisorId] = {
+              :hypervisorId => opts[:hypervisor_id],
+            }
+          end
 
-        unless opts[:capabilities].empty?
-          h[:capabilities] = opts[:capabilities].map do |c|
-            Hash[:name, c]
+          unless opts[:capabilities].empty?
+            h[:capabilities] = opts[:capabilities].map do |c|
+              Hash[:name, c]
+            end
           end
         end
+
+        consumer_json = {
+          :type => { :label => opts[:type] },
+          :installedProducts => opts[:installed_products],
+        }.merge(consumer_json)
+
+        if opts[:environment].nil?
+          path = "/consumers"
+        else
+          path = "/environments/#{opts[:environment]}/consumers"
+        end
+
+        query_args = select_from(opts, :username, :owner)
+        keys = opts[:activation_keys].join(",")
+        query_args[:activation_keys] = keys unless keys.empty?
+
+        post(path, :query => query_args, :body => consumer_json)
       end
 
-      consumer_json = {
-        :type => { :label => opts[:type] },
-        :installedProducts => opts[:installed_products],
-      }.merge(consumer_json)
+      def delete_deletion_record(opts = {})
+        defaults = {
+          :deleted_uuid => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
 
-      if opts[:environment].nil?
-        path = "/consumers"
-      else
-        path = "/environments/#{opts[:environment]}/consumers"
+        path = "/consumers/#{opts[:deleted_uuid]}/deletionrecord"
+        delete(path)
       end
 
-      query_args = select_from(opts, :username, :owner)
-      keys = opts[:activation_keys].join(",")
-      query_args[:activation_keys] = keys unless keys.empty?
+      def update_consumer(opts = {})
+        defaults = {
+          :uuid => uuid,
+          :facts => {},
+          :installed_products => [],
+          :hypervisor_id => nil,
+          :guest_ids => [],
+          :autoheal => true,
+          :service_level => nil,
+          :capabilities => [],
+        }
+        opts = verify_and_merge(opts, defaults)
 
-      post(path, :query => query_args, :body => consumer_json)
-    end
+        body = opts.dup
 
-    def post_hypervisor_check_in(opts = {})
-      defaults = {
-        :owner => nil,
-        :host_guest_mapping => {},
-        :create_missing => nil,
-      }
-      opts = verify_and_merge(opts, defaults)
+        body[:capabilities].map! do |name|
+          { :name => name }
+        end
 
-      body = opts[:host_guest_mapping]
-      post('/hypervisors', :query => select_from(opts, :owner, :create_missing), :body => body)
-    end
-
-    def delete_deletion_record(opts = {})
-      defaults = {
-        :deleted_uuid => nil,
-      }
-      opts = verify_and_merge(opts, defaults)
-
-      path = "/consumers/#{opts[:deleted_uuid]}/deletionrecord"
-      delete(path)
-    end
-
-    def get_deleted_consumers(opts = {})
-      defaults = {
-        :date => nil,
-      }
-      opts = verify_and_merge(opts, defaults)
-
-      get('/deleted_consumers')
-    end
-
-    def update_consumer(opts = {})
-      defaults = {
-        :uuid => uuid,
-        :facts => {},
-        :installed_products => [],
-        :hypervisor_id => nil,
-        :guest_ids => [],
-        :autoheal => true,
-        :service_level => nil,
-        :capabilities => [],
-      }
-      opts = verify_and_merge(opts, defaults)
-
-      body = opts.dup
-
-      body[:capabilities].map! do |name|
-        { :name => name }
-      end
-
-      body[:guest_ids].map! do |id|
-        { :guestId => id }
-      end
-
-      body = camelize_hash(body)
-      path = "/consumers/#{opts[:uuid]}"
-      put(path, body)
-    end
-
-    def update_all_guest_ids(opts = {})
-      defaults = {
-        :uuid => uuid,
-        :guest_ids => [],
-      }
-      opts = verify_and_merge(opts, defaults)
-
-      path = "/consumers/#{opts[:uuid]}/guestids"
-      body = opts[:guest_ids].map do |id|
+        body[:guest_ids].map! do |id|
           { :guestId => id }
+        end
+
+        body = camelize_hash(body)
+        path = "/consumers/#{opts[:uuid]}"
+        put(path, body)
       end
-      put(path, body)
+
+      def update_all_guest_ids(opts = {})
+        defaults = {
+          :uuid => uuid,
+          :guest_ids => [],
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        path = "/consumers/#{opts[:uuid]}/guestids"
+        body = opts[:guest_ids].map do |id|
+            { :guestId => id }
+        end
+        put(path, body)
+      end
+
+      def update_guest_id(opts = {})
+        defaults = {
+          :uuid => uuid,
+          :guest_id => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        path = "/consumers/#{opts[:uuid]}/guestids/#{opts[:guest_id]}"
+        put(path, camelize_hash(opts, :guest_id))
+      end
+
+      def get_all_guest_ids(opts = {})
+        defaults = {
+          :uuid => uuid,
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        get("/consumers/#{opts[:uuid]}/guestids")
+      end
+
+      def get_guest_id(opts = {})
+        defaults = {
+          :uuid => uuid,
+          :guest_id => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+        get("/consumers/#{opts[:uuid]}/guestids/#{opts[:guest_id]}")
+      end
+
+      def delete_guest_id(opts = {})
+        defaults = {
+          :uuid => uuid,
+          :guest_id => nil,
+          :unregister => false,
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        path = "/consumers/#{opts[:uuid]}/guestids/#{opts[:guest_id]}"
+        delete(path, select_from(opts, :unregister))
+      end
     end
 
-    def update_guest_id(opts = {})
-      defaults = {
-        :uuid => uuid,
-        :guest_id => nil,
-      }
-      opts = verify_and_merge(opts, defaults)
+    module HypervisorResource
+      def post_hypervisor_check_in(opts = {})
+        defaults = {
+           :owner => nil,
+           :host_guest_mapping => {},
+           :create_missing => nil,
+         }
+         opts = verify_and_merge(opts, defaults)
 
-      path = "/consumers/#{opts[:uuid]}/guestids/#{opts[:guest_id]}"
-      put(path, camelize_hash(opts, :guest_id))
+         body = opts[:host_guest_mapping]
+         post('/hypervisors', :query => select_from(opts, :owner, :create_missing), :body => body)
+      end
     end
 
-    def delete_guest_id(opts = {})
-      defaults = {
-        :uuid => uuid,
-        :guest_id => nil,
-        :unregister => false,
-      }
-      opts = verify_and_merge(opts, defaults)
+    module DeletedConsumerResource
+      def get_deleted_consumers(opts = {})
+        defaults = {
+          :date => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
 
-      path = "/consumers/#{opts[:uuid]}/guestids/#{opts[:guest_id]}"
-      delete(path, select_from(opts, :unregister))
+        get('/deleted_consumers')
+      end
     end
 
-    def update_entitlement(opts = {})
-      defaults = {
-        :id => nil,
-        :quantity => 1,
-      }
-      opts = verify_and_merge(opts, defaults)
+    module EntitlementResource
+      def update_entitlement(opts = {})
+        defaults = {
+          :id => nil,
+          :quantity => 1,
+        }
+        opts = verify_and_merge(opts, defaults)
 
-      path = "/entitlements/#{opts[:id]}"
-      put(path, opts)
+        path = "/entitlements/#{opts[:id]}"
+        put(path, opts)
+      end
+
+      def update_entitlement_consumer(opts = {})
+        defaults = {
+          :id => nil,
+          :to_consumer => nil,
+          :quantity => 1,
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        path = "/entitlements/#{opts[:id]}"
+        put(path, select_from(opts, :to_consumer, :quantity))
+      end
     end
 
-    def update_entitlement_consumer(opts = {})
-      defaults = {
-        :id => nil,
-        :to_consumer => nil,
-        :quantity => 1,
-      }
-      opts = verify_and_merge(opts, defaults)
+    module UserResource
+      def create_user(opts = {})
+        defaults = {
+          :username => nil,
+          :password => nil,
+          :super_admin => false,
+        }
+        opts = verify_and_merge(opts, defaults)
+        post("/users", camelize_hash(opts))
+      end
 
-      path = "/entitlements/#{opts[:id]}"
-      put(path, select_from(opts, :to_consumer, :quantity))
+      def update_user(opts = {})
+        defaults = {
+          :username => nil,
+          :password => nil,
+          :super_admin => false,
+        }
+        opts = verify_and_merge(opts, defaults)
+        put("/users/#{opts[:username]}", camelize_hash(opts))
+      end
+
+      def get_user(opts = {})
+        defaults = {
+          :username => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+        get("/users/#{opts[:username]}")
+      end
+
+      def get_user_roles(opts = {})
+        defaults = {
+          :username => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+        get("/users/#{opts[:username]}/roles")
+      end
+
+      def get_user_owners(opts = {})
+        defaults = {
+          :username => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+        get("/users/#{opts[:username]}/owners")
+      end
+
+      def delete_user(opts = {})
+        defaults = {
+          :username => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+        delete("/users/#{opts[:username]}")
+      end
+
+      def get_all_users
+        get('/users')
+      end
     end
 
-    def create_user(opts = {})
-      defaults = {
-        :username => nil,
-        :password => nil,
-        :super_admin => false,
-      }
-      opts = verify_and_merge(opts, defaults)
-      post("/users", camelize_hash(opts))
+    module RoleResource
+      def create_role(opts = {})
+        defaults = {
+          :name => nil,
+          :permissions => [],
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        post("/roles", opts)
+      end
+
+      def update_role(opts = {})
+        defaults = {
+          :role_id => nil,
+          :users => [],
+          :permissions => [],
+          :name => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        put("/roles/#{opts[:role_id]}", opts)
+      end
+
+      def get_role(opts = {})
+        defaults = {
+          :role_id => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        get("/roles/#{opts[:role_id]}")
+      end
+
+      def delete_role(opts = {})
+        defaults = {
+          :role_id => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        delete("/roles/#{opts[:role_id]}")
+      end
+
+      def add_role_user(opts = {})
+        defaults = {
+          :role_id => nil,
+          :username => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        post("/roles/#{opts[:role_id]}/users/#{opts[:username]}")
+      end
+
+      def delete_role_user(opts = {})
+        defaults = {
+          :role_id => nil,
+          :username => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        delete("/roles/#{opts[:role_id]}/users/#{opts[:username]}")
+      end
+
+      def add_role_permission(opts = {})
+        defaults = {
+          :role_id => nil,
+          :permission => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        permission = select_from(opts, :owner, :access)
+        post("/roles/#{opts[:role_id]}/permissions/#{opts[:permission_id]}", permission)
+      end
+
+      def delete_role_permission(opts = {})
+        defaults = {
+          :role_id => nil,
+          :permission_id => nil,
+          :owner => nil,
+          :access => 'READ_ONLY',
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        delete("/roles/#{opts[:role_id]}/permissions/#{opts[:permission_id]}")
+      end
     end
 
-    def update_user(opts = {})
-      defaults = {
-        :username => nil,
-        :password => nil,
-        :super_admin => false,
-      }
-      opts = verify_and_merge(opts, defaults)
-      put("/users/#{opts[:username]}", camelize_hash(opts))
-    end
-
-    def get_user(opts = {})
-      defaults = {
-        :username => nil,
-      }
-      opts = verify_and_merge(opts, defaults)
-      get("/users/#{opts[:username]}")
-    end
-
-    def delete_user(opts = {})
-      defaults = {
-        :username => nil,
-      }
-      opts = verify_and_merge(opts, defaults)
-      delete("/users/#{opts[:username]}")
-    end
-
-    def get_all_users
-      get('/users')
-    end
-
-    def create_role(opts = {})
-      defaults = {
-        :name => nil,
-        :permissions => [],
-      }
-      opts = verify_and_merge(opts, defaults)
-
-      post("/roles", opts)
-    end
-
-    def update_role(opts = {})
-      defaults = {
-        :role_id => nil,
-        :users => [],
-        :permissions => [],
-        :name => nil,
-      }
-      opts = verify_and_merge(opts, defaults)
-
-      put("/roles/#{opts[:role_id]}", opts)
-    end
-
-    def get_role(opts = {})
-      defaults = {
-        :role_id => nil,
-      }
-      opts = verify_and_merge(opts, defaults)
-
-      get("/roles/#{opts[:role_id]}")
-    end
-
-    def delete_role(opts = {})
-      defaults = {
-        :role_id => nil,
-      }
-      opts = verify_and_merge(opts, defaults)
-
-      delete("/roles/#{opts[:role_id]}")
-    end
-
-    def add_role_user(opts = {})
-      defaults = {
-        :role_id => nil,
-        :username => nil,
-      }
-      opts = verify_and_merge(opts, defaults)
-
-      post("/roles/#{opts[:role_id]}/users/#{opts[:username]}")
-    end
-
-    def delete_role_user(opts = {})
-      defaults = {
-        :role_id => nil,
-        :username => nil,
-      }
-      opts = verify_and_merge(opts, defaults)
-
-      delete("/roles/#{opts[:role_id]}/users/#{opts[:username]}")
-    end
-
-    def add_role_permission(opts = {})
-      defaults = {
-        :role_id => nil,
-        :permission => nil,
-      }
-      opts = verify_and_merge(opts, defaults)
-
-      permission = select_from(opts, :owner, :access)
-      post("/roles/#{opts[:role_id]}/permissions/#{opts[:permission_id]}", permission)
-    end
-
-    def delete_role_permission(opts = {})
-      defaults = {
-        :role_id => nil,
-        :permission_id => nil,
-        :owner => nil,
-        :access => 'READ_ONLY',
-      }
-      opts = verify_and_merge(opts, defaults)
-
-      delete("/roles/#{opts[:role_id]}/permissions/#{opts[:permission_id]}")
-    end
-
-    def get_all_owners
-      get('/owners')
+    module OwnerResource
+      def get_all_owners
+        get('/owners')
+      end
     end
   end
 
