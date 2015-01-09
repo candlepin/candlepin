@@ -21,7 +21,7 @@
 Name: %{parent_proj}-common
 Summary: Common code for Candlepin and related projects
 License: GPLv2
-Version: 1.0.17
+Version: 1.0.18
 Release: 1%{?dist}
 URL: http://www.candlepinproject.org
 Source: %{name}-%{version}.tar.gz
@@ -175,6 +175,11 @@ rm -rf %{_tmppath}/distlibdir
 %{_datadir}/%{parent_proj}/gutterball/lib/%{name}.jar
 
 %changelog
+* Fri Jan 09 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 1.0.18-1
+- Updated translations from Zanata. (dgoodwin@redhat.com)
+- Move all current translations to common. (awood@redhat.com)
+- Enable language specific text in Gutterball (wpoteat@redhat.com)
+
 * Thu Dec 11 2014 Devan Goodwin <dgoodwin@rm-rf.ca> 1.0.17-1
 - Fixed an issue with data being filtered erroneously (crog@redhat.com)
 - Fixed an issue with serializing the "environment" property. (crog@redhat.com)
