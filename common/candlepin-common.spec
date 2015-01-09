@@ -21,7 +21,7 @@
 Name: %{parent_proj}-common
 Summary: Common code for Candlepin and related projects
 License: GPLv2
-Version: 1.0.18
+Version: 1.0.19
 Release: 1%{?dist}
 URL: http://www.candlepinproject.org
 Source: %{name}-%{version}.tar.gz
@@ -174,6 +174,9 @@ rm -rf %{_tmppath}/distlibdir
 %{_datadir}/%{parent_proj}/gutterball/lib/%{name}.jar
 
 %changelog
+* Fri Jan 09 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 1.0.19-1
+- Fix oauth dependency for cpdeps builds. (dgoodwin@redhat.com)
+
 * Fri Jan 09 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 1.0.18-1
 - Updated translations from Zanata. (dgoodwin@redhat.com)
 - Move all current translations to common. (awood@redhat.com)
