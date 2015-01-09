@@ -22,7 +22,7 @@
 %endif
 
 Name: gutterball
-Version: 1.0.8
+Version: 1.0.9
 Release: 1%{?dist}
 Summary: Data aggregator for Candlepin
 
@@ -214,6 +214,9 @@ rm -rf %{buildroot}
 %attr(775, tomcat, root) %{_localstatedir}/log/%{name}
 
 %changelog
+* Fri Jan 09 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 1.0.9-1
+- Fix gutterball ant dep on Fedora. (dgoodwin@redhat.com)
+
 * Fri Jan 09 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 1.0.8-1
 - Removed unused object reference (mstead@redhat.com)
 - Fixed broken consumer status report query (mstead@redhat.com)
