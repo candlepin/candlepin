@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.37
+Version: 0.9.38
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -393,6 +393,24 @@ fi
 
 
 %changelog
+* Fri Jan 09 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.38-1
+- Update consumers when their content tags change. (awood@redhat.com)
+- Store consumer's content tags in the database. (awood@redhat.com)
+- Remove excessive and unecessary logging from X509Util. (dgoodwin@redhat.com)
+- Improved bind performance for large SKUs with modifier entitlements.
+  (dgoodwin@redhat.com)
+- Fix immediate regen of entitlements that modify their own products.
+  (dgoodwin@redhat.com)
+- 1171781: Major performance improvements for list owner pools.
+  (dgoodwin@redhat.com)
+- Make runtime classes for translations come from new common implementation
+  (wpoteat@redhat.com)
+- Merge all PO and POT files and place under common. (awood@redhat.com)
+- Move all current translations to common. (awood@redhat.com)
+- Enable language specific text in Gutterball (wpoteat@redhat.com)
+- 1156576: Fix NPE on hypervisor checkin (mstead@redhat.com)
+- 1173139: Make responses include the req uuid again (alikins@redhat.com)
+
 * Fri Dec 12 2014 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.37-1
 - Do not check Entitlement.updated when generating hash (mstead@redhat.com)
 - No longer salt compliance with md5 of data (mstead@redhat.com)
