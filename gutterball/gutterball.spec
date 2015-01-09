@@ -22,7 +22,7 @@
 %endif
 
 Name: gutterball
-Version: 1.0.7
+Version: 1.0.8
 Release: 1%{?dist}
 Summary: Data aggregator for Candlepin
 
@@ -214,6 +214,17 @@ rm -rf %{buildroot}
 %attr(775, tomcat, root) %{_localstatedir}/log/%{name}
 
 %changelog
+* Fri Jan 09 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 1.0.8-1
+- Removed unused object reference (mstead@redhat.com)
+- Fixed broken consumer status report query (mstead@redhat.com)
+- Fixed GB event status DB upgrade (mstead@redhat.com)
+- Make runtime classes for translations come from new common implementation
+  (wpoteat@redhat.com)
+- Merge all PO and POT files and place under common. (awood@redhat.com)
+- Enable language specific text in Gutterball (wpoteat@redhat.com)
+- Adjust CA name in Candlepin truststore for Katello installs.
+  (awood@redhat.com)
+
 * Fri Dec 12 2014 Devan Goodwin <dgoodwin@rm-rf.ca> 1.0.7-1
 - Fixed an issue with data being filtered erroneously (crog@redhat.com)
 - Fixed an issue with serializing the "environment" property. (crog@redhat.com)
