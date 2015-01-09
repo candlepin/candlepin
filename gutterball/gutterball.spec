@@ -38,7 +38,7 @@ BuildRequires: java-devel >= 0:1.6.0
 BuildRequires: gettext
 BuildRequires: candlepin-common >= 0:1.0.16
 
-%if 0%{?rhel} < 7
+%if 0%{?rhel} && 0%{?rhel} < 7
 BuildRequires: ant-nodeps >= 0:1.7.0
 %else
 BuildRequires: ant >= 0:1.7.0
