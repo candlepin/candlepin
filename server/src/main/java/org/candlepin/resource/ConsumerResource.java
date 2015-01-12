@@ -1443,8 +1443,7 @@ public class ConsumerResource {
                 throw cvce;
             }
             catch (RuntimeException re) {
-                log.warn("Unable to attach a subscription for a product that " +
-                    "has no pool: {}", re.getMessage());
+                log.error("Autobind error", re);
             }
         }
 
@@ -1531,6 +1530,7 @@ public class ConsumerResource {
     public List<Entitlement> listEntitlements(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         @QueryParam("product") String productId,
+        @QueryParam("regen") @DefaultValue("true") Boolean regen,
         @Context PageRequest pageRequest) {
 
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
@@ -1555,7 +1555,13 @@ public class ConsumerResource {
         for (Entitlement ent : returnedEntitlements) {
             addCalculatedAttributes(ent);
         }
-        poolManager.regenerateDirtyEntitlements(returnedEntitlements);
+
+        if (regen) {
+            poolManager.regenerateDirtyEntitlements(returnedEntitlements);
+        }
+        else {
+            log.debug("Skipping certificate regeneration.");
+        }
 
         return returnedEntitlements;
     }
