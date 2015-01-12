@@ -168,7 +168,10 @@ public class AdminResource {
         }
 
         log.info("Finished populating Hosted DB");
-        return String.format("DB populated successfully. Inserted/updated %d products and %d content", pcount, ccount);
+        return String.format(
+            "DB populated successfully. Inserted/updated %d products and %d content",
+            pcount, ccount
+        );
     }
 
 
