@@ -599,4 +599,42 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 .addOrder(Order.asc("id"))
                 .list();
     }
+
+    /**
+     * Retrieves the set of all known product IDs, as determined by looking only at pool data. If
+     * there are no known products, this method returns an empty set.
+     *
+     *
+     *
+     * @return
+     *  a set of all known product IDs.
+     */
+    public Set<String> getAllKnownProductIds() {
+        /*
+            SELECT "product_id" FROM "cp_pool_products"
+            WHERE "product_id" IS NOT NULL AND "product_id" != ''
+            UNION
+            SELECT "productid" AS "product_id" FROM "cp_pool"
+            WHERE "productid" IS NOT NULL AND "productid" != ''
+            UNION
+            SELECT "derivedproductid" AS "product_id" FROM "cp_pool"
+            WHERE "derivedproductid" IS NOT NULL AND "derivedproductid" != ''
+        */
+
+        String hql =
+            "SELECT Pool.productId " +
+            "    FROM Pool " +
+            "    WHERE Pool.productId IS NOT NULL AND Pool.productId != '' " +
+            "UNION " +
+            "SELECT Pool.derivedProductId " +
+            "    FROM Pool " +
+            "    WHERE Pool.derivedProductId IS NOT NULL AND Pool.derivedProductId != '' " +
+            "UNION " +
+            "SELECT ProvidedProduct.productId " +
+            "    FROM ProvidedProduct " +
+            "    WHERE ProvidedProduct.productId IS NOT NULL AND ProvidedProduct.productId != '';";
+
+        Query query = this.currentSession().createQuery(hql);
+        return new HashSet<String>(query.list());
+    }
 }
