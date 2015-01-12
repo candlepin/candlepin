@@ -19,8 +19,14 @@ import org.candlepin.audit.QueueStatus;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SystemPrincipal;
 import org.candlepin.common.auth.SecurityHole;
+import org.candlepin.model.ContentCurator;
+import org.candlepin.model.PoolCurator;
+import org.candlepin.model.Product;
+import org.candlepin.model.ProductContent;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.User;
 import org.candlepin.model.UserCurator;
+import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.service.impl.DefaultUserServiceAdapter;
 
@@ -31,6 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Set;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -47,13 +54,28 @@ public class AdminResource {
 
     private UserServiceAdapter userService;
     private UserCurator userCurator;
+
+    private ProductServiceAdapter productService;
+    private ProductCurator productCurator;
+    private ContentCurator contentCurator;
+    private PoolCurator poolCurator;
+
     private HornetqEventDispatcher dispatcher;
 
     @Inject
     public AdminResource(UserServiceAdapter userService, UserCurator userCurator,
-            HornetqEventDispatcher dispatcher) {
+        ProductServiceAdapter productService, ProductCurator productCurator,
+        ContentCurator contentCurator, PoolCurator poolCurator,
+        HornetqEventDispatcher dispatcher) {
+
         this.userService = userService;
         this.userCurator = userCurator;
+
+        this.productService = productService;
+        this.productCurator = productCurator;
+        this.contentCurator = contentCurator;
+        this.poolCurator = poolCurator;
+
         this.dispatcher = dispatcher;
     }
 
@@ -111,5 +133,43 @@ public class AdminResource {
     public List<QueueStatus> getQueueStats() {
         return dispatcher.getQueueInfo();
     }
+
+
+
+    @GET
+    @Produces({MediaType.TEXT_PLAIN})
+    @Path("pophosteddb")
+    public String populatedHostedDB() {
+        int pcount = 0;
+        int ccount = 0;
+        log.info("Populating Hosted DB");
+
+        String sql =
+            "SELECT DISTINCT \"product_id\" FROM (" +
+            "  SELECT \"product_id\" FROM \"cp_pool_products\"" +
+            "  UNION" +
+            "  SELECT \"productid\" AS \"product_id\" FROM \"cp_pool\"" +
+            "  UNION" +
+            "  SELECT \"derivedproductid\" AS \"product_id\" FROM \"cp_pool\"" +
+            ") u WHERE u.product_id IS NOT NULL AND u.product_id != '';";
+
+        Set<String> productIds = this.poolCurator.getAllKnownProductIds();
+
+        for (Product product : this.productService.getProductsByIds(productIds)) {
+            log.info("  Updating product: " + product.toString());
+            this.productCurator.createOrUpdate(product);
+            ++pcount;
+
+            for (ProductContent pcontent : product.getProductContent()) {
+                log.info("    Inserting product content: " + pcontent.getContent().toString());
+                this.contentCurator.createOrUpdate(pcontent.getContent());
+                ++ccount;
+            }
+        }
+
+        log.info("Finished populating Hosted DB");
+        return String.format("DB populated successfully. Inserted/updated %d products and %d content", pcount, ccount);
+    }
+
 
 }
