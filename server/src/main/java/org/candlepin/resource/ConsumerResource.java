@@ -1536,8 +1536,7 @@ public class ConsumerResource {
                 throw cvce;
             }
             catch (RuntimeException re) {
-                log.warn("Unable to attach a subscription for a product that " +
-                    "has no pool: " + re.getMessage());
+                log.error("Autobind error", re);
             }
         }
 
