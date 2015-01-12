@@ -14,10 +14,7 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 
 import org.candlepin.auth.Access;
@@ -371,7 +368,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         consumerResource.unbindBySerial(consumer.getUuid(), serials.get(0)
             .getSerial().getId());
         assertEquals(0,
-            consumerResource.listEntitlements(consumer.getUuid(), null, null).size());
+            consumerResource.listEntitlements(consumer.getUuid(), null, true, null).size());
     }
 
     @Test(expected = NotFoundException.class)
@@ -496,7 +493,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         securityInterceptor.enable();
 
         assertEquals(3,
-            consumerResource.listEntitlements(consumer.getUuid(), null, null).size());
+            consumerResource.listEntitlements(consumer.getUuid(), null, true, null).size());
     }
 
     @Test(expected = NotFoundException.class)
@@ -515,7 +512,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         setupPrincipal(new ConsumerPrincipal(evilConsumer));
         securityInterceptor.enable();
 
-        consumerResource.listEntitlements(consumer.getUuid(), null, null);
+        consumerResource.listEntitlements(consumer.getUuid(), null, true, null);
     }
 
     @Test(expected = NotFoundException.class)
@@ -533,7 +530,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         securityInterceptor.enable();
         setupPrincipal(evilOwner, Access.ALL);
 
-        consumerResource.listEntitlements(consumer.getUuid(), null, null);
+        consumerResource.listEntitlements(consumer.getUuid(), null, true, null);
     }
 
     @Test
@@ -548,7 +545,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         securityInterceptor.enable();
 
         assertEquals(3,
-            consumerResource.listEntitlements(consumer.getUuid(), null, null).size());
+            consumerResource.listEntitlements(consumer.getUuid(), null, true, null).size());
     }
 
     @Test
