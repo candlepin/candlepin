@@ -555,9 +555,73 @@ module Candlepin
     end
 
     module OwnerResource
+      def get_owner(opts = {})
+        defaults = {
+          :key => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        get("/owners/#{opts[:key]}")
+      end
+
+      def get_owner_info(opts = {})
+        defaults = {
+          :key => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        get("/owners/#{opts[:key]}/info")
+      end
+
       def get_all_owners
         get('/owners')
       end
+
+      def create_owner(opts = {})
+        defaults = {
+          :key => nil,
+          :display_name => nil,
+          :parent_owner => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        post("/owners", camelize_hash(opts))
+      end
+
+      def update_owner(opts = {})
+        defaults = {
+          :key => nil,
+          :display_name => nil,
+          :parent_owner => nil,
+          :default_service_level => nil,
+          :content_prefix => nil,
+          :log_level => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        body = camelize_hash(opts, *opts.keys.reject { |k| k == :key || opts[k].nil? })
+        put("/owners/#{opts[:key]}", body)
+      end
+
+      def set_owner_log_level(opts = {})
+        defaults = {
+          :key => nil,
+          :level => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        put("/owners/#{opts[:key]}/log", :query => select_from(opts, :level))
+      end
+
+      def delete_owner_log_level(opts = {})
+        defaults = {
+          :key => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        delete("/owners/#{opts[:key]}/log")
+      end
+
     end
   end
 

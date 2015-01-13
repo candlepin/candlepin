@@ -261,6 +261,104 @@ module Candlepin
         )
         expect(res.content["users"]).to be_empty
       end
+
+      it 'creates owners' do
+        res = user_client.create_owner(
+          :key => rand_string,
+          :display_name => rand_string,
+        )
+        expect(res).to be_2xx
+        expect(res.content).to have_key('id')
+      end
+
+      it 'creates child owners' do
+        parent = user_client.create_owner(
+          :key => rand_string,
+          :display_name => rand_string,
+        ).content
+
+        child = user_client.create_owner(
+          :key => rand_string,
+          :display_name => rand_string,
+          :parent_owner => parent,
+        ).content
+
+        expect(child['parentOwner']['id']).to eq(parent['id'])
+        expect(parent['parentOwner']).to be_nil
+      end
+
+      it 'updates owners' do
+        owner = user_client.create_owner(
+          :key => rand_string,
+          :display_name => rand_string,
+        ).content
+        old_name = owner['displayName']
+
+        res = user_client.update_owner(
+          :key => owner['key'],
+          :display_name => rand_string
+        )
+        expect(res).to be_2xx
+        expect(res.content['displayName']).to_not eq(old_name)
+      end
+
+      it 'sets owner log level' do
+        owner = user_client.create_owner(
+          :key => rand_string,
+          :display_name => rand_string,
+        ).content
+
+        res = user_client.set_owner_log_level(
+          :key => owner['key'],
+          :level => 'debug',
+        )
+        expect(res).to be_2xx
+        expect(res.content['logLevel']).to eq('DEBUG')
+      end
+
+      it 'deletes owner log level' do
+        owner = user_client.create_owner(
+          :key => rand_string,
+          :display_name => rand_string,
+        ).content
+
+        res = user_client.set_owner_log_level(
+          :key => owner['key'],
+          :level => 'debug',
+        )
+        expect(res).to be_2xx
+        expect(res.content['logLevel']).to eq('DEBUG')
+
+        res = user_client.delete_owner_log_level(
+          :key => owner['key'],
+        )
+        expect(res).to be_2xx
+      end
+
+      it 'gets owners' do
+        owner = user_client.create_owner(
+          :key => rand_string,
+          :display_name => rand_string,
+        ).content
+
+        res = user_client.get_owner(
+          :key => owner['key'],
+        )
+        expect(res).to be_2xx
+        expect(res.content['id']).to eq(owner['id'])
+      end
+
+      it 'gets owner info' do
+        owner = user_client.create_owner(
+          :key => rand_string,
+          :display_name => rand_string,
+        ).content
+
+        res = user_client.get_owner_info(
+          :key => owner['key'],
+        )
+        expect(res).to be_2xx
+      end
     end
 
     context "in a unit test context", :unit => true do
