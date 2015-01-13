@@ -305,7 +305,8 @@ define "candlepin" do
 
     gutterball_war = package(:war, :id=>"gutterball").tap do |war|
       war.libs -= artifacts(PROVIDED)
-      war.classes += [msgfmt.destination, resources.target]
+      war.classes << resources.target
+      war.classes << msgfmt.destination if msgfmt.enabled?
     end
     pom.artifact = gutterball_war
   end
@@ -424,7 +425,8 @@ define "candlepin" do
       war.libs -= artifacts(PROVIDED)
       war.libs -= artifacts(JAVA_TOOLS)
       war.classes.clear
-      war.classes = [msgfmt.destination, resources.target]
+      war.classes << resources.target
+      war.classes << msgfmt.destination if msgfmt.enabled?
       web_inf = war.path('WEB-INF/classes')
       web_inf.path(candlepin_path).include("#{compiled_cp_path}/**").exclude("#{compiled_cp_path}/util/apicrawl")
     end
