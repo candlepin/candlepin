@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.26.6
+Version: 0.9.26.7
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -390,6 +390,11 @@ fi
 
 
 %changelog
+* Tue Jan 13 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.26.7-1
+- Improve logging for bind lock wait timeouts. (dgoodwin@redhat.com)
+- Add option to skip dirty certificate regeneration on list entitlements.
+  (dgoodwin@redhat.com)
+
 * Thu Dec 18 2014 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.26.6-1
 - Remove excessive and unecessary logging from X509Util. (dgoodwin@redhat.com)
 - Improved bind performance for large SKUs with modifier entitlements.
