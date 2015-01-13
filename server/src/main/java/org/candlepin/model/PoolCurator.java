@@ -616,17 +616,17 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         */
 
         String hql =
-            "SELECT Pool.productId " +
+            "SELECT productId " +
             "    FROM Pool " +
-            "    WHERE Pool.productId IS NOT NULL AND Pool.productId != '' " +
+            "    WHERE productId IS NOT NULL AND productId != '' " +
             "UNION " +
-            "SELECT Pool.derivedProductId " +
+            "SELECT derivedProductId " +
             "    FROM Pool " +
-            "    WHERE Pool.derivedProductId IS NOT NULL AND Pool.derivedProductId != '' " +
+            "    WHERE derivedProductId IS NOT NULL AND derivedProductId != '' " +
             "UNION " +
-            "SELECT ProvidedProduct.productId " +
+            "SELECT productId " +
             "    FROM ProvidedProduct " +
-            "    WHERE ProvidedProduct.productId IS NOT NULL AND ProvidedProduct.productId != '';";
+            "    WHERE productId IS NOT NULL AND productId != '';";
 
         Query query = this.currentSession().createQuery(hql);
         return new HashSet<String>(query.list());
