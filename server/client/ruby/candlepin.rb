@@ -29,7 +29,6 @@ class JSONClient < HTTPClient
   attr_accessor :content_type_json
 
   class AcceptTypeHeaderFilter
-
     def initialize(client, mime_type)
       @client = client
       @mime_type = mime_type
@@ -648,15 +647,6 @@ module Candlepin
         get("/owners/#{opts[:key]}")
       end
 
-      def get_owner_info(opts = {})
-        defaults = {
-          :key => nil,
-        }
-        opts = verify_and_merge(opts, defaults)
-
-        get("/owners/#{opts[:key]}/info")
-      end
-
       def get_owner_hypervisors(opts = {})
         defaults = {
           :key => nil,
@@ -667,13 +657,29 @@ module Candlepin
         get("/owners/#{opts[:key]}/hypervisors", :hypervisor_id => opts[:hypervisor_ids])
       end
 
-      def get_owner_events(opts = {})
+      def get_owner_subresource(subresource, opts = {})
         defaults = {
           :key => nil,
         }
         opts = verify_and_merge(opts, defaults)
 
-        get("/owners/#{opts[:key]}/events")
+        get("/owners/#{opts[:key]}/#{subresource}")
+      end
+
+      def get_owner_info(opts = {})
+        get_owner_subresource("info", opts)
+      end
+
+      def get_owner_events(opts = {})
+        get_owner_subresource("events", opts)
+      end
+
+      def get_owner_imports(opts = {})
+        get_owner_subresource("imports", opts)
+      end
+
+      def get_owner_subscriptions(opts = {})
+        get_owner_subresource("subscriptions", opts)
       end
 
       def get_all_owners
