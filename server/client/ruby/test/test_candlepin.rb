@@ -87,6 +87,21 @@ module Candlepin
         expect(res).to be_2xx
       end
 
+      it 'allows a client to set a sticky uuid' do
+        res = user_client.register(
+          :owner => 'admin',
+          :username => 'admin',
+          :name => rand_string,
+        )
+        consumer = res.content
+        user_client.uuid = consumer['uuid']
+
+        res = user_client.update_consumer(
+          :autoheal => false,
+        )
+        expect(res).to be_2xx
+      end
+
       it 'updates a consumer guest id list' do
         res = user_client.register(
           :owner => 'admin',
@@ -358,6 +373,23 @@ module Candlepin
           :key => owner['key'],
         )
         expect(res).to be_2xx
+      end
+
+      it "gets an owner's jobs" do
+        owner = user_client.create_owner(
+          :key => rand_string,
+          :display_name => rand_string,
+        ).content
+
+        res = user_client.get_owner_jobs(
+          :owner => owner['key'],
+        )
+        expect(res).to be_2xx
+      end
+
+      it 'gets a crl' do
+        crl = user_client.get_crl
+        expect(crl).to be_kind_of(OpenSSL::X509::CRL)
       end
     end
 

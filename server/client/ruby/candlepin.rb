@@ -218,6 +218,71 @@ module Candlepin
       return @uuid || nil
     end
 
+    module CrlResource
+      def get_crl
+        res = get('/crl', :header => {'Accept' => 'text/plain'})
+        OpenSSL::X509::CRL.new(res.content)
+      end
+    end
+
+    module StatisticsResource
+      def put_statistics
+        put("/statistics/generate")
+      end
+    end
+
+    module SerialsResource
+      def get_serial(opts = {})
+        defaults = {
+          :serial_id => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        get("/serials/#{opt[:serial_id]}")
+      end
+    end
+
+    module EventsResource
+      def get_events
+        get("/events")
+      end
+    end
+
+    module JobsResource
+      def get_job(opts = {})
+        defaults = {
+          :job_id => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        get("/jobs/#{opts[:job_id]}")
+      end
+
+      def get_owner_jobs(opts = {})
+        defaults = {
+          :owner => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        get("/jobs", opts)
+      end
+
+      def delete_job(opts = {})
+        defaults = {
+          :job_id => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        delete("/jobs/#{opts[:job_id]}")
+      end
+    end
+
+    module StatusResource
+      def get_status
+        get('/status')
+      end
+    end
+
     module ConsumerResource
       def register(opts = {})
         defaults = {
@@ -501,6 +566,10 @@ module Candlepin
         get("/roles/#{opts[:role_id]}")
       end
 
+      def get_all_roles
+        get("/roles")
+      end
+
       def delete_role(opts = {})
         defaults = {
           :role_id => nil,
@@ -573,8 +642,27 @@ module Candlepin
         get("/owners/#{opts[:key]}/info")
       end
 
+      def get_owner_hypervisors(opts = {})
+        defaults = {
+          :key => nil,
+          :hypervisor_ids => [],
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        get("/owners/#{opts[:key]}/hypervisors", :hypervisor_id => opts[:hypervisor_ids])
+      end
+
+      def get_owner_events(opts = {})
+        defaults = {
+          :key => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        get("/owners/#{opts[:key]}/events")
+      end
+
       def get_all_owners
-        get('/owners')
+        get("/owners")
       end
 
       def create_owner(opts = {})
