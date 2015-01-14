@@ -68,12 +68,12 @@ public class PopulateHostedDBTask extends KingpinJob {
         Set<String> productIds = this.poolCurator.getAllKnownProductIds();
 
         for (Product product : this.productService.getProductsByIds(productIds)) {
-            log.info("  Updating product: " + product.toString());
+            log.info("Updating product: " + product.toString());
             this.productCurator.createOrUpdate(product);
             ++pcount;
 
             for (ProductContent pcontent : product.getProductContent()) {
-                log.info("    Inserting product content: " + pcontent.getContent().toString());
+                log.info("Inserting product content: " + pcontent.getContent().toString());
                 this.contentCurator.createOrUpdate(pcontent.getContent());
                 ++ccount;
             }
