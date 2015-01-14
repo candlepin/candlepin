@@ -28,6 +28,21 @@ class JSONClient < HTTPClient
 
   attr_accessor :content_type_json
 
+  class AcceptTypeHeaderFilter
+
+    def initialize(client, mime_type)
+      @client = client
+      @mime_type = mime_type
+    end
+
+    def filter_request(req)
+      req.header['accept'] = @mime_type
+    end
+
+    def filter_response(req, res)
+    end
+  end
+
   class JSONRequestHeaderFilter
     attr_accessor :replace
 
@@ -220,7 +235,7 @@ module Candlepin
 
     module CrlResource
       def get_crl
-        res = get('/crl', :header => {'Accept' => 'text/plain'})
+        res = get_text('/crl')
         OpenSSL::X509::CRL.new(res.content)
       end
     end
@@ -820,6 +835,25 @@ module Candlepin
         uri = URI::HTTP.build(components)
       end
       uri.to_s
+    end
+
+    def get_text(*args, &block)
+      get_type('text/plain', *args, &block)
+    end
+
+    def get_file(*args, &block)
+      get_type('application/zip', *args, &block)
+    end
+
+    def get_type(mime_type, uri, *args, &block)
+      header_filter = JSONClient::AcceptTypeHeaderFilter.new(self, mime_type)
+      client.request_filter << header_filter
+      begin
+        res = client.get(uri, *args, &block)
+      ensure
+        client.request_filter.delete(header_filter)
+      end
+      res
     end
 
     # This method provides the raw HTTPClient object that is being used

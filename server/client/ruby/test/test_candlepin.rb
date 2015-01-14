@@ -429,8 +429,16 @@ module Candlepin
 
         [server, client_cert_server].each do |s|
           s.mount_proc('/candlepin/status') do |req, res|
-            res.body = '{ "message": "Hello" }'
-            res['Content-Type'] = 'text/json'
+            if req.accept.include?('text/plain')
+              res.body = 'Hello Text'
+              res['Content-Type'] = 'text/plain'
+            elsif req.accept.include?('bad/type')
+              res.body = 'ERROR'
+              res['Content-Type'] = 'text/plain'
+            else
+              res.body = '{ "message": "Hello" }'
+              res['Content-Type'] = 'text/json'
+            end
           end
         end
 
@@ -458,6 +466,20 @@ module Candlepin
 
         res = simple_client.get('/status')
         expect(res.content['message']).to eq("Hello")
+      end
+
+      it 'makes text/plain requests' do
+        simple_client = NoAuthClient.new(
+          :port => TEST_PORT)
+        res = simple_client.get_text('/status')
+        expect(res.content).to eq("Hello Text")
+      end
+
+      it 'allows arbitrary accept headers' do
+        simple_client = NoAuthClient.new(
+          :port => TEST_PORT)
+        res = simple_client.get_type('bad/type', '/status')
+        expect(res.content).to eq("ERROR")
       end
 
       it 'fails to connect if no CA given in strict mode' do
