@@ -615,20 +615,31 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             WHERE "derivedproductid" IS NOT NULL AND "derivedproductid" != ''
         */
 
-        String hql =
-            "SELECT productId " +
-            "    FROM Pool " +
-            "    WHERE productId IS NOT NULL AND productId != '' " +
-            "UNION " +
-            "SELECT derivedProductId " +
-            "    FROM Pool " +
-            "    WHERE derivedProductId IS NOT NULL AND derivedProductId != '' " +
-            "UNION " +
-            "SELECT productId " +
-            "    FROM ProvidedProduct " +
-            "    WHERE productId IS NOT NULL AND productId != '';";
+        // Impl note:
+        // HQL does not (properly) support unions, so we have to do this query multiple times.
+        Set<String> result = new HashSet<String>();
 
-        Query query = this.currentSession().createQuery(hql);
-        return new HashSet<String>(query.list());
+        Query query = this.currentSession().createQuery(
+            "SELECT DISTINCT productId " +
+            "    FROM Pool " +
+            "    WHERE productId IS NOT NULL AND productId != ''"
+        );
+        result.addAll(query.list());
+
+        query = this.currentSession().createQuery(
+            "SELECT DISTINCT derivedProductId " +
+            "    FROM Pool " +
+            "    WHERE derivedProductId IS NOT NULL AND derivedProductId != ''"
+        );
+        result.addAll(query.list());
+
+        query = this.currentSession().createQuery(
+            "SELECT DISTINCT productId " +
+            "    FROM ProvidedProduct " +
+            "    WHERE productId IS NOT NULL AND productId != ''"
+        );
+        result.addAll(query.list());
+
+        return result;
     }
 }
