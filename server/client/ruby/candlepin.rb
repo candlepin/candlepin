@@ -850,6 +850,15 @@ module Candlepin
         get("/pools", :consumer => opts[:uuid])
       end
 
+      def get_pool_entitlements(opts = {})
+        defaults = {
+          :pool_id => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        get("/pools/#{opts[:pool_id]}/entitlements")
+      end
+
       def delete_pool(opts = {})
         delete_by_id("/pools", :pool_id, opts)
       end
@@ -880,6 +889,47 @@ module Candlepin
     end
 
     module ProductResource
+      def create_product(opts = {})
+        defaults = {
+          :product_id => nil,
+          :type => "SVC",
+          :name => nil,
+          :multiplier => nil,
+          :attributes => [],
+          :dependent_product_ids => [],
+          :relies_on => [],
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        product = camelize_hash(opts, :type, :name, :multiplier, :dependent_product_ids, :relies_on)
+        product[:id] = opts[:product_id]
+        product[:attributes] = opts[:attributes].map do |k, v|
+          { :name => k, :value => v }
+        end
+
+        post("/products", product)
+      end
+
+      def update_product(opts = {})
+        defaults = {
+          :product_id => nil,
+          :name => nil,
+          :multiplier => nil,
+          :attributes => [],
+          :dependent_product_ids => [],
+          :relies_on => [],
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        product = camelize_hash(opts, :name, :multiplier, :dependent_product_ids, :relies_on)
+        product[:id] = opts[:product_id]
+        product[:attributes] = opts[:attributes].map do |k, v|
+          { :name => k, :value => v }
+        end
+
+        put("/products/#{opts[:product_id]}", product)
+      end
+
       def get_product(opts = {})
         get_by_id("/products", :product_id, opts)
       end

@@ -30,6 +30,12 @@ RSpec::Matchers.define :be_forbidden do |expected|
   end
 end
 
+RSpec::Matchers.define :be_missing do |expected|
+  match do |res|
+    res.status_code == 404
+  end
+end
+
 module Candlepin
   describe "Candlepin" do
     def rand_string(len = 9)
@@ -395,6 +401,56 @@ module Candlepin
       it 'gets environments' do
         res = user_client.get_environments
         expect(res).to be_2xx
+      end
+
+      it 'creates a product' do
+        res = user_client.create_product(
+          :product_id => rand_string,
+          :name => rand_string,
+          :multiplier => 2,
+          :attributes => { :arch => 'x86_64' },
+        )
+        expect(res).to be_2xx
+        expect(res.content['multiplier']).to eq(2)
+      end
+
+      it 'deletes a product' do
+        product = user_client.create_product(
+          :product_id => rand_string,
+          :name => rand_string,
+          :multiplier => 2,
+          :attributes => { :arch => 'x86_64' },
+        ).content
+
+        res = user_client.delete_product(
+          :product_id => product['id']
+        )
+        expect(res).to be_2xx
+
+        res = user_client.get_product(
+          :product_id => product['id']
+        )
+        expect(res).to be_missing
+      end
+
+      it 'updates a product' do
+        product = user_client.create_product(
+          :product_id => rand_string,
+          :name => rand_string,
+          :multiplier => 2,
+          :attributes => { :arch => 'x86_64' },
+        ).content
+
+        res = user_client.update_product(
+          :product_id => product['id'],
+          :multiplier => 8,
+        )
+        expect(res).to be_2xx
+
+        res = user_client.get_product(
+          :product_id => product['id']
+        )
+        expect(res.content['multiplier']).to eq(8)
       end
     end
 
