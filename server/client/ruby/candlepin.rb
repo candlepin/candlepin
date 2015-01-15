@@ -592,6 +592,15 @@ module Candlepin
         get_by_id("/entitlements", :entitlement_id, opts)
       end
 
+      def get_upstream_certificate(opts = {})
+        defaults = {
+          :id => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        get_text("/entitlements/#{opts[:id]}/upstream_cert")
+      end
+
       def update_entitlement(opts = {})
         defaults = {
           :id => nil,
@@ -859,6 +868,16 @@ module Candlepin
         get("/pools/#{opts[:pool_id]}/entitlements")
       end
 
+      def get_per_pool_statistics(opts = {})
+        defaults = {
+          :pool_id => nil,
+          :val_type => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        get("/pools/#{opts[:pool_id]}/statistics/#{opts[:val_type]}")
+      end
+
       def delete_pool(opts = {})
         delete_by_id("/pools", :pool_id, opts)
       end
@@ -934,6 +953,16 @@ module Candlepin
         get_by_id("/products", :product_id, opts)
       end
 
+      def get_per_product_statistics(opts = {})
+        defaults = {
+          :product_id => nil,
+          :val_type => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        get("/products/#{opts[:product_id]}/statistics/#{opts[:val_type]}")
+      end
+
       def get_product_cert(opts = {})
         defaults = {
           :product_id => nil,
@@ -968,8 +997,40 @@ module Candlepin
     end
 
     module DistributorVersionResource
+      def create_distributor_version(opts = {})
+        defaults = {
+          :name => nil,
+          :display_name => nil,
+          :capabilities => [],
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        distributor = camelize_hash(opts, :name, :display_name)
+        distributor[:capabilities] = opts[:capabilities].map do |v|
+          { :name => v }
+        end
+        post("/distributor_versions", distributor)
+      end
+
+      def update_distributor_version(opts = {})
+        defaults = {
+          :id => nil,
+          :name => nil,
+          :display_name => nil,
+          :capabilities => [],
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        distributor = camelize_hash(opts, :id, :name, :display_name)
+        distributor[:capabilities] = opts[:capabilities].map do |v|
+          { :name => v }
+        end
+
+        put("/distributor_versions/#{opts[:id]}", distributor)
+      end
+
       def delete_distributor_version(opts = {})
-        delete_by_id("/distributor_version", :id, opts)
+        delete_by_id("/distributor_versions", :id, opts)
       end
     end
 

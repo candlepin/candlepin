@@ -452,6 +452,44 @@ module Candlepin
         )
         expect(res.content['multiplier']).to eq(8)
       end
+
+      it 'creates a distributor version' do
+        name = rand_string
+        res = user_client.create_distributor_version(
+          :name => name,
+          :display_name => rand_string,
+          :capabilities => ['ram'],
+        )
+        expect(res).to be_2xx
+        expect(res.content['name']).to eq(name)
+      end
+
+      it 'deletes a distributor version' do
+        distributor = user_client.create_distributor_version(
+          :name => rand_string,
+          :display_name => rand_string,
+        ).content
+
+        res = user_client.delete_distributor_version(
+          :id => distributor['id']
+        )
+        expect(res).to be_2xx
+      end
+
+      it 'updates a distributor version' do
+        distributor = user_client.create_distributor_version(
+          :name => rand_string,
+          :display_name => rand_string,
+          :capabilities => ['ram'],
+        ).content
+
+        new_display_name = rand_string
+        res = user_client.update_distributor_version(
+          :id => distributor['id'],
+          :display_name => new_display_name,
+        )
+        expect(res).to be_2xx
+      end
     end
 
     context "in a unit test context", :unit => true do
