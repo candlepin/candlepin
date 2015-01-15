@@ -391,6 +391,11 @@ module Candlepin
         crl = user_client.get_crl
         expect(crl).to be_kind_of(OpenSSL::X509::CRL)
       end
+
+      it 'gets environments' do
+        res = user_client.get_environments
+        expect(res).to be_2xx
+      end
     end
 
     context "in a unit test context", :unit => true do

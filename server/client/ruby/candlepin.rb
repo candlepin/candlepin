@@ -244,6 +244,9 @@ module Candlepin
         defaults = {
           key => nil,
         }
+
+        # TODO Could use keyword_argument(opts, key) to allow these
+        # calls to be made without having to pass in a hash
         opts = verify_and_merge(opts, defaults)
         get("#{resource}/#{opts[key]}")
       end
@@ -363,6 +366,15 @@ module Candlepin
         delete(path)
       end
 
+      def delete_all_entitlements(opts = {})
+        defaults = {
+          :uuid => uuid,
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        delete("/consumers/#{opts[:uuid]}/entitlements")
+      end
+
       def update_consumer(opts = {})
         defaults = {
           :uuid => uuid,
@@ -389,6 +401,44 @@ module Candlepin
         body = camelize_hash(body)
         path = "/consumers/#{opts[:uuid]}"
         put(path, body)
+      end
+
+      def get_consumer(opts = {})
+        # Can't use get_by_id here because of our usage of the
+        # "sticky" uuid.
+        defaults = {
+          :uuid => uuid,
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        get("/consumers/#{opts[:uuid]}")
+      end
+
+      def get_consumer_events(opts = {})
+        defaults = {
+          :uuid => uuid,
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        get("/consumers/#{opts[:uuid]}/events")
+      end
+
+      def get_consumer_events_atom(opts = {})
+        defaults = {
+          :uuid => uuid,
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        get_text("/consumers/#{opts[:uuid]}/atom")
+      end
+
+      def get_consumer_cert_serials(opts = {})
+        defaults = {
+          :uuid => uuid,
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        get("/consumers/#{opts[:uuid]}/certificates/serials")
       end
 
       def update_all_guest_ids(opts = {})
@@ -447,6 +497,30 @@ module Candlepin
       end
     end
 
+    module EnvironmentResource
+      def get_environments
+        get("/environments")
+      end
+
+      def get_environment(opts = {})
+        get_by_id("/environments", :id, opts)
+      end
+
+      def delete_environment(opts = {})
+        delete_by_id("/environments", :id, opts)
+      end
+    end
+
+    module ActivationKeyResource
+      def get_activation_key(opts = {})
+        get_by_id("/activation_keys", :id, opts)
+      end
+
+      def delete_activation_key(opts = {})
+        delete_by_id("/activation_keys", :id, opts)
+      end
+    end
+
     module HypervisorResource
       def post_hypervisor_check_in(opts = {})
         defaults = {
@@ -473,6 +547,10 @@ module Candlepin
     end
 
     module EntitlementResource
+      def get_entitlement(opts = {})
+        get_by_id("/entitlements", :entitlement_id, opts)
+      end
+
       def update_entitlement(opts = {})
         defaults = {
           :id => nil,
@@ -715,6 +793,64 @@ module Candlepin
         delete("/owners/#{opts[:key]}/log")
       end
 
+      module PoolResource
+        def get_pool(opts = {})
+          defaults = {
+            :pool_id => nil,
+            :uuid => uuid,
+          }
+          opts = verify_and_merge(opts, defaults)
+
+          get("/pools", :consumer => opts[:uuid])
+        end
+
+        def delete_pool(opts = {})
+          delete_by_id("/pools", :pool_id, opts)
+        end
+      end
+
+      module ContentResource
+        def get_all_content
+          get("/content")
+        end
+
+        def get_content(opts = {})
+          get_by_id("/content", :content_id, opts)
+        end
+
+        def delete_content(opts = {})
+          delete_by_id("/content", :content_id, opts)
+        end
+      end
+
+      module RuleResource
+        def get_rules
+          get_text("/rules")
+        end
+
+        def delete_rules
+          delete("/rules")
+        end
+      end
+
+      module ProductResource
+        def get_product(opts = {})
+          get_by_id("/products", :product_id, opts)
+        end
+
+        def get_product_cert(opts = {})
+          defaults = {
+            :product_id => nil,
+          }
+          opts = verify_and_merge(opts, defaults)
+
+          get("/products/#{opts[:product_id]}/certificate")
+        end
+
+        def delete_product(opts = {})
+          delete_by_id("/products", :product_id, opts)
+        end
+      end
     end
   end
 
