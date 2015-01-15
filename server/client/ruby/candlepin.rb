@@ -375,6 +375,16 @@ module Candlepin
         delete("/consumers/#{opts[:uuid]}/entitlements")
       end
 
+      def delete_entitlement(opts = {})
+        defaults = {
+          :uuid => uuid,
+          :entitlement_id => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        get("/consumers/#{opts[:uuid]}/entitlements/#{opts[:entitlement_id]}")
+      end
+
       def update_consumer(opts = {})
         defaults = {
           :uuid => uuid,
@@ -421,6 +431,24 @@ module Candlepin
         opts = verify_and_merge(opts, defaults)
 
         get("/consumers/#{opts[:uuid]}/events")
+      end
+
+      def get_consumer_host(opts = {})
+        defaults = {
+          :uuid => uuid,
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        get("/consumers/#{opts[:uuid]}/host")
+      end
+
+      def get_consumer_guests(opts = {})
+        defaults = {
+          :uuid => uuid,
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        get("/consumers/#{opts[:uuid]}/guests")
       end
 
       def get_consumer_events_atom(opts = {})
@@ -514,6 +542,19 @@ module Candlepin
     module ActivationKeyResource
       def get_activation_key(opts = {})
         get_by_id("/activation_keys", :id, opts)
+      end
+
+      def get_all_activation_keys(opts = {})
+        get("/activation_keys")
+      end
+
+      def get_activation_key_pools(opts = {})
+        defaults = {
+          :id => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        get("/activation_keys/#{opts[:id]}/pools")
       end
 
       def delete_activation_key(opts = {})
@@ -744,6 +785,10 @@ module Candlepin
         get_owner_subresource("subscriptions", opts)
       end
 
+      def get_owner_activation_keys(opts = {})
+        get_owner_subresource("activation_keys", opts)
+      end
+
       def get_all_owners
         get("/owners")
       end
@@ -792,64 +837,99 @@ module Candlepin
 
         delete("/owners/#{opts[:key]}/log")
       end
+    end
 
-      module PoolResource
-        def get_pool(opts = {})
-          defaults = {
-            :pool_id => nil,
-            :uuid => uuid,
-          }
-          opts = verify_and_merge(opts, defaults)
+    module PoolResource
+      def get_pool(opts = {})
+        defaults = {
+          :pool_id => nil,
+          :uuid => uuid,
+        }
+        opts = verify_and_merge(opts, defaults)
 
-          get("/pools", :consumer => opts[:uuid])
-        end
-
-        def delete_pool(opts = {})
-          delete_by_id("/pools", :pool_id, opts)
-        end
+        get("/pools", :consumer => opts[:uuid])
       end
 
-      module ContentResource
-        def get_all_content
-          get("/content")
-        end
+      def delete_pool(opts = {})
+        delete_by_id("/pools", :pool_id, opts)
+      end
+    end
 
-        def get_content(opts = {})
-          get_by_id("/content", :content_id, opts)
-        end
-
-        def delete_content(opts = {})
-          delete_by_id("/content", :content_id, opts)
-        end
+    module ContentResource
+      def get_all_content
+        get("/content")
       end
 
-      module RuleResource
-        def get_rules
-          get_text("/rules")
-        end
-
-        def delete_rules
-          delete("/rules")
-        end
+      def get_content(opts = {})
+        get_by_id("/content", :content_id, opts)
       end
 
-      module ProductResource
-        def get_product(opts = {})
-          get_by_id("/products", :product_id, opts)
-        end
+      def delete_content(opts = {})
+        delete_by_id("/content", :content_id, opts)
+      end
+    end
 
-        def get_product_cert(opts = {})
-          defaults = {
-            :product_id => nil,
-          }
-          opts = verify_and_merge(opts, defaults)
+    module RuleResource
+      def get_rules
+        get_text("/rules")
+      end
 
-          get("/products/#{opts[:product_id]}/certificate")
-        end
+      def delete_rules
+        delete("/rules")
+      end
+    end
 
-        def delete_product(opts = {})
-          delete_by_id("/products", :product_id, opts)
-        end
+    module ProductResource
+      def get_product(opts = {})
+        get_by_id("/products", :product_id, opts)
+      end
+
+      def get_product_cert(opts = {})
+        defaults = {
+          :product_id => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        get("/products/#{opts[:product_id]}/certificate")
+      end
+
+      def delete_product(opts = {})
+        delete_by_id("/products", :product_id, opts)
+      end
+    end
+
+    module SubscriptionResource
+      def get_subscription(opts = {})
+        get_by_id("/subscriptions", :subscription_id, opts)
+      end
+
+      def get_subscription_certificate(opts = {})
+        defaults = {
+          :subscription_id => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        get_text("/subscriptions/#{opts[:subscription_id]}/cert")
+      end
+
+      def delete_subscription(opts = {})
+        delete_by_id("/subscriptions", :subscription_id, opts)
+      end
+    end
+
+    module DistributorVersionResource
+      def delete_distributor_version(opts = {})
+        delete_by_id("/distributor_version", :id, opts)
+      end
+    end
+
+    module CdnResource
+      def get_all_cdns
+        get("/cdn")
+      end
+
+      def delete_cdn(opts = {})
+        delete_by_id("/cdn", :label, opts)
       end
     end
   end
