@@ -292,6 +292,59 @@ module Candlepin
         expect(res.content).to have_key('id')
       end
 
+      it 'creates owner environments' do
+        owner = user_client.create_owner(
+          :key => rand_string,
+          :display_name => rand_string,
+        ).content
+
+        res = user_client.create_owner_environment(
+          :key => owner['key'],
+          :id => rand_string,
+          :description => rand_string,
+          :name => rand_string
+        )
+        expect(res).to be_2xx
+        expect(res.content).to have_key('name')
+      end
+
+      it 'gets owner environments' do
+        owner = user_client.create_owner(
+          :key => rand_string,
+          :display_name => rand_string,
+        ).content
+
+        env = user_client.create_owner_environment(
+          :key => owner['key'],
+          :id => rand_string,
+          :description => rand_string,
+          :name => rand_string
+        ).content
+
+        res = user_client.get_owner_environment(
+          :key => owner['key'],
+          :name => env['name']
+        )
+        expect(res).to be_2xx
+      end
+
+      it 'deletes owners' do
+        owner = user_client.create_owner(
+          :key => rand_string,
+          :display_name => rand_string,
+        ).content
+
+        res = user_client.delete_owner(
+          :key => owner['key']
+        )
+        expect(res).to be_2xx
+
+        res = user_client.get_owner(
+          :key => owner['key']
+        )
+        expect(res).to be_missing
+      end
+
       it 'creates child owners' do
         parent = user_client.create_owner(
           :key => rand_string,
@@ -489,6 +542,34 @@ module Candlepin
           :display_name => new_display_name,
         )
         expect(res).to be_2xx
+
+        res = user_client.get_distributor_version(
+          :name => distributor['name']
+        )
+        expect(res.content.first['displayName']).to eq(new_display_name)
+      end
+
+      it 'creates a consumer type' do
+        res = user_client.create_consumer_type(
+          :label => rand_string
+        )
+        expect(res).to be_2xx
+      end
+
+      it 'deletes a consumer type' do
+        type = user_client.create_consumer_type(
+          :label => rand_string
+        ).content
+
+        res = user_client.delete_consumer_type(
+          :type_id => type['id']
+        )
+        expect(res).to be_2xx
+
+        res = user_client.get_consumer_type(
+          :type_id => type['id']
+        )
+        expect(res).to be_missing
       end
     end
 

@@ -63,7 +63,7 @@ class JSONClient < HTTPClient
     super
     @header_filter = JSONRequestHeaderFilter.new(self)
     @request_filter << @header_filter
-    @content_type_json = 'application/json; charset=utf-8'
+    @content_type_json = 'application/json'
   end
 
   # Takes in a uri, either a hash or individual arguments, and a block
@@ -296,8 +296,45 @@ module Candlepin
         get("/jobs", opts)
       end
 
+      def get_scheduler_status
+        get("/jobs/scheduler")
+      end
+
+      def set_scheduler_status(opts = {})
+        opts = {
+          :status => false,
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        post("/jobs/scheduler", opts[:status])
+      end
+
       def delete_job(opts = {})
         delete_by_id("/jobs", :job_id, opts)
+      end
+    end
+
+    module ConsumerTypeResource
+      def create_consumer_type(opts = {})
+        defaults = {
+          :label => nil,
+          :manifest => false,
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        post("/consumertypes", opts)
+      end
+
+      def get_all_consumer_types
+        get("/consumertypes")
+      end
+
+      def get_consumer_type(opts = {})
+        get_by_id("/consumertypes", :type_id, opts)
+      end
+
+      def delete_consumer_type(opts = {})
+        delete_by_id("/consumertypes", :type_id, opts)
       end
     end
 
@@ -383,6 +420,15 @@ module Candlepin
         opts = verify_and_merge(opts, defaults)
 
         get("/consumers/#{opts[:uuid]}/entitlements/#{opts[:entitlement_id]}")
+      end
+
+      def delete_consumer(opts = {})
+        defaults = {
+          :uuid => uuid,
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        delete("/consumers/#{opts[:uuid]}")
       end
 
       def update_consumer(opts = {})
@@ -798,8 +844,26 @@ module Candlepin
         get_owner_subresource("activation_keys", opts)
       end
 
+      def get_owner_environment(opts = {})
+        defaults = {
+          :key => nil,
+          :name => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+        get("/owners/#{opts[:key]}/environments", select_from(opts, :name))
+      end
+
       def get_all_owners
         get("/owners")
+      end
+
+      def autoheal_owner(opts = {})
+        defaults = {
+          :key => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        post("/owners/#{opts[:key]}/entitlements")
       end
 
       def create_owner(opts = {})
@@ -811,6 +875,27 @@ module Candlepin
         opts = verify_and_merge(opts, defaults)
 
         post("/owners", camelize_hash(opts))
+      end
+
+      def create_owner_environment(opts = {})
+        defaults = {
+          :key => nil,
+          :id => nil,
+          :name => nil,
+          :description => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        post("/owners/#{opts[:key]}/environments", select_from(opts, :id, :name, :description))
+      end
+
+      def create_ueber_cert(opts = {})
+        defaults = {
+          :key => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        post("/owners/#{opts[:key]}/uebercert")
       end
 
       def update_owner(opts = {})
@@ -845,6 +930,15 @@ module Candlepin
         opts = verify_and_merge(opts, defaults)
 
         delete("/owners/#{opts[:key]}/log")
+      end
+
+      def delete_owner(opts = {})
+        defaults = {
+          :key => nil,
+          :revoke => false,
+        }
+        opts = verify_and_merge(opts, defaults)
+        delete("/owners/#{opts[:key]}", select_from(opts, :revoke))
       end
     end
 
@@ -1029,12 +1123,49 @@ module Candlepin
         put("/distributor_versions/#{opts[:id]}", distributor)
       end
 
+      def get_distributor_version(opts = {})
+        defaults = {
+          :name => nil,
+          :capability => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        query = select_from(opts, :capability)
+        query['name_search'] = opts[:name]
+
+        get("/distributor_versions", query)
+      end
+
       def delete_distributor_version(opts = {})
         delete_by_id("/distributor_versions", :id, opts)
       end
     end
 
     module CdnResource
+      def create_cdn(opts = {})
+        defaults = {
+          :label => nil,
+          :name => nil,
+          :url => nil,
+          :certificate => nil
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        post("/cdn", opts)
+      end
+
+      def update_cdn(opts = {})
+        defaults = {
+          :label => nil,
+          :name => nil,
+          :url => nil,
+          :certificate => nil
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        put("/cdn/#{opts[:label]}", select_from(opts, :name, :url, :certificate))
+      end
+
       def get_all_cdns
         get("/cdn")
       end
