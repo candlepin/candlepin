@@ -232,6 +232,28 @@ module Candlepin
       return @uuid || nil
     end
 
+    module GenericResource
+      # There are so many GET /resource/:id methods that it
+      # makes sense to provide a generic implementation.  The
+      # opts hash that is passed in may have only one key and
+      # that key's value will be used as the id.
+      def get_by_id(resource, key, opts = {})
+        # We don't reference the key by name since different
+        # methods can use slightly different names.  E.g.
+        # serial_id, uuid, id, etc.
+        defaults = {
+          key => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+        get("#{resource}/#{opts[key]}")
+      end
+
+      def delete_by_id(resource, key, opts = {})
+        verify_keys(opts, key)
+        delete("#{resource}/#{opts[key]}")
+      end
+    end
+
     module CrlResource
       def get_crl
         res = get_text('/crl')
@@ -247,12 +269,7 @@ module Candlepin
 
     module SerialsResource
       def get_serial(opts = {})
-        defaults = {
-          :serial_id => nil,
-        }
-        opts = verify_and_merge(opts, defaults)
-
-        get("/serials/#{opt[:serial_id]}")
+        get_by_id("/serials", :serial_id, opts)
       end
     end
 
@@ -264,12 +281,7 @@ module Candlepin
 
     module JobsResource
       def get_job(opts = {})
-        defaults = {
-          :job_id => nil,
-        }
-        opts = verify_and_merge(opts, defaults)
-
-        get("/jobs/#{opts[:job_id]}")
+        get_by_id("/jobs", :job_id, opts)
       end
 
       def get_owner_jobs(opts = {})
@@ -282,12 +294,7 @@ module Candlepin
       end
 
       def delete_job(opts = {})
-        defaults = {
-          :job_id => nil,
-        }
-        opts = verify_and_merge(opts, defaults)
-
-        delete("/jobs/#{opts[:job_id]}")
+        delete_by_id("/jobs", :job_id, opts)
       end
     end
 
@@ -512,11 +519,7 @@ module Candlepin
       end
 
       def get_user(opts = {})
-        defaults = {
-          :username => nil,
-        }
-        opts = verify_and_merge(opts, defaults)
-        get("/users/#{opts[:username]}")
+        get_by_id("/users", :username, opts)
       end
 
       def get_user_roles(opts = {})
@@ -536,11 +539,7 @@ module Candlepin
       end
 
       def delete_user(opts = {})
-        defaults = {
-          :username => nil,
-        }
-        opts = verify_and_merge(opts, defaults)
-        delete("/users/#{opts[:username]}")
+        delete_by_id("/users", :username, opts)
       end
 
       def get_all_users
@@ -572,12 +571,7 @@ module Candlepin
       end
 
       def get_role(opts = {})
-        defaults = {
-          :role_id => nil,
-        }
-        opts = verify_and_merge(opts, defaults)
-
-        get("/roles/#{opts[:role_id]}")
+        get_by_id("/roles", :role_id, opts)
       end
 
       def get_all_roles
@@ -585,12 +579,7 @@ module Candlepin
       end
 
       def delete_role(opts = {})
-        defaults = {
-          :role_id => nil,
-        }
-        opts = verify_and_merge(opts, defaults)
-
-        delete("/roles/#{opts[:role_id]}")
+        delete_by_id("/roles", :role_id, opts)
       end
 
       def add_role_user(opts = {})
@@ -639,12 +628,7 @@ module Candlepin
 
     module OwnerResource
       def get_owner(opts = {})
-        defaults = {
-          :key => nil,
-        }
-        opts = verify_and_merge(opts, defaults)
-
-        get("/owners/#{opts[:key]}")
+        get_by_id("/owners", :key, opts)
       end
 
       def get_owner_hypervisors(opts = {})
