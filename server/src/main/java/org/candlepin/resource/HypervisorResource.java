@@ -118,7 +118,8 @@ public class HypervisorResource {
         HypervisorCheckInResult result = new HypervisorCheckInResult();
         for (Entry<String, List<GuestId>> hostEntry : hostGuestMap.entrySet()) {
             try {
-                log.info("Checking virt host: " + hostEntry.getKey());
+                log.info("Syncing virt host: " + hostEntry.getKey() +
+                        " (" + hostEntry.getValue().size() + " guest IDs)");
 
                 boolean hostConsumerCreated = false;
                 // Attempt to find a consumer for the given hypervisorId

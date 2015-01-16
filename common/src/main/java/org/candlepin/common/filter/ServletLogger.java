@@ -90,7 +90,7 @@ public class ServletLogger {
         return new StringBuilder().append("Response: status=")
                 .append(resp.getStatus())
                 .append(", content-type=\"").append(resp.getContentType())
-                .append("\", time=").append(duration).append("ms");
+                .append("\", time=").append(duration);
     }
 
     public static boolean showAsText(String contentType) {
