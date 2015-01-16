@@ -236,7 +236,7 @@ define "candlepin" do
     ])
     test.using :java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ]
 
-    pom.artifact = package(:jar).tap do |jar|
+    pom.artifacts << package(:jar).tap do |jar|
       jar.include(:from => msgfmt.destination)
     end
   end
@@ -308,7 +308,7 @@ define "candlepin" do
       war.classes << resources.target
       war.classes << msgfmt.destination if msgfmt.enabled?
     end
-    pom.artifact = gutterball_war
+    pom.artifacts << gutterball_war
   end
 
   desc "The Candlepin Server"
@@ -411,7 +411,7 @@ define "candlepin" do
       p = jar.path(candlepin_path)
       p.include(pkgs).exclude("#{compiled_cp_path}/util/apicrawl")
     end
-    pom.artifact = api_jar
+    pom.artifacts << api_jar
 
     package(:jar, :id=>"candlepin-certgen").tap do |jar|
       jar.clean
@@ -420,7 +420,7 @@ define "candlepin" do
       p.include(pkgs).exclude("#{compiled_cp_path}/util/apicrawl")
     end
 
-    package(:war, :id=>"candlepin").tap do |war|
+    war_file = package(:war, :id=>"candlepin").tap do |war|
       war.libs += artifacts(HSQLDB)
       war.libs -= artifacts(PROVIDED)
       war.libs -= artifacts(JAVA_TOOLS)
@@ -430,6 +430,7 @@ define "candlepin" do
       web_inf = war.path('WEB-INF/classes')
       web_inf.path(candlepin_path).include("#{compiled_cp_path}/**").exclude("#{compiled_cp_path}/util/apicrawl")
     end
+    pom.artifacts << war_file
 
     desc 'Crawl the REST API and print a summary.'
     task :apicrawl => :compile do

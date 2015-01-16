@@ -2,14 +2,17 @@ require 'builder'
 
 module PomTask
   class Config
-    attr_accessor :artifact
-
     def enabled?
-      !artifact.nil?
+      !artifacts.nil? && !artifacts.empty?
     end
 
     def initialize(project)
       @project = project
+    end
+
+    attr_writer :artifacts
+    def artifacts
+      @artifacts ||= []
     end
   end
 
@@ -87,11 +90,13 @@ module PomTask
         project.recursive_task('pom') do
           # Filter out Rake::FileTask dependencies
           deps = project.compile.dependencies.select { |dep| dep.is_a?(Buildr::Artifact) }
-          xml = PomBuilder.new(pom.artifact, deps)
-          spec = pom.artifact.to_hash
-          destination = project.path_to(:target, "#{spec[:id]}-#{spec[:version]}.pom")
-          xml.write_pom(destination)
-          info("POM written to #{destination}")
+          pom.artifacts.each do |artifact|
+            xml = PomBuilder.new(artifact, deps)
+            spec = artifact.to_hash
+            destination = project.path_to(:target, "#{spec[:id]}-#{spec[:version]}.pom")
+            xml.write_pom(destination)
+            info("POM written to #{destination}")
+          end
         end
       end
     end
