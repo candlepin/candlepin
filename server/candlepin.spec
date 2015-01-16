@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.38
+Version: 0.9.39
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -393,6 +393,12 @@ fi
 
 
 %changelog
+* Fri Jan 16 2015 Alex Wood <awood@redhat.com> 0.9.39-1
+- Add generated POM files to the repository. (awood@redhat.com)
+- Improve logging for bind lock wait timeouts. (dgoodwin@redhat.com)
+- Add option to skip dirty certificate regeneration on list entitlements.
+  (dgoodwin@redhat.com)
+
 * Fri Jan 09 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.38-1
 - Update consumers when their content tags change. (awood@redhat.com)
 - Store consumer's content tags in the database. (awood@redhat.com)
