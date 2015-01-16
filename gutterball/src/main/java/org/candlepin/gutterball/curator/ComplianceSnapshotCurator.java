@@ -634,6 +634,7 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
                 "INNER JOIN ConsumerSnap.consumerState AS ConsumerState " +
                 "INNER JOIN ConsumerSnap.complianceSnapshot AS ComplianceSnap " +
                 "INNER JOIN ComplianceSnap.status AS ComplianceStatusSnap " +
+                "LEFT JOIN ComplianceSnap.entitlements AS EntitlementSnap " +
 
             "WHERE (" +
                     "ConsumerState.deleted IS NULL " +
@@ -674,33 +675,24 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
 
             List<String> criteria = new LinkedList<String>();
             StringBuffer inner = new StringBuffer(
-                "AND ComplianceSnap.id IN (" +
-                    "SELECT ComplianceSnap3.id " +
-                        "FROM Consumer AS ConsumerSnap3 " +
-                        "INNER JOIN ConsumerSnap3.consumerState AS ConsumerState3 " +
-                        "INNER JOIN ConsumerSnap3.complianceSnapshot AS ComplianceSnap3 " +
-                        "LEFT JOIN ComplianceSnap3.entitlements AS EntitlementSnap3 " +
-
-                        "WHERE " +
-                            "ConsumerState3.uuid = ConsumerState.uuid " +
-                            "AND ("
+                "AND ("
             );
 
             // TODO:
             // Owner, SKU, product name and should be replaced by the same mechanism we used for
             // --matches in Subscription-manager.
             if (ownerKey != null) {
-                criteria.add("ConsumerState3.ownerKey = ?" + ++counter);
+                criteria.add("ConsumerState.ownerKey = ?" + ++counter);
                 parameters.add(ownerKey);
             }
 
             if (sku != null) {
-                criteria.add("EntitlementSnap3.productId = ?" + ++counter);
+                criteria.add("EntitlementSnap.productId = ?" + ++counter);
                 parameters.add(sku);
             }
 
             if (subscriptionName != null) {
-                criteria.add("EntitlementSnap3.productName = ?" + ++counter);
+                criteria.add("EntitlementSnap.productName = ?" + ++counter);
                 parameters.add(subscriptionName);
             }
 
@@ -710,7 +702,7 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
                         "(?%d, ?%d) IN (" +
                             "SELECT ENTRY(EntitlementSnapA.attributes) " +
                                 "FROM Entitlement AS EntitlementSnapA " +
-                                "WHERE EntitlementSnapA.id = EntitlementSnap3.id" +
+                                "WHERE EntitlementSnapA.id = EntitlementSnap.id" +
                         ")",
                         ++counter,
                         ++counter
@@ -730,7 +722,7 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
                 inner.append(ci.next());
             }
 
-            hql.append(inner.append(")) "));
+            hql.append(inner.append(") "));
         }
 
         // Add our date range, if necessary...
