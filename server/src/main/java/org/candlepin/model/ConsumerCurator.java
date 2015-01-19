@@ -169,6 +169,68 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     }
 
     /**
+     * Lookup all consumers matching the given guest IDs.
+     *
+     * Maps guest ID to the most recent registered consumer that matches it.
+     * Any guest ID not found will not return null.
+     *
+     * If multiple registered consumers report this guest ID (re-registraiton), only the
+     * most recently updated will be returned.
+     *
+     * @param guestId
+     *
+     * @return VirtConsumerMap of guest ID to it's registered guest consumer, or null if
+     * none exists.
+     */
+    @Transactional
+    public VirtConsumerMap getGuestConsumersMap(Owner owner,
+            List<String> guestIds) {
+        VirtConsumerMap guestConsumersMap = new VirtConsumerMap();
+        if (guestIds.size() == 0) {
+            return guestConsumersMap;
+        }
+
+        List<String> possibleGuestIds = Util.getPossibleUuids(guestIds.toArray(
+                new String [guestIds.size()]));
+
+        String sql = "select cp_consumer.uuid from cp_consumer " +
+            "inner join cp_consumer_facts " +
+            "on cp_consumer.id = cp_consumer_facts.cp_consumer_id " +
+            "where cp_consumer_facts.mapkey = 'virt.uuid' and " +
+            "lower(cp_consumer_facts.element) in (:guestids) " +
+            "and cp_consumer.owner_id = :ownerid " +
+            "order by cp_consumer.updated desc";
+
+        // We need to filter down to only the most recently registered consumer with
+        // each guest ID.
+
+        Query q = currentSession().createSQLQuery(sql);
+        q.setParameterList("guestids", possibleGuestIds);
+        q.setParameter("ownerid", owner.getId());
+        List<String> consumerUuids = q.list();
+
+        if (consumerUuids == null || consumerUuids.size() == 0) {
+            return guestConsumersMap;
+        }
+
+        List<Consumer> guestConsumersWithDupes = findByUuidsAndOwner(consumerUuids, owner);
+        // At this point we might have duplicates for re-registered consumers:
+        for (Consumer c : guestConsumersWithDupes) {
+            String virtUuid = c.getFact("virt.uuid").toLowerCase();
+            if (guestConsumersMap.get(virtUuid) == null) {
+                // Store both big and little endian forms in the result:
+                guestConsumersMap.add(virtUuid, c);
+            }
+
+            // Can safely ignore if already in the map, this would be another consumer
+            // reporting the same guest ID (re-registration), but we already sorted by
+            // last update time.
+        }
+
+        return guestConsumersMap;
+    }
+
+    /**
      * Candlepin supports the notion of a user being a consumer. When in effect
      * a consumer will exist in the system who is tied to a particular user.
      *
@@ -395,6 +457,43 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     }
 
     /**
+     * Get the host consumer for the given virt guest IDs, if one exists.
+     *
+     * As multiple hosts could have reported the same guest ID, we find the newest
+     * and assume this is the authoritative host for the guest.
+     *
+     * This search needs to be case insensitive as some hypervisors report uppercase
+     * guest UUIDs, when the guest itself will report lowercase.
+     *
+     * @param guestIds
+     * @return host consumers who most recently reported the given guestIds (if any)
+     */
+    @Transactional
+    public VirtConsumerMap getGuestsHostMap(Owner owner, List<String> guestIds) {
+        Disjunction guestIdCrit = Restrictions.disjunction();
+        for (String possibleId : Util.getPossibleUuids(guestIds.toArray(
+                new String [guestIds.size()]))) {
+            guestIdCrit.add(Restrictions.eq("guestId", possibleId).ignoreCase());
+        }
+        Criteria crit = currentSession()
+            .createCriteria(GuestId.class)
+            .createAlias("consumer", "gconsumer")
+            .add(Restrictions.eq("gconsumer.owner", owner))
+            .addOrder(Order.desc("updated"))
+            .setProjection(Projections.property("consumer"));
+
+        // Note: may contain duplicates but is sorted so they appear later:
+        List<Consumer> hypervisors = crit.add(guestIdCrit).list();
+        VirtConsumerMap result = new VirtConsumerMap();
+        for (Consumer hypervisor : hypervisors) {
+            for (GuestId gid : hypervisor.getGuestIds()) {
+                result.add(gid.getGuestId(), hypervisor);
+            }
+        }
+        return result;
+    }
+
+    /**
      * Get guest consumers for a host consumer.
      *
      * @param consumer host consumer to find the guests for
@@ -450,17 +549,42 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     }
 
     /**
+     * Lookup all registered consumers matching one of the given hypervisor IDs.
+     *
+     * Results are returned as a map of hypervisor ID to the consumer record created.
+     * If a hypervisor ID is not in the map, this indicates the hypervisor consumer does
+     * not exist, i.e. it is new and needs to be created.
+     *
+     * This is an unsecured query, manually limited to an owner by the parameter given.
+     * @param owner Owner to limit results to.
+     * @param hypervisorIds List of hypervisor IDs as reported by the virt fabric.
+     *
+     * @return VirtConsumerMap of hypervisor ID to it's consumer, or null if none exists.
+     */
+    @Transactional
+    public VirtConsumerMap getHostConsumersMap(Owner owner,
+            Collection<String> hypervisorIds) {
+        List<Consumer> results = getHypervisorsBulk(hypervisorIds, owner.getKey());
+        VirtConsumerMap hypervisorMap = new VirtConsumerMap();
+        for (Consumer c : results) {
+            hypervisorMap.add(c.getHypervisorId().getHypervisorId(), c);
+        }
+        return hypervisorMap;
+    }
+
+    /**
      * @param hypervisorIds list of unique hypervisor identifiers
      * @param ownerKey Org namespace to search
      * @return Consumer that matches the given
      */
     @SuppressWarnings("unchecked")
     @Transactional
-    public List<Consumer> getHypervisorsBulk(List<String> hypervisorIds, String ownerKey) {
+    public List<Consumer> getHypervisorsBulk(Collection<String> hypervisorIds,
+            String ownerKey) {
         if (hypervisorIds == null || hypervisorIds.isEmpty()) {
             return new LinkedList<Consumer>();
         }
-        return createSecureCriteria()
+        return currentSession().createCriteria(Consumer.class)
             .createAlias("owner", "o")
             .add(Restrictions.eq("o.key", ownerKey))
             .createAlias("hypervisorId", "hvsr")

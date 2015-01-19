@@ -478,6 +478,39 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void getGuestConsumerMap() {
+
+        String guestId1 = "06F81B41-AAC0-7685-FBE9-79AA4A326511";
+        String guestId1ReverseEndian = "411bf806-c0aa-8576-fbe9-79aa4a326511";
+        Consumer gConsumer1 = new Consumer("guestConsumer1", "testUser", owner, ct);
+        gConsumer1.getFacts().put("virt.uuid", guestId1);
+        consumerCurator.create(gConsumer1);
+
+        String guestId2 = "4C4C4544-0046-4210-8031-C7C04F445831";
+        Consumer gConsumer2 = new Consumer("guestConsumer2", "testUser", owner, ct);
+        gConsumer2.getFacts().put("virt.uuid", guestId2);
+        consumerCurator.create(gConsumer2);
+
+        List<String> guestIds = new LinkedList<String>();
+        guestIds.add(guestId1ReverseEndian); // reversed endian match
+        guestIds.add(guestId2); // direct match
+        VirtConsumerMap guestMap = consumerCurator.getGuestConsumersMap(
+                owner, guestIds);
+
+        assertEquals(2, guestMap.size());
+
+        assertEquals(gConsumer1.getId(), guestMap.get(
+                guestId1.toLowerCase()).getId());
+        assertEquals(gConsumer1.getId(), guestMap.get(
+                guestId1ReverseEndian).getId());
+
+        assertEquals(gConsumer2.getId(), guestMap.get(
+                guestId2.toLowerCase()).getId());
+        assertEquals(gConsumer2.getId(), guestMap.get(
+                Util.transformUuid(guestId2.toLowerCase())).getId());
+    }
+
+    @Test
     public void testDoesConsumerExistNo() {
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
         consumer.setUuid("1");
@@ -547,6 +580,30 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         consumer = consumerCurator.create(consumer);
         Consumer result = consumerCurator.getHypervisor(hypervisorid, otherOwner);
         assertNull(result);
+    }
+
+    @Test
+    public void testGetHypervisorConsumerMap() {
+        String hypervisorId1 = "Hypervisor";
+        Consumer consumer1 = new Consumer("testConsumer", "testUser", owner, ct);
+        consumer1.setHypervisorId(new HypervisorId(hypervisorId1));
+        consumer1 = consumerCurator.create(consumer1);
+
+        String hypervisorId2 = "hyPERvisor2";
+        Consumer consumer2 = new Consumer("testConsumer", "testUser", owner, ct);
+        consumer2.setHypervisorId(new HypervisorId(hypervisorId2));
+        consumer2 = consumerCurator.create(consumer2);
+
+        List<String> hypervisorIds = new LinkedList<String>();
+        hypervisorIds.add(hypervisorId1);
+        hypervisorIds.add(hypervisorId2);
+        hypervisorIds.add("not really a hypervisor");
+
+        VirtConsumerMap hypervisorMap =
+                consumerCurator.getHostConsumersMap(owner, hypervisorIds);
+        assertEquals(2, hypervisorMap.size());
+        assertEquals(consumer1.getId(), hypervisorMap.get(hypervisorId1).getId());
+        assertEquals(consumer2.getId(), hypervisorMap.get(hypervisorId2).getId());
     }
 
     @Test

@@ -27,6 +27,7 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.GuestIdCurator;
+import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 
@@ -37,6 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.ws.rs.DELETE;
@@ -141,7 +143,18 @@ public class GuestIdResource {
         Consumer consumer = new Consumer();
         consumer.setGuestIds(guestIds);
 
-        if (consumerResource.performConsumerUpdates(consumer, toUpdate)) {
+        List<String> allGuestIds = new LinkedList<String>();
+        for (GuestId gid : consumer.getGuestIds()) {
+            allGuestIds.add(gid.getGuestId());
+        }
+        VirtConsumerMap guestConsumerMap = consumerCurator.getGuestConsumersMap(
+                toUpdate.getOwner(), allGuestIds);
+
+        VirtConsumerMap guestsHostConsumerMap = consumerCurator.getGuestsHostMap(
+                toUpdate.getOwner(), allGuestIds);
+
+        if (consumerResource.performConsumerUpdates(consumer, toUpdate,
+                guestConsumerMap, guestsHostConsumerMap)) {
             consumerCurator.update(toUpdate);
         }
     }

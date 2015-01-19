@@ -388,16 +388,18 @@ public class Util {
      * this should return a list of length 1, with the given value.  All values
      * returned should be lower case
      */
-    public static List<String> getPossibleUuids(String id) {
-        if (id != null) {
-            // We want to use lower case everywhere we can in order
-            // to do less work at query time.
-            id = id.toLowerCase();
-        }
+    public static List<String> getPossibleUuids(String... ids) {
         List<String> results = new LinkedList<String>();
-        results.add(id);
-        if (isUuid(id)) {
-            results.add(transformUuid(id));
+        for (String id : ids) {
+            if (id != null) {
+                // We want to use lower case everywhere we can in order
+                // to do less work at query time.
+                id = id.toLowerCase();
+            }
+            results.add(id);
+            if (isUuid(id)) {
+                results.add(transformUuid(id));
+            }
         }
         return results;
     }
