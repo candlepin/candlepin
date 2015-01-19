@@ -601,17 +601,23 @@ public class PoolRulesTest {
     }
 
     /*
-     * Bonus pools should not be created at pool creation time if the
-     * host_limited attribute is present on the product.  Instead the bonus
-     * pools will be created during binding.
+     * Bonus pools should be created at pool creation time if the
+     * host_limited attribute is present on the product.  A tag will
+     * be added to the created pool. Host specific bonus pools will
+     * still be created during binding.
      */
     @Test
-    public void hostedVirtLimitWithHostLimitedSkipsBonusPools() {
-        when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
+    public void virtLimitWithHostLimitedCreatesTaggedBonusPool() {
         Subscription s = createVirtLimitSub("virtLimitProduct", 10, 10);
         s.getProduct().setAttribute("host_limited", "true");
         List<Pool> pools = poolRules.createPools(s);
-        assertEquals(1, pools.size());
+        assertEquals(2, pools.size());
+        for (Pool p : pools) {
+            if (p.getSourceSubscription().getSubscriptionSubKey().equals("derived")) {
+                assertTrue(p.hasAttribute("unmapped_guest_only") &&
+                        p.hasAttribute("unmapped_guest_only"));
+            }
+        }
     }
 
     // Make sure host_limited false is working:

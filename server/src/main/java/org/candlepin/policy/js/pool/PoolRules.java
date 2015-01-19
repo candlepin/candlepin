@@ -158,25 +158,29 @@ public class PoolRules {
         boolean hostLimited = attributes.containsKey("host_limited") &&
             attributes.get("host_limited").equals("true");
         // Check if we need to create a virt-only pool for this subscription:
-        if (attributes.containsKey("virt_limit") && !config.getBoolean(ConfigProperties.STANDALONE) &&
-            !hostLimited && !hasBonusPool(existingPools)) {
-            HashMap<String, String> virtAttributes = new HashMap<String, String>();
-            virtAttributes.put("virt_only", "true");
-            virtAttributes.put("pool_derived", "true");
-            virtAttributes.put("physical_only", "false");
-            // Make sure the virt pool does not have a virt_limit,
-            // otherwise this will recurse infinitely
-            virtAttributes.put("virt_limit", "0");
+        if (attributes.containsKey("virt_limit") && !hasBonusPool(existingPools)) {
+            if (hostLimited || !config.getBoolean(ConfigProperties.STANDALONE)) {
+                HashMap<String, String> virtAttributes = new HashMap<String, String>();
+                virtAttributes.put("virt_only", "true");
+                virtAttributes.put("pool_derived", "true");
+                virtAttributes.put("physical_only", "false");
+                if (hostLimited) {
+                    virtAttributes.put("unmapped_guest_only", "true");
+                }
+                // Make sure the virt pool does not have a virt_limit,
+                // otherwise this will recurse infinitely
+                virtAttributes.put("virt_limit", "0");
 
-            String virtQuantity = getVirtQuantity(attributes.get("virt_limit"), quantity);
-            if (virtQuantity != null) {
-                Pool derivedPool = helper.createPool(sub, sub.getProduct().getId(),
-                                                    virtQuantity, virtAttributes);
-                // Using derived here because only one derived pool
-                // is created for this subscription
-                derivedPool.setSourceSubscription(
-                    new SourceSubscription(sub.getId(), "derived"));
-                pools.add(derivedPool);
+                String virtQuantity = getVirtQuantity(attributes.get("virt_limit"), quantity);
+                if (virtQuantity != null) {
+                    Pool derivedPool = helper.createPool(sub, sub.getProduct().getId(),
+                                                        virtQuantity, virtAttributes);
+                    // Using derived here because only one derived pool
+                    // is created for this subscription
+                    derivedPool.setSourceSubscription(
+                        new SourceSubscription(sub.getId(), "derived"));
+                    pools.add(derivedPool);
+                }
             }
         }
         return pools;

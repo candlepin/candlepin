@@ -101,7 +101,7 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
         Subscription s = createVirtLimitSub("virtLimitProduct", 10, "unlimited");
         s.getProduct().setAttribute("host_limited", "true");
         List<Pool> pools = poolRules.createPools(s);
-        assertEquals(1, pools.size());
+        assertEquals(2, pools.size());
 
         Pool physicalPool = pools.get(0);
         physicalPool.setId("physical");
