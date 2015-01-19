@@ -71,6 +71,7 @@ import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.Release;
 import org.candlepin.model.User;
+import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyContentOverride;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
@@ -848,7 +849,22 @@ public class ConsumerResource {
         Consumer consumer) {
         Consumer toUpdate = consumerCurator.verifyAndLookupConsumer(uuid);
 
-        if (performConsumerUpdates(consumer, toUpdate)) {
+        VirtConsumerMap guestConsumerMap = new VirtConsumerMap();
+        VirtConsumerMap guestsHostConsumerMap = new VirtConsumerMap();
+        if (consumer.getGuestIds() != null) {
+            List<String> allGuestIds = new LinkedList<String>();
+            for (GuestId gid : consumer.getGuestIds()) {
+                allGuestIds.add(gid.getGuestId());
+            }
+            guestConsumerMap = consumerCurator.getGuestConsumersMap(
+                    toUpdate.getOwner(), allGuestIds);
+
+            guestsHostConsumerMap = consumerCurator.getGuestsHostMap(
+                    toUpdate.getOwner(), allGuestIds);
+        }
+
+        if (performConsumerUpdates(consumer, toUpdate,
+                guestConsumerMap, guestsHostConsumerMap)) {
             try {
                 consumerCurator.update(toUpdate);
             }
@@ -864,15 +880,18 @@ public class ConsumerResource {
         }
     }
 
-    protected boolean performConsumerUpdates(Consumer updated, Consumer toUpdate) {
+    @Transactional
+    protected boolean performConsumerUpdates(Consumer updated, Consumer toUpdate,
+            VirtConsumerMap guestConsumerMap,
+            VirtConsumerMap guestHypervisorConsumers) {
         if (log.isDebugEnabled()) {
             log.debug("Updating consumer: " + toUpdate.getUuid());
         }
         // We need a representation of the consumer before making any modifications.
         // If nothing changes we won't send.  The new entity needs to be correct though,
         // so we should get a Jsonstring now, and finish it off if we're going to send
-        EventBuilder eventBuilder = eventFactory.getEventBuilder(Target.CONSUMER, Type.MODIFIED)
-                .setOldEntity(toUpdate);
+        EventBuilder eventBuilder = eventFactory.getEventBuilder(Target.CONSUMER,
+                Type.MODIFIED).setOldEntity(toUpdate);
 
         // version changed on non-checked in consumer, or list of capabilities
         // changed on checked in consumer
@@ -880,7 +899,8 @@ public class ConsumerResource {
 
         changesMade = checkForFactsUpdate(toUpdate, updated) || changesMade;
         changesMade = checkForInstalledProductsUpdate(toUpdate, updated) || changesMade;
-        changesMade = checkForGuestsUpdate(toUpdate, updated) || changesMade;
+        changesMade = checkForGuestsUpdate(toUpdate, updated,
+                guestConsumerMap, guestHypervisorConsumers) || changesMade;
         changesMade = checkForHypervisorIdUpdate(toUpdate, updated) || changesMade;
 
         // Allow optional setting of the autoheal attribute:
@@ -1062,7 +1082,9 @@ public class ConsumerResource {
      * @param incoming incoming consumer
      * @return a boolean
      */
-    private boolean checkForGuestsUpdate(Consumer existing, Consumer incoming) {
+    private boolean checkForGuestsUpdate(Consumer existing, Consumer incoming,
+            VirtConsumerMap guestConsumerMap,
+            VirtConsumerMap guestHypervisorConsumers) {
 
         if (incoming.getGuestIds() == null) {
             if (log.isDebugEnabled()) {
@@ -1091,10 +1113,7 @@ public class ConsumerResource {
 
         // Check guests that are existing/added.
         for (GuestId guestId : incoming.getGuestIds()) {
-            Consumer host = consumerCurator.getHost(
-                guestId.getGuestId(), existing.getOwner());
-            Consumer guest = consumerCurator.findByVirtUuid(guestId.getGuestId(),
-                existing.getOwner().getId());
+            Consumer host = guestHypervisorConsumers.get(guestId.getGuestId());
 
             // Add back the guestId.
             existing.addGuestId(guestId);
@@ -1108,9 +1127,12 @@ public class ConsumerResource {
             }
 
             // The guest has not registered. No need to process entitlements.
+            Consumer guest = guestConsumerMap.get(guestId.getGuestId());
             if (guest == null) {
                 continue;
             }
+
+
 
             // Check if the guest was already reported by another host.
             if (host != null && !existing.equals(host)) {

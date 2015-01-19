@@ -12,11 +12,11 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.resource.test;
+package org.candlepin.resource;
 
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
@@ -30,6 +30,7 @@ import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.GuestIdCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.resource.ConsumerResource;
@@ -135,11 +136,13 @@ public class GuestIdResourceTest {
         List<GuestId> guestIds = new LinkedList<GuestId>();
         guestIds.add(new GuestId("1"));
         when(consumerResource.performConsumerUpdates(any(Consumer.class),
-            eq(consumer))).thenReturn(true);
+            eq(consumer), any(VirtConsumerMap.class), any(VirtConsumerMap.class))).
+            thenReturn(true);
 
         guestIdResource.updateGuests(consumer.getUuid(), guestIds);
         Mockito.verify(consumerResource, Mockito.times(1))
-            .performConsumerUpdates(any(Consumer.class), eq(consumer));
+            .performConsumerUpdates(any(Consumer.class), eq(consumer),
+                    any(VirtConsumerMap.class), any(VirtConsumerMap.class));
         // consumerResource returned true, so the consumer should be updated
         Mockito.verify(consumerCurator, Mockito.times(1)).update(eq(consumer));
     }
@@ -151,11 +154,13 @@ public class GuestIdResourceTest {
 
         // consumerResource tells us nothing changed
         when(consumerResource.performConsumerUpdates(any(Consumer.class),
-            eq(consumer))).thenReturn(false);
+            eq(consumer), any(VirtConsumerMap.class), any(VirtConsumerMap.class))).
+            thenReturn(false);
 
         guestIdResource.updateGuests(consumer.getUuid(), guestIds);
         Mockito.verify(consumerResource, Mockito.times(1))
-            .performConsumerUpdates(any(Consumer.class), eq(consumer));
+            .performConsumerUpdates(any(Consumer.class), eq(consumer),
+                    any(VirtConsumerMap.class), any(VirtConsumerMap.class));
         Mockito.verify(consumerCurator, Mockito.never()).update(eq(consumer));
     }
 
@@ -274,10 +279,6 @@ public class GuestIdResourceTest {
                 null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null,
                 null, null, null, null, null, mockedServiceLevelValidator);
-        }
-
-        public boolean performConsumerUpdates(Consumer updated, Consumer toUpdate) {
-            return true;
         }
 
         public void revokeGuestEntitlementsNotMatchingHost(Consumer host, Consumer guest) {

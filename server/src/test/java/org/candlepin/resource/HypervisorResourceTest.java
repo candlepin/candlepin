@@ -16,7 +16,7 @@ package org.candlepin.resource;
 
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
@@ -37,6 +37,7 @@ import org.candlepin.model.GuestId;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
@@ -57,6 +58,7 @@ import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -160,7 +162,15 @@ public class HypervisorResourceTest {
             new GuestId("GUEST_B")));
 
         when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
-        when(consumerCurator.getHypervisor(eq("test-host"), eq(owner))).thenReturn(null);
+
+        when(consumerCurator.getHostConsumersMap(any(Owner.class),
+                any(Collection.class))).
+                thenReturn(new VirtConsumerMap());
+        when(consumerCurator.getGuestConsumersMap(any(Owner.class), any(List.class))).
+            thenReturn(new VirtConsumerMap());
+        when(consumerCurator.getGuestsHostMap(any(Owner.class), any(List.class))).
+            thenReturn(new VirtConsumerMap());
+
         when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
         when(principal.canAccess(eq(owner), eq(SubResource.CONSUMERS), eq(Access.CREATE))).
             thenReturn(true);
@@ -182,6 +192,13 @@ public class HypervisorResourceTest {
         assertEquals("GUEST_B", c1.getGuestIds().get(1).getGuestId());
         assertEquals("x86_64", c1.getFact("uname.machine"));
         assertEquals("hypervisor", c1.getType().getLabel());
+    }
+
+    private VirtConsumerMap mockHypervisorConsumerMap(
+            String hypervisorId, Consumer c) {
+        VirtConsumerMap mockMap = new VirtConsumerMap();
+        mockMap.add(hypervisorId, c);
+        return mockMap;
     }
 
     @Test
@@ -220,7 +237,8 @@ public class HypervisorResourceTest {
         Owner owner = new Owner("owner-id", "Owner Id");
 
         Map<String, List<GuestId>> hostGuestMap = new HashMap<String, List<GuestId>>();
-        hostGuestMap.put("test-host", Arrays.asList(new GuestId("GUEST_B")));
+        String hypervisorId = "test-host";
+        hostGuestMap.put(hypervisorId, Arrays.asList(new GuestId("GUEST_B")));
 
         Owner o = new Owner("owner-id", "Owner ID");
         o.setId("owner-id");
@@ -231,8 +249,14 @@ public class HypervisorResourceTest {
 
         when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
         // Force update
-        when(consumerCurator.getHypervisor(eq("test-host"),
-            eq(owner))).thenReturn(existing);
+        when(consumerCurator.getHostConsumersMap(any(Owner.class),
+                any(Collection.class))).
+                thenReturn(mockHypervisorConsumerMap(hypervisorId, existing));
+        when(consumerCurator.getGuestConsumersMap(any(Owner.class), any(List.class))).
+                thenReturn(new VirtConsumerMap());
+        when(consumerCurator.getGuestsHostMap(any(Owner.class), any(List.class))).
+            thenReturn(new VirtConsumerMap());
+
 
         HypervisorCheckInResult result = hypervisorResource.hypervisorCheckIn(hostGuestMap,
             principal, owner.getKey(), true);
@@ -246,7 +270,7 @@ public class HypervisorResourceTest {
     }
 
     @Test
-    public void hypervisorCheckInReportsFailuresOnCreateFailure() {
+    public void hypervisorCheckInReportsFailuresOnCreateFailure() throws Exception {
         Owner owner = new Owner("admin");
 
         Map<String, List<GuestId>> hostGuestMap = new HashMap<String, List<GuestId>>();
@@ -254,58 +278,35 @@ public class HypervisorResourceTest {
         hostGuestMap.put(expectedHostVirtId, Arrays.asList(new GuestId("GUEST_A"),
             new GuestId("GUEST_B")));
 
-        // Force create.
-        when(consumerCurator.getHypervisor(eq(expectedHostVirtId),
-            eq(owner))).thenReturn(null);
+        when(consumerCurator.getHostConsumersMap(any(Owner.class),
+                any(Collection.class))).
+                thenReturn(new VirtConsumerMap());
+        when(consumerCurator.getGuestConsumersMap(any(Owner.class), any(List.class))).
+            thenReturn(new VirtConsumerMap());
+        when(consumerCurator.getGuestsHostMap(any(Owner.class), any(List.class))).
+            thenReturn(new VirtConsumerMap());
+
+        when(consumerTypeCurator.lookupByLabel(
+                eq(ConsumerTypeEnum.HYPERVISOR.getLabel()))).thenReturn(hypervisorType);
+        when(idCertService.generateIdentityCert(any(Consumer.class)))
+                .thenReturn(new IdentityCertificate());
+
 
         String expectedMessage = "Forced Exception.";
         RuntimeException exception = new RuntimeException(expectedMessage);
         // Simulate failure  when checking the owner
         when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
-        when(consumerCurator.getHypervisor(eq(expectedHostVirtId),
-            eq(owner))).thenThrow(exception);
+        when(principal.canAccess(eq(owner), eq(SubResource.CONSUMERS), eq(Access.CREATE))).
+            thenReturn(true);
+        when(consumerCurator.create(any(Consumer.class))).
+                thenThrow(exception);
 
         HypervisorCheckInResult result = hypervisorResource.hypervisorCheckIn(hostGuestMap,
             principal, owner.getKey(), true);
 
         Set<String> failures = result.getFailedUpdate();
         assertEquals(1, failures.size());
-        assertEquals(expectedHostVirtId + ": " + expectedMessage,
-            failures.iterator().next());
-    }
-
-    @Test
-    public void hypervisorCheckInReportsFailureWhenGuestIdUpdateFails() throws Exception {
-        Owner owner = new Owner("admin", "Admin");
-
-        Map<String, List<GuestId>> hostGuestMap = new HashMap<String, List<GuestId>>();
-        String expectedHostVirtId = "test-host";
-        hostGuestMap.put(expectedHostVirtId, Arrays.asList(new GuestId("GUEST_B")));
-
-        Consumer existing = new Consumer();
-        existing.setUuid(expectedHostVirtId);
-        existing.setOwner(owner);
-        existing.addGuestId(new GuestId("GUEST_A"));
-
-        when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
-
-        // Force update
-        when(consumerCurator.getHypervisor(eq(expectedHostVirtId),
-            eq(owner))).thenReturn(existing);
-
-        String expectedMessage = "Forced Exception.";
-        RuntimeException exception = new RuntimeException(expectedMessage);
-        // Simulate failure  when checking the owner
-        when(consumerCurator.getHost(any(String.class),
-            any(Owner.class))).thenThrow(exception);
-
-        HypervisorCheckInResult result = hypervisorResource.hypervisorCheckIn(hostGuestMap,
-            principal, owner.getKey(), true);
-
-        Set<String> failures = result.getFailedUpdate();
-        assertEquals(1, failures.size());
-        assertEquals(expectedHostVirtId + ": " + expectedMessage,
-            failures.iterator().next());
+        assertTrue(failures.iterator().next().contains("Problem creating unit"));
     }
 
     @Test
@@ -317,7 +318,15 @@ public class HypervisorResourceTest {
             new GuestId("GUEST_B")));
 
         when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
-        when(consumerCurator.getHypervisor(eq("test-host"), eq(owner))).thenReturn(null);
+
+        when(consumerCurator.getHostConsumersMap(any(Owner.class),
+                any(Collection.class))).
+                thenReturn(new VirtConsumerMap());
+        when(consumerCurator.getGuestConsumersMap(any(Owner.class), any(List.class))).
+            thenReturn(new VirtConsumerMap());
+        when(consumerCurator.getGuestsHostMap(any(Owner.class), any(List.class))).
+            thenReturn(new VirtConsumerMap());
+
         when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
         when(principal.canAccess(eq(owner), eq(SubResource.CONSUMERS), eq(Access.CREATE))).
             thenReturn(true);

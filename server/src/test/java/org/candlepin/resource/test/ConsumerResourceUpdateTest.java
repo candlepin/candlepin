@@ -43,6 +43,7 @@ import org.candlepin.model.GuestId;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Release;
+import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
@@ -66,6 +67,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
@@ -296,6 +298,11 @@ public class ConsumerResourceUpdateTest {
         // Create a consumer with 1 new guest.
         Consumer updated = createConsumerWithGuests("Guest 2");
 
+        when(this.consumerCurator.getGuestConsumersMap(any(Owner.class), any(List.class))).
+            thenReturn(new VirtConsumerMap());
+        when(this.consumerCurator.getGuestsHostMap(any(Owner.class), any(List.class))).
+            thenReturn(new VirtConsumerMap());
+
         this.resource.updateConsumer(existing.getUuid(), updated);
         assertEquals(1, existing.getGuestIds().size());
         assertEquals("Guest 2", existing.getGuestIds().get(0).getGuestId());
@@ -344,6 +351,10 @@ public class ConsumerResourceUpdateTest {
         Event expectedEvent = new Event();
         when(this.eventFactory.guestIdCreated(updated.getGuestIds().get(0)))
             .thenReturn(expectedEvent);
+        when(this.consumerCurator.getGuestConsumersMap(any(Owner.class), any(List.class))).
+            thenReturn(new VirtConsumerMap());
+        when(this.consumerCurator.getGuestsHostMap(any(Owner.class), any(List.class))).
+            thenReturn(new VirtConsumerMap());
 
         this.resource.updateConsumer(existing.getUuid(), updated);
         verify(sink).sendEvent(eq(expectedEvent));
@@ -364,6 +375,11 @@ public class ConsumerResourceUpdateTest {
         when(this.eventFactory.guestIdDeleted(existing.getGuestIds().get(0)))
             .thenReturn(expectedEvent);
 
+        when(this.consumerCurator.getGuestConsumersMap(any(Owner.class), any(List.class))).
+            thenReturn(new VirtConsumerMap());
+        when(this.consumerCurator.getGuestsHostMap(any(Owner.class), any(List.class))).
+            thenReturn(new VirtConsumerMap());
+
         this.resource.updateConsumer(existing.getUuid(), updated);
         verify(sink).sendEvent(eq(expectedEvent));
     }
@@ -382,6 +398,11 @@ public class ConsumerResourceUpdateTest {
         // Has to be mocked even though we don't intend to send:
         Event event = new Event();
         when(this.eventFactory.consumerModified(existing, updated)).thenReturn(event);
+
+        when(this.consumerCurator.getGuestConsumersMap(any(Owner.class), any(List.class))).
+            thenReturn(new VirtConsumerMap());
+        when(this.consumerCurator.getGuestsHostMap(any(Owner.class), any(List.class))).
+            thenReturn(new VirtConsumerMap());
 
         this.resource.updateConsumer(existing.getUuid(), updated);
         verify(sink, never()).sendEvent(any(Event.class));
@@ -402,6 +423,11 @@ public class ConsumerResourceUpdateTest {
         // Has to be mocked even though we don't intend to send:
         Event event = new Event();
         when(this.eventFactory.consumerModified(existing, updated)).thenReturn(event);
+
+        when(this.consumerCurator.getGuestConsumersMap(any(Owner.class), any(List.class))).
+            thenReturn(new VirtConsumerMap());
+        when(this.consumerCurator.getGuestsHostMap(any(Owner.class), any(List.class))).
+            thenReturn(new VirtConsumerMap());
 
         this.resource.updateConsumer(existing.getUuid(), updated);
         verify(sink, never()).sendEvent(any(Event.class));
@@ -460,11 +486,11 @@ public class ConsumerResourceUpdateTest {
         guest1.setUuid("Guest 1");
         guest1.addEntitlement(entitlement);
 
-        when(consumerCurator.findByVirtUuid("Guest 1",
-            existingHost.getOwner().getId())).thenReturn(guest1);
+        when(this.consumerCurator.getGuestConsumersMap(any(Owner.class), any(List.class))).
+            thenReturn(mockVirtConsumerMap("Guest 1", guest1));
         // Ensure that the guests host is the existing.
-        when(consumerCurator.getHost("Guest 1",
-            existingHost.getOwner())).thenReturn(existingHost);
+        when(this.consumerCurator.getGuestsHostMap(any(Owner.class), any(List.class))).
+            thenReturn(mockVirtConsumerMap("Guest 1", existingHost));
 
         Consumer existingMigratedTo = createConsumerWithGuests("Guest 1");
         existingMigratedTo.setUuid("MIGRATED_TO");
@@ -496,12 +522,12 @@ public class ConsumerResourceUpdateTest {
         guest1.setUuid("Guest 1");
         guest1.addEntitlement(entitlement);
 
-        when(consumerCurator.findByVirtUuid("Guest 1",
-            host.getOwner().getId())).thenReturn(guest1);
-
+        when(this.consumerCurator.getGuestConsumersMap(any(Owner.class), any(List.class))).
+            thenReturn(mockVirtConsumerMap("Guest 1", guest1));
         // Ensure that the guest was not reported by another host.
-        when(consumerCurator.getHost("Guest 1",
-            host.getOwner())).thenReturn(null);
+        when(this.consumerCurator.getGuestsHostMap(any(Owner.class), any(List.class))).
+            thenReturn(new VirtConsumerMap());
+
 
         this.resource.updateConsumer(host.getUuid(), updatedHost);
         verify(poolManager, never()).revokeEntitlement(eq(entitlement));
@@ -526,12 +552,11 @@ public class ConsumerResourceUpdateTest {
         guest1.setUuid("Guest 1");
         guest1.addEntitlement(entitlement);
 
-        when(consumerCurator.findByVirtUuid("Guest 1",
-            host.getOwner().getId())).thenReturn(guest1);
-
         // Ensure that the guest was already reported by same host.
-        when(consumerCurator.getHost("Guest 1",
-            host.getOwner())).thenReturn(host);
+        when(this.consumerCurator.getGuestConsumersMap(any(Owner.class), any(List.class))).
+            thenReturn(mockVirtConsumerMap("Guest 1", guest1));
+        when(this.consumerCurator.getGuestsHostMap(any(Owner.class), any(List.class))).
+            thenReturn(mockVirtConsumerMap("Guest 1", host));
 
         this.resource.updateConsumer(host.getUuid(), updatedHost);
         verify(poolManager, never()).revokeEntitlement(eq(entitlement));
@@ -556,14 +581,21 @@ public class ConsumerResourceUpdateTest {
         guest1.setUuid("Guest 1");
         guest1.addEntitlement(entitlement);
 
-        when(consumerCurator.findByVirtUuid("Guest 1",
-            host.getOwner().getId())).thenReturn(guest1);
+        when(this.consumerCurator.getGuestConsumersMap(any(Owner.class), any(List.class))).
+            thenReturn(mockVirtConsumerMap("Guest 1", guest1));
+        when(this.consumerCurator.getGuestsHostMap(any(Owner.class), any(List.class))).
+            thenReturn(new VirtConsumerMap());
 
         this.resource.updateConsumer(host.getUuid(), updatedHost);
         //verify(consumerCurator).findByVirtUuid(eq("Guest 1"));
         verify(poolManager, never()).revokeEntitlement(eq(entitlement));
     }
 
+    private VirtConsumerMap mockVirtConsumerMap(String uuid, Consumer consumer) {
+        VirtConsumerMap map = new VirtConsumerMap();
+        map.add(uuid, consumer);
+        return map;
+    }
 
     @Test
     public void ensureGuestEntitlementsAreNotRemovedWhenGuestsAndHostAreTheSame() {
@@ -584,9 +616,11 @@ public class ConsumerResourceUpdateTest {
         guest1.setUuid("Guest 1");
         guest1.addEntitlement(entitlement);
 
-        when(consumerCurator.findByVirtUuid("Guest 1",
-            host.getOwner().getId())).thenReturn(guest1);
-        when(consumerCurator.getHost("Guest 1", host.getOwner())).thenReturn(host);
+        when(this.consumerCurator.getGuestConsumersMap(any(Owner.class), any(List.class))).
+            thenReturn(mockVirtConsumerMap("Guest 1", guest1));
+        when(this.consumerCurator.getGuestsHostMap(any(Owner.class), any(List.class))).
+            thenReturn(mockVirtConsumerMap("Guest 1", host));
+
 
         this.resource.updateConsumer(host.getUuid(), updatedHost);
 
@@ -611,8 +645,10 @@ public class ConsumerResourceUpdateTest {
         guest1.setUuid("Guest 1");
         guest1.addEntitlement(entitlement);
 
-        when(consumerCurator.findByVirtUuid("Guest 1",
-            host.getOwner().getId())).thenReturn(guest1);
+        when(this.consumerCurator.getGuestConsumersMap(any(Owner.class), any(List.class))).
+            thenReturn(mockVirtConsumerMap("Guest 1", guest1));
+        when(this.consumerCurator.getGuestsHostMap(any(Owner.class), any(List.class))).
+            thenReturn(new VirtConsumerMap());
 
         this.resource.updateConsumer(host.getUuid(), updatedHost);
 
@@ -638,6 +674,11 @@ public class ConsumerResourceUpdateTest {
         updated.setFact(expectedFactName, expectedFactValue);
         updated.addInstalledProduct(expectedInstalledProduct);
         updated.addGuestId(expectedGuestId);
+
+        when(this.consumerCurator.getGuestConsumersMap(any(Owner.class), any(List.class))).
+            thenReturn(new VirtConsumerMap());
+        when(this.consumerCurator.getGuestsHostMap(any(Owner.class), any(List.class))).
+            thenReturn(new VirtConsumerMap());
 
         this.resource.updateConsumer(existing.getUuid(), updated);
         assertEquals(1, existing.getFacts().size());
