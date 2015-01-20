@@ -61,7 +61,9 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.PEMReader;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mock;
@@ -78,6 +80,7 @@ import java.security.GeneralSecurityException;
 import java.security.Key;
 import java.security.KeyPair;
 import java.security.Security;
+import java.security.cert.CertificateExpiredException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -100,6 +103,10 @@ import javax.inject.Inject;
 @SuppressWarnings("unchecked")
 @RunWith(MockitoJUnitRunner.class)
 public class DefaultEntitlementCertServiceAdapterTest {
+
+    @SuppressWarnings("checkstyle:visibilitymodifier")
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
 
     private static final String CONTENT_LABEL = "label";
     private static final String CONTENT_ID = "1234";
@@ -283,6 +290,32 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Content c = new Content(name, id, label, type, vendor, url, gpgUrl, arches);
 
         return c;
+    }
+
+    @Test
+    public void temporaryCertificateForUnmappedGuests() throws Exception {
+        Date now = new Date();
+        when(consumer.getCreated()).thenReturn(now);
+        pool.addAttribute(new PoolAttribute("unmapped_guest_only", "true"));
+
+        // Set up an adapter with a real PKIUtil
+        certServiceAdapter = new DefaultEntitlementCertServiceAdapter(
+            realPKI, extensionUtil, v3extensionUtil,
+            mock(EntitlementCertificateCurator.class), keyPairCurator,
+            serialCurator, productAdapter, entCurator,
+            I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
+            config);
+
+        X509Certificate result = certServiceAdapter.createX509Certificate(entitlement,
+            product, new HashSet<Product>(), new BigInteger("1234"), keyPair, true);
+
+        Date twentyFiveHoursOut = new Date(now.getTime() + 25 * 60 * 60 * 1000);
+        Date twentyThreeHoursOut = new Date(now.getTime() + 23 * 60 * 60 * 1000);
+
+        result.checkValidity(twentyThreeHoursOut);
+
+        thrown.expect(CertificateExpiredException.class);
+        result.checkValidity(twentyFiveHoursOut);
     }
 
     @Test(expected = CertificateSizeException.class)

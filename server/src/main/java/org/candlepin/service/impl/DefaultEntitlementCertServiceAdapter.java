@@ -47,6 +47,7 @@ import org.candlepin.util.X509V3ExtensionUtil;
 import com.google.common.collect.Collections2;
 import com.google.inject.Inject;
 
+import org.apache.commons.lang.BooleanUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -58,6 +59,7 @@ import java.net.URLEncoder;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.cert.X509Certificate;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -185,8 +187,30 @@ public class DefaultEntitlementCertServiceAdapter extends
 
         X509Certificate x509Cert =  this.pki.createX509Certificate(
                 createDN(ent), extensions, byteExtensions, ent.getPool().getStartDate(),
-                ent.getPool().getEndDate(), keyPair, serialNumber, null);
+                findPoolEndDate(ent), keyPair, serialNumber, null);
         return x509Cert;
+    }
+
+    private Date findPoolEndDate(Entitlement ent) {
+        Pool pool = ent.getPool();
+        Consumer consumer = ent.getConsumer();
+
+        Date startDate = new Date();
+
+        if (consumer.getCreated() != null) {
+            startDate = consumer.getCreated();
+        }
+
+        Date oneDayFromRegistration = new Date(startDate.getTime() + (24 * 60 * 60 * 1000));
+
+        boolean isUnmappedGuestPool = BooleanUtils.toBoolean(pool.getAttributeValue("unmapped_guest_only"));
+
+        if (isUnmappedGuestPool) {
+            return oneDayFromRegistration;
+        }
+        else {
+            return pool.getEndDate();
+        }
     }
 
     private boolean shouldGenerateV3(Entitlement entitlement) {
