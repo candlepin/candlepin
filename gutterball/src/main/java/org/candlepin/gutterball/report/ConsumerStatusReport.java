@@ -21,9 +21,12 @@ import org.candlepin.gutterball.model.snapshot.ComplianceReason;
 
 import com.google.inject.Inject;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.inject.Provider;
@@ -32,7 +35,8 @@ import javax.ws.rs.core.MultivaluedMap;
 /**
  * ConsumerStatusListReport
  */
-public class ConsumerStatusReport extends Report<MultiRowResult<Compliance>> {
+public class ConsumerStatusReport extends Report<ConsumerStatusReportResult> {
+    private static Logger log = LoggerFactory.getLogger(ConsumerStatusReport.class);
 
     private ComplianceSnapshotCurator complianceSnapshotCurator;
     private StatusReasonMessageGenerator messageGenerator;
@@ -81,7 +85,7 @@ public class ConsumerStatusReport extends Report<MultiRowResult<Compliance>> {
     }
 
     @Override
-    protected MultiRowResult<Compliance> execute(MultivaluedMap<String, String> queryParams) {
+    protected ConsumerStatusReportResult execute(MultivaluedMap<String, String> queryParams) {
         // At this point we would execute a lookup against the DW data store to formulate
         // the report result set.
 
@@ -92,15 +96,23 @@ public class ConsumerStatusReport extends Report<MultiRowResult<Compliance>> {
         Date targetDate = queryParams.containsKey("on_date") ?
             parseDateTime(queryParams.getFirst("on_date")) : new Date();
 
-        List<Compliance> snaps = complianceSnapshotCurator.getSnapshotsOnDate(targetDate,
-                consumerIds, ownerFilters, statusFilters);
+        // List<Compliance> snaps = complianceSnapshotCurator.getSnapshotsOnDate(targetDate,
+        //         consumerIds, ownerFilters, statusFilters);
 
-        for (Compliance cs : snaps) {
-            for (ComplianceReason cr : cs.getStatus().getReasons()) {
-                messageGenerator.setMessage(cs.getConsumer(), cr);
-            }
-        }
+        // TODO: Include this in the iterated results!
+        // for (Compliance cs : snaps) {
+        //     for (ComplianceReason cr : cs.getStatus().getReasons()) {
+        //         messageGenerator.setMessage(cs.getConsumer(), cr);
+        //     }
+        // }
 
-        return new MultiRowResult<Compliance>(snaps);
+        Iterator<Compliance> iterator = this.complianceSnapshotCurator.getSnapshotsIterator(
+            targetDate,
+            consumerIds,
+            ownerFilters,
+            statusFilters
+        );
+
+        return new ConsumerStatusReportResult(iterator, this.messageGenerator);
     }
 }
