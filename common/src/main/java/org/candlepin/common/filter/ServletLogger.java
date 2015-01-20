@@ -17,8 +17,9 @@ package org.candlepin.common.filter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 
+import org.apache.commons.lang.StringUtils;
+
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
@@ -31,7 +32,6 @@ import javax.ws.rs.core.Response;
  * ServletLogger
  */
 public class ServletLogger {
-
     private static ObjectMapper mapper;
     private static ObjectWriter writer;
 
@@ -137,15 +137,29 @@ public class ServletLogger {
                 .append("\", time=").append(duration);
     }
 
-    public static boolean showAsText(String contentType) {
+    public static boolean showAsText(String header) {
         String[] textTypes = {
             MediaType.APPLICATION_JSON,
             MediaType.APPLICATION_ATOM_XML,
             MediaType.TEXT_PLAIN,
             MediaType.TEXT_XML,
             MediaType.TEXT_HTML,
-            MediaType.APPLICATION_FORM_URLENCODED
+            MediaType.APPLICATION_FORM_URLENCODED,
         };
-        return Arrays.asList(textTypes).contains(contentType);
+
+        /* The Media Type specification (See RFC 6838 and RFC 2616 3.7)
+         * is fairly complex.  It allows for the specification of text encoding
+         * and other parameters.  RESTEasy can do the sophisticated parsing, but
+         * we really don't care.  All we need to know is if the header contains
+         * a key string that indicates the body is text.
+         */
+        if (!StringUtils.isBlank(header)) {
+            for (int i = 0; i < textTypes.length; i++) {
+                if (header.contains(textTypes[i])) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }
