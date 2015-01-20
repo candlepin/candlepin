@@ -15,16 +15,23 @@
 
 package org.candlepin.gutterball.curator;
 
+import org.candlepin.gutterball.util.AutoEvictingResultsIterator;
+import org.candlepin.gutterball.util.ScrollableResultsIterator;
 import org.candlepin.gutterball.model.snapshot.Compliance;
 
 import com.google.inject.Inject;
 
 import org.hibernate.Criteria;
+import org.hibernate.CacheMode;
 import org.hibernate.Query;
+import org.hibernate.ScrollMode;
+import org.hibernate.Session;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.Subqueries;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -44,6 +51,7 @@ import java.util.TreeMap;
  *
  */
 public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
+    private static Logger log = LoggerFactory.getLogger(ComplianceSnapshotCurator.class);
 
     @Inject
     public ComplianceSnapshotCurator() {
@@ -94,6 +102,199 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
 
         return postFilter.list();
     }
+
+    public Iterator<Compliance> getSnapshotsIterator(Date targetDate, List<String> consumerUuids,
+        List<String> ownerFilters, List<String> statusFilters) {
+
+        List<Object> parameters = new LinkedList<Object>();
+        int counter = 0;
+
+        StringBuilder hql = new StringBuilder(
+            "SELECT " +
+                "ComplianceSnap " +
+
+            "FROM " +
+                "Consumer AS ConsumerSnap " +
+                "INNER JOIN ConsumerSnap.consumerState AS ConsumerState " +
+                "INNER JOIN ConsumerSnap.complianceSnapshot AS ComplianceSnap " +
+                "INNER JOIN ComplianceSnap.status AS ComplianceStatusSnap " +
+
+            "WHERE (" +
+                    "ConsumerState.deleted IS NULL " +
+                    "OR year(ComplianceSnap.date) < year(ConsumerState.deleted) " +
+                    "OR (" +
+                        "year(ComplianceSnap.date) = year(ConsumerState.deleted) " +
+                        "AND month(ComplianceSnap.date) < month(ConsumerState.deleted) " +
+                    ") " +
+                    "OR (" +
+                        "year(ComplianceSnap.date) = year(ConsumerState.deleted) " +
+                        "AND month(ComplianceSnap.date) = month(ConsumerState.deleted) " +
+                        "AND day(ComplianceSnap.date) < day(ConsumerState.deleted)" +
+                    ")" +
+                ") " +
+
+                "AND (ComplianceStatusSnap.date, ConsumerSnap.uuid) IN (" +
+                    "SELECT " +
+                        "max(ComplianceSnap2.date) AS maxdate, " +
+                        "ConsumerState2.uuid " +
+
+                    "FROM " +
+                        "Consumer AS ConsumerSnap2 " +
+                        "INNER JOIN ConsumerSnap2.consumerState AS ConsumerState2 " +
+                        "INNER JOIN ConsumerSnap2.complianceSnapshot AS ComplianceSnap2 " +
+                        "INNER JOIN ComplianceSnap2.status AS ComplianceStatusSnap2 " +
+
+                    "GROUP BY " +
+                        "year(ComplianceSnap2.date)," +
+                        "month(ComplianceSnap2.date)," +
+                        "day(ComplianceSnap2.date)," +
+                        "ConsumerState2.uuid " +
+                ") "
+        );
+
+
+        // Add our target date...
+        int year = targetDate.getYear() + 1900;
+        int month = targetDate.getMonth() + 1;
+        int day = targetDate.getDate();
+
+        hql.append(String.format(
+            "AND (ComplianceStatusSnap.date, ConsumerSnap.uuid) IN (" +
+                "SELECT " +
+                    "max(ComplianceStatusSnap2.date) AS maxdate, " +
+                    "ConsumerState2.uuid " +
+
+                "FROM " +
+                    "Consumer AS ConsumerSnap2 " +
+                    "INNER JOIN ConsumerSnap2.consumerState AS ConsumerState2 " +
+                    "INNER JOIN ConsumerSnap2.complianceSnapshot AS ComplianceSnap2 " +
+                    "INNER JOIN ComplianceSnap2.status AS ComplianceStatusSnap2 " +
+
+                "WHERE " +
+                    "year(ComplianceStatusSnap2.date) < ?%1$d " +
+                    "OR (" +
+                        "year(ComplianceStatusSnap2.date) = ?%1$d " +
+                        "AND month(ComplianceStatusSnap2.date) < ?%2$d" +
+                    ") " +
+                    "OR (" +
+                        "year(ComplianceStatusSnap2.date) = ?%1$d " +
+                        "AND month(ComplianceStatusSnap2.date) = ?%2$d " +
+                        "AND day(ComplianceStatusSnap2.date) < ?%3$d" +
+                    ") " +
+
+                "GROUP BY " +
+                    "ConsumerState2.uuid" +
+            ") ",
+            ++counter, ++counter, ++counter
+        ));
+
+        parameters.add(year);
+        parameters.add(month);
+        parameters.add(day);
+
+        // Add our filters, if necessary...
+        List<String> criteria = new LinkedList<String>();
+        StringBuffer inner = new StringBuffer(
+            "AND ("
+        );
+
+        if (consumerUuids != null && !consumerUuids.isEmpty()) {
+            criteria.add("ConsumerState.uuid IN ?" + ++counter);
+            parameters.add(consumerUuids);
+        }
+
+        if (ownerFilters != null && !ownerFilters.isEmpty()) {
+            criteria.add("ConsumerState.ownerKey IN ?" + ++counter);
+            parameters.add(ownerFilters);
+        }
+
+        if (statusFilters != null && !statusFilters.isEmpty()) {
+            criteria.add("ComplianceStatusSnap.status IN ?" + ++counter);
+            parameters.add(statusFilters);
+        }
+
+        if (!criteria.isEmpty()) {
+            // Append the criteria to our where clause and close it.
+            Iterator<String> ci = criteria.iterator();
+            inner.append(ci.next());
+
+            while (ci.hasNext()) {
+                inner.append(" AND ");
+                inner.append(ci.next());
+            }
+
+            hql.append(inner.append(") "));
+        }
+
+/*
+ SELECT ComplianceSnap
+    FROM Consumer AS ConsumerSnap
+    INNER JOIN ConsumerSnap.consumerState AS ConsumerState
+    INNER JOIN ConsumerSnap.complianceSnapshot AS ComplianceSnap
+    INNER JOIN ComplianceSnap.status AS ComplianceStatusSnap
+    WHERE (
+        ConsumerState.deleted IS NULL
+        OR year(ComplianceSnap.date) < year(ConsumerState.deleted)
+        OR (
+            year(ComplianceSnap.date) = year(ConsumerState.deleted)
+            AND month(ComplianceSnap.date) < month(ConsumerState.deleted)
+        )
+        OR (
+            year(ComplianceSnap.date) = year(ConsumerState.deleted)
+            AND month(ComplianceSnap.date) = month(ConsumerState.deleted)
+            AND day(ComplianceSnap.date) < day(ConsumerState.deleted)
+        )
+    )
+
+    AND (ComplianceStatusSnap.date, ConsumerSnap.uuid) IN (
+        SELECT max(ComplianceSnap2.date) AS maxdate, ConsumerState2.uuid
+        FROM Consumer AS ConsumerSnap2
+        INNER JOIN ConsumerSnap2.consumerState AS ConsumerState2
+        INNER JOIN ConsumerSnap2.complianceSnapshot AS ComplianceSnap2
+        INNER JOIN ComplianceSnap2.status AS ComplianceStatusSnap2
+
+        GROUP BY year(ComplianceSnap2.date),month(ComplianceSnap2.date),day(ComplianceSnap2.date),ConsumerState2.uuid
+    )
+
+    AND (ComplianceStatusSnap.date, ConsumerSnap.uuid) IN (
+        SELECT max(ComplianceStatusSnap2.date) AS maxdate, ConsumerState2.uuid
+        FROM Consumer AS ConsumerSnap2
+        INNER JOIN ConsumerSnap2.consumerState AS ConsumerState2
+        INNER JOIN ConsumerSnap2.complianceSnapshot AS ComplianceSnap2
+        INNER JOIN ComplianceSnap2.status AS ComplianceStatusSnap2
+        WHERE year(ComplianceStatusSnap2.date) < ?1
+        OR (
+            year(ComplianceStatusSnap2.date) = ?1
+            AND month(ComplianceStatusSnap2.date) < ?2
+        )
+        OR (
+            year(ComplianceStatusSnap2.date) = ?1
+            AND month(ComplianceStatusSnap2.date) = ?2
+            AND day(ComplianceStatusSnap2.date) < ?
+        )
+        GROUP BY ConsumerState2.uuid
+    )
+*/
+
+
+        // log.info("Query:\n " + hql + "\n");
+
+        // Build our query object and set the parameters...
+        Session session = this.currentSession();
+        Query query = session.createQuery(hql.toString());
+        query.setCacheMode(CacheMode.IGNORE);
+        query.setReadOnly(true);
+
+        // Query query = this.currentSession().getSessionFactory().openStatelessSession().createQuery(hql.toString());
+
+        for (int i = 1; i <= counter; ++i) {
+            query.setParameter(String.valueOf(i), parameters.remove(0));
+        }
+
+        return new AutoEvictingResultsIterator<Compliance>(session, query.scroll());
+        // return new ScrollableResultsIterator<Compliance>(query.scroll(ScrollMode.FORWARD_ONLY));
+    }
+
 
     public Set<Compliance> getComplianceForTimespan(Date startDate, Date endDate,
         List<String> consumerIds, List<String> owners) {
@@ -645,14 +846,14 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
                     ") " +
                     "OR (" +
                         "year(ComplianceSnap.date) = year(ConsumerState.deleted) " +
-                        " AND month(ComplianceSnap.date) = month(ConsumerState.deleted) " +
-                        " AND day(ComplianceSnap.date) < day(ConsumerState.deleted)" +
+                        "AND month(ComplianceSnap.date) = month(ConsumerState.deleted) " +
+                        "AND day(ComplianceSnap.date) < day(ConsumerState.deleted)" +
                     ")" +
                 ") " +
 
                 "AND (ComplianceStatusSnap.date, ConsumerSnap.uuid) IN (" +
                     "SELECT " +
-                        "max(ComplianceSnap2.date) AS maxdate," +
+                        "max(ComplianceSnap2.date) AS maxdate, " +
                         "ConsumerState2.uuid " +
 
                     "FROM " +
@@ -745,7 +946,7 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
                     ")" +
                     "OR (ComplianceStatusSnap.date, ConsumerSnap.uuid) IN (" +
                         "SELECT " +
-                            "max(ComplianceStatusSnap2.date) AS maxdate," +
+                            "max(ComplianceStatusSnap2.date) AS maxdate, " +
                             "ConsumerState2.uuid " +
 
                         "FROM " +
@@ -762,9 +963,9 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
                             ") " +
                             "OR (" +
                                 "year(ComplianceStatusSnap2.date) = ?%1$d " +
-                                " AND month(ComplianceStatusSnap2.date) = ?%2$d " +
-                                " AND day(ComplianceStatusSnap2.date) < ?%3$d" +
-                            ")" +
+                                "AND month(ComplianceStatusSnap2.date) = ?%2$d " +
+                                "AND day(ComplianceStatusSnap2.date) < ?%3$d" +
+                            ") " +
 
                         "GROUP BY " +
                             "ConsumerState2.uuid" +
@@ -792,8 +993,8 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
                     ") " +
                     "OR (" +
                         "year(ComplianceStatusSnap.date) = ?%1$d " +
-                        " AND month(ComplianceStatusSnap.date) = ?%2$d " +
-                        " AND day(ComplianceStatusSnap.date) <= ?%3$d" +
+                        "AND month(ComplianceStatusSnap.date) = ?%2$d " +
+                        "AND day(ComplianceStatusSnap.date) <= ?%3$d" +
                     ")" +
                 ") ",
                 ++counter, ++counter, ++counter
