@@ -164,6 +164,12 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             new PoolFilterBuilder(), null, false).getPageData();
     }
 
+    @Transactional
+    public List<Pool> listByFilter(PoolFilterBuilder filters) {
+        return listAvailableEntitlementPools(
+                null, null, null, null, false, filters, null, false).getPageData();
+    }
+
     /**
      * List entitlement pools.
      *
