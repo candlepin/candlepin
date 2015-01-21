@@ -18,14 +18,13 @@ package org.candlepin.gutterball.util;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 
-import java.util.Iterator;
-import java.util.NoSuchElementException;
-
 
 
 /**
  * The AutoEvictingResultsIterator extends the ScrollableResultsIterator by automatically evicting
  * Hibernate objects previously returned each time a new object is returned.
+ *
+ * @param <E> The element type to be returned by this iterator's "next" method.
  */
 public class AutoEvictingResultsIterator<E> extends ScrollableResultsIterator<E> {
 

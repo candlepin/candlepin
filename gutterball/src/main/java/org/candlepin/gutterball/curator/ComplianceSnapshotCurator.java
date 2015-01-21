@@ -16,7 +16,6 @@
 package org.candlepin.gutterball.curator;
 
 import org.candlepin.gutterball.util.AutoEvictingResultsIterator;
-import org.candlepin.gutterball.util.ScrollableResultsIterator;
 import org.candlepin.gutterball.model.snapshot.Compliance;
 
 import com.google.inject.Inject;
@@ -34,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -103,6 +103,7 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
         return postFilter.list();
     }
 
+    @SuppressWarnings("checkstyle:methodlength")
     public Iterator<Compliance> getSnapshotsIterator(Date targetDate, List<String> consumerUuids,
         List<String> ownerFilters, List<String> statusFilters) {
 
@@ -154,6 +155,10 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
 
 
         // Add our target date...
+        if (targetDate == null) {
+            targetDate = new Date();
+        }
+
         int year = targetDate.getYear() + 1900;
         int month = targetDate.getMonth() + 1;
         int day = targetDate.getDate();
@@ -226,73 +231,24 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
             hql.append(inner.append(") "));
         }
 
-/*
- SELECT ComplianceSnap
-    FROM Consumer AS ConsumerSnap
-    INNER JOIN ConsumerSnap.consumerState AS ConsumerState
-    INNER JOIN ConsumerSnap.complianceSnapshot AS ComplianceSnap
-    INNER JOIN ComplianceSnap.status AS ComplianceStatusSnap
-    WHERE (
-        ConsumerState.deleted IS NULL
-        OR year(ComplianceSnap.date) < year(ConsumerState.deleted)
-        OR (
-            year(ComplianceSnap.date) = year(ConsumerState.deleted)
-            AND month(ComplianceSnap.date) < month(ConsumerState.deleted)
-        )
-        OR (
-            year(ComplianceSnap.date) = year(ConsumerState.deleted)
-            AND month(ComplianceSnap.date) = month(ConsumerState.deleted)
-            AND day(ComplianceSnap.date) < day(ConsumerState.deleted)
-        )
-    )
-
-    AND (ComplianceStatusSnap.date, ConsumerSnap.uuid) IN (
-        SELECT max(ComplianceSnap2.date) AS maxdate, ConsumerState2.uuid
-        FROM Consumer AS ConsumerSnap2
-        INNER JOIN ConsumerSnap2.consumerState AS ConsumerState2
-        INNER JOIN ConsumerSnap2.complianceSnapshot AS ComplianceSnap2
-        INNER JOIN ComplianceSnap2.status AS ComplianceStatusSnap2
-
-        GROUP BY year(ComplianceSnap2.date),month(ComplianceSnap2.date),day(ComplianceSnap2.date),ConsumerState2.uuid
-    )
-
-    AND (ComplianceStatusSnap.date, ConsumerSnap.uuid) IN (
-        SELECT max(ComplianceStatusSnap2.date) AS maxdate, ConsumerState2.uuid
-        FROM Consumer AS ConsumerSnap2
-        INNER JOIN ConsumerSnap2.consumerState AS ConsumerState2
-        INNER JOIN ConsumerSnap2.complianceSnapshot AS ComplianceSnap2
-        INNER JOIN ComplianceSnap2.status AS ComplianceStatusSnap2
-        WHERE year(ComplianceStatusSnap2.date) < ?1
-        OR (
-            year(ComplianceStatusSnap2.date) = ?1
-            AND month(ComplianceStatusSnap2.date) < ?2
-        )
-        OR (
-            year(ComplianceStatusSnap2.date) = ?1
-            AND month(ComplianceStatusSnap2.date) = ?2
-            AND day(ComplianceStatusSnap2.date) < ?
-        )
-        GROUP BY ConsumerState2.uuid
-    )
-*/
-
-
-        // log.info("Query:\n " + hql + "\n");
-
         // Build our query object and set the parameters...
         Session session = this.currentSession();
         Query query = session.createQuery(hql.toString());
         query.setCacheMode(CacheMode.IGNORE);
         query.setReadOnly(true);
 
-        // Query query = this.currentSession().getSessionFactory().openStatelessSession().createQuery(hql.toString());
-
         for (int i = 1; i <= counter; ++i) {
-            query.setParameter(String.valueOf(i), parameters.remove(0));
+            Object arg = parameters.remove(0);
+
+            if (arg instanceof Collection) {
+                query.setParameterList(String.valueOf(i), (Collection) arg);
+            }
+            else {
+                query.setParameter(String.valueOf(i), arg);
+            }
         }
 
-        return new AutoEvictingResultsIterator<Compliance>(session, query.scroll());
-        // return new ScrollableResultsIterator<Compliance>(query.scroll(ScrollMode.FORWARD_ONLY));
+        return new AutoEvictingResultsIterator<Compliance>(session, query.scroll(ScrollMode.FORWARD_ONLY));
     }
 
 
