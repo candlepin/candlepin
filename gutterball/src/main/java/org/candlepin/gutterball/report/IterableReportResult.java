@@ -20,6 +20,8 @@ import java.util.Iterator;
 
 /**
  * The IterableReportResult class represents an iterator to be used as a ReportResult.
+ *
+ * @param <E> The element type returned by this report result's "next" method.
  */
 public class IterableReportResult<E> implements Iterator<E>, ReportResult {
 

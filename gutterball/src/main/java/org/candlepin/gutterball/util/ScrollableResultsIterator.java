@@ -24,6 +24,8 @@ import java.util.NoSuchElementException;
 
 /**
  * The ScrollableResultsIterator provides iteration on a ScrollableResults object.
+ *
+ * @param <E> The element type to be returned by this iterator's "next" method.
  */
 public class ScrollableResultsIterator<E> implements Iterator<E> {
 

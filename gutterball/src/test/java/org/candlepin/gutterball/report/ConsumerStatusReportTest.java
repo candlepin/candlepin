@@ -33,6 +33,7 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -63,6 +64,14 @@ public class ConsumerStatusReportTest {
     public void setUp() throws Exception {
         I18nProvider i18nProvider = new I18nProvider(mockReq);
         StatusReasonMessageGenerator messageGenerator = mock(StatusReasonMessageGenerator.class);
+
+        // Indentation note: This is what checkstyle actually wants. :/
+        when(complianceSnapshotCurator.getSnapshotsIterator(
+                any(Date.class), any(List.class), any(List.class), any(List.class)
+        )).thenReturn(
+                (new LinkedList<Compliance>()).iterator()
+            );
+
         report = new ConsumerStatusReport(i18nProvider, complianceSnapshotCurator, messageGenerator);
     }
 
@@ -96,7 +105,7 @@ public class ConsumerStatusReportTest {
         List<String> owners = null;
         List<String> status = null;
 
-        verify(complianceSnapshotCurator).getSnapshotsOnDate(eq(cal.getTime()),
+        verify(complianceSnapshotCurator).getSnapshotsIterator(eq(cal.getTime()),
                 eq(uuids), eq(owners), eq(status));
         verifyNoMoreInteractions(complianceSnapshotCurator);
     }
@@ -113,7 +122,7 @@ public class ConsumerStatusReportTest {
         List<String> owners = Arrays.asList("o2");
         List<String> status = null;
 
-        verify(complianceSnapshotCurator).getSnapshotsOnDate(any(Date.class),
+        verify(complianceSnapshotCurator).getSnapshotsIterator(any(Date.class),
                 eq(uuids), eq(owners), eq(status));
         verifyNoMoreInteractions(complianceSnapshotCurator);
     }
@@ -127,8 +136,8 @@ public class ConsumerStatusReportTest {
         List<String> uuids = null;
         List<String> owners = null;
 
-        MultiRowResult<Compliance> results = report.run(params);
-        verify(complianceSnapshotCurator).getSnapshotsOnDate(any(Date.class),
+        ConsumerStatusReportResult results = report.run(params);
+        verify(complianceSnapshotCurator).getSnapshotsIterator(any(Date.class),
                 eq(uuids), eq(owners),
                 eq(Arrays.asList("partial")));
         verifyNoMoreInteractions(complianceSnapshotCurator);
