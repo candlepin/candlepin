@@ -75,6 +75,7 @@ public class Entitler {
 
     public List<Entitlement> bindByPool(String poolId, Consumer consumer,
         Integer quantity) {
+        log.info("Looking up pool to bind: " + poolId);
         Pool pool = poolManager.find(poolId);
         List<Entitlement> entitlementList = new LinkedList<Entitlement>();
 
