@@ -343,9 +343,7 @@ public class DefaultEntitlementCertServiceAdapter extends
         Subscription sub, Product product, boolean thisIsUeberCert)
         throws GeneralSecurityException, IOException {
 
-        log.debug("Generating entitlement cert for:");
-        log.debug("   consumer: {}", entitlement.getConsumer().getUuid());
-        log.debug("   product: {}" , product.getId());
+        log.info("Generating entitlement cert.");
 
         KeyPair keyPair = keyPairCurator.getConsumerKeyPair(entitlement.getConsumer());
         CertificateSerial serial = new CertificateSerial(entitlement.getEndDate());
@@ -361,6 +359,7 @@ public class DefaultEntitlementCertServiceAdapter extends
         // is available in the upstream certificate.
         products.addAll(getDerivedProductsForDistributor(sub, entitlement));
 
+        log.info("Creating X509 cert.");
         X509Certificate x509Cert = createX509Certificate(entitlement,
             product, products, BigInteger.valueOf(serial.getId()), keyPair,
             !thisIsUeberCert);
@@ -373,6 +372,7 @@ public class DefaultEntitlementCertServiceAdapter extends
         Map<String, EnvironmentContent> promotedContent = getPromotedContent(entitlement);
         String contentPrefix = getContentPrefix(entitlement, !thisIsUeberCert);
 
+        log.info("Getting PEM encoded cert.");
         String pem = new String(this.pki.getPemEncoded(x509Cert));
 
         if (shouldGenerateV3(entitlement)) {
@@ -400,6 +400,7 @@ public class DefaultEntitlementCertServiceAdapter extends
             log.debug("Cert: " + cert.getCert());
         }
 
+        log.info("Persisting cert.");
         entitlement.getCertificates().add(cert);
         entCertCurator.create(cert);
         return cert;

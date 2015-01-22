@@ -578,6 +578,9 @@ public class ConsumerResource {
                 change = true;
             }
         }
+        if (change) {
+            log.info("Capabilities changed.");
+        }
         return change;
     }
 
@@ -820,7 +823,7 @@ public class ConsumerResource {
 
         if (updated.getContentTags() != null &&
             !updated.getContentTags().equals(toUpdate.getContentTags())) {
-            log.debug("   Updating consumer content tags.");
+            log.info("   Updating content tags.");
             toUpdate.setContentTags(updated.getContentTags());
             changesMade = true;
         }
@@ -828,7 +831,7 @@ public class ConsumerResource {
         // Allow optional setting of the autoheal attribute:
         if (updated.isAutoheal() != null &&
              !updated.isAutoheal().equals(toUpdate.isAutoheal())) {
-            log.debug("   Updating consumer autoheal setting.");
+            log.info("   Updating consumer autoheal setting.");
             toUpdate.setAutoheal(updated.isAutoheal());
             changesMade = true;
         }
@@ -836,7 +839,7 @@ public class ConsumerResource {
         if (updated.getReleaseVer() != null &&
             (updated.getReleaseVer().getReleaseVer() != null) &&
             !updated.getReleaseVer().equals(toUpdate.getReleaseVer())) {
-            log.debug("   Updating consumer releaseVer setting.");
+            log.info("   Updating consumer releaseVer setting.");
             toUpdate.setReleaseVer(updated.getReleaseVer());
             changesMade = true;
         }
@@ -845,7 +848,7 @@ public class ConsumerResource {
         String level = updated.getServiceLevel();
         if (level != null &&
             !level.equals(toUpdate.getServiceLevel())) {
-            log.debug("   Updating consumer service level setting.");
+            log.info("   Updating consumer service level setting.");
             consumerBindUtil.validateServiceLevel(toUpdate.getOwner(), level);
             toUpdate.setServiceLevel(level);
             changesMade = true;
@@ -860,6 +863,7 @@ public class ConsumerResource {
                 throw new NotFoundException(i18n.tr(
                     "Environment with ID ''{0}'' could not be found.", environmentId));
             }
+            log.info("Updating environment to: " + environmentId);
             toUpdate.setEnvironment(e);
 
             // lazily regenerate certs, so the client can still work
@@ -871,6 +875,9 @@ public class ConsumerResource {
         // it should remain the same
         if (updated.getName() != null && !toUpdate.getName().equals(updated.getName())) {
             checkConsumerName(updated);
+
+            log.info("Updating consumer name: {} -> {}",
+                    toUpdate.getName(), updated.getName());
             toUpdate.setName(updated.getName());
 
             // get the new name into the id cert
@@ -879,6 +886,8 @@ public class ConsumerResource {
         }
 
         if (updated.getLastCheckin() != null) {
+            log.info("Updating to specific last checkin time: {}",
+                    updated.getLastCheckin());
             toUpdate.setLastCheckin(updated.getLastCheckin());
             changesMade = true;
         }
@@ -938,7 +947,7 @@ public class ConsumerResource {
             return false;
         }
         else if (!existing.factsAreEqual(incoming)) {
-            log.debug("Updating consumer facts.");
+            log.info("Updating facts.");
             existing.setFacts(incoming.getFacts());
             return true;
         }
@@ -962,7 +971,7 @@ public class ConsumerResource {
             return false;
         }
         else if (!existing.getInstalledProducts().equals(incoming.getInstalledProducts())) {
-            log.debug("Updating installed products.");
+            log.info("Updating installed products.");
             existing.getInstalledProducts().clear();
             for (ConsumerInstalledProduct cip : incoming.getInstalledProducts()) {
                 existing.addInstalledProduct(cip);
@@ -994,7 +1003,7 @@ public class ConsumerResource {
             return false;
         }
 
-        log.debug("Updating consumer's guest IDs.");
+        log.info("Updating {} guest IDs.", incoming.getGuestIds().size());
         List<GuestId> removedGuests = getRemovedGuestIds(existing, incoming);
         List<GuestId> addedGuests = getAddedGuestIds(existing, incoming);
 
@@ -1002,10 +1011,9 @@ public class ConsumerResource {
         if (existing.getGuestIds() != null) {
             // Always clear existing id so that the timestamps are updated
             // on each ID.
+            log.info("Clearing previous IDs.");
             existing.getGuestIds().clear();
         }
-
-        log.debug("Updating guest entitlements.");
 
         // Check guests that are existing/added.
         for (GuestId guestId : incoming.getGuestIds()) {
@@ -1020,7 +1028,7 @@ public class ConsumerResource {
             // If adding a new GuestId send notification.
             if (addedGuests.contains(guestId)) {
                 if (log.isDebugEnabled()) {
-                    log.debug("New guest ID added: {}", guestId.getGuestId());
+                    log.info("New guest ID added: {}", guestId.getGuestId());
                 }
                 sink.queueEvent(eventFactory.guestIdCreated(guestId));
             }
@@ -1057,7 +1065,7 @@ public class ConsumerResource {
         for (GuestId guestId : removedGuests) {
             // Report that the guestId was removed.
             if (log.isDebugEnabled()) {
-                log.debug("Guest ID removed: {}", guestId.getGuestId());
+                log.info("Guest ID removed: {}", guestId.getGuestId());
             }
             sink.queueEvent(eventFactory.guestIdDeleted(guestId));
 
