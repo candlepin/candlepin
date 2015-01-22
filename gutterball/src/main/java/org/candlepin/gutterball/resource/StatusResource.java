@@ -15,9 +15,15 @@
 package org.candlepin.gutterball.resource;
 
 import org.candlepin.common.auth.SecurityHole;
+import org.candlepin.common.util.VersionUtil;
 import org.candlepin.gutterball.model.Status;
 
+import org.xnap.commons.i18n.I18n;
+
+import java.util.Map;
+
 import javax.inject.Inject;
+import javax.inject.Provider;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -29,17 +35,23 @@ import javax.ws.rs.core.MediaType;
 @Path("status")
 public class StatusResource {
 
-    private Status status;
+    private Provider<I18n> i18nProvider;
+    private String version;
+    private String release;
 
     @Inject
-    public StatusResource(Status status) {
-        this.status = status;
+    public StatusResource(Provider<I18n> provider) {
+        i18nProvider = provider;
+
+        Map<String, String> versionMap = VersionUtil.getVersionMap();
+        version = versionMap.get("version");
+        release = versionMap.get("release");
     }
 
     @GET
     @Produces({ MediaType.APPLICATION_JSON })
     @SecurityHole(anon = true)
     public Status getStatus() {
-        return status;
+        return new Status(i18nProvider, version, release);
     }
 }
