@@ -774,9 +774,11 @@ public class CandlepinPoolManager implements PoolManager {
         // pool
         // when it was read. As such we're going to reload it with a lock
         // before starting this process.
+        log.info("Locking pool: " + pool.getId());
         pool = poolCurator.lockAndLoad(pool);
 
         if (quantity > 0) {
+            log.info("Running pre-entitlement rules.");
             // XXX preEntitlement is run twice for new entitlement creation
             ValidationResult result = enforcer.preEntitlement(
                 consumer, pool, quantity, caller);
@@ -795,9 +797,11 @@ public class CandlepinPoolManager implements PoolManager {
             handler = new UpdateHandler();
         }
 
+        log.info("Processing entitlement.");
         entitlement = handler.handleEntitlement(consumer, pool, entitlement, quantity);
         // Persist the entitlement after it has been created.  It requires an ID in order to
         // create an entitlement-derived subpool
+        log.info("Persisting entitlement.");
         handler.handleEntitlementPersist(entitlement);
 
         // The quantity is calculated at fetch time. We update it here
@@ -854,7 +858,9 @@ public class CandlepinPoolManager implements PoolManager {
         Pool pool, Entitlement e, boolean generateUeberCert) {
         Subscription sub = null;
         if (pool.getSubscriptionId() != null) {
+            log.info("Getting subscription: " + pool.getSubscriptionId());
             sub = subAdapter.getSubscription(pool.getSubscriptionId());
+            log.info("Got subscription");
         }
 
         Product product = null;
