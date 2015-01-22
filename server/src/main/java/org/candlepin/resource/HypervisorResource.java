@@ -28,6 +28,7 @@ import org.candlepin.model.GuestId;
 import org.candlepin.model.HypervisorId;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.resource.dto.HypervisorCheckInResult;
 
 import com.google.inject.Inject;
@@ -38,6 +39,7 @@ import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -115,31 +117,55 @@ public class HypervisorResource {
 
         Owner owner = this.getOwner(ownerKey);
 
+        // Maps virt hypervisor ID to registered consumer for that hypervisor, should one exist:
+        VirtConsumerMap hypervisorConsumersMap =
+                consumerCurator.getHostConsumersMap(owner, hostGuestMap.keySet());
+
+        List<String> allGuestIds = new LinkedList<String>();
+        for (Entry<String, List<GuestId>> hostEntry : hostGuestMap.entrySet()) {
+            for (GuestId gid : hostEntry.getValue()) {
+                allGuestIds.add(gid.getGuestId());
+            }
+        }
+        // Maps virt guest ID to registered consumer for guest, if one exists:
+        VirtConsumerMap guestConsumersMap = consumerCurator.getGuestConsumersMap(
+                owner, allGuestIds);
+
+        // Maps virt guest ID to registered consumer for hypervisor, if one exists:
+        VirtConsumerMap guestHypervisorConsumers = consumerCurator.
+                getGuestsHostMap(owner, allGuestIds);
+
         HypervisorCheckInResult result = new HypervisorCheckInResult();
         for (Entry<String, List<GuestId>> hostEntry : hostGuestMap.entrySet()) {
+            String hypervisorId = hostEntry.getKey();
             try {
-                log.info("Checking virt host: " + hostEntry.getKey());
+                log.info("Syncing virt host: " + hypervisorId +
+                        " (" + hostEntry.getValue().size() + " guest IDs)");
 
                 boolean hostConsumerCreated = false;
                 // Attempt to find a consumer for the given hypervisorId
-                Consumer consumer =
-                    consumerCurator.getHypervisor(hostEntry.getKey(), owner);
-                if (consumer == null) {
+                Consumer consumer = null;
+                if (hypervisorConsumersMap.get(hypervisorId) == null) {
                     if (!createMissing) {
                         log.info("Unable to find hypervisor with id " +
-                            hostEntry.getKey() + " in org " + ownerKey);
-                        result.failed(hostEntry.getKey(), i18n.tr(
+                            hypervisorId + " in org " + ownerKey);
+                        result.failed(hypervisorId, i18n.tr(
                             "Unable to find hypervisor in org ''{0}''", ownerKey));
                         continue;
                     }
-                    log.info("Registering new host consumer");
+                    log.info("Registering new host consumer for hypervisor ID: {}",
+                            hypervisorId);
                     // Create new consumer
                     consumer = createConsumerForHypervisorId(
-                        hostEntry.getKey(), owner, principal);
+                        hypervisorId, owner, principal);
                     hostConsumerCreated = true;
                 }
+                else {
+                    consumer = hypervisorConsumersMap.get(hypervisorId);
+                }
 
-                boolean guestIdsUpdated = addGuestIds(consumer, hostEntry.getValue());
+                boolean guestIdsUpdated = addGuestIds(consumer, hostEntry.getValue(),
+                        guestConsumersMap, guestHypervisorConsumers);
 
                 // Populate the result with the processed consumer.
                 if (hostConsumerCreated) {
@@ -154,7 +180,7 @@ public class HypervisorResource {
             }
             catch (Exception e) {
                 log.error("Hypervisor checkin failed", e);
-                result.failed(hostEntry.getKey(), e.getMessage());
+                result.failed(hypervisorId, e.getMessage());
             }
         }
         return result;
@@ -176,11 +202,14 @@ public class HypervisorResource {
      * Add a list of guestIds to the given consumer,
      * return whether or not there was any change
      */
-    private boolean addGuestIds(Consumer consumer, List<GuestId> guestIds) {
+    private boolean addGuestIds(Consumer consumer, List<GuestId> guestIds,
+            VirtConsumerMap guestConsumerMap,
+            VirtConsumerMap guestHypervisorConsumers) {
         Consumer withIds = new Consumer();
         withIds.setGuestIds(guestIds);
         boolean guestIdsUpdated =
-            consumerResource.performConsumerUpdates(withIds, consumer);
+            consumerResource.performConsumerUpdates(withIds, consumer,
+                    guestConsumerMap, guestHypervisorConsumers);
         if (guestIdsUpdated) {
             consumerCurator.update(consumer);
         }
