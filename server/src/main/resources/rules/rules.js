@@ -1,4 +1,4 @@
-// Version: 5.13
+// Version: 5.14
 
 /*
  * Default Candlepin rule set.
@@ -61,6 +61,7 @@ var REQUIRES_HOST_ATTRIBUTE = "requires_host";
 var VIRT_ONLY = "virt_only";
 var PHYSICAL_ONLY = "physical_only";
 var POOL_DERIVED = "pool_derived";
+var UNMAPPED_GUESTS_ONLY = "unmapped_guests_only";
 var GUEST_LIMIT_ATTRIBUTE = "guest_limit";
 var VCPU_ATTRIBUTE = "vcpu";
 var MULTI_ENTITLEMENT_ATTRIBUTE = "multi-entitlement";
@@ -1274,7 +1275,8 @@ var Entitlement = {
             "requires_host:1:requires_host," +
             "instance_multiplier:1:instance_multiplier," +
             "vcpu:1:vcpu," +
-            "physical_only:1:physical_only";
+            "physical_only:1:physical_only," +
+            "unmapped_guests_only:1:unmapped_guests_only";
     },
 
     ValidationResult: function () {
@@ -1398,6 +1400,38 @@ var Entitlement = {
 
     pre_physical_only: function() {
         return this.build_func("do_pre_physical_only")();
+    },
+
+    // pre_virt_only already covers is guest
+    do_pre_unmapped_guests_only: function(context, result) {
+        var caller = context.caller;
+        var consumer = context.consumer;
+        var unmapped_guest_pool = Utils.equalsIgnoreCase('true', context.getAttribute(context.pool, UNMAPPED_GUESTS_ONLY));
+
+        if (unmapped_guest_pool) {
+            if (context.hostConsumer){
+                if (BEST_POOLS_CALLER == caller ||
+                    BIND_CALLER == caller) {
+                    result.addError("virt.guest.cannot.use.unmapped.guest.pool.has.host");
+                }
+                else {
+                    result.addWarning("virt.guest.cannot.use.unmapped.guest.pool.has.host");
+                }
+            }
+            if (!context.newborn){
+                if (BEST_POOLS_CALLER == caller ||
+                    BIND_CALLER == caller) {
+                    result.addError("virt.guest.cannot.use.unmapped.guest.pool.not.new");
+                }
+                else {
+                    result.addWarning("virt.guest.cannot.use.unmapped.guest.pool.not.new");
+                }
+            }
+        }
+    },
+
+    pre_unmapped_guests_only: function() {
+        return this.build_func("do_pre_unmapped_guests_only")();
     },
 
     do_pre_requires_host: function(context, result) {

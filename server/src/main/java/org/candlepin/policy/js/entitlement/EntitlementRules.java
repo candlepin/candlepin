@@ -90,6 +90,7 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
         args.put("quantity", quantity);
         args.put("caller", caller.getLabel());
         args.put("log", log, false);
+        args.put("newborn", consumer.isNewborn());
 
         String json = jsRules.runJsFunction(String.class, "validate_pool", args);
         ValidationResult result;
@@ -116,6 +117,7 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
         args.put("pools", pools);
         args.put("caller", CallerType.LIST_POOLS.getLabel());
         args.put("log", log, false);
+        args.put("newborn", consumer.isNewborn());
 
         String json = jsRules.runJsFunction(String.class, "validate_pools_list", args);
         Map<String, ValidationResult> resultMap;

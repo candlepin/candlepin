@@ -638,6 +638,55 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
             result.getWarnings().get(0).getResourceKey());
     }
 
+    @Test
+    public void unmappedGuestGoodDate() {
+        Pool pool = setupUnmappedGuestPool();
+        Consumer newborn = new Consumer("test newborn consumer", "test user", owner,
+                new ConsumerType(ConsumerTypeEnum.SYSTEM));
+        newborn.setFact("virt.is_guest", "true");
+        newborn.setCreated(new java.util.Date());
+        ValidationResult result = enforcer.preEntitlement(newborn, pool, 1);
+        assertFalse(result.hasErrors());
+        assertFalse(result.hasWarnings());
+    }
+
+    @Test
+    public void unmappedGuestBadDate() {
+        Pool pool = setupUnmappedGuestPool();
+        Consumer newborn = new Consumer("test newborn consumer", "test user", owner,
+                new ConsumerType(ConsumerTypeEnum.SYSTEM));
+        newborn.setFact("virt.is_guest", "true");
+        java.util.Date oldDate = new java.util.Date();
+        oldDate.setTime(oldDate.getTime() - 86400001);
+        newborn.setCreated(oldDate);
+        ValidationResult result = enforcer.preEntitlement(newborn, pool, 1);
+        assertTrue(result.hasWarnings());
+        assertEquals(1, result.getWarnings().size());
+        assertEquals("virt.guest.cannot.use.unmapped.guest.pool.not.new",
+            result.getWarnings().get(0).getResourceKey());
+    }
+
+    @Test
+    public void mappedGuest() {
+        Consumer parent = new Consumer("test parent consumer", "test user", owner,
+                new ConsumerType(ConsumerTypeEnum.SYSTEM));
+        Consumer newborn = new Consumer("test newborn consumer", "test user", owner,
+                new ConsumerType(ConsumerTypeEnum.SYSTEM));
+        newborn.setCreated(new java.util.Date());
+        Pool pool = setupUnmappedGuestPool();
+
+        String guestId = "virtguestuuid";
+        newborn.setFact("virt.is_guest", "true");
+        newborn.setFact("virt.uuid", guestId);
+        when(consumerCurator.getHost(guestId, owner)).thenReturn(parent);
+
+        ValidationResult result = enforcer.preEntitlement(newborn, pool, 1);
+        assertTrue(result.hasWarnings());
+        assertEquals(1, result.getWarnings().size());
+        assertEquals("virt.guest.cannot.use.unmapped.guest.pool.has.host",
+            result.getWarnings().get(0).getResourceKey());
+    }
+
     private Pool setupUserRestrictedPool() {
         Product product = new Product(productId, "A user restricted product");
         Pool pool = TestUtil.createPool(owner, product);
@@ -650,6 +699,12 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
     private Pool setupHostRestrictedPool(Consumer parent) {
         Pool pool = setupVirtOnlyPool();
         pool.addAttribute(new PoolAttribute("requires_host", parent.getUuid()));
+        return pool;
+    }
+
+    private Pool setupUnmappedGuestPool() {
+        Pool pool = setupVirtOnlyPool();
+        pool.addAttribute(new PoolAttribute("unmapped_guests_only", "true"));
         return pool;
     }
 

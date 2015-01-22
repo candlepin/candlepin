@@ -203,7 +203,7 @@ public class DefaultEntitlementCertServiceAdapter extends
 
         Date oneDayFromRegistration = new Date(startDate.getTime() + (24 * 60 * 60 * 1000));
 
-        boolean isUnmappedGuestPool = BooleanUtils.toBoolean(pool.getAttributeValue("unmapped_guest_only"));
+        boolean isUnmappedGuestPool = BooleanUtils.toBoolean(pool.getAttributeValue("unmapped_guests_only"));
 
         if (isUnmappedGuestPool) {
             return oneDayFromRegistration;

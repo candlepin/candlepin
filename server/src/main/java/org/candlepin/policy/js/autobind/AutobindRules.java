@@ -98,6 +98,7 @@ public class AutobindRules {
         args.put("compliance", compliance);
         args.put("exemptList", exemptLevels);
         args.put("considerDerived", considerDerived);
+        args.put("newborn", consumer.isNewborn());
 
         // Convert the JSON returned into a Map object:
         Map<String, Integer> result = null;

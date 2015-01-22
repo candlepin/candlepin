@@ -165,7 +165,7 @@ public class PoolRules {
                 virtAttributes.put("pool_derived", "true");
                 virtAttributes.put("physical_only", "false");
                 if (hostLimited) {
-                    virtAttributes.put("unmapped_guest_only", "true");
+                    virtAttributes.put("unmapped_guests_only", "true");
                 }
                 // Make sure the virt pool does not have a virt_limit,
                 // otherwise this will recurse infinitely

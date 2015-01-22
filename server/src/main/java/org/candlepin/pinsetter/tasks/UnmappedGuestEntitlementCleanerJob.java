@@ -56,7 +56,7 @@ public class UnmappedGuestEntitlementCleanerJob extends KingpinJob {
         throws JobExecutionException {
         Date now = new Date();
         PoolFilterBuilder filters = new PoolFilterBuilder();
-        filters.addAttributeFilter("unmapped_guest_only", "true");
+        filters.addAttributeFilter("unmapped_guests_only", "true");
 
         List<Pool> unmappedGuestPools = poolCurator.listByFilter(filters);
         List<Entitlement> lapsedUnmappedGuestEntitlements = new ArrayList<Entitlement>();

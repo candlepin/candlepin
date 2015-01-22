@@ -56,8 +56,8 @@ public class UnmappedGuestEntitlementCleanerJobTest {
         Pool p1 = TestUtil.createPool(owner1, product);
         Pool p2 = TestUtil.createPool(owner2, product);
 
-        p1.addAttribute(new PoolAttribute("unmapped_guest_only", "true"));
-        p2.addAttribute(new PoolAttribute("unmapped_guest_only", "true"));
+        p1.addAttribute(new PoolAttribute("unmapped_guests_only", "true"));
+        p2.addAttribute(new PoolAttribute("unmapped_guests_only", "true"));
 
         when(poolCurator.listByFilter(any(PoolFilterBuilder.class)))
             .thenReturn(Arrays.asList(new Pool[] {p1, p2}));

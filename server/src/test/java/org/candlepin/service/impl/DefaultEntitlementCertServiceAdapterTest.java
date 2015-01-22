@@ -296,7 +296,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     public void temporaryCertificateForUnmappedGuests() throws Exception {
         Date now = new Date();
         when(consumer.getCreated()).thenReturn(now);
-        pool.addAttribute(new PoolAttribute("unmapped_guest_only", "true"));
+        pool.addAttribute(new PoolAttribute("unmapped_guests_only", "true"));
 
         // Set up an adapter with a real PKIUtil
         certServiceAdapter = new DefaultEntitlementCertServiceAdapter(
