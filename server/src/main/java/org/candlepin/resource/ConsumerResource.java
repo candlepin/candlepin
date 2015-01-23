@@ -907,7 +907,7 @@ public class ConsumerResource {
         if (updated.getLastCheckin() != null) {
             log.info("Updating to specific last checkin time: {}",
                     updated.getLastCheckin());
-            toUpdate.setLastCheckin(updated.getLastCheckin());
+            toUpdate.addCheckIn(updated.getLastCheckin());
             changesMade = true;
         }
 

@@ -32,7 +32,7 @@
         <createIndex indexName="idx_consumer_checkin" tableName="cp_consumer_checkin" unique="true">
             <column name="id"/>
         </createIndex>
-        <createIndex indexName="idx_consumer_checkin_consumer" tableName="cp_consumer_checkin" unique="true">
+        <createIndex indexName="idx_consumer_checkin_consumer" tableName="cp_consumer_checkin" unique="false">
             <column name="consumer_id"/>
         </createIndex>
     </changeSet>

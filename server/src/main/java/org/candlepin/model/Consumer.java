@@ -173,6 +173,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     @OneToOne(cascade = CascadeType.ALL)
     private KeyPair keyPair;
 
+    @Formula("(select max(c.created) from cp_consumer_checkin c where c.consumer_id = id)")
     private Date lastCheckin;
 
     @OneToMany(mappedBy = "consumer",
@@ -446,6 +447,20 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     }
 
     /**
+     * Add an Entitlement to this Consumer
+     * @param entitlementIn to add to this consumer
+     *
+     */
+    public void addEntitlement(Entitlement entitlementIn) {
+        entitlementIn.setConsumer(this);
+        this.entitlements.add(entitlementIn);
+    }
+
+    public void removeEntitlement(Entitlement entitlement) {
+        this.entitlements.remove(entitlement);
+    }
+
+    /**
      * @return All CheckIns that have not been reaped.
      */
     @XmlTransient
@@ -459,20 +474,6 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
 
     public void addCheckIn(Date checkInDate) {
         this.checkIns.add(new CheckIn(this, checkInDate));
-    }
-
-    /**
-     * Add an Entitlement to this Consumer
-     * @param entitlementIn to add to this consumer
-     *
-     */
-    public void addEntitlement(Entitlement entitlementIn) {
-        entitlementIn.setConsumer(this);
-        this.entitlements.add(entitlementIn);
-    }
-
-    public void removeEntitlement(Entitlement entitlement) {
-        this.entitlements.remove(entitlement);
     }
 
     @XmlTransient
@@ -519,10 +520,6 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
 
     public Date getLastCheckin() {
         return lastCheckin;
-    }
-
-    public void setLastCheckin(Date lastCheckin) {
-        this.lastCheckin = lastCheckin;
     }
 
     public boolean isCanActivate() {
