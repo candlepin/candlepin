@@ -246,7 +246,7 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
     public void testGetAllLatestStatusReportsIterator() {
         // c1 was deleted before the report date.
         List<String> expectedConsumerUuids = Arrays.asList("c2", "c3", "c4");
-        Iterator<Compliance> snaps = complianceSnapshotCurator.getSnapshotsIterator(null, null, null, null);
+        Iterator<Compliance> snaps = complianceSnapshotCurator.getSnapshotIterator(null, null, null, null);
 
         int received = 0;
         while (snaps.hasNext()) {
@@ -299,7 +299,7 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         cal.set(Calendar.MONTH, Calendar.JUNE);
         cal.set(Calendar.DAY_OF_MONTH, 12);
 
-        Iterator<Compliance> snaps = complianceSnapshotCurator.getSnapshotsIterator(
+        Iterator<Compliance> snaps = complianceSnapshotCurator.getSnapshotIterator(
             cal.getTime(),
             null,
             null,
@@ -338,6 +338,53 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void testGetPaginatedSnapshotIteratorOnDate() {
+        Calendar cal = this.getCalendar();
+        cal.setTime(baseTestingDate);
+        cal.set(Calendar.MONTH, Calendar.JUNE);
+        cal.set(Calendar.DAY_OF_MONTH, 12);
+
+        List<String> expectedConsumerUuids = Arrays.asList("c2", "c3", "c4");
+        Map<String, Date> expectedStatusDates = new HashMap<String, Date>();
+        cal.set(Calendar.DAY_OF_MONTH, 10);
+
+        cal.set(Calendar.MONTH, Calendar.APRIL);
+        expectedStatusDates.put("c2", cal.getTime());
+
+        cal.set(Calendar.MONTH, Calendar.JUNE);
+        expectedStatusDates.put("c3", cal.getTime());
+
+        cal.set(Calendar.MONTH, Calendar.JUNE);
+        expectedStatusDates.put("c4", cal.getTime());
+
+
+        List<Compliance> snaps = new LinkedList<Compliance>();
+
+        for (int offset = 0; offset < 3; ++offset) {
+            Iterator<Compliance> page = complianceSnapshotCurator.getSnapshotIterator(
+                cal.getTime(),
+                null,
+                null,
+                null,
+                offset,
+                1
+            );
+
+            while (page.hasNext()) {
+                snaps.add(page.next());
+            }
+        }
+
+        assertTrue(getUuidsFromSnapshots(snaps).containsAll(Arrays.asList("c2", "c3", "c4")));
+
+        for (Compliance cs : snaps) {
+            String uuid = cs.getConsumer().getUuid();
+            assertEquals("Invalid status found for " + uuid,
+                    expectedStatusDates.get(uuid), cs.getStatus().getDate());
+        }
+    }
+
+    @Test
     public void testDeletedConsumerIncludedIfDeletedAfterTargetDate() {
         // May, June, July 10 -- 2014
         Calendar cal = this.getCalendar();
@@ -361,7 +408,7 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         cal.set(Calendar.DAY_OF_MONTH, 12);
 
         List<String> expectedConsumerUuids = Arrays.asList("c1", "c2", "c3", "c4");
-        Iterator<Compliance> snaps = this.complianceSnapshotCurator.getSnapshotsIterator(
+        Iterator<Compliance> snaps = this.complianceSnapshotCurator.getSnapshotIterator(
             cal.getTime(),
             null,
             null,
@@ -397,7 +444,7 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
     public void testGetIteratorByOwner() {
         String expectedOwner = "o2";
 
-        Iterator<Compliance> snaps = complianceSnapshotCurator.getSnapshotsIterator(
+        Iterator<Compliance> snaps = complianceSnapshotCurator.getSnapshotIterator(
             new Date(),
             null,
             Arrays.asList(expectedOwner),
@@ -445,7 +492,7 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
     @Test
     public void testGetIteratorByStatus() {
         String expectedStatus = "partial";
-        Iterator<Compliance> snaps = complianceSnapshotCurator.getSnapshotsIterator(
+        Iterator<Compliance> snaps = complianceSnapshotCurator.getSnapshotIterator(
             null,
             null,
             null,
