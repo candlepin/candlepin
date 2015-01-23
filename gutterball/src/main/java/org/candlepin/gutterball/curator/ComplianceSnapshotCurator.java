@@ -254,6 +254,9 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
         return this.getComplianceStatusCounts(startDate, endDate, ownerKey, null, subscriptionName, null);
     }
 
+
+//afkjasflkjalkjs
+
     /**
      * Retrieves the compliance status counts for consumers using subscriptions with the specified
      * name over the given time span. The counts are returned in a map of maps, with the outer map
