@@ -2027,7 +2027,7 @@
     </changeSet>
     <changeSet author="awood" id="1413225753032-290">
         <comment>
-            Add the default quartz lock columns.
+             Add the default quartz lock columns. 
         </comment>
         <insert tableName="QRTZ_LOCKS">
             <column name="LOCK_NAME" value="TRIGGER_ACCESS"/>
@@ -2258,4 +2258,5 @@
     </changeSet> -->
     <include file="db/changelog/20141203123727-add-compliance-status-hash-column.xml"/>
     <include file="db/changelog/20141126150611-create-content-tags-table.xml"/>
+    <include file="db/changelog/20150123105016-add-consumer-checkin-table.xml"/>
 </databaseChangeLog>
