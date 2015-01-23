@@ -11,7 +11,7 @@
     <property name="timestamp.type" value="DATETIME" dbms="mysql"/>
 
     <changeSet id="20150123105016-1" author="dgoodwin">
-        <comment>add consumer checkin table</comment>
+        <comment>Add consumer checkin table.</comment>
         <createTable tableName="cp_consumer_checkin">
 
             <column name="id" type="VARCHAR(32)">
@@ -38,11 +38,15 @@
     </changeSet>
 
     <changeSet id="20150123105016-2" author="dgoodwin">
-        <comment>populate consumer checkins table with current values</comment>
+        <comment>Populate consumer checkins table with current values.</comment>
         <!-- re-use the consumer ID as the first checkin ID to avoid generated ID problem, we know it will be unique -->
         <sql>INSERT INTO cp_consumer_checkin(id, consumer_id, created, updated) SELECT cp_consumer.id, cp_consumer.id, cp_consumer.lastcheckin, cp_consumer.lastcheckin FROM cp_consumer WHERE cp_consumer.lastcheckin IS NOT NULL</sql>
     </changeSet>
 
+    <changeSet id="20150123105016-3" author="dgoodwin">
+        <comment>Drop the old last checkin column.</comment>
+        <dropColumn tableName="cp_consumer" columnName="lastcheckin"/>
+    </changeSet>
 
 </databaseChangeLog>
 <!-- vim: set expandtab sts=4 sw=4 ai: -->

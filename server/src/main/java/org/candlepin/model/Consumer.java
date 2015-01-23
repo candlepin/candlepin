@@ -16,6 +16,8 @@ package org.candlepin.model;
 
 import org.candlepin.common.jackson.HateoasArrayExclude;
 import org.candlepin.common.jackson.HateoasInclude;
+import org.candlepin.policy.js.compliance.ComplianceRules;
+import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.util.Util;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
@@ -155,6 +157,9 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "consumer", fetch = FetchType.LAZY)
     private Set<Entitlement> entitlements;
 
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "consumer", fetch = FetchType.LAZY)
+    private Set<CheckIn> checkIns;
+
     @ElementCollection
     @CollectionTable(name = "cp_consumer_facts",
                      joinColumns = @JoinColumn(name = "cp_consumer_id"))
@@ -220,6 +225,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         // generate a UUID at this point.
         this.ensureUUID();
         this.entitlements = new HashSet<Entitlement>();
+        this.checkIns = new HashSet<CheckIn>();
     }
 
     /**
@@ -423,6 +429,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         }
         return entitlementCount.longValue();
     }
+
     /**
      * @return Returns the entitlements.
      */
@@ -431,12 +438,27 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         return entitlements;
     }
 
-
     /**
      * @param entitlementsIn The entitlements to set.
      */
     public void setEntitlements(Set<Entitlement> entitlementsIn) {
         entitlements = entitlementsIn;
+    }
+
+    /**
+     * @return All CheckIns that have not been reaped.
+     */
+    @XmlTransient
+    public Set<CheckIn> getCheckIns() {
+        return checkIns;
+    }
+
+    public void setCheckIns(Set<CheckIn> checkIns) {
+        this.checkIns = checkIns;
+    }
+
+    public void addCheckIn(Date checkInDate) {
+        this.checkIns.add(new CheckIn(this, checkInDate));
     }
 
     /**
