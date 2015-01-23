@@ -14,6 +14,7 @@
  */
 package org.candlepin.gutterball.report;
 
+import org.candlepin.common.config.PropertyConverter;
 import org.candlepin.gutterball.curator.ComplianceSnapshotCurator;
 import org.candlepin.gutterball.model.snapshot.Compliance;
 
@@ -31,7 +32,7 @@ import javax.ws.rs.core.MultivaluedMap;
 /**
  * ConsumerTrendReport
  */
-public class ConsumerTrendReport extends Report<ReasonGeneratingReportResult> {
+public class ConsumerTrendReport extends Report<ReportResult> {
 
     private ComplianceSnapshotCurator snapshotCurator;
     private StatusReasonMessageGenerator messageGenerator;
@@ -82,20 +83,13 @@ public class ConsumerTrendReport extends Report<ReasonGeneratingReportResult> {
                 .getParameter());
 
         addParameter(
-            builder.init("page", i18n.tr("The page at which to begin retrieving results."))
-                .mustBeInteger()
-                .getParameter()
-        );
-
-        addParameter(
-            builder.init("per_page", i18n.tr("The number of results to return per page."))
-                .mustBeInteger()
-                .getParameter()
-        );
+            builder.init("custom", i18n.tr("Allows building a custom result data set by tayloring the " +
+                         "data to include in the JSON (boolean)")).getParameter());
     }
 
     @Override
-    protected ReasonGeneratingReportResult execute(MultivaluedMap<String, String> queryParams) {
+    protected ReportResult execute(MultivaluedMap<String, String> queryParams) {
+
         String consumer = queryParams.getFirst("consumer_uuid");
 
         Date startDate = null;
@@ -131,15 +125,21 @@ public class ConsumerTrendReport extends Report<ReasonGeneratingReportResult> {
             results = perPage;
         }
 
+        String custom = queryParams.containsKey("custom") ? queryParams.getFirst("custom") : "";
+        boolean useCustom = PropertyConverter.toBoolean(custom);
+
         Iterator<Compliance> iterator = this.snapshotCurator.getSnapshotIteratorForConsumer(
-            consumer,
-            startDate,
-            endDate,
-            offset,
-            results
+                consumer,
+                startDate,
+                endDate,
+                offset,
+                results
         );
 
-        return new ReasonGeneratingReportResult(iterator, this.messageGenerator);
+        if (useCustom) {
+            return new ReasonGeneratingReportResult(iterator, this.messageGenerator);
+        }
+        return new ConsumerTrendReportDefaultResult(iterator);
     }
 
 }
