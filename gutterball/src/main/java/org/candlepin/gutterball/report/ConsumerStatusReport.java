@@ -82,13 +82,13 @@ public class ConsumerStatusReport extends Report<ConsumerStatusReportResult> {
         );
 
         addParameter(
-            builder.init("page", i18n.tr("The date to filter on. Defaults to NOW."))
+            builder.init("page", i18n.tr("The page at which to begin retrieving results."))
                 .mustBeInteger()
                 .getParameter()
         );
 
         addParameter(
-            builder.init("per_page", i18n.tr("The date to filter on. Defaults to NOW."))
+            builder.init("per_page", i18n.tr("The number of results to return per page."))
                 .mustBeInteger()
                 .getParameter()
         );
@@ -105,28 +105,33 @@ public class ConsumerStatusReport extends Report<ConsumerStatusReportResult> {
         List<String> ownerFilters = queryParams.get("owner");
 
         Date targetDate = queryParams.containsKey("on_date") ?
-            parseDateTime(queryParams.getFirst("on_date")) : new Date();
+            parseDateTime(queryParams.getFirst("on_date")) :
+            new Date();
 
-        int page = queryParams.containsKey("page") ? Integer.parseInt(queryParams.getFirst("page")) : 1;
-        int perPage = queryParams.containsKey("per_page") ? Integer.parseInt(queryParams.getFirst("per_page")) : 100;
+        // Pagination stuff
+        int page = queryParams.containsKey("page") ?
+            Integer.parseInt(queryParams.getFirst("page")) :
+            1;
 
-        // List<Compliance> snaps = complianceSnapshotCurator.getSnapshotsOnDate(targetDate,
-        //         consumerIds, ownerFilters, statusFilters);
+        int perPage = queryParams.containsKey("per_page") ?
+            Integer.parseInt(queryParams.getFirst("per_page")) :
+            100;
 
-        // TODO: Include this in the iterated results!
-        // for (Compliance cs : snaps) {
-        //     for (ComplianceReason cr : cs.getStatus().getReasons()) {
-        //         messageGenerator.setMessage(cs.getConsumer(), cr);
-        //     }
-        // }
+        int offset = 0;
+        int results = 0;
 
-        Iterator<Compliance> iterator = this.complianceSnapshotCurator.getSnapshotIteratorB(
+        if (page > 0 && perPage > 0) {
+            offset = (page - 1) * perPage;
+            results = perPage;
+        }
+
+        Iterator<Compliance> iterator = this.complianceSnapshotCurator.getSnapshotIterator(
             targetDate,
             consumerIds,
             ownerFilters,
             statusFilters,
-            page,
-            perPage
+            offset,
+            results
         );
 
         return new ConsumerStatusReportResult(iterator, this.messageGenerator);

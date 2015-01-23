@@ -67,10 +67,8 @@ public class ConsumerStatusReportTest {
 
         // Indentation note: This is what checkstyle actually wants. :/
         when(complianceSnapshotCurator.getSnapshotIterator(
-                any(Date.class), any(List.class), any(List.class), any(List.class)
-        )).thenReturn(
-                (new LinkedList<Compliance>()).iterator()
-            );
+                any(Date.class), any(List.class), any(List.class), any(List.class), anyInt(), anyInt()
+        )).thenReturn((new LinkedList<Compliance>()).iterator());
 
         report = new ConsumerStatusReport(i18nProvider, complianceSnapshotCurator, messageGenerator);
     }
@@ -106,7 +104,7 @@ public class ConsumerStatusReportTest {
         List<String> status = null;
 
         verify(complianceSnapshotCurator).getSnapshotIterator(eq(cal.getTime()),
-                eq(uuids), eq(owners), eq(status));
+                eq(uuids), eq(owners), eq(status), anyInt(), anyInt());
         verifyNoMoreInteractions(complianceSnapshotCurator);
     }
 
@@ -123,7 +121,7 @@ public class ConsumerStatusReportTest {
         List<String> status = null;
 
         verify(complianceSnapshotCurator).getSnapshotIterator(any(Date.class),
-                eq(uuids), eq(owners), eq(status));
+                eq(uuids), eq(owners), eq(status), anyInt(), anyInt());
         verifyNoMoreInteractions(complianceSnapshotCurator);
     }
 
@@ -139,7 +137,30 @@ public class ConsumerStatusReportTest {
         ConsumerStatusReportResult results = report.run(params);
         verify(complianceSnapshotCurator).getSnapshotIterator(any(Date.class),
                 eq(uuids), eq(owners),
-                eq(Arrays.asList("partial")));
+                eq(Arrays.asList("partial")),
+                anyInt(), anyInt());
+        verifyNoMoreInteractions(complianceSnapshotCurator);
+    }
+
+    @Test
+    public void testGetPaginatedResults() {
+        MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
+        when(params.containsKey("page")).thenReturn(true);
+        when(params.get("page")).thenReturn(Arrays.asList("3"));
+        when(params.getFirst("page")).thenReturn("3");
+        when(params.containsKey("per_page")).thenReturn(true);
+        when(params.get("per_page")).thenReturn(Arrays.asList("10"));
+        when(params.getFirst("per_page")).thenReturn("10");
+
+        List<String> uuids = null;
+        List<String> owners = null;
+        List<String> statuses = null;
+
+        ConsumerStatusReportResult results = report.run(params);
+        verify(complianceSnapshotCurator).getSnapshotIterator(any(Date.class),
+                eq(uuids), eq(owners),
+                eq(statuses),
+                eq(20), eq(10));
         verifyNoMoreInteractions(complianceSnapshotCurator);
     }
 

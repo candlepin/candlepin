@@ -33,7 +33,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -103,158 +102,64 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
         return postFilter.list();
     }
 
-    @SuppressWarnings("checkstyle:methodlength")
+    /**
+     * Retrieves an iterator over the compliance snapshots on the target date.
+     *
+     * @param targetDate
+     *  The date for which to retrieve compliance snapshots. If null, the current date will be used
+     *  instead.
+     *
+     * @param consumerUuids
+     *  A list of consumer UUIDs to use to filter the results. If provided, only compliances for
+     *  consumers in the list will be retrieved.
+     *
+     * @param ownerFilters
+     *  A list of owners to use to filter the results. If provided, only compliances for consumers
+     *  belonging to the specified owners (orgs) will be retrieved.
+     *
+     * @param statusFilters
+     *  A list of statuses to use to filter the results. If provided, only compliances with a status
+     *  matching the list will be retrieved.
+     *
+     * @return
+     *  An iterator over the compliance snapshots for the target date.
+     */
     public Iterator<Compliance> getSnapshotIterator(Date targetDate, List<String> consumerUuids,
-        List<String> ownerFilters, List<String> statusFilters, int page, int perPage) {
-
-        List<Object> parameters = new LinkedList<Object>();
-        int counter = 0;
-
-        StringBuilder hql = new StringBuilder(
-            "SELECT " +
-                "ComplianceSnap " +
-
-            "FROM " +
-                "Consumer AS ConsumerSnap " +
-                "INNER JOIN ConsumerSnap.consumerState AS ConsumerState " +
-                "INNER JOIN ConsumerSnap.complianceSnapshot AS ComplianceSnap " +
-                "INNER JOIN ComplianceSnap.status AS ComplianceStatusSnap " +
-
-            "WHERE (" +
-                    "ConsumerState.deleted IS NULL " +
-                    "OR year(ComplianceSnap.date) < year(ConsumerState.deleted) " +
-                    "OR (" +
-                        "year(ComplianceSnap.date) = year(ConsumerState.deleted) " +
-                        "AND month(ComplianceSnap.date) < month(ConsumerState.deleted) " +
-                    ") " +
-                    "OR (" +
-                        "year(ComplianceSnap.date) = year(ConsumerState.deleted) " +
-                        "AND month(ComplianceSnap.date) = month(ConsumerState.deleted) " +
-                        "AND day(ComplianceSnap.date) < day(ConsumerState.deleted)" +
-                    ")" +
-                ") " +
-
-                "AND (ComplianceStatusSnap.date, ConsumerSnap.uuid) IN (" +
-                    "SELECT " +
-                        "max(ComplianceSnap2.date) AS maxdate, " +
-                        "ConsumerState2.uuid " +
-
-                    "FROM " +
-                        "Consumer AS ConsumerSnap2 " +
-                        "INNER JOIN ConsumerSnap2.consumerState AS ConsumerState2 " +
-                        "INNER JOIN ConsumerSnap2.complianceSnapshot AS ComplianceSnap2 " +
-                        "INNER JOIN ComplianceSnap2.status AS ComplianceStatusSnap2 " +
-
-                    "GROUP BY " +
-                        "year(ComplianceSnap2.date)," +
-                        "month(ComplianceSnap2.date)," +
-                        "day(ComplianceSnap2.date)," +
-                        "ConsumerState2.uuid " +
-                ") "
-        );
-
-
-        // Add our target date...
-        if (targetDate == null) {
-            targetDate = new Date();
-        }
-
-        int year = targetDate.getYear() + 1900;
-        int month = targetDate.getMonth() + 1;
-        int day = targetDate.getDate();
-
-        hql.append(String.format(
-            "AND (ComplianceStatusSnap.date, ConsumerSnap.uuid) IN (" +
-                "SELECT " +
-                    "max(ComplianceStatusSnap2.date) AS maxdate, " +
-                    "ConsumerState2.uuid " +
-
-                "FROM " +
-                    "Consumer AS ConsumerSnap2 " +
-                    "INNER JOIN ConsumerSnap2.consumerState AS ConsumerState2 " +
-                    "INNER JOIN ConsumerSnap2.complianceSnapshot AS ComplianceSnap2 " +
-                    "INNER JOIN ComplianceSnap2.status AS ComplianceStatusSnap2 " +
-
-                "WHERE " +
-                    "year(ComplianceStatusSnap2.date) < ?%1$d " +
-                    "OR (" +
-                        "year(ComplianceStatusSnap2.date) = ?%1$d " +
-                        "AND month(ComplianceStatusSnap2.date) < ?%2$d" +
-                    ") " +
-                    "OR (" +
-                        "year(ComplianceStatusSnap2.date) = ?%1$d " +
-                        "AND month(ComplianceStatusSnap2.date) = ?%2$d " +
-                        "AND day(ComplianceStatusSnap2.date) < ?%3$d" +
-                    ") " +
-
-                "GROUP BY " +
-                    "ConsumerState2.uuid" +
-            ") ",
-            ++counter, ++counter, ++counter
-        ));
-
-        parameters.add(year);
-        parameters.add(month);
-        parameters.add(day);
-
-        // Add our filters, if necessary...
-        List<String> criteria = new LinkedList<String>();
-        StringBuffer inner = new StringBuffer(
-            "AND ("
-        );
-
-        if (consumerUuids != null && !consumerUuids.isEmpty()) {
-            criteria.add("ConsumerState.uuid IN ?" + ++counter);
-            parameters.add(consumerUuids);
-        }
-
-        if (ownerFilters != null && !ownerFilters.isEmpty()) {
-            criteria.add("ConsumerState.ownerKey IN ?" + ++counter);
-            parameters.add(ownerFilters);
-        }
-
-        if (statusFilters != null && !statusFilters.isEmpty()) {
-            criteria.add("ComplianceStatusSnap.status IN ?" + ++counter);
-            parameters.add(statusFilters);
-        }
-
-        if (!criteria.isEmpty()) {
-            // Append the criteria to our where clause and close it.
-            Iterator<String> ci = criteria.iterator();
-            inner.append(ci.next());
-
-            while (ci.hasNext()) {
-                inner.append(" AND ");
-                inner.append(ci.next());
-            }
-
-            hql.append(inner.append(") "));
-        }
-
-        // Build our query object and set the parameters...
-        Session session = this.currentSession();
-        Query query = session.createQuery(hql.toString());
-        query.setCacheMode(CacheMode.IGNORE);
-        query.setReadOnly(true);
-        query.setFirstResult((page - 1) * perPage);
-        query.setMaxResults(perPage);
-
-        for (int i = 1; i <= counter; ++i) {
-            Object arg = parameters.remove(0);
-
-            if (arg instanceof Collection) {
-                query.setParameterList(String.valueOf(i), (Collection) arg);
-            }
-            else {
-                query.setParameter(String.valueOf(i), arg);
-            }
-        }
-
-        return new AutoEvictingResultsIterator<Compliance>(session, query.scroll(ScrollMode.FORWARD_ONLY));
+        List<String> ownerFilters, List<String> statusFilters) {
+        return this.getSnapshotIterator(targetDate, consumerUuids, ownerFilters, statusFilters, 0, 0);
     }
 
-    public Iterator<Compliance> getSnapshotIteratorB(Date targetDate, List<String> consumerUuids,
-        List<String> ownerFilters, List<String> statusFilters, int page, int perPage) {
+    /**
+     * Retrieves an iterator over the compliance snapshots on the target date.
+     *
+     * @param targetDate
+     *  The date for which to retrieve compliance snapshots. If null, the current date will be used
+     *  instead.
+     *
+     * @param consumerUuids
+     *  A list of consumer UUIDs to use to filter the results. If provided, only compliances for
+     *  consumers in the list will be retrieved.
+     *
+     * @param ownerFilters
+     *  A list of owners to use to filter the results. If provided, only compliances for consumers
+     *  belonging to the specified owners (orgs) will be retrieved.
+     *
+     * @param statusFilters
+     *  A list of statuses to use to filter the results. If provided, only compliances with a status
+     *  matching the list will be retrieved.
+     *
+     * @param offset
+     *  The offset at which to begin returning results. If non-positive, the offset will be ignored.
+     *
+     * @param results
+     *  The maximum number of results to return. If non-positive, no limit on the number of results
+     *  will be imposed.
+     *
+     * @return
+     *  An iterator over the compliance snapshots for the target date.
+     */
+    public Iterator<Compliance> getSnapshotIterator(Date targetDate, List<String> consumerUuids,
+        List<String> ownerFilters, List<String> statusFilters, int offset, int results) {
 
         DetachedCriteria mainQuery = DetachedCriteria.forClass(Compliance.class);
         mainQuery.createAlias("consumer", "c");
@@ -291,18 +196,26 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
             .createAlias("consumer", "cs")
             .add(Subqueries.propertiesIn(new String[] {"date", "cs.uuid"}, mainQuery))
             .setCacheMode(CacheMode.IGNORE)
-            .setReadOnly(true)
-            .setFirstResult((page - 1) * perPage)
-            .setMaxResults(perPage);
+            .setReadOnly(true);
+
+        if (offset > 0) {
+            postFilter.setFirstResult(offset);
+        }
+
+        if (results > 0) {
+            postFilter.setMaxResults(results);
+        }
 
         if (statusFilters != null && !statusFilters.isEmpty()) {
             postFilter.createAlias("status", "stat");
             postFilter.add(Restrictions.in("stat.status", statusFilters));
         }
 
-        return new AutoEvictingResultsIterator<Compliance>(session, postFilter.scroll(ScrollMode.FORWARD_ONLY));
+        return new AutoEvictingResultsIterator<Compliance>(
+            session,
+            postFilter.scroll(ScrollMode.FORWARD_ONLY)
+        );
     }
-
 
     public Set<Compliance> getComplianceForTimespan(Date startDate, Date endDate,
         List<String> consumerIds, List<String> owners) {
