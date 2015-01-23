@@ -66,7 +66,7 @@ public class ConsumerStatusReportTest {
         StatusReasonMessageGenerator messageGenerator = mock(StatusReasonMessageGenerator.class);
 
         // Indentation note: This is what checkstyle actually wants. :/
-        when(complianceSnapshotCurator.getSnapshotsIterator(
+        when(complianceSnapshotCurator.getSnapshotIterator(
                 any(Date.class), any(List.class), any(List.class), any(List.class)
         )).thenReturn(
                 (new LinkedList<Compliance>()).iterator()
@@ -105,7 +105,7 @@ public class ConsumerStatusReportTest {
         List<String> owners = null;
         List<String> status = null;
 
-        verify(complianceSnapshotCurator).getSnapshotsIterator(eq(cal.getTime()),
+        verify(complianceSnapshotCurator).getSnapshotIterator(eq(cal.getTime()),
                 eq(uuids), eq(owners), eq(status));
         verifyNoMoreInteractions(complianceSnapshotCurator);
     }
@@ -122,7 +122,7 @@ public class ConsumerStatusReportTest {
         List<String> owners = Arrays.asList("o2");
         List<String> status = null;
 
-        verify(complianceSnapshotCurator).getSnapshotsIterator(any(Date.class),
+        verify(complianceSnapshotCurator).getSnapshotIterator(any(Date.class),
                 eq(uuids), eq(owners), eq(status));
         verifyNoMoreInteractions(complianceSnapshotCurator);
     }
@@ -137,7 +137,7 @@ public class ConsumerStatusReportTest {
         List<String> owners = null;
 
         ConsumerStatusReportResult results = report.run(params);
-        verify(complianceSnapshotCurator).getSnapshotsIterator(any(Date.class),
+        verify(complianceSnapshotCurator).getSnapshotIterator(any(Date.class),
                 eq(uuids), eq(owners),
                 eq(Arrays.asList("partial")));
         verifyNoMoreInteractions(complianceSnapshotCurator);

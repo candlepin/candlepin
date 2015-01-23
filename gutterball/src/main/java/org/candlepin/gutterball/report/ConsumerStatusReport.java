@@ -81,6 +81,18 @@ public class ConsumerStatusReport extends Report<ConsumerStatusReportResult> {
                 .getParameter()
         );
 
+        addParameter(
+            builder.init("page", i18n.tr("The date to filter on. Defaults to NOW."))
+                .mustBeInteger()
+                .getParameter()
+        );
+
+        addParameter(
+            builder.init("per_page", i18n.tr("The date to filter on. Defaults to NOW."))
+                .mustBeInteger()
+                .getParameter()
+        );
+
     }
 
     @Override
@@ -95,6 +107,9 @@ public class ConsumerStatusReport extends Report<ConsumerStatusReportResult> {
         Date targetDate = queryParams.containsKey("on_date") ?
             parseDateTime(queryParams.getFirst("on_date")) : new Date();
 
+        int page = queryParams.containsKey("page") ? Integer.parseInt(queryParams.getFirst("page")) : 1;
+        int perPage = queryParams.containsKey("per_page") ? Integer.parseInt(queryParams.getFirst("per_page")) : 100;
+
         // List<Compliance> snaps = complianceSnapshotCurator.getSnapshotsOnDate(targetDate,
         //         consumerIds, ownerFilters, statusFilters);
 
@@ -105,11 +120,13 @@ public class ConsumerStatusReport extends Report<ConsumerStatusReportResult> {
         //     }
         // }
 
-        Iterator<Compliance> iterator = this.complianceSnapshotCurator.getSnapshotsIterator(
+        Iterator<Compliance> iterator = this.complianceSnapshotCurator.getSnapshotIteratorB(
             targetDate,
             consumerIds,
             ownerFilters,
-            statusFilters
+            statusFilters,
+            page,
+            perPage
         );
 
         return new ConsumerStatusReportResult(iterator, this.messageGenerator);

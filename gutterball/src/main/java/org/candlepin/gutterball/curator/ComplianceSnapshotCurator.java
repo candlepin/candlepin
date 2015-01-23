@@ -104,8 +104,8 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
     }
 
     @SuppressWarnings("checkstyle:methodlength")
-    public Iterator<Compliance> getSnapshotsIterator(Date targetDate, List<String> consumerUuids,
-        List<String> ownerFilters, List<String> statusFilters) {
+    public Iterator<Compliance> getSnapshotIterator(Date targetDate, List<String> consumerUuids,
+        List<String> ownerFilters, List<String> statusFilters, int page, int perPage) {
 
         List<Object> parameters = new LinkedList<Object>();
         int counter = 0;
@@ -236,6 +236,8 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
         Query query = session.createQuery(hql.toString());
         query.setCacheMode(CacheMode.IGNORE);
         query.setReadOnly(true);
+        query.setFirstResult((page - 1) * perPage);
+        query.setMaxResults(perPage);
 
         for (int i = 1; i <= counter; ++i) {
             Object arg = parameters.remove(0);
@@ -249,6 +251,56 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
         }
 
         return new AutoEvictingResultsIterator<Compliance>(session, query.scroll(ScrollMode.FORWARD_ONLY));
+    }
+
+    public Iterator<Compliance> getSnapshotIteratorB(Date targetDate, List<String> consumerUuids,
+        List<String> ownerFilters, List<String> statusFilters, int page, int perPage) {
+
+        DetachedCriteria mainQuery = DetachedCriteria.forClass(Compliance.class);
+        mainQuery.createAlias("consumer", "c");
+        mainQuery.createAlias("c.consumerState", "state");
+
+        // https://hibernate.atlassian.net/browse/HHH-2776
+        if (consumerUuids != null && !consumerUuids.isEmpty()) {
+            mainQuery.add(Restrictions.in("c.uuid", consumerUuids));
+        }
+
+        Date toCheck = targetDate == null ? new Date() : targetDate;
+        mainQuery.add(Restrictions.or(
+            Restrictions.isNull("state.deleted"),
+            Restrictions.gt("state.deleted", toCheck)
+        ));
+        mainQuery.add(Restrictions.le("state.created", toCheck));
+
+        if (ownerFilters != null && !ownerFilters.isEmpty()) {
+            mainQuery.createAlias("c.owner", "o");
+            mainQuery.add(Restrictions.in("o.key", ownerFilters));
+        }
+
+        mainQuery.add(Restrictions.le("date", toCheck));
+
+        mainQuery.setProjection(
+            Projections.projectionList()
+                .add(Projections.max("date"))
+                .add(Projections.groupProperty("c.uuid"))
+        );
+
+        // Post query filter on Status.
+        Session session = this.currentSession();
+        Criteria postFilter = session.createCriteria(Compliance.class)
+            .createAlias("consumer", "cs")
+            .add(Subqueries.propertiesIn(new String[] {"date", "cs.uuid"}, mainQuery))
+            .setCacheMode(CacheMode.IGNORE)
+            .setReadOnly(true)
+            .setFirstResult((page - 1) * perPage)
+            .setMaxResults(perPage);
+
+        if (statusFilters != null && !statusFilters.isEmpty()) {
+            postFilter.createAlias("status", "stat");
+            postFilter.add(Restrictions.in("stat.status", statusFilters));
+        }
+
+        return new AutoEvictingResultsIterator<Compliance>(session, postFilter.scroll(ScrollMode.FORWARD_ONLY));
     }
 
 
