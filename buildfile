@@ -73,7 +73,9 @@ LOGBACK = [group('logback-core', 'logback-classic',
 
 # Artifacts that bridge other logging frameworks to slf4j. Mime4j uses
 # JCL for example.
-SLF4J_BRIDGES = 'org.slf4j:jcl-over-slf4j:jar:1.7.5'
+SLF4J_BRIDGES = [group('jcl-over-slf4j', 'log4j-over-slf4j',
+                       :under => 'org.slf4j',
+                       :version => '1.7.5')]
 SLF4J = 'org.slf4j:slf4j-api:jar:1.7.5'
 
 LOGGING = [LOGBACK, SLF4J_BRIDGES, SLF4J]
