@@ -15,13 +15,12 @@
 
 package org.candlepin.gutterball.report;
 
+import org.candlepin.common.config.PropertyConverter;
 import org.candlepin.gutterball.curator.ComplianceSnapshotCurator;
 import org.candlepin.gutterball.model.snapshot.Compliance;
 
 import com.google.inject.Inject;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.Date;
@@ -34,8 +33,7 @@ import javax.ws.rs.core.MultivaluedMap;
 /**
  * ConsumerStatusListReport
  */
-public class ConsumerStatusReport extends Report<ReasonGeneratingReportResult> {
-    private static Logger log = LoggerFactory.getLogger(ConsumerStatusReport.class);
+public class ConsumerStatusReport extends Report<ReportResult> {
 
     private ComplianceSnapshotCurator complianceSnapshotCurator;
     private StatusReasonMessageGenerator messageGenerator;
@@ -93,10 +91,14 @@ public class ConsumerStatusReport extends Report<ReasonGeneratingReportResult> {
                 .getParameter()
         );
 
+        addParameter(
+            builder.init("custom", i18n.tr("Allows building a custom result data set by tayloring " +
+                         "the data to include in the JSON (boolean)")).getParameter());
+
     }
 
     @Override
-    protected ReasonGeneratingReportResult execute(MultivaluedMap<String, String> queryParams) {
+    protected ReportResult execute(MultivaluedMap<String, String> queryParams) {
         // At this point we would execute a lookup against the DW data store to formulate
         // the report result set.
 
@@ -134,6 +136,11 @@ public class ConsumerStatusReport extends Report<ReasonGeneratingReportResult> {
             results
         );
 
-        return new ReasonGeneratingReportResult(iterator, this.messageGenerator);
+        String custom = queryParams.containsKey("custom") ? queryParams.getFirst("custom") : "";
+        boolean useCustom = PropertyConverter.toBoolean(custom);
+        if (useCustom) {
+            return new ReasonGeneratingReportResult(iterator, this.messageGenerator);
+        }
+        return new ConsumerStatusReportDefaultResult(iterator);
     }
 }

@@ -18,6 +18,7 @@ package org.candlepin.gutterball;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.gutterball.model.ConsumerState;
 import org.candlepin.gutterball.model.snapshot.Compliance;
 import org.candlepin.gutterball.model.snapshot.ComplianceReason;
 import org.candlepin.gutterball.model.snapshot.ComplianceStatus;
@@ -56,7 +57,13 @@ public class TestUtils {
 
     public static Compliance createComplianceSnapshot(Date statusDate, String consumerUuid,
             String owner, String statusString) {
+        return createComplianceSnapshot(statusDate, consumerUuid, owner, statusString, null);
+    }
+
+    public static Compliance createComplianceSnapshot(Date statusDate, String consumerUuid,
+            String owner, String statusString, ConsumerState state) {
         Consumer consumerSnap = new Consumer(consumerUuid, null, createOwnerSnapshot(owner, owner));
+        consumerSnap.setConsumerState(state);
         ComplianceStatus statusSnap = new ComplianceStatus(statusDate, statusString);
 
         if (statusString.toLowerCase().equals("invalid")) {
