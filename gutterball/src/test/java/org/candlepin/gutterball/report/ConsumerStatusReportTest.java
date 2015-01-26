@@ -134,7 +134,7 @@ public class ConsumerStatusReportTest {
         List<String> uuids = null;
         List<String> owners = null;
 
-        ConsumerStatusReportResult results = report.run(params);
+        ReasonGeneratingReportResult results = report.run(params);
         verify(complianceSnapshotCurator).getSnapshotIterator(any(Date.class),
                 eq(uuids), eq(owners),
                 eq(Arrays.asList("partial")),
@@ -156,7 +156,7 @@ public class ConsumerStatusReportTest {
         List<String> owners = null;
         List<String> statuses = null;
 
-        ConsumerStatusReportResult results = report.run(params);
+        ReasonGeneratingReportResult results = report.run(params);
         verify(complianceSnapshotCurator).getSnapshotIterator(any(Date.class),
                 eq(uuids), eq(owners),
                 eq(statuses),

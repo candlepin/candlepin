@@ -23,13 +23,14 @@ import java.util.Iterator;
 
 
 /**
- * ConsumerStatusReportResult represents the results returned by the consumer status report.
+ * The ReasonGeneratingReportResult class represents an IterableReportResult that generates
+ * compliance reasons for each outbound compliance.
  */
-public class ConsumerStatusReportResult extends IterableReportResult<Compliance> {
+public class ReasonGeneratingReportResult extends IterableReportResult<Compliance> {
 
     private StatusReasonMessageGenerator messageGenerator;
 
-    public ConsumerStatusReportResult(Iterator<Compliance> results,
+    public ReasonGeneratingReportResult(Iterator<Compliance> results,
         StatusReasonMessageGenerator messageGenerator) {
         super(results);
 

@@ -16,7 +16,6 @@ package org.candlepin.gutterball.report;
 
 import org.candlepin.gutterball.curator.ComplianceSnapshotCurator;
 import org.candlepin.gutterball.model.snapshot.Compliance;
-import org.candlepin.gutterball.model.snapshot.ComplianceReason;
 
 import com.google.inject.Inject;
 
@@ -24,8 +23,7 @@ import org.xnap.commons.i18n.I18n;
 
 import java.util.Calendar;
 import java.util.Date;
-import java.util.List;
-import java.util.Set;
+import java.util.Iterator;
 
 import javax.inject.Provider;
 import javax.ws.rs.core.MultivaluedMap;
@@ -33,7 +31,7 @@ import javax.ws.rs.core.MultivaluedMap;
 /**
  * ConsumerTrendReport
  */
-public class ConsumerTrendReport extends Report<ConsumerTrendReportResult> {
+public class ConsumerTrendReport extends Report<ReasonGeneratingReportResult> {
 
     private ComplianceSnapshotCurator snapshotCurator;
     private StatusReasonMessageGenerator messageGenerator;
@@ -59,14 +57,9 @@ public class ConsumerTrendReport extends Report<ConsumerTrendReportResult> {
 
         addParameter(
             builder.init("consumer_uuid", i18n.tr("Filters the results by the specified consumer UUID."))
-                .multiValued()
+                .mandatory()
                 .getParameter()
         );
-
-        addParameter(
-            builder.init("owner", i18n.tr("The Owner key(s) to filter on."))
-                .multiValued()
-                .getParameter());
 
         addParameter(
             builder.init("hours", i18n.tr("The number of hours to filter on (used indepent of date range)."))
@@ -87,13 +80,23 @@ public class ConsumerTrendReport extends Report<ConsumerTrendReportResult> {
                 .mustHave("start_date")
                 .mustBeDate(REPORT_DATETIME_FORMAT)
                 .getParameter());
+
+        addParameter(
+            builder.init("page", i18n.tr("The page at which to begin retrieving results."))
+                .mustBeInteger()
+                .getParameter()
+        );
+
+        addParameter(
+            builder.init("per_page", i18n.tr("The number of results to return per page."))
+                .mustBeInteger()
+                .getParameter()
+        );
     }
 
     @Override
-    protected ConsumerTrendReportResult execute(MultivaluedMap<String, String> queryParams) {
-
-        List<String> consumerIds = queryParams.get("consumer_uuid");
-        List<String> ownerFilters = queryParams.get("owner");
+    protected ReasonGeneratingReportResult execute(MultivaluedMap<String, String> queryParams) {
+        String consumer = queryParams.getFirst("consumer_uuid");
 
         Date startDate = null;
         Date endDate = null;
@@ -111,17 +114,32 @@ public class ConsumerTrendReport extends Report<ConsumerTrendReportResult> {
             endDate = parseDateTime(queryParams.getFirst("end_date"));
         }
 
+        // Pagination stuff
+        int page = queryParams.containsKey("page") ?
+            Integer.parseInt(queryParams.getFirst("page")) :
+            1;
 
-        ConsumerTrendReportResult result = new ConsumerTrendReportResult();
-        Set<Compliance> forTimeSpan = snapshotCurator.getComplianceForTimespan(
-                startDate, endDate, consumerIds, ownerFilters);
-        for (Compliance cs : forTimeSpan) {
-            for (ComplianceReason cr : cs.getStatus().getReasons()) {
-                messageGenerator.setMessage(cs.getConsumer(), cr);
-            }
-            result.add(cs.getConsumer().getUuid(), cs);
+        int perPage = queryParams.containsKey("per_page") ?
+            Integer.parseInt(queryParams.getFirst("per_page")) :
+            100;
+
+        int offset = 0;
+        int results = 0;
+
+        if (page > 0 && perPage > 0) {
+            offset = (page - 1) * perPage;
+            results = perPage;
         }
-        return result;
+
+        Iterator<Compliance> iterator = this.snapshotCurator.getSnapshotIteratorForConsumer(
+            consumer,
+            startDate,
+            endDate,
+            offset,
+            results
+        );
+
+        return new ReasonGeneratingReportResult(iterator, this.messageGenerator);
     }
 
 }
