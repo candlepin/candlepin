@@ -223,35 +223,113 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
         // If the start date is null, we can return all status updates.
         // Otherwise, we need to get every consumers latest compliance info at that point.
         Set<Compliance> snaps = new HashSet<Compliance>();
-        if (startDate != null) {
-            // Don't restrict by status here, it may not match to begin with, we only care if it matches
-            snaps.addAll(getSnapshotsOnDate(startDate, consumerIds, owners, null));
-        }
 
-        Criteria mainQuery = currentSession().createCriteria(Compliance.class);
-        mainQuery.createAlias("consumer", "c");
+        Criteria mainQuery = currentSession().createCriteria(Compliance.class, "comp1");
+        mainQuery.createAlias("comp1.consumer", "cons1");
 
         if (consumerIds != null && !consumerIds.isEmpty()) {
-            mainQuery.add(Restrictions.in("c.uuid", consumerIds));
+            mainQuery.add(Restrictions.in("cons1.uuid", consumerIds));
         }
 
         if (owners != null && !owners.isEmpty()) {
-            mainQuery.createAlias("c.owner", "o");
-            mainQuery.add(Restrictions.in("o.key", owners));
+            mainQuery.createAlias("cons1.owner", "owner1");
+            mainQuery.add(Restrictions.in("owner1.key", owners));
         }
 
         if (startDate != null) {
-            // Use greater than (not equals) because we've already looked up status for <= the start date
-            // gte will open the door for duplicates
-            mainQuery.add(Restrictions.gt("date", startDate));
+            DetachedCriteria subquery = DetachedCriteria.forClass(Compliance.class, "comp2");
+            subquery.createAlias("comp2.consumer", "cons2");
+            subquery.createAlias("cons2.consumerState", "state2");
+
+            subquery.add(Restrictions.or(
+                Restrictions.isNull("state2.deleted"),
+                Restrictions.gt("state2.deleted", startDate)
+            ));
+
+            subquery.add(Restrictions.lt("state2.created", startDate));
+            subquery.add(Restrictions.eqProperty("cons2.uuid", "cons1.uuid"));
+            subquery.add(Restrictions.lt("comp2.date", startDate));
+
+            subquery.setProjection(
+                Projections.projectionList()
+                    .add(Projections.max("comp2.date"))
+            );
+
+            mainQuery.add(
+                Restrictions.disjunction()
+                    .add(Restrictions.ge("comp1.date", startDate))
+                    .add(Subqueries.propertyEq("comp1.date", subquery))
+            );
         }
 
         if (endDate != null) {
-            mainQuery.add(Restrictions.le("date", endDate));
+            mainQuery.add(Restrictions.le("comp1.date", endDate));
         }
 
         snaps.addAll(mainQuery.list());
         return snaps;
+    }
+
+    public Iterator<Compliance> getSnapshotIteratorForConsumer(String consumerUUID, Date startDate,
+        Date endDate) {
+
+        return this.getSnapshotIteratorForConsumer(consumerUUID, startDate, endDate, 0, 0);
+    }
+
+    public Iterator<Compliance> getSnapshotIteratorForConsumer(String consumerUUID, Date startDate,
+        Date endDate, int offset, int results) {
+
+        Session session = this.currentSession();
+        Criteria query = session.createCriteria(Compliance.class, "comp1");
+        query.createAlias("comp1.consumer", "cons1");
+
+        query.add(Restrictions.eq("cons1.uuid", consumerUUID));
+
+        if (startDate != null) {
+            DetachedCriteria subquery = DetachedCriteria.forClass(Compliance.class, "comp2");
+            subquery.createAlias("comp2.consumer", "cons2");
+            subquery.createAlias("cons2.consumerState", "state2");
+
+            subquery.add(Restrictions.or(
+                Restrictions.isNull("state2.deleted"),
+                Restrictions.gt("state2.deleted", startDate)
+            ));
+
+            subquery.add(Restrictions.lt("state2.created", startDate));
+            subquery.add(Restrictions.eqProperty("cons2.uuid", "cons1.uuid"));
+            subquery.add(Restrictions.lt("comp2.date", startDate));
+
+            subquery.setProjection(
+                Projections.projectionList()
+                    .add(Projections.max("comp2.date"))
+            );
+
+            query.add(
+                Restrictions.disjunction()
+                    .add(Restrictions.ge("comp1.date", startDate))
+                    .add(Subqueries.propertyEq("comp1.date", subquery))
+            );
+        }
+
+        if (endDate != null) {
+            query.add(Restrictions.le("comp1.date", endDate));
+        }
+
+        query.setCacheMode(CacheMode.IGNORE);
+        query.setReadOnly(true);
+
+        if (offset > 0) {
+            query.setFirstResult(offset);
+        }
+
+        if (results > 0) {
+            query.setMaxResults(results);
+        }
+
+        return new AutoEvictingResultsIterator<Compliance>(
+            session,
+            query.scroll(ScrollMode.FORWARD_ONLY)
+        );
     }
 
     /**

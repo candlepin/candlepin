@@ -22,6 +22,7 @@ import org.candlepin.gutterball.DatabaseTestFixture;
 import org.candlepin.gutterball.guice.I18nProvider;
 import org.candlepin.gutterball.model.ConsumerState;
 import org.candlepin.gutterball.model.snapshot.Compliance;
+import org.candlepin.gutterball.model.snapshot.Consumer;
 
 import org.jukito.JukitoRunner;
 import org.junit.Before;
@@ -29,13 +30,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Set;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -99,8 +96,25 @@ public class ConsumerTrendReportTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void testConsumerUUIDRequirement() {
+        MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
+
+        validateParams(params, "consumer_uuid", "Required parameter.");
+
+        when(params.containsKey("consumer_uuid")).thenReturn(true);
+        when(params.get("consumer_uuid")).thenReturn(Arrays.asList("completely-random-uuid"));
+        when(params.getFirst("consumer_uuid")).thenReturn("completely-random-uuid");
+
+        report.validateParameters(params);
+    }
+
+    @Test
     public void testDateFormatValidatedOnStartDateParameter() {
         MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
+
+        when(params.containsKey("consumer_uuid")).thenReturn(true);
+        when(params.get("consumer_uuid")).thenReturn(Arrays.asList("completely-random-uuid"));
+        when(params.getFirst("consumer_uuid")).thenReturn("completely-random-uuid");
 
         when(params.containsKey("start_date")).thenReturn(true);
         when(params.get("start_date")).thenReturn(Arrays.asList("13-21-2010"));
@@ -113,6 +127,10 @@ public class ConsumerTrendReportTest extends DatabaseTestFixture {
     public void testDateFormatValidatedOnEndDateParameter() {
         MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
 
+        when(params.containsKey("consumer_uuid")).thenReturn(true);
+        when(params.get("consumer_uuid")).thenReturn(Arrays.asList("completely-random-uuid"));
+        when(params.getFirst("consumer_uuid")).thenReturn("completely-random-uuid");
+
         when(params.containsKey("end_date")).thenReturn(true);
         when(params.get("end_date")).thenReturn(Arrays.asList("13-21-2010"));
 
@@ -121,8 +139,12 @@ public class ConsumerTrendReportTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testStartDateMustHaveValidatedOnStartDateParameter() {
+    public void testStartDateMustHaveValidatedOnEndDateParameter() {
         MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
+
+        when(params.containsKey("consumer_uuid")).thenReturn(true);
+        when(params.get("consumer_uuid")).thenReturn(Arrays.asList("completely-random-uuid"));
+        when(params.getFirst("consumer_uuid")).thenReturn("completely-random-uuid");
 
         when(params.containsKey("start_date")).thenReturn(true);
         Calendar cal = Calendar.getInstance();
@@ -137,6 +159,10 @@ public class ConsumerTrendReportTest extends DatabaseTestFixture {
     @Test
     public void testEndDateMustHaveValidatedOnStartDateParameter() {
         MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
+
+        when(params.containsKey("consumer_uuid")).thenReturn(true);
+        when(params.get("consumer_uuid")).thenReturn(Arrays.asList("completely-random-uuid"));
+        when(params.getFirst("consumer_uuid")).thenReturn("completely-random-uuid");
 
         when(params.containsKey("end_date")).thenReturn(true);
         Calendar cal = Calendar.getInstance();
@@ -157,6 +183,9 @@ public class ConsumerTrendReportTest extends DatabaseTestFixture {
 
         MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
         String onDateString = formatDate(cal.getTime());
+        when(params.containsKey("consumer_uuid")).thenReturn(true);
+        when(params.get("consumer_uuid")).thenReturn(Arrays.asList("c2"));
+        when(params.getFirst("consumer_uuid")).thenReturn("c2");
         when(params.containsKey("start_date")).thenReturn(true);
         when(params.getFirst("start_date")).thenReturn(onDateString);
         when(params.get("start_date")).thenReturn(Arrays.asList(onDateString));
@@ -164,74 +193,76 @@ public class ConsumerTrendReportTest extends DatabaseTestFixture {
         when(params.getFirst("end_date")).thenReturn(onDateString);
         when(params.get("end_date")).thenReturn(Arrays.asList(onDateString));
 
-        ConsumerTrendReportResult result = report.run(params);
-        assertEquals(2, result.keySet().size());
+        ReasonGeneratingReportResult result = report.run(params);
 
-        List<String> foundConsumers = new ArrayList<String>();
-        for (String uuid : result.keySet()) {
-            // There should only be one snapshot
-            Set<Compliance> snapshots = result.get(uuid);
-            assertEquals(1, snapshots.size());
-            foundConsumers.add(uuid);
+        int received = 0;
+        while (result.hasNext()) {
+            Compliance compliance = result.next();
+            Consumer consumer = compliance.getConsumer();
+
+            assertEquals("c2", consumer.getUuid());
+
+            ++received;
         }
-        assertTrue(foundConsumers.containsAll(Arrays.asList("c1", "c2")));
+
+        assertEquals(1, received);
     }
 
     @Test
-    public void testGetAllStatusReports() {
-        ConsumerTrendReportResult result = report.run(mock(MultivaluedMap.class));
-        HashMap<String, Integer> expectedUuidsNumReports = new HashMap<String, Integer>() {
-            {
-                put("c1", 3);
-                put("c2", 1);
-                put("c3", 2);
-                put("c4", 3);
-            }
-        };
-
-        // Ensure consumers are all found
-        assertEquals(expectedUuidsNumReports.keySet(), result.keySet());
-
-        for (String uuid : result.keySet()) {
-            Set<Compliance> snapshots = result.get(uuid);
-            assertEquals((int) expectedUuidsNumReports.get(uuid), snapshots.size());
-        }
-    }
-
-
-
-    @Test
-    public void testGetStatusReportsTimeframe() {
+    public void testReportOnDateRange() {
         Calendar cal = Calendar.getInstance();
         cal.set(Calendar.YEAR, 2012);
-        cal.set(Calendar.MONTH, Calendar.JUNE);
+        cal.set(Calendar.MONTH, Calendar.APRIL);
         cal.set(Calendar.DAY_OF_MONTH, 12);
 
         MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
-        String startDateString = formatDate(cal.getTime());
+        String onDateString = formatDate(cal.getTime());
         String endDateString = formatDate(new Date());
+        when(params.containsKey("consumer_uuid")).thenReturn(true);
+        when(params.get("consumer_uuid")).thenReturn(Arrays.asList("c4"));
+        when(params.getFirst("consumer_uuid")).thenReturn("c4");
         when(params.containsKey("start_date")).thenReturn(true);
-        when(params.getFirst("start_date")).thenReturn(startDateString);
-        when(params.get("start_date")).thenReturn(Arrays.asList(startDateString));
+        when(params.getFirst("start_date")).thenReturn(onDateString);
+        when(params.get("start_date")).thenReturn(Arrays.asList(onDateString));
         when(params.containsKey("end_date")).thenReturn(true);
         when(params.getFirst("end_date")).thenReturn(endDateString);
         when(params.get("end_date")).thenReturn(Arrays.asList(endDateString));
-        ConsumerTrendReportResult result = report.run(params);
-        HashMap<String, Integer> expectedUuidsNumReports = new HashMap<String, Integer>() {
-            {
-                put("c2", 1);
-                put("c3", 1);
-                put("c4", 2);
-            }
-        };
 
-        // Ensure consumers are all found
-        assertEquals(expectedUuidsNumReports.keySet(), result.keySet());
+        ReasonGeneratingReportResult result = report.run(params);
 
-        for (String uuid : result.keySet()) {
-            Set<Compliance> snapshots = result.get(uuid);
-            assertEquals((int) expectedUuidsNumReports.get(uuid), snapshots.size());
+        int received = 0;
+        while (result.hasNext()) {
+            Compliance compliance = result.next();
+            Consumer consumer = compliance.getConsumer();
+
+            assertEquals("c4", consumer.getUuid());
+
+            ++received;
         }
+
+        assertEquals(3, received);
+    }
+
+    @Test
+    public void testGetAllStatusReportsForConsumer() {
+        MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
+        when(params.containsKey("consumer_uuid")).thenReturn(true);
+        when(params.get("consumer_uuid")).thenReturn(Arrays.asList("c4"));
+        when(params.getFirst("consumer_uuid")).thenReturn("c4");
+
+        ReasonGeneratingReportResult result = report.run(params);
+
+        int received = 0;
+        while (result.hasNext()) {
+            Compliance compliance = result.next();
+            Consumer consumer = compliance.getConsumer();
+
+            assertEquals("c4", consumer.getUuid());
+
+            ++received;
+        }
+
+        assertEquals(3, received);
     }
 
     private String formatDate(Date date) {

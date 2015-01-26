@@ -34,7 +34,7 @@ import javax.ws.rs.core.MultivaluedMap;
 /**
  * ConsumerStatusListReport
  */
-public class ConsumerStatusReport extends Report<ConsumerStatusReportResult> {
+public class ConsumerStatusReport extends Report<ReasonGeneratingReportResult> {
     private static Logger log = LoggerFactory.getLogger(ConsumerStatusReport.class);
 
     private ComplianceSnapshotCurator complianceSnapshotCurator;
@@ -96,7 +96,7 @@ public class ConsumerStatusReport extends Report<ConsumerStatusReportResult> {
     }
 
     @Override
-    protected ConsumerStatusReportResult execute(MultivaluedMap<String, String> queryParams) {
+    protected ReasonGeneratingReportResult execute(MultivaluedMap<String, String> queryParams) {
         // At this point we would execute a lookup against the DW data store to formulate
         // the report result set.
 
@@ -134,6 +134,6 @@ public class ConsumerStatusReport extends Report<ConsumerStatusReportResult> {
             results
         );
 
-        return new ConsumerStatusReportResult(iterator, this.messageGenerator);
+        return new ReasonGeneratingReportResult(iterator, this.messageGenerator);
     }
 }
