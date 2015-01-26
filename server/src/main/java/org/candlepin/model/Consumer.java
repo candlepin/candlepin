@@ -173,7 +173,8 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     @OneToOne(cascade = CascadeType.ALL)
     private KeyPair keyPair;
 
-    @Formula("(select max(c.created) from cp_consumer_checkin c where c.consumer_id = id)")
+    @Formula("(select max(c.checkInTime) from cp_consumer_checkin c " +
+            "where c.consumer_id = id)")
     private Date lastCheckin;
 
     @OneToMany(mappedBy = "consumer",
@@ -473,7 +474,17 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     }
 
     public void addCheckIn(Date checkInDate) {
+        if (this.checkIns == null) {
+            this.checkIns = new HashSet<CheckIn>();
+        }
         this.checkIns.add(new CheckIn(this, checkInDate));
+    }
+
+    /*
+     * Only for internal use as a pojo for resource update.
+     */
+   public void setLastCheckin(Date lastCheckin) {
+        this.lastCheckin = lastCheckin;
     }
 
     @XmlTransient

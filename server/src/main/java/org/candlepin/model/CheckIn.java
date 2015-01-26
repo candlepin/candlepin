@@ -60,14 +60,19 @@ public class CheckIn extends AbstractHibernateObject {
     @NotNull
     private Consumer consumer;
 
+    /*
+     * Leveraging created/updated is too risky here, parent class wants to set them itself,
+     * and keeping everything separate technically gives us more information to work with.
+     */
+    private Date checkInTime;
+
     public CheckIn() {
     }
 
     public CheckIn(Consumer consumer, Date d) {
         this();
         this.consumer = consumer;
-        setCreated(d);
-        setUpdated(d);
+        this.checkInTime = d;
     }
 
     public String getId() {
@@ -84,5 +89,13 @@ public class CheckIn extends AbstractHibernateObject {
 
     public void setConsumer(Consumer consumer) {
         this.consumer = consumer;
+    }
+
+    public Date getCheckInTime() {
+        return checkInTime;
+    }
+
+    public void setCheckInTime(Date checkInTime) {
+        this.checkInTime = checkInTime;
     }
 }

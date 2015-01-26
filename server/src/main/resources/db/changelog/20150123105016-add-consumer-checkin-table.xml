@@ -6,8 +6,7 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
-    <property name="timestamp.type" value="TIMESTAMP WITH TIME ZONE" dbms="oracle"/>
-    <property name="timestamp.type" value="TIMESTAMP WITH TIME ZONE" dbms="postgresql"/>
+    <property name="timestamp.type" value="TIMESTAMP WITH TIME ZONE" dbms="oracle,postgresql,hsqldb"/>
     <property name="timestamp.type" value="DATETIME" dbms="mysql"/>
 
     <changeSet id="20150123105016-1" author="dgoodwin">
@@ -24,6 +23,7 @@
 
             <column name="created" type="${timestamp.type}"/>
             <column name="updated" type="${timestamp.type}"/>
+            <column name="checkintime" type="${timestamp.type}"/>
 
         </createTable>
 
