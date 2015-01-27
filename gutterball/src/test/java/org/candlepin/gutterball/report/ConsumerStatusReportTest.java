@@ -19,9 +19,12 @@ import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
+import org.candlepin.gutterball.TestUtils;
 import org.candlepin.gutterball.curator.ComplianceSnapshotCurator;
 import org.candlepin.gutterball.guice.I18nProvider;
+import org.candlepin.gutterball.model.ConsumerState;
 import org.candlepin.gutterball.model.snapshot.Compliance;
+import org.candlepin.gutterball.report.dto.ConsumerStatusComplianceDto;
 
 import org.jukito.JukitoModule;
 import org.jukito.JukitoRunner;
@@ -134,7 +137,7 @@ public class ConsumerStatusReportTest {
         List<String> uuids = null;
         List<String> owners = null;
 
-        ReasonGeneratingReportResult results = report.run(params);
+        report.run(params);
         verify(complianceSnapshotCurator).getSnapshotIterator(any(Date.class),
                 eq(uuids), eq(owners),
                 eq(Arrays.asList("partial")),
@@ -156,12 +159,49 @@ public class ConsumerStatusReportTest {
         List<String> owners = null;
         List<String> statuses = null;
 
-        ReasonGeneratingReportResult results = report.run(params);
+        report.run(params);
         verify(complianceSnapshotCurator).getSnapshotIterator(any(Date.class),
                 eq(uuids), eq(owners),
                 eq(statuses),
                 eq(20), eq(10));
         verifyNoMoreInteractions(complianceSnapshotCurator);
+    }
+
+    @Test
+    public void testDefaultResultSetContainsCustomMap() {
+        MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
+        when(params.containsKey("custom")).thenReturn(false);
+
+        List<Compliance> complianceList = new LinkedList<Compliance>();
+        complianceList.add(TestUtils.createComplianceSnapshot(new Date(), "abcd", "an-owner", "valid",
+            new ConsumerState("abcd", "an-owner", new Date())));
+        when(complianceSnapshotCurator.getSnapshotIterator(
+                any(Date.class), any(List.class), any(List.class), any(List.class), anyInt(), anyInt()
+        )).thenReturn(complianceList.iterator());
+
+        ComplianceTransformerIterator result = (ComplianceTransformerIterator) report.run(params);
+        assertNotNull(result);
+        assertTrue(result.hasNext());
+        assertTrue(result.next() instanceof ConsumerStatusComplianceDto);
+    }
+
+    @Test
+    public void testCustomResultSetContainsComplianceObjects() {
+        MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
+        when(params.containsKey("custom")).thenReturn(true);
+        when(params.getFirst("custom")).thenReturn("1");
+
+        List<Compliance> complianceList = new LinkedList<Compliance>();
+        complianceList.add(TestUtils.createComplianceSnapshot(new Date(), "abcd", "an-owner", "valid"));
+
+        when(complianceSnapshotCurator.getSnapshotIterator(
+                any(Date.class), any(List.class), any(List.class), any(List.class), anyInt(), anyInt()
+        )).thenReturn(complianceList.iterator());
+
+        ReasonGeneratingReportResult result = (ReasonGeneratingReportResult) report.run(params);
+        assertNotNull(result);
+        assertTrue(result.hasNext());
+        assertTrue(result.next() instanceof Compliance);
     }
 
     private String formatDate(Date date) {

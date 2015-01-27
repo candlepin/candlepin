@@ -14,7 +14,7 @@
  */
 package org.candlepin.gutterball.report;
 
-import static org.candlepin.gutterball.TestUtils.*;
+import static org.candlepin.gutterball.TestUtils.createComplianceSnapshot;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
@@ -22,7 +22,7 @@ import org.candlepin.gutterball.DatabaseTestFixture;
 import org.candlepin.gutterball.guice.I18nProvider;
 import org.candlepin.gutterball.model.ConsumerState;
 import org.candlepin.gutterball.model.snapshot.Compliance;
-import org.candlepin.gutterball.model.snapshot.Consumer;
+import org.candlepin.gutterball.report.dto.ConsumerTrendComplianceDto;
 
 import org.jukito.JukitoRunner;
 import org.junit.Before;
@@ -33,6 +33,7 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Map;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -193,14 +194,13 @@ public class ConsumerTrendReportTest extends DatabaseTestFixture {
         when(params.getFirst("end_date")).thenReturn(onDateString);
         when(params.get("end_date")).thenReturn(Arrays.asList(onDateString));
 
-        ReasonGeneratingReportResult result = report.run(params);
+        ConsumerTrendReportDefaultResult result = (ConsumerTrendReportDefaultResult) report.run(params);
 
         int received = 0;
         while (result.hasNext()) {
-            Compliance compliance = result.next();
-            Consumer consumer = compliance.getConsumer();
-
-            assertEquals("c2", consumer.getUuid());
+            ConsumerTrendComplianceDto compliance = result.next();
+            Map<String, Object> consumer = (Map<String, Object>) compliance.get("consumer");
+            assertEquals("c2", consumer.get("uuid"));
 
             ++received;
         }
@@ -228,14 +228,13 @@ public class ConsumerTrendReportTest extends DatabaseTestFixture {
         when(params.getFirst("end_date")).thenReturn(endDateString);
         when(params.get("end_date")).thenReturn(Arrays.asList(endDateString));
 
-        ReasonGeneratingReportResult result = report.run(params);
+        ConsumerTrendReportDefaultResult result = (ConsumerTrendReportDefaultResult) report.run(params);
 
         int received = 0;
         while (result.hasNext()) {
-            Compliance compliance = result.next();
-            Consumer consumer = compliance.getConsumer();
-
-            assertEquals("c4", consumer.getUuid());
+            ConsumerTrendComplianceDto compliance = result.next();
+            Map<String, Object> consumer = (Map<String, Object>) compliance.get("consumer");
+            assertEquals("c4", consumer.get("uuid"));
 
             ++received;
         }
@@ -250,19 +249,58 @@ public class ConsumerTrendReportTest extends DatabaseTestFixture {
         when(params.get("consumer_uuid")).thenReturn(Arrays.asList("c4"));
         when(params.getFirst("consumer_uuid")).thenReturn("c4");
 
-        ReasonGeneratingReportResult result = report.run(params);
+        ConsumerTrendReportDefaultResult result = (ConsumerTrendReportDefaultResult) report.run(params);
 
         int received = 0;
         while (result.hasNext()) {
-            Compliance compliance = result.next();
-            Consumer consumer = compliance.getConsumer();
-
-            assertEquals("c4", consumer.getUuid());
+            ConsumerTrendComplianceDto compliance = result.next();
+            Map<String, Object> consumer = (Map<String, Object>) compliance.get("consumer");
+            assertEquals("c4", consumer.get("uuid"));
 
             ++received;
         }
 
         assertEquals(3, received);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testDefaultResultSetContainsCustomMap() {
+        MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
+        when(params.containsKey("custom")).thenReturn(false);
+
+        String uuid = "c3";
+        when(params.containsKey("consumer_uuid")).thenReturn(true);
+        when(params.getFirst("consumer_uuid")).thenReturn(uuid);
+
+        createComplianceSnapshot(new Date(), uuid, "an-owner", "valid");
+        // This cast will not fail when generic type differs. Checking below.
+        ConsumerTrendReportDefaultResult result = (ConsumerTrendReportDefaultResult) report.run(params);
+        assertNotNull(result);
+        assertTrue(result.hasNext());
+
+        ConsumerTrendComplianceDto firstCompliance = result.next();
+        assertTrue(firstCompliance instanceof ConsumerTrendComplianceDto);
+    }
+
+    @Test
+    public void testCustomResultSetContainsComplianceObjects() {
+        MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
+        when(params.containsKey("custom")).thenReturn(true);
+        when(params.getFirst("custom")).thenReturn("1");
+
+        String uuid = "c3";
+        when(params.containsKey("consumer_uuid")).thenReturn(true);
+        when(params.getFirst("consumer_uuid")).thenReturn(uuid);
+
+        createComplianceSnapshot(new Date(), uuid, "an-owner", "valid");
+        // This cast will not fail when generic type differs. Checking below.
+        ReasonGeneratingReportResult result = (ReasonGeneratingReportResult) report.run(params);
+        assertNotNull(result);
+        assertTrue(result.hasNext());
+
+        Compliance firstCompliance = result.next();
+        assertTrue(firstCompliance instanceof Compliance);
     }
 
     private String formatDate(Date date) {

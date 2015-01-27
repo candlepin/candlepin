@@ -15,24 +15,25 @@
 package org.candlepin.gutterball.report;
 
 import org.candlepin.gutterball.model.snapshot.Compliance;
+import org.candlepin.gutterball.report.dto.ConsumerTrendComplianceDto;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Iterator;
 
 /**
- * ConsumerTrendReportResult map of consumer uuid -> collection of compliance data
+ * Represents the default ConsumerTrendReport results. An instance of this class wraps an iterator of
+ * Compliance records that come from the database, so that each Compliance record can be transformed
+ * into a minimal DTO that gets sent back to the client.
  */
-public class ConsumerTrendReportResult extends HashMap<String, Set<Compliance>>
-    implements ReportResult {
+public class ConsumerTrendReportDefaultResult extends
+    ComplianceTransformerIterator<ConsumerTrendComplianceDto> {
 
-    public void add(String consumerUuid, Compliance snapshotToAdd) {
-        Set<Compliance> appendTo = get(consumerUuid);
-        if (appendTo == null) {
-            appendTo = new HashSet<Compliance>();
-            put(consumerUuid, appendTo);
-        }
-        appendTo.add(snapshotToAdd);
+    public ConsumerTrendReportDefaultResult(Iterator<Compliance> dbIterator) {
+        super(dbIterator);
+    }
+
+    @Override
+    ConsumerTrendComplianceDto convertDbObject(Compliance compliance) {
+        return new ConsumerTrendComplianceDto(compliance);
     }
 
 }
