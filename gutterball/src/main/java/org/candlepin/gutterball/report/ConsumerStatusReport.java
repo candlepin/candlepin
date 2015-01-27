@@ -15,15 +15,16 @@
 
 package org.candlepin.gutterball.report;
 
+import org.candlepin.common.config.PropertyConverter;
 import org.candlepin.gutterball.curator.ComplianceSnapshotCurator;
 import org.candlepin.gutterball.model.snapshot.Compliance;
-import org.candlepin.gutterball.model.snapshot.ComplianceReason;
 
 import com.google.inject.Inject;
 
 import org.xnap.commons.i18n.I18n;
 
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.inject.Provider;
@@ -32,7 +33,7 @@ import javax.ws.rs.core.MultivaluedMap;
 /**
  * ConsumerStatusListReport
  */
-public class ConsumerStatusReport extends Report<MultiRowResult<Compliance>> {
+public class ConsumerStatusReport extends Report<ReportResult> {
 
     private ComplianceSnapshotCurator complianceSnapshotCurator;
     private StatusReasonMessageGenerator messageGenerator;
@@ -78,10 +79,26 @@ public class ConsumerStatusReport extends Report<MultiRowResult<Compliance>> {
                 .getParameter()
         );
 
+        addParameter(
+            builder.init("page", i18n.tr("The page at which to begin retrieving results."))
+                .mustBeInteger()
+                .getParameter()
+        );
+
+        addParameter(
+            builder.init("per_page", i18n.tr("The number of results to return per page."))
+                .mustBeInteger()
+                .getParameter()
+        );
+
+        addParameter(
+            builder.init("custom", i18n.tr("Allows building a custom result data set by tayloring " +
+                         "the data to include in the JSON (boolean)")).getParameter());
+
     }
 
     @Override
-    protected MultiRowResult<Compliance> execute(MultivaluedMap<String, String> queryParams) {
+    protected ReportResult execute(MultivaluedMap<String, String> queryParams) {
         // At this point we would execute a lookup against the DW data store to formulate
         // the report result set.
 
@@ -90,17 +107,40 @@ public class ConsumerStatusReport extends Report<MultiRowResult<Compliance>> {
         List<String> ownerFilters = queryParams.get("owner");
 
         Date targetDate = queryParams.containsKey("on_date") ?
-            parseDateTime(queryParams.getFirst("on_date")) : new Date();
+            parseDateTime(queryParams.getFirst("on_date")) :
+            new Date();
 
-        List<Compliance> snaps = complianceSnapshotCurator.getSnapshotsOnDate(targetDate,
-                consumerIds, ownerFilters, statusFilters);
+        // Pagination stuff
+        int page = queryParams.containsKey("page") ?
+            Integer.parseInt(queryParams.getFirst("page")) :
+            1;
 
-        for (Compliance cs : snaps) {
-            for (ComplianceReason cr : cs.getStatus().getReasons()) {
-                messageGenerator.setMessage(cs.getConsumer(), cr);
-            }
+        int perPage = queryParams.containsKey("per_page") ?
+            Integer.parseInt(queryParams.getFirst("per_page")) :
+            100;
+
+        int offset = 0;
+        int results = 0;
+
+        if (page > 0 && perPage > 0) {
+            offset = (page - 1) * perPage;
+            results = perPage;
         }
 
-        return new MultiRowResult<Compliance>(snaps);
+        Iterator<Compliance> iterator = this.complianceSnapshotCurator.getSnapshotIterator(
+            targetDate,
+            consumerIds,
+            ownerFilters,
+            statusFilters,
+            offset,
+            results
+        );
+
+        String custom = queryParams.containsKey("custom") ? queryParams.getFirst("custom") : "";
+        boolean useCustom = PropertyConverter.toBoolean(custom);
+        if (useCustom) {
+            return new ReasonGeneratingReportResult(iterator, this.messageGenerator);
+        }
+        return new ConsumerStatusReportDefaultResult(iterator);
     }
 }
