@@ -56,15 +56,13 @@ public class ContentOverrideValidatorTest extends DatabaseTestFixture  {
     public void testValidateSingleInvalid() {
         ContentOverride override = new ContentOverride("label", "baseurl", "value");
 
-        boolean gotException = false;
         try {
             validator.validate(override);
+            fail("Expected exception was \"BadRequestException\" not thrown.");
         }
         catch (BadRequestException bre) {
             assertEquals("Not allowed to override values for: baseurl", bre.getMessage());
-            gotException = true;
         }
-        assertTrue(gotException);
     }
 
     @Test
@@ -73,15 +71,15 @@ public class ContentOverrideValidatorTest extends DatabaseTestFixture  {
         overrides.add(new ContentOverride("label", "baseurl", "value"));
         overrides.add(new ContentOverride("other label", "name", "other value"));
 
-        boolean gotException = false;
         try {
             validator.validate(overrides);
+            fail("Expected exception \"BadRequestException\" was not thrown.");
         }
         catch (BadRequestException bre) {
-            assertEquals("Not allowed to override values for:" +
-                " name, baseurl", bre.getMessage());
-            gotException = true;
+            assertTrue(bre.getMessage().matches(
+                "^Not allowed to override values for: (?:baseurl, name|name, baseurl)"
+            ));
         }
-        assertTrue(gotException);
+
     }
 }
