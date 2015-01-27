@@ -32,6 +32,8 @@ describe 'Unmapped Guest Pools' do
     @guest1_client = Candlepin.new(nil, nil, @guest1['idCert']['cert'], @guest1['idCert']['key'])
     @host1 = @user.register(random_string('host'), :system)
     @host1_client = Candlepin.new(nil, nil, @host1['idCert']['cert'], @host1['idCert']['key'])
+    @host2 = @user.register(random_string('host'), :system)
+    @host2_client = Candlepin.new(nil, nil, @host2['idCert']['cert'], @host2['idCert']['key'])
 
   end
 
@@ -80,6 +82,50 @@ describe 'Unmapped Guest Pools' do
 
     bound_pool = ents[0].pool
     bound_pool['attributes'].find_all {|i| i['name'] == 'unmapped_guests_only' }[0].should_not be nil
+  end
+
+  it 'revokes entitlement from another host during an auto attach' do
+    all_pools = @user.list_pools :owner => @owner.id, :product => @virt_limit_product.id
+    @host1_client.update_consumer({:guestIds => [{'guestId' => @uuid1}]});
+
+    for pool in all_pools
+        unmapped = pool['attributes'].find_all {|i| i['name'] == 'unmapped_guests_only' }[0]
+        if !unmapped or unmapped['value'] != 'true'
+            @host1_client.consume_pool(pool['id'], {:quantity => 1})
+            @host2_client.consume_pool(pool['id'], {:quantity => 1})
+        end
+    end
+    @cp.refresh_pools(@owner['key'])
+
+    # should be the base pool, the bonus pool for unmapped guests, plus two pools for the hosts' guests
+    @pools = @user.list_pools :owner => @owner.id, :product => @virt_limit_product.id
+    @pools.size.should == 4
+
+    @guest1_client.consume_product(@virt_limit_product.id)
+    ents = @guest1_client.list_entitlements()
+    ents.should have(1).things
+
+    bound_pool = ents[0].pool
+    requires_att = bound_pool['attributes'].find_all {|i| i['name'] == 'requires_host' }[0]
+    requires_att.should_not be nil
+    requires_att['value'].should == @host1_client.uuid
+
+    # should not remove until attached to new host
+    @host1_client.update_consumer({:guestIds => []});
+    ents = @guest1_client.list_entitlements()
+    ents.should have(1).things
+
+    # now migrate the guest
+    @host2_client.update_consumer({:guestIds => [{'guestId' => @uuid1}]});
+
+    @guest1_client.consume_product(@virt_limit_product.id)
+    ents = @guest1_client.list_entitlements()
+    ents.should have(1).things
+
+    bound_pool = ents[0].pool
+    requires_att = bound_pool['attributes'].find_all {|i| i['name'] == 'requires_host' }[0]
+    requires_att.should_not be nil
+    requires_att['value'].should == @host2_client.uuid
   end
 
 end

@@ -173,6 +173,17 @@ public class Entitler {
                 }
                 // Consumer is stale at this point.
                 consumer = consumerCurator.getConsumer(consumer.getUuid());
+                data.setConsumer(consumer);
+            }
+            // revoke any entitlements that are for the wrong host
+            if (host != null) {
+                for (Entitlement e : consumer.getEntitlements()) {
+                    Pool p = e.getPool();
+                    if (p.hasAttribute("requires_host") &&
+                        !p.getAttributeValue("requires_host").equals(host.getUuid())) {
+                        poolManager.revokeEntitlement(e);
+                    }
+                }
             }
         }
 

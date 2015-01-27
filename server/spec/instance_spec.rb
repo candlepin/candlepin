@@ -48,7 +48,7 @@ describe 'Instance Based Subscriptions' do
   end
 
   it 'should auto-subscribe physical systems with quantity 2 per socket pair' do
-    @guest_client.list_pools({:consumer => @guest_client.uuid}).size.should == 2
+    @guest_client.list_pools({:consumer => @guest_client.uuid}).size.should == 1
 
     @physical_client.consume_product
     ents = @physical_client.list_entitlements
@@ -57,7 +57,7 @@ describe 'Instance Based Subscriptions' do
     ents[0].quantity.should == 8
 
     # Guest should now see additional sub-pool:
-    @guest_client.list_pools({:consumer => @guest_client.uuid}).size.should == 3
+    @guest_client.list_pools({:consumer => @guest_client.uuid}).size.should == 2
   end
 
   it 'should auto-subscribe guest systems with quantity 1' do
