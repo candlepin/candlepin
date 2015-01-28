@@ -700,10 +700,11 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
      */
     @XmlTransient
     public boolean isNewborn() {
-        if (this.getCreated() == null) {
+        if (getCreated() == null) {
             return false;
         }
         Date now = new Date();
-        return this.getCreated().getTime() + 86400000 > now.getTime();
+        Date oneDayFromRegistration = new Date(getCreated().getTime() + 24L * 60L * 60L * 1000L);
+        return now.before(oneDayFromRegistration);
     }
 }
