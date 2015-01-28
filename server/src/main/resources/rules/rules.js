@@ -659,41 +659,41 @@ var StatusReasonGenerator = {
     /*
      * Add a reason for an installed product without entitlement (red)
      */
-     buildInstalledProductReason: function (installed_pid) {
-         var attributes = {};
-         attributes["product_id"] = installed_pid;
+    buildInstalledProductReason: function (installed_pid) {
+        var attributes = {};
+        attributes["product_id"] = installed_pid;
 
-         var reason = {};
-         reason["key"] = "NOTCOVERED";
-         reason["message"] = reason["key"];
-         reason["attributes"] = attributes;
-         return reason;
-     },
+        var reason = {};
+        reason["key"] = "NOTCOVERED";
+        reason["message"] = reason["key"];
+        reason["attributes"] = attributes;
+        return reason;
+    },
 
-     /*
-      * Add a reason for a unmapped guest entitlement
-      */
-     buildUnmappedEntitlementReason: function (installed_pid) {
-          var attributes = {};
-          attributes["product_id"] = installed_pid;
+    /*
+     * Add a reason for a unmapped guest entitlement
+     */
+    buildUnmappedEntitlementReason: function (installed_pid) {
+        var attributes = {};
+        attributes["product_id"] = installed_pid;
 
-          var reason = {};
-          reason["key"] = "UNMAPPEDGUEST";
-          reason["message"] = reason["key"];
-          reason["attributes"] = attributes;
-          return reason;
-      },
+        var reason = {};
+        reason["key"] = "UNMAPPEDGUEST";
+        reason["message"] = reason["key"];
+        reason["attributes"] = attributes;
+        return reason;
+    },
 
-      getIdAttribute: function (type) {
-          var attribute = null;
-          if (type == "STACK") {
-              attribute = "stack_id";
-          }
-          else if (type == "ENTITLEMENT") {
-              attribute = "entitlement_id";
-          }
-          return attribute;
-      }
+    getIdAttribute: function (type) {
+        var attribute = null;
+        if (type == "STACK") {
+            attribute = "stack_id";
+        }
+        else if (type == "ENTITLEMENT") {
+            attribute = "entitlement_id";
+        }
+        return attribute;
+    }
 };
 
 /**
@@ -2902,7 +2902,7 @@ var Compliance = {
         complianceTracker.updateAccumulatedFromEnt(entitlement);
         return CoverageCalculator.getStackCoverage(complianceTracker, consumer, ents);
     },
-    
+
     getUnmappedGuest: function(entitlement) {
         log.debug("Checking unmapped guest for entitlement: " + entitlement.id);
         return Utils.equalsIgnoreCase('true', entitlement.pool.getAttribute(UNMAPPED_GUESTS_ONLY));

@@ -614,8 +614,8 @@ public class PoolRulesTest {
         assertEquals(2, pools.size());
         for (Pool p : pools) {
             if (p.getSourceSubscription().getSubscriptionSubKey().equals("derived")) {
-                assertTrue(p.hasAttribute("unmapped_guests_only") &&
-                        p.hasAttribute("unmapped_guests_only"));
+                assertTrue(p.hasAttribute("unmapped_guests_only"));
+                assertEquals("true", p.getAttributeValue("unmapped_guests_only"));
             }
         }
     }
