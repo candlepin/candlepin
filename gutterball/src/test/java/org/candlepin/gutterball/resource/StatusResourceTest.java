@@ -14,14 +14,13 @@
  */
 package org.candlepin.gutterball.resource;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.when;
 
-import org.candlepin.common.config.Configuration;
-import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.gutterball.guice.I18nProvider;
 import org.candlepin.gutterball.model.Status;
 
+import com.google.inject.Provider;
 import com.google.inject.servlet.RequestScoped;
 
 import org.jukito.JukitoModule;
@@ -32,6 +31,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.xnap.commons.i18n.I18n;
 
+import java.io.File;
+import java.io.PrintStream;
 import java.util.Locale;
 
 import javax.inject.Inject;
@@ -41,20 +42,44 @@ import javax.inject.Inject;
  */
 @RunWith(JukitoRunner.class)
 public class StatusResourceTest {
-    @Inject private StatusResource statusResource;
+
+    @Inject Provider<I18n> i18nProvider;
 
     @Test
-    @SuppressWarnings("serial")
-    public void testGetStatus(I18n i18n) {
+    public void testGetStatus(I18n i18n) throws Exception {
+        PrintStream ps = new PrintStream(new File(this.getClass().getClassLoader()
+            .getResource("version.properties").toURI()));
+        ps.println("version=TEST_V");
+        ps.println("release=TEST_R");
+        StatusResource statusResource = new StatusResource(i18nProvider);
+        ps.close();
+
         when(i18n.getLocale()).thenReturn(Locale.US);
-        assertEquals("X.Y.Z", statusResource.getStatus().getVersion());
+        Status status = statusResource.getStatus();
+        assertEquals("TEST_V", status.getVersion());
+        assertEquals("TEST_R", status.getRelease());
         assertEquals(Locale.US.toString(), statusResource.getStatus().getRequestLocale());
+    }
+
+    @Test
+    public void testVersionAndReleaseDefaultsToUnknown(I18n i18n) throws Exception {
+        PrintStream ps = new PrintStream(new File(this.getClass().getClassLoader()
+            .getResource("version.properties").toURI()));
+        ps.println("pfffft");
+        StatusResource statusResource = new StatusResource(i18nProvider);
+        ps.close();
+
+        when(i18n.getLocale()).thenReturn(Locale.US);
+        Status status = statusResource.getStatus();
+        assertEquals("Unknown", status.getVersion());
+        assertEquals("Unknown", status.getRelease());
     }
 
     @Ignore
     @Test
     @SuppressWarnings("serial")
     public void testGetFrenchStatus(I18n i18n) {
+        StatusResource statusResource = new StatusResource(i18nProvider);
         when(i18n.getLocale()).thenReturn(Locale.FRANCE);
         assertEquals("X.Y.Z", statusResource.getStatus().getVersion());
         assertEquals(Locale.FRANCE.toString(), statusResource.getStatus().getRequestLocale());
@@ -64,12 +89,7 @@ public class StatusResourceTest {
         @Override
         protected void configureTest() {
             bindScope(RequestScoped.class, TestScope.EAGER_SINGLETON);
-
-            Configuration c = new MapConfiguration();
-            c.setProperty("gutterball.version", "X.Y.Z");
-            bind(Configuration.class).toInstance(c);
             bind(I18n.class).toProvider(I18nProvider.class);
-            bind(Status.class);
         }
     }
 }

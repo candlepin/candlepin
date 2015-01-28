@@ -14,10 +14,7 @@
  */
 package org.candlepin.gutterball.model;
 
-import org.candlepin.common.config.Configuration;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.inject.Inject;
 
 import org.xnap.commons.i18n.I18n;
 
@@ -33,19 +30,22 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 public class Status {
 
-    // TODO can we inject version directly from the configuration?
     private String version;
+    private String release;
     private String requestLocale;
 
-    @Inject
-    public Status(Provider<I18n> i18nProvider, Configuration config) {
-        version = config.getString("gutterball.version", i18nProvider.get().tr("Unknown"));
+    public Status(Provider<I18n> i18nProvider, String ver, String rel) {
         requestLocale = i18nProvider.get().getLocale().toString();
+        version = ver;
+        release = rel;
     }
 
-    @JsonProperty("gutterball.version")
     public String getVersion() {
         return version;
+    }
+
+    public String getRelease() {
+        return release;
     }
 
     @JsonProperty("request_locale")
