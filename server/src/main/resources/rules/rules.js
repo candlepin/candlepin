@@ -656,30 +656,44 @@ var StatusReasonGenerator = {
         return reason;
     },
 
-   /*
-    * Add a reason for an installed product without entitlement (red)
-    */
-    buildInstalledProductReason: function (installed_pid) {
-        var attributes = {};
-        attributes["product_id"] = installed_pid;
+    /*
+     * Add a reason for an installed product without entitlement (red)
+     */
+     buildInstalledProductReason: function (installed_pid) {
+         var attributes = {};
+         attributes["product_id"] = installed_pid;
 
-        var reason = {};
-        reason["key"] = "NOTCOVERED";
-        reason["message"] = reason["key"];
-        reason["attributes"] = attributes;
-        return reason;
-    },
+         var reason = {};
+         reason["key"] = "NOTCOVERED";
+         reason["message"] = reason["key"];
+         reason["attributes"] = attributes;
+         return reason;
+     },
 
-    getIdAttribute: function (type) {
-        var attribute = null;
-        if (type == "STACK") {
-            attribute = "stack_id";
-        }
-        else if (type == "ENTITLEMENT") {
-            attribute = "entitlement_id";
-        }
-        return attribute;
-    }
+     /*
+      * Add a reason for a unmapped guest entitlement
+      */
+     buildUnmappedEntitlementReason: function (installed_pid) {
+          var attributes = {};
+          attributes["product_id"] = installed_pid;
+
+          var reason = {};
+          reason["key"] = "UNMAPPEDGUEST";
+          reason["message"] = reason["key"];
+          reason["attributes"] = attributes;
+          return reason;
+      },
+
+      getIdAttribute: function (type) {
+          var attribute = null;
+          if (type == "STACK") {
+              attribute = "stack_id";
+          }
+          else if (type == "ENTITLEMENT") {
+              attribute = "entitlement_id";
+          }
+          return attribute;
+      }
 };
 
 /**
@@ -2746,9 +2760,19 @@ var Compliance = {
                     compStatus.add_reasons(entCoverage.reasons);
                 }
             }
+            // If the consumer has an entitlement from a pool marked
+            // unmapped_guests_only it can only hope to be partial
+            var unmappedGuest = Compliance.getUnmappedGuest(e);
 
             for (var m = 0; m < relevant_pids.length; m++) {
                 var relevant_pid = relevant_pids[m];
+
+                if (unmappedGuest) {
+                    log.debug("   partially compliant: " + relevant_pid);
+                    compStatus.add_partial_product(relevant_pid, e);
+                    compStatus.add_reasons([StatusReasonGenerator.buildUnmappedEntitlementReason(relevant_pid)]);
+                    continue;
+                }
                 if (partially_stacked) {
                     log.debug("   partially compliant: " + relevant_pid);
                     compStatus.add_partial_product(relevant_pid, e);
@@ -2877,7 +2901,13 @@ var Compliance = {
         var complianceTracker = createComplianceTracker(consumer, null);
         complianceTracker.updateAccumulatedFromEnt(entitlement);
         return CoverageCalculator.getStackCoverage(complianceTracker, consumer, ents);
+    },
+    
+    getUnmappedGuest: function(entitlement) {
+        log.debug("Checking unmapped guest for entitlement: " + entitlement.id);
+        return Utils.equalsIgnoreCase('true', entitlement.pool.getAttribute(UNMAPPED_GUESTS_ONLY));
     }
+
 }
 
 var Quantity = {

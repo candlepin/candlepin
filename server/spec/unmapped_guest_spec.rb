@@ -128,4 +128,24 @@ describe 'Unmapped Guest Pools' do
     requires_att['value'].should == @host2_client.uuid
   end
 
+  it 'compliance status for entitled unmapped guest will be partial' do
+    all_pools = @user.list_pools :owner => @owner.id, :product => @virt_limit_product.id
+    for pool in all_pools
+        unmapped = pool['attributes'].find_all {|i| i['name'] == 'unmapped_guests_only' }[0]
+        if unmapped and unmapped['value'] == 'true'
+            @guest1_client.consume_pool(pool['id'], {:quantity => 1})
+        end
+    end
+    ents = @guest1_client.list_entitlements()
+    ents.should have(1).things
+
+    puts("attributes: %s" % ents[0]['pool']['attributes'].inspect)
+
+    compliance_status = @cp.get_compliance(consumer_id=@guest1_client.uuid)
+    compliance_status['status'].should == 'partial'
+    compliance_status['compliant'].should == false
+    compliance_status.should have_key('reasons')
+    compliance_status['reasons'].size.should == 1
+  end
+
 end
