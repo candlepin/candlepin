@@ -27,7 +27,6 @@ import org.hibernate.Session;
  * @param <E> The element type to be returned by this iterator's "next" method.
  */
 public class AutoEvictingResultsIterator<E> extends ScrollableResultsIterator<E> {
-
     private Session session;
     private E prev;
 

@@ -111,11 +111,11 @@ public class ConsumerTrendReport extends Report<ReportResult> {
         // Pagination stuff
         int page = queryParams.containsKey("page") ?
             Integer.parseInt(queryParams.getFirst("page")) :
-            1;
+            0;
 
         int perPage = queryParams.containsKey("per_page") ?
             Integer.parseInt(queryParams.getFirst("per_page")) :
-            100;
+            0;
 
         int offset = 0;
         int results = 0;
