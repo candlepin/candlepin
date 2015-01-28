@@ -30,6 +30,10 @@ describe 'Unmapped Guest Pools' do
     @guest1 = @user.register(random_string('guest'), :system, nil,
       {'virt.uuid' => @uuid1, 'virt.is_guest' => 'true', 'uname.machine' => 'x86_64'}, nil, nil, [], [])
     @guest1_client = Candlepin.new(nil, nil, @guest1['idCert']['cert'], @guest1['idCert']['key'])
+    installed = [
+        {'productId' => @virt_limit_product.id, 'productName' => @virt_limit_product.name}
+    ]
+    @guest1_client.update_consumer({:installedProducts => installed})
     @host1 = @user.register(random_string('host'), :system)
     @host1_client = Candlepin.new(nil, nil, @host1['idCert']['cert'], @host1['idCert']['key'])
     @host2 = @user.register(random_string('host'), :system)
@@ -139,9 +143,7 @@ describe 'Unmapped Guest Pools' do
     ents = @guest1_client.list_entitlements()
     ents.should have(1).things
 
-    puts("attributes: %s" % ents[0]['pool']['attributes'].inspect)
-
-    compliance_status = @cp.get_compliance(consumer_id=@guest1_client.uuid)
+    compliance_status = @guest1_client.get_compliance()
     compliance_status['status'].should == 'partial'
     compliance_status['compliant'].should == false
     compliance_status.should have_key('reasons')
