@@ -18,7 +18,7 @@ describe 'Unmapped Guest Pools' do
         :physical_only => 'true'
       }
     })
-    @sub1 = @cp.create_subscription(@owner['key'],@virt_limit_product.id, 10)
+    @sub1 = @cp.create_subscription(@owner['key'], @virt_limit_product.id, 10)
     @cp.refresh_pools(@owner['key'])
 
     # should only be the base pool and the bonus pool for unmapped guests
@@ -43,11 +43,11 @@ describe 'Unmapped Guest Pools' do
 
   it 'allows a new guest with no host to attach to an unmapped guest pool' do
     all_pools = @user.list_pools :owner => @owner.id, :product => @virt_limit_product.id
-    for pool in all_pools
-        unmapped = pool['attributes'].find_all {|i| i['name'] == 'unmapped_guests_only' }[0]
-        if unmapped and unmapped['value'] == 'true'
-            @guest1_client.consume_pool(pool['id'], {:quantity => 1})
-        end
+    all_pools.each do |pool|
+      unmapped = pool['attributes'].select {|i| i['name'] == 'unmapped_guests_only' }[0]
+      if !unmapped.nil? && unmapped['value'] == 'true'
+        @guest1_client.consume_pool(pool['id'], :quantity => 1)
+      end
     end
     ents = @guest1_client.list_entitlements()
     ents.should have(1).things
@@ -56,25 +56,25 @@ describe 'Unmapped Guest Pools' do
   it 'does not allow a new guest with a host to attach to an unmapped guest pool' do
     @host1_client.update_consumer({:guestIds => [{'guestId' => @uuid1}]});
     all_pools = @user.list_pools :owner => @owner.id, :product => @virt_limit_product.id
-    for pool in all_pools
-        unmapped = pool['attributes'].find_all {|i| i['name'] == 'unmapped_guests_only' }[0]
-        if unmapped and unmapped['value'] == 'true'
-            lambda do
-                @guest1_client.consume_pool(pool['id'], {:quantity => 1})
-            end.should raise_exception(RestClient::Forbidden)
-        end
+    all_pools.each do |pool|
+      unmapped = pool['attributes'].select {|i| i['name'] == 'unmapped_guests_only' }[0]
+      if !unmapped.nil? && unmapped['value'] == 'true'
+        lambda do
+          @guest1_client.consume_pool(pool['id'], :quantity => 1)
+        end.should raise_exception(RestClient::Forbidden)
+      end
     end
   end
 
   it 'ensures unmapped guest will attach to unmapped guest pool on auto attach' do
     all_pools = @user.list_pools :owner => @owner.id, :product => @virt_limit_product.id
-    for pool in all_pools
-        unmapped = pool['attributes'].find_all {|i| i['name'] == 'unmapped_guests_only' }[0]
-        if !unmapped or unmapped['value'] != 'true'
-            @host1_client.consume_pool(pool['id'], {:quantity => 1})
-        end
+    all_pools.each do |pool|
+      unmapped = pool['attributes'].select {|i| i['name'] == 'unmapped_guests_only' }[0]
+      if unmapped.nil? || unmapped['value'] != 'true'
+        @host1_client.consume_pool(pool['id'], {:quantity => 1})
+      end
     end
-    @cp.refresh_pools(@owner['key'])   
+    @cp.refresh_pools(@owner['key'])
 
     # should be the base pool, the bonus pool for unmapped guests, plus a pool for the host's guests
     @pools = @user.list_pools :owner => @owner.id, :product => @virt_limit_product.id
@@ -85,19 +85,19 @@ describe 'Unmapped Guest Pools' do
     ents.should have(1).things
 
     bound_pool = ents[0].pool
-    bound_pool['attributes'].find_all {|i| i['name'] == 'unmapped_guests_only' }[0].should_not be nil
+    bound_pool['attributes'].select {|i| i['name'] == 'unmapped_guests_only' }[0].should_not be nil
   end
 
   it 'revokes entitlement from another host during an auto attach' do
     all_pools = @user.list_pools :owner => @owner.id, :product => @virt_limit_product.id
     @host1_client.update_consumer({:guestIds => [{'guestId' => @uuid1}]});
 
-    for pool in all_pools
-        unmapped = pool['attributes'].find_all {|i| i['name'] == 'unmapped_guests_only' }[0]
-        if !unmapped or unmapped['value'] != 'true'
-            @host1_client.consume_pool(pool['id'], {:quantity => 1})
-            @host2_client.consume_pool(pool['id'], {:quantity => 1})
-        end
+    all_pools.each do |pool|
+      unmapped = pool['attributes'].select {|i| i['name'] == 'unmapped_guests_only' }[0]
+      if unmapped.nil? || unmapped['value'] != 'true'
+        @host1_client.consume_pool(pool['id'], :quantity => 1)
+        @host2_client.consume_pool(pool['id'], :quantity => 1)
+      end
     end
     @cp.refresh_pools(@owner['key'])
 
@@ -110,7 +110,7 @@ describe 'Unmapped Guest Pools' do
     ents.should have(1).things
 
     bound_pool = ents[0].pool
-    requires_att = bound_pool['attributes'].find_all {|i| i['name'] == 'requires_host' }[0]
+    requires_att = bound_pool['attributes'].select {|i| i['name'] == 'requires_host' }[0]
     requires_att.should_not be nil
     requires_att['value'].should == @host1_client.uuid
 
@@ -127,18 +127,18 @@ describe 'Unmapped Guest Pools' do
     ents.should have(1).things
 
     bound_pool = ents[0].pool
-    requires_att = bound_pool['attributes'].find_all {|i| i['name'] == 'requires_host' }[0]
+    requires_att = bound_pool['attributes'].select {|i| i['name'] == 'requires_host' }[0]
     requires_att.should_not be nil
     requires_att['value'].should == @host2_client.uuid
   end
 
   it 'compliance status for entitled unmapped guest will be partial' do
     all_pools = @user.list_pools :owner => @owner.id, :product => @virt_limit_product.id
-    for pool in all_pools
-        unmapped = pool['attributes'].find_all {|i| i['name'] == 'unmapped_guests_only' }[0]
-        if unmapped and unmapped['value'] == 'true'
-            @guest1_client.consume_pool(pool['id'], {:quantity => 1})
-        end
+    all_pools.each do |pool|
+      unmapped = pool['attributes'].select {|i| i['name'] == 'unmapped_guests_only' }[0]
+      if !unmapped.nil? && unmapped['value'] == 'true'
+        @guest1_client.consume_pool(pool['id'], :quantity => 1)
+      end
     end
     ents = @guest1_client.list_entitlements()
     ents.should have(1).things
@@ -149,5 +149,4 @@ describe 'Unmapped Guest Pools' do
     compliance_status.should have_key('reasons')
     compliance_status['reasons'].size.should == 1
   end
-
 end
