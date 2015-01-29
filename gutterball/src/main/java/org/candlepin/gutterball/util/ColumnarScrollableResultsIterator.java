@@ -23,28 +23,36 @@ import java.util.NoSuchElementException;
 
 
 /**
- * The ScrollableResultsIterator provides iteration on a ScrollableResults object.
+ * The ColumnarScrollableResultsIterator provides iteration on a ScrollableResults object, returning
+ * only the values from a specific column in each row.
+ *
+ * @param <E> The element type to be returned by this iterator's "next" method.
  */
-public class ScrollableResultsIterator implements Iterator<Object[]> {
+public class ColumnarScrollableResultsIterator<E> implements Iterator<E> {
 
     private ScrollableResults results;
+    private int column;
 
     private boolean cache;
     private boolean useCache;
 
     /**
-     * Creates a new ScrollableResultsIterator to iterate over the results provided by the given
-     * ScrollableResults instance.
+     * Creates a new ColumnarScrollableResultsIterator to iterate over the results provided by the
+     * given ScrollableResults instance, returning only the values in the column specified.
      *
      * @param results
      *  The ScrollableResults instance over which to iterate.
+     *
+     * @param column
+     *  The column from which to read values to be returned.
      */
-    public ScrollableResultsIterator(ScrollableResults results) {
+    public ColumnarScrollableResultsIterator(ScrollableResults results, int column) {
         if (results == null) {
             throw new IllegalArgumentException("results is null");
         }
 
         this.results = results;
+        this.column = column;
 
         this.cache = false;
         this.useCache = false;
@@ -63,19 +71,19 @@ public class ScrollableResultsIterator implements Iterator<Object[]> {
     }
 
     @Override
-    public Object[] next() {
+    public E next() {
         if (!this.hasNext()) {
             throw new NoSuchElementException();
         }
 
         this.useCache = false;
-        return this.results.get();
+        return (E) this.results.get(this.column);
     }
 
     @Override
     public void remove() {
         throw new UnsupportedOperationException(
-            "The remove operation is not supported on ScrollableResultsIterator instances."
+            "The remove operation is not supported on ColumnarScrollableResultsIterator instances."
         );
     }
 
