@@ -12,6 +12,7 @@
     <ch.qos.logback-logback-core.version>1.0.13</ch.qos.logback-logback-core.version>
     <ch.qos.logback-logback-classic.version>1.0.13</ch.qos.logback-logback-classic.version>
     <org.slf4j-jcl-over-slf4j.version>1.7.5</org.slf4j-jcl-over-slf4j.version>
+    <org.slf4j-log4j-over-slf4j.version>1.7.5</org.slf4j-log4j-over-slf4j.version>
     <org.slf4j-slf4j-api.version>1.7.5</org.slf4j-slf4j-api.version>
     <com.google.inject.extensions-guice-assistedinject.version>3.0</com.google.inject.extensions-guice-assistedinject.version>
     <com.google.inject.extensions-guice-multibindings.version>3.0</com.google.inject.extensions-guice-multibindings.version>
@@ -83,6 +84,11 @@
       <groupId>org.slf4j</groupId>
       <artifactId>jcl-over-slf4j</artifactId>
       <version>${org.slf4j-jcl-over-slf4j.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>log4j-over-slf4j</artifactId>
+      <version>${org.slf4j-log4j-over-slf4j.version}</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
