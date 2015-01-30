@@ -51,7 +51,8 @@ oauth/oauth
 oauth/oauth-provider
 objectweb-asm/asm
 postgresql-jdbc
-qpid-client-0.22
+qpid-client-0.30.redhat-1
+qpid-common-0.30.redhat-1
 resteasy/jaxrs-api
 resteasy/resteasy-atom-provider
 resteasy/resteasy-guice

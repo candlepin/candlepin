@@ -152,7 +152,7 @@ SCHEMASPY = 'net.sourceforge:schemaSpy:jar:4.1.1'
 
 AMQP  = [group('qpid-common', 'qpid-client',
                :under => 'org.apache.qpid',
-               :version => '0.22'),
+               :version => '0.30'),
          group('mina-core', 'mina-filter-ssl',
                :under => 'org.apache.mina',
                :version => '1.0.1'),

@@ -22,8 +22,8 @@ jackson-module-jaxb-annotations
 jms
 logback/logback-classic
 logback/logback-core
-qpid-client-0.22
-qpid-common-0.22
+qpid-client-0.30.redhat-1
+qpid-common-0.30.redhat-1
 resteasy/jaxrs-api
 resteasy/resteasy-guice
 resteasy/resteasy-jaxb-provider
