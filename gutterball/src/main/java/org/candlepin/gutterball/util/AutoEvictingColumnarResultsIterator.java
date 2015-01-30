@@ -21,18 +21,17 @@ import org.hibernate.Session;
 
 
 /**
- * The AutoDisconnectingColumnarResultsIterator extends the ColumnarScrollableResultsIterator to add
- * automatic eviction of the elements returned by the "next" method, and automatic closing of the
- * backing session upon completion or finalization.
+ * The AutoEvictingColumnarResultsIterator extends the ColumnarScrollableResultsIterator to add
+ * automatic eviction of the elements returned by the "next" method.
  *
  * @param <E> The element type to be returned by this iterator's "next" method.
  */
-public class AutoDisconnectingColumnarResultsIterator<E> extends ColumnarScrollableResultsIterator<E> {
+public class AutoEvictingColumnarResultsIterator<E> extends ColumnarScrollableResultsIterator<E> {
     private Session session;
     private E prev;
 
     /**
-     * Creates a new AutoDisconnectingColumnarResultsIterator to iterate over the results provided by the
+     * Creates a new AutoEvictingColumnarResultsIterator to iterate over the results provided by the
      * given ScrollableResults instance, returning only the values in the column specified.
      *
      * @param session
@@ -45,7 +44,7 @@ public class AutoDisconnectingColumnarResultsIterator<E> extends ColumnarScrolla
      * @param column
      *  The column from which to read values to be returned.
      */
-    public AutoDisconnectingColumnarResultsIterator(Session session, ScrollableResults results, int column) {
+    public AutoEvictingColumnarResultsIterator(Session session, ScrollableResults results, int column) {
         super(results, column);
 
         if (session == null) {
@@ -54,26 +53,6 @@ public class AutoDisconnectingColumnarResultsIterator<E> extends ColumnarScrolla
 
         this.session = session;
         this.prev = null;
-    }
-
-    @Override
-    public void finalize() throws Throwable {
-        super.finalize();
-
-        if (this.session.isConnected()) {
-            this.session.disconnect();
-        }
-    }
-
-    @Override
-    public boolean hasNext() {
-        boolean result = super.hasNext();
-
-        if (!result && this.session.isConnected()) {
-            this.session.disconnect();
-        }
-
-        return result;
     }
 
     @Override

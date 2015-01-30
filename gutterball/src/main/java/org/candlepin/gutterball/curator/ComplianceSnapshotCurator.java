@@ -15,11 +15,10 @@
 
 package org.candlepin.gutterball.curator;
 
-import org.candlepin.gutterball.util.AutoDisconnectingColumnarResultsIterator;
+import org.candlepin.gutterball.util.AutoEvictingColumnarResultsIterator;
 import org.candlepin.gutterball.model.snapshot.Compliance;
 
 import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
 
 import org.hibernate.Criteria;
 import org.hibernate.CacheMode;
@@ -166,7 +165,7 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
             postFilter.add(Restrictions.in("stat.status", statusFilters));
         }
 
-        return new AutoDisconnectingColumnarResultsIterator<Compliance>(
+        return new AutoEvictingColumnarResultsIterator<Compliance>(
             session,
             postFilter.scroll(ScrollMode.FORWARD_ONLY),
             0
@@ -229,7 +228,7 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
             query.setMaxResults(results);
         }
 
-        return new AutoDisconnectingColumnarResultsIterator<Compliance>(
+        return new AutoEvictingColumnarResultsIterator<Compliance>(
             session,
             query.scroll(ScrollMode.FORWARD_ONLY),
             0
@@ -441,7 +440,6 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
      *  a map of maps containing the compliance status counts, grouped by day. If no counts were
      *  found for the given time span, an empty map will be returned.
      */
-    @Transactional
     private Map<Date, Map<String, Integer>> getComplianceStatusCounts(Date startDate, Date endDate,
         String ownerKey, String sku, String subscriptionName, Map<String, String> attributes) {
 
@@ -449,6 +447,7 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
         // Impl note: This query's results MUST be sorted by date in ascending order. If it's not,
         // the algorithm below breaks.
         Query query = this.buildComplianceStatusCountQuery(
+            this.currentSession(),
             startDate,
             endDate,
             ownerKey,
@@ -689,6 +688,9 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
      *    ComplianceStatusSnap.date ASC
      *  </pre>
      *
+     * @param session
+     *  The session to use to create the query.
+     *
      * @param startDate
      *  <em>Optional</em><br/>
      *  The date at which the time span should begin. If null, all compliance statuses before the
@@ -724,8 +726,8 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
      *  A Query object to be used for retrieving compliance status counts.
      */
     @SuppressWarnings("checkstyle:methodlength")
-    private Query buildComplianceStatusCountQuery(Date startDate, Date endDate, String ownerKey,
-        String sku, String subscriptionName, Map<String, String> attributes) {
+    private Query buildComplianceStatusCountQuery(Session session, Date startDate, Date endDate,
+        String ownerKey, String sku, String subscriptionName, Map<String, String> attributes) {
 
         List<Object> parameters = new LinkedList<Object>();
         int counter = 0;
@@ -917,7 +919,7 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
         hql.append("ORDER BY ComplianceStatusSnap.date ASC");
 
         // Build our query object and set the parameters...
-        Query query = this.currentSession().createQuery(hql.toString());
+        Query query = session.createQuery(hql.toString());
         query.setReadOnly(true);
 
         for (int i = 1; i <= counter; ++i) {
