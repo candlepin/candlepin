@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.39
+Version: 0.9.40
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -393,6 +393,12 @@ fi
 
 
 %changelog
+* Mon Feb 02 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.40-1
+- Rename POM files to the Maven prefered 'pom.xml'. (awood@redhat.com)
+- Upgrade to QPid 0.30. (awood@redhat.com)
+- Batch lookups done during hypervisor checkins. (dgoodwin@redhat.com)
+- Logging touchups. (dgoodwin@redhat.com)
+
 * Fri Jan 16 2015 Alex Wood <awood@redhat.com> 0.9.39-1
 - Add generated POM files to the repository. (awood@redhat.com)
 - Improve logging for bind lock wait timeouts. (dgoodwin@redhat.com)
