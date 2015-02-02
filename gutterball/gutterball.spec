@@ -46,12 +46,12 @@ BuildRequires: ant >= 0:1.7.0
 
 %if 0%{?reqcpdeps}
 %global distlibdir %{_datadir}/%{parent_proj}/%{name}/lib/
-BuildRequires: candlepin-deps-gutterball >= 0:0.3.1
+BuildRequires: candlepin-deps-gutterball >= 0:0.3.5
 %else
 BuildRequires: servlet
 BuildRequires: gettext-commons
-BuildRequires: qpid-java-client >= 0:0.22
-BuildRequires: qpid-java-common >= 0:0.22
+BuildRequires: qpid-java-client >= 0:0.30
+BuildRequires: qpid-java-common >= 0:0.30
 BuildRequires: resteasy >= 0:2.3.7
 BuildRequires: jms
 BuildRequires: oauth >= 20100601-4
@@ -109,8 +109,8 @@ BuildRequires: mvn(ch.qos.logback:logback-classic)
 # Universal requires
 Requires: java >= 0:1.6.0
 Requires: servlet
-Requires: qpid-java-client >= 0:0.22
-Requires: qpid-java-common >= 0:0.22
+Requires: qpid-java-client >= 0:0.30
+Requires: qpid-java-common >= 0:0.30
 Requires: gettext-commons
 Requires: jms
 Requires: candlepin-common >= 0:1.0.16

@@ -56,7 +56,7 @@ BuildRequires: ant-nodeps >= 0:1.7.0
 %global distlibdir %{_datadir}/%{name}/lib/
 %global libdir %{_datadir}/%{name}/lib/
 %global usecpdeps "usecpdeps"
-BuildRequires: candlepin-deps >= 0:0.3.1
+BuildRequires: candlepin-deps >= 0:0.3.5
 %else
 # Require the candlepin software collection for packages we use that may
 # conflict with other projects/releases:
@@ -127,8 +127,8 @@ BuildRequires: jta
 # resteasy multipart requires this at runtime
 BuildRequires: apache-mime4j = 0:0.6
 
-# needed to send events to a qpid
-BuildRequires: qpid-java-client >= 0:0.22
+BuildRequires: qpid-java-client >= 0:0.30
+BuildRequires: qpid-java-common >= 0:0.30
 %endif
 
 # Common requires go here
@@ -198,7 +198,8 @@ Requires: gettext-commons
 Requires: javamail
 Requires: javassist >= 3.12.0
 Requires: jta
-Requires: qpid-java-client >= 0:0.22
+Requires: qpid-java-client >= 0:0.30
+Requires: qpid-java-common >= 0:0.30
 %endif
 %global __jar_repack %{nil}
 
