@@ -16,6 +16,9 @@ package org.candlepin.gutterball.guice;
 
 import org.candlepin.common.filter.LoggingFilter;
 
+import org.candlepin.gutterball.servlet.GutterballValidationFilter;
+
+import com.google.inject.persist.PersistFilter;
 import com.google.inject.servlet.ServletModule;
 
 import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
@@ -37,6 +40,9 @@ public class GutterballServletModule extends ServletModule {
         Map<String, String> loggingFilterConfig = new HashMap<String, String>();
         loggingFilterConfig.put("header.name", "x-gutterball-request-uuid");
         filter("/*").through(LoggingFilter.class, loggingFilterConfig);
+
+        filter("/*").through(PersistFilter.class);
+        filter("/*").through(GutterballValidationFilter.class);
     }
 
 }

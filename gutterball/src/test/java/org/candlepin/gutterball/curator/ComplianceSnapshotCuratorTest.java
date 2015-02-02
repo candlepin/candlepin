@@ -20,7 +20,6 @@ import static org.junit.Assert.*;
 import static junitparams.JUnitParamsRunner.*;
 
 import org.candlepin.gutterball.DatabaseTestFixture;
-import org.candlepin.gutterball.TestUtils;
 import org.candlepin.gutterball.jackson.GutterballObjectMapper;
 import org.candlepin.gutterball.model.ConsumerState;
 import org.candlepin.gutterball.model.Event;
@@ -39,11 +38,11 @@ import junitparams.Parameters;
 import java.io.File;
 import java.net.URL;
 import java.nio.file.Files;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -232,28 +231,75 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testGetAllLatestStatusReports() {
+    public void testGetAllLatestStatusReportsIterator() {
         // c1 was deleted before the report date.
         List<String> expectedConsumerUuids = Arrays.asList("c2", "c3", "c4");
-        List<Compliance> snaps = complianceSnapshotCurator.getSnapshotsOnDate(null,
-                null, null, null);
-        assertEquals(expectedConsumerUuids.size(), snaps.size());
-        assertTrue(getUuidsFromSnapshots(snaps).containsAll(expectedConsumerUuids));
+        Iterator<Compliance> snaps = complianceSnapshotCurator.getSnapshotIterator(null, null, null, null);
+
+        int received = 0;
+        while (snaps.hasNext()) {
+            Compliance compliance = snaps.next();
+
+            assertTrue(expectedConsumerUuids.contains(compliance.getConsumer().getUuid()));
+            ++received;
+        }
+
+        assertEquals(expectedConsumerUuids.size(), received);
     }
 
     @Test
-    public void testGetSnapshotOnDate() {
+    public void testGetSnapshotIteratorOnDate() {
         Calendar cal = this.getCalendar();
         cal.setTime(baseTestingDate);
         cal.set(Calendar.MONTH, Calendar.JUNE);
         cal.set(Calendar.DAY_OF_MONTH, 12);
 
-        List<Compliance> snaps =
-            complianceSnapshotCurator.getSnapshotsOnDate(cal.getTime(), null, null, null);
-        assertEquals(3, snaps.size());
+        Iterator<Compliance> snaps = complianceSnapshotCurator.getSnapshotIterator(
+            cal.getTime(),
+            null,
+            null,
+            null
+        );
 
-        assertTrue(getUuidsFromSnapshots(snaps).containsAll(Arrays.asList("c2", "c3", "c4")));
+        List<String> expectedConsumerUuids = Arrays.asList("c2", "c3", "c4");
+        Map<String, Date> expectedStatusDates = new HashMap<String, Date>();
+        cal.set(Calendar.DAY_OF_MONTH, 10);
 
+        cal.set(Calendar.MONTH, Calendar.APRIL);
+        expectedStatusDates.put("c2", cal.getTime());
+
+        cal.set(Calendar.MONTH, Calendar.JUNE);
+        expectedStatusDates.put("c3", cal.getTime());
+
+        cal.set(Calendar.MONTH, Calendar.JUNE);
+        expectedStatusDates.put("c4", cal.getTime());
+
+        int received = 0;
+        while (snaps.hasNext()) {
+            Compliance compliance = snaps.next();
+            String uuid = compliance.getConsumer().getUuid();
+
+            assertTrue(expectedConsumerUuids.contains(uuid));
+            assertEquals(
+                "Invalid status found for " + uuid,
+                expectedStatusDates.get(uuid),
+                compliance.getStatus().getDate()
+            );
+
+            ++received;
+        }
+
+        assertEquals(expectedConsumerUuids.size(), received);
+    }
+
+    @Test
+    public void testGetPaginatedSnapshotIteratorOnDate() {
+        Calendar cal = this.getCalendar();
+        cal.setTime(baseTestingDate);
+        cal.set(Calendar.MONTH, Calendar.JUNE);
+        cal.set(Calendar.DAY_OF_MONTH, 12);
+
+        List<String> expectedConsumerUuids = Arrays.asList("c2", "c3", "c4");
         Map<String, Date> expectedStatusDates = new HashMap<String, Date>();
         cal.set(Calendar.DAY_OF_MONTH, 10);
 
@@ -267,16 +313,34 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         expectedStatusDates.put("c4", cal.getTime());
 
 
+        List<Compliance> snaps = new LinkedList<Compliance>();
+
+        for (int offset = 0; offset < 3; ++offset) {
+            Iterator<Compliance> page = complianceSnapshotCurator.getSnapshotIterator(
+                cal.getTime(),
+                null,
+                null,
+                null,
+                offset,
+                1
+            );
+
+            while (page.hasNext()) {
+                snaps.add(page.next());
+            }
+        }
+
+        assertTrue(getUuidsFromSnapshots(snaps).containsAll(Arrays.asList("c2", "c3", "c4")));
+
         for (Compliance cs : snaps) {
             String uuid = cs.getConsumer().getUuid();
             assertEquals("Invalid status found for " + uuid,
                     expectedStatusDates.get(uuid), cs.getStatus().getDate());
         }
-
     }
 
     @Test
-    public void testDeletedConsumerIncludedIfDeletedAfterTargetDate() {
+    public void testDeletedConsumerIncludedInIteratorIfDeletedAfterTargetDate() {
         // May, June, July 10 -- 2014
         Calendar cal = this.getCalendar();
         cal.set(Calendar.YEAR, 2012);
@@ -284,34 +348,69 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         cal.set(Calendar.DAY_OF_MONTH, 12);
 
         List<String> expectedConsumerUuids = Arrays.asList("c1", "c2", "c3", "c4");
-        List<Compliance> snaps = complianceSnapshotCurator.getSnapshotsOnDate(cal.getTime(),
-                null, null, null);
-        assertEquals(expectedConsumerUuids.size(), snaps.size());
-        assertTrue(getUuidsFromSnapshots(snaps).containsAll(expectedConsumerUuids));
+        Iterator<Compliance> snaps = this.complianceSnapshotCurator.getSnapshotIterator(
+            cal.getTime(),
+            null,
+            null,
+            null
+        );
+
+        int received = 0;
+        while (snaps.hasNext()) {
+            Compliance compliance = snaps.next();
+            assertTrue(expectedConsumerUuids.contains(compliance.getConsumer().getUuid()));
+
+            ++received;
+        }
+
+        assertEquals(expectedConsumerUuids.size(), received);
     }
 
     @Test
-    public void testGetByOwner() {
+    public void testGetIteratorByOwner() {
         String expectedOwner = "o2";
 
-        List<Compliance> snaps = complianceSnapshotCurator.getSnapshotsOnDate(new Date(),
-                null, Arrays.asList(expectedOwner), null);
-        assertEquals(1, snaps.size());
-        Compliance snap = snaps.get(0);
+        Iterator<Compliance> snaps = complianceSnapshotCurator.getSnapshotIterator(
+            new Date(),
+            null,
+            Arrays.asList(expectedOwner),
+            null
+        );
 
-        Consumer consumerSnapshot = snap.getConsumer();
+        assertTrue(snaps.hasNext());
+        Compliance compliance = snaps.next();
+        Consumer consumerSnapshot = compliance.getConsumer();
+
         assertEquals(expectedOwner, consumerSnapshot.getOwner().getKey());
         assertEquals("c3", consumerSnapshot.getUuid());
+        assertFalse(snaps.hasNext());
+    }
+
+    private Compliance performGetByIdTest() {
+        Iterator<Compliance> snaps = complianceSnapshotCurator.getSnapshotIterator(
+            new Date(),
+            Arrays.asList("c1", "c4"),
+            null,
+            null
+        );
+
+        // C1 should get filtered out since it was deleted before the target date.
+        assertTrue(snaps.hasNext());
+        Compliance compliance = snaps.next();
+        assertEquals("c4", compliance.getConsumer().getUuid());
+        assertFalse(snaps.hasNext());
+
+        return compliance;
     }
 
     @Test
     public void testGetByConsumerUuid() {
-        performGetByIdTest();
+        this.performGetByIdTest();
     }
 
     @Test
     public void assertLatestStatusIsReturnedForConsumer() {
-        Compliance snap = performGetByIdTest();
+        Compliance snap = this.performGetByIdTest();
         ComplianceStatus status = snap.getStatus();
         assertEquals(snap.getDate(), status.getDate());
 
@@ -324,13 +423,20 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testGetByStatus() {
+    public void testGetIteratorByStatus() {
         String expectedStatus = "partial";
-        List<Compliance> snaps = complianceSnapshotCurator.getSnapshotsOnDate(null,
-                null, null, Arrays.asList(expectedStatus));
-        assertEquals(1, snaps.size());
-        Compliance snap = snaps.get(0);
-        assertEquals("c3", snap.getConsumer().getUuid());
+        Iterator<Compliance> snaps = complianceSnapshotCurator.getSnapshotIterator(
+            null,
+            null,
+            null,
+            Arrays.asList(expectedStatus)
+        );
+
+        assertTrue(snaps.hasNext());
+        Compliance compliance = snaps.next();
+
+        assertEquals("c3", compliance.getConsumer().getUuid());
+        assertFalse(snaps.hasNext());
     }
 
     @Test
@@ -341,16 +447,52 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         cal.set(Calendar.DAY_OF_MONTH, 12);
 
         Date onDate = cal.getTime();
-        Set<Compliance> results = complianceSnapshotCurator.getComplianceForTimespan(
-                onDate, onDate, null, null);
-        assertEquals(2, results.size());
-        List<String> foundUuids = TestUtils.getUuidsFromSnapshots(new ArrayList<Compliance>(results));
-        assertTrue(foundUuids.containsAll(Arrays.asList("c1", "c2")));
+
+        Iterator<Compliance> snaps = this.complianceSnapshotCurator.getSnapshotIteratorForConsumer(
+            "c1",
+            onDate,
+            onDate
+        );
+
+        int received = 0;
+
+        while (snaps.hasNext()) {
+            Compliance compliance = snaps.next();
+            assertEquals("c1", compliance.getConsumer().getUuid());
+            ++received;
+        }
+
+        assertEquals(1, received);
     }
+
+    private void testConsumerTrendReport(Map<String, Integer> expectedCountsPerUUID, Date startDate,
+        Date endDate) {
+
+        for (Map.Entry<String, Integer> entry : expectedCountsPerUUID.entrySet()) {
+            String uuid = entry.getKey();
+
+            Iterator<Compliance> snaps = this.complianceSnapshotCurator.getSnapshotIteratorForConsumer(
+                uuid,
+                startDate,
+                endDate
+            );
+
+            int received = 0;
+            while (snaps.hasNext()) {
+                Compliance compliance = snaps.next();
+                assertEquals(uuid, compliance.getConsumer().getUuid());
+                ++received;
+            }
+
+            assertEquals(entry.getValue().intValue(), received);
+        }
+
+    }
+
 
     @Test
     public void testGetAllStatusReports() {
-        HashMap<String, Integer> expectedUuidsNumReports = new HashMap<String, Integer>() {
+        HashMap<String, Integer> expected = new HashMap<String, Integer>() {
             {
                 put("c1", 3);
                 put("c2", 1);
@@ -359,12 +501,7 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
             }
         };
 
-        Set<Compliance> results = complianceSnapshotCurator.getComplianceForTimespan(null, null,
-                null, null);
-
-        // Ensure consumers are all found
-        assertEquals(9, results.size());
-        processAndCheckResults(expectedUuidsNumReports, results);
+        this.testConsumerTrendReport(expected, null, null);
     }
 
     @Test
@@ -376,7 +513,7 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
 
         Date startDate = cal.getTime();
         Date endDate = new Date();
-        HashMap<String, Integer> expectedUuidsNumReports = new HashMap<String, Integer>() {
+        HashMap<String, Integer> expected = new HashMap<String, Integer>() {
             {
                 put("c2", 1);
                 put("c3", 1);
@@ -384,12 +521,7 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
             }
         };
 
-        Set<Compliance> results = complianceSnapshotCurator.getComplianceForTimespan(startDate,
-                endDate, null, null);
-
-        // Ensure consumers are all found
-        assertEquals(4, results.size());
-        processAndCheckResults(expectedUuidsNumReports, results);
+        this.testConsumerTrendReport(expected, startDate, endDate);
     }
 
     @Test
@@ -1198,16 +1330,6 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         }
 
         return intersection;
-    }
-
-    private Compliance performGetByIdTest() {
-        List<Compliance> snaps = complianceSnapshotCurator.getSnapshotsOnDate(new Date(),
-                Arrays.asList("c1", "c4"), null, null);
-        // C1 should get filtered out since it was deleted before the target date.
-        assertEquals(1, snaps.size());
-        Compliance snap = snaps.get(0);
-        assertEquals("c4", snap.getConsumer().getUuid());
-        return snap;
     }
 
     private Compliance createInitialConsumer(Date createdOn, String uuid, String owner, String status) {

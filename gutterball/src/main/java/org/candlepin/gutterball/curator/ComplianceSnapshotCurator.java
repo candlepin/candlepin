@@ -15,26 +15,31 @@
 
 package org.candlepin.gutterball.curator;
 
+import org.candlepin.gutterball.util.AutoEvictingColumnarResultsIterator;
 import org.candlepin.gutterball.model.snapshot.Compliance;
 
 import com.google.inject.Inject;
 
 import org.hibernate.Criteria;
+import org.hibernate.CacheMode;
 import org.hibernate.Query;
+import org.hibernate.ScrollableResults;
+import org.hibernate.ScrollMode;
+import org.hibernate.Session;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.Subqueries;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
 
 
@@ -44,14 +49,71 @@ import java.util.TreeMap;
  *
  */
 public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
+    private static Logger log = LoggerFactory.getLogger(ComplianceSnapshotCurator.class);
 
     @Inject
     public ComplianceSnapshotCurator() {
         super(Compliance.class);
     }
 
-    public List<Compliance> getSnapshotsOnDate(Date targetDate, List<String> consumerUuids,
+    /**
+     * Retrieves an iterator over the compliance snapshots on the target date.
+     *
+     * @param targetDate
+     *  The date for which to retrieve compliance snapshots. If null, the current date will be used
+     *  instead.
+     *
+     * @param consumerUuids
+     *  A list of consumer UUIDs to use to filter the results. If provided, only compliances for
+     *  consumers in the list will be retrieved.
+     *
+     * @param ownerFilters
+     *  A list of owners to use to filter the results. If provided, only compliances for consumers
+     *  belonging to the specified owners (orgs) will be retrieved.
+     *
+     * @param statusFilters
+     *  A list of statuses to use to filter the results. If provided, only compliances with a status
+     *  matching the list will be retrieved.
+     *
+     * @return
+     *  An iterator over the compliance snapshots for the target date.
+     */
+    public Iterator<Compliance> getSnapshotIterator(Date targetDate, List<String> consumerUuids,
         List<String> ownerFilters, List<String> statusFilters) {
+        return this.getSnapshotIterator(targetDate, consumerUuids, ownerFilters, statusFilters, 0, 0);
+    }
+
+    /**
+     * Retrieves an iterator over the compliance snapshots on the target date.
+     *
+     * @param targetDate
+     *  The date for which to retrieve compliance snapshots. If null, the current date will be used
+     *  instead.
+     *
+     * @param consumerUuids
+     *  A list of consumer UUIDs to use to filter the results. If provided, only compliances for
+     *  consumers in the list will be retrieved.
+     *
+     * @param ownerFilters
+     *  A list of owners to use to filter the results. If provided, only compliances for consumers
+     *  belonging to the specified owners (orgs) will be retrieved.
+     *
+     * @param statusFilters
+     *  A list of statuses to use to filter the results. If provided, only compliances with a status
+     *  matching the list will be retrieved.
+     *
+     * @param offset
+     *  The offset at which to begin returning results. If non-positive, the offset will be ignored.
+     *
+     * @param results
+     *  The maximum number of results to return. If non-positive, no limit on the number of results
+     *  will be imposed.
+     *
+     * @return
+     *  An iterator over the compliance snapshots for the target date.
+     */
+    public Iterator<Compliance> getSnapshotIterator(Date targetDate, List<String> consumerUuids,
+        List<String> ownerFilters, List<String> statusFilters, int offset, int results) {
 
         DetachedCriteria mainQuery = DetachedCriteria.forClass(Compliance.class);
         mainQuery.createAlias("consumer", "c");
@@ -83,53 +145,94 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
         );
 
         // Post query filter on Status.
-        Criteria postFilter = currentSession().createCriteria(Compliance.class)
+        Session session = this.currentSession();
+        Criteria postFilter = session.createCriteria(Compliance.class)
             .createAlias("consumer", "cs")
-            .add(Subqueries.propertiesIn(new String[] {"date", "cs.uuid"}, mainQuery));
+            .add(Subqueries.propertiesIn(new String[] {"date", "cs.uuid"}, mainQuery))
+            .setCacheMode(CacheMode.IGNORE)
+            .setReadOnly(true);
+
+        if (offset > 0) {
+            postFilter.setFirstResult(offset);
+        }
+
+        if (results > 0) {
+            postFilter.setMaxResults(results);
+        }
 
         if (statusFilters != null && !statusFilters.isEmpty()) {
             postFilter.createAlias("status", "stat");
             postFilter.add(Restrictions.in("stat.status", statusFilters));
         }
 
-        return postFilter.list();
+        return new AutoEvictingColumnarResultsIterator<Compliance>(
+            session,
+            postFilter.scroll(ScrollMode.FORWARD_ONLY),
+            0
+        );
     }
 
-    public Set<Compliance> getComplianceForTimespan(Date startDate, Date endDate,
-        List<String> consumerIds, List<String> owners) {
+    public Iterator<Compliance> getSnapshotIteratorForConsumer(String consumerUUID, Date startDate,
+        Date endDate) {
 
-        // If the start date is null, we can return all status updates.
-        // Otherwise, we need to get every consumers latest compliance info at that point.
-        Set<Compliance> snaps = new HashSet<Compliance>();
-        if (startDate != null) {
-            // Don't restrict by status here, it may not match to begin with, we only care if it matches
-            snaps.addAll(getSnapshotsOnDate(startDate, consumerIds, owners, null));
-        }
+        return this.getSnapshotIteratorForConsumer(consumerUUID, startDate, endDate, 0, 0);
+    }
 
-        Criteria mainQuery = currentSession().createCriteria(Compliance.class);
-        mainQuery.createAlias("consumer", "c");
+    public Iterator<Compliance> getSnapshotIteratorForConsumer(String consumerUUID, Date startDate,
+        Date endDate, int offset, int results) {
 
-        if (consumerIds != null && !consumerIds.isEmpty()) {
-            mainQuery.add(Restrictions.in("c.uuid", consumerIds));
-        }
+        Session session = this.currentSession();
+        Criteria query = session.createCriteria(Compliance.class, "comp1");
+        query.createAlias("comp1.consumer", "cons1");
 
-        if (owners != null && !owners.isEmpty()) {
-            mainQuery.createAlias("c.owner", "o");
-            mainQuery.add(Restrictions.in("o.key", owners));
-        }
+        query.add(Restrictions.eq("cons1.uuid", consumerUUID));
 
         if (startDate != null) {
-            // Use greater than (not equals) because we've already looked up status for <= the start date
-            // gte will open the door for duplicates
-            mainQuery.add(Restrictions.gt("date", startDate));
+            DetachedCriteria subquery = DetachedCriteria.forClass(Compliance.class, "comp2");
+            subquery.createAlias("comp2.consumer", "cons2");
+            subquery.createAlias("cons2.consumerState", "state2");
+
+            subquery.add(Restrictions.or(
+                Restrictions.isNull("state2.deleted"),
+                Restrictions.gt("state2.deleted", startDate)
+            ));
+
+            subquery.add(Restrictions.lt("state2.created", startDate));
+            subquery.add(Restrictions.eqProperty("cons2.uuid", "cons1.uuid"));
+            subquery.add(Restrictions.lt("comp2.date", startDate));
+
+            subquery.setProjection(
+                Projections.projectionList()
+                    .add(Projections.max("comp2.date"))
+            );
+
+            query.add(
+                Restrictions.disjunction()
+                    .add(Restrictions.ge("comp1.date", startDate))
+                    .add(Subqueries.propertyEq("comp1.date", subquery))
+            );
         }
 
         if (endDate != null) {
-            mainQuery.add(Restrictions.le("date", endDate));
+            query.add(Restrictions.le("comp1.date", endDate));
         }
 
-        snaps.addAll(mainQuery.list());
-        return snaps;
+        query.setCacheMode(CacheMode.IGNORE);
+        query.setReadOnly(true);
+
+        if (offset > 0) {
+            query.setFirstResult(offset);
+        }
+
+        if (results > 0) {
+            query.setMaxResults(results);
+        }
+
+        return new AutoEvictingColumnarResultsIterator<Compliance>(
+            session,
+            query.scroll(ScrollMode.FORWARD_ONLY),
+            0
+        );
     }
 
     /**
@@ -344,6 +447,7 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
         // Impl note: This query's results MUST be sorted by date in ascending order. If it's not,
         // the algorithm below breaks.
         Query query = this.buildComplianceStatusCountQuery(
+            this.currentSession(),
             startDate,
             endDate,
             ownerKey,
@@ -367,12 +471,12 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
         Map<String, Object[]> cstatusmap = new HashMap<String, Object[]>();
 
         // Step through our data and do our manual aggregation bits...
-        Iterator qi = query.iterate();
+        ScrollableResults results = query.scroll(ScrollMode.FORWARD_ONLY);
 
-        if (qi.hasNext()) {
+        if (results.next()) {
             Calendar date = Calendar.getInstance();
 
-            Object[] row = (Object[]) qi.next();
+            Object[] row = results.get();
             String uuid = (String) row[0];
             row[1] = ((String) row[1]).toLowerCase();
             date.setTime((Date) row[2]);
@@ -394,7 +498,7 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
                     // our counts later.
                     cstatusmap.put(uuid, row);
 
-                    if (!qi.hasNext()) {
+                    if (!results.next()) {
                         if (endDate == null) {
                             end.setTimeInMillis(cdate.getTimeInMillis());
                         }
@@ -402,8 +506,9 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
                         break;
                     }
 
-                    row = (Object[]) qi.next();
+                    row = (Object[]) results.get();
                     uuid = (String) row[0];
+                    row[1] = ((String) row[1]).toLowerCase();
                     date.setTime((Date) row[2]);
                 }
 
@@ -421,6 +526,8 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
                 resultmap.put(hashdate, statusmap);
             }
         }
+
+        results.close();
 
         return resultmap;
     }
@@ -581,6 +688,9 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
      *    ComplianceStatusSnap.date ASC
      *  </pre>
      *
+     * @param session
+     *  The session to use to create the query.
+     *
      * @param startDate
      *  <em>Optional</em><br/>
      *  The date at which the time span should begin. If null, all compliance statuses before the
@@ -616,8 +726,8 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
      *  A Query object to be used for retrieving compliance status counts.
      */
     @SuppressWarnings("checkstyle:methodlength")
-    private Query buildComplianceStatusCountQuery(Date startDate, Date endDate, String ownerKey,
-        String sku, String subscriptionName, Map<String, String> attributes) {
+    private Query buildComplianceStatusCountQuery(Session session, Date startDate, Date endDate,
+        String ownerKey, String sku, String subscriptionName, Map<String, String> attributes) {
 
         List<Object> parameters = new LinkedList<Object>();
         int counter = 0;
@@ -634,6 +744,7 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
                 "INNER JOIN ConsumerSnap.consumerState AS ConsumerState " +
                 "INNER JOIN ConsumerSnap.complianceSnapshot AS ComplianceSnap " +
                 "INNER JOIN ComplianceSnap.status AS ComplianceStatusSnap " +
+                "LEFT JOIN ComplianceSnap.entitlements AS EntitlementSnap " +
 
             "WHERE (" +
                     "ConsumerState.deleted IS NULL " +
@@ -644,14 +755,14 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
                     ") " +
                     "OR (" +
                         "year(ComplianceSnap.date) = year(ConsumerState.deleted) " +
-                        " AND month(ComplianceSnap.date) = month(ConsumerState.deleted) " +
-                        " AND day(ComplianceSnap.date) < day(ConsumerState.deleted)" +
+                        "AND month(ComplianceSnap.date) = month(ConsumerState.deleted) " +
+                        "AND day(ComplianceSnap.date) < day(ConsumerState.deleted)" +
                     ")" +
                 ") " +
 
                 "AND (ComplianceStatusSnap.date, ConsumerSnap.uuid) IN (" +
                     "SELECT " +
-                        "max(ComplianceSnap2.date) AS maxdate," +
+                        "max(ComplianceSnap2.date) AS maxdate, " +
                         "ConsumerState2.uuid " +
 
                     "FROM " +
@@ -674,33 +785,24 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
 
             List<String> criteria = new LinkedList<String>();
             StringBuffer inner = new StringBuffer(
-                "AND ComplianceSnap.id IN (" +
-                    "SELECT ComplianceSnap3.id " +
-                        "FROM Consumer AS ConsumerSnap3 " +
-                        "INNER JOIN ConsumerSnap3.consumerState AS ConsumerState3 " +
-                        "INNER JOIN ConsumerSnap3.complianceSnapshot AS ComplianceSnap3 " +
-                        "LEFT JOIN ComplianceSnap3.entitlements AS EntitlementSnap3 " +
-
-                        "WHERE " +
-                            "ConsumerState3.uuid = ConsumerState.uuid " +
-                            "AND ("
+                "AND ("
             );
 
             // TODO:
             // Owner, SKU, product name and should be replaced by the same mechanism we used for
             // --matches in Subscription-manager.
             if (ownerKey != null) {
-                criteria.add("ConsumerState3.ownerKey = ?" + ++counter);
+                criteria.add("ConsumerState.ownerKey = ?" + ++counter);
                 parameters.add(ownerKey);
             }
 
             if (sku != null) {
-                criteria.add("EntitlementSnap3.productId = ?" + ++counter);
+                criteria.add("EntitlementSnap.productId = ?" + ++counter);
                 parameters.add(sku);
             }
 
             if (subscriptionName != null) {
-                criteria.add("EntitlementSnap3.productName = ?" + ++counter);
+                criteria.add("EntitlementSnap.productName = ?" + ++counter);
                 parameters.add(subscriptionName);
             }
 
@@ -710,7 +812,7 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
                         "(?%d, ?%d) IN (" +
                             "SELECT ENTRY(EntitlementSnapA.attributes) " +
                                 "FROM Entitlement AS EntitlementSnapA " +
-                                "WHERE EntitlementSnapA.id = EntitlementSnap3.id" +
+                                "WHERE EntitlementSnapA.id = EntitlementSnap.id" +
                         ")",
                         ++counter,
                         ++counter
@@ -730,7 +832,7 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
                 inner.append(ci.next());
             }
 
-            hql.append(inner.append(")) "));
+            hql.append(inner.append(") "));
         }
 
         // Add our date range, if necessary...
@@ -753,7 +855,7 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
                     ")" +
                     "OR (ComplianceStatusSnap.date, ConsumerSnap.uuid) IN (" +
                         "SELECT " +
-                            "max(ComplianceStatusSnap2.date) AS maxdate," +
+                            "max(ComplianceStatusSnap2.date) AS maxdate, " +
                             "ConsumerState2.uuid " +
 
                         "FROM " +
@@ -770,9 +872,9 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
                             ") " +
                             "OR (" +
                                 "year(ComplianceStatusSnap2.date) = ?%1$d " +
-                                " AND month(ComplianceStatusSnap2.date) = ?%2$d " +
-                                " AND day(ComplianceStatusSnap2.date) < ?%3$d" +
-                            ")" +
+                                "AND month(ComplianceStatusSnap2.date) = ?%2$d " +
+                                "AND day(ComplianceStatusSnap2.date) < ?%3$d" +
+                            ") " +
 
                         "GROUP BY " +
                             "ConsumerState2.uuid" +
@@ -800,8 +902,8 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
                     ") " +
                     "OR (" +
                         "year(ComplianceStatusSnap.date) = ?%1$d " +
-                        " AND month(ComplianceStatusSnap.date) = ?%2$d " +
-                        " AND day(ComplianceStatusSnap.date) <= ?%3$d" +
+                        "AND month(ComplianceStatusSnap.date) = ?%2$d " +
+                        "AND day(ComplianceStatusSnap.date) <= ?%3$d" +
                     ")" +
                 ") ",
                 ++counter, ++counter, ++counter
@@ -813,12 +915,12 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
         }
 
 
-
         // Add our grouping...
         hql.append("ORDER BY ComplianceStatusSnap.date ASC");
 
         // Build our query object and set the parameters...
-        Query query = this.currentSession().createQuery(hql.toString());
+        Query query = session.createQuery(hql.toString());
+        query.setReadOnly(true);
 
         for (int i = 1; i <= counter; ++i) {
             query.setParameter(String.valueOf(i), parameters.remove(0));

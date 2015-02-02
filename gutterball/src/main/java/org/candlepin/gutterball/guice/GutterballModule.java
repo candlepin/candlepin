@@ -35,7 +35,6 @@ import org.candlepin.common.exceptions.mappers.UnsupportedMediaTypeExceptionMapp
 import org.candlepin.common.exceptions.mappers.ValidationExceptionMapper;
 import org.candlepin.common.exceptions.mappers.WebApplicationExceptionMapper;
 import org.candlepin.common.exceptions.mappers.WriterExceptionMapper;
-import org.candlepin.common.guice.JPAInitializer;
 import org.candlepin.common.resteasy.interceptor.DynamicFilterInterceptor;
 import org.candlepin.common.validation.CandlepinMessageInterpolator;
 import org.candlepin.gutterball.config.ConfigProperties;
@@ -161,7 +160,6 @@ public class GutterballModule extends AbstractModule {
     protected void configureJPA() {
         Configuration jpaConfig = config.strippedSubset(ConfigurationPrefixes.JPA_CONFIG_PREFIX);
         install(new JpaPersistModule("default").properties(jpaConfig.toProperties()));
-        bind(JPAInitializer.class).asEagerSingleton();
     }
 
     protected void configureOAuth() {
