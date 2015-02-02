@@ -22,7 +22,7 @@
 %endif
 
 Name: gutterball
-Version: 1.0.9
+Version: 1.0.10
 Release: 1%{?dist}
 Summary: Data aggregator for Candlepin
 
@@ -214,6 +214,27 @@ rm -rf %{buildroot}
 %attr(775, tomcat, root) %{_localstatedir}/log/%{name}
 
 %changelog
+* Mon Feb 02 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 1.0.10-1
+- Update rpm deps for qpid 0.30. (dgoodwin@redhat.com)
+- Fix SSL hostname verification error after upgrade to Qpid 0.30.
+  (dgoodwin@redhat.com)
+- Updated fix for connection holding (crog@redhat.com)
+- Rename POM files to the Maven prefered 'pom.xml'. (awood@redhat.com)
+- Upgrade to QPid 0.30. (awood@redhat.com)
+- Connections are now released after reports are run. (crog@redhat.com)
+- Paging is no longer enabled by default. (crog@redhat.com)
+- Use minimized DTO for report defaults (mstead@redhat.com)
+- ConsumerTrendReport no longer returns results for multiple consumers
+  (crog@redhat.com)
+- Cleaned up pagination and snapshot iterator functionality (crog@redhat.com)
+- Added simple pagination (crog@redhat.com)
+- Cleaned up curator and added unit tests. (crog@redhat.com)
+- Added memory management improvements to consumer status report
+  (crog@redhat.com)
+- Optimized status trend report query filtering (crog@redhat.com)
+- GB: Return correct gutterball version info (mstead@redhat.com)
+- Add generated POM files to the repository. (awood@redhat.com)
+
 * Fri Jan 09 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 1.0.9-1
 - Fix gutterball ant dep on Fedora. (dgoodwin@redhat.com)
 
