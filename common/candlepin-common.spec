@@ -21,7 +21,7 @@
 Name: %{parent_proj}-common
 Summary: Common code for Candlepin and related projects
 License: GPLv2
-Version: 1.0.19
+Version: 1.0.20
 Release: 1%{?dist}
 URL: http://www.candlepinproject.org
 Source: %{name}-%{version}.tar.gz
@@ -174,6 +174,11 @@ rm -rf %{_tmppath}/distlibdir
 %{_datadir}/%{parent_proj}/gutterball/lib/%{name}.jar
 
 %changelog
+* Mon Feb 02 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 1.0.20-1
+- Rename POM files to the Maven prefered 'pom.xml'. (awood@redhat.com)
+- Add generated POM files to the repository. (awood@redhat.com)
+- Logging touchups. (dgoodwin@redhat.com)
+
 * Fri Jan 09 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 1.0.19-1
 - Fix oauth dependency for cpdeps builds. (dgoodwin@redhat.com)
 
