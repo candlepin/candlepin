@@ -24,8 +24,14 @@ IS_KATELLO="$(test -e $KATELLO_PKI; echo $?)"
 SUBJ="/C=US/O=Candlepin"
 CERT_LOC="$LOCATION/keys"
 LOG="$CERT_LOC/keys.log"
-CA_NAME="ca"
-CN_NAME="localhost"
+
+# We are dual-purposing the CA cert in this script so that it also acts as the
+# server-side certificate for the Qpid daemon.  In a real deployment, you would
+# not want to do this, but for development it makes for one less certificate to
+# manage.  A better approach might be to give a more descriptive CN and use
+# a SubjectAltName to add "localhost" as an acceptable hostname, but OpenSSL
+# doesn't have an easy way to do that from the command line.
+CA_NAME="localhost"
 
 define_variables() {
     if [ $IS_KATELLO -eq 0 ]; then
@@ -84,7 +90,6 @@ create_client_certs() {
             local nss_nick="amqp-client"
         fi
 
-
         local existing_nss="$(fp_nss "$CA_DB" "$nss_nick")"
         # This will be an empty string if the script hasn't run before
         local existing_generated="$(fp_file "$dest.crt")"
@@ -112,7 +117,7 @@ create_client_certs() {
 
         if [ ! -e "$dest.crt" -a ! -e "$dest.key" ]; then
             # Generate the key and certificate signing request
-            openssl req -nodes -new -newkey rsa:2048 -out "$dest.csr" -keyout "$dest.key" -subj "$SUBJ/OU=$client/CN=$CN_NAME" -passin pass:$JAVA_PASS &>> $LOG
+            openssl req -nodes -new -newkey rsa:2048 -out "$dest.csr" -keyout "$dest.key" -subj "$SUBJ/OU=$client/CN=$client" -passin pass:$JAVA_PASS &>> $LOG
 
             if [ "$IS_KATELLO" == 0 ]; then
                 # Katello doesn't place the CA private key in the NSS DB
