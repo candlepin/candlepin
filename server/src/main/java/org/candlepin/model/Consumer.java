@@ -157,9 +157,6 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "consumer", fetch = FetchType.LAZY)
     private Set<Entitlement> entitlements;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "consumer", fetch = FetchType.LAZY)
-    private Set<CheckIn> checkIns;
-
     @ElementCollection
     @CollectionTable(name = "cp_consumer_facts",
                      joinColumns = @JoinColumn(name = "cp_consumer_id"))
@@ -172,6 +169,9 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
 
     @OneToOne(cascade = CascadeType.ALL)
     private KeyPair keyPair;
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "consumer", fetch = FetchType.LAZY)
+    private Set<CheckIn> checkIns;
 
     @Formula("(select max(c.checkInTime) from cp_consumer_checkin c " +
             "where c.consumer_id = id)")
