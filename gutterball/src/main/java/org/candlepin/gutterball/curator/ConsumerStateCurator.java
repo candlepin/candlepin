@@ -34,6 +34,7 @@ public class ConsumerStateCurator extends BaseCurator<ConsumerState> {
         super(ConsumerState.class);
     }
 
+    @Transactional
     public ConsumerState findByUuid(String uuid) {
         return (ConsumerState) this.currentSession()
             .createCriteria(ConsumerState.class)

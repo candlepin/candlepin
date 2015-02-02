@@ -21,18 +21,31 @@ import org.hibernate.Session;
 
 
 /**
- * The AutoEvictingResultsIterator extends the ScrollableResultsIterator by automatically evicting
- * Hibernate objects previously returned each time a new object is returned.
+ * The AutoEvictingColumnarResultsIterator extends the ColumnarScrollableResultsIterator to add
+ * automatic eviction of the elements returned by the "next" method.
  *
  * @param <E> The element type to be returned by this iterator's "next" method.
  */
-public class AutoEvictingResultsIterator<E> extends ScrollableResultsIterator<E> {
-
+public class AutoEvictingColumnarResultsIterator<E> extends ColumnarScrollableResultsIterator<E> {
     private Session session;
     private E prev;
 
-    public AutoEvictingResultsIterator(Session session, ScrollableResults results) {
-        super(results);
+    /**
+     * Creates a new AutoEvictingColumnarResultsIterator to iterate over the results provided by the
+     * given ScrollableResults instance, returning only the values in the column specified.
+     *
+     * @param session
+     *  The Session to close upon completion of this iterator and from which to evict returned
+     *  objects.
+     *
+     * @param results
+     *  The ScrollableResults instance over which to iterate.
+     *
+     * @param column
+     *  The column from which to read values to be returned.
+     */
+    public AutoEvictingColumnarResultsIterator(Session session, ScrollableResults results, int column) {
+        super(results, column);
 
         if (session == null) {
             throw new IllegalArgumentException("session is null");
