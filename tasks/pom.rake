@@ -91,9 +91,15 @@ module PomTask
           # Filter out Rake::FileTask dependencies
           deps = project.compile.dependencies.select { |dep| dep.is_a?(Buildr::Artifact) }
           pom.artifacts.each do |artifact|
-            xml = PomBuilder.new(artifact, deps)
             spec = artifact.to_hash
-            destination = project.path_to(:target, "#{spec[:id]}-#{spec[:version]}.pom")
+            destination = project.path_to("pom.xml")
+
+            # Special case for when we want to build a POM for just candlepin-api.jar
+            if pom.artifacts.length > 1 && spec[:type] != :war
+              destination = project.path_to(:target, "#{spec[:id]}-#{spec[:version]}.pom")
+            end
+
+            xml = PomBuilder.new(artifact, deps)
             xml.write_pom(destination)
             info("POM written to #{destination}")
           end
