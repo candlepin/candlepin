@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.resteasy.interceptor;
+package org.candlepin.common.resteasy.interceptor;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -24,7 +24,6 @@ import static org.mockito.Mockito.when;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.MapConfiguration;
-import org.candlepin.config.ConfigProperties;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
 
@@ -39,6 +38,7 @@ import org.mockito.MockitoAnnotations;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.util.HashMap;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -53,6 +53,7 @@ public class LinkHeaderPostInterceptorTest {
     @Mock private Page page;
     @Mock private PageRequest pageRequest;
 
+    private String apiUrlPrefixKey;
     private LinkHeaderPostInterceptor interceptor;
 
     /* We do not want to load candlepin.conf off the filesystem which is what
@@ -60,14 +61,20 @@ public class LinkHeaderPostInterceptorTest {
      */
     private static class ConfigForTesting extends MapConfiguration {
         public ConfigForTesting() {
-            super(ConfigProperties.DEFAULT_PROPERTIES);
+            super(new HashMap<String, String>() {
+                /* constructor */ {
+                    this.put("test prefix key", "localhost:8443/candlepin");
+                }
+            });
         }
     }
 
     @Before
     public void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
-        interceptor = new LinkHeaderPostInterceptor(config);
+
+        this.apiUrlPrefixKey = "test prefix key";
+        interceptor = new LinkHeaderPostInterceptor(config, this.apiUrlPrefixKey);
     }
 
     @After
@@ -77,7 +84,7 @@ public class LinkHeaderPostInterceptorTest {
 
     @Test
     public void testBuildBaseUrlWithNoConfigProperty() {
-        when(config.containsKey(eq(ConfigProperties.PREFIX_APIURL))).thenReturn(false);
+        when(config.containsKey(eq(this.apiUrlPrefixKey))).thenReturn(false);
         when(request.getRequestURL()).thenReturn(
             new StringBuffer("https://example.com/candlepin"));
 
@@ -87,8 +94,8 @@ public class LinkHeaderPostInterceptorTest {
 
     @Test
     public void testBuildBaseUrlWithConfigPropertyEmpty() {
-        when(config.containsKey(eq(ConfigProperties.PREFIX_APIURL))).thenReturn(true);
-        when(config.getString(eq(ConfigProperties.PREFIX_APIURL))).thenReturn("");
+        when(config.containsKey(eq(this.apiUrlPrefixKey))).thenReturn(true);
+        when(config.getString(eq(this.apiUrlPrefixKey))).thenReturn("");
         when(request.getRequestURL()).thenReturn(
             new StringBuffer("https://example.com/candlepin"));
 
@@ -98,11 +105,12 @@ public class LinkHeaderPostInterceptorTest {
 
     @Test
     public void testBuildBaseUrlWithConfigDefault() {
-        LinkHeaderPostInterceptor interceptorWithDefault =
-            new LinkHeaderPostInterceptor(new ConfigForTesting());
-
         when(request.getContextPath()).thenReturn("/candlepin");
         when(request.getRequestURI()).thenReturn("/candlepin/resource");
+
+        LinkHeaderPostInterceptor interceptorWithDefault =
+            new LinkHeaderPostInterceptor(new ConfigForTesting(), this.apiUrlPrefixKey);
+
         UriBuilder builder = interceptorWithDefault.buildBaseUrl(request);
         assertEquals("https://localhost:8443/candlepin/resource",
             builder.build().toString());
@@ -110,8 +118,8 @@ public class LinkHeaderPostInterceptorTest {
 
     @Test
     public void testBuildBaseUrlWithNoSchemeProvided() {
-        when(config.containsKey(eq(ConfigProperties.PREFIX_APIURL))).thenReturn(true);
-        when(config.getString(eq(ConfigProperties.PREFIX_APIURL))).thenReturn(
+        when(config.containsKey(eq(this.apiUrlPrefixKey))).thenReturn(true);
+        when(config.getString(eq(this.apiUrlPrefixKey))).thenReturn(
             "example.com/candlepin");
         when(request.getContextPath()).thenReturn("/candlepin");
         when(request.getRequestURI()).thenReturn("/candlepin/resource");
@@ -122,7 +130,7 @@ public class LinkHeaderPostInterceptorTest {
 
     @Test
     public void testBuildBaseUrlWithBadUriReturnsNull() {
-        when(config.containsKey(eq(ConfigProperties.PREFIX_APIURL))).thenReturn(false);
+        when(config.containsKey(eq(this.apiUrlPrefixKey))).thenReturn(false);
         when(request.getRequestURL()).thenReturn(
             new StringBuffer("^$&#**("));
 
@@ -334,7 +342,7 @@ public class LinkHeaderPostInterceptorTest {
         when(pageRequest.getPerPage()).thenReturn(5);
 
         // We're going to take the quick path through buildBaseUrl.
-        when(config.containsKey(eq(ConfigProperties.PREFIX_APIURL))).thenReturn(false);
+        when(config.containsKey(eq(this.apiUrlPrefixKey))).thenReturn(false);
         when(request.getRequestURL()).thenReturn(
             new StringBuffer("https://example.com/candlepin"));
         when(request.getQueryString()).thenReturn("order=asc&page=1&per_page=10");

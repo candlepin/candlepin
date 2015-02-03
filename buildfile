@@ -409,7 +409,7 @@ define "candlepin" do
     # kept getting complaints about circular dependencies.
     api_jar = package(:jar, :id=>'candlepin-api').tap do |jar|
       jar.clean
-      pkgs = %w{auth config jackson model paging pki resteasy service util}.map { |pkg| "#{compiled_cp_path}/#{pkg}" }
+      pkgs = %w{auth config jackson model pki resteasy service util}.map { |pkg| "#{compiled_cp_path}/#{pkg}" }
       p = jar.path(candlepin_path)
       p.include(pkgs).exclude("#{compiled_cp_path}/util/apicrawl")
     end

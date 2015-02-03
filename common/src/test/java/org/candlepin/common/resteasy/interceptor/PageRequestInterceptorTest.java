@@ -12,12 +12,13 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.resteasy.interceptor;
+package org.candlepin.common.resteasy.interceptor;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.common.exceptions.BadRequestException;
+import org.candlepin.common.guice.CommonI18nProvider;
 import org.candlepin.common.paging.PageRequest;
 
 import org.jboss.resteasy.core.ResourceMethod;
@@ -26,22 +27,29 @@ import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.xnap.commons.i18n.I18n;
-import org.xnap.commons.i18n.I18nFactory;
 
 import java.util.Locale;
+
+import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * PageRequestInterceptorTest
  */
 public class PageRequestInterceptorTest {
-    private I18n i18n;
+
+    @Inject
+    private HttpServletRequest mockReq = mock(HttpServletRequest.class);
+
+    private javax.inject.Provider<I18n> i18nProvider;
     private PageRequestInterceptor interceptor;
     private ResourceMethod rmethod;
 
     @Before
     public void setUp() throws Exception {
-        i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
-        interceptor = new PageRequestInterceptor(i18n);
+        when(mockReq.getLocale()).thenReturn(Locale.US);
+        this.i18nProvider = new CommonI18nProvider(this.mockReq);
+        interceptor = new PageRequestInterceptor(this.i18nProvider);
         rmethod = mock(ResourceMethod.class);
     }
 

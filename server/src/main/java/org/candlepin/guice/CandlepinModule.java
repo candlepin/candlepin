@@ -317,6 +317,9 @@ public class CandlepinModule extends AbstractModule {
         bind(VersionPostInterceptor.class);
         bind(LinkHeaderPostInterceptor.class);
         bind(DynamicFilterInterceptor.class);
+
+        bindConstant().annotatedWith(Names.named("PREFIX_APIURL_KEY"))
+            .to(ConfigProperties.PREFIX_APIURL);
     }
 
     private void configurePinsetter() {

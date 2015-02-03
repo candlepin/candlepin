@@ -64,6 +64,7 @@ import com.google.inject.Provides;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
+import com.google.inject.name.Names;
 import com.google.inject.persist.jpa.JpaPersistModule;
 import com.google.inject.servlet.ServletScopes;
 
@@ -149,6 +150,9 @@ public class GutterballModule extends AbstractModule {
         bind(DynamicFilterInterceptor.class);
         bind(PageRequestInterceptor.class);
         bind(LinkHeaderPostInterceptor.class);
+
+        bindConstant().annotatedWith(Names.named("PREFIX_APIURL_KEY"))
+            .to(ConfigProperties.PREFIX_APIURL);
 
         this.configureOAuth();
     }

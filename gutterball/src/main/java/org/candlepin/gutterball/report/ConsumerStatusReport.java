@@ -83,18 +83,6 @@ public class ConsumerStatusReport extends Report<ReportResult> {
         );
 
         addParameter(
-            builder.init("page", i18n.tr("The page at which to begin retrieving results."))
-                .mustBeInteger()
-                .getParameter()
-        );
-
-        addParameter(
-            builder.init("per_page", i18n.tr("The number of results to return per page."))
-                .mustBeInteger()
-                .getParameter()
-        );
-
-        addParameter(
             builder.init("custom", i18n.tr("Allows building a custom result data set by tayloring " +
                          "the data to include in the JSON (boolean)")).getParameter());
 

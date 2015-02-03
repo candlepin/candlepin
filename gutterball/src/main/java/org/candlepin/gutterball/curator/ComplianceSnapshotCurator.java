@@ -50,7 +50,6 @@ import java.util.TreeMap;
 
 /**
  * The curator responsible for managing {@link Compliance} objects.
- *
  */
 public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
     private static Logger log = LoggerFactory.getLogger(ComplianceSnapshotCurator.class);
@@ -135,15 +134,13 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
      *  A list of statuses to use to filter the results. If provided, only compliances with a status
      *  matching the list will be retrieved.
      *
-     * @param offset
-     *  The offset at which to begin returning results. If non-positive, the offset will be ignored.
-     *
-     * @param results
-     *  The maximum number of results to return. If non-positive, no limit on the number of results
-     *  will be imposed.
+     * @param pageRequest
+     *  A PageRequest instance containing paging information from the request. If null, no paging
+     *  will be performed.
      *
      * @return
-     *  An iterator over the compliance snapshots for the target date.
+     *  A Page instance containing an iterator over the compliance snapshots for the target date and
+     *  the paging information for the query.
      */
     public Page<Iterator<Compliance>> getSnapshotIterator(Date targetDate, List<String> consumerUuids,
         List<String> ownerFilters, List<String> statusFilters, PageRequest pageRequest) {
@@ -217,6 +214,23 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
         return page;
     }
 
+    /**
+     * Retrieves an iterator over the compliance snapshots for the specified consumer.
+     *
+     * @param consumerUUID
+     *  The UUID for the consumer for which to retrieve compliance snapshots.
+     *
+     * @param startDate
+     *  The start date to use to filter snapshots retrieved. If specified, only snapshots occurring
+     *  after the start date, and the snapshot immediately preceding it, will be retrieved.
+     *
+     * @param endDate
+     *  The end date to use to filter snapshots retrieved. If specified, only snapshots occurring
+     *  before the end date will be retrieved.
+     *
+     * @return
+     *  An iterator over the snapshots for the specified consumer.
+     */
     public Iterator<Compliance> getSnapshotIteratorForConsumer(String consumerUUID, Date startDate,
         Date endDate) {
 
@@ -230,6 +244,28 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
         return result.getPageData();
     }
 
+    /**
+     * Retrieves an iterator over the compliance snapshots for the specified consumer.
+     *
+     * @param consumerUUID
+     *  The UUID for the consumer for which to retrieve compliance snapshots.
+     *
+     * @param startDate
+     *  The start date to use to filter snapshots retrieved. If specified, only snapshots occurring
+     *  after the start date, and the snapshot immediately preceding it, will be retrieved.
+     *
+     * @param endDate
+     *  The end date to use to filter snapshots retrieved. If specified, only snapshots occurring
+     *  before the end date will be retrieved.
+     *
+     * @param pageRequest
+     *  A PageRequest instance containing paging information from the request. If null, no paging
+     *  will be performed.
+     *
+     * @return
+     *  A Page instance containing an iterator over the snapshots for the specified consumer, and
+     *  the paging information for the query.
+     */
     public Page<Iterator<Compliance>> getSnapshotIteratorForConsumer(String consumerUUID, Date startDate,
         Date endDate, PageRequest pageRequest) {
 
@@ -322,17 +358,14 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
      * provided, all known compliance status data will be used.
      *
      * @param startDate
-     *  <em>Optional</em><br/>
      *  The date at which the time span should begin. If null, all compliance statuses before the
      *  end date (if provided) will be used.
      *
      * @param endDate
-     *  <em>Optional</em><br/>
      *  The date at which the time span should end. If null, all compliance statuses after the
      *  start date (if provided) will be used.
      *
      * @param ownerKey
-     *  <em>Optional</em><br/>
      *  An owner key to use to filter compliance status counts. If provided, only consumers
      *  associated with the specified owner key/account will be counted.
      *
@@ -355,22 +388,18 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
      * provided, all known compliance status data will be used.
      *
      * @param startDate
-     *  <em>Optional</em><br/>
      *  The date at which the time span should begin. If null, all compliance statuses before the
      *  end date (if provided) will be used.
      *
      * @param endDate
-     *  <em>Optional</em><br/>
      *  The date at which the time span should end. If null, all compliance statuses after the
      *  start date (if provided) will be used.
      *
      * @param ownerKey
-     *  <em>Optional</em><br/>
      *  An owner key to use to filter compliance status counts. If provided, only consumers
      *  associated with the specified owner key/account will be counted.
      *
      * @param sku
-     *  <em>Optional</em><br/>
      *  A subscription sku to use to filter compliance status counts. If provided, only consumers
      *  using the specified sku will be counted.
      *
@@ -393,22 +422,18 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
      * provided, all known compliance status data will be used.
      *
      * @param startDate
-     *  <em>Optional</em><br/>
      *  The date at which the time span should begin. If null, all compliance statuses before the
      *  end date (if provided) will be used.
      *
      * @param endDate
-     *  <em>Optional</em><br/>
      *  The date at which the time span should end. If null, all compliance statuses after the
      *  start date (if provided) will be used.
      *
      * @param ownerKey
-     *  <em>Optional</em><br/>
      *  An owner key to use to filter compliance status counts. If provided, only consumers
      *  associated with the specified owner key/account will be counted.
      *
      * @param subscriptionName
-     *  <em>Optional</em><br/>
      *  A subscription name to use to filter compliance status counts. If provided, only consumers
      *  using subscriptions with the specified product name will be counted.
      *
@@ -431,22 +456,18 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
      * provided, all known compliance status data will be used.
      *
      * @param startDate
-     *  <em>Optional</em><br/>
      *  The date at which the time span should begin. If null, all compliance statuses before the
      *  end date (if provided) will be used.
      *
      * @param endDate
-     *  <em>Optional</em><br/>
      *  The date at which the time span should end. If null, all compliance statuses after the
      *  start date (if provided) will be used.
      *
      * @param ownerKey
-     *  <em>Optional</em><br/>
      *  An owner key to use to filter compliance status counts. If provided, only consumers
      *  associated with the specified owner key/account will be counted.
      *
      * @param attributes
-     *  <em>Optional</em><br/>
      *  A map of entitlement attributes to use to filter compliance status counts. If provided, only
      *  consumers with entitlements having the specified values for the given attributes will be
      *  counted.
@@ -470,33 +491,27 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
      * provided, all known compliance status data will be used.
      *
      * @param startDate
-     *  <em>Optional</em><br/>
      *  The date at which the time span should begin. If null, all compliance statuses before the
      *  end date (if provided) will be used.
      *
      * @param endDate
-     *  <em>Optional</em><br/>
      *  The date at which the time span should end. If null, all compliance statuses after the
      *  start date (if provided) will be used.
      *
      * @param sku
-     *  <em>Optional</em><br/>
      *  A subscription sku to use to filter compliance status counts. If provided, only consumers
      *  using the specified sku will be counted.
      *
      * @param subscriptionName
-     *  <em>Optional</em><br/>
      *  A subscription name to use to filter compliance status counts. If provided, only consumers
      *  using subscriptions with the specified product name will be counted.
      *
      * @param attributes
-     *  <em>Optional</em><br/>
      *  A map of entitlement attributes to use to filter compliance status counts. If provided, only
      *  consumers with entitlements having the specified values for the given attributes will be
      *  counted.
      *
      * @param ownerKey
-     *  <em>Optional</em><br/>
      *  An owner key to use to filter compliance status counts. If provided, only consumers
      *  associated with the specified owner key/account will be counted.
      *
@@ -756,33 +771,27 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
      *  The session to use to create the query.
      *
      * @param startDate
-     *  <em>Optional</em><br/>
      *  The date at which the time span should begin. If null, all compliance statuses before the
      *  end date (if provided) will be used.
      *
      * @param endDate
-     *  <em>Optional</em><br/>
      *  The date at which the time span should end. If null, all compliance statuses after the
      *  start date (if provided) will be used.
      *
      * @param sku
-     *  <em>Optional</em><br/>
      *  A subscription sku to use to filter compliance status counts. If provided, only consumers
      *  using the specified sku will be counted.
      *
      * @param subscriptionName
-     *  <em>Optional</em><br/>
      *  A product name to use to filter compliance status counts. If provided, only consumers using
      *  subscriptions which provide the specified product name will be counted.
      *
      * @param attributes
-     *  <em>Optional</em><br/>
      *  A map of entitlement attributes to use to filter compliance status counts. If provided, only
      *  consumers with entitlements having the specified values for the given attributes will be
      *  counted.
      *
      * @param ownerKey
-     *  <em>Optional</em><br/>
      *  An owner key to use to filter compliance status counts. If provided, only consumers
      *  associated with the specified owner key/account will be counted.
      *
