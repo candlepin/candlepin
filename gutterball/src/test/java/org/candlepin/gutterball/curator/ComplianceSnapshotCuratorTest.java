@@ -19,6 +19,9 @@ import static org.candlepin.gutterball.TestUtils.*;
 import static org.junit.Assert.*;
 import static junitparams.JUnitParamsRunner.*;
 
+import org.candlepin.common.paging.Page;
+import org.candlepin.common.paging.PageRequest;
+
 import org.candlepin.gutterball.DatabaseTestFixture;
 import org.candlepin.gutterball.jackson.GutterballObjectMapper;
 import org.candlepin.gutterball.model.ConsumerState;
@@ -316,17 +319,22 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         List<Compliance> snaps = new LinkedList<Compliance>();
 
         for (int offset = 0; offset < 3; ++offset) {
-            Iterator<Compliance> page = complianceSnapshotCurator.getSnapshotIterator(
+            PageRequest pageRequest = new PageRequest();
+            pageRequest.setPage(offset + 1);
+            pageRequest.setPerPage(1);
+
+            Page<Iterator<Compliance>> page = complianceSnapshotCurator.getSnapshotIterator(
                 cal.getTime(),
                 null,
                 null,
                 null,
-                offset,
-                1
+                pageRequest
             );
 
-            while (page.hasNext()) {
-                snaps.add(page.next());
+            Iterator<Compliance> iterator = page.getPageData();
+
+            while (iterator.hasNext()) {
+                snaps.add(iterator.next());
             }
         }
 

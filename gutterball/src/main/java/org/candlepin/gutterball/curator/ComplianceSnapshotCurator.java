@@ -15,6 +15,9 @@
 
 package org.candlepin.gutterball.curator;
 
+import org.candlepin.common.paging.Page;
+import org.candlepin.common.paging.PageRequest;
+
 import org.candlepin.gutterball.util.AutoEvictingColumnarResultsIterator;
 import org.candlepin.gutterball.model.snapshot.Compliance;
 
@@ -27,6 +30,7 @@ import org.hibernate.ScrollableResults;
 import org.hibernate.ScrollMode;
 import org.hibernate.Session;
 import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.Subqueries;
@@ -57,6 +61,26 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
     }
 
     /**
+     * Fetches the row count for the specified criteria. The criteria's projections and result
+     * transformer will be reset in the process.
+     *
+     * @param criteria
+     *  The Criteria for which to retrieve the row count.
+     *
+     * @return
+     *  The number of rows returned from the database for the given Criteria-based query.
+     */
+    protected int getRowCount(Criteria criteria) {
+        criteria.setProjection(Projections.rowCount());
+        int count = ((Number) criteria.uniqueResult()).intValue();
+
+        criteria.setProjection(null);
+        criteria.setResultTransformer(Criteria.ROOT_ENTITY);
+
+        return count;
+    }
+
+    /**
      * Retrieves an iterator over the compliance snapshots on the target date.
      *
      * @param targetDate
@@ -80,7 +104,16 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
      */
     public Iterator<Compliance> getSnapshotIterator(Date targetDate, List<String> consumerUuids,
         List<String> ownerFilters, List<String> statusFilters) {
-        return this.getSnapshotIterator(targetDate, consumerUuids, ownerFilters, statusFilters, 0, 0);
+
+        Page<Iterator<Compliance>> result = this.getSnapshotIterator(
+            targetDate,
+            consumerUuids,
+            ownerFilters,
+            statusFilters,
+            null
+        );
+
+        return result.getPageData();
     }
 
     /**
@@ -112,33 +145,36 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
      * @return
      *  An iterator over the compliance snapshots for the target date.
      */
-    public Iterator<Compliance> getSnapshotIterator(Date targetDate, List<String> consumerUuids,
-        List<String> ownerFilters, List<String> statusFilters, int offset, int results) {
+    public Page<Iterator<Compliance>> getSnapshotIterator(Date targetDate, List<String> consumerUuids,
+        List<String> ownerFilters, List<String> statusFilters, PageRequest pageRequest) {
 
-        DetachedCriteria mainQuery = DetachedCriteria.forClass(Compliance.class);
-        mainQuery.createAlias("consumer", "c");
-        mainQuery.createAlias("c.consumerState", "state");
+        Page<Iterator<Compliance>> page = new Page<Iterator<Compliance>>();
+        page.setPageRequest(pageRequest);
+
+        DetachedCriteria subquery = DetachedCriteria.forClass(Compliance.class);
+        subquery.createAlias("consumer", "c");
+        subquery.createAlias("c.consumerState", "state");
 
         // https://hibernate.atlassian.net/browse/HHH-2776
         if (consumerUuids != null && !consumerUuids.isEmpty()) {
-            mainQuery.add(Restrictions.in("c.uuid", consumerUuids));
+            subquery.add(Restrictions.in("c.uuid", consumerUuids));
         }
 
         Date toCheck = targetDate == null ? new Date() : targetDate;
-        mainQuery.add(Restrictions.or(
+        subquery.add(Restrictions.or(
             Restrictions.isNull("state.deleted"),
             Restrictions.gt("state.deleted", toCheck)
         ));
-        mainQuery.add(Restrictions.le("state.created", toCheck));
+        subquery.add(Restrictions.le("state.created", toCheck));
 
         if (ownerFilters != null && !ownerFilters.isEmpty()) {
-            mainQuery.createAlias("c.owner", "o");
-            mainQuery.add(Restrictions.in("o.key", ownerFilters));
+            subquery.createAlias("c.owner", "o");
+            subquery.add(Restrictions.in("o.key", ownerFilters));
         }
 
-        mainQuery.add(Restrictions.le("date", toCheck));
+        subquery.add(Restrictions.le("date", toCheck));
 
-        mainQuery.setProjection(
+        subquery.setProjection(
             Projections.projectionList()
                 .add(Projections.max("date"))
                 .add(Projections.groupProperty("c.uuid"))
@@ -146,40 +182,59 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
 
         // Post query filter on Status.
         Session session = this.currentSession();
-        Criteria postFilter = session.createCriteria(Compliance.class)
+        Criteria query = session.createCriteria(Compliance.class)
             .createAlias("consumer", "cs")
-            .add(Subqueries.propertiesIn(new String[] {"date", "cs.uuid"}, mainQuery))
+            .add(Subqueries.propertiesIn(new String[] {"date", "cs.uuid"}, subquery))
             .setCacheMode(CacheMode.IGNORE)
             .setReadOnly(true);
 
-        if (offset > 0) {
-            postFilter.setFirstResult(offset);
-        }
-
-        if (results > 0) {
-            postFilter.setMaxResults(results);
-        }
-
         if (statusFilters != null && !statusFilters.isEmpty()) {
-            postFilter.createAlias("status", "stat");
-            postFilter.add(Restrictions.in("stat.status", statusFilters));
+            query.createAlias("status", "stat");
+            query.add(Restrictions.in("stat.status", statusFilters));
         }
 
-        return new AutoEvictingColumnarResultsIterator<Compliance>(
+        if (pageRequest != null && pageRequest.isPaging()) {
+            page.setMaxRecords(this.getRowCount(query));
+
+            query.setFirstResult((pageRequest.getPage() - 1) * pageRequest.getPerPage());
+            query.setMaxResults(pageRequest.getPerPage());
+
+            if (pageRequest.getSortBy() != null) {
+                query.addOrder(
+                    pageRequest.getOrder() == PageRequest.Order.ASCENDING ?
+                        Order.asc(pageRequest.getSortBy()) :
+                        Order.desc(pageRequest.getSortBy())
+                );
+            }
+        }
+
+        page.setPageData(new AutoEvictingColumnarResultsIterator<Compliance>(
             session,
-            postFilter.scroll(ScrollMode.FORWARD_ONLY),
+            query.scroll(ScrollMode.FORWARD_ONLY),
             0
-        );
+        ));
+
+        return page;
     }
 
     public Iterator<Compliance> getSnapshotIteratorForConsumer(String consumerUUID, Date startDate,
         Date endDate) {
 
-        return this.getSnapshotIteratorForConsumer(consumerUUID, startDate, endDate, 0, 0);
+        Page<Iterator<Compliance>> result = this.getSnapshotIteratorForConsumer(
+            consumerUUID,
+            startDate,
+            endDate,
+            null
+        );
+
+        return result.getPageData();
     }
 
-    public Iterator<Compliance> getSnapshotIteratorForConsumer(String consumerUUID, Date startDate,
-        Date endDate, int offset, int results) {
+    public Page<Iterator<Compliance>> getSnapshotIteratorForConsumer(String consumerUUID, Date startDate,
+        Date endDate, PageRequest pageRequest) {
+
+        Page<Iterator<Compliance>> page = new Page<Iterator<Compliance>>();
+        page.setPageRequest(pageRequest);
 
         Session session = this.currentSession();
         Criteria query = session.createCriteria(Compliance.class, "comp1");
@@ -220,19 +275,28 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
         query.setCacheMode(CacheMode.IGNORE);
         query.setReadOnly(true);
 
-        if (offset > 0) {
-            query.setFirstResult(offset);
+        if (pageRequest != null && pageRequest.isPaging()) {
+            page.setMaxRecords(this.getRowCount(query));
+
+            query.setFirstResult((pageRequest.getPage() - 1) * pageRequest.getPerPage());
+            query.setMaxResults(pageRequest.getPerPage());
+
+            if (pageRequest.getSortBy() != null) {
+                query.addOrder(
+                    pageRequest.getOrder() == PageRequest.Order.ASCENDING ?
+                        Order.asc(pageRequest.getSortBy()) :
+                        Order.desc(pageRequest.getSortBy())
+                );
+            }
         }
 
-        if (results > 0) {
-            query.setMaxResults(results);
-        }
-
-        return new AutoEvictingColumnarResultsIterator<Compliance>(
+        page.setPageData(new AutoEvictingColumnarResultsIterator<Compliance>(
             session,
             query.scroll(ScrollMode.FORWARD_ONLY),
             0
-        );
+        ));
+
+        return page;
     }
 
     /**

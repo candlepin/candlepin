@@ -17,6 +17,7 @@ package org.candlepin.gutterball.report;
 
 import org.candlepin.common.config.ConversionException;
 import org.candlepin.common.config.PropertyConverter;
+import org.candlepin.common.paging.PageRequest;
 import org.candlepin.gutterball.curator.ComplianceSnapshotCurator;
 import org.candlepin.gutterball.guice.I18nProvider;
 
@@ -127,7 +128,9 @@ public class StatusTrendReport extends Report<StatusTrendReportResult> {
     }
 
     @Override
-    protected StatusTrendReportResult execute(MultivaluedMap<String, String> queryParams) {
+    protected StatusTrendReportResult execute(MultivaluedMap<String, String> queryParams,
+        PageRequest pageRequest) {
+
         Map<String, String> attributes = new HashMap<String, String>();
 
         TimeZone timezone = this.parseTimeZone(queryParams.getFirst("timezone"));

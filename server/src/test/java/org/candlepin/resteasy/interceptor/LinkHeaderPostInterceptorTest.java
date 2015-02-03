@@ -25,8 +25,8 @@ import static org.mockito.Mockito.when;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.paging.Page;
-import org.candlepin.paging.PageRequest;
+import org.candlepin.common.paging.Page;
+import org.candlepin.common.paging.PageRequest;
 
 import org.jboss.resteasy.core.ServerResponse;
 import org.jboss.resteasy.specimpl.MultivaluedMapImpl;

@@ -52,7 +52,7 @@ import org.candlepin.model.Role;
 import org.candlepin.model.RoleCurator;
 import org.candlepin.model.User;
 import org.candlepin.model.UserCurator;
-import org.candlepin.paging.PageRequest;
+import org.candlepin.common.paging.PageRequest;
 import org.candlepin.pki.PKIReader;
 import org.candlepin.pki.impl.BouncyCastlePKIReader;
 import org.candlepin.resource.util.ConsumerBindUtil;

@@ -28,8 +28,8 @@ import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.GuestIdCurator;
 import org.candlepin.model.VirtConsumerMap;
-import org.candlepin.paging.Page;
-import org.candlepin.paging.PageRequest;
+import org.candlepin.common.paging.Page;
+import org.candlepin.common.paging.PageRequest;
 
 import com.google.inject.Inject;
 

@@ -184,7 +184,7 @@ public class StatusTrendReportTest {
 
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
 
-        StatusTrendReportResult actual = report.run(params);
+        StatusTrendReportResult actual = report.run(params, null);
         StatusTrendReportResult expected = new StatusTrendReportResult();
         expected.put(this.testDateString, testcount);
 
@@ -218,7 +218,7 @@ public class StatusTrendReportTest {
 
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
 
-        StatusTrendReportResult actual = report.run(params);
+        StatusTrendReportResult actual = report.run(params, null);
         StatusTrendReportResult expected = new StatusTrendReportResult();
         expected.put(this.testDateString, testcount);
 
@@ -256,7 +256,7 @@ public class StatusTrendReportTest {
 
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
 
-        StatusTrendReportResult actual = report.run(params);
+        StatusTrendReportResult actual = report.run(params, null);
         StatusTrendReportResult expected = new StatusTrendReportResult();
         expected.put(this.testDateString, testcount);
 
@@ -284,7 +284,7 @@ public class StatusTrendReportTest {
 
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
 
-        StatusTrendReportResult actual = report.run(params);
+        StatusTrendReportResult actual = report.run(params, null);
         StatusTrendReportResult expected = new StatusTrendReportResult();
         expected.put(this.testDateString, testcount);
 
@@ -317,7 +317,7 @@ public class StatusTrendReportTest {
 
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
 
-        StatusTrendReportResult actual = report.run(params);
+        StatusTrendReportResult actual = report.run(params, null);
         StatusTrendReportResult expected = new StatusTrendReportResult();
         expected.put(this.testDateString, testcount);
 
@@ -356,7 +356,7 @@ public class StatusTrendReportTest {
 
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
 
-        StatusTrendReportResult actual = report.run(params);
+        StatusTrendReportResult actual = report.run(params, null);
         StatusTrendReportResult expected = new StatusTrendReportResult();
         expected.put(this.testDateString, testcount);
 
@@ -400,7 +400,7 @@ public class StatusTrendReportTest {
 
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
 
-        StatusTrendReportResult actual = report.run(params);
+        StatusTrendReportResult actual = report.run(params, null);
         StatusTrendReportResult expected = new StatusTrendReportResult();
         expected.put(this.testDateString, testcount);
 
@@ -430,7 +430,7 @@ public class StatusTrendReportTest {
 
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
 
-        StatusTrendReportResult actual = report.run(params);
+        StatusTrendReportResult actual = report.run(params, null);
         StatusTrendReportResult expected = new StatusTrendReportResult();
         expected.put(this.testDateString, testcount);
 
@@ -464,7 +464,7 @@ public class StatusTrendReportTest {
 
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
 
-        StatusTrendReportResult actual = report.run(params);
+        StatusTrendReportResult actual = report.run(params, null);
         StatusTrendReportResult expected = new StatusTrendReportResult();
         expected.put(this.testDateString, testcount);
 
@@ -503,7 +503,7 @@ public class StatusTrendReportTest {
 
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
 
-        StatusTrendReportResult actual = report.run(params);
+        StatusTrendReportResult actual = report.run(params, null);
         StatusTrendReportResult expected = new StatusTrendReportResult();
         expected.put(this.testDateString, testcount);
 
@@ -546,7 +546,7 @@ public class StatusTrendReportTest {
 
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
 
-        StatusTrendReportResult actual = report.run(params);
+        StatusTrendReportResult actual = report.run(params, null);
         StatusTrendReportResult expected = new StatusTrendReportResult();
         expected.put(this.testDateString, testcount);
 
@@ -579,7 +579,7 @@ public class StatusTrendReportTest {
 
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
 
-        StatusTrendReportResult actual = report.run(params);
+        StatusTrendReportResult actual = report.run(params, null);
         StatusTrendReportResult expected = new StatusTrendReportResult();
         expected.put(this.testDateString, testcount);
 
@@ -615,7 +615,7 @@ public class StatusTrendReportTest {
 
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
 
-        StatusTrendReportResult actual = report.run(params);
+        StatusTrendReportResult actual = report.run(params, null);
         StatusTrendReportResult expected = new StatusTrendReportResult();
         expected.put(this.testDateString, testcount);
 
@@ -656,7 +656,7 @@ public class StatusTrendReportTest {
 
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
 
-        StatusTrendReportResult actual = report.run(params);
+        StatusTrendReportResult actual = report.run(params, null);
         StatusTrendReportResult expected = new StatusTrendReportResult();
         expected.put(this.testDateString, testcount);
 
@@ -701,7 +701,7 @@ public class StatusTrendReportTest {
 
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
 
-        StatusTrendReportResult actual = report.run(params);
+        StatusTrendReportResult actual = report.run(params, null);
         StatusTrendReportResult expected = new StatusTrendReportResult();
         expected.put(this.testDateString, testcount);
 
@@ -735,7 +735,7 @@ public class StatusTrendReportTest {
 
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
 
-        StatusTrendReportResult actual = report.run(params);
+        StatusTrendReportResult actual = report.run(params, null);
         StatusTrendReportResult expected = new StatusTrendReportResult();
         expected.put(dateString, testcount);
 

@@ -12,13 +12,13 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.resteasy.interceptor;
+package org.candlepin.common.resteasy.interceptor;
 
 import org.candlepin.common.config.Configuration;
-import org.candlepin.config.ConfigProperties;
-import org.candlepin.paging.Page;
-import org.candlepin.paging.PageRequest;
-import org.candlepin.paging.Paginate;
+import org.candlepin.common.paging.Page;
+import org.candlepin.common.paging.PageRequest;
+import org.candlepin.common.paging.Paginate;
+// import org.candlepin.config.ConfigProperties;
 
 import com.google.inject.Inject;
 
@@ -151,38 +151,38 @@ public class LinkHeaderPostInterceptor implements PostProcessInterceptor, Accept
 
     protected UriBuilder buildBaseUrl(HttpServletRequest request) {
         StringBuffer url;
-        if (config.containsKey(ConfigProperties.PREFIX_APIURL) &&
-            !"".equals(config.getString(ConfigProperties.PREFIX_APIURL))) {
-            url = new StringBuffer(config.getString(ConfigProperties.PREFIX_APIURL));
-            // The default value of PREFIX_APIURL doesn't specify a scheme.
-            if (url.indexOf("://") == -1) {
-                url = new StringBuffer("https://").append(url);
-            }
+        // if (config.containsKey(ConfigProperties.PREFIX_APIURL) &&
+        //     !"".equals(config.getString(ConfigProperties.PREFIX_APIURL))) {
+        //     url = new StringBuffer(config.getString(ConfigProperties.PREFIX_APIURL));
+        //     // The default value of PREFIX_APIURL doesn't specify a scheme.
+        //     if (url.indexOf("://") == -1) {
+        //         url = new StringBuffer("https://").append(url);
+        //     }
 
-            // Now add on the resource they requested
-            // We can't just use request.getServletPath().  Something RESTEasy is doing?
+        //     // Now add on the resource they requested
+        //     // We can't just use request.getServletPath().  Something RESTEasy is doing?
 
-            // Context path should equal something like /candlepin
-            String context = request.getContextPath();
+        //     // Context path should equal something like /candlepin
+        //     String context = request.getContextPath();
 
-            // Request URI should equal something like /candlepin/resource
-            String requestUri = request.getRequestURI();
+        //     // Request URI should equal something like /candlepin/resource
+        //     String requestUri = request.getRequestURI();
 
-            int offset = requestUri.lastIndexOf(context);
-            if (offset >= 0) {
-                // Strip off the context
-                url.append(requestUri.substring(offset + context.length()));
-            }
-            else {
-                // Something has gone really wrong if the context isn't in the
-                // request URI.
-                log.warn("Could not determine resource path.");
-                return null;
-            }
-        }
-        else {
+        //     int offset = requestUri.lastIndexOf(context);
+        //     if (offset >= 0) {
+        //         // Strip off the context
+        //         url.append(requestUri.substring(offset + context.length()));
+        //     }
+        //     else {
+        //         // Something has gone really wrong if the context isn't in the
+        //         // request URI.
+        //         log.warn("Could not determine resource path.");
+        //         return null;
+        //     }
+        // }
+        // else {
             url = request.getRequestURL();
-        }
+        // }
 
         try {
             UriBuilder builder = UriBuilder.fromUri(url.toString());

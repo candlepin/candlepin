@@ -15,11 +15,14 @@
 package org.candlepin.gutterball.report;
 
 import org.candlepin.common.config.PropertyConverter;
+import org.candlepin.common.paging.Page;
+import org.candlepin.common.paging.PageRequest;
 import org.candlepin.gutterball.curator.ComplianceSnapshotCurator;
 import org.candlepin.gutterball.model.snapshot.Compliance;
 
 import com.google.inject.Inject;
 
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.Calendar;
@@ -88,12 +91,13 @@ public class ConsumerTrendReport extends Report<ReportResult> {
     }
 
     @Override
-    protected ReportResult execute(MultivaluedMap<String, String> queryParams) {
+    protected ReportResult execute(MultivaluedMap<String, String> queryParams, PageRequest pageRequest) {
 
         String consumer = queryParams.getFirst("consumer_uuid");
 
         Date startDate = null;
         Date endDate = null;
+
         // Determine if we should lookup for the last x hours.
         if (queryParams.containsKey("hours")) {
             Calendar cal = Calendar.getInstance();
@@ -108,38 +112,21 @@ public class ConsumerTrendReport extends Report<ReportResult> {
             endDate = parseDateTime(queryParams.getFirst("end_date"));
         }
 
-        // Pagination stuff
-        int page = queryParams.containsKey("page") ?
-            Integer.parseInt(queryParams.getFirst("page")) :
-            0;
-
-        int perPage = queryParams.containsKey("per_page") ?
-            Integer.parseInt(queryParams.getFirst("per_page")) :
-            0;
-
-        int offset = 0;
-        int results = 0;
-
-        if (page > 0 && perPage > 0) {
-            offset = (page - 1) * perPage;
-            results = perPage;
-        }
-
         String custom = queryParams.containsKey("custom") ? queryParams.getFirst("custom") : "";
         boolean useCustom = PropertyConverter.toBoolean(custom);
 
-        Iterator<Compliance> iterator = this.snapshotCurator.getSnapshotIteratorForConsumer(
+        Page<Iterator<Compliance>> page = this.snapshotCurator.getSnapshotIteratorForConsumer(
                 consumer,
                 startDate,
                 endDate,
-                offset,
-                results
+                pageRequest
         );
 
-        if (useCustom) {
-            return new ReasonGeneratingReportResult(iterator, this.messageGenerator);
-        }
-        return new ConsumerTrendReportDefaultResult(iterator);
+        ResteasyProviderFactory.pushContext(Page.class, page);
+
+        return useCustom ?
+            new ReasonGeneratingReportResult(page.getPageData(), this.messageGenerator) :
+            new ConsumerTrendReportDefaultResult(page.getPageData());
     }
 
 }

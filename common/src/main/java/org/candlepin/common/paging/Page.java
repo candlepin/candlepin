@@ -12,16 +12,16 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.paging;
+package org.candlepin.common.paging;
 
-import java.util.Collection;
+
 
 /**
  * Represents a page of data.
  *
- * @param <T> The type of collection this page holds.
+ * @param <T> The type of data or results this page holds.
  */
-public class Page<T extends Collection<?>> {
+public class Page<T> {
     private T pageData;
     private Integer maxRecords;
     private PageRequest pageRequest;

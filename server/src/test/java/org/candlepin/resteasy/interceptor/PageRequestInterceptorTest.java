@@ -18,7 +18,7 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.common.exceptions.BadRequestException;
-import org.candlepin.paging.PageRequest;
+import org.candlepin.common.paging.PageRequest;
 
 import org.jboss.resteasy.core.ResourceMethod;
 import org.jboss.resteasy.mock.MockHttpRequest;

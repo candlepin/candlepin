@@ -16,11 +16,14 @@
 package org.candlepin.gutterball.report;
 
 import org.candlepin.common.config.PropertyConverter;
+import org.candlepin.common.paging.Page;
+import org.candlepin.common.paging.PageRequest;
 import org.candlepin.gutterball.curator.ComplianceSnapshotCurator;
 import org.candlepin.gutterball.model.snapshot.Compliance;
 
 import com.google.inject.Inject;
 
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.Date;
@@ -98,7 +101,7 @@ public class ConsumerStatusReport extends Report<ReportResult> {
     }
 
     @Override
-    protected ReportResult execute(MultivaluedMap<String, String> queryParams) {
+    protected ReportResult execute(MultivaluedMap<String, String> queryParams, PageRequest pageRequest) {
         // At this point we would execute a lookup against the DW data store to formulate
         // the report result set.
 
@@ -110,37 +113,21 @@ public class ConsumerStatusReport extends Report<ReportResult> {
             parseDateTime(queryParams.getFirst("on_date")) :
             new Date();
 
-        // Pagination stuff
-        int page = queryParams.containsKey("page") ?
-            Integer.parseInt(queryParams.getFirst("page")) :
-            0;
+        String custom = queryParams.containsKey("custom") ? queryParams.getFirst("custom") : "";
+        boolean useCustom = PropertyConverter.toBoolean(custom);
 
-        int perPage = queryParams.containsKey("per_page") ?
-            Integer.parseInt(queryParams.getFirst("per_page")) :
-            0;
-
-        int offset = 0;
-        int results = 0;
-
-        if (page > 0 && perPage > 0) {
-            offset = (page - 1) * perPage;
-            results = perPage;
-        }
-
-        Iterator<Compliance> iterator = this.complianceSnapshotCurator.getSnapshotIterator(
+        Page<Iterator<Compliance>> page = this.complianceSnapshotCurator.getSnapshotIterator(
             targetDate,
             consumerIds,
             ownerFilters,
             statusFilters,
-            offset,
-            results
+            pageRequest
         );
 
-        String custom = queryParams.containsKey("custom") ? queryParams.getFirst("custom") : "";
-        boolean useCustom = PropertyConverter.toBoolean(custom);
-        if (useCustom) {
-            return new ReasonGeneratingReportResult(iterator, this.messageGenerator);
-        }
-        return new ConsumerStatusReportDefaultResult(iterator);
+        ResteasyProviderFactory.pushContext(Page.class, page);
+
+        return useCustom ?
+            new ReasonGeneratingReportResult(page.getPageData(), this.messageGenerator) :
+            new ConsumerStatusReportDefaultResult(page.getPageData());
     }
 }

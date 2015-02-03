@@ -19,7 +19,7 @@ import static org.junit.Assert.assertEquals;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
-import org.candlepin.paging.Page;
+import org.candlepin.common.paging.Page;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.test.DatabaseTestFixture;
 

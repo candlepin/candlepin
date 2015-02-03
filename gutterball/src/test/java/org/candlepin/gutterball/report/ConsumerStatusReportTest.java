@@ -19,6 +19,9 @@ import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
+import org.candlepin.common.paging.Page;
+import org.candlepin.common.paging.PageRequest;
+
 import org.candlepin.gutterball.TestUtils;
 import org.candlepin.gutterball.curator.ComplianceSnapshotCurator;
 import org.candlepin.gutterball.guice.I18nProvider;
@@ -36,6 +39,7 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -68,10 +72,13 @@ public class ConsumerStatusReportTest {
         I18nProvider i18nProvider = new I18nProvider(mockReq);
         StatusReasonMessageGenerator messageGenerator = mock(StatusReasonMessageGenerator.class);
 
+        Page<Iterator<Compliance>> page = new Page<Iterator<Compliance>>();
+        page.setPageData((new LinkedList<Compliance>()).iterator());
+
         // Indentation note: This is what checkstyle actually wants. :/
         when(complianceSnapshotCurator.getSnapshotIterator(
-                any(Date.class), any(List.class), any(List.class), any(List.class), anyInt(), anyInt()
-        )).thenReturn((new LinkedList<Compliance>()).iterator());
+                any(Date.class), any(List.class), any(List.class), any(List.class), any(PageRequest.class)
+        )).thenReturn(page);
 
         report = new ConsumerStatusReport(i18nProvider, complianceSnapshotCurator, messageGenerator);
     }
@@ -100,14 +107,15 @@ public class ConsumerStatusReportTest {
         when(params.getFirst("on_date")).thenReturn(onDateString);
         when(params.get("on_date")).thenReturn(Arrays.asList(onDateString));
 
-        report.run(params);
-
         List<String> uuids = null;
         List<String> owners = null;
         List<String> status = null;
+        PageRequest pageRequest = null;
+
+        report.run(params, pageRequest);
 
         verify(complianceSnapshotCurator).getSnapshotIterator(eq(cal.getTime()),
-                eq(uuids), eq(owners), eq(status), anyInt(), anyInt());
+                eq(uuids), eq(owners), eq(status), eq(pageRequest));
         verifyNoMoreInteractions(complianceSnapshotCurator);
     }
 
@@ -117,14 +125,15 @@ public class ConsumerStatusReportTest {
         when(params.containsKey("owner")).thenReturn(true);
         when(params.get("owner")).thenReturn(Arrays.asList("o2"));
 
-        report.run(params);
-
         List<String> uuids = null;
         List<String> owners = Arrays.asList("o2");
         List<String> status = null;
+        PageRequest pageRequest = null;
+
+        report.run(params, pageRequest);
 
         verify(complianceSnapshotCurator).getSnapshotIterator(any(Date.class),
-                eq(uuids), eq(owners), eq(status), anyInt(), anyInt());
+                eq(uuids), eq(owners), eq(status), eq(pageRequest));
         verifyNoMoreInteractions(complianceSnapshotCurator);
     }
 
@@ -136,34 +145,35 @@ public class ConsumerStatusReportTest {
 
         List<String> uuids = null;
         List<String> owners = null;
+        PageRequest pageRequest = null;
 
-        report.run(params);
+        report.run(params, pageRequest);
         verify(complianceSnapshotCurator).getSnapshotIterator(any(Date.class),
                 eq(uuids), eq(owners),
                 eq(Arrays.asList("partial")),
-                anyInt(), anyInt());
+                eq(pageRequest));
         verifyNoMoreInteractions(complianceSnapshotCurator);
     }
 
     @Test
     public void testGetPaginatedResults() {
         MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
-        when(params.containsKey("page")).thenReturn(true);
-        when(params.get("page")).thenReturn(Arrays.asList("3"));
-        when(params.getFirst("page")).thenReturn("3");
-        when(params.containsKey("per_page")).thenReturn(true);
-        when(params.get("per_page")).thenReturn(Arrays.asList("10"));
-        when(params.getFirst("per_page")).thenReturn("10");
 
         List<String> uuids = null;
         List<String> owners = null;
         List<String> statuses = null;
+        PageRequest pageRequest = new PageRequest();
+        pageRequest.setPage(3);
+        pageRequest.setPerPage(10);
 
-        report.run(params);
-        verify(complianceSnapshotCurator).getSnapshotIterator(any(Date.class),
-                eq(uuids), eq(owners),
+        report.run(params, pageRequest);
+        verify(complianceSnapshotCurator).getSnapshotIterator(
+                any(Date.class),
+                eq(uuids),
+                eq(owners),
                 eq(statuses),
-                eq(20), eq(10));
+                eq(pageRequest)
+        );
         verifyNoMoreInteractions(complianceSnapshotCurator);
     }
 
@@ -175,11 +185,15 @@ public class ConsumerStatusReportTest {
         List<Compliance> complianceList = new LinkedList<Compliance>();
         complianceList.add(TestUtils.createComplianceSnapshot(new Date(), "abcd", "an-owner", "valid",
             new ConsumerState("abcd", "an-owner", new Date())));
-        when(complianceSnapshotCurator.getSnapshotIterator(
-                any(Date.class), any(List.class), any(List.class), any(List.class), anyInt(), anyInt()
-        )).thenReturn(complianceList.iterator());
 
-        ComplianceTransformerIterator result = (ComplianceTransformerIterator) report.run(params);
+        Page<Iterator<Compliance>> page = new Page<Iterator<Compliance>>();
+        page.setPageData(complianceList.iterator());
+
+        when(complianceSnapshotCurator.getSnapshotIterator(
+                any(Date.class), any(List.class), any(List.class), any(List.class), any(PageRequest.class)
+        )).thenReturn(page);
+
+        ComplianceTransformerIterator result = (ComplianceTransformerIterator) report.run(params, null);
         assertNotNull(result);
         assertTrue(result.hasNext());
         assertTrue(result.next() instanceof ConsumerStatusComplianceDto);
@@ -194,11 +208,14 @@ public class ConsumerStatusReportTest {
         List<Compliance> complianceList = new LinkedList<Compliance>();
         complianceList.add(TestUtils.createComplianceSnapshot(new Date(), "abcd", "an-owner", "valid"));
 
-        when(complianceSnapshotCurator.getSnapshotIterator(
-                any(Date.class), any(List.class), any(List.class), any(List.class), anyInt(), anyInt()
-        )).thenReturn(complianceList.iterator());
+        Page<Iterator<Compliance>> page = new Page<Iterator<Compliance>>();
+        page.setPageData(complianceList.iterator());
 
-        ReasonGeneratingReportResult result = (ReasonGeneratingReportResult) report.run(params);
+        when(complianceSnapshotCurator.getSnapshotIterator(
+                any(Date.class), any(List.class), any(List.class), any(List.class), any(PageRequest.class)
+        )).thenReturn(page);
+
+        ReasonGeneratingReportResult result = (ReasonGeneratingReportResult) report.run(params, null);
         assertNotNull(result);
         assertTrue(result.hasNext());
         assertTrue(result.next() instanceof Compliance);

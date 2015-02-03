@@ -32,9 +32,9 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.Statistic;
 import org.candlepin.model.StatisticCurator;
-import org.candlepin.paging.Page;
-import org.candlepin.paging.PageRequest;
-import org.candlepin.paging.Paginate;
+import org.candlepin.common.paging.Page;
+import org.candlepin.common.paging.PageRequest;
+import org.candlepin.common.paging.Paginate;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ResourceDateParser;
 

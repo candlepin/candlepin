@@ -18,8 +18,8 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.paging.Page;
-import org.candlepin.paging.PageRequest;
+import org.candlepin.common.paging.Page;
+import org.candlepin.common.paging.PageRequest;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.util.Util;
 

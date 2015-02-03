@@ -14,8 +14,8 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.paging.Page;
-import org.candlepin.paging.PageRequest;
+import org.candlepin.common.paging.Page;
+import org.candlepin.common.paging.PageRequest;
 import org.candlepin.service.ProductServiceAdapter;
 
 import com.google.inject.Inject;
