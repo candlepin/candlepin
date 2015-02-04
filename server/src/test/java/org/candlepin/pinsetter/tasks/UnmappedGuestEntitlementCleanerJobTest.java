@@ -23,7 +23,7 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolAttribute;
-import org.candlepin.model.PoolCurator;
+import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.Product;
 import org.candlepin.test.TestUtil;
@@ -40,7 +40,7 @@ import java.util.Set;
 
 @RunWith(MockitoJUnitRunner.class)
 public class UnmappedGuestEntitlementCleanerJobTest {
-    @Mock private PoolCurator poolCurator;
+    @Mock private EntitlementCurator entitlementCurator;
     @Mock private PoolManager poolManager;
 
     @Test
@@ -58,9 +58,6 @@ public class UnmappedGuestEntitlementCleanerJobTest {
 
         p1.addAttribute(new PoolAttribute("unmapped_guests_only", "true"));
         p2.addAttribute(new PoolAttribute("unmapped_guests_only", "true"));
-
-        when(poolCurator.listByFilter(any(PoolFilterBuilder.class)))
-            .thenReturn(Arrays.asList(new Pool[] {p1, p2}));
 
         Date thirtySixHoursAgo = new Date(new Date().getTime() - 36L * 60L * 60L * 1000L);
         Date twelveHoursAgo =  new Date(new Date().getTime() - 12L * 60L * 60L * 1000L);
@@ -85,7 +82,10 @@ public class UnmappedGuestEntitlementCleanerJobTest {
 
         p2.setEntitlements(entitlementSet2);
 
-        new UnmappedGuestEntitlementCleanerJob(poolCurator, poolManager).execute(null);
+        when(entitlementCurator.findByPoolAttribute(eq("unmapped_guests_only"), eq("true")))
+            .thenReturn(Arrays.asList(new Entitlement[] {e1,  e2}));
+
+        new UnmappedGuestEntitlementCleanerJob(entitlementCurator, poolManager).execute(null);
 
         verify(poolManager).revokeEntitlement(e1);
     }

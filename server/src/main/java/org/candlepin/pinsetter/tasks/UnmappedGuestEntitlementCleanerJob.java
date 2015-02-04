@@ -16,6 +16,7 @@ package org.candlepin.pinsetter.tasks;
 
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Entitlement;
+import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolFilterBuilder;
@@ -34,7 +35,7 @@ import javax.inject.Inject;
 /**
  *
  * UnmappedGuestEntitlementCleanerJob removes 24 hour unmapped guest entitlements
- * after the entitlement has expired.  Entitlements normally last until to pool expires
+ * after the entitlement has expired.  Entitlements normally last until a pool expires.
  */
 public class UnmappedGuestEntitlementCleanerJob extends KingpinJob {
     // Run at 3 AM and every 12 hours afterwards
@@ -42,12 +43,12 @@ public class UnmappedGuestEntitlementCleanerJob extends KingpinJob {
 
     private static final Logger log = LoggerFactory.getLogger(UnmappedGuestEntitlementCleanerJob.class);
 
-    private PoolCurator poolCurator;
+    private EntitlementCurator entitlementCurator;
     private PoolManager poolManager;
 
     @Inject
-    public UnmappedGuestEntitlementCleanerJob(PoolCurator poolCurator, PoolManager manager) {
-        this.poolCurator = poolCurator;
+    public UnmappedGuestEntitlementCleanerJob(EntitlementCurator entitlementCurator, PoolManager manager) {
+        this.entitlementCurator = entitlementCurator;
         this.poolManager = manager;
     }
 
@@ -55,27 +56,20 @@ public class UnmappedGuestEntitlementCleanerJob extends KingpinJob {
     public void toExecute(JobExecutionContext context)
         throws JobExecutionException {
         Date now = new Date();
-        PoolFilterBuilder filters = new PoolFilterBuilder();
-        filters.addAttributeFilter("unmapped_guests_only", "true");
 
-        List<Pool> unmappedGuestPools = poolCurator.listByFilter(filters);
-        List<Entitlement> lapsedUnmappedGuestEntitlements = new ArrayList<Entitlement>();
+        List<Entitlement> unmappedGuestEntitlements =
+            entitlementCurator.findByPoolAttribute("unmapped_guests_only", "true");
 
-        for (Pool p : unmappedGuestPools) {
-            for (Entitlement e : p.getEntitlements()) {
-                if (isLapsed(e, now)) {
-                    lapsedUnmappedGuestEntitlements.add(e);
-                }
+        int total = 0;
+        for (Entitlement e : unmappedGuestEntitlements) {
+            if (isLapsed(e, now)) {
+                poolManager.revokeEntitlement(e);
+                total++;
             }
         }
 
-        for (Entitlement e : lapsedUnmappedGuestEntitlements) {
-            poolManager.revokeEntitlement(e);
-        }
-
-        if (lapsedUnmappedGuestEntitlements.size() > 0) {
-            log.info("Reaped {} unmapped guest entitlements due to expiration.",
-                lapsedUnmappedGuestEntitlements.size());
+        if (total > 0) {
+            log.info("Reaped {} unmapped guest entitlements due to expiration.", total);
         }
         else {
             log.debug("No unmapped guest entitlements need reaping.");
