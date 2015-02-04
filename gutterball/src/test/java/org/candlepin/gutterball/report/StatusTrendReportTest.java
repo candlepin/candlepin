@@ -20,6 +20,7 @@ import static org.mockito.Mockito.*;
 import static junitparams.JUnitParamsRunner.*;
 
 import org.candlepin.common.config.MapConfiguration;
+import org.candlepin.common.paging.Page;
 import org.candlepin.gutterball.GutterballTestingModule;
 import org.candlepin.gutterball.curator.ComplianceSnapshotCurator;
 import org.candlepin.gutterball.guice.I18nProvider;
@@ -173,14 +174,17 @@ public class StatusTrendReportTest {
     @Test
     public void testDefaultReporting() {
         HashMap<String, Integer> testcount = new HashMap<String, Integer>();
+        Page<Map<Date, Map<String, Integer>>> testpage = new Page<Map<Date, Map<String, Integer>>>();
         HashMap<Date, Map<String, Integer>> testoutput = new HashMap<Date, Map<String, Integer>>();
         testcount.put("testcount1", 1);
         testoutput.put(this.testDate, testcount);
+        testpage.setPageData(testoutput);
 
         MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
 
         ComplianceSnapshotCurator mockCSCurator = mock(ComplianceSnapshotCurator.class);
-        when(mockCSCurator.getComplianceStatusCounts(null, null, null)).thenReturn(testoutput);
+        when(mockCSCurator.getComplianceStatusCounts(null, null, null, null, null, null, null))
+            .thenReturn(testpage);
 
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
 
@@ -190,16 +194,18 @@ public class StatusTrendReportTest {
 
         assertEquals(expected, actual);
 
-        verify(mockCSCurator).getComplianceStatusCounts(null, null, null);
+        verify(mockCSCurator).getComplianceStatusCounts(null, null, null, null, null, null, null);
         verifyNoMoreInteractions(mockCSCurator);
     }
 
     @Test
     public void testReportingByDate() throws Exception {
         HashMap<String, Integer> testcount = new HashMap<String, Integer>();
+        Page<Map<Date, Map<String, Integer>>> testpage = new Page<Map<Date, Map<String, Integer>>>();
         HashMap<Date, Map<String, Integer>> testoutput = new HashMap<Date, Map<String, Integer>>();
         testcount.put("testcount1", 1);
         testoutput.put(this.testDate, testcount);
+        testpage.setPageData(testoutput);
 
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
         Date startDate = formatter.parse("2014-11-07");
@@ -214,7 +220,8 @@ public class StatusTrendReportTest {
         when(params.getFirst("end_date")).thenReturn("2014-11-08");
 
         ComplianceSnapshotCurator mockCSCurator = mock(ComplianceSnapshotCurator.class);
-        when(mockCSCurator.getComplianceStatusCounts(startDate, endDate, null)).thenReturn(testoutput);
+        when(mockCSCurator.getComplianceStatusCounts(startDate, endDate, null, null, null, null, null))
+            .thenReturn(testpage);
 
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
 
@@ -224,16 +231,18 @@ public class StatusTrendReportTest {
 
         assertEquals(expected, actual);
 
-        verify(mockCSCurator).getComplianceStatusCounts(startDate, endDate, null);
+        verify(mockCSCurator).getComplianceStatusCounts(startDate, endDate, null, null, null, null, null);
         verifyNoMoreInteractions(mockCSCurator);
     }
 
     @Test
     public void testReportingByDateAndOwner() throws Exception {
         HashMap<String, Integer> testcount = new HashMap<String, Integer>();
+        Page<Map<Date, Map<String, Integer>>> testpage = new Page<Map<Date, Map<String, Integer>>>();
         HashMap<Date, Map<String, Integer>> testoutput = new HashMap<Date, Map<String, Integer>>();
         testcount.put("testcount1", 1);
         testoutput.put(this.testDate, testcount);
+        testpage.setPageData(testoutput);
 
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
         Date startDate = formatter.parse("2014-11-07");
@@ -252,7 +261,8 @@ public class StatusTrendReportTest {
         when(params.getFirst("owner")).thenReturn(owner);
 
         ComplianceSnapshotCurator mockCSCurator = mock(ComplianceSnapshotCurator.class);
-        when(mockCSCurator.getComplianceStatusCounts(startDate, endDate, owner)).thenReturn(testoutput);
+        when(mockCSCurator.getComplianceStatusCounts(startDate, endDate, owner, null, null, null, null))
+            .thenReturn(testpage);
 
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
 
@@ -262,16 +272,18 @@ public class StatusTrendReportTest {
 
         assertEquals(expected, actual);
 
-        verify(mockCSCurator).getComplianceStatusCounts(startDate, endDate, owner);
+        verify(mockCSCurator).getComplianceStatusCounts(startDate, endDate, owner, null, null, null, null);
         verifyNoMoreInteractions(mockCSCurator);
     }
 
     @Test
     public void testReportingBySku() {
         HashMap<String, Integer> testcount = new HashMap<String, Integer>();
+        Page<Map<Date, Map<String, Integer>>> testpage = new Page<Map<Date, Map<String, Integer>>>();
         HashMap<Date, Map<String, Integer>> testoutput = new HashMap<Date, Map<String, Integer>>();
         testcount.put("testcount1", 1);
         testoutput.put(this.testDate, testcount);
+        testpage.setPageData(testoutput);
 
         MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
         when(params.containsKey("sku")).thenReturn(true);
@@ -279,8 +291,8 @@ public class StatusTrendReportTest {
         when(params.get("sku")).thenReturn(Arrays.asList("testsku1"));
 
         ComplianceSnapshotCurator mockCSCurator = mock(ComplianceSnapshotCurator.class);
-        when(mockCSCurator.getComplianceStatusCountsBySku(null, null, null, "testsku1"))
-            .thenReturn(testoutput);
+        when(mockCSCurator.getComplianceStatusCounts(null, null, null, "testsku1", null, null, null))
+            .thenReturn(testpage);
 
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
 
@@ -290,16 +302,18 @@ public class StatusTrendReportTest {
 
         assertEquals(expected, actual);
 
-        verify(mockCSCurator).getComplianceStatusCountsBySku(null, null, null, "testsku1");
+        verify(mockCSCurator).getComplianceStatusCounts(null, null, null, "testsku1", null, null, null);
         verifyNoMoreInteractions(mockCSCurator);
     }
 
     @Test
     public void testReportingBySkuAndOwner() {
         HashMap<String, Integer> testcount = new HashMap<String, Integer>();
+        Page<Map<Date, Map<String, Integer>>> testpage = new Page<Map<Date, Map<String, Integer>>>();
         HashMap<Date, Map<String, Integer>> testoutput = new HashMap<Date, Map<String, Integer>>();
         testcount.put("testcount1", 1);
         testoutput.put(this.testDate, testcount);
+        testpage.setPageData(testoutput);
 
         String sku = "testsku1";
         String owner = "test_owner";
@@ -313,7 +327,8 @@ public class StatusTrendReportTest {
         when(params.getFirst("owner")).thenReturn(owner);
 
         ComplianceSnapshotCurator mockCSCurator = mock(ComplianceSnapshotCurator.class);
-        when(mockCSCurator.getComplianceStatusCountsBySku(null, null, owner, sku)).thenReturn(testoutput);
+        when(mockCSCurator.getComplianceStatusCounts(null, null, owner, sku, null, null, null))
+            .thenReturn(testpage);
 
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
 
@@ -323,16 +338,18 @@ public class StatusTrendReportTest {
 
         assertEquals(expected, actual);
 
-        verify(mockCSCurator).getComplianceStatusCountsBySku(null, null, owner, sku);
+        verify(mockCSCurator).getComplianceStatusCounts(null, null, owner, sku, null, null, null);
         verifyNoMoreInteractions(mockCSCurator);
     }
 
     @Test
     public void testReportingByDateAndSku() throws Exception {
         HashMap<String, Integer> testcount = new HashMap<String, Integer>();
+        Page<Map<Date, Map<String, Integer>>> testpage = new Page<Map<Date, Map<String, Integer>>>();
         HashMap<Date, Map<String, Integer>> testoutput = new HashMap<Date, Map<String, Integer>>();
         testcount.put("testcount1", 1);
         testoutput.put(this.testDate, testcount);
+        testpage.setPageData(testoutput);
 
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
         Date startDate = formatter.parse("2014-11-07");
@@ -351,8 +368,8 @@ public class StatusTrendReportTest {
         when(params.get("sku")).thenReturn(Arrays.asList(sku));
 
         ComplianceSnapshotCurator mockCSCurator = mock(ComplianceSnapshotCurator.class);
-        when(mockCSCurator.getComplianceStatusCountsBySku(startDate, endDate, null, sku))
-            .thenReturn(testoutput);
+        when(mockCSCurator.getComplianceStatusCounts(startDate, endDate, null, sku, null, null, null))
+            .thenReturn(testpage);
 
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
 
@@ -362,16 +379,18 @@ public class StatusTrendReportTest {
 
         assertEquals(expected, actual);
 
-        verify(mockCSCurator).getComplianceStatusCountsBySku(startDate, endDate, null, sku);
+        verify(mockCSCurator).getComplianceStatusCounts(startDate, endDate, null, sku, null, null, null);
         verifyNoMoreInteractions(mockCSCurator);
     }
 
     @Test
     public void testReportingByDateOwnerAndSku() throws Exception {
         HashMap<String, Integer> testcount = new HashMap<String, Integer>();
+        Page<Map<Date, Map<String, Integer>>> testpage = new Page<Map<Date, Map<String, Integer>>>();
         HashMap<Date, Map<String, Integer>> testoutput = new HashMap<Date, Map<String, Integer>>();
         testcount.put("testcount1", 1);
         testoutput.put(this.testDate, testcount);
+        testpage.setPageData(testoutput);
 
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
         Date startDate = formatter.parse("2014-11-07");
@@ -395,8 +414,8 @@ public class StatusTrendReportTest {
         when(params.getFirst("owner")).thenReturn(owner);
 
         ComplianceSnapshotCurator mockCSCurator = mock(ComplianceSnapshotCurator.class);
-        when(mockCSCurator.getComplianceStatusCountsBySku(startDate, endDate, owner, sku))
-            .thenReturn(testoutput);
+        when(mockCSCurator.getComplianceStatusCounts(startDate, endDate, owner, sku, null, null, null))
+            .thenReturn(testpage);
 
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
 
@@ -406,16 +425,18 @@ public class StatusTrendReportTest {
 
         assertEquals(expected, actual);
 
-        verify(mockCSCurator).getComplianceStatusCountsBySku(startDate, endDate, owner, sku);
+        verify(mockCSCurator).getComplianceStatusCounts(startDate, endDate, owner, sku, null, null, null);
         verifyNoMoreInteractions(mockCSCurator);
     }
 
     @Test
     public void testReportingBySubscription() {
         HashMap<String, Integer> testcount = new HashMap<String, Integer>();
+        Page<Map<Date, Map<String, Integer>>> testpage = new Page<Map<Date, Map<String, Integer>>>();
         HashMap<Date, Map<String, Integer>> testoutput = new HashMap<Date, Map<String, Integer>>();
         testcount.put("testcount1", 1);
         testoutput.put(this.testDate, testcount);
+        testpage.setPageData(testoutput);
 
         String subscription = "test product";
 
@@ -425,8 +446,8 @@ public class StatusTrendReportTest {
         when(params.get("subscription_name")).thenReturn(Arrays.asList(subscription));
 
         ComplianceSnapshotCurator mockCSCurator = mock(ComplianceSnapshotCurator.class);
-        when(mockCSCurator.getComplianceStatusCountsBySubscription(null, null, null, subscription))
-            .thenReturn(testoutput);
+        when(mockCSCurator.getComplianceStatusCounts(null, null, null, null, subscription, null, null))
+            .thenReturn(testpage);
 
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
 
@@ -436,16 +457,18 @@ public class StatusTrendReportTest {
 
         assertEquals(expected, actual);
 
-        verify(mockCSCurator).getComplianceStatusCountsBySubscription(null, null, null, subscription);
+        verify(mockCSCurator).getComplianceStatusCounts(null, null, null, null, subscription, null, null);
         verifyNoMoreInteractions(mockCSCurator);
     }
 
     @Test
     public void testReportingBySubscriptionAndOwner() {
         HashMap<String, Integer> testcount = new HashMap<String, Integer>();
+        Page<Map<Date, Map<String, Integer>>> testpage = new Page<Map<Date, Map<String, Integer>>>();
         HashMap<Date, Map<String, Integer>> testoutput = new HashMap<Date, Map<String, Integer>>();
         testcount.put("testcount1", 1);
         testoutput.put(this.testDate, testcount);
+        testpage.setPageData(testoutput);
 
         String subscription = "test product";
         String owner = "test_owner";
@@ -459,8 +482,8 @@ public class StatusTrendReportTest {
         when(params.getFirst("owner")).thenReturn(owner);
 
         ComplianceSnapshotCurator mockCSCurator = mock(ComplianceSnapshotCurator.class);
-        when(mockCSCurator.getComplianceStatusCountsBySubscription(null, null, owner, subscription))
-            .thenReturn(testoutput);
+        when(mockCSCurator.getComplianceStatusCounts(null, null, owner, null, subscription, null, null))
+            .thenReturn(testpage);
 
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
 
@@ -470,16 +493,18 @@ public class StatusTrendReportTest {
 
         assertEquals(expected, actual);
 
-        verify(mockCSCurator).getComplianceStatusCountsBySubscription(null, null, owner, subscription);
+        verify(mockCSCurator).getComplianceStatusCounts(null, null, owner, null, subscription, null, null);
         verifyNoMoreInteractions(mockCSCurator);
     }
 
     @Test
     public void testReportingByDateAndSubscription() throws Exception {
         HashMap<String, Integer> testcount = new HashMap<String, Integer>();
+        Page<Map<Date, Map<String, Integer>>> testpage = new Page<Map<Date, Map<String, Integer>>>();
         HashMap<Date, Map<String, Integer>> testoutput = new HashMap<Date, Map<String, Integer>>();
         testcount.put("testcount1", 1);
         testoutput.put(this.testDate, testcount);
+        testpage.setPageData(testoutput);
 
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
         Date startDate = formatter.parse("2014-11-07");
@@ -498,8 +523,14 @@ public class StatusTrendReportTest {
         when(params.get("subscription_name")).thenReturn(Arrays.asList(subscription));
 
         ComplianceSnapshotCurator mockCSCurator = mock(ComplianceSnapshotCurator.class);
-        when(mockCSCurator.getComplianceStatusCountsBySubscription(startDate, endDate, null, subscription))
-            .thenReturn(testoutput);
+        when(mockCSCurator.getComplianceStatusCounts(startDate,
+            endDate,
+            null,
+            null,
+            subscription,
+            null,
+            null
+        )).thenReturn(testpage);
 
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
 
@@ -509,16 +540,26 @@ public class StatusTrendReportTest {
 
         assertEquals(expected, actual);
 
-        verify(mockCSCurator).getComplianceStatusCountsBySubscription(startDate, endDate, null, subscription);
+        verify(mockCSCurator).getComplianceStatusCounts(
+            startDate,
+            endDate,
+            null,
+            null,
+            subscription,
+            null,
+            null
+        );
         verifyNoMoreInteractions(mockCSCurator);
     }
 
     @Test
     public void testReportingByDateOwnerAndSubscription() throws Exception {
         HashMap<String, Integer> testcount = new HashMap<String, Integer>();
+        Page<Map<Date, Map<String, Integer>>> testpage = new Page<Map<Date, Map<String, Integer>>>();
         HashMap<Date, Map<String, Integer>> testoutput = new HashMap<Date, Map<String, Integer>>();
         testcount.put("testcount1", 1);
         testoutput.put(this.testDate, testcount);
+        testpage.setPageData(testoutput);
 
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
         Date startDate = formatter.parse("2014-11-07");
@@ -541,8 +582,15 @@ public class StatusTrendReportTest {
         when(params.getFirst("owner")).thenReturn(owner);
 
         ComplianceSnapshotCurator mockCSCurator = mock(ComplianceSnapshotCurator.class);
-        when(mockCSCurator.getComplianceStatusCountsBySubscription(startDate, endDate, owner, subscription))
-            .thenReturn(testoutput);
+        when(mockCSCurator.getComplianceStatusCounts(
+            startDate,
+            endDate,
+            owner,
+            null,
+            subscription,
+            null,
+            null
+        )).thenReturn(testpage);
 
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
 
@@ -553,7 +601,7 @@ public class StatusTrendReportTest {
         assertEquals(expected, actual);
 
         verify(mockCSCurator)
-            .getComplianceStatusCountsBySubscription(startDate, endDate, owner, subscription);
+            .getComplianceStatusCounts(startDate, endDate, owner, null, subscription, null, null);
 
         verifyNoMoreInteractions(mockCSCurator);
     }
@@ -561,9 +609,11 @@ public class StatusTrendReportTest {
     @Test
     public void testReportingByManagementEnabled() {
         HashMap<String, Integer> testcount = new HashMap<String, Integer>();
+        Page<Map<Date, Map<String, Integer>>> testpage = new Page<Map<Date, Map<String, Integer>>>();
         HashMap<Date, Map<String, Integer>> testoutput = new HashMap<Date, Map<String, Integer>>();
         testcount.put("testcount1", 1);
         testoutput.put(this.testDate, testcount);
+        testpage.setPageData(testoutput);
 
         MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
         when(params.containsKey("management_enabled")).thenReturn(true);
@@ -574,8 +624,8 @@ public class StatusTrendReportTest {
         attributes.put("management_enabled", "1");
 
         ComplianceSnapshotCurator mockCSCurator = mock(ComplianceSnapshotCurator.class);
-        when(mockCSCurator.getComplianceStatusCountsByAttributes(null, null, null, attributes))
-            .thenReturn(testoutput);
+        when(mockCSCurator.getComplianceStatusCounts(null, null, null, null, null, attributes, null))
+            .thenReturn(testpage);
 
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
 
@@ -585,16 +635,18 @@ public class StatusTrendReportTest {
 
         assertEquals(expected, actual);
 
-        verify(mockCSCurator).getComplianceStatusCountsByAttributes(null, null, null, attributes);
+        verify(mockCSCurator).getComplianceStatusCounts(null, null, null, null, null, attributes, null);
         verifyNoMoreInteractions(mockCSCurator);
     }
 
     @Test
     public void testReportingByOwnerAndManagementEnabled() {
         HashMap<String, Integer> testcount = new HashMap<String, Integer>();
+        Page<Map<Date, Map<String, Integer>>> testpage = new Page<Map<Date, Map<String, Integer>>>();
         HashMap<Date, Map<String, Integer>> testoutput = new HashMap<Date, Map<String, Integer>>();
         testcount.put("testcount1", 1);
         testoutput.put(this.testDate, testcount);
+        testpage.setPageData(testoutput);
 
         String owner = "test_owner";
 
@@ -610,8 +662,8 @@ public class StatusTrendReportTest {
         attributes.put("management_enabled", "1");
 
         ComplianceSnapshotCurator mockCSCurator = mock(ComplianceSnapshotCurator.class);
-        when(mockCSCurator.getComplianceStatusCountsByAttributes(null, null, owner, attributes))
-            .thenReturn(testoutput);
+        when(mockCSCurator.getComplianceStatusCounts(null, null, owner, null, null, attributes, null))
+            .thenReturn(testpage);
 
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
 
@@ -621,16 +673,18 @@ public class StatusTrendReportTest {
 
         assertEquals(expected, actual);
 
-        verify(mockCSCurator).getComplianceStatusCountsByAttributes(null, null, owner, attributes);
+        verify(mockCSCurator).getComplianceStatusCounts(null, null, owner, null, null, attributes, null);
         verifyNoMoreInteractions(mockCSCurator);
     }
 
     @Test
     public void testReportingByDateAndManagementEnabled() throws Exception {
         HashMap<String, Integer> testcount = new HashMap<String, Integer>();
+        Page<Map<Date, Map<String, Integer>>> testpage = new Page<Map<Date, Map<String, Integer>>>();
         HashMap<Date, Map<String, Integer>> testoutput = new HashMap<Date, Map<String, Integer>>();
         testcount.put("testcount1", 1);
         testoutput.put(this.testDate, testcount);
+        testpage.setPageData(testoutput);
 
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
         Date startDate = formatter.parse("2014-11-07");
@@ -651,8 +705,8 @@ public class StatusTrendReportTest {
         attributes.put("management_enabled", "1");
 
         ComplianceSnapshotCurator mockCSCurator = mock(ComplianceSnapshotCurator.class);
-        when(mockCSCurator.getComplianceStatusCountsByAttributes(startDate, endDate, null, attributes))
-            .thenReturn(testoutput);
+        when(mockCSCurator.getComplianceStatusCounts(startDate, endDate, null, null, null, attributes, null))
+            .thenReturn(testpage);
 
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
 
@@ -662,16 +716,26 @@ public class StatusTrendReportTest {
 
         assertEquals(expected, actual);
 
-        verify(mockCSCurator).getComplianceStatusCountsByAttributes(startDate, endDate, null, attributes);
+        verify(mockCSCurator).getComplianceStatusCounts(
+            startDate,
+            endDate,
+            null,
+            null,
+            null,
+            attributes,
+            null
+        );
         verifyNoMoreInteractions(mockCSCurator);
     }
 
     @Test
     public void testReportingByDateOwnerAndManagementEnabled() throws Exception {
         HashMap<String, Integer> testcount = new HashMap<String, Integer>();
+        Page<Map<Date, Map<String, Integer>>> testpage = new Page<Map<Date, Map<String, Integer>>>();
         HashMap<Date, Map<String, Integer>> testoutput = new HashMap<Date, Map<String, Integer>>();
         testcount.put("testcount1", 1);
         testoutput.put(this.testDate, testcount);
+        testpage.setPageData(testoutput);
 
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
         Date startDate = formatter.parse("2014-11-07");
@@ -696,8 +760,8 @@ public class StatusTrendReportTest {
         attributes.put("management_enabled", "1");
 
         ComplianceSnapshotCurator mockCSCurator = mock(ComplianceSnapshotCurator.class);
-        when(mockCSCurator.getComplianceStatusCountsByAttributes(startDate, endDate, owner, attributes))
-            .thenReturn(testoutput);
+        when(mockCSCurator.getComplianceStatusCounts(startDate, endDate, owner, null, null, attributes, null))
+            .thenReturn(testpage);
 
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
 
@@ -707,16 +771,26 @@ public class StatusTrendReportTest {
 
         assertEquals(expected, actual);
 
-        verify(mockCSCurator).getComplianceStatusCountsByAttributes(startDate, endDate, owner, attributes);
+        verify(mockCSCurator).getComplianceStatusCounts(
+            startDate,
+            endDate,
+            owner,
+            null,
+            null,
+            attributes,
+            null
+        );
         verifyNoMoreInteractions(mockCSCurator);
     }
 
     @Test
     public void testReportingWithTimeZoneAdjustmnet() throws Exception {
         HashMap<String, Integer> testcount = new HashMap<String, Integer>();
+        Page<Map<Date, Map<String, Integer>>> testpage = new Page<Map<Date, Map<String, Integer>>>();
         HashMap<Date, Map<String, Integer>> testoutput = new HashMap<Date, Map<String, Integer>>();
         testcount.put("testcount1", 1);
         testoutput.put(this.testDate, testcount);
+        testpage.setPageData(testoutput);
 
         String tzString = "GMT+1400";
         TimeZone timezone = TimeZone.getTimeZone(tzString);
@@ -731,7 +805,8 @@ public class StatusTrendReportTest {
         when(params.getFirst("timezone")).thenReturn(tzString);
 
         ComplianceSnapshotCurator mockCSCurator = mock(ComplianceSnapshotCurator.class);
-        when(mockCSCurator.getComplianceStatusCounts(null, null, null)).thenReturn(testoutput);
+        when(mockCSCurator.getComplianceStatusCounts(null, null, null, null, null, null, null))
+            .thenReturn(testpage);
 
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
 
@@ -742,7 +817,7 @@ public class StatusTrendReportTest {
 
         assertEquals(expected, actual);
 
-        verify(mockCSCurator).getComplianceStatusCounts(null, null, null);
+        verify(mockCSCurator).getComplianceStatusCounts(null, null, null, null, null, null, null);
         verifyNoMoreInteractions(mockCSCurator);
     }
 }

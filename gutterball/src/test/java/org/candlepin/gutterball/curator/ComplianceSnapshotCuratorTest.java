@@ -535,9 +535,64 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
     @Test
     public void testGetComplianceStatusCounts() {
         Map<Date, Map<String, Integer>> expected = this.buildMapForAllStatusCounts();
-        Map<Date, Map<String, Integer>> actual = this.complianceSnapshotCurator.getComplianceStatusCounts();
+        Map<Date, Map<String, Integer>> actual = this.complianceSnapshotCurator.getComplianceStatusCounts(
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+        );
 
         assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testGetPaginatedComplianceStatusCounts() {
+        Map<Date, Map<String, Integer>> expected = this.buildMapForAllStatusCounts();
+        Map<Date, Map<String, Integer>> data;
+
+        int p = 1;
+        int pages = 0;
+        PageRequest pageRequest = new PageRequest();
+
+        pageRequest.setPerPage(1);
+
+
+        do {
+            pageRequest.setPage(p);
+
+            Page<Map<Date, Map<String, Integer>>> page = this.complianceSnapshotCurator
+                .getComplianceStatusCounts(
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                pageRequest
+            );
+
+            if (pages == 0) {
+                pages = page.getMaxRecords();
+            }
+
+            data = page.getPageData();
+
+            // Make sure we got exactly one result back...
+            assertEquals(1, data.size());
+
+            // ...and it contains something from our expected results.
+            for (Map.Entry<Date, Map<String, Integer>> entry : data.entrySet()) {
+                Map<String, Integer> record = expected.remove(entry.getKey());
+
+                assertNotNull(record);
+                assertEquals(record, entry.getValue());
+            }
+        } while(++p <= pages);
+
+        // Make sure we've exhausted every expected result.
+        assertEquals(0, expected.size());
     }
 
     @Test
@@ -545,6 +600,9 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
     public void testGetComplianceStatusCountsAfterDate(Date date, Map<Date, Map<String, Integer>> expected) {
         Map<Date, Map<String, Integer>> actual = this.complianceSnapshotCurator.getComplianceStatusCounts(
             date,
+            null,
+            null,
+            null,
             null,
             null
         );
@@ -558,6 +616,9 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         Map<Date, Map<String, Integer>> actual = this.complianceSnapshotCurator.getComplianceStatusCounts(
             null,
             date,
+            null,
+            null,
+            null,
             null
         );
 
@@ -572,6 +633,9 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         Map<Date, Map<String, Integer>> actual = this.complianceSnapshotCurator.getComplianceStatusCounts(
             startDate,
             endDate,
+            null,
+            null,
+            null,
             null
         );
 
@@ -584,11 +648,13 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         Map<Date, Map<String, Integer>> expected) {
         Map<Date, Map<String, Integer>> actual;
 
-        actual = this.complianceSnapshotCurator.getComplianceStatusCountsBySku(
+        actual = this.complianceSnapshotCurator.getComplianceStatusCounts(
             startDate,
             endDate,
             null,
-            sku
+            sku,
+            null,
+            null
         );
 
         assertEquals(expected, actual);
@@ -600,11 +666,13 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         String subscriptionName, Map<Date, Map<String, Integer>> expected) {
         Map<Date, Map<String, Integer>> actual;
 
-        actual = this.complianceSnapshotCurator.getComplianceStatusCountsBySubscription(
+        actual = this.complianceSnapshotCurator.getComplianceStatusCounts(
             startDate,
             endDate,
             null,
-            subscriptionName
+            null,
+            subscriptionName,
+            null
         );
 
         assertEquals(expected, actual);
@@ -616,9 +684,11 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         Map<String, String> attributes, Map<Date, Map<String, Integer>> expected) {
         Map<Date, Map<String, Integer>> actual;
 
-        actual = this.complianceSnapshotCurator.getComplianceStatusCountsByAttributes(
+        actual = this.complianceSnapshotCurator.getComplianceStatusCounts(
             startDate,
             endDate,
+            null,
+            null,
             null,
             attributes
         );

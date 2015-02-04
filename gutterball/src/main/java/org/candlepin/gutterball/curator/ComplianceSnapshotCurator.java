@@ -336,152 +336,6 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
     }
 
     /**
-     * Retrieves the compliance status counts over the given time span. The counts are returned in a
-     * map of maps, with the outer map mapping the dates to the inner map which maps the statuses to
-     * their respective counts.
-     *
-     * @return
-     *  a map of maps containing the compliance status counts, grouped by day. If no counts were
-     *  found for the given time span, an empty map will be returned.
-     */
-    public Map<Date, Map<String, Integer>> getComplianceStatusCounts() {
-        return this.getComplianceStatusCounts(null, null, null, null, null, null);
-    }
-
-    /**
-     * Retrieves the compliance status counts over the given time span. The counts are returned in a
-     * map of maps, with the outer map mapping the dates to the inner map which maps the statuses to
-     * their respective counts.
-     * <p/>
-     * If the start and/or end dates are null, the time span will be similarly unrestricted. Note
-     * that the time within a given Date object is ignored. If neither the start nor end dates are
-     * provided, all known compliance status data will be used.
-     *
-     * @param startDate
-     *  The date at which the time span should begin. If null, all compliance statuses before the
-     *  end date (if provided) will be used.
-     *
-     * @param endDate
-     *  The date at which the time span should end. If null, all compliance statuses after the
-     *  start date (if provided) will be used.
-     *
-     * @param ownerKey
-     *  An owner key to use to filter compliance status counts. If provided, only consumers
-     *  associated with the specified owner key/account will be counted.
-     *
-     * @return
-     *  a map of maps containing the compliance status counts, grouped by day. If no counts were
-     *  found for the given time span, an empty map will be returned.
-     */
-    public Map<Date, Map<String, Integer>> getComplianceStatusCounts(Date startDate, Date endDate,
-        String ownerKey) {
-        return this.getComplianceStatusCounts(startDate, endDate, ownerKey, null, null, null);
-    }
-
-    /**
-     * Retrieves the compliance status counts for consumers using subscriptions with the specified
-     * sku over the given time span. The counts are returned in a map of maps, with the outer map
-     * mapping the dates to the inner map which maps the statuses to their respective counts.
-     * <p/>
-     * If the start and/or end dates are null, the time span will be similarly unrestricted. Note
-     * that the time within a given Date object is ignored. If neither the start nor end dates are
-     * provided, all known compliance status data will be used.
-     *
-     * @param startDate
-     *  The date at which the time span should begin. If null, all compliance statuses before the
-     *  end date (if provided) will be used.
-     *
-     * @param endDate
-     *  The date at which the time span should end. If null, all compliance statuses after the
-     *  start date (if provided) will be used.
-     *
-     * @param ownerKey
-     *  An owner key to use to filter compliance status counts. If provided, only consumers
-     *  associated with the specified owner key/account will be counted.
-     *
-     * @param sku
-     *  A subscription sku to use to filter compliance status counts. If provided, only consumers
-     *  using the specified sku will be counted.
-     *
-     * @return
-     *  a map of maps containing the compliance status counts, grouped by day. If no counts were
-     *  found for the given time span, an empty map will be returned.
-     */
-    public Map<Date, Map<String, Integer>> getComplianceStatusCountsBySku(Date startDate, Date endDate,
-        String ownerKey, String sku) {
-        return this.getComplianceStatusCounts(startDate, endDate, ownerKey, sku, null, null);
-    }
-
-    /**
-     * Retrieves the compliance status counts for consumers using subscriptions with the specified
-     * name over the given time span. The counts are returned in a map of maps, with the outer map
-     * mapping the dates to the inner map which maps the statuses to their respective counts.
-     * <p/>
-     * If the start and/or end dates are null, the time span will be similarly unrestricted. Note
-     * that the time within a given Date object is ignored. If neither the start nor end dates are
-     * provided, all known compliance status data will be used.
-     *
-     * @param startDate
-     *  The date at which the time span should begin. If null, all compliance statuses before the
-     *  end date (if provided) will be used.
-     *
-     * @param endDate
-     *  The date at which the time span should end. If null, all compliance statuses after the
-     *  start date (if provided) will be used.
-     *
-     * @param ownerKey
-     *  An owner key to use to filter compliance status counts. If provided, only consumers
-     *  associated with the specified owner key/account will be counted.
-     *
-     * @param subscriptionName
-     *  A subscription name to use to filter compliance status counts. If provided, only consumers
-     *  using subscriptions with the specified product name will be counted.
-     *
-     * @return
-     *  a map of maps containing the compliance status counts, grouped by day. If no counts were
-     *  found for the given time span, an empty map will be returned.
-     */
-    public Map<Date, Map<String, Integer>> getComplianceStatusCountsBySubscription(Date startDate,
-        Date endDate, String ownerKey, String subscriptionName) {
-        return this.getComplianceStatusCounts(startDate, endDate, ownerKey, null, subscriptionName, null);
-    }
-
-    /**
-     * Retrieves the compliance status counts for consumers using subscriptions with the specified
-     * name over the given time span. The counts are returned in a map of maps, with the outer map
-     * mapping the dates to the inner map which maps the statuses to their respective counts.
-     * <p/>
-     * If the start and/or end dates are null, the time span will be similarly unrestricted. Note
-     * that the time within a given Date object is ignored. If neither the start nor end dates are
-     * provided, all known compliance status data will be used.
-     *
-     * @param startDate
-     *  The date at which the time span should begin. If null, all compliance statuses before the
-     *  end date (if provided) will be used.
-     *
-     * @param endDate
-     *  The date at which the time span should end. If null, all compliance statuses after the
-     *  start date (if provided) will be used.
-     *
-     * @param ownerKey
-     *  An owner key to use to filter compliance status counts. If provided, only consumers
-     *  associated with the specified owner key/account will be counted.
-     *
-     * @param attributes
-     *  A map of entitlement attributes to use to filter compliance status counts. If provided, only
-     *  consumers with entitlements having the specified values for the given attributes will be
-     *  counted.
-     *
-     * @return
-     *  a map of maps containing the compliance status counts, grouped by day. If no counts were
-     *  found for the given time span, an empty map will be returned.
-     */
-    public Map<Date, Map<String, Integer>> getComplianceStatusCountsByAttributes(Date startDate, Date endDate,
-        String ownerKey, Map<String, String> attributes) {
-        return this.getComplianceStatusCounts(startDate, endDate, ownerKey, null, null, attributes);
-    }
-
-    /**
      * Retrieves the compliance status counts over the given time span with the specified criteria.
      * The counts are returned in a map of maps, with the outer map mapping the dates to the inner
      * map which maps the statuses to their respective counts.
@@ -519,8 +373,71 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
      *  a map of maps containing the compliance status counts, grouped by day. If no counts were
      *  found for the given time span, an empty map will be returned.
      */
-    private Map<Date, Map<String, Integer>> getComplianceStatusCounts(Date startDate, Date endDate,
+    public Map<Date, Map<String, Integer>> getComplianceStatusCounts(Date startDate, Date endDate,
         String ownerKey, String sku, String subscriptionName, Map<String, String> attributes) {
+
+        Page<Map<Date, Map<String, Integer>>> result = this.getComplianceStatusCounts(
+            startDate,
+            endDate,
+            ownerKey,
+            sku,
+            subscriptionName,
+            attributes,
+            null
+        );
+
+        return result.getPageData();
+
+    }
+
+    /**
+     * Retrieves the compliance status counts over the given time span with the specified criteria.
+     * The counts are returned in a map of maps, with the outer map mapping the dates to the inner
+     * map which maps the statuses to their respective counts.
+     * <p/>
+     * If the start and/or end dates are null, the time span will be similarly unrestricted. Note
+     * that the time within a given Date object is ignored. If neither the start nor end dates are
+     * provided, all known compliance status data will be used.
+     *
+     * @param startDate
+     *  The date at which the time span should begin. If null, all compliance statuses before the
+     *  end date (if provided) will be used.
+     *
+     * @param endDate
+     *  The date at which the time span should end. If null, all compliance statuses after the
+     *  start date (if provided) will be used.
+     *
+     * @param sku
+     *  A subscription sku to use to filter compliance status counts. If provided, only consumers
+     *  using the specified sku will be counted.
+     *
+     * @param subscriptionName
+     *  A subscription name to use to filter compliance status counts. If provided, only consumers
+     *  using subscriptions with the specified product name will be counted.
+     *
+     * @param attributes
+     *  A map of entitlement attributes to use to filter compliance status counts. If provided, only
+     *  consumers with entitlements having the specified values for the given attributes will be
+     *  counted.
+     *
+     * @param ownerKey
+     *  An owner key to use to filter compliance status counts. If provided, only consumers
+     *  associated with the specified owner key/account will be counted.
+     *
+     * @param pageRequest
+     *  A PageRequest instance containing paging information from the request. If null, no paging
+     *  will be performed.
+     *
+     * @return
+     *  A page containing a map of maps containing the compliance status counts, grouped by day. If
+     *  no counts were found for the given time span, the page will contain an empty map.
+     */
+    public Page<Map<Date, Map<String, Integer>>> getComplianceStatusCounts(Date startDate, Date endDate,
+        String ownerKey, String sku, String subscriptionName, Map<String, String> attributes,
+        PageRequest pageRequest) {
+
+        Page<Map<Date, Map<String, Integer>>> page = new Page<Map<Date, Map<String, Integer>>>();
+        page.setPageRequest(pageRequest);
 
         // Build our query...
         // Impl note: This query's results MUST be sorted by date in ascending order. If it's not,
@@ -608,7 +525,27 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
 
         results.close();
 
-        return resultmap;
+        // Pagination
+        // This is horribly inefficient, but the only way to do it with the current implementation.
+        if (pageRequest != null && pageRequest.isPaging()) {
+            page.setMaxRecords(resultmap.size());
+
+            int offset = (pageRequest.getPage() - 1) * pageRequest.getPerPage();
+            int nextpage = offset + pageRequest.getPerPage();
+
+            // Trim results. :(
+            Iterator<Date> iterator = resultmap.keySet().iterator();
+            for (int pos = 0; iterator.hasNext(); ++pos) {
+                iterator.next();
+
+                if (pos < offset || pos >= nextpage) {
+                    iterator.remove();
+                }
+            }
+        }
+
+        page.setPageData(resultmap);
+        return page;
     }
 
     /**
