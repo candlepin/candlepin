@@ -14,6 +14,10 @@
  */
 package org.candlepin.common.filter;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
+
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
@@ -26,6 +30,14 @@ import javax.ws.rs.core.MediaType;
  * ServletLogger
  */
 public class ServletLogger {
+
+    private static ObjectMapper mapper;
+    private static ObjectWriter writer;
+
+    static {
+        mapper = new ObjectMapper();
+        writer = mapper.writerWithDefaultPrettyPrinter();
+    }
 
     protected ServletLogger() {
 
@@ -59,17 +71,34 @@ public class ServletLogger {
     }
 
     public static StringBuilder logRequest(TeeHttpServletRequest req) {
-        return logHeaders(req).append(logBody("Request", req));
+        return logHeaders(req).append(logBody("Request", req, true));
     }
 
     public static StringBuilder logResponse(TeeHttpServletResponse resp) {
-        return logHeaders(resp).append(logBody("Response", resp));
+        // Impl note:
+        // We're not formatting JSON output here as our JsonProvider already takes care of that.
+        return logHeaders(resp).append(logBody("Response", resp, false));
     }
 
-    public static StringBuilder logBody(String type, BodyLogger bodyLogger) {
+    public static StringBuilder logBody(String type, BodyLogger bodyLogger, boolean formatJson) {
         StringBuilder builder = new StringBuilder();
         builder.append("====").append(type).append(" Body====\n");
-        builder.append(bodyLogger.getBody());
+
+        String content = bodyLogger.getBody();
+
+        if (formatJson && MediaType.APPLICATION_JSON.equals(bodyLogger.getContentType())) {
+            // Ensure JSON is formatted for humans
+            try {
+                Object jobj = mapper.readValue(content, Object.class);
+                content = writer.writeValueAsString(jobj);
+            }
+            catch (IOException e) {
+                // This may happen if the JSON is malformed. We'll just leave the content alone in
+                // such a case.
+            }
+        }
+
+        builder.append(content);
         return builder;
     }
 
