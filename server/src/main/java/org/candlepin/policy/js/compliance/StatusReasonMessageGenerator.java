@@ -90,7 +90,8 @@ public class StatusReasonMessageGenerator {
                 reason.getAttributes().get("has")));
         }
         else if (reason.getKey().equals("UNMAPPEDGUEST")) {
-            reason.setMessage(i18n.tr("Has an unmapped guest subscription."));
+            reason.setMessage(i18n.tr("Guest has not been reported on any host" +
+                " and is using a temporary unmapped guest subscription."));
         }
         else { //default fallback
             reason.setMessage(i18n.tr("{2} COVERAGE PROBLEM.  Supports {0} of {1}",

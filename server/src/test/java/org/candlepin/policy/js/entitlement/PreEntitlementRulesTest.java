@@ -14,9 +14,7 @@
  */
 package org.candlepin.policy.js.entitlement;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.config.ConfigProperties;
@@ -33,6 +31,7 @@ import org.candlepin.test.TestUtil;
 
 import org.junit.Test;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -644,7 +643,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         Consumer newborn = new Consumer("test newborn consumer", "test user", owner,
                 new ConsumerType(ConsumerTypeEnum.SYSTEM));
         newborn.setFact("virt.is_guest", "true");
-        newborn.setCreated(new java.util.Date());
+        newborn.setCreated(new Date());
         ValidationResult result = enforcer.preEntitlement(newborn, pool, 1);
         assertFalse(result.hasErrors());
         assertFalse(result.hasWarnings());
@@ -653,13 +652,12 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
     @Test
     public void unmappedGuestBadDate() {
         Pool pool = setupUnmappedGuestPool();
-        Consumer newborn = new Consumer("test newborn consumer", "test user", owner,
+        Consumer tooOld = new Consumer("test newborn consumer", "test user", owner,
                 new ConsumerType(ConsumerTypeEnum.SYSTEM));
-        newborn.setFact("virt.is_guest", "true");
-        java.util.Date oldDate = new java.util.Date();
-        oldDate.setTime(oldDate.getTime() - 86400001);
-        newborn.setCreated(oldDate);
-        ValidationResult result = enforcer.preEntitlement(newborn, pool, 1);
+        tooOld.setFact("virt.is_guest", "true");
+        Date twentyFiveHoursAgo = new Date(new Date().getTime() - 25L * 60L * 60L * 1000L);
+        tooOld.setCreated(twentyFiveHoursAgo);
+        ValidationResult result = enforcer.preEntitlement(tooOld, pool, 1);
         assertTrue(result.hasWarnings());
         assertEquals(1, result.getWarnings().size());
         assertEquals("virt.guest.cannot.use.unmapped.guest.pool.not.new",

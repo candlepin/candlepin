@@ -692,19 +692,4 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     public Consumer getConsumer() {
         return this;
     }
-
-    /**
-     * Was this consumer created in the last 24 hours?
-     *
-     * @return boolean was created in the last 24 hours
-     */
-    @XmlTransient
-    public boolean isNewborn() {
-        if (getCreated() == null) {
-            return false;
-        }
-        Date now = new Date();
-        Date oneDayFromRegistration = new Date(getCreated().getTime() + 24L * 60L * 60L * 1000L);
-        return now.before(oneDayFromRegistration);
-    }
 }

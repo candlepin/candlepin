@@ -1432,7 +1432,8 @@ var Entitlement = {
                     result.addWarning("virt.guest.cannot.use.unmapped.guest.pool.has.host");
                 }
             }
-            if (!context.newborn){
+
+            if (!Utils.isNewborn(consumer)) {
                 if (BEST_POOLS_CALLER == caller ||
                     BIND_CALLER == caller) {
                     result.addError("virt.guest.cannot.use.unmapped.guest.pool.not.new");
@@ -3077,6 +3078,17 @@ var Override = {
 }
 
 var Utils = {
+
+    isNewborn: function(consumer) {
+        if (consumer.created == null) {
+            return false;
+        }
+
+        var now = new Date().getTime();
+        // 24 * 60 * 60 * 1000 = 86400000
+        var oneDayFromRegistration = new Date(consumer.created).getTime() + 86400000;
+        return now < oneDayFromRegistration;
+    },
 
     date_compare: function(d1, d2) {
         if (d1 - d2 > 0) {
