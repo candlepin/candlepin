@@ -22,7 +22,6 @@ import org.jboss.resteasy.core.ServerResponse;
 import org.jboss.resteasy.spi.Failure;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
-import org.jboss.resteasy.spi.interception.PostProcessInterceptor;
 import org.jboss.resteasy.spi.interception.PreProcessInterceptor;
 
 import java.util.List;
@@ -44,8 +43,7 @@ import javax.ws.rs.ext.Provider;
  */
 @Provider
 @ServerInterceptor
-public class DynamicFilterInterceptor implements PreProcessInterceptor,
-        PostProcessInterceptor {
+public class DynamicFilterInterceptor implements PreProcessInterceptor {
 
     @Override
     public ServerResponse preProcess(HttpRequest request, ResourceMethod method)
@@ -65,25 +63,15 @@ public class DynamicFilterInterceptor implements PreProcessInterceptor,
 
         if (containsExcl) {
             for (String toExclude : queryParams.get("exclude")) {
-                filterData.addAttribute(toExclude);
+                filterData.addAttributeFilter(toExclude);
             }
         }
         else if (containsIncl) {
             for (String toInclude : queryParams.get("include")) {
-                filterData.addAttribute(toInclude);
+                filterData.addAttributeFilter(toInclude);
             }
         }
         ResteasyProviderFactory.pushContext(DynamicFilterData.class, filterData);
         return null;
-    }
-
-    @Override
-    public void postProcess(ServerResponse response) {
-        DynamicFilterData filterData =
-            ResteasyProviderFactory.getContextData(DynamicFilterData.class);
-        if (filterData != null) {
-            Object obj = response.getEntity();
-            filterData.setupFilters(obj);
-        }
     }
 }

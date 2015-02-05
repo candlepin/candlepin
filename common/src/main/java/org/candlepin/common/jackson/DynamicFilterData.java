@@ -17,13 +17,10 @@ package org.candlepin.common.jackson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.reflect.Method;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.IdentityHashMap;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 
 /**
  * DynamicFilterData
@@ -32,119 +29,50 @@ import java.util.Set;
  * to DynamicPropertyFilter
  */
 public class DynamicFilterData {
-
     private static Logger log = LoggerFactory.getLogger(DynamicFilterData.class);
 
-    private Set<String> attributes;
+    private Map<String, List<String>> filters;
     private boolean excluding = true;
-    private Map<Object, Set<String>> filterMappings;
 
     public DynamicFilterData(boolean excluding) {
-        attributes = new HashSet<String>();
+        this.filters = new HashMap<String, List<String>>();
         this.excluding = excluding;
-        filterMappings = new IdentityHashMap<Object, Set<String>>();
     }
 
-    public void addAttribute(String attr) {
-        attributes.add(attr);
+    public void addAttributeFilter(String path) {
+        if (path == null) {
+            throw new IllegalArgumentException("path is null");
+        }
+
+        String[] chunklets = path.split("\\.");
+        this.filters.put(path.toLowerCase(), Arrays.asList(chunklets));
     }
 
-    public void setupFilters(Object obj) {
-        addFilters(obj, attributes);
+    public boolean isAttributeExcluded(String path) {
+        String[] chunklets = path.split("\\.");
+        return this.isAttributeExcluded(Arrays.asList(chunklets));
     }
 
-    public boolean isAttributeExcluded(String attribute, Object obj) {
-        // If the object is null or unmapped
-        if (obj == null ||
-                !filterMappings.containsKey(obj)) {
-            return false;
-        }
-        if (excluding) {
-            return filterMappings.get(obj).contains(attribute);
-        }
-        // In the case that we're including:
-        return !filterMappings.get(obj).contains(attribute);
-    }
+    public boolean isAttributeExcluded(List<String> path) {
+        boolean match = false;
 
-    private void allowAttribute(Object obj, String attr) {
-        Map<Object, Set<String>> mapping = filterMappings;
-        if (excluding) {
-            if (mapping.containsKey(obj)) {
-                mapping.get(obj).remove(attr);
-            }
-        }
-        else {
-            if (!mapping.containsKey(obj) || !mapping.get(obj).contains(obj)) {
-                addAttributeMapping(obj, attr);
-            }
-        }
-    }
+        for (List<String> apath : this.filters.values()) {
+            int i = 0;
+            do {
+                String achunk = apath.get(i);
+                String pchunk = path.get(i);
 
-    private void addAttributeMapping(Object obj, String attr) {
-        Map<Object, Set<String>> mapping = filterMappings;
-        if (!mapping.containsKey(obj)) {
-            mapping.put(obj, new HashSet<String>());
-        }
-        mapping.get(obj).add(attr);
-    }
+                match = achunk != null && achunk.equalsIgnoreCase(pchunk);
+                ++i;
+            } while (match && i < path.size() && i < apath.size());
 
-    private void addFilters(Object obj, Set<String> attrs) {
-        if (obj instanceof Collection) {
-            Collection<?> collection = (Collection<?>) obj;
-            for (Object o : collection) {
-                addFilters(o, attrs);
+            if (match && (!this.excluding || i >= apath.size())) {
+                break;
             }
-        }
-        if (obj instanceof Map) {
-            Map<?, ?> map = (Map<?, ?>) obj;
-            for (Entry<?, ?> entry : map.entrySet()) {
-                addFilters(entry.getValue(), attrs);
-            }
-        }
-        else {
-            for (String attr : attrs) {
-                if (addFiltersSubObject(obj, attr)) {
-                    addAttributeMapping(obj, attr);
-                }
-            }
-        }
-    }
 
-    /*
-     * This method is used for attributes in encapsulated classes.
-     *
-     * Returns true if the attribute was not handled for encapsulated classes
-     * This method always allows the local attribute if there is an encapsulated
-     * class, even if it is not valid/serialized.
-     */
-    private boolean addFiltersSubObject(Object obj, String attr) {
-        boolean proceed = true;
-        int index = attr.indexOf('.');
-        if (index != -1 && index != attr.length() - 1) {
-            String localAttr = attr.substring(0, index);
-            allowAttribute(obj, localAttr);
-            proceed = false;
-            String subAttrs = attr.substring(index + 1);
-            try {
-                // "is" getter should only be used for booleans.
-                // here we only care about objects.
-                String getterName = "get" + localAttr.substring(0, 1).toUpperCase();
-                if (localAttr.length() > 1) {
-                    getterName += localAttr.substring(1);
-                }
-                Method getter = obj.getClass().getMethod(getterName, new Class[] {});
-                Object result = getter.invoke(obj);
-                Set<String> sublist = new HashSet<String>();
-                sublist.add(subAttrs);
-                addFilters(result, sublist);
-            }
-            catch (Exception e) {
-                // This doesn't need to be more sever than a debug log because
-                // it may be hit with a bad filter option.  Probably not worth
-                // the time to log the entire exception either.
-                log.debug("failed to set filters on sub-object " + e.getMessage());
-            }
+            match = false;
         }
-        return proceed;
+
+        return this.excluding ? match : !match;
     }
 }

@@ -15,10 +15,14 @@
 package org.candlepin.common.jackson;
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonStreamContext;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.PropertyWriter;
 
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * DynamicPropertyFilter
@@ -28,12 +32,27 @@ import org.jboss.resteasy.spi.ResteasyProviderFactory;
  */
 public class DynamicPropertyFilter extends CheckableBeanPropertyFilter {
 
+    private List<String> path = new ArrayList<String>(10);
+
     public boolean isSerializable(Object obj, JsonGenerator jsonGenerator,
         SerializerProvider serializerProvider, PropertyWriter writer) {
-        DynamicFilterData filterData =
-            ResteasyProviderFactory.getContextData(DynamicFilterData.class);
+
+        DynamicFilterData filterData = ResteasyProviderFactory.getContextData(DynamicFilterData.class);
+
         if (filterData != null) {
-            return !filterData.isAttributeExcluded(writer.getName(), obj);
+            this.path.clear();
+            this.path.add(0, writer.getName());
+
+            // Build full path from the context...
+            JsonStreamContext context = jsonGenerator.getOutputContext();
+            while ((context = context.getParent()) != null) {
+                String cname = context.getCurrentName();
+                if (cname != null) {
+                    this.path.add(0, cname);
+                }
+            }
+
+            return !filterData.isAttributeExcluded(this.path);
         }
 
         // Allow serialization by default
