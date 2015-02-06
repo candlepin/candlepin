@@ -20,8 +20,6 @@ import org.candlepin.gutterball.model.snapshot.ComplianceReason;
 import org.candlepin.gutterball.model.snapshot.ComplianceStatus;
 import org.candlepin.gutterball.model.snapshot.Consumer;
 
-import com.fasterxml.jackson.annotation.JsonFilter;
-
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -32,7 +30,6 @@ import java.util.Map;
  * limits the amount of processing that Jackson has to do when serializing {@link Compliance} objects
  * to include in the response.
  */
-@JsonFilter("GBConsumerTrendComplianceDTO")
 public class ConsumerTrendComplianceDto extends HashMap<String, Object> {
 
     public ConsumerTrendComplianceDto(Compliance compliance) {
