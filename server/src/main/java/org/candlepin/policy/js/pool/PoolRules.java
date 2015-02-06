@@ -173,12 +173,17 @@ public class PoolRules {
 
                 String virtQuantity = getVirtQuantity(attributes.get("virt_limit"), quantity);
                 if (virtQuantity != null) {
-                    Pool derivedPool = helper.createPool(sub, sub.getProduct().getId(),
-                                                        virtQuantity, virtAttributes);
+                    Product poolProduct = sub.getProduct();
+                    // Favor derived products if they are available
+                    if (sub.getDerivedProduct() != null) {
+                        poolProduct = sub.getDerivedProduct();
+                    }
+
+                    Pool derivedPool = helper.createPool(sub, poolProduct.getId(),
+                        virtQuantity, virtAttributes);
                     // Using derived here because only one derived pool
                     // is created for this subscription
-                    derivedPool.setSourceSubscription(
-                        new SourceSubscription(sub.getId(), "derived"));
+                    derivedPool.setSourceSubscription(new SourceSubscription(sub.getId(), "derived"));
                     pools.add(derivedPool);
                 }
             }
