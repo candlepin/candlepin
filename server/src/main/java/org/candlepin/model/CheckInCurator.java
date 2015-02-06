@@ -59,10 +59,10 @@ public class CheckInCurator extends AbstractHibernateCurator<CheckIn> {
 
         int totalDeleted = 0;
         int totalQueries = 1;
+        String deleteHql = "DELETE from CheckIn where id in (:deleteIds)";
+        Query deleteQuery = currentSession().createQuery(deleteHql);
         while (checkInIds.size() > 0) {
             log.debug("Found {} check-in IDs to be deleted.", checkInIds.size());
-            String deleteHql = "DELETE from CheckIn where id in (:deleteIds)";
-            Query deleteQuery = currentSession().createQuery(deleteHql);
             deleteQuery.setParameterList("deleteIds", checkInIds);
             totalDeleted += deleteQuery.executeUpdate();
 
