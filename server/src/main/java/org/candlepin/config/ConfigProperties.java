@@ -20,6 +20,7 @@ import static org.candlepin.common.config.ConfigurationPrefixes.JPA_CONFIG_PREFI
 import org.candlepin.pinsetter.tasks.ActiveEntitlementJob;
 import org.candlepin.pinsetter.tasks.CancelJobJob;
 import org.candlepin.pinsetter.tasks.CertificateRevocationListTask;
+import org.candlepin.pinsetter.tasks.CleanupCheckInsJob;
 import org.candlepin.pinsetter.tasks.ExpiredPoolsJob;
 import org.candlepin.pinsetter.tasks.ExportCleaner;
 import org.candlepin.pinsetter.tasks.ImportRecordJob;
@@ -103,7 +104,8 @@ public class ConfigProperties {
         StatisticHistoryTask.class.getName(),
         CancelJobJob.class.getName(), ExpiredPoolsJob.class.getName(),
         UnpauseJob.class.getName(), SweepBarJob.class.getName(),
-        ExportCleaner.class.getName(), ActiveEntitlementJob.class.getName()};
+        ExportCleaner.class.getName(), ActiveEntitlementJob.class.getName(),
+        CleanupCheckInsJob.class.getName()};
 
     public static final String SYNC_WORK_DIR = "candlepin.sync.work_dir";
     public static final String CONSUMER_FACTS_MATCHER = "candlepin.consumer.facts.match_regex";

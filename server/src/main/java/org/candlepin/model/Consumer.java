@@ -483,7 +483,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     /*
      * Only for internal use as a pojo for resource update.
      */
-   public void setLastCheckin(Date lastCheckin) {
+    public void setLastCheckin(Date lastCheckin) {
         this.lastCheckin = lastCheckin;
     }
 

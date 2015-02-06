@@ -54,12 +54,14 @@ public class CheckInCuratorTest extends DatabaseTestFixture {
         consumerCurator.merge(c1);
 
         c2.addCheckIn(fourHoursAgo);
-        c1.addCheckIn(getDateHoursBefore(12));
-        c1.addCheckIn(getDateHoursBefore(16));
+        c2.addCheckIn(getDateHoursBefore(12));
+        c2.addCheckIn(getDateHoursBefore(16));
+        c2.addCheckIn(getDateHoursBefore(18));
+        c2.addCheckIn(getDateHoursBefore(20));
         consumerCurator.merge(c1);
 
         int deleted = checkInCurator.cleanupOldCheckIns();
-        assertEquals(4, deleted);
+        assertEquals(6, deleted);
 
         consumerCurator.evict(c1);
         c1 = consumerCurator.find(c1.getId());
