@@ -312,6 +312,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         Date dt = ResourceDateParser.parseDateString("2011-09-26T18:10:50.184081+00:00");
         consumerCurator.updateLastCheckin(consumer, dt);
         consumerCurator.refresh(consumer);
+        consumer = consumerCurator.find(consumer.getId());
 
         assertEquals(consumer.getLastCheckin().getTime(), dt.getTime());
     }
@@ -319,7 +320,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     public void updatelastCheckin() throws Exception {
         Date date = new Date();
         Consumer consumer = new Consumer("hostConsumer", "testUser", owner, ct);
-        consumer.setLastCheckin(date);
+        consumer.addCheckIn(date);
         Thread.sleep(5); // sleep for at 5ms to allow enough time to pass
         consumer = consumerCurator.create(consumer);
         consumerCurator.updateLastCheckin(consumer);

@@ -400,6 +400,10 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         getEntityManager().refresh(object);
     }
 
+    public void evict(E object) {
+        currentSession().evict(object);
+    }
+
     public List<E> takeSubList(PageRequest pageRequest, List<E> results) {
         int fromIndex = (pageRequest.getPage() - 1) * pageRequest.getPerPage();
         if (fromIndex >= results.size()) {

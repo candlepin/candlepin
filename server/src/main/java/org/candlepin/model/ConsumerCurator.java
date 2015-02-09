@@ -353,13 +353,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
     @Transactional
     public void updateLastCheckin(Consumer consumer, Date checkinDate) {
-        currentSession().createQuery("update Consumer c " +
-            "set c.lastCheckin = :date, " +
-            "c.updated = :date " +
-            "where c.id = :consumerid")
-            .setTimestamp("date", checkinDate)
-            .setParameter("consumerid", consumer.getId())
-            .executeUpdate();
+        consumer.addCheckIn(checkinDate);
+        save(consumer);
     }
 
     private boolean factsChanged(Map<String, String> updatedFacts,

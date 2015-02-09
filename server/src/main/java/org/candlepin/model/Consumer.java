@@ -16,6 +16,8 @@ package org.candlepin.model;
 
 import org.candlepin.common.jackson.HateoasArrayExclude;
 import org.candlepin.common.jackson.HateoasInclude;
+import org.candlepin.policy.js.compliance.ComplianceRules;
+import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.util.Util;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
@@ -168,6 +170,11 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     @OneToOne(cascade = CascadeType.ALL)
     private KeyPair keyPair;
 
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "consumer", fetch = FetchType.LAZY)
+    private Set<CheckIn> checkIns;
+
+    @Formula("(select max(c.checkInTime) from cp_consumer_checkin c " +
+            "where c.consumer_id = id)")
     private Date lastCheckin;
 
     @OneToMany(mappedBy = "consumer",
@@ -220,6 +227,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         // generate a UUID at this point.
         this.ensureUUID();
         this.entitlements = new HashSet<Entitlement>();
+        this.checkIns = new HashSet<CheckIn>();
     }
 
     /**
@@ -423,6 +431,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         }
         return entitlementCount.longValue();
     }
+
     /**
      * @return Returns the entitlements.
      */
@@ -430,7 +439,6 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     public Set<Entitlement> getEntitlements() {
         return entitlements;
     }
-
 
     /**
      * @param entitlementsIn The entitlements to set.
@@ -451,6 +459,32 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
 
     public void removeEntitlement(Entitlement entitlement) {
         this.entitlements.remove(entitlement);
+    }
+
+    /**
+     * @return All CheckIns that have not been reaped.
+     */
+    @XmlTransient
+    public Set<CheckIn> getCheckIns() {
+        return checkIns;
+    }
+
+    public void setCheckIns(Set<CheckIn> checkIns) {
+        this.checkIns = checkIns;
+    }
+
+    public void addCheckIn(Date checkInDate) {
+        if (this.checkIns == null) {
+            this.checkIns = new HashSet<CheckIn>();
+        }
+        this.checkIns.add(new CheckIn(this, checkInDate));
+    }
+
+    /*
+     * Only for internal use as a pojo for resource update.
+     */
+    public void setLastCheckin(Date lastCheckin) {
+        this.lastCheckin = lastCheckin;
     }
 
     @XmlTransient
@@ -497,10 +531,6 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
 
     public Date getLastCheckin() {
         return lastCheckin;
-    }
-
-    public void setLastCheckin(Date lastCheckin) {
-        this.lastCheckin = lastCheckin;
     }
 
     public boolean isCanActivate() {
