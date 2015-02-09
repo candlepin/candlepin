@@ -29,9 +29,6 @@
 
         <addForeignKeyConstraint baseColumnNames="consumer_id" baseTableName="cp_consumer_checkin" constraintName="fk_consumer_checkin_consumer" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer" referencesUniqueColumn="true"/>
 
-        <createIndex indexName="idx_consumer_checkin" tableName="cp_consumer_checkin" unique="true">
-            <column name="id"/>
-        </createIndex>
         <createIndex indexName="idx_consumer_checkin_consumer" tableName="cp_consumer_checkin" unique="false">
             <column name="consumer_id"/>
         </createIndex>
