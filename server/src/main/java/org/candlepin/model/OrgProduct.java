@@ -96,9 +96,6 @@ public class OrgProduct extends AbstractHibernateObject implements Linkable {
     @LazyCollection(LazyCollectionOption.EXTRA) // allows .size() without loading all data
     private List<OrgProductContent> productContent;
 
-    @ManyToMany(mappedBy = "providedProducts")
-    private List<Subscription> subscriptions;
-
     @ElementCollection
     @CollectionTable(name = "cp_product_dependent_products",
                      joinColumns = @JoinColumn(name = "cp_product_id"))
