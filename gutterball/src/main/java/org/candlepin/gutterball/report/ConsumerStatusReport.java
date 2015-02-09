@@ -71,7 +71,8 @@ public class ConsumerStatusReport extends Report<ReportResult> {
                 .getParameter());
 
         addParameter(
-            builder.init("status", i18n.tr("The subscription status to filter on."))
+            builder.init("status", i18n.tr("The subscription status to filter on [{0}, {1}, {2}].",
+                    "valid", "invalid", "partial"))
                 .multiValued()
                 .getParameter()
         );
