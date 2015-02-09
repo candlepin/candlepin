@@ -20,7 +20,6 @@ import static org.mockito.Mockito.*;
 import org.candlepin.common.jackson.DynamicFilterData;
 
 import org.jboss.resteasy.core.ResourceMethod;
-import org.jboss.resteasy.core.ServerResponse;
 import org.jboss.resteasy.mock.MockHttpRequest;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
@@ -29,6 +28,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+
+import java.util.Arrays;
+
 
 /**
  * DynamicFilterInterceptorTest
@@ -52,183 +54,202 @@ public class DynamicFilterInterceptorTest {
     public void testNoFilters() throws Exception {
         MockHttpRequest req = MockHttpRequest.create("GET",
             "http://localhost/candlepin/status");
-        interceptor.preProcess(req, rmethod);
+        this.interceptor.preProcess(req, rmethod);
 
-        ServerResponse resp = new ServerResponse();
-        ClassForFilterTesting df = new ClassForFilterTesting("first", "second");
-        resp.setEntity(df);
-        interceptor.postProcess(resp);
-        DynamicFilterData filterData =
-            ResteasyProviderFactory.getContextData(DynamicFilterData.class);
+        DynamicFilterData filterData = ResteasyProviderFactory.getContextData(DynamicFilterData.class);
         assertNull(filterData);
     }
 
     @Test
     public void testSimpleBlacklist() throws Exception {
-        MockHttpRequest req = MockHttpRequest.create("GET",
-            "http://localhost/candlepin/status?exclude=attributeTwo");
-        interceptor.preProcess(req, rmethod);
+        MockHttpRequest req = MockHttpRequest.create(
+            "GET",
+            "http://localhost/candlepin/status?exclude=a2"
+        );
+        this.interceptor.preProcess(req, rmethod);
 
-        ServerResponse resp = new ServerResponse();
-        ClassForFilterTesting df = new ClassForFilterTesting("first", "second");
-        resp.setEntity(df);
-        interceptor.postProcess(resp);
-        DynamicFilterData filterData =
-            ResteasyProviderFactory.getContextData(DynamicFilterData.class);
-        assertFalse(filterData.isAttributeExcluded("attributeOne", df));
-        assertTrue(filterData.isAttributeExcluded("attributeTwo", df));
-        assertFalse(filterData.isAttributeExcluded("otherObjectOne", df));
-        assertFalse(filterData.isAttributeExcluded("otherObjectTwo", df));
+        DynamicFilterData filterData = ResteasyProviderFactory.getContextData(DynamicFilterData.class);
+        assertNotNull(filterData);
+
+        assertFalse(filterData.isAttributeExcluded("a1"));
+        assertFalse(filterData.isAttributeExcluded("a1.c1"));
+        assertFalse(filterData.isAttributeExcluded("a1.c2"));
+        assertTrue(filterData.isAttributeExcluded("a2"));
+        assertTrue(filterData.isAttributeExcluded("a2.c1"));
+        assertTrue(filterData.isAttributeExcluded("a2.c2"));
+        assertFalse(filterData.isAttributeExcluded("a3"));
+        assertFalse(filterData.isAttributeExcluded("a3.c1"));
+        assertFalse(filterData.isAttributeExcluded("a3.c2"));
+
+        assertFalse(filterData.isAttributeExcluded(Arrays.asList("a1")));
+        assertFalse(filterData.isAttributeExcluded(Arrays.asList("a1", "c1")));
+        assertFalse(filterData.isAttributeExcluded(Arrays.asList("a1", "c2")));
+        assertTrue(filterData.isAttributeExcluded(Arrays.asList("a2")));
+        assertTrue(filterData.isAttributeExcluded(Arrays.asList("a2", "c1")));
+        assertTrue(filterData.isAttributeExcluded(Arrays.asList("a2", "c2")));
+        assertFalse(filterData.isAttributeExcluded(Arrays.asList("a3")));
+        assertFalse(filterData.isAttributeExcluded(Arrays.asList("a3", "c1")));
+        assertFalse(filterData.isAttributeExcluded(Arrays.asList("a3", "c2")));
     }
 
     @Test
     public void testSimpleMultiBlacklist() throws Exception {
-        MockHttpRequest req = MockHttpRequest.create("GET",
-            "http://localhost/candlepin/status" +
-            "?exclude=attributeTwo&exclude=otherObjectOne");
-        interceptor.preProcess(req, rmethod);
+        MockHttpRequest req = MockHttpRequest.create(
+            "GET",
+            "http://localhost/candlepin/status?exclude=a2&exclude=a3"
+        );
+        this.interceptor.preProcess(req, rmethod);
 
-        ServerResponse resp = new ServerResponse();
-        ClassForFilterTesting df = new ClassForFilterTesting("first", "second");
-        resp.setEntity(df);
-        interceptor.postProcess(resp);
-        DynamicFilterData filterData =
-            ResteasyProviderFactory.getContextData(DynamicFilterData.class);
-        assertFalse(filterData.isAttributeExcluded("attributeOne", df));
-        assertTrue(filterData.isAttributeExcluded("attributeTwo", df));
-        assertTrue(filterData.isAttributeExcluded("otherObjectOne", df));
-        assertFalse(filterData.isAttributeExcluded("otherObjectTwo", df));
+        DynamicFilterData filterData = ResteasyProviderFactory.getContextData(DynamicFilterData.class);
+        assertNotNull(filterData);
+
+        assertFalse(filterData.isAttributeExcluded("a1"));
+        assertFalse(filterData.isAttributeExcluded("a1.c1"));
+        assertFalse(filterData.isAttributeExcluded("a1.c2"));
+        assertTrue(filterData.isAttributeExcluded("a2"));
+        assertTrue(filterData.isAttributeExcluded("a2.c1"));
+        assertTrue(filterData.isAttributeExcluded("a2.c2"));
+        assertTrue(filterData.isAttributeExcluded("a3"));
+        assertTrue(filterData.isAttributeExcluded("a3.c1"));
+        assertTrue(filterData.isAttributeExcluded("a3.c2"));
+
+        assertFalse(filterData.isAttributeExcluded(Arrays.asList("a1")));
+        assertFalse(filterData.isAttributeExcluded(Arrays.asList("a1", "c1")));
+        assertFalse(filterData.isAttributeExcluded(Arrays.asList("a1", "c2")));
+        assertTrue(filterData.isAttributeExcluded(Arrays.asList("a2")));
+        assertTrue(filterData.isAttributeExcluded(Arrays.asList("a2", "c1")));
+        assertTrue(filterData.isAttributeExcluded(Arrays.asList("a2", "c2")));
+        assertTrue(filterData.isAttributeExcluded(Arrays.asList("a3")));
+        assertTrue(filterData.isAttributeExcluded(Arrays.asList("a3", "c1")));
+        assertTrue(filterData.isAttributeExcluded(Arrays.asList("a3", "c2")));
     }
 
     @Test
-    public void testEncapsulatedBlacklist() throws Exception {
-        MockHttpRequest req = MockHttpRequest.create("GET",
-            "http://localhost/candlepin/status?exclude=attributeTwo" +
-            "&exclude=otherObjectOne.attributeOne");
+    public void testNestedAttributeBlacklist() throws Exception {
+        MockHttpRequest req = MockHttpRequest.create(
+            "GET",
+            "http://localhost/candlepin/status?exclude=a2&exclude=a3.c1"
+        );
         interceptor.preProcess(req, rmethod);
 
-        ServerResponse resp = new ServerResponse();
-        ClassForFilterTesting df =
-            new ClassForFilterTesting("first", "second");
-        ClassForFilterTesting innerdf =
-            new ClassForFilterTesting("third", "fourth");
-        df.setOtherObjectOne(innerdf);
-        resp.setEntity(df);
-        interceptor.postProcess(resp);
-        DynamicFilterData filterData =
-            ResteasyProviderFactory.getContextData(DynamicFilterData.class);
-        assertFalse(filterData.isAttributeExcluded("attributeOne", df));
-        assertTrue(filterData.isAttributeExcluded("attributeTwo", df));
-        assertFalse(filterData.isAttributeExcluded("otherObjectOne", df));
-        assertFalse(filterData.isAttributeExcluded("otherObjectTwo", df));
-        assertTrue(filterData.isAttributeExcluded("attributeOne", innerdf));
-        assertFalse(filterData.isAttributeExcluded("attributeTwo", innerdf));
+        DynamicFilterData filterData = ResteasyProviderFactory.getContextData(DynamicFilterData.class);
+        assertNotNull(filterData);
+
+        assertFalse(filterData.isAttributeExcluded("a1"));
+        assertFalse(filterData.isAttributeExcluded("a1.c1"));
+        assertFalse(filterData.isAttributeExcluded("a1.c2"));
+        assertTrue(filterData.isAttributeExcluded("a2"));
+        assertTrue(filterData.isAttributeExcluded("a2.c1"));
+        assertTrue(filterData.isAttributeExcluded("a2.c2"));
+        assertFalse(filterData.isAttributeExcluded("a3"));
+        assertTrue(filterData.isAttributeExcluded("a3.c1"));
+        assertFalse(filterData.isAttributeExcluded("a3.c2"));
+
+        assertFalse(filterData.isAttributeExcluded(Arrays.asList("a1")));
+        assertFalse(filterData.isAttributeExcluded(Arrays.asList("a1", "c1")));
+        assertFalse(filterData.isAttributeExcluded(Arrays.asList("a1", "c2")));
+        assertTrue(filterData.isAttributeExcluded(Arrays.asList("a2")));
+        assertTrue(filterData.isAttributeExcluded(Arrays.asList("a2", "c1")));
+        assertTrue(filterData.isAttributeExcluded(Arrays.asList("a2", "c2")));
+        assertFalse(filterData.isAttributeExcluded(Arrays.asList("a3")));
+        assertTrue(filterData.isAttributeExcluded(Arrays.asList("a3", "c1")));
+        assertFalse(filterData.isAttributeExcluded(Arrays.asList("a3", "c2")));
     }
 
     @Test
     public void testSimpleWhitelist() throws Exception {
-        MockHttpRequest req = MockHttpRequest.create("GET",
-            "http://localhost/candlepin/status?include=attributeTwo");
-        interceptor.preProcess(req, rmethod);
+        MockHttpRequest req = MockHttpRequest.create(
+            "GET",
+            "http://localhost/candlepin/status?include=a2"
+        );
+        this.interceptor.preProcess(req, rmethod);
 
-        ServerResponse resp = new ServerResponse();
-        ClassForFilterTesting df = new ClassForFilterTesting("first", "second");
-        resp.setEntity(df);
-        interceptor.postProcess(resp);
-        DynamicFilterData filterData =
-            ResteasyProviderFactory.getContextData(DynamicFilterData.class);
-        assertTrue(filterData.isAttributeExcluded("attributeOne", df));
-        assertFalse(filterData.isAttributeExcluded("attributeTwo", df));
-        assertTrue(filterData.isAttributeExcluded("otherObjectOne", df));
-        assertTrue(filterData.isAttributeExcluded("otherObjectTwo", df));
+        DynamicFilterData filterData = ResteasyProviderFactory.getContextData(DynamicFilterData.class);
+        assertNotNull(filterData);
+
+        assertTrue(filterData.isAttributeExcluded("a1"));
+        assertTrue(filterData.isAttributeExcluded("a1.c1"));
+        assertTrue(filterData.isAttributeExcluded("a1.c2"));
+        assertFalse(filterData.isAttributeExcluded("a2"));
+        assertFalse(filterData.isAttributeExcluded("a2.c1"));
+        assertFalse(filterData.isAttributeExcluded("a2.c2"));
+        assertTrue(filterData.isAttributeExcluded("a3"));
+        assertTrue(filterData.isAttributeExcluded("a3.c1"));
+        assertTrue(filterData.isAttributeExcluded("a3.c2"));
+
+        assertTrue(filterData.isAttributeExcluded(Arrays.asList("a1")));
+        assertTrue(filterData.isAttributeExcluded(Arrays.asList("a1", "c1")));
+        assertTrue(filterData.isAttributeExcluded(Arrays.asList("a1", "c2")));
+        assertFalse(filterData.isAttributeExcluded(Arrays.asList("a2")));
+        assertFalse(filterData.isAttributeExcluded(Arrays.asList("a2", "c1")));
+        assertFalse(filterData.isAttributeExcluded(Arrays.asList("a2", "c2")));
+        assertTrue(filterData.isAttributeExcluded(Arrays.asList("a3")));
+        assertTrue(filterData.isAttributeExcluded(Arrays.asList("a3", "c1")));
+        assertTrue(filterData.isAttributeExcluded(Arrays.asList("a3", "c2")));
     }
 
     @Test
     public void testSimpleMultiWhitelist() throws Exception {
-        MockHttpRequest req = MockHttpRequest.create("GET",
-            "http://localhost/candlepin/status?" +
-            "include=attributeTwo&include=otherObjectOne");
-        interceptor.preProcess(req, rmethod);
+        MockHttpRequest req = MockHttpRequest.create(
+            "GET",
+            "http://localhost/candlepin/status?include=a1&include=a3"
+        );
+        this.interceptor.preProcess(req, rmethod);
 
-        ServerResponse resp = new ServerResponse();
-        ClassForFilterTesting df = new ClassForFilterTesting("first", "second");
-        resp.setEntity(df);
-        interceptor.postProcess(resp);
-        DynamicFilterData filterData =
-            ResteasyProviderFactory.getContextData(DynamicFilterData.class);
-        assertTrue(filterData.isAttributeExcluded("attributeOne", df));
-        assertFalse(filterData.isAttributeExcluded("attributeTwo", df));
-        assertFalse(filterData.isAttributeExcluded("otherObjectOne", df));
-        assertTrue(filterData.isAttributeExcluded("otherObjectTwo", df));
+        DynamicFilterData filterData = ResteasyProviderFactory.getContextData(DynamicFilterData.class);
+        assertNotNull(filterData);
+
+        assertFalse(filterData.isAttributeExcluded("a1"));
+        assertFalse(filterData.isAttributeExcluded("a1.c1"));
+        assertFalse(filterData.isAttributeExcluded("a1.c2"));
+        assertTrue(filterData.isAttributeExcluded("a2"));
+        assertTrue(filterData.isAttributeExcluded("a2.c1"));
+        assertTrue(filterData.isAttributeExcluded("a2.c2"));
+        assertFalse(filterData.isAttributeExcluded("a3"));
+        assertFalse(filterData.isAttributeExcluded("a3.c1"));
+        assertFalse(filterData.isAttributeExcluded("a3.c2"));
+
+        assertFalse(filterData.isAttributeExcluded(Arrays.asList("a1")));
+        assertFalse(filterData.isAttributeExcluded(Arrays.asList("a1", "c1")));
+        assertFalse(filterData.isAttributeExcluded(Arrays.asList("a1", "c2")));
+        assertTrue(filterData.isAttributeExcluded(Arrays.asList("a2")));
+        assertTrue(filterData.isAttributeExcluded(Arrays.asList("a2", "c1")));
+        assertTrue(filterData.isAttributeExcluded(Arrays.asList("a2", "c2")));
+        assertFalse(filterData.isAttributeExcluded(Arrays.asList("a3")));
+        assertFalse(filterData.isAttributeExcluded(Arrays.asList("a3", "c1")));
+        assertFalse(filterData.isAttributeExcluded(Arrays.asList("a3", "c2")));
     }
 
     @Test
-    public void testEncapsulatedWhitelist() throws Exception {
-        MockHttpRequest req = MockHttpRequest.create("GET",
-            "http://localhost/candlepin/status?include=attributeTwo" +
-            "&include=otherObjectOne.attributeOne");
+    public void testNestedAttributeWhitelist() throws Exception {
+        MockHttpRequest req = MockHttpRequest.create(
+            "GET",
+            "http://localhost/candlepin/status?include=a2&include=a3.c1"
+        );
         interceptor.preProcess(req, rmethod);
 
-        ServerResponse resp = new ServerResponse();
-        ClassForFilterTesting df =
-            new ClassForFilterTesting("first", "second");
-        ClassForFilterTesting innerdf =
-            new ClassForFilterTesting("third", "fourth");
-        df.setOtherObjectOne(innerdf);
-        resp.setEntity(df);
-        interceptor.postProcess(resp);
-        DynamicFilterData filterData =
-            ResteasyProviderFactory.getContextData(DynamicFilterData.class);
-        assertTrue(filterData.isAttributeExcluded("attributeOne", df));
-        assertFalse(filterData.isAttributeExcluded("attributeTwo", df));
-        assertFalse(filterData.isAttributeExcluded("otherObjectOne", df));
-        assertTrue(filterData.isAttributeExcluded("otherObjectTwo", df));
-        assertFalse(filterData.isAttributeExcluded("attributeOne", innerdf));
-        assertTrue(filterData.isAttributeExcluded("attributeTwo", innerdf));
+        DynamicFilterData filterData = ResteasyProviderFactory.getContextData(DynamicFilterData.class);
+        assertNotNull(filterData);
+
+        assertTrue(filterData.isAttributeExcluded("a1"));
+        assertTrue(filterData.isAttributeExcluded("a1.c1"));
+        assertTrue(filterData.isAttributeExcluded("a1.c2"));
+        assertFalse(filterData.isAttributeExcluded("a2"));
+        assertFalse(filterData.isAttributeExcluded("a2.c1"));
+        assertFalse(filterData.isAttributeExcluded("a2.c2"));
+        assertFalse(filterData.isAttributeExcluded("a3"));
+        assertFalse(filterData.isAttributeExcluded("a3.c1"));
+        assertTrue(filterData.isAttributeExcluded("a3.c2"));
+
+        assertTrue(filterData.isAttributeExcluded(Arrays.asList("a1")));
+        assertTrue(filterData.isAttributeExcluded(Arrays.asList("a1", "c1")));
+        assertTrue(filterData.isAttributeExcluded(Arrays.asList("a1", "c2")));
+        assertFalse(filterData.isAttributeExcluded(Arrays.asList("a2")));
+        assertFalse(filterData.isAttributeExcluded(Arrays.asList("a2", "c1")));
+        assertFalse(filterData.isAttributeExcluded(Arrays.asList("a2", "c2")));
+        assertFalse(filterData.isAttributeExcluded(Arrays.asList("a3")));
+        assertFalse(filterData.isAttributeExcluded(Arrays.asList("a3", "c1")));
+        assertTrue(filterData.isAttributeExcluded(Arrays.asList("a3", "c2")));
     }
 
-    public class ClassForFilterTesting {
-
-        private String attributeOne;
-        private String attributeTwo;
-        private ClassForFilterTesting otherObjectOne;
-        private ClassForFilterTesting otherObjectTwo;
-
-        public ClassForFilterTesting(String s1, String s2) {
-            this.setAttributeOne(s1);
-            this.setAttributeTwo(s2);
-        }
-
-        public String getAttributeOne() {
-            return attributeOne;
-        }
-
-        public void setAttributeOne(String attributeOne) {
-            this.attributeOne = attributeOne;
-        }
-
-        public String getAttributeTwo() {
-            return attributeTwo;
-        }
-
-        public void setAttributeTwo(String attributeTwo) {
-            this.attributeTwo = attributeTwo;
-        }
-
-        public ClassForFilterTesting getOtherObjectOne() {
-            return otherObjectOne;
-        }
-
-        public void setOtherObjectOne(ClassForFilterTesting otherObjectOne) {
-            this.otherObjectOne = otherObjectOne;
-        }
-
-        public ClassForFilterTesting getOtherObjectTwo() {
-            return otherObjectTwo;
-        }
-
-        public void setOtherObjectTwo(ClassForFilterTesting otherObjectTwo) {
-            this.otherObjectTwo = otherObjectTwo;
-        }
-    }
 }
