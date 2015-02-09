@@ -60,7 +60,7 @@ public class ReportsResourceTest {
     @Test
     public void testExceptionThrownWhenReportNotFound() {
         try {
-            reportsResource.run(uriInfo, "invalid_report_key");
+            reportsResource.run(uriInfo, "invalid_report_key", null);
             fail("Expected exception due to invalid report key");
         }
         catch (RuntimeException e) {
@@ -71,8 +71,8 @@ public class ReportsResourceTest {
     @Test
     public void testValidReportRun() {
         ReportResult result = mock(ReportResult.class);
-        when(ReportsResourceModule.MOCK_REPORT.run(uriInfo.getQueryParameters())).thenReturn(result);
-        assertEquals(result, reportsResource.run(uriInfo, "test_report_1"));
+        when(ReportsResourceModule.MOCK_REPORT.run(uriInfo.getQueryParameters(), null)).thenReturn(result);
+        assertEquals(result, reportsResource.run(uriInfo, "test_report_1", null));
     }
 
     public static class ReportsResourceModule extends JukitoModule {

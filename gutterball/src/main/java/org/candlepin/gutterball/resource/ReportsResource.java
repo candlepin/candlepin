@@ -16,6 +16,8 @@
 package org.candlepin.gutterball.resource;
 
 import org.candlepin.common.exceptions.BadRequestException;
+import org.candlepin.common.paging.Paginate;
+import org.candlepin.common.paging.PageRequest;
 import org.candlepin.gutterball.report.Report;
 import org.candlepin.gutterball.report.ReportFactory;
 import org.candlepin.gutterball.report.ReportResult;
@@ -63,15 +65,18 @@ public class ReportsResource {
     @Path("{report_key}/run")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
+    @Paginate
     public ReportResult run(@Context UriInfo uriInfo,
-        @PathParam("report_key") String reportKey) {
+        @PathParam("report_key") String reportKey,
+        @Context PageRequest pageRequest) {
+
         Report r = this.reportFactory.getReport(reportKey);
         if (r == null) {
             // TODO: Throw an appropriate exception once they are moved
             //       into candlepin-common.
             throw new BadRequestException("Report " + reportKey + " not found.");
         }
-        return r.run(uriInfo.getQueryParameters());
+        return r.run(uriInfo.getQueryParameters(), pageRequest);
     }
 
 }

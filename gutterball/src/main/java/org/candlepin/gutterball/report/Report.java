@@ -15,6 +15,8 @@
 
 package org.candlepin.gutterball.report;
 
+import org.candlepin.common.paging.PageRequest;
+
 import org.xnap.commons.i18n.I18n;
 
 import java.text.ParseException;
@@ -75,9 +77,9 @@ public abstract class Report<R extends ReportResult> {
         return this.parameters;
     }
 
-    public R run(MultivaluedMap<String, String> queryParameters) {
+    public R run(MultivaluedMap<String, String> queryParameters, PageRequest pageRequest) {
         validateParameters(queryParameters);
-        return execute(queryParameters);
+        return execute(queryParameters, pageRequest);
     }
 
     /**
@@ -99,7 +101,7 @@ public abstract class Report<R extends ReportResult> {
      * @param queryParameters
      * @return a {@link ReportResult} containing the results of the query.
      */
-    protected abstract R execute(MultivaluedMap<String, String> queryParameters);
+    protected abstract R execute(MultivaluedMap<String, String> queryParameters, PageRequest pageRequest);
 
     /**
      * Defines the {@link ReportParameter}s that are used by this report. These

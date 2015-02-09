@@ -41,6 +41,8 @@ import org.candlepin.common.exceptions.mappers.WebApplicationExceptionMapper;
 import org.candlepin.common.exceptions.mappers.WriterExceptionMapper;
 import org.candlepin.common.guice.JPAInitializer;
 import org.candlepin.common.resteasy.interceptor.DynamicFilterInterceptor;
+import org.candlepin.common.resteasy.interceptor.LinkHeaderPostInterceptor;
+import org.candlepin.common.resteasy.interceptor.PageRequestInterceptor;
 import org.candlepin.common.validation.CandlepinMessageInterpolator;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.CandlepinPoolManager;
@@ -101,8 +103,6 @@ import org.candlepin.resource.SubscriptionResource;
 import org.candlepin.resource.UserResource;
 import org.candlepin.resteasy.JsonProvider;
 import org.candlepin.resteasy.interceptor.AuthInterceptor;
-import org.candlepin.resteasy.interceptor.LinkHeaderPostInterceptor;
-import org.candlepin.resteasy.interceptor.PageRequestInterceptor;
 import org.candlepin.resteasy.interceptor.PinsetterAsyncInterceptor;
 import org.candlepin.resteasy.interceptor.VersionPostInterceptor;
 import org.candlepin.service.UniqueIdGenerator;
@@ -317,6 +317,9 @@ public class CandlepinModule extends AbstractModule {
         bind(VersionPostInterceptor.class);
         bind(LinkHeaderPostInterceptor.class);
         bind(DynamicFilterInterceptor.class);
+
+        bindConstant().annotatedWith(Names.named("PREFIX_APIURL_KEY"))
+            .to(ConfigProperties.PREFIX_APIURL);
     }
 
     private void configurePinsetter() {

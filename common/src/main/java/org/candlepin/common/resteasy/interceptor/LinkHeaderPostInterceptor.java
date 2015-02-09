@@ -12,15 +12,15 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.resteasy.interceptor;
+package org.candlepin.common.resteasy.interceptor;
 
 import org.candlepin.common.config.Configuration;
-import org.candlepin.config.ConfigProperties;
-import org.candlepin.paging.Page;
-import org.candlepin.paging.PageRequest;
-import org.candlepin.paging.Paginate;
+import org.candlepin.common.paging.Page;
+import org.candlepin.common.paging.PageRequest;
+import org.candlepin.common.paging.Paginate;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
 import org.jboss.resteasy.annotations.interception.Precedence;
 import org.jboss.resteasy.annotations.interception.ServerInterceptor;
@@ -55,10 +55,14 @@ public class LinkHeaderPostInterceptor implements PostProcessInterceptor, Accept
     public static final String LINK_HEADER = "Link";
 
     private Configuration config;
+    private String apiUrlPrefixKey;
 
     @Inject
-    public LinkHeaderPostInterceptor(Configuration config) {
+    public LinkHeaderPostInterceptor(Configuration config,
+        @Named("PREFIX_APIURL_KEY") String apiUrlPrefixKey) {
+
         this.config = config;
+        this.apiUrlPrefixKey = apiUrlPrefixKey;
     }
 
     @Override
@@ -151,9 +155,8 @@ public class LinkHeaderPostInterceptor implements PostProcessInterceptor, Accept
 
     protected UriBuilder buildBaseUrl(HttpServletRequest request) {
         StringBuffer url;
-        if (config.containsKey(ConfigProperties.PREFIX_APIURL) &&
-            !"".equals(config.getString(ConfigProperties.PREFIX_APIURL))) {
-            url = new StringBuffer(config.getString(ConfigProperties.PREFIX_APIURL));
+        if (config.containsKey(this.apiUrlPrefixKey) && !"".equals(config.getString(this.apiUrlPrefixKey))) {
+            url = new StringBuffer(config.getString(this.apiUrlPrefixKey));
             // The default value of PREFIX_APIURL doesn't specify a scheme.
             if (url.indexOf("://") == -1) {
                 url = new StringBuffer("https://").append(url);

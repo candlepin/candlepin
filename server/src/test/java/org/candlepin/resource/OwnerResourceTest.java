@@ -64,7 +64,7 @@ import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
-import org.candlepin.paging.PageRequest;
+import org.candlepin.common.paging.PageRequest;
 import org.candlepin.resteasy.parameter.CandlepinParam;
 import org.candlepin.resteasy.parameter.CandlepinParameterUnmarshaller;
 import org.candlepin.resteasy.parameter.KeyValueParameter;

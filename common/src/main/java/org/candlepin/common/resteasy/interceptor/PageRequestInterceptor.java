@@ -12,12 +12,12 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.resteasy.interceptor;
+package org.candlepin.common.resteasy.interceptor;
 
 import org.candlepin.common.exceptions.BadRequestException;
-import org.candlepin.paging.PageRequest;
-import org.candlepin.paging.PageRequest.Order;
-import org.candlepin.paging.Paginate;
+import org.candlepin.common.paging.PageRequest;
+import org.candlepin.common.paging.PageRequest.Order;
+import org.candlepin.common.paging.Paginate;
 
 import com.google.inject.Inject;
 
@@ -45,12 +45,12 @@ import javax.ws.rs.ext.Provider;
 public class PageRequestInterceptor implements PreProcessInterceptor,
     AcceptedByMethod {
 
-    private I18n i18n;
+    private javax.inject.Provider<I18n> i18nProvider;
 
     @Inject
-    public PageRequestInterceptor(I18n i18n) {
+    public PageRequestInterceptor(javax.inject.Provider<I18n> i18nProvider) {
         super();
-        this.i18n = i18n;
+        this.i18nProvider = i18nProvider;
     }
 
     @Override
@@ -99,6 +99,7 @@ public class PageRequestInterceptor implements PreProcessInterceptor,
                 }
             }
             catch (NumberFormatException nfe) {
+                I18n i18n = this.i18nProvider.get();
                 throw new BadRequestException(i18n.tr("offset and limit parameters" +
                     " must be positive integers"), nfe);
             }
@@ -117,6 +118,7 @@ public class PageRequestInterceptor implements PreProcessInterceptor,
             return Order.DESCENDING;
         }
 
+        I18n i18n = this.i18nProvider.get();
         throw new BadRequestException(i18n.tr("the order parameter must be either" +
                 " ''ascending'' or ''descending''"));
     }
@@ -126,6 +128,7 @@ public class PageRequestInterceptor implements PreProcessInterceptor,
             int i = Integer.parseInt(value);
 
             if (i <= 0) {
+                I18n i18n = this.i18nProvider.get();
                 throw new NumberFormatException(i18n.tr("Expected a positive integer."));
             }
             return i;

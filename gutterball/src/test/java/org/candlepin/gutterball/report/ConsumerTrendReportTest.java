@@ -194,7 +194,7 @@ public class ConsumerTrendReportTest extends DatabaseTestFixture {
         when(params.getFirst("end_date")).thenReturn(onDateString);
         when(params.get("end_date")).thenReturn(Arrays.asList(onDateString));
 
-        ConsumerTrendReportDefaultResult result = (ConsumerTrendReportDefaultResult) report.run(params);
+        ConsumerTrendReportDefaultResult result = (ConsumerTrendReportDefaultResult) report.run(params, null);
 
         int received = 0;
         while (result.hasNext()) {
@@ -228,7 +228,7 @@ public class ConsumerTrendReportTest extends DatabaseTestFixture {
         when(params.getFirst("end_date")).thenReturn(endDateString);
         when(params.get("end_date")).thenReturn(Arrays.asList(endDateString));
 
-        ConsumerTrendReportDefaultResult result = (ConsumerTrendReportDefaultResult) report.run(params);
+        ConsumerTrendReportDefaultResult result = (ConsumerTrendReportDefaultResult) report.run(params, null);
 
         int received = 0;
         while (result.hasNext()) {
@@ -249,7 +249,7 @@ public class ConsumerTrendReportTest extends DatabaseTestFixture {
         when(params.get("consumer_uuid")).thenReturn(Arrays.asList("c4"));
         when(params.getFirst("consumer_uuid")).thenReturn("c4");
 
-        ConsumerTrendReportDefaultResult result = (ConsumerTrendReportDefaultResult) report.run(params);
+        ConsumerTrendReportDefaultResult result = (ConsumerTrendReportDefaultResult) report.run(params, null);
 
         int received = 0;
         while (result.hasNext()) {
@@ -275,7 +275,7 @@ public class ConsumerTrendReportTest extends DatabaseTestFixture {
 
         createComplianceSnapshot(new Date(), uuid, "an-owner", "valid");
         // This cast will not fail when generic type differs. Checking below.
-        ConsumerTrendReportDefaultResult result = (ConsumerTrendReportDefaultResult) report.run(params);
+        ConsumerTrendReportDefaultResult result = (ConsumerTrendReportDefaultResult) report.run(params, null);
         assertNotNull(result);
         assertTrue(result.hasNext());
 
@@ -295,7 +295,7 @@ public class ConsumerTrendReportTest extends DatabaseTestFixture {
 
         createComplianceSnapshot(new Date(), uuid, "an-owner", "valid");
         // This cast will not fail when generic type differs. Checking below.
-        ReasonGeneratingReportResult result = (ReasonGeneratingReportResult) report.run(params);
+        ReasonGeneratingReportResult result = (ReasonGeneratingReportResult) report.run(params, null);
         assertNotNull(result);
         assertTrue(result.hasNext());
 

@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.paging;
+package org.candlepin.common.paging;
 
 /**
  * Represents a request to page data coming back from Candlepin.

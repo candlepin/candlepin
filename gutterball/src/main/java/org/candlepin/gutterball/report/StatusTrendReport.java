@@ -17,11 +17,14 @@ package org.candlepin.gutterball.report;
 
 import org.candlepin.common.config.ConversionException;
 import org.candlepin.common.config.PropertyConverter;
+import org.candlepin.common.paging.Page;
+import org.candlepin.common.paging.PageRequest;
 import org.candlepin.gutterball.curator.ComplianceSnapshotCurator;
 import org.candlepin.gutterball.guice.I18nProvider;
 
 import com.google.inject.Inject;
 
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -127,7 +130,9 @@ public class StatusTrendReport extends Report<StatusTrendReportResult> {
     }
 
     @Override
-    protected StatusTrendReportResult execute(MultivaluedMap<String, String> queryParams) {
+    protected StatusTrendReportResult execute(MultivaluedMap<String, String> queryParams,
+        PageRequest pageRequest) {
+
         Map<String, String> attributes = new HashMap<String, String>();
 
         TimeZone timezone = this.parseTimeZone(queryParams.getFirst("timezone"));
@@ -137,7 +142,7 @@ public class StatusTrendReport extends Report<StatusTrendReportResult> {
         String sku = queryParams.getFirst("sku");
         String subscriptionName = queryParams.getFirst("subscription_name");
 
-        Map<Date, Map<String, Integer>> result;
+        Page<Map<Date, Map<String, Integer>>> page;
         StatusTrendReportResult output = new StatusTrendReportResult();
 
         // TODO:
@@ -155,27 +160,52 @@ public class StatusTrendReport extends Report<StatusTrendReportResult> {
         }
 
         if (sku != null) {
-            result = this.curator.getComplianceStatusCountsBySku(startDate, endDate, ownerKey, sku);
-        }
-        else if (subscriptionName != null) {
-            result = this.curator.getComplianceStatusCountsBySubscription(
+            page = this.curator.getComplianceStatusCounts(
                 startDate,
                 endDate,
                 ownerKey,
-                subscriptionName
+                sku,
+                null,
+                null,
+                pageRequest
+            );
+        }
+        else if (subscriptionName != null) {
+            page = this.curator.getComplianceStatusCounts(
+                startDate,
+                endDate,
+                ownerKey,
+                null,
+                subscriptionName,
+                null,
+                pageRequest
             );
         }
         else if (managementEnabled != null) {
-            result = this.curator.getComplianceStatusCountsByAttributes(
+            page = this.curator.getComplianceStatusCounts(
                 startDate,
                 endDate,
                 ownerKey,
-                attributes
+                null,
+                null,
+                attributes,
+                pageRequest
             );
         }
         else {
-            result = this.curator.getComplianceStatusCounts(startDate, endDate, ownerKey);
+            page = this.curator.getComplianceStatusCounts(
+                startDate,
+                endDate,
+                ownerKey,
+                null,
+                null,
+                null,
+                pageRequest
+            );
         }
+
+        ResteasyProviderFactory.pushContext(Page.class, page);
+        Map<Date, Map<String, Integer>> result = page.getPageData();
 
         // Process query result & convert dates
         SimpleDateFormat formatter = new SimpleDateFormat(REPORT_DATETIME_FORMAT);
