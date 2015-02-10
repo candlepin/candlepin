@@ -37,6 +37,8 @@ import javax.ws.rs.core.MultivaluedMap;
  */
 public class ConsumerTrendReport extends Report<ReportResult> {
 
+    private static final String CUSTOM_RESULTS_PARAM = "custom_results";
+
     private ComplianceSnapshotCurator snapshotCurator;
     private StatusReasonMessageGenerator messageGenerator;
 
@@ -86,8 +88,22 @@ public class ConsumerTrendReport extends Report<ReportResult> {
                 .getParameter());
 
         addParameter(
-            builder.init("custom", i18n.tr("Allows building a custom result data set by tayloring the " +
-                         "data to include in the JSON (boolean)")).getParameter());
+            builder.init(CUSTOM_RESULTS_PARAM, i18n.tr("Enables/disables custom report result functionality " +
+                        "via attribute filtering (boolean).")).getParameter());
+
+            addParameter(builder.init("include",
+                    i18n.tr("Includes the specified attribute in the result JSON"))
+                .multiValued()
+                .mustHave(CUSTOM_RESULTS_PARAM)
+                .mustNotHave("exclude")
+                .getParameter());
+
+            addParameter(builder.init("exclude",
+                    i18n.tr("Excludes the specified attribute in the result JSON"))
+                .multiValued()
+                .mustHave(CUSTOM_RESULTS_PARAM)
+                .mustNotHave("include")
+                .getParameter());
     }
 
     @Override
@@ -112,7 +128,8 @@ public class ConsumerTrendReport extends Report<ReportResult> {
             endDate = parseDateTime(queryParams.getFirst("end_date"));
         }
 
-        String custom = queryParams.containsKey("custom") ? queryParams.getFirst("custom") : "";
+        String custom = queryParams.containsKey(CUSTOM_RESULTS_PARAM) ?
+            queryParams.getFirst(CUSTOM_RESULTS_PARAM) : "";
         boolean useCustom = PropertyConverter.toBoolean(custom);
 
         Page<Iterator<Compliance>> page = this.snapshotCurator.getSnapshotIteratorForConsumer(
