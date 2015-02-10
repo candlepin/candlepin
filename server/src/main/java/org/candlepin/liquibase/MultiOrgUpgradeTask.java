@@ -123,17 +123,17 @@ public class MultiOrgUpgradeTask {
      */
     protected ResultSet getProductIDs(String orgid) {
         String sql =
-            "SELECT p.productid "+
+            "SELECT p.product_id_old "+
             "  FROM cp_pool p " +
             "  WHERE p.owner_id = ? " +
-            "    AND p.productid IS NOT NULL " +
-            "    AND p.productid != '' " +
+            "    AND p.product_id_old IS NOT NULL " +
+            "    AND p.product_id_old != '' " +
             "UNION " +
-            "SELECT p.derivedproductid " +
+            "SELECT p.derived_product_id_old " +
             "  FROM cp_pool p " +
             "  WHERE p.owner_id = ? " +
-            "  AND p.derivedproductid IS NOT NULL " +
-            "  AND p.derivedproductid != '' " +
+            "  AND p.derived_product_id_old IS NOT NULL " +
+            "  AND p.derived_product_id_old != '' " +
             "UNION " +
             "SELECT pp.product_id " +
             "  FROM cp_pool p " +
