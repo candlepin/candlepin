@@ -20,65 +20,61 @@ import org.candlepin.model.OrgProduct;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Index;
 
-import java.io.Serializable;
-import java.util.Date;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.PrePersist;
-import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-import javax.xml.bind.annotation.XmlType;
-
-import com.fasterxml.jackson.annotation.JsonFilter;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
-
 
 /**
  * SubscriptionToken
  */
-@Entity
-@JsonIgnoreProperties(ignoreUnknown = true)
-@JsonFilter("DefaultFilter")
-@XmlAccessorType(XmlAccessType.PROPERTY)
 @XmlRootElement
-@XmlType(name = "CandlepinObject")
+@Entity
+@XmlAccessorType(XmlAccessType.PROPERTY)
 @Table(name = "cp_org_activationkey_product")
-public class OrgActivationKeyProduct implements Persisted, Serializable {
-    public static final String DEFAULT_SORT_FIELD = "created";
+public class ActivationKeyProduct extends AbstractHibernateObject {
+
+    @Id
+    @GeneratedValue(generator = "system-uuid")
+    @GenericGenerator(name = "system-uuid", strategy = "uuid")
+    @Column(length = 32)
+    @NotNull
+    private String id;
 
     @ManyToOne
-    @JoinColumn(name="id", nullable = false)
+    @JoinColumn(nullable = false)
+    @Index(name = "cp_org_activation_key_prod_k_fk_idx")
     @NotNull
     private ActivationKey key;
 
-    @ManyToOne
-    @JoinColumn(name="id", nullable = false)
+    @Column(name = "product_id", nullable = false)
     @NotNull
     private OrgProduct product;
 
-    private Date created;
-    private Date updated;
-
-    public OrgActivationKeyProduct() {
+    public ActivationKeyProduct() {
     }
 
-    public OrgActivationKeyProduct(ActivationKey key, OrgProduct product) {
+    public ActivationKeyProduct(ActivationKey key, OrgProduct product) {
         this.key = key;
         this.product = product;
+    }
+
+    public String getId() {
+        return this.id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     /**
@@ -92,7 +88,7 @@ public class OrgActivationKeyProduct implements Persisted, Serializable {
     /**
      * @param key the key to set
      */
-    public void setKeyId(ActivationKey key) {
+    public void setKey(ActivationKey key) {
         this.key = key;
     }
 
@@ -114,38 +110,5 @@ public class OrgActivationKeyProduct implements Persisted, Serializable {
     public String toString() {
         return "Activation key: " + this.getKey().getName() + ", Product: " +
                 this.getProduct().getName();
-    }
-
-    @PrePersist
-    protected void onCreate() {
-        Date now = new Date();
-
-        setCreated(now);
-        setUpdated(now);
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        setUpdated(new Date());
-    }
-
-    @XmlElement
-    @Column(nullable = false, unique = false)
-    public Date getCreated() {
-        return created;
-    }
-
-    public void setCreated(Date created) {
-        this.created = created;
-    }
-
-    @XmlElement
-    @Column(nullable = false, unique = false)
-    public Date getUpdated() {
-        return updated;
-    }
-
-    public void setUpdated(Date updated) {
-        this.updated = updated;
     }
 }

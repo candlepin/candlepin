@@ -51,7 +51,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "cp_org_product")
+@Table(name = "cp_org_products")
 public class OrgProduct extends AbstractHibernateObject implements Linkable {
 
     public static final  String UEBER_PRODUCT_POSTFIX = "_ueber_product";
