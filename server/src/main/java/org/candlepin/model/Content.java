@@ -63,6 +63,9 @@ public class Content extends AbstractHibernateObject {
     private String label;
 
     // Description?
+    @Column(nullable = false)
+    @NotNull
+    private Owner owner;
 
     @Column(nullable = false)
     @Size(max = 255)
@@ -108,8 +111,9 @@ public class Content extends AbstractHibernateObject {
     @Size(max = 255)
     private String arches;
 
-    public Content(String name, String id, String label, String type,
+    public Content(Owner owner, String name, String id, String label, String type,
         String vendor, String contentUrl, String gpgUrl, String arches) {
+        setOwner(owner);
         setName(name);
         setId(id);
         setLabel(label);
@@ -127,7 +131,7 @@ public class Content extends AbstractHibernateObject {
         UniqueIdGenerator idGenerator, Owner o, Product p) {
 
         return new Content(
-            UEBER_CONTENT_NAME, idGenerator.generateId(),
+            o, UEBER_CONTENT_NAME, idGenerator.generateId(),
             ueberContentLabelForProduct(p), "yum", "Custom",
             "/" + o.getKey(), "", "");
     }
@@ -146,6 +150,14 @@ public class Content extends AbstractHibernateObject {
      */
     public void setId(String id) {
         this.id = id;
+    }
+
+    public void setOwner(Owner owner) {
+        this.owner = owner;
+    }
+
+    public Owner getOwner() {
+        return this.owner;
     }
 
     public String getLabel() {

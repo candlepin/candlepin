@@ -32,12 +32,16 @@ public class ContentCuratorTest extends DatabaseTestFixture {
     @Inject private ContentCurator contentCurator;
 
     private Content updates;
+    private Owner owner;
 
     /* FIXME: Add Arches here */
 
     @Before
     public void setUp() {
+        this.owner = new Owner("Example-Corporation");
+
         updates = new Content(
+            this.owner,
             "Test Content 1", "100",
             "test-content-label-1", "yum-1", "test-vendor-1",
             "test-content-url-1", "test-gpg-url-1", "test-arch1,test-arch2");
@@ -50,6 +54,7 @@ public class ContentCuratorTest extends DatabaseTestFixture {
     @Test
     public void shouldUpdateContentWithNewValues() {
         Content toBeUpdated = new Content(
+            this.owner,
             "Test Content", updates.getId(),
             "test-content-label", "yum", "test-vendor",
             "test-content-url", "test-gpg-url", "test-arch1");

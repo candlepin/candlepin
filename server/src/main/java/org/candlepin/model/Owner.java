@@ -100,11 +100,11 @@ public class Owner extends AbstractHibernateObject implements Serializable,
     // Do we even want/need these? This will have a massive affect on the amount of data that needs
     // to be serialized; may not be worth it if Hibernate is nice enough to not require this to be
     // present.
-    @OneToMany(mappedBy = "owner", targetEntity = OrgProduct.class)
-    private Set<OrgProduct> products;
+    @OneToMany(mappedBy = "owner", targetEntity = Product.class)
+    private Set<Product> products;
 
-    @OneToMany(mappedBy = "owner", targetEntity = OrgContent.class)
-    private Set<OrgContent> productContent;
+    @OneToMany(mappedBy = "owner", targetEntity = Content.class)
+    private Set<Content> productContent;
     // end TODO
 
     @OneToOne(cascade = CascadeType.ALL)
@@ -122,8 +122,8 @@ public class Owner extends AbstractHibernateObject implements Serializable,
         this.consumers = new HashSet<Consumer>();
         this.pools = new HashSet<Pool>();
         this.environments = new HashSet<Environment>();
-        this.products = new HashSet<OrgProduct>();
-        this.productContent = new HashSet<OrgContent>();
+        this.products = new HashSet<Product>();
+        this.productContent = new HashSet<Content>();
     }
 
     /**
@@ -262,14 +262,14 @@ public class Owner extends AbstractHibernateObject implements Serializable,
      * @return the products
      */
     @XmlTransient
-    public Set<OrgProduct> getProducts() {
+    public Set<Product> getProducts() {
         return products;
     }
 
     /**
      * @param products the products to set
      */
-    public void setProducts(Set<OrgProduct> products) {
+    public void setProducts(Set<Product> products) {
         this.products = products;
     }
 
@@ -283,7 +283,7 @@ public class Owner extends AbstractHibernateObject implements Serializable,
      * @return
      *  True if the product was added successfully; false otherwise.
      */
-    public boolean addProduct(OrgProduct product) {
+    public boolean addProduct(Product product) {
         // TODO: Shouldn't this remove it from the previous owner as necessary?
 
         if (this.products.add(product)) {

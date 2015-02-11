@@ -128,7 +128,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
             startDate, endDate);
 
         // Provided product 2 will modify 1, both will be on the pool:
-        Content c = new Content("fakecontent", "fakecontent", "facecontent",
+        Content c = new Content(this.owner, "fakecontent", "fakecontent", "facecontent",
                 "yum", "RH", "http://", "http://", "x86_64");
         Set<String> modifiedIds = new HashSet<String>();
         modifiedIds.add(providedProduct1.getId());
