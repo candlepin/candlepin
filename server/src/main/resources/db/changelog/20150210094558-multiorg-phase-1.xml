@@ -9,189 +9,12 @@
     <property name="timestamp.type" value="TIMESTAMP WITHOUT TIME ZONE" dbms="oracle,postgresql,hsqldb"/>
     <property name="timestamp.type" value="DATETIME" dbms="mysql"/>
 
-    <!-- cpo_activationkey_products -->
-    <changeSet id="20150210094558-2" author="crog">
-        <createTable tableName="cpo_activationkey_products">
-            <column name="id" type="varchar(32)">
-                <constraints primaryKey="true" primaryKeyName="cpo_actkeyprod-pk"/>
-            </column>
-            <column name="created" type="${timestamp.type}"/>
-            <column name="updated" type="${timestamp.type}"/>
-            <column name="key_id" type="varchar(32)">
-                <constraint
-                    nullable="false"
-                    foreignKeyName="cpo_actkeyprod-fk1"
-                    references="cp_activation_key(id)"
-                />
-            </column>
-            <column name="product_id" type="varchar(32)">
-                <constraint
-                    nullable="false"
-                    foreignKeyName="cpo_actkeyprod-fk2"
-                    references="cpo_products(id)"
-                />
-            </column>
-        </createTable>
-    </changeset>
-
-    <changeSet id="20150210094558-3" author="crog">
-        <addUniqueConstraint tableName="cpo_activationkey_products"
-            columnNames="key_id,product_id"
-            constraintName="cpo_actkeyprod-unq1"/>
-    </changeset>
-
-
-
-    <!-- cpo_branding -->
-    <changeSet id="20150210094558-4" author="crog">
-        <createTable tableName="cpo_branding">
-            <column name="id" type="varchar(32)">
-                <constraint primaryKey="true" primaryKeyName="cpo_branding-pk"/>
-            </column>
-            <column name="created" type="${timestamp.type}"/>
-            <column name="updated" type="${timestamp.type}"/>
-            <column name="product_id" type="varchar(32)">
-                <constraint
-                    nullable="false"
-                    foreignKeyName="cpo_branding-fk1"
-                    references="cpo_products(id)"
-                />
-            </column>
-            <column name="type" type="varchar(32)">
-                <constraint nullable="false"/>
-            </column>
-            <column name="name" type="varchar(255)">
-                <constraint nullable="false"/>
-            </column>
-        </createTable>
-    </changeSet>
-
-
-
-    <!-- cpo_content -->
-    <changeSet id="20150210094558-5" author="crog">
-        <createTable tableName="cpo_content">
-            <column name="id" type="varchar(32)">
-                <constraint primaryKey="true" primaryKeyName="cpo_content-pk"/>
-            </column>
-            <column name="created" type="${timestamp.type}"/>
-            <column name="updated" type="${timestamp.type}"/>
-            <column name="owner_id" type="varchar(32)">
-                <constraint
-                    nullable="false"
-                    foreignKeyName="cpo_content-fk1"
-                    references="cp_owner(id)"
-                />
-            </column>
-            <column name="contenturl" type="varchar(255)"/>
-            <column name="gpgurl" type="varchar(255)"/>
-            <column name="label" type="varchar(255)">
-                <constraint nullable="false"/>
-            </column>
-            <column name="metadataexpire" type="bigint"/>
-            <column name="name" type="varchar(255)">
-                <constraint nullable="false"/>
-            </column>
-            <column name="releasever" type="varchar(255)"/>
-            <column name="requiredtags" type="varchar(255)"/>
-            <column name="type" type="varchar(255)">
-                <constraint nullable="false"/>
-            </column>
-            <column name="vendor" type="varchar(255)">
-                <constraint nullable="false"/>
-            </column>
-            <column name="arches" type="varchar(255)"/>
-        </createTable>
-    </changeSet>
-
-
-    <!-- cpo_content_modified_products -->
-    <changeSet id="20150210094558-6" author="crog">
-        <createTable tableName="cpo_content_modified_products">
-            <column name="content_id" type="varchar(32)">
-                <constraints primaryKey="true" primarykeyName="cpo_contentmodprod-pk"/>
-            <column name="element" type="varchar(255)">
-                <constraints
-                    nullable="false"
-                    foreignKeyName="cpo_contentmodprod-fk1"
-                    references="cpo_content(id)"
-                />
-            </column>
-        </createTable>
-    </changeSet>
-
-
-    <!-- cpo_environment_content -->
-    <changeSet id="20150210094558-7" author="crog">
-        <createTable tableName="cpo_environment_content">
-            <column name="id" type="varchar(32)">
-                <constraints primaryKey="true" primaryKeyName="cpo_environment_content-pk"
-            </column>
-            <column name="created" type="${timestamp.type}"/>
-            <column name="updated" type="${timestamp.type}"/>
-            <column name="content_id" type="varchar(32)">
-                <constraints
-                    nullable="false"
-                    foreignKeyName="cpo_environment_content-fk1"
-                    references="cpo_content(id)"
-                />
-            </column>
-            <column name="environment_id" type="varchar(32)">
-                <constraints
-                    nullable="false"
-                    foreignKeyName="cpo_environment_content-fk2"
-                    references="cp_environment(id)"
-                />
-            <column name="enabled" type="boolean"/>
-        </createTable>
-    </changeSet>
-
-    <changeSet id="20150210094558-8" author="crog">
-        <addUniqueConstraint tableName="cpo_environment_content"
-            columnNames="content_id, environment_id"
-            constraintName="cpo_environment_content-unq1"/>
-    </changeSet>
-
-
-
-    <!-- cpo_installed_products -->
-    <changeSet id="20150210094558-9" author="crog">
-        <createTable tableName="cpo_installed_products">
-            <column name="id" type="varchar(32)">
-                <constraint primaryKey="true" primaryKeyName="cpo_installed_products-pk"/>
-            </column>
-            <column name="created" type="${timestamp.type}"/>
-            <column name="updated" type="${timestamp.type}"/>
-            <column name="consumer_id" type="varchar(32)">
-                <constraints
-                    nullable="false"
-                    foreignKeyName="cpo_installed_products-fk1"
-                    references="cp_consumer(id)"
-                />
-            </column>
-            <column name="product_id" type="varchar(32)">
-                <constraints
-                    nullable="false"
-                    foreignKeyName="cpo_installed_products-fk2"
-                    references="cpo_products(id)"
-                />
-            </column>
-        </createTable>
-    </changeSet>
-
-    <changeSet id="20150210094558-10" author="crog">
-        <addUniqueConstraint tableName="cpo_installed_products"
-            columnNames="consumer_id, product_id"
-            constraintName="cpo_installed_products_unq1"/>
-    </changeSet>
-
-
 
     <!-- cpo_products -->
-    <changeSet id="20150210094558-11" author="crog">
+    <changeSet id="20150210094558-2" author="crog">
         <createTable tableName="cpo_products">
             <column name="id" type="varchar(32)">
-                <constraints primaryKey="true" primaryKeyName="cpo_products-pk"/>
+                <constraints primaryKey="true" primaryKeyName="cpo_products_pk"/>
             </column>
             <column name="created" type="${timestamp.type}"/>
             <column name="updated" type="${timestamp.type}"/>
@@ -199,7 +22,7 @@
             <column name="owner_id" type="varchar(32)">
                 <constraints
                     nullable="false"
-                    foreignKeyName="cpo_products-fk1"
+                    foreignKeyName="cpo_products_fk1"
                     references="cp_owner(id)"
                 />
             </column>
@@ -210,10 +33,188 @@
         </createTable>
     </changeSet>
 
-    <changeSet id="20150210094558-12" author="crog">
+    <changeSet id="20150210094558-3" author="crog">
         <addUniqueConstraint tableName="cpo_products"
             columnNames="owner_id, product_id"
-            constraintName="cpo_products_unique"/>
+            constraintName="cpo_products_unq1"/>
+    </changeSet>
+
+    <!-- cpo_activationkey_products -->
+    <changeSet id="20150210094558-4" author="crog">
+        <createTable tableName="cpo_activationkey_products">
+            <column name="id" type="varchar(32)">
+                <constraints primaryKey="true" primaryKeyName="cpo_actkeyprod_pk"/>
+            </column>
+            <column name="created" type="${timestamp.type}"/>
+            <column name="updated" type="${timestamp.type}"/>
+            <column name="key_id" type="varchar(32)">
+                <constraints
+                    nullable="false"
+                    foreignKeyName="cpo_actkeyprod_fk1"
+                    references="cp_activation_key(id)"
+                />
+            </column>
+            <column name="product_id" type="varchar(32)">
+                <constraints
+                    nullable="false"
+                    foreignKeyName="cpo_actkeyprod_fk2"
+                    references="cpo_products(id)"
+                />
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20150210094558-5" author="crog">
+        <addUniqueConstraint tableName="cpo_activationkey_products"
+            columnNames="key_id,product_id"
+            constraintName="cpo_actkeyprod_unq1"/>
+    </changeSet>
+
+
+
+    <!-- cpo_branding -->
+    <changeSet id="20150210094558-6" author="crog">
+        <createTable tableName="cpo_branding">
+            <column name="id" type="varchar(32)">
+                <constraints primaryKey="true" primaryKeyName="cpo_branding_pk"/>
+            </column>
+            <column name="created" type="${timestamp.type}"/>
+            <column name="updated" type="${timestamp.type}"/>
+            <column name="product_id" type="varchar(32)">
+                <constraints
+                    nullable="false"
+                    foreignKeyName="cpo_branding_fk1"
+                    references="cpo_products(id)"
+                />
+            </column>
+            <column name="type" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+
+
+    <!-- cpo_content -->
+    <changeSet id="20150210094558-7" author="crog">
+        <createTable tableName="cpo_content">
+            <column name="id" type="varchar(32)">
+                <constraints primaryKey="true" primaryKeyName="cpo_content_pk"/>
+            </column>
+            <column name="created" type="${timestamp.type}"/>
+            <column name="updated" type="${timestamp.type}"/>
+            <column name="owner_id" type="varchar(32)">
+                <constraints
+                    nullable="false"
+                    foreignKeyName="cpo_content_fk1"
+                    references="cp_owner(id)"
+                />
+            </column>
+            <column name="contenturl" type="varchar(255)"/>
+            <column name="gpgurl" type="varchar(255)"/>
+            <column name="label" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="metadataexpire" type="bigint"/>
+            <column name="name" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="releasever" type="varchar(255)"/>
+            <column name="requiredtags" type="varchar(255)"/>
+            <column name="type" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="vendor" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="arches" type="varchar(255)"/>
+        </createTable>
+    </changeSet>
+
+
+    <!-- cpo_content_modified_products -->
+    <changeSet id="20150210094558-8" author="crog">
+        <createTable tableName="cpo_content_modified_products">
+            <column name="content_id" type="varchar(32)">
+                <constraints primaryKey="true" primaryKeyName="cpo_contentmodprod_pk"/>
+            </column>
+            <column name="element" type="varchar(255)">
+                <constraints
+                    nullable="false"
+                    foreignKeyName="cpo_contentmodprod_fk1"
+                    references="cpo_content(id)"
+                />
+            </column>
+        </createTable>
+    </changeSet>
+
+
+    <!-- cpo_environment_content -->
+    <changeSet id="20150210094558-9" author="crog">
+        <createTable tableName="cpo_environment_content">
+            <column name="id" type="varchar(32)">
+                <constraints primaryKey="true" primaryKeyName="cpo_environment_content_pk"/>
+            </column>
+            <column name="created" type="${timestamp.type}"/>
+            <column name="updated" type="${timestamp.type}"/>
+            <column name="content_id" type="varchar(32)">
+                <constraints
+                    nullable="false"
+                    foreignKeyName="cpo_environment_content_fk1"
+                    references="cpo_content(id)"
+                />
+            </column>
+            <column name="environment_id" type="varchar(32)">
+                <constraints
+                    nullable="false"
+                    foreignKeyName="cpo_environment_content_fk2"
+                    references="cp_environment(id)"
+                />
+            </column>
+            <column name="enabled" type="boolean"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20150210094558-10" author="crog">
+        <addUniqueConstraint tableName="cpo_environment_content"
+            columnNames="content_id, environment_id"
+            constraintName="cpo_environment_content_unq1"/>
+    </changeSet>
+
+
+
+    <!-- cpo_installed_products -->
+    <changeSet id="20150210094558-11" author="crog">
+        <createTable tableName="cpo_installed_products">
+            <column name="id" type="varchar(32)">
+                <constraints primaryKey="true" primaryKeyName="cpo_installed_products_pk"/>
+            </column>
+            <column name="created" type="${timestamp.type}"/>
+            <column name="updated" type="${timestamp.type}"/>
+            <column name="consumer_id" type="varchar(32)">
+                <constraints
+                    nullable="false"
+                    foreignKeyName="cpo_installed_products_fk1"
+                    references="cp_consumer(id)"
+                />
+            </column>
+            <column name="product_id" type="varchar(32)">
+                <constraints
+                    nullable="false"
+                    foreignKeyName="cpo_installed_products_fk2"
+                    references="cpo_products(id)"
+                />
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20150210094558-12" author="crog">
+        <addUniqueConstraint tableName="cpo_installed_products"
+            columnNames="consumer_id, product_id"
+            constraintName="cpo_installed_products_unq1"/>
     </changeSet>
 
 
@@ -222,7 +223,7 @@
     <changeSet id="20150210094558-13" author="crog">
         <createTable tableName="cpo_product_attributes">
             <column name="id" type="varchar(32)">
-                <constraints primaryKey="true" primaryKeyName="cpo_product_attributes-pk"/>
+                <constraints primaryKey="true" primaryKeyName="cpo_product_attributes_pk"/>
             </column>
             <column name="created" type="${timestamp.type}"/>
             <column name="updated" type="${timestamp.type}"/>
@@ -233,7 +234,7 @@
             <column name="product_id" type="varchar(32)">
                 <constraints
                     nullable="false"
-                    foreignKeyName="cpo_product_attributes-fk1"
+                    foreignKeyName="cpo_product_attributes_fk1"
                     references="cpo_products(id)"
                 />
             </column>
@@ -243,7 +244,7 @@
     <changeSet id="20150210094558-14" author="crog">
         <addUniqueConstraint tableName="cpo_product_attributes"
             columnNames="name, product_id"
-            constraintName="cpo_product_attributes-unq1"/>
+            constraintName="cpo_product_attributes_unq1"/>
     </changeSet>
 
 
@@ -252,7 +253,7 @@
     <changeSet id="20150210094558-15" author="crog">
         <createTable tableName="cpo_product_certificates">
             <column name="id" type="varchar(32)">
-                <constraints primaryKey="true" primaryKeyName="cpo_product_certificates-pk"/>
+                <constraints primaryKey="true" primaryKeyName="cpo_product_certificates_pk"/>
             </column>
             <column name="created" type="${timestamp.type}"/>
             <column name="updated" type="${timestamp.type}"/>
@@ -265,7 +266,7 @@
             <column name="product_id" type="varchar(32)">
                 <constraints
                     nullable="false"
-                    foreignKeyName="cpo_product_certificates-fk1"
+                    foreignKeyName="cpo_product_certificates_fk1"
                     references="cpo_products(id)"
                 />
             </column>
@@ -280,14 +281,14 @@
             <column name="product_id" type="varchar(32)">
                 <constraints
                     nullable="false"
-                    foreignKeyName="cpo_product_content-fk1"
+                    foreignKeyName="cpo_product_content_fk1"
                     references="cpo_products(id)"
                 />
             </column>
             <column name="content_id" type="varchar(32)">
                 <constraints
                     nullable="false"
-                    foreignKeyName="cpo_product_content-fk2"
+                    foreignKeyName="cpo_product_content_fk2"
                     references="cpo_content(id)"
                 />
             </column>
@@ -298,9 +299,9 @@
     </changeSet>
 
     <changeSet id="20150210094558-17" author="crog">
-        <addPrimaryKey tableName="cpo_product_certificates"
+        <addPrimaryKey tableName="cpo_product_content"
             columnNames="product_id, content_id"
-            constraintName="cpo_product_certificates-pk"/>
+            constraintName="cpo_product_content_pk"/>
     </changeSet>
 
 
@@ -311,8 +312,8 @@
             <column name="product_id" type="varchar(32)">
                 <constraints
                     primaryKey="true"
-                    primaryKeyName="cpo_proddepprod-pk"
-                    foreignKeyName="cpo_proddepprod-fk1"
+                    primaryKeyName="cpo_proddepprod_pk"
+                    foreignKeyName="cpo_proddepprod_fk1"
                     references="cpo_products(id)"
                 />
             </column>
@@ -333,15 +334,15 @@
     <changeSet id="20150210094558-20" author="crog">
         <renameColumn tableName="cp_pool"
             oldColumnName="productid"
-            newColumnName="product_id_old"
-            remarks="deprecated; obsoleted by product_id"/>
+            newColumnName="product_id_old"/>
+            <!--remarks="deprecated; obsoleted by product_id"/>-->
     </changeSet>
 
     <changeSet id="20150210094558-21" author="crog">
         <renameColumn tableName="cp_pool"
             oldColumnName="derivedproductid"
-            newColumnName="derived_product_id_old"
-            remarks="deprecated; obsoleted by derived_product_id"/>
+            newColumnName="derived_product_id_old"/>
+            <!--remarks="deprecated; obsoleted by derived_product_id"/>-->
     </changeSet>
 
     <changeSet id="20150210094558-22" author="crog">

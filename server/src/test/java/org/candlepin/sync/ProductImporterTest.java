@@ -25,6 +25,7 @@ import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
+import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
@@ -359,8 +360,9 @@ public class ProductImporterTest {
         Product newProduct = TestUtil.createProduct("fake id", "fake name");
         Product oldProduct = TestUtil.createProduct("fake id", "fake name");
 
-        Content content = new Content("foobar", null, null, null, null, null, null, null);
-        Content content2 = new Content("baz", null, null, null, null, null, null, null);
+        Owner owner = new Owner("Example-Corporation");
+        Content content = new Content(owner, "foobar", null, null, null, null, null, null, null);
+        Content content2 = new Content(owner, "baz", null, null, null, null, null, null, null);
 
         oldProduct.addContent(content);
         newProduct.addContent(content2);
@@ -382,7 +384,8 @@ public class ProductImporterTest {
         Product newProduct = TestUtil.createProduct("fake id", "fake name");
         Product oldProduct = TestUtil.createProduct("fake id", "fake name");
 
-        Content content = new Content("foobar", null, null, null, null, null, null, null);
+        Owner owner = new Owner("Example-Corporation");
+        Content content = new Content(owner, "foobar", null, null, null, null, null, null, null);
 
         oldProduct.addContent(content);
         newProduct.addEnabledContent(content);
@@ -419,7 +422,8 @@ public class ProductImporterTest {
 
     // Returns the Content object added
     private void addContentTo(Product p) {
-        Content c = new Content("name", "100130", "label", "type",
+        Owner owner = new Owner("Example-Corporation");
+        Content c = new Content(owner, "name", "100130", "label", "type",
             "vendor", "url", "gpgurl", "arch");
         c.setMetadataExpire(1000L);
         p.getProductContent().add(new ProductContent(p, c, true));
@@ -427,7 +431,8 @@ public class ProductImporterTest {
 
     // Returns the Content object added without vendor
     private void addNoVendorContentTo(Product p) {
-        Content c = new Content("name", "100130", "label", "type",
+        Owner owner = new Owner("Example-Corporation");
+        Content c = new Content(owner, "name", "100130", "label", "type",
             "", "url", "gpgurl", "arch");
         c.setMetadataExpire(1000L);
         p.getProductContent().add(new ProductContent(p, c, true));

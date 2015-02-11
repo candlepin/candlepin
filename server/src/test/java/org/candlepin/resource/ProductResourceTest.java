@@ -26,6 +26,7 @@ import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductCertificateCurator;
+import org.candlepin.model.Owner;
 import org.candlepin.model.Subscription;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
@@ -74,7 +75,8 @@ public class ProductResourceTest extends DatabaseTestFixture {
         Product toSubmit = createProduct();
         String  contentHash = String.valueOf(
             Math.abs(Long.valueOf("test-content".hashCode())));
-        Content testContent = new Content("test-content", contentHash,
+        Owner owner = new Owner("Example-Corporation");
+        Content testContent = new Content(owner, "test-content", contentHash,
                             "test-content-label", "yum", "test-vendor",
                              "test-content-url", "test-gpg-url", "test-arch");
 
