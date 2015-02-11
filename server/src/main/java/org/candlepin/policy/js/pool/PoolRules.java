@@ -640,7 +640,8 @@ public class PoolRules {
                 else {
                     try {
                         int virtLimit = Integer.parseInt(virtLimitStr);
-                        if (config.getBoolean(ConfigProperties.STANDALONE)) {
+                        if (config.getBoolean(ConfigProperties.STANDALONE) &&
+                            !"true".equals(existingPool.getAttributeValue("unmapped_guests_only"))) {
                             // this is how we determined the quantity
                             expectedQuantity = virtLimit;
                         }

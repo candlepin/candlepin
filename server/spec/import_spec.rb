@@ -34,19 +34,25 @@ describe 'Import', :serial => true do
 
   it 'creates pools' do
     pools = @import_owner_client.list_pools({:owner => @import_owner['id']})
-    pools.length.should == 5
+    pools.length.should == 6
   end
 
   it 'ignores multiplier for pool quantity' do
     pools = @import_owner_client.list_pools({:owner => @import_owner['id']})
-    pools.length.should == 5
+    pools.length.should == 6
 
     # 1 product has a multiplier of 2 upstream, the others 1.
     # 1 entitlement is consumed from each pool for the export, so
     # quantity should be 1 on each.
-    pools[0]['quantity'].should == 1
-    pools[1]['quantity'].should == 1
-    pools[2]['quantity'].should == 1
+    # remove unmapped guest pool, not part of test
+    pools.select! do |p|
+      unmapped = p['attributes'].select {|i| i['name'] == 'unmapped_guests_only' }[0]
+      unmapped.nil? || unmapped['value'] == 'false'
+    end
+
+    pools.each do |p|
+      p['quantity'].should == 1
+    end
   end
 
   it 'modifies owner to reference upstream consumer' do

@@ -751,11 +751,15 @@ public class PoolRulesTest {
         Subscription s = createVirtLimitSub("virtLimitProduct", 10, 10);
         List<Pool> pools = poolRules.createPools(s);
 
-        // Should be no virt_only bonus pool:
-        assertEquals(1, pools.size());
+        // Should be virt_only pool for unmapped guests:
+        assertEquals(2, pools.size());
 
         Pool physicalPool = pools.get(0);
         assertEquals(0, physicalPool.getAttributes().size());
+
+        Pool unmappedVirtPool = pools.get(1);
+        assert ("true".equals(unmappedVirtPool.getAttributeValue("virt_only")));
+        assert ("true".equals(unmappedVirtPool.getAttributeValue("unmapped_guests_only")));
     }
 
     @Test
@@ -764,16 +768,17 @@ public class PoolRulesTest {
         Subscription s = createVirtLimitSub("virtLimitProduct", 10, 10);
         List<Pool> pools = poolRules.createPools(s);
 
-        // Should be no virt_only bonus pool:
-        assertEquals(1, pools.size());
+        // Should be unmapped virt_only pool:
+        assertEquals(2, pools.size());
 
         Pool physicalPool = pools.get(0);
         assertEquals(0, physicalPool.getAttributes().size());
 
         s.setQuantity(50L);
         List<PoolUpdate> updates = poolRules.updatePools(s, pools);
-        assertEquals(1, updates.size());
+        assertEquals(2, updates.size());
         physicalPool = updates.get(0).getPool();
+        Pool unmappedPool = updates.get(1).getPool();
         assertEquals(new Long(50), physicalPool.getQuantity());
         assertEquals(0, physicalPool.getAttributes().size());
     }
@@ -827,7 +832,7 @@ public class PoolRulesTest {
         when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
         Subscription s = createVirtLimitSub("virtLimitProduct", 10, 10);
         List<Pool> pools = poolRules.createPools(s);
-        assertEquals(1, pools.size());
+        assertEquals(2, pools.size());
         Entitlement ent = mock(Entitlement.class);
         when(ent.getQuantity()).thenReturn(1);
 
@@ -850,7 +855,7 @@ public class PoolRulesTest {
         when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
         Subscription s = createVirtLimitSub("virtLimitProduct", 10, 10);
         List<Pool> pools = poolRules.createPools(s);
-        assertEquals(1, pools.size());
+        assertEquals(2, pools.size());
         s.setQuantity(new Long(20));
         Entitlement ent = mock(Entitlement.class);
         when(ent.getQuantity()).thenReturn(4);
@@ -867,11 +872,13 @@ public class PoolRulesTest {
 
         s.getProduct().setAttribute("virt_limit", "40");
         List<PoolUpdate> updates = poolRules.updatePools(s, pools);
-        assertEquals(2, updates.size());
+        assertEquals(3, updates.size());
         Pool regular = updates.get(0).getPool();
-        Pool subPool = updates.get(1).getPool();
+        Pool unmappedSubPool = updates.get(1).getPool();
+        Pool subPool = updates.get(2).getPool();
         assertEquals("40", regular.getProductAttribute("virt_limit").getValue());
         assertEquals(new Long(40), subPool.getQuantity());
+        assertEquals(new Long(800), unmappedSubPool.getQuantity());
     }
 
     @Test
