@@ -88,6 +88,22 @@ describe 'Unmapped Guest Pools' do
     bound_pool['attributes'].select {|i| i['name'] == 'unmapped_guests_only' }[0].should_not be nil
   end
 
+  it 'revokes the unmapped guest pool once the guest is mapped' do
+    all_pools = @user.list_pools :owner => @owner.id, :product => @virt_limit_product.id
+    all_pools.each do |pool|
+      unmapped = pool['attributes'].select {|i| i['name'] == 'unmapped_guests_only' }[0]
+      if !unmapped.nil? && unmapped['value'] == 'true'
+        @guest1_client.consume_pool(pool['id'], :quantity => 1)
+      end
+    end
+    ents = @guest1_client.list_entitlements()
+    ents.should have(1).things
+
+    @host1_client.update_consumer({:guestIds => [{'guestId' => @uuid1}]})
+    ents = @guest1_client.list_entitlements()
+    ents.should have(0).things
+  end
+
   it 'revokes entitlement from another host during an auto attach' do
     all_pools = @user.list_pools :owner => @owner.id, :product => @virt_limit_product.id
     @host1_client.update_consumer({:guestIds => [{'guestId' => @uuid1}]});

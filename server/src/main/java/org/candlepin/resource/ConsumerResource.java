@@ -1057,8 +1057,6 @@ public class ConsumerResource {
                 continue;
             }
 
-
-
             // Check if the guest was already reported by another host.
             if (host != null && !existing.equals(host)) {
                 // If the guest already existed and its host consumer is not the same
@@ -1131,16 +1129,22 @@ public class ConsumerResource {
         for (Entitlement entitlement : guest.getEntitlements()) {
             Pool pool = entitlement.getPool();
 
-            // If there is no host required, do not revoke the entitlement.
-            if (!pool.hasAttribute("requires_host")) {
+            // If there is no host required or the pool isn't for unmapped guests, skip it
+            if (!(pool.hasAttribute("requires_host") || isUnmappedGuestPool(pool))) {
                 continue;
             }
 
             String requiredHost = getRequiredHost(pool);
-            if (isVirtOnly(pool) && !requiredHost.equals(host.getUuid())) {
-                log.warn("Removing entitlement {} from guest {}.",
-                    entitlement.getProductId(), guest.getName());
-                deletableGuestEntitlements.add(entitlement);
+            if (isVirtOnly(pool)) {
+                if (!requiredHost.equals(host.getUuid())) {
+                    log.warn("Removing entitlement {} from guest {}.",
+                        entitlement.getProductId(), guest.getName());
+                    deletableGuestEntitlements.add(entitlement);
+                }
+                else if (isUnmappedGuestPool(pool)) {
+                    log.info("Removing unmapped guest pool from {} now that it is mapped", guest.getName());
+                    deletableGuestEntitlements.add(entitlement);
+                }
             }
             else {
                 log.info("Entitlement {} on {} is still valid and will not be removed.",
@@ -1163,6 +1167,11 @@ public class ConsumerResource {
         String virtOnly = pool.hasAttribute("virt_only") ?
             pool.getAttributeValue("virt_only") : "false";
         return virtOnly.equalsIgnoreCase("true") || virtOnly.equals("1");
+    }
+
+    private boolean isUnmappedGuestPool(Pool pool) {
+        return pool.hasAttribute("unmapped_guests_only") &&
+            "true".equals(pool.getAttributeValue("unmapped_guests_only"));
     }
 
     /**
@@ -1431,6 +1440,7 @@ public class ConsumerResource {
                 quantity = 1;
             }
         }
+
         //
         // HANDLE ASYNC
         //
@@ -1449,7 +1459,6 @@ public class ConsumerResource {
             return Response.status(Response.Status.OK)
                 .type(MediaType.APPLICATION_JSON).entity(detail).build();
         }
-
 
         //
         // otherwise we do what we do today.
