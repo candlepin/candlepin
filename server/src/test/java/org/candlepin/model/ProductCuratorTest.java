@@ -54,6 +54,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
     @Inject private ContentCurator contentCurator;
     @Inject private Configuration config;
 
+    private Owner owner;
     private Product product;
     private Product derivedProduct;
     private Product providedProduct;
@@ -74,7 +75,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         config.setProperty(ConfigProperties.BOOLEAN_ATTRIBUTES,
             "product.bool_val_str, product.bool_val_num");
 
-        Owner owner = createOwner();
+        this.owner = createOwner();
         ownerCurator.create(owner);
 
         product = TestUtil.createProduct();
@@ -514,7 +515,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
     @Test
     public void testRemoveProductContent() {
         Product p = createTestProduct();
-        Content content = new Content("test-content", "test-content",
+        Content content = new Content(this.owner, "test-content", "test-content",
             "test-content", "yum", "us", "here", "here", "test-arch");
         p.addContent(content);
         contentCurator.create(content);
@@ -554,7 +555,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
     @Test
     public void testGetProductIdFromContentId() {
         Product p = createTestProduct();
-        Content content = new Content("best-content", "best-content",
+        Content content = new Content(this.owner, "best-content", "best-content",
             "best-content", "yum", "us", "here", "here", "test-arch");
         p.addContent(content);
         contentCurator.create(content);
@@ -597,7 +598,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
     @Test
     public void testSaveOrUpdateProductNoDuplicateProdContent() {
         Product p = createTestProduct();
-        Content content = new Content("best-content", "best-content",
+        Content content = new Content(this.owner, "best-content", "best-content",
             "best-content", "yum", "us", "here", "here", "test-arch");
         p.addContent(content);
         contentCurator.create(content);
@@ -606,7 +607,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         p = createTestProduct();
         // The content isn't quite the same.  We just care about matching
         // product ids with content ids
-        content = new Content("best-content", "best-content",
+        content = new Content(this.owner, "best-content", "best-content",
             "best-content", "yum", "us", "here", "differnet", "test-arch");
         p.addContent(content);
         productCurator.createOrUpdate(p);

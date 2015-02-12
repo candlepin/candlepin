@@ -248,7 +248,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
     private Content createContent(String name, String id, String label,
         String type, String vendor, String url, String gpgUrl, String arches) {
-        Content c = new Content(name, id, label, type, vendor, url, gpgUrl, arches);
+        Owner owner = new Owner("Example-Corporation");
+        Content c = new Content(owner, name, id, label, type, vendor, url, gpgUrl, arches);
 
         return c;
     }

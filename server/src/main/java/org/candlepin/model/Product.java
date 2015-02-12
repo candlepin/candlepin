@@ -30,6 +30,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
@@ -64,6 +65,11 @@ public class Product extends AbstractHibernateObject implements Linkable {
     @Size(max = 255)
     @NotNull
     private String name;
+
+    @ManyToOne
+    @JoinColumn(nullable = false)
+    @NotNull
+    private Owner owner;
 
     /**
      * How many entitlements per quantity
@@ -101,11 +107,11 @@ public class Product extends AbstractHibernateObject implements Linkable {
      * @param id Product label
      * @param name Human readable Product name
      */
-    public Product(String id, String name) {
-        this(id, name, 1L);
+    public Product(String id, String name, Owner owner) {
+
     }
 
-    public Product(String id, String name, Long multiplier) {
+    public Product(String id, String name, Owner owner, Long multiplier) {
         setId(id);
         setName(name);
         setMultiplier(multiplier);
@@ -115,23 +121,18 @@ public class Product extends AbstractHibernateObject implements Linkable {
         setDependentProductIds(new HashSet<String>());
     }
 
-    public Product(String id, String name, String variant, String version,
-        String arch, String type) {
-        setId(id);
-        setName(name);
-        setMultiplier(1L);
-        setAttributes(new HashSet<ProductAttribute>());
-        setProductContent(new LinkedList<ProductContent>());
-        setSubscriptions(new LinkedList<Subscription>());
-        setDependentProductIds(new HashSet<String>());
+    public Product(String id, String name, Owner owner, String variant, String version, String arch,
+        String type) {
+        this(id, name, owner, 1L);
+
         setAttribute("version", version);
         setAttribute("variant", variant);
         setAttribute("type", type);
         setAttribute("arch", arch);
     }
 
-    public static Product createUeberProductForOwner(Owner o) {
-        return new Product(null, ueberProductNameForOwner(o), 1L);
+    public static Product createUeberProductForOwner(Owner owner) {
+        return new Product(null, ueberProductNameForOwner(owner), owner, 1L);
     }
 
     protected Product() {
@@ -169,6 +170,24 @@ public class Product extends AbstractHibernateObject implements Linkable {
      */
     public void setName(String name) {
         this.name = name;
+    }
+
+
+    /**
+     * @return The product's owner/organization
+     */
+    public Owner getOwner() {
+        return this.owner;
+    }
+
+    /**
+     * Sets the product's owner.
+     *
+     * @param owner
+     * The new owner/organization for this product.
+     */
+    public void setOwner(Owner owner) {
+        this.owner = owner;
     }
 
     /**

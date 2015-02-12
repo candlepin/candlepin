@@ -36,9 +36,10 @@ public class ContentTest extends DatabaseTestFixture {
 
     @Test
     public void testContent() {
+        Owner owner = new Owner("Example-Corporation");
         String  contentHash = String.valueOf(
             Math.abs(Long.valueOf("test-content".hashCode())));
-        Content content = new Content("test-content", contentHash,
+        Content content = new Content(owner, "test-content", contentHash,
                             "test-content-label", "yum", "test-vendor",
                              "test-content-url", "test-gpg-url",
                              "test-arch1,test-arch2");
@@ -60,10 +61,11 @@ public class ContentTest extends DatabaseTestFixture {
 
     @Test
     public void testContentWithArches() {
+        Owner owner = new Owner("Example-Corporation");
         String  contentHash = String.valueOf(
             Math.abs(Long.valueOf("test-content-arches".hashCode())));
 
-        Content content = new Content("test-content-arches", contentHash,
+        Content content = new Content(owner, "test-content-arches", contentHash,
                             "test-content-arches-label", "yum", "test-vendor",
                              "test-content-url", "test-gpg-url", "");
         String arches = "x86_64, i386";
@@ -76,7 +78,9 @@ public class ContentTest extends DatabaseTestFixture {
 
     @Test
     public void testCreateOrUpdateWithNewLabel() {
-        Content content = new Content("Test Content", "100",
+        Owner owner = new Owner("Example-Corporation");
+
+        Content content = new Content(owner, "Test Content", "100",
             "test-content-label", "yum", "test-vendor",
              "test-content-url", "test-gpg-url", "test-arch1");
         contentCurator.create(content);
@@ -84,7 +88,7 @@ public class ContentTest extends DatabaseTestFixture {
         // Same ID, but label changed:
         String newLabel = "test-content-label-new";
         String newName = "Test Content Updated";
-        Content modifiedContent = new Content(newName, "100",
+        Content modifiedContent = new Content(owner, newName, "100",
             newLabel, "yum", "test-vendor", "test-content-url",
             "test-gpg-url", "test-arch1");
         contentCurator.createOrUpdate(modifiedContent);
