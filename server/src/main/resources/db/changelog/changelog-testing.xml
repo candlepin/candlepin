@@ -2259,4 +2259,5 @@
     <include file="db/changelog/20141203123727-add-compliance-status-hash-column.xml"/>
     <include file="db/changelog/20141126150611-create-content-tags-table.xml"/>
     <include file="db/changelog/20150123105016-add-consumer-checkin-table.xml"/>
+    <include file="db/changelog/20150211111319-add-last-guest-update-table.xml"/>
 </databaseChangeLog>

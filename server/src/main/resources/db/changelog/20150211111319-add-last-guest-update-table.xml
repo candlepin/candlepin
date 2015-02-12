@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <property name="timestamp.type" value="TIMESTAMP WITH TIME ZONE" dbms="oracle,postgresql,hsqldb"/>
+    <property name="timestamp.type" value="DATETIME" dbms="mysql"/>
+
+    <changeSet id="20150211111319-1" author="dgoodwin">
+        <comment>add last guest update table</comment>
+
+        <!-- See http://www.liquibase.org/documentation/changes/index.html -->
+        <createTable tableName="cp_guest_ids_checkin">
+
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_guest_ids_checkin_pkey"/>
+            </column>
+
+            <column name="consumer_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="created" type="${timestamp.type}"/>
+            <column name="updated" type="${timestamp.type}"/>
+            <column name="checkintime" type="${timestamp.type}"/>
+
+        </createTable>
+
+        <addForeignKeyConstraint baseColumnNames="consumer_id" baseTableName="cp_guest_ids_checkin" constraintName="fk_guest_ids_checkin_consumer" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer" referencesUniqueColumn="true"/>
+
+        <createIndex indexName="idx_guest_ids_checkin_consumer" tableName="cp_consumer_checkin" unique="false">
+            <column name="consumer_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20150211111319-2" author="dgoodwin">
+        <comment>Populate guest ID checkins table with current values.</comment>
+        <!-- re-use the consumer ID as the first checkin ID to avoid generated ID problem, we know it will be unique -->
+        <sql>
+            INSERT INTO cp_guest_ids_checkin(id, consumer_id, created, updated)
+                SELECT DISTINCT cp_consumer.id, cp_consumer.id, cp_consumer_guests.created, cp_consumer_guests.updated FROM cp_consumer INNER JOIN cp_consumer_guests ON cp_consumer.id = cp_consumer_guests.consumer_id
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>
+<!-- vim: set expandtab sts=4 sw=4 ai: -->
