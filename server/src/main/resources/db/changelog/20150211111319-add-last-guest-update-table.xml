@@ -25,7 +25,6 @@
 
             <column name="created" type="${timestamp.type}"/>
             <column name="updated" type="${timestamp.type}"/>
-            <column name="checkintime" type="${timestamp.type}"/>
 
         </createTable>
 

@@ -34,6 +34,9 @@ import org.candlepin.common.exceptions.CandlepinException;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.common.exceptions.IseException;
 import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.common.paging.Page;
+import org.candlepin.common.paging.PageRequest;
+import org.candlepin.common.paging.Paginate;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.PoolManager;
@@ -72,9 +75,6 @@ import org.candlepin.model.User;
 import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
-import org.candlepin.common.paging.Page;
-import org.candlepin.common.paging.PageRequest;
-import org.candlepin.common.paging.Paginate;
 import org.candlepin.pinsetter.tasks.EntitleByProductsJob;
 import org.candlepin.pinsetter.tasks.EntitlerJob;
 import org.candlepin.policy.js.compliance.ComplianceRules;
@@ -1027,6 +1027,10 @@ public class ConsumerResource {
         log.info("Updating {} guest IDs.", incoming.getGuestIds().size());
         List<GuestId> removedGuests = getRemovedGuestIds(existing, incoming);
         List<GuestId> addedGuests = getAddedGuestIds(existing, incoming);
+
+        // Always record a guest ID checkin if the update contained guest IDs. This is
+        // used in queries to see which host most recently reported a guest.
+        existing.addGuestIdCheckIn();
 
         // Ensure that existing actually has guest ids initialized.
         if (existing.getGuestIds() != null) {
