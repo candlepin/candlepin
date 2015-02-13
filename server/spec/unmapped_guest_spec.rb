@@ -98,10 +98,13 @@ describe 'Unmapped Guest Pools' do
     end
     ents = @guest1_client.list_entitlements()
     ents.should have(1).things
+    original_ent_id = ents.first['id']
 
     @host1_client.update_consumer({:guestIds => [{'guestId' => @uuid1}]})
     ents = @guest1_client.list_entitlements()
-    ents.should have(0).things
+    ents.should have(1).things
+    autohealed_ent_id = ents.first['id']
+    original_ent_id.should_not equal(autohealed_ent_id)
   end
 
   it 'revokes entitlement from another host during an auto attach' do

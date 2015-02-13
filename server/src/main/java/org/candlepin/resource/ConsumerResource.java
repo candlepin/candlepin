@@ -1156,6 +1156,14 @@ public class ConsumerResource {
             poolManager.revokeEntitlement(entitlement);
         }
 
+        // auto heal guests after revocations
+        if (guest.isAutoheal() && !deletableGuestEntitlements.isEmpty()) {
+            AutobindData autobindData = AutobindData.create(guest).on(new Date());
+            List<Entitlement> ents = entitler.bindByProducts(autobindData);
+            entitler.sendEvents(ents);
+        }
+
+
     }
 
     private String getRequiredHost(Pool pool) {
