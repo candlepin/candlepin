@@ -5,6 +5,7 @@ require 'json'
 describe 'Import', :serial => true do
 
   include CandlepinMethods
+  include VirtHelper
 
   before(:all) do
     @cp = Candlepin.new('admin', 'admin')
@@ -45,10 +46,7 @@ describe 'Import', :serial => true do
     # 1 entitlement is consumed from each pool for the export, so
     # quantity should be 1 on each.
     # remove unmapped guest pool, not part of test
-    pools.select! do |p|
-      unmapped = p['attributes'].select {|i| i['name'] == 'unmapped_guests_only' }[0]
-      unmapped.nil? || unmapped['value'] == 'false'
-    end
+    filter_unmapped_guest_pools(pools)
 
     pools.each do |p|
       p['quantity'].should == 1

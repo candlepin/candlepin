@@ -72,8 +72,10 @@ RSpec.configure do |config|
 
     @pools = @user.list_pools :owner => @owner.id, \
       :product => @virt_limit_product.id
-    @pools.size.should == 2
-    @virt_limit_pool = @pools[0]
+
+    # includes an extra unmapped guest pool for each
+    @pools.size.should == 4
+    @virt_limit_pool = filter_unmapped_guest_pools(@pools)[0]
 
     # Setup two virt guest consumers:
     @uuid1 = random_string('system.uuid')
@@ -98,6 +100,14 @@ module VirtHelper
   def find_guest_virt_pool(guest_client, guest_uuid)
     pools = guest_client.list_pools :consumer => guest_uuid
     return pools.find_all { |i| !i['sourceEntitlement'].nil? }[0]
+  end
+
+  def filter_unmapped_guest_pools(pools)  
+    # need to ignore the unmapped guest pools
+    pools.select! do |p|
+      unmapped = p['attributes'].select {|i| i['name'] == 'unmapped_guests_only' }[0]
+      unmapped.nil? || unmapped['value'] == 'false'
+    end
   end
 end
 
