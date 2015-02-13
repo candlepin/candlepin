@@ -1157,7 +1157,9 @@ public class ConsumerResource {
         }
 
         // auto heal guests after revocations
-        if (guest.isAutoheal() && !deletableGuestEntitlements.isEmpty()) {
+        boolean hasInstalledProducts = guest.getInstalledProducts() != null &&
+                !guest.getInstalledProducts().isEmpty();
+        if (guest.isAutoheal() && !deletableGuestEntitlements.isEmpty() && hasInstalledProducts) {
             AutobindData autobindData = AutobindData.create(guest).on(new Date());
             List<Entitlement> ents = entitler.bindByProducts(autobindData);
             entitler.sendEvents(ents);
