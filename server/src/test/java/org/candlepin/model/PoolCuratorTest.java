@@ -417,7 +417,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testProductName() {
-        Product p = new Product("someProduct", "An Extremely Great Product");
+        Product p = new Product("someProduct", "An Extremely Great Product", owner);
         productCurator.create(p);
 
         Pool pool = createPoolAndSub(owner, p, 100L,
@@ -432,7 +432,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testProductNameViaFind() {
-        Product p = new Product("another", "A Great Operating System");
+        Product p = new Product("another", "A Great Operating System", owner);
         productCurator.create(p);
 
         Pool pool = createPoolAndSub(owner, p, 25L,
@@ -445,7 +445,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testProductNameViaFindAll() {
-        Product p = new Product("another", "A Great Operating System");
+        Product p = new Product("another", "A Great Operating System", owner);
         productCurator.create(p);
 
         Pool pool = createPoolAndSub(owner, p, 25L,
@@ -494,7 +494,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     //        All of the null/negative multiplier test cases are in ProductTest
     @Test
     public void testMultiplierCreation() {
-        Product product = new Product("someProduct", "An Extremely Great Product", 10L);
+        Product product = new Product("someProduct", "An Extremely Great Product", owner, 10L);
         productCurator.create(product);
 
         Subscription sub = new Subscription(owner, product, new HashSet<Product>(), 16L,

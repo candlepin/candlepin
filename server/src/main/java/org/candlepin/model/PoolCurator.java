@@ -203,6 +203,10 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         }
 
         Criteria crit = createSecureCriteria();
+        crit.createAlias("product", "product");
+        crit.createAlias("derivedProduct", "derivedProduct");
+        crit.createAlias("providedProducts", "providedProducts");
+
         if (activeOnly) {
             crit.add(Restrictions.eq("activeSubscription", Boolean.TRUE));
         }
@@ -225,7 +229,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         }
         if (o != null) {
             crit.add(Restrictions.eq("owner", o));
-            crit.add(Restrictions.ne("productName", Product.ueberProductNameForOwner(o)));
+            crit.add(Restrictions.ne("product.productName", Product.ueberProductNameForOwner(o)));
         }
         if (activeOn != null) {
             crit.add(Restrictions.le("startDate", activeOn));
@@ -233,9 +237,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         }
 
         if (productId != null) {
-            crit.createAlias("providedProducts", "providedProduct",
-                CriteriaSpecification.LEFT_JOIN);
-
             crit.add(Restrictions.or(Restrictions.eq("productId", productId),
                 Restrictions.eq("providedProduct.productId", productId)));
         }

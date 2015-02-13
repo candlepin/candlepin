@@ -231,7 +231,7 @@ public class EnforcerTest extends DatabaseTestFixture {
     // This exception should mention wrapping a MissingFactException
     @Test(expected = RuleExecutionException.class)
     public void testRuleFailsWhenConsumerDoesntHaveFact() {
-        Product product = new Product("a-product", "A product for testing");
+        Product product = new Product("a-product", "A product for testing", owner);
         product.setAttribute(PRODUCT_CPULIMITED, "2");
         productCurator.create(product);
 

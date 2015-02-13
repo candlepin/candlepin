@@ -107,7 +107,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
     @SuppressWarnings("unchecked")
     public void normalCreate() {
 
-        Product prod = new Product("cptest-label", "My Product");
+        Product prod = new Product("cptest-label", "My Product", owner);
         productCurator.create(prod);
 
         List<Product> results = entityManager().createQuery(
@@ -118,7 +118,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
     @Test(expected = PersistenceException.class)
     public void nameRequired() {
 
-        Product prod = new Product("someproductlabel", null);
+        Product prod = new Product("someproductlabel", null, owner);
         productCurator.create(prod);
 
     }
@@ -126,17 +126,17 @@ public class ProductCuratorTest extends DatabaseTestFixture {
     @Test(expected = PersistenceException.class)
     public void labelRequired() {
 
-        Product prod = new Product(null, "My Product Name");
+        Product prod = new Product(null, "My Product Name", owner);
         productCurator.create(prod);
     }
 
     @Test
     public void nameNonUnique() {
 
-        Product prod = new Product("label1", "name");
+        Product prod = new Product("label1", "name", owner);
         productCurator.create(prod);
 
-        Product prod2 = new Product("label2", "name");
+        Product prod2 = new Product("label2", "name", owner);
         productCurator.create(prod2);
 
         assertEquals(prod.getName(), prod2.getName());
@@ -146,8 +146,8 @@ public class ProductCuratorTest extends DatabaseTestFixture {
     @Test(expected = PersistenceException.class)
     public void labelUnique() {
 
-        Product prod = new Product("label1", "name");
-        Product prod2 = new Product("label1", "name2");
+        Product prod = new Product("label1", "name", owner);
+        Product prod2 = new Product("label1", "name2", owner);
         productCurator.create(prod);
 
         productCurator.create(prod2);
@@ -155,12 +155,12 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testEquality() {
-        assertEquals(new Product("label", "name"), new Product("label", "name"));
-        assertFalse(new Product("label", "name").equals(null));
-        assertFalse(new Product("label", "name").equals(new Product("label",
-                "another_name")));
-        assertFalse(new Product("label", "name").equals(new Product(
-                "another_label", "name")));
+        assertEquals(new Product("label", "name", owner), new Product("label", "name", owner));
+        assertFalse(new Product("label", "name", owner).equals(null));
+        assertFalse(new Product("label", "name", owner).equals(new Product("label",
+                "another_name", owner)));
+        assertFalse(new Product("label", "name", owner).equals(new Product(
+                "another_label", "name", owner)));
     }
 
     @Test
@@ -171,7 +171,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         ObjectMapper mapper = new ObjectMapper();
         String jsonData = mapper.writeValueAsString(data);
 
-        Product prod = new Product("cptest-label", "My Product");
+        Product prod = new Product("cptest-label", "My Product", owner);
         ProductAttribute a = new ProductAttribute("content_sets", jsonData);
         prod.addAttribute(a);
         productCurator.create(prod);
@@ -203,7 +203,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         ObjectMapper mapper = new ObjectMapper();
         String jsonData = mapper.writeValueAsString(data);
 
-        Product prod = new Product("cptest-label", "My Product");
+        Product prod = new Product("cptest-label", "My Product", owner);
         ProductAttribute a = new ProductAttribute("content_sets", jsonData);
         prod.addAttribute(a);
         productCurator.create(prod);
@@ -227,7 +227,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
      */
     @Test
     public void testCreationDate() {
-        Product prod = new Product("test-label", "test-product-name");
+        Product prod = new Product("test-label", "test-product-name", owner);
         productCurator.create(prod);
 
         assertNotNull(prod.getCreated());
@@ -235,7 +235,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testInitialUpdate() {
-        Product prod = new Product("test-label", "test-product-name");
+        Product prod = new Product("test-label", "test-product-name", owner);
         productCurator.create(prod);
 
         assertNotNull(prod.getUpdated());
@@ -243,7 +243,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testDependentProducts() {
-        Product prod = new Product("test-label", "test-product-name");
+        Product prod = new Product("test-label", "test-product-name", owner);
         HashSet<String> dependentProductIds = new HashSet<String>();
         dependentProductIds.add("ProductX");
         prod.setDependentProductIds(dependentProductIds);
@@ -259,7 +259,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
      */
     @Test
     public void testSubsequentUpdate() {
-        Product prod = new Product("test-label", "test-product-name");
+        Product prod = new Product("test-label", "test-product-name", owner);
         productCurator.create(prod);
 
         Calendar calendar = Calendar.getInstance();
@@ -276,7 +276,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testProductFullConstructor() {
-        Product prod = new Product("cp_test-label", "variant",
+        Product prod = new Product("cp_test-label", "variant", owner,
                                    "version", "arch", "", "SVC");
         productCurator.create(prod);
 
@@ -285,7 +285,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void setMultiplierBasic() {
-        Product product = new Product("test", "Test Product");
+        Product product = new Product("test", "Test Product", owner);
         product.setMultiplier(4L);
 
         assertEquals(Long.valueOf(4), product.getMultiplier());
@@ -293,7 +293,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void setMultiplierNull() {
-        Product product = new Product("test", "Test Product");
+        Product product = new Product("test", "Test Product", owner);
         product.setMultiplier(null);
 
         assertEquals(Long.valueOf(1), product.getMultiplier());
@@ -301,14 +301,14 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void setMultiplierNegative() {
-        Product product = new Product("test", "Test Product");
+        Product product = new Product("test", "Test Product", owner);
         product.setMultiplier(-15L);
 
         assertEquals(Long.valueOf(1), product.getMultiplier());
     }
 
     private Product createTestProduct() {
-        Product p = TestUtil.createProduct("testProductId", "Test Product");
+        Product p = TestUtil.createProduct("testProductId", "Test Product", owner);
 
         ProductAttribute a1 = new ProductAttribute("a1", "a1");
         p.addAttribute(a1);

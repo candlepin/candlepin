@@ -60,8 +60,8 @@ public class ConsumerTest extends DatabaseTestFixture {
     @Before
     public void setUpTestObjects() {
         owner = new Owner("Example Corporation");
-        rhel = new Product("rhel", "Red Hat Enterprise Linux");
-        jboss = new Product("jboss", "JBoss");
+        rhel = new Product("rhel", "Red Hat Enterprise Linux", owner);
+        jboss = new Product("jboss", "JBoss", owner);
 
         ownerCurator.create(owner);
         productCurator.create(rhel);

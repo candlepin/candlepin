@@ -11,7 +11,7 @@
 
 
     <!-- cpo_products -->
-    <changeSet id="20150210094558-2" author="crog">
+    <changeSet id="20150210094558-1" author="crog">
         <createTable tableName="cpo_products">
             <column name="id" type="varchar(32)">
                 <constraints primaryKey="true" primaryKeyName="cpo_products_pk"/>
@@ -30,23 +30,22 @@
                 remarks="RH product ID; not to be confused with cp_products.id">
                 <constraints nullable="false"/>
             </column>
+            <column name ="name" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
         </createTable>
     </changeSet>
 
-    <changeSet id="20150210094558-3" author="crog">
+    <changeSet id="20150210094558-2" author="crog">
         <addUniqueConstraint tableName="cpo_products"
             columnNames="owner_id, product_id"
-            constraintName="cpo_products_unq1"/>
+            constraintName="cpo_products_unq1"
+        />
     </changeSet>
 
     <!-- cpo_activationkey_products -->
-    <changeSet id="20150210094558-4" author="crog">
-        <createTable tableName="cpo_activationkey_products">
-            <column name="id" type="varchar(32)">
-                <constraints primaryKey="true" primaryKeyName="cpo_actkeyprod_pk"/>
-            </column>
-            <column name="created" type="${timestamp.type}"/>
-            <column name="updated" type="${timestamp.type}"/>
+    <changeSet id="20150210094558-3" author="crog">
+        <createTable tableName="cpo_activation_key_products">
             <column name="key_id" type="varchar(32)">
                 <constraints
                     nullable="false"
@@ -64,16 +63,17 @@
         </createTable>
     </changeSet>
 
-    <changeSet id="20150210094558-5" author="crog">
-        <addUniqueConstraint tableName="cpo_activationkey_products"
+    <changeSet id="20150210094558-4" author="crog">
+        <addPrimaryKey tableName="cpo_activation_key_products"
             columnNames="key_id,product_id"
-            constraintName="cpo_actkeyprod_unq1"/>
+            constraintName="cpo_actkeyprod_pk"
+        />
     </changeSet>
 
 
 
     <!-- cpo_branding -->
-    <changeSet id="20150210094558-6" author="crog">
+    <changeSet id="20150210094558-5" author="crog">
         <createTable tableName="cpo_branding">
             <column name="id" type="varchar(32)">
                 <constraints primaryKey="true" primaryKeyName="cpo_branding_pk"/>
@@ -99,7 +99,7 @@
 
 
     <!-- cpo_content -->
-    <changeSet id="20150210094558-7" author="crog">
+    <changeSet id="20150210094558-6" author="crog">
         <createTable tableName="cpo_content">
             <column name="id" type="varchar(32)">
                 <constraints primaryKey="true" primaryKeyName="cpo_content_pk"/>
@@ -136,11 +136,12 @@
 
 
     <!-- cpo_content_modified_products -->
-    <changeSet id="20150210094558-8" author="crog">
+    <changeSet id="20150210094558-7" author="crog">
         <createTable tableName="cpo_content_modified_products">
             <column name="content_id" type="varchar(32)">
                 <constraints primaryKey="true" primaryKeyName="cpo_contentmodprod_pk"/>
             </column>
+            <!-- TODO: This should be a reference to a proper product ID -->
             <column name="element" type="varchar(255)">
                 <constraints
                     nullable="false"
@@ -153,7 +154,7 @@
 
 
     <!-- cpo_environment_content -->
-    <changeSet id="20150210094558-9" author="crog">
+    <changeSet id="20150210094558-8" author="crog">
         <createTable tableName="cpo_environment_content">
             <column name="id" type="varchar(32)">
                 <constraints primaryKey="true" primaryKeyName="cpo_environment_content_pk"/>
@@ -178,16 +179,17 @@
         </createTable>
     </changeSet>
 
-    <changeSet id="20150210094558-10" author="crog">
+    <changeSet id="20150210094558-9" author="crog">
         <addUniqueConstraint tableName="cpo_environment_content"
             columnNames="content_id, environment_id"
-            constraintName="cpo_environment_content_unq1"/>
+            constraintName="cpo_environment_content_unq1"
+        />
     </changeSet>
 
 
 
     <!-- cpo_installed_products -->
-    <changeSet id="20150210094558-11" author="crog">
+    <changeSet id="20150210094558-10" author="crog">
         <createTable tableName="cpo_installed_products">
             <column name="id" type="varchar(32)">
                 <constraints primaryKey="true" primaryKeyName="cpo_installed_products_pk"/>
@@ -211,16 +213,48 @@
         </createTable>
     </changeSet>
 
-    <changeSet id="20150210094558-12" author="crog">
+    <changeSet id="20150210094558-11" author="crog">
         <addUniqueConstraint tableName="cpo_installed_products"
             columnNames="consumer_id, product_id"
-            constraintName="cpo_installed_products_unq1"/>
+            constraintName="cpo_installed_products_unq1"
+        />
+    </changeSet>
+
+
+
+    <!-- cpo_pool_products -->
+    <changeSet id="20150210094558-12" author="crog">
+        <createTable tableName="cpo_pool_products">
+            <column name="pool_id" type="varchar(32)">
+                <constraints
+                    nullable="false"
+                    foreignKeyName="cpo_pool_products_fk1"
+                    references="cp_pool(id)"
+                />
+            </column>
+            <column name="product_id" type="varchar(32)">
+                <constraints
+                    nullable="false"
+                    foreignKeyName="cpo_pool_products_fk2"
+                    references="cpo_products(id)"
+                />
+            </column>
+            <column name="dtype" type="varchar(32)">
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20150210094558-13" author="crog">
+        <addPrimaryKey tableName="cpo_pool_products"
+            columnNames="pool_id, product_id, dtype"
+            constraintName="cpo_pool_products_pk"
+        />
     </changeSet>
 
 
 
     <!-- cpo_product_attributes -->
-    <changeSet id="20150210094558-13" author="crog">
+    <changeSet id="20150210094558-14" author="crog">
         <createTable tableName="cpo_product_attributes">
             <column name="id" type="varchar(32)">
                 <constraints primaryKey="true" primaryKeyName="cpo_product_attributes_pk"/>
@@ -241,16 +275,17 @@
         </createTable>
     </changeSet>
 
-    <changeSet id="20150210094558-14" author="crog">
+    <changeSet id="20150210094558-15" author="crog">
         <addUniqueConstraint tableName="cpo_product_attributes"
             columnNames="name, product_id"
-            constraintName="cpo_product_attributes_unq1"/>
+            constraintName="cpo_product_attributes_unq1"
+        />
     </changeSet>
 
 
 
     <!-- cpo_product_certificates -->
-    <changeSet id="20150210094558-15" author="crog">
+    <changeSet id="20150210094558-16" author="crog">
         <createTable tableName="cpo_product_certificates">
             <column name="id" type="varchar(32)">
                 <constraints primaryKey="true" primaryKeyName="cpo_product_certificates_pk"/>
@@ -276,7 +311,7 @@
 
 
     <!-- cpo_product_content -->
-    <changeSet id="20150210094558-16" author="crog">
+    <changeSet id="20150210094558-17" author="crog">
         <createTable tableName="cpo_product_content">
             <column name="product_id" type="varchar(32)">
                 <constraints
@@ -298,16 +333,17 @@
         </createTable>
     </changeSet>
 
-    <changeSet id="20150210094558-17" author="crog">
+    <changeSet id="20150210094558-18" author="crog">
         <addPrimaryKey tableName="cpo_product_content"
             columnNames="product_id, content_id"
-            constraintName="cpo_product_content_pk"/>
+            constraintName="cpo_product_content_pk"
+        />
     </changeSet>
 
 
 
     <!-- cpo_product_dependent_products -->
-    <changeSet id="20150210094558-18" author="crog">
+    <changeSet id="20150210094558-19" author="crog">
         <createTable tableName="cpo_product_dependent_products">
             <column name="product_id" type="varchar(32)">
                 <constraints
@@ -324,38 +360,42 @@
 
 
     <!-- cp_pool -->
-    <changeSet id="20150210094558-19" author="crog">
+    <changeSet id="20150210094558-20" author="crog">
         <addColumn tableName="cp_pool">
             <column name="product_id" type="varchar(32)"/>
             <column name="derived_product_id" type="varchar(32)"/>
         </addColumn>
     </changeSet>
 
-    <changeSet id="20150210094558-20" author="crog">
-        <renameColumn tableName="cp_pool"
-            oldColumnName="productid"
-            newColumnName="product_id_old"/>
-            <!--remarks="deprecated; obsoleted by product_id"/>-->
-    </changeSet>
-
     <changeSet id="20150210094558-21" author="crog">
         <renameColumn tableName="cp_pool"
-            oldColumnName="derivedproductid"
-            newColumnName="derived_product_id_old"/>
-            <!--remarks="deprecated; obsoleted by derived_product_id"/>-->
+            oldColumnName="productid"
+            newColumnName="product_id_old"
+        />
+        <!--remarks="deprecated; obsoleted by product_id"-->
     </changeSet>
 
     <changeSet id="20150210094558-22" author="crog">
-        <dropColumn tableName="cp_pool"
-            columnName="productname"/>
+        <renameColumn tableName="cp_pool"
+            oldColumnName="derivedproductid"
+            newColumnName="derived_product_id_old"
+        />
+        <!--remarks="deprecated; obsoleted by derived_product_id"-->
     </changeSet>
 
     <changeSet id="20150210094558-23" author="crog">
         <dropColumn tableName="cp_pool"
-            columnName="derivedproductname"/>
+            columnName="productname"
+        />
     </changeSet>
 
     <changeSet id="20150210094558-24" author="crog">
+        <dropColumn tableName="cp_pool"
+            columnName="derivedproductname"
+        />
+    </changeSet>
+
+    <changeSet id="20150210094558-25" author="crog">
         <comment>Migrate data from obsoleted tables to new org-specific tables.</comment>
 
         <customChange class="org.candlepin.liquibase.MultiOrgUpgradeLiquibaseWrapper"/>

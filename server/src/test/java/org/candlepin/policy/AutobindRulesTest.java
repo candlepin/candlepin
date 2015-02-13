@@ -115,7 +115,7 @@ public class AutobindRulesTest {
 
     @Test
     public void testFindBestWithSingleProductSinglePoolReturnsProvidedPool() {
-        Product product = new Product(productId, "A test product");
+        Product product = new Product(productId, "A test product", owner);
         Pool pool = TestUtil.createPool(owner, product);
         pool.setId("DEAD-BEEF");
         when(this.prodAdapter.getProductById(productId)).thenReturn(product);
@@ -132,9 +132,9 @@ public class AutobindRulesTest {
 
     @Test
     public void testSelectBestPoolsFiltersTooMuchContent() {
-        Product mktProduct = new Product(productId, "A test product");
+        Product mktProduct = new Product(productId, "A test product", owner);
         Product engProduct = new Product(Integer.toString(TestUtil.randomInt()),
-            "An ENG product");
+            "An ENG product", owner);
 
         Set<Content> productContent = new HashSet<Content>();
         for (int i = 0; i < X509ExtensionUtil.V1_CONTENT_LIMIT + 1; i++) {
@@ -178,9 +178,16 @@ public class AutobindRulesTest {
 
     @Test
     public void testSelectBestPoolsLotsOfContentV2Client() {
-        Product mktProduct = new Product(productId, "A test product");
-        Product engProduct = new Product(Integer.toString(TestUtil.randomInt()),
-            "An ENG product");
+        Product mktProduct = new Product(
+            productId,
+            "A test product",
+            owner
+        );
+        Product engProduct = new Product(
+            Integer.toString(TestUtil.randomInt()),
+            "An ENG product",
+            owner
+        );
 
         Set<Content> productContent = new HashSet<Content>();
         for (int i = 0; i < X509ExtensionUtil.V1_CONTENT_LIMIT + 1; i++) {
@@ -211,7 +218,7 @@ public class AutobindRulesTest {
     public void testFindBestWithConsumerSockets() {
         consumer.setFact("cpu.cpu_socket(s)", "4");
 
-        Product product = new Product(productId, "A test product");
+        Product product = new Product(productId, "A test product", owner);
         product.setAttribute("sockets", "4");
 
         Pool pool = TestUtil.createPool(owner, product);
@@ -314,8 +321,7 @@ public class AutobindRulesTest {
     public void ensureSelectBestPoolsFiltersPoolsBySLAWhenConsumerHasSLASet() {
         // Create Premium SLA prod
         String slaPremiumProdId = "premium-sla-product";
-        Product slaPremiumProduct = new Product(slaPremiumProdId,
-                                         "Product with SLA Permium");
+        Product slaPremiumProduct = new Product(slaPremiumProdId, "Product with SLA Premium", owner);
         slaPremiumProduct.setAttribute("support_level", "Premium");
 
         Pool slaPremiumPool = TestUtil.createPool(owner, slaPremiumProduct);
@@ -325,8 +331,11 @@ public class AutobindRulesTest {
 
         // Create Standard SLA Product
         String slaStandardProdId = "standard-sla-product";
-        Product slaStandardProduct = new Product(slaStandardProdId,
-                                         "Product with SLA Standard");
+        Product slaStandardProduct = new Product(
+            slaStandardProdId,
+            "Product with SLA Standard",
+            owner
+        );
         slaStandardProduct.setAttribute("support_level", "Standard");
 
         Pool slaStandardPool = TestUtil.createPool(owner, slaStandardProduct);
@@ -335,7 +344,7 @@ public class AutobindRulesTest {
             slaStandardProdId);
 
         // Create a product with no SLA.
-        Product noSLAProduct = new Product(productId, "A test product");
+        Product noSLAProduct = new Product(productId, "A test product", owner);
         Pool noSLAPool = TestUtil.createPool(owner, noSLAProduct);
         noSLAPool.setId("pool-1");
 
@@ -367,8 +376,11 @@ public class AutobindRulesTest {
     public void ensureSelectBestPoolsFiltersPoolsBySLAWhenOrgHasSLASet() {
         // Create Premium SLA prod
         String slaPremiumProdId = "premium-sla-product";
-        Product slaPremiumProduct = new Product(slaPremiumProdId,
-                                         "Product with SLA Permium");
+        Product slaPremiumProduct = new Product(
+            slaPremiumProdId,
+            "Product with SLA Permium",
+            owner
+        );
         slaPremiumProduct.setAttribute("support_level", "Premium");
 
         Pool slaPremiumPool = TestUtil.createPool(owner, slaPremiumProduct);
@@ -378,8 +390,11 @@ public class AutobindRulesTest {
 
         // Create Standard SLA Product
         String slaStandardProdId = "standard-sla-product";
-        Product slaStandardProduct = new Product(slaStandardProdId,
-                                         "Product with SLA Standard");
+        Product slaStandardProduct = new Product(
+            slaStandardProdId,
+            "Product with SLA Standard",
+            owner
+        );
         slaStandardProduct.setAttribute("support_level", "Standard");
 
         Pool slaStandardPool = TestUtil.createPool(owner, slaStandardProduct);
@@ -388,7 +403,7 @@ public class AutobindRulesTest {
             slaStandardProdId);
 
         // Create a product with no SLA.
-        Product noSLAProduct = new Product(productId, "A test product");
+        Product noSLAProduct = new Product(productId, "A test product", owner);
         Pool noSLAPool = TestUtil.createPool(owner, noSLAProduct);
         noSLAPool.setId("pool-1");
 
@@ -481,7 +496,7 @@ public class AutobindRulesTest {
     @Test(expected = RuntimeException.class)
     public void testSelectBestPoolNoPools() {
         when(this.prodAdapter.getProductById(HIGHEST_QUANTITY_PRODUCT))
-            .thenReturn(new Product(HIGHEST_QUANTITY_PRODUCT, HIGHEST_QUANTITY_PRODUCT));
+            .thenReturn(new Product(HIGHEST_QUANTITY_PRODUCT, HIGHEST_QUANTITY_PRODUCT, owner));
 
         // There are no pools for the product in this case:
         autobindRules.selectBestPools(consumer,
@@ -492,7 +507,7 @@ public class AutobindRulesTest {
     @Test
     public void testSelectBestPoolDefaultRule() {
         consumer.setFact("cpu.cpu_socket(s)", "32");
-        Product product = new Product("a-product", "A product for testing");
+        Product product = new Product("a-product", "A product for testing", owner);
 
         Pool pool1 = createPool(owner, product, 5, TestUtil
             .createDate(2000, 02, 26), TestUtil.createDate(2050, 02, 26));
@@ -516,7 +531,7 @@ public class AutobindRulesTest {
 
     private Product mockStackingProduct(String pid, String productName,
         String stackId, String sockets) {
-        Product product = new Product(pid, productName);
+        Product product = new Product(pid, productName, owner);
         product.setAttribute("sockets", sockets);
         product.setAttribute("stacking_id", stackId);
         product.setAttribute("multi-entitlement", "yes");
@@ -525,13 +540,13 @@ public class AutobindRulesTest {
     }
 
     private Product mockProduct(String pid, String productName) {
-        Product product = new Product(pid, productName);
+        Product product = new Product(pid, productName, owner);
         when(this.prodAdapter.getProductById(pid)).thenReturn(product);
         return product;
     }
 
     private Product mockProduct(String pid, String productName, String sockets) {
-        Product product = new Product(pid, productName);
+        Product product = new Product(pid, productName, owner);
         product.setAttribute("sockets", sockets);
         when(this.prodAdapter.getProductById(pid)).thenReturn(product);
         return product;
@@ -548,7 +563,7 @@ public class AutobindRulesTest {
     }
 
     private List<Pool> createDerivedPool(String derivedEngPid) {
-        Product product = new Product(productId, "A test product");
+        Product product = new Product(productId, "A test product", owner);
         product.setAttribute("stacking_id", "1");
         product.setAttribute("multi-entitlement", "yes");
         product.setAttribute("sockets", "2");
@@ -557,7 +572,7 @@ public class AutobindRulesTest {
             new HashSet<DerivedProvidedProduct>();
         derivedProvided.add(new DerivedProvidedProduct(derivedEngPid, derivedEngPid));
 
-        Product derivedProduct = new Product("derivedProd", "A derived test product");
+        Product derivedProduct = new Product("derivedProd", "A derived test product", owner);
         product.setAttribute("stacking_id", "1");
         product.setAttribute("multi-entitlement", "yes");
 
@@ -686,7 +701,7 @@ public class AutobindRulesTest {
     }
 
     private List<Pool> createInstanceBasedPool() {
-        Product product = new Product(productId, "A test product");
+        Product product = new Product(productId, "A test product", owner);
         product.setAttribute("instance_multiplier", "2");
         product.setAttribute("stacking_id", "1");
         product.setAttribute("multi-entitlement", "yes");
@@ -701,7 +716,7 @@ public class AutobindRulesTest {
     }
 
     private List<Pool> createSocketPool(int sockets, int quantity, String stackingId) {
-        Product product = new Product(productId, "A test product");
+        Product product = new Product(productId, "A test product", owner);
         product.setAttribute("stacking_id", stackingId);
         product.setAttribute("multi-entitlement", "yes");
         product.setAttribute("sockets", "" + sockets);
@@ -730,7 +745,7 @@ public class AutobindRulesTest {
 
     // Simulating the subpool you would get after a physical system binds:
     private List<Pool> createHostRestrictedVirtLimitPool() {
-        Product product = new Product(productId, "A test product");
+        Product product = new Product(productId, "A test product", owner);
         product.setAttribute("virt_limit", "4");
         product.setAttribute("stacking_id", "1");
         product.setAttribute("multi-entitlement", "yes");
@@ -747,7 +762,7 @@ public class AutobindRulesTest {
     }
 
     private List<Pool> createStackedPoolEnforcingNothing() {
-        Product product = new Product(productId, "A test product");
+        Product product = new Product(productId, "A test product", owner);
         product.setAttribute("stacking_id", "1");
         product.setAttribute("multi-entitlement", "yes");
         Pool pool = TestUtil.createPool(owner, product, 100);
@@ -776,7 +791,7 @@ public class AutobindRulesTest {
 
     @Test
     public void unlimitedPoolIsPickedUp() {
-        Product product = new Product(productId, "my-prod");
+        Product product = new Product(productId, "my-prod", owner);
         product.setAttribute("sockets", "2");
         Pool pool = TestUtil.createPool(owner, product, -1);
         pool.setId("POOL-ID");

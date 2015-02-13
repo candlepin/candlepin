@@ -49,35 +49,19 @@ public class PoolFilterBuilder extends FilterBuilder {
     public void addMatchesFilter(String matches) {
 
         Disjunction textOr = Restrictions.disjunction();
-        textOr.add(new FilterLikeExpression("productName", matches, true));
-        textOr.add(new FilterLikeExpression("productId", matches, true));
+        textOr.add(new FilterLikeExpression("product.name", matches, true));
+        textOr.add(new FilterLikeExpression("product.productId", matches, true));
         textOr.add(new FilterLikeExpression("contractNumber", matches, true));
         textOr.add(new FilterLikeExpression("orderNumber", matches, true));
-        textOr.add(Subqueries.exists(
-                createProvidedProductCriteria(matches)));
+
+        // TODO: These next two may not work at all.
+        textOr.add(new FilterLikeExpression("providedProducts.productId", matches, true));
+        textOr.add(new FilterLikeExpression("providedProducts.name", matches, true));
+
         textOr.add(Subqueries.exists(
                 createAttributeCriteria(ProductPoolAttribute.class, "support_level",
                 Arrays.asList(matches))));
         this.otherCriteria.add(textOr);
-    }
-
-    private DetachedCriteria createProvidedProductCriteria(String searchString) {
-
-        DetachedCriteria attrMatch = DetachedCriteria.forClass(
-            ProvidedProduct.class, "provided");
-
-        List<Criterion> providedOrs = new ArrayList<Criterion>();
-        providedOrs.add(new FilterLikeExpression("productId", searchString, true));
-        providedOrs.add(new FilterLikeExpression("productName", searchString, true));
-
-        attrMatch.add(Restrictions.or(
-            providedOrs.toArray(new Criterion[providedOrs.size()]))
-        );
-
-        attrMatch.add(Property.forName("this.id").eqProperty("provided.pool.id"));
-        attrMatch.setProjection(Projections.property("provided.id"));
-
-        return attrMatch;
     }
 
     @Override

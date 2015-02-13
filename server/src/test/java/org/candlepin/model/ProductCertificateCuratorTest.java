@@ -38,7 +38,8 @@ public class ProductCertificateCuratorTest extends DatabaseTestFixture {
     public void init() {
         super.init();
 
-        Product product = new Product("dummy", "Dummy Product");
+        Owner owner = new Owner("Test Corporation");
+        Product product = new Product("dummy", "Dummy Product", owner);
         this.product = productCurator.create(product);
     }
 

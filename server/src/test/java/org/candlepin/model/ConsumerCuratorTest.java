@@ -698,7 +698,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     public void testGetConsumerIdsWithStartedEnts() {
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
         consumerCurator.create(consumer);
-        Product prod = new Product("1", "2");
+        Product prod = new Product("1", "2", owner);
         this.productCurator.create(prod);
         Pool p = createPoolAndSub(owner, prod, 5L, Util.yesterday(), Util.tomorrow());
         Entitlement ent = this.createEntitlement(owner, consumer, p,
@@ -715,7 +715,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     public void testGetConsumerIdsWithStartedEntsAlreadyDone() {
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
         consumerCurator.create(consumer);
-        Product prod = new Product("1", "2");
+        Product prod = new Product("1", "2", owner);
         this.productCurator.create(prod);
         Pool p = createPoolAndSub(owner, prod, 5L, Util.yesterday(), Util.tomorrow());
         Entitlement ent = this.createEntitlement(owner, consumer, p,

@@ -136,8 +136,9 @@ public class ProductImporterTest {
 
     @Test
     public void testExistingProductContentAdded() throws Exception {
-        Product oldProduct = TestUtil.createProduct("fake id", "fake name");
-        Product newProduct = TestUtil.createProduct("fake id", "fake name");
+        Owner owner = new Owner("Test Corporation");
+        Product oldProduct = TestUtil.createProduct("fake id", "fake name", owner);
+        Product newProduct = TestUtil.createProduct("fake id", "fake name", owner);
 
         addContentTo(newProduct);
         Content c = newProduct.getProductContent().iterator().next().getContent();
@@ -155,7 +156,8 @@ public class ProductImporterTest {
 
     @Test
     public void testGetChangedProductsNoNewProducts() {
-        Product oldProduct = TestUtil.createProduct("fake id", "fake name");
+        Owner owner = new Owner("Test Corporation");
+        Product oldProduct = TestUtil.createProduct("fake id", "fake name", owner);
 
         Set<Product> products = new HashSet<Product>();
 
@@ -170,7 +172,8 @@ public class ProductImporterTest {
 
     @Test
     public void testGetChangedProductsAllBrandNew() {
-        Product newProduct = TestUtil.createProduct("fake id", "fake name");
+        Owner owner = new Owner("Test Corporation");
+        Product newProduct = TestUtil.createProduct("fake id", "fake name", owner);
 
         Set<Product> products = new HashSet<Product>();
         products.add(newProduct);
@@ -184,7 +187,8 @@ public class ProductImporterTest {
 
     @Test
     public void testGetChangedProductsAllIdentical() {
-        Product oldProduct = TestUtil.createProduct("fake id", "fake name");
+        Owner owner = new Owner("Test Corporation");
+        Product oldProduct = TestUtil.createProduct("fake id", "fake name", owner);
 
         Set<Product> products = new HashSet<Product>();
         products.add(oldProduct);
@@ -200,8 +204,9 @@ public class ProductImporterTest {
 
     @Test
     public void testGetChangedProductsNameChanged() {
-        Product newProduct = TestUtil.createProduct("fake id", "fake name new");
-        Product oldProduct = TestUtil.createProduct("fake id", "fake name");
+        Owner owner = new Owner("Test Corporation");
+        Product newProduct = TestUtil.createProduct("fake id", "fake name new", owner);
+        Product oldProduct = TestUtil.createProduct("fake id", "fake name", owner);
 
         Set<Product> products = new HashSet<Product>();
         products.add(newProduct);
@@ -217,8 +222,9 @@ public class ProductImporterTest {
 
     @Test
     public void testGetChangedProductsMultiplierChanged() {
-        Product newProduct = TestUtil.createProduct("fake id", "fake name");
-        Product oldProduct = TestUtil.createProduct("fake id", "fake name");
+        Owner owner = new Owner("Test Corporation");
+        Product newProduct = TestUtil.createProduct("fake id", "fake name", owner);
+        Product oldProduct = TestUtil.createProduct("fake id", "fake name", owner);
 
         oldProduct.setMultiplier(1L);
         newProduct.setMultiplier(2L);
@@ -237,8 +243,9 @@ public class ProductImporterTest {
 
     @Test
     public void testGetChangedProductsAttributeAdded() {
-        Product newProduct = TestUtil.createProduct("fake id", "fake name");
-        Product oldProduct = TestUtil.createProduct("fake id", "fake name");
+        Owner owner = new Owner("Test Corporation");
+        Product newProduct = TestUtil.createProduct("fake id", "fake name", owner);
+        Product oldProduct = TestUtil.createProduct("fake id", "fake name", owner);
 
         newProduct.setAttribute("fake attr", "value");
 
@@ -256,8 +263,9 @@ public class ProductImporterTest {
 
     @Test
     public void testGetChangedProductsAttributeRemoved() {
-        Product newProduct = TestUtil.createProduct("fake id", "fake name");
-        Product oldProduct = TestUtil.createProduct("fake id", "fake name");
+        Owner owner = new Owner("Test Corporation");
+        Product newProduct = TestUtil.createProduct("fake id", "fake name", owner);
+        Product oldProduct = TestUtil.createProduct("fake id", "fake name", owner);
 
         oldProduct.setAttribute("fake attr", "value");
 
@@ -275,8 +283,9 @@ public class ProductImporterTest {
 
     @Test
     public void testGetChangedProductsAttributeModified() {
-        Product newProduct = TestUtil.createProduct("fake id", "fake name");
-        Product oldProduct = TestUtil.createProduct("fake id", "fake name");
+        Owner owner = new Owner("Test Corporation");
+        Product newProduct = TestUtil.createProduct("fake id", "fake name", owner);
+        Product oldProduct = TestUtil.createProduct("fake id", "fake name", owner);
 
         oldProduct.setAttribute("fake attr", "value");
         newProduct.setAttribute("fake attr", "value new");
@@ -295,8 +304,9 @@ public class ProductImporterTest {
 
     @Test
     public void testGetChangedProductsAttributeSwapped() {
-        Product newProduct = TestUtil.createProduct("fake id", "fake name");
-        Product oldProduct = TestUtil.createProduct("fake id", "fake name");
+        Owner owner = new Owner("Test Corporation");
+        Product newProduct = TestUtil.createProduct("fake id", "fake name", owner);
+        Product oldProduct = TestUtil.createProduct("fake id", "fake name", owner);
 
         oldProduct.setAttribute("fake attr", "value");
         newProduct.setAttribute("other fake attr", "value");
@@ -315,8 +325,9 @@ public class ProductImporterTest {
 
     @Test
     public void testGetChangedProductsContentAdded() {
-        Product newProduct = TestUtil.createProduct("fake id", "fake name");
-        Product oldProduct = TestUtil.createProduct("fake id", "fake name");
+        Owner owner = new Owner("Test Corporation");
+        Product newProduct = TestUtil.createProduct("fake id", "fake name", owner);
+        Product oldProduct = TestUtil.createProduct("fake id", "fake name", owner);
 
         Content content = new Content();
 
@@ -336,8 +347,9 @@ public class ProductImporterTest {
 
     @Test
     public void testGetChangedProductsContentRemoved() {
-        Product newProduct = TestUtil.createProduct("fake id", "fake name");
-        Product oldProduct = TestUtil.createProduct("fake id", "fake name");
+        Owner owner = new Owner("Test Corporation");
+        Product newProduct = TestUtil.createProduct("fake id", "fake name", owner);
+        Product oldProduct = TestUtil.createProduct("fake id", "fake name", owner);
 
         Content content = new Content();
 
@@ -357,10 +369,10 @@ public class ProductImporterTest {
 
     @Test
     public void testGetChangedProductsContentSwapped() {
-        Product newProduct = TestUtil.createProduct("fake id", "fake name");
-        Product oldProduct = TestUtil.createProduct("fake id", "fake name");
-
         Owner owner = new Owner("Example-Corporation");
+        Product newProduct = TestUtil.createProduct("fake id", "fake name", owner);
+        Product oldProduct = TestUtil.createProduct("fake id", "fake name", owner);
+
         Content content = new Content(owner, "foobar", null, null, null, null, null, null, null);
         Content content2 = new Content(owner, "baz", null, null, null, null, null, null, null);
 
@@ -381,10 +393,10 @@ public class ProductImporterTest {
 
     @Test
     public void testGetChangedProductsContentEnabledToggled() {
-        Product newProduct = TestUtil.createProduct("fake id", "fake name");
-        Product oldProduct = TestUtil.createProduct("fake id", "fake name");
-
         Owner owner = new Owner("Example-Corporation");
+        Product newProduct = TestUtil.createProduct("fake id", "fake name", owner);
+        Product oldProduct = TestUtil.createProduct("fake id", "fake name", owner);
+
         Content content = new Content(owner, "foobar", null, null, null, null, null, null, null);
 
         oldProduct.addContent(content);

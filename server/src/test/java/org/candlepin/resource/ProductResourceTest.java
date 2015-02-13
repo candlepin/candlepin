@@ -50,32 +50,33 @@ public class ProductResourceTest extends DatabaseTestFixture {
     @Inject private ContentCurator contentCurator;
     @Inject private ProductResource productResource;
 
-    private Product createProduct() {
+    private Product createProduct(Owner owner) {
         String label = "test_product";
         String name = "Test Product";
         String variant = "server";
         String version = "1.0";
         String arch = "ALL";
         String type = "SVC";
-        Product prod = new Product(label, name, variant,
+        Product prod = new Product(label, name, owner, variant,
                 version, arch, type);
         return prod;
     }
 
     @Test
     public void testCreateProductResource() {
+        Owner owner = new Owner("Example-Corporation");
 
-        Product toSubmit = createProduct();
+        Product toSubmit = createProduct(owner);
         productResource.createProduct(toSubmit);
-
     }
 
     @Test
     public void testCreateProductWithContent() {
-        Product toSubmit = createProduct();
+        Owner owner = new Owner("Example-Corporation");
+
+        Product toSubmit = createProduct(owner);
         String  contentHash = String.valueOf(
             Math.abs(Long.valueOf("test-content".hashCode())));
-        Owner owner = new Owner("Example-Corporation");
         Content testContent = new Content(owner, "test-content", contentHash,
                             "test-content-label", "yum", "test-vendor",
                              "test-content-url", "test-gpg-url", "test-arch");
@@ -105,7 +106,9 @@ public class ProductResourceTest extends DatabaseTestFixture {
 
     @Test
     public void getProduct() {
-        Product p = createProduct();
+        Owner owner = new Owner("Example-Corporation");
+
+        Product p = createProduct(owner);
         p = productResource.createProduct(p);
         securityInterceptor.enable();
 
@@ -115,7 +118,9 @@ public class ProductResourceTest extends DatabaseTestFixture {
 
     @Test
     public void getProductCertificate() {
-        Product p = createProduct();
+        Owner owner = new Owner("Example-Corporation");
+
+        Product p = createProduct(owner);
         p = productResource.createProduct(p);
         // ensure we check SecurityHole
         securityInterceptor.enable();

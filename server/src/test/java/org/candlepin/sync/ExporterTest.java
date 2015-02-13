@@ -45,6 +45,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProvidedProduct;
+import org.candlepin.model.Owner;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.pki.PKIUtility;
@@ -172,28 +173,30 @@ public class ExporterTest {
         Set<Entitlement> entitlements = new HashSet<Entitlement>();
         entitlements.add(ent);
 
-        Product prod = new Product("12345", "RHEL Product");
+        Owner owner = new Owner("Example-Corporation");
+
+        Product prod = new Product("12345", "RHEL Product", owner);
         prod.setMultiplier(1L);
         prod.setCreated(new Date());
         prod.setUpdated(new Date());
         prod.setHref("http://localhost");
         prod.setAttributes(Collections.EMPTY_SET);
 
-        Product prod1 = new Product("MKT-prod", "RHEL Product");
+        Product prod1 = new Product("MKT-prod", "RHEL Product", owner);
         prod1.setMultiplier(1L);
         prod1.setCreated(new Date());
         prod1.setUpdated(new Date());
         prod1.setHref("http://localhost");
         prod1.setAttributes(Collections.EMPTY_SET);
 
-        Product subProduct = new Product("MKT-sub-prod", "Sub Product");
+        Product subProduct = new Product("MKT-sub-prod", "Sub Product", owner);
         subProduct.setMultiplier(1L);
         subProduct.setCreated(new Date());
         subProduct.setUpdated(new Date());
         subProduct.setHref("http://localhost");
         subProduct.setAttributes(Collections.EMPTY_SET);
 
-        Product subProvidedProduct = new Product("332211", "Sub Product");
+        Product subProvidedProduct = new Product("332211", "Sub Product", owner);
         subProvidedProduct.setMultiplier(1L);
         subProvidedProduct.setCreated(new Date());
         subProvidedProduct.setUpdated(new Date());

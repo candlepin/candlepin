@@ -37,7 +37,7 @@ import javax.xml.bind.annotation.XmlTransient;
  * See Attributes interface for documentation.
  */
 @Entity
-@Table(name = "cp_product_attribute")
+@Table(name = "cpo_product_attributes")
 @Embeddable
 public class ProductAttribute extends AbstractHibernateObject implements Attribute {
 
@@ -58,9 +58,7 @@ public class ProductAttribute extends AbstractHibernateObject implements Attribu
 
 
     @ManyToOne
-    @ForeignKey(name = "fk_product_attrib_product_id")
     @JoinColumn(nullable = false)
-    @Index(name = "cp_prodattribute_prod_fk_idx")
     @NotNull
     private Product product;
 

@@ -107,14 +107,13 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     public void setUp() throws Exception {
         o = createOwner();
         ownerCurator.create(o);
-        virtHost = new Product(PRODUCT_VIRT_HOST, PRODUCT_VIRT_HOST);
-        virtHostPlatform = new Product(PRODUCT_VIRT_HOST_PLATFORM,
-            PRODUCT_VIRT_HOST_PLATFORM);
-        virtGuest = new Product(PRODUCT_VIRT_GUEST, PRODUCT_VIRT_GUEST);
-        monitoring = new Product(PRODUCT_MONITORING, PRODUCT_MONITORING);
+        virtHost = new Product(PRODUCT_VIRT_HOST, PRODUCT_VIRT_HOST, o);
+        virtHostPlatform = new Product(PRODUCT_VIRT_HOST_PLATFORM, PRODUCT_VIRT_HOST_PLATFORM, o);
+        virtGuest = new Product(PRODUCT_VIRT_GUEST, PRODUCT_VIRT_GUEST, o);
+        monitoring = new Product(PRODUCT_MONITORING, PRODUCT_MONITORING, o);
         monitoring.addAttribute(new ProductAttribute("multi-entitlement", "yes"));
 
-        provisioning = new Product(PRODUCT_PROVISIONING, PRODUCT_PROVISIONING);
+        provisioning = new Product(PRODUCT_PROVISIONING, PRODUCT_PROVISIONING, o);
         provisioning.addAttribute(new ProductAttribute("multi-entitlement", "yes"));
 
         virtHost.addAttribute(new ProductAttribute(PRODUCT_VIRT_HOST, ""));
@@ -124,8 +123,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         monitoring.addAttribute(new ProductAttribute(PRODUCT_MONITORING, ""));
         provisioning.addAttribute(new ProductAttribute(PRODUCT_PROVISIONING, ""));
 
-        socketLimitedProduct = new Product("socket-limited-prod",
-            "Socket Limited Product");
+        socketLimitedProduct = new Product("socket-limited-prod", "Socket Limited Product", o);
         socketLimitedProduct.addAttribute(new ProductAttribute("sockets", "2"));
         productCurator.create(socketLimitedProduct);
 
@@ -249,7 +247,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     @Test
     public void testEntitleByProductsWithModifierAndModifiee()
         throws EntitlementRefusedException {
-        Product modifier = new Product("modifier", "modifier");
+        Product modifier = new Product("modifier", "modifier", o);
 
         Set<String> modified = new HashSet<String>();
         modified.add(PRODUCT_VIRT_HOST);
@@ -292,8 +290,8 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
     @Test
     public void testRefreshPoolsWithChangedProductShouldUpdatePool() {
-        Product product1 = TestUtil.createProduct("product 1", "Product 1");
-        Product product2 = TestUtil.createProduct("product 2", "Product 2");
+        Product product1 = TestUtil.createProduct("product 1", "Product 1", o);
+        Product product2 = TestUtil.createProduct("product 2", "Product 2", o);
 
         productAdapter.createProduct(product1);
         productAdapter.createProduct(product2);
@@ -341,7 +339,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
     @Test
     public void testListAllForConsumerExcludesErrors() {
-        Product p = new Product("test-product", "Test Product");
+        Product p = new Product("test-product", "Test Product", o);
         productCurator.create(p);
 
         Page<List<Pool>> results =
@@ -366,7 +364,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
     @Test
     public void testListAllForActKeyExcludesErrors() {
-        Product p = new Product("test-product", "Test Product");
+        Product p = new Product("test-product", "Test Product", o);
         productCurator.create(p);
 
         ActivationKey ak = new ActivationKey();

@@ -45,7 +45,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "cp_installed_products")
+@Table(name = "cpo_installed_products")
 public class ConsumerInstalledProduct extends AbstractHibernateObject {
 
     @Id
@@ -55,23 +55,17 @@ public class ConsumerInstalledProduct extends AbstractHibernateObject {
     @NotNull
     private String id;
 
-    @Column(name = "product_id", nullable = false)
-    @Size(max = 255)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name="consumer_id", nullable = false)
+    @XmlTransient
+    private Consumer consumer;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_id", nullable = false)
     @NotNull
-    private String productId;
+    private Product product;
 
-    @Column(name = "product_name")
-    @Size(max = 255)
-    private String productName;
-
-    @Column(name = "product_version")
-    @Size(max = 20)
-    private String version;
-
-    @Column(name = "product_arch")
-    @Size(max = 63)
-    private String arch;
-
+    // TODO: What are these...?
     @Transient
     private String status;
 
@@ -81,42 +75,14 @@ public class ConsumerInstalledProduct extends AbstractHibernateObject {
     @Transient
     private Date endDate;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @ForeignKey(name = "fk_consumer_installed_product")
-    @JoinColumn(nullable = false)
-    @XmlTransient
-    @Index(name = "cp_installedproduct_consumer_fk_idx")
-    private Consumer consumer;
+
 
     public ConsumerInstalledProduct() {
     }
 
-    public ConsumerInstalledProduct(String productId, String productName) {
-        this.productId = productId;
-        this.productName = productName;
-    }
-
-    public ConsumerInstalledProduct(String productId, String productName,
-        Consumer consumer) {
-        this.productId = productId;
-        this.productName = productName;
+    public ConsumerInstalledProduct(Consumer consumer, Product product) {
         this.consumer = consumer;
-    }
-
-    public String getProductId() {
-        return productId;
-    }
-
-    public void setProductId(String productId) {
-        this.productId = productId;
-    }
-
-    public String getProductName() {
-        return productName;
-    }
-
-    public void setProductName(String productName) {
-        this.productName = productName;
+        this.product = product;
     }
 
     public String getId() {
@@ -127,20 +93,20 @@ public class ConsumerInstalledProduct extends AbstractHibernateObject {
         this.id = id;
     }
 
-    public String getVersion() {
-        return version;
+    public Consumer getConsumer() {
+        return this.consumer;
     }
 
-    public void setVersion(String version) {
-        this.version = version;
+    public void setConsumer(Consumer consumer) {
+        this.consumer = consumer;
     }
 
-    public String getArch() {
-        return arch;
+    public Product getProduct() {
+        return product;
     }
 
-    public void setArch(String arch) {
-        this.arch = arch;
+    public void setProduct(Product product) {
+        this.product = product;
     }
 
     public String getStatus() {
@@ -167,35 +133,23 @@ public class ConsumerInstalledProduct extends AbstractHibernateObject {
         this.endDate = endDate;
     }
 
-    @XmlTransient
-    public Consumer getConsumer() {
-        return consumer;
-    }
-
-    public void setConsumer(Consumer consumer) {
-        this.consumer = consumer;
-    }
-
     @Override
     public boolean equals(Object other) {
         if (!(other instanceof ConsumerInstalledProduct)) {
             return false;
         }
+
         ConsumerInstalledProduct that = (ConsumerInstalledProduct) other;
-        if (this.getProductId().equals(that.getProductId()) &&
-            this.getProductName().equals(that.getProductName()) &&
-            ((this.getVersion() == null && that.getVersion() == null) ||
-            this.getVersion() != null && this.getVersion().equals(that.getVersion())) &&
-            ((this.getArch() == null && that.getArch() == null) ||
-            this.getArch() != null && this.getArch().equals(that.getArch()))) {
-            return true;
-        }
-        return false;
+
+        return this.getConsumer().equals(that.getConsumer()) &&
+            this.getProduct().equals(that.getProduct());
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder(7, 23).append(getProductId())
-            .append(getProductName()).toHashCode();
+        return new HashCodeBuilder(7, 23)
+            .append(this.getConsumer())
+            .append(this.getProduct())
+            .toHashCode();
     }
 }

@@ -592,7 +592,7 @@ public class PoolRulesTest {
     }
 
     private Subscription createVirtLimitSub(String productId, int quantity, int virtLimit) {
-        Product product = new Product(productId, productId);
+        Product product = new Product(productId, productId, owner);
         product.setAttribute("virt_limit", Integer.toString(virtLimit));
         when(productAdapterMock.getProductById(productId)).thenReturn(product);
         Subscription s = TestUtil.createSubscription(product);
@@ -784,7 +784,7 @@ public class PoolRulesTest {
     }
 
     private Subscription createVirtOnlySub(String productId, int quantity) {
-        Product product = new Product(productId, productId);
+        Product product = new Product(productId, productId, owner);
         product.setAttribute("virt_only", "true");
         when(productAdapterMock.getProductById(productId)).thenReturn(product);
         Subscription s = TestUtil.createSubscription(product);

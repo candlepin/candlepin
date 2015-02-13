@@ -16,6 +16,7 @@ package org.candlepin.service.impl;
 
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
+import org.candlepin.model.Owner;
 import org.candlepin.pki.PKIReader;
 import org.candlepin.pki.impl.BouncyCastlePKIReader;
 import org.candlepin.service.ProductServiceAdapter;
@@ -56,8 +57,8 @@ public class ProductCertCreationTest extends DatabaseTestFixture {
 
     @Test
     public void validProduct() {
-        Product product = new Product("50", "Test Product",
-            "Standard", "1", "x86_64", "Base");
+        Owner owner = new Owner("Example-Corporation");
+        Product product = new Product("50", "Test Product", owner, "Standard", "1", "x86_64", "Base");
         ProductCertificate cert = createCert(product);
 
         Assert.assertEquals(product, cert.getProduct());
@@ -65,12 +66,13 @@ public class ProductCertCreationTest extends DatabaseTestFixture {
 
     @Test(expected = IllegalArgumentException.class)
     public void noHashCreation() {
-        createCert(new Product("thin", "Not Much Here"));
+        Owner owner = new Owner("Example-Corporation");
+        createCert(new Product("thin", "Not Much Here", owner));
     }
 
     private ProductCertificate createDummyCert() {
-        Product product = new Product("50", "Test Product",
-            "Standard", "1", "x86_64", "Base");
+        Owner owner = new Owner("Example-Corporation");
+        Product product = new Product("50", "Test Product", owner, "Standard", "1", "x86_64", "Base");
 
         return createCert(product);
     }

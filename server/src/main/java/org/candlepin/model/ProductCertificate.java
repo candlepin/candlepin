@@ -36,7 +36,7 @@ import javax.xml.bind.annotation.XmlTransient;
  */
 @XmlRootElement(name = "cert")
 @XmlAccessorType(XmlAccessType.PROPERTY)
-@Table(name = "cp_product_certificate")
+@Table(name = "cpo_product_certificates")
 @Entity
 public class ProductCertificate extends AbstractCertificate {
 
@@ -53,9 +53,7 @@ public class ProductCertificate extends AbstractCertificate {
     }
 
     @ManyToOne
-    @ForeignKey(name = "fk_cert_product")
     @JoinColumn(nullable = false)
-    @Index(name = "cp_prodcert_prod_fk_idx")
     @NotNull
     private Product product;
 

@@ -56,7 +56,7 @@ public class PoolCuratorFilterTest extends DatabaseTestFixture {
 
     private Pool createSearchPools() {
         Product searchProduct = new Product("awesomeos-server",
-                "Awesome OS Server Premium");
+                "Awesome OS Server Premium", owner);
         searchProduct.addAttribute(new ProductAttribute("support_level",
                 "CustomSupportLevel"));
         productCurator.create(searchProduct);

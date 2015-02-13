@@ -207,9 +207,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
             I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
             config);
 
-        product = new Product("12345", "a product", "variant", "version",
-            ARCH_LABEL, "SVC");
-        largeContentProduct = new Product("67890", "large content product", "variant",
+        product = new Product("12345", "a product", owner, "variant", "version", ARCH_LABEL, "SVC");
+        largeContentProduct = new Product("67890", "large content product", owner, "variant",
             "version", ARCH_LABEL, "SVC");
 
         content = createContent(CONTENT_NAME, CONTENT_ID, CONTENT_LABEL,
@@ -327,12 +326,12 @@ public class DefaultEntitlementCertServiceAdapterTest {
     @Test(expected = CertificateSizeException.class)
     public void tooManyContentSetsAcrossMultipleProducts() throws Exception {
         Set<Product> providedProducts = new HashSet<Product>();
-        Product pp1 = new Product("12346", "Provided 1", "variant", "version",
+        Product pp1 = new Product("12346", "Provided 1", owner, "variant", "version",
             ARCH_LABEL, "SVC");
         pp1.setContent(generateContent(100, "PP1"));
         providedProducts.add(pp1);
 
-        Product pp2 = new Product("12347", "Provided 2", "variant", "version",
+        Product pp2 = new Product("12347", "Provided 2", owner, "variant", "version",
             ARCH_LABEL, "SVC");
         pp2.setContent(generateContent(100, "PP2"));
         providedProducts.add(pp2);
@@ -548,7 +547,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
     @Test
     public void testFilterProductContent() {
-        Product modProduct = new Product("12345", "a product", "variant",
+        Product modProduct = new Product("12345", "a product", owner, "variant",
             "version", ARCH_LABEL, "SVC");
 
         // Use this set for successful providing queries:
@@ -948,7 +947,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Set<Product> products = new HashSet<Product>();
 
         // product with no compatible content, but marked as 'ALL' arch
-        Product wrongArchProduct = new Product("12345", "a product",
+        Product wrongArchProduct = new Product("12345", "a product", owner,
             "variant", "version", "ALL", "SVC");
 
         // no x86_64, ie ARCH_LABEL
@@ -979,7 +978,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Set<Product> products = new HashSet<Product>();
 
         // product with a kickstart content
-        Product kickstartProduct = new Product("12345", "a product",
+        Product kickstartProduct = new Product("12345", "a product", owner,
             "variant", "version", "ALL", "SVC");
 
         kickstartProduct.setContent(Collections.singleton(kickstartContent));
@@ -1010,7 +1009,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Set<Product> products = new HashSet<Product>();
 
         // product with a kickstart content
-        Product fileProduct = new Product("12345", "a product",
+        Product fileProduct = new Product("12345", "a product", owner,
             "variant", "version", "ALL", "SVC");
 
         fileProduct.setContent(Collections.singleton(fileContent));
@@ -1042,7 +1041,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Set<Product> products = new HashSet<Product>();
 
         // product with a kickstart content
-        Product unknownContentTypeProduct = new Product("12345", "a product",
+        Product unknownContentTypeProduct = new Product("12345", "a product", owner,
             "variant", "version", ARCH_LABEL, "SVC");
 
         unknownContentTypeProduct.setContent(Collections.singleton(unknownTypeContent));
@@ -1075,7 +1074,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Set<Product> products = new HashSet<Product>();
 
         // product with a kickstart content
-        Product product = new Product("12345", "a product",
+        Product product = new Product("12345", "a product", owner,
             "variant", "version", ARCH_LABEL, "SVC");
 
         Set<Content> multipleContents = new HashSet<Content>();
@@ -1316,7 +1315,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Set<Product> products = new HashSet<Product>();
 
         // our content with no arch should inherit this arch
-        Product inheritedArchProduct = new Product("12345", "a product",
+        Product inheritedArchProduct = new Product("12345", "a product", owner,
             "variant", "version", ARCH_LABEL, "SVC");
 
         inheritedArchProduct.setContent(Collections.singleton(noArchContent));
@@ -1378,7 +1377,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Set<Product> products = new HashSet<Product>();
 
         // product with no compatible content, but marked as 'ALL' arch
-        Product wrongArchProduct = new Product("12345", "a product",
+        Product wrongArchProduct = new Product("12345", "a product", owner,
             "variant", "version", "ALL", "SVC");
 
         // no x86_64, ie ARCH_LABEL
@@ -1673,7 +1672,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     @Test
     public void testContentExtensionLargeSet() throws IOException {
         Set<Product> products = new HashSet<Product>();
-        Product extremeProduct = new Product("12345", "a product", "variant", "version",
+        Product extremeProduct = new Product("12345", "a product", owner, "variant", "version",
             ARCH_LABEL, "SVC");
         products.add(extremeProduct);
         Set<Content> extremeContent = new HashSet<Content>();

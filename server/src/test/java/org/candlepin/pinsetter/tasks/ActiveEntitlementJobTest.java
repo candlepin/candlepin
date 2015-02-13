@@ -56,11 +56,12 @@ public class ActiveEntitlementJobTest extends DatabaseTestFixture {
 
     @Before
     public void setUp() {
-        prod = new Product("1", "2");
-        productCurator.create(prod);
-
         owner = new Owner("test-owner", "Test Owner");
         owner = ownerCurator.create(owner);
+
+        prod = new Product("1", "2", owner);
+        productCurator.create(prod);
+
         ct = new ConsumerType(ConsumerTypeEnum.SYSTEM);
         ct = consumerTypeCurator.create(ct);
 

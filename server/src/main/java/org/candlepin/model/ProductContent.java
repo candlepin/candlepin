@@ -39,7 +39,6 @@ public class ProductContent extends AbstractHibernateObject {
 
     @ManyToOne
     @JoinColumn(name = "content_id", nullable = false, updatable = false)
-    @Index(name = "cp_prodcont_cont_fk_idx")
     @NotNull
     private Content content;
 

@@ -92,8 +92,7 @@ public class PoolTest extends DatabaseTestFixture {
 
     @Test
     public void testCreate() {
-        Pool lookedUp = entityManager().find(
-                Pool.class, pool.getId());
+        Pool lookedUp = entityManager().find(Pool.class, pool.getId());
         assertNotNull(lookedUp);
         assertEquals(owner.getId(), lookedUp.getOwner().getId());
         assertEquals(prod1.getId(), lookedUp.getProductId());
@@ -191,8 +190,8 @@ public class PoolTest extends DatabaseTestFixture {
 
     @Test
     public void testLookupPoolsProvidingProduct() {
-        Product parentProduct = TestUtil.createProduct("1", "product-1");
-        Product childProduct = TestUtil.createProduct("2", "product-2");
+        Product parentProduct = TestUtil.createProduct("1", "product-1", owner);
+        Product childProduct = TestUtil.createProduct("2", "product-2", owner);
         productCurator.create(childProduct);
         productCurator.create(parentProduct);
 
@@ -268,10 +267,10 @@ public class PoolTest extends DatabaseTestFixture {
 
     @Test
     public void providedProductCleanup() {
-        Product parentProduct = TestUtil.createProduct("1", "product-1");
-        Product childProduct1 = TestUtil.createProduct("child1", "child1");
-        Product childProduct2 = TestUtil.createProduct("child2", "child2");
-        Product childProduct3 = TestUtil.createProduct("child3", "child3");
+        Product parentProduct = TestUtil.createProduct("1", "product-1", owner);
+        Product childProduct1 = TestUtil.createProduct("child1", "child1", owner);
+        Product childProduct2 = TestUtil.createProduct("child2", "child2", owner);
+        Product childProduct3 = TestUtil.createProduct("child3", "child3", owner);
         productCurator.create(childProduct1);
         productCurator.create(childProduct2);
         productCurator.create(childProduct3);

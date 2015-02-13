@@ -15,6 +15,7 @@
 package org.candlepin.model;
 
 import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 
@@ -29,6 +30,7 @@ import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToMany;
@@ -42,6 +44,8 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+
+
 /**
  * Represents a Product that can be consumed and entitled. Products define the
  * software or entity they want to entitle i.e. RHEL Server. They also contain
@@ -51,17 +55,23 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "cp_product")
+@Table(name = "cpo_products")
 public class Product extends AbstractHibernateObject implements Linkable {
 
     public static final  String UEBER_PRODUCT_POSTFIX = "_ueber_product";
 
-    // Product ID is stored as a string.
-    // This is a subset of the product OID known as the hash.
+    // Object ID
     @Id
-    @Column(length = 32, unique = true)
+    @GeneratedValue(generator = "system-uuid")
+    @GenericGenerator(name = "system-uuid", strategy = "uuid")
+    @Column(length = 32)
     @NotNull
     private String id;
+
+    // Internal RH product ID,
+    @Column(name="product_id")
+    @NotNull
+    private String productId;
 
     @Column(nullable = false)
     @Size(max = 255)
@@ -88,7 +98,7 @@ public class Product extends AbstractHibernateObject implements Linkable {
     private Set<ProductAttribute> attributes;
 
     @ElementCollection
-    @CollectionTable(name = "cp_product_content",
+    @CollectionTable(name = "cpo_product_content",
                      joinColumns = @JoinColumn(name = "product_id"))
     @Column(name = "element")
     @LazyCollection(LazyCollectionOption.EXTRA) // allows .size() without loading all data
@@ -98,10 +108,13 @@ public class Product extends AbstractHibernateObject implements Linkable {
     private List<Subscription> subscriptions;
 
     @ElementCollection
-    @CollectionTable(name = "cp_product_dependent_products",
-                     joinColumns = @JoinColumn(name = "cp_product_id"))
+    @CollectionTable(name = "cpo_product_dependent_products",
+                     joinColumns = @JoinColumn(name = "product_id"))
     @Column(name = "element")
     private Set<String> dependentProductIds;
+
+    protected Product() {
+    }
 
     /**
      * Constructor Use this variant when creating a new object to persist.
@@ -109,13 +122,14 @@ public class Product extends AbstractHibernateObject implements Linkable {
      * @param id Product label
      * @param name Human readable Product name
      */
-    public Product(String id, String name, Owner owner) {
-
+    public Product(String productId, String name, Owner owner) {
+        this(productId, name, owner, 1L);
     }
 
-    public Product(String id, String name, Owner owner, Long multiplier) {
-        setId(id);
+    public Product(String productId, String name, Owner owner, Long multiplier) {
+        setProductId(productId);
         setName(name);
+        setOwner(owner);
         setMultiplier(multiplier);
         setAttributes(new HashSet<ProductAttribute>());
         setProductContent(new LinkedList<ProductContent>());
@@ -123,9 +137,9 @@ public class Product extends AbstractHibernateObject implements Linkable {
         setDependentProductIds(new HashSet<String>());
     }
 
-    public Product(String id, String name, Owner owner, String variant, String version, String arch,
-        String type) {
-        this(id, name, owner, 1L);
+    public Product(String productId, String name, Owner owner, String variant, String version,
+        String arch, String type) {
+        this(productId, name, owner, 1L);
 
         setAttribute("version", version);
         setAttribute("variant", variant);
@@ -137,25 +151,48 @@ public class Product extends AbstractHibernateObject implements Linkable {
         return new Product(null, ueberProductNameForOwner(owner), owner, 1L);
     }
 
-    protected Product() {
-    }
-
-    /** {@inheritDoc} */
+    /**
+     * Retrieves this product's object ID. Note that this ID is used to uniquely identify this
+     * particular object and has no baring on the Red Hat product ID.
+     *
+     * @return
+     *  this product's object ID.
+     */
     public String getId() {
         return id;
-
     }
 
     /**
-     * @param id product id
+     * Sets this product's object ID. Note that this ID is used to uniquely identify this
+     * particular object and has no baring on the Red Hat product ID.
+     *
+     * @param id
+     *  The object ID to assign to this product.
      */
     public void setId(String id) {
         this.id = id;
     }
 
-    @Override
-    public String toString() {
-        return "Product [id = " + id + ", name = " + name + "]";
+    /**
+     * Retrieves this product's ID. This ID is the Red Hat product ID and should not be confused
+     * with the object ID.
+     *
+     * @return
+     *  this product's ID.
+     */
+    public String getProductId() {
+        return this.productId;
+    }
+
+    /**
+     * Sets the product ID for this product. The product ID is the Red Hat product ID and should not
+     * be confused with the object ID.
+     *
+     * @param productId
+     *  The new product ID for this product.
+     */
+    public void setProductId(String productId) {
+        this.productId = productId;
     }
 
     /**
@@ -293,6 +330,11 @@ public class Product extends AbstractHibernateObject implements Linkable {
             }
         }
         return false;
+    }
+
+    @Override
+    public String toString() {
+        return "Product [id = " + id + ", name = " + name + "]";
     }
 
     @Override

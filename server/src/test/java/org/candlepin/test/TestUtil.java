@@ -109,8 +109,8 @@ public class TestUtil {
         return Math.abs(RANDOM.nextInt());
     }
 
-    public static Product createProduct(String id, String name) {
-        Product rhel = new Product(id, name);
+    public static Product createProduct(String id, String name, Owner owner) {
+        Product rhel = new Product(id, name, owner);
         ProductAttribute a1 = new ProductAttribute("a1", "a1");
         rhel.addAttribute(a1);
 
@@ -127,7 +127,11 @@ public class TestUtil {
 
     public static Product createProduct() {
         int random = randomInt();
-        return createProduct(String.valueOf(random), "test-product-" + random);
+        return createProduct(
+            String.valueOf(random),
+            "test-product-" + random,
+            new Owner("Test Owner " + randomInt())
+        );
     }
 
     public static ProvidedProduct createProvidedProduct() {

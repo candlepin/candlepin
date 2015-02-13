@@ -39,9 +39,7 @@ import javax.xml.bind.annotation.XmlTransient;
  * been promoted to that environment.
  */
 @Entity
-@Table(name = "cp_env_content",
-    uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"environment_id", "contentId"})})
+@Table(name = "cpo_environment_content")
 public class EnvironmentContent extends AbstractHibernateObject {
 
     @Id
@@ -52,26 +50,23 @@ public class EnvironmentContent extends AbstractHibernateObject {
     private String id;
 
     @ManyToOne
-    @ForeignKey(name = "fk_env_content_env")
-    @JoinColumn(nullable = false)
-    @Index(name = "cp_env_content_env_fk_idx")
+    @JoinColumn(name="environment_id", nullable = false)
     @NotNull
     private Environment environment;
 
-    @Column(nullable = false)
-    @Size(max = 255)
+    @ManyToOne
+    @JoinColumn(name="content_id", nullable = false)
     @NotNull
-    private String contentId;
+    private Content content;
 
     private Boolean enabled;
 
     public EnvironmentContent() {
-
     }
 
-    public EnvironmentContent(Environment env, String content, Boolean enabled) {
+    public EnvironmentContent(Environment env, Content content, Boolean enabled) {
         this.setEnvironment(env);
-        this.setContentId(content);
+        this.setContent(content);
         this.setEnabled(enabled);
         env.getEnvironmentContent().add(this);
     }
@@ -84,12 +79,12 @@ public class EnvironmentContent extends AbstractHibernateObject {
         this.id = id;
     }
 
-    public void setContentId(String contentId) {
-        this.contentId = contentId;
+    public void setContent(Content content) {
+        this.content = content;
     }
 
-    public String getContentId() {
-        return contentId;
+    public String getContent() {
+        return content;
     }
 
     public void setEnvironment(Environment env) {
@@ -112,7 +107,7 @@ public class EnvironmentContent extends AbstractHibernateObject {
     @Override
     public int hashCode() {
         HashCodeBuilder hcBuilder = new HashCodeBuilder(3, 23)
-            .append(this.contentId.hashCode());
+            .append(this.content.hashCode());
         return hcBuilder.toHashCode();
     }
 
@@ -124,7 +119,7 @@ public class EnvironmentContent extends AbstractHibernateObject {
         if (other instanceof EnvironmentContent) {
             EnvironmentContent that = (EnvironmentContent) other;
             return new EqualsBuilder().append(this.enabled, that.enabled)
-                .isEquals() && this.contentId.equals(that.contentId);
+                .isEquals() && this.content.equals(that.content);
         }
         return false;
     }

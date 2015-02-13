@@ -231,7 +231,7 @@ public class CertificateSerialCuratorTest extends DatabaseTestFixture {
     private EntitlementCertificate createEntitlementCertificate(CertificateSerial serial) {
         Owner owner = this.createOwner();
         Consumer c = this.createConsumer(owner);
-        Product prod = new Product("id" + TestUtil.randomInt(), "test");
+        Product prod = new Product("id" + TestUtil.randomInt(), "test", owner);
         this.productCurator.create(prod);
         Pool p = this.createPoolAndSub(owner, prod, 10L, new Date(),
             new Date(new Date().getTime() + 100000L));

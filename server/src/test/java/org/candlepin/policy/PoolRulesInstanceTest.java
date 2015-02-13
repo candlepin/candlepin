@@ -27,6 +27,7 @@ import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
+import org.candlepin.model.Owner;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.Subscription;
@@ -179,7 +180,8 @@ public class PoolRulesInstanceTest {
 
     private Subscription createInstanceBasedSub(String productId, int quantity,
         int instanceMultiplier, boolean exported) {
-        Product product = new Product(productId, productId);
+        Owner owner = new Owner("Test Corporation");
+        Product product = new Product(productId, productId, owner);
         product.setAttribute("instance_multiplier",
             Integer.toString(instanceMultiplier));
         when(productAdapterMock.getProductById(productId)).thenReturn(product);

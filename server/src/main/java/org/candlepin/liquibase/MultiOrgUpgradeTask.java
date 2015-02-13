@@ -253,6 +253,13 @@ public class MultiOrgUpgradeTask {
                 );
 
                 this.executeUpdate(
+                    "INSERT INTO cpo_pool_products " +
+                    "SELECT pool_id, ?, dtype " +
+                    "FROM cp_pool_products WHERE product_id = ?;",
+                    productuuid, productid
+                );
+
+                this.executeUpdate(
                     "INSERT INTO cpo_product " +
                     "SELECT ?, created, updated, multiplier, name " +
                     "FROM cp_product WHERE id = ?;",

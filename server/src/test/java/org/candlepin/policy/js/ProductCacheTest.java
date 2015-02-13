@@ -27,6 +27,7 @@ import static org.mockito.Mockito.when;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Product;
+import org.candlepin.model.Owner;
 import org.candlepin.service.ProductServiceAdapter;
 
 import org.junit.Before;
@@ -71,7 +72,8 @@ public class ProductCacheTest {
 
     @Test
     public void getProductFromAdapterIfNotInCache() {
-        Product p = new Product("a_product", "a_product");
+        Owner owner = new Owner("Test Corporation");
+        Product p = new Product("a_product", "a_product", owner);
         when(mockProductAdapter.getProductById(p.getId())).thenReturn(p);
         assertFalse(cache.contains(p.getId()));
         Product fetched = cache.getProductById(p.getId());
@@ -83,7 +85,8 @@ public class ProductCacheTest {
 
     @Test
     public void doNotGetProductFromAdapterIfInCache() {
-        Product p = new Product("a_product", "a_product");
+        Owner owner = new Owner("Test Corporation");
+        Product p = new Product("a_product", "a_product", owner);
         when(mockProductAdapter.getProductById(p.getId())).thenReturn(p);
         assertFalse(cache.contains(p.getId()));
         // Look up the product so it is fetched from the adapter
@@ -180,7 +183,8 @@ public class ProductCacheTest {
     }
 
     private Product addProductToCache(ProductCache prodCache, String productId) {
-        Product product = new Product(productId, productId);
+        Owner owner = new Owner("Test Corporation");
+        Product product = new Product(productId, productId, owner);
         when(mockProductAdapter.getProductById(product.getId())).thenReturn(product);
         assertNotNull("Failed to add product to cache.",
             prodCache.getProductById(product.getId()));

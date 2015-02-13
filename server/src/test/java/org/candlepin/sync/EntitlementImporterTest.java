@@ -599,10 +599,10 @@ public class EntitlementImporterTest {
         Map<String, Product> productsById = new HashMap<String, Product>();
         productsById.put(parentProduct.getId(), parentProduct);
         productsById.put(pp1.getProductId(),
-            TestUtil.createProduct(pp1.getProductId(), pp1.getProductName()));
+            TestUtil.createProduct(pp1.getProductId(), pp1.getProductName(), owner));
         productsById.put(subProduct.getId(), subProduct);
         productsById.put(subProvided1.getProductId(), TestUtil.createProduct(
-            subProvided1.getProductId(), subProvided1.getProductName()));
+            subProvided1.getProductId(), subProvided1.getProductName(), owner));
 
         Meta meta = new Meta();
         meta.setCdnLabel("test-cdn");
@@ -650,7 +650,7 @@ public class EntitlementImporterTest {
     private Subscription createSubscription(Owner daOwner, String productId,
             String poolId, String entId, String conId, long quantity) {
         Subscription sub = new Subscription();
-        sub.setProduct(new Product(productId, productId));
+        sub.setProduct(new Product(productId, productId, owner));
         sub.setUpstreamPoolId(poolId);
         sub.setUpstreamEntitlementId(entId);
         sub.setUpstreamConsumerId(conId);
