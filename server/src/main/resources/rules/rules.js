@@ -2761,9 +2761,14 @@ var Compliance = {
                     compStatus.add_reasons(entCoverage.reasons);
                 }
             }
+
             // If the consumer has an entitlement from a pool marked
             // unmapped_guests_only it can only hope to be partial
             var unmappedGuest = Compliance.getUnmappedGuest(e);
+            // should be partial even with no matching product
+            if (relevant_pids.length == 0 && unmappedGuest) {
+                    compStatus.add_reasons([StatusReasonGenerator.buildUnmappedEntitlementReason(null)]);
+            }
 
             for (var m = 0; m < relevant_pids.length; m++) {
                 var relevant_pid = relevant_pids[m];

@@ -168,4 +168,25 @@ describe 'Unmapped Guest Pools' do
     compliance_status.should have_key('reasons')
     compliance_status['reasons'].size.should == 1
   end
+
+  it 'compliance status for entitled unmapped guest will be partial without installed product' do
+    @guest1_client.update_consumer({:installedProducts => []})
+    all_pools = @user.list_pools :owner => @owner.id, :product => @virt_limit_product.id
+    all_pools.each do |pool|
+      unmapped = pool['attributes'].select {|i| i['name'] == 'unmapped_guests_only' }[0]
+      if !unmapped.nil? && unmapped['value'] == 'true'
+        @guest1_client.consume_pool(pool['id'], :quantity => 1)
+      end
+    end
+    ents = @guest1_client.list_entitlements()
+    ents.should have(1).things
+
+    compliance_status = @guest1_client.get_compliance()
+    compliance_status['status'].should == 'partial'
+    compliance_status['compliant'].should == false
+    compliance_status.should have_key('reasons')
+    compliance_status['reasons'].size.should == 1
+  end
+
+
 end
