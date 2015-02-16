@@ -36,7 +36,6 @@ import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.common.paging.Page;
@@ -582,7 +581,7 @@ public class CandlepinPoolManager implements PoolManager {
           already have virt_only pools available to the guest */
         Set<String> productsToRemove = new HashSet<String>();
         for (Pool pool : allOwnerPoolsForGuest) {
-            if (pool.hasProductAttribute("virt_only") || pool.hasAttribute("virt_only")) {
+            if (pool.getProduct().hasAttribute("virt_only") || pool.hasAttribute("virt_only")) {
                 for (String prodId : tmpSet) {
                     if (pool.provides(prodId)) {
                         productsToRemove.add(prodId);
@@ -604,8 +603,8 @@ public class CandlepinPoolManager implements PoolManager {
             boolean providesProduct = false;
             // Would parse the int here, but it can be 'unlimited'
             // and we only need to check that it's non-zero
-            if (pool.hasProductAttribute("virt_limit") &&
-                    !pool.getProductAttribute("virt_limit").getValue().equals("0")) {
+            if (pool.getProduct().hasAttribute("virt_limit") &&
+                    !pool.getProduct().getAttribute("virt_limit").getValue().equals("0")) {
                 for (String productId : productIds) {
                     // If this is a derived pool, we need to see if the derived product
                     // provides anything for the guest, otherwise we use the parent.
@@ -691,9 +690,9 @@ public class CandlepinPoolManager implements PoolManager {
             boolean providesProduct = false;
             // If We want to complete partial stacks if possible,
             // even if they do not provide any products
-            if (pool.hasProductAttribute("stacking_id") &&
+            if (pool.getProduct().hasAttribute("stacking_id") &&
                     compliance.getPartialStacks().containsKey(
-                        pool.getProductAttribute("stacking_id").getValue())) {
+                        pool.getProduct().getAttribute("stacking_id").getValue())) {
                 providesProduct = true;
             }
             else {
@@ -962,11 +961,9 @@ public class CandlepinPoolManager implements PoolManager {
             }
 
             // Now the provided products:
-            for (ProvidedProduct provided : ent.getPool().getProvidedProducts()) {
-                Product providedProd = productCache.getProductById(
-                    provided.getProductId());
+            for (Product provided : ent.getPool().getProvidedProducts()) {
                 for (String contentId : affectedContent) {
-                    if (providedProd.hasContent(contentId)) {
+                    if (provided.hasContent(contentId)) {
                         entsToRegen.add(ent);
                     }
                 }
@@ -1090,8 +1087,8 @@ public class CandlepinPoolManager implements PoolManager {
         // Check for a single stacked sub pool as well. We'll need to either
         // update or delete the sub pool now that all other pools have been deleted.
         if (!"true".equals(pool.getAttributeValue("pool_derived")) &&
-            pool.hasProductAttribute("stacking_id")) {
-            String stackId = pool.getProductAttributeValue("stacking_id");
+            pool.getProduct().hasAttribute("stacking_id")) {
+            String stackId = pool.getProduct().getAttributeValue("stacking_id");
             Pool stackedSubPool = poolCurator.getSubPoolForStackId(consumer, stackId);
             if (stackedSubPool != null) {
                 List<Entitlement> stackedEnts =

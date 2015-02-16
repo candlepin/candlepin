@@ -161,7 +161,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
                 continue;
             }
             entitledProductIds.add(e.getPool().getProductId());
-            for (ProvidedProduct pp : e.getPool().getProvidedProducts()) {
+            for (Product pp : e.getPool().getProvidedProducts()) {
                 entitledProductIds.add(pp.getProductId());
             }
         }
@@ -227,8 +227,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         List<Product> products = productAdapter.getProductsByIds(pidEnts.keySet());
         for (Product p : products) {
             boolean modifies = p.modifies(entitlement.getProductId());
-            Iterator<ProvidedProduct> ppit =
-                entitlement.getPool().getProvidedProducts().iterator();
+            Iterator<Product> ppit = entitlement.getPool().getProvidedProducts().iterator();
             // No need to continue checking once we have found a modified product
             while (!modifies && ppit.hasNext()) {
                 modifies = modifies || p.modifies(ppit.next().getProductId());
@@ -259,7 +258,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
      */
     private void addToMap(Map<String, Set<Entitlement>> map, Entitlement e) {
         addProductIdToMap(map, e.getProductId(), e);
-        for (ProvidedProduct pp : e.getPool().getProvidedProducts()) {
+        for (Product pp : e.getPool().getProvidedProducts()) {
             addProductIdToMap(map, pp.getProductId(), e);
         }
     }

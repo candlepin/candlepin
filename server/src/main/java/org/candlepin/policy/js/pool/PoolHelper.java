@@ -16,14 +16,10 @@ package org.candlepin.policy.js.pool;
 
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Attribute;
-import org.candlepin.model.DerivedProductPoolAttribute;
-import org.candlepin.model.DerivedProvidedProduct;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductPoolAttribute;
-import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.SourceStack;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.Subscription;
@@ -189,7 +185,7 @@ public class PoolHelper extends AttributeHelper {
         copyProvidedProducts(sub, pool);
 
         // Add in the new attributes
-        for (Entry<String, String> entry : newPoolAttributes.entrySet()) {
+        for (Entry<String, String> entry : attributes.entrySet()) {
             pool.setAttribute(entry.getKey(), entry.getValue());
         }
 

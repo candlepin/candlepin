@@ -83,7 +83,7 @@ public class EnvironmentContent extends AbstractHibernateObject {
         this.content = content;
     }
 
-    public String getContent() {
+    public Content getContent() {
         return content;
     }
 

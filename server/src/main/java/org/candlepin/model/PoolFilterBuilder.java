@@ -38,6 +38,8 @@ import java.util.List;
  */
 public class PoolFilterBuilder extends FilterBuilder {
 
+// TODO/FIXME: This whole class is likely broken.
+
     /**
      * Add filters to search only for pools matching the given text. A number of
      * fields on the pool are searched including it's SKU, SKU product name,
@@ -54,13 +56,16 @@ public class PoolFilterBuilder extends FilterBuilder {
         textOr.add(new FilterLikeExpression("contractNumber", matches, true));
         textOr.add(new FilterLikeExpression("orderNumber", matches, true));
 
-        // TODO: These next two may not work at all.
         textOr.add(new FilterLikeExpression("providedProducts.productId", matches, true));
         textOr.add(new FilterLikeExpression("providedProducts.name", matches, true));
 
         textOr.add(Subqueries.exists(
-                createAttributeCriteria(ProductPoolAttribute.class, "support_level",
-                Arrays.asList(matches))));
+            this.createProductAttributeCriteria(
+                "support_level",
+                Arrays.asList(matches)
+            )
+        ));
+
         this.otherCriteria.add(textOr);
     }
 
@@ -86,75 +91,88 @@ public class PoolFilterBuilder extends FilterBuilder {
         Conjunction conjunction = new Conjunction();
 
         if (!values.isEmpty()) {
-            DetachedCriteria productPoolAttrMatch =
-                createAttributeCriteria(PoolAttribute.class, key, values);
-
-            DetachedCriteria poolAttrMatch =
-                createAttributeCriteria(ProductPoolAttribute.class, key, values);
-
-            Criterion positiveClause = Restrictions.or(
-                Subqueries.exists(productPoolAttrMatch),
-                Subqueries.exists(poolAttrMatch));
-
-            conjunction.add(positiveClause);
+            conjunction.add(
+                Restrictions.or(
+                    Subqueries.exists(this.createPoolAttributeCriteria(key, values)),
+                    Subqueries.exists(this.createProductAttributeCriteria(key, values))
+                )
+            );
         }
 
         if (!negatives.isEmpty()) {
-            DetachedCriteria productPoolAttrNegative =
-                createAttributeCriteria(ProductPoolAttribute.class, key, negatives);
-
-            DetachedCriteria poolAttrNegative =
-                createAttributeCriteria(PoolAttribute.class, key, negatives);
-
-            Criterion negativeClause = Restrictions.not(Restrictions.or(
-                Subqueries.exists(productPoolAttrNegative),
-                Subqueries.exists(poolAttrNegative)));
-
-            conjunction.add(negativeClause);
+            conjunction.add(
+                Restrictions.not(
+                    Restrictions.or(
+                        Subqueries.exists(this.createProductAttributeCriteria(key, negatives)),
+                        Subqueries.exists(this.createPoolAttributeCriteria(key, negatives))
+                    )
+                )
+            );
         }
 
         return conjunction;
     }
 
-    private DetachedCriteria createAttributeCriteria(
-        Class<? extends AbstractPoolAttribute> entityClass, String attributeName,
-        List<String> possibleValues) {
-        DetachedCriteria attrMatch = DetachedCriteria.forClass(
-            entityClass, "attr");
-        attrMatch.add(new FilterLikeExpression("name", attributeName, false));
+
+    private DetachedCriteria createPoolAttributeCriteria(String attribute, List<String> values) {
+        DetachedCriteria subquery = DetachedCriteria.forClass(PoolAttribute.class, "attr");
+        subquery.add(new FilterLikeExpression("name", attribute, false));
 
         // It would be nice to be able to use an 'in' restriction here, but
         // hibernate does not support ignoring case with its 'in' restriction.
         // We could probably roll our own, but would involve duplicating some
         // hibernate code to achieve it.
-        List<Criterion> attrOrs = new ArrayList<Criterion>();
-        for (String val : possibleValues) {
-            // Setting an attribute value as '' may end up being set to null,
-            // so we check both.
-            if (val == null || val.isEmpty()) {
-                attrOrs.add(Restrictions.isNull("value"));
-                attrOrs.add(Restrictions.eq("value", ""));
+        Disjunction disjunction = Restrictions.disjunction();
+        for (String value : values) {
+            if (value == null || value.isEmpty()) {
+                disjunction.add(Restrictions.isNull("value"));
+                disjunction.add(Restrictions.eq("value", ""));
             }
             else {
-                attrOrs.add(new FilterLikeExpression("value", val, true));
+                disjunction.add(new FilterLikeExpression("value", value, true));
             }
         }
-        attrMatch.add(Restrictions.or(
-            attrOrs.toArray(new Criterion[attrOrs.size()]))
-        );
 
-        attrMatch.add(Property.forName("this.id").eqProperty("attr.pool.id"));
-        attrMatch.setProjection(Projections.property("attr.id"));
+        subquery.add(disjunction);
+
+        subquery.add(Property.forName("this.id").eqProperty("attr.pool.id"));
+        subquery.setProjection(Projections.property("attr.id"));
+
+        return subquery;
+    }
+
+    private DetachedCriteria createProductAttributeCriteria(String attribute, List<String> values) {
+        DetachedCriteria subquery = DetachedCriteria.forClass(ProductAttribute.class, "attr");
+        subquery.add(new FilterLikeExpression("name", attribute, false));
+
+        // It would be nice to be able to use an 'in' restriction here, but
+        // hibernate does not support ignoring case with its 'in' restriction.
+        // We could probably roll our own, but would involve duplicating some
+        // hibernate code to achieve it.
+        Disjunction disjunction = Restrictions.disjunction();
+        for (String value : values) {
+            if (value == null || value.isEmpty()) {
+                disjunction.add(Restrictions.isNull("value"));
+                disjunction.add(Restrictions.eq("value", ""));
+            }
+            else {
+                disjunction.add(new FilterLikeExpression("value", value, true));
+            }
+        }
+
+        subquery.add(disjunction);
+
+        subquery.add(Property.forName("this.product.id").eqProperty("attr.product.id"));
+        subquery.setProjection(Projections.property("attr.id"));
 
         // We don't want to match Product Attributes that have been overridden
-        if (entityClass == ProductPoolAttribute.class) {
-            DetachedCriteria overridden =
-                DetachedCriteria.forClass(PoolAttribute.class, "pattr")
-                // If we're using wildcards in the name, we should block exact matches
-                    .add(Restrictions.eqProperty("name", "attr.name"))
-                    .setProjection(Projections.property("pattr.pool.id"));
-            attrMatch.add(Subqueries.propertyNotIn("attr.pool.id", overridden));
-        }
-        return attrMatch;
+        DetachedCriteria overridden = DetachedCriteria.forClass(PoolAttribute.class, "pattr")
+            // If we're using wildcards in the name, we should block exact matches
+            .add(Restrictions.eqProperty("name", "attr.name"))
+            .setProjection(Projections.property("pattr.pool.id"));
+        subquery.add(Subqueries.propertyNotIn("this.id", overridden));
+
+        return subquery;
     }
+
 }

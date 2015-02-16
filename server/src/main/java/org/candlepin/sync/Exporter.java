@@ -23,16 +23,15 @@ import org.candlepin.model.CdnCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
-import org.candlepin.model.DerivedProvidedProduct;
 import org.candlepin.model.DistributorVersion;
 import org.candlepin.model.DistributorVersionCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.IdentityCertificate;
+import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
-import org.candlepin.model.ProvidedProduct;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.policy.js.export.ExportRules;
 import org.candlepin.service.EntitlementCertServiceAdapter;
@@ -477,38 +476,24 @@ public class Exporter {
 
         Map<String, Product> products = new HashMap<String, Product>();
         for (Entitlement entitlement : consumer.getEntitlements()) {
+            Pool pool = entitlement.getPool();
 
-            for (ProvidedProduct providedProduct : entitlement.getPool().
-                getProvidedProducts()) {
-                // Don't want to call the adapter if not needed, it can be expensive.
-                if (!products.containsKey(providedProduct.getProductId())) {
-                    products.put(providedProduct.getProductId(),
-                        productAdapter.getProductById(providedProduct.getProductId()));
-                }
+            for (Product providedProduct : pool.getProvidedProducts()) {
+                products.put(providedProduct.getProductId(), providedProduct);
             }
 
             // Don't forget the 'main' product!
-            String productId = entitlement.getPool().getProductId();
-            if (!products.containsKey(productId)) {
-                products.put(productId, productAdapter.getProductById(productId));
-            }
+            Product product = pool.getProduct();
+            products.put(product.getProductId(), product);
 
             // Also need to check for sub products
-            String subProductId = entitlement.getPool().getDerivedProductId();
-            if (subProductId != null && !subProductId.isEmpty() &&
-                !products.containsKey(subProductId)) {
-                products.put(subProductId, productAdapter.getProductById(subProductId));
+            Product derivedProduct = pool.getDerivedProduct();
+            if (derivedProduct != null) {
+                products.put(derivedProduct.getProductId(), derivedProduct);
             }
 
-            // TODO This seems so duplicated. It would be nice to be able to
-            //       do all processing in one loop.
-            for (DerivedProvidedProduct subProvidedProduct : entitlement.getPool().
-                getDerivedProvidedProducts()) {
-                // Don't want to call the adapter if not needed, it can be expensive.
-                if (!products.containsKey(subProvidedProduct.getProductId())) {
-                    products.put(subProvidedProduct.getProductId(),
-                        productAdapter.getProductById(subProvidedProduct.getProductId()));
-                }
+            for (Product derivedProvidedProduct : pool.getDerivedProvidedProducts()) {
+                products.put(derivedProvidedProduct.getProductId(), derivedProvidedProduct);
             }
         }
 

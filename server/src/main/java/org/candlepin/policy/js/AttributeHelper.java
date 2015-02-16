@@ -42,7 +42,7 @@ public class AttributeHelper {
     public Map<String, String> getFlattenedAttributes(Pool pool) {
         Map<String, String> allAttributes = new HashMap<String, String>();
         if (pool != null) {
-            allAttributes.putAll(getFlattenedAttributes(pool.getProductAttributes()));
+            allAttributes.putAll(getFlattenedAttributes(pool.getProduct().getAttributes()));
             allAttributes.putAll(getFlattenedAttributes(pool.getAttributes()));
         }
         return allAttributes;
@@ -57,10 +57,6 @@ public class AttributeHelper {
     }
 
     public Map<String, String> getFlattenedAttributes(Product product) {
-        Map<String, String> attributes = new HashMap<String, String>();
-        for (ProductAttribute attr : product.getAttributes()) {
-            attributes.put(attr.getName(), attr.getValue());
-        }
-        return attributes;
+        return this.getFlattenedAttributes(product.getAttributes());
     }
 }

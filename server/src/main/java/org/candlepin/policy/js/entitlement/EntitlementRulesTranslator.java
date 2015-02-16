@@ -78,8 +78,8 @@ public class EntitlementRulesTranslator {
         }
         else if (errorKey.equals("rulefailed.quantity.mismatch")) {
             String multip = null;
-            if (pool.hasProductAttribute("instance_multiplier")) {
-                multip = pool.getProductAttribute("instance_multiplier").getValue();
+            if (pool.getProduct().hasAttribute("instance_multiplier")) {
+                multip = pool.getProduct().getAttributeValue("instance_multiplier");
             }
             msg = i18n.tr(
                 "Subscription ''{0}'' must be attached using a quantity" +

@@ -24,11 +24,11 @@ import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
+import org.candlepin.model.Product;
 import org.candlepin.model.Release;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyContentOverride;
 import org.candlepin.model.activationkeys.ActivationKeyPool;
-import org.candlepin.model.activationkeys.ActivationKeyProduct;
 import org.candlepin.policy.js.quantity.QuantityRules;
 import org.candlepin.policy.js.quantity.SuggestedQuantity;
 import org.candlepin.resource.dto.AutobindData;
@@ -131,11 +131,12 @@ public class ConsumerBindUtil {
         try {
             Set<String> productIds = new HashSet<String>();
             List<String> poolIds = new ArrayList<String>();
-            for (ActivationKeyProduct akpid : key.getProductIds()) {
-                productIds.add(akpid.getProductId());
+
+            for (Product akp : key.getProducts()) {
+                productIds.add(akp.getProductId());
             }
             for (ConsumerInstalledProduct cip : consumer.getInstalledProducts()) {
-                productIds.add(cip.getProductId());
+                productIds.add(cip.getProduct().getProductId());
             }
             for (ActivationKeyPool p : key.getPools()) {
                 poolIds.add(p.getPool().getId());

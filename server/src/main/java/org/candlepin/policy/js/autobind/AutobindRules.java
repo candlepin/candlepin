@@ -18,7 +18,6 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProvidedProduct;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsonJsContext;
 import org.candlepin.policy.js.ProductCache;
@@ -177,9 +176,7 @@ public class AutobindRules {
 
                 // Check each provided product, if *any* have too much content, we must
                 // skip the pool:
-                for (ProvidedProduct providedProd : p.getProvidedProducts()) {
-                    Product product = productCache.getProductById(
-                        providedProd.getProductId());
+                for (Product product : p.getProvidedProducts()) {
                     if (product.getProductContent().size() >
                         X509ExtensionUtil.V1_CONTENT_LIMIT) {
                         contentOk = false;

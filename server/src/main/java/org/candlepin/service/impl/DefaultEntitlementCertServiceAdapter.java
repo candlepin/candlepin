@@ -31,7 +31,6 @@ import org.candlepin.model.KeyPairCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
-import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Subscription;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.X509ByteExtensionWrapper;
@@ -138,9 +137,8 @@ public class DefaultEntitlementCertServiceAdapter extends
     }
 
     private Set<Product> getProvidedProducts(Pool pool, Subscription sub) {
-        Set<Product> providedProducts = new HashSet<Product>();
-        // TODO: eliminate the use of subscription here by looking up products in a batch
-        // somehow, and we can eliminate all use of subscriptions during bind.
+        Set<Product> providedProducts;
+
         if (sub != null) {
             // need to use the sub provided products if creating an
             // entitlement for derived pool who's sub specifies a
@@ -152,11 +150,9 @@ public class DefaultEntitlementCertServiceAdapter extends
         else {
             // If this pool doesn't have a subscription associated with it, we need to
             // lookup all the Product objects manually:
-            for (ProvidedProduct providedProduct : pool.getProvidedProducts()) {
-                providedProducts.add(
-                    productAdapter.getProductById(providedProduct.getProductId()));
-            }
+            providedProducts = pool.getProvidedProducts();
         }
+
         return providedProducts;
     }
 
@@ -271,8 +267,8 @@ public class DefaultEntitlementCertServiceAdapter extends
                 ent.getConsumer().getEnvironment());
             for (EnvironmentContent envContent :
                     ent.getConsumer().getEnvironment().getEnvironmentContent()) {
-                log.debug("  promoted content: " + envContent.getContentId());
-                promotedContent.put(envContent.getContentId(), envContent);
+                log.debug("  promoted content: " + envContent.getContent().getId());
+                promotedContent.put(envContent.getContent().getId(), envContent);
             }
         }
         return promotedContent;

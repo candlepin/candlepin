@@ -34,7 +34,7 @@ public class ExportRules {
         // Product would typically never have pool_derived on it, as this would only be
         // applied to pools internally by candlepin, but some tests were doing this so
         // we will continue doing the same.
-        Boolean poolDerived = pool.hasProductAttribute("pool_derived") ||
+        Boolean poolDerived = pool.hasAttribute("pool_derived") ||
             pool.hasAttribute("pool_derived");
         return !entitlement.getConsumer().getType().isManifest() || !poolDerived;
     }

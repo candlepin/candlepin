@@ -80,10 +80,11 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
      */
     public List<Owner> lookupOwnersByActiveProduct(List<String> productIds) {
         // NOTE: only used by superadmin API calls, no permissions filtering needed here.
-        DetachedCriteria poolIdQuery =
-            DetachedCriteria.forClass(ProvidedProduct.class, "pp");
-        poolIdQuery.add(Restrictions.in("pp.productId", productIds))
-            .setProjection(Property.forName("pp.pool.id"));
+        DetachedCriteria poolIdQuery = DetachedCriteria.forClass(Pool.class, "pool");
+        poolIdQuery.createAlias("pool.providedProducts", "providedProducts");
+
+        poolIdQuery.add(Restrictions.in("providedProducts.productId", productIds))
+            .setProjection(Property.forName("pool.id"));
 
         DetachedCriteria ownerIdQuery = DetachedCriteria.forClass(Entitlement.class, "e")
             .add(Subqueries.propertyIn("e.pool.id", poolIdQuery))

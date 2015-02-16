@@ -95,7 +95,7 @@ public class X509ExtensionUtil  extends X509Util{
         toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
             OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_QUANTITY_KEY), false, pool
             .getQuantity().toString()));
-        String socketLimit = pool.getProductAttributeValue("sockets");
+        String socketLimit = pool.getProduct().getAttributeValue("sockets");
         if (socketLimit != null) {
             toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
                 OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_SOCKETLIMIT_KEY), false,
@@ -108,8 +108,7 @@ public class X509ExtensionUtil  extends X509Util{
             OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_ENDDATE_KEY), false,
             iso8601DateFormat.format(pool.getEndDate())));
         // TODO : use keys
-        String warningPeriod = pool.getProductAttributeValue(
-            "warning_period");
+        String warningPeriod = pool.getProduct().getAttributeValue("warning_period");
         if (warningPeriod == null) {
             warningPeriod = "0";
         }
@@ -128,15 +127,14 @@ public class X509ExtensionUtil  extends X509Util{
                 false, pool.getAccountNumber()));
         }
         // Add Smart Management, default to "not managed"
-        String mgmt = pool.getProductAttributeValue("management_enabled");
+        String mgmt = pool.getProduct().getAttributeValue("management_enabled");
         mgmt = (mgmt == null) ? "0" : mgmt;
         toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
             OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_PROVIDES_MANAGEMENT_KEY),
             false, mgmt));
 
-        String supportLevel = pool.getProductAttributeValue(
-            "support_level");
-        String supportType = pool.getProductAttributeValue("support_type");
+        String supportLevel = pool.getProduct().getAttributeValue("support_level");
+        String supportType = pool.getProduct().getAttributeValue("support_type");
         if (supportLevel != null) {
             toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
                 OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_SUPPORT_LEVEL), false,
@@ -147,7 +145,7 @@ public class X509ExtensionUtil  extends X509Util{
                 OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_SUPPORT_TYPE), false,
                 supportType));
         }
-        String stackingId = pool.getProductAttributeValue("stacking_id");
+        String stackingId = pool.getProduct().getAttributeValue("stacking_id");
         if (stackingId != null) {
             toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
                 OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_STACKING_ID), false,

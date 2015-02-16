@@ -185,12 +185,12 @@ public class X509V3ExtensionUtil extends X509Util {
         Entitlement ent) {
         Subscription toReturn = new Subscription();
         Pool pool = ent.getPool();
+        Product product = pool.getProduct();
 
-        toReturn.setSku(pool.getProductId());
-        toReturn.setName(pool.getProductName());
+        toReturn.setSku(product.getProductId());
+        toReturn.setName(product.getName());
 
-        String warningPeriod = pool.getProductAttributeValue(
-            "warning_period");
+        String warningPeriod = product.getAttributeValue("warning_period");
         if (warningPeriod != null && !warningPeriod.trim().equals("")) {
             // only included if not the default value of 0
             if (!warningPeriod.equals("0")) {
@@ -198,22 +198,22 @@ public class X509V3ExtensionUtil extends X509Util {
             }
         }
 
-        String socketLimit = pool.getProductAttributeValue("sockets");
+        String socketLimit = product.getAttributeValue("sockets");
         if (socketLimit != null && !socketLimit.trim().equals("")) {
             toReturn.setSockets(new Integer(socketLimit));
         }
 
-        String ramLimit = pool.getProductAttributeValue("ram");
+        String ramLimit = product.getAttributeValue("ram");
         if (ramLimit != null && !ramLimit.trim().equals("")) {
             toReturn.setRam(new Integer(ramLimit));
         }
 
-        String coreLimit = pool.getProductAttributeValue("cores");
+        String coreLimit = product.getAttributeValue("cores");
         if (coreLimit != null && !coreLimit.trim().equals("")) {
             toReturn.setCores(new Integer(coreLimit));
         }
 
-        String management = pool.getProductAttributeValue("management_enabled");
+        String management = product.getAttributeValue("management_enabled");
         if (management != null && !management.trim().equals("")) {
             // only included if not the default value of false
             if (management.equalsIgnoreCase("true") ||
@@ -222,7 +222,7 @@ public class X509V3ExtensionUtil extends X509Util {
             }
         }
 
-        String stackingId = pool.getProductAttributeValue("stacking_id");
+        String stackingId = product.getAttributeValue("stacking_id");
         if (stackingId != null && !stackingId.trim().equals("")) {
             toReturn.setStackingId(stackingId);
         }
@@ -242,13 +242,13 @@ public class X509V3ExtensionUtil extends X509Util {
     }
 
     private Service createService(Pool pool) {
-        if (pool.getProductAttributeValue("support_level") == null &&
-            pool.getProductAttributeValue("support_type") == null) {
+        if (pool.getProduct().getAttributeValue("support_level") == null &&
+            pool.getProduct().getAttributeValue("support_type") == null) {
             return null;
         }
         Service toReturn = new Service();
-        toReturn.setLevel(pool.getProductAttributeValue("support_level"));
-        toReturn.setType(pool.getProductAttributeValue("support_type"));
+        toReturn.setLevel(pool.getProduct().getAttributeValue("support_level"));
+        toReturn.setType(pool.getProduct().getAttributeValue("support_type"));
 
         return toReturn;
     }

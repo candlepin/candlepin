@@ -43,6 +43,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
@@ -227,7 +228,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     public Pool() {
     }
 
-    public Pool(Owner ownerIn, Product product, Set<ProvidedProduct> providedProducts,
+    public Pool(Owner ownerIn, Product product, Set<Product> providedProducts,
         Long quantityIn, Date startDateIn, Date endDateIn, String contractNumber,
         String accountNumber, String orderNumber) {
         this.product = product;
@@ -390,7 +391,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     }
 
     public boolean hasAttribute(String key) {
-        return findAttribute(this.attributes, key) != null;
+        return this.findAttribute(key) != null;
     }
 
     /**
@@ -419,7 +420,8 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     }
 
     public String getAttributeValue(String name) {
-        return findAttributeValue(this.attributes, name);
+        PoolAttribute attribute = this.findAttribute(name);
+        return attribute != null ? attribute.getValue() : null;
     }
 
     public void setAttributes(Set<PoolAttribute> attributes) {
@@ -435,7 +437,8 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     }
 
     public void setAttribute(String key, String value) {
-        PoolAttribute existing = findAttribute(this.attributes, key);
+        PoolAttribute existing = this.findAttribute(key);
+
         if (existing != null) {
             existing.setValue(value);
         }
@@ -444,6 +447,30 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
             attr.setPool(this);
             addAttribute(attr);
         }
+    }
+
+    private PoolAttribute findAttribute(String name) {
+        for (PoolAttribute attribute : this.attributes) {
+            if (attribute.getName().equals(name)) {
+                return attribute;
+            }
+        }
+
+        return null;
+    }
+
+    public boolean hasMergedAttribute(String name) {
+        return this.getMergedAttribute(name) != null;
+    }
+
+    public Attribute getMergedAttribute(String name) {
+        Attribute attribute = this.findAttribute(name);
+
+        if (attribute == null) {
+            attribute = this.product.getAttribute(name);
+        }
+
+        return attribute;
     }
 
     /**
@@ -533,42 +560,49 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     }
 
     public String toString() {
-        return "Pool[id: " + getId() + ", owner: " + owner +
-            ", product: " + productId +
-            ", quantity: " + getQuantity() + ", expires: " + getEndDate() + "]";
+        return String.format(
+            "Pool[id: %s, owner: %s, product: %s, quantity: %d, expires: %s]",
+            this.getId(),
+            this.owner,
+            this.getProductId(),
+            this.getQuantity(),
+            this.getEndDate()
+        );
     }
 
-    public Set<ProvidedProduct> getProvidedProducts() {
-        return providedProducts;
+    public Set<Product> getProvidedProducts() {
+        return this.providedProducts;
     }
 
-    public void addProvidedProduct(ProvidedProduct provided) {
-        provided.setPool(this);
-        providedProducts.add(provided);
+    public void addProvidedProduct(Product provided) {
+        this.providedProducts.add(provided);
     }
 
-    public void setProvidedProducts(Set<ProvidedProduct> providedProducts) {
+    public void setProvidedProducts(Set<Product> providedProducts) {
         this.providedProducts = providedProducts;
     }
 
     /**
-     * Check if this pool provides the given product ID.
+     * Check if this pool provides the given product
      *
      * @param productId
+     *  The Red Hat product ID for which to search.
+     *
      * @return true if pool provides this product
      */
     public Boolean provides(String productId) {
-        if (this.productId.equals(productId)) {
+        if (this.getProductId().equals(productId)) {
             return true;
         }
 
         if (providedProducts != null) {
-            for (ProvidedProduct p : providedProducts) {
-                if (p.getProductId().equals(productId)) {
+            for (Product product : providedProducts) {
+                if (product.getProductId().equals(productId)) {
                     return true;
                 }
             }
         }
+
         return false;
     }
 
@@ -583,21 +617,21 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
      * @return true if pool provides this product
      */
     public Boolean providesDerived(String productId) {
-        if (this.getDerivedProductId() != null) {
-            if (getDerivedProductId().equals(productId)) {
+        if (this.getDerivedProduct() != null) {
+            if (getDerivedProduct().equals(productId)) {
                 return true;
             }
 
             if (getDerivedProvidedProducts() != null) {
-                for (DerivedProvidedProduct p : getDerivedProvidedProducts()) {
-                    if (p.getProductId().equals(productId)) {
+                for (Product product : getDerivedProvidedProducts()) {
+                    if (product.getProductId().equals(productId)) {
                         return true;
                     }
                 }
             }
         }
         else {
-            return provides(productId);
+            return this.provides(productId);
         }
         return false;
     }
@@ -679,10 +713,6 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         return "/pools/" + getId();
     }
 
-
-    public boolean hasMergedAttribute(String name) {
-        return this.getMergedAttribute(name) != null;
-    }
 
     /**
      * @return the subscriptionSubKey
@@ -777,11 +807,11 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     }
 
     public boolean isStacked() {
-        return hasProductAttribute("stacking_id");
+        return this.product.hasAttribute("stacking_id");
     }
 
     public String getStackId() {
-        return getProductAttributeValue("stacking_id");
+        return this.product.getAttributeValue("stacking_id");
     }
 
     public Set<Branding> getBranding() {

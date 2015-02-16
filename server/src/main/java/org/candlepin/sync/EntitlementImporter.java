@@ -21,12 +21,10 @@ import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
-import org.candlepin.model.DerivedProvidedProduct;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.model.SubscriptionsCertificate;
@@ -110,21 +108,21 @@ public class EntitlementImporter {
         }
 
         Set<Product> products = new HashSet<Product>();
-        for (ProvidedProduct providedProduct : entitlement.getPool().
-            getProvidedProducts()) {
+        for (Product providedProduct : entitlement.getPool().getProvidedProducts()) {
             products.add(findProduct(productsById, providedProduct.getProductId()));
         }
         subscription.setProvidedProducts(products);
 
         // Add any sub product data to the subscription.
-        if (entitlement.getPool().getDerivedProductId() != null) {
-            subscription.setDerivedProduct(findProduct(productsById,
-                entitlement.getPool().getDerivedProductId()));
+        if (entitlement.getPool().getDerivedProduct() != null) {
+            subscription.setDerivedProduct(findProduct(
+                productsById,
+                entitlement.getPool().getDerivedProduct().getProductId()
+            ));
         }
 
         Set<Product> subProvProds = new HashSet<Product>();
-        for (DerivedProvidedProduct subProvProd : entitlement.getPool().
-            getDerivedProvidedProducts()) {
+        for (Product subProvProd : entitlement.getPool().getDerivedProvidedProducts()) {
             subProvProds.add(findProduct(productsById, subProvProd.getProductId()));
         }
         subscription.setDerivedProvidedProducts(subProvProds);

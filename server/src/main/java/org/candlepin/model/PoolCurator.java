@@ -61,6 +61,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     protected Injector injector;
 
     @Inject
+    // TODO/FIXME: May be unnecessary now...?
     protected ProductCache productCache;
 
     @Inject
@@ -350,24 +351,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
     @Transactional
     public Pool replicate(Pool pool) {
-        for (ProvidedProduct pp : pool.getProvidedProducts()) {
-            pp.setPool(pool);
-        }
-
-        for (DerivedProvidedProduct dpp : pool.getDerivedProvidedProducts()) {
-            dpp.setPool(pool);
-        }
-
         for (PoolAttribute pa : pool.getAttributes()) {
             pa.setPool(pool);
-        }
-
-        for (ProductPoolAttribute ppa : pool.getProductAttributes()) {
-            ppa.setPool(pool);
-        }
-
-        for (DerivedProductPoolAttribute dppa : pool.getDerivedProductAttributes()) {
-            dppa.setPool(pool);
         }
 
         // Looks like this is restored in MigrateOwnerJob.replicateEntitlements:

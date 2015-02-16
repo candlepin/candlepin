@@ -174,11 +174,11 @@ public class EnvironmentResource {
         Set<String> contentIds = new HashSet<String>();
         for (EnvironmentContent promoteMe : contentToPromote) {
             // Make sure the content exists:
-            promoteMe.setContentId(promoteMe.getContentId());
+            // promoteMe.setContentId(promoteMe.getContentId()); // What was the point of this?
             promoteMe.setEnvironment(env);
             envContentCurator.create(promoteMe);
             env.getEnvironmentContent().add(promoteMe);
-            contentIds.add(promoteMe.getContentId());
+            contentIds.add(promoteMe.getContent().getId());
         }
 
         JobDataMap map = new JobDataMap();

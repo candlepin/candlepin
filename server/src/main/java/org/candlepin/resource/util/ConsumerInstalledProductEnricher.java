@@ -17,6 +17,7 @@ package org.candlepin.resource.util;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.Entitlement;
+import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
@@ -61,13 +62,8 @@ public class ConsumerInstalledProductEnricher {
      * @param prod the product to pull the data from.
      */
     public void enrich(ConsumerInstalledProduct cip, Product prod) {
-        cip.setStatus(getStatus(prod.getId()));
-        if (cip.getVersion() == null) {
-            cip.setVersion(prod.getAttributeValue("version"));
-        }
-        if (cip.getArch() == null) {
-            cip.setArch(prod.getAttributeValue("arch"));
-        }
+        cip.setStatus(getStatus(prod.getProductId()));
+
         DateRange range = getValidDateRange(prod);
         cip.setStartDate(range != null ? range.getStartDate() : null);
         cip.setEndDate(range != null ? range.getEndDate() : null);
@@ -189,19 +185,20 @@ public class ConsumerInstalledProductEnricher {
         Set<String> requiredGlobalAttrs = new HashSet<String>();
 
         for (Entitlement ent : this.consumer.getEntitlements()) {
-            if (ent.getPool().provides(product.getId())) {
+            Pool pool = ent.getPool();
+
+            if (pool.provides(product.getId())) {
                 productEnts.add(ent);
                 //If this entitlement is stackable,
                 //the whole stack may be required, even if
                 //this is the only ent that provides the product
-                if (ent.getPool().hasProductAttribute("stacking_id")) {
-                    stackIds.add(ent.getPool()
-                        .getProductAttribute("stacking_id").getValue());
+                if (pool.getProduct().hasAttribute("stacking_id")) {
+                    stackIds.add(pool.getProduct().getAttributeValue("stacking_id"));
                 }
             }
             // Save the stacking id so we don't have to loop over everything again
-            if (ent.getPool().hasProductAttribute("stacking_id")) {
-                String key = ent.getPool().getProductAttribute("stacking_id").getValue();
+            if (pool.getProduct().hasAttribute("stacking_id")) {
+                String key = pool.getProduct().getAttributeValue("stacking_id");
                 if (!stackIdMap.containsKey(key)) {
                     stackIdMap.put(key, new HashSet<Entitlement>());
                 }
@@ -209,9 +206,9 @@ public class ConsumerInstalledProductEnricher {
             }
             // Save the global attributes so we don't need to loop over them again.
             for (String attribute : globalAttrMap.keySet()) {
-                if (ent.getPool().hasProductAttribute(attribute)) {
+                if (pool.getProduct().hasAttribute(attribute)) {
                     globalAttrMap.get(attribute).add(ent);
-                    if (ent.getPool().provides(product.getId())) {
+                    if (pool.provides(product.getProductId())) {
                         requiredGlobalAttrs.add(attribute);
                     }
                 }
