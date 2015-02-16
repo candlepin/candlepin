@@ -107,6 +107,23 @@ describe 'Unmapped Guest Pools' do
     original_ent_id.should_not equal(autohealed_ent_id)
   end
 
+  it 'hides unmapped guest pools from pool lists if instructed to' do
+    all_pools = @user.list_owner_pools(@owner['displayName'], :product => @virt_limit_product.id)
+    all_pools.each do |p|
+      p['productId'].should eq(@virt_limit_product.id)
+    end
+
+    filtered_pools = @user.list_owner_pools(@owner['displayName'], {:product => @virt_limit_product.id},
+      ["unmapped_guests_only:!true"])
+    filtered_pools.should have(all_pools.length - 1).things
+
+    filtered_pools.each do |p|
+      p.should satisfy do |o|
+        o['attributes'].select { |i| i['name'] == 'unmapped_guests_only' && i['value'] == 'true' }.empty?
+      end
+    end
+  end
+
   it 'revokes entitlement from another host during an auto attach' do
     all_pools = @user.list_pools :owner => @owner.id, :product => @virt_limit_product.id
     @host1_client.update_consumer({:guestIds => [{'guestId' => @uuid1}]});
@@ -169,6 +186,7 @@ describe 'Unmapped Guest Pools' do
     compliance_status['reasons'].size.should == 1
   end
 
+
   it 'compliance status for entitled unmapped guest will be partial without installed product' do
     @guest1_client.update_consumer({:installedProducts => []})
     all_pools = @user.list_pools :owner => @owner.id, :product => @virt_limit_product.id
@@ -187,6 +205,4 @@ describe 'Unmapped Guest Pools' do
     compliance_status.should have_key('reasons')
     compliance_status['reasons'].size.should == 1
   end
-
-
 end

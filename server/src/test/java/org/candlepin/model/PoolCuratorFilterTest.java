@@ -38,6 +38,7 @@ public class PoolCuratorFilterTest extends DatabaseTestFixture {
     private Owner owner;
     private PageRequest req = new PageRequest();
     private Pool searchPool;
+    private Pool hidePool;
 
     @Before
     public void setUp() {
@@ -67,13 +68,14 @@ public class PoolCuratorFilterTest extends DatabaseTestFixture {
                 "Containers In This One"));
         searchPool.setContractNumber("mycontract");
         searchPool.setOrderNumber("myorder");
+        searchPool.setAttribute("hello", "true");
 
         poolCurator.create(searchPool);
 
         // Create another we don't intend to see in the results:
         Product hideProduct = TestUtil.createProduct();
         productCurator.create(hideProduct);
-        Pool hidePool = createPoolAndSub(owner, hideProduct, 100L,
+        hidePool = createPoolAndSub(owner, hideProduct, 100L,
                 TestUtil.createDate(2005, 3, 2), TestUtil.createDate(2050, 3, 2));
         hidePool.addProvidedProduct(TestUtil.createProvidedProduct("101",
                 "Workstation Bits"));
@@ -82,12 +84,10 @@ public class PoolCuratorFilterTest extends DatabaseTestFixture {
         return searchPool;
     }
 
-    private void searchTest(String searchFor, int expectedResults, String ... expectedIds) {
-        PoolFilterBuilder filters = new PoolFilterBuilder();
-        filters.addMatchesFilter(searchFor);
+    private void searchTest(PoolFilterBuilder filters, int expectedResults, String ... expectedIds) {
         Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
-                null, owner, null, null, false, filters,
-                req, false);
+            null, owner, null, null, false, filters,
+            req, false);
         List<Pool> results = page.getPageData();
         assertEquals(expectedResults, results.size());
         for (String id : expectedIds) {
@@ -100,6 +100,12 @@ public class PoolCuratorFilterTest extends DatabaseTestFixture {
             }
             assertTrue("Missing expected pool: " + id, found);
         }
+    }
+
+    private void searchTest(String searchFor, int expectedResults, String ... expectedIds) {
+        PoolFilterBuilder filters = new PoolFilterBuilder();
+        filters.addMatchesFilter(searchFor);
+        searchTest(filters, expectedResults, expectedIds);
     }
 
     @Test
@@ -137,6 +143,17 @@ public class PoolCuratorFilterTest extends DatabaseTestFixture {
         searchTest("*Ser*emiumaroni", 0, new String [] {});
         searchTest("*Ser*emium*", 1, searchPool.getId());
         searchTest("*Ser**emium", 1, searchPool.getId());
+    }
+
+    @Test
+    public void negationOfAKeyValueFilter() throws Exception {
+        PoolFilterBuilder filter = new PoolFilterBuilder();
+        filter.addAttributeFilter("hello", "true");
+        searchTest(filter, 1, searchPool.getId());
+
+        filter = new PoolFilterBuilder();
+        filter.addAttributeFilter("hello", "!true");
+        searchTest(filter, 1, hidePool.getId());
     }
 
     @Test

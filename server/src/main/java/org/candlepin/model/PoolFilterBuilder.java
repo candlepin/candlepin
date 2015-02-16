@@ -14,6 +14,10 @@
  */
 package org.candlepin.model;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Lists;
+
+import org.hibernate.criterion.Conjunction;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Disjunction;
@@ -78,14 +82,54 @@ public class PoolFilterBuilder extends FilterBuilder {
 
     @Override
     protected Criterion buildCriteriaForKey(String key, List<String> values) {
-        DetachedCriteria productPoolAttrMatch =
-            createAttributeCriteria(PoolAttribute.class, key, values);
+        List<String> negatives = new ArrayList<String>();
+        for (String predicate : values) {
+            if (predicate.startsWith("!")) {
+                negatives.add(predicate);
+            }
+        }
 
-        DetachedCriteria poolAttrMatch =
-            createAttributeCriteria(ProductPoolAttribute.class, key, values);
+        values.removeAll(negatives);
 
-        return Restrictions.or(Subqueries.exists(productPoolAttrMatch),
-            Subqueries.exists(poolAttrMatch));
+        // Strip off all the exclamation points
+        negatives = Lists.transform(negatives, new Function<String, String>() {
+            @Override
+            public String apply(String input) {
+                return input.substring(1);
+            }
+        });
+
+        Conjunction conjunction = new Conjunction();
+
+        if (!values.isEmpty()) {
+            DetachedCriteria productPoolAttrMatch =
+                createAttributeCriteria(PoolAttribute.class, key, values);
+
+            DetachedCriteria poolAttrMatch =
+                createAttributeCriteria(ProductPoolAttribute.class, key, values);
+
+            Criterion positiveClause = Restrictions.or(
+                Subqueries.exists(productPoolAttrMatch),
+                Subqueries.exists(poolAttrMatch));
+
+            conjunction.add(positiveClause);
+        }
+
+        if (!negatives.isEmpty()) {
+            DetachedCriteria productPoolAttrNegative =
+                createAttributeCriteria(ProductPoolAttribute.class, key, negatives);
+
+            DetachedCriteria poolAttrNegative =
+                createAttributeCriteria(PoolAttribute.class, key, negatives);
+
+            Criterion negativeClause = Restrictions.not(Restrictions.or(
+                Subqueries.exists(productPoolAttrNegative),
+                Subqueries.exists(poolAttrNegative)));
+
+            conjunction.add(negativeClause);
+        }
+
+        return conjunction;
     }
 
     private DetachedCriteria createAttributeCriteria(
