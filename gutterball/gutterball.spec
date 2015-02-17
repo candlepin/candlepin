@@ -22,7 +22,7 @@
 %endif
 
 Name: gutterball
-Version: 1.0.11
+Version: 1.0.12
 Release: 1%{?dist}
 Summary: Data aggregator for Candlepin
 
@@ -215,6 +215,9 @@ rm -rf %{buildroot}
 %attr(775, tomcat, root) %{_localstatedir}/log/%{name}
 
 %changelog
+* Tue Feb 17 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 1.0.12-1
+- 1190040: Add tomcat dependency for gutterball. (dgoodwin@redhat.com)
+
 * Tue Feb 17 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 1.0.11-1
 - Changed custom param to custom_results (mstead@redhat.com)
 - GB: Better description on status parameter (mstead@redhat.com)
