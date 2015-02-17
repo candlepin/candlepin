@@ -27,6 +27,7 @@ import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
+import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.X509V3ExtensionUtil.NodePair;
 import org.candlepin.util.X509V3ExtensionUtil.PathNode;
@@ -47,6 +48,7 @@ import java.util.Set;
 public class X509V3ExtensionUtilTest {
     private Configuration config;
     private EntitlementCurator ec;
+    private ProductServiceAdapter psa;
     private X509V3ExtensionUtil util;
 
 
@@ -54,7 +56,7 @@ public class X509V3ExtensionUtilTest {
     public void init() {
         config = mock(Configuration.class);
         ec = mock(EntitlementCurator.class);
-        util = new X509V3ExtensionUtil(config, ec);
+        util = new X509V3ExtensionUtil(config, ec, psa);
     }
 
     @Test

@@ -1123,6 +1123,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             .thenReturn("3.2");
         when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
         when(entitlement.getConsumer().getFact("uname.machine")).thenReturn("x86_64");
+        when(productAdapter.getProductById(product.getId())).thenReturn(product);
 
         pool.setProductAttribute("warning_period", "20", "p");
         pool.setProductAttribute("sockets", "4", "p");
@@ -1265,6 +1266,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         for (X509ExtensionWrapper ext : extensions) {
             map.put(ext.getOid(), ext);
         }
+        when(productAdapter.getProductById(product.getId())).thenReturn(product);
 
         byte[] payload = v3extensionUtil.createEntitlementDataPayload(products, entitlement,
             "prefix", null);
@@ -1326,6 +1328,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
         }
         assertTrue(map.containsKey("1.3.6.1.4.1.2312.9.6"));
         assertEquals(map.get("1.3.6.1.4.1.2312.9.6").getValue(), ("3.2"));
+
+        when(productAdapter.getProductById(product.getId())).thenReturn(product);
 
         byte[] payload = v3extensionUtil.createEntitlementDataPayload(products, entitlement,
             "prefix", null);
@@ -1432,6 +1436,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             .thenReturn("3.2");
         when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
         when(entitlement.getConsumer().getFact("uname.machine")).thenReturn("x86_64");
+        when(productAdapter.getProductById(product.getId())).thenReturn(product);
 
         subscription.getProduct().setAttribute("warning_period", "0");
         subscription.getProduct().setAttribute("management_enabled", "false");
@@ -1487,6 +1492,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             .thenReturn("3.2");
         when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
         when(entitlement.getConsumer().getFact("uname.machine")).thenReturn("x86_64");
+        when(productAdapter.getProductById(product.getId())).thenReturn(product);
 
         pool.setProductAttribute("management_enabled", "1", "p");
         entitlement.getPool().setAttribute("virt_only", "1");
@@ -1551,6 +1557,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             .thenReturn("3.2");
         when(entitlement.getConsumer().getFact("uname.machine")).thenReturn("x86_64");
         when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
+        when(productAdapter.getProductById(product.getId())).thenReturn(product);
 
         Set<X509ByteExtensionWrapper> byteExtensions =
             certServiceAdapter.prepareV3ByteExtensions(products, entitlement, "prefix",
@@ -1596,6 +1603,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             .thenReturn("3.2");
         when(entitlement.getConsumer().getFact("uname.machine")).thenReturn(null);
         when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
+        when(productAdapter.getProductById(product.getId())).thenReturn(product);
 
         Set<X509ByteExtensionWrapper> byteExtensions =
             certServiceAdapter.prepareV3ByteExtensions(products, entitlement, "prefix",
@@ -1633,6 +1641,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         when(largeContentEntitlement.getConsumer().getFact("system.certificate_version"))
             .thenReturn("3.2");
         when(largeContentEntitlement.getConsumer().getUuid()).thenReturn("test-consumer");
+        when(productAdapter.getProductById(largeContentProduct.getId())).thenReturn(largeContentProduct);
 
         Set<X509ByteExtensionWrapper> byteExtensions =
             certServiceAdapter.prepareV3ByteExtensions(products, largeContentEntitlement,
@@ -1679,6 +1688,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         when(entitlement.getConsumer().getFact("system.certificate_version"))
             .thenReturn("3.2");
         when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
+        when(productAdapter.getProductById(product.getId())).thenReturn(product);
 
         certServiceAdapter.prepareV3Extensions(entitlement, "prefix", null);
         Set<X509ByteExtensionWrapper> byteExtensions =
