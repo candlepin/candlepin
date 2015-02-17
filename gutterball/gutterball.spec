@@ -107,6 +107,7 @@ BuildRequires: mvn(ch.qos.logback:logback-classic)
 
 %if !0%{?reqcpdeps}
 # Universal requires
+Requires: %{tomcat}
 Requires: java >= 0:1.6.0
 Requires: servlet
 Requires: qpid-java-client >= 0:0.30
