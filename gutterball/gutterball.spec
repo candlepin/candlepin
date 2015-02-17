@@ -22,7 +22,7 @@
 %endif
 
 Name: gutterball
-Version: 1.0.10
+Version: 1.0.11
 Release: 1%{?dist}
 Summary: Data aggregator for Candlepin
 
@@ -214,6 +214,13 @@ rm -rf %{buildroot}
 %attr(775, tomcat, root) %{_localstatedir}/log/%{name}
 
 %changelog
+* Tue Feb 17 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 1.0.11-1
+- Changed custom param to custom_results (mstead@redhat.com)
+- GB: Better description on status parameter (mstead@redhat.com)
+- Added pagination to the status trend report. (crog@redhat.com)
+- Completed migration of common pagination codebase. (crog@redhat.com)
+- GB now uses CP's paging system for pagination (crog@redhat.com)
+
 * Mon Feb 02 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 1.0.10-1
 - Update rpm deps for qpid 0.30. (dgoodwin@redhat.com)
 - Fix SSL hostname verification error after upgrade to Qpid 0.30.
