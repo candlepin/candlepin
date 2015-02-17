@@ -14,10 +14,7 @@
  */
 package org.candlepin.policy;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
@@ -35,8 +32,6 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolAttribute;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
-import org.candlepin.model.ProductPoolAttribute;
-import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.Subscription;
@@ -137,8 +132,7 @@ public class PoolRulesTest {
         // Setup a pool with a single (different) provided product:
         Pool p = TestUtil.copyFromSub(s);
         p.getProvidedProducts().clear();
-        p.getProvidedProducts().add(
-            new ProvidedProduct(product3.getId(), product3.getName(), p));
+        p.getProvidedProducts().add(product3);
 
         List<Pool> existingPools = new LinkedList<Pool>();
         existingPools.add(p);
@@ -156,7 +150,7 @@ public class PoolRulesTest {
 
         // Setup a pool with a single (different) provided product:
         Pool p = TestUtil.copyFromSub(s);
-        p.setProductName("somethingelse");
+        p.getProduct().setName("somethingelse");
 
         List<Pool> existingPools = Arrays.asList(p);
         List<PoolUpdate> updates = this.poolRules.updatePools(s, existingPools);
@@ -303,7 +297,8 @@ public class PoolRulesTest {
         assertEquals(1, updates.size());
         PoolUpdate update = updates.get(0);
         Pool updatedPool = update.getPool();
-        assertTrue(updatedPool.hasProductAttribute(testAttributeKey));
+        assertNotNull(updatedPool.getProduct());
+        assertTrue(updatedPool.getProduct().hasAttribute(testAttributeKey));
     }
 
     @Test
@@ -320,6 +315,7 @@ public class PoolRulesTest {
         assertEquals(1, updates.size());
         PoolUpdate update = updates.get(0);
         Pool updatedPool = update.getPool();
+        assertNotNull(updatedPool.getDerivedProduct());
         assertTrue(updatedPool.hasSubProductAttribute("a"));
     }
 
@@ -342,8 +338,9 @@ public class PoolRulesTest {
         assertEquals(1, updates.size());
         PoolUpdate update = updates.get(0);
         Pool updatedPool = update.getPool();
-        assertTrue(updatedPool.hasProductAttribute("a"));
-        assertFalse(updatedPool.hasSubProductAttribute("a"));
+        assertNotNull(updatedPool.getProduct());
+        assertTrue(updatedPool.getProduct().hasAttribute("a"));
+        assertFalse(updatedPool.getDerivedProduct().hasAttribute("a"));
     }
 
     @Test
@@ -370,9 +367,12 @@ public class PoolRulesTest {
         assertEquals(1, updates.size());
         PoolUpdate update = updates.get(0);
         Pool updatedPool = update.getPool();
-        assertTrue(updatedPool.hasProductAttribute(testAttributeKey));
-        assertEquals(expectedAttributeValue,
-            updatedPool.getProductAttribute(testAttributeKey).getValue());
+        assertNotNull(updatedPool.getProduct());
+        assertTrue(updatedPool.getProduct().hasAttribute(testAttributeKey));
+        assertEquals(
+            expectedAttributeValue,
+            updatedPool.getProduct().getAttributeValue(testAttributeKey)
+        );
     }
 
     @Test
@@ -391,8 +391,9 @@ public class PoolRulesTest {
         assertEquals(1, updates.size());
         PoolUpdate update = updates.get(0);
         Pool updatedPool = update.getPool();
-        assertTrue(updatedPool.hasSubProductAttribute("a"));
-        assertEquals(newVal, updatedPool.getDerivedProductAttribute("a").getValue());
+        assertNotNull(updatedPool.getDerivedProduct());
+        assertTrue(updatedPool.getDerivedProduct().hasAttribute("a"));
+        assertEquals(newVal, updatedPool.getDerivedProduct().getAttributeValue("a"));
     }
 
     private Subscription createSubscriptionWithSubProduct() {
@@ -427,9 +428,10 @@ public class PoolRulesTest {
         assertEquals(1, updates.size());
         PoolUpdate update = updates.get(0);
         Pool updatedPool = update.getPool();
-        assertTrue(updatedPool.hasProductAttribute("a"));
-        assertEquals(newVal, updatedPool.getProductAttribute("a").getValue());
-        assertFalse(updatedPool.hasSubProductAttribute("a"));
+        assertNotNull(updatedPool.getProduct());
+        assertTrue(updatedPool.getProduct().hasAttribute("a"));
+        assertEquals(newVal, updatedPool.getProduct().getAttributeValue("a"));
+        assertFalse(updatedPool.getDerivedProduct().hasAttribute("a"));
     }
 
     @Test
@@ -445,8 +447,7 @@ public class PoolRulesTest {
         // Setup a pool with a single (different) provided product:
         Pool p = TestUtil.copyFromSub(s);
         p.getProvidedProducts().clear();
-        p.getProvidedProducts().add(
-            new ProvidedProduct(product3.getId(), product3.getName(), p));
+        p.getProvidedProducts().add(product3);
 
         List<Pool> existingPools = Arrays.asList(p);
 
@@ -467,7 +468,7 @@ public class PoolRulesTest {
 
         // Change the sub's product's ID
         String expectedProductId = "NEW_TEST_ID";
-        s.getProduct().setId(expectedProductId);
+        s.getProduct().setProductId(expectedProductId);
 
         when(productAdapterMock.getProductById(s.getProduct().getId()))
             .thenReturn(s.getProduct());
@@ -479,11 +480,8 @@ public class PoolRulesTest {
         assertEquals(1, updates.size());
         PoolUpdate update = updates.get(0);
         Pool updatedPool = update.getPool();
-        assertTrue(updatedPool.hasProductAttribute(testAttributeKey));
-
-        ProductPoolAttribute provided =
-            updatedPool.getProductAttribute(testAttributeKey);
-        assertEquals("Wrong product id.", expectedProductId, provided.getProductId());
+        assertEquals(s.getProduct(), updatedPool.getProduct());
+        assertTrue(updatedPool.getProduct().hasAttribute(testAttributeKey));
     }
 
     @Test
@@ -501,9 +499,12 @@ public class PoolRulesTest {
         assertEquals(1, pools.size());
 
         Pool resultPool = pools.get(0);
-        assertTrue(resultPool.hasProductAttribute(testAttributeKey));
-        assertEquals(expectedAttributeValue,
-            resultPool.getProductAttribute(testAttributeKey).getValue());
+        assertNotNull(resultPool.getProduct());
+        assertTrue(resultPool.getProduct().hasProductAttribute(testAttributeKey));
+        assertEquals(
+            expectedAttributeValue,
+            resultPool.getProduct().getAttributeValue(testAttributeKey)
+        );
     }
 
     @Test
@@ -545,9 +546,12 @@ public class PoolRulesTest {
         assertEquals(1, pools.size());
 
         Pool resultPool = pools.get(0);
-        assertTrue(resultPool.hasSubProductAttribute(testAttributeKey));
-        assertEquals(expectedAttributeValue,
-            resultPool.getDerivedProductAttribute(testAttributeKey).getValue());
+        assertNotNull(resultPool.getDerivedProduct());
+        assertTrue(resultPool.getDerivedProduct().hasAttribute(testAttributeKey));
+        assertEquals(
+            expectedAttributeValue,
+            resultPool.getDerivedProduct().getAttributeValue(testAttributeKey)
+        );
     }
 
     @Test
@@ -565,8 +569,7 @@ public class PoolRulesTest {
         assertEquals(1, pools.size());
 
         Pool resultPool = pools.get(0);
-        assertEquals(subProduct.getId(), resultPool.getDerivedProductId());
-        assertEquals(subProduct.getName(), resultPool.getDerivedProductName());
+        assertEquals(subProduct, resultPool.getDerivedProduct());
     }
 
     @Test

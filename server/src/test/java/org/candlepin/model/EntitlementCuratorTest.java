@@ -137,12 +137,8 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         providedProduct2.addContent(c);
 
         // Add some provided products to this pool:
-        ProvidedProduct p1 = new ProvidedProduct(providedProduct1.getId(),
-            providedProduct1.getName());
-        ProvidedProduct p2 = new ProvidedProduct(providedProduct2.getId(),
-            providedProduct2.getName());
-        testPool.addProvidedProduct(p1);
-        testPool.addProvidedProduct(p2);
+        testPool.addProvidedProduct(providedProduct1);
+        testPool.addProvidedProduct(providedProduct2);
         poolCurator.create(testPool);
 
         EntitlementCertificate cert = createEntitlementCertificate("key", "certificate");
@@ -162,12 +158,8 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
             startDate, endDate);
 
         // Add some provided products to this pool:
-        ProvidedProduct p1 = new ProvidedProduct(providedProduct1.getId(),
-            providedProduct1.getName());
-        ProvidedProduct p2 = new ProvidedProduct(providedProduct2.getId(),
-            providedProduct2.getName());
-        testPool.addProvidedProduct(p1);
-        testPool.addProvidedProduct(p2);
+        testPool.addProvidedProduct(providedProduct1);
+        testPool.addProvidedProduct(providedProduct2);
         poolCurator.create(testPool);
 
         EntitlementCertificate cert = createEntitlementCertificate("key", "certificate");

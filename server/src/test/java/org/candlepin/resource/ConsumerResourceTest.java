@@ -394,7 +394,7 @@ public class ConsumerResourceTest {
         products.add(cip);
 
         when(c.getOwner()).thenReturn(o);
-        when(cip.getProductId()).thenReturn("product-foo");
+        when(cip.getProduct()).thenReturn(TestUtil.createProduct("product-foo"));
         when(sa.hasUnacceptedSubscriptionTerms(eq(o))).thenReturn(false);
         when(cc.verifyAndLookupConsumer(eq("fakeConsumer"))).thenReturn(c);
 

@@ -235,7 +235,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             activeDate, TestUtil.createDate(2005, 3, 2));
 
         // This product value should be overridden by the pool attr
-        pool2.setProductAttribute("virt_only", "true", "1234");
+        pool2.getProduct().setAttribute("virt_only", "true");
         pool2.setAttribute("virt_only", "false");
         poolCurator.create(pool2);
 
@@ -562,10 +562,17 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         entitlementCurator.create(sourceEnt);
 
         // Create derived pool referencing the entitlement just made:
-        Pool derivedPool = new Pool(owner, product.getId(), product.getName(),
-            new HashSet<ProvidedProduct>(), 1L, TestUtil.createDate(2011, 3, 2),
+        Pool derivedPool = new Pool(
+            owner,
+            product,
+            new HashSet<Product>(),
+            1L,
+            TestUtil.createDate(2011, 3, 2),
             TestUtil.createDate(2055, 3, 2),
-            "", "", "");
+            "",
+            "",
+            ""
+        );
         derivedPool.setSourceEntitlement(sourceEnt);
         derivedPool.setSourceSubscription(new SourceSubscription(subid, "derived"));
         poolCurator.create(derivedPool);
@@ -884,10 +891,16 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         productCurator.create(product);
 
         // Create derived pool referencing the entitlement just made:
-        Pool derivedPool = new Pool(owner, product.getId(), product.getName(),
-            new HashSet<ProvidedProduct>(), 1L, TestUtil.createDate(2011, 3, 2),
+        Pool derivedPool = new Pool(
+            owner, product,
+            new HashSet<ProvidedProduct>(),
+            1L,
+            TestUtil.createDate(2011, 3, 2),
             TestUtil.createDate(2055, 3, 2),
-            "", "", "");
+            "",
+            "",
+            ""
+        );
         derivedPool.setSourceStack(new SourceStack(consumer, expectedStackId));
         derivedPool.setAttribute("requires_host", consumer.getUuid());
 
@@ -925,10 +938,18 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void handleNull() {
-        Pool noexist = new Pool(owner, product.getId(), product.getName(),
-            new HashSet<ProvidedProduct>(), 1L, TestUtil.createDate(2011, 3, 2),
+        Pool noexist = new Pool(
+            owner,
+            product,
+            new HashSet<Product>(),
+            1L,
+            TestUtil.createDate(2011, 3, 2),
             TestUtil.createDate(2055, 3, 2),
-            "", "", "");
+            "",
+            "",
+            ""
+        );
+
         noexist.setId("betternotexist");
 
         poolCurator.delete(noexist);

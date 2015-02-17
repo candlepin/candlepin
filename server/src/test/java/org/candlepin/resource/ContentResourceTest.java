@@ -111,7 +111,7 @@ public class ContentResourceTest {
         when(content.getId()).thenReturn("10");
         when(cc.find(eq("10"))).thenReturn(content);
         EnvironmentContent ec =
-            new EnvironmentContent(mock(Environment.class), content.getId(), true);
+            new EnvironmentContent(mock(Environment.class), content, true);
         List<EnvironmentContent> envContents = listFrom(ec);
         when(envContentCurator.lookupByContent(content.getId())).thenReturn(envContents);
 

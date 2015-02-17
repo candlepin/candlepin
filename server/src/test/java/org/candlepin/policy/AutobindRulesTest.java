@@ -27,7 +27,6 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.Content;
-import org.candlepin.model.DerivedProvidedProduct;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.Owner;
@@ -35,8 +34,6 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
-import org.candlepin.model.ProductPoolAttribute;
-import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.SourceSubscription;
@@ -145,8 +142,7 @@ public class AutobindRulesTest {
         engProduct.setContent(productContent);
         Pool pool = TestUtil.createPool(owner, mktProduct);
         pool.setId("DEAD-BEEF");
-        pool.addProvidedProduct(new ProvidedProduct(engProduct.getId(),
-            engProduct.getName()));
+        pool.addProvidedProduct(engProduct);
         when(this.prodAdapter.getProductById(productId)).thenReturn(mktProduct);
         when(this.prodAdapter.getProductById(engProduct.getId())).thenReturn(engProduct);
 
@@ -198,8 +194,7 @@ public class AutobindRulesTest {
         engProduct.setContent(productContent);
         Pool pool = TestUtil.createPool(owner, mktProduct);
         pool.setId("DEAD-BEEF");
-        pool.addProvidedProduct(new ProvidedProduct(engProduct.getId(),
-            engProduct.getName()));
+        pool.addProvidedProduct(engProduct);
         when(this.prodAdapter.getProductById(productId)).thenReturn(mktProduct);
         when(this.prodAdapter.getProductById(engProduct.getId())).thenReturn(engProduct);
 
@@ -255,8 +250,8 @@ public class AutobindRulesTest {
         Pool pool2 = TestUtil.createPool(owner, product);
         pool2.setId("DEAD-BEEF2");
         //only enforce cores on pool 2
-        pool2.setProductAttribute("ram", null, productId);
-        pool2.setProductAttribute("sockets", null, productId);
+        pool2.getProduct().setAttribute("ram", null);
+        pool2.getProduct().setAttribute("sockets", null);
         Pool pool3 = TestUtil.createPool(owner, product);
         pool3.setId("DEAD-BEEF3");
         when(this.prodAdapter.getProductById(productId)).thenReturn(product);
@@ -296,8 +291,8 @@ public class AutobindRulesTest {
         Pool pool2 = TestUtil.createPool(owner, product);
         pool2.setId("DEAD-BEEF2");
         //only enforce cores on pool 2
-        pool2.setProductAttribute("ram", null, productId);
-        pool2.setProductAttribute("sockets", null, productId);
+        pool2.getProduct().setAttribute("ram", null);
+        pool2.getProduct().setAttribute("sockets", null);
         Pool pool3 = TestUtil.createPool(owner, product);
         pool3.setId("DEAD-BEEF3");
         when(this.prodAdapter.getProductById(productId)).thenReturn(product);
@@ -326,8 +321,7 @@ public class AutobindRulesTest {
 
         Pool slaPremiumPool = TestUtil.createPool(owner, slaPremiumProduct);
         slaPremiumPool.setId("pool-with-premium-sla");
-        slaPremiumPool.setProductAttribute("support_level", "Premium",
-            slaPremiumProdId);
+        slaPremiumPool.getProduct().setAttribute("support_level", "Premium");
 
         // Create Standard SLA Product
         String slaStandardProdId = "standard-sla-product";
@@ -340,8 +334,7 @@ public class AutobindRulesTest {
 
         Pool slaStandardPool = TestUtil.createPool(owner, slaStandardProduct);
         slaStandardPool.setId("pool-with-standard-sla");
-        slaStandardPool.setProductAttribute("support_level", "Standard",
-            slaStandardProdId);
+        slaStandardPool.getProduct().setAttribute("support_level", "Standard");
 
         // Create a product with no SLA.
         Product noSLAProduct = new Product(productId, "A test product", owner);
@@ -385,8 +378,7 @@ public class AutobindRulesTest {
 
         Pool slaPremiumPool = TestUtil.createPool(owner, slaPremiumProduct);
         slaPremiumPool.setId("pool-with-premium-sla");
-        slaPremiumPool.setProductAttribute("support_level", "Premium",
-            slaPremiumProdId);
+        slaPremiumPool.getProduct().setAttribute("support_level", "Premium");
 
         // Create Standard SLA Product
         String slaStandardProdId = "standard-sla-product";
@@ -399,8 +391,7 @@ public class AutobindRulesTest {
 
         Pool slaStandardPool = TestUtil.createPool(owner, slaStandardProduct);
         slaStandardPool.setId("pool-with-standard-sla");
-        slaStandardPool.setProductAttribute("support_level", "Standard",
-            slaStandardProdId);
+        slaStandardPool.getProduct().setAttribute("support_level", "Standard");
 
         // Create a product with no SLA.
         Product noSLAProduct = new Product(productId, "A test product", owner);
@@ -408,12 +399,9 @@ public class AutobindRulesTest {
         noSLAPool.setId("pool-1");
 
         // Ensure correct products are returned when requested.
-        when(this.prodAdapter.getProductById(productId)).thenReturn(
-            noSLAProduct);
-        when(this.prodAdapter.getProductById(slaPremiumProdId)).thenReturn(
-            slaPremiumProduct);
-        when(this.prodAdapter.getProductById(slaStandardProdId)).thenReturn(
-            slaStandardProduct);
+        when(this.prodAdapter.getProductById(productId)).thenReturn(noSLAProduct);
+        when(this.prodAdapter.getProductById(slaPremiumProdId)).thenReturn(slaPremiumProduct);
+        when(this.prodAdapter.getProductById(slaStandardProdId)).thenReturn(slaStandardProduct);
 
         List<Pool> pools = new LinkedList<Pool>();
         pools.add(noSLAPool);
@@ -446,11 +434,11 @@ public class AutobindRulesTest {
 
         Pool pool1 = mockPool(product1);
         pool1.setId("DEAD-BEEF");
-        pool1.addProvidedProduct(new ProvidedProduct(product3.getId(), product3.getName()));
+        pool1.addProvidedProduct(product3);
 
         Pool pool2 = mockPool(product2);
         pool2.setId("DEAD-BEEF2");
-        pool2.addProvidedProduct(new ProvidedProduct(product3.getId(), product3.getName()));
+        pool2.addProvidedProduct(product3);
 
         when(this.prodAdapter.getProductById(productId1)).thenReturn(product1);
         when(this.prodAdapter.getProductById(productId2)).thenReturn(product2);
@@ -478,18 +466,14 @@ public class AutobindRulesTest {
         }
     }
 
-    protected Pool createPool(Owner owner, Product product,
-        int quantity, Date startDate, Date endDate) {
+    protected Pool createPool(Owner owner, Product product, int quantity, Date startDate, Date endDate) {
         Pool p = TestUtil.createPool(owner, product, quantity);
         p.setId("testpool" + TestUtil.randomInt());
         p.setSourceSubscription(
             new SourceSubscription("testsub" + TestUtil.randomInt(), "master"));
         p.setStartDate(startDate);
         p.setEndDate(endDate);
-        for (ProductAttribute pa : product.getAttributes()) {
-            p.addProductAttribute(new ProductPoolAttribute(pa.getName(),
-                pa.getValue(), product.getId()));
-        }
+
         return p;
     }
 
@@ -555,10 +539,7 @@ public class AutobindRulesTest {
     private Pool mockPool(Product product) {
         Pool p = TestUtil.createPool(owner, product);
         p.setId(TestUtil.randomInt() + "");
-        // Copy all the product attributes onto the pool:
-        for (ProductAttribute prodAttr : product.getAttributes()) {
-            p.setProductAttribute(prodAttr.getName(), prodAttr.getValue(), product.getId());
-        }
+
         return p;
     }
 

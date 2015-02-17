@@ -155,10 +155,17 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         providedProducts.add(providedProduct);
 
         // Create pool with end date in the past.
-        Pool pool = new Pool(owner, product.getId(), product.getName(),
-            providedProducts, Long.valueOf(5), TestUtil.createDate(2009,
-                11, 30), TestUtil.createDate(2010, 11, 30), "SUB234598S",
-            "ACC123", "ORD222");
+        Pool pool = new Pool(
+            owner,
+            product,
+            providedProducts,
+            Long.valueOf(5),
+            TestUtil.createDate(2009, 11, 30),
+            TestUtil.createDate(2010, 11, 30),
+            "SUB234598S",
+            "ACC123",
+            "ORD222"
+        );
 
         providedProduct.setPool(pool);
         poolCurator.create(pool);

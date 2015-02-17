@@ -22,8 +22,6 @@ import org.candlepin.model.Branding;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
-import org.candlepin.model.DerivedProductPoolAttribute;
-import org.candlepin.model.DerivedProvidedProduct;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.IdentityCertificate;
@@ -31,8 +29,6 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
-import org.candlepin.model.ProductPoolAttribute;
-import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.Subscription;
@@ -67,6 +63,10 @@ public class TestUtil {
     private TestUtil() {
     }
 
+    public static Owner createOwner() {
+        return new Owner("Test Owner " + randomInt());
+    }
+
     public static Consumer createConsumer(ConsumerType type, Owner owner) {
         return new Consumer("TestConsumer" + randomInt(), "User", owner, type);
     }
@@ -81,8 +81,7 @@ public class TestUtil {
      * @return Consumer
      */
     public static Consumer createConsumer() {
-        return createConsumer(createConsumerType(), new Owner("Test Owner " +
-            randomInt()));
+        return createConsumer(createConsumerType(), new Owner("Test Owner " + randomInt()));
     }
 
     /**
@@ -91,8 +90,13 @@ public class TestUtil {
      * @return Consumer
      */
     public static Consumer createConsumer(Owner owner) {
-        Consumer consumer = new Consumer("testconsumer" + randomInt(), "User",
-            owner, createConsumerType());
+        Consumer consumer = new Consumer(
+            "testconsumer" + randomInt(),
+            "User",
+            owner,
+            createConsumerType()
+        );
+
         consumer.setFact("foo", "bar");
         consumer.setFact("foo1", "bar1");
 
@@ -120,9 +124,8 @@ public class TestUtil {
         return rhel;
     }
 
-    public static ProvidedProduct createProvidedProduct(String id, String name) {
-        ProvidedProduct p = new ProvidedProduct(id, name);
-        return p;
+    public static Product createProduct(String id) {
+        return createProduct(id, "test-product-" + randomInt(), createOwner());
     }
 
     public static Product createProduct() {
@@ -130,20 +133,8 @@ public class TestUtil {
         return createProduct(
             String.valueOf(random),
             "test-product-" + random,
-            new Owner("Test Owner " + randomInt())
+            createOwner()
         );
-    }
-
-    public static ProvidedProduct createProvidedProduct() {
-        int random = randomInt();
-        return createProvidedProduct("test-provided-product-" + random,
-            "Test Provided Product " + random);
-    }
-
-    public static DerivedProvidedProduct createSubProvidedProduct() {
-        int random = randomInt();
-        return new DerivedProvidedProduct("test-sub-provided-product-" + random,
-            "Test Sub Provided Product " + random);
     }
 
     public static Subscription createSubscription(Product product) {
@@ -161,9 +152,17 @@ public class TestUtil {
 
     public static Subscription createSubscription(Owner owner, Product product,
         Set<Product> providedProducts) {
-        Subscription sub = new Subscription(owner, product,
-            providedProducts, 1000L, createDate(2000, 1, 1), createDate(
-                2050, 1, 1), createDate(2000, 1, 1));
+
+        Subscription sub = new Subscription(
+            owner,
+            product,
+            providedProducts,
+            1000L,
+            createDate(2000, 1, 1),
+            createDate(2050, 1, 1),
+            createDate(2000, 1, 1)
+        );
+
         return sub;
     }
 
@@ -176,8 +175,7 @@ public class TestUtil {
     }
 
     public static Pool createPool(Owner owner, Product product, int quantity) {
-        return createPool(owner, product, new HashSet<ProvidedProduct>(),
-            quantity);
+        return createPool(owner, product, new HashSet<Product>(), quantity);
     }
 
     public static Pool createPool(Owner owner, Product product,
@@ -185,28 +183,29 @@ public class TestUtil {
 
         String random = String.valueOf(randomInt());
 
-        Pool pool = new Pool(owner, product.getId(), product.getName(),
-            providedProducts, Long.valueOf(quantity), TestUtil.createDate(2009,
-                11, 30), TestUtil.createDate(2015, 11, 30), "SUB234598S" + random,
-            "ACC123" + random, "ORD222" + random);
-        pool.setSourceSubscription(new SourceSubscription(
-            "SUB234598S" + random, "master" + random));
+        Pool pool = new Pool(
+            owner,
+            product,
+            providedProducts,
+            Long.valueOf(quantity),
+            TestUtil.createDate(2009, 11, 30),
+            TestUtil.createDate(2015, 11, 30),
+            "SUB234598S" + random,
+            "ACC123" + random,
+            "ORD222" + random
+        );
 
-        // Simulate copying product attributes to the pool.
-        if (product != null) {
-            for (ProductAttribute attr : product.getAttributes()) {
-                pool.setProductAttribute(attr.getName(), attr.getValue(), product.getId());
-            }
-        }
+        pool.setSourceSubscription(new SourceSubscription("SUB234598S" + random, "master" + random));
+
         return pool;
     }
 
-    public static Pool createPool(Owner owner, Product product,
-        Set<ProvidedProduct> providedProducts, String subProductId,
-        Set<DerivedProvidedProduct> subProvidedProducts, int quantity) {
+    public static Pool createPool(Owner owner, Product product, Set<Product> providedProducts,
+        Product derivedProduct, Set<Product> subProvidedProducts, int quantity) {
+
         Pool pool = createPool(owner, product, providedProducts, quantity);
-        pool.setDerivedProductId(subProductId);
-        pool.setDerivedProvidedProducts(subProvidedProducts);
+        pool.setDerivedProduct(derivedProduct);
+
         return pool;
     }
 
@@ -214,7 +213,7 @@ public class TestUtil {
         Calendar cal = Calendar.getInstance();
 
         cal.set(Calendar.YEAR, year);
-        // Watchout, Java expects month as 0-11
+        // Watch out! Java expects month as 0-11
         cal.set(Calendar.MONTH, month - 1);
         cal.set(Calendar.DATE, day);
 
@@ -248,12 +247,12 @@ public class TestUtil {
         return new User(username, password, superAdmin);
     }
 
-    public static UserPrincipal createPrincipal(String username, Owner owner,
-        Access role) {
+    public static UserPrincipal createPrincipal(String username, Owner owner, Access role) {
         return new UserPrincipal(
             username,
             Arrays.asList(new Permission[]{ new OwnerPermission(owner, role) }),
-            false);
+            false
+        );
     }
 
     public static UserPrincipal createOwnerPrincipal() {
@@ -301,8 +300,12 @@ public class TestUtil {
     public static Entitlement createEntitlement() {
         Owner owner = new Owner("Test Owner |" + randomInt());
         owner.setId(String.valueOf(RANDOM.nextLong()));
-        return createEntitlement(owner, createConsumer(owner),
-            createPool(owner, createProduct()), null);
+        return createEntitlement(
+            owner,
+            createConsumer(owner),
+            createPool(owner, createProduct()),
+            null
+        );
     }
 
     public void addPermissionToUser(User u, Access role, Owner o) {
@@ -317,31 +320,21 @@ public class TestUtil {
      * @return pool for subscription
      */
     public static Pool copyFromSub(Subscription sub) {
-        Pool p = new Pool(sub.getOwner(), sub.getProduct().getId(),
-            sub.getProduct().getName(), new HashSet<ProvidedProduct>(),
-            sub.getQuantity(), sub.getStartDate(),
-            sub.getEndDate(), sub.getContractNumber(), sub.getAccountNumber(),
-            sub.getOrderNumber());
+        Pool p = new Pool(sub.getOwner(),
+            sub.getProduct(),
+            sub.getProvidedProducts(),
+            sub.getQuantity(),
+            sub.getStartDate(),
+            sub.getEndDate(),
+            sub.getContractNumber(),
+            sub.getAccountNumber(),
+            sub.getOrderNumber()
+        );
+
         p.setSourceSubscription(new SourceSubscription(sub.getId(), "master"));
 
-        for (ProductAttribute attr : sub.getProduct().getAttributes()) {
-            p.addProductAttribute(new ProductPoolAttribute(attr.getName(), attr.getValue(),
-                sub.getProduct().getId()));
-        }
-
         // Copy sub-product data if there is any:
-        if (sub.getDerivedProduct() != null) {
-            p.setDerivedProductId(sub.getDerivedProduct().getId());
-            p.setDerivedProductName(sub.getDerivedProduct().getName());
-            for (ProductAttribute attr : sub.getDerivedProduct().getAttributes()) {
-                p.addSubProductAttribute(new DerivedProductPoolAttribute(attr.getName(),
-                    attr.getValue(), sub.getProduct().getId()));
-            }
-        }
-
-        for (Product prod : sub.getProvidedProducts()) {
-            p.addProvidedProduct(new ProvidedProduct(prod.getId(), prod.getName()));
-        }
+        p.setDerivedProduct(sub.getDerivedProduct());
 
         for (Branding b : sub.getBranding()) {
             p.getBranding().add(new Branding(b.getProductId(), b.getType(), b.getName()));
@@ -376,8 +369,7 @@ public class TestUtil {
             "\n//somerules";
     }
 
-    public static boolean isJsonEqual(String one, String two)
-        throws JsonProcessingException, IOException {
+    public static boolean isJsonEqual(String one, String two) throws JsonProcessingException, IOException {
         ObjectMapper mapper = new ObjectMapper();
         JsonNode tree1 = mapper.readTree(one);
         JsonNode tree2 = mapper.readTree(two);

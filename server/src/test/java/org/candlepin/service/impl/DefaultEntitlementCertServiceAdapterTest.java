@@ -249,25 +249,37 @@ public class DefaultEntitlementCertServiceAdapterTest {
                 CONTENT_TYPE, CONTENT_VENDOR, url, CONTENT_GPG_URL, ARCH_LABEL));
         }
 
-        subscription = new Subscription(null, product, new HashSet<Product>(),
-            1L, new Date(), new Date(), new Date());
-        subscription.setId("1");
-        largeContentSubscription = new Subscription(null, largeContentProduct,
+        subscription = new Subscription(
+            null,
+            product,
             new HashSet<Product>(),
-            1L, new Date(), new Date(), new Date());
+            1L,
+            new Date(),
+            new Date(),
+            new Date()
+        );
+        subscription.setId("1");
+
+        largeContentSubscription = new Subscription(
+            null,
+            largeContentProduct,
+            new HashSet<Product>(),
+            1L,
+            new Date(),
+            new Date(),
+            new Date()
+        );
         largeContentSubscription.setId("2");
 
         owner = new Owner();
 
         pool = new Pool();
         pool.setQuantity(1L);
-        pool.setProductId(product.getId());
-        pool.setProductName(product.getName());
+        pool.setProduct(product);
         pool.setStartDate(subscription.getStartDate());
         pool.setEndDate(subscription.getEndDate());
         largeContentPool = new Pool();
-        largeContentPool.setProductId(largeContentProduct.getId());
-        largeContentPool.setProductName(largeContentProduct.getName());
+        largeContentPool.setProduct(largeContentProduct);
 
         when(consumer.getType()).thenReturn(
             new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM));
@@ -393,7 +405,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         // Environment, with promoted content:
         Environment e = new Environment("env1", "Env 1", owner);
-        e.getEnvironmentContent().add(new EnvironmentContent(e, content.getId(), true));
+        e.getEnvironmentContent().add(new EnvironmentContent(e, content, true));
         when(entitlement.getConsumer().getEnvironment()).thenReturn(e);
 
         Map<String, EnvironmentContent> promotedContent =
@@ -458,7 +470,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         // Setup an environment for the consumer:
         Environment e = new Environment("env1", "Awesome Environment #1", owner);
-        e.getEnvironmentContent().add(new EnvironmentContent(e, content.getId(), true));
+        e.getEnvironmentContent().add(new EnvironmentContent(e, content, true));
         when(entitlement.getConsumer().getEnvironment()).thenReturn(e);
 
         certServiceAdapter.createX509Certificate(entitlement,
@@ -478,7 +490,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         // Setup an environment for the consumer:
         Environment e = new Environment("env1", "Awesome Environment #1", owner);
-        e.getEnvironmentContent().add(new EnvironmentContent(e, content.getId(), true));
+        e.getEnvironmentContent().add(new EnvironmentContent(e, content, true));
         when(entitlement.getConsumer().getEnvironment()).thenReturn(e);
 
         certServiceAdapter.createX509Certificate(entitlement,
@@ -593,10 +605,11 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Environment environment = new Environment();
         when(consumer.getEnvironment()).thenReturn(environment);
 
-        Map<String, EnvironmentContent> promotedContent =
-            new HashMap<String, EnvironmentContent>();
-        promotedContent.put(normalContent.getId(), new EnvironmentContent(environment,
-            "content", true));
+        Map<String, EnvironmentContent> promotedContent = new HashMap<String, EnvironmentContent>();
+        promotedContent.put(
+            normalContent.getId(),
+            new EnvironmentContent(environment, normalContent, true)
+        );
 
         assertEquals(1,
             extensionUtil.filterProductContent(modProduct, entitlement, entCurator,
@@ -645,7 +658,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     @Test
     public void managementEnabledByAttribute() throws Exception {
 
-        pool.addProductAttribute(new ProductPoolAttribute("management_enabled", "1", "p"));
+        pool.getProduct().setAttribute("management_enabled", "1");
         certServiceAdapter.createX509Certificate(entitlement,
             product, new HashSet<Product>(), new BigInteger("1234"), keyPair, true);
 
@@ -658,7 +671,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     @Test
     public void stackingIdByAttribute() throws Exception {
 
-        pool.addProductAttribute(new ProductPoolAttribute("stacking_id", "3456", "p"));
+        pool.getProduct().setAttribute("stacking_id", "3456");
         certServiceAdapter.createX509Certificate(entitlement,
             product, new HashSet<Product>(), new BigInteger("1234"), keyPair, true);
 
@@ -697,8 +710,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
     @Test
     public void supportValuesPresentOnCertIfAttributePresent() throws Exception {
 
-        pool.setProductAttribute("support_level", "Premium", "p");
-        pool.setProductAttribute("support_type", "Level 3", "p");
+        pool.getProduct().setAttribute("support_level", "Premium");
+        pool.getProduct().setAttribute("support_type", "Level 3");
 
         certServiceAdapter.createX509Certificate(entitlement,
             product, new HashSet<Product>(), new BigInteger("1234"), keyPair, true);
@@ -1129,15 +1142,17 @@ public class DefaultEntitlementCertServiceAdapterTest {
         when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
         when(entitlement.getConsumer().getFact("uname.machine")).thenReturn("x86_64");
 
-        pool.setProductAttribute("warning_period", "20", "p");
-        pool.setProductAttribute("sockets", "4", "p");
-        pool.setProductAttribute("ram", "8", "p");
-        pool.setProductAttribute("cores", "4", "p");
-        pool.setProductAttribute("management_enabled", "true", "p");
-        pool.setProductAttribute("stacking_id", "45678", "p");
+        Product product = pool.getProduct();
+
+        product.setAttribute("warning_period", "20", "p");
+        product.setAttribute("sockets", "4", "p");
+        product.setAttribute("ram", "8", "p");
+        product.setAttribute("cores", "4", "p");
+        product.setAttribute("management_enabled", "true", "p");
+        product.setAttribute("stacking_id", "45678", "p");
         pool.setAttribute("virt_only", "true");
-        pool.setProductAttribute("support_level", "slevel", "p");
-        pool.setProductAttribute("support_type", "stype", "p");
+        product.setAttribute("support_level", "slevel", "p");
+        product.setAttribute("support_type", "stype", "p");
         pool.setAccountNumber("account1");
         pool.setContractNumber("contract1");
         pool.setOrderNumber("order1");
@@ -1238,15 +1253,17 @@ public class DefaultEntitlementCertServiceAdapterTest {
         when(entitlement.getConsumer().getFact("uname.machine")).thenReturn(
             consumerArch);
 
-        subscription.getProduct().setAttribute("warning_period", "20");
-        subscription.getProduct().setAttribute("sockets", "4");
-        subscription.getProduct().setAttribute("ram", "8");
-        subscription.getProduct().setAttribute("cores", "4");
-        subscription.getProduct().setAttribute("management_enabled", "true");
-        subscription.getProduct().setAttribute("stacking_id", "45678");
+        Product product = subscription.getProduct();
+
+        product.setAttribute("warning_period", "20");
+        product.setAttribute("sockets", "4");
+        product.setAttribute("ram", "8");
+        product.setAttribute("cores", "4");
+        product.setAttribute("management_enabled", "true");
+        product.setAttribute("stacking_id", "45678");
         entitlement.getPool().setAttribute("virt_only", "true");
-        subscription.getProduct().setAttribute("support_level", "slevel");
-        subscription.getProduct().setAttribute("support_type", "stype");
+        product.setAttribute("support_level", "slevel");
+        product.setAttribute("support_type", "stype");
         subscription.setAccountNumber("account1");
         subscription.setContractNumber("contract1");
         subscription.setOrderNumber("order1");

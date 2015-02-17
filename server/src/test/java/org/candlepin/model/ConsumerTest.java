@@ -456,10 +456,14 @@ public class ConsumerTest extends DatabaseTestFixture {
     @Test
     public void testInstalledProducts() throws Exception {
         Consumer lookedUp = consumerCurator.find(consumer.getId());
-        lookedUp.addInstalledProduct(new ConsumerInstalledProduct("someproduct",
-            "someproductname"));
-        lookedUp.addInstalledProduct(new ConsumerInstalledProduct("someproduct2",
-            "someproductname2"));
+        lookedUp.addInstalledProduct(new ConsumerInstalledProduct(
+            lookedUp,
+            TestUtil.createProduct("someproduct", "someproductname")
+        ));
+        lookedUp.addInstalledProduct(new ConsumerInstalledProduct(
+            lookedUp,
+            TestUtil.createProduct("someproduct2", "someproductname2")
+        ));
         consumerCurator.update(lookedUp);
         lookedUp = consumerCurator.find(consumer.getId());
         assertEquals(2, lookedUp.getInstalledProducts().size());

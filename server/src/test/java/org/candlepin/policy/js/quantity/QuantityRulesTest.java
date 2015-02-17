@@ -94,8 +94,8 @@ public class QuantityRulesTest {
         entSet.add(e);
 
         pool.setEntitlements(entSet);
-        pool.setProductAttribute("multi-entitlement", "yes", product.getId());
-        pool.setProductAttribute("stacking_id", "1", product.getId());
+        pool.getProduct().setAttribute("multi-entitlement", "yes");
+        pool.getProduct().setAttribute("stacking_id", "1");
     }
 
     private Entitlement createValidEntitlement(Pool p) {
@@ -117,7 +117,7 @@ public class QuantityRulesTest {
 
     @Test
     public void testNonMultiEntitlementPool() {
-        pool.setProductAttribute("multi-entitlement", "no", product.getId());
+        pool.getProduct().setAttribute("multi-entitlement", "no");
         SuggestedQuantity suggested = quantityRules.getSuggestedQuantity(pool,
             new Consumer(), new Date());
         assertEquals(new Long(1), suggested.getSuggested());
@@ -125,7 +125,7 @@ public class QuantityRulesTest {
 
     @Test
     public void testNonMultiEntitlementPoolMultiPool() {
-        pool.setProductAttribute("multi-entitlement", "no", product.getId());
+        pool.getProduct().setAttribute("multi-entitlement", "no");
         List<Pool> pools = new LinkedList<Pool>();
         pools.add(pool);
         Map<String, SuggestedQuantity> results =
@@ -139,7 +139,7 @@ public class QuantityRulesTest {
     @Test
     public void testPhysicalDefaultToNumSocketsBySocketCount() {
         consumer.setFact(SOCKET_FACT, "4");
-        pool.setProductAttribute(SOCKET_ATTRIBUTE, "2", product.getId());
+        pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "2");
         SuggestedQuantity suggested =
             quantityRules.getSuggestedQuantity(pool, consumer, new Date());
         assertEquals(new Long(2), suggested.getSuggested());
@@ -148,7 +148,7 @@ public class QuantityRulesTest {
     @Test
     public void testPhysicalRoundsUp() {
         consumer.setFact(SOCKET_FACT, "4");
-        pool.setProductAttribute(SOCKET_ATTRIBUTE, "3", product.getId());
+        pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "3");
         SuggestedQuantity suggested =
             quantityRules.getSuggestedQuantity(pool, consumer, new Date());
         assertEquals(new Long(2), suggested.getSuggested());
@@ -157,7 +157,7 @@ public class QuantityRulesTest {
     @Test
     public void testPhysicalAccountsForCurrentlyConsumed() {
         consumer.setFact(SOCKET_FACT, "4");
-        pool.setProductAttribute(SOCKET_ATTRIBUTE, "1", product.getId());
+        pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "1");
 
         Entitlement e = createValidEntitlement(pool);
         e.setQuantity(2);
@@ -176,7 +176,7 @@ public class QuantityRulesTest {
     public void testVirtDefaultToNumCpusByVcpuCount() {
         consumer.setFact(IS_VIRT, "true");
         consumer.setFact(CORES_FACT, "8");
-        pool.setProductAttribute(VCPU_ATTRIBUTE, "4", product.getId());
+        pool.getProduct().setAttribute(VCPU_ATTRIBUTE, "4");
         SuggestedQuantity suggested =
             quantityRules.getSuggestedQuantity(pool, consumer, new Date());
         assertEquals(new Long(2), suggested.getSuggested());
@@ -188,7 +188,7 @@ public class QuantityRulesTest {
         consumer.getEntitlements().clear();
         consumer.setFact(IS_VIRT, "true");
         consumer.setFact(SOCKET_FACT, "4");
-        pool.setProductAttribute(SOCKET_ATTRIBUTE, "2", product.getId());
+        pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "2");
         SuggestedQuantity suggested =
             quantityRules.getSuggestedQuantity(pool, consumer, new Date());
         assertEquals(new Long(1), suggested.getSuggested());
@@ -210,7 +210,7 @@ public class QuantityRulesTest {
     public void testVirtRoundsUp() {
         consumer.setFact(IS_VIRT, "true");
         consumer.setFact(CORES_FACT, "8");
-        pool.setProductAttribute(VCPU_ATTRIBUTE, "6", product.getId());
+        pool.getProduct().setAttribute(VCPU_ATTRIBUTE, "6");
         SuggestedQuantity suggested =
             quantityRules.getSuggestedQuantity(pool, consumer, new Date());
         assertEquals(new Long(2), suggested.getSuggested());
@@ -220,7 +220,7 @@ public class QuantityRulesTest {
     public void testVirtAccountsForCurrentlyConsumed() {
         consumer.setFact(IS_VIRT, "true");
         consumer.setFact(CORES_FACT, "4");
-        pool.setProductAttribute(VCPU_ATTRIBUTE, "1", product.getId());
+        pool.getProduct().setAttribute(VCPU_ATTRIBUTE, "1");
 
         Entitlement e = createValidEntitlement(pool);
         e.setQuantity(2);
@@ -238,7 +238,7 @@ public class QuantityRulesTest {
     @Test
     public void testUnlimitedQuantity() {
         consumer.setFact(SOCKET_FACT, "8");
-        pool.setProductAttribute(SOCKET_ATTRIBUTE, "2", product.getId());
+        pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "2");
         pool.setQuantity(new Long(-1));
         SuggestedQuantity suggested =
             quantityRules.getSuggestedQuantity(pool, consumer, new Date());
@@ -249,7 +249,7 @@ public class QuantityRulesTest {
     public void testIsNotVirtWhenFactIsFalse() {
         consumer.setFact(IS_VIRT, "false");
         consumer.setFact(SOCKET_FACT, "4");
-        pool.setProductAttribute(SOCKET_ATTRIBUTE, "2", product.getId());
+        pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "2");
 
         SuggestedQuantity suggested =
             quantityRules.getSuggestedQuantity(pool, consumer, new Date());
@@ -261,8 +261,8 @@ public class QuantityRulesTest {
     public void testInstanceBasedOnPhysical() {
         consumer.setFact(IS_VIRT, "false");
         consumer.setFact(SOCKET_FACT, "4");
-        pool.setProductAttribute(SOCKET_ATTRIBUTE, "2", product.getId());
-        pool.setProductAttribute(INSTANCE_ATTRIBUTE, "2", product.getId());
+        pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "2");
+        pool.getProduct().setAttribute(INSTANCE_ATTRIBUTE, "2");
 
         SuggestedQuantity suggested =
             quantityRules.getSuggestedQuantity(pool, consumer, new Date());
@@ -274,8 +274,8 @@ public class QuantityRulesTest {
     public void testInstanceBasedOnSingleSocketPhysical() {
         consumer.setFact(IS_VIRT, "false");
         consumer.setFact(SOCKET_FACT, "1");
-        pool.setProductAttribute(SOCKET_ATTRIBUTE, "2", product.getId());
-        pool.setProductAttribute(INSTANCE_ATTRIBUTE, "2", product.getId());
+        pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "2");
+        pool.getProduct().setAttribute(INSTANCE_ATTRIBUTE, "2");
 
         SuggestedQuantity suggested =
             quantityRules.getSuggestedQuantity(pool, consumer, new Date());
@@ -287,8 +287,8 @@ public class QuantityRulesTest {
     public void testSingleSocketInstanceBasedOnPhysical() {
         consumer.setFact(IS_VIRT, "false");
         consumer.setFact(SOCKET_FACT, "1");
-        pool.setProductAttribute(SOCKET_ATTRIBUTE, "1", product.getId());
-        pool.setProductAttribute(INSTANCE_ATTRIBUTE, "2", product.getId());
+        pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "1");
+        pool.getProduct().setAttribute(INSTANCE_ATTRIBUTE, "2");
 
         SuggestedQuantity suggested =
             quantityRules.getSuggestedQuantity(pool, consumer, new Date());
@@ -300,8 +300,8 @@ public class QuantityRulesTest {
     public void testInstanceBasedOnPhysicalNotEnoughAvailable() {
         consumer.setFact(IS_VIRT, "false");
         consumer.setFact(SOCKET_FACT, "40"); // lots of ents required
-        pool.setProductAttribute(SOCKET_ATTRIBUTE, "2", product.getId());
-        pool.setProductAttribute(INSTANCE_ATTRIBUTE, "2", product.getId());
+        pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "2");
+        pool.getProduct().setAttribute(INSTANCE_ATTRIBUTE, "2");
 
         pool.setQuantity(4L);
         SuggestedQuantity suggested =
@@ -314,8 +314,8 @@ public class QuantityRulesTest {
     public void testInstanceBasedOnPhysicalNotEnoughAvailableUneven() {
         consumer.setFact(IS_VIRT, "false");
         consumer.setFact(SOCKET_FACT, "40"); // lots of ents required
-        pool.setProductAttribute(SOCKET_ATTRIBUTE, "2", product.getId());
-        pool.setProductAttribute(INSTANCE_ATTRIBUTE, "2", product.getId());
+        pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "2");
+        pool.getProduct().setAttribute(INSTANCE_ATTRIBUTE, "2");
 
         pool.setQuantity(3L);
         SuggestedQuantity suggested =
@@ -330,8 +330,8 @@ public class QuantityRulesTest {
         consumer.getEntitlements().clear();
         consumer.setFact(IS_VIRT, "true");
         consumer.setFact(SOCKET_FACT, "4");
-        pool.setProductAttribute(SOCKET_ATTRIBUTE, "2", product.getId());
-        pool.setProductAttribute(INSTANCE_ATTRIBUTE, "2", product.getId());
+        pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "2");
+        pool.getProduct().setAttribute(INSTANCE_ATTRIBUTE, "2");
 
         SuggestedQuantity suggested =
             quantityRules.getSuggestedQuantity(pool, consumer, new Date());
@@ -343,7 +343,7 @@ public class QuantityRulesTest {
     public void testIsNotVirtWhenFactIsEmpty() {
         consumer.setFact(IS_VIRT, "");
         consumer.setFact(SOCKET_FACT, "4");
-        pool.setProductAttribute(SOCKET_ATTRIBUTE, "2", product.getId());
+        pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "2");
 
         SuggestedQuantity suggested =
             quantityRules.getSuggestedQuantity(pool, consumer, new Date());
@@ -354,7 +354,7 @@ public class QuantityRulesTest {
     public void testTotalConsumedIsZeroWhenNoMatches() {
         consumer.setFact(IS_VIRT, "");
         consumer.setFact(SOCKET_FACT, "4");
-        pool.setProductAttribute(SOCKET_ATTRIBUTE, "2", product.getId());
+        pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "2");
 
         Product product2 = TestUtil.createProduct();
         Pool pool2 = TestUtil.createPool(owner, product2);
@@ -376,7 +376,7 @@ public class QuantityRulesTest {
     public void testCalculatedValueIsZeroWhenNegativeIsCalculated() {
         consumer.setFact(IS_VIRT, "");
         consumer.setFact(SOCKET_FACT, "4");
-        pool.setProductAttribute(SOCKET_ATTRIBUTE, "2", product.getId());
+        pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "2");
 
         Entitlement e = createValidEntitlement(pool);
         e.setQuantity(1000);
@@ -395,7 +395,7 @@ public class QuantityRulesTest {
     public void testTotalConsumedDoesNotIncludeFutureEntitlements() {
         consumer.setFact(IS_VIRT, "");
         consumer.setFact(SOCKET_FACT, "4");
-        pool.setProductAttribute(SOCKET_ATTRIBUTE, "2", product.getId());
+        pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "2");
 
         Entitlement e = TestUtil.createEntitlement(owner, consumer, pool, null);
         pool.setStartDate(TestUtil.createDate(9000, 1, 1));
@@ -423,11 +423,11 @@ public class QuantityRulesTest {
         Pool currentPool = TestUtil.createPool(owner, product);
         currentPool.setStartDate(TestUtil.createDate(2000, 1, 1));
         currentPool.setEndDate(TestUtil.createDate(5000, 1, 1));
-        currentPool.setProductAttribute("multi-entitlement", "yes", product.getId());
-        currentPool.setProductAttribute("stacking_id", "1", product.getId());
+        currentPool.getProduct().setAttribute("multi-entitlement", "yes");
+        currentPool.getProduct().setAttribute("stacking_id", "1");
 
-        pool.setProductAttribute(SOCKET_ATTRIBUTE, "2", product.getId());
-        currentPool.setProductAttribute(SOCKET_ATTRIBUTE, "2", product.getId());
+        pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "2");
+        currentPool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "2");
 
         Entitlement currentEntitlement =
             TestUtil.createEntitlement(owner, consumer, currentPool, null);
@@ -456,12 +456,12 @@ public class QuantityRulesTest {
         futurePool.setStartDate(TestUtil.createDate(2050, 1, 1));
         futurePool.setEndDate(TestUtil.createDate(2060, 1, 1));
 
-        pool.setProductAttribute("multi-entitlement", "yes", product.getId());
-        pool.setProductAttribute("stacking_id", "1", product.getId());
-        pool.setProductAttribute(SOCKET_ATTRIBUTE, "1", product.getId());
-        futurePool.setProductAttribute("multi-entitlement", "yes", product.getId());
-        futurePool.setProductAttribute("stacking_id", "1", product.getId());
-        futurePool.setProductAttribute(SOCKET_ATTRIBUTE, "1", product.getId());
+        pool.getProduct().setAttribute("multi-entitlement", "yes");
+        pool.getProduct().setAttribute("stacking_id", "1");
+        pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "1");
+        futurePool.getProduct().setAttribute("multi-entitlement", "yes");
+        futurePool.getProduct().setAttribute("stacking_id", "1");
+        futurePool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "1");
 
         consumer.setFact(SOCKET_FACT, "4");
 
@@ -481,9 +481,9 @@ public class QuantityRulesTest {
 
     @Test
     public void testPhysicalIgnoresPastConsumed() {
-        pool.setProductAttribute("multi-entitlement", "yes", product.getId());
-        pool.setProductAttribute("stacking_id", "1", product.getId());
-        pool.setProductAttribute(SOCKET_ATTRIBUTE, "1", product.getId());
+        pool.getProduct().setAttribute("multi-entitlement", "yes");
+        pool.getProduct().setAttribute("stacking_id", "1");
+        pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "1");
 
         consumer.setFact(SOCKET_FACT, "4");
 
@@ -509,7 +509,7 @@ public class QuantityRulesTest {
     public void testStackOnlyStacksWithSameStackingId() {
         consumer.setFact(IS_VIRT, "false");
         consumer.setFact(SOCKET_FACT, "8");
-        pool.setProductAttribute(SOCKET_ATTRIBUTE, "2", product.getId());
+        pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "2");
         pool.setQuantity(10L);
         Product product1 = TestUtil.createProduct();
         Pool pool1 = TestUtil.createPool(owner, product1);
@@ -519,9 +519,9 @@ public class QuantityRulesTest {
         Set<Entitlement> entSet = new HashSet<Entitlement>();
         entSet.add(e);
         pool1.setEntitlements(entSet);
-        pool1.setProductAttribute("multi-entitlement", "yes", product1.getId());
-        pool1.setProductAttribute("stacking_id", "2", product1.getId());
-        pool1.setProductAttribute(SOCKET_ATTRIBUTE, "2", product1.getId());
+        pool1.getProduct().setAttribute("multi-entitlement", "yes");
+        pool1.getProduct().setAttribute("stacking_id", "2");
+        pool1.getProduct().setAttribute(SOCKET_ATTRIBUTE, "2");
         pool1.setQuantity(10L);
 
         // Consume 2 subscriptions with another stacking ID
@@ -547,8 +547,8 @@ public class QuantityRulesTest {
         for (int i = 0; i < 5; i++) {
             consumer.addGuestId(new GuestId("" + i, consumer, guestAttrs));
         }
-        pool.setProductAttribute(GUEST_LIMIT_ATTRIBUTE, "4", product.getId());
-        pool.setProductAttribute(SOCKET_ATTRIBUTE, "2", product.getId());
+        pool.getProduct().setAttribute(GUEST_LIMIT_ATTRIBUTE, "4");
+        pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "2");
         pool.setQuantity(new Long(-1));
         SuggestedQuantity suggested =
             quantityRules.getSuggestedQuantity(pool, consumer, new Date());
@@ -564,8 +564,8 @@ public class QuantityRulesTest {
         dist.getType().setManifest(true);
         dist.setFact(IS_VIRT, "false");
         dist.setFact(SOCKET_FACT, "4");
-        pool.setProductAttribute(SOCKET_ATTRIBUTE, "2", product.getId());
-        pool.setProductAttribute(INSTANCE_ATTRIBUTE, "2", product.getId());
+        pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "2");
+        pool.getProduct().setAttribute(INSTANCE_ATTRIBUTE, "2");
 
         SuggestedQuantity suggested =
             quantityRules.getSuggestedQuantity(pool, dist, new Date());

@@ -210,20 +210,31 @@ public class DatabaseTestFixture {
      *
      * @return an entitlement pool and matching subscription.
      */
-    protected Pool createPoolAndSub(Owner owner, Product product,
-        Long quantity, Date startDate, Date endDate) {
-        Pool p = new Pool(owner, product.getId(), product.getName(),
-            new HashSet<ProvidedProduct>(), quantity, startDate, endDate,
-            DEFAULT_CONTRACT, DEFAULT_ACCOUNT, DEFAULT_ORDER);
-        Subscription sub = new Subscription(owner, product,
-            new HashSet<Product>(), quantity, startDate, endDate,
-            TestUtil.createDate(2010, 2, 12));
+    protected Pool createPoolAndSub(Owner owner, Product product, Long quantity, Date startDate,
+        Date endDate) {
+
+        Pool p = new Pool(
+            owner,
+            product,
+            new HashSet<Product>(),
+            quantity,
+            startDate,
+            endDate,
+            DEFAULT_CONTRACT,
+            DEFAULT_ACCOUNT,
+            DEFAULT_ORDER
+        );
+        Subscription sub = new Subscription(
+            owner,
+            product,
+            new HashSet<Product>(),
+            quantity,
+            startDate,
+            endDate,
+            TestUtil.createDate(2010, 2, 12)
+        );
         subCurator.create(sub);
         p.setSourceSubscription(new SourceSubscription(sub.getId(), "master"));
-        for (ProductAttribute pa : product.getAttributes()) {
-            p.addProductAttribute(new ProductPoolAttribute(pa.getName(),
-                pa.getValue(), product.getId()));
-        }
         return poolCurator.create(p);
     }
 

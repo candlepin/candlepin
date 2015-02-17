@@ -73,7 +73,7 @@ public class ExportRulesTest {
         Consumer consumer = mock(Consumer.class);
         ConsumerType type = mock(ConsumerType.class);
         Pool pool = new Pool();
-        pool.setProductId("12345");
+        pool.getProduct().setProductId("12345");
         pool.setAttribute("pool_derived", "true");
 
         when(entitlement.getPool()).thenReturn(pool);

@@ -104,11 +104,10 @@ public class PoolTest extends DatabaseTestFixture {
         Product derivedProd = TestUtil.createProduct();
         productCurator.create(derivedProd);
 
-        Pool p = TestUtil.createPool(owner, prod1, new HashSet<ProvidedProduct>(), 1000);
-        p.addProvidedProduct(new ProvidedProduct(prod2.getId(), prod2.getName()));
-        Set<DerivedProvidedProduct> derivedProducts = new HashSet<DerivedProvidedProduct>();
-        derivedProducts.add(new DerivedProvidedProduct(derivedProd.getId(),
-            derivedProd.getName(), p));
+        Pool p = TestUtil.createPool(owner, prod1, new HashSet<Product>(), 1000);
+        p.addProvidedProduct(prod2);
+        Set<Product> derivedProducts = new HashSet<Product>();
+        derivedProducts.add(derivedProd);
 
         p.setDerivedProvidedProducts(derivedProducts);
         poolCurator.create(p);
@@ -288,10 +287,8 @@ public class PoolTest extends DatabaseTestFixture {
 
         // Clear the set and create a new one:
         pool.getProvidedProducts().clear();
-        pool.addProvidedProduct(new ProvidedProduct("child2",
-            "child2", pool));
-        pool.addProvidedProduct(new ProvidedProduct("child3",
-            "child3", pool));
+        pool.addProvidedProduct(childProduct2);
+        pool.addProvidedProduct(childProduct3);
         poolCurator.merge(pool);
 
         pool = poolCurator.find(pool.getId());

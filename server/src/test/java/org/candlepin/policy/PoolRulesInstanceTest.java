@@ -150,7 +150,7 @@ public class PoolRulesInstanceTest {
         PoolUpdate update = updates.get(0);
         assertTrue(update.getQuantityChanged());
         assertEquals(new Long(100), update.getPool().getQuantity());
-        assertFalse(update.getPool().hasProductAttribute("instance_multiplier"));
+        assertFalse(update.getPool().getProduct().hasAttribute("instance_multiplier"));
     }
 
     @Test

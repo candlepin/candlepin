@@ -42,6 +42,7 @@ import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
+import org.candlepin.model.Product;
 import org.candlepin.model.Release;
 import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
@@ -214,17 +215,17 @@ public class ConsumerResourceUpdateTest {
 
     @Test
     public void installedPackagesChanged() throws Exception {
-        ConsumerInstalledProduct a = new ConsumerInstalledProduct("a", "Product A");
-        ConsumerInstalledProduct b = new ConsumerInstalledProduct("b", "Product B");
-        ConsumerInstalledProduct c = new ConsumerInstalledProduct("c", "Product C");
+        Product productA = TestUtil.createProduct("Product A");
+        Product productB = TestUtil.createProduct("Product B");
+        Product productC = TestUtil.createProduct("Product C");
 
         Consumer consumer = getFakeConsumer();
-        consumer.addInstalledProduct(a);
-        consumer.addInstalledProduct(b);
+        consumer.addInstalledProduct(new ConsumerInstalledProduct(consumer, productA));
+        consumer.addInstalledProduct(new ConsumerInstalledProduct(consumer, productB));
 
         Consumer incoming = new Consumer();
-        incoming.addInstalledProduct(b);
-        incoming.addInstalledProduct(c);
+        incoming.addInstalledProduct(new ConsumerInstalledProduct(incoming, productB));
+        incoming.addInstalledProduct(new ConsumerInstalledProduct(incoming, productC));
 
         this.resource.updateConsumer(consumer.getUuid(), incoming);
         verify(sink).queueEvent((Event) any());
@@ -232,17 +233,17 @@ public class ConsumerResourceUpdateTest {
 
     @Test
     public void setStatusOnUpdate() throws Exception {
-        ConsumerInstalledProduct a = new ConsumerInstalledProduct("a", "Product A");
-        ConsumerInstalledProduct b = new ConsumerInstalledProduct("b", "Product B");
-        ConsumerInstalledProduct c = new ConsumerInstalledProduct("c", "Product C");
+        Product productA = TestUtil.createProduct("Product A");
+        Product productB = TestUtil.createProduct("Product B");
+        Product productC = TestUtil.createProduct("Product C");
 
         Consumer consumer = getFakeConsumer();
-        consumer.addInstalledProduct(a);
-        consumer.addInstalledProduct(b);
+        consumer.addInstalledProduct(new ConsumerInstalledProduct(consumer, productA));
+        consumer.addInstalledProduct(new ConsumerInstalledProduct(consumer, productB));
 
         Consumer incoming = new Consumer();
-        incoming.addInstalledProduct(b);
-        incoming.addInstalledProduct(c);
+        incoming.addInstalledProduct(new ConsumerInstalledProduct(incoming, productB));
+        incoming.addInstalledProduct(new ConsumerInstalledProduct(incoming, productC));
 
         this.resource.updateConsumer(consumer.getUuid(), incoming);
         verify(sink).queueEvent((Event) any());
@@ -252,28 +253,34 @@ public class ConsumerResourceUpdateTest {
 
     @Test
     public void testInstalledPackageSetEquality() throws Exception {
-        Consumer a = new Consumer();
-        a.addInstalledProduct(new ConsumerInstalledProduct("a", "Product A"));
-        a.addInstalledProduct(new ConsumerInstalledProduct("b", "Product B"));
-        a.addInstalledProduct(new ConsumerInstalledProduct("c", "Product C"));
+        Consumer consumerA = new Consumer();
+        Consumer consumerB = new Consumer();
+        Consumer consumerC = new Consumer();
+        Consumer consumerD = new Consumer();
 
-        Consumer b = new Consumer();
-        b.addInstalledProduct(new ConsumerInstalledProduct("a", "Product A"));
-        b.addInstalledProduct(new ConsumerInstalledProduct("b", "Product B"));
-        b.addInstalledProduct(new ConsumerInstalledProduct("c", "Product C"));
+        Product productA = TestUtil.createProduct("Product A");
+        Product productB = TestUtil.createProduct("Product B");
+        Product productC = TestUtil.createProduct("Product C");
+        Product productD = TestUtil.createProduct("Product D");
 
-        Consumer c = new Consumer();
-        c.addInstalledProduct(new ConsumerInstalledProduct("a", "Product A"));
-        c.addInstalledProduct(new ConsumerInstalledProduct("c", "Product C"));
+        consumerA.addInstalledProduct(new ConsumerInstalledProduct(consumerA, productA));
+        consumerA.addInstalledProduct(new ConsumerInstalledProduct(consumerB, productB));
+        consumerA.addInstalledProduct(new ConsumerInstalledProduct(consumerC, productC));
 
-        Consumer d = new Consumer();
-        d.addInstalledProduct(new ConsumerInstalledProduct("a", "Product A"));
-        d.addInstalledProduct(new ConsumerInstalledProduct("b", "Product B"));
-        d.addInstalledProduct(new ConsumerInstalledProduct("d", "Product D"));
+        consumerB.addInstalledProduct(new ConsumerInstalledProduct(consumerA, productA));
+        consumerB.addInstalledProduct(new ConsumerInstalledProduct(consumerB, productB));
+        consumerB.addInstalledProduct(new ConsumerInstalledProduct(consumerC, productC));
 
-        assertEquals(a.getInstalledProducts(), b.getInstalledProducts());
-        assertFalse(a.getInstalledProducts().equals(c.getInstalledProducts()));
-        assertFalse(a.getInstalledProducts().equals(d.getInstalledProducts()));
+        consumerC.addInstalledProduct(new ConsumerInstalledProduct(consumerA, productA));
+        consumerC.addInstalledProduct(new ConsumerInstalledProduct(consumerC, productC));
+
+        consumerD.addInstalledProduct(new ConsumerInstalledProduct(consumerA, productA));
+        consumerD.addInstalledProduct(new ConsumerInstalledProduct(consumerB, productB));
+        consumerD.addInstalledProduct(new ConsumerInstalledProduct(consumerD, productD));
+
+        assertEquals(consumerA.getInstalledProducts(), consumerB.getInstalledProducts());
+        assertFalse(consumerA.getInstalledProducts().equals(consumerC.getInstalledProducts()));
+        assertFalse(consumerA.getInstalledProducts().equals(consumerD.getInstalledProducts()));
     }
 
     @Test
@@ -682,8 +689,6 @@ public class ConsumerResourceUpdateTest {
         String uuid = "A Consumer";
         String expectedFactName = "FACT1";
         String expectedFactValue = "F1";
-        ConsumerInstalledProduct expectedInstalledProduct =
-            new ConsumerInstalledProduct("P1", "Product One");
         GuestId expectedGuestId = new GuestId("GUEST_ID_1");
 
         Consumer existing = getFakeConsumer();
@@ -693,6 +698,9 @@ public class ConsumerResourceUpdateTest {
         Consumer updated = new Consumer();
         updated.setUuid(uuid);
         updated.setFact(expectedFactName, expectedFactValue);
+        ConsumerInstalledProduct expectedInstalledProduct =
+            new ConsumerInstalledProduct(updated, TestUtil.createProduct("Product One"));
+
         updated.addInstalledProduct(expectedInstalledProduct);
         updated.addGuestId(expectedGuestId);
 

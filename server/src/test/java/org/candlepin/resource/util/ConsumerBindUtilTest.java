@@ -76,8 +76,13 @@ public class ConsumerBindUtilTest {
     public void init() throws Exception {
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
 
-        consumerBindUtil = new ConsumerBindUtil(this.entitler, this.i18n,
-                this.consumerContentOverrideCurator, null, this.serviceLevelValidator);
+        consumerBindUtil = new ConsumerBindUtil(
+            this.entitler,
+            this.i18n,
+            this.consumerContentOverrideCurator,
+            null,
+            this.serviceLevelValidator
+        );
     }
 
     private List<ActivationKey> mockActivationKeys() {
@@ -109,7 +114,7 @@ public class ConsumerBindUtilTest {
 
         Consumer consumer = new Consumer("sys.example.com", null, null, system);
         Set<ConsumerInstalledProduct> cips = new HashSet<ConsumerInstalledProduct>();
-        ConsumerInstalledProduct cip = new ConsumerInstalledProduct(prod.getId(), prod.getName());
+        ConsumerInstalledProduct cip = new ConsumerInstalledProduct(consumer, prod);
         cips.add(cip);
         consumer.setInstalledProducts(cips);
 
@@ -130,7 +135,7 @@ public class ConsumerBindUtilTest {
 
         Consumer consumer = new Consumer("sys.example.com", null, null, system);
         Set<ConsumerInstalledProduct> cips = new HashSet<ConsumerInstalledProduct>();
-        ConsumerInstalledProduct cip = new ConsumerInstalledProduct(prod.getId(), prod.getName());
+        ConsumerInstalledProduct cip = new ConsumerInstalledProduct(consumer, prod);
         cips.add(cip);
         consumer.setInstalledProducts(cips);
 
@@ -155,7 +160,7 @@ public class ConsumerBindUtilTest {
 
         Consumer consumer = new Consumer("sys.example.com", null, null, system);
         Set<ConsumerInstalledProduct> cips = new HashSet<ConsumerInstalledProduct>();
-        ConsumerInstalledProduct cip = new ConsumerInstalledProduct(prod1.getId(), prod1.getName());
+        ConsumerInstalledProduct cip = new ConsumerInstalledProduct(consumer, prod1);
         cips.add(cip);
         consumer.setInstalledProducts(cips);
 

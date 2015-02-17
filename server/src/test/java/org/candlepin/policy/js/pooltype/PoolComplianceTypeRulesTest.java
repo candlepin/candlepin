@@ -72,8 +72,8 @@ public class PoolComplianceTypeRulesTest {
     @Test
     public void testStackablePool() {
         Pool p = new Pool();
-        p.setProductAttribute("stacking_id", "5", "test");
-        p.setProductAttribute("multi-entitlement", "yes", "test");
+        p.getProduct().setAttribute("stacking_id", "5");
+        p.getProduct().setAttribute("multi-entitlement", "yes");
         PoolComplianceType pt = poolTypeRules.getPoolType(p);
         assertEquals("stackable", pt.getRawPoolType());
     }
@@ -85,7 +85,7 @@ public class PoolComplianceTypeRulesTest {
     @Test
     public void testUniqueStackablePool() {
         Pool p = new Pool();
-        p.setProductAttribute("stacking_id", "5", "test");
+        p.getProduct().setAttribute("stacking_id", "5");
         PoolComplianceType pt = poolTypeRules.getPoolType(p);
         assertEquals("unique stackable", pt.getRawPoolType());
     }
@@ -93,9 +93,9 @@ public class PoolComplianceTypeRulesTest {
     @Test
     public void testInstanceBasedPool() {
         Pool p = new Pool();
-        p.setProductAttribute("stacking_id", "5", "test");
-        p.setProductAttribute("multi-entitlement", "yes", "test");
-        p.setProductAttribute("instance_multiplier", "2", "test");
+        p.getProduct().setAttribute("stacking_id", "5");
+        p.getProduct().setAttribute("multi-entitlement", "yes");
+        p.getProduct().setAttribute("instance_multiplier", "2");
         PoolComplianceType pt = poolTypeRules.getPoolType(p);
         assertEquals("instance based", pt.getRawPoolType());
     }
@@ -107,7 +107,7 @@ public class PoolComplianceTypeRulesTest {
     @Test
     public void testUnknownPool() {
         Pool p = new Pool();
-        p.setProductAttribute("instance_multiplier", "2", "test");
+        p.getProduct().setAttribute("instance_multiplier", "2");
         PoolComplianceType pt = poolTypeRules.getPoolType(p);
         assertEquals("unknown", pt.getRawPoolType());
     }

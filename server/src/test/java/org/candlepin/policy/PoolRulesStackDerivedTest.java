@@ -163,7 +163,7 @@ public class PoolRulesStackDerivedTest {
 
         PoolHelper helper = new PoolHelper(poolManagerMock, productCache,
             stackedEnts.get(0));
-        stackDerivedPool = helper.createHostRestrictedPool(prod2.getId(), pool2, "6");
+        stackDerivedPool = helper.createHostRestrictedPool(prod2, pool2, "6");
     }
 
     private Subscription createStackedVirtSub(Owner owner, Product product,
@@ -218,8 +218,8 @@ public class PoolRulesStackDerivedTest {
 
     @Test
     public void initialAttributes() {
-        assertEquals(5, stackDerivedPool.getProductAttributes().size());
-        assertEquals("2", stackDerivedPool.getProductAttributeValue("testattr2"));
+        assertEquals(5, stackDerivedPool.getProduct().getAttributes().size());
+        assertEquals("2", stackDerivedPool.getProduct().getAttributeValue("testattr2"));
     }
 
     @Test
@@ -250,10 +250,10 @@ public class PoolRulesStackDerivedTest {
         PoolUpdate update = poolRules.updatePoolFromStack(stackDerivedPool);
         assertTrue(update.changed());
         assertTrue(update.getProductAttributesChanged());
-        assertEquals(6, stackDerivedPool.getProductAttributes().size());
+        assertEquals(6, stackDerivedPool.getProduct().getAttributes().size());
 
-        assertEquals("2", stackDerivedPool.getProductAttributeValue("testattr2"));
-        assertEquals("1", stackDerivedPool.getProductAttributeValue("testattr1"));
+        assertEquals("2", stackDerivedPool.getProduct().getAttributeValue("testattr2"));
+        assertEquals("1", stackDerivedPool.getProduct().getAttributeValue("testattr1"));
     }
 
     @Test
@@ -339,11 +339,11 @@ public class PoolRulesStackDerivedTest {
     public void virtLimitNotChangedWhenLastVirtEntIsRemovedFromStack() {
         // Remove virt_limit from pool1 so that it is not considered
         // as virt limiting.
-        pool1.getProductAttributes().clear();
-        pool1.getProductAttributes().add(new ProductPoolAttribute(
-            "stacking_id", STACK, pool1.getProductId()));
-        pool1.getProductAttributes().add(new ProductPoolAttribute(
-            "testattr2", "2", pool1.getProductId()));
+        Product product = pool1.getProduct();
+
+        product.getAttributes().clear();
+        product.setAttribute("stacking_id", STACK);
+        product.setAttribute("testattr2", "2");
 
         stackedEnts.clear();
         stackedEnts.add(createEntFromPool(pool1));
