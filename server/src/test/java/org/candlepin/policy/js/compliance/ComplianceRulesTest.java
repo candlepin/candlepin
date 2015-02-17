@@ -1957,6 +1957,25 @@ public class ComplianceRulesTest {
         assertNotEquals(initialHash, updatedHash);
     }
 
+    @Test
+    public void unmappedGuestEntitlementPartial() {
+        Consumer c = mockConsumer(new String[]{ PRODUCT_1 });
+
+        Entitlement ent = mockEntitlement(c, PRODUCT_1);
+        ent.getPool().setAttribute("unmapped_guests_only", "true");
+        ent.getPool().setAttribute("virt_only", "true");
+        ent.getPool().setAttribute("pool_derived", "true");
+
+        mockEntCurator(c, Arrays.asList(ent));
+        ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
+
+        assertEquals(0, status.getNonCompliantProducts().size());
+        assertEquals(1, status.getPartiallyCompliantProducts().size());
+        assertEquals(0, status.getCompliantProducts().size());
+        assertTrue(status.getPartiallyCompliantProducts().keySet().contains(PRODUCT_1));
+        assertEquals(ComplianceStatus.YELLOW, status.getStatus());
+    }
+
     private void mockEntCurator(Consumer c, List<Entitlement> ents) {
         c.setEntitlements(new HashSet<Entitlement>(ents));
         when(entCurator.listByConsumer(eq(c))).thenReturn(ents);

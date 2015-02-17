@@ -1,4 +1,4 @@
-// Version: 5.13
+// Version: 5.14
 
 /*
  * Default Candlepin rule set.
@@ -61,6 +61,7 @@ var REQUIRES_HOST_ATTRIBUTE = "requires_host";
 var VIRT_ONLY = "virt_only";
 var PHYSICAL_ONLY = "physical_only";
 var POOL_DERIVED = "pool_derived";
+var UNMAPPED_GUESTS_ONLY = "unmapped_guests_only";
 var GUEST_LIMIT_ATTRIBUTE = "guest_limit";
 var VCPU_ATTRIBUTE = "vcpu";
 var MULTI_ENTITLEMENT_ATTRIBUTE = "multi-entitlement";
@@ -655,15 +656,29 @@ var StatusReasonGenerator = {
         return reason;
     },
 
-   /*
-    * Add a reason for an installed product without entitlement (red)
-    */
+    /*
+     * Add a reason for an installed product without entitlement (red)
+     */
     buildInstalledProductReason: function (installed_pid) {
         var attributes = {};
         attributes["product_id"] = installed_pid;
 
         var reason = {};
         reason["key"] = "NOTCOVERED";
+        reason["message"] = reason["key"];
+        reason["attributes"] = attributes;
+        return reason;
+    },
+
+    /*
+     * Add a reason for a unmapped guest entitlement
+     */
+    buildUnmappedEntitlementReason: function (installed_pid) {
+        var attributes = {};
+        attributes["product_id"] = installed_pid;
+
+        var reason = {};
+        reason["key"] = "UNMAPPEDGUEST";
         reason["message"] = reason["key"];
         reason["attributes"] = attributes;
         return reason;
@@ -1274,7 +1289,8 @@ var Entitlement = {
             "requires_host:1:requires_host," +
             "instance_multiplier:1:instance_multiplier," +
             "vcpu:1:vcpu," +
-            "physical_only:1:physical_only";
+            "physical_only:1:physical_only," +
+            "unmapped_guests_only:1:unmapped_guests_only";
     },
 
     ValidationResult: function () {
@@ -1398,6 +1414,39 @@ var Entitlement = {
 
     pre_physical_only: function() {
         return this.build_func("do_pre_physical_only")();
+    },
+
+    // pre_virt_only already covers is guest
+    do_pre_unmapped_guests_only: function(context, result) {
+        var caller = context.caller;
+        var consumer = context.consumer;
+        var unmapped_guest_pool = Utils.equalsIgnoreCase('true', context.getAttribute(context.pool, UNMAPPED_GUESTS_ONLY));
+
+        if (unmapped_guest_pool) {
+            if (context.hostConsumer){
+                if (BEST_POOLS_CALLER == caller ||
+                    BIND_CALLER == caller) {
+                    result.addError("virt.guest.cannot.use.unmapped.guest.pool.has.host");
+                }
+                else {
+                    result.addWarning("virt.guest.cannot.use.unmapped.guest.pool.has.host");
+                }
+            }
+
+            if (!Utils.isNewborn(consumer)) {
+                if (BEST_POOLS_CALLER == caller ||
+                    BIND_CALLER == caller) {
+                    result.addError("virt.guest.cannot.use.unmapped.guest.pool.not.new");
+                }
+                else {
+                    result.addWarning("virt.guest.cannot.use.unmapped.guest.pool.not.new");
+                }
+            }
+        }
+    },
+
+    pre_unmapped_guests_only: function() {
+        return this.build_func("do_pre_unmapped_guests_only")();
     },
 
     do_pre_requires_host: function(context, result) {
@@ -2713,8 +2762,23 @@ var Compliance = {
                 }
             }
 
+            // If the consumer has an entitlement from a pool marked
+            // unmapped_guests_only it can only hope to be partial
+            var unmappedGuest = Compliance.getUnmappedGuest(e);
+            // should be partial even with no matching product
+            if (relevant_pids.length == 0 && unmappedGuest) {
+                    compStatus.add_reasons([StatusReasonGenerator.buildUnmappedEntitlementReason(null)]);
+            }
+
             for (var m = 0; m < relevant_pids.length; m++) {
                 var relevant_pid = relevant_pids[m];
+
+                if (unmappedGuest) {
+                    log.debug("   partially compliant: " + relevant_pid);
+                    compStatus.add_partial_product(relevant_pid, e);
+                    compStatus.add_reasons([StatusReasonGenerator.buildUnmappedEntitlementReason(relevant_pid)]);
+                    continue;
+                }
                 if (partially_stacked) {
                     log.debug("   partially compliant: " + relevant_pid);
                     compStatus.add_partial_product(relevant_pid, e);
@@ -2843,7 +2907,13 @@ var Compliance = {
         var complianceTracker = createComplianceTracker(consumer, null);
         complianceTracker.updateAccumulatedFromEnt(entitlement);
         return CoverageCalculator.getStackCoverage(complianceTracker, consumer, ents);
+    },
+
+    getUnmappedGuest: function(entitlement) {
+        log.debug("Checking unmapped guest for entitlement: " + entitlement.id);
+        return Utils.equalsIgnoreCase('true', entitlement.pool.getAttribute(UNMAPPED_GUESTS_ONLY));
     }
+
 }
 
 var Quantity = {
@@ -3013,6 +3083,17 @@ var Override = {
 }
 
 var Utils = {
+
+    isNewborn: function(consumer) {
+        if (consumer.created == null) {
+            return false;
+        }
+
+        var now = new Date().getTime();
+        // 24 * 60 * 60 * 1000 = 86400000
+        var oneDayFromRegistration = new Date(consumer.created).getTime() + 86400000;
+        return now < oneDayFromRegistration;
+    },
 
     date_compare: function(d1, d2) {
         if (d1 - d2 > 0) {

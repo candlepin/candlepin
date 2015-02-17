@@ -14,9 +14,7 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import org.candlepin.auth.NoAuthPrincipal;
 import org.candlepin.controller.CandlepinPoolManager;
@@ -28,6 +26,7 @@ import org.candlepin.common.paging.PageRequest;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -956,6 +955,39 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         List<Pool> result = poolCurator.getPoolsBySubscriptionId(null);
         assertTrue(result.isEmpty());
+    }
+
+    @Test
+    public void testGetPoolsByFilter() {
+        Owner owner1 = createOwner();
+        ownerCurator.create(owner1);
+
+        Owner owner2 = createOwner();
+        ownerCurator.create(owner2);
+
+        Pool p1Attributes = TestUtil.createPool(owner1, product);
+        Pool p1NoAttributes = TestUtil.createPool(owner1, product);
+
+        Pool p2Attributes = TestUtil.createPool(owner2, product);
+        Pool p2NoAttributes = TestUtil.createPool(owner2, product);
+        Pool p2BadAttributes = TestUtil.createPool(owner2, product);
+
+        p1Attributes.addAttribute(new PoolAttribute("x", "true"));
+        p2Attributes.addAttribute(new PoolAttribute("x", "true"));
+        p2BadAttributes.addAttribute(new PoolAttribute("x", "false"));
+
+        poolCurator.create(p1Attributes);
+        poolCurator.create(p1NoAttributes);
+        poolCurator.create(p2Attributes);
+        poolCurator.create(p2NoAttributes);
+        poolCurator.create(p2BadAttributes);
+
+        PoolFilterBuilder filters = new PoolFilterBuilder();
+        filters.addAttributeFilter("x", "true");
+
+        List<Pool> results = poolCurator.listByFilter(filters);
+
+        assertThat(results, Matchers.hasItems(p1Attributes, p2Attributes));
     }
 
     private Pool createPool(Owner o, String subId) {

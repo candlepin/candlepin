@@ -6,6 +6,7 @@ require 'rest_client'
 
 describe 'Refresh Pools' do
   include CandlepinMethods
+  include VirtHelper
 
   it 'creates a valid job' do
     owner = create_owner random_string('test_owner')
@@ -173,7 +174,8 @@ describe 'Refresh Pools' do
       })
     # refresh so the owner has it
     @cp.refresh_pools(owner['key'])
-    pools = @cp.list_pools :owner => owner.id, \
+    # extra unmapped guest pool will be labeled with provided product
+    pools = @cp.list_pools :owner => owner.id,
       :product => datacenter_product.id
     pools.size.should == 1
     pools[0]['derivedProvidedProducts'].length.should == 1
@@ -182,7 +184,6 @@ describe 'Refresh Pools' do
     # the scenario that caues the bug
     sub1['derivedProduct'] = nil
     sub1['derivedProvidedProducts'] = nil
-    puts "updating subscription"
     @cp.update_subscription(sub1)
 
     # this is the refresh we are actually testing
@@ -190,8 +191,10 @@ describe 'Refresh Pools' do
     @cp.refresh_pools(owner['key'])
 
     # let's verify it removed them correctly
-    pools = @cp.list_pools({:owner => owner.id})
-    pools.length.should == 1
+    # extra unmapped pool now shows datacenter product
+    pools = @cp.list_pools :owner => owner.id, \
+      :product => datacenter_product.id
+    pools.length.should == 2
     pools[0]['derivedProvidedProducts'].length.should == 0
   end
 
@@ -274,11 +277,13 @@ describe 'Refresh Pools' do
     if is_hosted?
         pools.length.should == 2
     else
-        pools.length.should == 1
-        @cp.consume_pool(pools[0]['id'], {:uuid => host.uuid, :quantity => 1})
+        # unmapped guest pool also gets created
+        pools.length.should == 2
+        @cp.consume_pool(filter_unmapped_guest_pools(pools)[0]['id'], {:uuid => host.uuid, :quantity => 1})
         @cp.refresh_pools(owner['key'], false, false, false)
         pools = @cp.list_pools({:owner => owner.id, :product => product.id})
-        pools.length.should == 2
+        pools.length.should == 3
+        filter_unmapped_guest_pools(pools)
         host.update_consumer({:guestIds => [{'guestId' => guest_uuid}]})
      end
 
@@ -300,6 +305,7 @@ describe 'Refresh Pools' do
     @cp.update_product(product.id, :attributes => attrs)
     @cp.refresh_pools(owner['key'], false, false, false)
     pools = @cp.list_pools({:owner => owner.id, :product => product.id})
+    # unmapped guest pool is also removed
     pools.length.should == 1
   end
 

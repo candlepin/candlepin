@@ -501,6 +501,7 @@ public class ConsumerResourceUpdateTest {
         Consumer guest1 = new Consumer();
         guest1.setUuid("Guest 1");
         guest1.addEntitlement(entitlement);
+        guest1.setAutoheal(true);
 
         when(this.consumerCurator.getGuestConsumersMap(any(Owner.class), any(List.class))).
             thenReturn(mockVirtConsumerMap("Guest 1", guest1));
@@ -512,6 +513,7 @@ public class ConsumerResourceUpdateTest {
         existingMigratedTo.setUuid("MIGRATED_TO");
         when(this.consumerCurator.verifyAndLookupConsumer(existingMigratedTo.getUuid()))
             .thenReturn(existingMigratedTo);
+        when(this.consumerCurator.find(eq(guest1.getId()))).thenReturn(guest1);
 
         this.resource.updateConsumer(existingMigratedTo.getUuid(),
             createConsumerWithGuests("Guest 1"));
@@ -537,13 +539,14 @@ public class ConsumerResourceUpdateTest {
         Consumer guest1 = new Consumer();
         guest1.setUuid("Guest 1");
         guest1.addEntitlement(entitlement);
+        guest1.setAutoheal(true);
 
         when(this.consumerCurator.getGuestConsumersMap(any(Owner.class), any(List.class))).
             thenReturn(mockVirtConsumerMap("Guest 1", guest1));
         // Ensure that the guest was not reported by another host.
         when(this.consumerCurator.getGuestsHostMap(any(Owner.class), any(List.class))).
             thenReturn(new VirtConsumerMap());
-
+        when(this.consumerCurator.find(eq(guest1.getId()))).thenReturn(guest1);
 
         this.resource.updateConsumer(host.getUuid(), updatedHost);
         verify(poolManager, never()).revokeEntitlement(eq(entitlement));
@@ -660,11 +663,13 @@ public class ConsumerResourceUpdateTest {
         Consumer guest1 = new Consumer();
         guest1.setUuid("Guest 1");
         guest1.addEntitlement(entitlement);
+        guest1.setAutoheal(true);
 
         when(this.consumerCurator.getGuestConsumersMap(any(Owner.class), any(List.class))).
             thenReturn(mockVirtConsumerMap("Guest 1", guest1));
         when(this.consumerCurator.getGuestsHostMap(any(Owner.class), any(List.class))).
             thenReturn(new VirtConsumerMap());
+        when(this.consumerCurator.find(eq(guest1.getId()))).thenReturn(guest1);
 
         this.resource.updateConsumer(host.getUuid(), updatedHost);
 

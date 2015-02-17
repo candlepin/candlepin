@@ -171,8 +171,12 @@ public class Entitler {
                     log.debug("Healing failed for host UUID " + host.getUuid() +
                         " with message: " + e.getMessage());
                 }
-                // Consumer is stale at this point.
-                consumer = consumerCurator.getConsumer(consumer.getUuid());
+                /* Consumer is stale at this point.  Note that we use find() instead of
+                 * findByUuid() or getConsumer() since the latter two methods are secured
+                 * to a specific host principal and bindByProducts can get called when
+                 * a guest is switching hosts */
+                consumer = consumerCurator.find(consumer.getId());
+                data.setConsumer(consumer);
             }
         }
 
