@@ -1032,23 +1032,26 @@ public class ConsumerResource {
         // used in queries to see which host most recently reported a guest.
         existing.addGuestIdCheckIn();
 
-        // Ensure that existing actually has guest ids initialized.
-        if (existing.getGuestIds() != null) {
-            // Always clear existing id so that the timestamps are updated
-            // on each ID.
-            log.info("Clearing previous IDs.");
-            existing.getGuestIds().clear();
-        }
+        List<GuestId> existingGuests = existing.getGuestIds();
 
+        // remove guests that are missing.
+        if (existingGuests != null) {
+            log.info("removing IDs.");
+            for (GuestId guestId : removedGuests) {
+                existingGuests.remove(guestId);
+                if (log.isDebugEnabled()) {
+                    log.info("Guest ID removed: {}", guestId);
+                }
+                sink.queueEvent(eventFactory.guestIdDeleted(guestId));
+            }
+        }
         // Check guests that are existing/added.
         for (GuestId guestId : incoming.getGuestIds()) {
             Consumer host = guestHypervisorConsumers.get(guestId.getGuestId());
 
-            // Add back the guestId.
-            existing.addGuestId(guestId);
-
-            // If adding a new GuestId send notification.
             if (addedGuests.contains(guestId)) {
+                // Add the guestId.
+                existing.addGuestId(guestId);
                 if (log.isDebugEnabled()) {
                     log.info("New guest ID added: {}", guestId.getGuestId());
                 }
@@ -1084,16 +1087,6 @@ public class ConsumerResource {
                 // and revoke those.
                 revokeGuestEntitlementsNotMatchingHost(existing, guest);
             }
-        }
-
-        // Check guests that have been removed.
-        for (GuestId guestId : removedGuests) {
-            // Report that the guestId was removed.
-            if (log.isDebugEnabled()) {
-                log.info("Guest ID removed: {}", guestId.getGuestId());
-            }
-            sink.queueEvent(eventFactory.guestIdDeleted(guestId));
-
         }
 
         // If nothing shows as being added, and nothing shows as being removed, we should

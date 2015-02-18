@@ -301,4 +301,33 @@ describe 'GuestId Resource' do
     guest = consumer_client.get_guestid(uuid1)
     guest['attributes']['some_attr'].should == 'some_value'
   end
+
+  it 'should not rewrite existing guest ids on host consumer' do
+    guests = [{'guestId' => 'guest1'},
+              {'guestId' => 'guest2'}]
+
+    user_cp = user_client(@owner1, random_string('test-user'))
+    consumer = user_cp.register(random_string('host'), :system, nil,
+      {}, nil, nil, [], [])
+
+    consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
+    consumer_client.update_guestids(guests)
+
+    guest_ids = consumer_client.get_guestids()
+    guest_ids.length.should == 2
+
+    updated = nil
+    guest_ids.each do |gi|
+      if gi['guestId'] == 'guest2'
+        updated = gi['updated']
+      end
+    end
+    updated.should_not be_nil
+
+    consumer_client.update_guestids([guests[1]])
+    guest_ids = consumer_client.get_guestids()
+    guest_ids.length.should == 1
+    guest_ids[0]['guestId'].should == 'guest2'
+    guest_ids[0]['updated'].should == updated
+  end
 end

@@ -14,7 +14,9 @@
  */
 package org.candlepin.model;
 
+import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Index;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -50,7 +52,9 @@ public class GuestIdsCheckIn extends AbstractHibernateObject {
     private String id;
 
     @ManyToOne
+    @ForeignKey(name = "fk_guest_ids_checkin_consumer")
     @JoinColumn(nullable = false)
+    @Index(name = "idx_guest_ids_checkin_consumer")
     @NotNull
     private Consumer consumer;
 
