@@ -33,8 +33,6 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
-import org.candlepin.model.ProductPoolAttribute;
-import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.Subscription;
@@ -263,12 +261,9 @@ public class PoolRulesStackDerivedTest {
         PoolUpdate update = poolRules.updatePoolFromStack(stackDerivedPool);
         assertTrue(update.getProductsChanged());
         assertEquals(3, stackDerivedPool.getProvidedProducts().size());
-        assertTrue(stackDerivedPool.getProvidedProducts().contains(
-            new ProvidedProduct(provided1.getId(), provided1.getName())));
-        assertTrue(stackDerivedPool.getProvidedProducts().contains(
-            new ProvidedProduct(provided2.getId(), provided2.getName())));
-        assertTrue(stackDerivedPool.getProvidedProducts().contains(
-            new ProvidedProduct(provided3.getId(), provided3.getName())));
+        assertTrue(stackDerivedPool.getProvidedProducts().contains(provided1));
+        assertTrue(stackDerivedPool.getProvidedProducts().contains(provided2));
+        assertTrue(stackDerivedPool.getProvidedProducts().contains(provided3));
     }
 
     @Test

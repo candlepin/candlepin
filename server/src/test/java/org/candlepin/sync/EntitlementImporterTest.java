@@ -25,13 +25,11 @@ import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Consumer;
-import org.candlepin.model.DerivedProvidedProduct;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.test.TestUtil;
@@ -572,23 +570,22 @@ public class EntitlementImporterTest {
             consumer.getType(), consumer.getOwner(), "", "");
 
         Product parentProduct = TestUtil.createProduct();
-        ProvidedProduct pp1 = TestUtil.createProvidedProduct();
+        Product pp1 = TestUtil.createProduct();
 
-        Set<ProvidedProduct> provided = new HashSet<ProvidedProduct>();
+        Set<Product> provided = new HashSet<Product>();
         provided.add(pp1);
 
         // Sub product setup
         Product subProduct = TestUtil.createProduct();
-        DerivedProvidedProduct subProvided1 = TestUtil.createSubProvidedProduct();
+        Product subProvided1 = TestUtil.createProduct();
 
-        Set<DerivedProvidedProduct> subProvidedProducts =
-            new HashSet<DerivedProvidedProduct>();
+        Set<Product> subProvidedProducts = new HashSet<Product>();
         subProvidedProducts.add(subProvided1);
 
-        Pool pool = TestUtil.createPool(owner, parentProduct, provided, subProduct.getId(),
+        Pool pool = TestUtil.createPool(owner, parentProduct, provided, subProduct,
             subProvidedProducts, 3);
-        EntitlementCertificate cert = createEntitlementCertificate("my-test-key",
-            "my-cert");
+
+        EntitlementCertificate cert = createEntitlementCertificate("my-test-key", "my-cert");
         Entitlement ent = TestUtil.createEntitlement(owner, consumer, pool, cert);
         ent.setQuantity(3);
 
@@ -599,19 +596,17 @@ public class EntitlementImporterTest {
         Map<String, Product> productsById = new HashMap<String, Product>();
         productsById.put(parentProduct.getId(), parentProduct);
         productsById.put(pp1.getProductId(),
-            TestUtil.createProduct(pp1.getProductId(), pp1.getProductName(), owner));
+            TestUtil.createProduct(pp1.getProductId(), pp1.getName(), owner));
         productsById.put(subProduct.getId(), subProduct);
         productsById.put(subProvided1.getProductId(), TestUtil.createProduct(
-            subProvided1.getProductId(), subProvided1.getProductName(), owner));
+            subProvided1.getProductId(), subProvided1.getName(), owner));
 
         Meta meta = new Meta();
         meta.setCdnLabel("test-cdn");
-        Cdn testCdn = new Cdn("test-cdn",
-            "Test CDN", "https://test.url.com");
+        Cdn testCdn = new Cdn("test-cdn", "Test CDN", "https://test.url.com");
         when(cdnCurator.lookupByLabel("test-cdn")).thenReturn(testCdn);
 
-        Subscription sub = importer.importObject(om, reader, owner,
-            productsById, consumerDto, meta);
+        Subscription sub = importer.importObject(om, reader, owner, productsById, consumerDto, meta);
 
         assertEquals(pool.getId(), sub.getUpstreamPoolId());
         assertEquals(consumer.getUuid(), sub.getUpstreamConsumerId());

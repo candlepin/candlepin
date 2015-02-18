@@ -22,7 +22,7 @@ import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
-import org.candlepin.model.ProductPoolAttribute;
+import org.candlepin.model.Product;
 import org.candlepin.test.TestUtil;
 
 import org.junit.Before;
@@ -57,12 +57,12 @@ public class StatusReasonMessageGeneratorTest {
         owner = new Owner("test");
         consumer = new Consumer();
         consumer.setType(new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM));
-        ent1 = mockEntitlement(consumer, "id1", "Nonstacked Product");
+        ent1 = mockEntitlement(consumer, TestUtil.createProduct("id1", "Nonstacked Product", owner));
         ent1.setId("ent1");
         entStacked1 = mockBaseStackedEntitlement(consumer, "stack",
-            "Stacked Product", "Stack Subscription One");
+            TestUtil.createProduct("Stacked Product", "Stack Subscription One", owner));
         entStacked2 = mockBaseStackedEntitlement(consumer, "stack",
-            "Stacked Product", "Stack Subscription Two");
+            TestUtil.createProduct("Stacked Product", "Stack Subscription Two", owner));
         consumer.addEntitlement(ent1);
         consumer.addEntitlement(entStacked1);
         consumer.addEntitlement(entStacked2);
@@ -141,9 +141,7 @@ public class StatusReasonMessageGeneratorTest {
         ComplianceReason reason = buildReason("NOT_A_KEY",
             buildGeneralAttributes("8", "4"));
         generator.setMessage(consumer, reason, new Date());
-        assertEquals(
-            "NOT_A_KEY COVERAGE PROBLEM.  " +
-            "Supports 4 of 8", reason.getMessage());
+        assertEquals("NOT_A_KEY COVERAGE PROBLEM.  Supports 4 of 8", reason.getMessage());
     }
 
     @Test
@@ -151,9 +149,11 @@ public class StatusReasonMessageGeneratorTest {
         HashMap<String, String> attrs = new HashMap<String, String>();
         attrs.put("product_id", "prod1");
         ComplianceReason reason = buildReason("NOTCOVERED", attrs);
-        ConsumerInstalledProduct installed = new ConsumerInstalledProduct();
-        installed.setProductId("prod1");
-        installed.setProductName("NonCovered Product");
+
+        Owner owner = new Owner("test");
+        Product product = TestUtil.createProduct("prod1", "NonCovered Product", owner);
+        ConsumerInstalledProduct installed = new ConsumerInstalledProduct(consumer, product);
+
         consumer.addInstalledProduct(installed);
         generator.setMessage(consumer, reason, new Date());
         assertEquals("Not supported by a valid subscription.", reason.getMessage());
@@ -183,22 +183,29 @@ public class StatusReasonMessageGeneratorTest {
         return result;
     }
 
-    private Entitlement mockBaseStackedEntitlement(Consumer consumer, String stackId,
-        String productId, String name) {
-        Entitlement e = mockEntitlement(consumer, productId, name);
+    private Entitlement mockBaseStackedEntitlement(Consumer consumer, String stackId, Product product) {
+        Entitlement e = mockEntitlement(consumer, product);
         Random gen = new Random();
         int id = gen.nextInt(Integer.MAX_VALUE);
         e.setId(String.valueOf(id));
         Pool p = e.getPool();
         // Setup the attributes for stacking:
-        p.addProductAttribute(new ProductPoolAttribute("stacking_id", stackId, productId));
+        p.getProduct().setAttribute("stacking_id", stackId);
         return e;
     }
 
-    private Entitlement mockEntitlement(Consumer consumer, String productId, String name) {
-        Pool p = new Pool(owner, productId, name, null,
-            new Long(1000), TestUtil.createDate(2000, 1, 1),
-            TestUtil.createDate(2050, 1, 1), "1000", "1000", "1000");
+    private Entitlement mockEntitlement(Consumer consumer, Product product) {
+        Pool p = new Pool(
+            owner,
+            product,
+            null,
+            new Long(1000),
+            TestUtil.createDate(2000, 1, 1),
+            TestUtil.createDate(2050, 1, 1),
+            "1000",
+            "1000",
+            "1000"
+        );
         Entitlement e = new Entitlement(p, consumer, 1);
         return e;
     }

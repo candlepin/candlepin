@@ -53,8 +53,9 @@ public class PostEntitlementRulesTest extends EntitlementRulesTestFixture {
         enforcer.postEntitlement(consumer, postHelper, e);
 
         // Pool quantity should be virt_limit:
-        verify(postHelper).createHostRestrictedPool(eq(pool.getProductId()),
-            eq(pool), eq("10"));
+        verify(postHelper).createHostRestrictedPool(
+            eq(pool.getProduct()), eq(pool), eq("10")
+        );
     }
 
     @Test
@@ -70,8 +71,9 @@ public class PostEntitlementRulesTest extends EntitlementRulesTestFixture {
         enforcer.postEntitlement(consumer, postHelper, e);
 
         // Pool quantity should be virt_limit * entitlement quantity:
-        verify(postHelper).createHostRestrictedPool(eq(pool.getProductId()),
-            eq(pool), eq("unlimited"));
+        verify(postHelper).createHostRestrictedPool(
+            eq(pool.getProduct()), eq(pool), eq("unlimited")
+        );
     }
 
     // Sub-pools should not be created when distributors bind:

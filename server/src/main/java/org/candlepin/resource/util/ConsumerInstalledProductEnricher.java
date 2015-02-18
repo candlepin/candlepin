@@ -32,6 +32,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+// TODO: This class may not have much use with object references.
+
 /**
  * Responsible for enriching a {@link ConsumerInstalledProduct} with
  * product data.

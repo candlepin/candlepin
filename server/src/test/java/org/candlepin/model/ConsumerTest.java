@@ -458,11 +458,11 @@ public class ConsumerTest extends DatabaseTestFixture {
         Consumer lookedUp = consumerCurator.find(consumer.getId());
         lookedUp.addInstalledProduct(new ConsumerInstalledProduct(
             lookedUp,
-            TestUtil.createProduct("someproduct", "someproductname")
+            TestUtil.createProduct("someproduct", "someproductname", owner)
         ));
         lookedUp.addInstalledProduct(new ConsumerInstalledProduct(
             lookedUp,
-            TestUtil.createProduct("someproduct2", "someproductname2")
+            TestUtil.createProduct("someproduct2", "someproductname2", owner)
         ));
         consumerCurator.update(lookedUp);
         lookedUp = consumerCurator.find(consumer.getId());

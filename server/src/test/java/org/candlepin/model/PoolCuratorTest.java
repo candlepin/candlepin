@@ -461,13 +461,10 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         Product parent = TestUtil.createProduct();
         productCurator.create(parent);
 
-        Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
-        ProvidedProduct providedProduct = new ProvidedProduct(
-            product.getId(), "Test Provided Product");
-        providedProducts.add(providedProduct);
+        Set<Product> providedProducts = new HashSet<Product>();
+        providedProducts.add(parent);
 
         Pool p = TestUtil.createPool(owner, parent, providedProducts, 5);
-        providedProduct.setPool(p);
         poolCurator.create(p);
         List<Pool> results = poolCurator.listByOwnerAndProduct(owner, product.getId());
         assertEquals(1, results.size());
@@ -478,13 +475,10 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         Product another = TestUtil.createProduct();
         productCurator.create(another);
 
-        Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
-        ProvidedProduct providedProduct = new ProvidedProduct(
-            another.getId(), "Test Provided Product");
-        providedProducts.add(providedProduct);
+        Set<Product> providedProducts = new HashSet<Product>();
+        providedProducts.add(another);
 
         Pool pool = TestUtil.createPool(owner, product, providedProducts, 5);
-        providedProduct.setPool(pool);
         poolCurator.create(pool);
         pool = poolCurator.find(pool.getId());
         assertTrue(pool.getProvidedProducts().size() > 0);
@@ -893,7 +887,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         // Create derived pool referencing the entitlement just made:
         Pool derivedPool = new Pool(
             owner, product,
-            new HashSet<ProvidedProduct>(),
+            new HashSet<Product>(),
             1L,
             TestUtil.createDate(2011, 3, 2),
             TestUtil.createDate(2055, 3, 2),

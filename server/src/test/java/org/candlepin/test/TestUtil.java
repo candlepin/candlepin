@@ -178,8 +178,8 @@ public class TestUtil {
         return createPool(owner, product, new HashSet<Product>(), quantity);
     }
 
-    public static Pool createPool(Owner owner, Product product,
-        Set<ProvidedProduct> providedProducts, int quantity) {
+    public static Pool createPool(Owner owner, Product product, Set<Product> providedProducts,
+        int quantity) {
 
         String random = String.valueOf(randomInt());
 

@@ -316,7 +316,7 @@ public class PoolRulesTest {
         PoolUpdate update = updates.get(0);
         Pool updatedPool = update.getPool();
         assertNotNull(updatedPool.getDerivedProduct());
-        assertTrue(updatedPool.hasSubProductAttribute("a"));
+        assertTrue(updatedPool.getDerivedProduct().hasAttribute("a"));
     }
 
     @Test
@@ -352,7 +352,7 @@ public class PoolRulesTest {
         String expectedAttributeValue = "yes";
 
         // Simulate an attribute that was added during pool creation:
-        p.setProductAttribute(testAttributeKey, "no", s.getProduct().getId());
+        p.getProduct().setAttribute(testAttributeKey, "no");
 
         // Update the subscription's product with new attribute value:
         s.getProduct().setAttribute(testAttributeKey, expectedAttributeValue);
@@ -464,7 +464,7 @@ public class PoolRulesTest {
         s.getProduct().setAttribute(testAttributeKey, "yes");
 
         Pool p = TestUtil.copyFromSub(s);
-        p.setProductAttribute(testAttributeKey, "yes", s.getProduct().getId());
+        p.getProduct().setAttribute(testAttributeKey, "yes");
 
         // Change the sub's product's ID
         String expectedProductId = "NEW_TEST_ID";
@@ -500,7 +500,7 @@ public class PoolRulesTest {
 
         Pool resultPool = pools.get(0);
         assertNotNull(resultPool.getProduct());
-        assertTrue(resultPool.getProduct().hasProductAttribute(testAttributeKey));
+        assertTrue(resultPool.getProduct().hasAttribute(testAttributeKey));
         assertEquals(
             expectedAttributeValue,
             resultPool.getProduct().getAttributeValue(testAttributeKey)
@@ -649,7 +649,7 @@ public class PoolRulesTest {
         // Quantity on bonus pool should be virt limit * sub quantity:
         assertEquals(new Long(100), virtBonusPool.getQuantity());
         assertEquals("true", virtBonusPool.getAttributeValue("virt_only"));
-        assertEquals("10", virtBonusPool.getProductAttribute("virt_limit").getValue());
+        assertEquals("10", virtBonusPool.getProduct().getAttributeValue("virt_limit"));
     }
 
     @Test
@@ -801,7 +801,7 @@ public class PoolRulesTest {
         Subscription s = createVirtOnlySub("virtOnlyProduct", 10);
         List<Pool> pools = poolRules.createPools(s);
         assertEquals(1, pools.size());
-        assertEquals("true", pools.get(0).getProductAttribute("virt_only").getValue());
+        assertEquals("true", pools.get(0).getProduct().getAttributeValue("virt_only"));
         assertEquals(new Long(10), pools.get(0).getQuantity());
     }
 
@@ -812,7 +812,7 @@ public class PoolRulesTest {
         s.getProduct().setMultiplier(new Long(5));
         List<Pool> pools = poolRules.createPools(s);
         assertEquals(1, pools.size());
-        assertEquals("true", pools.get(0).getProductAttribute("virt_only").getValue());
+        assertEquals("true", pools.get(0).getProduct().getAttributeValue("virt_only"));
         assertEquals(new Long(50), pools.get(0).getQuantity());
     }
 
@@ -879,7 +879,7 @@ public class PoolRulesTest {
         Pool regular = updates.get(0).getPool();
         Pool unmappedSubPool = updates.get(1).getPool();
         Pool subPool = updates.get(2).getPool();
-        assertEquals("40", regular.getProductAttribute("virt_limit").getValue());
+        assertEquals("40", regular.getProduct().getAttributeValue("virt_limit").getValue());
         assertEquals(new Long(40), subPool.getQuantity());
         assertEquals(new Long(800), unmappedSubPool.getQuantity());
     }

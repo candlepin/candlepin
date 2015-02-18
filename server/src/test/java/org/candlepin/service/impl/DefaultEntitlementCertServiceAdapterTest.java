@@ -39,7 +39,6 @@ import org.candlepin.model.PoolAttribute;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProductContent;
-import org.candlepin.model.ProductPoolAttribute;
 import org.candlepin.model.Subscription;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.X509ByteExtensionWrapper;
@@ -1144,15 +1143,15 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         Product product = pool.getProduct();
 
-        product.setAttribute("warning_period", "20", "p");
-        product.setAttribute("sockets", "4", "p");
-        product.setAttribute("ram", "8", "p");
-        product.setAttribute("cores", "4", "p");
-        product.setAttribute("management_enabled", "true", "p");
-        product.setAttribute("stacking_id", "45678", "p");
+        product.setAttribute("warning_period", "20");
+        product.setAttribute("sockets", "4");
+        product.setAttribute("ram", "8");
+        product.setAttribute("cores", "4");
+        product.setAttribute("management_enabled", "true");
+        product.setAttribute("stacking_id", "45678");
         pool.setAttribute("virt_only", "true");
-        product.setAttribute("support_level", "slevel", "p");
-        product.setAttribute("support_type", "stype", "p");
+        product.setAttribute("support_level", "slevel");
+        product.setAttribute("support_type", "stype");
         pool.setAccountNumber("account1");
         pool.setContractNumber("contract1");
         pool.setOrderNumber("order1");
@@ -1506,12 +1505,11 @@ public class DefaultEntitlementCertServiceAdapterTest {
     public void testPrepareV3EntitlementDataForBooleans() throws IOException {
         Set<Product> products = new HashSet<Product>();
         products.add(product);
-        when(entitlement.getConsumer().getFact("system.certificate_version"))
-            .thenReturn("3.2");
+        when(entitlement.getConsumer().getFact("system.certificate_version")).thenReturn("3.2");
         when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
         when(entitlement.getConsumer().getFact("uname.machine")).thenReturn("x86_64");
 
-        pool.setProductAttribute("management_enabled", "1", "p");
+        pool.getProduct().setAttribute("management_enabled", "1");
         entitlement.getPool().setAttribute("virt_only", "1");
 
         Set<X509ExtensionWrapper> extensions =

@@ -81,13 +81,10 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
     }
 
     private void associateProductToOwner(Owner o, Product p, Product provided) {
-        Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
-        ProvidedProduct providedProduct = new ProvidedProduct(
-            provided.getId(), "Test Provided Product");
-        providedProducts.add(providedProduct);
+        Set<Product> providedProducts = new HashSet<Product>();
+        providedProducts.add(provided);
 
         Pool pool = TestUtil.createPool(o, p, providedProducts, 5);
-        providedProduct.setPool(pool);
         poolCurator.create(pool);
 
         Consumer c = createConsumer(o);
@@ -149,9 +146,8 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         productCurator.create(product);
         productCurator.create(provided);
 
-        Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
-        ProvidedProduct providedProduct = new ProvidedProduct(
-            provided.getId(), "Test Provided Product");
+        Set<Product> providedProducts = new HashSet<Product>();
+        Product providedProduct = TestUtil.createProduct(provided.getId());
         providedProducts.add(providedProduct);
 
         // Create pool with end date in the past.
@@ -167,7 +163,6 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
             "ORD222"
         );
 
-        providedProduct.setPool(pool);
         poolCurator.create(pool);
 
         Consumer consumer = createConsumer(owner);

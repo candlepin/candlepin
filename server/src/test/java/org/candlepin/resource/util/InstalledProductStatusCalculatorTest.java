@@ -35,6 +35,7 @@ import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.compliance.StatusReasonMessageGenerator;
+import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
 import com.google.inject.Provider;
@@ -188,7 +189,7 @@ public class InstalledProductStatusCalculatorTest {
         List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
         mockEntCurator(c, ents);
         ComplianceStatus status = compliance.getStatus(c, now);
-        status.addNonCompliantProduct(PRODUCT_1);
+        status.addNonCompliantProduct(PRODUCT_1.getProductId());
         ConsumerInstalledProduct cip = new ConsumerInstalledProduct();
         c.addInstalledProduct(cip);
         ConsumerInstalledProductEnricher calculator =
@@ -205,23 +206,24 @@ public class InstalledProductStatusCalculatorTest {
     public void enricherDoesntSetArchVersion() {
         //test that the enricher does not set the arch and version
         //when they are supplied with values
-        Consumer c = mockConsumer(PRODUCT_1);
+        Product baseProduct = new Product(PRODUCT_1.getProductId(), "Awesome Product", owner);
+        Consumer c = mockConsumer(baseProduct);
 
         Calendar cal = Calendar.getInstance();
         Date now = cal.getTime();
         DateRange range2 = rangeRelativeToDate(now, -1, 4);
-        c.addEntitlement(mockEntitlement(c, PRODUCT_1, range2, PRODUCT_1));
+        c.addEntitlement(mockEntitlement(c, baseProduct, range2, baseProduct));
         List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
         mockEntCurator(c, ents);
         ComplianceStatus status = compliance.getStatus(c, now);
-        status.addNonCompliantProduct(PRODUCT_1);
-        ConsumerInstalledProduct cip = new ConsumerInstalledProduct();
-        cip.setArch("x86_64");
-        cip.setVersion("4.5");
+        status.addNonCompliantProduct(baseProduct.getProductId());
+        ConsumerInstalledProduct cip = new ConsumerInstalledProduct(c, baseProduct);
+        baseProduct.setAttribute("arch", "x86_64");
+        baseProduct.setAttribute("version", "4.5");
         c.addInstalledProduct(cip);
         ConsumerInstalledProductEnricher calculator =
             new ConsumerInstalledProductEnricher(c, status, compliance);
-        Product p = new Product(PRODUCT_1.getProductId(), "Awesome Product", owner);
+        Product p = new Product(baseProduct.getProductId(), "Awesome Product", owner);
         p.setAttribute("version", "candlepin version");
         p.setAttribute("arch", "candlepin arch");
         calculator.enrich(cip, p);
@@ -573,10 +575,9 @@ public class InstalledProductStatusCalculatorTest {
         Date now = cal.getTime();
         DateRange range = rangeRelativeToDate(now, -4, 4);
 
-        c.addEntitlement(mockStackedEntitlement(c, range, STACK_ID_1, PRODUCT_1, 1,
-            PRODUCT_1));
-        c.addEntitlement(mockStackedEntitlement(c, range, STACK_ID_1, "other", 1,
-            PRODUCT_1));
+        c.addEntitlement(mockStackedEntitlement(c, range, STACK_ID_1, PRODUCT_1, 1, PRODUCT_1));
+        c.addEntitlement(mockStackedEntitlement(c, range, STACK_ID_1,
+            TestUtil.createProduct("other"), 1, PRODUCT_1));
 
         List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
         mockEntCurator(c, ents);
@@ -704,7 +705,7 @@ public class InstalledProductStatusCalculatorTest {
         DateRange range2 = rangeRelativeToDate(now, -2, 6);
 
         Entitlement ent = mockEntitlement(c, PRODUCT_1, range1, PRODUCT_1);
-        ent.getPool().setProductAttribute("sockets", "2", PRODUCT_1);
+        ent.getPool().getProduct().setAttribute("sockets", "2");
         c.addEntitlement(ent);
 
         c.addEntitlement(mockEntitlement(c, PRODUCT_1, range2, PRODUCT_1));
@@ -738,7 +739,7 @@ public class InstalledProductStatusCalculatorTest {
         ent.getPool().getProduct().setAttribute("guest_limit", "2");
         c.addEntitlement(ent);
         Entitlement hpvsrEnt = mockStackedEntitlement(c, hypervisorRange,
-            "other_stack_id", "other", 10, "prod2");
+            "other_stack_id", TestUtil.createProduct("other"), 10, TestUtil.createProduct("prod2"));
         hpvsrEnt.getPool().getProduct().setAttribute("guest_limit", "-1");
         c.addEntitlement(hpvsrEnt);
 

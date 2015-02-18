@@ -366,23 +366,6 @@ public class HibernateValidationAnnotationTest {
     }
 
     @Test
-    public void productPoolAttributeTest() throws Exception {
-        Map<Field, Matcher<AnnotatedElement>> fm = new HashMap<Field, Matcher<AnnotatedElement>>();
-        fm.put(ProductPoolAttribute.class.getDeclaredField("productId"), notNull);
-        runMap(fm);
-
-    }
-    @Test
-    public void providedProductTest() throws Exception {
-        Map<Field, Matcher<AnnotatedElement>> fm = new HashMap<Field, Matcher<AnnotatedElement>>();
-        fm.put(ProvidedProduct.class.getDeclaredField("id"), notNull);
-        fm.put(ProvidedProduct.class.getDeclaredField("productId"), sizeAndNotNull);
-        fm.put(ProvidedProduct.class.getDeclaredField("productName"), sizeAndNotNull);
-        fm.put(ProvidedProduct.class.getDeclaredField("pool"), notNull);
-        runMap(fm);
-    }
-
-    @Test
     public void roleTest() throws Exception {
         Map<Field, Matcher<AnnotatedElement>> fm = new HashMap<Field, Matcher<AnnotatedElement>>();
         fm.put(Role.class.getDeclaredField("id"), notNull);

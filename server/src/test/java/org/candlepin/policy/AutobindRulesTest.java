@@ -549,16 +549,16 @@ public class AutobindRulesTest {
         product.setAttribute("multi-entitlement", "yes");
         product.setAttribute("sockets", "2");
 
-        Set<DerivedProvidedProduct> derivedProvided =
-            new HashSet<DerivedProvidedProduct>();
-        derivedProvided.add(new DerivedProvidedProduct(derivedEngPid, derivedEngPid));
+        Set<Product> derivedProvided = new HashSet<Product>();
+        derivedProvided.add(TestUtil.createProduct(derivedEngPid));
 
         Product derivedProduct = new Product("derivedProd", "A derived test product", owner);
         product.setAttribute("stacking_id", "1");
         product.setAttribute("multi-entitlement", "yes");
 
-        Pool pool = TestUtil.createPool(owner, product, new HashSet<ProvidedProduct>(),
-            derivedProduct.getId(), derivedProvided, 100);
+        Pool pool = TestUtil.createPool(
+            owner, product, new HashSet<Product>(), derivedProduct, derivedProvided, 100
+        );
 
         pool.setId("DEAD-BEEF");
         when(this.prodAdapter.getProductById(productId)).thenReturn(product);

@@ -33,7 +33,6 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
-import org.candlepin.model.DerivedProvidedProduct;
 import org.candlepin.model.DistributorVersion;
 import org.candlepin.model.DistributorVersionCapability;
 import org.candlepin.model.DistributorVersionCurator;
@@ -44,7 +43,6 @@ import org.candlepin.model.KeyPair;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
-import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
@@ -157,17 +155,17 @@ public class ExporterTest {
         config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
         Consumer consumer = mock(Consumer.class);
         Entitlement ent = mock(Entitlement.class);
-        ProvidedProduct pp = mock(ProvidedProduct.class);
-        DerivedProvidedProduct spp = mock(DerivedProvidedProduct.class);
+        Product pp = mock(Product.class);
+        Product spp = mock(Product.class);
         Pool pool = mock(Pool.class);
         Rules mrules = mock(Rules.class);
         Principal principal = mock(Principal.class);
         IdentityCertificate idcert = new IdentityCertificate();
 
-        Set<ProvidedProduct> ppset = new HashSet<ProvidedProduct>();
+        Set<Product> ppset = new HashSet<Product>();
         ppset.add(pp);
 
-        Set<DerivedProvidedProduct> sppSet = new HashSet<DerivedProvidedProduct>();
+        Set<Product> sppSet = new HashSet<Product>();
         sppSet.add(spp);
 
         Set<Entitlement> entitlements = new HashSet<Entitlement>();
@@ -209,13 +207,13 @@ public class ExporterTest {
         pcert.setCreated(new Date());
         pcert.setUpdated(new Date());
 
-        when(pp.getProductId()).thenReturn("12345");
+        when(pp.getProductId()).thenReturn(prod.getProductId());
         when(pool.getProvidedProducts()).thenReturn(ppset);
-        when(pool.getProductId()).thenReturn("MKT-prod");
+        when(pool.getProduct()).thenReturn(prod1);
 
         when(pool.getDerivedProvidedProducts()).thenReturn(sppSet);
-        when(pool.getDerivedProductId()).thenReturn(subProduct.getId());
-        when(spp.getProductId()).thenReturn(subProvidedProduct.getId());
+        when(pool.getDerivedProduct()).thenReturn(subProduct);
+        when(spp.getProductId()).thenReturn(subProvidedProduct.getProductId());
 
         when(ent.getPool()).thenReturn(pool);
         when(mrules.getRules()).thenReturn("foobar");

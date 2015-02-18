@@ -357,8 +357,9 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
         c.getType().setManifest(true);
 
         Product prod = TestUtil.createProduct();
+        Product derived = TestUtil.createProduct("sub-prod-id");
         Pool p = TestUtil.createPool(prod);
-        p.setDerivedProductId("sub-prod-id");
+        p.setDerivedProduct(derived);
 
         ValidationResult results = enforcer.preEntitlement(c, p, 1, CallerType.BIND);
         assertNotNull(results);
@@ -377,8 +378,9 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
         c.getType().setManifest(true);
 
         Product prod = TestUtil.createProduct();
+        Product derived = TestUtil.createProduct("sub-prod-id");
         Pool p = TestUtil.createPool(prod);
-        p.setDerivedProductId("sub-prod-id");
+        p.setDerivedProduct(derived);
 
         ValidationResult results = enforcer.preEntitlement(c, p, 1, CallerType.LIST_POOLS);
         assertNotNull(results);
@@ -397,8 +399,9 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
         c.getType().setManifest(true);
 
         Product prod = TestUtil.createProduct();
+        Product derived = TestUtil.createProduct("sub-prod-id");
         Pool p = TestUtil.createPool(prod);
-        p.setDerivedProductId("sub-prod-id");
+        p.setDerivedProduct(derived);
 
         ValidationResult results = enforcer.preEntitlement(c, p, 1, CallerType.BEST_POOLS);
         assertNotNull(results);
@@ -419,8 +422,9 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
         c.getType().setManifest(true);
 
         Product prod = TestUtil.createProduct();
+        Product derived = TestUtil.createProduct("sub-prod-id");
         Pool p = TestUtil.createPool(prod);
-        p.setDerivedProductId("sub-prod-id");
+        p.setDerivedProduct(derived);
 
         ValidationResult results = enforcer.preEntitlement(c, p, 1, CallerType.BIND);
         assertNotNull(results);
@@ -436,8 +440,9 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
         c.getType().setManifest(true);
 
         Product prod = TestUtil.createProduct();
+        Product derived = TestUtil.createProduct("sub-prod-id");
         Pool p = TestUtil.createPool(prod);
-        p.setDerivedProductId("sub-prod-id");
+        p.setDerivedProduct(derived);
 
         ValidationResult results = enforcer.preEntitlement(c, p, 1, CallerType.BEST_POOLS);
         assertNotNull(results);

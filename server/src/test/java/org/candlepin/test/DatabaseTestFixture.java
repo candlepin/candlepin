@@ -45,8 +45,6 @@ import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.model.ProductPoolAttribute;
-import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Role;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.Subscription;
