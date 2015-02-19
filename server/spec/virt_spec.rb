@@ -182,7 +182,7 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
     @guest1_client.list_entitlements.length.should == 0
   end
 
-  it 'should not obtain a new entitlement when guest is migrated to another host' do
+  it 'should auto-heal when guest is migrated to another host' do
 
     # create a second product in order to test bz #786730
 
@@ -196,7 +196,11 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
 
     @guest1_client.update_consumer({:installedProducts => @installed_product_list})
     @guest1_client.consume_product()
-    @guest1_client.list_entitlements.length.should == 2
+    ents = @guest1_client.list_entitlements
+    ents.length.should == 2
+    original_virt_limit_pool = ents.select do |e|
+      e['product_id'] = @virt_limit_product.id
+    end.first['pool']['id']
 
     # Add guest 2 to host 1 so we can make sure that only guest1's
     # entitlements are revoked.
@@ -209,10 +213,13 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
     # this is where the error would occur without the 786730 fix
     @host2_client.update_consumer({:guestIds => [{'guestId' => @uuid1}]})
 
-    # host-specific entitlement should not be on the guest anymore (see 768872 comment #41)
+    # The old host-specific entitlement should not be on the guest anymore (see 768872 comment #41)
+    # Instead the guest should be auto-healed for host2
     # second_product's entitlement should still be there, though.
     @guest1_client.list_entitlements(:product_id => @second_product.id).length.should == 1
-    @guest1_client.list_entitlements(:product_id => @virt_limit_product.id).length.should == 0
+    ents = @guest1_client.list_entitlements(:product_id => @virt_limit_product.id).first
+
+    ents['pool']['id'].should_not == original_virt_limit_pool
 
     # Entitlements should have remained the same for guest 2 and its host
     # is the same.
