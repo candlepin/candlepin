@@ -189,7 +189,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     private List<GuestId> guestIds;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "consumer", fetch = FetchType.LAZY)
-    private Set<GuestIdsCheckIn> guestIdCheckIns;
+    private Set<GuestIdsCheckIn> guestIdsCheckIns;
 
     @OneToMany(mappedBy = "consumer",
         orphanRemoval = true, cascade = { CascadeType.ALL })
@@ -703,18 +703,18 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
      * has most recently reported a guest ID. (which could have been migrated or copied)
      */
     @XmlTransient    public Set<GuestIdsCheckIn> getGuestIdCheckIns() {
-        return guestIdCheckIns;
+        return guestIdsCheckIns;
     }
 
     public void setGuestIdCheckIns(Set<GuestIdsCheckIn> guestIdCheckIns) {
-        this.guestIdCheckIns = guestIdCheckIns;
+        this.guestIdsCheckIns = guestIdCheckIns;
     }
 
     public void addGuestIdCheckIn() {
-        if (this.guestIdCheckIns == null) {
-            this.guestIdCheckIns = new HashSet<GuestIdsCheckIn>();
+        if (this.guestIdsCheckIns == null) {
+            this.guestIdsCheckIns = new HashSet<GuestIdsCheckIn>();
         }
-        this.guestIdCheckIns.add(new GuestIdsCheckIn(this));
+        this.guestIdsCheckIns.add(new GuestIdsCheckIn(this));
     }
 
 }

@@ -94,6 +94,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         consumer.addGuestId(new GuestId("test-guest-1"));
         consumer.addGuestId(new GuestId("test-guest-2"));
         consumerCurator.update(consumer);
+        consumer.addGuestIdCheckIn();
 
         List<Consumer> guests = consumerCurator.getGuests(consumer);
         assertTrue(guests.size() == 2);
@@ -116,6 +117,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         // Doesn't match a registered guest consumer
         consumer.addGuestId(new GuestId("43e41def-e9ae-4b6b-b8f4-942c8b69a39e"));
         consumerCurator.update(consumer);
+        consumer.addGuestIdCheckIn();
 
         List<Consumer> guests = consumerCurator.getGuests(consumer);
         assertTrue(guests.size() == 2);
@@ -132,6 +134,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
         host.addGuestId(new GuestId("DAF0FE10-956B-7B4E-B7DC-B383CE681BA8"));
         consumerCurator.update(host);
+        host.addGuestIdCheckIn();
 
         List<Consumer> guests = consumerCurator.getGuests(host);
         assertTrue(guests.size() == 1);
@@ -189,12 +192,14 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         GuestId hGuest1 = new GuestId("test-guest-1");
         hConsumer1.addGuestId(hGuest1);
         consumerCurator.update(hConsumer1);
+        hConsumer1.addGuestIdCheckIn();
 
         // Uppercase the guest ID reported by host 2 just to make sure the casing is
         // working properly here too:
         GuestId hGuest2 = new GuestId("TEST-GUEST-1");
         hConsumer2.addGuestId(hGuest2);
         consumerCurator.update(hConsumer2);
+        hConsumer2.addGuestIdCheckIn();
 
         List<Consumer> guests1 = consumerCurator.getGuests(hConsumer1);
         List<Consumer> guests2 = consumerCurator.getGuests(hConsumer2);
@@ -221,6 +226,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
         host.addGuestId(new GuestId("DAF0FE10-956B-7B4E-B7DC-B383CE681BA8"));
         consumerCurator.update(host);
+        host.addGuestIdCheckIn();
 
         Consumer guestHost = consumerCurator.getHost(
             "daf0fe10-956b-7b4e-b7dc-b383ce681ba8", owner);
@@ -238,6 +244,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
         host.addGuestId(new GuestId("DAF0FE10-956B-7B4E-B7DC-B383CE681BA8"));
         consumerCurator.update(host);
+        host.addGuestIdCheckIn();
 
         Consumer guestHost = consumerCurator.getHost(
             "10fef0da-6b95-4e7b-b7dc-b383ce681ba8", owner);
@@ -259,10 +266,12 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         GuestId host1Guest = new GuestId("DAF0FE10-956B-7B4E-B7DC-B383CE681BA8");
         host1.addGuestId(host1Guest);
         consumerCurator.update(host1);
+        host1.addGuestIdCheckIn();
 
         GuestId host2Guest = new GuestId("DAF0FE10-956B-7B4E-B7DC-B383CE681BA8");
         host2.addGuestId(host2Guest);
         consumerCurator.update(host2);
+        host2.addGuestIdCheckIn();
 
         Consumer guestHost = consumerCurator.getHost(
             "daf0fe10-956b-7b4e-b7dc-b383ce681ba8", owner);
@@ -285,10 +294,12 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         GuestId host2Guest = new GuestId("DAF0FE10-956B-7B4E-B7DC-B383CE681BA8");
         host2.addGuestId(host2Guest);
         consumerCurator.update(host2);
+        host2.addGuestIdCheckIn();
 
         GuestId host1Guest = new GuestId("DAF0FE10-956B-7B4E-B7DC-B383CE681BA8");
         host1.addGuestId(host1Guest);
         consumerCurator.update(host1);
+        host1.addGuestIdCheckIn();
 
         Consumer guestHost = consumerCurator.getHost(
             "daf0fe10-956b-7b4e-b7dc-b383ce681ba8", owner);

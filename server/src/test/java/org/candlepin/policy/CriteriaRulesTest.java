@@ -121,6 +121,7 @@ public class CriteriaRulesTest extends DatabaseTestFixture {
         Consumer host = createConsumer(owner);
         host.addGuestId(new GuestId("GUESTUUID", host));
         consumerCurator.update(host);
+        host.addGuestIdCheckIn();
 
         Product targetProduct = TestUtil.createProduct();
         this.productCurator.create(targetProduct);

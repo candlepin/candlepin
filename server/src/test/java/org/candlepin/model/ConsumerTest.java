@@ -477,12 +477,14 @@ public class ConsumerTest extends DatabaseTestFixture {
         lookedUp.addGuestId(new GuestId("guest1"));
         lookedUp.addGuestId(new GuestId("guest2"));
         consumerCurator.update(lookedUp);
+        lookedUp.addGuestIdCheckIn();
         lookedUp = consumerCurator.find(consumer.getId());
         assertEquals(2, lookedUp.getGuestIds().size());
         GuestId installed = lookedUp.getGuestIds().
             iterator().next();
         lookedUp.getGuestIds().remove(installed);
         consumerCurator.update(lookedUp);
+        lookedUp.addGuestIdCheckIn();
         lookedUp = consumerCurator.find(consumer.getId());
         assertEquals(1, lookedUp.getGuestIds().size());
     }

@@ -474,7 +474,9 @@ public class ConsumerResource {
             for (GuestId g : consumer.getGuestIds()) {
                 g.setConsumer(consumer);
             }
+            consumer.addGuestIdCheckIn();
         }
+
         HypervisorId hvsrId = consumer.getHypervisorId();
         if (hvsrId != null && hvsrId.getHypervisorId() != null && !hvsrId.getHypervisorId().isEmpty()) {
             // If a hypervisorId is supplied, make sure the consumer and owner are correct
