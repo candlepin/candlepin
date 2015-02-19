@@ -702,7 +702,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
      * Technically only the most recent one matters, and is used in queries to see who
      * has most recently reported a guest ID. (which could have been migrated or copied)
      */
-    @XmlTransient    public Set<GuestIdsCheckIn> getGuestIdCheckIns() {
+    public Set<GuestIdsCheckIn> getGuestIdCheckIns() {
         return guestIdsCheckIns;
     }
 

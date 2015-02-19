@@ -29,6 +29,7 @@ import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 /**
  * Represents a consumer guest ID update time, created whenever a consumer reports guest
@@ -74,6 +75,7 @@ public class GuestIdsCheckIn extends AbstractHibernateObject {
         this.id = id;
     }
 
+    @XmlTransient
     public Consumer getConsumer() {
         return consumer;
     }
