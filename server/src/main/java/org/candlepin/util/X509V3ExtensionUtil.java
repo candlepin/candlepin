@@ -373,6 +373,10 @@ public class X509V3ExtensionUtil extends X509Util {
         Set<ProductContent> archApproriateProductContent = filterContentByContentArch(
             productContent, consumer, product);
 
+        Product skuProd = prodAdapter.getProductById(ent.getPool().getProductId());
+        List<String> skuDisabled = skuProd.getSkuDisabledContentIds();
+        List<String> skuEnabled = skuProd.getSkuEnabledContentIds();
+
         for (ProductContent pc : archApproriateProductContent) {
             Content content = new Content();
             if (enableEnvironmentFiltering) {
@@ -414,25 +418,13 @@ public class X509V3ExtensionUtil extends X509Util {
 
             Boolean enabled = pc.getEnabled();
             // sku level content enable override. if on both lists, active wins.
-            Product skuProd = prodAdapter.getProductById(ent.getPool().getProductId());
-            if(skuProd.hasAttribute("content_override_disabled") && skuProd.getAttributeValue("content_override_disabled").length() > 0) {
-                StringTokenizer stDisable = new StringTokenizer(
-                        skuProd.getAttributeValue("content_override_disabled"), ",");
-                while (stDisable.hasMoreElements()) {
-                    if (stDisable.nextElement().equals(pc.getContent().getId())) {
-                        enabled = false;
-                    }
-                }
+            if (skuDisabled.contains(pc.getContent().getId())) {
+                enabled = false;
             }
-            if(skuProd.hasAttribute("content_override_active") && skuProd.getAttributeValue("content_override_active").length() > 0) {
-                StringTokenizer stActive = new StringTokenizer(
-                        skuProd.getAttributeValue("content_override_active"), ",");
-                while (stActive.hasMoreElements()) {
-                    if (stActive.nextElement().equals(pc.getContent().getId())) {
-                        enabled = true;
-                    }
-                }
+            if (skuEnabled.contains(pc.getContent().getId())) {
+                enabled = true;
             }
+
             // Check if we should override the enabled flag due to setting on promoted
             // content
             if ((consumer.getEnvironment() != null) && enableEnvironmentFiltering) {

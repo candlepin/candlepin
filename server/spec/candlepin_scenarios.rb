@@ -54,9 +54,10 @@ module CandlepinMethods
 
   def create_content(params={})
     random_str = random_string(nil, true).to_i
+    label = random_string("label")
     # Apologies, passing optional params straight through to prevent just pulling
     # each one out and putting it into a new hash.
-    @cp.create_content(random_str, random_str, random_str, "yum",
+    @cp.create_content(random_str, random_str, label, "yum",
       random_str, params)
   end
 
