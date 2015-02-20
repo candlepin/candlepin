@@ -86,7 +86,6 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
 
     @Transactional
     public Product create(Product entity) {
-
         /*
          * Ensure all referenced ProductAttributes are correctly pointing to
          * this product. This is useful for products being created from incoming
@@ -96,10 +95,10 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
             attr.setProduct(entity);
             validateAttributeValue(attr);
         }
+
         /*
          * Ensure that no circular reference exists
          */
-
         return super.create(entity);
     }
 

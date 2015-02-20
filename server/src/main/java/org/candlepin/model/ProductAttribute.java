@@ -34,7 +34,7 @@ import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlTransient;
 
 /**
- * See Attributes interface for documentation.
+ * See Attributes interface for documentation.f
  */
 @Entity
 @Table(name = "cpo_product_attributes")
@@ -56,11 +56,11 @@ public class ProductAttribute extends AbstractHibernateObject implements Attribu
     @Size(max = 255)
     protected String value;
 
-
     @ManyToOne
     @JoinColumn(nullable = false)
     @NotNull
     private Product product;
+
 
     public ProductAttribute() {
     }
