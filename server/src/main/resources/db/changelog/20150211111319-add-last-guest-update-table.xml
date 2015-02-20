@@ -28,7 +28,7 @@
 
         </createTable>
 
-        <addForeignKeyConstraint baseColumnNames="consumer_id" baseTableName="cp_guest_ids_checkin" constraintName="fk_guest_ids_checkin_consumer" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer" referencesUniqueColumn="true"/>
+        <addForeignKeyConstraint baseColumnNames="consumer_id" baseTableName="cp_guest_ids_checkin" constraintName="fk_guest_ids_checkin_consumer" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer" referencesUniqueColumn="false"/>
 
         <createIndex indexName="idx_guest_ids_checkin_consumer" tableName="cp_consumer_checkin" unique="false">
             <column name="consumer_id"/>
