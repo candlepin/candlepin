@@ -225,20 +225,44 @@ public class AutobindRulesTest {
         consumer.setFact("memory.memtotal", "16000000");
         consumer.setFact("cpu.core(s)_per_socket", "4");
 
-        Product product = mockStackingProduct(productId, "Test Stack product", "1", "1");
-        product.setAttribute("cores", "6");
-        product.setAttribute("ram", "2");
-        product.setAttribute("sockets", "2");
+//        Product product = mockStackingProduct(productId, "Test Stack product", "1", "1");
+//        product.setAttribute("cores", "6");
+//        product.setAttribute("ram", "2");
+//        product.setAttribute("sockets", "2");
+//
+//        Pool pool1 = TestUtil.createPool(owner, product);
+//        pool1.setId("DEAD-BEEF1");
+//        Pool pool2 = TestUtil.createPool(owner, product);
+//        pool2.setId("DEAD-BEEF2");
+//        //only enforce cores on pool 2
+//        pool2.getProduct().setAttribute("ram", null);
+//        pool2.getProduct().setAttribute("sockets", null);
+//        Pool pool3 = TestUtil.createPool(owner, product);
+//        pool3.setId("DEAD-BEEF3");
 
-        Pool pool1 = TestUtil.createPool(owner, product);
+        // Will be common to both SKUs and what we autobind for:
+        Product provided = mockProduct("5000", "Eng Product");
+
+        Product sku1 = mockStackingProduct(productId, "Test Stack product", "1", "1");
+        sku1.setAttribute("cores", "6");
+        sku1.setAttribute("ram", "2");
+        sku1.setAttribute("sockets", "2");
+
+        Pool pool1 = TestUtil.createPool(owner, sku1);
         pool1.setId("DEAD-BEEF1");
-        Pool pool2 = TestUtil.createPool(owner, product);
+        pool1.addProvidedProduct(provided);
+
+        //only enforce cores on pool 2:
+        Product sku2 = mockStackingProduct("prod2", "Test Stack product", "1", "1");
+        sku2.setAttribute("cores", "6");
+
+        Pool pool2 = TestUtil.createPool(owner, sku2);
         pool2.setId("DEAD-BEEF2");
-        //only enforce cores on pool 2
-        pool2.getProduct().setAttribute("ram", null);
-        pool2.getProduct().setAttribute("sockets", null);
-        Pool pool3 = TestUtil.createPool(owner, product);
+        pool2.addProvidedProduct(provided);
+
+        Pool pool3 = TestUtil.createPool(owner, sku1);
         pool3.setId("DEAD-BEEF3");
+        pool3.addProvidedProduct(provided);
 
         List<Pool> pools = new LinkedList<Pool>();
         pools.add(pool1);
@@ -246,7 +270,7 @@ public class AutobindRulesTest {
         pools.add(pool3);
 
         List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance, null, new HashSet<String>(),
+            new String[]{ provided.getProductId() }, pools, compliance, null, new HashSet<String>(),
             false);
 
         assertEquals(1, bestPools.size());
@@ -264,21 +288,31 @@ public class AutobindRulesTest {
         consumer.setFact("cpu.core(s)_per_socket", "4");
         consumer.setFact("virt.is_guest", "true");
 
-        Product product = mockStackingProduct(productId, "Test Stack product", "1", "1");
-        product.setAttribute("cores", "6");
-        product.setAttribute("ram", "2");
-        product.setAttribute("sockets", "2");
+        // Will be common to both SKUs and what we autobind for:
+        Product provided = mockProduct("5000", "Eng Product");
 
-        Pool pool1 = TestUtil.createPool(owner, product);
+        Product sku1 = mockStackingProduct(productId, "Test Stack product", "1", "1");
+        sku1.setAttribute("cores", "6");
+        sku1.setAttribute("ram", "2");
+        sku1.setAttribute("sockets", "2");
+
+        Pool pool1 = TestUtil.createPool(owner, sku1);
         pool1.setId("DEAD-BEEF1");
         pool1.setAttribute("virt_only", "true");
-        Pool pool2 = TestUtil.createPool(owner, product);
+        pool1.addProvidedProduct(provided);
+
+
+        //only enforce cores on pool 2:
+        Product sku2 = mockStackingProduct("prod2", "Test Stack product", "1", "1");
+        sku2.setAttribute("cores", "6");
+
+        Pool pool2 = TestUtil.createPool(owner, sku2);
         pool2.setId("DEAD-BEEF2");
-        //only enforce cores on pool 2
-        pool2.getProduct().setAttribute("ram", null);
-        pool2.getProduct().setAttribute("sockets", null);
-        Pool pool3 = TestUtil.createPool(owner, product);
+        pool2.addProvidedProduct(provided);
+
+        Pool pool3 = TestUtil.createPool(owner, sku1);
         pool3.setId("DEAD-BEEF3");
+        pool3.addProvidedProduct(provided);
 
         List<Pool> pools = new LinkedList<Pool>();
         pools.add(pool1);
@@ -286,8 +320,8 @@ public class AutobindRulesTest {
         pools.add(pool3);
 
         List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance, null, new HashSet<String>(),
-            false);
+            new String[]{ provided.getProductId() }, pools, compliance, null,
+            new HashSet<String>(), false);
 
         assertEquals(2, bestPools.size());
         //higher quantity from this pool, as it is virt_only
@@ -465,7 +499,7 @@ public class AutobindRulesTest {
             = Arrays.asList(new Pool[] {pool1, pool2});
 
         List<PoolQuantity> result = autobindRules.selectBestPools(consumer,
-            new String[] {product.getId()}, availablePools, compliance, null,
+            new String[] {product.getProductId()}, availablePools, compliance, null,
             new HashSet<String>(), false);
         assertNotNull(result);
         for (PoolQuantity pq : result) {
@@ -484,6 +518,7 @@ public class AutobindRulesTest {
 
     private Product mockProduct(String pid, String productName) {
         Product product = new Product(pid, productName, owner);
+        product.setId("FAKE_DB_ID");
         return product;
     }
 
@@ -502,12 +537,13 @@ public class AutobindRulesTest {
 
     private List<Pool> createDerivedPool(String derivedEngPid) {
         Product product = new Product(productId, "A test product", owner);
+        product.setId("FAKE_DB_ID");
         product.setAttribute("stacking_id", "1");
         product.setAttribute("multi-entitlement", "yes");
         product.setAttribute("sockets", "2");
 
         Set<Product> derivedProvided = new HashSet<Product>();
-        derivedProvided.add(TestUtil.createProduct(derivedEngPid));
+        derivedProvided.add(TestUtil.createProduct(derivedEngPid, derivedEngPid, owner));
 
         Product derivedProduct = new Product("derivedProd", "A derived test product", owner);
         product.setAttribute("stacking_id", "1");
@@ -731,7 +767,7 @@ public class AutobindRulesTest {
         pools.add(pool);
 
         List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
-            new String[]{ product.getId() }, pools, compliance, null,
+            new String[]{ product.getProductId() }, pools, compliance, null,
             new HashSet<String>(), false);
         assertEquals(1, bestPools.size());
         assertEquals(new Integer(1), bestPools.get(0).getQuantity());
@@ -749,7 +785,7 @@ public class AutobindRulesTest {
         pools.add(pool);
 
         List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
-            new String[]{ product.getId() }, pools, compliance, null,
+            new String[]{ product.getProductId() }, pools, compliance, null,
             new HashSet<String>(), false);
         assertEquals(1, bestPools.size());
         assertEquals(new Integer(4), bestPools.get(0).getQuantity());
@@ -813,14 +849,14 @@ public class AutobindRulesTest {
 
         // The hypervisor must be installed and entitled on the system for autobind
         // to pick up the unlimited guest_limit
-        compliance.addCompliantProduct(hypervisor.getId(), entitlement);
+        compliance.addCompliantProduct(hypervisor.getProductId(), entitlement);
 
         List<Pool> pools = new LinkedList<Pool>();
         pools.add(serverPool);
         pools.add(hyperPool);
 
         List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
-            new String[]{ server.getId() }, pools, compliance, null,
+            new String[]{ server.getProductId() }, pools, compliance, null,
             new HashSet<String>(), false);
         assertEquals(1, bestPools.size());
         assertEquals(new Integer(4), bestPools.get(0).getQuantity());
@@ -862,7 +898,7 @@ public class AutobindRulesTest {
         pools.add(hyperPool);
 
         List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
-            new String[]{ server.getId() }, pools, compliance, null,
+            new String[]{ server.getProductId() }, pools, compliance, null,
             new HashSet<String>(), false);
         assertEquals(1, bestPools.size());
         assertEquals(new Integer(1), bestPools.get(0).getQuantity());

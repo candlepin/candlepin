@@ -349,13 +349,12 @@ public class Product extends AbstractHibernateObject implements Linkable {
 
         Product another = (Product) anObject;
 
-        return (this.id == another.id || (this.id != null && this.id.equals(another.id))) &&
-            name.equals(another.getName());
+        return id.equals(another.getProductId()) && name.equals(another.getName());
     }
 
     @Override
     public int hashCode() {
-        return (this.id != null ? this.id.hashCode() : 0) + 31 * 7;
+        return productId.hashCode() * 31;
     }
 
     /**
