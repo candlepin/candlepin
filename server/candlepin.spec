@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.42
+Version: 0.9.43
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -394,6 +394,9 @@ fi
 
 
 %changelog
+* Mon Feb 23 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.43-1
+- 1194997: Don't use referencesUniqueColumn true. (dgoodwin@redhat.com)
+
 * Tue Feb 17 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.42-1
 - Allow key-value filters to be negated. (awood@redhat.com)
 - Status partial for unmapped guest entitlement but no installed product
