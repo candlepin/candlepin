@@ -14,8 +14,7 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
@@ -48,7 +47,7 @@ public class EnvironmentContentCuratorTest extends DatabaseTestFixture {
         e = new Environment("env1", "Env 1", owner);
         envCurator.create(e);
 
-        p = TestUtil.createProduct();
+        p = TestUtil.createProduct(owner);
         c = new Content(this.owner, "testcontent", "contentId1", "testcontent", "yum",
             "red hat", "http://example.com", "http://example.com/gpg.key",
             "test-arch");

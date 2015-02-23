@@ -14,12 +14,9 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.controller.PoolManager;
@@ -104,7 +101,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
     public void testAddingRemovingPools() {
         ActivationKey key = new ActivationKey();
         Owner owner = createOwner();
-        Product product = TestUtil.createProduct();
+        Product product = TestUtil.createProduct(owner);
         productCurator.create(product);
         Pool pool = createPoolAndSub(owner, product, 10L, new Date(), new Date());
         key.setOwner(owner);
@@ -121,7 +118,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
     public void testReaddingPools() {
         ActivationKey key = new ActivationKey();
         Owner owner = createOwner();
-        Product product = TestUtil.createProduct();
+        Product product = TestUtil.createProduct(owner);
         productCurator.create(product);
         Pool pool = createPoolAndSub(owner, product, 10L, new Date(), new Date());
 
@@ -343,7 +340,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
     public void testAddingRemovingProductIDs() {
         ActivationKey key = new ActivationKey();
         Owner owner = createOwner();
-        Product product = TestUtil.createProduct();
+        Product product = TestUtil.createProduct(owner);
         productCurator.create(product);
 
         key.setOwner(owner);
@@ -361,7 +358,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
     public void testReaddingProductIDs() {
         ActivationKey key = new ActivationKey();
         Owner owner = createOwner();
-        Product product = TestUtil.createProduct();
+        Product product = TestUtil.createProduct(owner);
         productCurator.create(product);
 
         key.setOwner(owner);

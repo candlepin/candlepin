@@ -63,7 +63,7 @@ public class CriteriaRulesTest extends DatabaseTestFixture {
     public void virtOnlyPoolAttributeFiltering() {
 
         consumer = this.createConsumer(owner);
-        Product targetProduct = TestUtil.createProduct();
+        Product targetProduct = TestUtil.createProduct(owner);
         this.productCurator.create(targetProduct);
         Pool physicalPool = this.createPoolAndSub(owner, targetProduct, 1L, new Date(),
             new Date());
@@ -93,7 +93,7 @@ public class CriteriaRulesTest extends DatabaseTestFixture {
     public void virtOnlyProductAttributeFiltering() {
 
         consumer = this.createConsumer(owner);
-        Product targetProduct = TestUtil.createProduct();
+        Product targetProduct = TestUtil.createProduct(owner);
         targetProduct.setAttribute("virt_only", "true");
         this.productCurator.create(targetProduct);
         this.createPoolAndSub(owner, targetProduct, 1L, new Date(), new Date());
@@ -123,7 +123,7 @@ public class CriteriaRulesTest extends DatabaseTestFixture {
         host.addGuestIdCheckIn();
         consumerCurator.update(host);
 
-        Product targetProduct = TestUtil.createProduct();
+        Product targetProduct = TestUtil.createProduct(owner);
         this.productCurator.create(targetProduct);
 
         Pool virtPool = this.createPoolAndSub(owner, targetProduct, 1L, new Date(),
@@ -169,7 +169,7 @@ public class CriteriaRulesTest extends DatabaseTestFixture {
         host.addGuestIdCheckIn();
         consumerCurator.update(host);
 
-        Product targetProduct = TestUtil.createProduct();
+        Product targetProduct = TestUtil.createProduct(owner);
         this.productCurator.create(targetProduct);
 
         Pool virtPool = this.createPoolAndSub(owner, targetProduct, 1L, new Date(),
@@ -196,7 +196,7 @@ public class CriteriaRulesTest extends DatabaseTestFixture {
         host.addGuestIdCheckIn();
         consumerCurator.update(host);
 
-        Product targetProduct = TestUtil.createProduct();
+        Product targetProduct = TestUtil.createProduct(owner);
         this.productCurator.create(targetProduct);
 
         Pool virtPool = this.createPoolAndSub(owner, targetProduct, 1L, new Date(),

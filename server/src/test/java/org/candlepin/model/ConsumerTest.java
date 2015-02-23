@@ -14,11 +14,7 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.common.config.Configuration;
@@ -212,9 +208,10 @@ public class ConsumerTest extends DatabaseTestFixture {
 
     @Test
     public void testAddEntitlements() {
-        Product newProduct = TestUtil.createProduct();
+        Owner o = createOwner();
+        Product newProduct = TestUtil.createProduct(o);
         productCurator.create(newProduct);
-        Pool pool = createPoolAndSub(createOwner(), newProduct,
+        Pool pool = createPoolAndSub(o, newProduct,
             1000L, TestUtil.createDate(2009, 11, 30),
             TestUtil.createDate(2015, 11, 30));
         entityManager().persist(pool.getOwner());

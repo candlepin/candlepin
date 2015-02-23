@@ -14,9 +14,7 @@
  */
 package org.candlepin.policy;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
@@ -120,21 +118,21 @@ public class PoolRulesStackDerivedTest {
             new ConsumerType(ConsumerTypeEnum.SYSTEM));
 
         // Two subtly different products stacked together:
-        prod1 = TestUtil.createProduct();
+        prod1 = TestUtil.createProduct(owner);
         prod1.addAttribute(new ProductAttribute("virt_limit", "2"));
         prod1.addAttribute(new ProductAttribute("stacking_id", STACK));
         prod1.addAttribute(new ProductAttribute("testattr1", "1"));
         when(productAdapterMock.getProductById(prod1.getId())).thenReturn(prod1);
 
-        prod2 = TestUtil.createProduct();
+        prod2 = TestUtil.createProduct(owner);
         prod2.addAttribute(new ProductAttribute("virt_limit", "unlimited"));
         prod2.addAttribute(new ProductAttribute("stacking_id", STACK));
         prod2.addAttribute(new ProductAttribute("testattr2", "2"));
         when(productAdapterMock.getProductById(prod2.getId())).thenReturn(prod2);
 
-        provided1 = TestUtil.createProduct();
-        provided2 = TestUtil.createProduct();
-        provided3 = TestUtil.createProduct();
+        provided1 = TestUtil.createProduct(owner);
+        provided2 = TestUtil.createProduct(owner);
+        provided3 = TestUtil.createProduct(owner);
 
         // Create three subscriptions with various start/end dates:
         sub1 = createStackedVirtSub(owner, prod1,
@@ -166,7 +164,7 @@ public class PoolRulesStackDerivedTest {
 
     private Subscription createStackedVirtSub(Owner owner, Product product,
         Date start, Date end) {
-        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
+        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct(owner));
         s.setStartDate(start);
         s.setEndDate(end);
         s.setProduct(product);

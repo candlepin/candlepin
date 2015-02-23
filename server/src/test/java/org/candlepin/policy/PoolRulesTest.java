@@ -15,10 +15,8 @@
 package org.candlepin.policy;
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.common.config.Configuration;
@@ -97,7 +95,7 @@ public class PoolRulesTest {
     @Test
     public void hostedVirtLimitBadValueDoesntTraceBack() {
         when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
-        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
+        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct(owner));
         s.getProduct().addAttribute(new ProductAttribute("virt_limit", "badvalue"));
         s.setQuantity(10L);
 
@@ -122,10 +120,10 @@ public class PoolRulesTest {
     @Test
     public void providedProductsChanged() {
         // Subscription with two provided products:
-        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
-        Product product1 = TestUtil.createProduct();
-        Product product2 = TestUtil.createProduct();
-        Product product3 = TestUtil.createProduct();
+        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct(owner));
+        Product product1 = TestUtil.createProduct(owner);
+        Product product2 = TestUtil.createProduct(owner);
+        Product product3 = TestUtil.createProduct(owner);
         s.getProvidedProducts().add(product1);
         s.getProvidedProducts().add(product2);
 
@@ -146,7 +144,7 @@ public class PoolRulesTest {
 
     @Test
     public void productNameChanged() {
-        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
+        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct(owner));
 
         // Setup a pool with a single (different) provided product:
         Pool p = TestUtil.copyFromSub(s);
@@ -165,7 +163,7 @@ public class PoolRulesTest {
 
     @Test
     public void datesNameChanged() {
-        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
+        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct(owner));
 
         // Setup a pool with a single (different) provided product:
         Pool p = TestUtil.copyFromSub(s);
@@ -184,7 +182,7 @@ public class PoolRulesTest {
 
     @Test
     public void quantityChanged() {
-        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
+        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct(owner));
 
         // Setup a pool with a single (different) provided product:
         Pool p = TestUtil.copyFromSub(s);
@@ -203,7 +201,7 @@ public class PoolRulesTest {
 
     @Test
     public void brandingChanged() {
-        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
+        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct(owner));
 
         Pool p = TestUtil.copyFromSub(s);
 
@@ -233,7 +231,7 @@ public class PoolRulesTest {
 
     @Test
     public void brandingDidntChange() {
-        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
+        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct(owner));
 
         // Add some branding to the subscription and do an update:
         Branding b1 = new Branding("8000", "OS", "Awesome OS Branded");
@@ -255,7 +253,7 @@ public class PoolRulesTest {
 
     @Test
     public void virtOnlyQuantityChanged() {
-        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
+        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct(owner));
         s.getProduct().addAttribute(new ProductAttribute("virt_limit", "5"));
         s.setQuantity(10L);
 
@@ -282,7 +280,7 @@ public class PoolRulesTest {
 
     @Test
     public void updatePoolWithNewProductAttributes() {
-        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
+        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct(owner));
         Pool p = TestUtil.copyFromSub(s);
 
         // Update the subscription's product.
@@ -345,7 +343,7 @@ public class PoolRulesTest {
 
     @Test
     public void updatePoolWithModifiedProductAttributes() {
-        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
+        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct(owner));
         Pool p = TestUtil.copyFromSub(s);
 
         String testAttributeKey = "multi-entitlement";
@@ -397,8 +395,8 @@ public class PoolRulesTest {
     }
 
     private Subscription createSubscriptionWithSubProduct() {
-        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
-        Product subProd = TestUtil.createProduct();
+        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct(owner));
+        Product subProd = TestUtil.createProduct(owner);
         s.setDerivedProduct(subProd);
         when(productAdapterMock.getProductById(s.getProduct().getId()))
             .thenReturn(s.getProduct());
@@ -438,9 +436,9 @@ public class PoolRulesTest {
     public void updatePoolSubProvidedProductsChanged() {
         // Subscription with two provided products:
         Subscription s = createSubscriptionWithSubProduct();
-        Product product1 = TestUtil.createProduct();
-        Product product2 = TestUtil.createProduct();
-        Product product3 = TestUtil.createProduct();
+        Product product1 = TestUtil.createProduct(owner);
+        Product product2 = TestUtil.createProduct(owner);
+        Product product3 = TestUtil.createProduct(owner);
         s.getDerivedProvidedProducts().add(product1);
         s.getDerivedProvidedProducts().add(product2);
 
@@ -459,7 +457,7 @@ public class PoolRulesTest {
 
     @Test
     public void productIdChangeOnProductPoolAttributeTriggersUpdate() {
-        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
+        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct(owner));
         String testAttributeKey = "multi-entitlement";
         s.getProduct().setAttribute(testAttributeKey, "yes");
 
@@ -486,7 +484,7 @@ public class PoolRulesTest {
 
     @Test
     public void productAttributesCopiedOntoPoolWhenCreatingNewPool() {
-        Product product = TestUtil.createProduct();
+        Product product = TestUtil.createProduct(owner);
 
         Subscription sub = TestUtil.createSubscription(owner, product);
         String testAttributeKey = "multi-entitlement";
@@ -509,7 +507,7 @@ public class PoolRulesTest {
 
     @Test
     public void brandingCopiedWhenCreatingPools() {
-        Product product = TestUtil.createProduct();
+        Product product = TestUtil.createProduct(owner);
 
         Subscription sub = TestUtil.createSubscription(owner, product);
         Branding b1 = new Branding("8000", "OS", "Branded Awesome OS");
@@ -530,8 +528,8 @@ public class PoolRulesTest {
 
     @Test
     public void subProductAttributesCopiedOntoPoolWhenCreatingNewPool() {
-        Product product = TestUtil.createProduct();
-        Product subProduct = TestUtil.createProduct();
+        Product product = TestUtil.createProduct(owner);
+        Product subProduct = TestUtil.createProduct(owner);
 
         Subscription sub = TestUtil.createSubscription(owner, product);
         sub.setDerivedProduct(subProduct);
@@ -556,8 +554,8 @@ public class PoolRulesTest {
 
     @Test
     public void subProductIdCopiedOntoPoolWhenCreatingNewPool() {
-        Product product = TestUtil.createProduct();
-        Product subProduct = TestUtil.createProduct();
+        Product product = TestUtil.createProduct(owner);
+        Product subProduct = TestUtil.createProduct(owner);
 
         Subscription sub = TestUtil.createSubscription(owner, product);
         sub.setDerivedProduct(subProduct);
@@ -574,9 +572,9 @@ public class PoolRulesTest {
 
     @Test
     public void subProvidedProductsCopiedOntoPoolWhenCreatingNewPool() {
-        Product product = TestUtil.createProduct();
-        Product subProduct = TestUtil.createProduct();
-        Product subProvidedProduct = TestUtil.createProduct();
+        Product product = TestUtil.createProduct(owner);
+        Product subProduct = TestUtil.createProduct(owner);
+        Product subProvidedProduct = TestUtil.createProduct(owner);
 
         Subscription sub = TestUtil.createSubscription(owner, product);
         sub.setDerivedProduct(subProduct);
@@ -887,7 +885,7 @@ public class PoolRulesTest {
     @Test
     public void dontUpdateVirtOnlyNoVirtLimit() {
         when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
-        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
+        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct(owner));
         s.setQuantity(10L);
         when(productAdapterMock.getProductById(s.getProduct().getId()))
             .thenReturn(s.getProduct());
@@ -908,7 +906,7 @@ public class PoolRulesTest {
     @Test
     public void updateVirtOnlyNoVirtLimit() {
         when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
-        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
+        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct(owner));
         s.setQuantity(10L);
 
         // Setup a pool with a single (different) provided product:
@@ -931,7 +929,7 @@ public class PoolRulesTest {
 
     @Test
     public void contractNumberChanged() {
-        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
+        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct(owner));
         s.setContractNumber("123");
 
         // Setup a pool with a single (different) provided product:
@@ -951,7 +949,7 @@ public class PoolRulesTest {
 
     @Test
     public void orderNumberChanged() {
-        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
+        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct(owner));
         s.setOrderNumber("123");
 
         // Setup a pool with a single (different) provided product:
@@ -971,7 +969,7 @@ public class PoolRulesTest {
 
     @Test
     public void accountNumberChanged() {
-        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
+        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct(owner));
         s.setAccountNumber("123");
 
         // Setup a pool with a single (different) provided product:

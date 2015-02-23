@@ -26,6 +26,8 @@ import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.common.config.Configuration;
+import org.candlepin.common.paging.Page;
+import org.candlepin.common.paging.PageRequest;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.AbstractHibernateObject;
 import org.candlepin.model.Consumer;
@@ -44,8 +46,6 @@ import org.candlepin.model.Product;
 import org.candlepin.model.SourceStack;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.Subscription;
-import org.candlepin.common.paging.Page;
-import org.candlepin.common.paging.PageRequest;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.activationkey.ActivationKeyRules;
@@ -142,8 +142,8 @@ public class PoolManagerTest {
 
     @Before
     public void init() throws Exception {
-        product = TestUtil.createProduct();
         o = new Owner("key", "displayname");
+        product = TestUtil.createProduct(o);
         pool = TestUtil.createPool(o, product);
 
         when(mockConfig.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX))).thenReturn(100);
@@ -172,7 +172,7 @@ public class PoolManagerTest {
     @Test
     public void testRefreshPoolsOnlyRegeneratesFloatingWhenNecessary() {
         List<Subscription> subscriptions = Util.newList();
-        Product product = TestUtil.createProduct();
+        Product product = TestUtil.createProduct(o);
         Subscription sub = TestUtil.createSubscription(getOwner(), product);
         sub.setId("testing-subid");
         subscriptions.add(sub);
@@ -186,7 +186,7 @@ public class PoolManagerTest {
         pools.add(p);
 
         // Should be regenerated because it has no subscription id
-        Pool floating = TestUtil.createPool(TestUtil.createProduct());
+        Pool floating = TestUtil.createPool(TestUtil.createProduct(o));
         floating.setSourceSubscription(null);
         pools.add(floating);
         mockSubsList(subscriptions);
@@ -204,7 +204,7 @@ public class PoolManagerTest {
     @Test
     public void testRefreshPoolsOnlyRegeneratesWhenNecessary() {
         List<Subscription> subscriptions = Util.newList();
-        Product product = TestUtil.createProduct();
+        Product product = TestUtil.createProduct(o);
         Subscription sub = TestUtil.createSubscription(getOwner(), product);
         sub.setId("testing-subid");
         subscriptions.add(sub);
@@ -236,7 +236,7 @@ public class PoolManagerTest {
     public void testRefreshPoolsDeletesOrphanedPools() {
         List<Subscription> subscriptions = Util.newList();
         List<Pool> pools = Util.newList();
-        Pool p = TestUtil.createPool(TestUtil.createProduct());
+        Pool p = TestUtil.createPool(TestUtil.createProduct(o));
         p.setSourceSubscription(new SourceSubscription("112", "master"));
         pools.add(p);
         mockSubsList(subscriptions);
@@ -251,7 +251,7 @@ public class PoolManagerTest {
     public void testRefreshPoolsDeletesOrphanedHostedVirtBonusPool() {
         List<Subscription> subscriptions = Util.newList();
         List<Pool> pools = Util.newList();
-        Pool p = TestUtil.createPool(TestUtil.createProduct());
+        Pool p = TestUtil.createPool(TestUtil.createProduct(o));
         p.setSourceSubscription(new SourceSubscription("112", "master"));
 
         // Make it look like a hosted virt bonus pool:
@@ -272,7 +272,7 @@ public class PoolManagerTest {
     public void testRefreshPoolsSkipsOrphanedEntitlementDerivedPools() {
         List<Subscription> subscriptions = Util.newList();
         List<Pool> pools = Util.newList();
-        Pool p = TestUtil.createPool(TestUtil.createProduct());
+        Pool p = TestUtil.createPool(TestUtil.createProduct(o));
         p.setSourceSubscription(new SourceSubscription("112", "master"));
 
         // Mock a pool with a source entitlement:
@@ -293,7 +293,7 @@ public class PoolManagerTest {
     public void testRefreshPoolsSkipsOrphanedStackDerivedPools() {
         List<Subscription> subscriptions = Util.newList();
         List<Pool> pools = Util.newList();
-        Pool p = TestUtil.createPool(TestUtil.createProduct());
+        Pool p = TestUtil.createPool(TestUtil.createProduct(o));
         p.setSourceSubscription(new SourceSubscription("112", "master"));
 
         // Mock a pool with a source stack ID:
@@ -316,7 +316,7 @@ public class PoolManagerTest {
         List<Pool> pools = Util.newList();
 
         // Pool has no subscription ID:
-        Pool p = TestUtil.createPool(TestUtil.createProduct());
+        Pool p = TestUtil.createPool(TestUtil.createProduct(o));
         p.setSourceStack(new SourceStack(new Consumer(), "a"));
 
         pools.add(p);
@@ -336,7 +336,7 @@ public class PoolManagerTest {
         List<Subscription> subscriptions = Util.newList();
         List<Pool> pools = Util.newList();
         Subscription s = TestUtil.createSubscription(getOwner(),
-            TestUtil.createProduct());
+            TestUtil.createProduct(o));
         subscriptions.add(s);
         mockSubsList(subscriptions);
 
@@ -358,7 +358,7 @@ public class PoolManagerTest {
         List<Subscription> subscriptions = Util.newList();
         List<Pool> pools = Util.newList();
         Subscription s = TestUtil.createSubscription(getOwner(),
-            TestUtil.createProduct());
+            TestUtil.createProduct(o));
         s.setId("01923");
         subscriptions.add(s);
         Pool p = TestUtil.createPool(s.getProduct());
@@ -431,7 +431,7 @@ public class PoolManagerTest {
     @Test
     public void testCreatePoolForSubscription() {
         final Subscription s = TestUtil.createSubscription(getOwner(),
-            TestUtil.createProduct());
+            TestUtil.createProduct(o));
 
         List<Pool> newPools = new LinkedList<Pool>();
         Pool p = TestUtil.createPool(s.getProduct());
@@ -489,7 +489,7 @@ public class PoolManagerTest {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Test
     public void testEntitleWithADate() throws Exception {
-        Product product = TestUtil.createProduct();
+        Product product = TestUtil.createProduct(o);
         List<Pool> pools = Util.newList();
         Pool pool1 = TestUtil.createPool(product);
         pools.add(pool1);
@@ -539,7 +539,7 @@ public class PoolManagerTest {
         List<Subscription> subscriptions = Util.newList();
 
         Subscription sub = TestUtil.createSubscription(getOwner(),
-            TestUtil.createProduct());
+            TestUtil.createProduct(o));
         sub.setStartDate(expiredStart);
         sub.setEndDate(expiredDate);
         sub.setId("123");
@@ -680,7 +680,7 @@ public class PoolManagerTest {
     @SuppressWarnings("rawtypes")
     @Test
     public void testEntitleByProductsEmptyArray() throws Exception {
-        Product product = TestUtil.createProduct();
+        Product product = TestUtil.createProduct(o);
         List<Pool> pools = Util.newList();
         Pool pool1 = TestUtil.createPool(product);
         pools.add(pool1);
@@ -736,7 +736,7 @@ public class PoolManagerTest {
         List<Subscription> subscriptions = Util.newList();
 
         Subscription sub = TestUtil.createSubscription(getOwner(),
-            TestUtil.createProduct());
+            TestUtil.createProduct(getOwner()));
         sub.setId("123");
         subscriptions.add(sub);
 
@@ -829,7 +829,7 @@ public class PoolManagerTest {
             mockConfig, entitlementCurator);
         List<Subscription> subscriptions = Util.newList();
         List<Pool> pools = Util.newList();
-        Product prod = TestUtil.createProduct();
+        Product prod = TestUtil.createProduct(o);
         Set<Product> products = new HashSet<Product>();
         products.add(prod);
         prod.setAttribute("virt_limit", "4");
@@ -858,7 +858,7 @@ public class PoolManagerTest {
             mockConfig, entitlementCurator);
         List<Subscription> subscriptions = Util.newList();
         List<Pool> pools = Util.newList();
-        Product prod = TestUtil.createProduct();
+        Product prod = TestUtil.createProduct(o);
         Set<Product> products = new HashSet<Product>();
         products.add(prod);
         productCache.addProducts(products);
@@ -884,7 +884,7 @@ public class PoolManagerTest {
             mockConfig, entitlementCurator);
         List<Subscription> subscriptions = Util.newList();
         List<Pool> pools = Util.newList();
-        Product prod = TestUtil.createProduct();
+        Product prod = TestUtil.createProduct(o);
         Set<Product> products = new HashSet<Product>();
         products.add(prod);
         productCache.addProducts(products);

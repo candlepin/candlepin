@@ -128,12 +128,12 @@ public class TestUtil {
         return createProduct(id, "test-product-" + randomInt(), createOwner());
     }
 
-    public static Product createProduct() {
+    public static Product createProduct(Owner o) {
         int random = randomInt();
         return createProduct(
             String.valueOf(random),
             "test-product-" + random,
-            createOwner()
+            o
         );
     }
 
@@ -143,7 +143,7 @@ public class TestUtil {
     }
 
     public static Subscription createSubscription() {
-        return createSubscription(createProduct());
+        return createSubscription(createProduct(createOwner()));
     }
 
     public static Subscription createSubscription(Owner owner, Product product) {
@@ -303,7 +303,7 @@ public class TestUtil {
         return createEntitlement(
             owner,
             createConsumer(owner),
-            createPool(owner, createProduct()),
+            createPool(owner, createProduct(owner)),
             null
         );
     }

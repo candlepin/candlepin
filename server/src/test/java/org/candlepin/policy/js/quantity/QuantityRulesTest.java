@@ -82,7 +82,7 @@ public class QuantityRulesTest {
         quantityRules = new QuantityRules(provider.get());
 
         owner = new Owner("Test Owner " + TestUtil.randomInt());
-        product = TestUtil.createProduct();
+        product = TestUtil.createProduct(owner);
         pool = TestUtil.createPool(owner, product);
         pool.setId("fakepoolid");
 
@@ -356,7 +356,7 @@ public class QuantityRulesTest {
         consumer.setFact(SOCKET_FACT, "4");
         pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "2");
 
-        Product product2 = TestUtil.createProduct();
+        Product product2 = TestUtil.createProduct(owner);
         Pool pool2 = TestUtil.createPool(owner, product2);
 
         Entitlement e = createValidEntitlement(pool2);
@@ -511,7 +511,7 @@ public class QuantityRulesTest {
         consumer.setFact(SOCKET_FACT, "8");
         pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "2");
         pool.setQuantity(10L);
-        Product product1 = TestUtil.createProduct();
+        Product product1 = TestUtil.createProduct(owner);
         Pool pool1 = TestUtil.createPool(owner, product1);
         Entitlement e = TestUtil.createEntitlement(owner, consumer, pool1,
             new EntitlementCertificate());

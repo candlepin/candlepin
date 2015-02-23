@@ -15,11 +15,7 @@
 package org.candlepin.model;
 
 import static org.hamcrest.collection.IsCollectionContaining.hasItem;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
@@ -78,19 +74,19 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         this.owner = createOwner();
         ownerCurator.create(owner);
 
-        product = TestUtil.createProduct();
+        product = TestUtil.createProduct(owner);
         productCurator.create(product);
 
-        providedProduct = TestUtil.createProduct();
+        providedProduct = TestUtil.createProduct(owner);
         productCurator.create(providedProduct);
 
         Set<Product> providedProducts = new HashSet<Product>();
         providedProducts.add(providedProduct);
 
-        derivedProduct = TestUtil.createProduct();
+        derivedProduct = TestUtil.createProduct(owner);
         productCurator.create(derivedProduct);
 
-        derivedProvidedProduct = TestUtil.createProduct();
+        derivedProvidedProduct = TestUtil.createProduct(owner);
         productCurator.create(derivedProvidedProduct);
 
         Set<Product> derivedProvidedProducts = new HashSet<Product>();
@@ -534,7 +530,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         List<Product> products = new ArrayList<Product>();
         List<String> pids = new ArrayList<String>();
         for (int i = 0; i < 5; i++) {
-            Product p = TestUtil.createProduct();
+            Product p = TestUtil.createProduct(owner);
             productCurator.create(p);
             products.add(p);
             pids.add(p.getId());
@@ -590,7 +586,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void ensureDoesNotHaveSubscription() {
-        Product doesNotHave = TestUtil.createProduct();
+        Product doesNotHave = TestUtil.createProduct(owner);
         productCurator.create(doesNotHave);
         assertFalse(productCurator.productHasSubscriptions(doesNotHave));
     }

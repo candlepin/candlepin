@@ -14,10 +14,7 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
@@ -52,9 +49,9 @@ public class SubscriptionCuratorTest extends DatabaseTestFixture {
     public void setUp() {
         owner = createOwner();
         ownerCurator.create(owner);
-        parentProduct = TestUtil.createProduct();
+        parentProduct = TestUtil.createProduct(owner);
 
-        childProduct = TestUtil.createProduct();
+        childProduct = TestUtil.createProduct(owner);
         productCurator.create(childProduct);
         productCurator.create(parentProduct);
 
@@ -80,7 +77,7 @@ public class SubscriptionCuratorTest extends DatabaseTestFixture {
     @Test
     public void testLookupSubscriptionByProduct() {
         Owner owner = createOwner();
-        Product product = TestUtil.createProduct();
+        Product product = TestUtil.createProduct(owner);
         productCurator.create(product);
 
         Subscription sub = TestUtil.createSubscription(owner, product);
@@ -96,7 +93,7 @@ public class SubscriptionCuratorTest extends DatabaseTestFixture {
     public void testLookupMultipleSubscriptionsByProduct() {
         Owner owner = createOwner();
 
-        Product product = TestUtil.createProduct();
+        Product product = TestUtil.createProduct(owner);
         productCurator.create(product);
 
         Subscription sub = TestUtil.createSubscription(owner, product);
@@ -116,7 +113,7 @@ public class SubscriptionCuratorTest extends DatabaseTestFixture {
         Owner owner = createOwner();
         Owner owner2 = createOwner();
 
-        Product product = TestUtil.createProduct();
+        Product product = TestUtil.createProduct(owner);
         productCurator.create(product);
 
         Subscription sub = TestUtil.createSubscription(owner, product);
@@ -135,8 +132,8 @@ public class SubscriptionCuratorTest extends DatabaseTestFixture {
     public void testLookupSubscriptionByProductProvidedProduct() {
         Owner owner = createOwner();
 
-        Product product = TestUtil.createProduct();
-        Product provided = TestUtil.createProduct();
+        Product product = TestUtil.createProduct(owner);
+        Product provided = TestUtil.createProduct(owner);
         productCurator.create(product);
         productCurator.create(provided);
 
@@ -160,7 +157,7 @@ public class SubscriptionCuratorTest extends DatabaseTestFixture {
     public void testLookupSubscriptionGivesUniqueResult() {
         Owner owner = createOwner();
 
-        Product product = TestUtil.createProduct();
+        Product product = TestUtil.createProduct(owner);
         productCurator.create(product);
 
         Set<Product> providedProducts = new HashSet<Product>();
@@ -177,9 +174,9 @@ public class SubscriptionCuratorTest extends DatabaseTestFixture {
     public void testLookupSubscriptionByProductMixedMainAndProvidedProduct() {
         Owner owner = createOwner();
 
-        Product product = TestUtil.createProduct();
-        Product product2 = TestUtil.createProduct();
-        Product product3 = TestUtil.createProduct();
+        Product product = TestUtil.createProduct(owner);
+        Product product2 = TestUtil.createProduct(owner);
+        Product product3 = TestUtil.createProduct(owner);
         productCurator.create(product);
         productCurator.create(product2);
         productCurator.create(product3);
@@ -205,9 +202,9 @@ public class SubscriptionCuratorTest extends DatabaseTestFixture {
     public void testLookupSubscriptionByProductDoesNotIncludeExtraSubscriptions() {
         Owner owner = createOwner();
 
-        Product product = TestUtil.createProduct();
-        Product product2 = TestUtil.createProduct();
-        Product product3 = TestUtil.createProduct();
+        Product product = TestUtil.createProduct(owner);
+        Product product2 = TestUtil.createProduct(owner);
+        Product product3 = TestUtil.createProduct(owner);
         productCurator.create(product);
         productCurator.create(product2);
         productCurator.create(product3);

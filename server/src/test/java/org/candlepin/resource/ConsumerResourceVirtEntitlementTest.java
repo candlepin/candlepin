@@ -14,11 +14,9 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
@@ -95,7 +93,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
         consumerCurator.create(systemConsumer);
 
         // create a physical pool with numeric virt_limit
-        productLimit = TestUtil.createProduct();
+        productLimit = TestUtil.createProduct(owner);
         productLimit.setAttribute("virt_limit", "10");
         productLimit.setAttribute("multi-entitlement", "yes");
         productCurator.create(productLimit);
@@ -111,7 +109,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
         limitPools = poolManager.createPoolsForSubscription(limitSub);
 
         // create a physical pool with unlimited virt_limit
-        productUnlimit = TestUtil.createProduct();
+        productUnlimit = TestUtil.createProduct(owner);
         productUnlimit.setAttribute("virt_limit", "unlimited");
         productUnlimit.setAttribute("multi-entitlement", "yes");
         productCurator.create(productUnlimit);

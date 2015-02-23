@@ -15,7 +15,7 @@
 package org.candlepin.sync;
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.audit.Event;
@@ -569,15 +569,15 @@ public class EntitlementImporterTest {
         ConsumerDto consumerDto = new ConsumerDto(consumer.getUuid(), consumer.getName(),
             consumer.getType(), consumer.getOwner(), "", "");
 
-        Product parentProduct = TestUtil.createProduct();
-        Product pp1 = TestUtil.createProduct();
+        Product parentProduct = TestUtil.createProduct(owner);
+        Product pp1 = TestUtil.createProduct(owner);
 
         Set<Product> provided = new HashSet<Product>();
         provided.add(pp1);
 
         // Sub product setup
-        Product subProduct = TestUtil.createProduct();
-        Product subProvided1 = TestUtil.createProduct();
+        Product subProduct = TestUtil.createProduct(owner);
+        Product subProvided1 = TestUtil.createProduct(owner);
 
         Set<Product> subProvidedProducts = new HashSet<Product>();
         subProvidedProducts.add(subProvided1);

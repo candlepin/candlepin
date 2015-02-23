@@ -14,12 +14,8 @@
  */
 package org.candlepin.sync;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
@@ -53,6 +49,8 @@ public class ProductImporterTest {
     private ProductImporter importer;
     private ProductCurator productCuratorMock;
     private ContentCurator contentCuratorMock;
+    private Owner owner = new Owner("Test Corporation");
+
     @Before
     public void setUp() throws IOException {
         mapper = SyncUtils.getObjectMapper(new MapConfiguration(
@@ -70,7 +68,7 @@ public class ProductImporterTest {
 
     @Test
     public void testCreateObject() throws Exception {
-        Product product = TestUtil.createProduct();
+        Product product = TestUtil.createProduct(owner);
         String json = getJsonForProduct(product);
         Reader reader = new StringReader(json);
         Product created = importer.createObject(mapper, reader);
@@ -81,7 +79,7 @@ public class ProductImporterTest {
 
     @Test
     public void testNewProductCreated() throws Exception {
-        Product product = TestUtil.createProduct();
+        Product product = TestUtil.createProduct(owner);
 
         String json = getJsonForProduct(product);
         Reader reader = new StringReader(json);
@@ -95,7 +93,7 @@ public class ProductImporterTest {
 
     @Test
     public void testExistingProductUpdated() throws Exception {
-        Product product = TestUtil.createProduct();
+        Product product = TestUtil.createProduct(owner);
         String json = getJsonForProduct(product);
         Reader reader = new StringReader(json);
 
@@ -118,7 +116,7 @@ public class ProductImporterTest {
 
     @Test
     public void testContentCreated() throws Exception {
-        Product product = TestUtil.createProduct();
+        Product product = TestUtil.createProduct(owner);
         addContentTo(product);
 
         String json = getJsonForProduct(product);
@@ -156,7 +154,6 @@ public class ProductImporterTest {
 
     @Test
     public void testGetChangedProductsNoNewProducts() {
-        Owner owner = new Owner("Test Corporation");
         Product oldProduct = TestUtil.createProduct("fake id", "fake name", owner);
 
         Set<Product> products = new HashSet<Product>();
@@ -416,7 +413,7 @@ public class ProductImporterTest {
 
     @Test
     public void testVendorSetToUnknown() throws Exception {
-        Product product = TestUtil.createProduct();
+        Product product = TestUtil.createProduct(owner);
         addNoVendorContentTo(product);
 
         String json = getJsonForProduct(product);

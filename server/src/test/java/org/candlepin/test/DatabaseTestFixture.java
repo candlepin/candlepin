@@ -43,7 +43,6 @@ import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Role;
 import org.candlepin.model.SourceSubscription;
@@ -249,20 +248,6 @@ public class DatabaseTestFixture {
         Consumer c = new Consumer("test-consumer", "test-user", owner, type);
         consumerCurator.create(c);
         return c;
-    }
-
-    protected Subscription createSubscription() {
-        Product p = TestUtil.createProduct();
-        productCurator.create(p);
-        Subscription sub = new Subscription(createOwner(),
-                                            p, new HashSet<Product>(),
-                                            1000L,
-                                            TestUtil.createDate(2000, 1, 1),
-                                            TestUtil.createDate(2010, 1, 1),
-                                            TestUtil.createDate(2000, 1, 1));
-        subCurator.create(sub);
-        return sub;
-
     }
 
     protected ActivationKey createActivationKey(Owner owner) {

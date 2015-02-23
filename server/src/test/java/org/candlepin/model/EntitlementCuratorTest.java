@@ -69,7 +69,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         consumer.setEnvironment(environment);
         consumerCurator.create(consumer);
 
-        Product product = TestUtil.createProduct();
+        Product product = TestUtil.createProduct(owner);
         productCurator.create(product);
 
         Pool firstPool = createPoolAndSub(owner, product, 1L,
@@ -82,7 +82,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
             firstCertificate);
         entitlementCurator.create(firstEntitlement);
 
-        Product product1 = TestUtil.createProduct();
+        Product product1 = TestUtil.createProduct(owner);
         productCurator.create(product1);
 
         Pool secondPool = createPoolAndSub(owner, product1, 1L,
@@ -98,9 +98,9 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         futureDate = createDate(2050, 1, 1);
         pastDate = createDate(1998, 1, 1);
 
-        parentProduct = TestUtil.createProduct();
-        providedProduct1 = TestUtil.createProduct();
-        providedProduct2 = TestUtil.createProduct();
+        parentProduct = TestUtil.createProduct(owner);
+        providedProduct1 = TestUtil.createProduct(owner);
+        providedProduct2 = TestUtil.createProduct(owner);
         productCurator.create(parentProduct);
         productCurator.create(providedProduct1);
         productCurator.create(providedProduct2);
@@ -253,7 +253,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         req.setOrder(PageRequest.Order.ASCENDING);
         req.setSortBy("id");
 
-        Product product = TestUtil.createProduct();
+        Product product = TestUtil.createProduct(owner);
         productCurator.create(product);
 
         Pool pool = createPoolAndSub(owner, product, 1L,
@@ -288,7 +288,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testListByConsumerAndProductWithoutPaging() {
-        Product product = TestUtil.createProduct();
+        Product product = TestUtil.createProduct(owner);
         productCurator.create(product);
 
         Pool pool = createPoolAndSub(owner, product, 1L,
@@ -302,7 +302,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
             entitlementCurator.create(ent);
         }
 
-        Product product2 = TestUtil.createProduct();
+        Product product2 = TestUtil.createProduct(owner);
         productCurator.create(product2);
 
         Pool pool2 = createPoolAndSub(owner, product2, 1L,
@@ -332,7 +332,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         req.setPage(1);
         req.setPerPage(10);
 
-        Product product = TestUtil.createProduct();
+        Product product = TestUtil.createProduct(owner);
         productCurator.create(product);
 
         Pool pool = createPoolAndSub(owner, product, 1L,
@@ -346,7 +346,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
             entitlementCurator.create(ent);
         }
 
-        Product product2 = TestUtil.createProduct();
+        Product product2 = TestUtil.createProduct(owner);
         productCurator.create(product2);
 
         Pool pool2 = createPoolAndSub(owner, product2, 1L,
@@ -372,7 +372,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         // Should be 2 entitlements already
         assertEquals(2, ents.size());
 
-        Product product = TestUtil.createProduct();
+        Product product = TestUtil.createProduct(owner);
         productCurator.create(product);
         // expired pool
         Pool pool = createPoolAndSub(owner, product, 1L,
@@ -392,7 +392,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     @Test
     public void findByStackIdTest() {
         String stackingId = "test_stack_id";
-        Product product = TestUtil.createProduct();
+        Product product = TestUtil.createProduct(owner);
         product.setAttribute("stacking_id", stackingId);
         productCurator.create(product);
 
@@ -409,7 +409,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     @Test
     public void findByStackIdMultiTest() {
         String stackingId = "test_stack_id";
-        Product product = TestUtil.createProduct();
+        Product product = TestUtil.createProduct(owner);
         product.setAttribute("stacking_id", stackingId);
         productCurator.create(product);
 
@@ -431,7 +431,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     @Test
     public void findByStackIdMultiTestWithDerived() {
         String stackingId = "test_stack_id";
-        Product product = TestUtil.createProduct();
+        Product product = TestUtil.createProduct(owner);
         product.setAttribute("stacking_id", stackingId);
         productCurator.create(product);
 
@@ -461,7 +461,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     @Test
     public void findUpstreamEntitlementForStack() {
         String stackingId = "test_stack_id";
-        Product product = TestUtil.createProduct();
+        Product product = TestUtil.createProduct(owner);
         product.setAttribute("stacking_id", stackingId);
         productCurator.create(product);
 
@@ -491,7 +491,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     @Test
     public void findUpstreamEntitlementForStackNothingActive() {
         String stackingId = "test_stack_id";
-        Product product = TestUtil.createProduct();
+        Product product = TestUtil.createProduct(owner);
         product.setAttribute("stacking_id", stackingId);
         productCurator.create(product);
 
@@ -509,7 +509,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     @Test
     public void findUpstreamEntitlementForStackNoResults() {
         String stackingId = "test_stack_id";
-        Product product = TestUtil.createProduct();
+        Product product = TestUtil.createProduct(owner);
         product.setAttribute("stacking_id", stackingId);
         productCurator.create(product);
 

@@ -14,7 +14,7 @@
  */
 package org.candlepin.resource.util;
 
-import static org.mockito.Matchers.*;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.common.exceptions.BadRequestException;
@@ -98,7 +98,7 @@ public class ConsumerBindUtilTest {
 
     @Test
     public void registerWithKeyWithPoolAndInstalledProductsAutoAttach() {
-        Product prod = TestUtil.createProduct();
+        Product prod = TestUtil.createProduct(owner);
         String[] prodIds = new String[]{prod.getId()};
 
         Pool pool = TestUtil.createPool(owner, prod);
@@ -125,7 +125,7 @@ public class ConsumerBindUtilTest {
 
     @Test
     public void registerWithKeyWithInstalledProductsAutoAttach() {
-        Product prod = TestUtil.createProduct();
+        Product prod = TestUtil.createProduct(owner);
         String[] prodIds = new String[]{prod.getId()};
 
         List<ActivationKey> keys = new ArrayList<ActivationKey>();
@@ -147,9 +147,9 @@ public class ConsumerBindUtilTest {
     @Test
     public void registerWithKeyWithInstalledProductsPlusAutoAttach() {
         // installed product
-        Product prod1 = TestUtil.createProduct();
+        Product prod1 = TestUtil.createProduct(owner);
         // key product
-        Product prod2 = TestUtil.createProduct();
+        Product prod2 = TestUtil.createProduct(owner);
         String[] prodIds = new String[]{prod1.getId(), prod2.getId()};
 
         List<ActivationKey> keys = new ArrayList<ActivationKey>();
@@ -201,7 +201,7 @@ public class ConsumerBindUtilTest {
         ActivationKey key1 = new ActivationKey("key1", owner);
         keys.add(key1);
 
-        Product prod1 = TestUtil.createProduct();
+        Product prod1 = TestUtil.createProduct(owner);
         Pool ghost = TestUtil.createPool(owner, prod1, 5);
         ghost.setId("ghost-pool");
         key1.addPool(ghost, 10L);
@@ -218,15 +218,15 @@ public class ConsumerBindUtilTest {
         ActivationKey key1 = new ActivationKey("key1", owner);
         keys.add(key1);
 
-        Product prod1 = TestUtil.createProduct();
+        Product prod1 = TestUtil.createProduct(owner);
         Pool pool1 = TestUtil.createPool(owner, prod1, 5);
         pool1.setId("pool1");
         key1.addPool(pool1, 10L);
-        Product prod2 = TestUtil.createProduct();
+        Product prod2 = TestUtil.createProduct(owner);
         Pool pool2 = TestUtil.createPool(owner, prod2, 5);
         pool2.setId("pool2");
         key1.addPool(pool2, 10L);
-        Product prod3 = TestUtil.createProduct();
+        Product prod3 = TestUtil.createProduct(owner);
         Pool pool3 = TestUtil.createPool(owner, prod3, 5);
         pool3.setId("pool3");
         key1.addPool(pool3, 5L);
@@ -247,15 +247,15 @@ public class ConsumerBindUtilTest {
         keys.add(key1);
         keys.add(key2);
 
-        Product prod1 = TestUtil.createProduct();
+        Product prod1 = TestUtil.createProduct(owner);
         Pool pool1 = TestUtil.createPool(owner, prod1, 5);
         pool1.setId("pool1");
         key1.addPool(pool1, 10L);
-        Product prod2 = TestUtil.createProduct();
+        Product prod2 = TestUtil.createProduct(owner);
         Pool pool2 = TestUtil.createPool(owner, prod2, 5);
         pool2.setId("pool2");
         key1.addPool(pool2, 10L);
-        Product prod3 = TestUtil.createProduct();
+        Product prod3 = TestUtil.createProduct(owner);
         Pool pool3 = TestUtil.createPool(owner, prod3, 5);
         pool3.setId("pool3");
         key2.addPool(pool3, 5L);

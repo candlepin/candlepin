@@ -14,8 +14,7 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
@@ -71,7 +70,7 @@ public class PoolCuratorFilterTest extends DatabaseTestFixture {
         poolCurator.create(searchPool);
 
         // Create another we don't intend to see in the results:
-        Product hideProduct = TestUtil.createProduct();
+        Product hideProduct = TestUtil.createProduct(owner);
         productCurator.create(hideProduct);
         hidePool = createPoolAndSub(owner, hideProduct, 100L,
                 TestUtil.createDate(2005, 3, 2), TestUtil.createDate(2050, 3, 2));

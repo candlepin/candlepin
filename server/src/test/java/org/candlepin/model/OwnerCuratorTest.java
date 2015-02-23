@@ -14,10 +14,7 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.test.DatabaseTestFixture;
@@ -98,10 +95,10 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         Owner owner = createOwner();
         Owner owner2 = createOwner();
 
-        Product product = TestUtil.createProduct();
-        Product provided = TestUtil.createProduct();
-        Product product2 = TestUtil.createProduct();
-        Product provided2 = TestUtil.createProduct();
+        Product product = TestUtil.createProduct(owner);
+        Product provided = TestUtil.createProduct(owner);
+        Product product2 = TestUtil.createProduct(owner2);
+        Product provided2 = TestUtil.createProduct(owner2);
         productCurator.create(product);
         productCurator.create(provided);
         productCurator.create(product2);
@@ -122,8 +119,8 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
     public void testLookupOwnerByActiveProduct() {
         Owner owner = createOwner();
 
-        Product product = TestUtil.createProduct();
-        Product provided = TestUtil.createProduct();
+        Product product = TestUtil.createProduct(owner);
+        Product provided = TestUtil.createProduct(owner);
         productCurator.create(product);
         productCurator.create(provided);
 
@@ -141,8 +138,8 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
     public void testLookupOwnersByActiveProductWithExpiredEntitlements() {
         Owner owner = createOwner();
 
-        Product product = TestUtil.createProduct();
-        Product provided = TestUtil.createProduct();
+        Product product = TestUtil.createProduct(owner);
+        Product provided = TestUtil.createProduct(owner);
         productCurator.create(product);
         productCurator.create(provided);
 

@@ -14,15 +14,7 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
 import org.candlepin.controller.CandlepinPoolManager;
-import org.candlepin.model.Pool.PoolType;
-import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
@@ -30,10 +22,7 @@ import org.candlepin.test.TestUtil;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Calendar;
-import java.util.Date;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -59,12 +48,13 @@ public class PoolTest extends DatabaseTestFixture {
     public void createObjects() {
         beginTransaction();
 
-        prod1 = TestUtil.createProduct();
-        prod2 = TestUtil.createProduct();
-        productCurator.create(prod1);
-        productCurator.create(prod2);
         owner = new Owner("testowner");
         ownerCurator.create(owner);
+
+        prod1 = TestUtil.createProduct(owner);
+        prod2 = TestUtil.createProduct(owner);
+        productCurator.create(prod1);
+        productCurator.create(prod2);
 
         Set<Product> providedProducts = new HashSet<Product>();
         providedProducts.add(prod2);

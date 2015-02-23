@@ -14,12 +14,9 @@
  */
 package org.candlepin.policy.js.pool;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
@@ -52,6 +49,7 @@ public class PoolHelperTest {
     private ProductServiceAdapter psa;
     private Entitlement ent;
     private ProductCache productCache;
+    private Owner owner;
 
     @Before
     public void init() {
@@ -68,6 +66,8 @@ public class PoolHelperTest {
         // default to an empty list, override in the test
         when(pool.getProvidedProducts()).thenReturn(Collections.EMPTY_SET);
         when(sub.getProvidedProducts()).thenReturn(Collections.EMPTY_SET);
+
+        owner = TestUtil.createOwner();
     }
 
     @Test
@@ -244,7 +244,7 @@ public class PoolHelperTest {
 
     @Test
     public void copyProductAttributesForHostRestrictedPools() {
-        Product targetProduct = TestUtil.createProduct();
+        Product targetProduct = TestUtil.createProduct(owner);
         Consumer cons = TestUtil.createConsumer();
         targetProduct.getAttributes().clear();
         targetProduct.setAttribute("A1", "V1");
@@ -271,12 +271,11 @@ public class PoolHelperTest {
 
         // Create a product for the main pool to be sure that
         // the attributes do not get copied to the sub pool.
-        Product mainPoolProduct = TestUtil.createProduct();
+        Product mainPoolProduct = TestUtil.createProduct(owner);
         mainPoolProduct.getAttributes().clear();
         mainPoolProduct.setAttribute("A1", "V1");
         mainPoolProduct.setAttribute("A2", "V2");
 
-        Owner owner = TestUtil.createOwner();
         Product derivedProduct1 = TestUtil.createProduct("sub-pp-1", "Sub Provided 1", owner);
         Product derivedProduct2 = TestUtil.createProduct("sub-pp-2", "Sub Provided 2", owner);
 
@@ -284,7 +283,7 @@ public class PoolHelperTest {
         derivedProducts.add(derivedProduct1);
         derivedProducts.add(derivedProduct2);
 
-        Product subProduct = TestUtil.createProduct();
+        Product subProduct = TestUtil.createProduct(owner);
         subProduct.getAttributes().clear();
         subProduct.setAttribute("SA1", "SV1");
         subProduct.setAttribute("SA2", "SV2");

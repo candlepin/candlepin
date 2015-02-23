@@ -14,9 +14,7 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
@@ -70,7 +68,7 @@ public class ActivationKeyTest extends DatabaseTestFixture {
     @Test
     public void testPoolRelationship() {
         ActivationKey key = createActivationKey(owner);
-        Product prod = TestUtil.createProduct();
+        Product prod = TestUtil.createProduct(owner);
         productCurator.create(prod);
         Pool pool = createPoolAndSub(owner, prod, 12L,
             new Date(), new Date(System.currentTimeMillis() + (365 * 24 * 60 * 60 * 1000)));
@@ -86,7 +84,7 @@ public class ActivationKeyTest extends DatabaseTestFixture {
     @Test
     public void testNullPoolRelationship() {
         ActivationKey key = createActivationKey(owner);
-        Product prod = TestUtil.createProduct();
+        Product prod = TestUtil.createProduct(owner);
         productCurator.create(prod);
         Pool pool = createPoolAndSub(owner, prod, 12L,
             new Date(), new Date(System.currentTimeMillis() + (365 * 24 * 60 * 60 * 1000)));
@@ -102,7 +100,7 @@ public class ActivationKeyTest extends DatabaseTestFixture {
     @Test
     public void testActivationKeyHasPool() {
         ActivationKey key = this.createActivationKey(this.owner);
-        Product prod = TestUtil.createProduct();
+        Product prod = TestUtil.createProduct(owner);
         productCurator.create(prod);
         Pool pool = createPoolAndSub(
             this.owner,
@@ -124,7 +122,7 @@ public class ActivationKeyTest extends DatabaseTestFixture {
     @Test
     public void testActivationKeyHasProduct() {
         ActivationKey key = this.createActivationKey(this.owner);
-        Product product = TestUtil.createProduct();
+        Product product = TestUtil.createProduct(owner);
 
         assertTrue(!key.hasProduct(product));
 

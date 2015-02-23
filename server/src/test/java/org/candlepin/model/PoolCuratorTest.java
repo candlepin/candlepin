@@ -17,12 +17,12 @@ package org.candlepin.model;
 import static org.junit.Assert.*;
 
 import org.candlepin.auth.NoAuthPrincipal;
+import org.candlepin.common.paging.Page;
+import org.candlepin.common.paging.PageRequest;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
-import org.candlepin.common.paging.Page;
-import org.candlepin.common.paging.PageRequest;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
@@ -67,7 +67,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         ConsumerType ueberCertType = new ConsumerType(ConsumerTypeEnum.UEBER_CERT);
         consumerTypeCurator.create(ueberCertType);
 
-        product = TestUtil.createProduct();
+        product = TestUtil.createProduct(owner);
         productCurator.create(product);
 
         consumer = TestUtil.createConsumer(owner);
@@ -129,7 +129,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             activeDate, TestUtil.createDate(2005, 3, 2));
         poolCurator.create(pool1);
 
-        Product product2 = TestUtil.createProduct();
+        Product product2 = TestUtil.createProduct(owner);
         product2.addAttribute(new ProductAttribute("cores", "8"));
         productCurator.create(product2);
 
@@ -258,7 +258,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             activeDate, TestUtil.createDate(2005, 3, 2));
         poolCurator.create(pool1);
 
-        Product product2 = TestUtil.createProduct();
+        Product product2 = TestUtil.createProduct(owner);
         product2.addAttribute(new ProductAttribute("cores", "4"));
         productCurator.create(product2);
 
@@ -293,7 +293,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             activeDate, TestUtil.createDate(2005, 3, 2));
         poolCurator.create(pool1);
 
-        Product product2 = TestUtil.createProduct();
+        Product product2 = TestUtil.createProduct(owner);
         product2.addAttribute(new ProductAttribute("empty-attr", ""));
         productCurator.create(product2);
 
@@ -320,7 +320,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void attributeFilterValuesAreNotCaseSensitive() {
-        Product product1 = TestUtil.createProduct();
+        Product product1 = TestUtil.createProduct(owner);
         product1.addAttribute(new ProductAttribute("A", "foo"));
         product1.addAttribute(new ProductAttribute("B", "bar"));
         productCurator.create(product1);
@@ -365,17 +365,17 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     @Test
     public void testAttributeFilterLogic() {
 
-        Product product1 = TestUtil.createProduct();
+        Product product1 = TestUtil.createProduct(owner);
         product1.addAttribute(new ProductAttribute("A", "foo"));
         product1.addAttribute(new ProductAttribute("B", "bar"));
         productCurator.create(product1);
 
-        Product product2 = TestUtil.createProduct();
+        Product product2 = TestUtil.createProduct(owner);
         product2.addAttribute(new ProductAttribute("A", "foo"));
         product2.addAttribute(new ProductAttribute("B", "zoo"));
         productCurator.create(product2);
 
-        Product product3 = TestUtil.createProduct();
+        Product product3 = TestUtil.createProduct(owner);
         product3.addAttribute(new ProductAttribute("A", "biz"));
         product3.addAttribute(new ProductAttribute("B", "zoo"));
         productCurator.create(product3);
@@ -458,7 +458,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testFuzzyProductMatchingWithoutSubscription() {
-        Product parent = TestUtil.createProduct();
+        Product parent = TestUtil.createProduct(owner);
         productCurator.create(parent);
 
         Set<Product> providedProducts = new HashSet<Product>();
@@ -472,7 +472,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testPoolProducts() {
-        Product another = TestUtil.createProduct();
+        Product another = TestUtil.createProduct(owner);
         productCurator.create(another);
 
         Set<Product> providedProducts = new HashSet<Product>();
@@ -657,7 +657,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         }
 
         for (int i = 0; i < 50; i++) {
-            Product p = TestUtil.createProduct();
+            Product p = TestUtil.createProduct(owner);
             productCurator.create(p);
 
             Pool pool = TestUtil.createPool(owner, p);
@@ -759,7 +759,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     @Test
     public void testCorrectPagingWhenResultsEmpty() {
         for (int i = 0; i < 5; i++) {
-            Product p = TestUtil.createProduct();
+            Product p = TestUtil.createProduct(owner);
             productCurator.create(p);
 
             Pool pool = TestUtil.createPool(owner, p);
@@ -802,21 +802,21 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testExempt() {
-        Product product1 = TestUtil.createProduct();
+        Product product1 = TestUtil.createProduct(owner);
         product1.addAttribute(new ProductAttribute("support_level", "premium"));
         product1.addAttribute(new ProductAttribute("support_level_exempt", "true"));
         productCurator.create(product1);
-        Product product2 = TestUtil.createProduct();
+        Product product2 = TestUtil.createProduct(owner);
         product2.addAttribute(new ProductAttribute("support_level", "Premium"));
         productCurator.create(product2);
-        Product product3 = TestUtil.createProduct();
+        Product product3 = TestUtil.createProduct(owner);
         product3.addAttribute(new ProductAttribute("support_level", "super"));
         productCurator.create(product3);
-        Product product4 = TestUtil.createProduct();
+        Product product4 = TestUtil.createProduct(owner);
         product4.addAttribute(new ProductAttribute("support_level", "high"));
         product4.addAttribute(new ProductAttribute("support_level_exempt", "false"));
         productCurator.create(product4);
-        Product product5 = TestUtil.createProduct();
+        Product product5 = TestUtil.createProduct(owner);
         product5.addAttribute(new ProductAttribute("support_level", "HIGH"));
         productCurator.create(product5);
 
@@ -852,13 +852,13 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testSupportCasing() {
-        Product product1 = TestUtil.createProduct();
+        Product product1 = TestUtil.createProduct(owner);
         product1.addAttribute(new ProductAttribute("support_level", "premium"));
         productCurator.create(product1);
-        Product product2 = TestUtil.createProduct();
+        Product product2 = TestUtil.createProduct(owner);
         product2.addAttribute(new ProductAttribute("support_level", "Premium"));
         productCurator.create(product2);
-        Product product3 = TestUtil.createProduct();
+        Product product3 = TestUtil.createProduct(owner);
         product3.addAttribute(new ProductAttribute("support_level", "Premiums"));
         productCurator.create(product3);
 
@@ -879,7 +879,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     @Test
     public void getSubPoolCountForStack() {
         String expectedStackId = "13245";
-        Product product = TestUtil.createProduct();
+        Product product = TestUtil.createProduct(owner);
         product.setAttribute("virt_limit", "3");
         product.setAttribute("stacking_id", expectedStackId);
         productCurator.create(product);

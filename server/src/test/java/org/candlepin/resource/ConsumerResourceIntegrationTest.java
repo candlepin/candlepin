@@ -28,6 +28,7 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.common.paging.PageRequest;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.model.CertificateSerialCurator;
@@ -52,7 +53,6 @@ import org.candlepin.model.Role;
 import org.candlepin.model.RoleCurator;
 import org.candlepin.model.User;
 import org.candlepin.model.UserCurator;
-import org.candlepin.common.paging.PageRequest;
 import org.candlepin.pki.PKIReader;
 import org.candlepin.pki.impl.BouncyCastlePKIReader;
 import org.candlepin.resource.util.ConsumerBindUtil;
@@ -149,7 +149,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         consumer = TestUtil.createConsumer(standardSystemType, owner);
         consumerCurator.create(consumer);
 
-        product = TestUtil.createProduct();
+        product = TestUtil.createProduct(owner);
         product.addAttribute(new ProductAttribute("support_level", DEFAULT_SERVICE_LEVEL));
         productCurator.create(product);
 
