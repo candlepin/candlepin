@@ -20,7 +20,6 @@ import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsonJsContext;
-import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.RuleExecutionException;
 import org.candlepin.policy.js.RulesObjectMapper;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
@@ -51,14 +50,12 @@ public class AutobindRules {
 
     private JsRunner jsRules;
     private static Logger log = LoggerFactory.getLogger(AutobindRules.class);
-    private ProductCache productCache;
     private RulesObjectMapper mapper;
 
 
     @Inject
-    public AutobindRules(JsRunner jsRules, ProductCache productCache) {
+    public AutobindRules(JsRunner jsRules) {
         this.jsRules = jsRules;
-        this.productCache = productCache;
 
         mapper = RulesObjectMapper.instance();
         jsRules.init("autobind_name_space");
