@@ -112,8 +112,8 @@ public class SubscriptionCurator extends AbstractHibernateCurator<Subscription> 
                 .createAlias("providedProducts", "providedProduct",
                     CriteriaSpecification.LEFT_JOIN)
                 .add(Restrictions.or(
-                    Restrictions.eq("product", product),
-                    Restrictions.eq("providedProduct.id", product.getId())
+                    Restrictions.eq("product.id", product.getProductId()),
+                    Restrictions.eq("providedProduct.id", product.getProductId())
             ));
 
         List<Subscription> subs = subscriptionCriteria.list();
