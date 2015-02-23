@@ -129,9 +129,7 @@ public class MultiOrgUpgradeTask {
      *  A ResultSet instance representing the result of the query.
      */
     protected ResultSet getOrgIDs() throws DatabaseException, SQLException {
-        String sql = "SELECT id FROM cp_owner;";
-
-        return this.executeQuery(sql);
+        return this.executeQuery("SELECT id FROM cp_owner;");
     }
 
     /**
@@ -145,7 +143,7 @@ public class MultiOrgUpgradeTask {
      *  A ResultSet instance representing the result of the query.
      */
     protected ResultSet getProductIDs(String orgid) throws DatabaseException, SQLException {
-        String sql =
+        return this.executeQuery(
             "SELECT p.product_id_old "+
             "  FROM cp_pool p " +
             "  WHERE p.owner_id = ? " +
@@ -164,9 +162,9 @@ public class MultiOrgUpgradeTask {
             "    ON p.id = pp.pool_id " +
             "  WHERE p.owner_id = ? " +
             "    AND pp.product_id IS NOT NULL " +
-            "    AND pp.product_id != '';";
-
-        return this.executeQuery(sql, orgid, orgid, orgid);
+            "    AND pp.product_id != '';",
+            orgid, orgid, orgid
+        );
     }
 
     /**
@@ -179,9 +177,27 @@ public class MultiOrgUpgradeTask {
      *  A ResultSet instance representing the result of the query.
      */
     protected ResultSet getContentIDs(String productid) throws DatabaseException, SQLException {
-        String sql = "SELECT content_id FROM cp_product_content WHERE product_id = ?;";
+        return this.executeQuery(
+            "SELECT content_id FROM cp_product_content WHERE product_id = ?;",
+            productid
+        );
+    }
 
-        return this.executeQuery(sql, productid);
+    /**
+     * Executes a query to retrieve from the database all known subscriptions for the specified
+     * organization.
+     *
+     * @param orgid
+     *  The ID of the organization for which to retrieve products.
+     *
+     * @return
+     *  A ResultSet instance representing the result of the query.
+     */
+    protected ResultSet getSubscriptionIDs(String orgid) throws DatabaseException, SQLException {
+        return this.executeQuery(
+            "SELECT id FROM cp_subscription WHERE owner_id = ?;",
+            orgid
+        );
     }
 
     /**
@@ -218,7 +234,7 @@ public class MultiOrgUpgradeTask {
             orgContent.clear();
 
             ResultSet productids = this.getProductIDs(orgid);
-            for (productids.first(); !productids.isAfterLast(); productids.next()) {
+            while (productids.next()) {
                 String productid = productids.getString(1);
 
                 this.connection.setAutoCommit(false);
@@ -242,25 +258,21 @@ public class MultiOrgUpgradeTask {
                 );
 
                 this.executeUpdate(
-                    "INSERT INTO cpo_installed_products " +
-                    "SELECT id, created, updated, ?, consumer_id, product_version, product_arch " +
-                    "FROM cp_installed_products WHERE id = ( " +
-                    "    SELECT cip.id " +
-                    "    FROM cp_installed_products cip JOIN cp_consumer cc ON cip.consumer_id = cc.id " +
-                    "    WHERE cc.owner_id = ? AND cip.product_id = ?" +
-                    ");",
-                    productuuid, orgid, productid
-                );
-
-                this.executeUpdate(
-                    "INSERT INTO cpo_pool_products " +
-                    "SELECT pool_id, ?, dtype " +
-                    "FROM cp_pool_products WHERE product_id = ?;",
+                    "INSERT INTO cpo_pool_provided_products " +
+                    "SELECT pool_id, ? " +
+                    "FROM cp_pool_products WHERE product_id = ? AND dtype='provided';",
                     productuuid, productid
                 );
 
                 this.executeUpdate(
-                    "INSERT INTO cpo_product " +
+                    "INSERT INTO cpo_pool_derived_products " +
+                    "SELECT pool_id, ? " +
+                    "FROM cp_pool_products WHERE product_id = ? AND dtype='derived';",
+                    productuuid, productid
+                );
+
+                this.executeUpdate(
+                    "INSERT INTO cpo_products " +
                     "SELECT ?, created, updated, multiplier, name " +
                     "FROM cp_product WHERE id = ?;",
                     productuuid, productid
@@ -361,111 +373,71 @@ public class MultiOrgUpgradeTask {
             }
 
             productids.close();
+
+            // Update subscriptions
+            ResultSet subscriptionids = this.getProductIDs(orgid);
+            while (subscriptionids.next()) {
+                String subid = subscriptionids.getString(1);
+                String subuuid = this.generateUUID();
+
+                this.connection.setAutoCommit(false);
+
+                this.executeUpdate(
+                    "INSERT INTO cpo_subscriptions " +
+                    "SELECT ?, created, updated, accountnumber, contractnumber, enddate, " +
+                    "    modified, quantity, startdate, upstream_pool_id, certificate_id, ?, " +
+                    "    (SELECT id FROM cpo_products " +
+                    "        WHERE owner_id = ? AND product_id = S.product_id), " +
+                    "    ordernumber, upstream_entitlement_id, upstream_consumer_id, " +
+                    "    (SELECT id FROM cpo_products " +
+                    "        WHERE owner_id = ? AND product_id = S.derivedproduct_id), " +
+                    "    cdn_id " +
+                    "FROM cp_subscriptions S WHERE id = ?;",
+                    subuuid, orgid, orgid, orgid, subid
+                );
+
+                this.executeUpdate(
+                    "INSERT INTO cpo_pool_source_sub " +
+                    "SELECT id, ?, subscriptionsubkey, pool_id, created, update " +
+                    "FROM cp_pool_source_sub WHERE subscriptionid = ?;",
+                    subuuid, subid
+                );
+
+                this.executeUpdate(
+                    "INSERT INTO cpo_sub_branding " +
+                    "SELECT ?, branding_id " +
+                    "FROM cp_sub_branding WHERE subscription_id = ?;",
+                    subuuid, subid
+                );
+
+                this.executeUpdate(
+                    "INSERT INTO cpo_subscription_products " +
+                    "SELECT ?, (SELECT id FROM cpo_products " +
+                    "    WHERE owner_id = ? AND product_id = S.product_id) " +
+                    "FROM cp_subscription_products S WHERE subscription_id = ?;",
+                    subuuid, orgid, subid
+                );
+
+                this.executeUpdate(
+                    "INSERT INTO cpo_sub_derived_products " +
+                    "SELECT ?, (SELECT id FROM cpo_products " +
+                    "    WHERE owner_id = ? AND product_id = S.product_id) " +
+                    "FROM cp_sub_derivedprods S WHERE subscription_id = ?;",
+                    subuuid, orgid, subid
+                );
+
+                this.connection.commit();
+                this.connection.setAutoCommit(true);
+            }
+
+            subscriptionids.close();
         }
 
         orgids.close();
+
 
         // Restore original autocommit state
         this.connection.setAutoCommit(autocommit);
     }
 
 }
-
-/*
-Upgrade task pseudo code:
-    - Get list of existing org IDs
-        SELECT id FROM cp_owner;
-
-    - For each org:
-        - Get list of products via pool:
-            SELECT p.productid FROM cp_pool p WHERE p.owner_id = <current org id> AND p.productid IS NOT NULL AND p.productid != ''
-            UNION
-            SELECT p.derivedproductid FROM cp_pool p WHERE p.owner_id = <current org id> AND p.derivedproductid IS NOT NULL AND p.derivedproductid != ''
-            UNION
-            SELECT DISTINCT pp.product_id
-              FROM cp_pool p
-              JOIN cp_pool_products pp
-                ON p.id = pp.pool_id
-              WHERE p.owner_id = <current org id>
-                AND pp.product_id IS NOT NULL
-                AND pp.product_id != ''
-
-        - For each product id:
-            - Generate new UUID:
-                product uuid = java.util.UUID.randomUUID().toString().replace('-', '')
-
-            - Migrate information from pre-existing tables to new cpo_* tables:
-                - cpo_activationkey_product:
-                    INSERT INTO cpo_activationkey_product
-                    SELECT id, created, updated, key_id, <product uuid>
-                    FROM cp_activationkey_product WHERE product_id = <rh product id>
-
-                - cpo_branding:
-                    INSERT INTO cpo_branding
-                    SELECT id, created, updated, <product uuid>, type, name
-                    FROM cp_branding WHERE productid = <rh product id>
-
-                - cpo_installed_products:
-                    INSERT INTO cpo_installed_products
-                    SELECT id, created, updated, <product uuid>, consumer_id, product_version, product_arch
-                    FROM cp_installed_products WHERE id = (
-                        SELECT cip.id
-                        FROM cp_installed_products cip JOIN cp_consumer cc ON cip.consumer_id = cc.id
-                        WHERE cc.owner_id = <current org id> AND cip.product_id = <rh product id>
-                    )
-
-                - cpo_product:
-                    INSERT INTO cpo_product
-                    SELECT <product uuid>, created, updated, multiplier, name
-                    FROM cp_product WHERE id = <rh product id>
-
-                - cpo_product_attribute:
-                    INSERT INTO cpo_product_attribute
-                    SELECT id, created, updated, name, value, <product uuid>
-                    FROM cp_product_attribute WHERE product_id = <rh product id>
-
-                - cpo_product_certificate:
-                    INSERT INTO cpo_product_certificate
-                    SELECT id, created, updated, cert, privatekey, <product uuid>
-                    FROM cp_product_certificate WHERE product_id = <rh product id>
-
-                - cpo_product_dependent_products:
-                    INSERT INTO cpo_product_dependent_products
-                    SELECT <product uuid>, element
-                    FROM cp_product_dependent_products WHERE cp_product_id = <rh product id>
-
-            - Get list of content for current product:
-                SELECT content_id FROM cp_product_content WHERE product_id = <rh product id>
-
-                For each content:
-                    - if the content has not been added for this org:
-                        (WHERE NOT EXIST (SELECT id FROM cpo_content WHERE id = <current content id> AND owner_id = <current org id>) ?)
-                        (Perhaps a hashmap in the Java would be quicker)
-
-                        - update cpo_content:
-                            INSERT INTO cpo_content
-                            SELECT id, created, updated, <current org id>, contenturl, gpgurl, label, metadataexpire, name, releasever, requiredtags, type, vendor, arches
-                            FROM cp_content
-
-                        - update content tables
-                            - cpo_content_modified_products:
-                                INSERT INTO cpo_modified_products
-                                SELECT <current content_id>, element
-                                FROM cp_content_modified_products
-                                WHERE cp_content_id = <current content id>
-
-                            - cpo_environment_content:
-                                INSERT INTO cpo_environment_content
-                                SELECT id, created, updated, <new content id>, enabled, environment_id
-                                FROM cp_env_content
-                                WHERE content_id = <current content id>
-
-                    - update product => content links
-                        INSERT INTO cpo_product_content
-                        SELECT <product uuid>, <new content id>, enabled, created, updated
-                        FROM cp_product_content WHERE product_id = <rh product id> AND content_id = <current content id>
-
-            - Update new product columns on existing tables:
-                UPDATE cp_pool SET product_id = <generated product id> WHERE product_id_old = <RH product id> AND owner_id = <current org id>
-                UPDATE cp_pool SET derived_product_id = <generated product id> WHERE derived_product_id_old = <RH product id> AND owner_id = <current org id>
-*/

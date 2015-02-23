@@ -49,7 +49,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "cp_subscription")
+@Table(name = "cpo_subscriptions")
 public class Subscription extends AbstractHibernateObject implements Owned, Named {
 
     @Id
@@ -60,43 +60,33 @@ public class Subscription extends AbstractHibernateObject implements Owned, Name
     private String id;
 
     @ManyToOne
-    @ForeignKey(name = "fk_subscription_owner")
     @JoinColumn(nullable = false)
-    @Index(name = "cp_subscription_owner_fk_idx")
     @NotNull
     private Owner owner;
 
     @ManyToOne
-    @ForeignKey(name = "fk_subscription_product")
     @JoinColumn(nullable = false)
     @NotNull
     private Product product;
 
     @ManyToOne
-    @ForeignKey(name = "fk_sub_derivedprod")
-    @JoinColumn(nullable = true)
+    @JoinColumn(name="derived_product_id", nullable = true)
     private Product derivedProduct;
 
     @ManyToMany(targetEntity = Product.class)
-    @ForeignKey(name = "fk_subscription_id",
-            inverseName = "fk_product_id")
-    @JoinTable(name = "cp_subscription_products",
+    @JoinTable(name = "cpo_subscription_products",
         joinColumns = @JoinColumn(name = "subscription_id"),
         inverseJoinColumns = @JoinColumn(name = "product_id"))
     private Set<Product> providedProducts = new HashSet<Product>();
 
     @ManyToMany(targetEntity = Product.class)
-    @ForeignKey(name = "fk_product_id",
-            inverseName = "fk_subscription_id")
-    @JoinTable(name = "cp_sub_derivedprods",
+    @JoinTable(name = "cpo_sub_derived_products",
         joinColumns = @JoinColumn(name = "subscription_id"),
         inverseJoinColumns = @JoinColumn(name = "product_id"))
     private Set<Product> derivedProvidedProducts = new HashSet<Product>();
 
     @OneToMany
-    @ForeignKey(name = "fk_sub_branding_branding_id",
-            inverseName = "fk_sub_branding_sub_id")
-    @JoinTable(name = "cp_sub_branding",
+    @JoinTable(name = "cpo_sub_branding",
         joinColumns = @JoinColumn(name = "subscription_id"),
         inverseJoinColumns = @JoinColumn(name = "branding_id"))
     @Cascade({org.hibernate.annotations.CascadeType.ALL,

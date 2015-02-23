@@ -108,14 +108,15 @@ public class ComplianceRules {
      * @param updateConsumer whether or not to use consumerCurator.update
      * @return Compliance status.
      */
-    public ComplianceStatus getStatus(Consumer c, Date date,
-            boolean calculateCompliantUntil, boolean updateConsumer) {
+    public ComplianceStatus getStatus(Consumer c, Date date, boolean calculateCompliantUntil,
+        boolean updateConsumer) {
 
         // If this is true, we send an updated compliance event
         boolean currentCompliance = false;
         if (date == null) {
             date = new Date();
             currentCompliance = true;
+
         }
         JsonJsContext args = new JsonJsContext(mapper);
         args.put("consumer", c);

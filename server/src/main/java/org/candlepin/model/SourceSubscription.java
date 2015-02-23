@@ -40,7 +40,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "cp_pool_source_sub")
+@Table(name = "cpo_pool_source_sub")
 public class SourceSubscription extends AbstractHibernateObject {
 
     @Id
@@ -54,7 +54,7 @@ public class SourceSubscription extends AbstractHibernateObject {
     // could exist in another system only accessible to us as a service.
     // Actual implementations of our SubscriptionService will be used to use
     // this data.
-    @Column(nullable = false)
+    @Column(name="subscription_id", nullable = false)
     @Size(max = 255)
     private String subscriptionId;
 
@@ -62,7 +62,7 @@ public class SourceSubscription extends AbstractHibernateObject {
     // combination of subid/some other key to uniquely identify a pool.
     // subscriptionSubKey is set in the js rules, according to the same logic
     // that will create more than one pool per sub.
-    @Column(nullable = false)
+    @Column(name="subscription_sub_key", nullable = false)
     @Size(max = 255)
     private String subscriptionSubKey;
 
@@ -70,7 +70,6 @@ public class SourceSubscription extends AbstractHibernateObject {
      * pool derived from the source
      */
     @OneToOne(fetch = FetchType.LAZY)
-    @ForeignKey(name = "fk_sourcesub_pool")
     @JoinColumn(nullable = false, unique = true)
     @XmlTransient
     private Pool pool;

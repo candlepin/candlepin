@@ -174,7 +174,7 @@ function createPool(pool) {
     pool.getAttribute = function (attrName) {
         attr_result = this.findAttributeIn(attrName, this.attributes);
         if (attr_result === null) {
-            return this.findAttributeIn(attrName, this.productAttributes);
+            return this.findAttributeIn(attrName, this.product.attributes);
         }
         return attr_result;
     };
@@ -184,7 +184,7 @@ function createPool(pool) {
     };
 
     pool.getProductAttribute = function (attrName) {
-        var attr_result = this.findAttributeIn(attrName, this.productAttributes);
+        var attr_result = this.findAttributeIn(attrName, this.product.attributes);
         if (attr_result === null) {
             return this.findAttributeIn(attrName, this.attributes);
         }
@@ -477,8 +477,8 @@ function architectureMatches(productArchStr, consumerUnameMachine, consumerType)
  * set to 0 or is not set, it is considered to be unlimited.
  */
 function getPoolQuantity(pool, attributeName) {
-    for (var j = 0; j < pool.productAttributes.length; j++) {
-        var prodAttr = pool.productAttributes[j];
+    for (var j = 0; j < pool.product.attributes.length; j++) {
+        var prodAttr = pool.product.attributes[j];
 
         if (prodAttr.name == attributeName) {
             var initialQuantity = prodAttr.value;
@@ -2528,8 +2528,8 @@ function is_stacked(ent) {
 }
 
 function is_pool_stacked(pool) {
-    for (var j = 0; j < pool.productAttributes.length; j++) {
-        var attr = pool.productAttributes[j];
+    for (var j = 0; j < pool.product.attributes.length; j++) {
+        var attr = pool.product.attributes[j];
 
         if (attr.name == "stacking_id") {
             return true;

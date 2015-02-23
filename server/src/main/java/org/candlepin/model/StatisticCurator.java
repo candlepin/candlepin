@@ -221,7 +221,7 @@ public class StatisticCurator extends AbstractHibernateCurator<Statistic> {
     }
 
     private void perProduct(String ownerId) {
-        String productString = "select distinct p.productName, p.productId from Pool p" +
+        String productString = "select distinct p.product.name, p.product.id from Pool p" +
             " where p.owner.id = :ownerId";
         Query productQuery = currentSession().createQuery(productString)
             .setString("ownerId", ownerId);
@@ -248,7 +248,7 @@ public class StatisticCurator extends AbstractHibernateCurator<Statistic> {
                 perProductDeletedCount;
 
             String totalProductCountString = "select sum(quantity) from Pool p" +
-                " where p.productName = :productName";
+                " where p.product.name = :productName";
             Query totalProductCountQuery = currentSession().createQuery(
                 totalProductCountString).setString("productName",
                 (String) productName[0]);

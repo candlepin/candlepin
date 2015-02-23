@@ -127,6 +127,7 @@ public class Product extends AbstractHibernateObject implements Linkable {
     }
 
     public Product(String productId, String name, Owner owner, Long multiplier) {
+
         setProductId(productId);
         setName(name);
         setOwner(owner);
@@ -348,12 +349,13 @@ public class Product extends AbstractHibernateObject implements Linkable {
 
         Product another = (Product) anObject;
 
-        return id.equals(another.getId()) && name.equals(another.getName());
+        return (this.id == another.id || (this.id != null && this.id.equals(another.id))) &&
+            name.equals(another.getName());
     }
 
     @Override
     public int hashCode() {
-        return id.hashCode() * 31;
+        return (this.id != null ? this.id.hashCode() : 0) + 31 * 7;
     }
 
     /**

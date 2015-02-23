@@ -147,33 +147,33 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     @NotNull
     private Date endDate;
 
-    @Column(name="product_id", nullable = false)
+    @ManyToOne
+    @JoinColumn(name="product_id", nullable = false)
     @NotNull
     private Product product;
 
-    @Column(name="derived_product_id")
+    @ManyToOne
+    @JoinColumn(name="derived_product_id")
     private Product derivedProduct;
 
     @ManyToMany
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
     @JoinTable(
-        name="cpo_pool_products",
+        name="cpo_pool_provided_products",
         joinColumns={@JoinColumn(name="pool_id", insertable = false, updatable = false)},
         inverseJoinColumns={@JoinColumn(name="product_id")}
     )
-    @Where(clause = "dtype='provided'")
     private Set<Product> providedProducts = new HashSet<Product>();
 
     @ManyToMany
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
     @JoinTable(
-        name="cpo_pool_products",
+        name="cpo_pool_derived_products",
         joinColumns={@JoinColumn(name="pool_id", insertable = false, updatable = false)},
         inverseJoinColumns={@JoinColumn(name="product_id")}
     )
-    @Where(clause = "dtype='derived'")
     private Set<Product> derivedProvidedProducts = new HashSet<Product>();
 
     @OneToMany(mappedBy = "pool")
@@ -207,8 +207,6 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     private Long exported;
 
     @OneToMany
-    @ForeignKey(name = "fk_pool_branding_branding_id",
-            inverseName = "fk_pool_branding_pool_id")
     @JoinTable(name = "cp_pool_branding",
         joinColumns = @JoinColumn(name = "pool_id"),
         inverseJoinColumns = @JoinColumn(name = "branding_id"))

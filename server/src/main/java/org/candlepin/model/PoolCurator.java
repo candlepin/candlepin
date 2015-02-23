@@ -216,12 +216,10 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
             // Ask the rules for any business logic criteria to filter with for
             // this consumer
-            List<Criterion> filterCriteria = poolCriteria.availableEntitlementCriteria(
-                c);
+            List<Criterion> filterCriteria = poolCriteria.availableEntitlementCriteria(c);
 
             if (log.isDebugEnabled()) {
-                log.debug("Got " + filterCriteria.size() +
-                    "  query filters from database.");
+                log.debug("Got " + filterCriteria.size() + " query filters from database.");
             }
 
             for (Criterion rulesCriteria : filterCriteria) {
@@ -230,7 +228,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         }
         if (o != null) {
             crit.add(Restrictions.eq("owner", o));
-            crit.add(Restrictions.ne("product.productName", Product.ueberProductNameForOwner(o)));
+            crit.add(Restrictions.ne("product.name", Product.ueberProductNameForOwner(o)));
         }
         if (activeOn != null) {
             crit.add(Restrictions.le("startDate", activeOn));
@@ -238,8 +236,10 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         }
 
         if (productId != null) {
-            crit.add(Restrictions.or(Restrictions.eq("productId", productId),
-                Restrictions.eq("providedProduct.productId", productId)));
+            crit.add(Restrictions.or(
+                Restrictions.eq("product.productId", productId),
+                Restrictions.eq("providedProducts.productId", productId)
+            ));
         }
 
         // Append any specified filters
@@ -260,8 +260,9 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     @Transactional
     public Pool findUeberPool(Owner o) {
         return (Pool) createSecureCriteria()
+            .createAlias("product", "product")
             .add(Restrictions.eq("owner", o))
-            .add(Restrictions.eq("productName", Product.ueberProductNameForOwner(o)))
+            .add(Restrictions.eq("product.name", Product.ueberProductNameForOwner(o)))
             .uniqueResult();
     }
 
@@ -456,12 +457,13 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @return Set of levels based on exempt flag.
      */
     public Set<String> retrieveServiceLevelsForOwner(Owner owner, boolean exempt) {
-        String stmt = "select distinct a.name, a.value, a.productId " +
-                        "from ProductPoolAttribute as a " +
-                        "inner join a.pool as p " +
-                        "where p.owner.id = :owner_id and " +
-                        "(a.name = 'support_level' or a.name='support_level_exempt') " +
-                        "order by a.name DESC";
+        String stmt = "SELECT DISTINCT Attribute.name, Attribute.value, Product.id " +
+            "FROM Pool AS Pool " +
+            "  INNER JOIN Pool.product AS Product " +
+            "  INNER JOIN Product.attributes AS Attribute " +
+            "WHERE Pool.owner.id = :owner_id " +
+            "  AND (Attribute.name = 'support_level' OR Attribute.name = 'support_level_exempt') " +
+            "  ORDER BY Attribute.name DESC;";
 
         Query q = currentSession().createQuery(stmt);
         q.setParameter("owner_id", owner.getId());
@@ -612,23 +614,23 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         Set<String> result = new HashSet<String>();
 
         Query query = this.currentSession().createQuery(
-            "SELECT DISTINCT productId " +
-            "    FROM Pool " +
-            "    WHERE productId IS NOT NULL AND productId != ''"
+            "SELECT DISTINCT P.product.productId " +
+            "    FROM Pool P" +
+            "    WHERE P.product.productId IS NOT NULL AND P.product.productId != ''"
         );
         result.addAll(query.list());
 
         query = this.currentSession().createQuery(
-            "SELECT DISTINCT derivedProductId " +
-            "    FROM Pool " +
-            "    WHERE derivedProductId IS NOT NULL AND derivedProductId != ''"
+            "SELECT DISTINCT P.derivedProduct.productId " +
+            "    FROM Pool P" +
+            "    WHERE P.derivedProduct.productId IS NOT NULL AND P.derivedProduct.productId != ''"
         );
         result.addAll(query.list());
 
         query = this.currentSession().createQuery(
-            "SELECT DISTINCT productId " +
-            "    FROM ProvidedProduct " +
-            "    WHERE productId IS NOT NULL AND productId != ''"
+            "SELECT DISTINCT P.providedProducts.productId " +
+            "    FROM Pool P" +
+            "    WHERE P.providedProducts.productId IS NOT NULL AND P.providedProducts.productId != ''"
         );
         result.addAll(query.list());
 

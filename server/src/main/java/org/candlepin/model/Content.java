@@ -62,7 +62,7 @@ public class Content extends AbstractHibernateObject {
     @NotNull
     private String label;
 
-    @Column(nullable = false)
+    @Column(name="owner_id", nullable = false)
     @NotNull
     private Owner owner;
 
