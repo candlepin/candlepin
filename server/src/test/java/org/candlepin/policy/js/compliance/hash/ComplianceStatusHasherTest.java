@@ -235,7 +235,8 @@ public class ComplianceStatusHasherTest {
 
         consumer.setInstalledProducts(new HashSet<ConsumerInstalledProduct>(initialInstalled));
         assertEquals(initialHash, generateHash(testStatus, consumer));
-        ConsumerInstalledProduct installed = new ConsumerInstalledProduct(consumer, product);
+        ConsumerInstalledProduct installed = new ConsumerInstalledProduct(product.getId(),
+                product.getName());
         consumer.addInstalledProduct(installed);
 
         String updatedHash = generateHash(testStatus, consumer);
@@ -332,8 +333,8 @@ public class ComplianceStatusHasherTest {
         Product product2 = TestUtil.createProduct("installed-2");
 
         Set<ConsumerInstalledProduct> installedProducts = new HashSet<ConsumerInstalledProduct>();
-        installedProducts.add(new ConsumerInstalledProduct(consumer, product1));
-        installedProducts.add(new ConsumerInstalledProduct(consumer, product2));
+        installedProducts.add(new ConsumerInstalledProduct(product1));
+        installedProducts.add(new ConsumerInstalledProduct(product2));
         consumer.setInstalledProducts(installedProducts);
 
         return consumer;

@@ -2027,7 +2027,7 @@ public class ConsumerResource {
             consumer, complianceStatus, complianceRules);
 
         for (ConsumerInstalledProduct cip : consumer.getInstalledProducts()) {
-            String prodId = cip.getProduct().getProductId();
+            String prodId = cip.getProductId();
             Product prod = productAdapter.getProductById(prodId);
             if (prod != null) {
                 enricher.enrich(cip, prod);

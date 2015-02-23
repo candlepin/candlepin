@@ -17,8 +17,6 @@ package org.candlepin.model;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
-import org.candlepin.test.TestUtil;
-
 import org.junit.Before;
 import org.junit.Test;
 
@@ -27,55 +25,52 @@ import org.junit.Test;
  */
 public class ConsumerInstalledProductTest {
 
-    private Consumer consumer1;
-    private Consumer consumer2;
-    private Product product1;
-    private Product product2;
     private ConsumerInstalledProduct cip1;
     private ConsumerInstalledProduct cip2;
 
     @Before
     public void setUpTestObjects() {
-        Owner owner = TestUtil.createOwner();
-        this.consumer1 = TestUtil.createConsumer();
-        this.consumer2 = TestUtil.createConsumer();
-        this.product1 = TestUtil.createProduct("ProdA", "Product A", owner);
-        this.product2 = TestUtil.createProduct("ProdB", "Product B", owner);
-
-        cip1 = new ConsumerInstalledProduct();
-        product1.setAttribute("arch", "x86");
-        product1.setAttribute("version", "1.0");
-        cip2 = new ConsumerInstalledProduct();
-        product2.setAttribute("arch", "x86");
-        product2.setAttribute("version", "1.0");
+        cip1 = new ConsumerInstalledProduct("ProdA", "Product A");
+        cip1.setArch("x86");
+        cip1.setVersion("1.0");
+        cip2 = new ConsumerInstalledProduct("ProdA", "Product A");
+        cip2.setArch("x86");
+        cip2.setVersion("1.0");
     }
 
     @Test
     public void testEquals() {
         assertEquals(cip1, cip2);
-
-        this.cip1.setConsumer(this.consumer1);
-        this.cip1.setProduct(this.product1);
-        this.cip2.setConsumer(this.consumer1);
-        this.cip2.setProduct(this.product1);
-
+        cip1.setVersion(null);
+        cip1.setArch(null);
+        cip2.setVersion(null);
+        cip2.setArch(null);
         assertEquals(cip1, cip2);
     }
 
     @Test
     public void testNotEquals() {
-        this.cip1.setConsumer(this.consumer1);
-        this.cip1.setProduct(this.product1);
-        this.cip2.setConsumer(this.consumer1);
-        this.cip2.setProduct(this.product1);
-
-        assertEquals(cip1, cip2);
-
-        this.cip2.setConsumer(this.consumer2);
+        cip1.setProductId("SomeProd");
         assertFalse(cip1.equals(cip2));
-
-        this.cip2.setConsumer(this.consumer1);
-        this.cip2.setProduct(this.product2);
+        cip1.setProductId("ProdA");
+        assertEquals(cip1, cip2);
+        cip1.setProductName("some name");
+        assertFalse(cip1.equals(cip2));
+        cip1.setProductName("Product A");
+        assertEquals(cip1, cip2);
+        cip1.setVersion(null);
+        assertFalse(cip1.equals(cip2));
+        cip1.setVersion("1.0");
+        assertEquals(cip1, cip2);
+        cip2.setVersion(null);
+        assertFalse(cip1.equals(cip2));
+        cip2.setVersion("1.0");
+        assertEquals(cip1, cip2);
+        cip1.setArch(null);
+        assertFalse(cip1.equals(cip2));
+        cip1.setArch("x86");
+        assertEquals(cip1, cip2);
+        cip2.setArch(null);
         assertFalse(cip1.equals(cip2));
     }
 }

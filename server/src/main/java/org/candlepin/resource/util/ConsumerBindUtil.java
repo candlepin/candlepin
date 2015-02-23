@@ -31,6 +31,7 @@ import org.candlepin.model.activationkeys.ActivationKeyContentOverride;
 import org.candlepin.model.activationkeys.ActivationKeyPool;
 import org.candlepin.policy.js.quantity.QuantityRules;
 import org.candlepin.policy.js.quantity.SuggestedQuantity;
+import org.candlepin.resource.ConsumerResource;
 import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.util.ServiceLevelValidator;
 import org.candlepin.version.CertVersionConflictException;
@@ -136,7 +137,7 @@ public class ConsumerBindUtil {
                 productIds.add(akp.getProductId());
             }
             for (ConsumerInstalledProduct cip : consumer.getInstalledProducts()) {
-                productIds.add(cip.getProduct().getProductId());
+                productIds.add(cip.getProductId());
             }
             for (ActivationKeyPool p : key.getPools()) {
                 poolIds.add(p.getPool().getId());

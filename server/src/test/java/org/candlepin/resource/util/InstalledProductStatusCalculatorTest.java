@@ -16,7 +16,7 @@ package org.candlepin.resource.util;
 
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.audit.EventSink;
 import org.candlepin.model.Consumer;
@@ -198,8 +198,8 @@ public class InstalledProductStatusCalculatorTest {
         p.setAttribute("version", "candlepin version");
         p.setAttribute("arch", "candlepin arch");
         calculator.enrich(cip, p);
-        assertEquals("candlepin version", cip.getProduct().getAttribute("version"));
-        assertEquals("candlepin arch", cip.getProduct().getAttribute("arch"));
+        assertEquals("candlepin version", cip.getVersion());
+        assertEquals("candlepin arch", cip.getArch());
     }
 
     @Test
@@ -227,8 +227,8 @@ public class InstalledProductStatusCalculatorTest {
         p.setAttribute("version", "candlepin version");
         p.setAttribute("arch", "candlepin arch");
         calculator.enrich(cip, p);
-        assertEquals("4.5", cip.getProduct().getAttribute("version"));
-        assertEquals("x86_64", cip.getProduct().getAttribute("arch"));
+        assertEquals("4.5", cip.getVersion());
+        assertEquals("x86_64", cip.getArch());
     }
 
     @Test

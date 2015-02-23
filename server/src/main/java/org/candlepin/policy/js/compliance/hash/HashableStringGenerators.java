@@ -19,7 +19,6 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
-import org.candlepin.model.Product;
 import org.candlepin.policy.js.compliance.ComplianceReason;
 
 import java.util.Collection;
@@ -232,10 +231,9 @@ public class HashableStringGenerators {
                 return null;
             }
 
-            Product product = target.getProduct();
-            String generated = product.getProductId();
-            generated += product.getAttributeValue("arch");
-            generated += product.getAttributeValue("version");
+            String generated = target.getProductId();
+            generated += target.getArch();
+            generated += target.getVersion();
             return generated;
         }
 

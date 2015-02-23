@@ -130,7 +130,8 @@ public class ComplianceRulesTest {
         Consumer consumer = new Consumer();
         consumer.setType(new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM));
         for (Product product : installedProducts) {
-            consumer.addInstalledProduct(new ConsumerInstalledProduct(consumer, product));
+            consumer.addInstalledProduct(new ConsumerInstalledProduct(product.getId(),
+                    product.getName()));
         }
         consumer.setFact("cpu.cpu_socket(s)", "8"); // 8 socket machine
         return consumer;
@@ -2012,10 +2013,8 @@ public class ComplianceRulesTest {
         assertEquals("valid", originalStatus.getStatus());
 
         verify(consumerCurator).update(eq(c));
-        c.addInstalledProduct(new ConsumerInstalledProduct(
-            c,
-            TestUtil.createProduct("Test Installed Product")
-        ));
+        String pid = "testinstalledprod";
+        c.addInstalledProduct(new ConsumerInstalledProduct(pid, pid));
         ComplianceStatus updated = compliance.getStatus(c);
         assertNotEquals(originalStatus.getStatus(), updated.getStatus());
         assertEquals(c.getEntitlementStatus(), updated.getStatus());
@@ -2032,10 +2031,8 @@ public class ComplianceRulesTest {
         assertFalse(initialHash.isEmpty());
 
         verify(consumerCurator).update(eq(c));
-        c.addInstalledProduct(new ConsumerInstalledProduct(
-            c,
-            TestUtil.createProduct("Test Installed Product")
-        ));
+        String pid = "testinstalledprod";
+        c.addInstalledProduct(new ConsumerInstalledProduct(pid, pid));
         ComplianceStatus updated = compliance.getStatus(c);
         assertNotEquals(originalStatus.getStatus(), updated.getStatus());
 

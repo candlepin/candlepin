@@ -220,12 +220,12 @@ public class ConsumerResourceUpdateTest {
         Product productC = TestUtil.createProduct("Product C");
 
         Consumer consumer = getFakeConsumer();
-        consumer.addInstalledProduct(new ConsumerInstalledProduct(consumer, productA));
-        consumer.addInstalledProduct(new ConsumerInstalledProduct(consumer, productB));
+        consumer.addInstalledProduct(new ConsumerInstalledProduct(productA));
+        consumer.addInstalledProduct(new ConsumerInstalledProduct(productB));
 
         Consumer incoming = new Consumer();
-        incoming.addInstalledProduct(new ConsumerInstalledProduct(incoming, productB));
-        incoming.addInstalledProduct(new ConsumerInstalledProduct(incoming, productC));
+        incoming.addInstalledProduct(new ConsumerInstalledProduct(productB));
+        incoming.addInstalledProduct(new ConsumerInstalledProduct(productC));
 
         this.resource.updateConsumer(consumer.getUuid(), incoming);
         verify(sink).queueEvent((Event) any());

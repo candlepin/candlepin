@@ -129,8 +129,8 @@ public class StatusReasonMessageGenerator {
 
     private String getInstalledMarketingName(String id, Consumer consumer) {
         for (ConsumerInstalledProduct prod : consumer.getInstalledProducts()) {
-            if (prod.getProduct().getProductId().equals(id)) {
-                return prod.getProduct().getName();
+            if (prod.getProductId().equals(id)) {
+                return prod.getProductName();
             }
         }
         return "UNABLE_TO_GET_NAME";

@@ -14,7 +14,7 @@
  */
 package org.candlepin.policy.js.compliance;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerInstalledProduct;
@@ -152,7 +152,8 @@ public class StatusReasonMessageGeneratorTest {
 
         Owner owner = new Owner("test");
         Product product = TestUtil.createProduct("prod1", "NonCovered Product", owner);
-        ConsumerInstalledProduct installed = new ConsumerInstalledProduct(consumer, product);
+        ConsumerInstalledProduct installed = new ConsumerInstalledProduct(product.getId(),
+                product.getName());
 
         consumer.addInstalledProduct(installed);
         generator.setMessage(consumer, reason, new Date());
