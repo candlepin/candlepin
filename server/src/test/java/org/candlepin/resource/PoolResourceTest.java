@@ -98,6 +98,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
         product1Owner2 = new Product(PRODUCT_CPULIMITED, PRODUCT_CPULIMITED, owner2);
         product2 = TestUtil.createProduct(owner1);
         productCurator.create(product1);
+        productCurator.create(product1Owner2);
         productCurator.create(product2);
 
         pool1 = createPoolAndSub(owner1, product1, 500L,
