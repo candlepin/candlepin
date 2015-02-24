@@ -204,7 +204,7 @@ public class OwnerInfoCurator {
         }
 
         queryStr = "select distinct prod.value from Pool p " +
-            "join p.productAttributes as prod " +
+            "join p.product.attributes as prod " +
             "where p.owner = :owner " +
             "and p.startDate < :date and p.endDate > :date " +
             "and prod.name = 'product_family' " +
@@ -257,7 +257,7 @@ public class OwnerInfoCurator {
                         "           where attr.name = 'virt_only' " +
                         "           and attr.value = 'true') " +
                         "     or (p in (select p from Pool p " +
-                        "               join p.productAttributes as prod " +
+                        "               join p.product.attributes as prod " +
                         "               where p.owner = :owner " +
                         "               and prod.name = 'virt_only' " +
                         "               and prod.value = 'true')" +

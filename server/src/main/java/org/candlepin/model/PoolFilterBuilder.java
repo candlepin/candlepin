@@ -26,7 +26,6 @@ import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.Subqueries;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -170,7 +169,7 @@ public class PoolFilterBuilder extends FilterBuilder {
             // If we're using wildcards in the name, we should block exact matches
             .add(Restrictions.eqProperty("name", "attr.name"))
             .setProjection(Projections.property("pattr.pool.id"));
-        subquery.add(Subqueries.propertyNotIn("this.id", overridden));
+        subquery.add(Subqueries.propertyNotIn("id", overridden));
 
         return subquery;
     }
