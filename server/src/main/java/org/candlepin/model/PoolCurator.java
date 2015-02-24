@@ -14,10 +14,10 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.model.activationkeys.ActivationKey;
-import org.candlepin.model.activationkeys.ActivationKeyPool;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
+import org.candlepin.model.activationkeys.ActivationKey;
+import org.candlepin.model.activationkeys.ActivationKeyPool;
 import org.candlepin.policy.criteria.CriteriaRules;
 import org.candlepin.policy.js.ProductCache;
 
@@ -30,7 +30,6 @@ import org.hibernate.Filter;
 import org.hibernate.LockOptions;
 import org.hibernate.Query;
 import org.hibernate.ReplicationMode;
-import org.hibernate.criterion.CriteriaSpecification;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
@@ -205,7 +204,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
         Criteria crit = createSecureCriteria();
         crit.createAlias("product", "product");
-        crit.createAlias("derivedProduct", "derivedProduct");
         crit.createAlias("providedProducts", "providedProducts");
 
         if (activeOnly) {
