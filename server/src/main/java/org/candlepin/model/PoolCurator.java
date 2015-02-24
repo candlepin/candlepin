@@ -455,13 +455,13 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @return Set of levels based on exempt flag.
      */
     public Set<String> retrieveServiceLevelsForOwner(Owner owner, boolean exempt) {
-        String stmt = "SELECT DISTINCT Attribute.name, Attribute.value, Product.id " +
+        String stmt = "SELECT DISTINCT Attribute.name, Attribute.value, Product.productId " +
             "FROM Pool AS Pool " +
             "  INNER JOIN Pool.product AS Product " +
             "  INNER JOIN Product.attributes AS Attribute " +
             "WHERE Pool.owner.id = :owner_id " +
             "  AND (Attribute.name = 'support_level' OR Attribute.name = 'support_level_exempt') " +
-            "  ORDER BY Attribute.name DESC;";
+            "  ORDER BY Attribute.name DESC";
 
         Query q = currentSession().createQuery(stmt);
         q.setParameter("owner_id", owner.getId());

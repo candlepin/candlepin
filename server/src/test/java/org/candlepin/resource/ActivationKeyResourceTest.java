@@ -57,6 +57,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
     protected ActivationKeyResource activationKeyResource;
     protected ActivationKeyRules activationKeyRules;
     private static int poolid = 0;
+    private Owner owner;
 
     @Before
     public void setUp() {
@@ -65,12 +66,12 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
             .getInstance(ActivationKeyResource.class);
         activationKeyRules = injector
             .getInstance(ActivationKeyRules.class);
+        owner = createOwner();
     }
 
     @Test(expected = BadRequestException.class)
     public void testCreateReadDelete() {
         ActivationKey key = new ActivationKey();
-        Owner owner = createOwner();
         key.setOwner(owner);
         key.setName("dd");
         key.setServiceLevel("level1");
@@ -100,7 +101,6 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
     @Test
     public void testAddingRemovingPools() {
         ActivationKey key = new ActivationKey();
-        Owner owner = createOwner();
         Product product = TestUtil.createProduct(owner);
         productCurator.create(product);
         Pool pool = createPoolAndSub(owner, product, 10L, new Date(), new Date());
@@ -117,7 +117,6 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
     @Test(expected = BadRequestException.class)
     public void testReaddingPools() {
         ActivationKey key = new ActivationKey();
-        Owner owner = createOwner();
         Product product = TestUtil.createProduct(owner);
         productCurator.create(product);
         Pool pool = createPoolAndSub(owner, product, 10L, new Date(), new Date());
@@ -348,9 +347,9 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         key = activationKeyCurator.create(key);
 
         assertNotNull(key.getId());
-        activationKeyResource.addProductIdToKey(key.getId(), product.getId());
+        activationKeyResource.addProductIdToKey(key.getId(), product.getProductId());
         assertTrue(key.getProducts().size() == 1);
-        activationKeyResource.removeProductIdFromKey(key.getId(), product.getId());
+        activationKeyResource.removeProductIdFromKey(key.getId(), product.getProductId());
         assertEquals(0, key.getProducts().size());
     }
 
@@ -367,10 +366,10 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
 
         assertNotNull(key.getId());
 
-        activationKeyResource.addProductIdToKey(key.getId(), product.getId());
+        activationKeyResource.addProductIdToKey(key.getId(), product.getProductId());
         assertEquals(1, key.getProducts().size());
 
-        activationKeyResource.addProductIdToKey(key.getId(), product.getId());
+        activationKeyResource.addProductIdToKey(key.getId(), product.getProductId());
         // ^ Kaboom.
     }
 
@@ -380,6 +379,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         pool.setQuantity(10L);
         pool.setConsumed(4L);
         pool.setAttribute("multi-entitlement", "yes");
+        pool.setProduct(TestUtil.createProduct(owner));
         return pool;
     }
 

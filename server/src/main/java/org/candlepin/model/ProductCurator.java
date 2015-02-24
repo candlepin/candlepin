@@ -65,7 +65,19 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     @Transactional
     public Product lookupById(String id) {
         return (Product) currentSession().createCriteria(Product.class)
-            .add(Restrictions.eq("id", id)).uniqueResult();
+            .add(Restrictions.eq("productId", id)).uniqueResult();
+    }
+
+    /**
+     * @param o owner to lookup product for
+     * @param id Product ID to lookup. (note: not the database ID)
+     * @return the Product which matches the given id.
+     */
+    @Transactional
+    public Product lookupById(Owner o, String id) {
+        return (Product) currentSession().createCriteria(Product.class)
+            .add(Restrictions.eq("owner", o))
+            .add(Restrictions.eq("productId", id)).uniqueResult();
     }
 
     /**
