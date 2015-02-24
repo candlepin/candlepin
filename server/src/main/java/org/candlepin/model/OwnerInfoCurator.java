@@ -241,7 +241,7 @@ public class OwnerInfoCurator {
                 "and (p in (select p from Pool p join p.attributes as attr " +
                 "           where p.owner = :owner " +
                 "           and attr.name = 'product_family' and attr.value = :family)" +
-                "     or (p in (select p from Pool p join p.productAttributes as prod " +
+                "     or (p in (select p from Pool p join p.product.attributes as prod " +
                 "              where p.owner = :owner " +
                 "              and prod.name = 'product_family' " +
                 "              and prod.value = :family) " +
