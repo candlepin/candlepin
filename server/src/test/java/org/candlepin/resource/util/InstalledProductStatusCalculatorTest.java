@@ -69,9 +69,9 @@ public class InstalledProductStatusCalculatorTest {
     private Owner owner;
     private ComplianceRules compliance;
 
-    private static final Owner PRODUCT_OWNER = new Owner("Test Corporation");
-    private static final Product PRODUCT_1 = new Product("p1", "product1", PRODUCT_OWNER);
-    private static final String STACK_ID_1 = "my-stack-1";
+    private final Owner PRODUCT_OWNER = new Owner("Test Corporation");
+    private final Product PRODUCT_1 = new Product("p1", "product1", PRODUCT_OWNER);
+    private final String STACK_ID_1 = "my-stack-1";
 
     @Mock private ConsumerCurator consumerCurator;
     @Mock private EntitlementCurator entCurator;
@@ -195,8 +195,8 @@ public class InstalledProductStatusCalculatorTest {
         ConsumerInstalledProductEnricher calculator =
             new ConsumerInstalledProductEnricher(c, status, compliance);
         Product p = new Product(PRODUCT_1.getProductId(), "Awesome Product", owner);
-        p.setAttribute("version", "candlepin version");
-        p.setAttribute("arch", "candlepin arch");
+        cip.setVersion("candlepin version");
+        cip.setArch("candlepin arch");
         calculator.enrich(cip, p);
         assertEquals("candlepin version", cip.getVersion());
         assertEquals("candlepin arch", cip.getArch());
@@ -218,8 +218,8 @@ public class InstalledProductStatusCalculatorTest {
         ComplianceStatus status = compliance.getStatus(c, now);
         status.addNonCompliantProduct(baseProduct.getProductId());
         ConsumerInstalledProduct cip = new ConsumerInstalledProduct(c, baseProduct);
-        baseProduct.setAttribute("arch", "x86_64");
-        baseProduct.setAttribute("version", "4.5");
+        cip.setArch("x86_64");
+        cip.setVersion("4.5");
         c.addInstalledProduct(cip);
         ConsumerInstalledProductEnricher calculator =
             new ConsumerInstalledProductEnricher(c, status, compliance);
@@ -679,7 +679,8 @@ public class InstalledProductStatusCalculatorTest {
         DateRange range3 = rangeRelativeToDate(now, -1, 4);
 
         c.addEntitlement(mockEntitlement(c, PRODUCT_1, range1, PRODUCT_1));
-        c.addEntitlement(mockStackedEntitlement(c, range2, STACK_ID_1, PRODUCT_1, 1,
+        Product stackedProduct = new Product("p1stacked", "product1stacked", PRODUCT_OWNER);
+        c.addEntitlement(mockStackedEntitlement(c, range2, STACK_ID_1, stackedProduct, 1,
             PRODUCT_1));
         c.addEntitlement(mockEntitlement(c, PRODUCT_1, range3, PRODUCT_1));
 
@@ -689,8 +690,8 @@ public class InstalledProductStatusCalculatorTest {
         ComplianceStatus status = compliance.getStatus(c, now);
         ConsumerInstalledProductEnricher calculator =
             new ConsumerInstalledProductEnricher(c, status, compliance);
-        Product p = new Product(PRODUCT_1.getProductId(), "Awesome Product", owner);
-        DateRange validRange = calculator.getValidDateRange(p);
+//        Product p = new Product(PRODUCT_1.getProductId(), "Awesome Product", owner);
+        DateRange validRange = calculator.getValidDateRange(PRODUCT_1);
         assertEquals(range3.getStartDate(), validRange.getStartDate());
         assertEquals(range3.getEndDate(), validRange.getEndDate());
     }
@@ -704,8 +705,9 @@ public class InstalledProductStatusCalculatorTest {
         DateRange range1 = rangeRelativeToDate(now, -4, 4);
         DateRange range2 = rangeRelativeToDate(now, -2, 6);
 
-        Entitlement ent = mockEntitlement(c, PRODUCT_1, range1, PRODUCT_1);
-        ent.getPool().getProduct().setAttribute("sockets", "2");
+        Product socketsProd = new Product("socketsprod", "s", PRODUCT_OWNER);
+        socketsProd.setAttribute("sockets", "2");
+        Entitlement ent = mockEntitlement(c, socketsProd, range1, PRODUCT_1);
         c.addEntitlement(ent);
 
         c.addEntitlement(mockEntitlement(c, PRODUCT_1, range2, PRODUCT_1));

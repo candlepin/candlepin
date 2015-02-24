@@ -106,7 +106,7 @@ public class ConsumerInstalledProductEnricher {
         // the same thing, either it's the range of time you're green, or the range of
         // time you're yellow or better. i.e. if I'm green now and then going to be yellow,
         // the date range should show me the whole span of time until I go red.
-        String prodStatus = getStatus(product.getId());
+        String prodStatus = getStatus(product.getProductId());
         if (prodStatus == RED_STATUS) {
             return null;
         }
@@ -120,7 +120,7 @@ public class ConsumerInstalledProductEnricher {
         Date startDate = null;
         Date endDate = null;
         for (int i = currentIdx - 1; i >= 0; i--) {
-            if (!isProductValidOnDate(product.getId(), dates.get(i))) {
+            if (!isProductValidOnDate(product.getProductId(), dates.get(i))) {
                 startDate = dates.get(i + 1);
                 break;
             }
@@ -130,7 +130,7 @@ public class ConsumerInstalledProductEnricher {
         }
 
         for (int i = currentIdx + 1; i < dates.size(); i++) {
-            if (!isProductValidOnDate(product.getId(), dates.get(i))) {
+            if (!isProductValidOnDate(product.getProductId(), dates.get(i))) {
                 endDate = new Date(dates.get(i).getTime() - 1);
                 break;
             }
@@ -189,7 +189,7 @@ public class ConsumerInstalledProductEnricher {
         for (Entitlement ent : this.consumer.getEntitlements()) {
             Pool pool = ent.getPool();
 
-            if (pool.provides(product.getId())) {
+            if (pool.provides(product.getProductId())) {
                 productEnts.add(ent);
                 //If this entitlement is stackable,
                 //the whole stack may be required, even if
