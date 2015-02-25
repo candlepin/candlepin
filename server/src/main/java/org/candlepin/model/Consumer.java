@@ -188,6 +188,9 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         orphanRemoval = true, cascade = { CascadeType.ALL })
     private List<GuestId> guestIds;
 
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "consumer", fetch = FetchType.LAZY)
+    private Set<GuestIdsCheckIn> guestIdsCheckIns;
+
     @OneToMany(mappedBy = "consumer",
         orphanRemoval = true, cascade = { CascadeType.ALL })
     private Set<ConsumerCapability> capabilities;
@@ -692,4 +695,26 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     public Consumer getConsumer() {
         return this;
     }
+
+    /**
+     *
+     * @return Set of all guest ID checkins that have not yet been reaped.
+     * Technically only the most recent one matters, and is used in queries to see who
+     * has most recently reported a guest ID. (which could have been migrated or copied)
+     */
+    public Set<GuestIdsCheckIn> getGuestIdCheckIns() {
+        return guestIdsCheckIns;
+    }
+
+    public void setGuestIdCheckIns(Set<GuestIdsCheckIn> guestIdCheckIns) {
+        this.guestIdsCheckIns = guestIdCheckIns;
+    }
+
+    public void addGuestIdCheckIn() {
+        if (this.guestIdsCheckIns == null) {
+            this.guestIdsCheckIns = new HashSet<GuestIdsCheckIn>();
+        }
+        this.guestIdsCheckIns.add(new GuestIdsCheckIn(this));
+    }
+
 }

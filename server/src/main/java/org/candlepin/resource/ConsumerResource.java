@@ -34,6 +34,9 @@ import org.candlepin.common.exceptions.CandlepinException;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.common.exceptions.IseException;
 import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.common.paging.Page;
+import org.candlepin.common.paging.PageRequest;
+import org.candlepin.common.paging.Paginate;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.PoolManager;
@@ -72,9 +75,6 @@ import org.candlepin.model.User;
 import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
-import org.candlepin.common.paging.Page;
-import org.candlepin.common.paging.PageRequest;
-import org.candlepin.common.paging.Paginate;
 import org.candlepin.pinsetter.tasks.EntitleByProductsJob;
 import org.candlepin.pinsetter.tasks.EntitlerJob;
 import org.candlepin.policy.js.compliance.ComplianceRules;
@@ -474,7 +474,9 @@ public class ConsumerResource {
             for (GuestId g : consumer.getGuestIds()) {
                 g.setConsumer(consumer);
             }
+            consumer.addGuestIdCheckIn();
         }
+
         HypervisorId hvsrId = consumer.getHypervisorId();
         if (hvsrId != null && hvsrId.getHypervisorId() != null && !hvsrId.getHypervisorId().isEmpty()) {
             // If a hypervisorId is supplied, make sure the consumer and owner are correct
@@ -1028,23 +1030,30 @@ public class ConsumerResource {
         List<GuestId> removedGuests = getRemovedGuestIds(existing, incoming);
         List<GuestId> addedGuests = getAddedGuestIds(existing, incoming);
 
-        // Ensure that existing actually has guest ids initialized.
-        if (existing.getGuestIds() != null) {
-            // Always clear existing id so that the timestamps are updated
-            // on each ID.
-            log.info("Clearing previous IDs.");
-            existing.getGuestIds().clear();
-        }
+        // Always record a guest ID checkin if the update contained guest IDs. This is
+        // used in queries to see which host most recently reported a guest.
+        existing.addGuestIdCheckIn();
 
+        List<GuestId> existingGuests = existing.getGuestIds();
+
+        // remove guests that are missing.
+        if (existingGuests != null) {
+            log.info("removing IDs.");
+            for (GuestId guestId : removedGuests) {
+                existingGuests.remove(guestId);
+                if (log.isDebugEnabled()) {
+                    log.info("Guest ID removed: {}", guestId);
+                }
+                sink.queueEvent(eventFactory.guestIdDeleted(guestId));
+            }
+        }
         // Check guests that are existing/added.
         for (GuestId guestId : incoming.getGuestIds()) {
             Consumer host = guestHypervisorConsumers.get(guestId.getGuestId());
 
-            // Add back the guestId.
-            existing.addGuestId(guestId);
-
-            // If adding a new GuestId send notification.
             if (addedGuests.contains(guestId)) {
+                // Add the guestId.
+                existing.addGuestId(guestId);
                 if (log.isDebugEnabled()) {
                     log.info("New guest ID added: {}", guestId.getGuestId());
                 }
@@ -1078,16 +1087,6 @@ public class ConsumerResource {
                 // and revoke those.
                 revokeGuestEntitlementsNotMatchingHost(existing, guest);
             }
-        }
-
-        // Check guests that have been removed.
-        for (GuestId guestId : removedGuests) {
-            // Report that the guestId was removed.
-            if (log.isDebugEnabled()) {
-                log.info("Guest ID removed: {}", guestId.getGuestId());
-            }
-            sink.queueEvent(eventFactory.guestIdDeleted(guestId));
-
         }
 
         // If nothing shows as being added, and nothing shows as being removed, we should

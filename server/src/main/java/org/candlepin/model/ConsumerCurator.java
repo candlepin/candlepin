@@ -17,9 +17,9 @@ package org.candlepin.model;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
-import org.candlepin.config.ConfigProperties;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.util.Util;
 
@@ -444,8 +444,9 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         Criteria crit = currentSession()
             .createCriteria(GuestId.class)
             .createAlias("consumer", "gconsumer")
+            .createAlias("gconsumer.guestIdsCheckIns", "checkins")
             .add(Restrictions.eq("gconsumer.owner", owner))
-            .addOrder(Order.desc("updated"))
+            .addOrder(Order.desc("checkins.updated"))
             .setMaxResults(1)
             .setProjection(Projections.property("consumer"));
         return (Consumer) crit.add(guestIdCrit).uniqueResult();
@@ -473,8 +474,9 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         Criteria crit = currentSession()
             .createCriteria(GuestId.class)
             .createAlias("consumer", "gconsumer")
+            .createAlias("gconsumer.guestIdsCheckIns", "checkins")
             .add(Restrictions.eq("gconsumer.owner", owner))
-            .addOrder(Order.desc("updated"))
+            .addOrder(Order.desc("checkins.updated"))
             .setProjection(Projections.property("consumer"));
 
         // Note: may contain duplicates but is sorted so they appear later:
