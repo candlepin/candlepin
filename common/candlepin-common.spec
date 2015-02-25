@@ -21,7 +21,7 @@
 Name: %{parent_proj}-common
 Summary: Common code for Candlepin and related projects
 License: GPLv2
-Version: 1.0.21
+Version: 1.0.22
 Release: 1%{?dist}
 URL: http://www.candlepinproject.org
 Source: %{name}-%{version}.tar.gz
@@ -174,6 +174,9 @@ rm -rf %{_tmppath}/distlibdir
 %{_datadir}/%{parent_proj}/gutterball/lib/%{name}.jar
 
 %changelog
+* Wed Feb 25 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 1.0.22-1
+- Translation updates for Sprint 87 (wpoteat@redhat.com)
+
 * Tue Feb 17 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 1.0.21-1
 - Changed property filtering to use JSON path instead of reflection.
   (crog@redhat.com)
