@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.43
+Version: 0.9.44
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -394,6 +394,12 @@ fi
 
 
 %changelog
+* Wed Feb 25 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.44-1
+- Allows attribute on SKU to enable or disable content for all associated
+  products (wpoteat@redhat.com)
+- Stop removing the guest ids that do not change (wpoteat@redhat.com)
+- Implement new guest ID checkin time model object. (dgoodwin@redhat.com)
+
 * Mon Feb 23 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.43-1
 - 1194997: Don't use referencesUniqueColumn true. (dgoodwin@redhat.com)
 
