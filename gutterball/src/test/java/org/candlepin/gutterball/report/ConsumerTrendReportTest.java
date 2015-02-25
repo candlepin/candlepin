@@ -267,7 +267,7 @@ public class ConsumerTrendReportTest extends DatabaseTestFixture {
     @SuppressWarnings("unchecked")
     public void testDefaultResultSetContainsCustomMap() {
         MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
-        when(params.containsKey("custom")).thenReturn(false);
+        when(params.containsKey("custom_results")).thenReturn(false);
 
         String uuid = "c3";
         when(params.containsKey("consumer_uuid")).thenReturn(true);
@@ -286,8 +286,8 @@ public class ConsumerTrendReportTest extends DatabaseTestFixture {
     @Test
     public void testCustomResultSetContainsComplianceObjects() {
         MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
-        when(params.containsKey("custom")).thenReturn(true);
-        when(params.getFirst("custom")).thenReturn("1");
+        when(params.containsKey("custom_results")).thenReturn(true);
+        when(params.getFirst("custom_results")).thenReturn("1");
 
         String uuid = "c3";
         when(params.containsKey("consumer_uuid")).thenReturn(true);

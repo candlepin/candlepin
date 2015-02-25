@@ -103,6 +103,9 @@ describe 'One Sub Pool Per Stack' do
     # Determine our pools by matching on contract number.
     pools = @user.list_pools :owner => @owner.id
 
+    # test does not use unmapped guest pools 
+    filter_unmapped_guest_pools(pools)
+
     @initial_pool_count = pools.size
     @initial_pool_count.should == 7
 

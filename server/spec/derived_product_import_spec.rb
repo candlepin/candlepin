@@ -5,6 +5,7 @@ require 'json'
 describe 'Import', :serial => true do
 
   include CandlepinMethods
+  include VirtHelper
 
   before(:all) do
     @cp = Candlepin.new('admin', 'admin')
@@ -71,7 +72,11 @@ describe 'Import', :serial => true do
     import_user_client = user_client(@dist_owner, random_string("user"))
     import_user_client.import(@dist_owner['key'], @exporter.export_filename)
     @cp.refresh_pools(@dist_owner['key'])
-    dist_pool = @cp.list_owner_pools(@dist_owner['key'], {:product => stacked_datacenter_product.id})[0]
+    pools = @cp.list_owner_pools(@dist_owner['key'], {:product => stacked_datacenter_product.id})
+
+    # need to ignore the unmapped guest pool
+    filter_unmapped_guest_pools(pools)
+    dist_pool = pools[0]
 
     # make host client to get entitlement from distributor
     dist_consumer_1 = @dist_user.register(random_string("consumer"))
@@ -90,7 +95,11 @@ describe 'Import', :serial => true do
 
     # entitle from derived pool
     dist_ent = nil
-    @cp.list_owner_pools(@dist_owner['key']).each do |p|
+    pools = @cp.list_owner_pools(@dist_owner['key'])
+    # need to ignore the unmapped guest pool
+    filter_unmapped_guest_pools(pools)
+    
+    pools.each do |p|
       p.attributes.each do |a|
         if a.name == 'pool_derived' and a.value == 'true'
             dist_ent = dist_consumer_client_2.consume_pool(p['id'])[0]

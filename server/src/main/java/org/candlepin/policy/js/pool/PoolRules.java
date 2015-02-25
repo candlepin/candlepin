@@ -109,36 +109,7 @@ public class PoolRules {
                     sub.getOrderNumber());
             newPool.setDerivedProvidedProducts(subProvidedProducts);
 
-            if (sub.getProvidedProducts() != null) {
-                for (Product p : sub.getProvidedProducts()) {
-                    ProvidedProduct providedProduct = new ProvidedProduct(p.getId(),
-                        p.getName());
-                    providedProduct.setPool(newPool);
-                    providedProducts.add(providedProduct);
-                }
-            }
-
-            if (sub.getDerivedProvidedProducts() != null) {
-                for (Product p : sub.getDerivedProvidedProducts()) {
-                    DerivedProvidedProduct providedProduct =
-                        new DerivedProvidedProduct(p.getId(), p.getName());
-                    providedProduct.setPool(newPool);
-                    subProvidedProducts.add(providedProduct);
-                }
-            }
-
-            helper.copyProductAttributesOntoPool(sub.getProduct().getId(), newPool);
-            if (sub.getDerivedProduct() != null) {
-                newPool.setDerivedProductId(sub.getDerivedProduct().getId());
-                newPool.setDerivedProductName(sub.getDerivedProduct().getName());
-                helper.copySubProductAttributesOntoPool(sub.getDerivedProduct().getId(),
-                    newPool);
-            }
-
-            for (Branding b : sub.getBranding()) {
-                newPool.getBranding().add(new Branding(b.getProductId(), b.getType(),
-                    b.getName()));
-            }
+            updatePoolFromSubscription(sub, newPool, providedProducts, subProvidedProducts, helper);
 
             newPool.setSourceSubscription(new SourceSubscription(sub.getId(), "master"));
             ProductAttribute virtAtt = sub.getProduct().getAttribute("virt_only");
@@ -158,28 +129,77 @@ public class PoolRules {
         boolean hostLimited = attributes.containsKey("host_limited") &&
             attributes.get("host_limited").equals("true");
         // Check if we need to create a virt-only pool for this subscription:
-        if (attributes.containsKey("virt_limit") && !config.getBoolean(ConfigProperties.STANDALONE) &&
-            !hostLimited && !hasBonusPool(existingPools)) {
+        if (attributes.containsKey("virt_limit") && !hasBonusPool(existingPools)) {
+
             HashMap<String, String> virtAttributes = new HashMap<String, String>();
             virtAttributes.put("virt_only", "true");
             virtAttributes.put("pool_derived", "true");
             virtAttributes.put("physical_only", "false");
+            if (hostLimited || config.getBoolean(ConfigProperties.STANDALONE)) {
+                virtAttributes.put("unmapped_guests_only", "true");
+            }
             // Make sure the virt pool does not have a virt_limit,
             // otherwise this will recurse infinitely
             virtAttributes.put("virt_limit", "0");
 
             String virtQuantity = getVirtQuantity(attributes.get("virt_limit"), quantity);
             if (virtQuantity != null) {
-                Pool derivedPool = helper.createPool(sub, sub.getProduct().getId(),
-                                                    virtQuantity, virtAttributes);
+                Product poolProduct = sub.getProduct();
+                // Favor derived products if they are available
+                if (sub.getDerivedProduct() != null) {
+                    poolProduct = sub.getDerivedProduct();
+                }
+
+                Pool derivedPool = helper.createPool(sub, poolProduct.getId(),
+                    virtQuantity, virtAttributes);
+
+                updatePoolFromSubscription(sub, derivedPool, providedProducts, subProvidedProducts, helper);
+
                 // Using derived here because only one derived pool
                 // is created for this subscription
-                derivedPool.setSourceSubscription(
-                    new SourceSubscription(sub.getId(), "derived"));
+                derivedPool.setSourceSubscription(new SourceSubscription(sub.getId(), "derived"));
                 pools.add(derivedPool);
             }
         }
         return pools;
+    }
+
+    private void updatePoolFromSubscription(Subscription sub,
+                                            Pool pool,
+                                            Set<ProvidedProduct> providedProducts,
+                                            Set<DerivedProvidedProduct> subProvidedProducts,
+                                            PoolHelper helper) {
+        if (sub.getProvidedProducts() != null) {
+            for (Product p : sub.getProvidedProducts()) {
+                ProvidedProduct providedProduct = new ProvidedProduct(p.getId(),
+                    p.getName());
+                providedProduct.setPool(pool);
+                providedProducts.add(providedProduct);
+            }
+        }
+
+        if (sub.getDerivedProvidedProducts() != null) {
+            for (Product p : sub.getDerivedProvidedProducts()) {
+                DerivedProvidedProduct providedProduct =
+                    new DerivedProvidedProduct(p.getId(), p.getName());
+                providedProduct.setPool(pool);
+                subProvidedProducts.add(providedProduct);
+            }
+        }
+
+        helper.copyProductAttributesOntoPool(sub.getProduct().getId(), pool);
+        if (sub.getDerivedProduct() != null) {
+            pool.setDerivedProductId(sub.getDerivedProduct().getId());
+            pool.setDerivedProductName(sub.getDerivedProduct().getName());
+            helper.copySubProductAttributesOntoPool(sub.getDerivedProduct().getId(),
+                pool);
+        }
+
+        for (Branding b : sub.getBranding()) {
+            pool.getBranding().add(new Branding(b.getProductId(), b.getType(),
+                b.getName()));
+        }
+
     }
 
     private boolean hasMasterPool(List<Pool> pools) {
@@ -632,7 +652,8 @@ public class PoolRules {
                 else {
                     try {
                         int virtLimit = Integer.parseInt(virtLimitStr);
-                        if (config.getBoolean(ConfigProperties.STANDALONE)) {
+                        if (config.getBoolean(ConfigProperties.STANDALONE) &&
+                            !"true".equals(existingPool.getAttributeValue("unmapped_guests_only"))) {
                             // this is how we determined the quantity
                             expectedQuantity = virtLimit;
                         }

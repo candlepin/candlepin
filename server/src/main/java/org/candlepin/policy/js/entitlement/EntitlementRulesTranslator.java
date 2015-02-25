@@ -102,6 +102,14 @@ public class EntitlementRulesTranslator {
             msg = i18n.tr("Unit does not support derived products data " +
                 "required by pool ''{0}''", pool.getId());
         }
+        else if (errorKey.equals("virt.guest.cannot.use.unmapped.guest.pool.has.host")) {
+            msg = i18n.tr("Pool is restricted to unmapped virtual guests: ''{0}''",
+                pool.getId());
+        }
+        else if (errorKey.equals("virt.guest.cannot.use.unmapped.guest.pool.not.new")) {
+            msg = i18n.tr("Pool is restricted to virtual guests in their first day of " +
+                "existence: ''{0}''", pool.getId());
+        }
         else {
             msg = i18n.tr("Unable to attach pool with ID ''{0}''.: {1}.",
                 pool.getId().toString(), errorKey);

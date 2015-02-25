@@ -21,7 +21,7 @@
 Name: %{parent_proj}-common
 Summary: Common code for Candlepin and related projects
 License: GPLv2
-Version: 1.0.20
+Version: 1.0.21
 Release: 1%{?dist}
 URL: http://www.candlepinproject.org
 Source: %{name}-%{version}.tar.gz
@@ -174,6 +174,13 @@ rm -rf %{_tmppath}/distlibdir
 %{_datadir}/%{parent_proj}/gutterball/lib/%{name}.jar
 
 %changelog
+* Tue Feb 17 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 1.0.21-1
+- Changed property filtering to use JSON path instead of reflection.
+  (crog@redhat.com)
+- Added JSON formatting to ServletLogger (crog@redhat.com)
+- Completed migration of common pagination codebase. (crog@redhat.com)
+- GB now uses CP's paging system for pagination (crog@redhat.com)
+
 * Mon Feb 02 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 1.0.20-1
 - Rename POM files to the Maven prefered 'pom.xml'. (awood@redhat.com)
 - Add generated POM files to the repository. (awood@redhat.com)

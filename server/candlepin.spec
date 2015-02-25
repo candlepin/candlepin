@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.41
+Version: 0.9.43
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -394,6 +394,43 @@ fi
 
 
 %changelog
+* Mon Feb 23 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.43-1
+- 1194997: Don't use referencesUniqueColumn true. (dgoodwin@redhat.com)
+
+* Tue Feb 17 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.42-1
+- Allow key-value filters to be negated. (awood@redhat.com)
+- Status partial for unmapped guest entitlement but no installed product
+  (wpoteat@redhat.com)
+- Do not autoheal guests with no installed products. (awood@redhat.com)
+- Auto-heal guests after revocations due to host changes. (awood@redhat.com)
+- Revoke the unmapped guest entitlement once a guest is mapped.
+  (awood@redhat.com)
+- Derived product attributes and provided products copied to derived pools
+  (wpoteat@redhat.com)
+- Let the database do the work of finding entitlements off unmapped guest
+  pools. (awood@redhat.com)
+- Revoke entitlements on bind/heal when guest has migrated.
+  (wpoteat@redhat.com)
+- Update of rules to follow unmapped guest conditions (wpoteat@redhat.com)
+- Add job to remove expired 24 hour unmapped guest entitlement.
+  (awood@redhat.com)
+- Create one day entitlement certs for unmapped guest pools. (awood@redhat.com)
+- Bonus pool creation when host_limited value is present (wpoteat@redhat.com)
+- Fix broken db upgrade on Oracle. (dgoodwin@redhat.com)
+- Move delete check-ins query creation out of loop. (dgoodwin@redhat.com)
+- Add a job to cleanup old consumer check-ins. (dgoodwin@redhat.com)
+- Add curator method for cleaning up all but most recent checkins.
+  (dgoodwin@redhat.com)
+- Completed migration of common pagination codebase. (crog@redhat.com)
+- GB now uses CP's paging system for pagination (crog@redhat.com)
+- Use a separate last checkin time due to problems with created/updated
+  timestamps. (dgoodwin@redhat.com)
+- Missed file. (dgoodwin@redhat.com)
+- Complete hibernate mappings. (dgoodwin@redhat.com)
+- Drop old checkin columns, add hibernate mappings. (dgoodwin@redhat.com)
+- Add new consumer checkin table. (dgoodwin@redhat.com)
+- 1153375: make dev deploys disable sslv3 by default (alikins@redhat.com)
+
 * Mon Feb 02 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.41-1
 - Update rpm deps for qpid 0.30. (dgoodwin@redhat.com)
 

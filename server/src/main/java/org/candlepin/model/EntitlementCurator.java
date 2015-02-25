@@ -349,6 +349,26 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         return activeNowQuery.list();
     }
 
+    @SuppressWarnings("unchecked")
+    public List<Entitlement> findByPoolAttribute(Consumer consumer, String attributeName, String value) {
+        Criteria criteria = currentSession().createCriteria(Entitlement.class)
+            .createAlias("pool", "ent_pool")
+            .createAlias("ent_pool.attributes", "attrs")
+            .add(Restrictions.eq("attrs.name", attributeName))
+            .add(Restrictions.eq("attrs.value", value));
+
+        if (consumer != null) {
+            criteria.add(Restrictions.eq("consumer", consumer));
+        }
+
+        return criteria.list();
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<Entitlement> findByPoolAttribute(String attributeName, String value) {
+        return findByPoolAttribute(null, attributeName, value);
+    }
+
     /**
      * For a given stack, find the eldest active entitlement with a subscription ID.
      * This is used to look up the upstream subscription certificate to use to talk to

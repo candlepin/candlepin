@@ -42,8 +42,12 @@ describe 'Instance Based Subscriptions' do
     @cp.refresh_pools(@owner['key'])
     @pools = @cp.list_pools :owner => @owner.id, \
       :product => @instance_product.id
-    @pools.size.should == 1
-    @instance_pool = @pools[0]
+    @pools.size.should == 2
+    instance_pools = @pools.reject do |p|
+      p['attributes'].any? { |attr| attr['name'] == 'unmapped_guests_only' }
+    end
+    instance_pools.size.should == 1
+    @instance_pool = instance_pools.first
     @instance_pool.quantity.should == 20
   end
 

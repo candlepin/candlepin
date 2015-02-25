@@ -15,7 +15,7 @@
 
 package org.candlepin.config;
 
-import static org.candlepin.common.config.ConfigurationPrefixes.*;
+import static org.candlepin.common.config.ConfigurationPrefixes.JPA_CONFIG_PREFIX;
 
 import org.candlepin.pinsetter.tasks.ActiveEntitlementJob;
 import org.candlepin.pinsetter.tasks.CancelJobJob;
@@ -28,6 +28,7 @@ import org.candlepin.pinsetter.tasks.ImportRecordJob;
 import org.candlepin.pinsetter.tasks.JobCleaner;
 import org.candlepin.pinsetter.tasks.StatisticHistoryTask;
 import org.candlepin.pinsetter.tasks.SweepBarJob;
+import org.candlepin.pinsetter.tasks.UnmappedGuestEntitlementCleanerJob;
 import org.candlepin.pinsetter.tasks.UnpauseJob;
 
 import org.apache.commons.lang.StringUtils;
@@ -101,12 +102,15 @@ public class ConfigProperties {
 
     private static final String[] DEFAULT_TASK_LIST = new String[]{
         CertificateRevocationListTask.class.getName(),
-        JobCleaner.class.getName(), ImportRecordJob.class.getName(),
+        JobCleaner.class.getName(),
+        ImportRecordJob.class.getName(),
         StatisticHistoryTask.class.getName(),
         CancelJobJob.class.getName(), ExpiredPoolsJob.class.getName(),
         UnpauseJob.class.getName(), SweepBarJob.class.getName(),
         ExportCleaner.class.getName(), ActiveEntitlementJob.class.getName(),
-        CleanupCheckInsJob.class.getName(), CleanupGuestIdsCheckInsJob.class.getName()};
+        CleanupCheckInsJob.class.getName(), CleanupGuestIdsCheckInsJob.class.getName(),
+        UnmappedGuestEntitlementCleanerJob.class.getName(),
+    };
 
     public static final String SYNC_WORK_DIR = "candlepin.sync.work_dir";
     public static final String CONSUMER_FACTS_MATCHER = "candlepin.consumer.facts.match_regex";

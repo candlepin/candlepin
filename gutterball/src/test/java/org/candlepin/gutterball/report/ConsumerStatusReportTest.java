@@ -178,9 +178,9 @@ public class ConsumerStatusReportTest {
     }
 
     @Test
-    public void testDefaultResultSetContainsCustomMap() {
+    public void testDefaultResultSetContainsCustomDto() {
         MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
-        when(params.containsKey("custom")).thenReturn(false);
+        when(params.containsKey("custom_results")).thenReturn(false);
 
         List<Compliance> complianceList = new LinkedList<Compliance>();
         complianceList.add(TestUtils.createComplianceSnapshot(new Date(), "abcd", "an-owner", "valid",
@@ -202,8 +202,8 @@ public class ConsumerStatusReportTest {
     @Test
     public void testCustomResultSetContainsComplianceObjects() {
         MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
-        when(params.containsKey("custom")).thenReturn(true);
-        when(params.getFirst("custom")).thenReturn("1");
+        when(params.containsKey("custom_results")).thenReturn(true);
+        when(params.getFirst("custom_results")).thenReturn("1");
 
         List<Compliance> complianceList = new LinkedList<Compliance>();
         complianceList.add(TestUtils.createComplianceSnapshot(new Date(), "abcd", "an-owner", "valid"));

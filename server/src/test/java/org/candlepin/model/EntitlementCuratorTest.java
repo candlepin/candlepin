@@ -21,6 +21,7 @@ import org.candlepin.common.paging.PageRequest;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -50,7 +51,6 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     private Owner owner;
     private Consumer consumer;
     private Environment environment;
-    private Date overlappingDate;
     private Date futureDate;
     private Date pastDate;
     private Product parentProduct;
@@ -95,7 +95,6 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
             secondCertificate);
         entitlementCurator.create(secondEntitlement);
 
-        overlappingDate = createDate(2010, 2, 1);
         futureDate = createDate(2050, 1, 1);
         pastDate = createDate(1998, 1, 1);
 
@@ -525,6 +524,55 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         Entitlement result = entitlementCurator.findUpstreamEntitlementForStack(
             consumer, stackingId);
         assertNull(result);
+    }
+
+    @Test
+    public void findEntitlementsByPoolAttributes() {
+        Owner owner1 = createOwner();
+        ownerCurator.create(owner1);
+
+        Owner owner2 = createOwner();
+        ownerCurator.create(owner2);
+
+        Product product = TestUtil.createProduct();
+
+        Pool p1Attributes = TestUtil.createPool(owner1, product);
+        Pool p1NoAttributes = TestUtil.createPool(owner1, product);
+
+        Pool p2Attributes = TestUtil.createPool(owner2, product);
+        Pool p2NoAttributes = TestUtil.createPool(owner2, product);
+        Pool p2BadAttributes = TestUtil.createPool(owner2, product);
+
+        p1Attributes.addAttribute(new PoolAttribute("x", "true"));
+        p2Attributes.addAttribute(new PoolAttribute("x", "true"));
+        p2BadAttributes.addAttribute(new PoolAttribute("x", "false"));
+
+        poolCurator.create(p1Attributes);
+        poolCurator.create(p1NoAttributes);
+        poolCurator.create(p2Attributes);
+        poolCurator.create(p2NoAttributes);
+        poolCurator.create(p2BadAttributes);
+
+        Entitlement e1 = createEntitlement(owner, consumer, p1Attributes,
+            createEntitlementCertificate("key", "certificate"));
+        entitlementCurator.create(e1);
+
+
+        Entitlement e2 = createEntitlement(owner, consumer, p2Attributes,
+            createEntitlementCertificate("key", "certificate"));
+        entitlementCurator.create(e2);
+
+        Entitlement eBadAttributes = createEntitlement(owner, consumer, p2NoAttributes,
+            createEntitlementCertificate("key", "certificate"));
+        entitlementCurator.create(eBadAttributes);
+
+        Entitlement eNoAttributes = createEntitlement(owner, consumer, p2BadAttributes,
+            createEntitlementCertificate("key", "certificate"));
+        entitlementCurator.create(eNoAttributes);
+
+        List<Entitlement> results = entitlementCurator.findByPoolAttribute("x", "true");
+
+        assertThat(results, Matchers.hasItems(e1, e2));
     }
 
     private Entitlement bind(Consumer consumer, Pool pool) {

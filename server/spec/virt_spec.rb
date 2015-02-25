@@ -63,6 +63,9 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
   it 'should list host restricted pool only for its guests' do
     # Other guest shouldn't be able to see the virt sub-pool:
     pools = @guest2_client.list_pools :consumer => @guest2['uuid']
+    # unmapped guest show 2 base and 2 unmapped guest pools
+    pools.should have(4).things
+    filter_unmapped_guest_pools(pools)
     pools.should have(2).things
   end
 
@@ -81,14 +84,17 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
     @cp.create_subscription(@owner['key'], arch_virt_product.id, 10)
     @cp.refresh_pools(@owner['key'])
     arch_virt_pools = @user.list_pools(:owner => @owner.id, :product => arch_virt_product.id)
-    arch_virt_pool = arch_virt_pools[0]
+    #unmapped guest pool not part of test
+    arch_virt_pool = filter_unmapped_guest_pools(arch_virt_pools)[0]
 
     @host1_client.consume_pool(arch_virt_pool['id'], {:quantity => 1})[0]
     @cp.refresh_pools(@owner['key'])
 
     # Find the host-restricted pool:
     pools = @guest1_client.list_pools :consumer => @guest1['uuid'], :listall => true, :product => arch_virt_product.id
-    pools.should have(2).things
+    pools.should have(3).things
+    #unmapped guest pool not part of test
+    filter_unmapped_guest_pools(pools)
     # Find the correct host-restricted subpool
     guest_pool_with_arch = pools.find_all { |i| !i['sourceConsumer'].nil? }[0]
     guest_pool_with_arch.should_not == nil
@@ -176,7 +182,7 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
     @guest1_client.list_entitlements.length.should == 0
   end
 
-  it 'should not obtain a new entitlement when guest is migrated to another host' do
+  it 'should auto-heal when guest is migrated to another host' do
 
     # create a second product in order to test bz #786730
 
@@ -190,7 +196,11 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
 
     @guest1_client.update_consumer({:installedProducts => @installed_product_list})
     @guest1_client.consume_product()
-    @guest1_client.list_entitlements.length.should == 2
+    ents = @guest1_client.list_entitlements
+    ents.length.should == 2
+    original_virt_limit_pool = ents.select do |e|
+      e['product_id'] = @virt_limit_product.id
+    end.first['pool']['id']
 
     # Add guest 2 to host 1 so we can make sure that only guest1's
     # entitlements are revoked.
@@ -203,10 +213,13 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
     # this is where the error would occur without the 786730 fix
     @host2_client.update_consumer({:guestIds => [{'guestId' => @uuid1}]})
 
-    # host-specific entitlement should not be on the guest anymore (see 768872 comment #41)
+    # The old host-specific entitlement should not be on the guest anymore (see 768872 comment #41)
+    # Instead the guest should be auto-healed for host2
     # second_product's entitlement should still be there, though.
     @guest1_client.list_entitlements(:product_id => @second_product.id).length.should == 1
-    @guest1_client.list_entitlements(:product_id => @virt_limit_product.id).length.should == 0
+    ents = @guest1_client.list_entitlements(:product_id => @virt_limit_product.id).first
+
+    ents['pool']['id'].should_not == original_virt_limit_pool
 
     # Entitlements should have remained the same for guest 2 and its host
     # is the same.
@@ -406,14 +419,16 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
 
     pools = @user.list_pools :owner => @owner.id, \
            :product => product.id
-    pools.size.should == 1
-    pool = pools[0]
+    # unmapped guest pool is also created
+    pools.size.should == 2
+    pool = filter_unmapped_guest_pools(pools)[0]
 
     host_ent = @host1_client.consume_pool(pool['id'], {:quantity => 3})[0]
     pools = @user.list_pools :owner => @owner.id, \
            :product => product.id
-    pools.size.should == 2
-    pools.each do |now_pool|
+    pools.size.should == 3
+    #unmapped guest pool not part of test
+    filter_unmapped_guest_pools(pools).each do |now_pool|
         if now_pool['id'] != pool['id']
             now_pool['quantity'].should == 3
         end
@@ -422,8 +437,9 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
     @host1_client.update_entitlement({:id => host_ent.id, :quantity => 2})
     pools = @user.list_pools :owner => @owner.id, \
            :product => product.id
-    pools.size.should == 2
-    pools.each do |now_pool|
+    pools.size.should == 3
+    #unmapped guest pool not part of test
+    filter_unmapped_guest_pools(pools).each do |now_pool|
         if now_pool['id'] != pool['id']
             now_pool['quantity'].should == 3
         end
