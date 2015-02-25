@@ -54,11 +54,10 @@ public class PoolCuratorFilterTest extends DatabaseTestFixture {
     }
 
     private Pool createSearchPools() {
-        Product searchProduct = new Product("awesomeos-server",
-                "Awesome OS Server Premium", owner);
-        searchProduct.addAttribute(new ProductAttribute("support_level",
-                "CustomSupportLevel"));
+        Product searchProduct = new Product("awesomeos-server", "Awesome OS Server Premium", owner);
+        searchProduct.addAttribute(new ProductAttribute("support_level", "CustomSupportLevel"));
         productCurator.create(searchProduct);
+
         Pool searchPool = createPoolAndSub(owner, searchProduct, 100L,
                 TestUtil.createDate(2005, 3, 2), TestUtil.createDate(2050, 3, 2));
         searchPool.addProvidedProduct(TestUtil.createProduct("101111", "Server Bits", owner));
@@ -70,7 +69,7 @@ public class PoolCuratorFilterTest extends DatabaseTestFixture {
         poolCurator.create(searchPool);
 
         // Create another we don't intend to see in the results:
-        Product hideProduct = TestUtil.createProduct(owner);
+        Product hideProduct = new Product("hidden-product", "Not-So-Awesome OS Home Edition", owner);
         productCurator.create(hideProduct);
         hidePool = createPoolAndSub(owner, hideProduct, 100L,
                 TestUtil.createDate(2005, 3, 2), TestUtil.createDate(2050, 3, 2));
@@ -82,9 +81,10 @@ public class PoolCuratorFilterTest extends DatabaseTestFixture {
 
     private void searchTest(PoolFilterBuilder filters, int expectedResults, String ... expectedIds) {
         Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
-            null, owner, null, null, false, filters,
-            req, false);
+            null, owner, null, null, false, filters, req, false
+        );
         List<Pool> results = page.getPageData();
+
         assertEquals(expectedResults, results.size());
         for (String id : expectedIds) {
             boolean found = false;

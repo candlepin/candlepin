@@ -30,6 +30,7 @@ import org.hibernate.Filter;
 import org.hibernate.LockOptions;
 import org.hibernate.Query;
 import org.hibernate.ReplicationMode;
+import org.hibernate.criterion.CriteriaSpecification;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
@@ -158,8 +159,9 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
     @SuppressWarnings("unchecked")
     @Transactional
-    public List<Pool> listAvailableEntitlementPools(Consumer c, Owner o,
-            String productId, Date activeOn, boolean activeOnly) {
+    public List<Pool> listAvailableEntitlementPools(Consumer c, Owner o, String productId,
+        Date activeOn, boolean activeOnly) {
+
         return listAvailableEntitlementPools(c, o, productId, activeOn, activeOnly,
             new PoolFilterBuilder(), null, false).getPageData();
     }
@@ -188,9 +190,10 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      */
     @SuppressWarnings("unchecked")
     @Transactional
-    public Page<List<Pool>> listAvailableEntitlementPools(Consumer c, Owner o,
-            String productId, Date activeOn, boolean activeOnly, PoolFilterBuilder filters,
-            PageRequest pageRequest, boolean postFilter) {
+    public Page<List<Pool>> listAvailableEntitlementPools(Consumer c, Owner o, String productId,
+        Date activeOn, boolean activeOnly, PoolFilterBuilder filters, PageRequest pageRequest,
+        boolean postFilter) {
+
         if (o == null && c != null) {
             o = c.getOwner();
         }
@@ -202,9 +205,10 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             log.debug("   product: " + productId);
         }
 
-        Criteria crit = createSecureCriteria();
-        crit.createAlias("product", "product");
-        crit.createAlias("providedProducts", "providedProducts");
+        Criteria crit = createSecureCriteria()
+            .createAlias("product", "product")
+            .createAlias("providedProducts", "provProd", CriteriaSpecification.LEFT_JOIN)
+            .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
 
         if (activeOnly) {
             crit.add(Restrictions.eq("activeSubscription", Boolean.TRUE));
@@ -236,7 +240,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         if (productId != null) {
             crit.add(Restrictions.or(
                 Restrictions.eq("product.productId", productId),
-                Restrictions.eq("providedProducts.productId", productId)
+                Restrictions.eq("provProd.productId", productId)
             ));
         }
 

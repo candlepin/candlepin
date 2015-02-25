@@ -37,8 +37,6 @@ import java.util.List;
  */
 public class PoolFilterBuilder extends FilterBuilder {
 
-// TODO/FIXME: This whole class is likely broken.
-
     /**
      * Add filters to search only for pools matching the given text. A number of
      * fields on the pool are searched including it's SKU, SKU product name,
@@ -55,8 +53,8 @@ public class PoolFilterBuilder extends FilterBuilder {
         textOr.add(new FilterLikeExpression("contractNumber", matches, true));
         textOr.add(new FilterLikeExpression("orderNumber", matches, true));
 
-        textOr.add(new FilterLikeExpression("providedProducts.productId", matches, true));
-        textOr.add(new FilterLikeExpression("providedProducts.name", matches, true));
+        textOr.add(new FilterLikeExpression("provProd.productId", matches, true));
+        textOr.add(new FilterLikeExpression("provProd.name", matches, true));
 
         textOr.add(Subqueries.exists(
             this.createProductAttributeCriteria(
@@ -141,35 +139,35 @@ public class PoolFilterBuilder extends FilterBuilder {
     }
 
     private DetachedCriteria createProductAttributeCriteria(String attribute, List<String> values) {
-        DetachedCriteria subquery = DetachedCriteria.forClass(ProductAttribute.class, "attr");
-        subquery.add(new FilterLikeExpression("name", attribute, false));
+        DetachedCriteria subquery = DetachedCriteria.forClass(Pool.class, "PoolI")
+            .createAlias("PoolI.product", "ProdI")
+            .createAlias("ProdI.attributes", "ProdAttrI");
 
-        // It would be nice to be able to use an 'in' restriction here, but
-        // hibernate does not support ignoring case with its 'in' restriction.
-        // We could probably roll our own, but would involve duplicating some
-        // hibernate code to achieve it.
+        subquery.add(new FilterLikeExpression("ProdAttrI.name", attribute, false));
+
         Disjunction disjunction = Restrictions.disjunction();
         for (String value : values) {
             if (value == null || value.isEmpty()) {
-                disjunction.add(Restrictions.isNull("value"));
-                disjunction.add(Restrictions.eq("value", ""));
+                disjunction.add(Restrictions.isNull("ProdAttrI.value"));
+                disjunction.add(Restrictions.eq("ProdAttrI.value", ""));
             }
             else {
-                disjunction.add(new FilterLikeExpression("value", value, true));
+                disjunction.add(new FilterLikeExpression("ProdAttrI.value", value, true));
             }
         }
 
         subquery.add(disjunction);
 
-        subquery.add(Property.forName("this.product.id").eqProperty("attr.product.id"));
-        subquery.setProjection(Projections.property("attr.id"));
+        subquery.add(Property.forName("this.id").eqProperty("PoolI.id"));
+        subquery.setProjection(Projections.property("PoolI.id"));
 
         // We don't want to match Product Attributes that have been overridden
-        DetachedCriteria overridden = DetachedCriteria.forClass(PoolAttribute.class, "pattr")
+        DetachedCriteria overridden = DetachedCriteria.forClass(PoolAttribute.class, "PoolAttrI")
             // If we're using wildcards in the name, we should block exact matches
-            .add(Restrictions.eqProperty("name", "attr.name"))
-            .setProjection(Projections.property("pattr.pool.id"));
-        subquery.add(Subqueries.propertyNotIn("id", overridden));
+            .add(Restrictions.eqProperty("PoolAttrI.name", "ProdAttrI.name"))
+            .add(Restrictions.eqProperty("PoolI.id", "PoolAttrI.pool.id"))
+            .setProjection(Projections.property("PoolAttrI.pool.id"));
+        subquery.add(Subqueries.notExists(overridden));
 
         return subquery;
     }
