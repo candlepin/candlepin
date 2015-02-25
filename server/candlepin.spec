@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.44
+Version: 0.9.45
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -394,6 +394,9 @@ fi
 
 
 %changelog
+* Wed Feb 25 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.45-1
+- Fix mistaken index copying error in liquibase xml. (dgoodwin@redhat.com)
+
 * Wed Feb 25 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.44-1
 - Allows attribute on SKU to enable or disable content for all associated
   products (wpoteat@redhat.com)
