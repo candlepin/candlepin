@@ -289,6 +289,9 @@ public class DefaultEntitlementCertServiceAdapter extends
 
         int contentCounter = 0;
         boolean enableEnvironmentFiltering = config.getBoolean(ConfigProperties.ENV_CONTENT_FILTERING);
+
+        Product skuProd = productAdapter.getProductById(ent.getPool().getProductId());
+
         for (Product prod : Collections2
             .filter(products, X509Util.PROD_FILTER_PREDICATE)) {
             result.addAll(extensionUtil.productExtensions(prod));
@@ -303,7 +306,7 @@ public class DefaultEntitlementCertServiceAdapter extends
             contentCounter += filteredContent.size();
 
             result.addAll(extensionUtil.contentExtensions(filteredContent,
-                contentPrefix, promotedContent, ent.getConsumer()));
+                contentPrefix, promotedContent, ent.getConsumer(), skuProd));
         }
 
         // For V1 certificates we're going to error out if we exceed a limit which is

@@ -18,10 +18,12 @@ import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.StringTokenizer;
 
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
@@ -409,6 +411,34 @@ public class Product extends AbstractHibernateObject implements Linkable {
 
     public static String ueberProductNameForOwner(Owner o) {
         return o.getKey() + UEBER_PRODUCT_POSTFIX;
+    }
+
+    @XmlTransient
+    public List<String> getSkuDisabledContentIds() {
+        List<String> skuDisabled = new ArrayList<String>();
+        if(this.hasAttribute("content_override_disabled") &&
+               this.getAttributeValue("content_override_disabled").length() > 0) {
+            StringTokenizer stDisable = new StringTokenizer(
+                    this.getAttributeValue("content_override_disabled"), ",");
+            while (stDisable.hasMoreElements()) {
+                skuDisabled.add((String)stDisable.nextElement());
+            }
+        }
+        return skuDisabled;
+    }
+
+    @XmlTransient
+    public List<String> getSkuEnabledContentIds() {
+        List<String> skuEnabled = new ArrayList<String>();
+        if(this.hasAttribute("content_override_enabled") &&
+               this.getAttributeValue("content_override_enabled").length() > 0) {
+            StringTokenizer stActive = new StringTokenizer(
+                    this.getAttributeValue("content_override_enabled"), ",");
+            while (stActive.hasMoreElements()) {
+                skuEnabled.add((String)stActive.nextElement());
+            }
+        }
+        return skuEnabled;
     }
 
 }

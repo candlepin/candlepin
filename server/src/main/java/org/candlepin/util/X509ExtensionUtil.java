@@ -207,12 +207,15 @@ public class X509ExtensionUtil  extends X509Util{
 
     public Set<X509ExtensionWrapper> contentExtensions(
         Collection<ProductContent> productContentList, String contentPrefix,
-        Map<String, EnvironmentContent> promotedContent, Consumer consumer) {
+        Map<String, EnvironmentContent> promotedContent, Consumer consumer, Product skuProduct) {
 
         Set<ProductContent> productContent = new HashSet<ProductContent>(productContentList);
         Set<X509ExtensionWrapper> toReturn = new LinkedHashSet<X509ExtensionWrapper>();
 
         boolean enableEnvironmentFiltering = config.getBoolean(ConfigProperties.ENV_CONTENT_FILTERING);
+
+        List<String> skuDisabled = skuProduct.getSkuDisabledContentIds();
+        List<String> skuEnabled = skuProduct.getSkuEnabledContentIds();
 
         // For V1 certificates we're going to error out if we exceed a limit which is
         // likely going to generate a certificate too large for the CDN, and return an
@@ -252,10 +255,19 @@ public class X509ExtensionUtil  extends X509Util{
                 OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_GPG_URL_KEY), false,
                 pc.getContent().getGpgUrl()));
 
-            // Check if we should override the enabled flag due to setting on promoted
-            // content:
             Boolean enabled = pc.getEnabled();
             log.debug("default enabled flag = " + enabled);
+
+            // sku level content enable override. if on both lists, active wins.
+            if (skuDisabled.contains(pc.getContent().getId())) {
+                enabled = false;
+            }
+            if (skuEnabled.contains(pc.getContent().getId())) {
+                enabled = true;
+            }
+
+            // Check if we should override the enabled flag due to setting on promoted
+            // content:
             if ((consumer.getEnvironment() != null) && enableEnvironmentFiltering) {
                 // we know content has been promoted at this point:
                 Boolean enabledOverride = promotedContent.get(

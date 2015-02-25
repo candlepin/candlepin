@@ -15,6 +15,7 @@
 package org.candlepin.util;
 
 import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.common.config.Configuration;
@@ -27,6 +28,7 @@ import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
+import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.X509V3ExtensionUtil.NodePair;
 import org.candlepin.util.X509V3ExtensionUtil.PathNode;
@@ -47,6 +49,7 @@ import java.util.Set;
 public class X509V3ExtensionUtilTest {
     private Configuration config;
     private EntitlementCurator ec;
+    private ProductServiceAdapter psa;
     private X509V3ExtensionUtil util;
 
 
@@ -54,7 +57,8 @@ public class X509V3ExtensionUtilTest {
     public void init() {
         config = mock(Configuration.class);
         ec = mock(EntitlementCurator.class);
-        util = new X509V3ExtensionUtil(config, ec);
+        psa = mock(ProductServiceAdapter.class);
+        util = new X509V3ExtensionUtil(config, ec, psa);
     }
 
     @Test
@@ -135,10 +139,12 @@ public class X509V3ExtensionUtilTest {
         Product p = new Product(engProdId, "Eng Product 1000");
         p.setAttribute("brand_type", "OS");
         Set<Product> prods = new HashSet<Product>(Arrays.asList(p));
-        Pool pool = TestUtil.createPool(new Product("mkt", "MKT SKU"));
+        Product mktProd = new Product("mkt", "MKT SKU");
+        Pool pool = TestUtil.createPool(mktProd);
         pool.getBranding().add(new Branding(engProdId, "OS", brandedName));
         Consumer consumer = new Consumer();
         Entitlement e = new Entitlement(pool, consumer, 10);
+        when(psa.getProductById(eq("mkt"))).thenReturn(mktProd);
 
         List<org.candlepin.json.model.Product> certProds = util.createProducts(prods, "",
             new HashMap<String, EnvironmentContent>(),  new Consumer(), e);
@@ -155,7 +161,8 @@ public class X509V3ExtensionUtilTest {
         Product p = new Product(engProdId, "Eng Product 1000");
         p.setAttribute("brand_type", "OS");
         Set<Product> prods = new HashSet<Product>(Arrays.asList(p));
-        Pool pool = TestUtil.createPool(new Product("mkt", "MKT SKU"));
+        Product mktProd = new Product("mkt", "MKT SKU");
+        Pool pool = TestUtil.createPool(mktProd);
         pool.getBranding().add(new Branding(engProdId, "OS", brandedName));
         pool.getBranding().add(new Branding(engProdId, "OS", "another brand name"));
         pool.getBranding().add(new Branding(engProdId, "OS", "number 3"));
@@ -165,6 +172,7 @@ public class X509V3ExtensionUtilTest {
         }
         Consumer consumer = new Consumer();
         Entitlement e = new Entitlement(pool, consumer, 10);
+        when(psa.getProductById(eq("mkt"))).thenReturn(mktProd);
 
         List<org.candlepin.json.model.Product> certProds = util.createProducts(prods, "",
             new HashMap<String, EnvironmentContent>(),  new Consumer(), e);

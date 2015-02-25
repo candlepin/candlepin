@@ -29,8 +29,10 @@ import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.pki.X509ByteExtensionWrapper;
 import org.candlepin.pki.X509ExtensionWrapper;
+import org.candlepin.service.ProductServiceAdapter;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -70,6 +72,7 @@ public class X509V3ExtensionUtil extends X509Util {
     private static Logger log = LoggerFactory.getLogger(X509V3ExtensionUtil.class);
     private Configuration config;
     private EntitlementCurator entCurator;
+    private ProductServiceAdapter prodAdapter;
     private String thisVersion = "3.2";
 
     private long pathNodeId = 0;
@@ -77,10 +80,12 @@ public class X509V3ExtensionUtil extends X509Util {
     private static final Object END_NODE = new Object();
     private static boolean treeDebug = false;
     @Inject
-    public X509V3ExtensionUtil(Configuration config, EntitlementCurator entCurator) {
+    public X509V3ExtensionUtil(Configuration config, EntitlementCurator entCurator,
+            ProductServiceAdapter prodAdapter) {
         // Output everything in UTC
         this.config = config;
         this.entCurator = entCurator;
+        this.prodAdapter = prodAdapter;
     }
 
     public Set<X509ExtensionWrapper> getExtensions(Entitlement ent,
@@ -320,7 +325,7 @@ public class X509V3ExtensionUtil extends X509Util {
         toReturn.setArchitectures(archList);
         toReturn.setContent(createContent(filterProductContent(product, ent,
                 entitledProductIds),
-            contentPrefix, promotedContent, consumer, product));
+            contentPrefix, promotedContent, consumer, product, ent));
 
         return toReturn;
     }
@@ -358,7 +363,7 @@ public class X509V3ExtensionUtil extends X509Util {
     public List<Content> createContent(
         Set<ProductContent> productContent, String contentPrefix,
         Map<String, EnvironmentContent> promotedContent,
-        Consumer consumer, Product product) {
+        Consumer consumer, Product product, Entitlement ent) {
 
         List<Content> toReturn = new ArrayList<Content>();
 
@@ -367,6 +372,10 @@ public class X509V3ExtensionUtil extends X509Util {
         // Return only the contents that are arch appropriate
         Set<ProductContent> archApproriateProductContent = filterContentByContentArch(
             productContent, consumer, product);
+
+        Product skuProd = prodAdapter.getProductById(ent.getPool().getProductId());
+        List<String> skuDisabled = skuProd.getSkuDisabledContentIds();
+        List<String> skuEnabled = skuProd.getSkuEnabledContentIds();
 
         for (ProductContent pc : archApproriateProductContent) {
             Content content = new Content();
@@ -407,9 +416,17 @@ public class X509V3ExtensionUtil extends X509Util {
             }
             content.setArches(archesList);
 
+            Boolean enabled = pc.getEnabled();
+            // sku level content enable override. if on both lists, active wins.
+            if (skuDisabled.contains(pc.getContent().getId())) {
+                enabled = false;
+            }
+            if (skuEnabled.contains(pc.getContent().getId())) {
+                enabled = true;
+            }
+
             // Check if we should override the enabled flag due to setting on promoted
             // content
-            Boolean enabled = pc.getEnabled();
             if ((consumer.getEnvironment() != null) && enableEnvironmentFiltering) {
                 // we know content has been promoted at this point
                 Boolean enabledOverride = promotedContent.get(

@@ -128,18 +128,18 @@ public class DefaultEntitlementCertServiceAdapterTest {
     private static final String ARCH_LABEL = "x86_64";
 
     private DefaultEntitlementCertServiceAdapter certServiceAdapter;
+    private X509V3ExtensionUtil v3extensionUtil;
 
     @Inject private PKIUtility realPKI;
-    @Inject private ProductServiceAdapter productAdapter;
     @Inject private EntitlementCurator entCurator;
     @Inject private Configuration config;
     @Inject private X509ExtensionUtil extensionUtil;
-    @Inject private X509V3ExtensionUtil v3extensionUtil;
 
     @Mock private CertificateSerialCurator serialCurator;
     @Mock private KeyPairCurator keyPairCurator;
     @Mock private PKIUtility mockedPKI;
     @Mock private Consumer consumer;
+    @Mock private ProductServiceAdapter productAdapter;
 
     private Product product;
     private Product largeContentProduct;
@@ -199,6 +199,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         );
         injector.injectMembers(this);
 
+        v3extensionUtil = new X509V3ExtensionUtil(config, entCurator, productAdapter);
         certServiceAdapter = new DefaultEntitlementCertServiceAdapter(
             mockedPKI, extensionUtil, v3extensionUtil,
             mock(EntitlementCertificateCurator.class), keyPairCurator,
@@ -283,6 +284,10 @@ public class DefaultEntitlementCertServiceAdapterTest {
         largeContentEntitlement.setOwner(owner);
 
         product.setContent(Collections.singleton(content));
+
+        when(productAdapter.getProductById(eq(product.getId()))).thenReturn(product);
+        when(productAdapter.getProductById(eq(largeContentProduct.getId())))
+            .thenReturn(largeContentProduct);
     }
 
     private Content createContent(String name, String id, String label,
@@ -366,7 +371,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     public void testContentExtentionCreation() throws CertificateSizeException {
         Set<X509ExtensionWrapper> contentExtensions = extensionUtil
             .contentExtensions(product.getProductContent(), null,
-                new HashMap<String, EnvironmentContent>(), entitlement.getConsumer());
+                new HashMap<String, EnvironmentContent>(), entitlement.getConsumer(), product);
         Map<String, X509ExtensionWrapper> encodedContent = getEncodedContent(
             contentExtensions);
         assertTrue(isEncodedContentValid(encodedContent));
@@ -376,7 +381,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         content.setMetadataExpire(null);
         contentExtensions = extensionUtil.contentExtensions(
             product.getProductContent(), "",
-            new HashMap<String, EnvironmentContent>(), entitlement.getConsumer());
+            new HashMap<String, EnvironmentContent>(), entitlement.getConsumer(), product);
         encodedContent = getEncodedContent(contentExtensions);
         assertTrue(isEncodedContentValid(encodedContent));
         assertFalse(encodedContent.containsKey(CONTENT_METADATA_EXPIRE.toString()));
@@ -396,7 +401,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         promotedContent.put(content.getId(), e.getEnvironmentContent().iterator().next());
         Set<X509ExtensionWrapper> contentExtensions = extensionUtil
             .contentExtensions(product.getProductContent(), null,
-                promotedContent, entitlement.getConsumer());
+                promotedContent, entitlement.getConsumer(), product);
         Map<String, X509ExtensionWrapper> encodedContent = getEncodedContent(
             contentExtensions);
         assertTrue(isEncodedContentValid(encodedContent));
@@ -408,7 +413,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     public void testContentRequiredTagsExtention()  throws CertificateSizeException {
         Set<X509ExtensionWrapper> contentExtensions = extensionUtil
             .contentExtensions(product.getProductContent(), null,
-                new HashMap<String, EnvironmentContent>(), entitlement.getConsumer());
+                new HashMap<String, EnvironmentContent>(), entitlement.getConsumer(), product);
         Map<String, X509ExtensionWrapper> encodedContent = getEncodedContent(
             contentExtensions);
         assertTrue(isEncodedContentValid(encodedContent));
@@ -418,7 +423,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         content.setRequiredTags(null);
         contentExtensions = extensionUtil.contentExtensions(
             product.getProductContent(), "",
-            new HashMap<String, EnvironmentContent>(), entitlement.getConsumer());
+            new HashMap<String, EnvironmentContent>(), entitlement.getConsumer(), product);
         encodedContent = getEncodedContent(contentExtensions);
         assertTrue(isEncodedContentValid(encodedContent));
         assertFalse(encodedContent.containsKey(REQUIRED_TAGS.toString()));
@@ -427,7 +432,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         content.setRequiredTags("");
         contentExtensions = extensionUtil.contentExtensions(
             product.getProductContent(), "",
-            new HashMap<String, EnvironmentContent>(), entitlement.getConsumer());
+            new HashMap<String, EnvironmentContent>(), entitlement.getConsumer(), product);
         encodedContent = getEncodedContent(contentExtensions);
         assertTrue(isEncodedContentValid(encodedContent));
         assertFalse(encodedContent.containsKey(REQUIRED_TAGS.toString()));
@@ -1315,6 +1320,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         inheritedArchProduct.setContent(Collections.singleton(noArchContent));
         products.add(inheritedArchProduct);
+        when(productAdapter.getProductById(eq(inheritedArchProduct.getId()))).thenReturn(inheritedArchProduct);
         setupEntitlements(ARCH_LABEL, "3.2");
 
         Set<X509ExtensionWrapper> extensions =
@@ -1679,6 +1685,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         when(entitlement.getConsumer().getFact("system.certificate_version"))
             .thenReturn("3.2");
         when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
+        when(productAdapter.getProductById(eq(extremeProduct.getId()))).thenReturn(extremeProduct);
 
         certServiceAdapter.prepareV3Extensions(entitlement, "prefix", null);
         Set<X509ByteExtensionWrapper> byteExtensions =
