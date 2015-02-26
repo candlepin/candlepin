@@ -16,7 +16,9 @@ package org.candlepin.service.impl;
 
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.pki.PKIReader;
 import org.candlepin.pki.impl.BouncyCastlePKIReader;
 import org.candlepin.service.ProductServiceAdapter;
@@ -35,6 +37,8 @@ import javax.inject.Inject;
  */
 public class ProductCertCreationTest extends DatabaseTestFixture {
     @Inject private ProductServiceAdapter productAdapter;
+    @Inject private ProductCurator productCurator;
+    @Inject private OwnerCurator ownerCurator;
 
     @Override
     protected Module getGuiceOverrideModule() {
@@ -59,14 +63,19 @@ public class ProductCertCreationTest extends DatabaseTestFixture {
     public void validProduct() {
         Owner owner = new Owner("Example-Corporation");
         Product product = new Product("50", "Test Product", owner, "Standard", "1", "x86_64", "Base");
-        ProductCertificate cert = createCert(product);
 
+        this.ownerCurator.create(owner);
+
+        ProductCertificate cert = createCert(product);
         Assert.assertEquals(product, cert.getProduct());
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void noHashCreation() {
         Owner owner = new Owner("Example-Corporation");
+
+        this.ownerCurator.create(owner);
+
         createCert(new Product("thin", "Not Much Here", owner));
     }
 
@@ -74,11 +83,14 @@ public class ProductCertCreationTest extends DatabaseTestFixture {
         Owner owner = new Owner("Example-Corporation");
         Product product = new Product("50", "Test Product", owner, "Standard", "1", "x86_64", "Base");
 
+        this.ownerCurator.create(owner);
+
         return createCert(product);
     }
 
     private ProductCertificate createCert(Product product) {
-        this.productAdapter.createProduct(product);
+        this.productCurator.create(product);
+
         return this.productAdapter.getProductCertificate(product);
     }
 

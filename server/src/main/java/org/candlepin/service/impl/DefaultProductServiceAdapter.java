@@ -90,13 +90,14 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
 
     @Override
     public Product createProduct(Product product) {
-        if (prodCurator.find(product.getId()) != null) {
-            throw new BadRequestException("product with ID " + product.getId() +
+        // TODO: This may not actually work properly with the change from getId to getProductId
+        if (prodCurator.find(product.getProductId()) != null) {
+            throw new BadRequestException("product with ID " + product.getProductId() +
                 " already exists");
         }
         else {
-            if (product.getId() == null || product.getId().trim().equals("")) {
-                product.setId(idGenerator.generateId());
+            if (product.getProductId() == null || product.getProductId().trim().equals("")) {
+                product.setProductId(idGenerator.generateId());
             }
             Product newProduct = prodCurator.create(product);
             return newProduct;
@@ -138,19 +139,18 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
         throws GeneralSecurityException, IOException {
 
         KeyPair keyPair = pki.generateNewKeyPair();
+        Set<X509ExtensionWrapper> extensions = this.extensionUtil.productExtensions(product);
 
-        Set<X509ExtensionWrapper> extensions = this.extensionUtil
-            .productExtensions(product);
-
-        BigInteger serial = BigInteger.valueOf(product.getId().hashCode())
-            .abs();
+        // TODO: Should this use the RH product ID, or our internal object ID?
+        BigInteger serial = BigInteger.valueOf(product.getProductId().hashCode()).abs();
 
         Calendar future = Calendar.getInstance();
         future.add(Calendar.YEAR, 10);
 
-        X509Certificate x509Cert = this.pki.createX509Certificate("CN=" +
-            product.getId(), extensions, null, new Date(), future.getTime(), keyPair,
-            serial, null);
+        X509Certificate x509Cert = this.pki.createX509Certificate(
+            "CN=" + product.getProductId(), extensions, null, new Date(), future.getTime(), keyPair,
+            serial, null
+        );
 
         ProductCertificate cert = new ProductCertificate();
         cert.setKeyAsBytes(pki.getPemEncoded(keyPair.getPrivate()));
