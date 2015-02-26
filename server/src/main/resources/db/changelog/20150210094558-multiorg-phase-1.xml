@@ -19,13 +19,7 @@
             <column name="created" type="${timestamp.type}"/>
             <column name="updated" type="${timestamp.type}"/>
             <column name="multiplier" type="int"/>
-            <column name="owner_id" type="varchar(32)">
-                <constraints
-                    nullable="false"
-                    foreignKeyName="cpo_products_fk1"
-                    references="cp_owner(id)"
-                />
-            </column>
+            <column name="owner_id" type="varchar(32)"/>
             <column name="product_id" type="varchar(32)"
                 remarks="RH product ID; not to be confused with cp_products.id">
                 <constraints nullable="false"/>
@@ -34,6 +28,7 @@
                 <constraints nullable="false"/>
             </column>
         </createTable>
+        <addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="cpo_products" baseTableSchemaName="public" constraintName="cpo_products_fk1" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
     </changeSet>
 
     <changeSet id="20150210094558-2" author="crog">

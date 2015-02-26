@@ -30,6 +30,9 @@ import org.candlepin.common.exceptions.CandlepinException;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.common.exceptions.IseException;
 import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.common.paging.Page;
+import org.candlepin.common.paging.PageRequest;
+import org.candlepin.common.paging.Paginate;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.guice.NonTransactional;
 import org.candlepin.model.Consumer;
@@ -56,6 +59,8 @@ import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.PermissionBlueprintCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolFilterBuilder;
+import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Statistic;
 import org.candlepin.model.StatisticCurator;
 import org.candlepin.model.Subscription;
@@ -64,9 +69,6 @@ import org.candlepin.model.UeberCertificateGenerator;
 import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
-import org.candlepin.common.paging.Page;
-import org.candlepin.common.paging.PageRequest;
-import org.candlepin.common.paging.Paginate;
 import org.candlepin.pinsetter.tasks.HealEntireOrgJob;
 import org.candlepin.pinsetter.tasks.RefreshPoolsJob;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
@@ -158,6 +160,7 @@ public class OwnerResource {
     private CalculatedAttributesUtil calculatedAttributesUtil;
     private ContentOverrideValidator contentOverrideValidator;
     private ServiceLevelValidator serviceLevelValidator;
+    private ProductCurator prodCurator;
 
     private static final int FEED_LIMIT = 1000;
 
@@ -182,7 +185,7 @@ public class OwnerResource {
         EnvironmentCurator envCurator, CalculatedAttributesUtil calculatedAttributesUtil,
         ContentOverrideValidator contentOverrideValidator,
         ServiceLevelValidator serviceLevelValidator,
-        OwnerServiceAdapter ownerService) {
+        OwnerServiceAdapter ownerService, ProductCurator productCurator) {
 
         this.ownerCurator = ownerCurator;
         this.ownerInfoCurator = ownerInfoCurator;
@@ -210,6 +213,7 @@ public class OwnerResource {
         this.contentOverrideValidator = contentOverrideValidator;
         this.serviceLevelValidator = serviceLevelValidator;
         this.ownerService = ownerService;
+        this.prodCurator = productCurator;
     }
 
     /**
@@ -334,6 +338,7 @@ public class OwnerResource {
     private void cleanupAndDelete(Owner owner, boolean revokeCerts) {
         log.info("Cleaning up owner: " + owner);
         List<Consumer> consumers = consumerCurator.listByOwner(owner);
+
         for (Consumer c : consumers) {
             log.info("Removing all entitlements for consumer: " + c);
 
@@ -399,6 +404,10 @@ public class OwnerResource {
             log.info("Deleting permission: " + perm.getAccess());
             perm.getRole().getPermissions().remove(perm);
             permissionCurator.delete(perm);
+        }
+
+        for (Product p : prodCurator.listByOwner(owner)) {
+            prodCurator.delete(p);
         }
 
         log.info("Deleting owner: " + owner);

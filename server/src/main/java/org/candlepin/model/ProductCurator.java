@@ -80,6 +80,13 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
             .add(Restrictions.eq("productId", id)).uniqueResult();
     }
 
+    @SuppressWarnings("unchecked")
+    @Transactional
+    public List<Product> listByOwner(Owner owner) {
+        return currentSession().createCriteria(Product.class)
+            .add(Restrictions.eq("owner", owner)).list();
+    }
+
     /**
      * Create the given product if it does not already exist, otherwise update
      * existing product.

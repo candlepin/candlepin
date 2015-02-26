@@ -167,7 +167,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         // Trigger the refresh:
         poolManager.getRefresher().add(owner).run();
         List<Pool> pools = poolCurator.listByOwnerAndProduct(owner,
-            prod.getId());
+            prod.getProductId());
         assertEquals(1, pools.size());
         Pool newPool = pools.get(0);
 
@@ -220,7 +220,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         poolManager.getRefresher().add(owner).run();
 
         List<Pool> pools = poolCurator.listByOwnerAndProduct(owner,
-            prod.getId());
+            prod.getProductId());
         assertEquals(1, pools.size());
         Pool newPool = pools.get(0);
         String poolId = newPool.getId();
@@ -443,6 +443,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         Product p2 = TestUtil.createProduct(owner);
         p2.setAttribute("cores", "12");
+        productCurator.create(p2);
         Pool pool2 = TestUtil.createPool(owner, p2);
         poolCurator.create(pool2);
 
@@ -674,7 +675,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         securityInterceptor.enable();
 
         List<Pool> pools = ownerResource.listPools(owner.getKey(), c.getUuid(), null,
-            p.getId(), true, null, null, new ArrayList<KeyValueParameter>(), principal, null);
+            p.getProductId(), true, null, null, new ArrayList<KeyValueParameter>(), principal, null);
         assertEquals(1, pools.size());
         Pool returnedPool = pools.get(0);
         assertNotNull(returnedPool.getCalculatedAttributes());
@@ -866,7 +867,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             null, akc, null, null, i18n, null, null, null,
             null, null, null, null, null, null, null,
             null, null, null, null, null, null, null, contentOverrideValidator,
-            serviceLevelValidator, null);
+            serviceLevelValidator, null, null);
         or.createActivationKey("testOwner", ak);
     }
 
@@ -944,7 +945,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             null, null, null, i18n, es, null, null, null, importer, null, null,
             null, importRecordCurator, null, null, null, null, null,
             null, null, null, contentOverrideValidator,
-            serviceLevelValidator, null);
+            serviceLevelValidator, null, null);
 
         MultipartInput input = mock(MultipartInput.class);
         InputPart part = mock(InputPart.class);
@@ -980,7 +981,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             null, null, null, i18n, es, null, null, null, null, null, ec,
             null, importRecordCurator, null, null, null, null, null,
             null, null, null, contentOverrideValidator,
-            serviceLevelValidator, null);
+            serviceLevelValidator, null, null);
 
         ExporterMetadata metadata = new ExporterMetadata();
         when(ec.lookupByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, owner))
@@ -1004,7 +1005,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             null, null, null, i18n, es, null, null, null, importer, null, null,
             null, importRecordCurator, null, null, null, null, null,
             null, null, null, contentOverrideValidator,
-            serviceLevelValidator, null);
+            serviceLevelValidator, null, null);
 
         MultipartInput input = mock(MultipartInput.class);
         InputPart part = mock(InputPart.class);
@@ -1045,7 +1046,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerResource ownerres = new OwnerResource(oc, null,
             null, null, null, i18n, null, null, null, null, null, null, null,
             null, null, null, null, null, null, null, null, null, null,
-            contentOverrideValidator, serviceLevelValidator, null);
+            contentOverrideValidator, serviceLevelValidator, null, null);
 
         when(oc.lookupByKey(eq("admin"))).thenReturn(owner);
         when(owner.getUpstreamConsumer()).thenReturn(upstream);
