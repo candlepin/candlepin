@@ -16,8 +16,7 @@ package org.candlepin.model;
 
 
 import static org.hamcrest.collection.IsCollectionContaining.hasItem;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 
 import org.candlepin.test.DatabaseTestFixture;
 
@@ -33,10 +32,13 @@ import javax.inject.Inject;
  */
 public class ContentTest extends DatabaseTestFixture {
     @Inject private ContentCurator contentCurator;
+    @Inject private OwnerCurator ownerCurator;
 
     @Test
     public void testContent() {
         Owner owner = new Owner("Example-Corporation");
+        ownerCurator.create(owner);
+
         String  contentHash = String.valueOf(
             Math.abs(Long.valueOf("test-content".hashCode())));
         Content content = new Content(owner, "test-content", contentHash,
@@ -62,6 +64,7 @@ public class ContentTest extends DatabaseTestFixture {
     @Test
     public void testContentWithArches() {
         Owner owner = new Owner("Example-Corporation");
+        ownerCurator.create(owner);
         String  contentHash = String.valueOf(
             Math.abs(Long.valueOf("test-content-arches".hashCode())));
 
@@ -79,6 +82,7 @@ public class ContentTest extends DatabaseTestFixture {
     @Test
     public void testCreateOrUpdateWithNewLabel() {
         Owner owner = new Owner("Example-Corporation");
+        ownerCurator.create(owner);
 
         Content content = new Content(owner, "Test Content", "100",
             "test-content-label", "yum", "test-vendor",

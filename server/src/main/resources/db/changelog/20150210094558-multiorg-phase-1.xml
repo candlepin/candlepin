@@ -139,9 +139,8 @@
     <changeSet id="20150210094558-7" author="crog">
         <createTable tableName="cpo_content_modified_products">
             <column name="content_id" type="varchar(32)">
-                <constraints primaryKey="true" primaryKeyName="cpo_contentmodprod_pk"/>
+                <constraints nullable="false"/>
             </column>
-            <!-- TODO: This should be a reference to a proper product ID -->
             <column name="element" type="varchar(255)"/>
         </createTable>
     </changeSet>
