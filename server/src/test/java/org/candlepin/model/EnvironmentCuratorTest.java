@@ -30,6 +30,7 @@ import javax.inject.Inject;
 
 public class EnvironmentCuratorTest extends DatabaseTestFixture {
     @Inject private OwnerCurator ownerCurator;
+    @Inject private ContentCurator contentCurator;
     @Inject private EnvironmentContentCurator envContentCurator;
     @Inject private EnvironmentCurator envCurator;
 
@@ -84,6 +85,8 @@ public class EnvironmentCuratorTest extends DatabaseTestFixture {
             "gpg.content.com",
             "arches"
         );
+
+        contentCurator.create(content);
 
         envContentCurator.create(new EnvironmentContent(environment, content, true));
 

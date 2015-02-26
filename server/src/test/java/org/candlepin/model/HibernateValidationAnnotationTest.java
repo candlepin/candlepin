@@ -218,7 +218,7 @@ public class HibernateValidationAnnotationTest {
         Map<Field, Matcher<AnnotatedElement>> fm = new HashMap<Field, Matcher<AnnotatedElement>>();
         fm.put(EnvironmentContent.class.getDeclaredField("id"), notNull);
         fm.put(EnvironmentContent.class.getDeclaredField("environment"), notNull);
-        fm.put(EnvironmentContent.class.getDeclaredField("contentId"), sizeAndNotNull);
+        fm.put(EnvironmentContent.class.getDeclaredField("content"), notNull);
         runMap(fm);
     }
 
@@ -320,14 +320,11 @@ public class HibernateValidationAnnotationTest {
         fm.put(Pool.class.getDeclaredField("quantity"), notNull);
         fm.put(Pool.class.getDeclaredField("startDate"), notNull);
         fm.put(Pool.class.getDeclaredField("endDate"), notNull);
-        fm.put(Pool.class.getDeclaredField("productId"), sizeAndNotNull);
-        fm.put(Pool.class.getDeclaredField("derivedProductId"), size);
+        fm.put(Pool.class.getDeclaredField("product"), notNull);
         fm.put(Pool.class.getDeclaredField("restrictedToUsername"), size);
         fm.put(Pool.class.getDeclaredField("contractNumber"), size);
         fm.put(Pool.class.getDeclaredField("accountNumber"), size);
         fm.put(Pool.class.getDeclaredField("orderNumber"), size);
-        fm.put(Pool.class.getDeclaredField("productName"), size);
-        fm.put(Pool.class.getDeclaredField("derivedProductName"), size);
         runMap(fm);
     }
 
