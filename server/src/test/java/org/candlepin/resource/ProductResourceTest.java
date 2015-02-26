@@ -27,6 +27,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Subscription;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
@@ -49,6 +50,7 @@ public class ProductResourceTest extends DatabaseTestFixture {
     @Inject private ProductCertificateCurator productCertificateCurator;
     @Inject private ContentCurator contentCurator;
     @Inject private ProductResource productResource;
+    @Inject private OwnerCurator ownerCurator;
 
     private Product createProduct(Owner owner) {
         String label = "test_product";
@@ -64,7 +66,7 @@ public class ProductResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testCreateProductResource() {
-        Owner owner = new Owner("Example-Corporation");
+        Owner owner = ownerCurator.create(new Owner("Example-Corporation"));
 
         Product toSubmit = createProduct(owner);
         productResource.createProduct(toSubmit);
@@ -72,7 +74,7 @@ public class ProductResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testCreateProductWithContent() {
-        Owner owner = new Owner("Example-Corporation");
+        Owner owner = ownerCurator.create(new Owner("Example-Corporation"));
 
         Product toSubmit = createProduct(owner);
         String  contentHash = String.valueOf(
@@ -106,19 +108,19 @@ public class ProductResourceTest extends DatabaseTestFixture {
 
     @Test
     public void getProduct() {
-        Owner owner = new Owner("Example-Corporation");
+        Owner owner = ownerCurator.create(new Owner("Example-Corporation"));
 
         Product p = createProduct(owner);
         p = productResource.createProduct(p);
         securityInterceptor.enable();
 
-        Product p1 = productResource.getProduct(p.getId());
+        Product p1 = productResource.getProduct(p.getProductId());
         assertEquals(p1, p);
     }
 
     @Test
     public void getProductCertificate() {
-        Owner owner = new Owner("Example-Corporation");
+        Owner owner = ownerCurator.create(new Owner("Example-Corporation"));
 
         Product p = createProduct(owner);
         p = productResource.createProduct(p);
@@ -130,7 +132,7 @@ public class ProductResourceTest extends DatabaseTestFixture {
         cert.setKey("some key");
         cert.setProduct(p);
         productCertificateCurator.create(cert);
-        ProductCertificate cert1 = productResource.getProductCertificate(p.getId());
+        ProductCertificate cert1 = productResource.getProductCertificate(p.getProductId());
         assertEquals(cert, cert1);
     }
 }
