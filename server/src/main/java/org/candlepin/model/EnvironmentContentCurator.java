@@ -31,13 +31,15 @@ public class EnvironmentContentCurator extends
     public EnvironmentContent lookupByEnvironmentAndContent(
         Environment e, String contentId) {
 
-        return (EnvironmentContent) this.currentSession().createCriteria(
-            EnvironmentContent.class).add(Restrictions.eq("environment", e))
-            .add(Restrictions.eq("contentId", contentId)).uniqueResult();
+        return (EnvironmentContent) this.currentSession().createCriteria(EnvironmentContent.class)
+            .add(Restrictions.eq("environment", e))
+            .add(Restrictions.eq("content.id", contentId))
+            .uniqueResult();
     }
 
     public List<EnvironmentContent> lookupByContent(String contentId) {
-        return this.currentSession().createCriteria(
-            EnvironmentContent.class).add(Restrictions.eq("contentId", contentId)).list();
+        return this.currentSession().createCriteria(EnvironmentContent.class)
+            .add(Restrictions.eq("content.id", contentId))
+            .list();
     }
 }

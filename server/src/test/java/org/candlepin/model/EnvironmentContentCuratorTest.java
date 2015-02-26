@@ -49,8 +49,7 @@ public class EnvironmentContentCuratorTest extends DatabaseTestFixture {
 
         p = TestUtil.createProduct(owner);
         c = new Content(this.owner, "testcontent", "contentId1", "testcontent", "yum",
-            "red hat", "http://example.com", "http://example.com/gpg.key",
-            "test-arch");
+            "red hat", "http://example.com", "http://example.com/gpg.key", "test-arch");
         contentCurator.create(c);
         p.addContent(c);
         productCurator.create(p);
