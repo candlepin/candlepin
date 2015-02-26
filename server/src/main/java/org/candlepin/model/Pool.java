@@ -350,7 +350,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
      */
     @HateoasInclude
     public String getProductName() {
-        return this.getProduct().getName();
+        return (this.getProduct() != null ? this.getProduct().getName() : null);
     }
 
     /**
@@ -576,7 +576,8 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     }
 
     public void setProvidedProducts(Set<Product> providedProducts) {
-        this.providedProducts = providedProducts;
+        this.providedProducts.clear();
+        this.providedProducts.addAll(providedProducts);
     }
 
     /**
@@ -641,7 +642,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
      */
     @HateoasInclude
     public String getProductId() {
-        return this.getProduct().getProductId();
+        return (this.getProduct() != null ? this.getProduct().getProductId() : null);
     }
 
     /**
@@ -743,7 +744,9 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     }
 
     public Set<ProductAttribute> getProductAttributes() {
-        return this.product.getAttributes();
+        return this.getProduct() != null ?
+            this.getProduct().getAttributes() :
+            new HashSet<ProductAttribute>();
     }
 
     public void setDerivedProduct(Product derived) {
@@ -755,7 +758,8 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     }
 
     public void setDerivedProvidedProducts(Set<Product> derivedProvidedProducts) {
-        this.derivedProvidedProducts = derivedProvidedProducts;
+        this.derivedProvidedProducts.clear();
+        this.derivedProvidedProducts.addAll(derivedProvidedProducts);
     }
 
     /*
@@ -808,11 +812,11 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     }
 
     public boolean isStacked() {
-        return this.product.hasAttribute("stacking_id");
+        return (this.getProduct() != null ? this.getProduct().hasAttribute("stacking_id") : false);
     }
 
     public String getStackId() {
-        return this.product.getAttributeValue("stacking_id");
+        return (this.getProduct() != null ? this.getProduct().getAttributeValue("stacking_id") : null);
     }
 
     public Set<Branding> getBranding() {

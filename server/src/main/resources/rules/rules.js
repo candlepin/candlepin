@@ -173,7 +173,7 @@ function createPool(pool) {
 
     pool.getAttribute = function (attrName) {
         attr_result = this.findAttributeIn(attrName, this.attributes);
-        if (attr_result === null) {
+        if (attr_result === null && this.product) {
             return this.findAttributeIn(attrName, this.product.attributes);
         }
         return attr_result;
@@ -184,7 +184,7 @@ function createPool(pool) {
     };
 
     pool.getProductAttribute = function (attrName) {
-        var attr_result = this.findAttributeIn(attrName, this.product.attributes);
+        var attr_result = this.product ? this.findAttributeIn(attrName, this.product.attributes) : null;
         if (attr_result === null) {
             return this.findAttributeIn(attrName, this.attributes);
         }

@@ -294,16 +294,14 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         // Hand off to rules to determine which pools need updating:
-        List<PoolUpdate> updatedPools = poolRules.updatePools(sub,
-            existingPools);
+        List<PoolUpdate> updatedPools = poolRules.updatePools(sub, existingPools);
 
         // Update subpools if necessary
         if (updateStackDerived && !updatedPools.isEmpty() &&
                 sub.createsSubPools() && sub.isStacked()) {
             // Get all pools for the subscriptions owner derived from the subscriptions
             // stack id, because we cannot look it up by subscriptionId
-            List<Pool> subPools = getOwnerSubPoolsForStackId(
-                sub.getOwner(), sub.getStackId());
+            List<Pool> subPools = getOwnerSubPoolsForStackId(sub.getOwner(), sub.getStackId());
 
             for (Pool subPool : subPools) {
                 PoolUpdate update = updatePoolFromStack(subPool);
