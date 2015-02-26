@@ -48,8 +48,7 @@ class SyncUtils {
     static ObjectMapper getObjectMapper(Configuration config) {
         ObjectMapper mapper = new ObjectMapper();
         AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
-        AnnotationIntrospector secondary =
-            new JaxbAnnotationIntrospector(mapper.getTypeFactory());
+        AnnotationIntrospector secondary = new JaxbAnnotationIntrospector(mapper.getTypeFactory());
         AnnotationIntrospector pair = new AnnotationIntrospectorPair(primary, secondary);
 
         mapper.setAnnotationIntrospector(pair);
