@@ -276,18 +276,22 @@ public class X509V3ExtensionUtil extends X509Util {
     }
 
     public List<org.candlepin.json.model.Product> createProducts(Set<Product> products,
-        String contentPrefix, Map<String, EnvironmentContent> promotedContent,
-        Consumer consumer, Entitlement ent) {
+        String contentPrefix, Map<String, EnvironmentContent> promotedContent, Consumer consumer,
+        Entitlement ent) {
+
         List<org.candlepin.json.model.Product> toReturn =
             new ArrayList<org.candlepin.json.model.Product>();
 
-        Set<String> entitledProductIds = entCurator.listEntitledProductIds(consumer,
-                ent.getStartDate(), ent.getEndDate());
-        for (Product p : Collections2
-            .filter(products, PROD_FILTER_PREDICATE)) {
-            toReturn.add(mapProduct(p, contentPrefix, promotedContent, consumer, ent,
-                    entitledProductIds));
+        Set<String> entitledProductIds = entCurator.listEntitledProductIds(
+            consumer, ent.getStartDate(), ent.getEndDate()
+        );
+
+        for (Product p : Collections2.filter(products, PROD_FILTER_PREDICATE)) {
+            toReturn.add(
+                mapProduct(p, contentPrefix, promotedContent, consumer, ent, entitledProductIds)
+            );
         }
+
         return toReturn;
     }
 
@@ -303,14 +307,13 @@ public class X509V3ExtensionUtil extends X509Util {
 
         org.candlepin.json.model.Product toReturn = new org.candlepin.json.model.Product();
 
-        toReturn.setId(product.getId());
+        toReturn.setId(product.getProductId());
         toReturn.setName(product.getName());
 
-        String version = product.hasAttribute("version") ?
-            product.getAttributeValue("version") : "";
+        String version = product.hasAttribute("version") ? product.getAttributeValue("version") : "";
         toReturn.setVersion(version);
 
-        Branding brand = getBranding(ent.getPool(), product.getId());
+        Branding brand = getBranding(ent.getPool(), product.getProductId());
         toReturn.setBrandType(brand.getType());
         toReturn.setBrandName(brand.getName());
 
