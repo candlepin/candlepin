@@ -372,7 +372,8 @@ public class Subscription extends AbstractHibernateObject implements Owned, Name
     }
 
     public void setDerivedProvidedProducts(Set<Product> subProvidedProducts) {
-        this.derivedProvidedProducts = subProvidedProducts;
+        this.derivedProvidedProducts.clear();
+        this.derivedProvidedProducts.addAll(subProvidedProducts);
     }
 
     public Cdn getCdn() {

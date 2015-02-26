@@ -205,6 +205,7 @@ public class TestUtil {
 
         Pool pool = createPool(owner, product, providedProducts, quantity);
         pool.setDerivedProduct(derivedProduct);
+        pool.setDerivedProvidedProducts(subProvidedProducts);
 
         return pool;
     }

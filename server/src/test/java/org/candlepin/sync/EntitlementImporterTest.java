@@ -582,8 +582,9 @@ public class EntitlementImporterTest {
         Set<Product> subProvidedProducts = new HashSet<Product>();
         subProvidedProducts.add(subProvided1);
 
-        Pool pool = TestUtil.createPool(owner, parentProduct, provided, subProduct,
-            subProvidedProducts, 3);
+        Pool pool = TestUtil.createPool(
+            owner, parentProduct, provided, subProduct, subProvidedProducts, 3
+        );
 
         EntitlementCertificate cert = createEntitlementCertificate("my-test-key", "my-cert");
         Entitlement ent = TestUtil.createEntitlement(owner, consumer, pool, cert);
@@ -594,12 +595,16 @@ public class EntitlementImporterTest {
 
         // Create our expected products
         Map<String, Product> productsById = new HashMap<String, Product>();
-        productsById.put(parentProduct.getId(), parentProduct);
-        productsById.put(pp1.getProductId(),
-            TestUtil.createProduct(pp1.getProductId(), pp1.getName(), owner));
-        productsById.put(subProduct.getId(), subProduct);
-        productsById.put(subProvided1.getProductId(), TestUtil.createProduct(
-            subProvided1.getProductId(), subProvided1.getName(), owner));
+        productsById.put(parentProduct.getProductId(), parentProduct);
+        productsById.put(
+            pp1.getProductId(),
+            TestUtil.createProduct(pp1.getProductId(), pp1.getName(), owner)
+        );
+        productsById.put(subProduct.getProductId(), subProduct);
+        productsById.put(
+            subProvided1.getProductId(),
+            TestUtil.createProduct(subProvided1.getProductId(), subProvided1.getName(), owner)
+        );
 
         Meta meta = new Meta();
         meta.setCdnLabel("test-cdn");
@@ -624,13 +629,17 @@ public class EntitlementImporterTest {
 
         assertEquals(parentProduct, sub.getProduct());
         assertEquals(provided.size(), sub.getProvidedProducts().size());
-        assertEquals(pp1.getProductId(), sub.getProvidedProducts().
-            iterator().next().getId());
+        assertEquals(
+            pp1.getProductId(),
+            sub.getProvidedProducts().iterator().next().getProductId()
+        );
 
         assertEquals(subProduct, sub.getDerivedProduct());
         assertEquals(1, sub.getDerivedProvidedProducts().size());
-        assertEquals(subProvided1.getProductId(), sub.getDerivedProvidedProducts().
-            iterator().next().getId());
+        assertEquals(
+            subProvided1.getProductId(),
+            sub.getDerivedProvidedProducts().iterator().next().getProductId()
+        );
 
         assertNotNull(sub.getCertificate());
         CertificateSerial serial = sub.getCertificate().getSerial();

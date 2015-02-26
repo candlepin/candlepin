@@ -111,13 +111,13 @@ public class EntitlementImporter {
         for (Product providedProduct : entitlement.getPool().getProvidedProducts()) {
             products.add(findProduct(productsById, providedProduct.getProductId()));
         }
+
         subscription.setProvidedProducts(products);
 
         // Add any sub product data to the subscription.
         if (entitlement.getPool().getDerivedProduct() != null) {
             subscription.setDerivedProduct(findProduct(
-                productsById,
-                entitlement.getPool().getDerivedProduct().getProductId()
+                productsById, entitlement.getPool().getDerivedProduct().getProductId()
             ));
         }
 
@@ -125,6 +125,7 @@ public class EntitlementImporter {
         for (Product subProvProd : entitlement.getPool().getDerivedProvidedProducts()) {
             subProvProds.add(findProduct(productsById, subProvProd.getProductId()));
         }
+
         subscription.setDerivedProvidedProducts(subProvProds);
 
         Set<EntitlementCertificate> certs = entitlement.getCertificates();
@@ -153,13 +154,14 @@ public class EntitlementImporter {
         return subscription;
     }
 
-    private Product findProduct(Map<String, Product> productsById,
-        String productId) throws SyncDataFormatException {
+    private Product findProduct(Map<String, Product> productsById, String productId)
+        throws SyncDataFormatException {
+
         Product product = productsById.get(productId);
         if (product == null) {
-            throw new SyncDataFormatException(i18n.tr("Unable to find product with ID: " +
-                productId));
+            throw new SyncDataFormatException(i18n.tr("Unable to find product with ID: {}", productId));
         }
+
         return product;
     }
 
