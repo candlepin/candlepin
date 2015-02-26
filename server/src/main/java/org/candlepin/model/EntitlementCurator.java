@@ -160,7 +160,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
                 // Skip this entitlement:
                 continue;
             }
-            entitledProductIds.add(e.getPool().getProductId());
+            entitledProductIds.add(e.getPool().getProduct().getProductId());
             for (Product pp : e.getPool().getProvidedProducts()) {
                 entitledProductIds.add(pp.getProductId());
             }
@@ -280,11 +280,12 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         Criteria query = createSecureCriteria()
             .add(Restrictions.eq("consumer", consumer))
             .createAlias("pool", "p")
+            .createAlias("p.product", "prod")
             .createAlias("p.providedProducts", "pp",
                 CriteriaSpecification.LEFT_JOIN)
             // Never show a consumer expired entitlements
             .add(Restrictions.ge("p.endDate", new Date()))
-            .add(Restrictions.or(Restrictions.eq("p.productId", productId),
+            .add(Restrictions.or(Restrictions.eq("prod.productId", productId),
                 Restrictions.eq("pp.productId", productId)));
 
         Page<List<Entitlement>> page = listByCriteria(query, pageRequest);
@@ -338,7 +339,8 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         Criteria activeNowQuery = currentSession().createCriteria(Entitlement.class)
             .add(Restrictions.eq("consumer", consumer))
             .createAlias("pool", "ent_pool")
-            .createAlias("ent_pool.productAttributes", "attrs")
+            .createAlias("ent_pool.product", "product")
+            .createAlias("product.attributes", "attrs")
             .add(Restrictions.eq("attrs.name", "stacking_id"))
             .add(Restrictions.eq("attrs.value", stackId))
             .add(Restrictions.isNull("ent_pool.sourceEntitlement"))
@@ -383,7 +385,8 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         Criteria activeNowQuery = currentSession().createCriteria(Entitlement.class)
             .add(Restrictions.eq("consumer", consumer))
             .createAlias("pool", "ent_pool")
-            .createAlias("ent_pool.productAttributes", "attrs")
+            .createAlias("ent_pool.product", "product")
+            .createAlias("product.attributes", "attrs")
             .add(Restrictions.le("ent_pool.startDate", currentDate))
             .add(Restrictions.ge("ent_pool.endDate", currentDate))
             .add(Restrictions.eq("attrs.name", "stacking_id"))
