@@ -142,13 +142,7 @@
                 <constraints primaryKey="true" primaryKeyName="cpo_contentmodprod_pk"/>
             </column>
             <!-- TODO: This should be a reference to a proper product ID -->
-            <column name="element" type="varchar(255)">
-                <constraints
-                    nullable="false"
-                    foreignKeyName="cpo_contentmodprod_fk1"
-                    references="cpo_content(id)"
-                />
-            </column>
+            <column name="element" type="varchar(255)"/>
         </createTable>
     </changeSet>
 

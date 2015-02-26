@@ -29,6 +29,7 @@ import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -62,7 +63,8 @@ public class Content extends AbstractHibernateObject {
     @NotNull
     private String label;
 
-    @Column(name="owner_id", nullable = false)
+    @ManyToOne
+    @JoinColumn(nullable = false)
     @NotNull
     private Owner owner;
 

@@ -30,6 +30,7 @@ import javax.inject.Inject;
  */
 public class ContentCuratorTest extends DatabaseTestFixture {
     @Inject private ContentCurator contentCurator;
+    @Inject private OwnerCurator ownerCurator;
 
     private Content updates;
     private Owner owner;
@@ -39,6 +40,7 @@ public class ContentCuratorTest extends DatabaseTestFixture {
     @Before
     public void setUp() {
         this.owner = new Owner("Example-Corporation");
+        ownerCurator.create(owner);
 
         updates = new Content(
             this.owner,
