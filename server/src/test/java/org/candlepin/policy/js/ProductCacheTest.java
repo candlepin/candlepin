@@ -14,20 +14,14 @@
  */
 package org.candlepin.policy.js;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.model.Product;
 import org.candlepin.model.Owner;
+import org.candlepin.model.Product;
 import org.candlepin.service.ProductServiceAdapter;
 
 import org.junit.Before;
@@ -111,7 +105,7 @@ public class ProductCacheTest {
         }
 
         assertEquals(100, cache.size());
-        assertTrue(cache.contains(initial.getId()));
+        assertTrue(cache.contains(initial.getProductId()));
 
         // Add one more to roll the cache over its max.
         Product overflow = addProductToCache("overflow");
@@ -119,9 +113,9 @@ public class ProductCacheTest {
         // Cache size should remain at MAX.
         assertEquals(100, cache.size());
         // First product added should no longer be there.
-        assertFalse(cache.contains(initial.getId()));
+        assertFalse(cache.contains(initial.getProductId()));
         // New product should exist.
-        assertTrue(cache.contains(overflow.getId()));
+        assertTrue(cache.contains(overflow.getProductId()));
     }
 
     @Test
@@ -161,7 +155,7 @@ public class ProductCacheTest {
         // Look the product up again so that we can verify that
         // a second adapter call was not made.
         Product fetched = cache.getProductById(productId);
-        assertEquals(productId, fetched.getId());
+        assertEquals(productId, fetched.getProductId());
 
         // The adapter should be hit again on the second lookup.
         verify(mockProductAdapter, times(2)).getProductById(eq(productId));
@@ -176,7 +170,7 @@ public class ProductCacheTest {
         cache.setNullReferenceForProduct(productId);
 
         Product fetched = cache.getProductById(productId);
-        assertEquals(productId, fetched.getId());
+        assertEquals(productId, fetched.getProductId());
 
         // The adapter should be hit again on the second lookup.
         verify(mockProductAdapter, times(2)).getProductById(eq(productId));
@@ -185,9 +179,9 @@ public class ProductCacheTest {
     private Product addProductToCache(ProductCache prodCache, String productId) {
         Owner owner = new Owner("Test Corporation");
         Product product = new Product(productId, productId, owner);
-        when(mockProductAdapter.getProductById(product.getId())).thenReturn(product);
+        when(mockProductAdapter.getProductById(product.getProductId())).thenReturn(product);
         assertNotNull("Failed to add product to cache.",
-            prodCache.getProductById(product.getId()));
+            prodCache.getProductById(product.getProductId()));
         return product;
     }
 
