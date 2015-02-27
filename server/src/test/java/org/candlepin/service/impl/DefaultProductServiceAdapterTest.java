@@ -77,7 +77,7 @@ public class DefaultProductServiceAdapterTest {
     public void productById() {
         // assert that the product returned by pc is unchanged
         Product p = mock(Product.class);
-        when(p.getId()).thenReturn(someid);
+        when(p.getProductId()).thenReturn(someid);
         when(pc.lookupById(eq(someid))).thenReturn(p);
         assertEquals(p, dpsa.getProductById(someid));
     }
@@ -103,7 +103,7 @@ public class DefaultProductServiceAdapterTest {
     @Test(expected = BadRequestException.class)
     public void createExistingProduct() {
         Product p = mock(Product.class);
-        when(p.getId()).thenReturn(someid);
+        when(p.getProductId()).thenReturn(someid);
         when(pc.find(someid)).thenReturn(p);
         dpsa.createProduct(p);
     }
@@ -115,7 +115,7 @@ public class DefaultProductServiceAdapterTest {
         when(pc.create(eq(p))).thenReturn(p);
         when(idgen.generateId()).thenReturn(someid);
         Product result = dpsa.createProduct(p);
-        verify(p).setId(eq(someid));
+        verify(p).setProductId(eq(someid));
         assertNotNull(result);
     }
 
@@ -151,7 +151,7 @@ public class DefaultProductServiceAdapterTest {
     @Test
     public void productCertificateNew() throws Exception {
         Product p = mock(Product.class);
-        when(p.getId()).thenReturn(someid);
+        when(p.getProductId()).thenReturn(someid);
         when(pcc.findForProduct((eq(p)))).thenReturn(null);
         KeyPair kp = createKeyPair();
         when(pki.generateNewKeyPair()).thenReturn(kp);
