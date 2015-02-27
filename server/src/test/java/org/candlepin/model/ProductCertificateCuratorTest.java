@@ -29,6 +29,7 @@ import javax.inject.Inject;
  */
 public class ProductCertificateCuratorTest extends DatabaseTestFixture {
     @Inject private ProductCurator productCurator;
+    @Inject private OwnerCurator ownerCurator;
     @Inject private ProductCertificateCurator productCertificateCurator;
 
     private Product product;
@@ -38,7 +39,7 @@ public class ProductCertificateCuratorTest extends DatabaseTestFixture {
     public void init() {
         super.init();
 
-        Owner owner = new Owner("Test Corporation");
+        Owner owner = ownerCurator.create(new Owner("Test Corporation"));
         Product product = new Product("dummy", "Dummy Product", owner);
         this.product = productCurator.create(product);
     }
