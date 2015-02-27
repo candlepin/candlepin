@@ -226,7 +226,7 @@ function createPool(pool) {
     // case. (this is probably impossible to hit due to changes in rule
     // versioning)
     pool.hasDerived = function () {
-        if (this.derivedProductId == null) {
+        if (this.derivedProduct == null) {
           return false;
         }
         return true;
@@ -254,7 +254,7 @@ function createPool(pool) {
         }
 
         if (this.derived_product_list == 0) {
-            this.derived_product_list.push(this.derivedProductId);
+            this.derived_product_list.push(this.derivedProduct.productId);
             for (var k = 0; k < this.derivedProvidedProducts.length; k++) {
                 this.derived_product_list.push(this.derivedProvidedProducts[k].productId);
             }
@@ -1679,7 +1679,7 @@ var Entitlement = {
             //
             // NOTE: We check for subProductId in the pre_global space because it is not
             // a product attribute.
-            if (pool.derivedProductId && !Utils.isCapable(consumer, "derived_product")) {
+            if (pool.derivedProduct && !Utils.isCapable(consumer, "derived_product")) {
                 if (BEST_POOLS_CALLER == caller || BIND_CALLER == caller) {
                     result.addError("rulefailed.derivedproduct.unsupported.by.consumer");
                 }
