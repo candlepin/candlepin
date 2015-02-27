@@ -108,8 +108,8 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         associateProductToOwner(owner2, product2, provided2);
 
         List<String> productIds = new ArrayList<String>();
-        productIds.add(provided.getId());
-        productIds.add(provided2.getId());
+        productIds.add(provided.getProductId());
+        productIds.add(provided2.getProductId());
         List<Owner> results = ownerCurator.lookupOwnersByActiveProduct(productIds);
 
         assertEquals(2, results.size());
@@ -127,7 +127,7 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         associateProductToOwner(owner, product, provided);
 
         List<String> productIds = new ArrayList<String>();
-        productIds.add(provided.getId());
+        productIds.add(provided.getProductId());
         List<Owner> results = ownerCurator.lookupOwnersByActiveProduct(productIds);
 
         assertEquals(1, results.size());
@@ -144,8 +144,7 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         productCurator.create(provided);
 
         Set<Product> providedProducts = new HashSet<Product>();
-        Product providedProduct = TestUtil.createProduct(provided.getId());
-        providedProducts.add(providedProduct);
+        providedProducts.add(provided);
 
         // Create pool with end date in the past.
         Pool pool = new Pool(
@@ -170,7 +169,7 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         entitlementCurator.create(ent);
 
         List<String> productIds = new ArrayList<String>();
-        productIds.add(provided.getId());
+        productIds.add(provided.getProductId());
         List<Owner> results = ownerCurator.lookupOwnersByActiveProduct(productIds);
 
         assertTrue(results.isEmpty());
