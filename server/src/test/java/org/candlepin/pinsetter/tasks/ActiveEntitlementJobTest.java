@@ -67,7 +67,7 @@ public class ActiveEntitlementJobTest extends DatabaseTestFixture {
 
         consumer = new Consumer("a consumer", "username", owner, ct);
         consumer.addInstalledProduct(new ConsumerInstalledProduct(
-                prod.getId(), prod.getName()));
+                prod.getProductId(), prod.getName()));
         consumerCurator.create(consumer);
     }
 
