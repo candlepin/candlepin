@@ -197,13 +197,13 @@ function createPool(pool) {
 
     // Add some functions onto pool objects:
     pool.provides = function (productId) {
-        if (this.product.id == productId) {
+        if (this.productId == productId) {
             return true;
         }
         for (var k = 0; k < this.providedProducts.length; k++) {
             var provided = this.providedProducts[k];
 
-            if (provided.id == productId) {
+            if (provided.productId == productId) {
                 return true;
             }
         }
@@ -213,9 +213,9 @@ function createPool(pool) {
     // Lazily initialize the list of provided product IDs.
     pool.products = function () {
         if (this.product_list == 0) {
-            this.product_list.push(this.product.id);
+            this.product_list.push(this.productId);
             for (var k = 0; k < this.providedProducts.length; k++) {
-                this.product_list.push(this.providedProducts[k].id);
+                this.product_list.push(this.providedProducts[k].productId);
             }
         }
         return this.product_list;
@@ -226,7 +226,7 @@ function createPool(pool) {
     // case. (this is probably impossible to hit due to changes in rule
     // versioning)
     pool.hasDerived = function () {
-        if (this.derivedProduct.id == null) {
+        if (this.derivedProductId == null) {
           return false;
         }
         return true;
@@ -254,9 +254,9 @@ function createPool(pool) {
         }
 
         if (this.derived_product_list == 0) {
-            this.derived_product_list.push(this.derivedProduct.id);
+            this.derived_product_list.push(this.derivedProductId);
             for (var k = 0; k < this.derivedProvidedProducts.length; k++) {
-                this.derived_product_list.push(this.derivedProvidedProducts[k].id);
+                this.derived_product_list.push(this.derivedProvidedProducts[k].productId);
             }
         }
         return this.derived_product_list;
@@ -1679,7 +1679,7 @@ var Entitlement = {
             //
             // NOTE: We check for subProductId in the pre_global space because it is not
             // a product attribute.
-            if (pool.derivedProduct.id && !Utils.isCapable(consumer, "derived_product")) {
+            if (pool.derivedProductId && !Utils.isCapable(consumer, "derived_product")) {
                 if (BEST_POOLS_CALLER == caller || BIND_CALLER == caller) {
                     result.addError("rulefailed.derivedproduct.unsupported.by.consumer");
                 }
@@ -2292,7 +2292,6 @@ var Autobind = {
                     this.is_pool_sla_valid(context, pool, consumerSLA) &&
                     pool_not_empty) {
                 valid_pools.push(pool);
-                log.debug("Valid_Pool id: " + pool.product.id)
             }
         }
         return valid_pools;
@@ -2551,7 +2550,7 @@ function find_relevant_pids(entitlement, consumer) {
     for (var j = 0; j < consumer.installedProducts.length; j++) {
         var installed_prod = consumer.installedProducts[j];
 
-        var installed_pid = installed_prod.id;
+        var installed_pid = installed_prod.productId;
         if (entitlement.pool.provides(installed_pid)) {
             log.debug("pool provides: " + installed_pid);
             provided_pids.push(installed_pid);
@@ -2815,7 +2814,7 @@ var Compliance = {
         for (var k = 0; k < ((consumer.installedProducts) ? consumer.installedProducts.length : 0); k++) {
             var installed_prod = consumer.installedProducts[k];
 
-            var installed_pid = installed_prod.id;
+            var installed_pid = installed_prod.productId;
             // Not compliant if we didn't find any entitlements for this product:
             if (typeof compStatus.compliantProducts[installed_pid] === "undefined" &&
                     typeof compStatus.partiallyCompliantProducts[installed_pid] === "undefined") {
@@ -2838,7 +2837,7 @@ var Compliance = {
         }
 
         for (var i = 0; i < consumer.installedProducts.length; i++) {
-            var productId =  consumer.installedProducts[i].id;
+            var productId =  consumer.installedProducts[i].productId;
             installedProducts.push(productId);
         }
 
