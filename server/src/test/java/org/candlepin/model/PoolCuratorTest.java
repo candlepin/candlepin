@@ -234,7 +234,9 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         Pool pool2 = createPoolAndSub(owner, product, 100L,
             activeDate, TestUtil.createDate(2005, 3, 2));
 
-        // This product value should be overridden by the pool attr
+        // This product value should be overridden by the pool attr. Note that this product is used
+        // by both pools, so its attributes will be reflected in both. Also note that only pool2 is
+        // overriding the value.
         pool2.getProduct().setAttribute("virt_only", "true");
         pool2.setAttribute("virt_only", "false");
         poolCurator.create(pool2);
@@ -246,7 +248,9 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             null, owner, null, activeDate, false, filters,
             null, false);
         List<Pool> results = page.getPageData();
-        assertTrue(results.isEmpty());
+
+        assertEquals(1, results.size());
+        assertEquals(pool1, results.get(0));
     }
 
     @Test
