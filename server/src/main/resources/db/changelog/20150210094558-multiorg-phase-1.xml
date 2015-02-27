@@ -288,7 +288,7 @@
 
     <changeSet id="20150210094558-17" author="crog">
         <addUniqueConstraint tableName="cpo_product_attributes"
-            columnNames="name, product_id"
+            columnNames="name, id"
             constraintName="cpo_product_attributes_unq1"
         />
     </changeSet>

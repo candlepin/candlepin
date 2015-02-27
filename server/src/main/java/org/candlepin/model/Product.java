@@ -338,7 +338,7 @@ public class Product extends AbstractHibernateObject implements Linkable {
 
     @Override
     public String toString() {
-        return "Product [id = " + id + ", name = " + name + "]";
+        return "Product [id = " + productId + ", name = " + name + "]";
     }
 
     @Override
@@ -352,12 +352,15 @@ public class Product extends AbstractHibernateObject implements Linkable {
 
         Product another = (Product) anObject;
 
-        return id.equals(another.getProductId()) && name.equals(another.getName());
+        return getProductId().equals(another.getProductId()) && name.equals(another.getName());
     }
 
     @Override
     public int hashCode() {
-        return productId.hashCode() * 31;
+        if (productId != null) {
+            return productId.hashCode() * 31;
+        }
+        return 31;
     }
 
     /**
@@ -394,6 +397,11 @@ public class Product extends AbstractHibernateObject implements Linkable {
         return productContent;
     }
 
+    public void addProductContent(ProductContent c) {
+        c.setProduct(this);
+        this.getProductContent().add(c);
+    }
+
     // FIXME: this seems wrong, shouldn't this reset the content
     // not add to it?
     public void setContent(Set<Content> content) {
@@ -405,18 +413,6 @@ public class Product extends AbstractHibernateObject implements Linkable {
         }
         for (Content newContent : content) {
             productContent.add(new ProductContent(this, newContent, false));
-        }
-    }
-
-    public void setEnabledContent(Set<Content> content) {
-        if (content == null) {
-            return;
-        }
-        if (productContent == null) {
-            productContent = new LinkedList<ProductContent>();
-        }
-        for (Content newContent : content) {
-            productContent.add(new ProductContent(this, newContent, true));
         }
     }
 
@@ -445,7 +441,7 @@ public class Product extends AbstractHibernateObject implements Linkable {
 
     @Override
     public String getHref() {
-        return "/products/" + getId();
+        return "/owners/" + getOwner().getKey() + "/products/" + getProductId();
     }
 
     @Override

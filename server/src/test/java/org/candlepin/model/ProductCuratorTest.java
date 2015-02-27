@@ -41,6 +41,7 @@ import java.util.Set;
 
 import javax.inject.Inject;
 import javax.persistence.PersistenceException;
+import javax.validation.ConstraintViolationException;
 
 public class ProductCuratorTest extends DatabaseTestFixture {
     @Inject private OwnerCurator ownerCurator;
@@ -119,7 +120,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
     }
 
-    @Test(expected = PersistenceException.class)
+    @Test(expected = ConstraintViolationException.class)
     public void labelRequired() {
 
         Product prod = new Product(null, "My Product Name", owner);
@@ -343,7 +344,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         int initialAttrCount = attributeCurator.listAll().size();
         productCurator.createOrUpdate(modified);
 
-        Product lookedUp = productCurator.lookupById(original.getId());
+        Product lookedUp = productCurator.lookupById(owner, original.getProductId());
         assertEquals(newName, lookedUp.getName());
         assertEquals(3, lookedUp.getAttributes().size());
         assertEquals("a1", lookedUp.getAttributeValue("a1"));
@@ -600,13 +601,14 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         contentCurator.create(content);
         productCurator.createOrUpdate(p);
 
-        p = createTestProduct();
+        // Technically the same product:
+        Product p2 = createTestProduct();
         // The content isn't quite the same.  We just care about matching
         // product ids with content ids
         content = new Content(this.owner, "best-content", "best-content",
             "best-content", "yum", "us", "here", "differnet", "test-arch");
-        p.addContent(content);
-        productCurator.createOrUpdate(p);
+        p2.addContent(content);
+        productCurator.createOrUpdate(p2);
 
         Product result = productCurator.find(p.getId());
         assertEquals(1, result.getProductContent().size());

@@ -94,13 +94,47 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      * @param p Product to create or update.
      */
     public void createOrUpdate(Product p) {
-        Product existing = lookupById(p.getId());
+        Product existing = lookupById(p.getOwner(), p.getProductId());
         if (existing == null) {
             create(p);
         }
         else {
-            merge(p);
+            copy(p, existing);
+            merge(existing);
         }
+    }
+
+    public void copy(Product incoming, Product existing) {
+        if (incoming.getProductId() != existing.getProductId()) {
+            throw new RuntimeException("Products do not have matching IDs: " +
+                    incoming.getProductId() + " != " + existing.getProductId());
+        }
+
+        existing.setName(incoming.getName());
+        existing.setMultiplier(incoming.getMultiplier());
+
+        if (!existing.getAttributes().equals(incoming.getAttributes())) {
+            existing.getAttributes().clear();
+            for (ProductAttribute attr : incoming.getAttributes()) {
+                ProductAttribute newAttr = new ProductAttribute(attr.getName(),
+                        attr.getValue());
+                existing.addAttribute(newAttr);
+            }
+        }
+
+        if (!existing.getProductContent().equals(incoming.getProductContent())) {
+            existing.getProductContent().clear();
+            for (ProductContent pc : incoming.getProductContent()) {
+                existing.addProductContent(new ProductContent(existing, pc.getContent(),
+                        pc.getEnabled()));
+            }
+        }
+
+        if (!existing.getDependentProductIds().equals(incoming.getDependentProductIds())) {
+            existing.getDependentProductIds().clear();
+            existing.setDependentProductIds(incoming.getDependentProductIds());
+        }
+
     }
 
     @Transactional
