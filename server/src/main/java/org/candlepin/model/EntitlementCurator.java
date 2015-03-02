@@ -223,6 +223,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             // Empty collections break hibernate queries
             return modifying;
         }
+
         // Retrieve all products at once from the adapter
         List<Product> products = productAdapter.getProductsByIds(pidEnts.keySet());
         for (Product p : products) {
@@ -230,11 +231,11 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             Iterator<Product> ppit = entitlement.getPool().getProvidedProducts().iterator();
             // No need to continue checking once we have found a modified product
             while (!modifies && ppit.hasNext()) {
-                modifies = modifies || p.modifies(ppit.next().getId());
+                modifies = p.modifies(ppit.next().getId());
             }
             if (modifies) {
                 // Return all entitlements for the modified product
-                modifying.addAll(pidEnts.get(p.getUuid()));
+                modifying.addAll(pidEnts.get(p.getId()));
             }
         }
 

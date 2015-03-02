@@ -282,7 +282,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         }
         catch (EntityNotFoundException e) {
             throw e;
-//            fail("Hibernate failed to properly save entitlement certs!");
+           // fail("Hibernate failed to properly save entitlement certs!");
         }
 
         // If we get here, no exception was raised, so we're happy!

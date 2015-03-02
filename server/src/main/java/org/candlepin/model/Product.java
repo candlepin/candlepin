@@ -126,7 +126,6 @@ public class Product extends AbstractHibernateObject implements Linkable {
     }
 
     public Product(String productId, String name, Owner owner, Long multiplier) {
-
         setId(productId);
         setName(name);
         setOwner(owner);
