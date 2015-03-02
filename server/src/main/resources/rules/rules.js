@@ -203,7 +203,7 @@ function createPool(pool) {
         for (var k = 0; k < this.providedProducts.length; k++) {
             var provided = this.providedProducts[k];
 
-            if (provided.productId == productId) {
+            if (provided.id == productId) {
                 return true;
             }
         }
