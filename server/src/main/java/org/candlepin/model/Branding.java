@@ -39,7 +39,6 @@ import javax.xml.bind.annotation.XmlTransient;
  */
 @Entity
 @Table(name = "cp_branding")
-// TODO: Update this class to not use product IDs
 public class Branding extends AbstractHibernateObject {
 
     @Id

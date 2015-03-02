@@ -16,9 +16,7 @@ package org.candlepin.model;
 
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Index;
 
 import java.util.Date;
 import java.util.HashSet;
