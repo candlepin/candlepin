@@ -15,8 +15,8 @@
 package org.candlepin.policy;
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.when;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
@@ -225,21 +225,6 @@ public class AutobindRulesTest {
         consumer.setFact("memory.memtotal", "16000000");
         consumer.setFact("cpu.core(s)_per_socket", "4");
 
-//        Product product = mockStackingProduct(productId, "Test Stack product", "1", "1");
-//        product.setAttribute("cores", "6");
-//        product.setAttribute("ram", "2");
-//        product.setAttribute("sockets", "2");
-//
-//        Pool pool1 = TestUtil.createPool(owner, product);
-//        pool1.setId("DEAD-BEEF1");
-//        Pool pool2 = TestUtil.createPool(owner, product);
-//        pool2.setId("DEAD-BEEF2");
-//        //only enforce cores on pool 2
-//        pool2.getProduct().setAttribute("ram", null);
-//        pool2.getProduct().setAttribute("sockets", null);
-//        Pool pool3 = TestUtil.createPool(owner, product);
-//        pool3.setId("DEAD-BEEF3");
-
         // Will be common to both SKUs and what we autobind for:
         Product provided = mockProduct("5000", "Eng Product");
 
@@ -255,6 +240,8 @@ public class AutobindRulesTest {
         //only enforce cores on pool 2:
         Product sku2 = mockStackingProduct("prod2", "Test Stack product", "1", "1");
         sku2.setAttribute("cores", "6");
+        sku2.setAttribute("ram", null);
+        sku2.setAttribute("sockets", null);
 
         Pool pool2 = TestUtil.createPool(owner, sku2);
         pool2.setId("DEAD-BEEF2");
