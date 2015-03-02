@@ -630,7 +630,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         result.addAll(query.list());
 
         query = this.currentSession().createQuery(
-            "SELECT DISTINCT P.providedProducts.productId " +
+            "SELECT DISTINCT P.providedProducts.id " +
             "    FROM Pool P" +
             "    WHERE P.providedProducts.id IS NOT NULL AND P.providedProducts.id != ''"
         );

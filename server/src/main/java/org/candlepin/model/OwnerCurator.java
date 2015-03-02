@@ -83,7 +83,7 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
         DetachedCriteria poolIdQuery = DetachedCriteria.forClass(Pool.class, "pool");
         poolIdQuery.createAlias("pool.providedProducts", "providedProducts");
 
-        poolIdQuery.add(Restrictions.in("providedProducts.productId", productIds))
+        poolIdQuery.add(Restrictions.in("providedProducts.id", productIds))
             .setProjection(Property.forName("pool.id"));
 
         DetachedCriteria ownerIdQuery = DetachedCriteria.forClass(Entitlement.class, "e")

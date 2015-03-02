@@ -286,8 +286,8 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
                 CriteriaSpecification.LEFT_JOIN)
             // Never show a consumer expired entitlements
             .add(Restrictions.ge("p.endDate", new Date()))
-            .add(Restrictions.or(Restrictions.eq("prod.productId", productId),
-                Restrictions.eq("pp.productId", productId)));
+            .add(Restrictions.or(Restrictions.eq("prod.id", productId),
+                Restrictions.eq("pp.id", productId)));
 
         Page<List<Entitlement>> page = listByCriteria(query, pageRequest);
 
