@@ -82,11 +82,9 @@
             <column name="created" type="${timestamp.type}"/>
             <column name="updated" type="${timestamp.type}"/>
             <column name="product_uuid" type="varchar(32)">
-                <constraints
-                    nullable="false"
-                    foreignKeyName="cpo_branding_fk1"
-                    references="cpo_products(uuid)"
-                />
+                <constraints nullable="false"/>
+<!--                     foreignKeyName="cpo_branding_fk1"
+                    references="cpo_products(uuid)" -->
             </column>
             <column name="type" type="varchar(32)">
                 <constraints nullable="false"/>
