@@ -243,15 +243,15 @@ public class ComplianceStatusHasherTest {
         assertNotEquals(initialHash, updatedHash);
 
         // Test arch change
-        product.setAttribute("arch", "test-arch");
+        installed.setArch("test-arch");
         assertNotEquals(updatedHash, generateHash(testStatus, consumer));
-        product.setAttribute("arch", null);
+        installed.setArch(null);
         assertEquals(updatedHash, generateHash(testStatus, consumer));
 
         // Test version change
-        product.setAttribute("version", "1.2.3.4");
+        installed.setVersion("1.2.3.4");
         assertNotEquals(updatedHash, generateHash(testStatus, consumer));
-        product.setAttribute("version", null);
+        installed.setVersion(null);
         assertEquals(updatedHash, generateHash(testStatus, consumer));
 
         consumer.getInstalledProducts().remove(installed);
@@ -383,10 +383,11 @@ public class ComplianceStatusHasherTest {
     }
 
     private Entitlement createEntitlement(Calendar cal, Owner owner, Consumer consumer,
-            String productId) {
+        String productId) {
+
         Product product = TestUtil.createProduct(productId, productId, owner);
         Pool pool = TestUtil.createPool(owner, product);
-        pool.setId(product.getUuid() + "pool");
+        pool.setId(product.getId() + "pool");
         pool.setUpdated(cal.getTime());
 
         Entitlement ent = new Entitlement();
@@ -396,7 +397,7 @@ public class ComplianceStatusHasherTest {
         ent.setQuantity(2);
         ent.setCreated(cal.getTime());
         ent.setUpdated(cal.getTime());
-        ent.setId(product.getUuid() + "ent");
+        ent.setId(product.getId() + "ent");
         consumer.addEntitlement(ent);
         return ent;
     }
