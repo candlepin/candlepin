@@ -57,7 +57,7 @@ public class ProductAttribute extends AbstractHibernateObject implements Attribu
     protected String value;
 
     @ManyToOne
-    @JoinColumn(nullable = false)
+    @JoinColumn(name="product_uuid", nullable = false)
     @NotNull
     private Product product;
 

@@ -53,7 +53,7 @@ public class ProductCertificate extends AbstractCertificate {
     }
 
     @ManyToOne
-    @JoinColumn(nullable = false)
+    @JoinColumn(name="product_uuid", nullable = false)
     @NotNull
     private Product product;
 

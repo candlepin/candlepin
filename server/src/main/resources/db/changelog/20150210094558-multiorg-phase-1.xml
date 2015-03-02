@@ -13,22 +13,28 @@
     <!-- cpo_products -->
     <changeSet id="20150210094558-1" author="crog">
         <createTable tableName="cpo_products">
-            <column name="id" type="varchar(32)">
+            <column name="uuid" type="varchar(32)">
                 <constraints primaryKey="true" primaryKeyName="cpo_products_pk"/>
             </column>
             <column name="created" type="${timestamp.type}"/>
             <column name="updated" type="${timestamp.type}"/>
             <column name="multiplier" type="int"/>
-            <column name="owner_id" type="varchar(32)"/>
+            <column name="owner_id" type="varchar(32)">
+                <constraints
+                    nullable="false"
+                    foreignKeyName="cpo_products_fk1"
+                    references="cp_owner(id)"
+                />
+            </column>
             <column name="product_id" type="varchar(32)"
-                remarks="RH product ID; not to be confused with cp_products.id">
+                remarks="RH product ID; not to be confused with the uuid">
                 <constraints nullable="false"/>
             </column>
             <column name ="name" type="varchar(255)">
                 <constraints nullable="false"/>
             </column>
         </createTable>
-        <addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="cpo_products" baseTableSchemaName="public" constraintName="cpo_products_fk1" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+<!--         <addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="cpo_products" baseTableSchemaName="public" constraintName="cpo_products_fk1" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" referencedTableSchemaName="public" referencesUniqueColumn="false"/> -->
     </changeSet>
 
     <changeSet id="20150210094558-2" author="crog">
@@ -48,11 +54,11 @@
                     references="cp_activation_key(id)"
                 />
             </column>
-            <column name="product_id" type="varchar(32)">
+            <column name="product_uuid" type="varchar(32)">
                 <constraints
                     nullable="false"
                     foreignKeyName="cpo_actkeyprod_fk2"
-                    references="cpo_products(id)"
+                    references="cpo_products(uuid)"
                 />
             </column>
         </createTable>
@@ -60,7 +66,7 @@
 
     <changeSet id="20150210094558-4" author="crog">
         <addPrimaryKey tableName="cpo_activation_key_products"
-            columnNames="key_id,product_id"
+            columnNames="key_id,product_uuid"
             constraintName="cpo_actkeyprod_pk"
         />
     </changeSet>
@@ -75,11 +81,11 @@
             </column>
             <column name="created" type="${timestamp.type}"/>
             <column name="updated" type="${timestamp.type}"/>
-            <column name="product_id" type="varchar(32)">
+            <column name="product_uuid" type="varchar(32)">
                 <constraints
                     nullable="false"
                     foreignKeyName="cpo_branding_fk1"
-                    references="cpo_products(id)"
+                    references="cpo_products(uuid)"
                 />
             </column>
             <column name="type" type="varchar(32)">
@@ -191,7 +197,7 @@
                     references="cp_consumer(id)"
                 />
             </column>
-            <column name="product_id" type="varchar(32)">
+            <column name="product_uuid" type="varchar(32)">
                 <constraints nullable="false"/>
             </column>
         </createTable>
@@ -199,7 +205,7 @@
 
     <changeSet id="20150210094558-11" author="crog">
         <addUniqueConstraint tableName="cpo_installed_products"
-            columnNames="consumer_id, product_id"
+            columnNames="consumer_id, product_uuid"
             constraintName="cpo_installed_products_unq1"
         />
     </changeSet>
@@ -216,11 +222,11 @@
                     references="cp_pool(id)"
                 />
             </column>
-            <column name="product_id" type="varchar(32)">
+            <column name="product_uuid" type="varchar(32)">
                 <constraints
                     nullable="false"
                     foreignKeyName="cpo_pool_provided_products_fk2"
-                    references="cpo_products(id)"
+                    references="cpo_products(uuid)"
                 />
             </column>
         </createTable>
@@ -228,7 +234,7 @@
 
     <changeSet id="20150210094558-13" author="crog">
         <addPrimaryKey tableName="cpo_pool_provided_products"
-            columnNames="pool_id, product_id"
+            columnNames="pool_id, product_uuid"
             constraintName="cpo_pool_provided_products_pk"
         />
     </changeSet>
@@ -245,11 +251,11 @@
                     references="cp_pool(id)"
                 />
             </column>
-            <column name="product_id" type="varchar(32)">
+            <column name="product_uuid" type="varchar(32)">
                 <constraints
                     nullable="false"
                     foreignKeyName="cpo_pool_derived_products_fk2"
-                    references="cpo_products(id)"
+                    references="cpo_products(uuid)"
                 />
             </column>
         </createTable>
@@ -257,7 +263,7 @@
 
     <changeSet id="20150210094558-15" author="crog">
         <addPrimaryKey tableName="cpo_pool_derived_products"
-            columnNames="pool_id, product_id"
+            columnNames="pool_id, product_uuid"
             constraintName="cpo_pool_derived_products_pk"
         />
     </changeSet>
@@ -276,11 +282,11 @@
                 <constraints nullable="false"/>
             </column>
             <column name="value" type="varchar(255)"/>
-            <column name="product_id" type="varchar(32)">
+            <column name="product_uuid" type="varchar(32)">
                 <constraints
                     nullable="false"
                     foreignKeyName="cpo_product_attributes_fk1"
-                    references="cpo_products(id)"
+                    references="cpo_products(uuid)"
                 />
             </column>
         </createTable>
@@ -309,11 +315,11 @@
             <column name="privatekey" type="blob">
                 <constraints nullable="false"/>
             </column>
-            <column name="product_id" type="varchar(32)">
+            <column name="product_uuid" type="varchar(32)">
                 <constraints
                     nullable="false"
                     foreignKeyName="cpo_product_certificates_fk1"
-                    references="cpo_products(id)"
+                    references="cpo_products(uuid)"
                 />
             </column>
         </createTable>
@@ -324,11 +330,11 @@
     <!-- cpo_product_content -->
     <changeSet id="20150210094558-19" author="crog">
         <createTable tableName="cpo_product_content">
-            <column name="product_id" type="varchar(32)">
+            <column name="product_uuid" type="varchar(32)">
                 <constraints
                     nullable="false"
                     foreignKeyName="cpo_product_content_fk1"
-                    references="cpo_products(id)"
+                    references="cpo_products(uuid)"
                 />
             </column>
             <column name="content_id" type="varchar(32)">
@@ -346,7 +352,7 @@
 
     <changeSet id="20150210094558-20" author="crog">
         <addPrimaryKey tableName="cpo_product_content"
-            columnNames="product_id, content_id"
+            columnNames="product_uuid, content_id"
             constraintName="cpo_product_content_pk"
         />
     </changeSet>
@@ -356,12 +362,12 @@
     <!-- cpo_product_dependent_products -->
     <changeSet id="20150210094558-21" author="crog">
         <createTable tableName="cpo_product_dependent_products">
-            <column name="product_id" type="varchar(32)">
+            <column name="product_uuid" type="varchar(32)">
                 <constraints
                     primaryKey="true"
                     primaryKeyName="cpo_proddepprod_pk"
                     foreignKeyName="cpo_proddepprod_fk1"
-                    references="cpo_products(id)"
+                    references="cpo_products(uuid)"
                 />
             </column>
             <column name="element" type="varchar(255)"/>
@@ -373,8 +379,8 @@
     <!-- cp_pool -->
     <changeSet id="20150210094558-22" author="crog">
         <addColumn tableName="cp_pool">
-            <column name="product_id" type="varchar(32)"/>
-            <column name="derived_product_id" type="varchar(32)"/>
+            <column name="product_uuid" type="varchar(32)"/>
+            <column name="derived_product_uuid" type="varchar(32)"/>
         </addColumn>
     </changeSet>
 
@@ -474,20 +480,20 @@
                     references="cp_owner(id)"
                 />
             </column>
-            <column name="product_id" type="varchar(32)">
+            <column name="product_uuid" type="varchar(32)">
                 <constraints
                     nullable="false"
                     foreignKeyName="cpo_subscriptions_fk3"
-                    references="cpo_products(id)"
+                    references="cpo_products(uuid)"
                 />
             </column>
             <column name="ordernumber" type="varchar(255)"/>
             <column name="upstream_entitlement_id" type="varchar(32)"/>
             <column name="upstream_consumer_id" type="varchar(255)"/>
-            <column name="derived_product_id" type="varchar(32)">
+            <column name="derived_product_uuid" type="varchar(32)">
                 <constraints
                     foreignKeyName="cpo_subscriptions_fk4"
-                    references="cpo_products(id)"
+                    references="cpo_products(uuid)"
                 />
             </column>
             <column name="cdn_id" type="varchar(32)"/>
@@ -562,11 +568,11 @@
                     references="cpo_subscriptions(id)"
                 />
             </column>
-            <column name="product_id" type="varchar(32)">
+            <column name="product_uuid" type="varchar(32)">
                 <constraints
                     nullable="false"
                     foreignKeyName="cpo_subscription_products_fk2"
-                    references="cpo_products(id)"
+                    references="cpo_products(uuid)"
                 />
             </column>
         </createTable>
@@ -574,7 +580,7 @@
 
     <changeSet id="20150210094558-36" author="crog">
         <addPrimaryKey tableName="cpo_subscription_products"
-            columnNames="subscription_id, product_id"
+            columnNames="subscription_id, product_uuid"
             constraintName="cpo_subscription_products_pk"
         />
     </changeSet>
@@ -591,11 +597,11 @@
                     references="cpo_subscriptions(id)"
                 />
             </column>
-            <column name="product_id" type="varchar(32)">
+            <column name="product_uuid" type="varchar(32)">
                 <constraints
                     nullable="false"
                     foreignKeyName="cpo_sub_derived_products_fk2"
-                    references="cpo_products(id)"
+                    references="cpo_products(uuid)"
                 />
             </column>
         </createTable>
@@ -603,7 +609,7 @@
 
     <changeSet id="20150210094558-38" author="crog">
         <addPrimaryKey tableName="cpo_sub_derived_products"
-            columnNames="subscription_id, product_id"
+            columnNames="subscription_id, product_uuid"
             constraintName="cpo_sub_derived_products_pk"
         />
     </changeSet>

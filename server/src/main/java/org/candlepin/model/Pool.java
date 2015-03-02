@@ -147,12 +147,12 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     private Date endDate;
 
     @ManyToOne
-    @JoinColumn(name="product_id", nullable = false)
+    @JoinColumn(name="product_uuid", nullable = false)
     @NotNull
     private Product product;
 
     @ManyToOne
-    @JoinColumn(name="derived_product_id")
+    @JoinColumn(name="derived_product_uuid")
     private Product derivedProduct;
 
     @ManyToMany
@@ -161,7 +161,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     @JoinTable(
         name="cpo_pool_provided_products",
         joinColumns={@JoinColumn(name="pool_id", insertable = false, updatable = false)},
-        inverseJoinColumns={@JoinColumn(name="product_id")}
+        inverseJoinColumns={@JoinColumn(name="product_uuid")}
     )
     private Set<Product> providedProducts = new HashSet<Product>();
 
@@ -171,7 +171,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     @JoinTable(
         name="cpo_pool_derived_products",
         joinColumns={@JoinColumn(name="pool_id", insertable = false, updatable = false)},
-        inverseJoinColumns={@JoinColumn(name="product_id")}
+        inverseJoinColumns={@JoinColumn(name="product_uuid")}
     )
     private Set<Product> derivedProvidedProducts = new HashSet<Product>();
 

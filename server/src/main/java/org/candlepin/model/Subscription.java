@@ -65,30 +65,30 @@ public class Subscription extends AbstractHibernateObject implements Owned, Name
     private Owner owner;
 
     @ManyToOne
-    @JoinColumn(nullable = false)
+    @JoinColumn(name="product_uuid", nullable = false)
     @NotNull
     private Product product;
 
     @ManyToOne
-    @JoinColumn(name="derived_product_id", nullable = true)
+    @JoinColumn(name="derived_product_uuid", nullable = true)
     private Product derivedProduct;
 
     @ManyToMany(targetEntity = Product.class)
     @JoinTable(name = "cpo_subscription_products",
         joinColumns = @JoinColumn(name = "subscription_id"),
-        inverseJoinColumns = @JoinColumn(name = "product_id"))
+        inverseJoinColumns = @JoinColumn(name = "product_uuid"))
     private Set<Product> providedProducts = new HashSet<Product>();
 
     @ManyToMany(targetEntity = Product.class)
     @JoinTable(name = "cpo_sub_derived_products",
         joinColumns = @JoinColumn(name = "subscription_id"),
-        inverseJoinColumns = @JoinColumn(name = "product_id"))
+        inverseJoinColumns = @JoinColumn(name = "product_uuid"))
     private Set<Product> derivedProvidedProducts = new HashSet<Product>();
 
     @OneToMany
     @JoinTable(name = "cpo_sub_branding",
         joinColumns = @JoinColumn(name = "subscription_id"),
-        inverseJoinColumns = @JoinColumn(name = "branding_id"))
+        inverseJoinColumns = @JoinColumn(name = "branding_uuid"))
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
     private Set<Branding> branding = new HashSet<Branding>();

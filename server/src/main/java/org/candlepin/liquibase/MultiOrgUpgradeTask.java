@@ -387,10 +387,10 @@ public class MultiOrgUpgradeTask {
                     "SELECT ?, created, updated, accountnumber, contractnumber, enddate, " +
                     "    modified, quantity, startdate, upstream_pool_id, certificate_id, ?, " +
                     "    (SELECT id FROM cpo_products " +
-                    "        WHERE owner_id = ? AND product_id = S.product_id), " +
+                    "        WHERE owner_id = ? AND product_uuid = S.product_id), " +
                     "    ordernumber, upstream_entitlement_id, upstream_consumer_id, " +
                     "    (SELECT id FROM cpo_products " +
-                    "        WHERE owner_id = ? AND product_id = S.derivedproduct_id), " +
+                    "        WHERE owner_id = ? AND product_uuid = S.derivedproduct_id), " +
                     "    cdn_id " +
                     "FROM cp_subscriptions S WHERE id = ?;",
                     subuuid, orgid, orgid, orgid, subid
@@ -413,7 +413,7 @@ public class MultiOrgUpgradeTask {
                 this.executeUpdate(
                     "INSERT INTO cpo_subscription_products " +
                     "SELECT ?, (SELECT id FROM cpo_products " +
-                    "    WHERE owner_id = ? AND product_id = S.product_id) " +
+                    "    WHERE owner_id = ? AND product_uuid = S.product_id) " +
                     "FROM cp_subscription_products S WHERE subscription_id = ?;",
                     subuuid, orgid, subid
                 );
@@ -421,7 +421,7 @@ public class MultiOrgUpgradeTask {
                 this.executeUpdate(
                     "INSERT INTO cpo_sub_derived_products " +
                     "SELECT ?, (SELECT id FROM cpo_products " +
-                    "    WHERE owner_id = ? AND product_id = S.product_id) " +
+                    "    WHERE owner_id = ? AND product_uuid = S.product_id) " +
                     "FROM cp_sub_derivedprods S WHERE subscription_id = ?;",
                     subuuid, orgid, subid
                 );

@@ -66,7 +66,7 @@ public class Product extends AbstractHibernateObject implements Linkable {
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     @Column(length = 32)
     @NotNull
-    private String id;
+    private String uuid;
 
     // Internal RH product ID,
     @Column(name="product_id")
@@ -99,7 +99,7 @@ public class Product extends AbstractHibernateObject implements Linkable {
 
     @ElementCollection
     @CollectionTable(name = "cpo_product_content",
-                     joinColumns = @JoinColumn(name = "product_id"))
+                     joinColumns = @JoinColumn(name = "product_uuid"))
     @Column(name = "element")
     @LazyCollection(LazyCollectionOption.EXTRA) // allows .size() without loading all data
     private List<ProductContent> productContent;
@@ -109,7 +109,7 @@ public class Product extends AbstractHibernateObject implements Linkable {
 
     @ElementCollection
     @CollectionTable(name = "cpo_product_dependent_products",
-                     joinColumns = @JoinColumn(name = "product_id"))
+                     joinColumns = @JoinColumn(name = "product_uuid"))
     @Column(name = "element")
     private Set<String> dependentProductIds;
 
@@ -119,7 +119,7 @@ public class Product extends AbstractHibernateObject implements Linkable {
     /**
      * Constructor Use this variant when creating a new object to persist.
      *
-     * @param id Product label
+     * @param productId The Red Hat product ID for the new product.
      * @param name Human readable Product name
      */
     public Product(String productId, String name, Owner owner) {
@@ -159,8 +159,9 @@ public class Product extends AbstractHibernateObject implements Linkable {
      * @return
      *  this product's object ID.
      */
+    // TODO: Rename to getUuid
     public String getId() {
-        return id;
+        return this.uuid;
     }
 
     /**
@@ -170,8 +171,9 @@ public class Product extends AbstractHibernateObject implements Linkable {
      * @param id
      *  The object ID to assign to this product.
      */
+    // TODO: Rename to setUuid
     public void setId(String id) {
-        this.id = id;
+        this.uuid = id;
     }
 
     /**
@@ -181,6 +183,7 @@ public class Product extends AbstractHibernateObject implements Linkable {
      * @return
      *  this product's ID.
      */
+    // TODO: Rename to getId
     public String getProductId() {
         return this.productId;
     }
@@ -192,6 +195,7 @@ public class Product extends AbstractHibernateObject implements Linkable {
      * @param productId
      *  The new product ID for this product.
      */
+    // TODO: Rename to setId
     public void setProductId(String productId) {
         this.productId = productId;
     }
