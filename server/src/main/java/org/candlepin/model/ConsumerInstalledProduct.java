@@ -55,7 +55,7 @@ public class ConsumerInstalledProduct extends AbstractHibernateObject {
     @NotNull
     private String id;
 
-    @Column(name = "product_uuid", nullable = false)
+    @Column(name = "product_id", nullable = false)
     @Size(max = 255)
     @NotNull
     private String productId;
