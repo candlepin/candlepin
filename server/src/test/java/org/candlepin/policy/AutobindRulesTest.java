@@ -891,7 +891,7 @@ public class AutobindRulesTest {
 
         // The hypervisor must be installed and entitled on the system for autobind
         // to pick up the unlimited guest_limit
-        compliance.addCompliantProduct(hypervisor.getUuid(), entitlement);
+        compliance.addCompliantProduct(hypervisor.getId(), entitlement);
 
         List<Pool> pools = new LinkedList<Pool>();
         pools.add(serverPool);

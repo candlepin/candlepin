@@ -215,7 +215,7 @@ function createPool(pool) {
         if (this.product_list == 0) {
             this.product_list.push(this.productId);
             for (var k = 0; k < this.providedProducts.length; k++) {
-                this.product_list.push(this.providedProducts[k].productId);
+                this.product_list.push(this.providedProducts[k].id);
             }
         }
         return this.product_list;
@@ -254,9 +254,9 @@ function createPool(pool) {
         }
 
         if (this.derived_product_list == 0) {
-            this.derived_product_list.push(this.derivedProduct.id);
+            this.derived_product_list.push(this.derivedProductId);
             for (var k = 0; k < this.derivedProvidedProducts.length; k++) {
-                this.derived_product_list.push(this.derivedProvidedProducts[k].productId);
+                this.derived_product_list.push(this.derivedProvidedProducts[k].id);
             }
         }
         return this.derived_product_list;
