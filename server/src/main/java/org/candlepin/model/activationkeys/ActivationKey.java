@@ -91,7 +91,7 @@ public class ActivationKey extends AbstractHibernateObject implements Owned, Nam
     @JoinTable(
         name="cpo_activation_key_products",
         joinColumns={@JoinColumn(name="key_id")},
-        inverseJoinColumns={@JoinColumn(name="product_id")}
+        inverseJoinColumns={@JoinColumn(name="product_uuid")}
     )
     private Set<Product> products = new HashSet<Product>();
 
