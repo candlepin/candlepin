@@ -105,12 +105,12 @@ public class ConsumerInstalledProduct extends AbstractHibernateObject {
 
     // Helper constructor for tests:
     public ConsumerInstalledProduct(Product p) {
-        this.productId = p.getProductId();
+        this.productId = p.getId();
         this.productName = p.getName();
     }
 
     public ConsumerInstalledProduct(Consumer c, Product p) {
-        this.productId = p.getProductId();
+        this.productId = p.getId();
         this.productName = p.getName();
         this.consumer = c;
     }

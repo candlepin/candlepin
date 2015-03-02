@@ -497,7 +497,7 @@ public class PoolRules {
         Set<Product> currentProvided = existingPool.getProvidedProducts();
 
         boolean productsChanged =
-            !incomingProduct.getProductId().equals(existingProduct.getProductId()) ||
+            !incomingProduct.getId().equals(existingProduct.getId()) ||
             !incomingProduct.getName().equals(existingProduct.getName()) ||
             !currentProvided.equals(incomingProvided);
 
@@ -513,8 +513,8 @@ public class PoolRules {
 
         boolean productsChanged = false;
         if (sub.getDerivedProduct() != null) {
-            productsChanged = !sub.getDerivedProduct().getProductId().equals(
-                existingPool.getDerivedProduct().getProductId());
+            productsChanged = !sub.getDerivedProduct().getId().equals(
+                existingPool.getDerivedProduct().getId());
             productsChanged = productsChanged ||
                 !sub.getDerivedProduct().getName().equals(
                     existingPool.getDerivedProduct().getName());

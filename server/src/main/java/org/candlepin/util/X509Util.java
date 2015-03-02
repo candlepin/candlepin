@@ -43,7 +43,7 @@ public abstract class X509Util {
     PROD_FILTER_PREDICATE = new Predicate<Product>() {
         @Override
         public boolean apply(Product product) {
-            return product != null && StringUtils.isNumeric(product.getProductId());
+            return product != null && StringUtils.isNumeric(product.getId());
         }
     };
 

@@ -254,7 +254,7 @@ function createPool(pool) {
         }
 
         if (this.derived_product_list == 0) {
-            this.derived_product_list.push(this.derivedProduct.productId);
+            this.derived_product_list.push(this.derivedProduct.id);
             for (var k = 0; k < this.derivedProvidedProducts.length; k++) {
                 this.derived_product_list.push(this.derivedProvidedProducts[k].productId);
             }

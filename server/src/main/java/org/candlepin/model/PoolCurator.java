@@ -239,8 +239,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
         if (productId != null) {
             crit.add(Restrictions.or(
-                Restrictions.eq("product.productId", productId),
-                Restrictions.eq("provProd.productId", productId)
+                Restrictions.eq("product.id", productId),
+                Restrictions.eq("provProd.id", productId)
             ));
         }
 
@@ -459,7 +459,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @return Set of levels based on exempt flag.
      */
     public Set<String> retrieveServiceLevelsForOwner(Owner owner, boolean exempt) {
-        String stmt = "SELECT DISTINCT Attribute.name, Attribute.value, Product.productId " +
+        String stmt = "SELECT DISTINCT Attribute.name, Attribute.value, Product.id " +
             "FROM Pool AS Pool " +
             "  INNER JOIN Pool.product AS Product " +
             "  INNER JOIN Product.attributes AS Attribute " +
@@ -616,23 +616,23 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         Set<String> result = new HashSet<String>();
 
         Query query = this.currentSession().createQuery(
-            "SELECT DISTINCT P.product.productId " +
+            "SELECT DISTINCT P.product.id " +
             "    FROM Pool P" +
-            "    WHERE P.product.productId IS NOT NULL AND P.product.productId != ''"
+            "    WHERE P.product.id IS NOT NULL AND P.product.id != ''"
         );
         result.addAll(query.list());
 
         query = this.currentSession().createQuery(
-            "SELECT DISTINCT P.derivedProduct.productId " +
+            "SELECT DISTINCT P.derivedProduct.id " +
             "    FROM Pool P" +
-            "    WHERE P.derivedProduct.productId IS NOT NULL AND P.derivedProduct.productId != ''"
+            "    WHERE P.derivedProduct.id IS NOT NULL AND P.derivedProduct.id != ''"
         );
         result.addAll(query.list());
 
         query = this.currentSession().createQuery(
             "SELECT DISTINCT P.providedProducts.productId " +
             "    FROM Pool P" +
-            "    WHERE P.providedProducts.productId IS NOT NULL AND P.providedProducts.productId != ''"
+            "    WHERE P.providedProducts.id IS NOT NULL AND P.providedProducts.id != ''"
         );
         result.addAll(query.list());
 

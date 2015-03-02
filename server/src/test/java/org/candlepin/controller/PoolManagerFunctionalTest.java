@@ -164,16 +164,16 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         List<Pool> pools = poolCurator.listByOwner(o);
         assertTrue(pools.size() > 0);
 
-        Pool virtHostPool = poolCurator.listByOwnerAndProduct(o, virtHost.getProductId()).get(0);
+        Pool virtHostPool = poolCurator.listByOwnerAndProduct(o, virtHost.getId()).get(0);
         assertNotNull(virtHostPool);
     }
 
     @Test
     public void testQuantityCheck() throws Exception {
-        Pool monitoringPool = poolCurator.listByOwnerAndProduct(o, monitoring.getProductId()).get(0);
+        Pool monitoringPool = poolCurator.listByOwnerAndProduct(o, monitoring.getId()).get(0);
         assertEquals(Long.valueOf(5), monitoringPool.getQuantity());
         AutobindData data = AutobindData.create(parentSystem).on(new Date())
-                .forProducts(new String [] {monitoring.getProductId()});
+                .forProducts(new String [] {monitoring.getId()});
         for (int i = 0; i < 5; i++) {
             List<Entitlement> entitlements = poolManager.entitleByProducts(data);
             assertEquals(1, entitlements.size());
@@ -196,7 +196,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     @Test
     public void testRevocation() throws Exception {
         AutobindData data = AutobindData.create(parentSystem).on(new Date())
-                .forProducts(new String [] {monitoring.getProductId()});
+                .forProducts(new String [] {monitoring.getId()});
         Entitlement e = poolManager.entitleByProducts(data).get(0);
         poolManager.revokeEntitlement(e);
 
@@ -207,7 +207,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     @Test
     public void testConsumeQuantity() throws Exception {
         Pool monitoringPool = poolCurator.listByOwnerAndProduct(o,
-            monitoring.getProductId()).get(0);
+            monitoring.getId()).get(0);
         assertEquals(Long.valueOf(5), monitoringPool.getQuantity());
 
         Entitlement e = poolManager.entitleByPool(parentSystem, monitoringPool, 3);
@@ -222,7 +222,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     public void testRegenerateEntitlementCertificatesWithSingleEntitlement()
         throws Exception {
         AutobindData data = AutobindData.create(childVirtSystem).on(new Date())
-                .forProducts(new String [] {provisioning.getProductId()});
+                .forProducts(new String [] {provisioning.getId()});
         this.entitlementCurator.refresh(poolManager.entitleByProducts(data).get(0));
         regenerateECAndAssertNotSameCertificates();
     }
@@ -231,7 +231,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     public void testRegenerateEntitlementCertificatesWithMultipleEntitlements()
         throws EntitlementRefusedException {
         AutobindData data = AutobindData.create(childVirtSystem).on(new Date())
-                .forProducts(new String [] {provisioning.getProductId()});
+                .forProducts(new String [] {provisioning.getId()});
         this.entitlementCurator.refresh(poolManager.entitleByProducts(data).get(0));
         this.entitlementCurator.refresh(poolManager.entitleByProducts(data).get(0));
         regenerateECAndAssertNotSameCertificates();
@@ -303,7 +303,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         // set up initial pool
         poolManager.getRefresher().add(o).run();
 
-        List<Pool> pools = poolCurator.listByOwnerAndProduct(o, product1.getProductId());
+        List<Pool> pools = poolCurator.listByOwnerAndProduct(o, product1.getId());
         assertEquals(1, pools.size());
 
         // now alter the product behind the sub, and make sure the pool is also updated
@@ -313,7 +313,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         // set up initial pool
         poolManager.getRefresher().add(o).run();
 
-        pools = poolCurator.listByOwnerAndProduct(o, product2.getProductId());
+        pools = poolCurator.listByOwnerAndProduct(o, product2.getId());
         assertEquals(1, pools.size());
     }
 

@@ -22,12 +22,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
-import org.hibernate.annotations.Where;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -595,7 +593,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
 
         if (providedProducts != null) {
             for (Product product : providedProducts) {
-                if (product.getProductId().equals(productId)) {
+                if (product.getId().equals(productId)) {
                     return true;
                 }
             }
@@ -622,7 +620,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
 
             if (getDerivedProvidedProducts() != null) {
                 for (Product product : getDerivedProvidedProducts()) {
-                    if (product.getProductId().equals(productId)) {
+                    if (product.getId().equals(productId)) {
                         return true;
                     }
                 }
@@ -642,7 +640,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
      */
     @HateoasInclude
     public String getProductId() {
-        return (this.getProduct() != null ? this.getProduct().getProductId() : null);
+        return (this.getProduct() != null ? this.getProduct().getId() : null);
     }
 
     /**
@@ -741,6 +739,13 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
 
     public Product getDerivedProduct() {
         return this.derivedProduct;
+    }
+
+    public String getDerivedProductId() {
+        if (derivedProduct == null) {
+            return null;
+        }
+        return this.derivedProduct.getId();
     }
 
     public Set<ProductAttribute> getProductAttributes() {

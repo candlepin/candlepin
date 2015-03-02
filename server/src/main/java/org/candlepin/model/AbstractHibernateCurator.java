@@ -17,9 +17,9 @@ package org.candlepin.model;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.permissions.Permission;
 import org.candlepin.common.exceptions.ConcurrentModificationException;
-import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
+import org.candlepin.guice.PrincipalProvider;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;

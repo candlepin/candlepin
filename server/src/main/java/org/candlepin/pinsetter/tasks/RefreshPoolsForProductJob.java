@@ -61,7 +61,7 @@ public class RefreshPoolsForProductJob extends KingpinJob {
     public static JobDetail forProduct(Product product, Boolean lazy) {
         JobDataMap map = new JobDataMap();
         map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.PRODUCT);
-        map.put(JobStatus.TARGET_ID, product.getId());
+        map.put(JobStatus.TARGET_ID, product.getUuid());
         map.put(LAZY_REGEN, lazy);
 
         JobDetail detail = newJob(RefreshPoolsForProductJob.class)

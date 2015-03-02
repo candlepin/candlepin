@@ -276,7 +276,7 @@ public class ProductResource {
                 entry.getValue());
             product.getProductContent().add(productContent);
         }
-        return prodAdapter.getProductById((product.getId()));
+        return prodAdapter.getProductById((product.getUuid()));
     }
 
     /**
@@ -298,7 +298,7 @@ public class ProductResource {
 
         ProductContent productContent = new ProductContent(product, content, enabled);
         product.getProductContent().add(productContent);
-        return prodAdapter.getProductById((product.getId()));
+        return prodAdapter.getProductById((product.getUuid()));
     }
 
     /**

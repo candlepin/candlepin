@@ -134,7 +134,7 @@ public class ConsumerBindUtil {
             List<String> poolIds = new ArrayList<String>();
 
             for (Product akp : key.getProducts()) {
-                productIds.add(akp.getProductId());
+                productIds.add(akp.getId());
             }
             for (ConsumerInstalledProduct cip : consumer.getInstalledProducts()) {
                 productIds.add(cip.getProductId());

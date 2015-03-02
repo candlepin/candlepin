@@ -197,7 +197,7 @@ public class ActivationKey extends AbstractHibernateObject implements Owned, Nam
 
     public void removeProduct(Product product) {
         for (Product candidate : this.getProducts()) {
-            if (product.getProductId().equals(candidate.getProductId())) {
+            if (product.getId().equals(candidate.getId())) {
                 this.getProducts().remove(candidate);
                 break;
             }
@@ -222,7 +222,7 @@ public class ActivationKey extends AbstractHibernateObject implements Owned, Nam
         }
 
         for (Product candidate : this.getProducts()) {
-            if (product.getProductId().equals(candidate.getProductId())) {
+            if (product.getId().equals(candidate.getId())) {
                 return true;
             }
         }

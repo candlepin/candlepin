@@ -49,11 +49,11 @@ public class PoolFilterBuilder extends FilterBuilder {
 
         Disjunction textOr = Restrictions.disjunction();
         textOr.add(new FilterLikeExpression("product.name", matches, true));
-        textOr.add(new FilterLikeExpression("product.productId", matches, true));
+        textOr.add(new FilterLikeExpression("product.id", matches, true));
         textOr.add(new FilterLikeExpression("contractNumber", matches, true));
         textOr.add(new FilterLikeExpression("orderNumber", matches, true));
 
-        textOr.add(new FilterLikeExpression("provProd.productId", matches, true));
+        textOr.add(new FilterLikeExpression("provProd.id", matches, true));
         textOr.add(new FilterLikeExpression("provProd.name", matches, true));
 
         textOr.add(Subqueries.exists(

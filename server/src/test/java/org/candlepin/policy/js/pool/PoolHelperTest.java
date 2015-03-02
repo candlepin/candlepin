@@ -252,7 +252,7 @@ public class PoolHelperTest {
         Pool targetPool = TestUtil.createPool(targetProduct);
         targetPool.setId("jso_speedwagon");
 
-        when(psa.getProductById(targetProduct.getId())).thenReturn(targetProduct);
+        when(psa.getProductById(targetProduct.getUuid())).thenReturn(targetProduct);
         when(ent.getConsumer()).thenReturn(cons);
 
         PoolHelper ph = new PoolHelper(pm, productCache, ent);
@@ -294,7 +294,7 @@ public class PoolHelperTest {
 
         targetPool.setDerivedProvidedProducts(derivedProducts);
 
-        when(psa.getProductById(subProduct.getId())).thenReturn(subProduct);
+        when(psa.getProductById(subProduct.getUuid())).thenReturn(subProduct);
         when(ent.getConsumer()).thenReturn(cons);
 
         PoolHelper ph = new PoolHelper(pm, productCache, ent);

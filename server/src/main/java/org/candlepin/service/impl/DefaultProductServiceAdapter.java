@@ -91,13 +91,13 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
     @Override
     public Product createProduct(Product product) {
         // TODO: This may not actually work properly with the change from getId to getProductId
-        if (prodCurator.find(product.getProductId()) != null) {
-            throw new BadRequestException("product with ID " + product.getProductId() +
+        if (prodCurator.find(product.getId()) != null) {
+            throw new BadRequestException("product with ID " + product.getId() +
                 " already exists");
         }
         else {
-            if (product.getProductId() == null || product.getProductId().trim().equals("")) {
-                product.setProductId(idGenerator.generateId());
+            if (product.getId() == null || product.getId().trim().equals("")) {
+                product.setId(idGenerator.generateId());
             }
             Product newProduct = prodCurator.create(product);
             return newProduct;
@@ -142,13 +142,13 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
         Set<X509ExtensionWrapper> extensions = this.extensionUtil.productExtensions(product);
 
         // TODO: Should this use the RH product ID, or our internal object ID?
-        BigInteger serial = BigInteger.valueOf(product.getProductId().hashCode()).abs();
+        BigInteger serial = BigInteger.valueOf(product.getId().hashCode()).abs();
 
         Calendar future = Calendar.getInstance();
         future.add(Calendar.YEAR, 10);
 
         X509Certificate x509Cert = this.pki.createX509Certificate(
-            "CN=" + product.getProductId(), extensions, null, new Date(), future.getTime(), keyPair,
+            "CN=" + product.getId(), extensions, null, new Date(), future.getTime(), keyPair,
             serial, null
         );
 

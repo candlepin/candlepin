@@ -306,13 +306,13 @@ public class Subscription extends AbstractHibernateObject implements Owned, Name
      */
     public Boolean provides(String desiredProductId) {
         // Direct match?
-        if (this.product.getId().equals(desiredProductId)) {
+        if (this.product.getUuid().equals(desiredProductId)) {
             return true;
         }
 
         // Check provided products:
         for (Product p : providedProducts) {
-            if (p.getId().equals(desiredProductId)) {
+            if (p.getUuid().equals(desiredProductId)) {
                 return true;
             }
         }

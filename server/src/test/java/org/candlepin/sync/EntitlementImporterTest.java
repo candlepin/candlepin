@@ -595,15 +595,15 @@ public class EntitlementImporterTest {
 
         // Create our expected products
         Map<String, Product> productsById = new HashMap<String, Product>();
-        productsById.put(parentProduct.getProductId(), parentProduct);
+        productsById.put(parentProduct.getId(), parentProduct);
         productsById.put(
-            pp1.getProductId(),
-            TestUtil.createProduct(pp1.getProductId(), pp1.getName(), owner)
+            pp1.getId(),
+            TestUtil.createProduct(pp1.getId(), pp1.getName(), owner)
         );
-        productsById.put(subProduct.getProductId(), subProduct);
+        productsById.put(subProduct.getId(), subProduct);
         productsById.put(
-            subProvided1.getProductId(),
-            TestUtil.createProduct(subProvided1.getProductId(), subProvided1.getName(), owner)
+            subProvided1.getId(),
+            TestUtil.createProduct(subProvided1.getId(), subProvided1.getName(), owner)
         );
 
         Meta meta = new Meta();
@@ -630,15 +630,15 @@ public class EntitlementImporterTest {
         assertEquals(parentProduct, sub.getProduct());
         assertEquals(provided.size(), sub.getProvidedProducts().size());
         assertEquals(
-            pp1.getProductId(),
-            sub.getProvidedProducts().iterator().next().getProductId()
+            pp1.getId(),
+            sub.getProvidedProducts().iterator().next().getId()
         );
 
         assertEquals(subProduct, sub.getDerivedProduct());
         assertEquals(1, sub.getDerivedProvidedProducts().size());
         assertEquals(
-            subProvided1.getProductId(),
-            sub.getDerivedProvidedProducts().iterator().next().getProductId()
+            subProvided1.getId(),
+            sub.getDerivedProvidedProducts().iterator().next().getId()
         );
 
         assertNotNull(sub.getCertificate());

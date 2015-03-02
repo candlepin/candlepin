@@ -134,7 +134,7 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
         Product secondProduct = productCurator.lookupByName(owner.getKey() + UEBER_PRODUCT);
 
         //make sure we didn't regenerate the whole thing
-        assertTrue(firstProduct.getId() == secondProduct.getId());
+        assertTrue(firstProduct.getUuid() == secondProduct.getUuid());
         // only the ueber cert
         assertFalse(firstCert.getId() == secondCert.getId());
     }

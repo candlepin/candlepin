@@ -207,13 +207,13 @@ public class ExporterTest {
         pcert.setCreated(new Date());
         pcert.setUpdated(new Date());
 
-        when(pp.getProductId()).thenReturn(prod.getProductId());
+        when(pp.getId()).thenReturn(prod.getId());
         when(pool.getProvidedProducts()).thenReturn(ppset);
         when(pool.getProduct()).thenReturn(prod1);
 
         when(pool.getDerivedProvidedProducts()).thenReturn(sppSet);
         when(pool.getDerivedProduct()).thenReturn(subProduct);
-        when(spp.getProductId()).thenReturn(subProvidedProduct.getProductId());
+        when(spp.getId()).thenReturn(subProvidedProduct.getId());
 
         when(ent.getPool()).thenReturn(pool);
         when(mrules.getRules()).thenReturn("foobar");

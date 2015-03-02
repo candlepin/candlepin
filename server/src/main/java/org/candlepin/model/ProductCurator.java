@@ -65,7 +65,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     @Transactional
     public Product lookupById(String id) {
         return (Product) currentSession().createCriteria(Product.class)
-            .add(Restrictions.eq("productId", id)).uniqueResult();
+            .add(Restrictions.eq("id", id)).uniqueResult();
     }
 
     /**
@@ -77,7 +77,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     public Product lookupById(Owner o, String id) {
         return (Product) currentSession().createCriteria(Product.class)
             .add(Restrictions.eq("owner", o))
-            .add(Restrictions.eq("productId", id)).uniqueResult();
+            .add(Restrictions.eq("id", id)).uniqueResult();
     }
 
     @SuppressWarnings("unchecked")
@@ -94,7 +94,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      * @param p Product to create or update.
      */
     public void createOrUpdate(Product p) {
-        Product existing = lookupById(p.getOwner(), p.getProductId());
+        Product existing = lookupById(p.getOwner(), p.getId());
         if (existing == null) {
             create(p);
         }
@@ -105,9 +105,9 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     }
 
     public void copy(Product incoming, Product existing) {
-        if (incoming.getProductId() != existing.getProductId()) {
+        if (incoming.getId() != existing.getId()) {
             throw new RuntimeException("Products do not have matching IDs: " +
-                    incoming.getProductId() + " != " + existing.getProductId());
+                    incoming.getId() + " != " + existing.getId());
         }
 
         existing.setName(incoming.getName());

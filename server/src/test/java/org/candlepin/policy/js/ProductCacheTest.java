@@ -68,32 +68,32 @@ public class ProductCacheTest {
     public void getProductFromAdapterIfNotInCache() {
         Owner owner = new Owner("Test Corporation");
         Product p = new Product("a_product", "a_product", owner);
-        when(mockProductAdapter.getProductById(p.getId())).thenReturn(p);
-        assertFalse(cache.contains(p.getId()));
-        Product fetched = cache.getProductById(p.getId());
-        assertEquals(p.getId(), fetched.getId());
-        assertTrue(cache.contains(p.getId()));
+        when(mockProductAdapter.getProductById(p.getUuid())).thenReturn(p);
+        assertFalse(cache.contains(p.getUuid()));
+        Product fetched = cache.getProductById(p.getUuid());
+        assertEquals(p.getUuid(), fetched.getUuid());
+        assertTrue(cache.contains(p.getUuid()));
 
-        verify(mockProductAdapter, times(1)).getProductById(eq(p.getId()));
+        verify(mockProductAdapter, times(1)).getProductById(eq(p.getUuid()));
     }
 
     @Test
     public void doNotGetProductFromAdapterIfInCache() {
         Owner owner = new Owner("Test Corporation");
         Product p = new Product("a_product", "a_product", owner);
-        when(mockProductAdapter.getProductById(p.getId())).thenReturn(p);
-        assertFalse(cache.contains(p.getId()));
+        when(mockProductAdapter.getProductById(p.getUuid())).thenReturn(p);
+        assertFalse(cache.contains(p.getUuid()));
         // Look up the product so it is fetched from the adapter
-        cache.getProductById(p.getId());
-        assertTrue(cache.contains(p.getId()));
+        cache.getProductById(p.getUuid());
+        assertTrue(cache.contains(p.getUuid()));
 
         // Look the product up again so that we can verify that
         // a second adapter call was not made.
-        Product fetched = cache.getProductById(p.getId());
-        assertEquals(p.getId(), fetched.getId());
+        Product fetched = cache.getProductById(p.getUuid());
+        assertEquals(p.getUuid(), fetched.getUuid());
 
         // The adapter should be hit only once.
-        verify(mockProductAdapter, times(1)).getProductById(eq(p.getId()));
+        verify(mockProductAdapter, times(1)).getProductById(eq(p.getUuid()));
     }
 
     @Test
@@ -105,7 +105,7 @@ public class ProductCacheTest {
         }
 
         assertEquals(100, cache.size());
-        assertTrue(cache.contains(initial.getProductId()));
+        assertTrue(cache.contains(initial.getId()));
 
         // Add one more to roll the cache over its max.
         Product overflow = addProductToCache("overflow");
@@ -113,9 +113,9 @@ public class ProductCacheTest {
         // Cache size should remain at MAX.
         assertEquals(100, cache.size());
         // First product added should no longer be there.
-        assertFalse(cache.contains(initial.getProductId()));
+        assertFalse(cache.contains(initial.getId()));
         // New product should exist.
-        assertTrue(cache.contains(overflow.getProductId()));
+        assertTrue(cache.contains(overflow.getId()));
     }
 
     @Test
@@ -155,7 +155,7 @@ public class ProductCacheTest {
         // Look the product up again so that we can verify that
         // a second adapter call was not made.
         Product fetched = cache.getProductById(productId);
-        assertEquals(productId, fetched.getProductId());
+        assertEquals(productId, fetched.getId());
 
         // The adapter should be hit again on the second lookup.
         verify(mockProductAdapter, times(2)).getProductById(eq(productId));
@@ -170,7 +170,7 @@ public class ProductCacheTest {
         cache.setNullReferenceForProduct(productId);
 
         Product fetched = cache.getProductById(productId);
-        assertEquals(productId, fetched.getProductId());
+        assertEquals(productId, fetched.getId());
 
         // The adapter should be hit again on the second lookup.
         verify(mockProductAdapter, times(2)).getProductById(eq(productId));
@@ -179,9 +179,9 @@ public class ProductCacheTest {
     private Product addProductToCache(ProductCache prodCache, String productId) {
         Owner owner = new Owner("Test Corporation");
         Product product = new Product(productId, productId, owner);
-        when(mockProductAdapter.getProductById(product.getProductId())).thenReturn(product);
+        when(mockProductAdapter.getProductById(product.getId())).thenReturn(product);
         assertNotNull("Failed to add product to cache.",
-            prodCache.getProductById(product.getProductId()));
+            prodCache.getProductById(product.getId()));
         return product;
     }
 

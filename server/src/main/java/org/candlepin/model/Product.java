@@ -64,14 +64,13 @@ public class Product extends AbstractHibernateObject implements Linkable {
     @Id
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
-    @Column(length = 32)
     @NotNull
     private String uuid;
 
     // Internal RH product ID,
     @Column(name="product_id")
     @NotNull
-    private String productId;
+    private String id;
 
     @Column(nullable = false)
     @Size(max = 255)
@@ -128,7 +127,7 @@ public class Product extends AbstractHibernateObject implements Linkable {
 
     public Product(String productId, String name, Owner owner, Long multiplier) {
 
-        setProductId(productId);
+        setId(productId);
         setName(name);
         setOwner(owner);
         setMultiplier(multiplier);
@@ -153,15 +152,15 @@ public class Product extends AbstractHibernateObject implements Linkable {
     }
 
     /**
-     * Retrieves this product's object ID. Note that this ID is used to uniquely identify this
-     * particular object and has no baring on the Red Hat product ID.
+     * Retrieves this product's database UUID. While the product ID may exist multiple times
+     * in the database (if in use by multiple owners), this UUID uniquely identifies a
+     * product instance.
      *
      * @return
-     *  this product's object ID.
+     *  this product's database UUID.
      */
-    // TODO: Rename to getUuid
-    public String getId() {
-        return this.uuid;
+    public String getUuid() {
+        return uuid;
     }
 
     /**
@@ -171,21 +170,19 @@ public class Product extends AbstractHibernateObject implements Linkable {
      * @param id
      *  The object ID to assign to this product.
      */
-    // TODO: Rename to setUuid
-    public void setId(String id) {
+    public void setUuid(String id) {
         this.uuid = id;
     }
 
     /**
-     * Retrieves this product's ID. This ID is the Red Hat product ID and should not be confused
-     * with the object ID.
+     * Retrieves this product's ID. Assigned by the content provider, and may exist in
+     * multiple owners, thus may not be unique in itself.
      *
      * @return
      *  this product's ID.
      */
-    // TODO: Rename to getId
-    public String getProductId() {
-        return this.productId;
+    public String getId() {
+        return this.id;
     }
 
     /**
@@ -195,9 +192,8 @@ public class Product extends AbstractHibernateObject implements Linkable {
      * @param productId
      *  The new product ID for this product.
      */
-    // TODO: Rename to setId
-    public void setProductId(String productId) {
-        this.productId = productId;
+    public void setId(String productId) {
+        this.id = productId;
     }
 
     /**
@@ -339,7 +335,7 @@ public class Product extends AbstractHibernateObject implements Linkable {
 
     @Override
     public String toString() {
-        return "Product [id = " + productId + ", name = " + name + "]";
+        return "Product [id = " + id + ", name = " + name + "]";
     }
 
     @Override
@@ -353,13 +349,13 @@ public class Product extends AbstractHibernateObject implements Linkable {
 
         Product another = (Product) anObject;
 
-        return getProductId().equals(another.getProductId()) && name.equals(another.getName());
+        return getId().equals(another.getId()) && name.equals(another.getName());
     }
 
     @Override
     public int hashCode() {
-        if (productId != null) {
-            return productId.hashCode() * 31;
+        if (id != null) {
+            return id.hashCode() * 31;
         }
         return 31;
     }
@@ -442,7 +438,7 @@ public class Product extends AbstractHibernateObject implements Linkable {
 
     @Override
     public String getHref() {
-        return "/owners/" + getOwner().getKey() + "/products/" + getProductId();
+        return "/owners/" + getOwner().getKey() + "/products/" + getId();
     }
 
     @Override

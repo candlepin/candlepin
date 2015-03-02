@@ -97,7 +97,7 @@ public class ProductImporter {
         Set<Product> toReturn = Util.newSet();
 
         for (Product product : products) {
-            Product existing = curator.lookupById(product.getId());
+            Product existing = curator.lookupById(product.getUuid());
 
             if (existing != null && hasProductChanged(existing, product)) {
                 toReturn.add(product);

@@ -58,7 +58,7 @@ public class StubEntitlementCertServiceAdapter extends BaseEntitlementCertServic
 
         log.debug("Generating entitlement cert for:");
         log.debug("   consumer: " + entitlement.getConsumer().getUuid());
-        log.debug("   product: " + product.getId());
+        log.debug("   product: " + product.getUuid());
         log.debug("   end date: " + entitlement.getEndDate());
 
         EntitlementCertificate cert = new EntitlementCertificate();

@@ -113,10 +113,10 @@ public class DefaultSubscriptionServiceAdapter implements
     @Override
     public Subscription createSubscription(Subscription subscription) {
         subscription.setProduct(prodCurator.find(subscription.getProduct()
-            .getId()));
+            .getUuid()));
         Set<Product> provided = new HashSet<Product>();
         for (Product incoming : subscription.getProvidedProducts()) {
-            provided.add(prodCurator.find(incoming.getId()));
+            provided.add(prodCurator.find(incoming.getUuid()));
         }
         subscription.setProvidedProducts(provided);
         Subscription s = subCurator.create(subscription);

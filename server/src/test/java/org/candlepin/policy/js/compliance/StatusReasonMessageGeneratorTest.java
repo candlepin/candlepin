@@ -152,7 +152,7 @@ public class StatusReasonMessageGeneratorTest {
 
         Owner owner = new Owner("test");
         Product product = TestUtil.createProduct("prod1", "NonCovered Product", owner);
-        ConsumerInstalledProduct installed = new ConsumerInstalledProduct(product.getProductId(),
+        ConsumerInstalledProduct installed = new ConsumerInstalledProduct(product.getId(),
                 product.getName());
 
         consumer.addInstalledProduct(installed);

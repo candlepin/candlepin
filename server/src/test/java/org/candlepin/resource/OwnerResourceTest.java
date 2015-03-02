@@ -167,7 +167,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         // Trigger the refresh:
         poolManager.getRefresher().add(owner).run();
         List<Pool> pools = poolCurator.listByOwnerAndProduct(owner,
-            prod.getProductId());
+            prod.getId());
         assertEquals(1, pools.size());
         Pool newPool = pools.get(0);
 
@@ -220,7 +220,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         poolManager.getRefresher().add(owner).run();
 
         List<Pool> pools = poolCurator.listByOwnerAndProduct(owner,
-            prod.getProductId());
+            prod.getId());
         assertEquals(1, pools.size());
         Pool newPool = pools.get(0);
         String poolId = newPool.getId();
@@ -675,7 +675,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         securityInterceptor.enable();
 
         List<Pool> pools = ownerResource.listPools(owner.getKey(), c.getUuid(), null,
-            p.getProductId(), true, null, null, new ArrayList<KeyValueParameter>(), principal, null);
+            p.getId(), true, null, null, new ArrayList<KeyValueParameter>(), principal, null);
         assertEquals(1, pools.size());
         Pool returnedPool = pools.get(0);
         assertNotNull(returnedPool.getCalculatedAttributes());
@@ -699,7 +699,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         ownerCurator.create(owner2);
 
         ownerResource.listPools(owner.getKey(), c.getUuid(), null,
-            p.getId(), true, null, null,
+            p.getUuid(), true, null, null,
             new ArrayList<KeyValueParameter>(), setupPrincipal(owner2, Access.NONE), null);
     }
 

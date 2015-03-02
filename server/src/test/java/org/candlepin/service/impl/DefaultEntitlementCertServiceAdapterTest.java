@@ -897,13 +897,13 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
     private Boolean extMapHasProductBrandType(Product product, Map<String, String> extMap) {
         return extMap.containsKey("1.3.6.1.4.1.2312.9.1." +
-            product.getId() + "." + "5");
+            product.getUuid() + "." + "5");
     }
 
     private Boolean extMapProductBrandTypeMatches(Product product, Map<String,
         String> extMap, String brandType) {
         String brandTypeOid = "1.3.6.1.4.1.2312.9.1." +
-            product.getId() + "." + "5";
+            product.getUuid() + "." + "5";
         String extBrandType = extMap.get(brandTypeOid);
 
         return extBrandType.equals(brandType);
@@ -1184,7 +1184,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         assertEquals(data.get("quantity"), 10);
 
         Map<String, Object> subs = (Map<String, Object>) data.get("subscription");
-        assertEquals(subs.get("sku"), subscription.getProduct().getId());
+        assertEquals(subs.get("sku"), subscription.getProduct().getUuid());
         assertEquals(subs.get("name"), subscription.getProduct().getName());
         assertEquals(subs.get("warning"), 20);
         assertEquals(subs.get("sockets"), 4);
@@ -1209,7 +1209,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         List<Map<String, Object>> prods = (List<Map<String, Object>>) data.get("products");
         List<Map<String, Object>> contents = null;
         for (Map<String, Object> prod : prods) {
-            assertEquals(prod.get("id"), product.getId());
+            assertEquals(prod.get("id"), product.getUuid());
             assertEquals(prod.get("name"), product.getName());
             assertEquals(prod.get("version"), product.getAttributeValue("version"));
             String arch = product.hasAttribute("arch") ?

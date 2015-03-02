@@ -479,27 +479,27 @@ public class Exporter {
             Pool pool = entitlement.getPool();
 
             for (Product providedProduct : pool.getProvidedProducts()) {
-                products.put(providedProduct.getProductId(), providedProduct);
+                products.put(providedProduct.getId(), providedProduct);
             }
 
             // Don't forget the 'main' product!
             Product product = pool.getProduct();
-            products.put(product.getProductId(), product);
+            products.put(product.getId(), product);
 
             // Also need to check for sub products
             Product derivedProduct = pool.getDerivedProduct();
             if (derivedProduct != null) {
-                products.put(derivedProduct.getProductId(), derivedProduct);
+                products.put(derivedProduct.getId(), derivedProduct);
             }
 
             for (Product derivedProvidedProduct : pool.getDerivedProvidedProducts()) {
-                products.put(derivedProvidedProduct.getProductId(), derivedProvidedProduct);
+                products.put(derivedProvidedProduct.getId(), derivedProvidedProduct);
             }
         }
 
         for (Product product : products.values()) {
             String path = productDir.getCanonicalPath();
-            String productId = product.getId();
+            String productId = product.getUuid();
             File file = new File(path, productId + ".json");
             FileWriter writer = null;
             try {
@@ -513,14 +513,14 @@ public class Exporter {
             }
 
             // Real products have a numeric id.
-            if (StringUtils.isNumeric(product.getId())) {
+            if (StringUtils.isNumeric(product.getUuid())) {
                 ProductCertificate cert = productAdapter.getProductCertificate(product);
                 // XXX: not all product adapters implement getProductCertificate,
                 // so just skip over this if we get null back
                 // XXX: need to decide if the cert should always be in the export, or never.
                 if (cert != null) {
                     file = new File(productDir.getCanonicalPath(),
-                        product.getId() + ".pem");
+                        product.getUuid() + ".pem");
                     writer = new FileWriter(file);
                     productCertExporter.export(writer, cert);
                     writer.close();

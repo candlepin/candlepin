@@ -187,7 +187,7 @@ public class X509V3ExtensionUtil extends X509Util {
         Pool pool = ent.getPool();
         Product product = pool.getProduct();
 
-        toReturn.setSku(product.getProductId());
+        toReturn.setSku(product.getId());
         toReturn.setName(product.getName());
 
         String warningPeriod = product.getAttributeValue("warning_period");
@@ -307,13 +307,13 @@ public class X509V3ExtensionUtil extends X509Util {
 
         org.candlepin.json.model.Product toReturn = new org.candlepin.json.model.Product();
 
-        toReturn.setId(product.getProductId());
+        toReturn.setId(product.getId());
         toReturn.setName(product.getName());
 
         String version = product.hasAttribute("version") ? product.getAttributeValue("version") : "";
         toReturn.setVersion(version);
 
-        Branding brand = getBranding(ent.getPool(), product.getProductId());
+        Branding brand = getBranding(ent.getPool(), product.getId());
         toReturn.setBrandType(brand.getType());
         toReturn.setBrandName(brand.getName());
 

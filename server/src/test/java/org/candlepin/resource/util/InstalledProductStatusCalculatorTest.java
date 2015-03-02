@@ -118,7 +118,7 @@ public class InstalledProductStatusCalculatorTest {
         ComplianceStatus status = compliance.getStatus(c, now);
         ConsumerInstalledProductEnricher calculator =
             new ConsumerInstalledProductEnricher(c, status, compliance);
-        Product p = new Product(PRODUCT_1.getProductId(), "Awesome Product", owner);
+        Product p = new Product(PRODUCT_1.getId(), "Awesome Product", owner);
         DateRange validRange = calculator.getValidDateRange(p);
         assertEquals(entRange.getStartDate(), validRange.getStartDate());
         assertEquals(entRange.getEndDate(), validRange.getEndDate());
@@ -144,7 +144,7 @@ public class InstalledProductStatusCalculatorTest {
         ComplianceStatus status = compliance.getStatus(c, now);
         ConsumerInstalledProductEnricher calculator =
             new ConsumerInstalledProductEnricher(c, status, compliance);
-        Product p = new Product(PRODUCT_1.getProductId(), "Awesome Product", owner);
+        Product p = new Product(PRODUCT_1.getId(), "Awesome Product", owner);
         DateRange validRange = calculator.getValidDateRange(p);
         assertEquals(range2.getStartDate(), validRange.getStartDate());
         assertEquals(range2.getEndDate(), validRange.getEndDate());
@@ -170,7 +170,7 @@ public class InstalledProductStatusCalculatorTest {
         ComplianceStatus status = compliance.getStatus(c, now);
         ConsumerInstalledProductEnricher calculator =
             new ConsumerInstalledProductEnricher(c, status, compliance);
-        Product p = new Product(PRODUCT_1.getProductId(), "Awesome Product", owner);
+        Product p = new Product(PRODUCT_1.getId(), "Awesome Product", owner);
         DateRange validRange = calculator.getValidDateRange(p);
         assertEquals(range2.getStartDate(), validRange.getStartDate());
         assertEquals(range2.getEndDate(), validRange.getEndDate());
@@ -189,12 +189,12 @@ public class InstalledProductStatusCalculatorTest {
         List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
         mockEntCurator(c, ents);
         ComplianceStatus status = compliance.getStatus(c, now);
-        status.addNonCompliantProduct(PRODUCT_1.getProductId());
+        status.addNonCompliantProduct(PRODUCT_1.getId());
         ConsumerInstalledProduct cip = new ConsumerInstalledProduct();
         c.addInstalledProduct(cip);
         ConsumerInstalledProductEnricher calculator =
             new ConsumerInstalledProductEnricher(c, status, compliance);
-        Product p = new Product(PRODUCT_1.getProductId(), "Awesome Product", owner);
+        Product p = new Product(PRODUCT_1.getId(), "Awesome Product", owner);
         cip.setVersion("candlepin version");
         cip.setArch("candlepin arch");
         calculator.enrich(cip, p);
@@ -206,7 +206,7 @@ public class InstalledProductStatusCalculatorTest {
     public void enricherDoesntSetArchVersion() {
         //test that the enricher does not set the arch and version
         //when they are supplied with values
-        Product baseProduct = new Product(PRODUCT_1.getProductId(), "Awesome Product", owner);
+        Product baseProduct = new Product(PRODUCT_1.getId(), "Awesome Product", owner);
         Consumer c = mockConsumer(baseProduct);
 
         Calendar cal = Calendar.getInstance();
@@ -216,14 +216,14 @@ public class InstalledProductStatusCalculatorTest {
         List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
         mockEntCurator(c, ents);
         ComplianceStatus status = compliance.getStatus(c, now);
-        status.addNonCompliantProduct(baseProduct.getProductId());
+        status.addNonCompliantProduct(baseProduct.getId());
         ConsumerInstalledProduct cip = new ConsumerInstalledProduct(c, baseProduct);
         cip.setArch("x86_64");
         cip.setVersion("4.5");
         c.addInstalledProduct(cip);
         ConsumerInstalledProductEnricher calculator =
             new ConsumerInstalledProductEnricher(c, status, compliance);
-        Product p = new Product(baseProduct.getProductId(), "Awesome Product", owner);
+        Product p = new Product(baseProduct.getId(), "Awesome Product", owner);
         p.setAttribute("version", "candlepin version");
         p.setAttribute("arch", "candlepin arch");
         calculator.enrich(cip, p);
@@ -253,7 +253,7 @@ public class InstalledProductStatusCalculatorTest {
         ComplianceStatus status = compliance.getStatus(c, now);
         ConsumerInstalledProductEnricher calculator =
             new ConsumerInstalledProductEnricher(c, status, compliance);
-        Product p = new Product(PRODUCT_1.getProductId(), "Awesome Product", owner);
+        Product p = new Product(PRODUCT_1.getId(), "Awesome Product", owner);
         DateRange validRange = calculator.getValidDateRange(p);
         assertEquals(current.getStartDate(), validRange.getStartDate());
         assertEquals(future.getEndDate(), validRange.getEndDate());
@@ -281,7 +281,7 @@ public class InstalledProductStatusCalculatorTest {
         ComplianceStatus status = compliance.getStatus(c, now);
         ConsumerInstalledProductEnricher calculator =
             new ConsumerInstalledProductEnricher(c, status, compliance);
-        Product p = new Product(PRODUCT_1.getProductId(), "Awesome Product", owner);
+        Product p = new Product(PRODUCT_1.getId(), "Awesome Product", owner);
         DateRange validRange = calculator.getValidDateRange(p);
         assertEquals(current.getStartDate(), validRange.getStartDate());
         assertEquals(future.getEndDate(), validRange.getEndDate());
@@ -305,7 +305,7 @@ public class InstalledProductStatusCalculatorTest {
         ComplianceStatus status = compliance.getStatus(c, now);
         ConsumerInstalledProductEnricher calculator =
             new ConsumerInstalledProductEnricher(c, status, compliance);
-        Product p = new Product(PRODUCT_1.getProductId(), "Awesome Product", owner);
+        Product p = new Product(PRODUCT_1.getId(), "Awesome Product", owner);
         DateRange validRange = calculator.getValidDateRange(p);
         assertEquals(range1.getStartDate(), validRange.getStartDate());
         assertEquals(range2.getEndDate(), validRange.getEndDate());
@@ -329,7 +329,7 @@ public class InstalledProductStatusCalculatorTest {
         ComplianceStatus status = compliance.getStatus(c, now);
         ConsumerInstalledProductEnricher calculator =
             new ConsumerInstalledProductEnricher(c, status, compliance);
-        Product p = new Product(PRODUCT_1.getProductId(), "Awesome Product", owner);
+        Product p = new Product(PRODUCT_1.getId(), "Awesome Product", owner);
         DateRange validRange = calculator.getValidDateRange(p);
         assertEquals(range1.getStartDate(), validRange.getStartDate());
         assertEquals(range1.getEndDate(), validRange.getEndDate());
@@ -353,7 +353,7 @@ public class InstalledProductStatusCalculatorTest {
         ComplianceStatus status = compliance.getStatus(c, now);
         ConsumerInstalledProductEnricher calculator =
             new ConsumerInstalledProductEnricher(c, status, compliance);
-        Product p = new Product(PRODUCT_1.getProductId(), "Awesome Product", owner);
+        Product p = new Product(PRODUCT_1.getId(), "Awesome Product", owner);
         DateRange validRange = calculator.getValidDateRange(p);
         assertEquals(range1.getStartDate(), validRange.getStartDate());
         assertEquals(range2.getEndDate(), validRange.getEndDate());
@@ -377,7 +377,7 @@ public class InstalledProductStatusCalculatorTest {
         ComplianceStatus status = compliance.getStatus(c, now);
         ConsumerInstalledProductEnricher calculator =
             new ConsumerInstalledProductEnricher(c, status, compliance);
-        Product p = new Product(PRODUCT_1.getProductId(), "Awesome Product", owner);
+        Product p = new Product(PRODUCT_1.getId(), "Awesome Product", owner);
         DateRange validRange = calculator.getValidDateRange(p);
         assertEquals(range2.getStartDate(), validRange.getStartDate());
         assertEquals(range1.getEndDate(), validRange.getEndDate());
@@ -399,7 +399,7 @@ public class InstalledProductStatusCalculatorTest {
         ComplianceStatus status = compliance.getStatus(c, now);
         ConsumerInstalledProductEnricher calculator =
             new ConsumerInstalledProductEnricher(c, status, compliance);
-        Product p = new Product(PRODUCT_1.getProductId(), "Awesome Product", owner);
+        Product p = new Product(PRODUCT_1.getId(), "Awesome Product", owner);
         DateRange validRange = calculator.getValidDateRange(p);
         assertNull(validRange);
     }
@@ -420,7 +420,7 @@ public class InstalledProductStatusCalculatorTest {
         ComplianceStatus status = compliance.getStatus(c, now);
         ConsumerInstalledProductEnricher calculator =
             new ConsumerInstalledProductEnricher(c, status, compliance);
-        Product p = new Product(PRODUCT_1.getProductId(), "Awesome Product", owner);
+        Product p = new Product(PRODUCT_1.getId(), "Awesome Product", owner);
         DateRange validRange = calculator.getValidDateRange(p);
         assertNull(validRange);
     }
@@ -443,7 +443,7 @@ public class InstalledProductStatusCalculatorTest {
         ComplianceStatus status = compliance.getStatus(c, now);
         ConsumerInstalledProductEnricher calculator =
             new ConsumerInstalledProductEnricher(c, status, compliance);
-        Product p = new Product(PRODUCT_1.getProductId(), "Awesome Product", owner);
+        Product p = new Product(PRODUCT_1.getId(), "Awesome Product", owner);
         DateRange validRange = calculator.getValidDateRange(p);
         assertNotNull(validRange);
         assertEquals(range.getStartDate(), validRange.getStartDate());
@@ -470,7 +470,7 @@ public class InstalledProductStatusCalculatorTest {
         ComplianceStatus status = compliance.getStatus(c, now);
         ConsumerInstalledProductEnricher calculator =
             new ConsumerInstalledProductEnricher(c, status, compliance);
-        Product p = new Product(PRODUCT_1.getProductId(), "Awesome Product", owner);
+        Product p = new Product(PRODUCT_1.getId(), "Awesome Product", owner);
         DateRange validRange = calculator.getValidDateRange(p);
         assertNotNull(validRange);
         assertEquals(range1.getStartDate(), validRange.getStartDate());
@@ -497,7 +497,7 @@ public class InstalledProductStatusCalculatorTest {
         ComplianceStatus status = compliance.getStatus(c, now);
         ConsumerInstalledProductEnricher calculator =
             new ConsumerInstalledProductEnricher(c, status, compliance);
-        Product p = new Product(PRODUCT_1.getProductId(), "Awesome Product", owner);
+        Product p = new Product(PRODUCT_1.getId(), "Awesome Product", owner);
         DateRange validRange = calculator.getValidDateRange(p);
         assertNotNull(validRange);
         assertEquals(range1.getStartDate(), validRange.getStartDate());
@@ -528,7 +528,7 @@ public class InstalledProductStatusCalculatorTest {
         ComplianceStatus status = compliance.getStatus(c, now);
         ConsumerInstalledProductEnricher calculator =
             new ConsumerInstalledProductEnricher(c, status, compliance);
-        Product p = new Product(PRODUCT_1.getProductId(), "Awesome Product", owner);
+        Product p = new Product(PRODUCT_1.getId(), "Awesome Product", owner);
         DateRange validRange = calculator.getValidDateRange(p);
         assertEquals(range1.getStartDate(), validRange.getStartDate());
         assertEquals(range1.getEndDate(), validRange.getEndDate());
@@ -560,7 +560,7 @@ public class InstalledProductStatusCalculatorTest {
         ComplianceStatus status = compliance.getStatus(c, now);
         ConsumerInstalledProductEnricher calculator =
             new ConsumerInstalledProductEnricher(c, status, compliance);
-        Product p = new Product(PRODUCT_1.getProductId(), "Awesome Product", owner);
+        Product p = new Product(PRODUCT_1.getId(), "Awesome Product", owner);
         DateRange validRange = calculator.getValidDateRange(p);
         assertEquals(range2.getStartDate(), validRange.getStartDate());
         assertEquals(range2.getEndDate(), validRange.getEndDate());
@@ -585,7 +585,7 @@ public class InstalledProductStatusCalculatorTest {
         ComplianceStatus status = compliance.getStatus(c, now);
         ConsumerInstalledProductEnricher calculator =
             new ConsumerInstalledProductEnricher(c, status, compliance);
-        Product p = new Product(PRODUCT_1.getProductId(), "Awesome Product", owner);
+        Product p = new Product(PRODUCT_1.getId(), "Awesome Product", owner);
         DateRange validRange = calculator.getValidDateRange(p);
         assertNotNull(validRange);
     }
@@ -616,7 +616,7 @@ public class InstalledProductStatusCalculatorTest {
         ComplianceStatus status = compliance.getStatus(c, now);
         ConsumerInstalledProductEnricher calculator =
             new ConsumerInstalledProductEnricher(c, status, compliance);
-        Product p = new Product(PRODUCT_1.getProductId(), "Awesome Product", owner);
+        Product p = new Product(PRODUCT_1.getId(), "Awesome Product", owner);
         DateRange validRange = calculator.getValidDateRange(p);
         assertEquals(range3.getStartDate(), validRange.getStartDate());
         assertEquals(range2.getEndDate(), validRange.getEndDate());
@@ -662,7 +662,7 @@ public class InstalledProductStatusCalculatorTest {
         ComplianceStatus status = compliance.getStatus(c, now);
         ConsumerInstalledProductEnricher calculator =
             new ConsumerInstalledProductEnricher(c, status, compliance);
-        Product p = new Product(PRODUCT_1.getProductId(), "Awesome Product", owner);
+        Product p = new Product(PRODUCT_1.getId(), "Awesome Product", owner);
         DateRange validRange = calculator.getValidDateRange(p);
         assertEquals(range3.getStartDate(), validRange.getStartDate());
         assertEquals(range2.getEndDate(), validRange.getEndDate());
@@ -718,7 +718,7 @@ public class InstalledProductStatusCalculatorTest {
         ComplianceStatus status = compliance.getStatus(c, now);
         ConsumerInstalledProductEnricher calculator =
             new ConsumerInstalledProductEnricher(c, status, compliance);
-        Product p = new Product(PRODUCT_1.getProductId(), "Awesome Product", owner);
+        Product p = new Product(PRODUCT_1.getId(), "Awesome Product", owner);
         DateRange validRange = calculator.getValidDateRange(p);
         assertEquals(range2.getStartDate(), validRange.getStartDate());
         assertEquals(range2.getEndDate(), validRange.getEndDate());
@@ -752,7 +752,7 @@ public class InstalledProductStatusCalculatorTest {
         assertEquals("valid", status.getStatus());
         ConsumerInstalledProductEnricher calculator =
             new ConsumerInstalledProductEnricher(c, status, compliance);
-        Product p1 = new Product(PRODUCT_1.getProductId(), "Awesome Product", owner);
+        Product p1 = new Product(PRODUCT_1.getId(), "Awesome Product", owner);
         DateRange validRange = calculator.getValidDateRange(p1);
         assertNotNull(validRange);
 

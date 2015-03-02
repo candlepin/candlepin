@@ -137,7 +137,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         productCurator.create(prod2);
 
         assertEquals(prod.getName(), prod2.getName());
-        assertFalse(prod.getId().equals(prod2.getId()));
+        assertFalse(prod.getUuid().equals(prod2.getUuid()));
     }
 
     @Test(expected = PersistenceException.class)
@@ -174,7 +174,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         productCurator.create(prod);
         attributeCurator.create(a);
 
-        Product lookedUp = productCurator.find(prod.getId());
+        Product lookedUp = productCurator.find(prod.getUuid());
         assertEquals(jsonData, lookedUp.getAttribute("content_sets").getValue());
 
         data = mapper.readValue(lookedUp.getAttribute("content_sets").getValue(),
@@ -206,7 +206,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         productCurator.create(prod);
         attributeCurator.create(a);
 
-        Product lookedUp = productCurator.find(prod.getId());
+        Product lookedUp = productCurator.find(prod.getUuid());
         assertEquals(jsonData, lookedUp.getAttribute("content_sets").getValue());
 
         data = mapper.readValue(lookedUp.getAttribute("content_sets").getValue(),
@@ -246,7 +246,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         prod.setDependentProductIds(dependentProductIds);
         productCurator.create(prod);
 
-        Product lookedUp = productCurator.find(prod.getId());
+        Product lookedUp = productCurator.find(prod.getUuid());
         assertThat(lookedUp.getDependentProductIds(), hasItem("ProductX"));
 
     }
@@ -277,7 +277,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
                                    "version", "arch", "", "SVC");
         productCurator.create(prod);
 
-        productCurator.find(prod.getId());
+        productCurator.find(prod.getUuid());
     }
 
     @Test
@@ -344,7 +344,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         int initialAttrCount = attributeCurator.listAll().size();
         productCurator.createOrUpdate(modified);
 
-        Product lookedUp = productCurator.lookupById(owner, original.getProductId());
+        Product lookedUp = productCurator.lookupById(owner, original.getId());
         assertEquals(newName, lookedUp.getName());
         assertEquals(3, lookedUp.getAttributes().size());
         assertEquals("a1", lookedUp.getAttributeValue("a1"));
@@ -368,14 +368,14 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         original.addAttribute(new ProductAttribute("product.bool_val_str", "true"));
         original.addAttribute(new ProductAttribute("product.bool_val_num", "0"));
         productCurator.create(original);
-        assertTrue(original.getId() != null);
+        assertTrue(original.getUuid() != null);
     }
 
     @Test
     public void testProductAttributeValidationSuccessUpdate() {
         Product original = createTestProduct();
         productCurator.create(original);
-        assertTrue(original.getId() != null);
+        assertTrue(original.getUuid() != null);
         original.setAttribute("product.count", "134");
         original.setAttribute("product.pos_count", "333");
         original.setAttribute("product.long_multiplier",
@@ -441,7 +441,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
     public void testProductAttributeUpdateFailInt() {
         Product original = createTestProduct();
         productCurator.create(original);
-        assertTrue(original.getId() != null);
+        assertTrue(original.getUuid() != null);
         original.addAttribute(new ProductAttribute("product.count", "one"));
         productCurator.createOrUpdate(original);
     }
@@ -450,7 +450,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
     public void testProductAttributeUpdateFailPosInt() {
         Product original = createTestProduct();
         productCurator.create(original);
-        assertTrue(original.getId() != null);
+        assertTrue(original.getUuid() != null);
         original.addAttribute(new ProductAttribute("product.pos_count", "-44"));
         productCurator.createOrUpdate(original);
     }
@@ -459,7 +459,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
     public void testProductAttributeUpdateSuccessZeroInt() {
         Product original = createTestProduct();
         productCurator.create(original);
-        assertTrue(original.getId() != null);
+        assertTrue(original.getUuid() != null);
         original.addAttribute(new ProductAttribute("product.pos_count", "0"));
         productCurator.createOrUpdate(original);
     }
@@ -468,7 +468,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
     public void testProductAttributeUpdateFailLong() {
         Product original = createTestProduct();
         productCurator.create(original);
-        assertTrue(original.getId() != null);
+        assertTrue(original.getUuid() != null);
         original.addAttribute(new ProductAttribute("product.long_multiplier",
             "10^23"));
         productCurator.createOrUpdate(original);
@@ -478,7 +478,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
     public void testProductAttributeUpdateFailPosLong() {
         Product original = createTestProduct();
         productCurator.create(original);
-        assertTrue(original.getId() != null);
+        assertTrue(original.getUuid() != null);
         original.addAttribute(new ProductAttribute("product.long_pos_count",
             "-23"));
         productCurator.createOrUpdate(original);
@@ -488,7 +488,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
     public void testProductAttributeUpdateFailStringBool() {
         Product original = createTestProduct();
         productCurator.create(original);
-        assertTrue(original.getId() != null);
+        assertTrue(original.getUuid() != null);
         original.addAttribute(new ProductAttribute("product.bool_val_str", "flase"));
         productCurator.createOrUpdate(original);
     }
@@ -497,7 +497,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
     public void testProductAttributeUpdateFailNumberBool() {
         Product original = createTestProduct();
         productCurator.create(original);
-        assertTrue(original.getId() != null);
+        assertTrue(original.getUuid() != null);
         original.addAttribute(new ProductAttribute("product.bool_val_num", "6"));
         productCurator.createOrUpdate(original);
     }
@@ -518,11 +518,11 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         contentCurator.create(content);
         productCurator.create(p);
 
-        p = productCurator.find(p.getId());
+        p = productCurator.find(p.getUuid());
         assertEquals(1, p.getProductContent().size());
 
         productCurator.removeProductContent(p, content);
-        p = productCurator.find(p.getId());
+        p = productCurator.find(p.getUuid());
         assertEquals(0, p.getProductContent().size());
     }
 
@@ -534,7 +534,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
             Product p = TestUtil.createProduct(owner);
             productCurator.create(p);
             products.add(p);
-            pids.add(p.getId());
+            pids.add(p.getUuid());
         }
 
         // ok get first 3 items to lookup
@@ -562,7 +562,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         contentIds.add(content.getId());
         List<String> productIds = productCurator.getProductIdsWithContent(contentIds);
         assertEquals(1, productIds.size());
-        assertEquals(p.getId(), productIds.get(0));
+        assertEquals(p.getUuid(), productIds.get(0));
     }
 
     @Test
@@ -610,7 +610,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         p2.addContent(content);
         productCurator.createOrUpdate(p2);
 
-        Product result = productCurator.find(p.getId());
+        Product result = productCurator.find(p.getUuid());
         assertEquals(1, result.getProductContent().size());
     }
 }

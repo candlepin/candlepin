@@ -270,7 +270,7 @@ public class AutobindRulesTest {
         pools.add(pool3);
 
         List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
-            new String[]{ provided.getProductId() }, pools, compliance, null, new HashSet<String>(),
+            new String[]{ provided.getId() }, pools, compliance, null, new HashSet<String>(),
             false);
 
         assertEquals(1, bestPools.size());
@@ -320,7 +320,7 @@ public class AutobindRulesTest {
         pools.add(pool3);
 
         List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
-            new String[]{ provided.getProductId() }, pools, compliance, null,
+            new String[]{ provided.getId() }, pools, compliance, null,
             new HashSet<String>(), false);
 
         assertEquals(2, bestPools.size());
@@ -499,7 +499,7 @@ public class AutobindRulesTest {
             = Arrays.asList(new Pool[] {pool1, pool2});
 
         List<PoolQuantity> result = autobindRules.selectBestPools(consumer,
-            new String[] {product.getProductId()}, availablePools, compliance, null,
+            new String[] {product.getId()}, availablePools, compliance, null,
             new HashSet<String>(), false);
         assertNotNull(result);
         for (PoolQuantity pq : result) {
@@ -518,7 +518,7 @@ public class AutobindRulesTest {
 
     private Product mockProduct(String pid, String productName) {
         Product product = new Product(pid, productName, owner);
-        product.setId("FAKE_DB_ID");
+        product.setUuid("FAKE_DB_ID");
         return product;
     }
 
@@ -537,7 +537,7 @@ public class AutobindRulesTest {
 
     private List<Pool> createDerivedPool(String derivedEngPid) {
         Product product = new Product(productId, "A test product", owner);
-        product.setId("FAKE_DB_ID");
+        product.setUuid("FAKE_DB_ID");
         product.setAttribute("stacking_id", "1");
         product.setAttribute("multi-entitlement", "yes");
         product.setAttribute("sockets", "2");
@@ -767,7 +767,7 @@ public class AutobindRulesTest {
         pools.add(pool);
 
         List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
-            new String[]{ product.getProductId() }, pools, compliance, null,
+            new String[]{ product.getId() }, pools, compliance, null,
             new HashSet<String>(), false);
         assertEquals(1, bestPools.size());
         assertEquals(new Integer(1), bestPools.get(0).getQuantity());
@@ -785,7 +785,7 @@ public class AutobindRulesTest {
         pools.add(pool);
 
         List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
-            new String[]{ product.getProductId() }, pools, compliance, null,
+            new String[]{ product.getId() }, pools, compliance, null,
             new HashSet<String>(), false);
         assertEquals(1, bestPools.size());
         assertEquals(new Integer(4), bestPools.get(0).getQuantity());
@@ -817,7 +817,7 @@ public class AutobindRulesTest {
         pools.add(hyperPool);
 
         autobindRules.selectBestPools(consumer,
-            new String[]{ server.getId() }, pools, compliance, null,
+            new String[]{ server.getUuid() }, pools, compliance, null,
             new HashSet<String>(), false);
     }
 
@@ -849,14 +849,14 @@ public class AutobindRulesTest {
 
         // The hypervisor must be installed and entitled on the system for autobind
         // to pick up the unlimited guest_limit
-        compliance.addCompliantProduct(hypervisor.getProductId(), entitlement);
+        compliance.addCompliantProduct(hypervisor.getId(), entitlement);
 
         List<Pool> pools = new LinkedList<Pool>();
         pools.add(serverPool);
         pools.add(hyperPool);
 
         List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
-            new String[]{ server.getProductId() }, pools, compliance, null,
+            new String[]{ server.getId() }, pools, compliance, null,
             new HashSet<String>(), false);
         assertEquals(1, bestPools.size());
         assertEquals(new Integer(4), bestPools.get(0).getQuantity());
@@ -891,14 +891,14 @@ public class AutobindRulesTest {
 
         // The hypervisor must be installed and entitled on the system for autobind
         // to pick up the unlimited guest_limit
-        compliance.addCompliantProduct(hypervisor.getId(), entitlement);
+        compliance.addCompliantProduct(hypervisor.getUuid(), entitlement);
 
         List<Pool> pools = new LinkedList<Pool>();
         pools.add(serverPool);
         pools.add(hyperPool);
 
         List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
-            new String[]{ server.getProductId() }, pools, compliance, null,
+            new String[]{ server.getId() }, pools, compliance, null,
             new HashSet<String>(), false);
         assertEquals(1, bestPools.size());
         assertEquals(new Integer(1), bestPools.get(0).getQuantity());

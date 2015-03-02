@@ -179,7 +179,7 @@ public class X509ExtensionUtil  extends X509Util{
             OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.PRODUCT_CERT_NAMESPACE_KEY);
 
         // XXX need to deal with non hash style IDs
-        String productOid = productCertOid + "." + product.getProductId();
+        String productOid = productCertOid + "." + product.getId();
 
         toReturn.add(new X509ExtensionWrapper(productOid + "." +
             OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_NAME_KEY), false, product

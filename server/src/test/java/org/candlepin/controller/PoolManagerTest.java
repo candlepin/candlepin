@@ -521,7 +521,7 @@ public class PoolManagerTest {
             .thenReturn(bestPools);
 
         AutobindData data = AutobindData.create(TestUtil.createConsumer(o))
-                .forProducts(new String[] { product.getId() }).on(now);
+                .forProducts(new String[] { product.getUuid() }).on(now);
         List<Entitlement> e = manager.entitleByProducts(data);
 
         assertNotNull(e);
@@ -690,7 +690,7 @@ public class PoolManagerTest {
 
         // Setup an installed product for the consumer, we'll make the bind request
         // with no products specified, so this should get used instead:
-        String [] installedPids = new String [] { product.getId() };
+        String [] installedPids = new String [] { product.getUuid() };
         ComplianceStatus mockCompliance = new ComplianceStatus(now);
         mockCompliance.addNonCompliantProduct(installedPids[0]);
         when(complianceRules.getStatus(any(Consumer.class),

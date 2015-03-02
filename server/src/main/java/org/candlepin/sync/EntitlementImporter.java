@@ -109,7 +109,7 @@ public class EntitlementImporter {
 
         Set<Product> products = new HashSet<Product>();
         for (Product providedProduct : entitlement.getPool().getProvidedProducts()) {
-            products.add(findProduct(productsById, providedProduct.getProductId()));
+            products.add(findProduct(productsById, providedProduct.getId()));
         }
 
         subscription.setProvidedProducts(products);
@@ -117,13 +117,13 @@ public class EntitlementImporter {
         // Add any sub product data to the subscription.
         if (entitlement.getPool().getDerivedProduct() != null) {
             subscription.setDerivedProduct(findProduct(
-                productsById, entitlement.getPool().getDerivedProduct().getProductId()
+                productsById, entitlement.getPool().getDerivedProduct().getId()
             ));
         }
 
         Set<Product> subProvProds = new HashSet<Product>();
         for (Product subProvProd : entitlement.getPool().getDerivedProvidedProducts()) {
-            subProvProds.add(findProduct(productsById, subProvProd.getProductId()));
+            subProvProds.add(findProduct(productsById, subProvProd.getId()));
         }
 
         subscription.setDerivedProvidedProducts(subProvProds);

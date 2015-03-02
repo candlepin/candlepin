@@ -588,7 +588,7 @@ public class Importer {
 
         Map<String, Product> productsById = new HashMap<String, Product>();
         for (Product product : products) {
-            productsById.put(product.getId(), product);
+            productsById.put(product.getUuid(), product);
         }
 
         Set<Subscription> subscriptionsToImport = new HashSet<Subscription>();

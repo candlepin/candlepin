@@ -68,8 +68,8 @@ public class ProductCache {
 
     public void addProducts(Set<Product> products) {
         for (Product product : products) {
-            if (!contains(product.getId())) {
-                this.products.put(product.getId(), new ProductReference(product));
+            if (!contains(product.getUuid())) {
+                this.products.put(product.getUuid(), new ProductReference(product));
             }
         }
     }

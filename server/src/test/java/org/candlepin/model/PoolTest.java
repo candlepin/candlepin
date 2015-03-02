@@ -90,8 +90,8 @@ public class PoolTest extends DatabaseTestFixture {
         Pool lookedUp = entityManager().find(Pool.class, pool.getId());
         assertNotNull(lookedUp);
         assertEquals(owner.getId(), lookedUp.getOwner().getId());
-        assertEquals(prod1.getProductId(), lookedUp.getProductId());
-        assertTrue(lookedUp.provides(prod1.getProductId()));
+        assertEquals(prod1.getId(), lookedUp.getProductId());
+        assertTrue(lookedUp.provides(prod1.getId()));
     }
 
     @Test
@@ -109,11 +109,11 @@ public class PoolTest extends DatabaseTestFixture {
 
         Pool lookedUp = entityManager().find(Pool.class, p.getId());
         assertEquals(1, lookedUp.getProvidedProducts().size());
-        assertEquals(prod2.getProductId(),
-            lookedUp.getProvidedProducts().iterator().next().getProductId());
+        assertEquals(prod2.getId(),
+            lookedUp.getProvidedProducts().iterator().next().getId());
         assertEquals(1, lookedUp.getDerivedProvidedProducts().size());
-        assertEquals(derivedProd.getProductId(),
-            lookedUp.getDerivedProvidedProducts().iterator().next().getProductId());
+        assertEquals(derivedProd.getId(),
+            lookedUp.getDerivedProvidedProducts().iterator().next().getId());
     }
 
     @Test
@@ -202,7 +202,7 @@ public class PoolTest extends DatabaseTestFixture {
 
 
         List<Pool> results = poolCurator.listAvailableEntitlementPools(
-            null, owner, childProduct.getProductId(), null, false
+            null, owner, childProduct.getId(), null, false
         );
         assertEquals(1, results.size());
         assertEquals(pool.getId(), results.get(0).getId());

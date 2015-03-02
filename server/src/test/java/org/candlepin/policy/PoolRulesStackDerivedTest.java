@@ -122,13 +122,13 @@ public class PoolRulesStackDerivedTest {
         prod1.addAttribute(new ProductAttribute("virt_limit", "2"));
         prod1.addAttribute(new ProductAttribute("stacking_id", STACK));
         prod1.addAttribute(new ProductAttribute("testattr1", "1"));
-        when(productAdapterMock.getProductById(prod1.getId())).thenReturn(prod1);
+        when(productAdapterMock.getProductById(prod1.getUuid())).thenReturn(prod1);
 
         prod2 = TestUtil.createProduct(owner);
         prod2.addAttribute(new ProductAttribute("virt_limit", "unlimited"));
         prod2.addAttribute(new ProductAttribute("stacking_id", STACK));
         prod2.addAttribute(new ProductAttribute("testattr2", "2"));
-        when(productAdapterMock.getProductById(prod2.getId())).thenReturn(prod2);
+        when(productAdapterMock.getProductById(prod2.getUuid())).thenReturn(prod2);
 
         provided1 = TestUtil.createProduct(owner);
         provided2 = TestUtil.createProduct(owner);
@@ -208,8 +208,8 @@ public class PoolRulesStackDerivedTest {
     @Test
     public void initialProvidedProducts() {
         assertEquals(1, stackDerivedPool.getProvidedProducts().size());
-        assertEquals(provided2.getId(),
-            stackDerivedPool.getProvidedProducts().iterator().next().getProductId());
+        assertEquals(provided2.getUuid(),
+            stackDerivedPool.getProvidedProducts().iterator().next().getId());
     }
 
     @Test

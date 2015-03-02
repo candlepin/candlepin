@@ -235,7 +235,7 @@ public class ComplianceStatusHasherTest {
 
         consumer.setInstalledProducts(new HashSet<ConsumerInstalledProduct>(initialInstalled));
         assertEquals(initialHash, generateHash(testStatus, consumer));
-        ConsumerInstalledProduct installed = new ConsumerInstalledProduct(product.getId(),
+        ConsumerInstalledProduct installed = new ConsumerInstalledProduct(product.getUuid(),
                 product.getName());
         consumer.addInstalledProduct(installed);
 
@@ -386,7 +386,7 @@ public class ComplianceStatusHasherTest {
             String productId) {
         Product product = TestUtil.createProduct(productId, productId, owner);
         Pool pool = TestUtil.createPool(owner, product);
-        pool.setId(product.getId() + "pool");
+        pool.setId(product.getUuid() + "pool");
         pool.setUpdated(cal.getTime());
 
         Entitlement ent = new Entitlement();
@@ -396,7 +396,7 @@ public class ComplianceStatusHasherTest {
         ent.setQuantity(2);
         ent.setCreated(cal.getTime());
         ent.setUpdated(cal.getTime());
-        ent.setId(product.getId() + "ent");
+        ent.setId(product.getUuid() + "ent");
         consumer.addEntitlement(ent);
         return ent;
     }

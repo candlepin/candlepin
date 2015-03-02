@@ -78,7 +78,7 @@ public class RefresherTest {
         Owner owner = mock(Owner.class);
         Product product = mock(Product.class);
 
-        when(product.getId()).thenReturn("product id");
+        when(product.getUuid()).thenReturn("product id");
 
         Pool pool = new Pool();
         pool.setSourceSubscription(new SourceSubscription("subId", "master"));
@@ -112,8 +112,8 @@ public class RefresherTest {
         Product product = mock(Product.class);
         Product product2 = mock(Product.class);
 
-        when(product.getId()).thenReturn("product id");
-        when(product2.getId()).thenReturn("product id 2");
+        when(product.getUuid()).thenReturn("product id");
+        when(product2.getUuid()).thenReturn("product id 2");
 
         Pool pool = new Pool();
         pool.setSourceSubscription(new SourceSubscription("subId", "master"));

@@ -99,7 +99,7 @@ public class ConsumerBindUtilTest {
     @Test
     public void registerWithKeyWithPoolAndInstalledProductsAutoAttach() {
         Product prod = TestUtil.createProduct(owner);
-        String[] prodIds = new String[]{prod.getProductId()};
+        String[] prodIds = new String[]{prod.getId()};
 
         Pool pool = TestUtil.createPool(owner, prod);
         pool.setId("id-string");
@@ -126,7 +126,7 @@ public class ConsumerBindUtilTest {
     @Test
     public void registerWithKeyWithInstalledProductsAutoAttach() {
         Product prod = TestUtil.createProduct(owner);
-        String[] prodIds = new String[]{prod.getProductId()};
+        String[] prodIds = new String[]{prod.getId()};
 
         List<ActivationKey> keys = new ArrayList<ActivationKey>();
         ActivationKey key1 = new ActivationKey("key1", owner);
@@ -150,7 +150,7 @@ public class ConsumerBindUtilTest {
         Product prod1 = TestUtil.createProduct(owner);
         // key product
         Product prod2 = TestUtil.createProduct(owner);
-        String[] prodIds = new String[]{prod1.getProductId(), prod2.getProductId()};
+        String[] prodIds = new String[]{prod1.getId(), prod2.getId()};
 
         List<ActivationKey> keys = new ArrayList<ActivationKey>();
         ActivationKey key1 = new ActivationKey("key1", owner);

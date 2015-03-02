@@ -274,7 +274,7 @@ public class Content extends AbstractHibernateObject {
     }
 
     public static String ueberContentLabelForProduct(Product p) {
-        return p.getId() + "_" + UEBER_CONTENT_NAME;
+        return p.getUuid() + "_" + UEBER_CONTENT_NAME;
     }
 
     /**

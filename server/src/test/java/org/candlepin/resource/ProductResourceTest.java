@@ -114,7 +114,7 @@ public class ProductResourceTest extends DatabaseTestFixture {
         p = productResource.createProduct(p);
         securityInterceptor.enable();
 
-        Product p1 = productResource.getProduct(p.getProductId());
+        Product p1 = productResource.getProduct(p.getId());
         assertEquals(p1, p);
     }
 
@@ -132,7 +132,7 @@ public class ProductResourceTest extends DatabaseTestFixture {
         cert.setKey("some key");
         cert.setProduct(p);
         productCertificateCurator.create(cert);
-        ProductCertificate cert1 = productResource.getProductCertificate(p.getProductId());
+        ProductCertificate cert1 = productResource.getProductCertificate(p.getId());
         assertEquals(cert, cert1);
     }
 }

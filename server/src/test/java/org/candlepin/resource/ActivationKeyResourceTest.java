@@ -347,9 +347,9 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         key = activationKeyCurator.create(key);
 
         assertNotNull(key.getId());
-        activationKeyResource.addProductIdToKey(key.getId(), product.getProductId());
+        activationKeyResource.addProductIdToKey(key.getId(), product.getId());
         assertTrue(key.getProducts().size() == 1);
-        activationKeyResource.removeProductIdFromKey(key.getId(), product.getProductId());
+        activationKeyResource.removeProductIdFromKey(key.getId(), product.getId());
         assertEquals(0, key.getProducts().size());
     }
 
@@ -366,10 +366,10 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
 
         assertNotNull(key.getId());
 
-        activationKeyResource.addProductIdToKey(key.getId(), product.getProductId());
+        activationKeyResource.addProductIdToKey(key.getId(), product.getId());
         assertEquals(1, key.getProducts().size());
 
-        activationKeyResource.addProductIdToKey(key.getId(), product.getProductId());
+        activationKeyResource.addProductIdToKey(key.getId(), product.getId());
         // ^ Kaboom.
     }
 

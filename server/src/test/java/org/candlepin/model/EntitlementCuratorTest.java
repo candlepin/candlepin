@@ -131,7 +131,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         Content c = new Content(this.owner, "fakecontent", "fakecontent", "facecontent",
                 "yum", "RH", "http://", "http://", "x86_64");
         Set<String> modifiedIds = new HashSet<String>();
-        modifiedIds.add(providedProduct1.getId());
+        modifiedIds.add(providedProduct1.getUuid());
         c.setModifiedProductIds(modifiedIds);
         contentCurator.create(c);
         providedProduct2.addContent(c);
@@ -176,9 +176,9 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         Set<String> results = entitlementCurator.listEntitledProductIds(consumer,
                 ent.getStartDate(), ent.getEndDate());
         assertEquals(3, results.size());
-        assertTrue(results.contains(providedProduct1.getProductId()));
-        assertTrue(results.contains(providedProduct2.getProductId()));
-        assertTrue(results.contains(ent.getPool().getProduct().getProductId()));
+        assertTrue(results.contains(providedProduct1.getId()));
+        assertTrue(results.contains(providedProduct2.getId()));
+        assertTrue(results.contains(ent.getPool().getProduct().getId()));
     }
 
     @Test
@@ -268,7 +268,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         }
 
         Page<List<Entitlement>> page =
-            entitlementCurator.listByConsumerAndProduct(consumer, product.getProductId(), req);
+            entitlementCurator.listByConsumerAndProduct(consumer, product.getId(), req);
         assertEquals(Integer.valueOf(10), page.getMaxRecords());
 
         List<Entitlement> ents = page.getPageData();
@@ -317,7 +317,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         }
 
         Page<List<Entitlement>> page =
-            entitlementCurator.listByConsumerAndProduct(consumer, product.getProductId(), null);
+            entitlementCurator.listByConsumerAndProduct(consumer, product.getId(), null);
         assertEquals(Integer.valueOf(10), page.getMaxRecords());
 
         List<Entitlement> ents = page.getPageData();
@@ -361,7 +361,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         }
 
         Page<List<Entitlement>> page =
-            entitlementCurator.listByConsumerAndProduct(consumer, product.getProductId(), req);
+            entitlementCurator.listByConsumerAndProduct(consumer, product.getId(), req);
         assertEquals(Integer.valueOf(5), page.getMaxRecords());
         assertEquals(5, page.getPageData().size());
     }
