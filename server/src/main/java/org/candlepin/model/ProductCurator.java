@@ -273,4 +273,12 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
             .setProjection(Projections.id())
             .list();
     }
+
+    // Needs an override due to the use of UUID as db identifier.
+    @Override
+    @Transactional
+    public void delete(Product entity) {
+        Product toDelete = find(entity.getUuid());
+        currentSession().delete(toDelete);
+    }
 }
