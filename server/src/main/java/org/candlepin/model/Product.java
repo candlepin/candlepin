@@ -14,8 +14,6 @@
  */
 package org.candlepin.model;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.LazyCollection;
@@ -129,6 +127,7 @@ public class Product extends AbstractHibernateObject implements Linkable {
     }
 
     public Product(String productId, String name, Owner owner, Long multiplier) {
+
         setProductId(productId);
         setName(name);
         setOwner(owner);
@@ -160,7 +159,6 @@ public class Product extends AbstractHibernateObject implements Linkable {
      * @return
      *  this product's object ID.
      */
-    @XmlTransient
     public String getId() {
         return id;
     }
@@ -183,7 +181,6 @@ public class Product extends AbstractHibernateObject implements Linkable {
      * @return
      *  this product's ID.
      */
-    @JsonProperty("id")
     public String getProductId() {
         return this.productId;
     }
