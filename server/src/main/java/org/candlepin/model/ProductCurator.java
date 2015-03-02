@@ -28,6 +28,7 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
 import org.xnap.commons.i18n.I18n;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -85,6 +86,13 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     public List<Product> listByOwner(Owner owner) {
         return currentSession().createCriteria(Product.class)
             .add(Restrictions.eq("owner", owner)).list();
+    }
+
+    @Override
+    public List<Product> listAllByIds(Collection<? extends Serializable> ids) {
+        return this.listByCriteria(
+            this.createSecureCriteria().add(Restrictions.in("uuid", ids))
+        );
     }
 
     /**
