@@ -329,13 +329,13 @@ public class PoolRules {
      */
     public PoolUpdate updatePoolFromStack(Pool pool) {
         List<Entitlement> stackedEnts = this.entCurator.findByStackId(
-            pool.getSourceConsumer(), pool.getSourceStackId());
+            pool.getSourceConsumer(), pool.getSourceStackId()
+        );
+
         return this.updatePoolFromStackedEntitlements(pool, stackedEnts);
     }
 
-    public PoolUpdate updatePoolFromStackedEntitlements(Pool pool,
-            List<Entitlement> stackedEnts) {
-
+    public PoolUpdate updatePoolFromStackedEntitlements(Pool pool, List<Entitlement> stackedEnts) {
         PoolUpdate update = new PoolUpdate(pool);
 
         // Nothing to do if there were no entitlements found.
@@ -346,8 +346,7 @@ public class PoolRules {
         pool.setSourceEntitlement(null);
         pool.setSourceSubscription(null);
 
-        StackedSubPoolValueAccumulator acc =
-            new StackedSubPoolValueAccumulator(pool, stackedEnts);
+        StackedSubPoolValueAccumulator acc = new StackedSubPoolValueAccumulator(pool, stackedEnts);
 
         // Check if the quantity should be changed. If there was no
         // virt limiting entitlement, then we leave the quantity alone,
@@ -359,8 +358,8 @@ public class PoolRules {
             String virtLimit =
                 eldestWithVirtLimit.getPool().getProduct().getAttributeValue("virt_limit");
 
-            Long quantity = virtLimit.equalsIgnoreCase("unlimited") ?
-                -1L : Long.parseLong(virtLimit);
+            Long quantity =
+                virtLimit.equalsIgnoreCase("unlimited") ? -1L : Long.parseLong(virtLimit);
 
             if (!quantity.equals(pool.getQuantity())) {
                 pool.setQuantity(quantity);
@@ -368,8 +367,7 @@ public class PoolRules {
             }
         }
 
-        update.setDatesChanged(checkForDateChange(acc.getStartDate(), acc.getEndDate(),
-            pool));
+        update.setDatesChanged(checkForDateChange(acc.getStartDate(), acc.getEndDate(), pool));
 
         // We use the "oldest" entitlement as the master for determining values that
         // could have come from the various subscriptions.

@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+
+
 /**
  * This class is responsible for determining the accumulated values
  * that can be used to update a stacked sub pool from a collection
@@ -94,7 +96,7 @@ public class StackedSubPoolValueAccumulator {
     private void updateEldestWithVirtLimit(Entitlement nextStacked) {
         // Keep track of the eldest with virt limit so that we can change the
         // quantity of the sub pool.
-        if (nextStacked.getPool().hasAttribute("virt_limit")) {
+        if (nextStacked.getPool().hasMergedAttribute("virt_limit")) {
             if (eldestWithVirtLimit == null ||
                 nextStacked.getCreated().before(eldestWithVirtLimit.getCreated())) {
                 eldestWithVirtLimit = nextStacked;

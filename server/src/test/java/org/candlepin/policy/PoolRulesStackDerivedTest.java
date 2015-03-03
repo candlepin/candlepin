@@ -209,7 +209,7 @@ public class PoolRulesStackDerivedTest {
     public void initialProvidedProducts() {
         assertEquals(1, stackDerivedPool.getProvidedProducts().size());
         assertEquals(provided2.getUuid(),
-            stackDerivedPool.getProvidedProducts().iterator().next().getId());
+            stackDerivedPool.getProvidedProducts().iterator().next().getUuid());
     }
 
     @Test
