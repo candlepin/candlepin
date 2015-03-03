@@ -499,7 +499,7 @@ public class Exporter {
 
         for (Product product : products.values()) {
             String path = productDir.getCanonicalPath();
-            String productId = product.getUuid();
+            String productId = product.getId();
             File file = new File(path, productId + ".json");
             FileWriter writer = null;
             try {
@@ -513,14 +513,14 @@ public class Exporter {
             }
 
             // Real products have a numeric id.
-            if (StringUtils.isNumeric(product.getUuid())) {
+            if (StringUtils.isNumeric(product.getId())) {
                 ProductCertificate cert = productAdapter.getProductCertificate(product);
                 // XXX: not all product adapters implement getProductCertificate,
                 // so just skip over this if we get null back
                 // XXX: need to decide if the cert should always be in the export, or never.
                 if (cert != null) {
                     file = new File(productDir.getCanonicalPath(),
-                        product.getUuid() + ".pem");
+                        product.getId() + ".pem");
                     writer = new FileWriter(file);
                     productCertExporter.export(writer, cert);
                     writer.close();

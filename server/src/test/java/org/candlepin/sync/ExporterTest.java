@@ -155,18 +155,10 @@ public class ExporterTest {
         config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
         Consumer consumer = mock(Consumer.class);
         Entitlement ent = mock(Entitlement.class);
-        Product pp = mock(Product.class);
-        Product spp = mock(Product.class);
         Pool pool = mock(Pool.class);
         Rules mrules = mock(Rules.class);
         Principal principal = mock(Principal.class);
         IdentityCertificate idcert = new IdentityCertificate();
-
-        Set<Product> ppset = new HashSet<Product>();
-        ppset.add(pp);
-
-        Set<Product> sppSet = new HashSet<Product>();
-        sppSet.add(spp);
 
         Set<Entitlement> entitlements = new HashSet<Entitlement>();
         entitlements.add(ent);
@@ -207,13 +199,17 @@ public class ExporterTest {
         pcert.setCreated(new Date());
         pcert.setUpdated(new Date());
 
-        when(pp.getId()).thenReturn(prod.getId());
+        Set<Product> ppset = new HashSet<Product>();
+        ppset.add(prod);
+
+        Set<Product> sppSet = new HashSet<Product>();
+        sppSet.add(subProvidedProduct);
+
         when(pool.getProvidedProducts()).thenReturn(ppset);
         when(pool.getProduct()).thenReturn(prod1);
 
         when(pool.getDerivedProvidedProducts()).thenReturn(sppSet);
         when(pool.getDerivedProduct()).thenReturn(subProduct);
-        when(spp.getId()).thenReturn(subProvidedProduct.getId());
 
         when(ent.getPool()).thenReturn(pool);
         when(mrules.getRules()).thenReturn("foobar");
