@@ -15,6 +15,8 @@
 
 package org.candlepin.model;
 
+import com.fasterxml.jackson.annotation.JsonFilter;
+
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.hibernate.annotations.ForeignKey;
@@ -39,6 +41,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @Entity
 @Table(name = "cpo_product_attributes")
 @Embeddable
+@JsonFilter("ProductAttributeFilter")
 public class ProductAttribute extends AbstractHibernateObject implements Attribute {
 
     @Id
