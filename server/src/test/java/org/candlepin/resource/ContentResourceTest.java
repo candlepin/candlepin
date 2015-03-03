@@ -14,14 +14,8 @@
  */
 package org.candlepin.resource;
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyLong;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
@@ -32,6 +26,7 @@ import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.service.ProductServiceAdapter;
+import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.impl.DefaultUniqueIdGenerator;
 
 import org.junit.Before;
@@ -57,6 +52,7 @@ public class ContentResourceTest {
     private EnvironmentContentCurator envContentCurator;
     private PoolManager poolManager;
     private ProductServiceAdapter productAdapter;
+    private SubscriptionServiceAdapter subAdapter;
 
     @Before
     public void init() {
@@ -65,8 +61,9 @@ public class ContentResourceTest {
         envContentCurator = mock(EnvironmentContentCurator.class);
         poolManager = mock(PoolManager.class);
         productAdapter = mock(ProductServiceAdapter.class);
+        subAdapter = mock(SubscriptionServiceAdapter.class);
         cr = new ContentResource(cc, i18n, new DefaultUniqueIdGenerator(),
-            envContentCurator, poolManager, productAdapter);
+            envContentCurator, poolManager, subAdapter, productAdapter);
     }
 
     @Test
@@ -146,7 +143,7 @@ public class ContentResourceTest {
         verify(cc).find(eq(contentId));
         verify(cc).createOrUpdate(eq(content));
         verify(productAdapter).getProductsWithContent(setFrom(contentId));
-        verify(poolManager).regenerateCertificatesOf(eq("productid"), eq(true));
+        verify(poolManager).regenerateCertificatesOf(eq(subAdapter), eq("productid"), eq(true));
     }
 
     @Test(expected = NotFoundException.class)

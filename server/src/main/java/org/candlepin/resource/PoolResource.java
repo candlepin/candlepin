@@ -37,6 +37,7 @@ import org.candlepin.common.paging.PageRequest;
 import org.candlepin.common.paging.Paginate;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ResourceDateParser;
+import org.candlepin.service.SubscriptionServiceAdapter;
 
 import com.google.inject.Inject;
 
@@ -70,12 +71,14 @@ public class PoolResource {
     private StatisticCurator statisticCurator;
     private I18n i18n;
     private PoolManager poolManager;
+    private SubscriptionServiceAdapter subAdapter;
     private CalculatedAttributesUtil calculatedAttributesUtil;
 
     @Inject
     public PoolResource(ConsumerCurator consumerCurator, OwnerCurator ownerCurator,
         StatisticCurator statisticCurator, I18n i18n,
         PoolManager poolManager,
+        SubscriptionServiceAdapter subAdapter,
         CalculatedAttributesUtil calculatedAttributesUtil) {
 
         this.consumerCurator = consumerCurator;
@@ -83,6 +86,7 @@ public class PoolResource {
         this.statisticCurator = statisticCurator;
         this.i18n = i18n;
         this.poolManager = poolManager;
+        this.subAdapter = subAdapter;
         this.calculatedAttributesUtil = calculatedAttributesUtil;
     }
 
@@ -271,7 +275,7 @@ public class PoolResource {
                 "Entitlement Pool with ID ''{0}'' could not be found.", id));
         }
 
-        poolManager.deletePool(pool);
+        poolManager.deletePool(subAdapter, pool);
     }
 
     /**

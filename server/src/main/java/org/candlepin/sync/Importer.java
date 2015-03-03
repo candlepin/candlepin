@@ -37,6 +37,8 @@ import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.pki.PKIUtility;
+import org.candlepin.service.SubscriptionServiceAdapter;
+import org.candlepin.service.impl.ImportSubscriptionServiceAdapter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
@@ -57,6 +59,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.security.cert.CertificateException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -426,7 +429,10 @@ public class Importer {
 
         // If the consumer has no entitlements, this products directory will end up empty.
         // This also implies there will be no entitlements to import.
-        Refresher refresher = poolManager.getRefresher();
+        // TODO Set the subscription list from the entitlement importer.
+        SubscriptionServiceAdapter adapter =
+                new ImportSubscriptionServiceAdapter(new ArrayList<Subscription>());
+        Refresher refresher = poolManager.getRefresher(adapter);
         Meta meta = mapper.readValue(metadata, Meta.class);
         if (importFiles.get(ImportFile.PRODUCTS.fileName()) != null) {
             ProductImporter importer = new ProductImporter(productCurator, contentCurator);

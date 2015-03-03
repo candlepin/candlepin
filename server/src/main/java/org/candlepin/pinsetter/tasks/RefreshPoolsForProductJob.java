@@ -20,6 +20,7 @@ import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Product;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.service.ProductServiceAdapter;
+import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
@@ -35,14 +36,17 @@ import org.quartz.JobExecutionException;
 public class RefreshPoolsForProductJob extends KingpinJob {
 
     private ProductServiceAdapter productAdapter;
+    private SubscriptionServiceAdapter subAdapter;
     private PoolManager poolManager;
 
     public static final String LAZY_REGEN = "lazy_regen";
 
     @Inject
     public RefreshPoolsForProductJob(ProductServiceAdapter productAdapter,
+        SubscriptionServiceAdapter subAdapter,
         PoolManager poolManager) {
         this.productAdapter = productAdapter;
+        this.subAdapter = subAdapter;
         this.poolManager = poolManager;
     }
 
@@ -52,8 +56,7 @@ public class RefreshPoolsForProductJob extends KingpinJob {
         String productId = context.getMergedJobDataMap().getString(JobStatus.TARGET_ID);
         Boolean lazy = context.getMergedJobDataMap().getBoolean(LAZY_REGEN);
 
-        poolManager.getRefresher(lazy).add(
-            productAdapter.getProductById(productId)).run();
+        poolManager.getRefresher(subAdapter, lazy).add(productAdapter.getProductById(productId)).run();
 
         context.setResult("Pools refreshed for product " + productId);
     }

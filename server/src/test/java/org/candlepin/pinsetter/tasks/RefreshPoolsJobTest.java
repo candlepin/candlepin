@@ -22,6 +22,7 @@ import org.candlepin.controller.Refresher;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.pinsetter.core.model.JobStatus;
+import org.candlepin.service.SubscriptionServiceAdapter;
 
 import com.google.inject.persist.UnitOfWork;
 
@@ -44,6 +45,7 @@ public class RefreshPoolsJobTest {
     private Owner owner;
     private JobExecutionContext ctx;
     private JobDataMap jdm;
+    private SubscriptionServiceAdapter subAdapter;
     private Refresher refresher;
 
     @Before
@@ -53,6 +55,7 @@ public class RefreshPoolsJobTest {
         owner = mock(Owner.class);
         ctx = mock(JobExecutionContext.class);
         jdm = mock(JobDataMap.class);
+        subAdapter = mock(SubscriptionServiceAdapter.class);
         refresher = mock(Refresher.class);
 
         when(ctx.getMergedJobDataMap()).thenReturn(jdm);
@@ -60,7 +63,7 @@ public class RefreshPoolsJobTest {
         when(jdm.getBoolean(eq(RefreshPoolsJob.LAZY_REGEN))).thenReturn(true);
         when(oc.lookupByKey(eq("someownerkey"))).thenReturn(owner);
         when(owner.getDisplayName()).thenReturn("test owner");
-        when(pm.getRefresher(eq(true))).thenReturn(refresher);
+        when(pm.getRefresher(eq(subAdapter), eq(true))).thenReturn(refresher);
         when(refresher.add(eq(owner))).thenReturn(refresher);
         when(refresher.setUnitOfWork(any(UnitOfWork.class))).thenReturn(refresher);
     }
@@ -68,11 +71,11 @@ public class RefreshPoolsJobTest {
     @Test
     public void execute() throws Exception {
         // test
-        RefreshPoolsJob rpj = new RefreshPoolsJob(oc, pm);
+        RefreshPoolsJob rpj = new RefreshPoolsJob(oc, pm, subAdapter);
         rpj.execute(ctx);
 
         // verification
-        verify(pm).getRefresher(true);
+        verify(pm).getRefresher(subAdapter, true);
         verify(refresher).add(owner);
         verify(refresher).run();
         verify(ctx).setResult(eq("Pools refreshed for owner test owner"));
@@ -95,7 +98,7 @@ public class RefreshPoolsJobTest {
         // the real thing we want to handle
         doThrow(new NullPointerException()).when(refresher).run();
 
-        RefreshPoolsJob rpj = new RefreshPoolsJob(oc, pm);
+        RefreshPoolsJob rpj = new RefreshPoolsJob(oc, pm, subAdapter);
         try {
             rpj.execute(ctx);
             fail("Expected exception not thrown");
@@ -112,7 +115,7 @@ public class RefreshPoolsJobTest {
         RuntimeException e = new RuntimeException("uh oh", new SQLException("not good"));
         doThrow(e).when(refresher).run();
 
-        RefreshPoolsJob rpj = new RefreshPoolsJob(oc, pm);
+        RefreshPoolsJob rpj = new RefreshPoolsJob(oc, pm, subAdapter);
         try {
             rpj.execute(ctx);
             fail("Expected exception not thrown");
@@ -130,7 +133,7 @@ public class RefreshPoolsJobTest {
         RuntimeException e2 = new RuntimeException("trouble!", e);
         doThrow(e2).when(refresher).run();
 
-        RefreshPoolsJob rpj = new RefreshPoolsJob(oc, pm);
+        RefreshPoolsJob rpj = new RefreshPoolsJob(oc, pm, subAdapter);
         try {
             rpj.execute(ctx);
             fail("Expected exception not thrown");
@@ -145,7 +148,7 @@ public class RefreshPoolsJobTest {
         RuntimeException e = new RuntimeException("uh oh", new NullPointerException());
         doThrow(e).when(refresher).run();
 
-        RefreshPoolsJob rpj = new RefreshPoolsJob(oc, pm);
+        RefreshPoolsJob rpj = new RefreshPoolsJob(oc, pm, subAdapter);
         try {
             rpj.execute(ctx);
             fail("Expected exception not thrown");

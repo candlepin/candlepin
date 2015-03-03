@@ -22,6 +22,7 @@ import org.candlepin.model.ContentCurator;
 import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.service.ProductServiceAdapter;
+import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UniqueIdGenerator;
 
 import com.google.inject.Inject;
@@ -53,17 +54,20 @@ public class ContentResource {
     private UniqueIdGenerator idGenerator;
     private EnvironmentContentCurator envContentCurator;
     private PoolManager poolManager;
+    private SubscriptionServiceAdapter subAdapter;
     private ProductServiceAdapter productAdapter;
 
     @Inject
     public ContentResource(ContentCurator contentCurator, I18n i18n,
         UniqueIdGenerator idGenerator, EnvironmentContentCurator envContentCurator,
-        PoolManager poolManager, ProductServiceAdapter productAdapter) {
+        PoolManager poolManager, SubscriptionServiceAdapter subAdapter,
+        ProductServiceAdapter productAdapter) {
         this.i18n = i18n;
         this.contentCurator = contentCurator;
         this.idGenerator = idGenerator;
         this.envContentCurator = envContentCurator;
         this.poolManager = poolManager;
+        this.subAdapter = subAdapter;
         this.productAdapter = productAdapter;
     }
 
@@ -190,7 +194,7 @@ public class ContentResource {
         Set<String> affectedProducts =
             productAdapter.getProductsWithContent(setFrom(contentId));
         for (String productId : affectedProducts) {
-            poolManager.regenerateCertificatesOf(productId, true);
+            poolManager.regenerateCertificatesOf(subAdapter, productId, true);
         }
 
         return updated;
@@ -221,7 +225,7 @@ public class ContentResource {
         }
         // Regenerate affected products
         for (String productId : affectedProducts) {
-            poolManager.regenerateCertificatesOf(productId, true);
+            poolManager.regenerateCertificatesOf(subAdapter, productId, true);
         }
     }
 }

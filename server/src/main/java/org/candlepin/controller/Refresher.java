@@ -24,7 +24,6 @@ import org.candlepin.util.Util;
 import com.google.inject.persist.Transactional;
 import com.google.inject.persist.UnitOfWork;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -70,7 +69,6 @@ public class Refresher {
     }
 
     public void run() {
-        Set<String> toRegen = new HashSet<String>();
 
         for (Product product : products) {
             subscriptions.addAll(subAdapter.getSubscriptions(product));
@@ -93,18 +91,18 @@ public class Refresher {
         }
 
         for (Owner owner : owners) {
-            poolManager.refreshPoolsWithRegeneration(owner, lazy);
+            poolManager.refreshPoolsWithRegeneration(subAdapter, owner, lazy);
         }
     }
 
     @Transactional
     private void refreshPoolsForSubscription(Subscription subscription, List<Pool> pools) {
-        poolManager.removeAndDeletePoolsOnOtherOwners(pools, subscription);
+        poolManager.removeAndDeletePoolsOnOtherOwners(subAdapter, pools, subscription);
 
         poolManager.createPoolsForSubscription(subscription, pools);
         // Regenerate certificates here, that way if it fails, the whole thing rolls back.
         // We don't want to refresh without marking ents dirty, they will never get regenerated
-        poolManager.regenerateCertificatesByEntIds(poolManager.updatePoolsForSubscription(
-            pools, subscription, true), lazy);
+        poolManager.regenerateCertificatesByEntIds(subAdapter, poolManager.updatePoolsForSubscription(
+            subAdapter, pools, subscription, true), lazy);
     }
 }

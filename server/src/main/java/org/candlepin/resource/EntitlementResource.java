@@ -36,6 +36,7 @@ import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.Enforcer.CallerType;
 import org.candlepin.policy.js.entitlement.EntitlementRulesTranslator;
 import org.candlepin.service.ProductServiceAdapter;
+import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
@@ -76,6 +77,7 @@ public class EntitlementResource {
     private PoolManager poolManager;
     private final EntitlementCurator entitlementCurator;
     private I18n i18n;
+    private SubscriptionServiceAdapter subAdapter;
     private ProductServiceAdapter prodAdapter;
     private Entitler entitler;
     private SubscriptionResource subResource;
@@ -84,6 +86,7 @@ public class EntitlementResource {
 
     @Inject
     public EntitlementResource(ProductServiceAdapter prodAdapter,
+            SubscriptionServiceAdapter subAdapter,
             EntitlementCurator entitlementCurator,
             ConsumerCurator consumerCurator,
             PoolManager poolManager,
@@ -94,6 +97,7 @@ public class EntitlementResource {
         this.consumerCurator = consumerCurator;
         this.i18n = i18n;
         this.prodAdapter = prodAdapter;
+        this.subAdapter = subAdapter;
         this.poolManager = poolManager;
         this.entitler = entitler;
         this.subResource = subResource;
@@ -201,7 +205,7 @@ public class EntitlementResource {
         @PathParam("dbid") @Verify(Entitlement.class) String dbid) {
         Entitlement toReturn = entitlementCurator.find(dbid);
         List<Entitlement> tempList = Arrays.asList(toReturn);
-        poolManager.regenerateDirtyEntitlements(tempList);
+        poolManager.regenerateDirtyEntitlements(subAdapter, tempList);
         if (toReturn != null) {
             return toReturn;
         }
@@ -321,7 +325,7 @@ public class EntitlementResource {
     public void unbind(@PathParam("dbid") String dbid) {
         Entitlement toDelete = entitlementCurator.find(dbid);
         if (toDelete != null) {
-            poolManager.revokeEntitlement(toDelete);
+            poolManager.revokeEntitlement(subAdapter, toDelete);
             return;
         }
         throw new NotFoundException(

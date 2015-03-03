@@ -16,6 +16,7 @@ package org.candlepin.pinsetter.tasks;
 
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Environment;
+import org.candlepin.service.SubscriptionServiceAdapter;
 
 import com.google.inject.Inject;
 
@@ -32,13 +33,15 @@ import java.util.Set;
  */
 public class RegenEnvEntitlementCertsJob extends KingpinJob {
 
-    private PoolManager poolManager;
     public static final String ENV = "env_id";
     public static final String CONTENT = "content_ids";
     public static final String LAZY_REGEN = "lazy_regen";
 
+    private PoolManager poolManager;
+    private SubscriptionServiceAdapter subAdapter;
+
     @Inject
-    public RegenEnvEntitlementCertsJob(PoolManager poolManager) {
+    public RegenEnvEntitlementCertsJob(PoolManager poolManager, SubscriptionServiceAdapter subAdapter) {
         this.poolManager = poolManager;
     }
 
@@ -50,6 +53,6 @@ public class RegenEnvEntitlementCertsJob extends KingpinJob {
             arg0.getJobDetail().getJobDataMap().get(CONTENT);
         Boolean lazy = arg0.getMergedJobDataMap().getBoolean(LAZY_REGEN);
 
-        this.poolManager.regenerateCertificatesOf(env, contentIds, lazy);
+        this.poolManager.regenerateCertificatesOf(subAdapter, env, contentIds, lazy);
     }
 }

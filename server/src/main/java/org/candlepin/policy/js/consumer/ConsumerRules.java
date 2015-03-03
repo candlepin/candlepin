@@ -18,6 +18,7 @@ import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
+import org.candlepin.service.SubscriptionServiceAdapter;
 
 import com.google.inject.Inject;
 
@@ -30,11 +31,14 @@ public class ConsumerRules {
 
     private PoolCurator poolCurator;
     private PoolManager poolManager;
+    private SubscriptionServiceAdapter subAdapter;
 
     @Inject
-    public ConsumerRules(PoolManager poolManager, PoolCurator poolCurator) {
+    public ConsumerRules(PoolManager poolManager, PoolCurator poolCurator,
+            SubscriptionServiceAdapter subAdapter) {
         this.poolManager = poolManager;
         this.poolCurator = poolCurator;
+        this.subAdapter = subAdapter;
     }
 
     public void onConsumerDelete(Consumer consumer) {
@@ -45,7 +49,7 @@ public class ConsumerRules {
                 .listPoolsRestrictedToUser(consumer.getUsername());
 
             for (Pool pool : userRestrictedPools) {
-                poolManager.deletePool(pool);
+                poolManager.deletePool(subAdapter, pool);
             }
 
         }

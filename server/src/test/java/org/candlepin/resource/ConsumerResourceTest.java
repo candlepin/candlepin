@@ -226,7 +226,7 @@ public class ConsumerResourceTest {
             new CandlepinCommonTestConfig(), null, null, null, consumerBindUtil);
         cr.regenerateEntitlementCertificates(consumer.getUuid(), null, true);
         Mockito.verify(mgr, Mockito.times(1))
-            .regenerateEntitlementCertificates(eq(consumer), eq(true));
+            .regenerateEntitlementCertificates(eq(mockedSubscriptionServiceAdapter), eq(consumer), eq(true));
     }
 
     @Test

@@ -201,7 +201,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
                     10, null, null, false, null, null);
                 assertTrue(p.getConsumed() == 20);
                 assertTrue(p.getQuantity() == -1);
-                poolManager.getRefresher().add(owner).run();
+                poolManager.getRefresher(subAdapter).add(owner).run();
                 // double check after pools refresh
                 assertTrue(p.getConsumed() == 20);
                 assertTrue(p.getQuantity() == -1);
