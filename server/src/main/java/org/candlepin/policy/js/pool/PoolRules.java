@@ -163,12 +163,9 @@ public class PoolRules {
 
     private void updatePoolFromSubscription(Subscription sub,
                                             Pool pool,
-                                            Set<ProvidedProduct> providedProducts,
-                                            Set<DerivedProvidedProduct> subProvidedProducts,
+                                            Set<Product> providedProducts,
+                                            Set<Product> subProvidedProducts,
                                             PoolHelper helper) {
-
-        Set<Product> providedProducts = pool.getProvidedProducts();
-        Set<Product> subProvidedProducts = pool.getDerivedProvidedProducts();
 
         if (sub.getProvidedProducts() != null) {
             providedProducts.addAll(sub.getProvidedProducts());

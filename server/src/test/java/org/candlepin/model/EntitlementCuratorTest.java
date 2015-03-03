@@ -526,14 +526,17 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         Owner owner2 = createOwner();
         ownerCurator.create(owner2);
 
-        Product product = TestUtil.createProduct();
+        Product product1 = TestUtil.createProduct(owner1);
+        Product product2 = TestUtil.createProduct(owner2);
+        productCurator.create(product1);
+        productCurator.create(product2);
 
-        Pool p1Attributes = TestUtil.createPool(owner1, product);
-        Pool p1NoAttributes = TestUtil.createPool(owner1, product);
+        Pool p1Attributes = TestUtil.createPool(owner1, product1);
+        Pool p1NoAttributes = TestUtil.createPool(owner1, product1);
 
-        Pool p2Attributes = TestUtil.createPool(owner2, product);
-        Pool p2NoAttributes = TestUtil.createPool(owner2, product);
-        Pool p2BadAttributes = TestUtil.createPool(owner2, product);
+        Pool p2Attributes = TestUtil.createPool(owner2, product2);
+        Pool p2NoAttributes = TestUtil.createPool(owner2, product2);
+        Pool p2BadAttributes = TestUtil.createPool(owner2, product2);
 
         p1Attributes.addAttribute(new PoolAttribute("x", "true"));
         p2Attributes.addAttribute(new PoolAttribute("x", "true"));

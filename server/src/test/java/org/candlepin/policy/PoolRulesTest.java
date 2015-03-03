@@ -877,7 +877,7 @@ public class PoolRulesTest {
         Pool regular = updates.get(0).getPool();
         Pool unmappedSubPool = updates.get(1).getPool();
         Pool subPool = updates.get(2).getPool();
-        assertEquals("40", regular.getProduct().getAttributeValue("virt_limit").getValue());
+        assertEquals("40", regular.getProduct().getAttributeValue("virt_limit"));
         assertEquals(new Long(40), subPool.getQuantity());
         assertEquals(new Long(800), unmappedSubPool.getQuantity());
     }

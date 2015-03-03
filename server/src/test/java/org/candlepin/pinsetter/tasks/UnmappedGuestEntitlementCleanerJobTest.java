@@ -47,13 +47,14 @@ public class UnmappedGuestEntitlementCleanerJobTest {
         /* TODO This would be a more faithful test if we did it as a DatabaseFixtureTest.
          * Unfortunately, there is some strange problem with deleted entitlements not actually
          * being deleted from the in-memory DB. */
-        Product product = TestUtil.createProduct();
-
         Owner owner1 = new Owner("o1");
         Owner owner2 = new Owner("o2");
 
-        Pool p1 = TestUtil.createPool(owner1, product);
-        Pool p2 = TestUtil.createPool(owner2, product);
+        Product product1 = TestUtil.createProduct(owner1);
+        Product product2 = TestUtil.createProduct(owner2);
+
+        Pool p1 = TestUtil.createPool(owner1, product1);
+        Pool p2 = TestUtil.createPool(owner2, product2);
 
         p1.addAttribute(new PoolAttribute("unmapped_guests_only", "true"));
         p2.addAttribute(new PoolAttribute("unmapped_guests_only", "true"));

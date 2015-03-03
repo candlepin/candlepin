@@ -142,7 +142,8 @@ public class X509V3ExtensionUtilTest {
         Product p = new Product(engProdId, "Eng Product 1000", owner);
         p.setAttribute("brand_type", "OS");
         Set<Product> prods = new HashSet<Product>(Arrays.asList(p));
-        Pool pool = TestUtil.createPool(new Product("mkt", "MKT SKU", owner));
+        Product mktProd = new Product("mkt", "MKT SKU", owner);
+        Pool pool = TestUtil.createPool(mktProd);
         pool.getBranding().add(new Branding(engProdId, "OS", brandedName));
         Consumer consumer = new Consumer();
         Entitlement e = new Entitlement(pool, consumer, 10);
@@ -164,7 +165,8 @@ public class X509V3ExtensionUtilTest {
         Product p = new Product(engProdId, "Eng Product 1000", owner);
         p.setAttribute("brand_type", "OS");
         Set<Product> prods = new HashSet<Product>(Arrays.asList(p));
-        Pool pool = TestUtil.createPool(new Product("mkt", "MKT SKU", owner));
+        Product mktProd = new Product("mkt", "MKT SKU", owner);
+        Pool pool = TestUtil.createPool(mktProd);
         pool.getBranding().add(new Branding(engProdId, "OS", brandedName));
         pool.getBranding().add(new Branding(engProdId, "OS", "another brand name"));
         pool.getBranding().add(new Branding(engProdId, "OS", "number 3"));

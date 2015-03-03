@@ -2051,7 +2051,7 @@ public class ComplianceRulesTest {
 
     @Test
     public void unmappedGuestEntitlementPartial() {
-        Consumer c = mockConsumer(new String[]{ PRODUCT_1 });
+        Consumer c = mockConsumer(PRODUCT_1);
 
         Entitlement ent = mockEntitlement(c, PRODUCT_1);
         ent.getPool().setAttribute("unmapped_guests_only", "true");
@@ -2064,7 +2064,7 @@ public class ComplianceRulesTest {
         assertEquals(0, status.getNonCompliantProducts().size());
         assertEquals(1, status.getPartiallyCompliantProducts().size());
         assertEquals(0, status.getCompliantProducts().size());
-        assertTrue(status.getPartiallyCompliantProducts().keySet().contains(PRODUCT_1));
+        assertTrue(status.getPartiallyCompliantProducts().keySet().contains(PRODUCT_1.getId()));
         assertEquals(ComplianceStatus.YELLOW, status.getStatus());
     }
 
