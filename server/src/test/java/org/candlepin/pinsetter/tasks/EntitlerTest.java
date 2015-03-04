@@ -125,7 +125,7 @@ public class EntitlerTest {
         String[] pids = {"prod1", "prod2", "prod3"};
         AutobindData data = AutobindData.create(consumer).forProducts(pids);
         entitler.bindByProducts(data);
-        verify(pm).entitleByProducts(eq(subAdapter), data);
+        verify(pm).entitleByProducts(subAdapter, data);
     }
 
     @Test(expected = BadRequestException.class)
