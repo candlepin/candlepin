@@ -21,6 +21,8 @@ import org.candlepin.audit.EventBuilder;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.common.config.Configuration;
+import org.candlepin.common.paging.Page;
+import org.candlepin.common.paging.PageRequest;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -36,10 +38,9 @@ import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.activationkeys.ActivationKey;
-import org.candlepin.common.paging.Page;
-import org.candlepin.common.paging.PageRequest;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.ProductCache;
@@ -99,6 +100,7 @@ public class CandlepinPoolManager implements PoolManager {
     private ProductCache productCache;
     private AutobindRules autobindRules;
     private ActivationKeyRules activationKeyRules;
+    private ProductCurator prodCurator;
 
     /**
      * @param poolCurator
@@ -115,7 +117,8 @@ public class CandlepinPoolManager implements PoolManager {
         EventFactory eventFactory, Configuration config, Enforcer enforcer,
         PoolRules poolRules, EntitlementCurator curator1, ConsumerCurator consumerCurator,
         EntitlementCertificateCurator ecC, ComplianceRules complianceRules,
-        AutobindRules autobindRules, ActivationKeyRules activationKeyRules) {
+        AutobindRules autobindRules, ActivationKeyRules activationKeyRules,
+        ProductCurator prodCurator) {
 
         this.poolCurator = poolCurator;
         this.sink = sink;
@@ -131,6 +134,7 @@ public class CandlepinPoolManager implements PoolManager {
         this.productCache = productCache;
         this.autobindRules = autobindRules;
         this.activationKeyRules = activationKeyRules;
+        this.prodCurator = prodCurator;
     }
 
     /*
@@ -139,25 +143,19 @@ public class CandlepinPoolManager implements PoolManager {
      */
     void refreshPoolsWithRegeneration(SubscriptionServiceAdapter subAdapter, Owner owner, boolean lazy) {
         log.info("Refreshing pools for owner: " + owner.getKey());
-        List<String> subIds = subAdapter.getSubscriptionIds(owner);
+        List<Subscription> subs = subAdapter.getSubscriptions(owner);
+        Set<String> subIds = Util.newSet();
         log.debug("Found " + subIds.size() + " existing subscriptions.");
 
         List<String> deletedSubs = new LinkedList<String>();
-        for (String subId : subIds) {
-            Subscription sub = subAdapter.getSubscription(subId);
-
-            // If this sub has been removed since getSubscriptionIds was called,
-            if (sub == null) {
-                deletedSubs.add(subId);
-                log.warn("Couldn't load subscription, assuming it has been deleted: " + subId);
-                continue;
-            }
+        for (Subscription sub : subs) {
+            String subId = sub.getId();
+            subIds.add(subId);
 
             // Remove expired subscriptions
             if (isExpired(sub)) {
                 deletedSubs.add(subId);
-                log.info("Deleting expired subscription: " + sub);
-                subAdapter.deleteSubscription(sub);
+                log.info("Skipping expired subscription: " + sub);
                 continue;
             }
 
@@ -177,6 +175,26 @@ public class CandlepinPoolManager implements PoolManager {
         // TODO: break this call into smaller pieces.  There may be lots of floating pools
         List<Pool> floatingPools = poolCurator.getOwnersFloatingPools(owner);
         updateFloatingPools(subAdapter, floatingPools, lazy);
+    }
+
+    void refreshProducts(Owner o, List<Subscription> subs) {
+
+        /*
+         * Build a master list of all products on the incoming subscriptions. Note that
+         * these product objects are detached, and need to be synced with what's in the
+         * database.
+         */
+        Set<Product> allProducts = Util.newSet();
+        for (Subscription sub : subs) {
+            allProducts.add(sub.getProduct());
+            allProducts.addAll(sub.getProvidedProducts());
+        }
+
+        log.debug("Syncing {} incoming products.", allProducts.size());
+        for (Product incoming : allProducts) {
+            Product existing = prodCurator.lookupById(o, incoming.getId());
+            // TODO: compare and update
+        }
     }
 
     // Returns IDs of deleted subscription
@@ -386,7 +404,7 @@ public class CandlepinPoolManager implements PoolManager {
 
     /**
      * @param sub
-     * @return the newly created Pool
+     * @return the newly created Pools
      */
     @Override
     public List<Pool> createPoolsForSubscription(Subscription sub) {
@@ -394,9 +412,6 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     public List<Pool> createPoolsForSubscription(Subscription sub, List<Pool> existingPools) {
-        if (log.isDebugEnabled()) {
-            log.debug("Creating new pool for new sub: " + sub.getId());
-        }
 
         List<Pool> pools = poolRules.createPools(sub, existingPools);
         for (Pool pool : pools) {

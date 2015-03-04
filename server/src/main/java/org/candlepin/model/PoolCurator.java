@@ -555,14 +555,21 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             .list();
     }
 
-    // Get rid of pools from subs that don't exist
+    /**
+     * Lookup all pools for subscriptions which are not in the given list of subscription
+     * IDs. Used for pool cleanup during refresh.
+     *
+     * @param owner
+     * @param expectedSubIds Full list of all expected subscription IDs.
+     * @return
+     */
     @SuppressWarnings("unchecked")
-    public List<Pool> getPoolsFromBadSubs(Owner owner, Collection<String> subIds) {
+    public List<Pool> getPoolsFromBadSubs(Owner owner, Collection<String> expectedSubIds) {
         Criteria crit = currentSession().createCriteria(Pool.class)
                 .add(Restrictions.eq("owner", owner));
-        if (!subIds.isEmpty()) {
+        if (!expectedSubIds.isEmpty()) {
             crit.createAlias("sourceSubscription", "sourceSub");
-            crit.add(Restrictions.and(Restrictions.not(Restrictions.in("sourceSub.subscriptionId", subIds)),
+            crit.add(Restrictions.and(Restrictions.not(Restrictions.in("sourceSub.subscriptionId", expectedSubIds)),
                     Restrictions.isNotNull("sourceSub.subscriptionId")));
         }
         crit.addOrder(Order.asc("id"));
