@@ -24,12 +24,13 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
+import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.ProductContent;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Statistic;
 import org.candlepin.model.StatisticCurator;
 import org.candlepin.pinsetter.tasks.RefreshPoolsForProductJob;
 import org.candlepin.resource.util.ResourceDateParser;
-import org.candlepin.service.ProductServiceAdapter;
 
 import com.google.inject.Inject;
 
@@ -64,26 +65,21 @@ import javax.ws.rs.core.MediaType;
 public class ProductResource {
 
     private static Logger log = LoggerFactory.getLogger(ProductResource.class);
-    private ProductServiceAdapter prodAdapter;
+    private ProductCurator productCurator;
     private ContentCurator contentCurator;
-    private StatisticCurator statisticCurator;
     private OwnerCurator ownerCurator;
+    private ProductCertificateCurator productCertCurator;
+    private StatisticCurator statisticCurator;
     private I18n i18n;
 
-    /**
-     * default ctor
-     *
-     * @param prodAdapter
-     *            Product Adapter used to interact with multiple services.
-     */
     @Inject
-    public ProductResource(ProductServiceAdapter prodAdapter,
-                           StatisticCurator statisticCurator,
-                           ContentCurator contentCurator,
-                           OwnerCurator ownerCurator,
-                           I18n i18n) {
-        this.prodAdapter = prodAdapter;
+    public ProductResource(ProductCurator productCurator, ContentCurator contentCurator,
+        OwnerCurator ownerCurator, ProductCertificateCurator productCertCurator,
+        StatisticCurator statisticCurator, I18n i18n) {
+
+        this.productCurator = productCurator;
         this.contentCurator = contentCurator;
+        this.productCertCurator = productCertCurator;
         this.statisticCurator = statisticCurator;
         this.ownerCurator = ownerCurator;
         this.i18n = i18n;
@@ -92,16 +88,16 @@ public class ProductResource {
     /**
      * Retrieves a list of Products
      *
-     * @param productIds if specified, the list of product ids to return product info for
+     * @param productUuids if specified, the list of product UUIDs to return product info for
      * @return a list of Product objects
      * @httpcode 200
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Product> list(@QueryParam("product") List<String> productIds) {
-        return productIds.isEmpty() ?
-            prodAdapter.getProducts() :
-            prodAdapter.getProductsByIds(productIds);
+    public List<Product> list(@QueryParam("product") List<String> productUuids) {
+        return productUuids.isEmpty() ?
+            productCurator.listAll() :
+            productCurator.listAllByUuids(productUuids);
     }
 
     /**
@@ -126,7 +122,7 @@ public class ProductResource {
      * }
      * </pre>
      *
-     * @param pid uuid of the product sought.
+     * @param productUuid uuid of the product sought.
      * @return a Product object
      * @httpcode 404
      * @httpcode 200
@@ -135,15 +131,16 @@ public class ProductResource {
     @Path("/{product_uuid}")
     @Produces(MediaType.APPLICATION_JSON)
     @SecurityHole
-    public Product getProduct(@PathParam("product_uuid") String pid) {
-        Product toReturn = prodAdapter.getProductById(pid);
+    public Product getProduct(@PathParam("product_uuid") String productUuid) {
+        Product product = productCurator.find(productUuid);
 
-        if (toReturn != null) {
-            return toReturn;
+        if (product == null) {
+            throw new NotFoundException(
+                i18n.tr("Product with UUID ''{0}'' could not be found.", productUuid)
+            );
         }
 
-        throw new NotFoundException(
-            i18n.tr("Product with UUID ''{0}'' could not be found.", pid));
+        return product;
     }
 
     /**
@@ -157,17 +154,9 @@ public class ProductResource {
     @Path("/{product_uuid}/certificate")
     @Produces(MediaType.APPLICATION_JSON)
     @SecurityHole
-    public ProductCertificate getProductCertificate(
-        @PathParam("product_uuid") String productId) {
-
-        Product product = prodAdapter.getProductById(productId);
-
-        if (product == null) {
-            throw new NotFoundException(
-                i18n.tr("Product with UUID ''{0}'' could not be found.", productId));
-        }
-
-        return prodAdapter.getProductCertificate(product);
+    public ProductCertificate getProductCertificate(@PathParam("product_uuid") String productUuid) {
+        Product product = this.getProduct(productUuid);
+        return this.productCertCurator.getCertForProduct(product);
     }
 
     /**
@@ -182,7 +171,7 @@ public class ProductResource {
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     public Product createProduct(Product product) {
-        return prodAdapter.createProduct(product);
+        return productCurator.create(product);
     }
 
     /**
@@ -198,10 +187,10 @@ public class ProductResource {
     public Product updateProduct(
         @PathParam("product_uuid") @Verify(Product.class) String productId,
         Product product) {
-        Product toUpdate = getProduct(productId);
+        Product toUpdate = this.getProduct(productId);
 
         if (performProductUpdates(toUpdate, product)) {
-            this.prodAdapter.mergeProduct(toUpdate);
+            this.productCurator.merge(toUpdate);
         }
 
         return toUpdate;
@@ -267,16 +256,22 @@ public class ProductResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product_uuid}/batch_content")
-    public Product addBatchContent(@PathParam("product_uuid") String pid,
-                              Map<String, Boolean> contentMap) {
-        Product product = prodAdapter.getProductById(pid);
+    public Product addBatchContent(@PathParam("product_uuid") String productUuid,
+                                   Map<String, Boolean> contentMap) {
+
+        Product product = this.getProduct(productUuid);
+
         for (Entry<String, Boolean> entry : contentMap.entrySet()) {
-            Content content = contentCurator.find(entry.getKey());
-            ProductContent productContent = new ProductContent(product, content,
-                entry.getValue());
+            Content content = contentCurator.lookupById(product.getOwner(), entry.getKey());
+
+            // TODO: Perhaps we should be checking that content was actually found here?
+
+            ProductContent productContent = new ProductContent(product, content, entry.getValue());
             product.getProductContent().add(productContent);
         }
-        return prodAdapter.getProductById((product.getUuid()));
+
+        // TODO: Why are we doing this instead of just returning the product we already have?
+        return productCurator.find((product.getUuid()));
     }
 
     /**
@@ -290,15 +285,17 @@ public class ProductResource {
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product_uuid}/content/{content_id}")
-    public Product addContent(@PathParam("product_uuid") String pid,
+    public Product addContent(@PathParam("product_uuid") String productUuid,
                               @PathParam("content_id") String contentId,
                               @QueryParam("enabled") Boolean enabled) {
-        Product product = prodAdapter.getProductById(pid);
-        Content content = contentCurator.find(contentId);
+
+        Product product = this.getProduct(productUuid);
+        Content content = contentCurator.lookupById(product.getOwner(), contentId);
 
         ProductContent productContent = new ProductContent(product, content, enabled);
         product.getProductContent().add(productContent);
-        return prodAdapter.getProductById((product.getUuid()));
+
+        return productCurator.find((product.getUuid()));
     }
 
     /**
@@ -309,9 +306,13 @@ public class ProductResource {
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product_uuid}/content/{content_id}")
-    public void removeContent(@PathParam("product_uuid") String pid,
+    public void removeContent(@PathParam("product_uuid") String productUuid,
                               @PathParam("content_id") String contentId) {
-        prodAdapter.removeContent(pid, contentId);
+
+        Product product = this.getProduct(productUuid);
+        Content content = contentCurator.lookupById(product.getOwner(), contentId);
+
+        productCurator.removeProductContent(product, content);
     }
 
     /**
@@ -324,19 +325,16 @@ public class ProductResource {
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product_uuid}")
-    public void deleteProduct(@PathParam("product_uuid") String pid) {
-        Product product = prodAdapter.getProductById(pid);
-        if (product == null) {
-            throw new NotFoundException(
-                i18n.tr("Product with UUID ''{0}'' could not be found.", pid));
-        }
-        if (prodAdapter.productHasSubscriptions(product)) {
+    public void deleteProduct(@PathParam("product_uuid") String productUuid) {
+        Product product = this.getProduct(productUuid);
+
+        if (productCurator.productHasSubscriptions(product)) {
             throw new BadRequestException(
                 i18n.tr("Product with UUID ''{0}'' cannot be deleted " +
-                    "while subscriptions exist.", pid));
+                    "while subscriptions exist.", productUuid));
         }
 
-        prodAdapter.deleteProduct(product);
+        productCurator.delete(product);
     }
 
     /**
@@ -347,14 +345,14 @@ public class ProductResource {
      * @httpcode 200
      */
     @GET
-    @Path("/{prod_id}/statistics")
+    @Path("/{product_uuid}/statistics")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Statistic> getProductStats(@PathParam("prod_id") String id,
+    public List<Statistic> getProductStats(@PathParam("product_uuid") String productUuid,
                             @QueryParam("from") String from,
                             @QueryParam("to") String to,
                             @QueryParam("days") String days) {
 
-        return statisticCurator.getStatisticsByProduct(id, null,
+        return statisticCurator.getStatisticsByProduct(productUuid, null,
                                 ResourceDateParser.getFromDate(from, to, days),
                                 ResourceDateParser.parseDateString(to));
     }
@@ -369,15 +367,15 @@ public class ProductResource {
      * @httpcode 200
      */
     @GET
-    @Path("/{prod_id}/statistics/{vtype}")
+    @Path("/{product_uuid}/statistics/{vtype}")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Statistic> getProductStats(@PathParam("prod_id") String id,
+    public List<Statistic> getProductStats(@PathParam("product_uuid") String productUuid,
                             @PathParam("vtype") String valueType,
                             @QueryParam("from") String from,
                             @QueryParam("to") String to,
                             @QueryParam("days") String days) {
 
-        return statisticCurator.getStatisticsByProduct(id, valueType,
+        return statisticCurator.getStatisticsByProduct(productUuid, valueType,
                                 ResourceDateParser.getFromDate(from, to, days),
                                 ResourceDateParser.parseDateString(to));
     }
@@ -392,8 +390,8 @@ public class ProductResource {
     @GET
     @Path("/owners")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Owner> getActiveProductOwners(@QueryParam("product") String[] productIds) {
-        List<String> ids = Arrays.asList(productIds);
+    public List<Owner> getActiveProductOwners(@QueryParam("product") String[] productUuid) {
+        List<String> ids = Arrays.asList(productUuid);
         if (ids.isEmpty()) {
             throw new BadRequestException(i18n.tr("Must specify product ID."));
         }
@@ -404,7 +402,7 @@ public class ProductResource {
     /**
      * Refreshes Pools by Product
      *
-     * @param pid
+     * @param productUuid
      * @param lazyRegen
      * @return a JobDetail object
      */
@@ -412,14 +410,10 @@ public class ProductResource {
     @Path("/{product_uuid}/subscriptions")
     @Produces(MediaType.APPLICATION_JSON)
     public JobDetail refreshPoolsForProduct(
-        @PathParam("product_uuid") String pid,
+        @PathParam("product_uuid") String productUuid,
         @QueryParam("lazy_regen") @DefaultValue("true") Boolean lazyRegen) {
 
-        Product product = prodAdapter.getProductById(pid);
-        if (product == null) {
-            throw new NotFoundException(
-                i18n.tr("Product with UUID ''{0}'' could not be found.", pid));
-        }
+        Product product = this.getProduct(productUuid);
 
         return RefreshPoolsForProductJob.forProduct(product, lazyRegen);
     }

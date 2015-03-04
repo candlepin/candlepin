@@ -151,7 +151,7 @@ public class Product extends AbstractHibernateObject implements Linkable {
     }
 
     /**
-     * Retrieves this product's database UUID. While the product ID may exist multiple times
+     * Retrieves this product's object/database UUID. While the product ID may exist multiple times
      * in the database (if in use by multiple owners), this UUID uniquely identifies a
      * product instance.
      *
@@ -163,14 +163,14 @@ public class Product extends AbstractHibernateObject implements Linkable {
     }
 
     /**
-     * Sets this product's object ID. Note that this ID is used to uniquely identify this
+     * Sets this product's object/database ID. Note that this ID is used to uniquely identify this
      * particular object and has no baring on the Red Hat product ID.
      *
-     * @param id
+     * @param uuid
      *  The object ID to assign to this product.
      */
-    public void setUuid(String id) {
-        this.uuid = id;
+    public void setUuid(String uuid) {
+        this.uuid = uuid;
     }
 
     /**
@@ -318,6 +318,7 @@ public class Product extends AbstractHibernateObject implements Linkable {
                 }
             }
         }
+
         return false;
     }
 
@@ -329,6 +330,7 @@ public class Product extends AbstractHibernateObject implements Linkable {
                 }
             }
         }
+
         return false;
     }
 

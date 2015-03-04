@@ -18,8 +18,8 @@ import static org.quartz.JobBuilder.*;
 
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.pinsetter.core.model.JobStatus;
-import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
@@ -34,28 +34,27 @@ import org.quartz.JobExecutionException;
  */
 public class RefreshPoolsForProductJob extends KingpinJob {
 
-    private ProductServiceAdapter productAdapter;
+    private ProductCurator productCurator;
     private PoolManager poolManager;
 
     public static final String LAZY_REGEN = "lazy_regen";
 
     @Inject
-    public RefreshPoolsForProductJob(ProductServiceAdapter productAdapter,
+    public RefreshPoolsForProductJob(ProductCurator productCurator,
         PoolManager poolManager) {
-        this.productAdapter = productAdapter;
+        this.productCurator = productCurator;
         this.poolManager = poolManager;
     }
 
     @Override
     public void toExecute(JobExecutionContext context)
         throws JobExecutionException {
-        String productId = context.getMergedJobDataMap().getString(JobStatus.TARGET_ID);
+        String productUuid = context.getMergedJobDataMap().getString(JobStatus.TARGET_ID);
         Boolean lazy = context.getMergedJobDataMap().getBoolean(LAZY_REGEN);
 
-        poolManager.getRefresher(lazy).add(
-            productAdapter.getProductById(productId)).run();
+        poolManager.getRefresher(lazy).add(this.productCurator.find(productUuid)).run();
 
-        context.setResult("Pools refreshed for product " + productId);
+        context.setResult("Pools refreshed for product " + productUuid);
     }
 
     public static JobDetail forProduct(Product product, Boolean lazy) {

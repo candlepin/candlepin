@@ -55,7 +55,7 @@ public class EnvironmentContent extends AbstractHibernateObject {
     private Environment environment;
 
     @ManyToOne
-    @JoinColumn(name="content_id", nullable = false)
+    @JoinColumn(name="content_uuid", nullable = false)
     @NotNull
     private Content content;
 

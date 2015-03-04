@@ -244,17 +244,17 @@ public class MultiOrgUpgradeTask {
 
                 // Migration information from pre-existing tables to cpo_* tables
                 this.executeUpdate(
-                    "INSERT INTO cpo_activationkey_product " +
-                    "SELECT id, created, updated, key_id, ? " +
+                    "INSERT INTO cpo_activationkey_products " +
+                    "SELECT key_id, ? " +
                     "FROM cp_activationkey_product WHERE product_id = ?;",
                     productuuid, productid
                 );
 
                 this.executeUpdate(
                     "INSERT INTO cpo_branding " +
-                    "SELECT id, created, updated, ?, type, name " +
+                    "SELECT ?, created, updated, ?, type, name " +
                     "FROM cp_branding WHERE productid = ?;",
-                    productuuid, productid
+                    this.generateUUID(), productuuid, productid
                 );
 
                 this.executeUpdate(
@@ -280,16 +280,16 @@ public class MultiOrgUpgradeTask {
 
                 this.executeUpdate(
                     "INSERT INTO cpo_product_attribute " +
-                    "SELECT id, created, updated, name, value, ? " +
+                    "SELECT ?, created, updated, name, value, ? " +
                     "FROM cp_product_attribute WHERE product_id = ?;",
-                    productuuid, productid
+                    this.generateUUID(), productuuid, productid
                 );
 
                 this.executeUpdate(
-                    "INSERT INTO cpo_product_certificate " +
-                    "SELECT id, created, updated, cert, privatekey, ? " +
+                    "INSERT INTO cpo_product_certificates " +
+                    "SELECT ?, created, updated, cert, privatekey, ? " +
                     "FROM cp_product_certificate WHERE product_id = ?;",
-                    productuuid, productid
+                    this.generateUUID(), productuuid, productid
                 );
 
                 this.executeUpdate(
@@ -332,7 +332,7 @@ public class MultiOrgUpgradeTask {
                         // update cpo_content
                         this.executeUpdate(
                             "INSERT INTO cpo_content " +
-                            "SELECT ?, created, updated, ?, contenturl, gpgurl, label, " +
+                            "SELECT ?, id, created, updated, ?, contenturl, gpgurl, label, " +
                             "       metadataexpire, name, releasever, requiredtags, type, " +
                             "       vendor, arches " +
                             "FROM cp_content WHERE id = ?;",
@@ -350,10 +350,10 @@ public class MultiOrgUpgradeTask {
 
                         this.executeUpdate(
                             "INSERT INTO cpo_environment_content " +
-                            "SELECT id, created, updated, ?, enabled, environment_id " +
+                            "SELECT ?, created, updated, ?, enabled, environment_id " +
                             "FROM cp_env_content " +
                             "WHERE content_id = ?;",
-                            contentuuid, contentid
+                            this.generateUUID(), contentuuid, contentid
                         );
                     }
 
@@ -398,9 +398,9 @@ public class MultiOrgUpgradeTask {
 
                 this.executeUpdate(
                     "INSERT INTO cpo_pool_source_sub " +
-                    "SELECT id, ?, subscriptionsubkey, pool_id, created, update " +
+                    "SELECT ?, ?, subscriptionsubkey, pool_id, created, update " +
                     "FROM cp_pool_source_sub WHERE subscriptionid = ?;",
-                    subuuid, subid
+                    this.generateUUID(), subuuid, subid
                 );
 
                 this.executeUpdate(

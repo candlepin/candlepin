@@ -286,7 +286,8 @@ public class DefaultEntitlementCertServiceAdapter extends
         int contentCounter = 0;
         boolean enableEnvironmentFiltering = config.getBoolean(ConfigProperties.ENV_CONTENT_FILTERING);
 
-        Product skuProd = productAdapter.getProductById(ent.getPool().getProductId());
+        // Product skuProd = productAdapter.getProductById(ent.getPool().getProductId());
+        Product skuProd = ent.getPool().getProduct();
 
         for (Product prod : Collections2
             .filter(products, X509Util.PROD_FILTER_PREDICATE)) {

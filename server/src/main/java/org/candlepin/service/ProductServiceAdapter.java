@@ -16,6 +16,7 @@ package org.candlepin.service;
 
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
+import org.candlepin.model.Owner;
 
 import java.util.Collection;
 import java.util.List;
@@ -31,17 +32,19 @@ public interface ProductServiceAdapter {
 
     /**
      * Query a specific product by its string ID.
+     * @param owner the owner/org in which to search for the product
      * @param id product id
      * @return specific product
      */
-    Product getProductById(String id);
+    Product getProductById(Owner owner, String id);
 
     /**
      * Query a list of products matching the given string IDs.
+     * @param owner the owner/org in which to search for products
      * @param ids list of product ids
      * @return list of products matching the given string IDs
      */
-    List<Product> getProductsByIds(Collection<String> ids);
+    List<Product> getProductsByIds(Owner owner, Collection<String> ids);
 
     /**
      * List all Products
@@ -85,11 +88,11 @@ public interface ProductServiceAdapter {
      * @param productId Product ID.
      * @param contentId Content ID.
      */
-    void removeContent(String productId, String contentId);
+    void removeContent(Owner owner, String productId, String contentId);
 
     boolean productHasSubscriptions(Product prod);
 
     Product mergeProduct(Product prod);
 
-    Set<String> getProductsWithContent(Collection<String> contentId);
+    Set<String> getProductsWithContent(Owner owner, Collection<String> contentId);
 }

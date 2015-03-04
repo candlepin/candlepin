@@ -65,6 +65,10 @@ public class PopulateHostedDBTask extends KingpinJob {
         int ccount = 0;
         log.info("Populating Hosted DB");
 
+        /*
+        TODO: Uh oh. This whole task needs to be examined. May be unnecessary now.
+
+
         Set<String> productIds = this.poolCurator.getAllKnownProductIds();
 
         for (Product product : this.productService.getProductsByIds(productIds)) {
@@ -83,6 +87,7 @@ public class PopulateHostedDBTask extends KingpinJob {
             "Finished populating Hosted DB. Inserted/updated %d product(s) and %d content",
             pcount, ccount
         ));
+        */
     }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

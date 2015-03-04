@@ -26,7 +26,6 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.Subscription;
-import org.candlepin.policy.js.ProductCache;
 
 import com.google.inject.Inject;
 
@@ -50,16 +49,14 @@ public class PoolRules {
     private static Logger log = LoggerFactory.getLogger(PoolRules.class);
 
     private PoolManager poolManager;
-    private ProductCache productCache;
     private Configuration config;
     private EntitlementCurator entCurator;
 
 
     @Inject
-    public PoolRules(PoolManager poolManager, ProductCache productCache, Configuration config,
+    public PoolRules(PoolManager poolManager, Configuration config,
         EntitlementCurator entCurator) {
         this.poolManager = poolManager;
-        this.productCache = productCache;
         this.config = config;
         this.entCurator = entCurator;
     }
@@ -88,7 +85,7 @@ public class PoolRules {
 
     public List<Pool> createPools(Subscription sub, List<Pool> existingPools) {
         log.info("Creating pools for subscription: " + sub);
-        PoolHelper helper = new PoolHelper(this.poolManager, this.productCache, null);
+        PoolHelper helper = new PoolHelper(this.poolManager, null);
 
         List<Pool> pools = new LinkedList<Pool>();
         Map<String, String> attributes =
@@ -260,7 +257,7 @@ public class PoolRules {
     public List<PoolUpdate> updatePools(Subscription sub, List<Pool> existingPools) {
         log.debug("Refreshing pools for existing subscription: " + sub);
         log.debug("  existing pools: " + existingPools.size());
-        PoolHelper helper = new PoolHelper(this.poolManager, this.productCache, null);
+        PoolHelper helper = new PoolHelper(this.poolManager, null);
 
         List<PoolUpdate> poolsUpdated = new LinkedList<PoolUpdate>();
         Map<String, String> attributes =

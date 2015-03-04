@@ -16,7 +16,6 @@ package org.candlepin.model;
 
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
-import org.candlepin.service.ProductServiceAdapter;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -43,15 +42,15 @@ import java.util.Set;
  */
 public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     private static Logger log = LoggerFactory.getLogger(EntitlementCurator.class);
-    private ProductServiceAdapter productAdapter;
+    private ProductCurator productCurator;
 
     /**
      * default ctor
      */
     @Inject
-    public EntitlementCurator(ProductServiceAdapter productAdapter) {
+    public EntitlementCurator(ProductCurator productCurator) {
         super(Entitlement.class);
-        this.productAdapter = productAdapter;
+        this.productCurator = productCurator;
     }
 
     // TODO: handles addition of new entitlements only atm!
@@ -225,7 +224,8 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         }
 
         // Retrieve all products at once from the adapter
-        List<Product> products = productAdapter.getProductsByIds(pidEnts.keySet());
+        List<Product> products = productCurator.listAllByIds(entitlement.getOwner(), pidEnts.keySet());
+
         for (Product p : products) {
             boolean modifies = p.modifies(entitlement.getProductId());
             Iterator<Product> ppit = entitlement.getPool().getProvidedProducts().iterator();

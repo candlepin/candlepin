@@ -50,35 +50,53 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     }
 
     /**
-     * @param name the product name to lookup
-     * @return the Product which matches the given name.
+     * Retrieves a Product instance for the product with the specified name. If a matching product
+     * could not be found, this method returns null.
+     *
+     * @param owner
+     *  The owner/org in which to search for a product
+     *
+     * @param name
+     *  The name of the product to retrieve
+     *
+     * @return
+     *  a Product instance for the product with the specified name, or null if a matching product
+     *  was not found.
      */
-    @Transactional
-    public Product lookupByName(String name) {
-        return (Product) currentSession().createCriteria(Product.class)
-            .add(Restrictions.eq("name", name)).uniqueResult();
+    public Product lookupByName(Owner owner, String name) {
+        return (Product) this.currentSession().createCriteria(Product.class)
+            .add(Restrictions.eq("owner", owner))
+            .add(Restrictions.eq("name", name))
+            .uniqueResult();
     }
 
     /**
-     * @param id product id to lookup
-     * @return the Product which matches the given id.
-     */
-    @Transactional
-    public Product lookupById(String id) {
-        return (Product) currentSession().createCriteria(Product.class)
-            .add(Restrictions.eq("id", id)).uniqueResult();
-    }
-
-    /**
-     * @param o owner to lookup product for
+     * @param owner owner to lookup product for
      * @param id Product ID to lookup. (note: not the database ID)
      * @return the Product which matches the given id.
      */
     @Transactional
-    public Product lookupById(Owner o, String id) {
+    public Product lookupById(Owner owner, String id) {
         return (Product) currentSession().createCriteria(Product.class)
-            .add(Restrictions.eq("owner", o))
+            .add(Restrictions.eq("owner", owner))
             .add(Restrictions.eq("id", id)).uniqueResult();
+    }
+
+    /**
+     * Retrieves a Product instance for the specified product UUID. If a matching product could not
+     * be found, this method returns null.
+     *
+     * @param uuid
+     *  The UUID of the product to retrieve
+     *
+     * @return
+     *  the Product instance for the product with the specified UUID or null if a matching product
+     *  was not found.
+     */
+    @Transactional
+    public Product lookupByUuid(String uuid) {
+        return (Product) currentSession().createCriteria(Product.class)
+            .add(Restrictions.eq("uuid", uuid)).uniqueResult();
     }
 
     @SuppressWarnings("unchecked")
@@ -88,10 +106,22 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
             .add(Restrictions.eq("owner", owner)).list();
     }
 
+    public List<Product> listAllByIds(Owner owner, Collection<? extends Serializable> ids) {
+        return this.listByCriteria(
+            this.createSecureCriteria()
+                .add(Restrictions.eq("owner", owner))
+                .add(Restrictions.in("id", ids))
+        );
+    }
+
     @Override
     public List<Product> listAllByIds(Collection<? extends Serializable> ids) {
+        throw new UnsupportedOperationException("An owner must be specified when listing products by ID");
+    }
+
+    public List<Product> listAllByUuids(Collection<? extends Serializable> uuids) {
         return this.listByCriteria(
-            this.createSecureCriteria().add(Restrictions.in("uuid", ids))
+            this.createSecureCriteria().add(Restrictions.in("uuid", uuids))
         );
     }
 
@@ -102,7 +132,9 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      * @param p Product to create or update.
      */
     public void createOrUpdate(Product p) {
-        Product existing = lookupById(p.getOwner(), p.getId());
+        // TODO: Should we also verify that the UUID isn't in use?
+
+        Product existing = this.lookupById(p.getOwner(), p.getId());
         if (existing == null) {
             create(p);
         }
@@ -247,7 +279,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     @Transactional
     public void removeProductContent(Product prod, Content content) {
         for (ProductContent pc : prod.getProductContent()) {
-            if (content.getId().equals(pc.getContent().getId())) {
+            if (content.getUuid().equals(pc.getContent().getUuid())) {
                 prod.getProductContent().remove(pc);
                 break;
             }
@@ -269,14 +301,31 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     }
 
     @SuppressWarnings("unchecked")
-    public List<String> getProductIdsWithContent(Collection<String> contentIds) {
+    public List<String> getProductsWithContentIds(Owner owner, Collection<String> contentIds) {
         if (contentIds == null || contentIds.isEmpty()) {
             return new LinkedList<String>();
         }
+
         return currentSession().createCriteria(Product.class)
             .createAlias("productContent", "pcontent")
             .createAlias("pcontent.content", "content")
+            .add(Restrictions.eq("owner", owner))
             .add(Restrictions.in("content.id", contentIds))
+            .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY)
+            .setProjection(Projections.id())
+            .list();
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<String> getProductsWithContentUuids(Collection<String> contentUuids) {
+        if (contentUuids == null || contentUuids.isEmpty()) {
+            return new LinkedList<String>();
+        }
+
+        return currentSession().createCriteria(Product.class)
+            .createAlias("productContent", "pcontent")
+            .createAlias("pcontent.content", "content")
+            .add(Restrictions.in("content.uuid", contentUuids))
             .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY)
             .setProjection(Projections.id())
             .list();

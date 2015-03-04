@@ -21,7 +21,7 @@ import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.EnvironmentContentCurator;
-import org.candlepin.service.ProductServiceAdapter;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.service.UniqueIdGenerator;
 
 import com.google.inject.Inject;
@@ -53,18 +53,18 @@ public class ContentResource {
     private UniqueIdGenerator idGenerator;
     private EnvironmentContentCurator envContentCurator;
     private PoolManager poolManager;
-    private ProductServiceAdapter productAdapter;
+    private ProductCurator productCurator;
 
     @Inject
     public ContentResource(ContentCurator contentCurator, I18n i18n,
         UniqueIdGenerator idGenerator, EnvironmentContentCurator envContentCurator,
-        PoolManager poolManager, ProductServiceAdapter productAdapter) {
+        PoolManager poolManager, ProductCurator productCurator) {
         this.i18n = i18n;
         this.contentCurator = contentCurator;
         this.idGenerator = idGenerator;
         this.envContentCurator = envContentCurator;
         this.poolManager = poolManager;
-        this.productAdapter = productAdapter;
+        this.productCurator = productCurator;
     }
 
     /**
@@ -106,8 +106,8 @@ public class ContentResource {
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("/{content_id}")
-    public Content getContent(@PathParam("content_id") String contentId) {
+    @Path("/{content_uuid}")
+    public Content getContent(@PathParam("content_uuid") String contentId) {
         Content content = contentCurator.find(contentId);
 
         if (content == null) {
@@ -174,8 +174,8 @@ public class ContentResource {
      */
     @PUT
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("/{content_id}")
-    public Content updateContent(@PathParam("content_id") String contentId,
+    @Path("/{content_uuid}")
+    public Content updateContent(@PathParam("content_uuid") String contentId,
             Content changes) {
         Content lookedUp  = contentCurator.find(contentId);
         if (lookedUp == null) {
@@ -187,8 +187,9 @@ public class ContentResource {
         changes.setId(contentId);
         Content updated = contentCurator.createOrUpdate(changes);
         // require regeneration of entitlement certificates of affected consumers
-        Set<String> affectedProducts =
-            productAdapter.getProductsWithContent(setFrom(contentId));
+        List<String> affectedProducts =
+            this.productCurator.getProductsWithContentUuids(setFrom(contentId));
+
         for (String productId : affectedProducts) {
             poolManager.regenerateCertificatesOf(productId, true);
         }
@@ -209,9 +210,9 @@ public class ContentResource {
      */
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("/{content_id}")
-    public void remove(@PathParam("content_id") String cid) {
-        Set<String> affectedProducts = productAdapter.getProductsWithContent(setFrom(cid));
+    @Path("/{content_uuid}")
+    public void remove(@PathParam("content_uuid") String cid) {
+        List<String> affectedProducts = this.productCurator.getProductsWithContentUuids(setFrom(cid));
         Content nuke = getContent(cid);
         contentCurator.delete(nuke);
 
