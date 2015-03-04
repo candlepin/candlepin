@@ -441,11 +441,6 @@ public class Importer {
                 importFiles.get(ImportFile.PRODUCTS.fileName()).listFiles(),
                 importer);
 
-            Set<Product> modifiedProducts = importer.getChangedProducts(productsToImport);
-            for (Product product : modifiedProducts) {
-                refresher.add(product);
-            }
-
             importer.store(productsToImport);
 
             meta = mapper.readValue(metadata, Meta.class);

@@ -38,6 +38,7 @@ import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.activationkeys.ActivationKey;
@@ -60,6 +61,7 @@ import org.candlepin.util.CertificateSizeException;
 import org.candlepin.util.Util;
 import org.candlepin.version.CertVersionConflictException;
 
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
@@ -177,7 +179,7 @@ public class CandlepinPoolManager implements PoolManager {
         updateFloatingPools(subAdapter, floatingPools, lazy);
     }
 
-    void refreshProducts(Owner o, List<Subscription> subs) {
+    Set<Product> refreshProducts(Owner o, List<Subscription> subs) {
 
         /*
          * Build a master list of all products on the incoming subscriptions. Note that
@@ -190,14 +192,66 @@ public class CandlepinPoolManager implements PoolManager {
             allProducts.addAll(sub.getProvidedProducts());
         }
 
+        return getChangedProducts(o, allProducts);
+    }
+
+    public Set<Product> getChangedProducts(Owner o, Set<Product> allProducts) {
+        Set<Product> changedProducts = Util.newSet();
+
         log.debug("Syncing {} incoming products.", allProducts.size());
         for (Product incoming : allProducts) {
             Product existing = prodCurator.lookupById(o, incoming.getId());
             // TODO: compare and update
+            if (existing == null) {
+                log.info("Creating new product for org {}: {}", o.getKey(),
+                        incoming.getId());
+                prodCurator.create(incoming);
+            }
+            else {
+                if (hasProductChanged(existing, incoming)) {
+                    log.info("Product changed for org {}: {}", o.getKey(),
+                            incoming.getId());
+                    prodCurator.createOrUpdate(incoming);
+                    changedProducts.add(incoming);
+                    // TODO: signal back to caller the set of changed products, we'll
+                    // need to know during refreshing of existing pools.
+                }
+            }
         }
+        return changedProducts;
     }
 
-    // Returns IDs of deleted subscription
+    // TODO: move to comparator?
+    protected final boolean hasProductChanged(Product existingProd, Product importedProd) {
+        // trying to go in order from least to most work.
+        if (!existingProd.getName().equals(importedProd.getName())) {
+            return true;
+        }
+
+        if (!existingProd.getMultiplier().equals(importedProd.getMultiplier())) {
+            return true;
+        }
+
+        if (existingProd.getAttributes().size() != importedProd.getAttributes().size()) {
+            return true;
+        }
+        if (Sets.intersection(existingProd.getAttributes(),
+            importedProd.getAttributes()).size() != existingProd.getAttributes().size()) {
+            return true;
+        }
+
+        if (existingProd.getProductContent().size() != importedProd.getProductContent().size()) {
+            return true;
+        }
+        if (Sets.intersection(new HashSet<ProductContent>(existingProd.getProductContent()),
+                new HashSet<ProductContent>(importedProd.getProductContent())).size() !=
+                existingProd.getProductContent().size()) {
+            return true;
+        }
+
+        return false;
+    }
+
     @Transactional
     void refreshPoolsForSubscription(SubscriptionServiceAdapter subAdapter, Subscription sub, boolean lazy) {
 
