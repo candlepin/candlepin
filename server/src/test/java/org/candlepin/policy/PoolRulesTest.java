@@ -33,7 +33,6 @@ import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.Subscription;
-import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.pool.PoolRules;
 import org.candlepin.policy.js.pool.PoolUpdate;
 import org.candlepin.service.ProductServiceAdapter;
@@ -69,7 +68,6 @@ public class PoolRulesTest {
     @Mock private Configuration configMock;
     @Mock private EntitlementCurator entCurMock;
 
-    private ProductCache productCache;
     private UserPrincipal principal;
     private Owner owner;
 
@@ -85,9 +83,8 @@ public class PoolRulesTest {
         when(rulesCuratorMock.getRules()).thenReturn(rules);
 
         when(configMock.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX))).thenReturn(100);
-        productCache = new ProductCache(configMock, productAdapterMock);
 
-        poolRules = new PoolRules(poolManagerMock, productCache, configMock, entCurMock);
+        poolRules = new PoolRules(poolManagerMock, configMock, entCurMock);
         principal = TestUtil.createOwnerPrincipal();
         owner = principal.getOwners().get(0);
     }

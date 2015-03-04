@@ -38,7 +38,6 @@ import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsRunnerProvider;
-import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.RuleExecutionException;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
@@ -83,7 +82,6 @@ public class EnforcerTest extends DatabaseTestFixture {
     private Enforcer enforcer;
     private Owner owner;
     private Consumer consumer;
-    private ProductCache productCache;
 
     private static final String PRODUCT_CPULIMITED = "CPULIMITED001";
 
@@ -92,7 +90,6 @@ public class EnforcerTest extends DatabaseTestFixture {
         MockitoAnnotations.initMocks(this);
 
         when(config.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX))).thenReturn(100);
-        productCache = new ProductCache(config, productAdapter);
 
         owner = createOwner();
         ownerCurator.create(owner);
@@ -118,8 +115,9 @@ public class EnforcerTest extends DatabaseTestFixture {
 
         JsRunner jsRules = new JsRunnerProvider(rulesCurator).get();
 
-        enforcer = new EntitlementRules(new DateSourceForTesting(2010, 1, 1),
-            jsRules, productCache, i18n, config, consumerCurator, poolCurator);
+        enforcer = new EntitlementRules(
+            new DateSourceForTesting(2010, 1, 1), jsRules, i18n, config, consumerCurator, poolCurator
+        );
     }
 
     @Test
@@ -235,7 +233,7 @@ public class EnforcerTest extends DatabaseTestFixture {
         product.setAttribute(PRODUCT_CPULIMITED, "2");
         productCurator.create(product);
 
-        when(this.productAdapter.getProductById("a-product")).thenReturn(product);
+        when(this.productAdapter.getProductById(owner, "a-product")).thenReturn(product);
 
         ValidationResult result = enforcer.preEntitlement(
             TestUtil.createConsumer(),
