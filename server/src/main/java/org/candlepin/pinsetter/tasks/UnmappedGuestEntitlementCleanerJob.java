@@ -17,6 +17,7 @@ package org.candlepin.pinsetter.tasks;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
+import org.candlepin.service.SubscriptionServiceAdapter;
 
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -41,11 +42,14 @@ public class UnmappedGuestEntitlementCleanerJob extends KingpinJob {
 
     private EntitlementCurator entitlementCurator;
     private PoolManager poolManager;
+    private SubscriptionServiceAdapter subAdapter;
 
     @Inject
-    public UnmappedGuestEntitlementCleanerJob(EntitlementCurator entitlementCurator, PoolManager manager) {
+    public UnmappedGuestEntitlementCleanerJob(EntitlementCurator entitlementCurator, PoolManager manager,
+            SubscriptionServiceAdapter subAdapter) {
         this.entitlementCurator = entitlementCurator;
         this.poolManager = manager;
+        this.subAdapter = subAdapter;
     }
 
     @Override
@@ -59,7 +63,7 @@ public class UnmappedGuestEntitlementCleanerJob extends KingpinJob {
         int total = 0;
         for (Entitlement e : unmappedGuestEntitlements) {
             if (isLapsed(e, now)) {
-                poolManager.revokeEntitlement(e);
+                poolManager.revokeEntitlement(subAdapter, e);
                 total++;
             }
         }
