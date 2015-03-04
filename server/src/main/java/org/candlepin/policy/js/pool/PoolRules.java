@@ -86,6 +86,19 @@ public class PoolRules {
         return createPools(sub, new LinkedList<Pool>());
     }
 
+    /**
+     * Create any pools that need to be created for the given subscription.
+     *
+     * In some scenarios, due to attribute changes, pools may need to be created even though
+     * pools already exist for the subscription. A list of pre-existing pools for the given
+     * sub are provided to help this method determine if something needs to be done or not.
+     *
+     * For a genuine new subscription, the existing pools list will be empty.
+     *
+     * @param sub
+     * @param existingPools
+     * @return
+     */
     public List<Pool> createPools(Subscription sub, List<Pool> existingPools) {
         log.info("Creating pools for subscription: " + sub);
         PoolHelper helper = new PoolHelper(this.poolManager, this.productCache, null);
