@@ -39,7 +39,6 @@ public class Refresher {
 
     private Set<Owner> owners = Util.newSet();
     private Set<Product> products = Util.newSet();
-    private Set<Subscription> subscriptions = Util.newSet();
 
     Refresher(CandlepinPoolManager poolManager, SubscriptionServiceAdapter subAdapter,
         boolean lazy) {
@@ -58,18 +57,30 @@ public class Refresher {
         return this;
     }
 
+    /**
+     * Add a product that has been changed to be refreshed globally.
+     *
+     * Will be used to lookup any subscription using the product, either as a SKU or a
+     * provided product, and trigger a refresh for that specific subscription.
+     *
+     * WARNING: Should only be used in upstream production environments, downstream should
+     * always be driven by manifest import, which should never trigger a global refresh
+     * for other orgs.
+     *
+     * @param product
+     * @return
+     */
     public Refresher add(Product product) {
         products.add(product);
         return this;
     }
 
-    public Refresher add(Subscription subscription) {
-        subscriptions.add(subscription);
-        return this;
-    }
-
     public void run() {
 
+        // If products were specified on the refresher, lookup any subscriptions
+        // using them, regardless of organization, and trigger a refresh for those
+        // specific subscriptions.
+        Set<Subscription> subscriptions = Util.newSet();
         for (Product product : products) {
             subscriptions.addAll(subAdapter.getSubscriptions(product));
         }
@@ -95,6 +106,9 @@ public class Refresher {
         }
     }
 
+    // TODO: Can this be replaced with CandlepinPoolManager.refreshForSub?
+    // They look identical... Suspect this is a holdover from some attempted transaction
+    // magic.
     @Transactional
     private void refreshPoolsForSubscription(Subscription subscription, List<Pool> pools) {
         poolManager.removeAndDeletePoolsOnOtherOwners(subAdapter, pools, subscription);
