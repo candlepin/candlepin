@@ -115,10 +115,24 @@ public class PoolRules {
                 quantity, sub.getStartDate(), sub.getEndDate(), sub.getContractNumber(),
                 sub.getAccountNumber(), sub.getOrderNumber()
             );
-
             newPool.setDerivedProvidedProducts(subProvidedProducts);
 
-            updatePoolFromSubscription(sub, newPool, providedProducts, subProvidedProducts, helper);
+            if (sub.getProvidedProducts() != null) {
+                providedProducts.addAll(sub.getProvidedProducts());
+            }
+
+            if (sub.getDerivedProvidedProducts() != null) {
+                subProvidedProducts.addAll(sub.getDerivedProvidedProducts());
+            }
+
+            if (sub.getDerivedProduct() != null) {
+                newPool.setDerivedProduct(sub.getDerivedProduct());
+            }
+
+            for (Branding b : sub.getBranding()) {
+                newPool.getBranding().add(new Branding(b.getProductId(), b.getType(), b.getName()));
+            }
+
 
             newPool.setSourceSubscription(new SourceSubscription(sub.getId(), "master"));
             ProductAttribute virtAtt = sub.getProduct().getAttribute("virt_only");
@@ -135,9 +149,11 @@ public class PoolRules {
             pools.add(newPool);
         }
 
+        // If this subscription carries a virt_limit, we need to either create a bonus
+        // pool for any guest (legacy behavior, only in hosted), or a pool for temporary
+        // use of unmapped guests. (current behavior for any pool with virt_limit)
         boolean hostLimited = attributes.containsKey("host_limited") &&
             attributes.get("host_limited").equals("true");
-        // Check if we need to create a virt-only pool for this subscription:
         if (attributes.containsKey("virt_limit") && !hasBonusPool(existingPools)) {
 
             HashMap<String, String> virtAttributes = new HashMap<String, String>();
@@ -163,8 +179,6 @@ public class PoolRules {
                     sub, poolProduct, virtQuantity, virtAttributes
                 );
 
-                updatePoolFromSubscription(sub, derivedPool, providedProducts, subProvidedProducts, helper);
-
                 // Using derived here because only one derived pool
                 // is created for this subscription
                 derivedPool.setSourceSubscription(new SourceSubscription(sub.getId(), "derived"));
@@ -172,29 +186,6 @@ public class PoolRules {
             }
         }
         return pools;
-    }
-
-    private void updatePoolFromSubscription(Subscription sub,
-                                            Pool pool,
-                                            Set<Product> providedProducts,
-                                            Set<Product> subProvidedProducts,
-                                            PoolHelper helper) {
-
-        if (sub.getProvidedProducts() != null) {
-            providedProducts.addAll(sub.getProvidedProducts());
-        }
-
-        if (sub.getDerivedProvidedProducts() != null) {
-            subProvidedProducts.addAll(sub.getDerivedProvidedProducts());
-        }
-
-        if (sub.getDerivedProduct() != null) {
-            pool.setDerivedProduct(sub.getDerivedProduct());
-        }
-
-        for (Branding b : sub.getBranding()) {
-            pool.getBranding().add(new Branding(b.getProductId(), b.getType(), b.getName()));
-        }
     }
 
     private boolean hasMasterPool(List<Pool> pools) {

@@ -62,6 +62,7 @@ import java.util.Set;
 public class PoolRulesTest {
 
     private PoolRules poolRules;
+    private static final String DERIVED_ATTR = "lookformeimderived";
 
     @Mock private RulesCurator rulesCuratorMock;
     @Mock private ProductServiceAdapter productAdapterMock;
@@ -767,6 +768,12 @@ public class PoolRulesTest {
     public void standaloneVirtLimitSubCreate() {
         when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
         Subscription s = createVirtLimitSub("virtLimitProduct", 10, 10);
+
+        Product provided1 = TestUtil.createProduct(owner);
+        Product provided2 = TestUtil.createProduct(owner);
+
+        s.getProvidedProducts().add(provided1);
+        s.getProvidedProducts().add(provided2);
         List<Pool> pools = poolRules.createPools(s);
 
         // Should be virt_only pool for unmapped guests:
@@ -774,11 +781,100 @@ public class PoolRulesTest {
 
         Pool physicalPool = pools.get(0);
         assertEquals(0, physicalPool.getAttributes().size());
+        assertProvidedProducts(s.getProvidedProducts(), physicalPool.getProvidedProducts());
+        assertProvidedProducts(s.getDerivedProvidedProducts(),
+                physicalPool.getDerivedProvidedProducts());
 
         Pool unmappedVirtPool = pools.get(1);
         assert ("true".equals(unmappedVirtPool.getAttributeValue("virt_only")));
         assert ("true".equals(unmappedVirtPool.getAttributeValue("unmapped_guests_only")));
+
+        assertProvidedProducts(s.getProvidedProducts(),
+                unmappedVirtPool.getProvidedProducts());
+        assertProvidedProducts(new HashSet<Product>(),
+                unmappedVirtPool.getDerivedProvidedProducts());
+
     }
+
+    @Test
+    public void standaloneVirtLimitSubCreateDerived() {
+        when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
+        Subscription s = createVirtLimitSubWithDerivedProducts("virtLimitProduct",
+                "derivedProd", 10, 10);
+        List<Pool> pools = poolRules.createPools(s);
+
+        // Should be virt_only pool for unmapped guests:
+        assertEquals(2, pools.size());
+
+        Pool physicalPool = pools.get(0);
+        assertEquals(0, physicalPool.getAttributes().size());
+        assertFalse(physicalPool.getProduct().hasAttribute(DERIVED_ATTR));
+
+        Pool unmappedVirtPool = pools.get(1);
+        assert ("true".equals(unmappedVirtPool.getAttributeValue("virt_only")));
+        assert ("true".equals(unmappedVirtPool.getAttributeValue("unmapped_guests_only")));
+        assertEquals("derivedProd", unmappedVirtPool.getProductId());
+
+        assertProvidedProducts(s.getDerivedProvidedProducts(),
+                unmappedVirtPool.getProvidedProducts());
+        assertProvidedProducts(new HashSet<Product>(),
+                unmappedVirtPool.getDerivedProvidedProducts());
+        assertTrue(unmappedVirtPool.getProduct().hasAttribute(DERIVED_ATTR));
+    }
+
+    private void assertProvidedProducts(Set<Product> expectedProducts,
+            Set<Product> providedProducts) {
+        assertEquals(expectedProducts.size(), providedProducts.size());
+        for (Product expected : expectedProducts) {
+            boolean found = false;
+            for (Product provided : providedProducts) {
+                if (provided.getId().equals(expected.getId())) {
+                    found = true;
+                    break;
+                }
+            }
+            assertTrue(found);
+        }
+
+    }
+
+    private Subscription createVirtLimitSubWithDerivedProducts(String productId,
+            String derivedProductId, int quantity, int virtLimit) {
+
+        Product product = new Product(productId, productId, owner);
+        product.setAttribute("virt_limit", Integer.toString(virtLimit));
+        when(productAdapterMock.getProductById(productId)).thenReturn(product);
+
+        Product derivedProd = new Product(derivedProductId, derivedProductId, owner);
+        // We'll look for this to make sure it makes it to correct pools:
+        derivedProd.setAttribute(DERIVED_ATTR, "nobodycares");
+        when(productAdapterMock.getProductById(derivedProductId)).thenReturn(derivedProd);
+
+        // Create some provided products:
+        Product provided1 = TestUtil.createProduct(owner);
+        when(productAdapterMock.getProductById(provided1.getId())).thenReturn(provided1);
+        Product provided2 = TestUtil.createProduct(owner);
+        when(productAdapterMock.getProductById(provided2.getId())).thenReturn(provided2);
+
+        // Create some derived provided products:
+        Product derivedProvided1 = TestUtil.createProduct(owner);
+        when(productAdapterMock.getProductById(derivedProvided1.getId())).thenReturn(derivedProvided1);
+        Product derivedProvided2 = TestUtil.createProduct(owner);
+        when(productAdapterMock.getProductById(derivedProvided2.getId())).thenReturn(derivedProvided2);
+
+
+        Subscription s = TestUtil.createSubscription(product);
+        s.setQuantity(new Long(quantity));
+        s.setDerivedProduct(derivedProd);
+
+        Set<Product> derivedProds = Util.newSet();
+        derivedProds.add(derivedProvided1);
+        derivedProds.add(derivedProvided2);
+        s.setDerivedProvidedProducts(derivedProds);
+
+        return s;
+    }
+
 
     @Test
     public void standaloneVirtLimitSubUpdate() {
