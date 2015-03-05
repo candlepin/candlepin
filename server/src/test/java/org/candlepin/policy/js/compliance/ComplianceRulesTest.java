@@ -1958,7 +1958,7 @@ public class ComplianceRulesTest {
     }
 
     @Test
-    public void unmappedGuestEntitlementPartial() {
+    public void unmappedGuestEntitlementYellow() {
         Consumer c = mockConsumer(new String[]{ PRODUCT_1 });
 
         Entitlement ent = mockEntitlement(c, PRODUCT_1);
@@ -1970,9 +1970,9 @@ public class ComplianceRulesTest {
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
 
         assertEquals(0, status.getNonCompliantProducts().size());
-        assertEquals(1, status.getPartiallyCompliantProducts().size());
-        assertEquals(0, status.getCompliantProducts().size());
-        assertTrue(status.getPartiallyCompliantProducts().keySet().contains(PRODUCT_1));
+        assertEquals(0, status.getPartiallyCompliantProducts().size());
+        assertEquals(1, status.getCompliantProducts().size());
+        assertEquals(1, status.getReasons().size());
         assertEquals(ComplianceStatus.YELLOW, status.getStatus());
     }
 

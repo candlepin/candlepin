@@ -477,6 +477,11 @@ class Candlepin
     post("/owners/#{owner_key}/entitlements")
   end
 
+  def autoheal_consumer(uuid = nil)
+    uuid = @uuid unless uuid
+    post("/consumers/#{uuid}/entitlements")
+  end
+
   def list_products(product_uuids=nil)
     method = "/products?"
     if product_uuids

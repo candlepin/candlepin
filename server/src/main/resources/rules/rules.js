@@ -673,9 +673,9 @@ var StatusReasonGenerator = {
     /*
      * Add a reason for a unmapped guest entitlement
      */
-    buildUnmappedEntitlementReason: function (installed_pid) {
+    buildUnmappedEntitlementReason: function (ent_id) {
         var attributes = {};
-        attributes["product_id"] = installed_pid;
+        attributes["entitlement_id"] = ent_id;
 
         var reason = {};
         reason["key"] = "UNMAPPEDGUEST";
@@ -2763,22 +2763,14 @@ var Compliance = {
             }
 
             // If the consumer has an entitlement from a pool marked
-            // unmapped_guests_only it can only hope to be partial
-            var unmappedGuest = Compliance.getUnmappedGuest(e);
-            // should be partial even with no matching product
-            if (relevant_pids.length == 0 && unmappedGuest) {
-                    compStatus.add_reasons([StatusReasonGenerator.buildUnmappedEntitlementReason(null)]);
+            // unmapped_guests_only it can only hope to be yellow
+            if (Compliance.getUnmappedGuest(e)) {
+                compStatus.add_reasons([StatusReasonGenerator.buildUnmappedEntitlementReason(e.id)]);
             }
 
             for (var m = 0; m < relevant_pids.length; m++) {
                 var relevant_pid = relevant_pids[m];
 
-                if (unmappedGuest) {
-                    log.debug("   partially compliant: " + relevant_pid);
-                    compStatus.add_partial_product(relevant_pid, e);
-                    compStatus.add_reasons([StatusReasonGenerator.buildUnmappedEntitlementReason(relevant_pid)]);
-                    continue;
-                }
                 if (partially_stacked) {
                     log.debug("   partially compliant: " + relevant_pid);
                     compStatus.add_partial_product(relevant_pid, e);
