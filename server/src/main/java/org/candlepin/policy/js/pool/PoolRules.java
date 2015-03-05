@@ -107,22 +107,17 @@ public class PoolRules {
         Map<String, String> attributes =
             helper.getFlattenedAttributes(sub.getProduct());
         long quantity = calculateQuantity(sub);
-        Set<Product> providedProducts = new HashSet<Product>();
-        Set<Product> subProvidedProducts = new HashSet<Product>();
 
         if (!hasMasterPool(existingPools)) {
-            Pool newPool = new Pool(sub.getOwner(), sub.getProduct(), providedProducts,
-                quantity, sub.getStartDate(), sub.getEndDate(), sub.getContractNumber(),
-                sub.getAccountNumber(), sub.getOrderNumber()
+            Pool newPool = new Pool(sub.getOwner(), sub.getProduct(),
+                    sub.getProvidedProducts(), quantity,
+                    sub.getStartDate(), sub.getEndDate(), sub.getContractNumber(),
+                    sub.getAccountNumber(), sub.getOrderNumber()
             );
-            newPool.setDerivedProvidedProducts(subProvidedProducts);
-
-            if (sub.getProvidedProducts() != null) {
-                providedProducts.addAll(sub.getProvidedProducts());
-            }
 
             if (sub.getDerivedProvidedProducts() != null) {
-                subProvidedProducts.addAll(sub.getDerivedProvidedProducts());
+                newPool.getDerivedProvidedProducts().addAll(
+                        sub.getDerivedProvidedProducts());
             }
 
             if (sub.getDerivedProduct() != null) {

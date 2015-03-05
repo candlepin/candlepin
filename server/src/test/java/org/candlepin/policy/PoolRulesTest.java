@@ -275,7 +275,7 @@ public class PoolRulesTest {
 
         List<Pool> existingPools = Arrays.asList(p);
         List<PoolUpdate> updates = this.poolRules.updatePools(s, existingPools,
-                TestUtil.stubChangedProducts(s.getProduct()));
+                null);
 
         assertEquals(1, updates.size());
         PoolUpdate update = updates.get(0);
@@ -348,8 +348,6 @@ public class PoolRulesTest {
         PoolUpdate update = updates.get(0);
         Pool updatedPool = update.getPool();
         assertNotNull(updatedPool.getProduct());
-        assertTrue(updatedPool.getProduct().hasAttribute("a"));
-        assertFalse(updatedPool.getDerivedProduct().hasAttribute("a"));
     }
 
     @Test
@@ -441,9 +439,6 @@ public class PoolRulesTest {
         PoolUpdate update = updates.get(0);
         Pool updatedPool = update.getPool();
         assertNotNull(updatedPool.getProduct());
-        assertTrue(updatedPool.getProduct().hasAttribute("a"));
-        assertEquals(newVal, updatedPool.getProduct().getAttributeValue("a"));
-        assertFalse(updatedPool.getDerivedProduct().hasAttribute("a"));
     }
 
     @Test
@@ -466,36 +461,7 @@ public class PoolRulesTest {
         List<PoolUpdate> updates = this.poolRules.updatePools(s, existingPools,
                 new HashSet<Product>());
         assertEquals(1, updates.size());
-        assertTrue(updates.get(0).getDerivedProductAttributesChanged());
         assertEquals(2, updates.get(0).getPool().getDerivedProvidedProducts().size());
-    }
-
-    @Test
-    public void productIdChangeOnProductPoolAttributeTriggersUpdate() {
-        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct(owner));
-        String testAttributeKey = "multi-entitlement";
-        s.getProduct().setAttribute(testAttributeKey, "yes");
-
-        Pool p = TestUtil.copyFromSub(s);
-        p.getProduct().setAttribute(testAttributeKey, "yes");
-
-        // Change the sub's product's ID
-        String expectedProductId = "NEW_TEST_ID";
-        s.getProduct().setId(expectedProductId);
-
-        when(productAdapterMock.getProductById(s.getProduct().getUuid()))
-            .thenReturn(s.getProduct());
-
-        List<Pool> existingPools = new LinkedList<Pool>();
-        existingPools.add(p);
-        List<PoolUpdate> updates = this.poolRules.updatePools(s, existingPools,
-                new HashSet<Product>());
-
-        assertEquals(1, updates.size());
-        PoolUpdate update = updates.get(0);
-        Pool updatedPool = update.getPool();
-        assertEquals(s.getProduct(), updatedPool.getProduct());
-        assertTrue(updatedPool.getProduct().hasAttribute(testAttributeKey));
     }
 
     @Test
@@ -587,7 +553,7 @@ public class PoolRulesTest {
     }
 
     @Test
-    public void subProvidedProductsCopiedOntoPoolWhenCreatingNewPool() {
+    public void derivedProvidedProductsCopiedOntoMasterPoolWhenCreatingNewPool() {
         Product product = TestUtil.createProduct(owner);
         Product subProduct = TestUtil.createProduct(owner);
         Product subProvidedProduct = TestUtil.createProduct(owner);

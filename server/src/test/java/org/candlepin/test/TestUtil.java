@@ -323,7 +323,7 @@ public class TestUtil {
     public static Pool copyFromSub(Subscription sub) {
         Pool p = new Pool(sub.getOwner(),
             sub.getProduct(),
-            sub.getProvidedProducts(),
+            new HashSet<Product>(sub.getProvidedProducts()),
             sub.getQuantity(),
             sub.getStartDate(),
             sub.getEndDate(),
