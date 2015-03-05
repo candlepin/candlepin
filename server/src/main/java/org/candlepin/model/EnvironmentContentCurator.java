@@ -37,8 +37,9 @@ public class EnvironmentContentCurator extends
             .uniqueResult();
     }
 
-    public List<EnvironmentContent> lookupByContent(String contentId) {
+    public List<EnvironmentContent> lookupByContent(Owner owner, String contentId) {
         return this.currentSession().createCriteria(EnvironmentContent.class)
+            .add(Restrictions.eq("environment.owner", owner))
             .add(Restrictions.eq("content.id", contentId))
             .list();
     }

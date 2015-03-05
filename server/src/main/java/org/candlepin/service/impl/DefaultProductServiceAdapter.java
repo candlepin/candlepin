@@ -134,7 +134,13 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
 
     @Override
     public Set<String> getProductsWithContent(Owner owner, Collection<String> contentIds) {
-        return new HashSet<String>(prodCurator.getProductsWithContentIds(owner, contentIds));
+        HashSet<String> productIds = new HashSet<String>();
+
+        for (Product product : prodCurator.getProductsWithContent(owner, contentIds)) {
+            productIds.add(product.getId());
+        }
+
+        return productIds;
     }
 
 }

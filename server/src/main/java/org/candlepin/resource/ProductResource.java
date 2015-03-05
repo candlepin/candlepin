@@ -132,7 +132,15 @@ public class ProductResource {
     @Produces(MediaType.APPLICATION_JSON)
     @SecurityHole
     public Product getProduct(@PathParam("product_id") String productId) {
-        Product product = productCurator.find(productId);
+        Product product = null;
+
+        for (Owner owner : this.ownerCurator.listAll()) {
+            product = this.productCurator.lookupById(owner, productId);
+
+            if (product != null) {
+                break;
+            }
+        }
 
         if (product == null) {
             throw new NotFoundException(
@@ -171,7 +179,11 @@ public class ProductResource {
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     public Product createProduct(Product product) {
-        return productCurator.create(product);
+        // TODO: Should this be allowed if the product describes a valid owner?
+
+        throw new UnsupportedOperationException(this.i18n.tr(
+            "Organization-agnostic product write operations are not supported."
+        ));
     }
 
     /**
@@ -187,13 +199,9 @@ public class ProductResource {
     public Product updateProduct(
         @PathParam("product_id") @Verify(Product.class) String productId,
         Product product) {
-        Product toUpdate = this.getProduct(productId);
-
-        if (performProductUpdates(toUpdate, product)) {
-            this.productCurator.merge(toUpdate);
-        }
-
-        return toUpdate;
+        throw new UnsupportedOperationException(this.i18n.tr(
+            "Organization-agnostic product write operations are not supported."
+        ));
     }
 
     protected boolean performProductUpdates(Product existing, Product incoming) {
@@ -258,20 +266,9 @@ public class ProductResource {
     @Path("/{product_id}/batch_content")
     public Product addBatchContent(@PathParam("product_id") String productId,
                                    Map<String, Boolean> contentMap) {
-
-        Product product = this.getProduct(productId);
-
-        for (Entry<String, Boolean> entry : contentMap.entrySet()) {
-            Content content = contentCurator.lookupById(product.getOwner(), entry.getKey());
-
-            // TODO: Perhaps we should be checking that content was actually found here?
-
-            ProductContent productContent = new ProductContent(product, content, entry.getValue());
-            product.getProductContent().add(productContent);
-        }
-
-        // TODO: Why are we doing this instead of just returning the product we already have?
-        return productCurator.find((product.getUuid()));
+        throw new UnsupportedOperationException(this.i18n.tr(
+            "Organization-agnostic product write operations are not supported."
+        ));
     }
 
     /**
@@ -288,14 +285,9 @@ public class ProductResource {
     public Product addContent(@PathParam("product_id") String productId,
                               @PathParam("content_id") String contentId,
                               @QueryParam("enabled") Boolean enabled) {
-
-        Product product = this.getProduct(productId);
-        Content content = contentCurator.lookupById(product.getOwner(), contentId);
-
-        ProductContent productContent = new ProductContent(product, content, enabled);
-        product.getProductContent().add(productContent);
-
-        return productCurator.find((product.getUuid()));
+        throw new UnsupportedOperationException(this.i18n.tr(
+            "Organization-agnostic product write operations are not supported."
+        ));
     }
 
     /**
@@ -308,11 +300,9 @@ public class ProductResource {
     @Path("/{product_id}/content/{content_id}")
     public void removeContent(@PathParam("product_id") String productId,
                               @PathParam("content_id") String contentId) {
-
-        Product product = this.getProduct(productId);
-        Content content = contentCurator.lookupById(product.getOwner(), contentId);
-
-        productCurator.removeProductContent(product, content);
+        throw new UnsupportedOperationException(this.i18n.tr(
+            "Organization-agnostic product write operations are not supported."
+        ));
     }
 
     /**
@@ -326,15 +316,9 @@ public class ProductResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product_id}")
     public void deleteProduct(@PathParam("product_id") String productId) {
-        Product product = this.getProduct(productId);
-
-        if (productCurator.productHasSubscriptions(product)) {
-            throw new BadRequestException(
-                i18n.tr("Product with ID ''{0}'' cannot be deleted " +
-                    "while subscriptions exist.", productId));
-        }
-
-        productCurator.delete(product);
+        throw new UnsupportedOperationException(this.i18n.tr(
+            "Organization-agnostic product write operations are not supported."
+        ));
     }
 
     /**
@@ -352,9 +336,7 @@ public class ProductResource {
                             @QueryParam("to") String to,
                             @QueryParam("days") String days) {
 
-        return statisticCurator.getStatisticsByProduct(productId, null,
-                                ResourceDateParser.getFromDate(from, to, days),
-                                ResourceDateParser.parseDateString(to));
+        return this.getProductStats(productId, from, to, days);
     }
 
     /**
@@ -375,7 +357,9 @@ public class ProductResource {
                             @QueryParam("to") String to,
                             @QueryParam("days") String days) {
 
-        return statisticCurator.getStatisticsByProduct(productId, valueType,
+        Product product = this.getProduct(productId);
+
+        return statisticCurator.getStatisticsByProduct(product.getOwner(), productId, valueType,
                                 ResourceDateParser.getFromDate(from, to, days),
                                 ResourceDateParser.parseDateString(to));
     }
@@ -413,8 +397,8 @@ public class ProductResource {
         @PathParam("product_id") String productId,
         @QueryParam("lazy_regen") @DefaultValue("true") Boolean lazyRegen) {
 
-        Product product = this.getProduct(productId);
-
-        return RefreshPoolsForProductJob.forProduct(product, lazyRegen);
+        throw new UnsupportedOperationException(this.i18n.tr(
+            "Organization-agnostic product write operations are not supported."
+        ));
     }
 }

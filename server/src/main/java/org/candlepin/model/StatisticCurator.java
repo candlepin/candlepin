@@ -68,9 +68,9 @@ public class StatisticCurator extends AbstractHibernateCurator<Statistic> {
     }
 
     @SuppressWarnings("unchecked")
-    public List<Statistic> getStatisticsByProduct(String prodId, String vType,
+    public List<Statistic> getStatisticsByProduct(Owner owner, String prodId, String vType,
         Date from, Date to) {
-        return statisticCuratorQueries.getStatisticsByProduct(prodId, vType, from, to);
+        return statisticCuratorQueries.getStatisticsByProduct(owner, prodId, vType, from, to);
     }
 
     public void executeStatisticRun() {

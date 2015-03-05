@@ -21,6 +21,8 @@ import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.EnvironmentContentCurator;
+import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.service.UniqueIdGenerator;
 
@@ -54,17 +56,19 @@ public class ContentResource {
     private EnvironmentContentCurator envContentCurator;
     private PoolManager poolManager;
     private ProductCurator productCurator;
+    private OwnerCurator ownerCurator;
 
     @Inject
     public ContentResource(ContentCurator contentCurator, I18n i18n,
         UniqueIdGenerator idGenerator, EnvironmentContentCurator envContentCurator,
-        PoolManager poolManager, ProductCurator productCurator) {
+        PoolManager poolManager, ProductCurator productCurator, OwnerCurator ownerCurator) {
         this.i18n = i18n;
         this.contentCurator = contentCurator;
         this.idGenerator = idGenerator;
         this.envContentCurator = envContentCurator;
         this.poolManager = poolManager;
         this.productCurator = productCurator;
+        this.ownerCurator = ownerCurator;
     }
 
     /**
@@ -106,13 +110,22 @@ public class ContentResource {
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("/{content_uuid}")
-    public Content getContent(@PathParam("content_uuid") String contentId) {
-        Content content = contentCurator.find(contentId);
+    @Path("/{content_id}")
+    public Content getContent(@PathParam("content_id") String contentId) {
+        Content content = null;
+
+        for (Owner owner : this.ownerCurator.listAll()) {
+            content = this.contentCurator.lookupById(owner, contentId);
+
+            if (content != null) {
+                break;
+            }
+        }
 
         if (content == null) {
-            throw new BadRequestException(
-                i18n.tr("Content with id {0} could not be found.", contentId));
+            throw new NotFoundException(
+                i18n.tr("Content with ID \"{0}\" could not be found.", contentId)
+            );
         }
 
         return content;
@@ -127,18 +140,9 @@ public class ContentResource {
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     public Content createContent(Content content) {
-        // FIXME: check if arches have changed
-        if (content.getId() == null || content.getId().trim().length() == 0) {
-            content.setId(idGenerator.generateId());
-            return contentCurator.create(content);
-        }
-
-        Content lookedUp  = contentCurator.find(content.getId());
-        if (lookedUp != null) {
-            return lookedUp;
-        }
-
-        return contentCurator.create(content);
+        throw new UnsupportedOperationException(this.i18n.tr(
+            "Organization-agnostic content write operations are not supported."
+        ));
     }
 
     /**
@@ -151,18 +155,9 @@ public class ContentResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/batch")
     public List<Content> createBatchContent(List<Content> contents) {
-        List<Content> result = new ArrayList<Content>();
-        for (Content content : contents) {
-            Content lookedUp = contentCurator.find(content.getId());
-            if (lookedUp != null) {
-                content.setId(lookedUp.getId());
-                result.add(contentCurator.merge(content));
-            }
-            else {
-                result.add(contentCurator.create(content));
-            }
-        }
-        return result;
+        throw new UnsupportedOperationException(this.i18n.tr(
+            "Organization-agnostic content write operations are not supported."
+        ));
     }
 
     /**
@@ -174,33 +169,11 @@ public class ContentResource {
      */
     @PUT
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("/{content_uuid}")
-    public Content updateContent(@PathParam("content_uuid") String contentId,
-            Content changes) {
-        Content lookedUp  = contentCurator.find(contentId);
-        if (lookedUp == null) {
-            throw new NotFoundException(
-                i18n.tr("Content with id {0} could not be found.", contentId));
-        }
-
-        // FIXME: needs arches handled as well?
-        changes.setId(contentId);
-        Content updated = contentCurator.createOrUpdate(changes);
-        // require regeneration of entitlement certificates of affected consumers
-        List<String> affectedProducts =
-            this.productCurator.getProductsWithContentUuids(setFrom(contentId));
-
-        for (String productId : affectedProducts) {
-            poolManager.regenerateCertificatesOf(productId, true);
-        }
-
-        return updated;
-    }
-
-    private <T> Set<T> setFrom(T anElement) {
-        Set<T> toReturn = new HashSet<T>();
-        toReturn.add(anElement);
-        return toReturn;
+    @Path("/{content_id}")
+    public Content updateContent(@PathParam("content_id") String contentId, Content changes) {
+        throw new UnsupportedOperationException(this.i18n.tr(
+            "Organization-agnostic content write operations are not supported."
+        ));
     }
 
     /**
@@ -210,19 +183,10 @@ public class ContentResource {
      */
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("/{content_uuid}")
-    public void remove(@PathParam("content_uuid") String cid) {
-        List<String> affectedProducts = this.productCurator.getProductsWithContentUuids(setFrom(cid));
-        Content nuke = getContent(cid);
-        contentCurator.delete(nuke);
-
-        // Clean up any dangling environment content:
-        for (EnvironmentContent ec : envContentCurator.lookupByContent(cid)) {
-            envContentCurator.delete(ec);
-        }
-        // Regenerate affected products
-        for (String productId : affectedProducts) {
-            poolManager.regenerateCertificatesOf(productId, true);
-        }
+    @Path("/{content_id}")
+    public void remove(@PathParam("content_id") String contentId) {
+        throw new UnsupportedOperationException(this.i18n.tr(
+            "Organization-agnostic content write operations are not supported."
+        ));
     }
 }

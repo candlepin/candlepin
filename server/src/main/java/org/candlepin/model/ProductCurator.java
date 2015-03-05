@@ -301,9 +301,9 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     }
 
     @SuppressWarnings("unchecked")
-    public List<String> getProductsWithContentIds(Owner owner, Collection<String> contentIds) {
-        if (contentIds == null || contentIds.isEmpty()) {
-            return new LinkedList<String>();
+    public List<Product> getProductsWithContent(Owner owner, Collection<String> contentIds) {
+        if (owner == null || contentIds == null || contentIds.isEmpty()) {
+            return new LinkedList<Product>();
         }
 
         return currentSession().createCriteria(Product.class)
@@ -312,14 +312,14 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
             .add(Restrictions.eq("owner", owner))
             .add(Restrictions.in("content.id", contentIds))
             .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY)
-            .setProjection(Projections.id())
+            // .setProjection(Projections.id())
             .list();
     }
 
     @SuppressWarnings("unchecked")
-    public List<String> getProductsWithContentUuids(Collection<String> contentUuids) {
+    public List<Product> getProductsWithContent(Collection<String> contentUuids) {
         if (contentUuids == null || contentUuids.isEmpty()) {
-            return new LinkedList<String>();
+            return new LinkedList<Product>();
         }
 
         return currentSession().createCriteria(Product.class)
@@ -327,7 +327,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
             .createAlias("pcontent.content", "content")
             .add(Restrictions.in("content.uuid", contentUuids))
             .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY)
-            .setProjection(Projections.id())
+            // .setProjection(Projections.id())
             .list();
     }
 

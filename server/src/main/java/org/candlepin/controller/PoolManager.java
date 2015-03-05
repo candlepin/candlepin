@@ -108,7 +108,9 @@ public interface PoolManager {
 
     void regenerateCertificatesOf(Environment env, Set<String> contentIds, boolean lazy);
 
-    void regenerateCertificatesOf(String productId, boolean lazy);
+    void regenerateCertificatesOf(Owner owner, String productId, boolean lazy);
+
+    void regenerateCertificatesOf(String productUuid, boolean lazy);
 
     void regenerateEntitlementCertificates(Consumer consumer, boolean lazy);
 
