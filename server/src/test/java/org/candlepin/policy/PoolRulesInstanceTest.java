@@ -14,9 +14,7 @@
  */
 package org.candlepin.policy;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
@@ -24,10 +22,10 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
-import org.candlepin.model.Owner;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.Subscription;
@@ -121,7 +119,8 @@ public class PoolRulesInstanceTest {
 
         List<Pool> existingPools = new LinkedList<Pool>();
         existingPools.add(pool);
-        List<PoolUpdate> updates = poolRules.updatePools(s, existingPools);
+        List<PoolUpdate> updates = poolRules.updatePools(s, existingPools,
+                TestUtil.stubChangedProducts(s.getProduct()));
 
         assertEquals(1, updates.size());
         PoolUpdate update = updates.get(0);
@@ -144,7 +143,8 @@ public class PoolRulesInstanceTest {
 
         List<Pool> existingPools = new LinkedList<Pool>();
         existingPools.add(pool);
-        List<PoolUpdate> updates = poolRules.updatePools(s, existingPools);
+        List<PoolUpdate> updates = poolRules.updatePools(s, existingPools,
+                TestUtil.stubChangedProducts(s.getProduct()));
 
         assertEquals(1, updates.size());
         PoolUpdate update = updates.get(0);
@@ -167,7 +167,8 @@ public class PoolRulesInstanceTest {
 
         List<Pool> existingPools = new LinkedList<Pool>();
         existingPools.add(pool);
-        List<PoolUpdate> updates = poolRules.updatePools(s, existingPools);
+        List<PoolUpdate> updates = poolRules.updatePools(s, existingPools,
+                TestUtil.stubChangedProducts(s.getProduct()));
 
         assertEquals(1, updates.size());
         PoolUpdate update = updates.get(0);

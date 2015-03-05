@@ -24,6 +24,7 @@ import org.candlepin.util.Util;
 import com.google.inject.persist.Transactional;
 import com.google.inject.persist.UnitOfWork;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -117,6 +118,6 @@ public class Refresher {
         // Regenerate certificates here, that way if it fails, the whole thing rolls back.
         // We don't want to refresh without marking ents dirty, they will never get regenerated
         poolManager.regenerateCertificatesByEntIds(subAdapter, poolManager.updatePoolsForSubscription(
-            subAdapter, pools, subscription, true), lazy);
+            subAdapter, pools, subscription, true, new HashSet<Product>()), lazy);
     }
 }

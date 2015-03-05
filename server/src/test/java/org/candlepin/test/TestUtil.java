@@ -398,4 +398,12 @@ public class TestUtil {
             }
         }
     }
+
+    public static Set<Product> stubChangedProducts(Product ... products) {
+        Set<Product> result = new HashSet<Product>();
+        for (Product p : products) {
+            result.add(p);
+        }
+        return result;
+    }
 }

@@ -14,6 +14,8 @@
  */
 package org.candlepin.controller;
 
+import org.candlepin.common.paging.Page;
+import org.candlepin.common.paging.PageRequest;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Environment;
@@ -21,10 +23,9 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.PoolQuantity;
+import org.candlepin.model.Product;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.activationkeys.ActivationKey;
-import org.candlepin.common.paging.Page;
-import org.candlepin.common.paging.PageRequest;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.js.pool.PoolUpdate;
 import org.candlepin.resource.dto.AutobindData;
@@ -200,7 +201,7 @@ public interface PoolManager {
      *
      * @return pool update specifics
      */
-    PoolUpdate updatePoolFromStack(Pool pool);
+    PoolUpdate updatePoolFromStack(Pool pool, Set<Product> changedProducts);
 
     /**
      * @param guest products we want to provide for

@@ -15,7 +15,6 @@
 package org.candlepin.policy.js.pool;
 
 import org.candlepin.controller.PoolManager;
-import org.candlepin.model.Attribute;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
@@ -103,7 +102,7 @@ public class PoolHelper extends AttributeHelper {
         // If the originating pool is stacked, we want to create the derived pool based on
         // the entitlements in the stack, instead of just the parent pool.
         if (pool.isStacked()) {
-            poolManager.updatePoolFromStack(consumerSpecificPool);
+            poolManager.updatePoolFromStack(consumerSpecificPool, null);
         }
         else {
             // attribute per 795431, useful for rolling up pool info in headpin

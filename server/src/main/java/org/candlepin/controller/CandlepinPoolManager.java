@@ -149,6 +149,8 @@ public class CandlepinPoolManager implements PoolManager {
         Set<String> subIds = Util.newSet();
         log.debug("Found " + subIds.size() + " existing subscriptions.");
 
+        Set<Product> changedProducts = refreshProducts(owner, subs);
+
         List<String> deletedSubs = new LinkedList<String>();
         for (Subscription sub : subs) {
             String subId = sub.getId();
@@ -161,7 +163,7 @@ public class CandlepinPoolManager implements PoolManager {
                 continue;
             }
 
-            refreshPoolsForSubscription(subAdapter, sub, lazy);
+            refreshPoolsForSubscription(subAdapter, sub, lazy, changedProducts);
         }
 
         // We deleted some, need to take that into account so we
@@ -176,7 +178,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         // TODO: break this call into smaller pieces.  There may be lots of floating pools
         List<Pool> floatingPools = poolCurator.getOwnersFloatingPools(owner);
-        updateFloatingPools(subAdapter, floatingPools, lazy);
+        updateFloatingPools(subAdapter, floatingPools, lazy, changedProducts);
     }
 
     Set<Product> refreshProducts(Owner o, List<Subscription> subs) {
@@ -253,7 +255,8 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     @Transactional
-    void refreshPoolsForSubscription(SubscriptionServiceAdapter subAdapter, Subscription sub, boolean lazy) {
+    void refreshPoolsForSubscription(SubscriptionServiceAdapter subAdapter,
+            Subscription sub, boolean lazy, Set<Product> changedProducts) {
 
         // These don't all necessarily belong to this owner
         List<Pool> subscriptionPools = poolCurator.getPoolsBySubscriptionId(sub.getId());
@@ -265,10 +268,11 @@ public class CandlepinPoolManager implements PoolManager {
         //  if only one of the pair still exists.
         createPoolsForSubscription(sub, subscriptionPools);
 
-        regenerateCertificatesByEntIds(subAdapter,
         // don't update floating here, we'll do that later
         // so we don't update anything twice
-        updatePoolsForSubscription(subAdapter, subscriptionPools, sub, false), lazy);
+        regenerateCertificatesByEntIds(subAdapter,
+                updatePoolsForSubscription(subAdapter, subscriptionPools,
+                        sub, false, changedProducts), lazy);
     }
 
     public void cleanupExpiredPools(SubscriptionServiceAdapter subAdapter) {
@@ -344,8 +348,9 @@ public class CandlepinPoolManager implements PoolManager {
      * @param updateStackDerived wheter or not to attempt to update stack derived
      * subscriptions
      */
-    Set<String> updatePoolsForSubscription(SubscriptionServiceAdapter subAdapter, List<Pool> existingPools,
-        Subscription sub, boolean updateStackDerived) {
+    Set<String> updatePoolsForSubscription(SubscriptionServiceAdapter subAdapter,
+            List<Pool> existingPools, Subscription sub, boolean updateStackDerived,
+            Set<Product> changedProducts) {
 
         /*
          * Rules need to determine which pools have changed, but the Java must
@@ -364,7 +369,8 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         // Hand off to rules to determine which pools need updating:
-        List<PoolUpdate> updatedPools = poolRules.updatePools(sub, existingPools);
+        List<PoolUpdate> updatedPools = poolRules.updatePools(sub, existingPools,
+                changedProducts);
 
         // Update subpools if necessary
         if (updateStackDerived && !updatedPools.isEmpty() &&
@@ -374,7 +380,7 @@ public class CandlepinPoolManager implements PoolManager {
             List<Pool> subPools = getOwnerSubPoolsForStackId(sub.getOwner(), sub.getStackId());
 
             for (Pool subPool : subPools) {
-                PoolUpdate update = updatePoolFromStack(subPool);
+                PoolUpdate update = updatePoolFromStack(subPool, changedProducts);
 
                 if (update.changed()) {
                     updatedPools.add(update);
@@ -382,7 +388,8 @@ public class CandlepinPoolManager implements PoolManager {
             }
         }
 
-        return processPoolUpdates(subAdapter, poolEvents, updatedPools);
+        Set<String> entsToRegen = processPoolUpdates(subAdapter, poolEvents, updatedPools);
+        return entsToRegen;
     }
 
     private Set<String> processPoolUpdates(SubscriptionServiceAdapter subAdapter,
@@ -438,7 +445,8 @@ public class CandlepinPoolManager implements PoolManager {
      * @return
      */
     @Transactional
-    void updateFloatingPools(SubscriptionServiceAdapter subAdapter, List<Pool> floatingPools, boolean lazy) {
+    void updateFloatingPools(SubscriptionServiceAdapter subAdapter,
+            List<Pool> floatingPools, boolean lazy, Set<Product> changedProducts) {
         /*
          * Rules need to determine which pools have changed, but the Java must
          * send out the events. Create an event for each pool that could change,
@@ -452,7 +460,8 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         // Hand off to rules to determine which pools need updating:
-        List<PoolUpdate> updatedPools = poolRules.updatePools(floatingPools);
+        List<PoolUpdate> updatedPools = poolRules.updatePools(floatingPools,
+                changedProducts);
         regenerateCertificatesByEntIds(subAdapter, processPoolUpdates(subAdapter, poolEvents, updatedPools), lazy);
     }
 
@@ -1339,7 +1348,7 @@ public class CandlepinPoolManager implements PoolManager {
                     poolCurator.getSubPoolForStackId(
                         entitlement.getConsumer(), entPool.getStackId());
                 if (pool != null) {
-                    poolRules.updatePoolFromStack(pool);
+                    poolRules.updatePoolFromStack(pool, new HashSet<Product>());
                     poolCurator.merge(pool);
                 }
             }
@@ -1387,7 +1396,8 @@ public class CandlepinPoolManager implements PoolManager {
         @Override
         public void handleBonusPools(SubscriptionServiceAdapter subAdapter, Pool pool, Entitlement entitlement) {
             updatePoolsForSubscription(subAdapter, poolCurator.listBySourceEntitlement(entitlement),
-                subAdapter.getSubscription(pool.getSubscriptionId()), false);
+                subAdapter.getSubscription(pool.getSubscriptionId()), false,
+                new HashSet<Product>());
             checkBonusPoolQuantities(subAdapter, pool, entitlement);
         }
     }
@@ -1454,13 +1464,14 @@ public class CandlepinPoolManager implements PoolManager {
         return poolCurator.listByOwner(owner);
     }
 
-    public PoolUpdate updatePoolFromStack(Pool pool) {
-        return poolRules.updatePoolFromStack(pool);
+    public PoolUpdate updatePoolFromStack(Pool pool, Set<Product> changedProducts) {
+        return poolRules.updatePoolFromStack(pool, changedProducts);
     }
 
     private PoolUpdate updatePoolFromStackedEntitlements(Pool pool,
         List<Entitlement> stackedEntitlements) {
-        return poolRules.updatePoolFromStackedEntitlements(pool, stackedEntitlements);
+        return poolRules.updatePoolFromStackedEntitlements(pool, stackedEntitlements,
+                null);
     }
 
     public List<Pool> getOwnerSubPoolsForStackId(Owner owner, String stackId) {

@@ -201,7 +201,7 @@ public class PoolManagerTest {
 
         // Make sure that only the floating pool was regenerated
         expectedFloating.add(floating);
-        verify(this.manager).updateFloatingPools(eq(mockSubAdapter), eq(expectedFloating), eq(true));
+        verify(this.manager).updateFloatingPools(eq(mockSubAdapter), eq(expectedFloating), eq(true), any(Set.class));
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -230,9 +230,9 @@ public class PoolManagerTest {
 
         // Make sure that only the floating pool was regenerated
         expectedModified.add(p);
-        verify(this.manager).updateFloatingPools(eq(mockSubAdapter), eq(new LinkedList()), eq(true));
+        verify(this.manager).updateFloatingPools(eq(mockSubAdapter), eq(new LinkedList()), eq(true), any(Set.class));
         verify(this.manager).updatePoolsForSubscription(
-            eq(mockSubAdapter), eq(expectedModified), eq(sub), eq(false));
+            eq(mockSubAdapter), eq(expectedModified), eq(sub), eq(false), any(Set.class));
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -330,7 +330,7 @@ public class PoolManagerTest {
 
         this.manager.getRefresher(mockSubAdapter).add(getOwner()).run();
         ArgumentCaptor<List> poolCaptor = ArgumentCaptor.forClass(List.class);
-        verify(this.poolRulesMock).updatePools(poolCaptor.capture());
+        verify(this.poolRulesMock).updatePools(poolCaptor.capture(), any(Set.class));
         assertEquals(1, poolCaptor.getValue().size());
         assertEquals(p, poolCaptor.getValue().get(0));
     }
@@ -380,7 +380,7 @@ public class PoolManagerTest {
         u.setQuantityChanged(true);
         u.setOrderChanged(true);
         updates.add(u);
-        when(poolRulesMock.updatePools(s, pools)).thenReturn(updates);
+        when(poolRulesMock.updatePools(eq(s), eq(pools), any(Set.class))).thenReturn(updates);
 
         this.manager.getRefresher(mockSubAdapter).add(getOwner()).run();
         verify(this.mockPoolCurator, times(1)).delete(any(Pool.class));
