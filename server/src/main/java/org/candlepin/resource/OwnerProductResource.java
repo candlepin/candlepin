@@ -61,10 +61,10 @@ import javax.ws.rs.core.MediaType;
  *
  * @version $Rev$
  */
-@Path("/products")
-public class ProductResource {
+@Path("/owners/{owner_id}/products")
+public class OwnerProductResource extends OwnerResource {
+    private static Logger log = LoggerFactory.getLogger(OwnerProductResource.class);
 
-    private static Logger log = LoggerFactory.getLogger(ProductResource.class);
     private ProductCurator productCurator;
     private ContentCurator contentCurator;
     private OwnerCurator ownerCurator;
@@ -72,10 +72,45 @@ public class ProductResource {
     private StatisticCurator statisticCurator;
     private I18n i18n;
 
+
     @Inject
-    public ProductResource(ProductCurator productCurator, ContentCurator contentCurator,
-        OwnerCurator ownerCurator, ProductCertificateCurator productCertCurator,
-        StatisticCurator statisticCurator, I18n i18n) {
+    public OwnerProductResource(OwnerCurator ownerCurator,
+        SubscriptionCurator subscriptionCurator,
+        ActivationKeyCurator activationKeyCurator,
+        ConsumerCurator consumerCurator,
+        StatisticCurator statisticCurator,
+        I18n i18n,
+        EventSink sink,
+        EventFactory eventFactory,
+        EventCurator eventCurator,
+        EventAdapter eventAdapter,
+        Importer importer,
+        PoolManager poolManager,
+        ExporterMetadataCurator exportCurator,
+        OwnerInfoCurator ownerInfoCurator,
+        ImportRecordCurator importRecordCurator,
+        SubscriptionServiceAdapter subService,
+        PermissionBlueprintCurator permCurator,
+        ConsumerTypeCurator consumerTypeCurator,
+        EntitlementCertificateCurator entitlementCertCurator,
+        EntitlementCurator entitlementCurator,
+        UeberCertificateGenerator ueberCertGenerator,
+        EnvironmentCurator envCurator,
+        CalculatedAttributesUtil calculatedAttributesUtil,
+        ContentOverrideValidator contentOverrideValidator,
+        ServiceLevelValidator serviceLevelValidator,
+        OwnerServiceAdapter ownerService,
+        ProductCurator productCurator,
+        ContentCurator contentCurator,
+        ProductCertificateCurator productCertCurator) {
+
+        super(ownerCurator, subscriptionCurator, activationKeyCurator, consumerCurator,
+            statisticCurator, i18n, sink, eventFactory, eventCurator, eventAdapter, importer,
+            poolManager, exportCurator, ownerInfoCurator, importRecordCurator, subService,
+            permCurator, consumerTypeCurator, entitlementCertCurator, entitlementCurator,
+            ueberCertGenerator, envCurator, calculatedAttributesUtil, contentOverrideValidator,
+            serviceLevelValidator, ownerService, productCurator
+        );
 
         this.productCurator = productCurator;
         this.contentCurator = contentCurator;
@@ -94,10 +129,14 @@ public class ProductResource {
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Product> list(@QueryParam("product") List<String> productIds) {
+    public List<Product> list(@PathParam("owner_id") String ownerId,
+                              @QueryParam("product") List<String> productIds) {
+
+        Owner owner = this.getOwner(ownerId);
+
         return productIds.isEmpty() ?
-            productCurator.listAll() :
-            productCurator.listAllByUuids(productIds);
+            productCurator.listByOwner(owner) :
+            productCurator.listAllByIds(owner, productIds);
     }
 
     /**
@@ -131,7 +170,10 @@ public class ProductResource {
     @Path("/{product_id}")
     @Produces(MediaType.APPLICATION_JSON)
     @SecurityHole
-    public Product getProduct(@PathParam("product_id") String productId) {
+    public Product getProduct(@PathParam("owner_id") String ownerId,
+                              @PathParam("product_id") String productId) {
+
+        Owner owner = this.getOwner(ownerId);
         Product product = productCurator.find(productId);
 
         if (product == null) {
@@ -154,8 +196,9 @@ public class ProductResource {
     @Path("/{product_id}/certificate")
     @Produces(MediaType.APPLICATION_JSON)
     @SecurityHole
-    public ProductCertificate getProductCertificate(@PathParam("product_id") String productId) {
-        Product product = this.getProduct(productId);
+    public ProductCertificate getProductCertificate(@PathParam("owner_id") String ownerId,
+                                                    @PathParam("product_id") String productId) {
+        Product product = this.getProduct(ownerId, productId);
         return this.productCertCurator.getCertForProduct(product);
     }
 
@@ -185,9 +228,11 @@ public class ProductResource {
     @Path("/{product_id}")
     @Produces(MediaType.APPLICATION_JSON)
     public Product updateProduct(
+        @PathParam("owner_id") String ownerId,
         @PathParam("product_id") @Verify(Product.class) String productId,
         Product product) {
-        Product toUpdate = this.getProduct(productId);
+
+        Product toUpdate = this.getProduct(ownerId, productId);
 
         if (performProductUpdates(toUpdate, product)) {
             this.productCurator.merge(toUpdate);
@@ -256,10 +301,11 @@ public class ProductResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product_id}/batch_content")
-    public Product addBatchContent(@PathParam("product_id") String productId,
+    public Product addBatchContent(@PathParam("owner_id") String ownerId,
+                                   @PathParam("product_id") String productId,
                                    Map<String, Boolean> contentMap) {
 
-        Product product = this.getProduct(productId);
+        Product product = this.getProduct(ownerId, productId);
 
         for (Entry<String, Boolean> entry : contentMap.entrySet()) {
             Content content = contentCurator.lookupById(product.getOwner(), entry.getKey());
@@ -285,11 +331,12 @@ public class ProductResource {
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product_id}/content/{content_id}")
-    public Product addContent(@PathParam("product_id") String productId,
+    public Product addContent(@PathParam("owner_id") String ownerId,
+                              @PathParam("product_id") String productId,
                               @PathParam("content_id") String contentId,
                               @QueryParam("enabled") Boolean enabled) {
 
-        Product product = this.getProduct(productId);
+        Product product = this.getProduct(ownerId, productId);
         Content content = contentCurator.lookupById(product.getOwner(), contentId);
 
         ProductContent productContent = new ProductContent(product, content, enabled);
@@ -306,10 +353,11 @@ public class ProductResource {
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product_id}/content/{content_id}")
-    public void removeContent(@PathParam("product_id") String productId,
+    public void removeContent(@PathParam("owner_id") String ownerId,
+                              @PathParam("product_id") String productId,
                               @PathParam("content_id") String contentId) {
 
-        Product product = this.getProduct(productId);
+        Product product = this.getProduct(ownerId, productId);
         Content content = contentCurator.lookupById(product.getOwner(), contentId);
 
         productCurator.removeProductContent(product, content);
@@ -325,8 +373,10 @@ public class ProductResource {
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product_id}")
-    public void deleteProduct(@PathParam("product_id") String productId) {
-        Product product = this.getProduct(productId);
+    public void deleteProduct(@PathParam("owner_id") String ownerId,
+                              @PathParam("product_id") String productId) {
+
+        Product product = this.getProduct(ownerId, productId);
 
         if (productCurator.productHasSubscriptions(product)) {
             throw new BadRequestException(
@@ -347,12 +397,15 @@ public class ProductResource {
     @GET
     @Path("/{product_id}/statistics")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Statistic> getProductStats(@PathParam("product_id") String productId,
-                            @QueryParam("from") String from,
-                            @QueryParam("to") String to,
-                            @QueryParam("days") String days) {
+    public List<Statistic> getProductStats(@PathParam("owner_id") String ownerId,
+                                           @PathParam("product_id") String productId,
+                                           @QueryParam("from") String from,
+                                           @QueryParam("to") String to,
+                                           @QueryParam("days") String days) {
 
-        return statisticCurator.getStatisticsByProduct(productId, null,
+        Owner owner = this.getOwner(ownerId);
+
+        return statisticCurator.getStatisticsByProduct(owner, productId, null,
                                 ResourceDateParser.getFromDate(from, to, days),
                                 ResourceDateParser.parseDateString(to));
     }
@@ -369,35 +422,39 @@ public class ProductResource {
     @GET
     @Path("/{product_id}/statistics/{vtype}")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Statistic> getProductStats(@PathParam("product_id") String productId,
-                            @PathParam("vtype") String valueType,
-                            @QueryParam("from") String from,
-                            @QueryParam("to") String to,
-                            @QueryParam("days") String days) {
+    public List<Statistic> getProductStats(@PathParam("owner_id") String ownerId,
+                                           @PathParam("product_id") String productId,
+                                           @PathParam("vtype") String valueType,
+                                           @QueryParam("from") String from,
+                                           @QueryParam("to") String to,
+                                           @QueryParam("days") String days) {
 
-        return statisticCurator.getStatisticsByProduct(productId, valueType,
+        Owner owner = this.getOwner(ownerId);
+
+        return statisticCurator.getStatisticsByProduct(owner, productId, valueType,
                                 ResourceDateParser.getFromDate(from, to, days),
                                 ResourceDateParser.parseDateString(to));
     }
 
-    /**
-     * Retrieves a list of Owners by Product
-     *
-     * @return a list of Owner objects
-     * @httpcode 200
-     * @httpcode 400
-     */
-    @GET
-    @Path("/owners")
-    @Produces(MediaType.APPLICATION_JSON)
-    public List<Owner> getActiveProductOwners(@QueryParam("product") String[] productId) {
-        List<String> ids = Arrays.asList(productId);
-        if (ids.isEmpty()) {
-            throw new BadRequestException(i18n.tr("Must specify product ID."));
-        }
+    // TODO: Not sure what use this method has before OR after multiorg.
+    // /**
+    //  * Retrieves a list of Owners by Product
+    //  *
+    //  * @return a list of Owner objects
+    //  * @httpcode 200
+    //  * @httpcode 400
+    //  */
+    // @GET
+    // @Path("/owners")
+    // @Produces(MediaType.APPLICATION_JSON)
+    // public List<Owner> getActiveProductOwners(@QueryParam("product") String[] productId) {
+    //     List<String> ids = Arrays.asList(productId);
+    //     if (ids.isEmpty()) {
+    //         throw new BadRequestException(i18n.tr("Must specify product ID."));
+    //     }
 
-        return ownerCurator.lookupOwnersByActiveProduct(ids);
-    }
+    //     return ownerCurator.lookupOwnersByActiveProduct(ids);
+    // }
 
     /**
      * Refreshes Pools by Product
@@ -410,10 +467,11 @@ public class ProductResource {
     @Path("/{product_id}/subscriptions")
     @Produces(MediaType.APPLICATION_JSON)
     public JobDetail refreshPoolsForProduct(
+        @PathParam("owner_id") String ownerId,
         @PathParam("product_id") String productId,
         @QueryParam("lazy_regen") @DefaultValue("true") Boolean lazyRegen) {
 
-        Product product = this.getProduct(productId);
+        Product product = this.getProduct(ownerId, productId);
 
         return RefreshPoolsForProductJob.forProduct(product, lazyRegen);
     }
