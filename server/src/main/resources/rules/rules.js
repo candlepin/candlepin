@@ -675,7 +675,9 @@ var StatusReasonGenerator = {
      */
     buildUnmappedEntitlementReason: function (installed_pid) {
         var attributes = {};
-        attributes["product_id"] = installed_pid;
+        if (installed_pid) {
+            attributes["product_id"] = installed_pid;
+        }
 
         var reason = {};
         reason["key"] = "UNMAPPEDGUEST";

@@ -184,6 +184,7 @@ describe 'Unmapped Guest Pools' do
     compliance_status['compliant'].should == false
     compliance_status.should have_key('reasons')
     compliance_status['reasons'].size.should == 1
+    compliance_status['reasons'][0]['attributes']['product_id'].should == @virt_limit_product.id
   end
 
 
@@ -204,5 +205,6 @@ describe 'Unmapped Guest Pools' do
     compliance_status['compliant'].should == false
     compliance_status.should have_key('reasons')
     compliance_status['reasons'].size.should == 1
+    compliance_status['reasons'][0]['attributes'].has_key?("product_id").should_not be_true
   end
 end
