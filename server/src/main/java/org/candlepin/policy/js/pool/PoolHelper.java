@@ -16,6 +16,7 @@ package org.candlepin.policy.js.pool;
 
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Attribute;
+import org.candlepin.model.Branding;
 import org.candlepin.model.DerivedProductPoolAttribute;
 import org.candlepin.model.DerivedProvidedProduct;
 import org.candlepin.model.Entitlement;
@@ -153,13 +154,19 @@ public class PoolHelper extends AttributeHelper {
     }
 
     /**
-     * Copies the provided products from a subscription to a pool.
+     * Copies the provided products from a subscription to a derived pool.
      *
      * @param source subscription
      * @param destination pool
      */
-    public void copyProvidedProducts(Subscription source, Pool destination) {
-        for (Product providedProduct : source.getProvidedProducts()) {
+    private void copyProvidedProducts(Subscription source, Pool destination) {
+        Set<Product> products = source.getProvidedProducts();
+        // Use derived product data if it exists, as this is a derived bonus pool:
+        if (source.getDerivedProvidedProducts() != null &&
+                source.getDerivedProvidedProducts().size() > 0) {
+            products = source.getDerivedProvidedProducts();
+        }
+        for (Product providedProduct : products) {
             destination.addProvidedProduct(new ProvidedProduct(providedProduct.getId(),
                 providedProduct.getName()));
         }
@@ -182,6 +189,11 @@ public class PoolHelper extends AttributeHelper {
         }
 
         copyProductAttributesOntoPool(productId, pool);
+
+        for (Branding b : sub.getBranding()) {
+            pool.getBranding().add(new Branding(b.getProductId(), b.getType(),
+                b.getName()));
+        }
 
         return pool;
     }
