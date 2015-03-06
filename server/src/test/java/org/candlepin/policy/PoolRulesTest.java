@@ -677,8 +677,10 @@ public class PoolRulesTest {
         List<Pool> pools = poolRules.createPools(s);
         assertEquals(2, pools.size());
 
-        // Now we update the sub and see if that unlimited pool gets adjusted:
-        s.getProduct().getAttributes().clear();
+        // Now we remove virt_limit on the incoming subscription product and see if
+        // the unlimited pool gets adjusted and flagged for cleanup:
+        s.setProduct(TestUtil.createProduct(s.getProduct().getId(),
+                s.getProduct().getName(), owner));
         List<PoolUpdate> updates = poolRules.updatePools(s, pools,
                 TestUtil.stubChangedProducts(s.getProduct()));
         assertEquals(2, updates.size());
