@@ -14,7 +14,6 @@
  */
 package org.candlepin.resource;
 
-import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Content;
@@ -90,7 +89,7 @@ public class OwnerContentResource {
         Owner owner = this.ownerCurator.lookupByKey(key);
 
         if (owner == null) {
-            throw new NotFoundException(i18n.tr("Owner with key: {} was not found.", key));
+            throw new NotFoundException(i18n.tr("Owner with key \"{0}\" was not found.", key));
         }
 
         return owner;
@@ -144,7 +143,7 @@ public class OwnerContentResource {
         Content content = this.contentCurator.lookupById(owner, contentId);
 
         if (content == null) {
-            throw new BadRequestException(
+            throw new NotFoundException(
                 i18n.tr("Content with id \"{0}\" could not be found.", contentId)
             );
         }

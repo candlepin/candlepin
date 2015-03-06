@@ -534,11 +534,11 @@ public class ProductCuratorTest extends DatabaseTestFixture {
             Product p = TestUtil.createProduct(owner);
             productCurator.create(p);
             products.add(p);
-            pids.add(p.getUuid());
+            pids.add(p.getId());
         }
 
         // ok get first 3 items to lookup
-        List<Product> returned = productCurator.listAllByIds(pids.subList(0, 3));
+        List<Product> returned = productCurator.listAllByIds(owner, pids.subList(0, 3));
         assertEquals(3, returned.size());
 
         // verify the first 3 were actually returned, and only those 3.
@@ -551,6 +551,22 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testGetProductIdFromContentId() {
+        Product p = createTestProduct();
+        Content content = new Content(this.owner, "best-content", "best-content",
+            "best-content", "yum", "us", "here", "here", "test-arch");
+        p.addContent(content);
+        contentCurator.create(content);
+        productCurator.create(p);
+
+        List<String> contentIds = new LinkedList<String>();
+        contentIds.add(content.getId());
+        List<Product> products = productCurator.getProductsWithContent(owner, contentIds);
+        assertEquals(1, products.size());
+        assertEquals(p, products.get(0));
+    }
+
+    @Test
+    public void testGetProductIdFromContentUuid() {
         Product p = createTestProduct();
         Content content = new Content(this.owner, "best-content", "best-content",
             "best-content", "yum", "us", "here", "here", "test-arch");
@@ -590,27 +606,5 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         Product doesNotHave = TestUtil.createProduct(owner);
         productCurator.create(doesNotHave);
         assertFalse(productCurator.productHasSubscriptions(doesNotHave));
-    }
-
-    @Test
-    public void testSaveOrUpdateProductNoDuplicateProdContent() {
-        Product p = createTestProduct();
-        Content content = new Content(this.owner, "best-content", "best-content",
-            "best-content", "yum", "us", "here", "here", "test-arch");
-        p.addContent(content);
-        contentCurator.create(content);
-        productCurator.createOrUpdate(p);
-
-        // Technically the same product:
-        Product p2 = createTestProduct();
-        // The content isn't quite the same.  We just care about matching
-        // product ids with content ids
-        content = new Content(this.owner, "best-content", "best-content",
-            "best-content", "yum", "us", "here", "differnet", "test-arch");
-        p2.addContent(content);
-        productCurator.createOrUpdate(p2);
-
-        Product result = productCurator.find(p.getUuid());
-        assertEquals(1, result.getProductContent().size());
     }
 }

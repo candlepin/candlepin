@@ -45,14 +45,13 @@ import javax.inject.Inject;
 
 
 /**
- * ProductResourceTest
+ * OwnerProductResourceTest
  */
-public class ProductResourceTest extends DatabaseTestFixture {
+public class OwnerProductResourceTest extends DatabaseTestFixture {
     @Inject private ProductCertificateCurator productCertificateCurator;
     @Inject private ContentCurator contentCurator;
-    @Inject private ProductResource productResource;
+    @Inject private OwnerProductResource ownerProductResource;
     @Inject private OwnerCurator ownerCurator;
-    @Inject private ProductCurator productCurator;
 
     private Product createProduct(Owner owner) {
         String label = "test_product";
@@ -66,15 +65,15 @@ public class ProductResourceTest extends DatabaseTestFixture {
         return prod;
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test
     public void testCreateProductResource() {
         Owner owner = ownerCurator.create(new Owner("Example-Corporation"));
 
         Product toSubmit = createProduct(owner);
-        productResource.createProduct(toSubmit);
+        ownerProductResource.createProduct(owner.getKey(), toSubmit);
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test
     public void testCreateProductWithContent() {
         Owner owner = ownerCurator.create(new Owner("Example-Corporation"));
 
@@ -90,41 +89,49 @@ public class ProductResourceTest extends DatabaseTestFixture {
         contentSet.add(testContent);
         toSubmit.setContent(contentSet);
 
-        productResource.createProduct(toSubmit);
+        ownerProductResource.createProduct(owner.getKey(), toSubmit);
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test(expected = BadRequestException.class)
     public void testDeleteProductWithSubscriptions() {
         ProductCurator pc = mock(ProductCurator.class);
+        OwnerCurator oc = mock(OwnerCurator.class);
         I18n i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
-        ProductResource pr = new ProductResource(pc, null, null, null, null, i18n);
+        OwnerProductResource pr = new OwnerProductResource(pc, null, oc, null, null, i18n);
+
         Owner o = mock(Owner.class);
         Product p = mock(Product.class);
+
+        when(oc.lookupByKey(eq("owner"))).thenReturn(o);
         when(pc.lookupById(eq(o), eq("10"))).thenReturn(p);
+        when(p.getOwner()).thenReturn(o);
+
         Set<Subscription> subs = new HashSet<Subscription>();
         Subscription s = mock(Subscription.class);
         subs.add(s);
         when(pc.productHasSubscriptions(eq(p))).thenReturn(true);
 
-        pr.deleteProduct("10");
+        pr.deleteProduct("owner", "10");
     }
 
     @Test
     public void getProduct() {
         Owner owner = ownerCurator.create(new Owner("Example-Corporation"));
-        Product p = productCurator.create(createProduct(owner));
 
+        Product p = createProduct(owner);
+        p = ownerProductResource.createProduct(owner.getKey(), p);
         securityInterceptor.enable();
 
-        Product p1 = productResource.getProduct(p.getId());
+        Product p1 = ownerProductResource.getProduct(owner.getKey(), p.getId());
         assertEquals(p1, p);
     }
 
     @Test
     public void getProductCertificate() {
         Owner owner = ownerCurator.create(new Owner("Example-Corporation"));
-        Product p = productCurator.create(createProduct(owner));
 
+        Product p = createProduct(owner);
+        p = ownerProductResource.createProduct(owner.getKey(), p);
         // ensure we check SecurityHole
         securityInterceptor.enable();
 
@@ -133,8 +140,7 @@ public class ProductResourceTest extends DatabaseTestFixture {
         cert.setKey("some key");
         cert.setProduct(p);
         productCertificateCurator.create(cert);
-
-        ProductCertificate cert1 = productResource.getProductCertificate(p.getId());
+        ProductCertificate cert1 = ownerProductResource.getProductCertificate(owner.getKey(), p.getId());
         assertEquals(cert, cert1);
     }
 }

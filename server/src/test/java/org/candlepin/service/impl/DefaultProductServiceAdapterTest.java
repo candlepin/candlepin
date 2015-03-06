@@ -21,8 +21,13 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.AdditionalAnswers.returnsFirstArg;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
@@ -55,8 +60,8 @@ public class DefaultProductServiceAdapterTest {
     private String someid = "deadbeef";
     private DefaultProductServiceAdapter dpsa;
     private ProductCurator pc;
-    private UniqueIdGenerator idgen;
     private ProductCertificateCurator pcc;
+    private UniqueIdGenerator idgen;
     private PKIUtility pki;
     private X509ExtensionUtil extUtil;
     private ContentCurator cc;
@@ -65,12 +70,12 @@ public class DefaultProductServiceAdapterTest {
     public void init() {
         pc = mock(ProductCurator.class);
         idgen = mock(UniqueIdGenerator.class);
-        pcc = mock(ProductCertificateCurator.class);
-        pki = mock(PKIUtility.class);
-        cc = mock(ContentCurator.class);
         Configuration config = mock(Configuration.class);
-        when(config.getBoolean(ConfigProperties.ENV_CONTENT_FILTERING)).thenReturn(false);
+        pki = mock(PKIUtility.class);
         extUtil = new X509ExtensionUtil(config);
+        cc = mock(ContentCurator.class);
+        pcc = spy(new ProductCertificateCurator(pki, extUtil));
+        when(config.getBoolean(ConfigProperties.ENV_CONTENT_FILTERING)).thenReturn(false);
         dpsa = new DefaultProductServiceAdapter(pc, pcc, cc, idgen);
     }
 
@@ -126,7 +131,8 @@ public class DefaultProductServiceAdapterTest {
     public void deleteProductWithCerts() {
         Product p = mock(Product.class);
         ProductCertificate cert = mock(ProductCertificate.class);
-        when(pcc.findForProduct((eq(p)))).thenReturn(cert);
+        doNothing().when(pcc).delete(any(ProductCertificate.class));
+        doReturn(cert).when(pcc).findForProduct(eq(p));
         dpsa.deleteProduct(p);
         verify(pcc).delete(eq(cert));
         verify(pc).delete(eq(p));
@@ -135,7 +141,7 @@ public class DefaultProductServiceAdapterTest {
     @Test
     public void deleteProductNoCerts() {
         Product p = mock(Product.class);
-        when(pcc.findForProduct((eq(p)))).thenReturn(null);
+        doReturn(null).when(pcc).findForProduct(eq(p));
         dpsa.deleteProduct(p);
         verify(pcc, never()).delete(any(ProductCertificate.class));
         verify(pc).delete(eq(p));
@@ -145,7 +151,7 @@ public class DefaultProductServiceAdapterTest {
     public void productCertificateExists() {
         Product p = mock(Product.class);
         ProductCertificate cert = mock(ProductCertificate.class);
-        when(pcc.findForProduct((eq(p)))).thenReturn(cert);
+        doReturn(cert).when(pcc).findForProduct(eq(p));
         ProductCertificate result = dpsa.getProductCertificate(p);
         verify(pcc, never()).create(eq(cert));
         assertEquals(cert, result);
@@ -155,7 +161,8 @@ public class DefaultProductServiceAdapterTest {
     public void productCertificateNew() throws Exception {
         Product p = mock(Product.class);
         when(p.getId()).thenReturn(someid);
-        when(pcc.findForProduct((eq(p)))).thenReturn(null);
+        doAnswer(returnsFirstArg()).when(pcc).create(any(ProductCertificate.class));
+        doReturn(null).when(pcc).findForProduct(eq(p));
         KeyPair kp = createKeyPair();
         when(pki.generateNewKeyPair()).thenReturn(kp);
         when(pki.getPemEncoded(any(Key.class))).thenReturn("junk".getBytes());

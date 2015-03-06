@@ -141,7 +141,7 @@ public class ProductImporterTest {
         addContentTo(newProduct);
         Content c = newProduct.getProductContent().iterator().next().getContent();
 
-        when(productCuratorMock.lookupById(oldProduct.getOwner(), oldProduct.getId()))
+        when(productCuratorMock.find(oldProduct.getUuid()))
             .thenReturn(oldProduct);
 
         Set<Product> storeThese = new HashSet<Product>();
@@ -159,12 +159,12 @@ public class ProductImporterTest {
 
         Set<Product> products = new HashSet<Product>();
 
-        when(productCuratorMock.lookupById(oldProduct.getOwner(), oldProduct.getId()))
+        when(productCuratorMock.find(oldProduct.getUuid()))
             .thenReturn(oldProduct);
 
         Set<Product> changed = importer.getChangedProducts(products);
 
-        verify(productCuratorMock, times(0)).lookupById(oldProduct.getOwner(), oldProduct.getId());
+        verify(productCuratorMock, times(0)).find(oldProduct.getUuid());
 
         assertTrue(changed.isEmpty());
     }
@@ -193,12 +193,12 @@ public class ProductImporterTest {
         Set<Product> products = new HashSet<Product>();
         products.add(oldProduct);
 
-        when(productCuratorMock.lookupById(oldProduct.getOwner(), oldProduct.getId()))
+        when(productCuratorMock.find(oldProduct.getUuid()))
             .thenReturn(oldProduct);
 
         Set<Product> changed = importer.getChangedProducts(products);
 
-        verify(productCuratorMock, times(1)).lookupById(oldProduct.getOwner(), oldProduct.getId());
+        verify(productCuratorMock, times(1)).find(oldProduct.getUuid());
 
         assertTrue(changed.isEmpty());
     }
@@ -212,12 +212,11 @@ public class ProductImporterTest {
         Set<Product> products = new HashSet<Product>();
         products.add(newProduct);
 
-        when(productCuratorMock.lookupById(oldProduct.getOwner(), oldProduct.getId()))
-            .thenReturn(oldProduct);
+        when(productCuratorMock.find(oldProduct.getUuid())).thenReturn(oldProduct);
 
         Set<Product> changed = importer.getChangedProducts(products);
 
-        verify(productCuratorMock, times(1)).lookupById(oldProduct.getOwner(), oldProduct.getId());
+        verify(productCuratorMock, times(1)).find(oldProduct.getUuid());
 
         assertEquals(1, changed.size());
     }
@@ -234,12 +233,12 @@ public class ProductImporterTest {
         Set<Product> products = new HashSet<Product>();
         products.add(newProduct);
 
-        when(productCuratorMock.lookupById(oldProduct.getOwner(), oldProduct.getId()))
+        when(productCuratorMock.find(oldProduct.getUuid()))
             .thenReturn(oldProduct);
 
         Set<Product> changed = importer.getChangedProducts(products);
 
-        verify(productCuratorMock, times(1)).lookupById(oldProduct.getOwner(), oldProduct.getId());
+        verify(productCuratorMock, times(1)).find(oldProduct.getUuid());
 
         assertEquals(1, changed.size());
     }
@@ -255,12 +254,12 @@ public class ProductImporterTest {
         Set<Product> products = new HashSet<Product>();
         products.add(newProduct);
 
-        when(productCuratorMock.lookupById(oldProduct.getOwner(), oldProduct.getId()))
+        when(productCuratorMock.find(oldProduct.getUuid()))
             .thenReturn(oldProduct);
 
         Set<Product> changed = importer.getChangedProducts(products);
 
-        verify(productCuratorMock, times(1)).lookupById(oldProduct.getOwner(), oldProduct.getId());
+        verify(productCuratorMock, times(1)).find(oldProduct.getUuid());
 
         assertEquals(1, changed.size());
     }
@@ -276,12 +275,12 @@ public class ProductImporterTest {
         Set<Product> products = new HashSet<Product>();
         products.add(newProduct);
 
-        when(productCuratorMock.lookupById(oldProduct.getOwner(), oldProduct.getId()))
+        when(productCuratorMock.find(oldProduct.getUuid()))
             .thenReturn(oldProduct);
 
         Set<Product> changed = importer.getChangedProducts(products);
 
-        verify(productCuratorMock, times(1)).lookupById(oldProduct.getOwner(), oldProduct.getId());
+        verify(productCuratorMock, times(1)).find(oldProduct.getUuid());
 
         assertEquals(1, changed.size());
     }
@@ -298,12 +297,12 @@ public class ProductImporterTest {
         Set<Product> products = new HashSet<Product>();
         products.add(newProduct);
 
-        when(productCuratorMock.lookupById(oldProduct.getOwner(), oldProduct.getId()))
+        when(productCuratorMock.find(oldProduct.getUuid()))
             .thenReturn(oldProduct);
 
         Set<Product> changed = importer.getChangedProducts(products);
 
-        verify(productCuratorMock, times(1)).lookupById(oldProduct.getOwner(), oldProduct.getId());
+        verify(productCuratorMock, times(1)).find(oldProduct.getUuid());
 
         assertEquals(1, changed.size());
     }
@@ -320,12 +319,12 @@ public class ProductImporterTest {
         Set<Product> products = new HashSet<Product>();
         products.add(newProduct);
 
-        when(productCuratorMock.lookupById(oldProduct.getOwner(), oldProduct.getId()))
+        when(productCuratorMock.find(oldProduct.getUuid()))
             .thenReturn(oldProduct);
 
         Set<Product> changed = importer.getChangedProducts(products);
 
-        verify(productCuratorMock, times(1)).lookupById(oldProduct.getOwner(), oldProduct.getId());
+        verify(productCuratorMock, times(1)).find(oldProduct.getUuid());
 
         assertEquals(1, changed.size());
     }
@@ -343,12 +342,12 @@ public class ProductImporterTest {
         Set<Product> products = new HashSet<Product>();
         products.add(newProduct);
 
-        when(productCuratorMock.lookupById(oldProduct.getOwner(), oldProduct.getId()))
+        when(productCuratorMock.find(oldProduct.getUuid()))
             .thenReturn(oldProduct);
 
         Set<Product> changed = importer.getChangedProducts(products);
 
-        verify(productCuratorMock, times(1)).lookupById(oldProduct.getOwner(), oldProduct.getId());
+        verify(productCuratorMock, times(1)).find(oldProduct.getUuid());
 
         assertEquals(1, changed.size());
     }
@@ -366,12 +365,12 @@ public class ProductImporterTest {
         Set<Product> products = new HashSet<Product>();
         products.add(newProduct);
 
-        when(productCuratorMock.lookupById(oldProduct.getOwner(), oldProduct.getId()))
+        when(productCuratorMock.find(oldProduct.getUuid()))
             .thenReturn(oldProduct);
 
         Set<Product> changed = importer.getChangedProducts(products);
 
-        verify(productCuratorMock, times(1)).lookupById(oldProduct.getOwner(), oldProduct.getId());
+        verify(productCuratorMock, times(1)).find(oldProduct.getUuid());
 
         assertEquals(1, changed.size());
     }
@@ -391,12 +390,12 @@ public class ProductImporterTest {
         Set<Product> products = new HashSet<Product>();
         products.add(newProduct);
 
-        when(productCuratorMock.lookupById(oldProduct.getOwner(), oldProduct.getId()))
+        when(productCuratorMock.find(oldProduct.getUuid()))
             .thenReturn(oldProduct);
 
         Set<Product> changed = importer.getChangedProducts(products);
 
-        verify(productCuratorMock, times(1)).lookupById(oldProduct.getOwner(), oldProduct.getId());
+        verify(productCuratorMock, times(1)).find(oldProduct.getUuid());
 
         assertEquals(1, changed.size());
     }
@@ -415,12 +414,12 @@ public class ProductImporterTest {
         Set<Product> products = new HashSet<Product>();
         products.add(newProduct);
 
-        when(productCuratorMock.lookupById(oldProduct.getOwner(), oldProduct.getId()))
+        when(productCuratorMock.find(oldProduct.getUuid()))
             .thenReturn(oldProduct);
 
         Set<Product> changed = importer.getChangedProducts(products);
 
-        verify(productCuratorMock, times(1)).lookupById(oldProduct.getOwner(), oldProduct.getId());
+        verify(productCuratorMock, times(1)).find(oldProduct.getUuid());
 
         assertEquals(1, changed.size());
     }

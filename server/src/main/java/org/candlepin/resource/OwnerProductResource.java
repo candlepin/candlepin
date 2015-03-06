@@ -104,7 +104,7 @@ public class OwnerProductResource {
         Owner owner = this.ownerCurator.lookupByKey(key);
 
         if (owner == null) {
-            throw new NotFoundException(i18n.tr("Owner with key: {} was not found.", key));
+            throw new NotFoundException(i18n.tr("Owner with key \"{0}\" was not found.", key));
         }
 
         return owner;
@@ -164,7 +164,7 @@ public class OwnerProductResource {
                               @PathParam("product_id") String productId) {
 
         Owner owner = this.getOwnerByKey(ownerKey);
-        Product product = productCurator.find(productId);
+        Product product = productCurator.lookupById(owner, productId);
 
         if (product == null) {
             throw new NotFoundException(
@@ -303,7 +303,7 @@ public class OwnerProductResource {
         Content content = this.contentCurator.lookupById(owner, contentId);
 
         if (content == null) {
-            throw new BadRequestException(
+            throw new NotFoundException(
                 i18n.tr("Content with ID \"{0}\" could not be found.", contentId)
             );
         }

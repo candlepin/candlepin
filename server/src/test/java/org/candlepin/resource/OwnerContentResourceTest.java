@@ -15,7 +15,7 @@
 package org.candlepin.resource;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyLong;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
@@ -51,12 +51,12 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 /**
- * ContentResourceTest
+ * OwnerContentResourceTest
  */
-public class ContentResourceTest {
+public class OwnerContentResourceTest {
 
     private ContentCurator cc;
-    private ContentResource cr;
+    private OwnerContentResource ocr;
     private I18n i18n;
     private EnvironmentContentCurator envContentCurator;
     private PoolManager poolManager;
@@ -72,21 +72,27 @@ public class ContentResourceTest {
         oc = mock(OwnerCurator.class);
         productCurator = mock(ProductCurator.class);
 
-        cr = new ContentResource(cc, i18n, new DefaultUniqueIdGenerator(),
+        ocr = new OwnerContentResource(cc, i18n, new DefaultUniqueIdGenerator(),
             envContentCurator, poolManager, productCurator, oc);
 
     }
 
     @Test
     public void listContent() {
-        cr.list();
-        verify(cc, atLeastOnce()).listAll();
+        Owner owner = mock(Owner.class);
+        when(oc.lookupByKey(eq("owner"))).thenReturn(owner);
+
+        ocr.list("owner");
+        verify(cc, atLeastOnce()).listByOwner(eq(owner));
     }
 
     @Test(expected = NotFoundException.class)
     public void getContentNull() {
-        when(cc.find(anyLong())).thenReturn(null);
-        cr.getContent("10");
+        Owner owner = mock(Owner.class);
+        when(oc.lookupByKey(eq("owner"))).thenReturn(owner);
+
+        when(cc.lookupById(any(Owner.class), anyString())).thenReturn(null);
+        ocr.getContent("owner", "10");
     }
 
     @Test
@@ -94,57 +100,74 @@ public class ContentResourceTest {
         Owner owner = mock(Owner.class);
         Content content = mock(Content.class);
 
-        when(oc.listAll()).thenReturn(Arrays.asList(owner));
+        when(oc.lookupByKey(eq("owner"))).thenReturn(owner);
         when(cc.lookupById(eq(owner), eq("10"))).thenReturn(content);
 
-        assertEquals(content, cr.getContent("10"));
+        assertEquals(content, ocr.getContent("owner", "10"));
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test
     public void createContent() {
+        Owner owner = mock(Owner.class);
         Content content = mock(Content.class);
+
         when(content.getId()).thenReturn("10");
-        when(cc.find(eq("10"))).thenReturn(content);
-        assertEquals(content, cr.createContent(content));
+        when(oc.lookupByKey(eq("owner"))).thenReturn(owner);
+        when(cc.lookupById(eq(owner), eq("10"))).thenReturn(content);
+        when(cc.merge(eq(content))).thenReturn(content);
+
+        assertEquals(content, ocr.createContent("owner", content));
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test
     public void createContentNull()  {
+        Owner owner = mock(Owner.class);
         Content content = mock(Content.class);
+
         when(content.getId()).thenReturn("10");
-        when(cc.find(eq(10L))).thenReturn(null);
-        cr.createContent(content);
+        when(oc.lookupByKey(eq("owner"))).thenReturn(owner);
+        when(cc.lookupById(eq(owner), eq("10"))).thenReturn(null);
+
+        ocr.createContent("owner", content);
         verify(cc, atLeastOnce()).create(content);
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test
     public void deleteContent() {
         Owner owner = mock(Owner.class);
         Content content = mock(Content.class);
+
         when(content.getId()).thenReturn("10");
-        when(cc.find(eq("10"))).thenReturn(content);
-        EnvironmentContent ec =
-            new EnvironmentContent(mock(Environment.class), content, true);
+        when(content.getOwner()).thenReturn(owner);
+        when(oc.lookupByKey(eq("owner"))).thenReturn(owner);
+        when(cc.lookupById(eq(owner), eq("10"))).thenReturn(content);
+
+        EnvironmentContent ec = new EnvironmentContent(mock(Environment.class), content, true);
         List<EnvironmentContent> envContents = Arrays.asList(ec);
         when(envContentCurator.lookupByContent(owner, content.getId())).thenReturn(envContents);
 
-        cr.remove("10");
+        ocr.remove("owner", "10");
 
         verify(cc, atLeastOnce()).delete(eq(content));
         verify(envContentCurator, atLeastOnce()).delete(eq(ec));
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test(expected = NotFoundException.class)
     public void deleteContentNull() {
+        Owner owner = mock(Owner.class);
         Content content = mock(Content.class);
+
         when(content.getId()).thenReturn("10");
-        when(cc.find(eq("10"))).thenReturn(null);
-        cr.remove("10");
+        when(oc.lookupByKey(eq("owner"))).thenReturn(owner);
+        when(cc.lookupById(eq(owner), eq("10"))).thenReturn(null);
+
+        ocr.remove("owner", "10");
         verify(cc, never()).delete(eq(content));
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test
     public void testUpdateContent() {
+        final String ownerId = "owner";
         final String productId = "productId";
         final String contentId = "10";
 
@@ -154,27 +177,39 @@ public class ContentResourceTest {
 
         when(product.getId()).thenReturn(productId);
         when(product.getOwner()).thenReturn(owner);
-
         when(content.getId()).thenReturn(contentId);
+        when(content.getOwner()).thenReturn(owner);
 
-        when(cc.find(any(String.class))).thenReturn(content);
-        when(cc.createOrUpdate(any(Content.class))).thenReturn(content);
+        when(oc.lookupByKey(eq(ownerId))).thenReturn(owner);
+        when(cc.lookupById(eq(owner), eq(contentId))).thenReturn(content);
+        when(cc.createOrUpdate(eq(content))).thenReturn(content);
         when(productCurator.getProductsWithContent(eq(owner), eq(Arrays.asList(contentId))))
             .thenReturn(Arrays.asList(product));
 
-        cr.updateContent(contentId, content);
+        ocr.updateContent(ownerId, contentId, content);
 
-        verify(cc).find(eq(contentId));
+        verify(cc).lookupById(eq(owner), eq(contentId));
         verify(cc).createOrUpdate(eq(content));
-        verify(productCurator).getProductsWithContent(owner, Arrays.asList(contentId));
+        verify(productCurator).getProductsWithContent(eq(owner), eq(Arrays.asList(contentId)));
         verify(poolManager).regenerateCertificatesOf(eq(owner), eq(productId), eq(true));
     }
 
-    @Test(expected = UnsupportedOperationException.class)
-    public void testUpdateContentThrowsExceptionWhenContentDoesNotExist() {
+    @Test(expected = NotFoundException.class)
+    public void testUpdateContentThrowsExceptionWhenOwnerDoesNotExist() {
         Content content = mock(Content.class);
         when(cc.find(any(String.class))).thenReturn(null);
 
-        cr.updateContent("someId", content);
+        ocr.updateContent("owner", "someId", content);
+    }
+
+    @Test(expected = NotFoundException.class)
+    public void testUpdateContentThrowsExceptionWhenContentDoesNotExist() {
+        Owner owner = mock(Owner.class);
+        Content content = mock(Content.class);
+
+        when(oc.lookupByKey(eq("owner"))).thenReturn(owner);
+        when(cc.lookupById(eq(owner), any(String.class))).thenReturn(null);
+
+        ocr.updateContent("owner", "someId", content);
     }
 }
