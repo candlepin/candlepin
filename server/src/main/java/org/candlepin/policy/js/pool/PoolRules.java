@@ -110,7 +110,7 @@ public class PoolRules {
 
         if (!hasMasterPool(existingPools)) {
             Pool newPool = new Pool(sub.getOwner(), sub.getProduct(),
-                    sub.getProvidedProducts(), quantity,
+                    new HashSet<Product>(sub.getProvidedProducts()), quantity,
                     sub.getStartDate(), sub.getEndDate(), sub.getContractNumber(),
                     sub.getAccountNumber(), sub.getOrderNumber()
             );
