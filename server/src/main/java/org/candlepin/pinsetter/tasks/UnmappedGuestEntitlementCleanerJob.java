@@ -14,22 +14,16 @@
  */
 package org.candlepin.pinsetter.tasks;
 
-import org.candlepin.controller.PoolManager;
-import org.candlepin.model.Entitlement;
-import org.candlepin.model.EntitlementCurator;
+import org.candlepin.controller.Entitler;
 
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Date;
-import java.util.List;
-
 import javax.inject.Inject;
 
 /**
- *
  * UnmappedGuestEntitlementCleanerJob removes 24 hour unmapped guest entitlements
  * after the entitlement has expired.  Entitlements normally last until a pool expires.
  */
@@ -39,30 +33,17 @@ public class UnmappedGuestEntitlementCleanerJob extends KingpinJob {
 
     private static final Logger log = LoggerFactory.getLogger(UnmappedGuestEntitlementCleanerJob.class);
 
-    private EntitlementCurator entitlementCurator;
-    private PoolManager poolManager;
+    private Entitler entitler;
 
     @Inject
-    public UnmappedGuestEntitlementCleanerJob(EntitlementCurator entitlementCurator, PoolManager manager) {
-        this.entitlementCurator = entitlementCurator;
-        this.poolManager = manager;
+    public UnmappedGuestEntitlementCleanerJob(Entitler entitler) {
+        this.entitler = entitler;
     }
 
     @Override
     public void toExecute(JobExecutionContext context)
         throws JobExecutionException {
-        Date now = new Date();
-
-        List<Entitlement> unmappedGuestEntitlements =
-            entitlementCurator.findByPoolAttribute("unmapped_guests_only", "true");
-
-        int total = 0;
-        for (Entitlement e : unmappedGuestEntitlements) {
-            if (isLapsed(e, now)) {
-                poolManager.revokeEntitlement(e);
-                total++;
-            }
-        }
+        int total = entitler.revokeUnmappedGuestEntitlements();
 
         if (total > 0) {
             log.info("Reaped {} unmapped guest entitlements due to expiration.", total);
@@ -70,11 +51,5 @@ public class UnmappedGuestEntitlementCleanerJob extends KingpinJob {
         else {
             log.debug("No unmapped guest entitlements need reaping.");
         }
-    }
-
-    protected boolean isLapsed(Entitlement e, Date now) {
-        Date consumerCreation = e.getConsumer().getCreated();
-        Date lapseDate = new Date(consumerCreation.getTime() + 24L * 60L * 60L * 1000L);
-        return lapseDate.before(now);
     }
 }

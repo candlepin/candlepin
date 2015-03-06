@@ -22,6 +22,7 @@ import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Entitlement;
+import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
@@ -53,11 +54,13 @@ public class Entitler {
     private EventSink sink;
     private ConsumerCurator consumerCurator;
     private EntitlementRulesTranslator messageTranslator;
+    private EntitlementCurator entitlementCurator;
 
     @Inject
     public Entitler(PoolManager pm, ConsumerCurator cc, I18n i18n,
         EventFactory evtFactory, EventSink sink,
-        EntitlementRulesTranslator messageTranslator) {
+        EntitlementRulesTranslator messageTranslator,
+        EntitlementCurator entitlementCurator) {
 
         this.poolManager = pm;
         this.i18n = i18n;
@@ -65,6 +68,7 @@ public class Entitler {
         this.sink = sink;
         this.consumerCurator = cc;
         this.messageTranslator = messageTranslator;
+        this.entitlementCurator = entitlementCurator;
     }
 
     public List<Entitlement> bindByPool(String poolId, String consumeruuid,
@@ -155,6 +159,9 @@ public class Entitler {
         // If the consumer is a guest, and has a host, try to heal the host first
         if (consumer.hasFact("virt.uuid")) {
             String guestUuid = consumer.getFact("virt.uuid");
+            // Remove any expired unmapped guest entitlements
+            revokeUnmappedGuestEntitlements(consumer);
+
             Consumer host = consumerCurator.getHost(guestUuid, consumer.getOwner());
             if (host != null && (force || host.isAutoheal())) {
                 log.info("Attempting to heal host machine with UUID " +
@@ -171,6 +178,7 @@ public class Entitler {
                     log.debug("Healing failed for host UUID " + host.getUuid() +
                         " with message: " + e.getMessage());
                 }
+
                 /* Consumer is stale at this point.  Note that we use find() instead of
                  * findByUuid() or getConsumer() since the latter two methods are secured
                  * to a specific host principal and bindByProducts can get called when
@@ -228,6 +236,40 @@ public class Entitler {
             }
         }
         return result;
+    }
+
+    public int revokeUnmappedGuestEntitlements(Consumer consumer) {
+        int total = 0;
+
+        List<Entitlement> unmappedGuestEntitlements;
+
+        if (consumer == null) {
+            unmappedGuestEntitlements = entitlementCurator.findByPoolAttribute(
+                "unmapped_guests_only", "true");
+        }
+        else {
+            unmappedGuestEntitlements = entitlementCurator.findByPoolAttribute(
+                consumer, "unmapped_guests_only", "true");
+        }
+
+        Date now = new Date();
+        for (Entitlement e : unmappedGuestEntitlements) {
+            if (isLapsed(e, now)) {
+                poolManager.revokeEntitlement(e);
+                total++;
+            }
+        }
+        return total;
+    }
+
+    protected boolean isLapsed(Entitlement e, Date now) {
+        Date consumerCreation = e.getConsumer().getCreated();
+        Date lapseDate = new Date(consumerCreation.getTime() + 24L * 60L * 60L * 1000L);
+        return lapseDate.before(now);
+    }
+
+    public int revokeUnmappedGuestEntitlements() {
+        return revokeUnmappedGuestEntitlements(null);
     }
 
     public void sendEvents(List<Entitlement> entitlements) {
