@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.pinsetter.tasks;
+package org.candlepin.controller;
 
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
@@ -23,17 +23,20 @@ import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.ForbiddenException;
-import org.candlepin.controller.Entitler;
-import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Entitlement;
+import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
+import org.candlepin.model.PoolAttribute;
+import org.candlepin.model.Product;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.entitlement.EntitlementRulesTranslator;
 import org.candlepin.resource.dto.AutobindData;
+import org.candlepin.test.TestUtil;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -41,8 +44,12 @@ import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 /**
  * EntitlerTest
  */
@@ -55,6 +62,7 @@ public class EntitlerTest {
     private Consumer consumer;
     private ConsumerCurator cc;
     private EntitlementRulesTranslator translator;
+    private EntitlementCurator entitlementCurator;
 
     private ValidationResult fakeOutResult(String msg) {
         ValidationResult result = new ValidationResult();
@@ -70,13 +78,14 @@ public class EntitlerTest {
         sink = mock(EventSink.class);
         cc = mock(ConsumerCurator.class);
         consumer = mock(Consumer.class);
+        entitlementCurator = mock(EntitlementCurator.class);
         i18n = I18nFactory.getI18n(
             getClass(),
             Locale.US,
             I18nFactory.READ_PROPERTIES | I18nFactory.FALLBACK
         );
         translator = new EntitlementRulesTranslator(i18n);
-        entitler = new Entitler(pm, cc, i18n, ef, sink, translator);
+        entitler = new Entitler(pm, cc, i18n, ef, sink, translator, entitlementCurator);
     }
 
     @Test
@@ -308,5 +317,85 @@ public class EntitlerTest {
         List<Entitlement> ents = new ArrayList<Entitlement>();
         entitler.sendEvents(ents);
         verify(sink, never()).queueEvent(any(Event.class));
+    }
+
+    @Test
+    public void testRevokesLapsedUnmappedGuestEntitlementsOnAutoHeal() throws Exception {
+        Product product = TestUtil.createProduct();
+
+        Owner owner1 = new Owner("o1");
+
+        Pool p1 = TestUtil.createPool(owner1, product);
+
+        p1.addAttribute(new PoolAttribute("unmapped_guests_only", "true"));
+
+        Date thirtySixHoursAgo = new Date(new Date().getTime() - 36L * 60L * 60L * 1000L);
+
+        Consumer c;
+
+        c = TestUtil.createConsumer(owner1);
+        c.setCreated(thirtySixHoursAgo);
+        c.setFact("virt.uuid", "1");
+
+        Entitlement e1 = TestUtil.createEntitlement(owner1, c, p1, null);
+        Set<Entitlement> entitlementSet1 = new HashSet<Entitlement>();
+        entitlementSet1.add(e1);
+
+        p1.setEntitlements(entitlementSet1);
+
+        when(entitlementCurator.findByPoolAttribute(eq(c), eq("unmapped_guests_only"), eq("true")))
+            .thenReturn(Arrays.asList(new Entitlement[] {e1}));
+
+        String[] pids = {product.getId(), "prod2"};
+        when(cc.findByUuid(eq("abcd1234"))).thenReturn(c);
+        entitler.bindByProducts(pids, "abcd1234", null, null);
+        AutobindData data = AutobindData.create(c).forProducts(pids);
+        verify(pm).entitleByProducts(eq(data));
+        verify(pm).revokeEntitlement(e1);
+    }
+
+    @Test
+    public void testUnmappedGuestRevocation() throws Exception {
+        Product product = TestUtil.createProduct();
+
+        Owner owner1 = new Owner("o1");
+        Owner owner2 = new Owner("o2");
+
+        Pool p1 = TestUtil.createPool(owner1, product);
+        Pool p2 = TestUtil.createPool(owner2, product);
+
+        p1.addAttribute(new PoolAttribute("unmapped_guests_only", "true"));
+        p2.addAttribute(new PoolAttribute("unmapped_guests_only", "true"));
+
+        Date thirtySixHoursAgo = new Date(new Date().getTime() - 36L * 60L * 60L * 1000L);
+        Date twelveHoursAgo =  new Date(new Date().getTime() - 12L * 60L * 60L * 1000L);
+
+        Consumer c;
+
+        c = TestUtil.createConsumer(owner1);
+        c.setCreated(thirtySixHoursAgo);
+
+        Entitlement e1 = TestUtil.createEntitlement(owner1, c, p1, null);
+        Set<Entitlement> entitlementSet1 = new HashSet<Entitlement>();
+        entitlementSet1.add(e1);
+
+        p1.setEntitlements(entitlementSet1);
+
+        c = TestUtil.createConsumer(owner2);
+        c.setCreated(twelveHoursAgo);
+
+        Entitlement e2 = TestUtil.createEntitlement(owner2, c, p2, null);
+        Set<Entitlement> entitlementSet2 = new HashSet<Entitlement>();
+        entitlementSet2.add(e2);
+
+        p2.setEntitlements(entitlementSet2);
+
+        when(entitlementCurator.findByPoolAttribute(eq("unmapped_guests_only"), eq("true")))
+            .thenReturn(Arrays.asList(new Entitlement[] {e1,  e2}));
+
+        int total = entitler.revokeUnmappedGuestEntitlements();
+        assertEquals(1, total);
+
+        verify(pm).revokeEntitlement(e1);
     }
 }
