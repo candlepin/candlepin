@@ -1034,18 +1034,6 @@ public class CandlepinPoolManager implements PoolManager {
         }
     }
 
-    @Override
-    @Transactional
-    public void regenerateCertificatesOf(String productUuid, boolean lazy) {
-        Product product = this.productCurator.find(productUuid);
-
-        // TODO: Should we throw an error if the product doesn't exist?
-
-        if (product != null) {
-            this.regenerateCertificatesOf(product.getOwner(), product.getId(), lazy);
-        }
-    }
-
     /**
      * Remove the given entitlement and clean up.
      *

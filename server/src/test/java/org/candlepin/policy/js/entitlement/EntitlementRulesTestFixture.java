@@ -115,7 +115,7 @@ public class EntitlementRulesTestFixture {
         String virtLimit) {
         Product product = new Product(productId, productId, owner);
         product.setAttribute("virt_limit", virtLimit);
-        when(prodAdapter.getProductById(productId)).thenReturn(product);
+        when(prodAdapter.getProductById(owner, productId)).thenReturn(product);
         Subscription s = TestUtil.createSubscription(product);
         s.setQuantity(new Long(quantity));
         s.setId("subId");
@@ -133,7 +133,7 @@ public class EntitlementRulesTestFixture {
         Pool pool = TestUtil.createPool(owner, product);
         pool.addAttribute(new PoolAttribute("virt_limit", "10"));
         pool.setId("fakeid" + TestUtil.randomInt());
-        when(this.prodAdapter.getProductById(productId)).thenReturn(product);
+        when(this.prodAdapter.getProductById(owner, productId)).thenReturn(product);
         return pool;
     }
 }

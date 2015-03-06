@@ -31,7 +31,10 @@ import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.EnvironmentContentCurator;
-import org.candlepin.service.ProductServiceAdapter;
+import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.service.impl.DefaultUniqueIdGenerator;
 
 import org.junit.Before;
@@ -41,6 +44,7 @@ import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -56,7 +60,8 @@ public class ContentResourceTest {
     private I18n i18n;
     private EnvironmentContentCurator envContentCurator;
     private PoolManager poolManager;
-    private ProductServiceAdapter productAdapter;
+    private ProductCurator productCurator;
+    private OwnerCurator ownerCurator;
 
     @Before
     public void init() {
@@ -64,9 +69,12 @@ public class ContentResourceTest {
         cc = mock(ContentCurator.class);
         envContentCurator = mock(EnvironmentContentCurator.class);
         poolManager = mock(PoolManager.class);
-        productAdapter = mock(ProductServiceAdapter.class);
+        ownerCurator = mock(OwnerCurator.class);
+        productCurator = new ProductCurator();
+
         cr = new ContentResource(cc, i18n, new DefaultUniqueIdGenerator(),
-            envContentCurator, poolManager, productAdapter);
+            envContentCurator, poolManager, productCurator, ownerCurator);
+
     }
 
     @Test
@@ -107,13 +115,14 @@ public class ContentResourceTest {
 
     @Test
     public void deleteContent() {
+        Owner owner = mock(Owner.class);
         Content content = mock(Content.class);
         when(content.getId()).thenReturn("10");
         when(cc.find(eq("10"))).thenReturn(content);
         EnvironmentContent ec =
             new EnvironmentContent(mock(Environment.class), content, true);
-        List<EnvironmentContent> envContents = listFrom(ec);
-        when(envContentCurator.lookupByContent(content.getId())).thenReturn(envContents);
+        List<EnvironmentContent> envContents = Arrays.asList(ec);
+        when(envContentCurator.lookupByContent(owner, content.getId())).thenReturn(envContents);
 
         cr.remove("10");
 
@@ -132,21 +141,29 @@ public class ContentResourceTest {
 
     @Test
     public void testUpdateContent() {
+        final String productId = "productId";
         final String contentId = "10";
+
+        Owner owner = mock(Owner.class);
+        Product product = mock(Product.class);
         Content content = mock(Content.class);
+
+        when(product.getId()).thenReturn(productId);
+        when(product.getOwner()).thenReturn(owner);
+
         when(content.getId()).thenReturn(contentId);
 
         when(cc.find(any(String.class))).thenReturn(content);
         when(cc.createOrUpdate(any(Content.class))).thenReturn(content);
-        when(productAdapter.getProductsWithContent(
-            eq(setFrom(contentId)))).thenReturn(setFrom("productid"));
+        when(productCurator.getProductsWithContent(eq(owner), eq(Arrays.asList(contentId))))
+            .thenReturn(Arrays.asList(product));
 
         cr.updateContent(contentId, content);
 
         verify(cc).find(eq(contentId));
         verify(cc).createOrUpdate(eq(content));
-        verify(productAdapter).getProductsWithContent(setFrom(contentId));
-        verify(poolManager).regenerateCertificatesOf(eq("productid"), eq(true));
+        verify(productCurator).getProductsWithContent(owner, Arrays.asList(contentId));
+        verify(poolManager).regenerateCertificatesOf(eq(owner), eq(productId), eq(true));
     }
 
     @Test(expected = NotFoundException.class)
@@ -155,18 +172,6 @@ public class ContentResourceTest {
         when(cc.find(any(String.class))).thenReturn(null);
 
         cr.updateContent("someId", content);
-    }
-
-    private <T> List<T> listFrom(T anElement) {
-        List<T> l = new ArrayList<T>();
-        l.add(anElement);
-        return l;
-    }
-
-    private <T> Set<T> setFrom(T anElement) {
-        Set<T> l = new HashSet<T>();
-        l.add(anElement);
-        return l;
     }
 
     private class SetContaining extends ArgumentMatcher<Set<String>> {

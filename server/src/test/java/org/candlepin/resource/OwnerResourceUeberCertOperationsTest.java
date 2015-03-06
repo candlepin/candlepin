@@ -108,7 +108,7 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
     @Test
     public void testUeberProductIsCreated() throws Exception {
         or.createUeberCertificate(principal, owner.getKey());
-        assertNotNull(productCurator.lookupByName(owner.getKey() + UEBER_PRODUCT));
+        assertNotNull(productCurator.lookupByName(owner, owner.getKey() + UEBER_PRODUCT));
     }
 
     @Test
@@ -127,11 +127,11 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
     public void testUeberCertIsRegeneratedOnNextInvocation() throws Exception {
         EntitlementCertificate firstCert
             = or.createUeberCertificate(principal, owner.getKey());
-        Product firstProduct = productCurator.lookupByName(owner.getKey() + UEBER_PRODUCT);
+        Product firstProduct = productCurator.lookupByName(owner, owner.getKey() + UEBER_PRODUCT);
 
         EntitlementCertificate secondCert
             = or.createUeberCertificate(principal, owner.getKey());
-        Product secondProduct = productCurator.lookupByName(owner.getKey() + UEBER_PRODUCT);
+        Product secondProduct = productCurator.lookupByName(owner, owner.getKey() + UEBER_PRODUCT);
 
         //make sure we didn't regenerate the whole thing
         assertTrue(firstProduct.getUuid() == secondProduct.getUuid());

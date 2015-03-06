@@ -28,6 +28,7 @@ import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.SourceStack;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
 import org.candlepin.policy.js.entitlement.EntitlementRulesTranslator;
@@ -54,6 +55,7 @@ public class EntitlementResourceTest {
     private Consumer consumer;
     private Owner owner;
     @Mock private ProductServiceAdapter prodAdapter;
+    @Mock private ProductCurator prodCurator;
     @Mock private EntitlementCurator entitlementCurator;
     @Mock private ConsumerCurator consumerCurator;
     @Mock private CandlepinPoolManager poolManager;
@@ -69,7 +71,7 @@ public class EntitlementResourceTest {
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         entResource = new EntitlementResource(prodAdapter, entitlementCurator,
             consumerCurator, poolManager, i18n, entitler, subResource, entRules,
-            messageTranslator);
+            messageTranslator, prodCurator);
         owner = new Owner("admin");
         consumer = new Consumer("myconsumer", "bill", owner,
             TestUtil.createConsumerType());

@@ -27,7 +27,7 @@ import org.quartz.JobExecutionException;
 public class RegenProductEntitlementCertsJob extends KingpinJob {
 
     private PoolManager poolManager;
-    public static final String PROD_UUID = "product_uuid";
+    public static final String PROD_ID = "product_id";
     public static final String LAZY_REGEN = "lazy_regen";
 
     @Inject
@@ -37,9 +37,11 @@ public class RegenProductEntitlementCertsJob extends KingpinJob {
 
     @Override
     public void toExecute(JobExecutionContext arg0) throws JobExecutionException {
-        String productUuid = arg0.getJobDetail().getJobDataMap().getString(PROD_UUID);
+        // TODO: This needs to be revisisted! Either it needs to step through every owner, or it
+        //       needs to use the product's UUID.
+        String productId = arg0.getJobDetail().getJobDataMap().getString(PROD_ID);
         boolean lazy = arg0.getJobDetail().getJobDataMap().getBoolean(LAZY_REGEN);
 
-        this.poolManager.regenerateCertificatesOf(productUuid, lazy);
+        // this.poolManager.regenerateCertificatesOf(productId, lazy);
     }
 }

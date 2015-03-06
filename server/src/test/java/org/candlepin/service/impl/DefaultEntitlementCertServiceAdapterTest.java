@@ -295,9 +295,11 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         product.setContent(Collections.singleton(content));
 
-        when(productAdapter.getProductById(eq(product.getId()))).thenReturn(product);
-        when(productAdapter.getProductById(eq(largeContentProduct.getId())))
-            .thenReturn(largeContentProduct);
+        when(productAdapter.getProductById(eq(product.getOwner()), eq(product.getId())))
+            .thenReturn(product);
+        when(productAdapter.getProductById(
+            eq(largeContentProduct.getOwner()), eq(largeContentProduct.getId()))
+        ).thenReturn(largeContentProduct);
     }
 
     private Content createContent(String name, String id, String label,
@@ -1336,7 +1338,11 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         inheritedArchProduct.setContent(Collections.singleton(noArchContent));
         products.add(inheritedArchProduct);
-        when(productAdapter.getProductById(eq(inheritedArchProduct.getId()))).thenReturn(inheritedArchProduct);
+        when(productAdapter.getProductById(
+            eq(inheritedArchProduct.getOwner()),
+            eq(inheritedArchProduct.getId()))
+        ).thenReturn(inheritedArchProduct);
+
         setupEntitlements(ARCH_LABEL, "3.2");
 
         Set<X509ExtensionWrapper> extensions =
@@ -1700,7 +1706,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
         when(entitlement.getConsumer().getFact("system.certificate_version"))
             .thenReturn("3.2");
         when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
-        when(productAdapter.getProductById(eq(extremeProduct.getId()))).thenReturn(extremeProduct);
+        when(productAdapter.getProductById(eq(extremeProduct.getOwner()), eq(extremeProduct.getId())))
+            .thenReturn(extremeProduct);
 
         certServiceAdapter.prepareV3Extensions(entitlement, "prefix", null);
         Set<X509ByteExtensionWrapper> byteExtensions =

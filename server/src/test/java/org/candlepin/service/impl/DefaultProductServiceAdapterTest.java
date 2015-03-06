@@ -29,6 +29,7 @@ import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
+import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductCertificateCurator;
@@ -70,24 +71,26 @@ public class DefaultProductServiceAdapterTest {
         Configuration config = mock(Configuration.class);
         when(config.getBoolean(ConfigProperties.ENV_CONTENT_FILTERING)).thenReturn(false);
         extUtil = new X509ExtensionUtil(config);
-        dpsa = new DefaultProductServiceAdapter(pc, pcc, pki, extUtil, cc, idgen);
+        dpsa = new DefaultProductServiceAdapter(pc, pcc, cc, idgen);
     }
 
     @Test
     public void productById() {
         // assert that the product returned by pc is unchanged
+        Owner o = mock(Owner.class);
         Product p = mock(Product.class);
         when(p.getId()).thenReturn(someid);
-        when(pc.lookupById(eq(someid))).thenReturn(p);
-        assertEquals(p, dpsa.getProductById(someid));
+        when(pc.lookupById(eq(o), eq(someid))).thenReturn(p);
+        assertEquals(p, dpsa.getProductById(o, someid));
     }
 
     @Test
     public void productsByIds() {
+        Owner o = mock(Owner.class);
         List<String> ids = new ArrayList<String>();
         ids.add(someid);
-        dpsa.getProductsByIds(ids);
-        verify(pc).listAllByIds(eq(ids));
+        dpsa.getProductsByIds(o, ids);
+        verify(pc).listAllByIds(eq(o), eq(ids));
     }
 
     @Test
@@ -163,12 +166,13 @@ public class DefaultProductServiceAdapterTest {
 
     @Test
     public void removeContent() {
+        Owner o = mock(Owner.class);
         Product p = mock(Product.class);
         Content c = mock(Content.class);
-        when(pc.find(eq(someid))).thenReturn(p);
-        when(cc.find(eq("cid"))).thenReturn(c);
+        when(pc.lookupById(eq(o), eq(someid))).thenReturn(p);
+        when(cc.lookupById(eq(o), eq("cid"))).thenReturn(c);
 
-        dpsa.removeContent(someid, "cid");
+        dpsa.removeContent(o, someid, "cid");
 
         verify(pc, atLeastOnce()).removeProductContent(eq(p), eq(c));
     }

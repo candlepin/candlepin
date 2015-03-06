@@ -147,7 +147,7 @@ public class X509V3ExtensionUtilTest {
         pool.getBranding().add(new Branding(engProdId, "OS", brandedName));
         Consumer consumer = new Consumer();
         Entitlement e = new Entitlement(pool, consumer, 10);
-        when(psa.getProductById(eq("mkt"))).thenReturn(mktProd);
+        when(psa.getProductById(owner, eq("mkt"))).thenReturn(mktProd);
 
         List<org.candlepin.json.model.Product> certProds = util.createProducts(prods, "",
             new HashMap<String, EnvironmentContent>(),  new Consumer(), e);
@@ -176,7 +176,7 @@ public class X509V3ExtensionUtilTest {
         }
         Consumer consumer = new Consumer();
         Entitlement e = new Entitlement(pool, consumer, 10);
-        when(psa.getProductById(eq("mkt"))).thenReturn(mktProd);
+        when(psa.getProductById(owner, eq("mkt"))).thenReturn(mktProd);
 
         List<org.candlepin.json.model.Product> certProds = util.createProducts(prods, "",
             new HashMap<String, EnvironmentContent>(),  new Consumer(), e);

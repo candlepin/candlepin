@@ -349,8 +349,7 @@ public class EntitlementResource {
         prodAdapter.purgeCache(Arrays.asList(productId));
 
         JobDataMap map = new JobDataMap();
-        // TODO: This needs to change to a UUID!
-        map.put(RegenProductEntitlementCertsJob.PROD_UUID, productId);
+        map.put(RegenProductEntitlementCertsJob.PROD_ID, productId);
         map.put(RegenProductEntitlementCertsJob.LAZY_REGEN, lazyRegen);
 
         JobDetail detail = newJob(RegenProductEntitlementCertsJob.class)
