@@ -28,7 +28,6 @@ import org.candlepin.model.PoolQuantity;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.js.entitlement.EntitlementRulesTranslator;
 import org.candlepin.resource.dto.AutobindData;
-import org.candlepin.service.SubscriptionServiceAdapter;
 
 import com.google.inject.Inject;
 
@@ -54,15 +53,12 @@ public class Entitler {
     private EventSink sink;
     private ConsumerCurator consumerCurator;
     private EntitlementRulesTranslator messageTranslator;
-    private SubscriptionServiceAdapter subAdapter;
 
     @Inject
-    public Entitler(PoolManager pm, SubscriptionServiceAdapter subAdapter, ConsumerCurator cc, I18n i18n,
-        EventFactory evtFactory, EventSink sink,
-        EntitlementRulesTranslator messageTranslator) {
+    public Entitler(PoolManager pm, ConsumerCurator cc, I18n i18n, EventFactory evtFactory,
+        EventSink sink, EntitlementRulesTranslator messageTranslator) {
 
         this.poolManager = pm;
-        this.subAdapter = subAdapter;
         this.i18n = i18n;
         this.evtFactory = evtFactory;
         this.sink = sink;
@@ -101,7 +97,7 @@ public class Entitler {
         Integer quantity) {
         // Attempt to create an entitlement:
         try {
-            Entitlement e = poolManager.entitleByPool(subAdapter, consumer, pool, quantity);
+            Entitlement e = poolManager.entitleByPool(consumer, pool, quantity);
             log.debug("Created entitlement: " + e);
             return e;
         }
@@ -116,7 +112,7 @@ public class Entitler {
         Integer quantity) {
         // Attempt to adjust an entitlement:
         try {
-            poolManager.adjustEntitlementQuantity(subAdapter, consumer, ent, quantity);
+            poolManager.adjustEntitlementQuantity(consumer, ent, quantity);
         }
         catch (EntitlementRefusedException e) {
             // TODO: Could be multiple errors, but we'll just report the first one for now:
@@ -164,7 +160,7 @@ public class Entitler {
                     host.getUuid() + " for guest with UUID " + consumer.getUuid());
                 try {
                     List<Entitlement> hostEntitlements =
-                        poolManager.entitleByProductsForHost(subAdapter, consumer, host,
+                        poolManager.entitleByProductsForHost(consumer, host,
                                 data.getOnDate(), data.getPossiblePools());
                     log.debug("Granted host {} entitlements", hostEntitlements.size());
                     sendEvents(hostEntitlements);
@@ -186,7 +182,7 @@ public class Entitler {
         // Attempt to create entitlements:
         try {
             // the pools are only used to bind the guest
-            List<Entitlement> entitlements = poolManager.entitleByProducts(subAdapter, data);
+            List<Entitlement> entitlements = poolManager.entitleByProducts(data);
             log.debug("Created entitlements: " + entitlements);
             return entitlements;
         }

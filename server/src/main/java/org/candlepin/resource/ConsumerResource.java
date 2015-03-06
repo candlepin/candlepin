@@ -888,7 +888,7 @@ public class ConsumerResource {
             toUpdate.setEnvironment(e);
 
             // lazily regenerate certs, so the client can still work
-            poolManager.regenerateEntitlementCertificates(subAdapter, toUpdate, true);
+            poolManager.regenerateEntitlementCertificates(toUpdate, true);
             changesMade = true;
         }
 
@@ -1152,7 +1152,7 @@ public class ConsumerResource {
         }
         // perform the entitlement revocation
         for (Entitlement entitlement : deletableGuestEntitlements) {
-            poolManager.revokeEntitlement(subAdapter, entitlement);
+            poolManager.revokeEntitlement(entitlement);
         }
 
         // auto heal guests after revocations
@@ -1201,7 +1201,7 @@ public class ConsumerResource {
         log.debug("Deleting consumer_uuid {}", uuid);
         Consumer toDelete = consumerCurator.verifyAndLookupConsumer(uuid);
         try {
-            this.poolManager.revokeAllEntitlements(subAdapter, toDelete);
+            this.poolManager.revokeAllEntitlements(toDelete);
         }
         catch (ForbiddenException e) {
             String msg = e.message().getDisplayMessage();
@@ -1655,7 +1655,7 @@ public class ConsumerResource {
                 "Unit with ID ''{0}'' could not be found.", consumerUuid));
         }
 
-        int total = poolManager.revokeAllEntitlements(subAdapter, consumer);
+        int total = poolManager.revokeAllEntitlements(consumer);
         log.debug("Revoked {} entitlements from {}", total, consumerUuid);
         return new DeleteResult(total);
 
@@ -1687,7 +1687,7 @@ public class ConsumerResource {
 
         Entitlement toDelete = entitlementCurator.find(dbid);
         if (toDelete != null) {
-            poolManager.revokeEntitlement(subAdapter, toDelete);
+            poolManager.revokeEntitlement(toDelete);
             return;
         }
 
@@ -1715,7 +1715,7 @@ public class ConsumerResource {
             .findByCertificateSerial(serial);
 
         if (toDelete != null) {
-            poolManager.revokeEntitlement(subAdapter, toDelete);
+            poolManager.revokeEntitlement(toDelete);
             return;
         }
         throw new NotFoundException(i18n.tr(
@@ -1778,11 +1778,11 @@ public class ConsumerResource {
         @QueryParam("lazy_regen") @DefaultValue("true") Boolean lazyRegen) {
         if (entitlementId != null) {
             Entitlement e = verifyAndLookupEntitlement(entitlementId);
-            poolManager.regenerateCertificatesOf(subAdapter, e, false, lazyRegen);
+            poolManager.regenerateCertificatesOf(e, false, lazyRegen);
         }
         else {
             Consumer c = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-            poolManager.regenerateEntitlementCertificates(subAdapter, c, lazyRegen);
+            poolManager.regenerateEntitlementCertificates(c, lazyRegen);
         }
     }
 

@@ -54,7 +54,7 @@ public interface PoolManager {
      *
      * @param pool
      */
-    void deletePool(SubscriptionServiceAdapter subAdapter, Pool pool);
+    void deletePool(Pool pool);
 
     /**
      * Request an entitlement by pool..
@@ -71,10 +71,10 @@ public interface PoolManager {
      *
      * @throws EntitlementRefusedException if entitlement is refused
      */
-    Entitlement entitleByPool(SubscriptionServiceAdapter subAdapter, Consumer consumer, Pool pool, Integer quantity)
+    Entitlement entitleByPool(Consumer consumer, Pool pool, Integer quantity)
         throws EntitlementRefusedException;
 
-    Entitlement ueberCertEntitlement(SubscriptionServiceAdapter subAdapter, Consumer consumer, Pool pool,
+    Entitlement ueberCertEntitlement(Consumer consumer, Pool pool,
         Integer quantity) throws EntitlementRefusedException;
 
     /**
@@ -88,7 +88,7 @@ public interface PoolManager {
      * @return Entitlement
      * @throws EntitlementRefusedException if entitlement is refused
      */
-    List<Entitlement> entitleByProducts(SubscriptionServiceAdapter subAdapter, AutobindData data)
+    List<Entitlement> entitleByProducts(AutobindData data)
         throws EntitlementRefusedException;
 
     List<PoolQuantity> getBestPools(Consumer consumer, String[] productIds,
@@ -106,19 +106,19 @@ public interface PoolManager {
      * @param e
      * @param ueberCertificate TODO
      */
-    void regenerateCertificatesOf(SubscriptionServiceAdapter subAdapter, Entitlement e, boolean ueberCertificate, boolean lazy);
+    void regenerateCertificatesOf(Entitlement e, boolean ueberCertificate, boolean lazy);
 
-    void regenerateCertificatesOf(SubscriptionServiceAdapter subAdapter, Environment env, Set<String> contentIds, boolean lazy);
+    void regenerateCertificatesOf(Environment env, Set<String> contentIds, boolean lazy);
 
-    void regenerateCertificatesOf(SubscriptionServiceAdapter subAdapter, String productId, boolean lazy);
+    void regenerateCertificatesOf(String productId, boolean lazy);
 
-    void regenerateEntitlementCertificates(SubscriptionServiceAdapter subAdapter, Consumer consumer, boolean lazy);
+    void regenerateEntitlementCertificates(Consumer consumer, boolean lazy);
 
-    int revokeAllEntitlements(SubscriptionServiceAdapter subAdapter, Consumer consumer);
+    int revokeAllEntitlements(Consumer consumer);
 
-    int removeAllEntitlements(SubscriptionServiceAdapter subAdapter, Consumer consumer);
+    int removeAllEntitlements(Consumer consumer);
 
-    void revokeEntitlement(SubscriptionServiceAdapter subAdapter, Entitlement entitlement);
+    void revokeEntitlement(Entitlement entitlement);
 
     Pool updatePoolQuantity(Pool pool, long adjust);
 
@@ -126,14 +126,14 @@ public interface PoolManager {
 
     void regenerateDirtyEntitlements(SubscriptionServiceAdapter subAdapter, List<Entitlement> entitlements);
 
-    Entitlement adjustEntitlementQuantity(SubscriptionServiceAdapter subAdapter, Consumer consumer, Entitlement entitlement,
+    Entitlement adjustEntitlementQuantity(Consumer consumer, Entitlement entitlement,
         Integer quantity) throws EntitlementRefusedException;
 
     /**
      * Search for any expired pools on the server, cleanup their subscription,
      * entitlements, and the pool itself.
      */
-    void cleanupExpiredPools(SubscriptionServiceAdapter subAdapter);
+    void cleanupExpiredPools();
 
 
     /**
@@ -225,7 +225,7 @@ public interface PoolManager {
      * @return list of entitlements to bind
      * @throws EntitlementRefusedException if unable to bind
      */
-    List<Entitlement> entitleByProductsForHost(SubscriptionServiceAdapter subAdapter, Consumer guest, Consumer host,
+    List<Entitlement> entitleByProductsForHost(Consumer guest, Consumer host,
             Date entitleDate, Collection<String> possiblePools)
         throws EntitlementRefusedException;
 }

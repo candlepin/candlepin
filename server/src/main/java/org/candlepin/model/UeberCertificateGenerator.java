@@ -112,7 +112,7 @@ public class UeberCertificateGenerator {
 
     public EntitlementCertificate generateUeberCertificate(Consumer consumer,
         Pool ueberPool) throws EntitlementRefusedException {
-        Entitlement e = poolManager.ueberCertEntitlement(subService, consumer, ueberPool, 1);
+        Entitlement e = poolManager.ueberCertEntitlement(consumer, ueberPool, 1);
         return (EntitlementCertificate) e.getCertificates().toArray()[0];
     }
 

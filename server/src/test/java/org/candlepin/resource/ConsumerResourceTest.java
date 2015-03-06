@@ -174,7 +174,7 @@ public class ConsumerResourceTest {
         when(mockedEntitlementCurator.find(eq("9999"))).thenReturn(e);
         when(mockedSubscriptionServiceAdapter.getSubscription(eq("4444"))).thenReturn(s);
         when(mockedEntitlementCertServiceAdapter.generateEntitlementCert(
-            any(Entitlement.class), any(Subscription.class), any(Product.class)))
+            any(Entitlement.class), any(Product.class)))
             .thenThrow(new IOException());
 
         CandlepinPoolManager poolManager = new CandlepinPoolManager(null,
@@ -226,7 +226,7 @@ public class ConsumerResourceTest {
             new CandlepinCommonTestConfig(), null, null, null, consumerBindUtil);
         cr.regenerateEntitlementCertificates(consumer.getUuid(), null, true);
         Mockito.verify(mgr, Mockito.times(1))
-            .regenerateEntitlementCertificates(eq(mockedSubscriptionServiceAdapter), eq(consumer), eq(true));
+            .regenerateEntitlementCertificates(eq(consumer), eq(true));
     }
 
     @Test

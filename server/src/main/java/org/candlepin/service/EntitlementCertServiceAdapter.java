@@ -18,7 +18,6 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.Product;
-import org.candlepin.model.Subscription;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -42,7 +41,7 @@ public interface EntitlementCertServiceAdapter {
      * @throws GeneralSecurityException thrown security problem
      */
     EntitlementCertificate generateEntitlementCert(Entitlement entitlement,
-        Subscription sub, Product product)
+        Product product)
         throws GeneralSecurityException, IOException;
 
 
@@ -59,7 +58,7 @@ public interface EntitlementCertServiceAdapter {
      * @throws GeneralSecurityException thrown security problem
      */
     EntitlementCertificate generateUeberCert(Entitlement entitlement,
-        Subscription sub, Product product)
+        Product product)
         throws GeneralSecurityException, IOException;
 
     /**

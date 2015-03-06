@@ -38,6 +38,10 @@ module CandlepinMethods
   # Wrapper for the ruby API's create product. Products do not get cleaned
   # up when an owner is deleted so we will need to track them.
   def create_product(id=nil, name=nil, params={})
+
+    # TODO: we must have an owner here now, to prevent churn, if none was given,
+    # try to read @owner from the test class, which will often be populated.
+
     # For purposes of testing, you can omit id and name to create with
     # random strings.
     id ||= random_string(nil, true) #id has to be a number. OID encoding fails otherwise

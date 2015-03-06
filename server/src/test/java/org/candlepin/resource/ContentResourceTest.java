@@ -63,7 +63,7 @@ public class ContentResourceTest {
         productAdapter = mock(ProductServiceAdapter.class);
         subAdapter = mock(SubscriptionServiceAdapter.class);
         cr = new ContentResource(cc, i18n, new DefaultUniqueIdGenerator(),
-            envContentCurator, poolManager, subAdapter, productAdapter);
+            envContentCurator, poolManager, productAdapter);
     }
 
     @Test
@@ -143,7 +143,7 @@ public class ContentResourceTest {
         verify(cc).find(eq(contentId));
         verify(cc).createOrUpdate(eq(content));
         verify(productAdapter).getProductsWithContent(setFrom(contentId));
-        verify(poolManager).regenerateCertificatesOf(eq(subAdapter), eq("productid"), eq(true));
+        verify(poolManager).regenerateCertificatesOf(eq("productid"), eq(true));
     }
 
     @Test(expected = NotFoundException.class)

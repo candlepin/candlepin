@@ -1557,8 +1557,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         when(serialCurator.create(any(CertificateSerial.class))).thenReturn(serial);
 
         EntitlementCertificate cert =
-            certServiceAdapter.generateEntitlementCert(entitlement, subscription,
-                product);
+            certServiceAdapter.generateEntitlementCert(entitlement, product);
 
         assertTrue(!cert.getCert().contains("ENTITLEMENT DATA"));
     }

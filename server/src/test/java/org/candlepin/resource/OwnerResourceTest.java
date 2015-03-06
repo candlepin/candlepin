@@ -373,7 +373,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         poolCurator.create(pool);
 
         // Give those consumers entitlements:
-        poolManager.entitleByPool(subAdapter, c1, pool, 1);
+        poolManager.entitleByPool(c1, pool, 1);
 
         assertEquals(2, consumerCurator.listByOwner(owner).size());
         assertEquals(1, poolCurator.listByOwner(owner).size());

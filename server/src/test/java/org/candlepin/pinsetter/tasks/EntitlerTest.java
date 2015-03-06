@@ -79,7 +79,7 @@ public class EntitlerTest {
         );
         translator = new EntitlementRulesTranslator(i18n);
         subAdapter = mock(SubscriptionServiceAdapter.class);
-        entitler = new Entitler(pm, subAdapter, cc, i18n, ef, sink, translator);
+        entitler = new Entitler(pm, cc, i18n, ef, sink, translator);
     }
 
     @Test
@@ -90,7 +90,7 @@ public class EntitlerTest {
 
         when(cc.findByUuid(eq("abcd1234"))).thenReturn(consumer);
         when(pm.find(eq(poolid))).thenReturn(pool);
-        when(pm.entitleByPool(eq(subAdapter), eq(consumer), eq(pool), eq(1))).thenReturn(ent);
+        when(pm.entitleByPool(eq(consumer), eq(pool), eq(1))).thenReturn(ent);
 
         List<Entitlement> ents = entitler.bindByPool(poolid, "abcd1234", 1);
         assertNotNull(ents);
@@ -104,7 +104,7 @@ public class EntitlerTest {
         Entitlement ent = mock(Entitlement.class);
 
         when(pm.find(eq(poolid))).thenReturn(pool);
-        when(pm.entitleByPool(eq(subAdapter), eq(consumer), eq(pool), eq(1))).thenReturn(ent);
+        when(pm.entitleByPool(eq(consumer), eq(pool), eq(1))).thenReturn(ent);
 
         List<Entitlement> ents = entitler.bindByPool(poolid, consumer, 1);
         assertNotNull(ents);
@@ -117,7 +117,7 @@ public class EntitlerTest {
         when(cc.findByUuid(eq("abcd1234"))).thenReturn(consumer);
         entitler.bindByProducts(pids, "abcd1234", null, null);
         AutobindData data = AutobindData.create(consumer).forProducts(pids);
-        verify(pm).entitleByProducts(eq(subAdapter), eq(data));
+        verify(pm).entitleByProducts(eq(data));
     }
 
     @Test
@@ -125,7 +125,7 @@ public class EntitlerTest {
         String[] pids = {"prod1", "prod2", "prod3"};
         AutobindData data = AutobindData.create(consumer).forProducts(pids);
         entitler.bindByProducts(data);
-        verify(pm).entitleByProducts(subAdapter, data);
+        verify(pm).entitleByProducts(data);
     }
 
     @Test(expected = BadRequestException.class)
@@ -217,7 +217,7 @@ public class EntitlerTest {
 
             when(pool.getId()).thenReturn(poolid);
             when(pm.find(eq(poolid))).thenReturn(pool);
-            when(pm.entitleByPool(eq(subAdapter), eq(consumer), eq(pool), eq(1))).thenThrow(ere);
+            when(pm.entitleByPool(eq(consumer), eq(pool), eq(1))).thenThrow(ere);
             entitler.bindByPool(poolid, consumer, 1);
         }
         catch (EntitlementRefusedException e) {
@@ -275,7 +275,7 @@ public class EntitlerTest {
             EntitlementRefusedException ere = new EntitlementRefusedException(
                 fakeOutResult(msg));
             AutobindData data = AutobindData.create(consumer).forProducts(pids);
-            when(pm.entitleByProducts(subAdapter, data)).thenThrow(ere);
+            when(pm.entitleByProducts(data)).thenThrow(ere);
             entitler.bindByProducts(data);
         }
         catch (EntitlementRefusedException e) {

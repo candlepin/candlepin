@@ -15,7 +15,6 @@
 package org.candlepin.pinsetter.tasks;
 
 import org.candlepin.controller.PoolManager;
-import org.candlepin.service.SubscriptionServiceAdapter;
 
 import com.google.inject.Inject;
 
@@ -31,12 +30,10 @@ public class RegenProductEntitlementCertsJob extends KingpinJob {
     public static final String LAZY_REGEN = "lazy_regen";
 
     private PoolManager poolManager;
-    private SubscriptionServiceAdapter subAdapter;
 
     @Inject
-    public RegenProductEntitlementCertsJob(PoolManager poolManager, SubscriptionServiceAdapter subAdapter) {
+    public RegenProductEntitlementCertsJob(PoolManager poolManager) {
         this.poolManager = poolManager;
-        this.subAdapter = subAdapter;
     }
 
     @Override
@@ -44,6 +41,6 @@ public class RegenProductEntitlementCertsJob extends KingpinJob {
         String prodId = arg0.getJobDetail().getJobDataMap().getString(
             PROD_ID);
         boolean lazy = arg0.getJobDetail().getJobDataMap().getBoolean(LAZY_REGEN);
-        this.poolManager.regenerateCertificatesOf(subAdapter, prodId, lazy);
+        this.poolManager.regenerateCertificatesOf(prodId, lazy);
     }
 }

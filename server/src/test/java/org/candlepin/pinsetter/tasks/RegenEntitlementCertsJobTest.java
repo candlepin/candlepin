@@ -14,11 +14,10 @@
  */
 package org.candlepin.pinsetter.tasks;
 
-import static org.mockito.Matchers.*;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.controller.CandlepinPoolManager;
-import org.candlepin.service.SubscriptionServiceAdapter;
 
 import org.junit.Test;
 import org.quartz.JobDataMap;
@@ -38,7 +37,6 @@ public class RegenEntitlementCertsJobTest {
         JobExecutionContext jec = mock(JobExecutionContext.class);
         JobDetail detail = mock(JobDetail.class);
         JobDataMap jdm = mock(JobDataMap.class);
-        SubscriptionServiceAdapter subService = mock(SubscriptionServiceAdapter.class);
 
         when(jdm.getString(eq("product_id"))).thenReturn("foobarbaz");
         when(jdm.getBoolean(eq("lazy_regen"))).thenReturn(true);
@@ -47,10 +45,10 @@ public class RegenEntitlementCertsJobTest {
 
         // test
         RegenProductEntitlementCertsJob recj =
-            new RegenProductEntitlementCertsJob(pm, subService);
+            new RegenProductEntitlementCertsJob(pm);
         recj.execute(jec);
 
         // verification
-        verify(pm).regenerateCertificatesOf(eq(subService), eq("foobarbaz"), eq(true));
+        verify(pm).regenerateCertificatesOf(eq("foobarbaz"), eq(true));
     }
 }
