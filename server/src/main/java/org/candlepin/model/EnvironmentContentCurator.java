@@ -32,6 +32,7 @@ public class EnvironmentContentCurator extends
         Environment e, String contentId) {
 
         return (EnvironmentContent) this.currentSession().createCriteria(EnvironmentContent.class)
+            .createAlias("content", "content")
             .add(Restrictions.eq("environment", e))
             .add(Restrictions.eq("content.id", contentId))
             .uniqueResult();
@@ -39,6 +40,8 @@ public class EnvironmentContentCurator extends
 
     public List<EnvironmentContent> lookupByContent(Owner owner, String contentId) {
         return this.currentSession().createCriteria(EnvironmentContent.class)
+            .createAlias("environment", "environment")
+            .createAlias("content", "content")
             .add(Restrictions.eq("environment.owner", owner))
             .add(Restrictions.eq("content.id", contentId))
             .list();
