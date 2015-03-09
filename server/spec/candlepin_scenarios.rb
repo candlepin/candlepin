@@ -39,9 +39,6 @@ module CandlepinMethods
   # up when an owner is deleted so we will need to track them.
   def create_product(id=nil, name=nil, params={})
 
-    # TODO: we must have an owner here now, to prevent churn, if none was given,
-    # try to read @owner from the test class, which will often be populated.
-
     # If owner given in params, use it, if not, try to find @owner, if neither
     # is set error out.
     # NOTE: this is the owner key being passed in as a string
@@ -69,11 +66,23 @@ module CandlepinMethods
   end
 
   def create_content(params={})
+    # If owner given in params, use it, if not, try to find @owner, if neither
+    # is set error out.
+    # NOTE: this is the owner key being passed in as a string
+    if params[:owner]
+      owner = params[:owner]
+    elsif @owner
+      owner = @owner['key']
+    end
+    if ! owner
+      raise "Must call create_product with owner param or set @owner in spec suite."
+    end
+
     random_str = random_string(nil, true).to_i
     label = random_string("label")
     # Apologies, passing optional params straight through to prevent just pulling
     # each one out and putting it into a new hash.
-    @cp.create_content(random_str, random_str, label, "yum",
+    @cp.create_content(owner, random_str, random_str, label, "yum",
       random_str, params)
   end
 

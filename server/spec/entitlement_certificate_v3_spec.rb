@@ -61,8 +61,8 @@ describe 'Entitlement Certificate V3' do
                                     :required_tags => 'TAG1,TAG2',})
 
 
-    @cp.add_content_to_product(@product.id, @content.id, false)
-    @cp.add_content_to_product(@product.id, @arch_content.id, false)
+    @cp.add_content_to_product(@owner['key'], @product.id, @content.id, false)
+    @cp.add_content_to_product(@owner['key'], @product.id, @arch_content.id, false)
 
 
     @subscription = @cp.create_subscription(@owner['key'], @product.id, 10, [], '12345', '6789', 'order1')
