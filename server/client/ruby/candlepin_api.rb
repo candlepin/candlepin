@@ -433,6 +433,13 @@ class Candlepin
 
   def async_call(immediate, *args, &blk)
     status = blk.call(args)
+
+    # Hack to limit test churn due to switchover to refresh pools being hosted only:
+    # TODO: can be removed if we remove all refresh_pools calls in spec tests.
+    if status.nil?
+      return status
+    end
+
     return status if immediate
     # otherwise poll the server to make this call synchronous
     while status['state'].downcase != 'finished'

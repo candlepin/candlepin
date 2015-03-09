@@ -25,6 +25,7 @@ import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SubResource;
 import org.candlepin.auth.interceptor.Verify;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.CandlepinException;
 import org.candlepin.common.exceptions.ForbiddenException;
@@ -33,6 +34,7 @@ import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.common.paging.Paginate;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.guice.NonTransactional;
 import org.candlepin.model.Consumer;
@@ -162,6 +164,7 @@ public class OwnerResource {
     private ContentOverrideValidator contentOverrideValidator;
     private ServiceLevelValidator serviceLevelValidator;
     private ProductCurator prodCurator;
+    private Configuration config;
 
     private static final int FEED_LIMIT = 1000;
 
@@ -186,7 +189,8 @@ public class OwnerResource {
         EnvironmentCurator envCurator, CalculatedAttributesUtil calculatedAttributesUtil,
         ContentOverrideValidator contentOverrideValidator,
         ServiceLevelValidator serviceLevelValidator,
-        OwnerServiceAdapter ownerService, ProductCurator productCurator) {
+        OwnerServiceAdapter ownerService, ProductCurator productCurator,
+        Configuration config) {
 
         this.ownerCurator = ownerCurator;
         this.ownerInfoCurator = ownerInfoCurator;
@@ -215,6 +219,7 @@ public class OwnerResource {
         this.serviceLevelValidator = serviceLevelValidator;
         this.ownerService = ownerService;
         this.prodCurator = productCurator;
+        this.config = config;
     }
 
     /**
@@ -968,6 +973,11 @@ public class OwnerResource {
                 throw new NotFoundException(i18n.tr(
                     "owner with key: {0} was not found.", ownerKey));
             }
+        }
+
+        if (config.getBoolean(ConfigProperties.STANDALONE)) {
+            log.warn("Ignoring refresh pools request due to standalone config.");
+            return null;
         }
 
         return RefreshPoolsJob.forOwner(owner, lazyRegen);
