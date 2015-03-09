@@ -23,6 +23,7 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCapability;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Entitlement;
+import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolAttribute;
 import org.candlepin.model.Product;
@@ -52,13 +53,14 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
         ConsumerType type = mock(ConsumerType.class);
         Pool pool = mock(Pool.class);
         Product product = mock(Product.class);
+        Owner owner = mock(Owner.class);
 
         when(e.getPool()).thenReturn(pool);
         when(e.getConsumer()).thenReturn(c);
         when(c.getType()).thenReturn(type);
         when(type.isManifest()).thenReturn(true);
         when(pool.getProductId()).thenReturn("testProd");
-        when(prodAdapter.getProductById(eq("testProd"))).thenReturn(product);
+        when(prodAdapter.getProductById(eq(owner), eq("testProd"))).thenReturn(product);
         when(product.getAttributes()).thenReturn(new HashSet<ProductAttribute>());
         when(pool.getAttributes()).thenReturn(new HashSet<PoolAttribute>());
 

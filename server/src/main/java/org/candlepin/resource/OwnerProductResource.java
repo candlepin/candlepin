@@ -40,6 +40,7 @@ import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -61,10 +62,10 @@ import javax.ws.rs.core.MediaType;
  *
  * @version $Rev$
  */
-@Path("/products")
-public class ProductResource {
+@Path("/owners/{owner_key}/products")
+public class OwnerProductResource {
+    private static Logger log = LoggerFactory.getLogger(OwnerProductResource.class);
 
-    private static Logger log = LoggerFactory.getLogger(ProductResource.class);
     private ProductCurator productCurator;
     private ContentCurator contentCurator;
     private OwnerCurator ownerCurator;
@@ -72,8 +73,9 @@ public class ProductResource {
     private StatisticCurator statisticCurator;
     private I18n i18n;
 
+
     @Inject
-    public ProductResource(ProductCurator productCurator, ContentCurator contentCurator,
+    public OwnerProductResource(ProductCurator productCurator, ContentCurator contentCurator,
         OwnerCurator ownerCurator, ProductCertificateCurator productCertCurator,
         StatisticCurator statisticCurator, I18n i18n) {
 
@@ -86,6 +88,29 @@ public class ProductResource {
     }
 
     /**
+     * Retrieves an Owner instance for the owner with the specified key/account. If a matching owner
+     * could not be found, this method throws an exception.
+     *
+     * @param key
+     *  The key for the owner to retrieve
+     *
+     * @throws NotFoundException
+     *  if an owner could not be found for the specified key.
+     *
+     * @return
+     *  the Owner instance for the owner with the specified key.
+     */
+    protected Owner getOwnerByKey(String key) {
+        Owner owner = this.ownerCurator.lookupByKey(key);
+
+        if (owner == null) {
+            throw new NotFoundException(i18n.tr("Owner with key \"{0}\" was not found.", key));
+        }
+
+        return owner;
+    }
+
+    /**
      * Retrieves a list of Products
      *
      * @param productIds if specified, the list of product IDs to return product info for
@@ -94,10 +119,14 @@ public class ProductResource {
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Product> list(@QueryParam("product") List<String> productIds) {
+    public List<Product> list(@PathParam("owner_key") String ownerKey,
+                              @QueryParam("product") List<String> productIds) {
+
+        Owner owner = this.getOwnerByKey(ownerKey);
+
         return productIds.isEmpty() ?
-            productCurator.listAll() :
-            productCurator.listAllByUuids(productIds);
+            productCurator.listByOwner(owner) :
+            productCurator.listAllByIds(owner, productIds);
     }
 
     /**
@@ -122,7 +151,7 @@ public class ProductResource {
      * }
      * </pre>
      *
-     * @param productId uuid of the product sought.
+     * @param productId id of the product sought.
      * @return a Product object
      * @httpcode 404
      * @httpcode 200
@@ -131,16 +160,11 @@ public class ProductResource {
     @Path("/{product_id}")
     @Produces(MediaType.APPLICATION_JSON)
     @SecurityHole
-    public Product getProduct(@PathParam("product_id") String productId) {
-        Product product = null;
+    public Product getProduct(@PathParam("owner_key") String ownerKey,
+                              @PathParam("product_id") String productId) {
 
-        for (Owner owner : this.ownerCurator.listAll()) {
-            product = this.productCurator.lookupById(owner, productId);
-
-            if (product != null) {
-                break;
-            }
-        }
+        Owner owner = this.getOwnerByKey(ownerKey);
+        Product product = productCurator.lookupById(owner, productId);
 
         if (product == null) {
             throw new NotFoundException(
@@ -162,8 +186,9 @@ public class ProductResource {
     @Path("/{product_id}/certificate")
     @Produces(MediaType.APPLICATION_JSON)
     @SecurityHole
-    public ProductCertificate getProductCertificate(@PathParam("product_id") String productId) {
-        Product product = this.getProduct(productId);
+    public ProductCertificate getProductCertificate(@PathParam("owner_key") String ownerKey,
+                                                    @PathParam("product_id") String productId) {
+        Product product = this.getProduct(ownerKey, productId);
         return this.productCertCurator.getCertForProduct(product);
     }
 
@@ -178,12 +203,12 @@ public class ProductResource {
      */
     @POST
     @Produces(MediaType.APPLICATION_JSON)
-    public Product createProduct(Product product) {
-        // TODO: Should this be allowed if the product describes a valid owner?
+    public Product createProduct(@PathParam("owner_key") String ownerKey, Product product) {
+        Owner owner = this.getOwnerByKey(ownerKey);
 
-        throw new UnsupportedOperationException(this.i18n.tr(
-            "Organization-agnostic product write operations are not supported."
-        ));
+        product.setOwner(owner);
+
+        return productCurator.create(product);
     }
 
     /**
@@ -197,11 +222,17 @@ public class ProductResource {
     @Path("/{product_id}")
     @Produces(MediaType.APPLICATION_JSON)
     public Product updateProduct(
+        @PathParam("owner_key") String ownerKey,
         @PathParam("product_id") @Verify(Product.class) String productId,
         Product product) {
-        throw new UnsupportedOperationException(this.i18n.tr(
-            "Organization-agnostic product write operations are not supported."
-        ));
+
+        Product toUpdate = this.getProduct(ownerKey, productId);
+
+        if (performProductUpdates(toUpdate, product)) {
+            this.productCurator.merge(toUpdate);
+        }
+
+        return toUpdate;
     }
 
     protected boolean performProductUpdates(Product existing, Product incoming) {
@@ -253,6 +284,34 @@ public class ProductResource {
     }
 
     /**
+     * Retrieves a Content instance for the content with the specified id. If no matching content
+     * could be found, this method throws an exception.
+     *
+     * @param owner
+     *  The organization
+     *
+     * @param contentId
+     *  The ID of the content to retrieve
+     *
+     * @throws NotFoundException
+     *  if no matching content could be found with the specified id.
+     *
+     * @return
+     *  the Owner instance for the owner with the specified key.
+     */
+    protected Content getContent(Owner owner, String contentId) {
+        Content content = this.contentCurator.lookupById(owner, contentId);
+
+        if (content == null) {
+            throw new NotFoundException(
+                i18n.tr("Content with ID \"{0}\" could not be found.", contentId)
+            );
+        }
+
+        return content;
+    }
+
+    /**
      * Adds Content to a Product
      * <p>
      * Batch mode
@@ -264,11 +323,22 @@ public class ProductResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product_id}/batch_content")
-    public Product addBatchContent(@PathParam("product_id") String productId,
+    public Product addBatchContent(@PathParam("owner_key") String ownerKey,
+                                   @PathParam("product_id") String productId,
                                    Map<String, Boolean> contentMap) {
-        throw new UnsupportedOperationException(this.i18n.tr(
-            "Organization-agnostic product write operations are not supported."
-        ));
+
+        Product product = this.getProduct(ownerKey, productId);
+        List<ProductContent> productContent = new LinkedList<ProductContent>();
+
+        for (Entry<String, Boolean> entry : contentMap.entrySet()) {
+            Content content = this.getContent(product.getOwner(), entry.getKey());
+            productContent.add(new ProductContent(product, content, entry.getValue()));
+        }
+
+        product.getProductContent().addAll(productContent);
+
+        // TODO: Why are we doing this instead of just returning the product we already have?
+        return productCurator.find((product.getUuid()));
     }
 
     /**
@@ -282,12 +352,18 @@ public class ProductResource {
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product_id}/content/{content_id}")
-    public Product addContent(@PathParam("product_id") String productId,
+    public Product addContent(@PathParam("owner_key") String ownerKey,
+                              @PathParam("product_id") String productId,
                               @PathParam("content_id") String contentId,
                               @QueryParam("enabled") Boolean enabled) {
-        throw new UnsupportedOperationException(this.i18n.tr(
-            "Organization-agnostic product write operations are not supported."
-        ));
+
+        Product product = this.getProduct(ownerKey, productId);
+        Content content = this.getContent(product.getOwner(), contentId);
+
+        ProductContent productContent = new ProductContent(product, content, enabled);
+        product.addProductContent(productContent);
+
+        return productCurator.find((product.getUuid()));
     }
 
     /**
@@ -298,11 +374,14 @@ public class ProductResource {
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product_id}/content/{content_id}")
-    public void removeContent(@PathParam("product_id") String productId,
+    public void removeContent(@PathParam("owner_key") String ownerKey,
+                              @PathParam("product_id") String productId,
                               @PathParam("content_id") String contentId) {
-        throw new UnsupportedOperationException(this.i18n.tr(
-            "Organization-agnostic product write operations are not supported."
-        ));
+
+        Product product = this.getProduct(ownerKey, productId);
+        Content content = this.getContent(product.getOwner(), contentId);
+
+        productCurator.removeProductContent(product, content);
     }
 
     /**
@@ -315,10 +394,18 @@ public class ProductResource {
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product_id}")
-    public void deleteProduct(@PathParam("product_id") String productId) {
-        throw new UnsupportedOperationException(this.i18n.tr(
-            "Organization-agnostic product write operations are not supported."
-        ));
+    public void deleteProduct(@PathParam("owner_key") String ownerKey,
+                              @PathParam("product_id") String productId) {
+
+        Product product = this.getProduct(ownerKey, productId);
+
+        if (productCurator.productHasSubscriptions(product)) {
+            throw new BadRequestException(
+                i18n.tr("Product with ID ''{0}'' cannot be deleted " +
+                    "while subscriptions exist.", productId));
+        }
+
+        productCurator.delete(product);
     }
 
     /**
@@ -331,12 +418,12 @@ public class ProductResource {
     @GET
     @Path("/{product_id}/statistics")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Statistic> getProductStats(@PathParam("product_id") String productId,
-                            @QueryParam("from") String from,
-                            @QueryParam("to") String to,
-                            @QueryParam("days") String days) {
-
-        return this.getProductStats(productId, from, to, days);
+    public List<Statistic> getProductStats(@PathParam("owner_key") String ownerKey,
+                                           @PathParam("product_id") String productId,
+                                           @QueryParam("from") String from,
+                                           @QueryParam("to") String to,
+                                           @QueryParam("days") String days) {
+        return this.getProductStats(ownerKey, productId, null, from, to, days);
     }
 
     /**
@@ -351,37 +438,39 @@ public class ProductResource {
     @GET
     @Path("/{product_id}/statistics/{vtype}")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Statistic> getProductStats(@PathParam("product_id") String productId,
-                            @PathParam("vtype") String valueType,
-                            @QueryParam("from") String from,
-                            @QueryParam("to") String to,
-                            @QueryParam("days") String days) {
+    public List<Statistic> getProductStats(@PathParam("owner_key") String ownerKey,
+                                           @PathParam("product_id") String productId,
+                                           @PathParam("vtype") String valueType,
+                                           @QueryParam("from") String from,
+                                           @QueryParam("to") String to,
+                                           @QueryParam("days") String days) {
 
-        Product product = this.getProduct(productId);
+        Owner owner = this.getOwnerByKey(ownerKey);
 
-        return statisticCurator.getStatisticsByProduct(product.getOwner(), productId, valueType,
+        return statisticCurator.getStatisticsByProduct(owner, productId, valueType,
                                 ResourceDateParser.getFromDate(from, to, days),
                                 ResourceDateParser.parseDateString(to));
     }
 
-    /**
-     * Retrieves a list of Owners by Product
-     *
-     * @return a list of Owner objects
-     * @httpcode 200
-     * @httpcode 400
-     */
-    @GET
-    @Path("/owners")
-    @Produces(MediaType.APPLICATION_JSON)
-    public List<Owner> getActiveProductOwners(@QueryParam("product") String[] productId) {
-        List<String> ids = Arrays.asList(productId);
-        if (ids.isEmpty()) {
-            throw new BadRequestException(i18n.tr("Must specify product ID."));
-        }
+    // TODO: Not sure what use this method has before OR after multiorg.
+    // /**
+    //  * Retrieves a list of Owners by Product
+    //  *
+    //  * @return a list of Owner objects
+    //  * @httpcode 200
+    //  * @httpcode 400
+    //  */
+    // @GET
+    // @Path("/owners")
+    // @Produces(MediaType.APPLICATION_JSON)
+    // public List<Owner> getActiveProductOwners(@QueryParam("product") String[] productId) {
+    //     List<String> ids = Arrays.asList(productId);
+    //     if (ids.isEmpty()) {
+    //         throw new BadRequestException(i18n.tr("Must specify product ID."));
+    //     }
 
-        return ownerCurator.lookupOwnersByActiveProduct(ids);
-    }
+    //     return ownerCurator.lookupOwnersByActiveProduct(ids);
+    // }
 
     /**
      * Refreshes Pools by Product
@@ -394,11 +483,12 @@ public class ProductResource {
     @Path("/{product_id}/subscriptions")
     @Produces(MediaType.APPLICATION_JSON)
     public JobDetail refreshPoolsForProduct(
+        @PathParam("owner_key") String ownerKey,
         @PathParam("product_id") String productId,
         @QueryParam("lazy_regen") @DefaultValue("true") Boolean lazyRegen) {
 
-        throw new UnsupportedOperationException(this.i18n.tr(
-            "Organization-agnostic product write operations are not supported."
-        ));
+        Product product = this.getProduct(ownerKey, productId);
+
+        return RefreshPoolsForProductJob.forProduct(product, lazyRegen);
     }
 }

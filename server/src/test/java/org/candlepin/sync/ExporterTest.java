@@ -217,10 +217,10 @@ public class ExporterTest {
             "signature".getBytes());
         when(rc.getRules()).thenReturn(mrules);
         when(consumer.getEntitlements()).thenReturn(entitlements);
-        when(psa.getProductById("12345")).thenReturn(prod);
-        when(psa.getProductById("MKT-prod")).thenReturn(prod1);
-        when(psa.getProductById("MKT-sub-prod")).thenReturn(subProduct);
-        when(psa.getProductById("332211")).thenReturn(subProvidedProduct);
+        when(psa.getProductById(prod.getOwner(), "12345")).thenReturn(prod);
+        when(psa.getProductById(prod1.getOwner(), "MKT-prod")).thenReturn(prod1);
+        when(psa.getProductById(subProduct.getOwner(), "MKT-sub-prod")).thenReturn(subProduct);
+        when(psa.getProductById(subProvidedProduct.getOwner(), "332211")).thenReturn(subProvidedProduct);
         when(psa.getProductCertificate(any(Product.class))).thenReturn(pcert);
         when(pprov.get()).thenReturn(principal);
         when(principal.getUsername()).thenReturn("testUser");
@@ -233,10 +233,8 @@ public class ExporterTest {
 
         KeyPair keyPair = createKeyPair();
         when(consumer.getKeyPair()).thenReturn(keyPair);
-        when(pki.getPemEncoded(keyPair.getPrivateKey()))
-            .thenReturn("privateKey".getBytes());
-        when(pki.getPemEncoded(keyPair.getPublicKey()))
-            .thenReturn("publicKey".getBytes());
+        when(pki.getPemEncoded(keyPair.getPrivateKey())).thenReturn("privateKey".getBytes());
+        when(pki.getPemEncoded(keyPair.getPublicKey())).thenReturn("publicKey".getBytes());
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,

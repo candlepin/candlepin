@@ -36,7 +36,6 @@ import org.candlepin.model.Subscription;
 import org.candlepin.policy.js.AttributeHelper;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsRunnerProvider;
-import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.pool.PoolRules;
 import org.candlepin.service.ProductServiceAdapter;
@@ -77,16 +76,13 @@ public class EntitlementRulesTestFixture {
     protected Consumer consumer;
     protected String productId = "a-product";
     protected PoolRules poolRules;
-    protected ProductCache productCache;
     protected AttributeHelper attrHelper;
 
     @Before
     public void createEnforcer() throws Exception {
         MockitoAnnotations.initMocks(this);
 
-        when(config.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX))).thenReturn(
-            100);
-        this.productCache = new ProductCache(config, this.prodAdapter);
+        when(config.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX))).thenReturn(100);
 
         InputStream is = this.getClass().getResourceAsStream(
             RulesCurator.DEFAULT_RULES_FILE);
@@ -97,9 +93,14 @@ public class EntitlementRulesTestFixture {
             TestDateUtil.date(2010, 1, 1));
 
         JsRunner jsRules = new JsRunnerProvider(rulesCurator).get();
-        enforcer = new EntitlementRules(new DateSourceImpl(), jsRules,
-            productCache, I18nFactory.getI18n(getClass(), Locale.US,
-                I18nFactory.FALLBACK), config, consumerCurator, poolCurator);
+        enforcer = new EntitlementRules(
+            new DateSourceImpl(),
+            jsRules,
+            I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
+            config,
+            consumerCurator,
+            poolCurator
+        );
 
         owner = new Owner();
         consumer = new Consumer("test consumer", "test user", owner,
@@ -107,15 +108,14 @@ public class EntitlementRulesTestFixture {
 
         attrHelper = new AttributeHelper();
 
-        poolRules = new PoolRules(poolManagerMock, productCache, config,
-            entCurMock);
+        poolRules = new PoolRules(poolManagerMock, config, entCurMock);
     }
 
     protected Subscription createVirtLimitSub(String productId, int quantity,
         String virtLimit) {
         Product product = new Product(productId, productId, owner);
         product.setAttribute("virt_limit", virtLimit);
-        when(prodAdapter.getProductById(productId)).thenReturn(product);
+        when(prodAdapter.getProductById(owner, productId)).thenReturn(product);
         Subscription s = TestUtil.createSubscription(product);
         s.setQuantity(new Long(quantity));
         s.setId("subId");
@@ -133,7 +133,7 @@ public class EntitlementRulesTestFixture {
         Pool pool = TestUtil.createPool(owner, product);
         pool.addAttribute(new PoolAttribute("virt_limit", "10"));
         pool.setId("fakeid" + TestUtil.randomInt());
-        when(this.prodAdapter.getProductById(productId)).thenReturn(product);
+        when(this.prodAdapter.getProductById(owner, productId)).thenReturn(product);
         return pool;
     }
 }

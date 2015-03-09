@@ -376,7 +376,8 @@ public class X509V3ExtensionUtil extends X509Util {
         Set<ProductContent> archApproriateProductContent = filterContentByContentArch(
             productContent, consumer, product);
 
-        Product skuProd = prodAdapter.getProductById(ent.getPool().getProductId());
+        // Product skuProd = prodAdapter.getProductById(ent.getPool().getProductId());
+        Product skuProd = ent.getPool().getProduct();
         List<String> skuDisabled = skuProd.getSkuDisabledContentIds();
         List<String> skuEnabled = skuProd.getSkuEnabledContentIds();
 
@@ -410,12 +411,10 @@ public class X509V3ExtensionUtil extends X509Util {
             Set<String> contentArches = Arch.parseArches(pc.getContent()
                 .getArches());
             if (contentArches.isEmpty()) {
-                archesList.addAll(Arch.parseArches(product
-                    .getAttributeValue(PRODUCT_ARCH_ATTR)));
+                archesList.addAll(Arch.parseArches(product.getAttributeValue(PRODUCT_ARCH_ATTR)));
             }
             else {
-                archesList
-                    .addAll(Arch.parseArches(pc.getContent().getArches()));
+                archesList.addAll(Arch.parseArches(pc.getContent().getArches()));
             }
             content.setArches(archesList);
 

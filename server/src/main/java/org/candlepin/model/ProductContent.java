@@ -38,7 +38,7 @@ public class ProductContent extends AbstractHibernateObject {
     private Product product;
 
     @ManyToOne
-    @JoinColumn(name = "content_id", nullable = false, updatable = false)
+    @JoinColumn(name = "content_uuid", nullable = false, updatable = false)
     @NotNull
     private Content content;
 

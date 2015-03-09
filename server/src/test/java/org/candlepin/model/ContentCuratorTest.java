@@ -62,6 +62,7 @@ public class ContentCuratorTest extends DatabaseTestFixture {
             "test-content-url", "test-gpg-url", "test-arch1");
         contentCurator.create(toBeUpdated);
 
+        updates.setUuid(toBeUpdated.getUuid());
         toBeUpdated = contentCurator.createOrUpdate(updates);
 
         assertEquals(toBeUpdated.getName(), updates.getName());

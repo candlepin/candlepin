@@ -42,8 +42,8 @@ public class ProductImporter {
         this.contentCurator = contentCurator;
     }
 
-    public Product createObject(ObjectMapper mapper, Reader reader)
-        throws IOException {
+    public Product createObject(ObjectMapper mapper, Reader reader) throws IOException {
+
         final Product importedProduct = mapper.readValue(reader, Product.class);
         // Make sure the ID's are null, otherwise Hibernate thinks these are
         // detached entities.

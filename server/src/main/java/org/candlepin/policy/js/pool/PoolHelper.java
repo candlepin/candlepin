@@ -24,7 +24,6 @@ import org.candlepin.model.SourceStack;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.Subscription;
 import org.candlepin.policy.js.AttributeHelper;
-import org.candlepin.policy.js.ProductCache;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -45,12 +44,10 @@ import java.util.Set;
 public class PoolHelper extends AttributeHelper {
 
     private PoolManager poolManager;
-    private ProductCache productCache;
     private Entitlement sourceEntitlement;
 
-    public PoolHelper(PoolManager poolManager, ProductCache productCache, Entitlement sourceEntitlement) {
+    public PoolHelper(PoolManager poolManager, Entitlement sourceEntitlement) {
         this.poolManager = poolManager;
-        this.productCache = productCache;
         this.sourceEntitlement = sourceEntitlement;
     }
 

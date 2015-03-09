@@ -55,7 +55,7 @@ public class ContentTest extends DatabaseTestFixture {
 
         contentCurator.create(content);
 
-        Content lookedUp = contentCurator.find(content.getId());
+        Content lookedUp = contentCurator.find(content.getUuid());
         assertEquals(content.getContentUrl(), lookedUp.getContentUrl());
         assertThat(lookedUp.getModifiedProductIds(), hasItem("ProductB"));
         assertEquals(metadataExpire, lookedUp.getMetadataExpire());
@@ -75,7 +75,7 @@ public class ContentTest extends DatabaseTestFixture {
         content.setArches(arches);
         contentCurator.create(content);
 
-        Content lookedUp = contentCurator.find(content.getId());
+        Content lookedUp = contentCurator.find(content.getUuid());
         assertEquals(lookedUp.getArches(), arches);
     }
 
@@ -95,9 +95,12 @@ public class ContentTest extends DatabaseTestFixture {
         Content modifiedContent = new Content(owner, newName, "100",
             newLabel, "yum", "test-vendor", "test-content-url",
             "test-gpg-url", "test-arch1");
+
+        modifiedContent.setUuid(content.getUuid());
+
         contentCurator.createOrUpdate(modifiedContent);
 
-        content = contentCurator.find("100");
+        content = contentCurator.lookupById(owner, "100");
         assertEquals(newLabel, content.getLabel());
         assertEquals(newName, content.getName());
     }

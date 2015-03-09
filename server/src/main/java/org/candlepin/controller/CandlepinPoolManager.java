@@ -44,7 +44,6 @@ import org.candlepin.model.Subscription;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.ValidationResult;
-import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.activationkey.ActivationKeyRules;
 import org.candlepin.policy.js.autobind.AutobindRules;
 import org.candlepin.policy.js.compliance.ComplianceRules;
@@ -99,7 +98,7 @@ public class CandlepinPoolManager implements PoolManager {
     private EntitlementCertServiceAdapter entCertAdapter;
     private EntitlementCertificateCurator entitlementCertificateCurator;
     private ComplianceRules complianceRules;
-    private ProductCache productCache;
+    private ProductCurator productCurator;
     private AutobindRules autobindRules;
     private ActivationKeyRules activationKeyRules;
     private ProductCurator prodCurator;
@@ -114,7 +113,7 @@ public class CandlepinPoolManager implements PoolManager {
     @Inject
     public CandlepinPoolManager(PoolCurator poolCurator,
         SubscriptionServiceAdapter subAdapter,
-        ProductCache productCache,
+        ProductCurator productCurator,
         EntitlementCertServiceAdapter entCertAdapter, EventSink sink,
         EventFactory eventFactory, Configuration config, Enforcer enforcer,
         PoolRules poolRules, EntitlementCurator curator1, ConsumerCurator consumerCurator,
@@ -133,7 +132,7 @@ public class CandlepinPoolManager implements PoolManager {
         this.entCertAdapter = entCertAdapter;
         this.entitlementCertificateCurator = ecC;
         this.complianceRules = complianceRules;
-        this.productCache = productCache;
+        this.productCurator = productCurator;
         this.autobindRules = autobindRules;
         this.activationKeyRules = activationKeyRules;
         this.prodCurator = prodCurator;
@@ -885,7 +884,7 @@ public class CandlepinPoolManager implements PoolManager {
         if (consumer.getType().isManifest()) {
             pool.setExported(pool.getExported() + quantity);
         }
-        PoolHelper poolHelper = new PoolHelper(this, productCache, entitlement);
+        PoolHelper poolHelper = new PoolHelper(this, entitlement);
         handler.handlePostEntitlement(consumer, poolHelper, entitlement);
 
         // Check consumer's new compliance status and save:
@@ -994,10 +993,11 @@ public class CandlepinPoolManager implements PoolManager {
     public void regenerateCertificatesOf(Environment e, Set<String> affectedContent,
         boolean lazy) {
         log.info("Regenerating relevant certificates in environment: " + e.getId());
+
         List<Entitlement> allEnvEnts = entitlementCurator.listByEnvironment(e);
         Set<Entitlement> entsToRegen = new HashSet<Entitlement>();
         for (Entitlement ent : allEnvEnts) {
-            Product prod = productCache.getProductById(ent.getProductId());
+            Product prod = productCurator.lookupById(ent.getOwner(), ent.getProductId());
             for (String contentId : affectedContent) {
                 if (prod.hasContent(contentId)) {
                     entsToRegen.add(ent);
@@ -1067,10 +1067,11 @@ public class CandlepinPoolManager implements PoolManager {
 
     @Override
     @Transactional
-    public void regenerateCertificatesOf(String productId, boolean lazy) {
-        List<Pool> poolsForProduct = this.listAvailableEntitlementPools(null, null, null,
+    public void regenerateCertificatesOf(Owner owner, String productId, boolean lazy) {
+        List<Pool> poolsForProduct = this.listAvailableEntitlementPools(null, null, owner,
             productId, new Date(), false, false, new PoolFilterBuilder(), null)
             .getPageData();
+
         for (Pool pool : poolsForProduct) {
             regenerateCertificatesOf(pool.getEntitlements(), lazy);
         }
@@ -1152,7 +1153,7 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         // post unbind actions
-        PoolHelper poolHelper = new PoolHelper(this, productCache, entitlement);
+        PoolHelper poolHelper = new PoolHelper(this, entitlement);
         enforcer.postUnbind(consumer, poolHelper, entitlement);
 
         if (regenModified) {

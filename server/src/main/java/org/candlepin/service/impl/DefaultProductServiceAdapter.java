@@ -17,26 +17,19 @@ package org.candlepin.service.impl;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
+import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.pki.PKIUtility;
-import org.candlepin.pki.X509ExtensionWrapper;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.UniqueIdGenerator;
-import org.candlepin.util.X509ExtensionUtil;
 
 import com.google.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.math.BigInteger;
-import java.security.GeneralSecurityException;
-import java.security.KeyPair;
-import java.security.cert.X509Certificate;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
@@ -53,34 +46,27 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
         LoggerFactory.getLogger(DefaultProductServiceAdapter.class);
 
     private ProductCurator prodCurator;
-
     private ContentCurator contentCurator;
 
     // for product cert storage/generation - not sure if this should go in
     // a separate service?
     private ProductCertificateCurator prodCertCurator;
-    private PKIUtility pki;
-    private X509ExtensionUtil extensionUtil;
     private UniqueIdGenerator idGenerator;
 
     @Inject
     public DefaultProductServiceAdapter(ProductCurator prodCurator,
-        ProductCertificateCurator prodCertCurator, PKIUtility pki,
-        X509ExtensionUtil extensionUtil, ContentCurator contentCurator,
+        ProductCertificateCurator prodCertCurator, ContentCurator contentCurator,
         UniqueIdGenerator idGenerator) {
 
         this.prodCurator = prodCurator;
         this.prodCertCurator = prodCertCurator;
-        this.pki = pki;
-        this.extensionUtil = extensionUtil;
         this.contentCurator = contentCurator;
         this.idGenerator = idGenerator;
     }
 
     @Override
-    public Product getProductById(String id) {
-        log.debug("called getProductById");
-        return prodCurator.lookupById(id);
+    public Product getProductById(Owner owner, String id) {
+        return prodCurator.lookupById(owner, id);
     }
 
     @Override
@@ -92,8 +78,7 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
     public Product createProduct(Product product) {
         // TODO: This may not actually work properly with the change from getId to getProductId
         if (prodCurator.find(product.getId()) != null) {
-            throw new BadRequestException("product with ID " + product.getId() +
-                " already exists");
+            throw new BadRequestException("product with ID " + product.getId() + " already exists");
         }
         else {
             if (product.getId() == null || product.getId().trim().equals("")) {
@@ -116,58 +101,20 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
 
     @Override
     public ProductCertificate getProductCertificate(Product product) {
-        ProductCertificate cert = this.prodCertCurator.findForProduct(product);
-
-        if (cert == null) {
-            // TODO: Do something better with these exceptions!
-            try {
-                cert = createForProduct(product);
-                this.prodCertCurator.create(cert);
-            }
-            catch (GeneralSecurityException e) {
-                log.error("Error creating product certificate!", e);
-            }
-            catch (IOException e) {
-                log.error("Error creating product certificate!", e);
-            }
-        }
-
-        return cert;
+        return this.prodCertCurator.getCertForProduct(product);
     }
 
-    private ProductCertificate createForProduct(Product product)
-        throws GeneralSecurityException, IOException {
 
-        KeyPair keyPair = pki.generateNewKeyPair();
-        Set<X509ExtensionWrapper> extensions = this.extensionUtil.productExtensions(product);
-
-        // TODO: Should this use the RH product ID, or our internal object ID?
-        BigInteger serial = BigInteger.valueOf(product.getId().hashCode()).abs();
-
-        Calendar future = Calendar.getInstance();
-        future.add(Calendar.YEAR, 10);
-
-        X509Certificate x509Cert = this.pki.createX509Certificate(
-            "CN=" + product.getId(), extensions, null, new Date(), future.getTime(), keyPair,
-            serial, null
-        );
-
-        ProductCertificate cert = new ProductCertificate();
-        cert.setKeyAsBytes(pki.getPemEncoded(keyPair.getPrivate()));
-        cert.setCertAsBytes(this.pki.getPemEncoded(x509Cert));
-        cert.setProduct(product);
-
-        return cert;
-    }
 
     @Override
     public void purgeCache(Collection<String> cachedKeys) {
+        // noop
     }
 
     @Override
-    public void removeContent(String productId, String contentId) {
-        Product product = prodCurator.find(productId);
-        Content content = contentCurator.find(contentId);
+    public void removeContent(Owner owner, String productId, String contentId) {
+        Product product = prodCurator.lookupById(owner, productId);
+        Content content = contentCurator.lookupById(owner, contentId);
         prodCurator.removeProductContent(product, content);
     }
 
@@ -181,13 +128,19 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
     }
 
     @Override
-    public List<Product> getProductsByIds(Collection<String> ids) {
-        return prodCurator.listAllByIds(ids);
+    public List<Product> getProductsByIds(Owner owner, Collection<String> ids) {
+        return prodCurator.listAllByIds(owner, ids);
     }
 
     @Override
-    public Set<String> getProductsWithContent(Collection<String> contentIds) {
-        return new HashSet<String>(prodCurator.getProductIdsWithContent(contentIds));
+    public Set<String> getProductsWithContent(Owner owner, Collection<String> contentIds) {
+        HashSet<String> productIds = new HashSet<String>();
+
+        for (Product product : prodCurator.getProductsWithContent(owner, contentIds)) {
+            productIds.add(product.getId());
+        }
+
+        return productIds;
     }
 
 }

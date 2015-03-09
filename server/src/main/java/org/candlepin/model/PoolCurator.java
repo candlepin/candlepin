@@ -19,7 +19,6 @@ import org.candlepin.common.paging.PageRequest;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyPool;
 import org.candlepin.policy.criteria.CriteriaRules;
-import org.candlepin.policy.js.ProductCache;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -59,10 +58,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     private CriteriaRules poolCriteria;
     @Inject
     protected Injector injector;
-
-    @Inject
-    // TODO/FIXME: May be unnecessary now...?
-    protected ProductCache productCache;
 
     @Inject
     public PoolCurator(CriteriaRules poolCriteria) {
@@ -237,6 +232,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             crit.add(Restrictions.ge("endDate", activeOn));
         }
 
+        // TODO: This may or may not need to change to be a UUID reference, depending on how badly
+        // it breaks things.
         if (productId != null) {
             crit.add(Restrictions.or(
                 Restrictions.eq("product.id", productId),

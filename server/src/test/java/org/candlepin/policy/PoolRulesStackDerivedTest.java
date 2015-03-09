@@ -31,14 +31,13 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.Subscription;
-import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.pool.PoolHelper;
 import org.candlepin.policy.js.pool.PoolRules;
 import org.candlepin.policy.js.pool.PoolUpdate;
-import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
@@ -64,12 +63,11 @@ public class PoolRulesStackDerivedTest {
     private Consumer consumer;
 
     @Mock private RulesCurator rulesCuratorMock;
-    @Mock private ProductServiceAdapter productAdapterMock;
+    @Mock private ProductCurator productCuratorMock;
     @Mock private PoolManager poolManagerMock;
     @Mock private Configuration configMock;
     @Mock private EntitlementCurator entCurMock;
 
-    private ProductCache productCache;
     private UserPrincipal principal;
     private Owner owner;
 
@@ -108,9 +106,8 @@ public class PoolRulesStackDerivedTest {
         when(rulesCuratorMock.getRules()).thenReturn(rules);
 
         when(configMock.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX))).thenReturn(100);
-        productCache = new ProductCache(configMock, productAdapterMock);
 
-        poolRules = new PoolRules(poolManagerMock, productCache, configMock, entCurMock);
+        poolRules = new PoolRules(poolManagerMock, configMock, entCurMock);
         principal = TestUtil.createOwnerPrincipal();
         owner = principal.getOwners().get(0);
 
@@ -122,13 +119,13 @@ public class PoolRulesStackDerivedTest {
         prod1.addAttribute(new ProductAttribute("virt_limit", "2"));
         prod1.addAttribute(new ProductAttribute("stacking_id", STACK));
         prod1.addAttribute(new ProductAttribute("testattr1", "1"));
-        when(productAdapterMock.getProductById(prod1.getUuid())).thenReturn(prod1);
+        when(productCuratorMock.find(prod1.getUuid())).thenReturn(prod1);
 
         prod2 = TestUtil.createProduct(owner);
         prod2.addAttribute(new ProductAttribute("virt_limit", "unlimited"));
         prod2.addAttribute(new ProductAttribute("stacking_id", STACK));
         prod2.addAttribute(new ProductAttribute("testattr2", "2"));
-        when(productAdapterMock.getProductById(prod2.getUuid())).thenReturn(prod2);
+        when(productCuratorMock.find(prod2.getUuid())).thenReturn(prod2);
 
         provided1 = TestUtil.createProduct(owner);
         provided2 = TestUtil.createProduct(owner);
@@ -157,8 +154,7 @@ public class PoolRulesStackDerivedTest {
         stackedEnts.add(createEntFromPool(pool2));
         when(entCurMock.findByStackId(consumer, STACK)).thenReturn(stackedEnts);
 
-        PoolHelper helper = new PoolHelper(poolManagerMock, productCache,
-            stackedEnts.get(0));
+        PoolHelper helper = new PoolHelper(poolManagerMock, stackedEnts.get(0));
         stackDerivedPool = helper.createHostRestrictedPool(prod2, pool2, "6");
     }
 

@@ -79,7 +79,7 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
         assertEquals("10", virtBonusPool.getProduct().getAttributeValue("virt_limit"));
 
         Entitlement e = new Entitlement(physicalPool, consumer, 1);
-        PoolHelper postHelper = new PoolHelper(poolManagerMock, productCache, e);
+        PoolHelper postHelper = new PoolHelper(poolManagerMock, e);
         List<Pool> poolList = new ArrayList<Pool>();
         poolList.add(virtBonusPool);
         when(poolManagerMock.lookupBySubscriptionId(eq(physicalPool.getSubscriptionId())))
@@ -111,7 +111,7 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
         assertEquals(0, physicalPool.getAttributes().size());
 
         Entitlement e = new Entitlement(physicalPool, consumer, 1);
-        PoolHelper postHelper = new PoolHelper(poolManagerMock, productCache, e);
+        PoolHelper postHelper = new PoolHelper(poolManagerMock, e);
 
         enforcer.postEntitlement(consumer, postHelper, e);
         verify(poolManagerMock).createPool(any(Pool.class));
@@ -138,7 +138,7 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
         assertEquals("unlimited", virtBonusPool.getProduct().getAttributeValue("virt_limit"));
 
         Entitlement e = new Entitlement(physicalPool, consumer, 1);
-        PoolHelper postHelper = new PoolHelper(poolManagerMock, productCache, e);
+        PoolHelper postHelper = new PoolHelper(poolManagerMock, e);
         List<Pool> poolList = new ArrayList<Pool>();
         poolList.add(virtBonusPool);
         when(poolManagerMock.lookupBySubscriptionId(eq(physicalPool.getSubscriptionId())))
@@ -176,7 +176,7 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
         assertEquals("unlimited", virtBonusPool.getProduct().getAttributeValue("virt_limit"));
 
         Entitlement e = new Entitlement(physicalPool, consumer, 1);
-        PoolHelper postHelper = new PoolHelper(poolManagerMock, productCache, e);
+        PoolHelper postHelper = new PoolHelper(poolManagerMock, e);
 
         enforcer.postEntitlement(consumer, postHelper, e);
         verify(poolManagerMock, never()).createPool(any(Pool.class));
@@ -211,7 +211,7 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
         Entitlement e = new Entitlement(physicalPool, consumer, 10);
         physicalPool.setConsumed(10L);
         physicalPool.setExported(10L);
-        PoolHelper postHelper = new PoolHelper(poolManagerMock, productCache, e);
+        PoolHelper postHelper = new PoolHelper(poolManagerMock, e);
         List<Pool> poolList = new ArrayList<Pool>();
         poolList.add(virtBonusPool);
         when(poolManagerMock.lookupBySubscriptionId(eq(physicalPool.getSubscriptionId())))
@@ -238,7 +238,7 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
         virtBonusPool.setAttribute("pool_derived", "true");
 
         Entitlement e = new Entitlement(virtBonusPool, consumer, 1);
-        PoolHelper postHelper = new PoolHelper(poolManagerMock, productCache, e);
+        PoolHelper postHelper = new PoolHelper(poolManagerMock, e);
         List<Pool> poolList = new ArrayList<Pool>();
         poolList.add(virtBonusPool);
         when(poolManagerMock.lookupBySubscriptionId(eq(virtBonusPool.getSubscriptionId())))

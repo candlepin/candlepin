@@ -15,6 +15,7 @@
 package org.candlepin.model;
 
 import org.candlepin.service.UniqueIdGenerator;
+import org.hibernate.annotations.GenericGenerator;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -27,6 +28,7 @@ import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
@@ -48,8 +50,16 @@ public class Content extends AbstractHibernateObject {
 
     public static final  String UEBER_CONTENT_NAME = "ueber_content";
 
+    // Object ID
     @Id
-    @Size(max = 255)
+    @GeneratedValue(generator = "system-uuid")
+    @GenericGenerator(name = "system-uuid", strategy = "uuid")
+    @NotNull
+    private String uuid;
+
+    // Internal RH content ID
+    @Column(name="content_id")
+    @Size(max = 32)
     @NotNull
     private String id;
 
@@ -103,7 +113,7 @@ public class Content extends AbstractHibernateObject {
 
     @ElementCollection
     @CollectionTable(name = "cpo_content_modified_products",
-                     joinColumns = @JoinColumn(name = "content_id"))
+                     joinColumns = @JoinColumn(name = "content_uuid"))
     @Column(name = "element")
     @Size(max = 255)
     // TODO: This should probably be a collection of products
@@ -138,17 +148,46 @@ public class Content extends AbstractHibernateObject {
             "/" + o.getKey(), "", "");
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.candlepin.model.Persisted#getId()
+    /**
+     * Retrieves this content's object/database UUID. While the content ID may exist multiple times
+     * in the database (if in use by multiple owners), this UUID uniquely identifies a
+     * content instance.
+     *
+     * @return
+     *  this content's database UUID.
      */
-    @Override
-    public String getId() {
-        return id;
+    public String getUuid() {
+        return uuid;
     }
 
     /**
-     * @param id product id
+     * Sets this content's object/database ID. Note that this ID is used to uniquely identify this
+     * particular object and has no baring on the Red Hat content ID.
+     *
+     * @param uuid
+     *  The object ID to assign to this content.
+     */
+    public void setUuid(String uuid) {
+        this.uuid = uuid;
+    }
+
+    /**
+     * Retrieves this content's ID. Assigned by the content provider, and may exist in
+     * multiple owners, thus may not be unique in itself.
+     *
+     * @return
+     *  this content's ID.
+     */
+    public String getId() {
+        return this.id;
+    }
+
+    /**
+     * Sets the content ID for this content. The content ID is the Red Hat content ID and should not
+     * be confused with the object ID.
+     *
+     * @param id
+     *  The new content ID for this content.
      */
     public void setId(String id) {
         this.id = id;
@@ -206,6 +245,8 @@ public class Content extends AbstractHibernateObject {
      * @param modifiedProductIds the modifiedProductIds to set
      */
     public void setModifiedProductIds(Set<String> modifiedProductIds) {
+        // TODO: This should probably change to modifiedProductUuids
+
         this.modifiedProductIds = modifiedProductIds;
     }
 

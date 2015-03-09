@@ -86,7 +86,7 @@ public class ProductImporterTest {
         Product created = importer.createObject(mapper, reader);
         Set<Product> storeThese = new HashSet<Product>();
         storeThese.add(created);
-        when(productCuratorMock.lookupById(product.getUuid())).thenReturn(null);
+        when(productCuratorMock.lookupById(product.getOwner(), product.getId())).thenReturn(null);
         importer.store(storeThese);
         verify(productCuratorMock).createOrUpdate(created);
     }
@@ -107,7 +107,7 @@ public class ProductImporterTest {
         storeThese.add(created);
 
         // Simulate the pre-existing product:
-        when(productCuratorMock.lookupById(product.getUuid())).thenReturn(product);
+        when(productCuratorMock.lookupById(product.getOwner(), product.getId())).thenReturn(product);
 
         importer.store(storeThese);
 
@@ -141,7 +141,8 @@ public class ProductImporterTest {
         addContentTo(newProduct);
         Content c = newProduct.getProductContent().iterator().next().getContent();
 
-        when(productCuratorMock.lookupById(oldProduct.getUuid())).thenReturn(oldProduct);
+        when(productCuratorMock.find(oldProduct.getUuid()))
+            .thenReturn(oldProduct);
 
         Set<Product> storeThese = new HashSet<Product>();
         storeThese.add(newProduct);
@@ -153,6 +154,7 @@ public class ProductImporterTest {
     }
 
     @Test
+
     public void testVendorSetToUnknown() throws Exception {
         Product product = TestUtil.createProduct(owner);
         addNoVendorContentTo(product);

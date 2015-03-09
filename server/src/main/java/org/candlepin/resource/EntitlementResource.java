@@ -30,6 +30,7 @@ import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Pool;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.pinsetter.tasks.RegenProductEntitlementCertsJob;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.entitlement.Enforcer;
@@ -83,6 +84,7 @@ public class EntitlementResource {
     private SubscriptionResource subResource;
     private Enforcer enforcer;
     private EntitlementRulesTranslator messageTranslator;
+    private ProductCurator productCurator;
 
     @Inject
     public EntitlementResource(ProductServiceAdapter prodAdapter,
@@ -91,7 +93,8 @@ public class EntitlementResource {
             ConsumerCurator consumerCurator,
             PoolManager poolManager,
             I18n i18n, Entitler entitler, SubscriptionResource subResource,
-            Enforcer enforcer, EntitlementRulesTranslator messageTranslator) {
+            Enforcer enforcer, EntitlementRulesTranslator messageTranslator,
+            ProductCurator productCurator) {
 
         this.entitlementCurator = entitlementCurator;
         this.consumerCurator = consumerCurator;
@@ -103,6 +106,9 @@ public class EntitlementResource {
         this.subResource = subResource;
         this.enforcer = enforcer;
         this.messageTranslator = messageTranslator;
+        this.productCurator = productCurator;
+
+        // TODO: Is the prodAdapter still necessary if we have the curator?
     }
 
     private void verifyExistence(Object o, String id) {
@@ -344,7 +350,9 @@ public class EntitlementResource {
             @PathParam("product_id") String productId,
             @QueryParam("lazy_regen") @DefaultValue("true") boolean lazyRegen) {
         prodAdapter.purgeCache(Arrays.asList(productId));
+
         JobDataMap map = new JobDataMap();
+        // TODO: We need an owner ID here to get anything done.
         map.put(RegenProductEntitlementCertsJob.PROD_ID, productId);
         map.put(RegenProductEntitlementCertsJob.LAZY_REGEN, lazyRegen);
 

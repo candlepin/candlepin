@@ -49,7 +49,6 @@ import org.candlepin.model.SourceStack;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.Subscription;
 import org.candlepin.policy.ValidationResult;
-import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.activationkey.ActivationKeyRules;
 import org.candlepin.policy.js.autobind.AutobindRules;
 import org.candlepin.policy.js.compliance.ComplianceRules;
@@ -97,6 +96,8 @@ public class PoolManagerTest {
     @Mock
     private SubscriptionServiceAdapter mockSubAdapter;
     @Mock
+    private ProductCurator mockProductCurator;
+    @Mock
     private ProductServiceAdapter mockProductAdapter;
     @Mock
     private EventSink mockEventSink;
@@ -139,7 +140,6 @@ public class PoolManagerTest {
     private Pool pool;
     private Product product;
     private ComplianceStatus dummyComplianceStatus;
-    private ProductCache productCache;
     private PoolRules poolRules;
 
     protected static Map<String, List<Pool>> subToPools;
@@ -154,14 +154,14 @@ public class PoolManagerTest {
         when(eventFactory.getEventBuilder(any(Target.class), any(Type.class))).thenReturn(eventBuilder);
         when(eventBuilder.setNewEntity(any(AbstractHibernateObject.class))).thenReturn(eventBuilder);
         when(eventBuilder.setOldEntity(any(AbstractHibernateObject.class))).thenReturn(eventBuilder);
-        this.productCache = new ProductCache(mockConfig, mockProductAdapter);
 
         this.principal = TestUtil.createOwnerPrincipal();
-        this.manager = spy(new CandlepinPoolManager(mockPoolCurator, mockSubAdapter,
-            productCache, entCertAdapterMock, mockEventSink, eventFactory,
-            mockConfig, enforcerMock, poolRulesMock, entitlementCurator,
+        this.manager = spy(new CandlepinPoolManager(
+            mockPoolCurator, mockSubAdapter, mockProductCurator, entCertAdapterMock, mockEventSink,
+            eventFactory, mockConfig, enforcerMock, poolRulesMock, entitlementCurator,
             consumerCuratorMock, certCuratorMock, complianceRules, autobindRules,
-            activationKeyRules, productCuratorMock));
+            activationKeyRules, productCuratorMock)
+        );
 
         when(entCertAdapterMock.generateEntitlementCert(any(Entitlement.class),
             any(Product.class))).thenReturn(
@@ -633,7 +633,6 @@ public class PoolManagerTest {
 
         // And the pool should be deleted:
         verify(mockPoolCurator).delete(p);
-        verify(mockSubAdapter).deleteSubscription(eq(sub));
     }
 
     @Test
@@ -826,15 +825,14 @@ public class PoolManagerTest {
 
     @Test
     public void createPoolsForExistingSubscriptionsNoneExist() {
-        PoolRules pRules = new PoolRules(manager, productCache,
-            mockConfig, entitlementCurator);
+        PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator);
         List<Subscription> subscriptions = Util.newList();
         List<Pool> pools = Util.newList();
         Product prod = TestUtil.createProduct(o);
         Set<Product> products = new HashSet<Product>();
         products.add(prod);
         prod.setAttribute("virt_limit", "4");
-        productCache.addProducts(products);
+        // productCache.addProducts(products);
         Subscription s = TestUtil.createSubscription(getOwner(), prod);
         subscriptions.add(s);
         when(mockSubAdapter.getSubscriptions(any(Owner.class))).thenReturn(
@@ -855,14 +853,13 @@ public class PoolManagerTest {
 
     @Test
     public void createPoolsForExistingSubscriptionsMasterExist() {
-        PoolRules pRules = new PoolRules(manager, productCache,
-            mockConfig, entitlementCurator);
+        PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator);
         List<Subscription> subscriptions = Util.newList();
         List<Pool> pools = Util.newList();
         Product prod = TestUtil.createProduct(o);
         Set<Product> products = new HashSet<Product>();
         products.add(prod);
-        productCache.addProducts(products);
+        // productCache.addProducts(products);
         prod.setAttribute("virt_limit", "4");
         Subscription s = TestUtil.createSubscription(getOwner(), prod);
         subscriptions.add(s);
@@ -881,14 +878,13 @@ public class PoolManagerTest {
 
     @Test
     public void createPoolsForExistingSubscriptionsBonusExist() {
-        PoolRules pRules = new PoolRules(manager, productCache,
-            mockConfig, entitlementCurator);
+        PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator);
         List<Subscription> subscriptions = Util.newList();
         List<Pool> pools = Util.newList();
         Product prod = TestUtil.createProduct(o);
         Set<Product> products = new HashSet<Product>();
         products.add(prod);
-        productCache.addProducts(products);
+        // productCache.addProducts(products);
         prod.setAttribute("virt_limit", "4");
         Subscription s = TestUtil.createSubscription(getOwner(), prod);
         subscriptions.add(s);
@@ -912,11 +908,12 @@ public class PoolManagerTest {
 
         Set<Product> products = new HashSet<Product>();
 
-        when(productCuratorMock.lookupById(oldProduct.getUuid())).thenReturn(oldProduct);
+        when(productCuratorMock.lookupById(oldProduct.getOwner(), oldProduct.getId()))
+            .thenReturn(oldProduct);
 
         Set<Product> changed = manager.getChangedProducts(o, products);
 
-        verify(productCuratorMock, times(0)).lookupById(oldProduct.getUuid());
+        verify(productCuratorMock, times(0)).lookupById(oldProduct.getOwner(), oldProduct.getId());
 
         assertTrue(changed.isEmpty());
     }
@@ -928,7 +925,8 @@ public class PoolManagerTest {
         Set<Product> products = new HashSet<Product>();
         products.add(newProduct);
 
-        when(productCuratorMock.lookupById(newProduct.getUuid())).thenReturn(null);
+        when(productCuratorMock.lookupById(newProduct.getOwner(), newProduct.getId()))
+            .thenReturn(null);
 
         Set<Product> changed = manager.getChangedProducts(o, products);
 

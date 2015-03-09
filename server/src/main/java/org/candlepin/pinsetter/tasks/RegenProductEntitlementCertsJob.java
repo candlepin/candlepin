@@ -15,6 +15,8 @@
 package org.candlepin.pinsetter.tasks;
 
 import org.candlepin.controller.PoolManager;
+import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 
 import com.google.inject.Inject;
 
@@ -26,21 +28,31 @@ import org.quartz.JobExecutionException;
  */
 public class RegenProductEntitlementCertsJob extends KingpinJob {
 
+    public static final String OWNER_ID = "owner_id";
     public static final String PROD_ID = "product_id";
     public static final String LAZY_REGEN = "lazy_regen";
 
     private PoolManager poolManager;
+    private OwnerCurator ownerCurator;
 
     @Inject
-    public RegenProductEntitlementCertsJob(PoolManager poolManager) {
+    public RegenProductEntitlementCertsJob(PoolManager poolManager,
+            OwnerCurator ownerCurator) {
+
         this.poolManager = poolManager;
+        this.ownerCurator = ownerCurator;
     }
 
     @Override
     public void toExecute(JobExecutionContext arg0) throws JobExecutionException {
-        String prodId = arg0.getJobDetail().getJobDataMap().getString(
-            PROD_ID);
+        String ownerId = arg0.getJobDetail().getJobDataMap().getString(OWNER_ID);
+        String productId = arg0.getJobDetail().getJobDataMap().getString(PROD_ID);
         boolean lazy = arg0.getJobDetail().getJobDataMap().getBoolean(LAZY_REGEN);
-        this.poolManager.regenerateCertificatesOf(prodId, lazy);
+
+        Owner owner = this.ownerCurator.find(ownerId);
+
+        if (owner != null) {
+            this.poolManager.regenerateCertificatesOf(owner, productId, lazy);
+        }
     }
 }

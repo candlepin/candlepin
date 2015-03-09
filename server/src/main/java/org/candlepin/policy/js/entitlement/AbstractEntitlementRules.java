@@ -26,7 +26,6 @@ import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.ValidationWarning;
 import org.candlepin.policy.js.JsRunner;
-import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.RulesObjectMapper;
 import org.candlepin.policy.js.pool.PoolHelper;
 import org.candlepin.util.DateSource;
@@ -53,7 +52,6 @@ public abstract class AbstractEntitlementRules implements Enforcer {
     protected Logger log = null;
     protected DateSource dateSource;
 
-    protected ProductCache productCache;
     protected I18n i18n;
     protected Map<String, Set<Rule>> attributesToRules;
     protected JsRunner jsRules;
