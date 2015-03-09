@@ -26,6 +26,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.Subscription;
@@ -60,6 +61,7 @@ public class PoolRulesInstanceTest {
     @Mock private PoolManager poolManagerMock;
     @Mock private Configuration configMock;
     @Mock private EntitlementCurator entCurMock;
+    @Mock private ProductCurator prodCuratorMock;
 
     @Before
     public void setUp() {
@@ -72,7 +74,7 @@ public class PoolRulesInstanceTest {
 
         when(configMock.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX))).thenReturn(100);
 
-        poolRules = new PoolRules(poolManagerMock, configMock, entCurMock);
+        poolRules = new PoolRules(poolManagerMock, configMock, entCurMock, prodCuratorMock);
     }
 
     @Test
@@ -181,8 +183,8 @@ public class PoolRulesInstanceTest {
         Product product = new Product(productId, productId, owner);
         product.setAttribute("instance_multiplier",
             Integer.toString(instanceMultiplier));
-        when(productAdapterMock.getProductById(owner, productId)).thenReturn(product);
-        Subscription s = TestUtil.createSubscription(product);
+        when(prodCuratorMock.lookupById(owner, productId)).thenReturn(product);
+        Subscription s = TestUtil.createSubscription(owner, product);
         if (exported) {
             s.setUpstreamPoolId("SOMETHING");
         }

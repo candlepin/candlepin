@@ -800,7 +800,8 @@ public class OwnerResource {
         Subscription subscription) {
         Owner o = findOwner(ownerKey);
         subscription.setOwner(o);
-        return subService.createSubscription(subscription);
+        poolManager.createPoolsForSubscription(subscription);
+        return subscription;
     }
 
     /**

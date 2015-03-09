@@ -24,6 +24,7 @@ import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.Subscription;
 
@@ -51,14 +52,15 @@ public class PoolRules {
     private PoolManager poolManager;
     private Configuration config;
     private EntitlementCurator entCurator;
-
+    private ProductCurator prodCurator;
 
     @Inject
     public PoolRules(PoolManager poolManager, Configuration config,
-        EntitlementCurator entCurator) {
+        EntitlementCurator entCurator, ProductCurator prodCurator) {
         this.poolManager = poolManager;
         this.config = config;
         this.entCurator = entCurator;
+        this.prodCurator = prodCurator;
     }
 
     private long calculateQuantity(Subscription sub) {
@@ -105,12 +107,22 @@ public class PoolRules {
             helper.getFlattenedAttributes(sub.getProduct());
         long quantity = calculateQuantity(sub);
 
+        // Products given on a subscription should *always* already exist in the database
+        // at this point. We can't use those directly on the subscription because they
+        // will be detached objects.
+        Product sku = prodCurator.lookupById(sub.getOwner(), sub.getProduct().getId());
+
         if (!hasMasterPool(existingPools)) {
-            Pool newPool = new Pool(sub.getOwner(), sub.getProduct(),
-                    new HashSet<Product>(sub.getProvidedProducts()), quantity,
+            Pool newPool = new Pool(sub.getOwner(), sku,
+                    new HashSet<Product>(), quantity,
                     sub.getStartDate(), sub.getEndDate(), sub.getContractNumber(),
                     sub.getAccountNumber(), sub.getOrderNumber()
             );
+            // Add all provided products, looked up from the database:
+            for (Product pp : sub.getProvidedProducts()) {
+                newPool.addProvidedProduct(prodCurator.lookupById(sub.getOwner(),
+                        pp.getId()));
+            }
 
             if (sub.getDerivedProvidedProducts() != null) {
                 newPool.getDerivedProvidedProducts().addAll(

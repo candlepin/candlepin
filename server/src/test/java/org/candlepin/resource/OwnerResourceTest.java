@@ -1090,4 +1090,12 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         unmarshaller.setAnnotations(annotations);
         return (KeyValueParameter) unmarshaller.fromString(key + ":" + val);
     }
+
+    @Test
+    public void createSubscription() {
+        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct(owner));
+        assertEquals(0, poolCurator.listByOwner(owner).size());
+        ownerResource.createSubscription(owner.getKey(), s);
+        assertEquals(1, poolCurator.listByOwner(owner).size());
+    }
 }
