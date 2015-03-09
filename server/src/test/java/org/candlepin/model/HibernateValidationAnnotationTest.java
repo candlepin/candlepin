@@ -133,6 +133,7 @@ public class HibernateValidationAnnotationTest {
     @Test
     public void contentTest() throws Exception {
         Map<Field, Matcher<AnnotatedElement>> fm = new HashMap<Field, Matcher<AnnotatedElement>>();
+        fm.put(Content.class.getDeclaredField("uuid"), notNull);
         fm.put(Content.class.getDeclaredField("id"), sizeAndNotNull);
         fm.put(Content.class.getDeclaredField("type"), sizeAndNotNull);
         fm.put(Content.class.getDeclaredField("label"), sizeAndNotNull);
