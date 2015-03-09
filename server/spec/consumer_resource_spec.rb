@@ -417,7 +417,6 @@ describe 'Consumer Resource' do
     end
 
     consumer = @cp.get_consumer(cp_client.uuid)
-    pp consumer
     for installed_product in consumer['installedProducts'] do
          installed_product['arch'].should == 'ALL'
          installed_product['version'].should == '3.11'
