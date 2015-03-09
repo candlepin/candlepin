@@ -35,8 +35,6 @@ module CandlepinMethods
     end
   end
 
-  # Wrapper for the ruby API's create product. Products do not get cleaned
-  # up when an owner is deleted so we will need to track them.
   def create_product(id=nil, name=nil, params={})
 
     # If owner given in params, use it, if not, try to find @owner, if neither
