@@ -20,7 +20,6 @@ import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.pinsetter.core.model.JobStatus;
-import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.util.Util;
 
@@ -36,19 +35,18 @@ import org.quartz.JobExecutionException;
  */
 public class RefreshPoolsForProductJob extends KingpinJob {
 
-    // TODO: FIX ME.
-
-    private ProductServiceAdapter productAdapter;
+    private ProductCurator productCurator;
     private SubscriptionServiceAdapter subAdapter;
     private PoolManager poolManager;
 
     public static final String LAZY_REGEN = "lazy_regen";
+    public static final String OWNER_ID = "owner_id";
 
     @Inject
-    public RefreshPoolsForProductJob(ProductServiceAdapter productAdapter,
+    public RefreshPoolsForProductJob(ProductCurator productCurator,
         SubscriptionServiceAdapter subAdapter, PoolManager poolManager) {
 
-        this.productAdapter = productAdapter;
+        this.productCurator = productCurator;
         this.subAdapter = subAdapter;
         this.poolManager = poolManager;
     }
@@ -57,18 +55,28 @@ public class RefreshPoolsForProductJob extends KingpinJob {
     public void toExecute(JobExecutionContext context)
         throws JobExecutionException {
         String productId = context.getMergedJobDataMap().getString(JobStatus.TARGET_ID);
+        String ownerId = context.getMergedJobDataMap().getString(OWNER_ID);
         Boolean lazy = context.getMergedJobDataMap().getBoolean(LAZY_REGEN);
 
-        // TODO: We need either an owner or a product UUID here.
-        // poolManager.getRefresher(subAdapter, lazy).add(productAdapter.getProductById(productId)).run();
+        Product product = this.productCurator.lookupById(ownerId, productId);
 
-        context.setResult("Pools refreshed for product " + productId);
+        if (product != null) {
+            poolManager.getRefresher(subAdapter, lazy).add(product).run();
+            context.setResult("Pools refreshed for product " + productId);
+        }
+        else {
+            context.setResult(
+                "Unable to refresh pools for product \"" + productId + "\"" +
+                ": Could not find the specified product for owner \"" + ownerId + "\""
+            );
+        }
     }
 
     public static JobDetail forProduct(Product product, Boolean lazy) {
         JobDataMap map = new JobDataMap();
         map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.PRODUCT);
-        map.put(JobStatus.TARGET_ID, product.getUuid());
+        map.put(JobStatus.TARGET_ID, product.getId());
+        map.put(OWNER_ID, product.getOwner().getId());
         map.put(LAZY_REGEN, lazy);
 
         JobDetail detail = newJob(RefreshPoolsForProductJob.class)

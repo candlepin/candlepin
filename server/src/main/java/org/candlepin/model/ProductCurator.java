@@ -83,6 +83,18 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     }
 
     /**
+     * @param owner owner to lookup product for
+     * @param id Product ID to lookup. (note: not the database ID)
+     * @return the Product which matches the given id.
+     */
+    @Transactional
+    public Product lookupById(String ownerId, String productId) {
+        return (Product) currentSession().createCriteria(Product.class)
+            .add(Restrictions.eq("owner.id", ownerId))
+            .add(Restrictions.eq("id", productId)).uniqueResult();
+    }
+
+    /**
      * Retrieves a Product instance for the specified product UUID. If a matching product could not
      * be found, this method returns null.
      *

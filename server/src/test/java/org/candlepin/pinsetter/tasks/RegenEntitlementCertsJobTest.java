@@ -19,6 +19,8 @@ import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.controller.CandlepinPoolManager;
+import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.service.SubscriptionServiceAdapter;
 
 import org.junit.Test;
@@ -37,22 +39,30 @@ public class RegenEntitlementCertsJobTest {
         // prep
         CandlepinPoolManager pm = mock(CandlepinPoolManager.class);
         JobExecutionContext jec = mock(JobExecutionContext.class);
+        OwnerCurator oc = mock(OwnerCurator.class);
         JobDetail detail = mock(JobDetail.class);
         JobDataMap jdm = mock(JobDataMap.class);
         SubscriptionServiceAdapter subService = mock(SubscriptionServiceAdapter.class);
 
-        when(jdm.getString(eq("product_id"))).thenReturn("foobarbaz");
-        when(jdm.getBoolean(eq("lazy_regen"))).thenReturn(true);
+        String ownerId = "foo_owner";
+        String prodId = "bar_prod";
+        boolean lazyRegen = true;
+
+        Owner owner = new Owner(ownerId);
+
+        when(oc.find(ownerId)).thenReturn(owner);
+
+        when(jdm.getString(eq(RegenProductEntitlementCertsJob.OWNER_ID))).thenReturn(ownerId);
+        when(jdm.getString(eq(RegenProductEntitlementCertsJob.PROD_ID))).thenReturn(prodId);
+        when(jdm.getBoolean(eq(RegenProductEntitlementCertsJob.LAZY_REGEN))).thenReturn(lazyRegen);
         when(detail.getJobDataMap()).thenReturn(jdm);
         when(jec.getJobDetail()).thenReturn(detail);
 
         // test
-        RegenProductEntitlementCertsJob recj =
-            new RegenProductEntitlementCertsJob(pm, subService);
+        RegenProductEntitlementCertsJob recj = new RegenProductEntitlementCertsJob(pm, oc, subService);
         recj.execute(jec);
 
         // verification
-        // fail("FIX ME");
-        // verify(pm).regenerateCertificatesOf(eq(subService), eq("foobarbaz"), eq(true));
+        verify(pm).regenerateCertificatesOf(eq(subService), eq(owner), eq(prodId), eq(lazyRegen));
     }
 }
