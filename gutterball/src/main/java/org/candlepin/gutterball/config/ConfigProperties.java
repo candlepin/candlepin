@@ -26,6 +26,8 @@ public class ConfigProperties {
 
     public static final String DEFAULT_CONFIG_FILE = "/etc/gutterball/gutterball.conf";
     public static final String AMQP_CONNECT_STRING = "gutterball.amqp.connect";
+    public static final String AMQP_CONNECTION_RETRY_ATTEMPTS = "gutterball.amqp.connection.retry_attempts";
+    public static final String AMQP_CONNECTION_RETRY_INTERVAL = "gutterball.amqp.connection.retry_interval";
     public static final String AMQP_KEYSTORE = "gutterball.amqp.keystore";
     public static final String AMQP_KEYSTORE_PASSWORD = "gutterball.amqp.keystore_password";
     public static final String AMQP_TRUSTSTORE = "gutterball.amqp.truststore";
@@ -52,8 +54,9 @@ public class ConfigProperties {
                 // AMQP (Qpid) defaults
                 this.put(AMQP_CONNECT_STRING, "amqp://guest:guest@localhost/test?brokerlist=" +
                         "'tcp://localhost:5671?ssl='true'&ssl_cert_alias='gutterball''");
-                this.put(AMQP_KEYSTORE,
-                        "/etc/gutterball/certs/amqp/gutterball.jks");
+                this.put(AMQP_CONNECTION_RETRY_INTERVAL, "10"); // Every 10 seconds
+                this.put(AMQP_CONNECTION_RETRY_ATTEMPTS, "12"); // Try for 2 minutes (10s * 12)
+                this.put(AMQP_KEYSTORE, "/etc/gutterball/certs/amqp/gutterball.jks");
                 this.put(AMQP_KEYSTORE_PASSWORD, "password");
                 this.put(AMQP_TRUSTSTORE,
                         "/etc/gutterball/certs/amqp/gutterball.truststore");
