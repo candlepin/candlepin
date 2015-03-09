@@ -185,9 +185,9 @@ describe 'Entitlement Certificate V3' do
 
   it 'encoded the content urls' do
     @content_1 = create_content({:content_url => '/content/dist/rhel/$releasever/$basearch/debug',})
-    @cp.add_content_to_product(@product.id, @content_1.id, true)
+    @cp.add_content_to_product(@owner['key'], @product.id, @content_1.id, true)
     @content_2 = create_content({:content_url => '/content/beta/rhel/$releasever/$basearch/source/SRPMS',})
-    @cp.add_content_to_product(@product.id, @content_2.id, true)
+    @cp.add_content_to_product(@owner['key'], @product.id, @content_2.id, true)
     @cp.refresh_pools(@owner['key'])
     entitlement = @system.consume_product(@product.id)[0]
 
@@ -209,7 +209,7 @@ describe 'Entitlement Certificate V3' do
     number = 100
     number.times do |i|
       content = create_content({:content_url => "/content/dist/rhel/$releasever#{i}/$basearch#{i}/debug#{i}",})
-      @cp.add_content_to_product(@product.id, content.id, true)
+      @cp.add_content_to_product(@owner['key'], @product.id, content.id, true)
     end
     @cp.refresh_pools(@owner['key'])
     entitlement = @system.consume_product(@product.id)[0]
