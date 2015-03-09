@@ -41,6 +41,8 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.Content;
+import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCertificateCurator;
@@ -165,6 +167,7 @@ public class OwnerResource {
     private ServiceLevelValidator serviceLevelValidator;
     private ProductCurator prodCurator;
     private Configuration config;
+    private ContentCurator contentCurator;
 
     private static final int FEED_LIMIT = 1000;
 
@@ -190,7 +193,8 @@ public class OwnerResource {
         ContentOverrideValidator contentOverrideValidator,
         ServiceLevelValidator serviceLevelValidator,
         OwnerServiceAdapter ownerService, ProductCurator productCurator,
-        Configuration config) {
+        Configuration config,
+        ContentCurator contentCurator) {
 
         this.ownerCurator = ownerCurator;
         this.ownerInfoCurator = ownerInfoCurator;
@@ -220,6 +224,7 @@ public class OwnerResource {
         this.ownerService = ownerService;
         this.prodCurator = productCurator;
         this.config = config;
+        this.contentCurator = contentCurator;
     }
 
     /**
@@ -414,6 +419,11 @@ public class OwnerResource {
 
         for (Product p : prodCurator.listByOwner(owner)) {
             prodCurator.delete(p);
+        }
+
+        for (Content c : contentCurator.listByOwner(owner)) {
+            log.info("Deleting content: " + c);
+            contentCurator.delete(c);
         }
 
         log.info("Deleting owner: " + owner);
