@@ -608,7 +608,7 @@ class Candlepin
     end
   end
 
-  def create_product(id, name, params={})
+  def create_product(owner_key, id, name, params={})
 
     multiplier = params[:multiplier] || 1
     attributes = params[:attributes] || {}
@@ -626,7 +626,7 @@ class Candlepin
       'reliesOn' => relies_on
     }
 
-    post("/products", product)
+    post("/owners/#{owner_key}/products", product)
   end
 
   def update_product(product_id, params={})
@@ -648,8 +648,8 @@ class Candlepin
     get("/products/#{product_id}")
   end
 
-  def delete_product(product_id)
-    delete("/products/#{product_id}")
+  def delete_product(owner_key, product_id)
+    delete("/owners/#{owner_key}/products/#{product_id}")
   end
 
   def get_product_cert(product_id)

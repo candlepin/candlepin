@@ -10,6 +10,7 @@ describe 'Entitlements' do
     @monitoring = create_product(nil, random_string('monitoring'))
     @virt = create_product(nil, random_string('virtualization_host'),
       {:attributes => {"multi-entitlement" => "yes"}})
+    pp @virt
     @super_awesome = create_product(nil, random_string('super_awesome'),
                                     :attributes => { 'cpu.cpu_socket(s)' => 4 })
     @virt_limit = create_product(nil, random_string('virt_limit'),
@@ -26,7 +27,7 @@ describe 'Entitlements' do
     @cp.create_subscription(@owner['key'], @virt_limit.id, 5)
     @cp.create_subscription(@owner['key'], @instance_based.id, 10)
 
-    @cp.refresh_pools(@owner['key'])
+    #@cp.refresh_pools(@owner['key'])
 
     #create consumer
     @user = user_client(@owner, random_string('billy'))
@@ -53,6 +54,7 @@ describe 'Entitlements' do
 
   it 'should allow an entitlement to be consumed by pool' do
     pool = find_pool @virt
+    pp pool
     @system.consume_pool pool.id
 
     @system.list_entitlements.should have(1).things

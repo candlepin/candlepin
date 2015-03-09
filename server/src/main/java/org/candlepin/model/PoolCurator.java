@@ -232,8 +232,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             crit.add(Restrictions.ge("endDate", activeOn));
         }
 
-        // TODO: This may or may not need to change to be a UUID reference, depending on how badly
-        // it breaks things.
         if (productId != null) {
             crit.add(Restrictions.or(
                 Restrictions.eq("product.id", productId),

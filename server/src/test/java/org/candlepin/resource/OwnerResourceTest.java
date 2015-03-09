@@ -181,7 +181,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     public void testRefreshPoolsWithChangedSubscriptions() {
         Product prod = TestUtil.createProduct(owner);
         productCurator.create(prod);
-        Pool pool = createPoolAndSub(createOwner(), prod, 1000L,
+        Pool pool = createPoolAndSub(owner, prod, 1000L,
             TestUtil.createDate(2009, 11, 30),
             TestUtil.createDate(2015, 11, 30));
         Owner owner = pool.getOwner();
@@ -1093,7 +1093,10 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void createSubscription() {
-        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct(owner));
+        Product p = TestUtil.createProduct(owner);
+        productCurator.create(p);
+        Subscription s = TestUtil.createSubscription(owner, p);
+        s.setId("MADETHISUP");
         assertEquals(0, poolCurator.listByOwner(owner).size());
         ownerResource.createSubscription(owner.getKey(), s);
         assertEquals(1, poolCurator.listByOwner(owner).size());

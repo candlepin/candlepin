@@ -42,6 +42,18 @@ module CandlepinMethods
     # TODO: we must have an owner here now, to prevent churn, if none was given,
     # try to read @owner from the test class, which will often be populated.
 
+    # If owner given in params, use it, if not, try to find @owner, if neither
+    # is set error out.
+    # NOTE: this is the owner key being passed in as a string
+    if params[:owner]
+      owner = params[:owner]
+    elsif @owner
+      owner = @owner['key']
+    end
+    if ! owner
+      raise "Must call create_product with owner param or set @owner in spec suite."
+    end
+
     # For purposes of testing, you can omit id and name to create with
     # random strings.
     id ||= random_string(nil, true) #id has to be a number. OID encoding fails otherwise
@@ -51,7 +63,7 @@ module CandlepinMethods
     #Product IDs are 32 characters or less
     id = id[0..31]
 
-    product = @cp.create_product(id, name, params)
+    product = @cp.create_product(owner, id, name, params)
     @created_products <<  product
     return product
   end

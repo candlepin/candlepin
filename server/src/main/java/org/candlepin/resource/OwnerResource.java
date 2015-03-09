@@ -112,6 +112,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.UUID;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -800,6 +801,10 @@ public class OwnerResource {
         Subscription subscription) {
         Owner o = findOwner(ownerKey);
         subscription.setOwner(o);
+        // TODO: not sure if this is kept or not, subscription ID doesn't mean much anymore
+        if (subscription.getId() == null) {
+            subscription.setId(UUID.randomUUID().toString().replace("-", ""));
+        }
         poolManager.createPoolsForSubscription(subscription);
         return subscription;
     }
