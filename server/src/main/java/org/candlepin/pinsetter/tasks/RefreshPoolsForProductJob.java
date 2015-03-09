@@ -20,6 +20,8 @@ import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.pinsetter.core.model.JobStatus;
+import org.candlepin.service.ProductServiceAdapter;
+import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
@@ -34,27 +36,33 @@ import org.quartz.JobExecutionException;
  */
 public class RefreshPoolsForProductJob extends KingpinJob {
 
-    private ProductCurator productCurator;
+    // TODO: FIX ME.
+
+    private ProductServiceAdapter productAdapter;
+    private SubscriptionServiceAdapter subAdapter;
     private PoolManager poolManager;
 
     public static final String LAZY_REGEN = "lazy_regen";
 
     @Inject
-    public RefreshPoolsForProductJob(ProductCurator productCurator,
-        PoolManager poolManager) {
-        this.productCurator = productCurator;
+    public RefreshPoolsForProductJob(ProductServiceAdapter productAdapter,
+        SubscriptionServiceAdapter subAdapter, PoolManager poolManager) {
+
+        this.productAdapter = productAdapter;
+        this.subAdapter = subAdapter;
         this.poolManager = poolManager;
     }
 
     @Override
     public void toExecute(JobExecutionContext context)
         throws JobExecutionException {
-        String productUuid = context.getMergedJobDataMap().getString(JobStatus.TARGET_ID);
+        String productId = context.getMergedJobDataMap().getString(JobStatus.TARGET_ID);
         Boolean lazy = context.getMergedJobDataMap().getBoolean(LAZY_REGEN);
 
-        poolManager.getRefresher(lazy).add(this.productCurator.find(productUuid)).run();
+        // TODO: We need either an owner or a product UUID here.
+        // poolManager.getRefresher(subAdapter, lazy).add(productAdapter.getProductById(productId)).run();
 
-        context.setResult("Pools refreshed for product " + productUuid);
+        context.setResult("Pools refreshed for product " + productId);
     }
 
     public static JobDetail forProduct(Product product, Boolean lazy) {

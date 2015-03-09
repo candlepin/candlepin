@@ -49,6 +49,7 @@ import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.model.activationkeys.ActivationKey;
+import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.util.DateSource;
 
 import com.google.inject.AbstractModule;
@@ -103,6 +104,7 @@ public class DatabaseTestFixture {
     @Inject private SubscriptionCurator subCurator;
     @Inject private CertificateSerialCurator certSerialCurator;
     @Inject protected ContentCurator contentCurator;
+    @Inject protected SubscriptionServiceAdapter subAdapter;
 
     private static Injector parentInjector;
     private Injector injector;

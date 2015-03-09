@@ -343,11 +343,11 @@ public class OwnerResource {
             log.info("Removing all entitlements for consumer: " + c);
 
             if (revokeCerts) {
-                poolManager.revokeAllEntitlements(c);
+                poolManager.revokeAllEntitlements(subService, c);
             }
             else {
                 // otherwise just remove them without touching the CRL
-                poolManager.removeAllEntitlements(c);
+                poolManager.removeAllEntitlements(subService, c);
             }
         }
 
@@ -384,7 +384,7 @@ public class OwnerResource {
         }
         for (Pool p : poolManager.listPoolsByOwner(owner)) {
             log.info("Deleting pool: " + p);
-            poolManager.deletePool(p);
+            poolManager.deletePool(subService, p);
         }
 
         cleanupUeberCert(owner);
@@ -430,7 +430,7 @@ public class OwnerResource {
 
         Pool ueberPool = poolManager.findUeberPool(owner);
         if (ueberPool != null) {
-            poolManager.deletePool(ueberPool);
+            poolManager.deletePool(subService, ueberPool);
         }
     }
 
@@ -1283,7 +1283,7 @@ public class OwnerResource {
             List<Entitlement> ueberEntitlement
                 = entitlementCurator.listByConsumer(ueberConsumer);
             // Immediately revoke and regenerate ueber certificates:
-            poolManager.regenerateCertificatesOf(ueberEntitlement.get(0), true, false);
+            poolManager.regenerateCertificatesOf(subService, ueberEntitlement.get(0), true, false);
             return entitlementCertCurator.listForConsumer(ueberConsumer).get(0);
         }
 

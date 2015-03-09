@@ -25,6 +25,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolAttribute;
 import org.candlepin.model.Product;
+import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.test.TestUtil;
 
 import org.junit.Test;
@@ -41,6 +42,7 @@ import java.util.Set;
 public class UnmappedGuestEntitlementCleanerJobTest {
     @Mock private EntitlementCurator entitlementCurator;
     @Mock private PoolManager poolManager;
+    @Mock private SubscriptionServiceAdapter subAdapter;
 
     @Test
     public void testToExecute() throws Exception {
@@ -85,8 +87,8 @@ public class UnmappedGuestEntitlementCleanerJobTest {
         when(entitlementCurator.findByPoolAttribute(eq("unmapped_guests_only"), eq("true")))
             .thenReturn(Arrays.asList(new Entitlement[] {e1,  e2}));
 
-        new UnmappedGuestEntitlementCleanerJob(entitlementCurator, poolManager).execute(null);
+        new UnmappedGuestEntitlementCleanerJob(entitlementCurator, poolManager, subAdapter).execute(null);
 
-        verify(poolManager).revokeEntitlement(e1);
+        verify(poolManager).revokeEntitlement(subAdapter, e1);
     }
 }

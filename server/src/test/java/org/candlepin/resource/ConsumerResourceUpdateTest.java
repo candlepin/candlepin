@@ -489,7 +489,7 @@ public class ConsumerResourceUpdateTest {
         this.resource.updateConsumer(existingMigratedTo.getUuid(),
             createConsumerWithGuests("Guest 1"));
 
-        verify(poolManager).revokeEntitlement(eq(entitlement));
+        verify(poolManager).revokeEntitlement(eq(subscriptionService), eq(entitlement));
         verify(entitler).bindByProducts(AutobindData.create(guest1));
     }
 
@@ -525,7 +525,7 @@ public class ConsumerResourceUpdateTest {
         this.resource.updateConsumer(existingMigratedTo.getUuid(),
             createConsumerWithGuests("Guest 1"));
 
-        verify(poolManager).revokeEntitlement(eq(entitlement));
+        verify(poolManager).revokeEntitlement(eq(subscriptionService), eq(entitlement));
     }
 
     @Test
@@ -556,7 +556,7 @@ public class ConsumerResourceUpdateTest {
         when(this.consumerCurator.find(eq(guest1.getId()))).thenReturn(guest1);
 
         this.resource.updateConsumer(host.getUuid(), updatedHost);
-        verify(poolManager, never()).revokeEntitlement(eq(entitlement));
+        verify(poolManager, never()).revokeEntitlement(eq(subscriptionService), eq(entitlement));
     }
 
     @Test
@@ -585,7 +585,7 @@ public class ConsumerResourceUpdateTest {
             thenReturn(mockVirtConsumerMap("Guest 1", host));
 
         this.resource.updateConsumer(host.getUuid(), updatedHost);
-        verify(poolManager, never()).revokeEntitlement(eq(entitlement));
+        verify(poolManager, never()).revokeEntitlement(eq(subscriptionService), eq(entitlement));
     }
 
     @Test
@@ -614,7 +614,7 @@ public class ConsumerResourceUpdateTest {
 
         this.resource.updateConsumer(host.getUuid(), updatedHost);
         //verify(consumerCurator).findByVirtUuid(eq("Guest 1"));
-        verify(poolManager, never()).revokeEntitlement(eq(entitlement));
+        verify(poolManager, never()).revokeEntitlement(eq(subscriptionService), eq(entitlement));
     }
 
     private VirtConsumerMap mockVirtConsumerMap(String uuid, Consumer consumer) {
@@ -650,7 +650,7 @@ public class ConsumerResourceUpdateTest {
 
         this.resource.updateConsumer(host.getUuid(), updatedHost);
 
-        verify(poolManager, never()).revokeEntitlement(eq(entitlement));
+        verify(poolManager, never()).revokeEntitlement(eq(subscriptionService), eq(entitlement));
     }
 
     @Test
@@ -681,7 +681,7 @@ public class ConsumerResourceUpdateTest {
         this.resource.updateConsumer(host.getUuid(), updatedHost);
 
         //verify(consumerCurator).findByVirtUuid(eq("Guest 1"));
-        verify(poolManager, never()).revokeEntitlement(eq(entitlement));
+        verify(poolManager, never()).revokeEntitlement(eq(subscriptionService), eq(entitlement));
     }
 
     @Test
@@ -732,7 +732,7 @@ public class ConsumerResourceUpdateTest {
 
         resource.updateConsumer(existing.getUuid(), updated);
 
-        verify(poolManager, atMost(1)).regenerateEntitlementCertificates(existing, true);
+        verify(poolManager, atMost(1)).regenerateEntitlementCertificates(subscriptionService, existing, true);
         verify(sink).queueEvent((Event) any());
     }
 

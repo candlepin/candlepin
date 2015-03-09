@@ -32,6 +32,7 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.AbstractHibernateObject;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.Content;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCertificateCurator;
@@ -129,6 +130,8 @@ public class PoolManagerTest {
 
     @Mock
     private ActivationKeyRules activationKeyRules;
+    @Mock
+    private ProductCurator productCuratorMock;
 
     private CandlepinPoolManager manager;
     private UserPrincipal principal;
@@ -157,7 +160,7 @@ public class PoolManagerTest {
             mockPoolCurator, mockSubAdapter, mockProductCurator, entCertAdapterMock, mockEventSink,
             eventFactory, mockConfig, enforcerMock, poolRulesMock, entitlementCurator,
             consumerCuratorMock, certCuratorMock, complianceRules, autobindRules,
-            activationKeyRules)
+            activationKeyRules, productCuratorMock)
         );
 
         when(entCertAdapterMock.generateEntitlementCert(any(Entitlement.class),
@@ -193,12 +196,12 @@ public class PoolManagerTest {
         mockSubsList(subscriptions);
 
         mockPoolsList(pools);
-        this.manager.getRefresher().add(getOwner()).run();
+        this.manager.getRefresher(mockSubAdapter).add(getOwner()).run();
         List<Pool> expectedFloating = new LinkedList();
 
         // Make sure that only the floating pool was regenerated
         expectedFloating.add(floating);
-        verify(this.manager).updateFloatingPools(eq(expectedFloating), eq(true));
+        verify(this.manager).updateFloatingPools(eq(mockSubAdapter), eq(expectedFloating), eq(true), any(Set.class));
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -222,14 +225,14 @@ public class PoolManagerTest {
         mockSubsList(subscriptions);
 
         mockPoolsList(pools);
-        this.manager.getRefresher().add(getOwner()).run();
+        this.manager.getRefresher(mockSubAdapter).add(getOwner()).run();
         List<Pool> expectedModified = new LinkedList();
 
         // Make sure that only the floating pool was regenerated
         expectedModified.add(p);
-        verify(this.manager).updateFloatingPools(eq(new LinkedList()), eq(true));
+        verify(this.manager).updateFloatingPools(eq(mockSubAdapter), eq(new LinkedList()), eq(true), any(Set.class));
         verify(this.manager).updatePoolsForSubscription(
-            eq(expectedModified), eq(sub), eq(false));
+            eq(mockSubAdapter), eq(expectedModified), eq(sub), eq(false), any(Set.class));
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -243,8 +246,8 @@ public class PoolManagerTest {
         mockSubsList(subscriptions);
 
         mockPoolsList(pools);
-        this.manager.getRefresher().add(getOwner()).run();
-        verify(this.manager).deletePool(same(p));
+        this.manager.getRefresher(mockSubAdapter).add(getOwner()).run();
+        verify(this.manager).deletePool(eq(mockSubAdapter), same(p));
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -264,8 +267,8 @@ public class PoolManagerTest {
         mockSubsList(subscriptions);
 
         mockPoolsList(pools);
-        this.manager.getRefresher().add(getOwner()).run();
-        verify(this.manager).deletePool(same(p));
+        this.manager.getRefresher(mockSubAdapter).add(getOwner()).run();
+        verify(this.manager).deletePool(eq(mockSubAdapter), same(p));
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -285,8 +288,8 @@ public class PoolManagerTest {
         mockSubsList(subscriptions);
 
         mockPoolsList(pools);
-        this.manager.getRefresher().add(getOwner()).run();
-        verify(this.manager, never()).deletePool(same(p));
+        this.manager.getRefresher(mockSubAdapter).add(getOwner()).run();
+        verify(this.manager, never()).deletePool(eq(mockSubAdapter), same(p));
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -306,8 +309,8 @@ public class PoolManagerTest {
         mockSubsList(subscriptions);
 
         mockPoolsList(pools);
-        this.manager.getRefresher().add(getOwner()).run();
-        verify(this.manager, never()).deletePool(same(p));
+        this.manager.getRefresher(mockSubAdapter).add(getOwner()).run();
+        verify(this.manager, never()).deletePool(eq(mockSubAdapter), same(p));
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -325,9 +328,9 @@ public class PoolManagerTest {
 
         mockPoolsList(pools);
 
-        this.manager.getRefresher().add(getOwner()).run();
+        this.manager.getRefresher(mockSubAdapter).add(getOwner()).run();
         ArgumentCaptor<List> poolCaptor = ArgumentCaptor.forClass(List.class);
-        verify(this.poolRulesMock).updatePools(poolCaptor.capture());
+        verify(this.poolRulesMock).updatePools(poolCaptor.capture(), any(Set.class));
         assertEquals(1, poolCaptor.getValue().size());
         assertEquals(p, poolCaptor.getValue().get(0));
     }
@@ -349,7 +352,7 @@ public class PoolManagerTest {
         newPools.add(p);
         when(poolRulesMock.createPools(eq(s), any(List.class))).thenReturn(newPools);
 
-        this.manager.getRefresher().add(getOwner()).run();
+        this.manager.getRefresher(mockSubAdapter).add(getOwner()).run();
         verify(this.mockPoolCurator, times(1)).create(any(Pool.class));
     }
 
@@ -377,16 +380,16 @@ public class PoolManagerTest {
         u.setQuantityChanged(true);
         u.setOrderChanged(true);
         updates.add(u);
-        when(poolRulesMock.updatePools(s, pools)).thenReturn(updates);
+        when(poolRulesMock.updatePools(eq(s), eq(pools), any(Set.class))).thenReturn(updates);
 
-        this.manager.getRefresher().add(getOwner()).run();
+        this.manager.getRefresher(mockSubAdapter).add(getOwner()).run();
         verify(this.mockPoolCurator, times(1)).delete(any(Pool.class));
     }
 
     @Test
     public void testLazyRegenerate() {
         Entitlement e = new Entitlement();
-        manager.regenerateCertificatesOf(e, false, true);
+        manager.regenerateCertificatesOf(mockSubAdapter, e, false, true);
         assertTrue(e.getDirty());
         verifyZeroInteractions(entCertAdapterMock);
     }
@@ -396,7 +399,7 @@ public class PoolManagerTest {
         Entitlement e = new Entitlement();
         Consumer c = new Consumer();
         c.addEntitlement(e);
-        manager.regenerateEntitlementCertificates(c, true);
+        manager.regenerateEntitlementCertificates(mockSubAdapter, c, true);
         assertTrue(e.getDirty());
         verifyZeroInteractions(entCertAdapterMock);
     }
@@ -413,7 +416,7 @@ public class PoolManagerTest {
 
         when(mockSubAdapter.getSubscription(pool.getSubscriptionId())).thenReturn(s);
 
-        manager.regenerateCertificatesOf(e, false, false);
+        manager.regenerateCertificatesOf(mockSubAdapter, e, false, false);
         assertFalse(e.getDirty());
 
         verify(entCertAdapterMock).generateEntitlementCert(eq(e), eq(s),
@@ -463,7 +466,7 @@ public class PoolManagerTest {
         ValidationResult result = new ValidationResult();
         when(preHelper.getResult()).thenReturn(result);
 
-        int total = manager.revokeAllEntitlements(c);
+        int total = manager.revokeAllEntitlements(mockSubAdapter, c);
 
         assertEquals(2, total);
         verify(entitlementCurator, never()).listModifying(any(Entitlement.class));
@@ -482,7 +485,7 @@ public class PoolManagerTest {
 
         when(mockPoolCurator.lockAndLoad(any(Pool.class))).thenReturn(pool);
 
-        manager.revokeEntitlement(e);
+        manager.revokeEntitlement(mockSubAdapter, e);
 
         verify(entitlementCurator).delete(e);
     }
@@ -523,7 +526,7 @@ public class PoolManagerTest {
 
         AutobindData data = AutobindData.create(TestUtil.createConsumer(o))
                 .forProducts(new String[] { product.getUuid() }).on(now);
-        List<Entitlement> e = manager.entitleByProducts(data);
+        List<Entitlement> e = manager.entitleByProducts(mockSubAdapter, data);
 
         assertNotNull(e);
         assertEquals(e.size(), 1);
@@ -571,9 +574,8 @@ public class PoolManagerTest {
         ValidationResult result = new ValidationResult();
         when(preHelper.getResult()).thenReturn(result);
 
-        this.manager.getRefresher().add(sub.getOwner()).run();
+        this.manager.getRefresher(mockSubAdapter).add(sub.getOwner()).run();
 
-        verify(mockSubAdapter).deleteSubscription(eq(sub));
         verify(mockPoolCurator).delete(eq(p));
 
         verify(entitlementCurator).delete(eq(ent));
@@ -599,7 +601,7 @@ public class PoolManagerTest {
         ValidationResult result = new ValidationResult();
         when(preHelper.getResult()).thenReturn(result);
 
-        manager.deletePool(p);
+        manager.deletePool(mockSubAdapter, p);
 
         // And the pool should be deleted:
         verify(mockPoolCurator).delete(p);
@@ -628,7 +630,7 @@ public class PoolManagerTest {
         ValidationResult result = new ValidationResult();
         when(preHelper.getResult()).thenReturn(result);
 
-        manager.cleanupExpiredPools();
+        manager.cleanupExpiredPools(mockSubAdapter);
 
         // And the pool should be deleted:
         verify(mockPoolCurator).delete(p);
@@ -655,7 +657,7 @@ public class PoolManagerTest {
         ValidationResult result = new ValidationResult();
         when(preHelper.getResult()).thenReturn(result);
 
-        manager.cleanupExpiredPools();
+        manager.cleanupExpiredPools(mockSubAdapter);
 
         // And the pool should be deleted:
         verify(mockPoolCurator).delete(p);
@@ -722,7 +724,7 @@ public class PoolManagerTest {
 
         // Make the call but provide a null array of product IDs (simulates healing):
         AutobindData data = AutobindData.create(TestUtil.createConsumer(o)).on(now);
-        manager.entitleByProducts(data);
+        manager.entitleByProducts(mockSubAdapter, data);
 
         verify(autobindRules).selectBestPools(any(Consumer.class), eq(installedPids),
             any(List.class), eq(mockCompliance), any(String.class),
@@ -764,7 +766,7 @@ public class PoolManagerTest {
         ValidationResult result = new ValidationResult();
         when(preHelper.getResult()).thenReturn(result);
 
-        this.manager.getRefresher().add(sub.getOwner()).run();
+        this.manager.getRefresher(mockSubAdapter).add(sub.getOwner()).run();
 
         // The pool left over from the pre-migrated subscription should be deleted
         // and granted entitlements should be revoked
@@ -901,5 +903,235 @@ public class PoolManagerTest {
         List<Pool> newPools = pRules.createPools(s, existingPools);
         assertEquals(newPools.size(), 1);
         assertEquals(newPools.get(0).getSourceSubscription().getSubscriptionSubKey(), "master");
+    }
+
+    @Test
+    public void testGetChangedProductsNoNewProducts() {
+        Product oldProduct = TestUtil.createProduct("fake id", "fake name", o);
+
+        Set<Product> products = new HashSet<Product>();
+
+        when(productCuratorMock.lookupById(oldProduct.getOwner(), oldProduct.getId()))
+            .thenReturn(oldProduct);
+
+        Set<Product> changed = manager.getChangedProducts(o, products);
+
+        verify(productCuratorMock, times(0)).lookupById(oldProduct.getOwner(), oldProduct.getId());
+
+        assertTrue(changed.isEmpty());
+    }
+
+    @Test
+    public void testGetChangedProductsAllBrandNew() {
+        Product newProduct = TestUtil.createProduct("fake id", "fake name", o);
+
+        Set<Product> products = new HashSet<Product>();
+        products.add(newProduct);
+
+        when(productCuratorMock.lookupById(newProduct.getOwner(), newProduct.getId()))
+            .thenReturn(null);
+
+        Set<Product> changed = manager.getChangedProducts(o, products);
+
+        assertTrue(changed.isEmpty());
+    }
+
+    private void mockProduct(Product p) {
+        when(productCuratorMock.lookupById(p.getOwner(), p.getId())).thenReturn(p);
+    }
+
+    @Test
+    public void testGetChangedProductsAllIdentical() {
+        Product oldProduct = TestUtil.createProduct("fake id", "fake name", o);
+        mockProduct(oldProduct);
+
+        Set<Product> products = new HashSet<Product>();
+        products.add(oldProduct);
+
+        Set<Product> changed = manager.getChangedProducts(o, products);
+
+        assertTrue(changed.isEmpty());
+    }
+
+    @Test
+    public void testGetChangedProductsNameChanged() {
+        Product newProduct = TestUtil.createProduct("fake id", "fake name new", o);
+        Product oldProduct = TestUtil.createProduct("fake id", "fake name", o);
+
+        Set<Product> products = new HashSet<Product>();
+        products.add(newProduct);
+
+        mockProduct(oldProduct);
+
+        Set<Product> changed = manager.getChangedProducts(o, products);
+
+        assertEquals(1, changed.size());
+    }
+
+    @Test
+    public void testGetChangedProductsMultiplierChanged() {
+        Product newProduct = TestUtil.createProduct("fake id", "fake name", o);
+        Product oldProduct = TestUtil.createProduct("fake id", "fake name", o);
+
+        oldProduct.setMultiplier(1L);
+        newProduct.setMultiplier(2L);
+
+        Set<Product> products = new HashSet<Product>();
+        products.add(newProduct);
+
+        mockProduct(oldProduct);
+
+        Set<Product> changed = manager.getChangedProducts(o, products);
+
+        assertEquals(1, changed.size());
+    }
+
+    @Test
+    public void testGetChangedProductsAttributeAdded() {
+        Product newProduct = TestUtil.createProduct("fake id", "fake name", o);
+        Product oldProduct = TestUtil.createProduct("fake id", "fake name", o);
+
+        newProduct.setAttribute("fake attr", "value");
+
+        Set<Product> products = new HashSet<Product>();
+        products.add(newProduct);
+
+        mockProduct(oldProduct);
+
+        Set<Product> changed = manager.getChangedProducts(o, products);
+
+        assertEquals(1, changed.size());
+    }
+
+    @Test
+    public void testGetChangedProductsAttributeRemoved() {
+        Product newProduct = TestUtil.createProduct("fake id", "fake name", o);
+        Product oldProduct = TestUtil.createProduct("fake id", "fake name", o);
+
+        oldProduct.setAttribute("fake attr", "value");
+
+        Set<Product> products = new HashSet<Product>();
+        products.add(newProduct);
+
+        mockProduct(oldProduct);
+
+        Set<Product> changed = manager.getChangedProducts(o, products);
+
+        assertEquals(1, changed.size());
+    }
+
+    @Test
+    public void testGetChangedProductsAttributeModified() {
+        Product newProduct = TestUtil.createProduct("fake id", "fake name", o);
+        Product oldProduct = TestUtil.createProduct("fake id", "fake name", o);
+
+        oldProduct.setAttribute("fake attr", "value");
+        newProduct.setAttribute("fake attr", "value new");
+
+        Set<Product> products = new HashSet<Product>();
+        products.add(newProduct);
+
+        mockProduct(oldProduct);
+
+        Set<Product> changed = manager.getChangedProducts(o, products);
+
+        assertEquals(1, changed.size());
+    }
+
+    @Test
+    public void testGetChangedProductsAttributeSwapped() {
+        Product newProduct = TestUtil.createProduct("fake id", "fake name", o);
+        Product oldProduct = TestUtil.createProduct("fake id", "fake name", o);
+
+        oldProduct.setAttribute("fake attr", "value");
+        newProduct.setAttribute("other fake attr", "value");
+
+        Set<Product> products = new HashSet<Product>();
+        products.add(newProduct);
+
+        mockProduct(oldProduct);
+
+        Set<Product> changed = manager.getChangedProducts(o, products);
+
+        assertEquals(1, changed.size());
+    }
+
+    @Test
+    public void testGetChangedProductsContentAdded() {
+        Product newProduct = TestUtil.createProduct("fake id", "fake name", o);
+        Product oldProduct = TestUtil.createProduct("fake id", "fake name", o);
+
+        Content content = new Content();
+
+        newProduct.addContent(content);
+
+        Set<Product> products = new HashSet<Product>();
+        products.add(newProduct);
+
+        mockProduct(oldProduct);
+
+        Set<Product> changed = manager.getChangedProducts(o, products);
+
+        assertEquals(1, changed.size());
+    }
+
+    @Test
+    public void testGetChangedProductsContentRemoved() {
+        Product newProduct = TestUtil.createProduct("fake id", "fake name", o);
+        Product oldProduct = TestUtil.createProduct("fake id", "fake name", o);
+
+        Content content = new Content();
+
+        oldProduct.addContent(content);
+
+        Set<Product> products = new HashSet<Product>();
+        products.add(newProduct);
+
+        mockProduct(oldProduct);
+
+        Set<Product> changed = manager.getChangedProducts(o, products);
+
+        assertEquals(1, changed.size());
+    }
+
+    @Test
+    public void testGetChangedProductsContentSwapped() {
+        Product newProduct = TestUtil.createProduct("fake id", "fake name", o);
+        Product oldProduct = TestUtil.createProduct("fake id", "fake name", o);
+
+        Content content = new Content(o, "foobar", null, null, null, null, null, null, null);
+        Content content2 = new Content(o, "baz", null, null, null, null, null, null, null);
+
+        oldProduct.addContent(content);
+        newProduct.addContent(content2);
+
+        Set<Product> products = new HashSet<Product>();
+        products.add(newProduct);
+
+        mockProduct(oldProduct);
+
+        Set<Product> changed = manager.getChangedProducts(o, products);
+
+        assertEquals(1, changed.size());
+    }
+
+    @Test
+    public void testGetChangedProductsContentEnabledToggled() {
+        Product newProduct = TestUtil.createProduct("fake id", "fake name", o);
+        Product oldProduct = TestUtil.createProduct("fake id", "fake name", o);
+
+        Content content = new Content(o, "foobar", null, null, null, null, null, null, null);
+
+        oldProduct.addContent(content);
+        newProduct.addEnabledContent(content);
+
+        Set<Product> products = new HashSet<Product>();
+        products.add(newProduct);
+
+        mockProduct(oldProduct);
+
+        Set<Product> changed = manager.getChangedProducts(o, products);
+
+        assertEquals(1, changed.size());
     }
 }

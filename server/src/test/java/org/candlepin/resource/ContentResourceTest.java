@@ -14,14 +14,8 @@
  */
 package org.candlepin.resource;
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyLong;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
@@ -72,9 +66,9 @@ public class ContentResourceTest {
         oc = mock(OwnerCurator.class);
         productCurator = mock(ProductCurator.class);
 
-        cr = new ContentResource(cc, i18n, new DefaultUniqueIdGenerator(),
-            envContentCurator, poolManager, productCurator, oc);
-
+        cr = new ContentResource(
+            cc, i18n, new DefaultUniqueIdGenerator(), envContentCurator, poolManager, productCurator, oc
+        );
     }
 
     @Test
@@ -114,7 +108,8 @@ public class ContentResourceTest {
         when(content.getId()).thenReturn("10");
         when(cc.find(eq(10L))).thenReturn(null);
         cr.createContent(content);
-        verify(cc, atLeastOnce()).create(content);
+
+        verify(cc, never()).create(content);
     }
 
     @Test(expected = UnsupportedOperationException.class)
@@ -130,8 +125,8 @@ public class ContentResourceTest {
 
         cr.remove("10");
 
-        verify(cc, atLeastOnce()).delete(eq(content));
-        verify(envContentCurator, atLeastOnce()).delete(eq(ec));
+        verify(cc, never()).delete(eq(content));
+        verify(envContentCurator, never()).delete(eq(ec));
     }
 
     @Test(expected = UnsupportedOperationException.class)
@@ -164,10 +159,10 @@ public class ContentResourceTest {
 
         cr.updateContent(contentId, content);
 
-        verify(cc).find(eq(contentId));
-        verify(cc).createOrUpdate(eq(content));
-        verify(productCurator).getProductsWithContent(owner, Arrays.asList(contentId));
-        verify(poolManager).regenerateCertificatesOf(eq(owner), eq(productId), eq(true));
+        verify(cc, never()).find(eq(contentId));
+        verify(cc, never()).createOrUpdate(eq(content));
+        verify(productCurator, never()).getProductsWithContent(owner, Arrays.asList(contentId));
+        // verify(poolManager, never()).regenerateCertificatesOf(eq(owner), eq(productId), eq(true));
     }
 
     @Test(expected = UnsupportedOperationException.class)

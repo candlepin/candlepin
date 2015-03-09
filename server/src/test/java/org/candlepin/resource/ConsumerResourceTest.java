@@ -182,7 +182,7 @@ public class ConsumerResourceTest {
             mockedEntitlementCertServiceAdapter, null, null,
             new CandlepinCommonTestConfig(), null, null,
             mockedEntitlementCurator, mockedConsumerCurator, null, null, null,
-            mockedActivationKeyRules);
+            mockedActivationKeyRules, null);
 
         ConsumerResource consumerResource = new ConsumerResource(
             mockedConsumerCurator, null, null, null, mockedEntitlementCurator, null,
@@ -221,12 +221,12 @@ public class ConsumerResourceTest {
 
         CandlepinPoolManager mgr = mock(CandlepinPoolManager.class);
         ConsumerResource cr = new ConsumerResource(mockedConsumerCurator, null,
-            null, null, null, null, null, null, null, null, null, null, null,
+            null, mockedSubscriptionServiceAdapter, null, null, null, null, null, null, null, null, null,
             null, mgr, null, null, null, null, null, null, null, null,
             new CandlepinCommonTestConfig(), null, null, null, consumerBindUtil);
         cr.regenerateEntitlementCertificates(consumer.getUuid(), null, true);
         Mockito.verify(mgr, Mockito.times(1))
-            .regenerateEntitlementCertificates(eq(consumer), eq(true));
+            .regenerateEntitlementCertificates(eq(mockedSubscriptionServiceAdapter), eq(consumer), eq(true));
     }
 
     @Test

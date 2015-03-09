@@ -22,10 +22,12 @@ import static org.mockito.Mockito.reset;
 
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventSink;
+import org.candlepin.common.paging.Page;
+import org.candlepin.common.paging.PageRequest;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
-import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
@@ -43,13 +45,10 @@ import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.model.activationkeys.ActivationKey;
-import org.candlepin.common.paging.Page;
-import org.candlepin.common.paging.PageRequest;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
 import org.candlepin.resource.dto.AutobindData;
-import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
@@ -145,7 +144,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         subCurator.create(new Subscription(o, provisioning, new HashSet<Product>(),
             5L, new Date(), TestUtil.createDate(3020, 12, 12), new Date()));
 
-        poolManager.getRefresher().add(o).run();
+        poolManager.getRefresher(subAdapter).add(o).run();
 
         this.systemType = new ConsumerType(ConsumerTypeEnum.SYSTEM);
         consumerTypeCurator.create(systemType);
@@ -175,13 +174,13 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         AutobindData data = AutobindData.create(parentSystem).on(new Date())
                 .forProducts(new String [] {monitoring.getId()});
         for (int i = 0; i < 5; i++) {
-            List<Entitlement> entitlements = poolManager.entitleByProducts(data);
+            List<Entitlement> entitlements = poolManager.entitleByProducts(subAdapter, data);
             assertEquals(1, entitlements.size());
         }
 
         // The cert should specify 5 monitoring entitlements, taking a 6th should fail:
         try {
-            poolManager.entitleByProducts(data);
+            poolManager.entitleByProducts(subAdapter, data);
             fail();
         }
         // With criteria filtered pools we end up with a RuntimeException
@@ -197,8 +196,8 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     public void testRevocation() throws Exception {
         AutobindData data = AutobindData.create(parentSystem).on(new Date())
                 .forProducts(new String [] {monitoring.getId()});
-        Entitlement e = poolManager.entitleByProducts(data).get(0);
-        poolManager.revokeEntitlement(e);
+        Entitlement e = poolManager.entitleByProducts(subAdapter, data).get(0);
+        poolManager.revokeEntitlement(subAdapter, e);
 
         List<Entitlement> entitlements = entitlementCurator.listByConsumer(parentSystem);
         assertTrue(entitlements.isEmpty());
@@ -210,11 +209,11 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
             monitoring.getId()).get(0);
         assertEquals(Long.valueOf(5), monitoringPool.getQuantity());
 
-        Entitlement e = poolManager.entitleByPool(parentSystem, monitoringPool, 3);
+        Entitlement e = poolManager.entitleByPool(subAdapter, parentSystem, monitoringPool, 3);
         assertNotNull(e);
         assertEquals(Long.valueOf(3), monitoringPool.getConsumed());
 
-        poolManager.revokeEntitlement(e);
+        poolManager.revokeEntitlement(subAdapter, e);
         assertEquals(Long.valueOf(0), monitoringPool.getConsumed());
     }
 
@@ -223,7 +222,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         throws Exception {
         AutobindData data = AutobindData.create(childVirtSystem).on(new Date())
                 .forProducts(new String [] {provisioning.getId()});
-        this.entitlementCurator.refresh(poolManager.entitleByProducts(data).get(0));
+        this.entitlementCurator.refresh(poolManager.entitleByProducts(subAdapter, data).get(0));
         regenerateECAndAssertNotSameCertificates();
     }
 
@@ -232,15 +231,15 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         throws EntitlementRefusedException {
         AutobindData data = AutobindData.create(childVirtSystem).on(new Date())
                 .forProducts(new String [] {provisioning.getId()});
-        this.entitlementCurator.refresh(poolManager.entitleByProducts(data).get(0));
-        this.entitlementCurator.refresh(poolManager.entitleByProducts(data).get(0));
+        this.entitlementCurator.refresh(poolManager.entitleByProducts(subAdapter, data).get(0));
+        this.entitlementCurator.refresh(poolManager.entitleByProducts(subAdapter, data).get(0));
         regenerateECAndAssertNotSameCertificates();
     }
 
     @Test
     public void testRegenerateEntitlementCertificatesWithNoEntitlement() {
         reset(this.eventSink); // pool creation events went out from setup
-        poolManager.regenerateEntitlementCertificates(childVirtSystem, true);
+        poolManager.regenerateEntitlementCertificates(subAdapter, childVirtSystem, true);
         assertEquals(0, collectEntitlementCertIds(this.childVirtSystem).size());
         Mockito.verifyZeroInteractions(this.eventSink);
     }
@@ -262,7 +261,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         subCurator.create(new Subscription(o, modifier, new HashSet<Product>(),
             5L, new Date(), TestUtil.createDate(3020, 12, 12), new Date()));
 
-        poolManager.getRefresher().add(o).run();
+        poolManager.getRefresher(subAdapter).add(o).run();
 
 
         // This test simulates https://bugzilla.redhat.com/show_bug.cgi?id=676870
@@ -273,12 +272,12 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         // inside an entitleByProducts call, we do it in two singular calls here.
         AutobindData data = AutobindData.create(parentSystem).on(new Date())
                 .forProducts(new String [] {"modifier"});
-        poolManager.entitleByProducts(data);
+        poolManager.entitleByProducts(subAdapter, data);
 
         try {
             data = AutobindData.create(parentSystem).on(new Date())
                     .forProducts(new String [] {PRODUCT_VIRT_HOST});
-            poolManager.entitleByProducts(data);
+            poolManager.entitleByProducts(subAdapter, data);
         }
         catch (EntityNotFoundException e) {
             throw e;
@@ -301,7 +300,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         subCurator.create(subscription);
 
         // set up initial pool
-        poolManager.getRefresher().add(o).run();
+        poolManager.getRefresher(subAdapter).add(o).run();
 
         List<Pool> pools = poolCurator.listByOwnerAndProduct(o, product1.getId());
         assertEquals(1, pools.size());
@@ -311,7 +310,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         subCurator.merge(subscription);
 
         // set up initial pool
-        poolManager.getRefresher().add(o).run();
+        poolManager.getRefresher(subAdapter).add(o).run();
 
         pools = poolCurator.listByOwnerAndProduct(o, product2.getId());
         assertEquals(1, pools.size());
@@ -419,7 +418,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     private void regenerateECAndAssertNotSameCertificates() {
         Set<EntitlementCertificate> oldsIds =
             collectEntitlementCertIds(this.childVirtSystem);
-        poolManager.regenerateEntitlementCertificates(childVirtSystem, false);
+        poolManager.regenerateEntitlementCertificates(subAdapter, childVirtSystem, false);
         Mockito.verify(this.eventSink, Mockito.times(oldsIds.size()))
             .queueEvent(any(Event.class));
         Set<EntitlementCertificate> newIds =

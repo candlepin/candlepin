@@ -323,7 +323,7 @@ public class TestUtil {
     public static Pool copyFromSub(Subscription sub) {
         Pool p = new Pool(sub.getOwner(),
             sub.getProduct(),
-            sub.getProvidedProducts(),
+            new HashSet<Product>(sub.getProvidedProducts()),
             sub.getQuantity(),
             sub.getStartDate(),
             sub.getEndDate(),
@@ -397,5 +397,13 @@ public class TestUtil {
                 }
             }
         }
+    }
+
+    public static Set<Product> stubChangedProducts(Product ... products) {
+        Set<Product> result = new HashSet<Product>();
+        for (Product p : products) {
+            result.add(p);
+        }
+        return result;
     }
 }

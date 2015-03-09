@@ -35,6 +35,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
+import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.impl.DefaultUniqueIdGenerator;
 
 import org.junit.Before;
@@ -62,6 +63,7 @@ public class OwnerContentResourceTest {
     private PoolManager poolManager;
     private ProductCurator productCurator;
     private OwnerCurator oc;
+    private SubscriptionServiceAdapter ssa;
 
     @Before
     public void init() {
@@ -71,9 +73,10 @@ public class OwnerContentResourceTest {
         poolManager = mock(PoolManager.class);
         oc = mock(OwnerCurator.class);
         productCurator = mock(ProductCurator.class);
+        ssa = mock(SubscriptionServiceAdapter.class);
 
         ocr = new OwnerContentResource(cc, i18n, new DefaultUniqueIdGenerator(),
-            envContentCurator, poolManager, productCurator, oc);
+            envContentCurator, poolManager, productCurator, oc, ssa);
 
     }
 
@@ -191,7 +194,7 @@ public class OwnerContentResourceTest {
         verify(cc).lookupById(eq(owner), eq(contentId));
         verify(cc).createOrUpdate(eq(content));
         verify(productCurator).getProductsWithContent(eq(owner), eq(Arrays.asList(contentId)));
-        verify(poolManager).regenerateCertificatesOf(eq(owner), eq(productId), eq(true));
+        verify(poolManager).regenerateCertificatesOf(eq(ssa), eq(owner), eq(productId), eq(true));
     }
 
     @Test(expected = NotFoundException.class)

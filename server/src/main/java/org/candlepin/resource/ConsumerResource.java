@@ -754,7 +754,7 @@ public class ConsumerResource {
                 log.info("Principal carries permission for owner that does not exist.");
                 log.info("Creating new owner: {}", owner.getKey());
                 existingOwner = ownerCurator.create(owner);
-                poolManager.getRefresher().add(existingOwner).run();
+                poolManager.getRefresher(subAdapter).add(existingOwner).run();
             }
         }
     }
@@ -888,7 +888,7 @@ public class ConsumerResource {
             toUpdate.setEnvironment(e);
 
             // lazily regenerate certs, so the client can still work
-            poolManager.regenerateEntitlementCertificates(toUpdate, true);
+            poolManager.regenerateEntitlementCertificates(subAdapter, toUpdate, true);
             changesMade = true;
         }
 
@@ -1152,7 +1152,7 @@ public class ConsumerResource {
         }
         // perform the entitlement revocation
         for (Entitlement entitlement : deletableGuestEntitlements) {
-            poolManager.revokeEntitlement(entitlement);
+            poolManager.revokeEntitlement(subAdapter, entitlement);
         }
 
         // auto heal guests after revocations
@@ -1201,7 +1201,7 @@ public class ConsumerResource {
         log.debug("Deleting consumer_uuid {}", uuid);
         Consumer toDelete = consumerCurator.verifyAndLookupConsumer(uuid);
         try {
-            this.poolManager.revokeAllEntitlements(toDelete);
+            this.poolManager.revokeAllEntitlements(subAdapter, toDelete);
         }
         catch (ForbiddenException e) {
             String msg = e.message().getDisplayMessage();
@@ -1235,7 +1235,7 @@ public class ConsumerResource {
 
         log.debug("Getting client certificates for consumer: {}", consumerUuid);
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        poolManager.regenerateDirtyEntitlements(
+        poolManager.regenerateDirtyEntitlements(subAdapter,
             entitlementCurator.listByConsumer(consumer));
 
         Set<Long> serialSet = this.extractSerials(serials);
@@ -1270,7 +1270,7 @@ public class ConsumerResource {
 
         log.debug("Getting client certificate zip file for consumer: {}", consumerUuid);
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        poolManager.regenerateDirtyEntitlements(
+        poolManager.regenerateDirtyEntitlements(subAdapter,
             entitlementCurator.listByConsumer(consumer));
 
         Set<Long> serialSet = this.extractSerials(serials);
@@ -1338,7 +1338,7 @@ public class ConsumerResource {
 
         log.debug("Getting client certificate serials for consumer: {}", consumerUuid);
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        poolManager.regenerateDirtyEntitlements(
+        poolManager.regenerateDirtyEntitlements(subAdapter,
             entitlementCurator.listByConsumer(consumer));
 
         List<CertificateSerialDto> allCerts = new LinkedList<CertificateSerialDto>();
@@ -1604,7 +1604,7 @@ public class ConsumerResource {
         }
 
         if (regen) {
-            poolManager.regenerateDirtyEntitlements(returnedEntitlements);
+            poolManager.regenerateDirtyEntitlements(subAdapter, returnedEntitlements);
         }
         else {
             log.debug("Skipping certificate regeneration.");
@@ -1655,7 +1655,7 @@ public class ConsumerResource {
                 "Unit with ID ''{0}'' could not be found.", consumerUuid));
         }
 
-        int total = poolManager.revokeAllEntitlements(consumer);
+        int total = poolManager.revokeAllEntitlements(subAdapter, consumer);
         log.debug("Revoked {} entitlements from {}", total, consumerUuid);
         return new DeleteResult(total);
 
@@ -1687,7 +1687,7 @@ public class ConsumerResource {
 
         Entitlement toDelete = entitlementCurator.find(dbid);
         if (toDelete != null) {
-            poolManager.revokeEntitlement(toDelete);
+            poolManager.revokeEntitlement(subAdapter, toDelete);
             return;
         }
 
@@ -1715,7 +1715,7 @@ public class ConsumerResource {
             .findByCertificateSerial(serial);
 
         if (toDelete != null) {
-            poolManager.revokeEntitlement(toDelete);
+            poolManager.revokeEntitlement(subAdapter, toDelete);
             return;
         }
         throw new NotFoundException(i18n.tr(
@@ -1778,11 +1778,11 @@ public class ConsumerResource {
         @QueryParam("lazy_regen") @DefaultValue("true") Boolean lazyRegen) {
         if (entitlementId != null) {
             Entitlement e = verifyAndLookupEntitlement(entitlementId);
-            poolManager.regenerateCertificatesOf(e, false, lazyRegen);
+            poolManager.regenerateCertificatesOf(subAdapter, e, false, lazyRegen);
         }
         else {
             Consumer c = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-            poolManager.regenerateEntitlementCertificates(c, lazyRegen);
+            poolManager.regenerateEntitlementCertificates(subAdapter, c, lazyRegen);
         }
     }
 
@@ -1821,7 +1821,7 @@ public class ConsumerResource {
                 i18n.tr("A CDN with label {0} does not exist on this system.", cdnLabel));
         }
 
-        poolManager.regenerateDirtyEntitlements(
+        poolManager.regenerateDirtyEntitlements(subAdapter,
             entitlementCurator.listByConsumer(consumer));
 
         File archive;

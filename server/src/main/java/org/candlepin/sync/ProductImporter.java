@@ -20,16 +20,13 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.util.Util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.Sets;
 
 import org.apache.commons.lang.StringUtils;
 
 import java.io.IOException;
 import java.io.Reader;
-import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -45,8 +42,8 @@ public class ProductImporter {
         this.contentCurator = contentCurator;
     }
 
-    public Product createObject(ObjectMapper mapper, Reader reader)
-        throws IOException {
+    public Product createObject(ObjectMapper mapper, Reader reader) throws IOException {
+
         final Product importedProduct = mapper.readValue(reader, Product.class);
         // Make sure the ID's are null, otherwise Hibernate thinks these are
         // detached entities.
@@ -84,56 +81,4 @@ public class ProductImporter {
         }
     }
 
-    /**
-     * Examine the list of products that are about to be imported, and return a set of them
-     * that have been modified from their state in the db.
-     *
-     * Will not return brand new products.
-     *
-     * @param products The list of yet to be imported products
-     * @return a set of all products that exist in the db, but will be changed
-     */
-    Set<Product> getChangedProducts(Set<Product> products) {
-        Set<Product> toReturn = Util.newSet();
-
-        for (Product product : products) {
-            Product existing = curator.find(product.getUuid());
-
-            if (existing != null && hasProductChanged(existing, product)) {
-                toReturn.add(product);
-            }
-        }
-
-        return toReturn;
-    }
-
-    protected final boolean hasProductChanged(Product existingProd, Product importedProd) {
-        // trying to go in order from least to most work.
-        if (!existingProd.getName().equals(importedProd.getName())) {
-            return true;
-        }
-
-        if (!existingProd.getMultiplier().equals(importedProd.getMultiplier())) {
-            return true;
-        }
-
-        if (existingProd.getAttributes().size() != importedProd.getAttributes().size()) {
-            return true;
-        }
-        if (Sets.intersection(existingProd.getAttributes(),
-            importedProd.getAttributes()).size() != existingProd.getAttributes().size()) {
-            return true;
-        }
-
-        if (existingProd.getProductContent().size() != importedProd.getProductContent().size()) {
-            return true;
-        }
-        if (Sets.intersection(new HashSet<ProductContent>(existingProd.getProductContent()),
-                new HashSet<ProductContent>(importedProd.getProductContent())).size() !=
-                existingProd.getProductContent().size()) {
-            return true;
-        }
-
-        return false;
-    }
 }

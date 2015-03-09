@@ -29,6 +29,7 @@ import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.pinsetter.tasks.RegenEnvEntitlementCertsJob;
+import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
@@ -66,12 +67,13 @@ public class EnvironmentResource {
     private ConsumerResource consumerResource;
     private PoolManager poolManager;
     private ConsumerCurator consumerCurator;
+    private SubscriptionServiceAdapter subAdapter;
 
     @Inject
     public EnvironmentResource(EnvironmentCurator envCurator, I18n i18n,
         EnvironmentContentCurator envContentCurator,
         ConsumerResource consumerResource, PoolManager poolManager,
-        ConsumerCurator consumerCurator) {
+        ConsumerCurator consumerCurator, SubscriptionServiceAdapter subAdapter) {
 
         this.envCurator = envCurator;
         this.i18n = i18n;
@@ -79,6 +81,7 @@ public class EnvironmentResource {
         this.consumerResource = consumerResource;
         this.poolManager = poolManager;
         this.consumerCurator = consumerCurator;
+        this.subAdapter = subAdapter;
     }
 
     /**
@@ -120,7 +123,7 @@ public class EnvironmentResource {
 
         // Cleanup all consumers and their entitlements:
         for (Consumer c : e.getConsumers()) {
-            poolManager.revokeAllEntitlements(c);
+            poolManager.revokeAllEntitlements(subAdapter, c);
             consumerCurator.delete(c);
         }
 

@@ -21,6 +21,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.pinsetter.core.RetryJobException;
 import org.candlepin.pinsetter.core.model.JobStatus;
+import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
@@ -45,14 +46,17 @@ public class RefreshPoolsJob extends UniqueByOwnerJob {
     private static Logger log = LoggerFactory.getLogger(RefreshPoolsJob.class);
     private OwnerCurator ownerCurator;
     private PoolManager poolManager;
+    private SubscriptionServiceAdapter subAdapter;
 
     public static final String LAZY_REGEN = "lazy_regen";
     protected static String prefix = "refresh_pools_";
 
     @Inject
-    public RefreshPoolsJob(OwnerCurator ownerCurator, PoolManager poolManager) {
+    public RefreshPoolsJob(OwnerCurator ownerCurator, PoolManager poolManager,
+            SubscriptionServiceAdapter subAdapter) {
         this.ownerCurator = ownerCurator;
         this.poolManager = poolManager;
+        this.subAdapter = subAdapter;
     }
 
     /**
@@ -75,7 +79,7 @@ public class RefreshPoolsJob extends UniqueByOwnerJob {
             }
 
             // Assume that we verified the request in the resource layer:
-            poolManager.getRefresher(lazy).setUnitOfWork(unitOfWork).add(owner).run();
+            poolManager.getRefresher(subAdapter, lazy).setUnitOfWork(unitOfWork).add(owner).run();
             context.setResult("Pools refreshed for owner " + owner.getDisplayName());
         }
         catch (PersistenceException e) {

@@ -24,6 +24,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
+import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UniqueIdGenerator;
 
 import com.google.inject.Inject;
@@ -58,11 +59,14 @@ public class OwnerContentResource {
     private OwnerCurator ownerCurator;
     private PoolManager poolManager;
     private ProductCurator productCurator;
+    private SubscriptionServiceAdapter subAdapter;
 
     @Inject
     public OwnerContentResource(ContentCurator contentCurator, I18n i18n, UniqueIdGenerator idGenerator,
         EnvironmentContentCurator envContentCurator, PoolManager poolManager,
-        ProductCurator productCurator, OwnerCurator ownerCurator) {
+        ProductCurator productCurator, OwnerCurator ownerCurator,
+        SubscriptionServiceAdapter subAdapter) {
+
         this.i18n = i18n;
         this.contentCurator = contentCurator;
         this.idGenerator = idGenerator;
@@ -70,6 +74,7 @@ public class OwnerContentResource {
         this.poolManager = poolManager;
         this.productCurator = productCurator;
         this.ownerCurator = ownerCurator;
+        this.subAdapter = subAdapter;
     }
 
     /**
@@ -248,7 +253,9 @@ public class OwnerContentResource {
             this.productCurator.getProductsWithContent(content.getOwner(), Arrays.asList(contentId));
 
         for (Product product : affectedProducts) {
-            poolManager.regenerateCertificatesOf(product.getOwner(), product.getId(), true);
+            poolManager.regenerateCertificatesOf(
+                this.subAdapter, product.getOwner(), product.getId(), true
+            );
         }
 
         return content;
@@ -280,7 +287,9 @@ public class OwnerContentResource {
 
         // Regenerate affected products
         for (Product product : affectedProducts) {
-            poolManager.regenerateCertificatesOf(product.getOwner(), product.getId(), true);
+            poolManager.regenerateCertificatesOf(
+                this.subAdapter, product.getOwner(), product.getId(), true
+            );
         }
     }
 }

@@ -33,6 +33,7 @@ import org.candlepin.model.SourceStack;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
 import org.candlepin.policy.js.entitlement.EntitlementRulesTranslator;
 import org.candlepin.service.ProductServiceAdapter;
+import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.test.TestUtil;
 
 import org.junit.Before;
@@ -63,13 +64,14 @@ public class EntitlementResourceTest {
     @Mock private SubscriptionResource subResource;
     @Mock private EntitlementRules entRules;
     @Mock private EntitlementRulesTranslator messageTranslator;
+    @Mock private SubscriptionServiceAdapter subAdapter;
 
     private EntitlementResource entResource;
 
     @Before
     public void before() {
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
-        entResource = new EntitlementResource(prodAdapter, entitlementCurator,
+        entResource = new EntitlementResource(prodAdapter, subAdapter, entitlementCurator,
             consumerCurator, poolManager, i18n, entitler, subResource, entRules,
             messageTranslator, prodCurator);
         owner = new Owner("admin");
