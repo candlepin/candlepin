@@ -102,15 +102,16 @@ public class PoolRules {
         log.info("Creating pools for subscription: " + sub);
         PoolHelper helper = new PoolHelper(this.poolManager, null);
 
-        List<Pool> pools = new LinkedList<Pool>();
-        Map<String, String> attributes =
-            helper.getFlattenedAttributes(sub.getProduct());
-        long quantity = calculateQuantity(sub);
-
         // Products given on a subscription should *always* already exist in the database
         // at this point. We can't use those directly on the subscription because they
         // will be detached objects.
         Product sku = prodCurator.lookupById(sub.getOwner(), sub.getProduct().getId());
+        sub.setProduct(sku); // replace incoming detached sub product with one from db
+
+        List<Pool> pools = new LinkedList<Pool>();
+        Map<String, String> attributes =
+            helper.getFlattenedAttributes(sku);
+        long quantity = calculateQuantity(sub);
 
         if (!hasMasterPool(existingPools)) {
             Pool newPool = new Pool(sub.getOwner(), sku,
@@ -139,7 +140,7 @@ public class PoolRules {
 
 
             newPool.setSourceSubscription(new SourceSubscription(sub.getId(), "master"));
-            ProductAttribute virtAtt = sub.getProduct().getAttribute("virt_only");
+            ProductAttribute virtAtt = sku.getAttribute("virt_only");
 
             // note: the product attributes are getting copied above, but the following will
             // make virt_only a pool attribute. That makes the pool explicitly virt_only to
@@ -173,14 +174,13 @@ public class PoolRules {
 
             String virtQuantity = getVirtQuantity(attributes.get("virt_limit"), quantity);
             if (virtQuantity != null) {
-                Product poolProduct = sub.getProduct();
                 // Favor derived products if they are available
                 if (sub.getDerivedProduct() != null) {
-                    poolProduct = sub.getDerivedProduct();
+                    sku = sub.getDerivedProduct();
                 }
 
                 Pool derivedPool = helper.createPool(
-                    sub, poolProduct, virtQuantity, virtAttributes
+                    sub, sku, virtQuantity, virtAttributes, prodCurator
                 );
 
                 // Using derived here because only one derived pool
