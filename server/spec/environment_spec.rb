@@ -114,8 +114,8 @@ describe 'Environments' do
     product = create_product
     content = create_content # promoted
     content2 = create_content # not promoted
-    @cp.add_content_to_product(product['id'], content['id'])
-    @cp.add_content_to_product(product['id'], content2['id'])
+    @cp.add_content_to_product(@owner['key'], product['id'], content['id'])
+    @cp.add_content_to_product(@owner['key'], product['id'], content2['id'])
 
     # Override enabled to false:
     job = @org_admin.promote_content(@env['id'],

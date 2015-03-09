@@ -17,7 +17,7 @@ describe 'Derived Products' do
                                          :content_url => '/content/dist/rhel/$releasever/$basearch/os',
                                          :metadata_expire => 6400})
 
-    @cp.add_content_to_product(@eng_product.id, @eng_product_content.id, true)
+    @cp.add_content_to_product(@owner['key'], @eng_product.id, @eng_product_content.id, true)
 
     installed_prods = [{'productId' => @eng_product['id'],
       'productName' => @eng_product['name']}]
@@ -34,7 +34,7 @@ describe 'Derived Products' do
     @guest1 = @user.register(random_string('guest'), :system, nil,
       {'virt.uuid' => @uuid, 'virt.is_guest' => 'true'}, nil, nil,
       [], installed_prods)
-    @guest_client = Candlepin.new(nil, nil, @guest1['idCert']['cert'], @guest1['idCert']['key']) 
+    @guest_client = Candlepin.new(nil, nil, @guest1['idCert']['cert'], @guest1['idCert']['key'])
     # create subscription with sub-pool data:
     @datacenter_product = create_product(nil, nil, {
       :attributes => {

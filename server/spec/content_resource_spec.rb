@@ -13,7 +13,7 @@ describe 'Content Resource' do
     @content_id = @content['id']
 
     @product = create_product(nil, 'some product', {:multiplier => 4})
-    @cp.add_content_to_product(@product['id'], @content_id)
+    @cp.add_content_to_product(@owner['key'], @product['id'], @content_id)
   end
 
   it 'should allow content creation' do

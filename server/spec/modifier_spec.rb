@@ -30,11 +30,11 @@ describe 'Modifier Entitlement' do
     # of which modify one of the provided products above:
     @modifier_provided_product = create_product()
     @modifier_content_1 = create_content({:modified_products => [@provided_product_1.id]})
-    @cp.add_content_to_product(@modifier_provided_product.id, @modifier_content_1.id)
+    @cp.add_content_to_product(@owner['key'], @modifier_provided_product.id, @modifier_content_1.id)
     @modifier_content_2 = create_content({:modified_products => [@provided_product_2.id]})
-    @cp.add_content_to_product(@modifier_provided_product.id, @modifier_content_2.id)
+    @cp.add_content_to_product(@owner['key'], @modifier_provided_product.id, @modifier_content_2.id)
     @modifier_content_3 = create_content({:modified_products => [@provided_product_3.id]})
-    @cp.add_content_to_product(@modifier_provided_product.id, @modifier_content_3.id)
+    @cp.add_content_to_product(@owner['key'], @modifier_provided_product.id, @modifier_content_3.id)
 
     # Create a bundled modifier product, just contains the modifier provided product:
     @modifier_product = create_product()

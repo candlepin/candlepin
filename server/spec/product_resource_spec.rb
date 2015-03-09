@@ -66,7 +66,7 @@ describe 'Product Resource' do
   it 'removes content from products.' do
     prod = create_product
     content = create_content
-    @cp.add_content_to_product(prod['id'], content['id'])
+    @cp.add_content_to_product(@owner['key'], prod['id'], content['id'])
     prod = @cp.get_product(prod['id'])
     prod['productContent'].size.should == 1
 

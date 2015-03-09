@@ -18,7 +18,7 @@ describe 'Entitlement Certificate V1 Size' do
                  :virt_only => 'false',
                  :support_level => 'standard',
                  :support_type => 'excellent',})
-    @cp.add_content_to_product(@product1.id, @content_list[0].id, true)
+    @cp.add_content_to_product(@owner['key'], @product1.id, @content_list[0].id, true)
     @subscription = @cp.create_subscription(@owner['key'], @product1.id, 10, [], '12345', '6789', 'order1')
     @product2 = create_product(nil, nil, :attributes =>
                 {:version => '6.4',
@@ -27,7 +27,7 @@ describe 'Entitlement Certificate V1 Size' do
                  :virt_only => 'false',
                  :support_level => 'standard',
                  :support_type => 'excellent',})
-    @cp.add_content_to_product(@product2.id, @content_list[0].id, true)
+    @cp.add_content_to_product(@owner['key'], @product2.id, @content_list[0].id, true)
     subscription2 = @cp.create_subscription(@owner['key'], @product2.id, 10, [], '12345', '6789', 'order1')
     @cp.refresh_pools(@owner['key'])
     @user = user_client(@owner, random_string('billy'))
@@ -80,9 +80,9 @@ describe 'Entitlement Certificate V1 Size' do
     ent1 = @system.consume_product(@product1.id)[0]
     ent2 = @system.consume_product(@product2.id)[0]
     (1..200).each do |i|
-      @cp.add_content_to_product(@product1.id, @content_list[i].id, true)
+      @cp.add_content_to_product(@owner['key'], @product1.id, @content_list[i].id, true)
     end
-    @cp.add_content_to_product(@product2.id, @content_list[1].id, true)
+    @cp.add_content_to_product(@owner['key'], @product2.id, @content_list[1].id, true)
     @cp.regenerate_entitlement_certificates_for_product(@product1.id)
     @cp.regenerate_entitlement_certificates_for_product(@product2.id)
 
