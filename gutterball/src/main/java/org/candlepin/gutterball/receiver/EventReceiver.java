@@ -65,7 +65,8 @@ public class EventReceiver {
             try {
                 init(config);
                 break;
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 maxRetries--;
                 if (maxRetries == 0) {
                     // Rethrow the exception so that it bubbles up on the last failed attempt.
@@ -78,7 +79,8 @@ public class EventReceiver {
                 try {
                     log.info("Waiting for " + waitTimeInSeconds + "s before retrying.");
                     Thread.sleep(waitTimeInSeconds * 1000);
-                } catch (InterruptedException e1) {
+                }
+                catch (InterruptedException e1) {
                     // If interrupted, just throw the initial error.
                     throw e;
                 }

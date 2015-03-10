@@ -88,18 +88,18 @@ public class ConsumerTrendReport extends Report<ReportResult> {
                 .getParameter());
 
         addParameter(
-            builder.init(CUSTOM_RESULTS_PARAM, i18n.tr("Enables/disables custom report result functionality " +
-                        "via attribute filtering (boolean).")).getParameter());
+            builder.init(CUSTOM_RESULTS_PARAM, i18n.tr("Enables/disables custom report result " +
+                        "functionality via attribute filtering (boolean).")).getParameter());
 
-            addParameter(builder.init("include",
-                    i18n.tr("Includes the specified attribute in the result JSON"))
+        addParameter(
+            builder.init("include", i18n.tr("Includes the specified attribute in the result JSON"))
                 .multiValued()
                 .mustHave(CUSTOM_RESULTS_PARAM)
                 .mustNotHave("exclude")
                 .getParameter());
 
-            addParameter(builder.init("exclude",
-                    i18n.tr("Excludes the specified attribute in the result JSON"))
+        addParameter(
+            builder.init("exclude", i18n.tr("Excludes the specified attribute in the result JSON"))
                 .multiValued()
                 .mustHave(CUSTOM_RESULTS_PARAM)
                 .mustNotHave("include")
