@@ -19,8 +19,8 @@ describe 'Custom Product' do
         {:custom => true})
     content = create_content({:metadata_expire => 6000,
       :required_tags => "TAG1,TAG2"})
-    @cp.add_content_to_product(product1.id, content.id)
-    @cp.add_content_to_product(product2.id, content.id)
+    @cp.add_content_to_product(@owner['key'], product1.id, content.id)
+    @cp.add_content_to_product(@owner['key'], product2.id, content.id)
     @end_date = Date.new(2025, 5, 29)
 
     sub1 = @cp.create_subscription(@owner['key'], product1.id, 2, [], '', '12345', '6789', nil, @end_date)

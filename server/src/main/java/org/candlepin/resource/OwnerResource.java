@@ -25,6 +25,7 @@ import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SubResource;
 import org.candlepin.auth.interceptor.Verify;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.CandlepinException;
 import org.candlepin.common.exceptions.ForbiddenException;
@@ -33,12 +34,15 @@ import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.common.paging.Paginate;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.guice.NonTransactional;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.Content;
+import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCertificateCurator;
@@ -112,6 +116,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.UUID;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -161,6 +166,8 @@ public class OwnerResource {
     private ContentOverrideValidator contentOverrideValidator;
     private ServiceLevelValidator serviceLevelValidator;
     private ProductCurator prodCurator;
+    private Configuration config;
+    private ContentCurator contentCurator;
 
     private static final int FEED_LIMIT = 1000;
 
@@ -185,7 +192,9 @@ public class OwnerResource {
         EnvironmentCurator envCurator, CalculatedAttributesUtil calculatedAttributesUtil,
         ContentOverrideValidator contentOverrideValidator,
         ServiceLevelValidator serviceLevelValidator,
-        OwnerServiceAdapter ownerService, ProductCurator productCurator) {
+        OwnerServiceAdapter ownerService, ProductCurator productCurator,
+        Configuration config,
+        ContentCurator contentCurator) {
 
         this.ownerCurator = ownerCurator;
         this.ownerInfoCurator = ownerInfoCurator;
@@ -214,6 +223,8 @@ public class OwnerResource {
         this.serviceLevelValidator = serviceLevelValidator;
         this.ownerService = ownerService;
         this.prodCurator = productCurator;
+        this.config = config;
+        this.contentCurator = contentCurator;
     }
 
     /**
@@ -408,6 +419,11 @@ public class OwnerResource {
 
         for (Product p : prodCurator.listByOwner(owner)) {
             prodCurator.delete(p);
+        }
+
+        for (Content c : contentCurator.listByOwner(owner)) {
+            log.info("Deleting content: " + c);
+            contentCurator.delete(c);
         }
 
         log.info("Deleting owner: " + owner);
@@ -800,7 +816,12 @@ public class OwnerResource {
         Subscription subscription) {
         Owner o = findOwner(ownerKey);
         subscription.setOwner(o);
-        return subService.createSubscription(subscription);
+        // TODO: not sure if this is kept or not, subscription ID doesn't mean much anymore
+        if (subscription.getId() == null) {
+            subscription.setId(UUID.randomUUID().toString().replace("-", ""));
+        }
+        poolManager.createPoolsForSubscription(subscription);
+        return subscription;
     }
 
     /**
@@ -962,6 +983,11 @@ public class OwnerResource {
                 throw new NotFoundException(i18n.tr(
                     "owner with key: {0} was not found.", ownerKey));
             }
+        }
+
+        if (config.getBoolean(ConfigProperties.STANDALONE)) {
+            log.warn("Ignoring refresh pools request due to standalone config.");
+            return null;
         }
 
         return RefreshPoolsJob.forOwner(owner, lazyRegen);

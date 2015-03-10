@@ -20,6 +20,7 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.SourceStack;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.Subscription;
@@ -155,7 +156,8 @@ public class PoolHelper extends AttributeHelper {
      * @param source subscription
      * @param destination pool
      */
-    private void copyProvidedProducts(Subscription source, Pool destination) {
+    private void copyProvidedProducts(Subscription source, Pool destination,
+            ProductCurator prodCurator) {
         Set<Product> products = source.getProvidedProducts();
         // Use derived product data if it exists, as this is a derived bonus pool:
         if (source.getDerivedProvidedProducts() != null &&
@@ -163,13 +165,14 @@ public class PoolHelper extends AttributeHelper {
             products = source.getDerivedProvidedProducts();
         }
         for (Product providedProduct : products) {
-            destination.addProvidedProduct(providedProduct);
+            destination.addProvidedProduct(prodCurator.lookupById(
+                    destination.getOwner(), providedProduct.getId()));
         }
     }
 
     // TODO: Update this method to not use a subscription... somehow.
     public Pool createPool(Subscription sub, Product product, String quantity,
-        Map<String, String> attributes) {
+        Map<String, String> attributes, ProductCurator prodCurator) {
 
         Pool pool = createPool(
             product,
@@ -185,7 +188,7 @@ public class PoolHelper extends AttributeHelper {
 
         pool.setSourceSubscription(new SourceSubscription(sub.getId(), "master"));
 
-        copyProvidedProducts(sub, pool);
+        copyProvidedProducts(sub, pool, prodCurator);
 
         // Add in the new attributes
         for (Entry<String, String> entry : attributes.entrySet()) {

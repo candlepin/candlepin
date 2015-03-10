@@ -433,6 +433,13 @@ class Candlepin
 
   def async_call(immediate, *args, &blk)
     status = blk.call(args)
+
+    # Hack to limit test churn due to switchover to refresh pools being hosted only:
+    # TODO: can be removed if we remove all refresh_pools calls in spec tests.
+    if status.nil?
+      return status
+    end
+
     return status if immediate
     # otherwise poll the server to make this call synchronous
     while status['state'].downcase != 'finished'
@@ -487,7 +494,7 @@ class Candlepin
     get(method)
   end
 
-  def create_content(name, id, label, type, vendor,
+  def create_content(owner_key, name, id, label, type, vendor,
       params={}, post=true)
 
     metadata_expire = params[:metadata_expire] || nil
@@ -511,7 +518,7 @@ class Candlepin
     content['metadataExpire'] = metadata_expire if not metadata_expire.nil?
     content['requiredTags'] = required_tags if not required_tags.nil?
     if post
-      post("/content", content)
+      post("/owners/#{owner_key}/content", content)
     else
       return content
     end
@@ -541,8 +548,8 @@ class Candlepin
     put("/content/#{content_id}", current_content)
   end
 
-  def add_content_to_product(product_id, content_id, enabled=true)
-    post("/products/#{product_id}/content/#{content_id}?enabled=#{enabled}")
+  def add_content_to_product(owner_key, product_id, content_id, enabled=true)
+    post("/owners/#{owner_key}/products/#{product_id}/content/#{content_id}?enabled=#{enabled}")
   end
 
   def add_batch_content_to_product(product_id, content_ids, enabled=true)
@@ -608,7 +615,7 @@ class Candlepin
     end
   end
 
-  def create_product(id, name, params={})
+  def create_product(owner_key, id, name, params={})
 
     multiplier = params[:multiplier] || 1
     attributes = params[:attributes] || {}
@@ -626,7 +633,7 @@ class Candlepin
       'reliesOn' => relies_on
     }
 
-    post("/products", product)
+    post("/owners/#{owner_key}/products", product)
   end
 
   def update_product(product_id, params={})
@@ -648,8 +655,8 @@ class Candlepin
     get("/products/#{product_id}")
   end
 
-  def delete_product(product_id)
-    delete("/products/#{product_id}")
+  def delete_product(owner_key, product_id)
+    delete("/owners/#{owner_key}/products/#{product_id}")
   end
 
   def get_product_cert(product_id)

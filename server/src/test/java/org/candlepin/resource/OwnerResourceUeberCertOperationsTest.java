@@ -14,9 +14,7 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
@@ -102,7 +100,7 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
             null, null, poolManager, null, null, null, subAdapter,
             null, consumerTypeCurator, entCertCurator, entitlementCurator,
             ueberCertGenerator, null, null, contentOverrideValidator,
-            serviceLevelValidator, null, null);
+            serviceLevelValidator, null, null, null, null);
     }
 
     @Test

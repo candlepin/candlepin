@@ -825,7 +825,8 @@ public class PoolManagerTest {
 
     @Test
     public void createPoolsForExistingSubscriptionsNoneExist() {
-        PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator);
+        PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator,
+                productCuratorMock);
         List<Subscription> subscriptions = Util.newList();
         List<Pool> pools = Util.newList();
         Product prod = TestUtil.createProduct(o);
@@ -853,7 +854,8 @@ public class PoolManagerTest {
 
     @Test
     public void createPoolsForExistingSubscriptionsMasterExist() {
-        PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator);
+        PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator,
+                productCuratorMock);
         List<Subscription> subscriptions = Util.newList();
         List<Pool> pools = Util.newList();
         Product prod = TestUtil.createProduct(o);
@@ -878,9 +880,9 @@ public class PoolManagerTest {
 
     @Test
     public void createPoolsForExistingSubscriptionsBonusExist() {
-        PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator);
+        PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator,
+                productCuratorMock);
         List<Subscription> subscriptions = Util.newList();
-        List<Pool> pools = Util.newList();
         Product prod = TestUtil.createProduct(o);
         Set<Product> products = new HashSet<Product>();
         products.add(prod);
