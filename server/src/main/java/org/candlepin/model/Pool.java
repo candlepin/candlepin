@@ -154,8 +154,6 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     private Product derivedProduct;
 
     @ManyToMany
-    @Cascade({org.hibernate.annotations.CascadeType.ALL,
-        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
     @JoinTable(
         name="cpo_pool_provided_products",
         joinColumns={@JoinColumn(name="pool_id", insertable = false, updatable = false)},
@@ -164,8 +162,6 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     private Set<Product> providedProducts = new HashSet<Product>();
 
     @ManyToMany
-    @Cascade({org.hibernate.annotations.CascadeType.ALL,
-        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
     @JoinTable(
         name="cpo_pool_derived_products",
         joinColumns={@JoinColumn(name="pool_id", insertable = false, updatable = false)},
@@ -765,6 +761,10 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     public void setDerivedProvidedProducts(Set<Product> derivedProvidedProducts) {
         this.derivedProvidedProducts.clear();
         this.derivedProvidedProducts.addAll(derivedProvidedProducts);
+    }
+
+    public void addDerivedProvidedProduct(Product provided) {
+        this.derivedProvidedProducts.add(provided);
     }
 
     /*

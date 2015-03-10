@@ -439,6 +439,9 @@ public class Product extends AbstractHibernateObject implements Linkable {
 
     @Override
     public String getHref() {
+        if (getOwner() == null) {
+            return "";
+        }
         return "/owners/" + getOwner().getKey() + "/products/" + getId();
     }
 

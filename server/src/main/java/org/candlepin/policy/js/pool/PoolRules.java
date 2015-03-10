@@ -126,12 +126,15 @@ public class PoolRules {
             }
 
             if (sub.getDerivedProvidedProducts() != null) {
-                newPool.getDerivedProvidedProducts().addAll(
-                        sub.getDerivedProvidedProducts());
+                for (Product pp : sub.getDerivedProvidedProducts()) {
+                    newPool.addDerivedProvidedProduct(prodCurator.lookupById(
+                            sub.getOwner(), pp.getId()));
+                }
             }
 
             if (sub.getDerivedProduct() != null) {
-                newPool.setDerivedProduct(sub.getDerivedProduct());
+                newPool.setDerivedProduct(prodCurator.lookupById(sub.getOwner(),
+                        sub.getDerivedProduct().getId()));
             }
 
             for (Branding b : sub.getBranding()) {
@@ -176,7 +179,8 @@ public class PoolRules {
             if (virtQuantity != null) {
                 // Favor derived products if they are available
                 if (sub.getDerivedProduct() != null) {
-                    sku = sub.getDerivedProduct();
+                    sku = prodCurator.lookupById(sub.getOwner(),
+                            sub.getDerivedProduct().getId());
                 }
 
                 Pool derivedPool = helper.createPool(

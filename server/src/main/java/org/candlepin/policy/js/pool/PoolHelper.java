@@ -195,7 +195,6 @@ public class PoolHelper extends AttributeHelper {
             pool.setAttribute(entry.getKey(), entry.getValue());
         }
 
-
         for (Branding b : sub.getBranding()) {
             pool.getBranding().add(new Branding(b.getProductId(), b.getType(),
                 b.getName()));
