@@ -1320,7 +1320,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         inheritedArchProduct.setContent(Collections.singleton(noArchContent));
         products.add(inheritedArchProduct);
-        when(productAdapter.getProductById(eq(inheritedArchProduct.getId()))).thenReturn(inheritedArchProduct);
+        when(productAdapter.getProductById(eq(inheritedArchProduct.getId())))
+            .thenReturn(inheritedArchProduct);
         setupEntitlements(ARCH_LABEL, "3.2");
 
         Set<X509ExtensionWrapper> extensions =
