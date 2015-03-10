@@ -54,13 +54,39 @@ public class EventReceiver {
 
     @Inject
     public EventReceiver(Configuration config, EventMessageListener eventMessageListener)
-        throws AMQException, JMSException, URISyntaxException {
+        throws Exception {
         this.eventMessageListener = eventMessageListener;
         configureSslProperties(config);
-        init(config);
+
+        int maxRetries = config.getInt(ConfigProperties.AMQP_CONNECTION_RETRY_ATTEMPTS);
+        long waitTimeInSeconds = config.getLong(ConfigProperties.AMQP_CONNECTION_RETRY_INTERVAL);
+
+        while (maxRetries > 0) {
+            try {
+                init(config);
+                break;
+            } catch (Exception e) {
+                maxRetries--;
+                if (maxRetries == 0) {
+                    // Rethrow the exception so that it bubbles up on the last failed attempt.
+                    throw e;
+                }
+
+                log.info("Failed to connect to message bus: " + e.getMessage());
+                log.info("Trying " + maxRetries + " more time(s).");
+
+                try {
+                    log.info("Waiting for " + waitTimeInSeconds + "s before retrying.");
+                    Thread.sleep(waitTimeInSeconds * 1000);
+                } catch (InterruptedException e1) {
+                    // If interrupted, just throw the initial error.
+                    throw e;
+                }
+            }
+        }
     }
 
-    private void init(Configuration config) throws AMQException, JMSException, URISyntaxException  {
+    protected void init(Configuration config) throws AMQException, JMSException, URISyntaxException  {
         conn = new AMQConnection(config.getString(ConfigProperties.AMQP_CONNECT_STRING));
         conn.start();
         sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
