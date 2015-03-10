@@ -416,12 +416,12 @@ public class Product extends AbstractHibernateObject implements Linkable {
     @XmlTransient
     public List<String> getSkuDisabledContentIds() {
         List<String> skuDisabled = new ArrayList<String>();
-        if(this.hasAttribute("content_override_disabled") &&
+        if (this.hasAttribute("content_override_disabled") &&
                this.getAttributeValue("content_override_disabled").length() > 0) {
             StringTokenizer stDisable = new StringTokenizer(
                     this.getAttributeValue("content_override_disabled"), ",");
             while (stDisable.hasMoreElements()) {
-                skuDisabled.add((String)stDisable.nextElement());
+                skuDisabled.add((String) stDisable.nextElement());
             }
         }
         return skuDisabled;
@@ -430,12 +430,12 @@ public class Product extends AbstractHibernateObject implements Linkable {
     @XmlTransient
     public List<String> getSkuEnabledContentIds() {
         List<String> skuEnabled = new ArrayList<String>();
-        if(this.hasAttribute("content_override_enabled") &&
+        if (this.hasAttribute("content_override_enabled") &&
                this.getAttributeValue("content_override_enabled").length() > 0) {
             StringTokenizer stActive = new StringTokenizer(
                     this.getAttributeValue("content_override_enabled"), ",");
             while (stActive.hasMoreElements()) {
-                skuEnabled.add((String)stActive.nextElement());
+                skuEnabled.add((String) stActive.nextElement());
             }
         }
         return skuEnabled;

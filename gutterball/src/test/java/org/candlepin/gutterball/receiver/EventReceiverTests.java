@@ -29,7 +29,7 @@ import java.net.URISyntaxException;
 
 import javax.jms.JMSException;
 
-public class EventRecieverTests {
+public class EventReceiverTests {
 
     private static int callCount = 0;
 
@@ -57,7 +57,8 @@ public class EventRecieverTests {
 
             };
             fail("Exception should have been thrown once max retries was hit.");
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             assertEquals(2, callCount);
         }
     }
