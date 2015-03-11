@@ -14,12 +14,8 @@
  */
 package org.candlepin.sync;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
@@ -52,6 +48,7 @@ public class ProductImporterTest {
     private ProductImporter importer;
     private ProductCurator productCuratorMock;
     private ContentCurator contentCuratorMock;
+
     @Before
     public void setUp() throws IOException {
         mapper = SyncUtils.getObjectMapper(new MapConfiguration(
@@ -130,7 +127,8 @@ public class ProductImporterTest {
 
         verify(contentCuratorMock).createOrUpdate(c);
 
-        assertEquals(new Long(1000), c.getMetadataExpire());
+        // Metadata expiry should be overridden to 0 on import:
+        assertEquals(new Long(0), c.getMetadataExpire());
     }
 
     @Test
@@ -418,11 +416,12 @@ public class ProductImporterTest {
     }
 
     // Returns the Content object added
-    private void addContentTo(Product p) {
+    private Content addContentTo(Product p) {
         Content c = new Content("name", "100130", "label", "type",
             "vendor", "url", "gpgurl", "arch");
         c.setMetadataExpire(1000L);
         p.getProductContent().add(new ProductContent(p, c, true));
+        return c;
     }
 
     // Returns the Content object added without vendor
