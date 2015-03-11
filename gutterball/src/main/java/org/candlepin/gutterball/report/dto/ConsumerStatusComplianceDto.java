@@ -61,6 +61,7 @@ public class ConsumerStatusComplianceDto extends HashMap<String, Object> {
         ComplianceStatus status = snap.getStatus();
         statusData.put("status", status.getStatus());
         statusData.put("date", status.getDate());
+        statusData.put("managementEnabled", status.getManagementEnabled());
 
         put("consumer", consumerData);
         put("status", statusData);

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <changeSet id="20150311092807-1" author="mstead">
+        <comment>Add management_enabled column to gb_compliance_snap</comment>
+        <addColumn tableName="gb_compliance_status_snap">
+            <column name="management_enabled" type="boolean" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+    <changeSet id="20150311092807-2" author="mstead">
+        <comment>Migrate management_enabled column data from entitlements</comment>
+        <sql>
+      update gb_compliance_status_snap
+                  set management_enabled = true
+                  where compliance_snap_id in (
+                      select distinct comp.id
+                          from gb_compliance_snap comp
+                          inner join gb_entitlement_snap ent on ent.compliance_snap_id = comp.id
+                          inner join gb_ent_attr_snap attr on attr.ent_snap_id = ent.id
+                          where attr.gb_ent_attr_name = 'management_enabled'
+                          and (
+                  attr.gb_ent_attr_value = '1'
+                  or attr.gb_ent_attr_value = 'true'
+                  or attr.gb_ent_attr_value = 'True'
+                  or attr.gb_ent_attr_value = 'T'
+                  or attr.gb_ent_attr_value = 't'
+                  or attr.gb_ent_attr_value = 'Yes'
+                  or attr.gb_ent_attr_value = 'yes'
+                  or attr.gb_ent_attr_value = 'Y'
+                  or attr.gb_ent_attr_value = 'Y')
+      );
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>
+<!-- vim: set expandtab sts=4 sw=4 ai: -->
