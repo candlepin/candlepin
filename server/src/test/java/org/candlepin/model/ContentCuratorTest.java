@@ -68,4 +68,36 @@ public class ContentCuratorTest extends DatabaseTestFixture {
         assertEquals(toBeUpdated.getModifiedProductIds(), updates.getModifiedProductIds());
         assertEquals(toBeUpdated.getArches(), updates.getArches());
     }
+
+    @Test
+    public void forceMetadataExpire() {
+        Content c1 = new Content(
+                "c1", "1",
+                "test-c1", "yum", "Vendor",
+                "test-content-url-1", "test-gpg-url-1", "test-arch1,test-arch2");
+        c1.setMetadataExpire(new Long(86000));
+        contentCurator.create(c1);
+
+        Content c2 = new Content(
+                "c2", "2",
+                "test-c2", "yum", "Vendor",
+                "test-content-url-1", "test-gpg-url-1", "test-arch1,test-arch2");
+        c2.setMetadataExpire(new Long(86000));
+        contentCurator.create(c2);
+
+        int updated = contentCurator.forceMetadataExpiry(new Long(0));
+        assertEquals(2, updated);
+
+        // Need to get these out of the session otherwise hibernate sees the old:
+        contentCurator.evict(c1);
+        contentCurator.evict(c2);
+
+        for (Content c : contentCurator.listAll()) {
+            assertEquals(new Long(0), c.getMetadataExpire());
+        }
+
+        // Running again should not re-update the same rows:
+        updated = contentCurator.forceMetadataExpiry(new Long(0));
+        assertEquals(0, updated);
+    }
 }
