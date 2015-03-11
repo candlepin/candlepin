@@ -33,6 +33,7 @@ public class PoolCuratorFilterTest extends DatabaseTestFixture {
     @Inject private OwnerCurator ownerCurator;
     @Inject private ProductCurator productCurator;
     @Inject private PoolCurator poolCurator;
+    @Inject private ContentCurator contentCurator;
 
     private Owner owner;
     private PageRequest req = new PageRequest();
@@ -54,6 +55,12 @@ public class PoolCuratorFilterTest extends DatabaseTestFixture {
     }
 
     private Pool createSearchPools() {
+        Content content = new Content(
+            owner, "Content One", "content1", "C-Label One", "ctype", "content vendor one",
+            "www.content.com", "gpgurl", "x86"
+        );
+        this.contentCurator.create(content);
+
         Product searchProduct = new Product("awesomeos-server", "Awesome OS Server Premium", owner);
         searchProduct.addAttribute(new ProductAttribute("support_level", "CustomSupportLevel"));
         productCurator.create(searchProduct);
@@ -62,6 +69,8 @@ public class PoolCuratorFilterTest extends DatabaseTestFixture {
                 TestUtil.createDate(2005, 3, 2), TestUtil.createDate(2050, 3, 2));
 
         Product provided = TestUtil.createProduct("101111", "Server Bits", owner);
+        provided.addContent(content);
+
         productCurator.create(provided);
         searchPool.addProvidedProduct(provided);
 
@@ -201,5 +210,21 @@ public class PoolCuratorFilterTest extends DatabaseTestFixture {
         searchTest("*Cus*port*", 1, searchPool.getId());
         searchTest("*Cus???Su??ortLevel*", 1, searchPool.getId());
         searchTest("*Self-Service*", 0, new String [] {});
+    }
+
+    @Test
+    public void availablePoolsCanBeFilteredByContentName() throws Exception {
+        searchTest("Content One", 1, searchPool.getId());
+        searchTest("*on*nt* one", 1, searchPool.getId());
+        searchTest("*con???t??n*", 1, searchPool.getId());
+        searchTest("*New Content*", 0, new String [] {});
+    }
+
+    @Test
+    public void availablePoolsCanBeFilteredByContentLabel() throws Exception {
+        searchTest("C-Label One", 1, searchPool.getId());
+        searchTest("*-l*l*one", 1, searchPool.getId());
+        searchTest("*c-l???l??n*", 1, searchPool.getId());
+        searchTest("*Content Label One*", 0, new String [] {});
     }
 }
