@@ -83,8 +83,8 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     }
 
     /**
-     * @param owner owner to lookup product for
-     * @param id Product ID to lookup. (note: not the database ID)
+     * @param ownerId The ID of the owner for which to lookup a product
+     * @param productId The ID of the product to lookup. (note: not the database ID)
      * @return the Product which matches the given id.
      */
     @Transactional

@@ -16,9 +16,7 @@ package org.candlepin.model;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Index;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -27,9 +25,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlTransient;
 
 /**
@@ -50,12 +46,12 @@ public class EnvironmentContent extends AbstractHibernateObject {
     private String id;
 
     @ManyToOne
-    @JoinColumn(name="environment_id", nullable = false)
+    @JoinColumn(name = "environment_id", nullable = false)
     @NotNull
     private Environment environment;
 
     @ManyToOne
-    @JoinColumn(name="content_uuid", nullable = false)
+    @JoinColumn(name = "content_uuid", nullable = false)
     @NotNull
     private Content content;
 

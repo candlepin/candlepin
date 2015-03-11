@@ -1260,7 +1260,9 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     @Override
-    public void regenerateDirtyEntitlements(SubscriptionServiceAdapter subAdapter, List<Entitlement> entitlements) {
+    public void regenerateDirtyEntitlements(SubscriptionServiceAdapter subAdapter,
+        List<Entitlement> entitlements) {
+
         List<Entitlement> dirtyEntitlements = new ArrayList<Entitlement>();
         for (Entitlement e : entitlements) {
             if (e.getDirty()) {

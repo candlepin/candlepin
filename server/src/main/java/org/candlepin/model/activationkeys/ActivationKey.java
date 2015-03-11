@@ -23,9 +23,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.Release;
 
 import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Index;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -89,9 +87,9 @@ public class ActivationKey extends AbstractHibernateObject implements Owned, Nam
 
     @ManyToMany
     @JoinTable(
-        name="cpo_activation_key_products",
-        joinColumns={@JoinColumn(name="key_id")},
-        inverseJoinColumns={@JoinColumn(name="product_uuid")}
+        name = "cpo_activation_key_products",
+        joinColumns = {@JoinColumn(name = "key_id")},
+        inverseJoinColumns = {@JoinColumn(name = "product_uuid")}
     )
     private Set<Product> products = new HashSet<Product>();
 

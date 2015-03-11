@@ -558,7 +558,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      *
      * @param owner
      * @param expectedSubIds Full list of all expected subscription IDs.
-     * @return
+     * @return a list of pools for subscriptions not matching the specified subscription list
      */
     @SuppressWarnings("unchecked")
     public List<Pool> getPoolsFromBadSubs(Owner owner, Collection<String> expectedSubIds) {
@@ -566,8 +566,10 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 .add(Restrictions.eq("owner", owner));
         if (!expectedSubIds.isEmpty()) {
             crit.createAlias("sourceSubscription", "sourceSub");
-            crit.add(Restrictions.and(Restrictions.not(Restrictions.in("sourceSub.subscriptionId", expectedSubIds)),
-                    Restrictions.isNotNull("sourceSub.subscriptionId")));
+            crit.add(Restrictions.and(
+                Restrictions.not(Restrictions.in("sourceSub.subscriptionId", expectedSubIds)),
+                Restrictions.isNotNull("sourceSub.subscriptionId")
+            ));
         }
         crit.addOrder(Order.asc("id"));
         return crit.list();

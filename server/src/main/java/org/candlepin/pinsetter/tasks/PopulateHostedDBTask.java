@@ -16,8 +16,8 @@ package org.candlepin.pinsetter.tasks;
 
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.PoolCurator;
-import org.candlepin.model.Product;
-import org.candlepin.model.ProductContent;
+// import org.candlepin.model.Product;
+// import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.util.Util;
@@ -31,7 +31,7 @@ import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Set;
+// import java.util.Set;
 
 
 

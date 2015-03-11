@@ -16,8 +16,6 @@ package org.candlepin.model;
 
 import org.candlepin.common.jackson.HateoasArrayExclude;
 import org.candlepin.common.jackson.HateoasInclude;
-import org.candlepin.policy.js.compliance.ComplianceRules;
-import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.util.Util;
 
 import com.fasterxml.jackson.annotation.JsonFilter;

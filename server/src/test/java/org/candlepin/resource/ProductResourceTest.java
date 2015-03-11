@@ -20,7 +20,6 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Product;
@@ -30,7 +29,6 @@ import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Subscription;
-import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
 
 import org.junit.Test;

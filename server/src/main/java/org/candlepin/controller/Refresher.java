@@ -69,7 +69,7 @@ public class Refresher {
      * for other orgs.
      *
      * @param product
-     * @return
+     * @return this Refresher instance
      */
     public Refresher add(Product product) {
         products.add(product);

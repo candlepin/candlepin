@@ -35,7 +35,6 @@ import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.X509ByteExtensionWrapper;
 import org.candlepin.pki.X509ExtensionWrapper;
 import org.candlepin.service.BaseEntitlementCertServiceAdapter;
-import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.util.CertificateSizeException;
 import org.candlepin.util.Util;
 import org.candlepin.util.X509ExtensionUtil;

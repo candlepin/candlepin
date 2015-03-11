@@ -201,7 +201,8 @@ public class PoolManagerTest {
 
         // Make sure that only the floating pool was regenerated
         expectedFloating.add(floating);
-        verify(this.manager).updateFloatingPools(eq(mockSubAdapter), eq(expectedFloating), eq(true), any(Set.class));
+        verify(this.manager)
+            .updateFloatingPools(eq(mockSubAdapter), eq(expectedFloating), eq(true), any(Set.class));
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -230,9 +231,10 @@ public class PoolManagerTest {
 
         // Make sure that only the floating pool was regenerated
         expectedModified.add(p);
-        verify(this.manager).updateFloatingPools(eq(mockSubAdapter), eq(new LinkedList()), eq(true), any(Set.class));
-        verify(this.manager).updatePoolsForSubscription(
-            eq(expectedModified), eq(sub), eq(false), any(Set.class));
+        verify(this.manager)
+            .updateFloatingPools(eq(mockSubAdapter), eq(new LinkedList()), eq(true), any(Set.class));
+        verify(this.manager)
+            .updatePoolsForSubscription(eq(expectedModified), eq(sub), eq(false), any(Set.class));
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })

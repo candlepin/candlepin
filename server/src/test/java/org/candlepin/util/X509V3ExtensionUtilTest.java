@@ -28,7 +28,6 @@ import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
-import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.model.Owner;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.X509V3ExtensionUtil.NodePair;

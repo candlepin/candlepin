@@ -58,7 +58,7 @@ public class Content extends AbstractHibernateObject {
     private String uuid;
 
     // Internal RH content ID
-    @Column(name="content_id")
+    @Column(name = "content_id")
     @Size(max = 32)
     @NotNull
     private String id;

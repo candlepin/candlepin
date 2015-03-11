@@ -97,7 +97,7 @@ public class PoolRules {
      *
      * @param sub
      * @param existingPools
-     * @return
+     * @return a list of pools created for the given subscription
      */
     public List<Pool> createPools(Subscription sub, List<Pool> existingPools) {
         log.info("Creating pools for subscription: " + sub);
@@ -342,7 +342,9 @@ public class PoolRules {
         return this.updatePoolFromStackedEntitlements(pool, stackedEnts, changedProducts);
     }
 
-    public PoolUpdate updatePoolFromStackedEntitlements(Pool pool, List<Entitlement> stackedEnts, Set<Product> changedProducts) {
+    public PoolUpdate updatePoolFromStackedEntitlements(Pool pool, List<Entitlement> stackedEnts,
+        Set<Product> changedProducts) {
+
         PoolUpdate update = new PoolUpdate(pool);
 
         // Nothing to do if there were no entitlements found.

@@ -14,9 +14,7 @@
  */
 package org.candlepin.model;
 
-import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Index;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -53,7 +51,7 @@ public class ProductCertificate extends AbstractCertificate {
     }
 
     @ManyToOne
-    @JoinColumn(name="product_uuid", nullable = false)
+    @JoinColumn(name = "product_uuid", nullable = false)
     @NotNull
     private Product product;
 
