@@ -95,18 +95,22 @@ public class PoolRulesTest {
     @Test
     public void hostedVirtLimitBadValueDoesntTraceBack() {
         when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
-        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct(owner));
+        Product product = TestUtil.createProduct(owner);
+
+        when(this.prodCuratorMock.lookupById(product.getOwner(), product.getId())).thenReturn(product);
+        Subscription s = TestUtil.createSubscription(owner, product);
         s.getProduct().addAttribute(new ProductAttribute("virt_limit", "badvalue"));
         s.setQuantity(10L);
-
 
         List<Pool> pools = null;
         try {
             pools = poolRules.createPools(s);
         }
         catch (Exception e) {
-            fail("Create pools should not have thrown an exception on bad value for " +
-                 "virt_limit. " + e.getMessage());
+            fail(
+                "Create pools should not have thrown an exception on bad value for virt_limit: " +
+                e.getMessage()
+            );
         }
         assertEquals(1, pools.size());
 
@@ -498,7 +502,7 @@ public class PoolRulesTest {
         sub.getBranding().add(b1);
         sub.getBranding().add(b2);
 
-        when(this.productAdapterMock.getProductById(product.getOwner(), product.getId()))
+        when(this.prodCuratorMock.lookupById(product.getOwner(), product.getId()))
             .thenReturn(product);
 
         List<Pool> pools = this.poolRules.createPools(sub);
@@ -521,9 +525,9 @@ public class PoolRulesTest {
         String expectedAttributeValue = "yes";
         subProduct.setAttribute(testAttributeKey, expectedAttributeValue);
 
-        when(this.productAdapterMock.getProductById(product.getOwner(), product.getId()))
+        when(this.prodCuratorMock.lookupById(product.getOwner(), product.getId()))
             .thenReturn(product);
-        when(this.productAdapterMock.getProductById(subProduct.getOwner(), subProduct.getId()))
+        when(this.prodCuratorMock.lookupById(subProduct.getOwner(), subProduct.getId()))
             .thenReturn(subProduct);
 
         List<Pool> pools = this.poolRules.createPools(sub);
@@ -546,9 +550,9 @@ public class PoolRulesTest {
         Subscription sub = TestUtil.createSubscription(owner, product);
         sub.setDerivedProduct(subProduct);
 
-        when(this.productAdapterMock.getProductById(product.getOwner(), product.getId()))
+        when(this.prodCuratorMock.lookupById(product.getOwner(), product.getId()))
             .thenReturn(product);
-        when(this.productAdapterMock.getProductById(subProduct.getOwner(), subProduct.getId()))
+        when(this.prodCuratorMock.lookupById(subProduct.getOwner(), subProduct.getId()))
             .thenReturn(subProduct);
 
         List<Pool> pools = this.poolRules.createPools(sub);
@@ -570,9 +574,9 @@ public class PoolRulesTest {
         subProvided.add(subProvidedProduct);
         sub.setDerivedProvidedProducts(subProvided);
 
-        when(this.productAdapterMock.getProductById(product.getOwner(), product.getId()))
+        when(this.prodCuratorMock.lookupById(product.getOwner(), product.getId()))
             .thenReturn(product);
-        when(this.productAdapterMock.getProductById(subProduct.getOwner(), subProduct.getId()))
+        when(this.prodCuratorMock.lookupById(subProduct.getOwner(), subProduct.getId()))
             .thenReturn(subProduct);
 
         List<Pool> pools = this.poolRules.createPools(sub);

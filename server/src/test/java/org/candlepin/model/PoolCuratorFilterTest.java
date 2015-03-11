@@ -60,8 +60,15 @@ public class PoolCuratorFilterTest extends DatabaseTestFixture {
 
         Pool searchPool = createPoolAndSub(owner, searchProduct, 100L,
                 TestUtil.createDate(2005, 3, 2), TestUtil.createDate(2050, 3, 2));
-        searchPool.addProvidedProduct(TestUtil.createProduct("101111", "Server Bits", owner));
-        searchPool.addProvidedProduct(TestUtil.createProduct("202222", "Containers In This One", owner));
+
+        Product provided = TestUtil.createProduct("101111", "Server Bits", owner);
+        productCurator.create(provided);
+        searchPool.addProvidedProduct(provided);
+
+        provided = TestUtil.createProduct("202222", "Containers In This One", owner);
+        productCurator.create(provided);
+        searchPool.addProvidedProduct(provided);
+
         searchPool.setContractNumber("mycontract");
         searchPool.setOrderNumber("myorder");
         searchPool.setAttribute("hello", "true");
@@ -73,7 +80,11 @@ public class PoolCuratorFilterTest extends DatabaseTestFixture {
         productCurator.create(hideProduct);
         hidePool = createPoolAndSub(owner, hideProduct, 100L,
                 TestUtil.createDate(2005, 3, 2), TestUtil.createDate(2050, 3, 2));
-        hidePool.addProvidedProduct(TestUtil.createProduct("101", "Workstation Bits", owner));
+
+        provided = TestUtil.createProduct("101", "Workstation Bits", owner);
+        productCurator.create(provided);
+        hidePool.addProvidedProduct(provided);
+
         poolCurator.create(hidePool);
 
         return searchPool;

@@ -825,17 +825,21 @@ public class PoolManagerTest {
 
     @Test
     public void createPoolsForExistingSubscriptionsNoneExist() {
+        Owner owner = this.getOwner();
         PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator,
                 productCuratorMock);
         List<Subscription> subscriptions = Util.newList();
         List<Pool> pools = Util.newList();
-        Product prod = TestUtil.createProduct(o);
+        Product prod = TestUtil.createProduct(owner);
         Set<Product> products = new HashSet<Product>();
         products.add(prod);
         prod.setAttribute("virt_limit", "4");
         // productCache.addProducts(products);
-        Subscription s = TestUtil.createSubscription(getOwner(), prod);
+        Subscription s = TestUtil.createSubscription(owner, prod);
         subscriptions.add(s);
+
+        when(productCuratorMock.lookupById(prod.getOwner(), prod.getId())).thenReturn(prod);
+
         when(mockSubAdapter.getSubscriptions(any(Owner.class))).thenReturn(
             subscriptions);
         when(mockConfig.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
@@ -854,17 +858,20 @@ public class PoolManagerTest {
 
     @Test
     public void createPoolsForExistingSubscriptionsMasterExist() {
+        Owner owner = this.getOwner();
         PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator,
                 productCuratorMock);
         List<Subscription> subscriptions = Util.newList();
         List<Pool> pools = Util.newList();
-        Product prod = TestUtil.createProduct(o);
+        Product prod = TestUtil.createProduct(owner);
         Set<Product> products = new HashSet<Product>();
         products.add(prod);
         // productCache.addProducts(products);
         prod.setAttribute("virt_limit", "4");
-        Subscription s = TestUtil.createSubscription(getOwner(), prod);
+        Subscription s = TestUtil.createSubscription(owner, prod);
         subscriptions.add(s);
+
+        when(productCuratorMock.lookupById(prod.getOwner(), prod.getId())).thenReturn(prod);
         when(mockSubAdapter.getSubscriptions(any(Owner.class))).thenReturn(
             subscriptions);
         when(mockConfig.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
@@ -880,16 +887,18 @@ public class PoolManagerTest {
 
     @Test
     public void createPoolsForExistingSubscriptionsBonusExist() {
+        Owner owner = this.getOwner();
         PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator,
                 productCuratorMock);
         List<Subscription> subscriptions = Util.newList();
-        Product prod = TestUtil.createProduct(o);
+        Product prod = TestUtil.createProduct(owner);
         Set<Product> products = new HashSet<Product>();
         products.add(prod);
         // productCache.addProducts(products);
         prod.setAttribute("virt_limit", "4");
-        Subscription s = TestUtil.createSubscription(getOwner(), prod);
+        Subscription s = TestUtil.createSubscription(owner, prod);
         subscriptions.add(s);
+        when(productCuratorMock.lookupById(prod.getOwner(), prod.getId())).thenReturn(prod);
         when(mockSubAdapter.getSubscriptions(any(Owner.class))).thenReturn(
             subscriptions);
         when(mockConfig.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);

@@ -763,10 +763,6 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         this.derivedProvidedProducts.addAll(derivedProvidedProducts);
     }
 
-    public void addDerivedProvidedProduct(Product provided) {
-        this.derivedProvidedProducts.add(provided);
-    }
-
     /*
      * Keeping getSourceConsumer to avoid breaking the api
      */

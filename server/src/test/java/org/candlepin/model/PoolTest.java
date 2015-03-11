@@ -268,13 +268,14 @@ public class PoolTest extends DatabaseTestFixture {
         Product childProduct1 = TestUtil.createProduct("child1", "child1", owner);
         Product childProduct2 = TestUtil.createProduct("child2", "child2", owner);
         Product childProduct3 = TestUtil.createProduct("child3", "child3", owner);
+        Product providedProduct = TestUtil.createProduct("provided", "Child 1", owner);
+        productCurator.create(providedProduct);
         productCurator.create(childProduct1);
         productCurator.create(childProduct2);
         productCurator.create(childProduct3);
         productCurator.create(parentProduct);
 
         Set<Product> providedProducts = new HashSet<Product>();
-        Product providedProduct = TestUtil.createProduct("provided", "Child 1", owner);
         providedProducts.add(providedProduct);
 
         Pool pool = TestUtil.createPool(owner, parentProduct, providedProducts, 5);
