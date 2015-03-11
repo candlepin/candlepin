@@ -63,11 +63,6 @@ public class PoolAttribute extends AbstractHibernateObject implements Attribute 
     protected String value;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    /* The @ForeignKey annotation is only used by HBM2DDL.  Please note that
-     * this particular annotation will create keys with the same name because
-     * there are two classes that extend this abstract class.  This duplication
-     * is okay for PostgreSQL but is a no-no for Oracle.
-     */
     @JoinColumn(nullable = false)
     @NotNull
     protected Pool pool;

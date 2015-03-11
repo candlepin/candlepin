@@ -234,7 +234,10 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         this.contractNumber = contractNumber;
         this.accountNumber = accountNumber;
         this.orderNumber = orderNumber;
-        this.providedProducts = providedProducts;
+
+        if (providedProducts != null) {
+            this.setProvidedProducts(providedProducts);
+        }
     }
 
     /** {@inheritDoc} */
@@ -408,9 +411,6 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     }
 
     public Set<PoolAttribute> getAttributes() {
-        if (attributes == null) {
-            return new HashSet<PoolAttribute>();
-        }
         return attributes;
     }
 
@@ -420,13 +420,11 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     }
 
     public void setAttributes(Set<PoolAttribute> attributes) {
-        this.attributes = attributes;
+        this.attributes.clear();
+        this.attributes.addAll(attributes);
     }
 
     public void addAttribute(PoolAttribute attrib) {
-        if (this.attributes == null) {
-            this.attributes = new HashSet<PoolAttribute>();
-        }
         attrib.setPool(this);
         this.attributes.add(attrib);
     }
@@ -438,9 +436,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
             existing.setValue(value);
         }
         else {
-            PoolAttribute attr = new PoolAttribute(key, value);
-            attr.setPool(this);
-            addAttribute(attr);
+            this.addAttribute(new PoolAttribute(key, value));
         }
     }
 
@@ -760,6 +756,10 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
 
     public Set<Product> getDerivedProvidedProducts() {
         return derivedProvidedProducts;
+    }
+
+    public void addDerivedProvidedProduct(Product product) {
+        this.derivedProvidedProducts.add(product);
     }
 
     public void setDerivedProvidedProducts(Set<Product> derivedProvidedProducts) {

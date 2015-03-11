@@ -439,7 +439,10 @@ public class Product extends AbstractHibernateObject implements Linkable {
 
     @Override
     public String getHref() {
-        return "/owners/" + getOwner().getKey() + "/products/" + getId();
+        // If we don't have an owner here, we're in a bit of trouble.
+        return (this.getOwner() != null && this.getOwner().getKey() != null && this.getId() != null) ?
+            "/owners/" + this.getOwner().getKey() + "/products/" + this.getId() :
+            null;
     }
 
     @Override

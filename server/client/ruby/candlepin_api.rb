@@ -494,9 +494,7 @@ class Candlepin
     get(method)
   end
 
-  def create_content(owner_key, name, id, label, type, vendor,
-      params={}, post=true)
-
+  def create_content(owner_key, name, id, label, type, vendor, params={}, post=true)
     metadata_expire = params[:metadata_expire] || nil
     required_tags = params[:required_tags] || nil
     content_url = params[:content_url] || ""

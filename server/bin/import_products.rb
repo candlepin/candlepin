@@ -145,32 +145,49 @@ thread_pool.shutdown
 # import all the content sets
 puts "Importing content set data..."
 
-def create_content(cp, c)
-  puts c['name']
+def create_content(cp, owner, content)
+  puts "#{owner['name']}/#{content['name']}"
 
   params = {}
-  modified_products = c['modified_products'] || []
-  if c.has_key?('metadata_expire')
-    params[:metadata_expire] = c['metadata_expire']
+  modified_products = content['modified_products'] || []
+  if content.has_key?('metadata_expire')
+    params[:metadata_expire] = content['metadata_expire']
   end
 
-  if c.has_key?('required_tags')
-    params[:required_tags] = c['required_tags']
+  if content.has_key?('required_tags')
+    params[:required_tags] = content['required_tags']
   end
 
-  params[:content_url] = c['content_url']
-  params[:arches] = c['arches']
-  params[:gpg_url] = c['gpg_url']
+  params[:content_url] = content['content_url']
+  params[:arches] = content['arches']
+  params[:gpg_url] = content['gpg_url']
   params[:modified_products] = modified_products
 
-  cp.create_content(c['name'], c['id'], c['label'], c['type'],
-                    c['vendor'], params)
+  cp.create_content(
+    owner['name'],
+    content['name'],
+    content['id'],
+    content['label'],
+    content['type'],
+    content['vendor'],
+    params
+  )
 end
 
 thread_pool = Pool.new(4)
-data['content'].each do |content|
-    thread_pool.schedule do
-        create_content(cp, content)
+data['owners'].each do |owner|
+    if owner.has_key?('content')
+        owner['content'].each do |content|
+          thread_pool.schedule do
+              create_content(cp, owner, content)
+          end
+        end
+    end
+
+    data['content'].each do |content|
+        thread_pool.schedule do
+            create_content(cp, owner, content)
+        end
     end
 end
 thread_pool.shutdown
@@ -187,18 +204,8 @@ end
 
 puts
 puts "Import product data..."
-eng_products = []
-mkt_products = []
-data['products'].each do |product|
-    if product['type'] == 'MKT'
-        mkt_products << product
-    else
-        eng_products << product
-    end
-end
 
-def create_product(cp, product)
-
+def create_product(cp, owner, product)
   name = product['name']
   id = product['id']
   multiplier = product['multiplier'] || 1
@@ -218,7 +225,7 @@ def create_product(cp, product)
   attrs['variant'] = variant
   attrs['arch'] = arch
   attrs['type'] = type
-  product_ret = cp.create_product(id, name, {:multiplier => multiplier,
+  product_ret = cp.create_product(owner['name'], id, name, {:multiplier => multiplier,
                                              :attributes => attrs,
                                              :dependentProductIds => dependent_products,
                                              :relies_on => relies_on})
@@ -227,8 +234,8 @@ def create_product(cp, product)
   return product_ret
 end
 
-def create_eng_product(cp, thread_pool, product)
-  product_ret = create_product(cp, product)
+def create_eng_product(cp, thread_pool, owner, product)
+  product_ret = create_product(cp, owner, product)
   product_content = product['content'] || []
 
   # Generate a product id cert in generated_certs for each engineering product
@@ -237,21 +244,12 @@ def create_eng_product(cp, thread_pool, product)
   cert_file.puts(product_cert['cert'])
 
   product_content.each do |content|
-        cp.add_content_to_product(product_ret['id'], content[0], content[1])
+    cp.add_content_to_product(owner['name'], product_ret['id'], content[0], content[1])
   end
 end
 
-puts "creating eng products"
-thread_pool = Pool.new(6)
-eng_products.each do |product|
-    thread_pool.schedule do
-        create_eng_product(cp, thread_pool, product)
-    end
-end
-thread_pool.shutdown
-
-def create_mkt_product(cp, product, owner_keys)
-  product_ret = create_product(cp, product)
+def create_mkt_product(cp, owner, product)
+  product_ret = create_product(cp, owner, product)
 
   if product.has_key?('skip_subs')
     return
@@ -270,63 +268,112 @@ def create_mkt_product(cp, product, owner_keys)
 
   contract_number = 0
   # Create a SMALL and a LARGE with the slightly similar begin/end dates.
-  owner_keys.each do |owner_key|
-      brandings = []
-      if !provided_products.empty? && product_ret['name'].include?('OS')
-        brandings = [
-          {
-            :productId => provided_products[0],
-            :type => 'OS',
-            :name => 'Branded ' + product_ret['name']
-          }
-        ]
-      end
-      subscription = cp.create_subscription(owner_key,
-                                            product_ret['id'],
-                                            SMALL_SUB_QUANTITY,
-                                            provided_products,
-                                            contract_number, '12331131231',
-                                            'order-8675309',
-                                            startDate1, endDate1,
-                                            {
-                                              'derived_product_id' => derived_product_id,
-                                              'derived_provided_products' => derived_provided_products,
-                                              :branding => brandings
-                                            })
-      contract_number += 1
-      subscription = cp.create_subscription(owner_key,
-                                            product_ret['id'],
-                                            LARGE_SUB_QUANTITY,
-                                            provided_products,
-                                            contract_number, '12331131231',
-                                            'order-8675309',
-                                            startDate1, endDate1,
-                                            {
-                                              'derived_product_id' => derived_product_id,
-                                              'derived_provided_products' => derived_provided_products,
-                                              :branding => brandings
-                                            })
 
-      # Create a subscription for the future:
-      subscription = cp.create_subscription(owner_key, product_ret['id'],
-                                            15, provided_products,
-                                            contract_number, '12331131231',
-                                            'order-8675309',
-                                            startDate2, endDate2,
-                                            {
-                                              'derived_product_id' => derived_product_id,
-                                              'derived_provided_products' => derived_provided_products,
-                                              :branding => brandings
-                                            })
-      contract_number += 1
+  brandings = []
+  if !provided_products.empty? && product_ret['name'].include?('OS')
+    brandings = [
+      {
+        :productId => provided_products[0],
+        :type => 'OS',
+        :name => 'Branded ' + product_ret['name']
+      }
+    ]
   end
+
+  subscription = cp.create_subscription(
+    owner['name'],
+    product_ret['id'],
+    SMALL_SUB_QUANTITY,
+    provided_products,
+    contract_number,
+    '12331131231',
+    'order-8675309',
+    startDate1,
+    endDate1,
+    {
+      'derived_product_id' => derived_product_id,
+      'derived_provided_products' => derived_provided_products,
+      :branding => brandings
+    }
+  )
+
+  contract_number += 1
+  subscription = cp.create_subscription(
+    owner['name'],
+    product_ret['id'],
+    LARGE_SUB_QUANTITY,
+    provided_products,
+    contract_number,
+    '12331131231',
+    'order-8675309',
+    startDate1,
+    endDate1,
+    {
+      'derived_product_id' => derived_product_id,
+      'derived_provided_products' => derived_provided_products,
+      :branding => brandings
+    }
+  )
+
+  # Create a subscription for the future:
+  subscription = cp.create_subscription(
+    owner['name'],
+    product_ret['id'],
+    15,
+    provided_products,
+    contract_number,
+    '12331131231',
+    'order-8675309',
+    startDate2,
+    endDate2,
+    {
+      'derived_product_id' => derived_product_id,
+      'derived_provided_products' => derived_provided_products,
+      :branding => brandings
+    }
+  )
+
+  contract_number += 1
 end
+
+
+eng_products = []
+mkt_products = []
+
+data['owners'].each do |owner|
+    if owner.has_key?('products')
+        owner['products'].each do |product|
+            if product['type'] == 'MKT'
+                mkt_products << [owner, product]
+            else
+                eng_products << [owner, product]
+            end
+        end
+    end
+
+    data['products'].each do |product|
+        if product['type'] == 'MKT'
+            mkt_products << [owner, product]
+        else
+            eng_products << [owner, product]
+        end
+    end
+end
+
+puts "creating eng products"
+thread_pool = Pool.new(6)
+eng_products.each do |eng_product|
+    thread_pool.schedule do
+        create_eng_product(cp, thread_pool, eng_product[0], eng_product[1])
+    end
+end
+thread_pool.shutdown
 
 puts "creating mkt products"
 thread_pool = Pool.new(6)
-mkt_products.each do |product|
+mkt_products.each do |mkt_product|
     thread_pool.schedule do
-        create_mkt_product(cp, product, owner_keys)
+        create_mkt_product(cp, mkt_product[0], mkt_product[1])
     end
 end
 thread_pool.shutdown
@@ -356,8 +403,8 @@ owner_keys.each do |owner_key|
     thread_pool.schedule do
         pools = cp.list_owner_pools(owner_key)
         pools.each do |pool|
-          create_activation_key_for_pool(cp, pool, owner_key)
+            create_activation_key_for_pool(cp, pool, owner_key)
         end
-   end
+    end
 end
 thread_pool.shutdown

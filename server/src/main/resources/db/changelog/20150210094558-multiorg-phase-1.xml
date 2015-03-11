@@ -432,7 +432,7 @@
     <!-- cp_pool_branding -->
     <changeSet id="20150210094558-29" author="crog">
         <dropForeignKeyConstraint baseTableName="cp_pool_branding"
-            constraintName="fk_pool_branding_pool_id"
+            constraintName="fk_pool_branding_branding_id"
         />
     </changeSet>
 
@@ -451,7 +451,6 @@
             constraintName="cp_sub_derived_products_pk"
         />
     </changeSet>
-
 
 
 

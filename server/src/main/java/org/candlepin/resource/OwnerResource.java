@@ -814,8 +814,17 @@ public class OwnerResource {
     public Subscription createSubscription(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
         Subscription subscription) {
-        Owner o = findOwner(ownerKey);
-        subscription.setOwner(o);
+
+        // Correct owner & products
+        Owner owner = findOwner(ownerKey);
+        subscription.setOwner(owner);
+
+        Product product = this.findProduct(
+            owner,
+            (subscription.getProduct() != null ? subscription.getProduct().getId() : null)
+        );
+        subscription.setProduct(product);
+
         // TODO: not sure if this is kept or not, subscription ID doesn't mean much anymore
         if (subscription.getId() == null) {
             subscription.setId(UUID.randomUUID().toString().replace("-", ""));
@@ -901,6 +910,19 @@ public class OwnerResource {
                 consumerUuid));
         }
         return consumer;
+    }
+
+    private Product findProduct(Owner owner, String productId) {
+        Product product = this.prodCurator.lookupById(owner, productId);
+
+        if (product == null) {
+            throw new NotFoundException(i18n.tr(
+                "Could not find a product with ID \"{0}\" for owner \"{1}\"",
+                productId, owner.getKey()
+            ));
+        }
+
+        return product;
     }
 
     /**

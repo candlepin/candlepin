@@ -55,8 +55,9 @@ public class PoolRules {
     private ProductCurator prodCurator;
 
     @Inject
-    public PoolRules(PoolManager poolManager, Configuration config,
-        EntitlementCurator entCurator, ProductCurator prodCurator) {
+    public PoolRules(PoolManager poolManager, Configuration config, EntitlementCurator entCurator,
+        ProductCurator prodCurator) {
+
         this.poolManager = poolManager;
         this.config = config;
         this.entCurator = entCurator;
@@ -109,29 +110,30 @@ public class PoolRules {
         sub.setProduct(sku); // replace incoming detached sub product with one from db
 
         List<Pool> pools = new LinkedList<Pool>();
-        Map<String, String> attributes =
-            helper.getFlattenedAttributes(sku);
+        Map<String, String> attributes = helper.getFlattenedAttributes(sku);
         long quantity = calculateQuantity(sub);
 
         if (!hasMasterPool(existingPools)) {
-            Pool newPool = new Pool(sub.getOwner(), sku,
-                    new HashSet<Product>(), quantity,
+            Pool newPool = new Pool(sub.getOwner(), sku, null, quantity,
                     sub.getStartDate(), sub.getEndDate(), sub.getContractNumber(),
                     sub.getAccountNumber(), sub.getOrderNumber()
             );
+
             // Add all provided products, looked up from the database:
             for (Product pp : sub.getProvidedProducts()) {
-                newPool.addProvidedProduct(prodCurator.lookupById(sub.getOwner(),
-                        pp.getId()));
-            }
-
-            if (sub.getDerivedProvidedProducts() != null) {
-                newPool.getDerivedProvidedProducts().addAll(
-                        sub.getDerivedProvidedProducts());
+                newPool.addProvidedProduct(prodCurator.lookupById(sub.getOwner(), pp.getId()));
             }
 
             if (sub.getDerivedProduct() != null) {
-                newPool.setDerivedProduct(sub.getDerivedProduct());
+                newPool.setDerivedProduct(
+                    prodCurator.lookupById(sub.getOwner(), sub.getDerivedProduct().getId())
+                );
+            }
+
+            if (sub.getDerivedProvidedProducts() != null) {
+                for (Product dpp : sub.getDerivedProvidedProducts()) {
+                    newPool.addDerivedProvidedProduct(prodCurator.lookupById(sub.getOwner(), dpp.getId()));
+                }
             }
 
             for (Branding b : sub.getBranding()) {
@@ -145,10 +147,10 @@ public class PoolRules {
             // note: the product attributes are getting copied above, but the following will
             // make virt_only a pool attribute. That makes the pool explicitly virt_only to
             // subscription manager and any other downstream comsumer.
-            if (virtAtt != null && virtAtt.getValue() != null &&
-                !virtAtt.getValue().equals("")) {
-                newPool.addAttribute(new org.candlepin.model.PoolAttribute("virt_only",
-                    virtAtt.getValue()));
+            if (virtAtt != null && virtAtt.getValue() != null && !virtAtt.getValue().equals("")) {
+                newPool.addAttribute(new org.candlepin.model.PoolAttribute(
+                    "virt_only", virtAtt.getValue()
+                ));
             }
 
             pools.add(newPool);
@@ -189,6 +191,7 @@ public class PoolRules {
                 pools.add(derivedPool);
             }
         }
+
         return pools;
     }
 
