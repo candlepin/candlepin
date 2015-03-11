@@ -178,7 +178,8 @@ public class PoolRules {
             if (virtQuantity != null) {
                 // Favor derived products if they are available
                 if (sub.getDerivedProduct() != null) {
-                    sku = sub.getDerivedProduct();
+                    sku = prodCurator.lookupById(sub.getOwner(),
+                            sub.getDerivedProduct().getId());
                 }
 
                 Pool derivedPool = helper.createPool(
