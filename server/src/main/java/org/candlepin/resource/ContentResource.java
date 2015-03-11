@@ -26,6 +26,8 @@ import org.candlepin.service.UniqueIdGenerator;
 
 import com.google.inject.Inject;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
@@ -54,6 +56,7 @@ public class ContentResource {
     private EnvironmentContentCurator envContentCurator;
     private PoolManager poolManager;
     private ProductServiceAdapter productAdapter;
+    private static Logger log = LoggerFactory.getLogger(ContentResource.class);
 
     @Inject
     public ContentResource(ContentCurator contentCurator, I18n i18n,
@@ -194,6 +197,20 @@ public class ContentResource {
         }
 
         return updated;
+    }
+
+    /**
+     * Forces the metadata expire of all content to 0 in the database.
+     *
+     * This API is a temporary measure for Satellite and will be removed in future
+     * releases. Do not use it.
+     */
+    @PUT
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/metadataexpire")
+    public void  forceMetadataExpire() {
+        int changes = contentCurator.forceMetadataExpiry(new Long(0));
+        log.warn("Forced metadata expire to 0 for {} content rows.", changes);
     }
 
     private <T> Set<T> setFrom(T anElement) {

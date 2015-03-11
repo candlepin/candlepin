@@ -35,4 +35,20 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
         // Copy the ID so Hibernate knows this is an existing entity to merge:
         return merge(c);
     }
+
+    /**
+     * Forces metadata expiry to the given value for all content in the system, globally.
+     *
+     * Part of the temporary API call for Satellite, this method should go away when
+     * PUT /content/metadataexpire does.
+     * @param metadataExpire
+     * @return Number of rows updated.
+     */
+    public int forceMetadataExpiry(Long metadataExpire) {
+        String hql = "update Content c set c.metadataExpire = :expiry "
+                + "where c.metadataExpire != :expiry";
+        int updated = currentSession().createQuery(hql).setLong("expiry",
+                metadataExpire).executeUpdate();
+        return updated;
+    }
 }
