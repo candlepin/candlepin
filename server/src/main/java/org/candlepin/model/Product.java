@@ -14,6 +14,8 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.service.UniqueIdGenerator;
+
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.LazyCollection;
@@ -146,8 +148,8 @@ public class Product extends AbstractHibernateObject implements Linkable {
         setAttribute("arch", arch);
     }
 
-    public static Product createUeberProductForOwner(Owner owner) {
-        return new Product(null, ueberProductNameForOwner(owner), owner, 1L);
+    public static Product createUeberProductForOwner(UniqueIdGenerator idGenerator, Owner owner) {
+        return new Product(idGenerator.generateId(), ueberProductNameForOwner(owner), owner, 1L);
     }
 
     /**

@@ -139,9 +139,7 @@ public class Content extends AbstractHibernateObject {
     public Content() {
     }
 
-    public static Content createUeberContent(
-        UniqueIdGenerator idGenerator, Owner o, Product p) {
-
+    public static Content createUeberContent(UniqueIdGenerator idGenerator, Owner o, Product p) {
         return new Content(
             o, UEBER_CONTENT_NAME, idGenerator.generateId(),
             ueberContentLabelForProduct(p), "yum", "Custom",

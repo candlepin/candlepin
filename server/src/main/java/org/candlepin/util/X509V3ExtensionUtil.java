@@ -72,7 +72,6 @@ public class X509V3ExtensionUtil extends X509Util {
     private static Logger log = LoggerFactory.getLogger(X509V3ExtensionUtil.class);
     private Configuration config;
     private EntitlementCurator entCurator;
-    private ProductServiceAdapter prodAdapter;
     private String thisVersion = "3.2";
 
     private long pathNodeId = 0;
@@ -80,12 +79,10 @@ public class X509V3ExtensionUtil extends X509Util {
     private static final Object END_NODE = new Object();
     private static boolean treeDebug = false;
     @Inject
-    public X509V3ExtensionUtil(Configuration config, EntitlementCurator entCurator,
-            ProductServiceAdapter prodAdapter) {
+    public X509V3ExtensionUtil(Configuration config, EntitlementCurator entCurator) {
         // Output everything in UTC
         this.config = config;
         this.entCurator = entCurator;
-        this.prodAdapter = prodAdapter;
     }
 
     public Set<X509ExtensionWrapper> getExtensions(Entitlement ent,
@@ -376,7 +373,6 @@ public class X509V3ExtensionUtil extends X509Util {
         Set<ProductContent> archApproriateProductContent = filterContentByContentArch(
             productContent, consumer, product);
 
-        // Product skuProd = prodAdapter.getProductById(ent.getPool().getProductId());
         Product skuProd = ent.getPool().getProduct();
         List<String> skuDisabled = skuProd.getSkuDisabledContentIds();
         List<String> skuEnabled = skuProd.getSkuEnabledContentIds();

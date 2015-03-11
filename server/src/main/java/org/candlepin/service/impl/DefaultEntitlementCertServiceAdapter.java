@@ -75,7 +75,6 @@ public class DefaultEntitlementCertServiceAdapter extends
     private X509V3ExtensionUtil v3extensionUtil;
     private KeyPairCurator keyPairCurator;
     private CertificateSerialCurator serialCurator;
-    private ProductServiceAdapter productAdapter;
     private EntitlementCurator entCurator;
     private I18n i18n;
     private Configuration config;
@@ -90,7 +89,6 @@ public class DefaultEntitlementCertServiceAdapter extends
         EntitlementCertificateCurator entCertCurator,
         KeyPairCurator keyPairCurator,
         CertificateSerialCurator serialCurator,
-        ProductServiceAdapter productAdapter,
         EntitlementCurator entCurator, I18n i18n,
         Configuration config) {
 
@@ -100,7 +98,6 @@ public class DefaultEntitlementCertServiceAdapter extends
         this.entCertCurator = entCertCurator;
         this.keyPairCurator = keyPairCurator;
         this.serialCurator = serialCurator;
-        this.productAdapter = productAdapter;
         this.entCurator = entCurator;
         this.i18n = i18n;
         this.config = config;
@@ -264,7 +261,6 @@ public class DefaultEntitlementCertServiceAdapter extends
         int contentCounter = 0;
         boolean enableEnvironmentFiltering = config.getBoolean(ConfigProperties.ENV_CONTENT_FILTERING);
 
-        // Product skuProd = productAdapter.getProductById(ent.getPool().getProductId());
         Product skuProd = ent.getPool().getProduct();
 
         for (Product prod : Collections2
