@@ -126,9 +126,22 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
         );
     }
 
+    /**
+     * List all products with a Red Hat ID matching any of the IDs provided. Note that this method
+     * may return multiple products for a given ID if multiple owners have a product with the same
+     * ID.
+     *
+     * @param ids
+     *  A collection of product IDs for which to search
+     *
+     * @return
+     *  a list of Product instances with IDs matching those provided
+     */
     @Override
     public List<Product> listAllByIds(Collection<? extends Serializable> ids) {
-        throw new UnsupportedOperationException("An owner must be specified when listing products by ID");
+        return this.listByCriteria(
+            this.createSecureCriteria().add(Restrictions.in("id", ids))
+        );
     }
 
     public List<Product> listAllByUuids(Collection<? extends Serializable> uuids) {
@@ -304,10 +317,11 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
             .createAlias("providedProducts", "providedProd", JoinType.LEFT_OUTER_JOIN)
             .createAlias("derivedProvidedProducts", "derivedProvidedProd", JoinType.LEFT_OUTER_JOIN)
             .add(Restrictions.or(
-                Restrictions.eq("product", prod),
-                Restrictions.eq("derivedProduct", prod),
-                Restrictions.eq("providedProd.id", prod.getId()),
-                Restrictions.eq("derivedProvidedProd.id", prod.getId())))
+                Restrictions.eq("product.uuid", prod.getUuid()),
+                Restrictions.eq("derivedProduct.uuid", prod.getUuid()),
+                Restrictions.eq("providedProd.uuid", prod.getUuid()),
+                Restrictions.eq("derivedProvidedProd.uuid", prod.getUuid())
+            ))
             .setProjection(Projections.count("id"))
             .uniqueResult()) > 0;
     }

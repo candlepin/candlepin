@@ -93,7 +93,7 @@ public class ProductResource {
     public List<Product> list(@QueryParam("product") List<String> productIds) {
         return productIds.isEmpty() ?
             productCurator.listAll() :
-            productCurator.listAllByUuids(productIds);
+            productCurator.listAllByIds(productIds);
     }
 
     /**
@@ -177,7 +177,7 @@ public class ProductResource {
     public Product createProduct(Product product) {
         // TODO: Should this be allowed if the product describes a valid owner?
 
-        throw new UnsupportedOperationException(this.i18n.tr(
+        throw new BadRequestException(this.i18n.tr(
             "Organization-agnostic product write operations are not supported."
         ));
     }
@@ -193,9 +193,9 @@ public class ProductResource {
     @Path("/{product_id}")
     @Produces(MediaType.APPLICATION_JSON)
     public Product updateProduct(
-        @PathParam("product_id") @Verify(Product.class) String productId,
+        @PathParam("product_id") String productId,
         Product product) {
-        throw new UnsupportedOperationException(this.i18n.tr(
+        throw new BadRequestException(this.i18n.tr(
             "Organization-agnostic product write operations are not supported."
         ));
     }
@@ -262,7 +262,7 @@ public class ProductResource {
     @Path("/{product_id}/batch_content")
     public Product addBatchContent(@PathParam("product_id") String productId,
                                    Map<String, Boolean> contentMap) {
-        throw new UnsupportedOperationException(this.i18n.tr(
+        throw new BadRequestException(this.i18n.tr(
             "Organization-agnostic product write operations are not supported."
         ));
     }
@@ -281,7 +281,7 @@ public class ProductResource {
     public Product addContent(@PathParam("product_id") String productId,
                               @PathParam("content_id") String contentId,
                               @QueryParam("enabled") Boolean enabled) {
-        throw new UnsupportedOperationException(this.i18n.tr(
+        throw new BadRequestException(this.i18n.tr(
             "Organization-agnostic product write operations are not supported."
         ));
     }
@@ -296,7 +296,7 @@ public class ProductResource {
     @Path("/{product_id}/content/{content_id}")
     public void removeContent(@PathParam("product_id") String productId,
                               @PathParam("content_id") String contentId) {
-        throw new UnsupportedOperationException(this.i18n.tr(
+        throw new BadRequestException(this.i18n.tr(
             "Organization-agnostic product write operations are not supported."
         ));
     }
@@ -312,7 +312,7 @@ public class ProductResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product_id}")
     public void deleteProduct(@PathParam("product_id") String productId) {
-        throw new UnsupportedOperationException(this.i18n.tr(
+        throw new BadRequestException(this.i18n.tr(
             "Organization-agnostic product write operations are not supported."
         ));
     }
@@ -393,7 +393,7 @@ public class ProductResource {
         @PathParam("product_id") String productId,
         @QueryParam("lazy_regen") @DefaultValue("true") Boolean lazyRegen) {
 
-        throw new UnsupportedOperationException(this.i18n.tr(
+        throw new BadRequestException(this.i18n.tr(
             "Organization-agnostic product write operations are not supported."
         ));
     }

@@ -484,11 +484,21 @@ class Candlepin
     post("/owners/#{owner_key}/entitlements")
   end
 
-  def list_products(product_uuids=nil)
+  def list_products(product_ids=nil)
     method = "/products?"
-    if product_uuids
-      product_uuids.each { |uuid|
-        method << "&product=" << uuid
+    if product_ids
+      product_ids.each { |id|
+        method << "&product=" << id
+      }
+    end
+    get(method)
+  end
+
+  def list_products_by_owner(owner_key, product_ids=nil)
+    method = "/owners/#{owner_key}/products?"
+    if product_ids
+      product_ids.each { |id|
+        method << "&product=" << id
       }
     end
     get(method)
@@ -634,8 +644,7 @@ class Candlepin
     post("/owners/#{owner_key}/products", product)
   end
 
-  def update_product(product_id, params={})
-
+  def update_product(owner_key, product_id, params={})
     product = {
       :id => product_id
     }
@@ -646,11 +655,11 @@ class Candlepin
     product[:dependentProductIds] = params[:dependentProductIds] if params[:dependentProductIds]
     product[:relies_on] = params[:relies_on] if params[:relies_on]
 
-    put("/products/#{product_id}", product)
+    put("/owners/#{owner_key}/products/#{product_id}", product)
   end
 
-  def get_product(product_id)
-    get("/products/#{product_id}")
+  def get_product(owner_key, product_id)
+    get("/owners/#{owner_key}/products/#{product_id}")
   end
 
   def delete_product(owner_key, product_id)
