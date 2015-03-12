@@ -238,9 +238,10 @@ define "candlepin" do
     ])
     test.using :java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ]
 
-    pom.artifacts << package(:jar).tap do |jar|
+    common_jar = package(:jar).tap do |jar|
       jar.include(:from => msgfmt.destination)
     end
+    pom.artifacts << common_jar
   end
 
   desc "API Crawl"
@@ -261,6 +262,15 @@ define "candlepin" do
 
     compile.with(compile_classpath)
     compile.with(project('common'))
+
+    # Buildr tries to outsmart you and use classpath variables whenever
+    # possible. If we don't do the below, Buildr will add
+    # 'JAVA_HOMElib/tools.jar' to the .classpath file, but Eclipse doesn't
+    # have JAVA_HOME set as one of its classpath variables by default so the
+    # file isn't found. We will cheat by setting the classpath variable to
+    # be exactly the same as the file path.
+    tools_location = File.basename(Java.tools_jar)
+    eclipse.classpath_variables tools_location.to_sym => tools_location
   end
 
   desc "The Gutterball Reporting Engine"
@@ -350,14 +360,6 @@ define "candlepin" do
     # eclipse settings
     # http://buildr.apache.org/more_stuff.html#eclipse
     eclipse.natures :java
-
-    # Buildr tries to outsmart you and use classpath variables whenever possible.  If
-    # we don't do the below, Buildr will add 'JAVA_HOMElib/tools.jar' to the .classpath
-    # file, but Eclipse doesn't have JAVA_HOME set as one of its classpath variables by
-    # default so the file isn't found.  We will cheat by setting the classpath variable to
-    # be exactly the same as the file path.
-    tools_location = File.basename(Java.tools_jar)
-    eclipse.classpath_variables tools_location.to_sym => tools_location
 
     resource_substitutions = {
       'version' => project.version,
