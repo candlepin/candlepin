@@ -129,6 +129,7 @@ public class ComplianceStatus {
         this.compliantProducts = new HashSet<String>();
         this.partiallyCompliantProducts = new HashSet<String>();
         this.partialStacks = new HashSet<String>();
+        this.managementEnabled = Boolean.FALSE;
     }
 
     public ComplianceStatus(Date date, String status) {
