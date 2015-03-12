@@ -119,7 +119,7 @@ public class ComplianceStatus {
     @JsonDeserialize(converter = MapToKeysConverter.class)
     private Set<String> partialStacks;
 
-    @Column(name="management_enabled")
+    @Column(name = "management_enabled")
     private Boolean managementEnabled;
 
     public ComplianceStatus() {
