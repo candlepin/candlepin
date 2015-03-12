@@ -98,6 +98,10 @@ public class ConsumerStatusReport extends Report<ReportResult> {
             builder.init(CUSTOM_RESULTS_PARAM, i18n.tr("Enables/disables custom report result functionality " +
                     "via attribute filtering (boolean).")).getParameter());
 
+        addParameter(builder.init("include_reasons", i18n.tr("Include status reasons in results"))
+                .mustNotHave(CUSTOM_RESULTS_PARAM)
+                .getParameter());
+
         addParameter(builder.init("include", i18n.tr("Includes the specified attribute in the result JSON"))
                 .mustHave(CUSTOM_RESULTS_PARAM)
                 .mustNotHave("exclude")
@@ -138,6 +142,11 @@ public class ConsumerStatusReport extends Report<ReportResult> {
             }
         }
 
+        boolean includeReasons = true;
+        if (queryParams.containsKey("include_reasons")) {
+            includeReasons = PropertyConverter.toBoolean(queryParams.getFirst("include_reasons"));
+        }
+
         String custom = queryParams.containsKey(CUSTOM_RESULTS_PARAM) ?
             queryParams.getFirst(CUSTOM_RESULTS_PARAM) : "";
         boolean useCustom = PropertyConverter.toBoolean(custom);
@@ -155,6 +164,6 @@ public class ConsumerStatusReport extends Report<ReportResult> {
 
         return useCustom ?
             new ReasonGeneratingReportResult(page.getPageData(), this.messageGenerator) :
-            new ConsumerStatusReportDefaultResult(page.getPageData());
+            new ConsumerStatusReportDefaultResult(page.getPageData(), includeReasons);
     }
 }

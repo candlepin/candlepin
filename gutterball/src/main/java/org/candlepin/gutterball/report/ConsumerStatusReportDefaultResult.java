@@ -28,13 +28,16 @@ import java.util.Iterator;
 public class ConsumerStatusReportDefaultResult extends
     ComplianceTransformerIterator<ConsumerStatusComplianceDto> {
 
-    public ConsumerStatusReportDefaultResult(Iterator<Compliance> dbIterator) {
+    private boolean includeReasons;
+
+    public ConsumerStatusReportDefaultResult(Iterator<Compliance> dbIterator, boolean includeReasons) {
         super(dbIterator);
+        this.includeReasons = includeReasons;
     }
 
     @Override
     ConsumerStatusComplianceDto convertDbObject(Compliance compliance) {
-        return new ConsumerStatusComplianceDto(compliance);
+        return new ConsumerStatusComplianceDto(compliance, includeReasons);
     }
 
 }
