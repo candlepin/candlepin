@@ -34,7 +34,6 @@
                 <constraints nullable="false"/>
             </column>
         </createTable>
-<!--         <addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="cpo_products" baseTableSchemaName="public" constraintName="cpo_products_fk1" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" referencedTableSchemaName="public" referencesUniqueColumn="false"/> -->
     </changeSet>
 
     <changeSet id="20150210094558-2" author="crog">
@@ -52,6 +51,7 @@
                     nullable="false"
                     foreignKeyName="cpo_actkeyprod_fk1"
                     references="cp_activation_key(id)"
+                    deleteCascade="true"
                 />
             </column>
             <column name="product_uuid" type="varchar(32)">
@@ -59,6 +59,7 @@
                     nullable="false"
                     foreignKeyName="cpo_actkeyprod_fk2"
                     references="cpo_products(uuid)"
+                    deleteCascade="true"
                 />
             </column>
         </createTable>
@@ -169,6 +170,7 @@
                     nullable="false"
                     foreignKeyName="cpo_environment_content_fk1"
                     references="cpo_content(uuid)"
+                    deleteCascade="true"
                 />
             </column>
             <column name="environment_id" type="varchar(32)">
@@ -176,6 +178,7 @@
                     nullable="false"
                     foreignKeyName="cpo_environment_content_fk2"
                     references="cp_environment(id)"
+                    deleteCascade="true"
                 />
             </column>
             <column name="enabled" type="boolean"/>
@@ -296,6 +299,7 @@
                     nullable="false"
                     foreignKeyName="cpo_product_attributes_fk1"
                     references="cpo_products(uuid)"
+                    deleteCascade="true"
                 />
             </column>
         </createTable>
@@ -344,6 +348,7 @@
                     nullable="false"
                     foreignKeyName="cpo_product_content_fk1"
                     references="cpo_products(uuid)"
+                    deleteCascade="true"
                 />
             </column>
             <column name="content_uuid" type="varchar(32)">
@@ -351,6 +356,7 @@
                     nullable="false"
                     foreignKeyName="cpo_product_content_fk2"
                     references="cpo_content(uuid)"
+                    deleteCascade="true"
                 />
             </column>
             <column name="enabled" type="boolean"/>
@@ -377,6 +383,7 @@
                     primaryKeyName="cpo_proddepprod_pk"
                     foreignKeyName="cpo_proddepprod_fk1"
                     references="cpo_products(uuid)"
+                    deleteCascade="true"
                 />
             </column>
             <column name="element" type="varchar(255)"/>

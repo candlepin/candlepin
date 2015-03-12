@@ -895,8 +895,7 @@ public class OwnerResource {
         Owner owner = ownerCurator.lookupByKey(key);
 
         if (owner == null) {
-            throw new NotFoundException(i18n.tr(
-                "owner with key: {0} was not found.", key));
+            throw new NotFoundException(i18n.tr("owner with key: {0} was not found.", key));
         }
 
         return owner;

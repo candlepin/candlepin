@@ -4,13 +4,10 @@ require 'candlepin_scenarios'
 describe 'Entitlement Certificate V1 Size' do
   include CandlepinMethods
 
-  before(:all) do
-    @cp = Candlepin.new('admin', 'admin')
-    @content_list= create_batch_content(200)
-  end
-
   before(:each) do
     @owner = create_owner random_string('test_owner')
+    @content_list = create_batch_content(200)
+
     @product1 = create_product(nil, nil, :attributes =>
                 {:version => '6.4',
                  :warning_period => 15,
@@ -35,9 +32,9 @@ describe 'Entitlement Certificate V1 Size' do
                 {'system.certificate_version' => '1.0'})
   end
 
-  after(:all) do
+  after(:each) do
     @content_list.each do |content|
-      @cp.delete_content(content.id)
+      @cp.delete_content(@owner['key'], content.id)
     end
   end
 
@@ -48,7 +45,7 @@ describe 'Entitlement Certificate V1 Size' do
     (1..10).each do |i|
       content_ids << @content_list[i].id
     end
-    @cp.add_batch_content_to_product(@product1.id, content_ids, true)
+    @cp.add_batch_content_to_product(@owner['key'], @product1.id, content_ids, true)
     @cp.regenerate_entitlement_certificates_for_product(@product1.id)
     ent2 = @system.get_entitlement(ent1.id)
     ent2.certificates[0].serial.id.should_not == ent1.certificates[0].serial.id
@@ -59,7 +56,7 @@ describe 'Entitlement Certificate V1 Size' do
     (11..200).each do |i|
       content_ids.push(@content_list[i].id)
     end
-    @cp.add_batch_content_to_product(@product1.id, content_ids, true)
+    @cp.add_batch_content_to_product(@owner['key'], @product1.id, content_ids, true)
     @cp.regenerate_entitlement_certificates_for_product(@product1.id)
     ent3 = @system.get_entitlement(ent1.id)
     ent3.certificates[0].serial.id.should == ent2.certificates[0].serial.id

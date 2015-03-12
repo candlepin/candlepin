@@ -522,44 +522,44 @@ class Candlepin
     end
   end
 
-  def create_batch_content(contents=[])
-    post("/content/batch", contents)
+  def create_batch_content(owner_key, contents=[])
+    post("/owners/#{owner_key}/content/batch", contents)
   end
 
-  def list_content
-    get("/content")
+  def list_content(owner_key)
+    get("/owners/#{owner_key}/content")
   end
 
-  def get_content(content_id)
-    get("/content/#{content_id}")
+  def get_content(owner_key, content_id)
+    get("/owners/#{owner_key}/content/#{content_id}")
   end
 
-  def delete_content(content_id)
-    delete("/content/#{content_id}")
+  def delete_content(owner_key, content_id)
+    delete("/owners/#{owner_key}/content/#{content_id}")
   end
 
-  def update_content(content_id, updates={})
+  def update_content(owner_key, content_id, updates={})
     current_content = get_content(content_id)
     updates.each do |key, value|
       current_content[key] = value
     end
-    put("/content/#{content_id}", current_content)
+    put("/owners/#{owner_key}/content/#{content_id}", current_content)
   end
 
   def add_content_to_product(owner_key, product_id, content_id, enabled=true)
     post("/owners/#{owner_key}/products/#{product_id}/content/#{content_id}?enabled=#{enabled}")
   end
 
-  def add_batch_content_to_product(product_id, content_ids, enabled=true)
+  def add_batch_content_to_product(owner_key, product_id, content_ids, enabled=true)
     data = {}
     content_ids.each do |id|
       data[id] = enabled
     end
-    post("/products/#{product_id}/batch_content", data)
+    post("/owners/#{owner_key}/products/#{product_id}/batch_content", data)
   end
 
-  def remove_content_from_product(product_id, content_id)
-    delete("/products/#{product_id}/content/#{content_id}")
+  def remove_content_from_product(owner_key, product_id, content_id)
+    delete("/owners/#{owner_key}/products/#{product_id}/content/#{content_id}")
   end
 
   def add_product_reliance(product_id, rely_id)
