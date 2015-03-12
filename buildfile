@@ -243,6 +243,26 @@ define "candlepin" do
     end
   end
 
+  desc "API Crawl"
+  define "apicrawl" do
+    project.version = "1.0"
+    eclipse.natures = :java
+    checkstyle.config_directory = checkstyle_config_directory
+    checkstyle.eclipse_xml = checkstyle_eclipse_xml
+
+    compile_classpath = [
+      COMMONS,
+      JACKSON,
+      RESTEASY,
+      GUICE,
+      LOGGING,
+      JAVA_TOOLS,
+    ]
+
+    compile.with(compile_classpath)
+    compile.with(project('common'))
+  end
+
   desc "The Gutterball Reporting Engine"
   define "gutterball" do
     spec_file = "gutterball.spec"
@@ -363,7 +383,6 @@ define "candlepin" do
       HIBERNATE,
       HORNETQ,
       JACKSON,
-      JAVA_TOOLS,
       LIQUIBASE,
       LOGGING,
       OAUTH,
@@ -404,14 +423,11 @@ define "candlepin" do
     candlepin_path = "org/candlepin"
     compiled_cp_path = "#{compile.target}/#{candlepin_path}"
 
-    # The apicrawl package is only used for generating documentation so there is no
-    # need to ship it.  Ideally, we'd put apicrawl in its own buildr project but I
-    # kept getting complaints about circular dependencies.
     api_jar = package(:jar, :id=>'candlepin-api').tap do |jar|
       jar.clean
       pkgs = %w{auth config jackson model pki resteasy service util}.map { |pkg| "#{compiled_cp_path}/#{pkg}" }
       p = jar.path(candlepin_path)
-      p.include(pkgs).exclude("#{compiled_cp_path}/util/apicrawl")
+      p.include(pkgs)
     end
     pom.artifacts << api_jar
 
@@ -419,27 +435,28 @@ define "candlepin" do
       jar.clean
       pkgs = %w{config jackson model pinsetter pki service util}.map { |pkg| "#{compiled_cp_path}/#{pkg}" }
       p = jar.path(candlepin_path)
-      p.include(pkgs).exclude("#{compiled_cp_path}/util/apicrawl")
+      p.include(pkgs)
     end
 
     war_file = package(:war, :id=>"candlepin").tap do |war|
       war.libs += artifacts(HSQLDB)
       war.libs -= artifacts(PROVIDED)
-      war.libs -= artifacts(JAVA_TOOLS)
       war.classes.clear
       war.classes << resources.target
       war.classes << msgfmt.destination if msgfmt.enabled?
       web_inf = war.path('WEB-INF/classes')
-      web_inf.path(candlepin_path).include("#{compiled_cp_path}/**").exclude("#{compiled_cp_path}/util/apicrawl")
+      web_inf.path(candlepin_path).include("#{compiled_cp_path}/**")
     end
     pom.artifacts << war_file
 
     desc 'Crawl the REST API and print a summary.'
-    task :apicrawl => :compile do
+    task :apicrawl => [project('apicrawl').task(:package), :compile] do
       options.test = 'no'
 
       # Join compile classpath with the package jar.
-      cp = [compile.dependencies, compile.target].flatten.uniq
+      apicrawl = project('apicrawl').package(:jar)
+      cp = [compile.dependencies, compile.target, apicrawl].flatten.uniq
+
       Java::Commands.java('org.candlepin.util.apicrawl.ApiCrawler',
                           path_to(:target, 'candlepin_api.json'),
                           :classpath => cp)
