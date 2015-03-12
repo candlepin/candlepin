@@ -829,6 +829,18 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
             }
 
             if (attributes != null) {
+
+                if (attributes.containsKey("management_enabled")) {
+                    boolean managementEnabledFilter =
+                            PropertyConverter.toBoolean(attributes.get("management_enabled"));
+                    criteria.add("ComplianceStatusSnap.managementEnabled = ?" + ++counter);
+                    parameters.add(managementEnabledFilter);
+
+                    // Don't process this attribute as part of entitlement attributes,
+                    // as it has already been handled.
+                    attributes.remove("management_enabled");
+                }
+
                 for (Map.Entry<String, String> entry : attributes.entrySet()) {
                     criteria.add(String.format(
                         "(?%d, ?%d) IN (" +
