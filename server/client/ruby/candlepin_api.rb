@@ -554,7 +554,7 @@ class Candlepin
   end
 
   def update_content(owner_key, content_id, updates={})
-    current_content = get_content(content_id)
+    current_content = get_content(owner_key, content_id)
     updates.each do |key, value|
       current_content[key] = value
     end

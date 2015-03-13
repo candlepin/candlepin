@@ -15,6 +15,7 @@
 package org.candlepin.resource;
 
 import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
@@ -135,7 +136,7 @@ public class ContentResource {
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     public Content createContent(Content content) {
-        throw new UnsupportedOperationException(this.i18n.tr(
+        throw new BadRequestException(this.i18n.tr(
             "Organization-agnostic content write operations are not supported."
         ));
     }
@@ -150,7 +151,7 @@ public class ContentResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/batch")
     public List<Content> createBatchContent(List<Content> contents) {
-        throw new UnsupportedOperationException(this.i18n.tr(
+        throw new BadRequestException(this.i18n.tr(
             "Organization-agnostic content write operations are not supported."
         ));
     }
@@ -166,7 +167,7 @@ public class ContentResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{content_id}")
     public Content updateContent(@PathParam("content_id") String contentId, Content changes) {
-        throw new UnsupportedOperationException(this.i18n.tr(
+        throw new BadRequestException(this.i18n.tr(
             "Organization-agnostic content write operations are not supported."
         ));
     }
@@ -180,7 +181,7 @@ public class ContentResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{content_id}")
     public void remove(@PathParam("content_id") String contentId) {
-        throw new UnsupportedOperationException(this.i18n.tr(
+        throw new BadRequestException(this.i18n.tr(
             "Organization-agnostic content write operations are not supported."
         ));
     }
