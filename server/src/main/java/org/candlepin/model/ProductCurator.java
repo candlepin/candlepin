@@ -313,7 +313,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     }
 
     public boolean productHasSubscriptions(Product prod) {
-        return ((Long) currentSession().createCriteria(Subscription.class)
+        return ((Long) currentSession().createCriteria(Pool.class)
             .createAlias("providedProducts", "providedProd", JoinType.LEFT_OUTER_JOIN)
             .createAlias("derivedProvidedProducts", "derivedProvidedProd", JoinType.LEFT_OUTER_JOIN)
             .add(Restrictions.or(

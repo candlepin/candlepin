@@ -12,7 +12,7 @@ describe 'Owner Product Resource' do
     @derived_product = create_product random_string('derived_product')
     @derived_prov_product = create_product random_string('derived_provided_product')
 
-    test = @cp.create_subscription(@owner['key'], @product.id,
+    @cp.create_subscription(@owner['key'], @product.id,
       10, [@prov_product.id], '222', '', '', nil, nil,
       {
         'derived_product_id' => @derived_product.id,
@@ -62,7 +62,7 @@ describe 'Owner Product Resource' do
     prod.name.should == 'iron maiden'
   end
 
-  it 'removes content from products.' do
+  it 'removes content from products' do
     prod = create_product
     content = create_content
     @cp.add_content_to_product(@owner['key'], prod['id'], content['id'])
@@ -103,49 +103,32 @@ describe 'Owner Product Resource' do
     product_owners[0]['key'].should == owner['key']
   end
 
-  it 'refreshes pools for specific products' do
+  it 'refreshes pools for owner on subscription creation' do
     owner = create_owner(random_string('owner'))
+    owner2 = create_owner(random_string('owner2'))
+
     owner_client = user_client(owner, random_string('testuser'))
-    product = create_product(random_string("test_id"), random_string("test_name"),
-        {:owner => owner['key']})
+    owner2_client = user_client(owner2, random_string('testuser'))
+
+    product = create_product(
+      random_string("test_id"),
+      random_string("test_name"),
+      {:owner => owner['key']}
+    )
+
     provided_product = create_product(nil, nil, {:owner => owner['key']})
+
     @cp.create_subscription(owner['key'], product.id, 10, [provided_product.id])
+
     pool = owner_client.list_pools(:owner => owner.id)
-    pool.should have(0).things
-    @cp.refresh_pools_for_product(product.id)
+    pool.should have(1).things
+
     pool = owner_client.list_pools(:owner => owner.id)
     pool.should have(1).things
     pool[0]['owner']['key'].should == owner['key']
-  end
 
-  it 'does not refresh pools without a given product' do
-    owner = create_owner(random_string('owner'))
-    owner_client = user_client(owner, random_string('testuser'))
-    product = create_product(random_string("test_id"), random_string("test_name"),
-        {:owner => owner['key']})
-    product2 = create_product(nil, nil, {:owner => owner['key']})
-    provided_product = create_product(nil, nil, {:owner => owner['key']})
-    @cp.create_subscription(owner['key'], product.id, 10, [provided_product.id])
-    pool = owner_client.list_pools(:owner => owner.id)
+    pool = owner2_client.list_pools(:owner => owner2.id)
     pool.should have(0).things
-    @cp.refresh_pools_for_product(product2.id)
-    pool = owner_client.list_pools(:owner => owner.id)
-    pool.should have(0).things
-  end
-
-  it 'refreshes pools for specific provided products' do
-    owner = create_owner(random_string('owner'))
-    owner_client = user_client(owner, random_string('testuser'))
-    product = create_product(random_string("test_id"), random_string("test_name"),
-        {:owner => owner['key']})
-    provided_product = create_product(nil, nil, {:owner => owner['key']})
-    @cp.create_subscription(owner['key'], product.id, 10, [provided_product.id])
-    pool = owner_client.list_pools(:owner => owner.id)
-    pool.should have(0).things
-    @cp.refresh_pools_for_product(provided_product.id)
-    pool = owner_client.list_pools(:owner => owner.id)
-    pool.should have(1).things
-    pool[0]['owner']['key'].should == owner['key']
   end
 
   it 'lists all products in bulk fetch' do
@@ -156,7 +139,7 @@ describe 'Owner Product Resource' do
     prod2 = create_product(prod2_id, random_string("test_name"))
     prod3 = create_product(prod3_id, random_string("test_name"))
     all_products = @cp.list_products_by_owner(@owner['key'])
-    all_products.size.should > 2
+    all_products.size.should >= 3
 
     # Pick two products to use in a bulk get
     prod_ids_to_get = [prod1_id, prod3_id]
@@ -166,8 +149,12 @@ describe 'Owner Product Resource' do
     bulk_get_products.size.should == 2
 
     # Make sure it got the correct ones
-    prod_ids_to_get.index(bulk_get_products[0]['id']).should == prod1_id
-    prod_ids_to_get.index(bulk_get_products[1]['id']).should == prod3_id
+    if (bulk_get_products[0]['id'] == prod1_id)
+      bulk_get_products[1]['id'].should == prod3_id
+    else
+      bulk_get_products[0]['id'].should == prod3_id
+      bulk_get_products[1]['id'].should == prod1_id
+    end
   end
 
   it 'should return correct exception for contraint violations' do
