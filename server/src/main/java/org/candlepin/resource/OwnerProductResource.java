@@ -397,8 +397,6 @@ public class OwnerProductResource {
 
         Product product = this.getProduct(ownerKey, productId);
 
-        log.debug("Found product with UUID: {}, RHID: {}, Owner: {}", product.getUuid(), product.getId(), product.getOwner().getKey());
-
         if (productCurator.productHasSubscriptions(product)) {
             throw new BadRequestException(
                 i18n.tr(

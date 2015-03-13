@@ -320,8 +320,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
                 Restrictions.eq("product.uuid", prod.getUuid()),
                 Restrictions.eq("derivedProduct.uuid", prod.getUuid()),
                 Restrictions.eq("providedProd.uuid", prod.getUuid()),
-                Restrictions.eq("derivedProvidedProd.uuid", prod.getUuid())
-            ))
+                Restrictions.eq("derivedProvidedProd.uuid", prod.getUuid())))
             .setProjection(Projections.count("id"))
             .uniqueResult()) > 0;
     }

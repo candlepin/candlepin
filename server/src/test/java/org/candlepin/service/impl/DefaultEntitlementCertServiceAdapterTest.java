@@ -1338,6 +1338,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         inheritedArchProduct.setContent(Collections.singleton(noArchContent));
         products.add(inheritedArchProduct);
+
         when(productAdapter.getProductById(
             eq(inheritedArchProduct.getOwner()),
             eq(inheritedArchProduct.getId()))

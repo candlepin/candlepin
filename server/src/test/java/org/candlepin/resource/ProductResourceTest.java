@@ -20,6 +20,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Product;
@@ -64,7 +65,7 @@ public class ProductResourceTest extends DatabaseTestFixture {
         return prod;
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test(expected = BadRequestException.class)
     public void testCreateProductResource() {
         Owner owner = ownerCurator.create(new Owner("Example-Corporation"));
 
@@ -72,7 +73,7 @@ public class ProductResourceTest extends DatabaseTestFixture {
         productResource.createProduct(toSubmit);
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test(expected = BadRequestException.class)
     public void testCreateProductWithContent() {
         Owner owner = ownerCurator.create(new Owner("Example-Corporation"));
 
@@ -91,7 +92,7 @@ public class ProductResourceTest extends DatabaseTestFixture {
         productResource.createProduct(toSubmit);
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test(expected = BadRequestException.class)
     public void testDeleteProductWithSubscriptions() {
         ProductCurator pc = mock(ProductCurator.class);
         I18n i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);

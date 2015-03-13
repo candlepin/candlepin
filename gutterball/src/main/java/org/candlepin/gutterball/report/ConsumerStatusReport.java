@@ -85,8 +85,8 @@ public class ConsumerStatusReport extends Report<ReportResult> {
         );
 
         addParameter(
-            builder.init(CUSTOM_RESULTS_PARAM, i18n.tr("Enables/disables custom report result functionality " +
-                    "via attribute filtering (boolean).")).getParameter());
+            builder.init(CUSTOM_RESULTS_PARAM, i18n.tr("Enables/disables custom report result " +
+                    "functionality via attribute filtering (boolean).")).getParameter());
 
         addParameter(builder.init("include", i18n.tr("Includes the specified attribute in the result JSON"))
                 .mustHave(CUSTOM_RESULTS_PARAM)

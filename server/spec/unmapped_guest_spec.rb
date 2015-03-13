@@ -15,7 +15,8 @@ describe 'Unmapped Guest Pools' do
       :attributes => {
         :virt_limit => 'unlimited',
         :host_limited => 'true',
-        :physical_only => 'true'
+        :physical_only => 'true',
+        :'multi-entitlement' => 'yes'
       }
     })
     @sub1 = @cp.create_subscription(@owner['key'], @virt_limit_product.id, 10)
@@ -80,12 +81,39 @@ describe 'Unmapped Guest Pools' do
     @pools = @user.list_pools :owner => @owner.id, :product => @virt_limit_product.id
     @pools.size.should == 3
 
-    @guest1_client.consume_product(@virt_limit_product.id)
+    @guest1_client.autoheal_consumer
     ents = @guest1_client.list_entitlements()
     ents.should have(1).things
 
     bound_pool = ents[0].pool
     bound_pool['attributes'].select {|i| i['name'] == 'unmapped_guests_only' }[0].should_not be nil
+  end
+
+  it 'ensures unmapped guest will attach to unmapped guest pool on auto attach only once' do
+    all_pools = @user.list_pools :owner => @owner.id, :product => @virt_limit_product.id
+    all_pools.each do |pool|
+      unmapped = pool['attributes'].select {|i| i['name'] == 'unmapped_guests_only' }[0]
+      if unmapped.nil? || unmapped['value'] != 'true'
+        @host1_client.consume_pool(pool['id'], {:quantity => 1})
+      end
+    end
+    @cp.refresh_pools(@owner['key'])
+
+    # should be the base pool, the bonus pool for unmapped guests, plus a pool for the host's guests
+    @pools = @user.list_pools :owner => @owner.id, :product => @virt_limit_product.id
+    @pools.size.should == 3
+
+    @guest1_client.autoheal_consumer
+    ents = @guest1_client.list_entitlements()
+    ents.should have(1).things
+
+    @guest1_client.autoheal_consumer
+    ents = @guest1_client.list_entitlements()
+    ents.should have(1).things
+
+    @guest1_client.autoheal_consumer
+    ents = @guest1_client.list_entitlements()
+    ents.should have(1).things
   end
 
   it 'revokes the unmapped guest pool once the guest is mapped' do
