@@ -47,7 +47,7 @@ BuildRequires: java-devel >= 1:1.6.0
 BuildRequires: ant >= 0:1.7.0
 BuildRequires: gettext
 BuildRequires: selinux-policy-doc
-BuildRequires: candlepin-common >= 0:1.0.16
+BuildRequires: candlepin-common >= 0:1.0.21
 %if 0%{?rhel} && 0%{?rhel} < 7
 BuildRequires: ant-nodeps >= 0:1.7.0
 %endif
