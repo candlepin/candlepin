@@ -16,8 +16,12 @@ package org.candlepin.resource;
 
 import org.candlepin.auth.interceptor.Verify;
 import org.candlepin.common.exceptions.BadRequestException;
+import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.Pool;
+import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.SubscriptionsCertificate;
 import org.candlepin.service.SubscriptionServiceAdapter;
@@ -54,18 +58,25 @@ public class SubscriptionResource {
 
     private SubscriptionServiceAdapter subService;
     private ConsumerCurator consumerCurator;
+    private PoolCurator poolCurator;
+
+    // TODO: This should probably be a generic PoolManager, but we may not be able to change the
+    //       interface.
+    private CandlepinPoolManager poolManager;
 
     private I18n i18n;
 
     @Inject
     public SubscriptionResource(SubscriptionServiceAdapter subService,
-        ConsumerCurator consumerCurator,
+        ConsumerCurator consumerCurator, PoolCurator poolCurator, CandlepinPoolManager poolManager,
         I18n i18n) {
+
         this.subService = subService;
         this.consumerCurator = consumerCurator;
+        this.poolCurator = poolCurator;
+        this.poolManager = poolManager;
 
         this.i18n = i18n;
-
     }
 
     /**
@@ -118,11 +129,30 @@ public class SubscriptionResource {
     @GET
     @Path("/{subscription_id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Subscription getSubscription(
-        @PathParam("subscription_id") String subscriptionId) {
+    public Subscription getSubscription(@PathParam("subscription_id") String subscriptionId) {
+        Pool pool = this.poolCurator.getMasterPoolBySubscription(subscriptionId);
 
-        Subscription subscription = verifyAndFind(subscriptionId);
-        return subscription;
+        if (pool == null) {
+            throw new NotFoundException(
+                i18n.tr("A subscription with the ID \"{0}\" could not be found.", subscriptionId)
+            );
+        }
+
+        Subscription fabricated = new Subscription(
+            pool.getOwner(),
+            pool.getProduct(),
+            pool.getProvidedProducts(),
+            pool.getQuantity(),
+            pool.getStartDate(),
+            pool.getEndDate(),
+            pool.getUpdated()
+        );
+
+        // TODO:
+        // There's probably a fair amount of other stuff we need to migrate over to the
+        // subscription. We should do that here.
+
+        return fabricated;
     }
 
      /**
@@ -218,12 +248,21 @@ public class SubscriptionResource {
      */
     @DELETE
     @Path("/{subscription_id}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public void deleteSubscription(
-        @PathParam("subscription_id") String subscriptionIdString) {
+    @Produces(MediaType.APPLICATION_JSON) // Does it??
+    public void deleteSubscription(@PathParam("subscription_id") String subscriptionId) {
 
-        Subscription subscription = verifyAndFind(subscriptionIdString);
-        subService.deleteSubscription(subscription);
+        // Lookup pools from subscription ID
+        List<Pool> pools = this.poolCurator.getPoolsBySubscriptionId(subscriptionId);
+
+        if (pools.isEmpty()) {
+            throw new NotFoundException(
+                i18n.tr("A subscription with the ID \"{0}\" could not be found.", subscriptionId)
+            );
+        }
+
+        for (Pool pool : pools) {
+            this.poolManager.deletePool(pool);
+        }
     }
 
     private Subscription verifyAndFind(String subscriptionId) {

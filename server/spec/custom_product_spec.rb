@@ -13,12 +13,13 @@ describe 'Custom Product' do
  it 'create custom products and subscribe' do
     owner_client = user_client(@owner, random_string('testuser'))
 
-    product1 = create_product(@owner['key'] + '_product_1', @owner['key'] + '_product_1',
-        {:custom => false})
-    product2 = create_product('', @owner['key'] + '_product_2',
-        {:custom => true})
-    content = create_content({:metadata_expire => 6000,
-      :required_tags => "TAG1,TAG2"})
+    product1 = create_product(
+        @owner['key'] + '_product_1', @owner['key'] + '_product_1', {:custom => false}
+    )
+    product2 = create_product(
+        'bacon', @owner['key'] + '_product_2', {:custom => true}
+    )
+    content = create_content({:metadata_expire => 6000, :required_tags => "TAG1,TAG2"})
     @cp.add_content_to_product(@owner['key'], product1.id, content.id)
     @cp.add_content_to_product(@owner['key'], product2.id, content.id)
     @end_date = Date.new(2025, 5, 29)
@@ -30,8 +31,7 @@ describe 'Custom Product' do
     pool1 = @cp.list_pools(:owner => @owner.id, :product => product1.id)[0]
     pool2 = @cp.list_pools(:owner => @owner.id, :product => product2.id)[0]
 
-    candlepin_client = consumer_client(owner_client, random_string(),
-        "candlepin")
+    candlepin_client = consumer_client(owner_client, random_string(), "candlepin")
     candlepin_client.consume_pool(pool1.id, {:quantity => 1})[0]
     candlepin_client.consume_pool(pool2.id, {:quantity => 1})[0]
 

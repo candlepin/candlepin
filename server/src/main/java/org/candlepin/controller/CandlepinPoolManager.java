@@ -254,9 +254,7 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     @Transactional
-    void refreshPoolsForSubscription(Subscription sub, boolean lazy,
-            Set<Product> changedProducts) {
-
+    void refreshPoolsForSubscription(Subscription sub, boolean lazy, Set<Product> changedProducts) {
         // These don't all necessarily belong to this owner
         List<Pool> subscriptionPools = poolCurator.getPoolsBySubscriptionId(sub.getId());
 
@@ -270,8 +268,8 @@ public class CandlepinPoolManager implements PoolManager {
         // don't update floating here, we'll do that later
         // so we don't update anything twice
         regenerateCertificatesByEntIds(
-                updatePoolsForSubscription(subscriptionPools,
-                        sub, false, changedProducts), lazy);
+            updatePoolsForSubscription(subscriptionPools, sub, false, changedProducts), lazy
+        );
     }
 
     public void cleanupExpiredPools() {

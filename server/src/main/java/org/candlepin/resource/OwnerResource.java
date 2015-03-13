@@ -801,39 +801,6 @@ public class OwnerResource {
     }
 
     /**
-     * Creates a Subscription for an Owner
-     *
-     * @return a Subscription object
-     * @httpcode 404
-     * @httpcode 200
-     */
-    @POST
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("{owner_key}/subscriptions")
-    public Subscription createSubscription(
-        @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
-        Subscription subscription) {
-
-        // Correct owner & products
-        Owner owner = findOwner(ownerKey);
-        subscription.setOwner(owner);
-
-        Product product = this.findProduct(
-            owner,
-            (subscription.getProduct() != null ? subscription.getProduct().getId() : null)
-        );
-        subscription.setProduct(product);
-
-        // TODO: not sure if this is kept or not, subscription ID doesn't mean much anymore
-        if (subscription.getId() == null) {
-            subscription.setId(UUID.randomUUID().toString().replace("-", ""));
-        }
-        poolManager.createPoolsForSubscription(subscription);
-        return subscription;
-    }
-
-    /**
      * Retrieves an Event Atom Feed for an owner
      *
      * @return a Feed object
@@ -939,11 +906,10 @@ public class OwnerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}")
     @Transactional
-    public Owner updateOwner(@PathParam("owner_key") @Verify(Owner.class) String key,
-        Owner owner) {
+    public Owner updateOwner(@PathParam("owner_key") @Verify(Owner.class) String key, Owner owner) {
         Owner toUpdate = findOwner(key);
         EventBuilder eventBuilder = eventFactory.getEventBuilder(Target.OWNER, Type.MODIFIED)
-                .setOldEntity(toUpdate);
+            .setOldEntity(toUpdate);
 
         log.debug("Updating owner: " + key);
 
@@ -971,6 +937,63 @@ public class OwnerResource {
         Event e = eventBuilder.setNewEntity(toUpdate).buildEvent();
         sink.queueEvent(e);
         return toUpdate;
+    }
+
+
+    /**
+     * Creates a Subscription for an Owner
+     *
+     * @return a Subscription object
+     * @httpcode 404
+     * @httpcode 200
+     */
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{owner_key}/subscriptions")
+    public Subscription createSubscription(
+        @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
+        Subscription subscription) {
+
+        // Correct owner & products
+        Owner owner = findOwner(ownerKey);
+        subscription.setOwner(owner);
+
+        Product product = this.findProduct(
+            owner,
+            (subscription.getProduct() != null ? subscription.getProduct().getId() : null)
+        );
+        subscription.setProduct(product);
+
+        // TODO: not sure if this is kept or not, subscription ID doesn't mean much anymore
+        if (subscription.getId() == null) {
+            subscription.setId(UUID.randomUUID().toString().replace("-", ""));
+        }
+        poolManager.createPoolsForSubscription(subscription);
+        return subscription;
+    }
+
+    /**
+     * Updates a Subscription for an Owner
+     *
+     * @httpcode 404
+     * @httpcode 200
+     */
+    @PUT
+    @Path("/subscriptions")
+    public void updateSubscription(Subscription subscription) {
+        // TODO: Do we even need the owner id here?
+
+
+
+
+        Subscription existingSubscription = this.subscriptionCurator
+            .find(subscription.getId());
+        if (existingSubscription == null) {
+            throw new NotFoundException(i18n.tr(
+                "subscription with id: {0} not found.", subscription.getId()));
+        }
+        this.subscriptionCurator.merge(subscription);
     }
 
     /**
@@ -1012,25 +1035,6 @@ public class OwnerResource {
         }
 
         return RefreshPoolsJob.forOwner(owner, lazyRegen);
-    }
-
-    /**
-     * Updates a Subscription for an Owner
-     *
-     * @httpcode 404
-     * @httpcode 200
-     */
-    @PUT
-    @Path("/subscriptions")
-    public void updateSubscription(Subscription subscription) {
-        // TODO: Do we even need the owner id here?
-        Subscription existingSubscription = this.subscriptionCurator
-            .find(subscription.getId());
-        if (existingSubscription == null) {
-            throw new NotFoundException(i18n.tr(
-                "subscription with id: {0} not found.", subscription.getId()));
-        }
-        this.subscriptionCurator.merge(subscription);
     }
 
     /**
