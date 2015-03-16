@@ -57,7 +57,7 @@ public interface PoolManager {
      * @param subscription
      *  The subscription to use for updating the associated pools
      */
-    public void updatePoolsForSubscription(Subscription subscription);
+    void updatePoolsForSubscription(Subscription subscription);
 
     /**
      * Cleanup entitlements and safely delete the given pool.
@@ -249,7 +249,7 @@ public interface PoolManager {
      * @return
      *  a new subscription object derived from the specified pool.
      */
-    public Subscription fabricateSubscriptionFromPool(Pool pool);
+    Subscription fabricateSubscriptionFromPool(Pool pool);
 
     /**
      * Retrieves a list of pools associated with the specified subscription ID. If there are no
@@ -261,7 +261,7 @@ public interface PoolManager {
      * @return
      *  a list of pools associated with the specified subscription.
      */
-    public List<Pool> getPoolsBySubscriptionId(String subscriptionId);
+    List<Pool> getPoolsBySubscriptionId(String subscriptionId);
 
     /**
      * Retrieves the master pool associated with the specified subscription ID. If there is not a
@@ -273,5 +273,5 @@ public interface PoolManager {
      * @return
      *  the master pool associated with the specified subscription.
      */
-    public Pool getMasterPoolBySubscriptionId(String subscriptionId);
+    Pool getMasterPoolBySubscriptionId(String subscriptionId);
 }

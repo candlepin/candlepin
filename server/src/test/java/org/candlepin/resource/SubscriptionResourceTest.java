@@ -22,7 +22,6 @@ import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
-import org.candlepin.model.PoolCurator;
 import org.candlepin.service.SubscriptionServiceAdapter;
 
 import org.junit.Before;

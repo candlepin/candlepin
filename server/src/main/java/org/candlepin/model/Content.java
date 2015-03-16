@@ -139,6 +139,16 @@ public class Content extends AbstractHibernateObject {
     public Content() {
     }
 
+    /**
+     * ID-based constructor so API users can specify an ID in place of a full object.
+     *
+     * @param id
+     *  The ID for this content
+     */
+    public Content(String id) {
+        this.setId(id);
+    }
+
     public static Content createUeberContent(UniqueIdGenerator idGenerator, Owner o, Product p) {
         return new Content(
             o, UEBER_CONTENT_NAME, idGenerator.generateId(),
