@@ -418,10 +418,10 @@ class StandardExporter < Exporter
                                    :required_tags => "TAG1,TAG2",
                                    :arches => "i386,x86_64"})
 
-    @cp.add_content_to_product(@products[:product1].id, content.id)
-    @cp.add_content_to_product(@products[:product2].id, content.id)
-    @cp.add_content_to_product(@products[:product2].id, arch_content.id)
-    @cp.add_content_to_product(@products[:derived_product].id, content.id)
+    @cp.add_content_to_product(@owner['key'], @products[:product1].id, content.id)
+    @cp.add_content_to_product(@owner['key'], @products[:product2].id, content.id)
+    @cp.add_content_to_product(@owner['key'], @products[:product2].id, arch_content.id)
+    @cp.add_content_to_product(@owner['key'], @products[:derived_product].id, content.id)
 
     end_date = Date.new(2025, 5, 29)
 
