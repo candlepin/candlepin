@@ -16,6 +16,7 @@ module AntTaskCheckstyle
         info("Running Checkstyle on #{options[:project]}")
 
         # See http://checkstyle.sourceforge.net/anttask.html
+        failed = false
         Buildr.ant('checkstyle') do |ant|
           ant.taskdef(:classpath => cp, :resource => "checkstyletask.properties")
           options[:profiles].each do |profile|
@@ -48,11 +49,11 @@ module AntTaskCheckstyle
               end
             end
           end
-          fail("Checkstyle failed") if ant.project.getProperty('checkstyleFailed')
+          failed ||= true if ant.project.getProperty('checkstyleFailed')
         end
-      rescue => e
-        warn("Checkstyle found errors")
-        raise e if options[:fail_on_error]
+        fail("Checkstyle failed") if failed && options[:fail_on_error]
+      rescue
+        warn("Checkstyle found errors in #{options[:project]}")
       end
     end
   end
