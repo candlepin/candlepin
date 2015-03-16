@@ -12,6 +12,7 @@ apache-mime4j
 atinject
 candlepin-common
 candlepin-guice // This will pull in all the jars under candlepin-guice
+cglib
 commons-codec-eap6/commons-codec
 commons-collections
 commons-io
