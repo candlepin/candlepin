@@ -18,6 +18,7 @@ import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
@@ -88,7 +89,7 @@ public class ContentResourceTest {
         assertEquals(content, cr.getContent("10"));
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test(expected = BadRequestException.class)
     public void createContent() {
         Content content = mock(Content.class);
         when(content.getId()).thenReturn("10");
@@ -96,7 +97,7 @@ public class ContentResourceTest {
         assertEquals(content, cr.createContent(content));
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test(expected = BadRequestException.class)
     public void createContentNull()  {
         Content content = mock(Content.class);
         when(content.getId()).thenReturn("10");
@@ -106,7 +107,7 @@ public class ContentResourceTest {
         verify(cc, never()).create(content);
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test(expected = BadRequestException.class)
     public void deleteContent() {
         Owner owner = mock(Owner.class);
         Content content = mock(Content.class);
@@ -123,7 +124,7 @@ public class ContentResourceTest {
         verify(envContentCurator, never()).delete(eq(ec));
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test(expected = BadRequestException.class)
     public void deleteContentNull() {
         Content content = mock(Content.class);
         when(content.getId()).thenReturn("10");
@@ -132,7 +133,7 @@ public class ContentResourceTest {
         verify(cc, never()).delete(eq(content));
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test(expected = BadRequestException.class)
     public void testUpdateContent() {
         final String productId = "productId";
         final String contentId = "10";
@@ -158,7 +159,7 @@ public class ContentResourceTest {
         verify(productCurator, never()).getProductsWithContent(owner, Arrays.asList(contentId));
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test(expected = BadRequestException.class)
     public void testUpdateContentThrowsExceptionWhenContentDoesNotExist() {
         Content content = mock(Content.class);
         when(cc.find(any(String.class))).thenReturn(null);

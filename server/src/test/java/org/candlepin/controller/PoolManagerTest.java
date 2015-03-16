@@ -1144,4 +1144,49 @@ public class PoolManagerTest {
 
         assertEquals(1, changed.size());
     }
+
+    @Test
+    public void testFabricateSubscriptionFromPool() {
+        Product product = TestUtil.createProduct("product", "Product", o);
+        Product provided1 = TestUtil.createProduct("provided-1", "Provided 1", o);
+        Product provided2 = TestUtil.createProduct("provided-2", "Provided 2", o);
+
+        Pool pool = mock(Pool.class);
+
+        HashSet<Product> provided = new HashSet<Product>();
+        provided.add(provided1);
+        provided.add(provided2);
+
+        Long quantity = new Long(42);
+
+        Date startDate = new Date(System.currentTimeMillis() - 86400000);
+        Date endDate = new Date(System.currentTimeMillis() + 86400000);
+        Date updated = new Date();
+
+        String subscriptionId = "test-subscription-1";
+
+        when(pool.getOwner()).thenReturn(o);
+        when(pool.getProduct()).thenReturn(product);
+        when(pool.getProvidedProducts()).thenReturn(provided);
+        when(pool.getQuantity()).thenReturn(quantity);
+        when(pool.getStartDate()).thenReturn(startDate);
+        when(pool.getEndDate()).thenReturn(endDate);
+        when(pool.getUpdated()).thenReturn(updated);
+        when(pool.getSubscriptionId()).thenReturn(subscriptionId);
+        // TODO: Add other attributes to check here.
+
+        Subscription fabricated = manager.fabricateSubscriptionFromPool(pool);
+
+        assertEquals(o, fabricated.getOwner());
+        assertEquals(product, fabricated.getProduct());
+        assertEquals(provided, fabricated.getProvidedProducts());
+        assertEquals(quantity, fabricated.getQuantity());
+        assertEquals(startDate, fabricated.getStartDate());
+        assertEquals(endDate, fabricated.getEndDate());
+        assertEquals(updated, fabricated.getModified());
+        assertEquals(subscriptionId, fabricated.getId());
+    }
+
+
+
 }

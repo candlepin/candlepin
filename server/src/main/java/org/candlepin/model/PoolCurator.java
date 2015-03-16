@@ -586,7 +586,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     }
 
     @SuppressWarnings("unchecked")
-    public Pool getMasterPoolBySubscription(String subscriptionId) {
+    public Pool getMasterPoolBySubscriptionId(String subscriptionId) {
         return (Pool) currentSession().createCriteria(Pool.class)
             .createAlias("sourceSubscription", "srcsub", JoinType.LEFT_OUTER_JOIN)
             .add(Restrictions.eq("srcsub.subscriptionId", subscriptionId))

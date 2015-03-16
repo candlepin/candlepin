@@ -488,6 +488,14 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     @Override
+    public void updatePoolsForSubscription(Subscription subscription) {
+        // TODO: Is a refresh good enough here?
+        this.refreshPoolsForSubscription(subscription, true, Collections.<Product>emptySet());
+    }
+
+
+
+    @Override
     public Pool find(String poolId) {
         return this.poolCurator.find(poolId);
     }
@@ -1417,6 +1425,51 @@ public class CandlepinPoolManager implements PoolManager {
 
         page.setPageData(resultingPools);
         return page;
+    }
+
+    /**
+     * Creates a Subscription object using information derived from the specified pool. Used to
+     * support deprecated API calls that still require a subscription.
+     *
+     * @param pool
+     *  The pool from which to build a subscription
+     *
+     * @return
+     *  a new subscription object derived from the specified pool.
+     */
+    @Override
+    public Subscription fabricateSubscriptionFromPool(Pool pool) {
+        if (pool == null) {
+            throw new IllegalArgumentException("pool is null");
+        }
+
+        Subscription fabricated = new Subscription(
+            pool.getOwner(),
+            pool.getProduct(),
+            pool.getProvidedProducts(),
+            pool.getQuantity(),
+            pool.getStartDate(),
+            pool.getEndDate(),
+            pool.getUpdated()
+        );
+
+        fabricated.setId(pool.getSubscriptionId());
+
+        // TODO:
+        // There's probably a fair amount of other stuff we need to migrate over to the
+        // subscription. We should do that here.
+
+        return fabricated;
+    }
+
+    @Override
+    public List<Pool> getPoolsBySubscriptionId(String subscriptionId) {
+        return this.poolCurator.getPoolsBySubscriptionId(subscriptionId);
+    }
+
+    @Override
+    public Pool getMasterPoolBySubscriptionId(String subscriptionId) {
+        return this.poolCurator.getMasterPoolBySubscriptionId(subscriptionId);
     }
 
     @Override

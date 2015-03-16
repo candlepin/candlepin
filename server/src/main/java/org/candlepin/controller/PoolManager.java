@@ -50,6 +50,16 @@ public interface PoolManager {
     List<Pool> createPoolsForSubscription(Subscription sub);
 
     /**
+     * Updates the pools associated with the specified subscription, using the information stored
+     * in the given subscription. Because the input subscription is used to lookup pools, the ID
+     * field must be set for this method to operate properly.
+     *
+     * @param subscription
+     *  The subscription to use for updating the associated pools
+     */
+    public void updatePoolsForSubscription(Subscription subscription);
+
+    /**
      * Cleanup entitlements and safely delete the given pool.
      *
      * @param pool
@@ -228,4 +238,40 @@ public interface PoolManager {
     List<Entitlement> entitleByProductsForHost(Consumer guest, Consumer host,
             Date entitleDate, Collection<String> possiblePools)
         throws EntitlementRefusedException;
+
+    /**
+     * Creates a Subscription object using information derived from the specified pool. Used to
+     * support deprecated API calls that still require a subscription.
+     *
+     * @param pool
+     *  The pool from which to build a subscription
+     *
+     * @return
+     *  a new subscription object derived from the specified pool.
+     */
+    public Subscription fabricateSubscriptionFromPool(Pool pool);
+
+    /**
+     * Retrieves a list of pools associated with the specified subscription ID. If there are no
+     * pools associated with the given subscription, this method should return an empty list.
+     *
+     * @param subscriptionId
+     *  The subscription ID to use to lookup pools
+     *
+     * @return
+     *  a list of pools associated with the specified subscription.
+     */
+    public List<Pool> getPoolsBySubscriptionId(String subscriptionId);
+
+    /**
+     * Retrieves the master pool associated with the specified subscription ID. If there is not a
+     * master pool asscoated with the given subscription, this method should return null.
+     *
+     * @param subscriptionId
+     *  The subscription ID to use to lookup a master pool
+     *
+     * @return
+     *  the master pool associated with the specified subscription.
+     */
+    public Pool getMasterPoolBySubscriptionId(String subscriptionId);
 }

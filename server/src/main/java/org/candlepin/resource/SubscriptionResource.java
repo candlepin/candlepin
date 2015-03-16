@@ -21,7 +21,6 @@ import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Pool;
-import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.SubscriptionsCertificate;
 import org.candlepin.service.SubscriptionServiceAdapter;
@@ -58,19 +57,16 @@ public class SubscriptionResource {
 
     private SubscriptionServiceAdapter subService;
     private ConsumerCurator consumerCurator;
-    private PoolCurator poolCurator;
     private PoolManager poolManager;
 
     private I18n i18n;
 
     @Inject
     public SubscriptionResource(SubscriptionServiceAdapter subService,
-        ConsumerCurator consumerCurator, PoolCurator poolCurator, PoolManager poolManager,
-        I18n i18n) {
+        ConsumerCurator consumerCurator, PoolManager poolManager, I18n i18n) {
 
         this.subService = subService;
         this.consumerCurator = consumerCurator;
-        this.poolCurator = poolCurator;
         this.poolManager = poolManager;
 
         this.i18n = i18n;
@@ -127,7 +123,7 @@ public class SubscriptionResource {
     @Path("/{subscription_id}")
     @Produces(MediaType.APPLICATION_JSON)
     public Subscription getSubscription(@PathParam("subscription_id") String subscriptionId) {
-        Pool pool = this.poolCurator.getMasterPoolBySubscription(subscriptionId);
+        Pool pool = this.poolManager.getMasterPoolBySubscriptionId(subscriptionId);
 
         if (pool == null) {
             throw new NotFoundException(
@@ -135,21 +131,7 @@ public class SubscriptionResource {
             );
         }
 
-        Subscription fabricated = new Subscription(
-            pool.getOwner(),
-            pool.getProduct(),
-            pool.getProvidedProducts(),
-            pool.getQuantity(),
-            pool.getStartDate(),
-            pool.getEndDate(),
-            pool.getUpdated()
-        );
-
-        // TODO:
-        // There's probably a fair amount of other stuff we need to migrate over to the
-        // subscription. We should do that here.
-
-        return fabricated;
+        return this.poolManager.fabricateSubscriptionFromPool(pool);
     }
 
      /**
@@ -249,7 +231,7 @@ public class SubscriptionResource {
     public void deleteSubscription(@PathParam("subscription_id") String subscriptionId) {
 
         // Lookup pools from subscription ID
-        List<Pool> pools = this.poolCurator.getPoolsBySubscriptionId(subscriptionId);
+        List<Pool> pools = this.poolManager.getPoolsBySubscriptionId(subscriptionId);
 
         if (pools.isEmpty()) {
             throw new NotFoundException(
@@ -266,7 +248,7 @@ public class SubscriptionResource {
         Subscription subscription = subService.getSubscription(subscriptionId);
 
         if (subscription == null) {
-            throw new BadRequestException(
+            throw new NotFoundException(
                 i18n.tr("Subscription with id {0} could not be found.", subscriptionId));
         }
         return subscription;

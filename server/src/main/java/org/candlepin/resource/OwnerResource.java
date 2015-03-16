@@ -67,6 +67,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Statistic;
 import org.candlepin.model.StatisticCurator;
+import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.model.UeberCertificateGenerator;
@@ -841,24 +842,6 @@ public class OwnerResource {
         return events;
     }
 
-    /**
-     * Retrieves a list of Subscriptions for an Owner
-     *
-     * @return a list of Subscription objects
-     * @httpcode 404
-     * @httpcode 200
-     */
-    @GET
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("{owner_key}/subscriptions")
-    public List<Subscription> getSubscriptions(
-        @PathParam("owner_key") @Verify(value = Owner.class,
-            subResource = SubResource.SUBSCRIPTIONS) String ownerKey) {
-        Owner o = findOwner(ownerKey);
-        return subService.getSubscriptions(o);
-    }
-
     private Owner findOwner(String key) {
         Owner owner = ownerCurator.lookupByKey(key);
 
@@ -940,6 +923,32 @@ public class OwnerResource {
         return toUpdate;
     }
 
+    /**
+     * Retrieves a list of Subscriptions for an Owner
+     *
+     * @return a list of Subscription objects
+     * @httpcode 404
+     * @httpcode 200
+     */
+    @GET
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{owner_key}/subscriptions")
+    public List<Subscription> getSubscriptions(@PathParam("owner_key") String ownerKey) {
+        Owner owner = this.findOwner(ownerKey);
+
+        List<Subscription> subscriptions = new LinkedList<Subscription>();
+
+        for (Pool pool : this.poolManager.listPoolsByOwner(owner)) {
+            SourceSubscription srcsub = pool.getSourceSubscription();
+
+            if (srcsub != null && "master".equalsIgnoreCase(srcsub.getSubscriptionSubKey())) {
+                subscriptions.add(this.poolManager.fabricateSubscriptionFromPool(pool));
+            }
+        }
+
+        return subscriptions;
+    }
 
     /**
      * Creates a Subscription for an Owner
@@ -983,18 +992,21 @@ public class OwnerResource {
     @PUT
     @Path("/subscriptions")
     public void updateSubscription(Subscription subscription) {
-        // TODO: Do we even need the owner id here?
-
-
-
-
-        Subscription existingSubscription = this.subscriptionCurator
-            .find(subscription.getId());
-        if (existingSubscription == null) {
+        if (this.poolManager.getMasterPoolBySubscriptionId(subscription.getId()) == null) {
             throw new NotFoundException(i18n.tr(
-                "subscription with id: {0} not found.", subscription.getId()));
+                "Unable to find a subscription with the ID \"{0}\".", subscription.getId()
+            ));
         }
-        this.subscriptionCurator.merge(subscription);
+
+        this.poolManager.updatePoolsForSubscription(subscription);
+
+        // Subscription existingSubscription = this.subscriptionCurator
+        //     .find(subscription.getId());
+        // if (existingSubscription == null) {
+        //     throw new NotFoundException(i18n.tr(
+        //         "subscription with id: {0} not found.", subscription.getId()));
+        // }
+        // this.subscriptionCurator.merge(subscription);
     }
 
     /**
