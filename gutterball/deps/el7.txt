@@ -55,4 +55,5 @@ scannotation
 servlet
 sisu-cglib/cglib
 slf4j/api
+slf4j/jcl-over-slf4j
 validation-api
