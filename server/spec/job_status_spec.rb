@@ -39,7 +39,8 @@ describe 'Job Status' do
 
   it 'should only find jobs with the correct owner key' do
     owner2 = create_owner(random_string('some_owner'))
-    @cp.create_subscription(owner2['key'], @monitoring.id, 100)
+    product = create_product(nil, nil, :owner => owner2['key'])
+    @cp.create_subscription(owner2['key'], product.id, 100)
 
     jobs = []
     # Just some random numbers here

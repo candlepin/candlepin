@@ -999,14 +999,6 @@ public class OwnerResource {
         }
 
         this.poolManager.updatePoolsForSubscription(subscription);
-
-        // Subscription existingSubscription = this.subscriptionCurator
-        //     .find(subscription.getId());
-        // if (existingSubscription == null) {
-        //     throw new NotFoundException(i18n.tr(
-        //         "subscription with id: {0} not found.", subscription.getId()));
-        // }
-        // this.subscriptionCurator.merge(subscription);
     }
 
     /**
@@ -1032,13 +1024,11 @@ public class OwnerResource {
 
         Owner owner = ownerCurator.lookupByKey(ownerKey);
         if (owner == null) {
-            if (autoCreateOwner &&
-                ownerService.isOwnerKeyValidForCreation(ownerKey)) {
+            if (autoCreateOwner && ownerService.isOwnerKeyValidForCreation(ownerKey)) {
                 owner = this.createOwner(new Owner(ownerKey, ownerKey));
             }
             else {
-                throw new NotFoundException(i18n.tr(
-                    "owner with key: {0} was not found.", ownerKey));
+                throw new NotFoundException(i18n.tr("owner with key: {0} was not found.", ownerKey));
             }
         }
 
