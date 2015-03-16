@@ -169,35 +169,34 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
         }
     }
 
-    public void copy(Product incoming, Product existing) {
-        if (incoming.getId() != existing.getId()) {
-            throw new RuntimeException("Products do not have matching IDs: " +
-                    incoming.getId() + " != " + existing.getId());
+    public void copy(Product src, Product dest) {
+        if (src.getId() == null ? dest.getId() != null : !src.getId().equals(dest.getId())) {
+            throw new RuntimeException(i18n.tr(
+                "Products do not have matching IDs: {0} != {1}", src.getId(), dest.getId()
+            ));
         }
 
-        existing.setName(incoming.getName());
-        existing.setMultiplier(incoming.getMultiplier());
+        dest.setName(src.getName());
+        dest.setMultiplier(src.getMultiplier());
 
-        if (!existing.getAttributes().equals(incoming.getAttributes())) {
-            existing.getAttributes().clear();
-            for (ProductAttribute attr : incoming.getAttributes()) {
-                ProductAttribute newAttr = new ProductAttribute(attr.getName(),
-                        attr.getValue());
-                existing.addAttribute(newAttr);
+        if (!dest.getAttributes().equals(src.getAttributes())) {
+            dest.getAttributes().clear();
+            for (ProductAttribute attr : src.getAttributes()) {
+                ProductAttribute newAttr = new ProductAttribute(attr.getName(), attr.getValue());
+                dest.addAttribute(newAttr);
             }
         }
 
-        if (!existing.getProductContent().equals(incoming.getProductContent())) {
-            existing.getProductContent().clear();
-            for (ProductContent pc : incoming.getProductContent()) {
-                existing.addProductContent(new ProductContent(existing, pc.getContent(),
-                        pc.getEnabled()));
+        if (!dest.getProductContent().equals(src.getProductContent())) {
+            dest.getProductContent().clear();
+            for (ProductContent pc : src.getProductContent()) {
+                dest.addProductContent(new ProductContent(dest, pc.getContent(), pc.getEnabled()));
             }
         }
 
-        if (!existing.getDependentProductIds().equals(incoming.getDependentProductIds())) {
-            existing.getDependentProductIds().clear();
-            existing.setDependentProductIds(incoming.getDependentProductIds());
+        if (!dest.getDependentProductIds().equals(src.getDependentProductIds())) {
+            dest.getDependentProductIds().clear();
+            dest.setDependentProductIds(src.getDependentProductIds());
         }
 
     }

@@ -773,8 +773,8 @@ public class OwnerResource {
             key = activationKeyCurator.lookupForOwner(activationKeyName, owner);
             if (key == null) {
                 throw new BadRequestException(
-                    i18n.tr("ActivationKey with id {0} could not be found.",
-                        activationKeyName));
+                    i18n.tr("ActivationKey with id {0} could not be found.", activationKeyName)
+                );
             }
         }
 
@@ -787,8 +787,9 @@ public class OwnerResource {
             poolFilters.addMatchesFilter(matches);
         }
 
-        Page<List<Pool>> page = poolManager.listAvailableEntitlementPools(c, key, owner,
-            productId, activeOnDate, true, listAll, poolFilters, pageRequest);
+        Page<List<Pool>> page = poolManager.listAvailableEntitlementPools(c, key, owner, productId,
+            activeOnDate, true, listAll, poolFilters, pageRequest
+        );
         List<Pool> poolList = page.getPageData();
 
         if (c != null) {

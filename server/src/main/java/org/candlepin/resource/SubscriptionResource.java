@@ -17,7 +17,7 @@ package org.candlepin.resource;
 import org.candlepin.auth.interceptor.Verify;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
-import org.candlepin.controller.CandlepinPoolManager;
+import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Pool;
@@ -59,16 +59,13 @@ public class SubscriptionResource {
     private SubscriptionServiceAdapter subService;
     private ConsumerCurator consumerCurator;
     private PoolCurator poolCurator;
-
-    // TODO: This should probably be a generic PoolManager, but we may not be able to change the
-    //       interface.
-    private CandlepinPoolManager poolManager;
+    private PoolManager poolManager;
 
     private I18n i18n;
 
     @Inject
     public SubscriptionResource(SubscriptionServiceAdapter subService,
-        ConsumerCurator consumerCurator, PoolCurator poolCurator, CandlepinPoolManager poolManager,
+        ConsumerCurator consumerCurator, PoolCurator poolCurator, PoolManager poolManager,
         I18n i18n) {
 
         this.subService = subService;

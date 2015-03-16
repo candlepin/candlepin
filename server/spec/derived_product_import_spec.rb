@@ -72,6 +72,7 @@ describe 'Import', :serial => true do
     import_user_client.import(@dist_owner['key'], @exporter.export_filename)
     @cp.refresh_pools(@dist_owner['key'])
     pools = @cp.list_owner_pools(@dist_owner['key'], {:product => stacked_datacenter_product.id})
+    pools.size.should >= 1
 
     # need to ignore the unmapped guest pool
     filter_unmapped_guest_pools(pools)

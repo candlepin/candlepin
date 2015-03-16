@@ -102,8 +102,7 @@ describe 'Derived Products' do
   it 'transfers sub-product data to main pool' do
     @main_pool['derivedProductId'].should == @derived_product['id']
     @main_pool['derivedProvidedProducts'].size.should == 1
-    @main_pool['derivedProvidedProducts'][0]['productId'].should ==
-      @eng_product['id']
+    @main_pool['derivedProvidedProducts'][0]['id'].should == @eng_product['id']
 
     @physical_client.consume_pool @main_pool['id']
     ents = @physical_client.list_entitlements
@@ -156,8 +155,7 @@ describe 'Derived Products' do
     pool = pools.first
     pool['derivedProductId'].should == @derived_product['id']
     pool['derivedProvidedProducts'].size.should == 1
-    pool['derivedProvidedProducts'][0]['productId'].should ==
-      @eng_product['id']
+    pool['derivedProvidedProducts'][0]['id'].should == @eng_product['id']
   end
 
   it 'prevents distributor from attaching without necessisary capabilities' do
