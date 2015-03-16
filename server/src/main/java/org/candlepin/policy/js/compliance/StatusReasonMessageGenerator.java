@@ -90,6 +90,11 @@ public class StatusReasonMessageGenerator {
                 reason.getAttributes().get("has")));
         }
         else if (reason.getKey().equals("UNMAPPEDGUEST")) {
+            // clients don't like reasons to have entitlement_id attributes that
+            // may not be valid entitlements, but we need it returned from rules so
+            // we can set the name correctly. See
+            // https://bugzilla.redhat.com/show_bug.cgi?id=1201727
+            reason.getAttributes().remove("entitlement_id");
             reason.setMessage(i18n.tr("Guest has not been reported on any host" +
                 " and is using a temporary unmapped guest subscription."));
         }
