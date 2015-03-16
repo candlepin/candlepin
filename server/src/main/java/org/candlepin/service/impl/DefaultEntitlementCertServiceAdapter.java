@@ -185,31 +185,35 @@ public class DefaultEntitlementCertServiceAdapter extends
                 promotedContent);
         }
 
+        setupEntitlementEndDate(ent);
         X509Certificate x509Cert =  this.pki.createX509Certificate(
-                createDN(ent), extensions, byteExtensions, ent.getPool().getStartDate(),
-                findPoolEndDate(ent), keyPair, serialNumber, null);
+                createDN(ent), extensions, byteExtensions, ent.getStartDate(),
+                ent.getEndDate(), keyPair, serialNumber, null);
         return x509Cert;
     }
 
-    private Date findPoolEndDate(Entitlement ent) {
+    /**
+     * Modify the entitlements end date
+     * @param ent
+     */
+    private void setupEntitlementEndDate(Entitlement ent) {
         Pool pool = ent.getPool();
         Consumer consumer = ent.getConsumer();
 
         Date startDate = new Date();
-
         if (consumer.getCreated() != null) {
             startDate = consumer.getCreated();
         }
 
-        Date oneDayFromRegistration = new Date(startDate.getTime() + (24 * 60 * 60 * 1000));
-
-        boolean isUnmappedGuestPool = BooleanUtils.toBoolean(pool.getAttributeValue("unmapped_guests_only"));
+        boolean isUnmappedGuestPool = BooleanUtils.toBoolean(
+                pool.getAttributeValue("unmapped_guests_only"));
 
         if (isUnmappedGuestPool) {
-            return oneDayFromRegistration;
-        }
-        else {
-            return pool.getEndDate();
+            Date oneDayFromRegistration = new Date(startDate.getTime() +
+                    (24 * 60 * 60 * 1000));
+            log.info("Setting 24h expiration for unmapped guest pool entilement: " +
+                    oneDayFromRegistration);
+            ent.setEndDateOverride(oneDayFromRegistration);
         }
     }
 
