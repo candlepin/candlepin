@@ -13,6 +13,7 @@ describe 'Job Status' do
   end
 
   it 'should contain the owner key' do
+    pending("candlepin not running in standalone mode") if not is_hosted?
     status = @cp.refresh_pools(@owner['key'], true)
     status['targetId'].should == @owner['key']
 
@@ -20,6 +21,7 @@ describe 'Job Status' do
   end
 
   it 'should contain the target type' do
+    pending("candlepin not running in standalone mode") if not is_hosted?
     status = @cp.refresh_pools(@owner['key'], true)
     status['targetType'].should == "owner"
 
@@ -28,6 +30,8 @@ describe 'Job Status' do
 
 
   it 'should be findable by owner key' do
+    pending("candlepin not running in standalone mode") if not is_hosted?
+
     jobs = []
     3.times {
         jobs << @cp.refresh_pools(@owner['key'], true)
@@ -38,6 +42,8 @@ describe 'Job Status' do
   end
 
   it 'should only find jobs with the correct owner key' do
+    pending("candlepin not running in standalone mode") if not is_hosted?
+
     owner2 = create_owner(random_string('some_owner'))
     product = create_product(nil, nil, :owner => owner2['key'])
     @cp.create_subscription(owner2['key'], product.id, 100)
@@ -69,6 +75,7 @@ describe 'Job Status' do
   end
 
   it 'should cancel a job' do
+    pending("candlepin not running in standalone mode") if not is_hosted?
     @cp.set_scheduler_status(false)
     job = @cp.refresh_pools(@owner['key'], true)
     #make sure we see a job waiting to go
