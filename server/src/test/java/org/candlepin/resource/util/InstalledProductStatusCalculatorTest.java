@@ -16,7 +16,7 @@ package org.candlepin.resource.util;
 
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.audit.EventSink;
 import org.candlepin.model.Consumer;
@@ -122,6 +122,32 @@ public class InstalledProductStatusCalculatorTest {
         DateRange validRange = calculator.getValidDateRange(p);
         assertEquals(entRange.getStartDate(), validRange.getStartDate());
         assertEquals(entRange.getEndDate(), validRange.getEndDate());
+    }
+
+    @Test
+    public void validRangeForUnmappedGuestEntitlement() {
+        Consumer c = mockConsumer(PRODUCT_1);
+        Date registration = new Date();
+        c.setCreated(registration);
+
+        Calendar cal = Calendar.getInstance();
+        Date now = cal.getTime();
+
+        DateRange entRange = rangeRelativeToDate(now, -6, 6);
+        c.addEntitlement(mockUnmappedGuestEntitlement(c, PRODUCT_1, entRange, PRODUCT_1));
+
+        List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
+        mockEntCurator(c, ents);
+
+        Date expectedEnd = new Date(registration.getTime() + (24 * 60 * 60 * 1000));
+
+        ComplianceStatus status = compliance.getStatus(c, now);
+        ConsumerInstalledProductEnricher calculator =
+            new ConsumerInstalledProductEnricher(c, status, compliance);
+        Product p = new Product(PRODUCT_1, "Awesome Product");
+        DateRange validRange = calculator.getValidDateRange(p);
+        assertEquals(entRange.getStartDate(), validRange.getStartDate());
+        assertEquals(expectedEnd, validRange.getEndDate());
     }
 
     @Test
@@ -773,6 +799,25 @@ public class InstalledProductStatusCalculatorTest {
         Random gen = new Random();
         int id = gen.nextInt(Integer.MAX_VALUE);
         e.setId(String.valueOf(id));
+
+        return e;
+    }
+
+    private Entitlement mockUnmappedGuestEntitlement(Consumer consumer, String productId,
+            DateRange range, String ... providedProductIds) {
+
+        consumer.setFact("virt.is_guest", "True");
+        Entitlement e = mockEntitlement(consumer, productId, range, providedProductIds);
+        Pool p = e.getPool();
+        Date endDateOverride = new Date(consumer.getCreated().getTime() +
+                (24 * 60 * 60 * 1000));
+        e.setEndDateOverride(endDateOverride);
+
+        // Setup the attributes for stacking:
+        p.setAttribute("virt_only", "true");
+        p.setAttribute("unmapped_guests_only", "true");
+        p.addProductAttribute(new ProductPoolAttribute("virt_limit", "unlimited",
+                productId));
 
         return e;
     }

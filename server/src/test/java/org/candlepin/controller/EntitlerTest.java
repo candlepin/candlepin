@@ -330,6 +330,7 @@ public class EntitlerTest {
         p1.addAttribute(new PoolAttribute("unmapped_guests_only", "true"));
 
         Date thirtySixHoursAgo = new Date(new Date().getTime() - 36L * 60L * 60L * 1000L);
+        Date twelveHoursAgo = new Date(new Date().getTime() - 12L * 60L * 60L * 1000L);
 
         Consumer c;
 
@@ -338,6 +339,7 @@ public class EntitlerTest {
         c.setFact("virt.uuid", "1");
 
         Entitlement e1 = TestUtil.createEntitlement(owner1, c, p1, null);
+        e1.setEndDateOverride(twelveHoursAgo);
         Set<Entitlement> entitlementSet1 = new HashSet<Entitlement>();
         entitlementSet1.add(e1);
 
@@ -376,6 +378,7 @@ public class EntitlerTest {
         c.setCreated(thirtySixHoursAgo);
 
         Entitlement e1 = TestUtil.createEntitlement(owner1, c, p1, null);
+        e1.setEndDateOverride(new Date(twelveHoursAgo.getTime() + 12L * 60L * 60L * 1000L));
         Set<Entitlement> entitlementSet1 = new HashSet<Entitlement>();
         entitlementSet1.add(e1);
 
@@ -385,6 +388,7 @@ public class EntitlerTest {
         c.setCreated(twelveHoursAgo);
 
         Entitlement e2 = TestUtil.createEntitlement(owner2, c, p2, null);
+        e2.setEndDateOverride(new Date(thirtySixHoursAgo.getTime() + 12L * 60L * 60L * 1000L));
         Set<Entitlement> entitlementSet2 = new HashSet<Entitlement>();
         entitlementSet2.add(e2);
 
