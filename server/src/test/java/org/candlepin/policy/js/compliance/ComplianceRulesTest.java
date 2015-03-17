@@ -133,6 +133,7 @@ public class ComplianceRulesTest {
             c.addInstalledProduct(new ConsumerInstalledProduct(pid, pid));
         }
         c.setFact("cpu.cpu_socket(s)", "8"); // 8 socket machine
+        c.setCreated(new Date(new Date().getTime() - 60L * 60L * 1000L));
         return c;
     }
 

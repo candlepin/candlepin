@@ -252,20 +252,13 @@ public class Entitler {
                 consumer, "unmapped_guests_only", "true");
         }
 
-        Date now = new Date();
         for (Entitlement e : unmappedGuestEntitlements) {
-            if (isLapsed(e, now)) {
+            if (!e.isValid()) {
                 poolManager.revokeEntitlement(e);
                 total++;
             }
         }
         return total;
-    }
-
-    protected boolean isLapsed(Entitlement e, Date now) {
-        Date consumerCreation = e.getConsumer().getCreated();
-        Date lapseDate = new Date(consumerCreation.getTime() + 24L * 60L * 60L * 1000L);
-        return lapseDate.before(now);
     }
 
     public int revokeUnmappedGuestEntitlements() {

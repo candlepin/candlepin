@@ -18,6 +18,7 @@ import org.candlepin.common.jackson.HateoasInclude;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
 
+import org.apache.commons.lang.BooleanUtils;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Index;
@@ -302,8 +303,13 @@ public class Entitlement extends AbstractHibernateObject
 
     @XmlTransient
     public boolean isValidOnDate(Date d) {
+        Date endDate = this.getEndDate();
+        boolean isUnmappedGuestPool = BooleanUtils.toBoolean(pool.getAttributeValue("unmapped_guests_only"));
+        if (isUnmappedGuestPool) {
+            endDate = new Date(consumer.getCreated().getTime() + 24L * 60L * 60L * 1000L);
+        }
         return (d.after(this.getStartDate()) || d.equals(this.getStartDate())) &&
-            (d.before(this.getEndDate()) || d.equals(this.getEndDate()));
+            (d.before(endDate) || d.equals(endDate));
     }
 
     @XmlTransient
