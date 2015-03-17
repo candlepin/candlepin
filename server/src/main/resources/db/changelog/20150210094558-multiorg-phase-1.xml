@@ -333,6 +333,7 @@
                     nullable="false"
                     foreignKeyName="cpo_product_certificates_fk1"
                     references="cpo_products(uuid)"
+                    deleteCascade="true"
                 />
             </column>
         </createTable>

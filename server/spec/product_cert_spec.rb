@@ -5,6 +5,8 @@ describe 'Product Certificate' do
   include CandlepinMethods
 
   before(:each) do
+    @owner = create_owner(random_string('test_owner'))
+
     # Static map of extension labels to OID values
     @oid_map = {
       'name' => '1',
