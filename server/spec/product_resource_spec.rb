@@ -65,8 +65,12 @@ describe 'Product Resource' do
     bulk_get_products.size.should == 2
 
     # Make sure it got the correct ones
-    prod_ids_to_get.index(bulk_get_products[0]['id']).should == prod1_id
-    prod_ids_to_get.index(bulk_get_products[1]['id']).should == prod2_id
+    if (bulk_get_products[0]['id'] == prod1_id)
+      bulk_get_products[1]['id'].should == prod2_id
+    else
+      bulk_get_products[0]['id'].should == prod2_id
+      bulk_get_products[1]['id'].should == prod1_id
+    end
   end
 
 end
