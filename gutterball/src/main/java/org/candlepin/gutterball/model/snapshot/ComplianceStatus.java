@@ -119,6 +119,9 @@ public class ComplianceStatus {
     @JsonDeserialize(converter = MapToKeysConverter.class)
     private Set<String> partialStacks;
 
+    @Column(name = "management_enabled")
+    private Boolean managementEnabled;
+
     public ComplianceStatus() {
         // Required by hibernate.
         reasons = new HashSet<ComplianceReason>();
@@ -126,6 +129,7 @@ public class ComplianceStatus {
         this.compliantProducts = new HashSet<String>();
         this.partiallyCompliantProducts = new HashSet<String>();
         this.partialStacks = new HashSet<String>();
+        this.managementEnabled = Boolean.FALSE;
     }
 
     public ComplianceStatus(Date date, String status) {
@@ -220,6 +224,14 @@ public class ComplianceStatus {
 
     public void setPartialStacks(Set<String> partialStacks) {
         this.partialStacks = partialStacks;
+    }
+
+    public Boolean getManagementEnabled() {
+        return managementEnabled;
+    }
+
+    public void setManagementEnabled(Boolean managementEnabled) {
+        this.managementEnabled = managementEnabled;
     }
 
 }

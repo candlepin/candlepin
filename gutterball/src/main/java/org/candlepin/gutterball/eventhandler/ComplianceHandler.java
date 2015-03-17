@@ -14,6 +14,7 @@
  */
 package org.candlepin.gutterball.eventhandler;
 
+import org.candlepin.common.config.PropertyConverter;
 import org.candlepin.gutterball.curator.ComplianceSnapshotCurator;
 import org.candlepin.gutterball.curator.ConsumerStateCurator;
 import org.candlepin.gutterball.model.ConsumerState;
@@ -22,6 +23,7 @@ import org.candlepin.gutterball.model.Event.Status;
 import org.candlepin.gutterball.model.snapshot.Compliance;
 import org.candlepin.gutterball.model.snapshot.ComplianceStatus;
 import org.candlepin.gutterball.model.snapshot.Consumer;
+import org.candlepin.gutterball.model.snapshot.Entitlement;
 import org.candlepin.gutterball.model.snapshot.Owner;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -32,6 +34,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.Map;
 
 /**
  * Handler for Compliance Events.  Currently we only send ComplianceCreated events.
@@ -89,6 +92,10 @@ public class ComplianceHandler extends EventHandler {
             );
         }
 
+        // Determine if this consumer is management enabled
+        status.setManagementEnabled(determineIfManaged(compliance));
+
+
         owner = consumer.getOwner();
         if (owner == null) {
             throw new RuntimeException(
@@ -118,4 +125,24 @@ public class ComplianceHandler extends EventHandler {
         complianceCurator.create(compliance);
         return Status.PROCESSED;
     }
+
+    private boolean determineIfManaged(Compliance compliance) {
+        for (Entitlement ent : compliance.getEntitlements()) {
+            boolean managed = entitlementIsManaged(ent);
+            if (managed) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean entitlementIsManaged(Entitlement e) {
+        boolean managed = false;
+        Map<String, String> attrs = e.getAttributes();
+        if (attrs != null && attrs.containsKey("management_enabled")) {
+            managed = PropertyConverter.toBoolean(attrs.get("management_enabled"));
+        }
+        return managed;
+    }
+
 }
