@@ -1,6 +1,15 @@
 require 'spec_helper'
 require 'candlepin_scenarios'
 
+def assert_no_entitlement_id(reasons)
+    reasons.each do |reason|
+        reason.should have_key('attributes')
+        attributes = reason['attributes']
+        attributes.should_not have_key('entitlement_id')
+        attributes.should have_key('name')
+    end
+end
+
 # This spec tests virt limited products in a standalone Candlepin deployment.
 # (which we assume to be testing against)
 describe 'Unmapped Guest Pools' do
@@ -212,8 +221,21 @@ describe 'Unmapped Guest Pools' do
     compliance_status['compliant'].should == false
     compliance_status.should have_key('reasons')
     compliance_status['reasons'].size.should == 1
+    assert_no_entitlement_id(compliance_status['reasons'])
   end
 
+  it 'compliance status for unmapped guest will not include entitlement_id in reasons' do
+    all_pools = @user.list_pools :owner => @owner.id, :product => @virt_limit_product.id
+    all_pools.each do |pool|
+      unmapped = pool['attributes'].select {|i| i['name'] == 'unmapped_guests_only' }[0]
+      if !unmapped.nil? && unmapped['value'] == 'true'
+        @guest1_client.consume_pool(pool['id'], :quantity => 1)
+      end
+    end
+
+    compliance_status = @guest1_client.get_compliance()
+    assert_no_entitlement_id(compliance_status['reasons'])
+  end
 
   it 'compliance status for entitled unmapped guest will be partial without installed product' do
     @guest1_client.update_consumer({:installedProducts => []})
@@ -232,5 +254,6 @@ describe 'Unmapped Guest Pools' do
     compliance_status['compliant'].should == false
     compliance_status.should have_key('reasons')
     compliance_status['reasons'].size.should == 1
+    assert_no_entitlement_id(compliance_status['reasons'])
   end
 end
