@@ -77,6 +77,13 @@ public class ProductImporter {
                 if (StringUtils.isBlank(c.getVendor())) {
                     c.setVendor("unknown");
                 }
+
+                // On standalone servers we need metadata expiry to be 0 so clients can
+                // immediately get changes to content when published on the server.
+                // We can assume this is a standalone server due to the fact that
+                // import is being used, so no need to guard this behavior:
+                c.setMetadataExpire(new Long(0));
+
                 contentCurator.createOrUpdate(c);
             }
 
