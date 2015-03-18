@@ -18,6 +18,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.common.exceptions.BadRequestException;
+import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.service.SubscriptionServiceAdapter;
@@ -43,6 +45,7 @@ public class SubscriptionResourceTest  {
 
     @Mock private SubscriptionServiceAdapter subService;
     @Mock private ConsumerCurator consumerCurator;
+    @Mock private PoolManager poolManager;
 
     @Mock private HttpServletResponse response;
 
@@ -54,11 +57,12 @@ public class SubscriptionResourceTest  {
             I18nFactory.READ_PROPERTIES | I18nFactory.FALLBACK
         );
 
-        this.subResource = new SubscriptionResource(subService,
-                consumerCurator, i18n);
+        this.subResource = new SubscriptionResource(
+            subService, consumerCurator, poolManager, i18n
+        );
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test(expected = NotFoundException.class)
     public void testInvalidIdOnDelete() throws Exception {
         subResource.deleteSubscription("JarJarBinks");
     }
@@ -68,7 +72,7 @@ public class SubscriptionResourceTest  {
         subResource.activateSubscription("random", null, "en_us", null);
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test(expected = NotFoundException.class)
     public void noSubForCert() {
         subResource.getSubCert("philadelphia-experiment");
     }

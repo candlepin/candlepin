@@ -57,6 +57,8 @@ public class PoolFilterBuilder extends FilterBuilder {
 
         textOr.add(new FilterLikeExpression("provProd.id", matches, true));
         textOr.add(new FilterLikeExpression("provProd.name", matches, true));
+        textOr.add(new FilterLikeExpression("ppContent.name", matches, true));
+        textOr.add(new FilterLikeExpression("ppContent.label", matches, true));
 
         textOr.add(Subqueries.exists(
             this.createProductAttributeCriteria(

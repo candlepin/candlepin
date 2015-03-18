@@ -26,7 +26,6 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolAttribute;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
-import org.candlepin.model.Owner;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.test.TestUtil;
 

@@ -1,6 +1,7 @@
 # Ran into a load of LoadErrors when trying to require from a
 # .rake file.  So we put the custom formatter in a .rb file.
 require 'rspec/core/formatters/base_formatter'
+require 'fileutils'
 
 module ModifiedRSpec
   # Courtesy http://artsy.github.io/blog/2012/05/15/how-to-organize-over-3000-rspec-specs-and-retry-test-failures
@@ -13,6 +14,7 @@ module ModifiedRSpec
         # is going to be under the spec directory in the project directory.
         project_dir = File.dirname(File.dirname(RSpec.configuration.files_to_run.first))
         failure_file = File.join(project_dir, 'target', 'rspec.failures')
+        FileUtils.mkdir(File.join(project_dir, 'target'))
 
         # We are going to append so that parallel tests can all
         # use the same file.  We must be diligent in deleting the

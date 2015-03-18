@@ -138,8 +138,7 @@ public class TestUtil {
     }
 
     public static Subscription createSubscription(Product product) {
-        Owner owner = new Owner("Test Owner " + randomInt());
-        return createSubscription(owner, product);
+        return createSubscription(product.getOwner(), product);
     }
 
     public static Subscription createSubscription() {

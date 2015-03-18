@@ -14,11 +14,14 @@
  */
 package org.candlepin.resource;
 
-import static org.quartz.JobBuilder.*;
+import static org.quartz.JobBuilder.newJob;
 
 import org.candlepin.auth.interceptor.Verify;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.common.paging.Page;
+import org.candlepin.common.paging.PageRequest;
+import org.candlepin.common.paging.Paginate;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Cdn;
@@ -27,11 +30,7 @@ import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Pool;
-import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.common.paging.Page;
-import org.candlepin.common.paging.PageRequest;
-import org.candlepin.common.paging.Paginate;
 import org.candlepin.pinsetter.tasks.RegenProductEntitlementCertsJob;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.entitlement.Enforcer;
@@ -332,7 +331,7 @@ public class EntitlementResource {
     public void unbind(@PathParam("dbid") String dbid) {
         Entitlement toDelete = entitlementCurator.find(dbid);
         if (toDelete != null) {
-            poolManager.revokeEntitlement(subAdapter, toDelete);
+            poolManager.revokeEntitlement(toDelete);
             return;
         }
         throw new NotFoundException(
@@ -353,7 +352,6 @@ public class EntitlementResource {
         prodAdapter.purgeCache(Arrays.asList(productId));
 
         JobDataMap map = new JobDataMap();
-        // TODO: We need an owner ID here to get anything done.
         map.put(RegenProductEntitlementCertsJob.PROD_ID, productId);
         map.put(RegenProductEntitlementCertsJob.LAZY_REGEN, lazyRegen);
 

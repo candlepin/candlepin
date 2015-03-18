@@ -58,7 +58,7 @@ public class Content extends AbstractHibernateObject {
     private String uuid;
 
     // Internal RH content ID
-    @Column(name="content_id")
+    @Column(name = "content_id")
     @Size(max = 32)
     @NotNull
     private String id;
@@ -139,9 +139,17 @@ public class Content extends AbstractHibernateObject {
     public Content() {
     }
 
-    public static Content createUeberContent(
-        UniqueIdGenerator idGenerator, Owner o, Product p) {
+    /**
+     * ID-based constructor so API users can specify an ID in place of a full object.
+     *
+     * @param id
+     *  The ID for this content
+     */
+    public Content(String id) {
+        this.setId(id);
+    }
 
+    public static Content createUeberContent(UniqueIdGenerator idGenerator, Owner o, Product p) {
         return new Content(
             o, UEBER_CONTENT_NAME, idGenerator.generateId(),
             ueberContentLabelForProduct(p), "yum", "Custom",

@@ -63,12 +63,12 @@ public class Subscription extends AbstractHibernateObject implements Owned, Name
     private Owner owner;
 
     @ManyToOne
-    @JoinColumn(name="product_uuid", nullable = false)
+    @JoinColumn(name = "product_uuid", nullable = false)
     @NotNull
     private Product product;
 
     @ManyToOne
-    @JoinColumn(name="derived_product_uuid", nullable = true)
+    @JoinColumn(name = "derived_product_uuid", nullable = true)
     private Product derivedProduct;
 
     @ManyToMany(targetEntity = Product.class)

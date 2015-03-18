@@ -181,7 +181,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     public void testRefreshPoolsWithChangedSubscriptions() {
         Product prod = TestUtil.createProduct(owner);
         productCurator.create(prod);
-        Pool pool = createPoolAndSub(createOwner(), prod, 1000L,
+        Pool pool = createPoolAndSub(owner, prod, 1000L,
             TestUtil.createDate(2009, 11, 30),
             TestUtil.createDate(2015, 11, 30));
         Owner owner = pool.getOwner();
@@ -373,7 +373,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         poolCurator.create(pool);
 
         // Give those consumers entitlements:
-        poolManager.entitleByPool(subAdapter, c1, pool, 1);
+        poolManager.entitleByPool(c1, pool, 1);
 
         assertEquals(2, consumerCurator.listByOwner(owner).size());
         assertEquals(1, poolCurator.listByOwner(owner).size());
@@ -757,7 +757,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         boolean fifo) throws ParseException {
         Product prod = TestUtil.createProduct(owner);
         productCurator.create(prod);
-        Pool pool = createPoolAndSub(createOwner(), prod, 1000L,
+        Pool pool = createPoolAndSub(owner, prod, 1000L,
             TestUtil.createDate(2009, 11, 30),
             TestUtil.createDate(2015, 11, 30));
         Owner owner = pool.getOwner();
@@ -867,7 +867,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             null, akc, null, null, i18n, null, null, null,
             null, null, null, null, null, null, null,
             null, null, null, null, null, null, null, contentOverrideValidator,
-            serviceLevelValidator, null, null);
+            serviceLevelValidator, null, null, null, null);
         or.createActivationKey("testOwner", ak);
     }
 
@@ -945,7 +945,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             null, null, null, i18n, es, null, null, null, importer, null, null,
             null, importRecordCurator, null, null, null, null, null,
             null, null, null, contentOverrideValidator,
-            serviceLevelValidator, null, null);
+            serviceLevelValidator, null, null, null, null);
 
         MultipartInput input = mock(MultipartInput.class);
         InputPart part = mock(InputPart.class);
@@ -981,7 +981,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             null, null, null, i18n, es, null, null, null, null, null, ec,
             null, importRecordCurator, null, null, null, null, null,
             null, null, null, contentOverrideValidator,
-            serviceLevelValidator, null, null);
+            serviceLevelValidator, null, null, null, null);
 
         ExporterMetadata metadata = new ExporterMetadata();
         when(ec.lookupByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, owner))
@@ -1005,7 +1005,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             null, null, null, i18n, es, null, null, null, importer, null, null,
             null, importRecordCurator, null, null, null, null, null,
             null, null, null, contentOverrideValidator,
-            serviceLevelValidator, null, null);
+            serviceLevelValidator, null, null, null, null);
 
         MultipartInput input = mock(MultipartInput.class);
         InputPart part = mock(InputPart.class);
@@ -1046,7 +1046,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerResource ownerres = new OwnerResource(oc, null,
             null, null, null, i18n, null, null, null, null, null, null, null,
             null, null, null, null, null, null, null, null, null, null,
-            contentOverrideValidator, serviceLevelValidator, null, null);
+            contentOverrideValidator, serviceLevelValidator, null, null, null, null);
 
         when(oc.lookupByKey(eq("admin"))).thenReturn(owner);
         when(owner.getUpstreamConsumer()).thenReturn(upstream);
@@ -1089,5 +1089,16 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             new CandlepinParameterUnmarshaller();
         unmarshaller.setAnnotations(annotations);
         return (KeyValueParameter) unmarshaller.fromString(key + ":" + val);
+    }
+
+    @Test
+    public void createSubscription() {
+        Product p = TestUtil.createProduct(owner);
+        productCurator.create(p);
+        Subscription s = TestUtil.createSubscription(owner, p);
+        s.setId("MADETHISUP");
+        assertEquals(0, poolCurator.listByOwner(owner).size());
+        ownerResource.createSubscription(owner.getKey(), s);
+        assertEquals(1, poolCurator.listByOwner(owner).size());
     }
 }

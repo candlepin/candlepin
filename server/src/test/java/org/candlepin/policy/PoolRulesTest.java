@@ -15,7 +15,7 @@
 package org.candlepin.policy;
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.auth.UserPrincipal;
@@ -30,6 +30,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolAttribute;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.Subscription;
@@ -68,6 +69,7 @@ public class PoolRulesTest {
     @Mock private PoolManager poolManagerMock;
     @Mock private Configuration configMock;
     @Mock private EntitlementCurator entCurMock;
+    @Mock private ProductCurator prodCuratorMock;
 
     private UserPrincipal principal;
     private Owner owner;
@@ -85,7 +87,7 @@ public class PoolRulesTest {
 
         when(configMock.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX))).thenReturn(100);
 
-        poolRules = new PoolRules(poolManagerMock, configMock, entCurMock);
+        poolRules = new PoolRules(poolManagerMock, configMock, entCurMock, prodCuratorMock);
         principal = TestUtil.createOwnerPrincipal();
         owner = principal.getOwners().get(0);
     }
@@ -93,18 +95,22 @@ public class PoolRulesTest {
     @Test
     public void hostedVirtLimitBadValueDoesntTraceBack() {
         when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
-        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct(owner));
+        Product product = TestUtil.createProduct(owner);
+
+        when(this.prodCuratorMock.lookupById(product.getOwner(), product.getId())).thenReturn(product);
+        Subscription s = TestUtil.createSubscription(owner, product);
         s.getProduct().addAttribute(new ProductAttribute("virt_limit", "badvalue"));
         s.setQuantity(10L);
-
 
         List<Pool> pools = null;
         try {
             pools = poolRules.createPools(s);
         }
         catch (Exception e) {
-            fail("Create pools should not have thrown an exception on bad value for " +
-                 "virt_limit. " + e.getMessage());
+            fail(
+                "Create pools should not have thrown an exception on bad value for virt_limit: " +
+                e.getMessage()
+            );
         }
         assertEquals(1, pools.size());
 
@@ -471,7 +477,7 @@ public class PoolRulesTest {
         String expectedAttributeValue = "yes";
         sub.getProduct().setAttribute(testAttributeKey, expectedAttributeValue);
 
-        when(this.productAdapterMock.getProductById(product.getOwner(), product.getId()))
+        when(prodCuratorMock.lookupById(product.getOwner(), product.getId()))
             .thenReturn(product);
 
         List<Pool> pools = this.poolRules.createPools(sub);
@@ -496,7 +502,7 @@ public class PoolRulesTest {
         sub.getBranding().add(b1);
         sub.getBranding().add(b2);
 
-        when(this.productAdapterMock.getProductById(product.getOwner(), product.getId()))
+        when(this.prodCuratorMock.lookupById(product.getOwner(), product.getId()))
             .thenReturn(product);
 
         List<Pool> pools = this.poolRules.createPools(sub);
@@ -519,9 +525,9 @@ public class PoolRulesTest {
         String expectedAttributeValue = "yes";
         subProduct.setAttribute(testAttributeKey, expectedAttributeValue);
 
-        when(this.productAdapterMock.getProductById(product.getOwner(), product.getId()))
+        when(this.prodCuratorMock.lookupById(product.getOwner(), product.getId()))
             .thenReturn(product);
-        when(this.productAdapterMock.getProductById(subProduct.getOwner(), subProduct.getId()))
+        when(this.prodCuratorMock.lookupById(subProduct.getOwner(), subProduct.getId()))
             .thenReturn(subProduct);
 
         List<Pool> pools = this.poolRules.createPools(sub);
@@ -544,9 +550,9 @@ public class PoolRulesTest {
         Subscription sub = TestUtil.createSubscription(owner, product);
         sub.setDerivedProduct(subProduct);
 
-        when(this.productAdapterMock.getProductById(product.getOwner(), product.getId()))
+        when(this.prodCuratorMock.lookupById(product.getOwner(), product.getId()))
             .thenReturn(product);
-        when(this.productAdapterMock.getProductById(subProduct.getOwner(), subProduct.getId()))
+        when(this.prodCuratorMock.lookupById(subProduct.getOwner(), subProduct.getId()))
             .thenReturn(subProduct);
 
         List<Pool> pools = this.poolRules.createPools(sub);
@@ -568,9 +574,9 @@ public class PoolRulesTest {
         subProvided.add(subProvidedProduct);
         sub.setDerivedProvidedProducts(subProvided);
 
-        when(this.productAdapterMock.getProductById(product.getOwner(), product.getId()))
+        when(this.prodCuratorMock.lookupById(product.getOwner(), product.getId()))
             .thenReturn(product);
-        when(this.productAdapterMock.getProductById(subProduct.getOwner(), subProduct.getId()))
+        when(this.prodCuratorMock.lookupById(subProduct.getOwner(), subProduct.getId()))
             .thenReturn(subProduct);
 
         List<Pool> pools = this.poolRules.createPools(sub);
@@ -583,9 +589,9 @@ public class PoolRulesTest {
     private Subscription createVirtLimitSub(String productId, int quantity, int virtLimit) {
         Product product = new Product(productId, productId, owner);
         product.setAttribute("virt_limit", Integer.toString(virtLimit));
-        when(productAdapterMock.getProductById(product.getOwner(), product.getId()))
+        when(prodCuratorMock.lookupById(product.getOwner(), product.getId()))
             .thenReturn(product);
-        Subscription s = TestUtil.createSubscription(product);
+        Subscription s = TestUtil.createSubscription(owner, product);
         s.setQuantity(new Long(quantity));
         return s;
     }
@@ -745,7 +751,9 @@ public class PoolRulesTest {
         Subscription s = createVirtLimitSub("virtLimitProduct", 10, 10);
 
         Product provided1 = TestUtil.createProduct(owner);
+        when(prodCuratorMock.lookupById(owner, provided1.getId())).thenReturn(provided1);
         Product provided2 = TestUtil.createProduct(owner);
+        when(prodCuratorMock.lookupById(owner, provided2.getId())).thenReturn(provided2);
 
         s.getProvidedProducts().add(provided1);
         s.getProvidedProducts().add(provided2);
@@ -818,33 +826,33 @@ public class PoolRulesTest {
 
         Product product = new Product(productId, productId, owner);
         product.setAttribute("virt_limit", Integer.toString(virtLimit));
-        when(productAdapterMock.getProductById(product.getOwner(), product.getId()))
+        when(prodCuratorMock.lookupById(product.getOwner(), product.getId()))
             .thenReturn(product);
 
         Product derivedProd = new Product(derivedProductId, derivedProductId, owner);
         // We'll look for this to make sure it makes it to correct pools:
         derivedProd.setAttribute(DERIVED_ATTR, "nobodycares");
-        when(productAdapterMock.getProductById(derivedProd.getOwner(), derivedProd.getId()))
+        when(prodCuratorMock.lookupById(derivedProd.getOwner(), derivedProd.getId()))
             .thenReturn(derivedProd);
 
         // Create some provided products:
         Product provided1 = TestUtil.createProduct(owner);
-        when(productAdapterMock.getProductById(provided1.getOwner(), provided1.getId()))
+        when(prodCuratorMock.lookupById(provided1.getOwner(), provided1.getId()))
             .thenReturn(provided1);
         Product provided2 = TestUtil.createProduct(owner);
-        when(productAdapterMock.getProductById(provided2.getOwner(), provided2.getId()))
+        when(prodCuratorMock.lookupById(provided2.getOwner(), provided2.getId()))
             .thenReturn(provided2);
 
         // Create some derived provided products:
         Product derivedProvided1 = TestUtil.createProduct(owner);
-        when(productAdapterMock.getProductById(derivedProvided1.getOwner(), derivedProvided1.getId()))
+        when(prodCuratorMock.lookupById(derivedProvided1.getOwner(), derivedProvided1.getId()))
             .thenReturn(derivedProvided1);
         Product derivedProvided2 = TestUtil.createProduct(owner);
-        when(productAdapterMock.getProductById(derivedProvided2.getOwner(), derivedProvided2.getId()))
+        when(prodCuratorMock.lookupById(derivedProvided2.getOwner(), derivedProvided2.getId()))
             .thenReturn(derivedProvided2);
 
 
-        Subscription s = TestUtil.createSubscription(product);
+        Subscription s = TestUtil.createSubscription(owner, product);
         s.setQuantity(new Long(quantity));
         s.setDerivedProduct(derivedProd);
 
@@ -882,9 +890,9 @@ public class PoolRulesTest {
     private Subscription createVirtOnlySub(String productId, int quantity) {
         Product product = new Product(productId, productId, owner);
         product.setAttribute("virt_only", "true");
-        when(productAdapterMock.getProductById(product.getOwner(), product.getId()))
+        when(prodCuratorMock.lookupById(product.getOwner(), product.getId()))
             .thenReturn(product);
-        Subscription s = TestUtil.createSubscription(product);
+        Subscription s = TestUtil.createSubscription(owner, product);
         s.setQuantity(new Long(quantity));
         return s;
     }

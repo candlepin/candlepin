@@ -30,6 +30,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolAttribute;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.Subscription;
@@ -68,6 +69,8 @@ public class EntitlementRulesTestFixture {
     protected PoolManager poolManagerMock;
     @Mock
     protected EntitlementCurator entCurMock;
+    @Mock
+    protected ProductCurator prodCuratorMock;
 
     @Mock
     protected PoolCurator poolCurator;
@@ -108,15 +111,15 @@ public class EntitlementRulesTestFixture {
 
         attrHelper = new AttributeHelper();
 
-        poolRules = new PoolRules(poolManagerMock, config, entCurMock);
+        poolRules = new PoolRules(poolManagerMock, config, entCurMock, prodCuratorMock);
     }
 
     protected Subscription createVirtLimitSub(String productId, int quantity,
         String virtLimit) {
         Product product = new Product(productId, productId, owner);
         product.setAttribute("virt_limit", virtLimit);
-        when(prodAdapter.getProductById(owner, productId)).thenReturn(product);
-        Subscription s = TestUtil.createSubscription(product);
+        when(prodCuratorMock.lookupById(owner, productId)).thenReturn(product);
+        Subscription s = TestUtil.createSubscription(owner, product);
         s.setQuantity(new Long(quantity));
         s.setId("subId");
         return s;

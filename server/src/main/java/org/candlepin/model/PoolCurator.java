@@ -203,6 +203,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         Criteria crit = createSecureCriteria()
             .createAlias("product", "product")
             .createAlias("providedProducts", "provProd", CriteriaSpecification.LEFT_JOIN)
+            .createAlias("provProd.productContent", "ppcw", CriteriaSpecification.LEFT_JOIN)
+            .createAlias("ppcw.content", "ppContent", CriteriaSpecification.LEFT_JOIN)
             .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
 
         if (activeOnly) {
@@ -232,8 +234,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             crit.add(Restrictions.ge("endDate", activeOn));
         }
 
-        // TODO: This may or may not need to change to be a UUID reference, depending on how badly
-        // it breaks things.
         if (productId != null) {
             crit.add(Restrictions.or(
                 Restrictions.eq("product.id", productId),
@@ -558,7 +558,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      *
      * @param owner
      * @param expectedSubIds Full list of all expected subscription IDs.
-     * @return
+     * @return a list of pools for subscriptions not matching the specified subscription list
      */
     @SuppressWarnings("unchecked")
     public List<Pool> getPoolsFromBadSubs(Owner owner, Collection<String> expectedSubIds) {
@@ -566,8 +566,10 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 .add(Restrictions.eq("owner", owner));
         if (!expectedSubIds.isEmpty()) {
             crit.createAlias("sourceSubscription", "sourceSub");
-            crit.add(Restrictions.and(Restrictions.not(Restrictions.in("sourceSub.subscriptionId", expectedSubIds)),
-                    Restrictions.isNotNull("sourceSub.subscriptionId")));
+            crit.add(Restrictions.and(
+                Restrictions.not(Restrictions.in("sourceSub.subscriptionId", expectedSubIds)),
+                Restrictions.isNotNull("sourceSub.subscriptionId")
+            ));
         }
         crit.addOrder(Order.asc("id"));
         return crit.list();
@@ -581,6 +583,15 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             .add(Restrictions.eq("sourceSub.subscriptionId", subId))
             .addOrder(Order.asc("id"))
             .list();
+    }
+
+    @SuppressWarnings("unchecked")
+    public Pool getMasterPoolBySubscriptionId(String subscriptionId) {
+        return (Pool) currentSession().createCriteria(Pool.class)
+            .createAlias("sourceSubscription", "srcsub", JoinType.LEFT_OUTER_JOIN)
+            .add(Restrictions.eq("srcsub.subscriptionId", subscriptionId))
+            .add(Restrictions.eq("srcsub.subscriptionSubKey", "master"))
+            .uniqueResult();
     }
 
     @SuppressWarnings("unchecked")

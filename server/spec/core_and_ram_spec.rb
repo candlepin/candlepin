@@ -213,20 +213,42 @@ describe 'Core and RAM Limiting' do
   it 'should allow consumer to be compliant for socket and core quantity across stacked pools' do
     owner = create_owner random_string('test_owner')
     user = user_client(owner, random_string('test-user'))
-    system = consumer_client(user, random_string('system'), :system, nil,
-                {'system.certificate_version' => '3.2',
-                 'cpu.cpu_socket(s)' => '4',
-                 'cpu.core(s)_per_socket' => '8'})
-    prod1 = create_product(random_string('product'), random_string('product'), :attributes =>
-                          { :sockets => '2',
-                            :cores => '8',
-                            :'multi-entitlement' => 'yes',
-                            :stacking_id => '9999'})
-    prod2 = create_product(random_string('product'), random_string('product'), :attributes =>
-                          { :sockets => '2',
-                            :cores => '8',
-                            :'multi-entitlement' => 'yes',
-                            :stacking_id => '9999'})
+    system = consumer_client(
+      user,
+      random_string('system'),
+      :system,
+      nil,
+      {
+        'system.certificate_version' => '3.2',
+        'cpu.cpu_socket(s)' => '4',
+        'cpu.core(s)_per_socket' => '8'
+      }
+    )
+
+    prod1 = create_product(
+      random_string('product'),
+      random_string('product'),
+      :attributes => {
+        :sockets => '2',
+        :cores => '8',
+        :'multi-entitlement' => 'yes',
+        :stacking_id => '9999'
+      },
+      :owner => owner['key']
+    )
+
+    prod2 = create_product(
+      random_string('product'),
+      random_string('product'),
+      :attributes => {
+        :sockets => '2',
+        :cores => '8',
+        :'multi-entitlement' => 'yes',
+        :stacking_id => '9999'
+      },
+      :owner => owner['key']
+    )
+
     installed = [
         {'productId' => prod1.id, 'productName' => prod1.name},
     ]

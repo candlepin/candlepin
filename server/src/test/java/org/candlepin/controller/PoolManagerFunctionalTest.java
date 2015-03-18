@@ -174,13 +174,13 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         AutobindData data = AutobindData.create(parentSystem).on(new Date())
                 .forProducts(new String [] {monitoring.getId()});
         for (int i = 0; i < 5; i++) {
-            List<Entitlement> entitlements = poolManager.entitleByProducts(subAdapter, data);
+            List<Entitlement> entitlements = poolManager.entitleByProducts(data);
             assertEquals(1, entitlements.size());
         }
 
         // The cert should specify 5 monitoring entitlements, taking a 6th should fail:
         try {
-            poolManager.entitleByProducts(subAdapter, data);
+            poolManager.entitleByProducts(data);
             fail();
         }
         // With criteria filtered pools we end up with a RuntimeException
@@ -196,8 +196,8 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     public void testRevocation() throws Exception {
         AutobindData data = AutobindData.create(parentSystem).on(new Date())
                 .forProducts(new String [] {monitoring.getId()});
-        Entitlement e = poolManager.entitleByProducts(subAdapter, data).get(0);
-        poolManager.revokeEntitlement(subAdapter, e);
+        Entitlement e = poolManager.entitleByProducts(data).get(0);
+        poolManager.revokeEntitlement(e);
 
         List<Entitlement> entitlements = entitlementCurator.listByConsumer(parentSystem);
         assertTrue(entitlements.isEmpty());
@@ -209,11 +209,11 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
             monitoring.getId()).get(0);
         assertEquals(Long.valueOf(5), monitoringPool.getQuantity());
 
-        Entitlement e = poolManager.entitleByPool(subAdapter, parentSystem, monitoringPool, 3);
+        Entitlement e = poolManager.entitleByPool(parentSystem, monitoringPool, 3);
         assertNotNull(e);
         assertEquals(Long.valueOf(3), monitoringPool.getConsumed());
 
-        poolManager.revokeEntitlement(subAdapter, e);
+        poolManager.revokeEntitlement(e);
         assertEquals(Long.valueOf(0), monitoringPool.getConsumed());
     }
 
@@ -222,7 +222,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         throws Exception {
         AutobindData data = AutobindData.create(childVirtSystem).on(new Date())
                 .forProducts(new String [] {provisioning.getId()});
-        this.entitlementCurator.refresh(poolManager.entitleByProducts(subAdapter, data).get(0));
+        this.entitlementCurator.refresh(poolManager.entitleByProducts(data).get(0));
         regenerateECAndAssertNotSameCertificates();
     }
 
@@ -231,15 +231,15 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         throws EntitlementRefusedException {
         AutobindData data = AutobindData.create(childVirtSystem).on(new Date())
                 .forProducts(new String [] {provisioning.getId()});
-        this.entitlementCurator.refresh(poolManager.entitleByProducts(subAdapter, data).get(0));
-        this.entitlementCurator.refresh(poolManager.entitleByProducts(subAdapter, data).get(0));
+        this.entitlementCurator.refresh(poolManager.entitleByProducts(data).get(0));
+        this.entitlementCurator.refresh(poolManager.entitleByProducts(data).get(0));
         regenerateECAndAssertNotSameCertificates();
     }
 
     @Test
     public void testRegenerateEntitlementCertificatesWithNoEntitlement() {
         reset(this.eventSink); // pool creation events went out from setup
-        poolManager.regenerateEntitlementCertificates(subAdapter, childVirtSystem, true);
+        poolManager.regenerateEntitlementCertificates(childVirtSystem, true);
         assertEquals(0, collectEntitlementCertIds(this.childVirtSystem).size());
         Mockito.verifyZeroInteractions(this.eventSink);
     }
@@ -272,12 +272,12 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         // inside an entitleByProducts call, we do it in two singular calls here.
         AutobindData data = AutobindData.create(parentSystem).on(new Date())
                 .forProducts(new String [] {"modifier"});
-        poolManager.entitleByProducts(subAdapter, data);
+        poolManager.entitleByProducts(data);
 
         try {
             data = AutobindData.create(parentSystem).on(new Date())
                     .forProducts(new String [] {PRODUCT_VIRT_HOST});
-            poolManager.entitleByProducts(subAdapter, data);
+            poolManager.entitleByProducts(data);
         }
         catch (EntityNotFoundException e) {
             throw e;
@@ -418,7 +418,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     private void regenerateECAndAssertNotSameCertificates() {
         Set<EntitlementCertificate> oldsIds =
             collectEntitlementCertIds(this.childVirtSystem);
-        poolManager.regenerateEntitlementCertificates(subAdapter, childVirtSystem, false);
+        poolManager.regenerateEntitlementCertificates(childVirtSystem, false);
         Mockito.verify(this.eventSink, Mockito.times(oldsIds.size()))
             .queueEvent(any(Event.class));
         Set<EntitlementCertificate> newIds =

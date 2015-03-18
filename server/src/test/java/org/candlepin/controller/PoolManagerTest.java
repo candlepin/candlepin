@@ -164,7 +164,7 @@ public class PoolManagerTest {
         );
 
         when(entCertAdapterMock.generateEntitlementCert(any(Entitlement.class),
-            any(Subscription.class), any(Product.class))).thenReturn(
+            any(Product.class))).thenReturn(
                 new EntitlementCertificate());
 
         dummyComplianceStatus = new ComplianceStatus(new Date());
@@ -201,7 +201,8 @@ public class PoolManagerTest {
 
         // Make sure that only the floating pool was regenerated
         expectedFloating.add(floating);
-        verify(this.manager).updateFloatingPools(eq(mockSubAdapter), eq(expectedFloating), eq(true), any(Set.class));
+        verify(this.manager)
+            .updateFloatingPools(eq(mockSubAdapter), eq(expectedFloating), eq(true), any(Set.class));
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -230,9 +231,10 @@ public class PoolManagerTest {
 
         // Make sure that only the floating pool was regenerated
         expectedModified.add(p);
-        verify(this.manager).updateFloatingPools(eq(mockSubAdapter), eq(new LinkedList()), eq(true), any(Set.class));
-        verify(this.manager).updatePoolsForSubscription(
-            eq(mockSubAdapter), eq(expectedModified), eq(sub), eq(false), any(Set.class));
+        verify(this.manager)
+            .updateFloatingPools(eq(mockSubAdapter), eq(new LinkedList()), eq(true), any(Set.class));
+        verify(this.manager)
+            .updatePoolsForSubscription(eq(expectedModified), eq(sub), eq(false), any(Set.class));
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -247,7 +249,7 @@ public class PoolManagerTest {
 
         mockPoolsList(pools);
         this.manager.getRefresher(mockSubAdapter).add(getOwner()).run();
-        verify(this.manager).deletePool(eq(mockSubAdapter), same(p));
+        verify(this.manager).deletePool(same(p));
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -268,7 +270,7 @@ public class PoolManagerTest {
 
         mockPoolsList(pools);
         this.manager.getRefresher(mockSubAdapter).add(getOwner()).run();
-        verify(this.manager).deletePool(eq(mockSubAdapter), same(p));
+        verify(this.manager).deletePool(same(p));
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -289,7 +291,7 @@ public class PoolManagerTest {
 
         mockPoolsList(pools);
         this.manager.getRefresher(mockSubAdapter).add(getOwner()).run();
-        verify(this.manager, never()).deletePool(eq(mockSubAdapter), same(p));
+        verify(this.manager, never()).deletePool(same(p));
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -310,7 +312,7 @@ public class PoolManagerTest {
 
         mockPoolsList(pools);
         this.manager.getRefresher(mockSubAdapter).add(getOwner()).run();
-        verify(this.manager, never()).deletePool(eq(mockSubAdapter), same(p));
+        verify(this.manager, never()).deletePool(same(p));
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -389,7 +391,7 @@ public class PoolManagerTest {
     @Test
     public void testLazyRegenerate() {
         Entitlement e = new Entitlement();
-        manager.regenerateCertificatesOf(mockSubAdapter, e, false, true);
+        manager.regenerateCertificatesOf(e, false, true);
         assertTrue(e.getDirty());
         verifyZeroInteractions(entCertAdapterMock);
     }
@@ -399,7 +401,7 @@ public class PoolManagerTest {
         Entitlement e = new Entitlement();
         Consumer c = new Consumer();
         c.addEntitlement(e);
-        manager.regenerateEntitlementCertificates(mockSubAdapter, c, true);
+        manager.regenerateEntitlementCertificates(c, true);
         assertTrue(e.getDirty());
         verifyZeroInteractions(entCertAdapterMock);
     }
@@ -416,11 +418,10 @@ public class PoolManagerTest {
 
         when(mockSubAdapter.getSubscription(pool.getSubscriptionId())).thenReturn(s);
 
-        manager.regenerateCertificatesOf(mockSubAdapter, e, false, false);
+        manager.regenerateCertificatesOf(e, false, false);
         assertFalse(e.getDirty());
 
-        verify(entCertAdapterMock).generateEntitlementCert(eq(e), eq(s),
-            eq(product));
+        verify(entCertAdapterMock).generateEntitlementCert(eq(e), eq(product));
         verify(mockEventSink, times(1)).queueEvent(any(Event.class));
     }
 
@@ -466,7 +467,7 @@ public class PoolManagerTest {
         ValidationResult result = new ValidationResult();
         when(preHelper.getResult()).thenReturn(result);
 
-        int total = manager.revokeAllEntitlements(mockSubAdapter, c);
+        int total = manager.revokeAllEntitlements(c);
 
         assertEquals(2, total);
         verify(entitlementCurator, never()).listModifying(any(Entitlement.class));
@@ -485,7 +486,7 @@ public class PoolManagerTest {
 
         when(mockPoolCurator.lockAndLoad(any(Pool.class))).thenReturn(pool);
 
-        manager.revokeEntitlement(mockSubAdapter, e);
+        manager.revokeEntitlement(e);
 
         verify(entitlementCurator).delete(e);
     }
@@ -526,7 +527,7 @@ public class PoolManagerTest {
 
         AutobindData data = AutobindData.create(TestUtil.createConsumer(o))
                 .forProducts(new String[] { product.getUuid() }).on(now);
-        List<Entitlement> e = manager.entitleByProducts(mockSubAdapter, data);
+        List<Entitlement> e = manager.entitleByProducts(data);
 
         assertNotNull(e);
         assertEquals(e.size(), 1);
@@ -601,7 +602,7 @@ public class PoolManagerTest {
         ValidationResult result = new ValidationResult();
         when(preHelper.getResult()).thenReturn(result);
 
-        manager.deletePool(mockSubAdapter, p);
+        manager.deletePool(p);
 
         // And the pool should be deleted:
         verify(mockPoolCurator).delete(p);
@@ -630,12 +631,10 @@ public class PoolManagerTest {
         ValidationResult result = new ValidationResult();
         when(preHelper.getResult()).thenReturn(result);
 
-        manager.cleanupExpiredPools(mockSubAdapter);
+        manager.cleanupExpiredPools();
 
         // And the pool should be deleted:
         verify(mockPoolCurator).delete(p);
-        verify(mockSubAdapter).getSubscription(eq("subid"));
-        verify(mockSubAdapter).deleteSubscription(eq(sub));
     }
 
     @Test
@@ -657,7 +656,7 @@ public class PoolManagerTest {
         ValidationResult result = new ValidationResult();
         when(preHelper.getResult()).thenReturn(result);
 
-        manager.cleanupExpiredPools(mockSubAdapter);
+        manager.cleanupExpiredPools();
 
         // And the pool should be deleted:
         verify(mockPoolCurator).delete(p);
@@ -724,7 +723,7 @@ public class PoolManagerTest {
 
         // Make the call but provide a null array of product IDs (simulates healing):
         AutobindData data = AutobindData.create(TestUtil.createConsumer(o)).on(now);
-        manager.entitleByProducts(mockSubAdapter, data);
+        manager.entitleByProducts(data);
 
         verify(autobindRules).selectBestPools(any(Consumer.class), eq(installedPids),
             any(List.class), eq(mockCompliance), any(String.class),
@@ -828,16 +827,21 @@ public class PoolManagerTest {
 
     @Test
     public void createPoolsForExistingSubscriptionsNoneExist() {
-        PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator);
+        Owner owner = this.getOwner();
+        PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator,
+                productCuratorMock);
         List<Subscription> subscriptions = Util.newList();
         List<Pool> pools = Util.newList();
-        Product prod = TestUtil.createProduct(o);
+        Product prod = TestUtil.createProduct(owner);
         Set<Product> products = new HashSet<Product>();
         products.add(prod);
         prod.setAttribute("virt_limit", "4");
         // productCache.addProducts(products);
-        Subscription s = TestUtil.createSubscription(getOwner(), prod);
+        Subscription s = TestUtil.createSubscription(owner, prod);
         subscriptions.add(s);
+
+        when(productCuratorMock.lookupById(prod.getOwner(), prod.getId())).thenReturn(prod);
+
         when(mockSubAdapter.getSubscriptions(any(Owner.class))).thenReturn(
             subscriptions);
         when(mockConfig.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
@@ -856,16 +860,20 @@ public class PoolManagerTest {
 
     @Test
     public void createPoolsForExistingSubscriptionsMasterExist() {
-        PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator);
+        Owner owner = this.getOwner();
+        PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator,
+                productCuratorMock);
         List<Subscription> subscriptions = Util.newList();
         List<Pool> pools = Util.newList();
-        Product prod = TestUtil.createProduct(o);
+        Product prod = TestUtil.createProduct(owner);
         Set<Product> products = new HashSet<Product>();
         products.add(prod);
         // productCache.addProducts(products);
         prod.setAttribute("virt_limit", "4");
-        Subscription s = TestUtil.createSubscription(getOwner(), prod);
+        Subscription s = TestUtil.createSubscription(owner, prod);
         subscriptions.add(s);
+
+        when(productCuratorMock.lookupById(prod.getOwner(), prod.getId())).thenReturn(prod);
         when(mockSubAdapter.getSubscriptions(any(Owner.class))).thenReturn(
             subscriptions);
         when(mockConfig.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
@@ -881,16 +889,18 @@ public class PoolManagerTest {
 
     @Test
     public void createPoolsForExistingSubscriptionsBonusExist() {
-        PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator);
+        Owner owner = this.getOwner();
+        PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator,
+                productCuratorMock);
         List<Subscription> subscriptions = Util.newList();
-        List<Pool> pools = Util.newList();
-        Product prod = TestUtil.createProduct(o);
+        Product prod = TestUtil.createProduct(owner);
         Set<Product> products = new HashSet<Product>();
         products.add(prod);
         // productCache.addProducts(products);
         prod.setAttribute("virt_limit", "4");
-        Subscription s = TestUtil.createSubscription(getOwner(), prod);
+        Subscription s = TestUtil.createSubscription(owner, prod);
         subscriptions.add(s);
+        when(productCuratorMock.lookupById(prod.getOwner(), prod.getId())).thenReturn(prod);
         when(mockSubAdapter.getSubscriptions(any(Owner.class))).thenReturn(
             subscriptions);
         when(mockConfig.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
@@ -1134,4 +1144,49 @@ public class PoolManagerTest {
 
         assertEquals(1, changed.size());
     }
+
+    @Test
+    public void testFabricateSubscriptionFromPool() {
+        Product product = TestUtil.createProduct("product", "Product", o);
+        Product provided1 = TestUtil.createProduct("provided-1", "Provided 1", o);
+        Product provided2 = TestUtil.createProduct("provided-2", "Provided 2", o);
+
+        Pool pool = mock(Pool.class);
+
+        HashSet<Product> provided = new HashSet<Product>();
+        provided.add(provided1);
+        provided.add(provided2);
+
+        Long quantity = new Long(42);
+
+        Date startDate = new Date(System.currentTimeMillis() - 86400000);
+        Date endDate = new Date(System.currentTimeMillis() + 86400000);
+        Date updated = new Date();
+
+        String subscriptionId = "test-subscription-1";
+
+        when(pool.getOwner()).thenReturn(o);
+        when(pool.getProduct()).thenReturn(product);
+        when(pool.getProvidedProducts()).thenReturn(provided);
+        when(pool.getQuantity()).thenReturn(quantity);
+        when(pool.getStartDate()).thenReturn(startDate);
+        when(pool.getEndDate()).thenReturn(endDate);
+        when(pool.getUpdated()).thenReturn(updated);
+        when(pool.getSubscriptionId()).thenReturn(subscriptionId);
+        // TODO: Add other attributes to check here.
+
+        Subscription fabricated = manager.fabricateSubscriptionFromPool(pool);
+
+        assertEquals(o, fabricated.getOwner());
+        assertEquals(product, fabricated.getProduct());
+        assertEquals(provided, fabricated.getProvidedProducts());
+        assertEquals(quantity, fabricated.getQuantity());
+        assertEquals(startDate, fabricated.getStartDate());
+        assertEquals(endDate, fabricated.getEndDate());
+        assertEquals(updated, fabricated.getModified());
+        assertEquals(subscriptionId, fabricated.getId());
+    }
+
+
+
 }

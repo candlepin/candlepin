@@ -20,7 +20,6 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCertificateCurator;
 import org.candlepin.model.Product;
-import org.candlepin.model.Subscription;
 import org.candlepin.service.BaseEntitlementCertServiceAdapter;
 
 import com.google.inject.Inject;
@@ -53,7 +52,7 @@ public class StubEntitlementCertServiceAdapter extends BaseEntitlementCertServic
 
     @Override
     public EntitlementCertificate generateEntitlementCert(Entitlement entitlement,
-        Subscription sub, Product product)
+        Product product)
         throws GeneralSecurityException, IOException {
 
         log.debug("Generating entitlement cert for:");
@@ -83,9 +82,9 @@ public class StubEntitlementCertServiceAdapter extends BaseEntitlementCertServic
 
     @Override
     public EntitlementCertificate generateUeberCert(Entitlement entitlement,
-        Subscription sub, Product product) throws GeneralSecurityException,
+        Product product) throws GeneralSecurityException,
         IOException {
-        return generateEntitlementCert(entitlement, sub, product);
+        return generateEntitlementCert(entitlement, product);
     }
 
 }

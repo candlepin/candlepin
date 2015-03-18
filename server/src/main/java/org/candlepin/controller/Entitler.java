@@ -22,13 +22,13 @@ import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Entitlement;
+import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.js.entitlement.EntitlementRulesTranslator;
 import org.candlepin.resource.dto.AutobindData;
-import org.candlepin.service.SubscriptionServiceAdapter;
 
 import com.google.inject.Inject;
 
@@ -54,20 +54,20 @@ public class Entitler {
     private EventSink sink;
     private ConsumerCurator consumerCurator;
     private EntitlementRulesTranslator messageTranslator;
-    private SubscriptionServiceAdapter subAdapter;
+    private EntitlementCurator entitlementCurator;
 
     @Inject
-    public Entitler(PoolManager pm, SubscriptionServiceAdapter subAdapter, ConsumerCurator cc, I18n i18n,
-        EventFactory evtFactory, EventSink sink,
-        EntitlementRulesTranslator messageTranslator) {
+    public Entitler(PoolManager pm, ConsumerCurator cc, I18n i18n, EventFactory evtFactory,
+        EventSink sink, EntitlementRulesTranslator messageTranslator,
+        EntitlementCurator entitlementCurator) {
 
         this.poolManager = pm;
-        this.subAdapter = subAdapter;
         this.i18n = i18n;
         this.evtFactory = evtFactory;
         this.sink = sink;
         this.consumerCurator = cc;
         this.messageTranslator = messageTranslator;
+        this.entitlementCurator = entitlementCurator;
     }
 
     public List<Entitlement> bindByPool(String poolId, String consumeruuid,
@@ -101,7 +101,7 @@ public class Entitler {
         Integer quantity) {
         // Attempt to create an entitlement:
         try {
-            Entitlement e = poolManager.entitleByPool(subAdapter, consumer, pool, quantity);
+            Entitlement e = poolManager.entitleByPool(consumer, pool, quantity);
             log.debug("Created entitlement: " + e);
             return e;
         }
@@ -116,7 +116,7 @@ public class Entitler {
         Integer quantity) {
         // Attempt to adjust an entitlement:
         try {
-            poolManager.adjustEntitlementQuantity(subAdapter, consumer, ent, quantity);
+            poolManager.adjustEntitlementQuantity(consumer, ent, quantity);
         }
         catch (EntitlementRefusedException e) {
             // TODO: Could be multiple errors, but we'll just report the first one for now:
@@ -158,13 +158,16 @@ public class Entitler {
         // If the consumer is a guest, and has a host, try to heal the host first
         if (consumer.hasFact("virt.uuid")) {
             String guestUuid = consumer.getFact("virt.uuid");
+            // Remove any expired unmapped guest entitlements
+            revokeUnmappedGuestEntitlements(consumer);
+
             Consumer host = consumerCurator.getHost(guestUuid, consumer.getOwner());
             if (host != null && (force || host.isAutoheal())) {
                 log.info("Attempting to heal host machine with UUID " +
                     host.getUuid() + " for guest with UUID " + consumer.getUuid());
                 try {
                     List<Entitlement> hostEntitlements =
-                        poolManager.entitleByProductsForHost(subAdapter, consumer, host,
+                        poolManager.entitleByProductsForHost(consumer, host,
                                 data.getOnDate(), data.getPossiblePools());
                     log.debug("Granted host {} entitlements", hostEntitlements.size());
                     sendEvents(hostEntitlements);
@@ -174,6 +177,7 @@ public class Entitler {
                     log.debug("Healing failed for host UUID " + host.getUuid() +
                         " with message: " + e.getMessage());
                 }
+
                 /* Consumer is stale at this point.  Note that we use find() instead of
                  * findByUuid() or getConsumer() since the latter two methods are secured
                  * to a specific host principal and bindByProducts can get called when
@@ -186,7 +190,7 @@ public class Entitler {
         // Attempt to create entitlements:
         try {
             // the pools are only used to bind the guest
-            List<Entitlement> entitlements = poolManager.entitleByProducts(subAdapter, data);
+            List<Entitlement> entitlements = poolManager.entitleByProducts(data);
             log.debug("Created entitlements: " + entitlements);
             return entitlements;
         }
@@ -231,6 +235,40 @@ public class Entitler {
             }
         }
         return result;
+    }
+
+    public int revokeUnmappedGuestEntitlements(Consumer consumer) {
+        int total = 0;
+
+        List<Entitlement> unmappedGuestEntitlements;
+
+        if (consumer == null) {
+            unmappedGuestEntitlements = entitlementCurator.findByPoolAttribute(
+                "unmapped_guests_only", "true");
+        }
+        else {
+            unmappedGuestEntitlements = entitlementCurator.findByPoolAttribute(
+                consumer, "unmapped_guests_only", "true");
+        }
+
+        Date now = new Date();
+        for (Entitlement e : unmappedGuestEntitlements) {
+            if (isLapsed(e, now)) {
+                poolManager.revokeEntitlement(e);
+                total++;
+            }
+        }
+        return total;
+    }
+
+    protected boolean isLapsed(Entitlement e, Date now) {
+        Date consumerCreation = e.getConsumer().getCreated();
+        Date lapseDate = new Date(consumerCreation.getTime() + 24L * 60L * 60L * 1000L);
+        return lapseDate.before(now);
+    }
+
+    public int revokeUnmappedGuestEntitlements() {
+        return revokeUnmappedGuestEntitlements(null);
     }
 
     public void sendEvents(List<Entitlement> entitlements) {

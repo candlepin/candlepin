@@ -14,16 +14,9 @@
  */
 package org.candlepin.resource;
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
-import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Content;
@@ -40,17 +33,12 @@ import org.candlepin.service.impl.DefaultUniqueIdGenerator;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.ArgumentMatcher;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 /**
  * OwnerContentResourceTest
  */
@@ -194,7 +182,7 @@ public class OwnerContentResourceTest {
         verify(cc).lookupById(eq(owner), eq(contentId));
         verify(cc).createOrUpdate(eq(content));
         verify(productCurator).getProductsWithContent(eq(owner), eq(Arrays.asList(contentId)));
-        verify(poolManager).regenerateCertificatesOf(eq(ssa), eq(owner), eq(productId), eq(true));
+        verify(poolManager).regenerateCertificatesOf(eq(owner), eq(productId), eq(true));
     }
 
     @Test(expected = NotFoundException.class)

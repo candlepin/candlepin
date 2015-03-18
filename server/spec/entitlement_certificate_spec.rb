@@ -25,8 +25,8 @@ describe 'Entitlement Certificate' do
     @owner = create_owner random_string('test_owner')
     monitoring = create_product()
 
-    @cp.create_subscription(@owner['key'], monitoring.id, 10)
-    @cp.refresh_pools(@owner['key'])
+    result = @cp.create_subscription(@owner['key'], monitoring.id, 10)
+    # @cp.refresh_pools(@owner['key'])
 
     @user = user_client(@owner, random_string('billy'))
 

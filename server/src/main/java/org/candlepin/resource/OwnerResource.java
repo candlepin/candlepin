@@ -25,6 +25,7 @@ import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SubResource;
 import org.candlepin.auth.interceptor.Verify;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.CandlepinException;
 import org.candlepin.common.exceptions.ForbiddenException;
@@ -33,12 +34,15 @@ import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.common.paging.Paginate;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.guice.NonTransactional;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.Content;
+import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCertificateCurator;
@@ -63,6 +67,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Statistic;
 import org.candlepin.model.StatisticCurator;
+import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.model.UeberCertificateGenerator;
@@ -112,6 +117,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.UUID;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -161,6 +167,8 @@ public class OwnerResource {
     private ContentOverrideValidator contentOverrideValidator;
     private ServiceLevelValidator serviceLevelValidator;
     private ProductCurator prodCurator;
+    private Configuration config;
+    private ContentCurator contentCurator;
 
     private static final int FEED_LIMIT = 1000;
 
@@ -185,7 +193,9 @@ public class OwnerResource {
         EnvironmentCurator envCurator, CalculatedAttributesUtil calculatedAttributesUtil,
         ContentOverrideValidator contentOverrideValidator,
         ServiceLevelValidator serviceLevelValidator,
-        OwnerServiceAdapter ownerService, ProductCurator productCurator) {
+        OwnerServiceAdapter ownerService, ProductCurator productCurator,
+        Configuration config,
+        ContentCurator contentCurator) {
 
         this.ownerCurator = ownerCurator;
         this.ownerInfoCurator = ownerInfoCurator;
@@ -214,6 +224,8 @@ public class OwnerResource {
         this.serviceLevelValidator = serviceLevelValidator;
         this.ownerService = ownerService;
         this.prodCurator = productCurator;
+        this.config = config;
+        this.contentCurator = contentCurator;
     }
 
     /**
@@ -343,11 +355,11 @@ public class OwnerResource {
             log.info("Removing all entitlements for consumer: " + c);
 
             if (revokeCerts) {
-                poolManager.revokeAllEntitlements(subService, c);
+                poolManager.revokeAllEntitlements(c);
             }
             else {
                 // otherwise just remove them without touching the CRL
-                poolManager.removeAllEntitlements(subService, c);
+                poolManager.removeAllEntitlements(c);
             }
         }
 
@@ -384,7 +396,7 @@ public class OwnerResource {
         }
         for (Pool p : poolManager.listPoolsByOwner(owner)) {
             log.info("Deleting pool: " + p);
-            poolManager.deletePool(subService, p);
+            poolManager.deletePool(p);
         }
 
         cleanupUeberCert(owner);
@@ -410,6 +422,11 @@ public class OwnerResource {
             prodCurator.delete(p);
         }
 
+        for (Content c : contentCurator.listByOwner(owner)) {
+            log.info("Deleting content: " + c);
+            contentCurator.delete(c);
+        }
+
         log.info("Deleting owner: " + owner);
         ownerCurator.delete(owner);
     }
@@ -430,7 +447,7 @@ public class OwnerResource {
 
         Pool ueberPool = poolManager.findUeberPool(owner);
         if (ueberPool != null) {
-            poolManager.deletePool(subService, ueberPool);
+            poolManager.deletePool(ueberPool);
         }
     }
 
@@ -757,8 +774,8 @@ public class OwnerResource {
             key = activationKeyCurator.lookupForOwner(activationKeyName, owner);
             if (key == null) {
                 throw new BadRequestException(
-                    i18n.tr("ActivationKey with id {0} could not be found.",
-                        activationKeyName));
+                    i18n.tr("ActivationKey with id {0} could not be found.", activationKeyName)
+                );
             }
         }
 
@@ -771,8 +788,9 @@ public class OwnerResource {
             poolFilters.addMatchesFilter(matches);
         }
 
-        Page<List<Pool>> page = poolManager.listAvailableEntitlementPools(c, key, owner,
-            productId, activeOnDate, true, listAll, poolFilters, pageRequest);
+        Page<List<Pool>> page = poolManager.listAvailableEntitlementPools(c, key, owner, productId,
+            activeOnDate, true, listAll, poolFilters, pageRequest
+        );
         List<Pool> poolList = page.getPageData();
 
         if (c != null) {
@@ -782,25 +800,6 @@ public class OwnerResource {
         // Store the page for the LinkHeaderPostInterceptor
         ResteasyProviderFactory.pushContext(Page.class, page);
         return poolList;
-    }
-
-    /**
-     * Creates a Subscription for an Owner
-     *
-     * @return a Subscription object
-     * @httpcode 404
-     * @httpcode 200
-     */
-    @POST
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("{owner_key}/subscriptions")
-    public Subscription createSubscription(
-        @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
-        Subscription subscription) {
-        Owner o = findOwner(ownerKey);
-        subscription.setOwner(o);
-        return subService.createSubscription(subscription);
     }
 
     /**
@@ -843,30 +842,11 @@ public class OwnerResource {
         return events;
     }
 
-    /**
-     * Retrieves a list of Subscriptions for an Owner
-     *
-     * @return a list of Subscription objects
-     * @httpcode 404
-     * @httpcode 200
-     */
-    @GET
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("{owner_key}/subscriptions")
-    public List<Subscription> getSubscriptions(
-        @PathParam("owner_key") @Verify(value = Owner.class,
-            subResource = SubResource.SUBSCRIPTIONS) String ownerKey) {
-        Owner o = findOwner(ownerKey);
-        return subService.getSubscriptions(o);
-    }
-
     private Owner findOwner(String key) {
         Owner owner = ownerCurator.lookupByKey(key);
 
         if (owner == null) {
-            throw new NotFoundException(i18n.tr(
-                "owner with key: {0} was not found.", key));
+            throw new NotFoundException(i18n.tr("owner with key: {0} was not found.", key));
         }
 
         return owner;
@@ -943,11 +923,10 @@ public class OwnerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}")
     @Transactional
-    public Owner updateOwner(@PathParam("owner_key") @Verify(Owner.class) String key,
-        Owner owner) {
+    public Owner updateOwner(@PathParam("owner_key") @Verify(Owner.class) String key, Owner owner) {
         Owner toUpdate = findOwner(key);
         EventBuilder eventBuilder = eventFactory.getEventBuilder(Target.OWNER, Type.MODIFIED)
-                .setOldEntity(toUpdate);
+            .setOldEntity(toUpdate);
 
         log.debug("Updating owner: " + key);
 
@@ -1096,36 +1075,20 @@ public class OwnerResource {
 
         Owner owner = ownerCurator.lookupByKey(ownerKey);
         if (owner == null) {
-            if (autoCreateOwner &&
-                ownerService.isOwnerKeyValidForCreation(ownerKey)) {
+            if (autoCreateOwner && ownerService.isOwnerKeyValidForCreation(ownerKey)) {
                 owner = this.createOwner(new Owner(ownerKey, ownerKey));
             }
             else {
-                throw new NotFoundException(i18n.tr(
-                    "owner with key: {0} was not found.", ownerKey));
+                throw new NotFoundException(i18n.tr("owner with key: {0} was not found.", ownerKey));
             }
         }
 
-        return RefreshPoolsJob.forOwner(owner, lazyRegen);
-    }
-
-    /**
-     * Updates a Subscription for an Owner
-     *
-     * @httpcode 404
-     * @httpcode 200
-     */
-    @PUT
-    @Path("/subscriptions")
-    public void updateSubscription(Subscription subscription) {
-        // TODO: Do we even need the owner id here?
-        Subscription existingSubscription = this.subscriptionCurator
-            .find(subscription.getId());
-        if (existingSubscription == null) {
-            throw new NotFoundException(i18n.tr(
-                "subscription with id: {0} not found.", subscription.getId()));
+        if (config.getBoolean(ConfigProperties.STANDALONE)) {
+            log.warn("Ignoring refresh pools request due to standalone config.");
+            return null;
         }
-        this.subscriptionCurator.merge(subscription);
+
+        return RefreshPoolsJob.forOwner(owner, lazyRegen);
     }
 
     /**
@@ -1425,7 +1388,7 @@ public class OwnerResource {
             List<Entitlement> ueberEntitlement
                 = entitlementCurator.listByConsumer(ueberConsumer);
             // Immediately revoke and regenerate ueber certificates:
-            poolManager.regenerateCertificatesOf(subService, ueberEntitlement.get(0), true, false);
+            poolManager.regenerateCertificatesOf(ueberEntitlement.get(0), true, false);
             return entitlementCertCurator.listForConsumer(ueberConsumer).get(0);
         }
 

@@ -589,7 +589,10 @@ public class Importer {
 
         Map<String, Product> productsById = new HashMap<String, Product>();
         for (Product product : products) {
-            productsById.put(product.getUuid(), product);
+            // TODO: If this should be the UUID instead of the RHID, we need to update several
+            // parts of the EntitlementImporter (and any other class that receives this map) to
+            // expect UUIDs as well.
+            productsById.put(product.getId(), product);
         }
 
         Set<Subscription> subscriptionsToImport = new HashSet<Subscription>();

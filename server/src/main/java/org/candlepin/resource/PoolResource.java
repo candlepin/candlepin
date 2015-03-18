@@ -22,6 +22,9 @@ import org.candlepin.common.auth.SecurityHole;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.common.paging.Page;
+import org.candlepin.common.paging.PageRequest;
+import org.candlepin.common.paging.Paginate;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -32,9 +35,6 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.Statistic;
 import org.candlepin.model.StatisticCurator;
-import org.candlepin.common.paging.Page;
-import org.candlepin.common.paging.PageRequest;
-import org.candlepin.common.paging.Paginate;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.service.SubscriptionServiceAdapter;
@@ -275,7 +275,7 @@ public class PoolResource {
                 "Entitlement Pool with ID ''{0}'' could not be found.", id));
         }
 
-        poolManager.deletePool(subAdapter, pool);
+        poolManager.deletePool(pool);
     }
 
     /**

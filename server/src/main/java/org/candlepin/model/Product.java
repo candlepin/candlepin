@@ -14,6 +14,8 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.service.UniqueIdGenerator;
+
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.LazyCollection;
@@ -68,7 +70,7 @@ public class Product extends AbstractHibernateObject implements Linkable {
     private String uuid;
 
     // Internal RH product ID,
-    @Column(name="product_id")
+    @Column(name = "product_id")
     @NotNull
     private String id;
 
@@ -146,8 +148,8 @@ public class Product extends AbstractHibernateObject implements Linkable {
         setAttribute("arch", arch);
     }
 
-    public static Product createUeberProductForOwner(Owner owner) {
-        return new Product(null, ueberProductNameForOwner(owner), owner, 1L);
+    public static Product createUeberProductForOwner(UniqueIdGenerator idGenerator, Owner owner) {
+        return new Product(idGenerator.generateId(), ueberProductNameForOwner(owner), owner, 1L);
     }
 
     /**
@@ -439,7 +441,10 @@ public class Product extends AbstractHibernateObject implements Linkable {
 
     @Override
     public String getHref() {
-        return "/owners/" + getOwner().getKey() + "/products/" + getId();
+        // If we don't have an owner here, we're in a bit of trouble.
+        return (this.getOwner() != null && this.getOwner().getKey() != null && this.getId() != null) ?
+            "/owners/" + this.getOwner().getKey() + "/products/" + this.getId() :
+            "";
     }
 
     @Override
@@ -475,12 +480,12 @@ public class Product extends AbstractHibernateObject implements Linkable {
     @XmlTransient
     public List<String> getSkuDisabledContentIds() {
         List<String> skuDisabled = new ArrayList<String>();
-        if(this.hasAttribute("content_override_disabled") &&
+        if (this.hasAttribute("content_override_disabled") &&
                this.getAttributeValue("content_override_disabled").length() > 0) {
             StringTokenizer stDisable = new StringTokenizer(
                     this.getAttributeValue("content_override_disabled"), ",");
             while (stDisable.hasMoreElements()) {
-                skuDisabled.add((String)stDisable.nextElement());
+                skuDisabled.add((String) stDisable.nextElement());
             }
         }
         return skuDisabled;
@@ -489,12 +494,12 @@ public class Product extends AbstractHibernateObject implements Linkable {
     @XmlTransient
     public List<String> getSkuEnabledContentIds() {
         List<String> skuEnabled = new ArrayList<String>();
-        if(this.hasAttribute("content_override_enabled") &&
+        if (this.hasAttribute("content_override_enabled") &&
                this.getAttributeValue("content_override_enabled").length() > 0) {
             StringTokenizer stActive = new StringTokenizer(
                     this.getAttributeValue("content_override_enabled"), ",");
             while (stActive.hasMoreElements()) {
-                skuEnabled.add((String)stActive.nextElement());
+                skuEnabled.add((String) stActive.nextElement());
             }
         }
         return skuEnabled;

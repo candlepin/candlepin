@@ -107,10 +107,10 @@ describe 'Activation Keys' do
   it 'should allow product ids to be added to and removed from activation keys' do
     @cp.add_prod_id_to_key(@activation_key['id'], @some_product['id'])
     key = @cp.get_activation_key(@activation_key['id'])
-    key['productIds'].length.should == 1
+    key['products'].length.should == 1
     @cp.remove_prod_id_from_key(@activation_key['id'], @some_product['id'])
     key = @cp.get_activation_key(@activation_key['id'])
-    key['productIds'].length.should == 0
+    key['products'].length.should == 0
   end
 
   it 'should allow auto attach flag to be set on activation keys' do

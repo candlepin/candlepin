@@ -17,7 +17,6 @@ module CleanupHooks
     @roles.reverse_each { |r| @cp.delete_role r['id'] }
     @owners.reverse_each { |owner| @cp.delete_owner owner['key'] }
     @users.reverse_each { |user| @cp.delete_user user['username'] }
-    @created_products.reverse_each { |product| @cp.delete_product product['id'] }
     @dist_versions.reverse_each { |dist_version| @cp.delete_distributor_version dist_version['id'] }
     @cdns.reverse_each { |cdn| @cp.delete_cdn cdn['label'] }
 
@@ -102,7 +101,7 @@ module VirtHelper
     return pools.find_all { |i| !i['sourceEntitlement'].nil? }[0]
   end
 
-  def filter_unmapped_guest_pools(pools)  
+  def filter_unmapped_guest_pools(pools)
     # need to ignore the unmapped guest pools
     pools.select! do |p|
       unmapped = p['attributes'].select {|i| i['name'] == 'unmapped_guests_only' }[0]

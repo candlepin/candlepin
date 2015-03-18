@@ -14,7 +14,7 @@
  */
 package org.candlepin.resource;
 
-import static org.quartz.JobBuilder.*;
+import static org.quartz.JobBuilder.newJob;
 
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.interceptor.Verify;
@@ -24,12 +24,14 @@ import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.Content;
+import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.EnvironmentCurator;
+import org.candlepin.model.Owner;
 import org.candlepin.pinsetter.tasks.RegenEnvEntitlementCertsJob;
-import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
@@ -67,13 +69,12 @@ public class EnvironmentResource {
     private ConsumerResource consumerResource;
     private PoolManager poolManager;
     private ConsumerCurator consumerCurator;
-    private SubscriptionServiceAdapter subAdapter;
+    private ContentCurator contentCurator;
 
     @Inject
     public EnvironmentResource(EnvironmentCurator envCurator, I18n i18n,
-        EnvironmentContentCurator envContentCurator,
-        ConsumerResource consumerResource, PoolManager poolManager,
-        ConsumerCurator consumerCurator, SubscriptionServiceAdapter subAdapter) {
+        EnvironmentContentCurator envContentCurator, ConsumerResource consumerResource,
+        PoolManager poolManager, ConsumerCurator consumerCurator, ContentCurator contentCurator) {
 
         this.envCurator = envCurator;
         this.i18n = i18n;
@@ -81,7 +82,7 @@ public class EnvironmentResource {
         this.consumerResource = consumerResource;
         this.poolManager = poolManager;
         this.consumerCurator = consumerCurator;
-        this.subAdapter = subAdapter;
+        this.contentCurator = contentCurator;
     }
 
     /**
@@ -123,7 +124,7 @@ public class EnvironmentResource {
 
         // Cleanup all consumers and their entitlements:
         for (Consumer c : e.getConsumers()) {
-            poolManager.revokeAllEntitlements(subAdapter, c);
+            poolManager.revokeAllEntitlements(c);
             consumerCurator.delete(c);
         }
 
@@ -143,6 +144,24 @@ public class EnvironmentResource {
     @Wrapped(element = "environments")
     public List<Environment> getEnvironments() {
         return envCurator.listAll();
+    }
+
+
+    /**
+     * Verifies that the content specified by the given content object's ID exists
+     *
+     *
+     */
+    private Content resolveContent(Owner owner, Content content) {
+        Content resolved = this.contentCurator.lookupById(owner, content.getId());
+
+        if (resolved == null) {
+            throw new NotFoundException(i18n.tr(
+                "Unable to find content with the ID \"{0}\".", content.getId()
+            ));
+        }
+
+        return resolved;
     }
 
     /**
@@ -177,8 +196,9 @@ public class EnvironmentResource {
         Set<String> contentIds = new HashSet<String>();
         for (EnvironmentContent promoteMe : contentToPromote) {
             // Make sure the content exists:
-            // promoteMe.setContentId(promoteMe.getContentId()); // What was the point of this?
+            promoteMe.setContent(this.resolveContent(env.getOwner(), promoteMe.getContent()));
             promoteMe.setEnvironment(env);
+
             envContentCurator.create(promoteMe);
             env.getEnvironmentContent().add(promoteMe);
             contentIds.add(promoteMe.getContent().getId());

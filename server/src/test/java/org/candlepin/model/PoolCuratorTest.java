@@ -926,7 +926,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         poolCurator.create(pool2);
 
         assertTrue(poolCurator.lookupBySubscriptionId(sub.getId()).size() == 2);
-        poolManager.deletePool(subAdapter, sourcePool);
+        poolManager.deletePool(sourcePool);
 
         // because we check for null now, we want to verify the
         // subpool gets deleted when the original pool is deleted.

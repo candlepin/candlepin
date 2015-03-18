@@ -69,7 +69,7 @@ public class Refresher {
      * for other orgs.
      *
      * @param product
-     * @return
+     * @return this Refresher instance
      */
     public Refresher add(Product product) {
         products.add(product);
@@ -112,12 +112,13 @@ public class Refresher {
     // magic.
     @Transactional
     private void refreshPoolsForSubscription(Subscription subscription, List<Pool> pools) {
-        poolManager.removeAndDeletePoolsOnOtherOwners(subAdapter, pools, subscription);
+        poolManager.removeAndDeletePoolsOnOtherOwners(pools, subscription);
 
         poolManager.createPoolsForSubscription(subscription, pools);
         // Regenerate certificates here, that way if it fails, the whole thing rolls back.
         // We don't want to refresh without marking ents dirty, they will never get regenerated
-        poolManager.regenerateCertificatesByEntIds(subAdapter, poolManager.updatePoolsForSubscription(
-            subAdapter, pools, subscription, true, new HashSet<Product>()), lazy);
+        poolManager.regenerateCertificatesByEntIds(
+                poolManager.updatePoolsForSubscription(pools, subscription, true,
+                        new HashSet<Product>()), lazy);
     }
 }

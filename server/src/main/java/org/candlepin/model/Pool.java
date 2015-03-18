@@ -145,31 +145,27 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     private Date endDate;
 
     @ManyToOne
-    @JoinColumn(name="product_uuid", nullable = false)
+    @JoinColumn(name = "product_uuid", nullable = false)
     @NotNull
     private Product product;
 
     @ManyToOne
-    @JoinColumn(name="derived_product_uuid")
+    @JoinColumn(name = "derived_product_uuid")
     private Product derivedProduct;
 
     @ManyToMany
-    @Cascade({org.hibernate.annotations.CascadeType.ALL,
-        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
     @JoinTable(
-        name="cpo_pool_provided_products",
-        joinColumns={@JoinColumn(name="pool_id", insertable = false, updatable = false)},
-        inverseJoinColumns={@JoinColumn(name="product_uuid")}
+        name = "cpo_pool_provided_products",
+        joinColumns = {@JoinColumn(name = "pool_id", insertable = false, updatable = false)},
+        inverseJoinColumns = {@JoinColumn(name = "product_uuid")}
     )
     private Set<Product> providedProducts = new HashSet<Product>();
 
     @ManyToMany
-    @Cascade({org.hibernate.annotations.CascadeType.ALL,
-        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
     @JoinTable(
-        name="cpo_pool_derived_products",
-        joinColumns={@JoinColumn(name="pool_id", insertable = false, updatable = false)},
-        inverseJoinColumns={@JoinColumn(name="product_uuid")}
+        name = "cpo_pool_derived_products",
+        joinColumns = {@JoinColumn(name = "pool_id", insertable = false, updatable = false)},
+        inverseJoinColumns = {@JoinColumn(name = "product_uuid")}
     )
     private Set<Product> derivedProvidedProducts = new HashSet<Product>();
 
@@ -234,7 +230,10 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         this.contractNumber = contractNumber;
         this.accountNumber = accountNumber;
         this.orderNumber = orderNumber;
-        this.providedProducts = providedProducts;
+
+        if (providedProducts != null) {
+            this.setProvidedProducts(providedProducts);
+        }
     }
 
     /** {@inheritDoc} */
@@ -408,9 +407,6 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     }
 
     public Set<PoolAttribute> getAttributes() {
-        if (attributes == null) {
-            return new HashSet<PoolAttribute>();
-        }
         return attributes;
     }
 
@@ -428,9 +424,6 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     }
 
     public void addAttribute(PoolAttribute attrib) {
-        if (this.attributes == null) {
-            this.attributes = new HashSet<PoolAttribute>();
-        }
         attrib.setPool(this);
         this.attributes.add(attrib);
     }
@@ -442,9 +435,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
             existing.setValue(value);
         }
         else {
-            PoolAttribute attr = new PoolAttribute(key, value);
-            attr.setPool(this);
-            addAttribute(attr);
+            this.addAttribute(new PoolAttribute(key, value));
         }
     }
 
@@ -767,6 +758,10 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
 
     public Set<Product> getDerivedProvidedProducts() {
         return derivedProvidedProducts;
+    }
+
+    public void addDerivedProvidedProduct(Product product) {
+        this.derivedProvidedProducts.add(product);
     }
 
     public void setDerivedProvidedProducts(Set<Product> derivedProvidedProducts) {

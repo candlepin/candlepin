@@ -17,7 +17,6 @@ package org.candlepin.policy.js;
 import org.candlepin.model.Attribute;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductAttribute;
 
 import java.util.HashMap;
 import java.util.Map;

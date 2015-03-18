@@ -18,7 +18,6 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.Product;
-import org.candlepin.model.Subscription;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -35,14 +34,12 @@ public interface EntitlementCertServiceAdapter {
      * End date specified explicitly to allow for flexible termination policies.
      *
      * @param entitlement entitlement which granted this cert.
-     * @param sub Subscription being used.
      * @param product Product being consumed.
      * @return Client entitlement certificate.
      * @throws IOException thrown if there's a problem reading the cert.
      * @throws GeneralSecurityException thrown security problem
      */
-    EntitlementCertificate generateEntitlementCert(Entitlement entitlement,
-        Subscription sub, Product product)
+    EntitlementCertificate generateEntitlementCert(Entitlement entitlement, Product product)
         throws GeneralSecurityException, IOException;
 
 
@@ -52,14 +49,12 @@ public interface EntitlementCertServiceAdapter {
      * End date specified explicitly to allow for flexible termination policies.
      *
      * @param entitlement entitlement which granted this cert.
-     * @param sub Subscription being used.
      * @param product Product being consumed.
      * @return Client entitlement certificate.
      * @throws IOException thrown if there's a problem reading the cert.
      * @throws GeneralSecurityException thrown security problem
      */
-    EntitlementCertificate generateUeberCert(Entitlement entitlement,
-        Subscription sub, Product product)
+    EntitlementCertificate generateUeberCert(Entitlement entitlement, Product product)
         throws GeneralSecurityException, IOException;
 
     /**

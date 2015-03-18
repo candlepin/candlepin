@@ -79,4 +79,12 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
         // Copy the ID so Hibernate knows this is an existing entity to merge:
         return merge(c);
     }
+
+    // Needs an override due to the use of UUID as db identifier.
+    @Override
+    @Transactional
+    public void delete(Content entity) {
+        Content toDelete = find(entity.getUuid());
+        currentSession().delete(toDelete);
+    }
 }

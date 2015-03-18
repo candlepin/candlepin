@@ -15,7 +15,6 @@
 package org.candlepin.pinsetter.tasks;
 
 import org.candlepin.controller.PoolManager;
-import org.candlepin.service.SubscriptionServiceAdapter;
 
 import com.google.inject.Inject;
 
@@ -38,18 +37,17 @@ public class ExpiredPoolsJob extends KingpinJob {
     public static final String DEFAULT_SCHEDULE = "0 0 0/1 * * ?";
 
     private PoolManager poolManager;
-    private SubscriptionServiceAdapter subAdapter;
 
     private static Logger log = LoggerFactory.getLogger(ExpiredPoolsJob.class);
 
     @Inject
-    public ExpiredPoolsJob(PoolManager poolManager, SubscriptionServiceAdapter subAdapter) {
+    public ExpiredPoolsJob(PoolManager poolManager) {
         this.poolManager = poolManager;
     }
 
     public void toExecute(JobExecutionContext ctx) throws JobExecutionException {
 
         log.info("Executing ExpiredPoolsJob");
-        poolManager.cleanupExpiredPools(subAdapter);
+        poolManager.cleanupExpiredPools();
     }
 }

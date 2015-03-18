@@ -17,8 +17,8 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
-import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
@@ -33,17 +33,12 @@ import org.candlepin.service.impl.DefaultUniqueIdGenerator;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.ArgumentMatcher;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 /**
  * ContentResourceTest
  */
@@ -94,7 +89,7 @@ public class ContentResourceTest {
         assertEquals(content, cr.getContent("10"));
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test(expected = BadRequestException.class)
     public void createContent() {
         Content content = mock(Content.class);
         when(content.getId()).thenReturn("10");
@@ -102,7 +97,7 @@ public class ContentResourceTest {
         assertEquals(content, cr.createContent(content));
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test(expected = BadRequestException.class)
     public void createContentNull()  {
         Content content = mock(Content.class);
         when(content.getId()).thenReturn("10");
@@ -112,7 +107,7 @@ public class ContentResourceTest {
         verify(cc, never()).create(content);
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test(expected = BadRequestException.class)
     public void deleteContent() {
         Owner owner = mock(Owner.class);
         Content content = mock(Content.class);
@@ -129,7 +124,7 @@ public class ContentResourceTest {
         verify(envContentCurator, never()).delete(eq(ec));
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test(expected = BadRequestException.class)
     public void deleteContentNull() {
         Content content = mock(Content.class);
         when(content.getId()).thenReturn("10");
@@ -138,7 +133,7 @@ public class ContentResourceTest {
         verify(cc, never()).delete(eq(content));
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test(expected = BadRequestException.class)
     public void testUpdateContent() {
         final String productId = "productId";
         final String contentId = "10";
@@ -162,10 +157,9 @@ public class ContentResourceTest {
         verify(cc, never()).find(eq(contentId));
         verify(cc, never()).createOrUpdate(eq(content));
         verify(productCurator, never()).getProductsWithContent(owner, Arrays.asList(contentId));
-        // verify(poolManager, never()).regenerateCertificatesOf(eq(owner), eq(productId), eq(true));
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test(expected = BadRequestException.class)
     public void testUpdateContentThrowsExceptionWhenContentDoesNotExist() {
         Content content = mock(Content.class);
         when(cc.find(any(String.class))).thenReturn(null);

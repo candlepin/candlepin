@@ -107,7 +107,8 @@ public class PoolRulesStackDerivedTest {
 
         when(configMock.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX))).thenReturn(100);
 
-        poolRules = new PoolRules(poolManagerMock, configMock, entCurMock);
+        poolRules = new PoolRules(poolManagerMock, configMock, entCurMock,
+                productCuratorMock);
         principal = TestUtil.createOwnerPrincipal();
         owner = principal.getOwners().get(0);
 

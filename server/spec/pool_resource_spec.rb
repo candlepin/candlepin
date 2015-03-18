@@ -9,7 +9,7 @@ describe 'Pool Resource' do
     owner1 = create_owner random_string('test_owner')
     owner1_client = user_client(owner1, random_string('testuser'))
 
-    product = create_product
+    product = create_product(nil, nil, :owner => owner1['key'])
     @cp.create_subscription(owner1['key'], product.id, 10)
     @cp.refresh_pools(owner1['key'])
 
@@ -25,7 +25,7 @@ describe 'Pool Resource' do
     owner1 = create_owner random_string('test_owner')
     owner1_client = user_client(owner1, random_string('testuser'))
 
-    product = create_product
+    product = create_product(nil, nil, :owner => owner1['key'])
     @cp.create_subscription(owner1['key'], product.id, 10)
     @cp.refresh_pools(owner1['key'])
 
@@ -48,7 +48,7 @@ describe 'Pool Resource' do
     owner2 = create_owner random_string('test_owner')
     owner2_client = user_client(owner2, random_string('testuser'))
 
-    product = create_product
+    product = create_product(nil, nil, :owner => owner2['key'])
     @cp.create_subscription(owner2['key'], product.id, 10)
     @cp.refresh_pools(owner2['key'])
 
@@ -66,7 +66,7 @@ describe 'Pool Resource' do
     owner2 = create_owner random_string('test_owner')
     owner2_client = user_client(owner2, random_string('testuser'))
 
-    product = create_product(random_string 'buskers')
+    product = create_product(random_string('buskers'), nil, :owner => owner2['key'])
     @cp.create_subscription(owner2['key'], product.id, 10)
     @cp.refresh_pools(owner2['key'])
 
@@ -80,7 +80,7 @@ describe 'Pool Resource' do
   it 'should not return expired pools' do
     owner = create_owner random_string('donaldduck')
     client = user_client(owner, random_string('testusr'))
-    product = create_product()
+    product = create_product(nil, nil, :owner => owner['key'])
     @cp.create_subscription(owner['key'], product.id, 5,
       [], '', '', '', Date.today - 60, Date.today - 1)
     @cp.refresh_pools(owner['key'])
@@ -91,7 +91,7 @@ describe 'Pool Resource' do
     owner = create_owner random_string('test_owner')
     admin_cp = user_client(owner, random_string('testuser'))
 
-    product = create_product()
+    product = create_product(nil, nil, :owner => owner['key'])
     # Pool with just one entitlement available:
     @cp.create_subscription(owner['key'], product.id, 1)
     @cp.refresh_pools(owner['key'])
@@ -115,7 +115,7 @@ describe 'Pool Resource' do
     admin_cp = user_client(owner, random_string('testuser'))
 
     # Create a product for an arch our consumer will not match:
-    product = create_product(nil, nil, {:attributes => {:arch => "X86"}})
+    product = create_product(nil, nil, {:attributes => {:arch => "X86"}, :owner => owner['key']})
 
     # Pool with just one entitlement available:
     @cp.create_subscription(owner['key'], product.id, 1)
@@ -136,7 +136,7 @@ describe 'Pool Resource' do
     owner1 = create_owner random_string('test_owner')
     owner1_client = user_client(owner1, random_string('testuser'))
 
-    product = create_product
+    product = create_product(nil, nil, :owner => owner1['key'])
     @cp.create_subscription(owner1['key'], product.id, 10)
     @cp.refresh_pools(owner1['key'])
 
@@ -166,7 +166,7 @@ describe 'Pool Resource' do
 
   it 'should return calculated attributes' do
     owner = create_owner random_string('test_owner')
-    product = create_product(nil, random_string('some_product'))
+    product = create_product(nil, random_string('some_product'), :owner => owner['key'])
 
     @cp.create_subscription(owner['key'], product.id, 25)
     @cp.refresh_pools(owner['key'])

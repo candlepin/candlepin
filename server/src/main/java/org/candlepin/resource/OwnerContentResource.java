@@ -33,9 +33,7 @@ import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -254,7 +252,7 @@ public class OwnerContentResource {
 
         for (Product product : affectedProducts) {
             poolManager.regenerateCertificatesOf(
-                this.subAdapter, product.getOwner(), product.getId(), true
+                product.getOwner(), product.getId(), true
             );
         }
 
@@ -288,7 +286,7 @@ public class OwnerContentResource {
         // Regenerate affected products
         for (Product product : affectedProducts) {
             poolManager.regenerateCertificatesOf(
-                this.subAdapter, product.getOwner(), product.getId(), true
+                product.getOwner(), product.getId(), true
             );
         }
     }

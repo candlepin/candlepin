@@ -31,7 +31,6 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -43,11 +42,14 @@ import javax.inject.Inject;
 import javax.persistence.PersistenceException;
 import javax.validation.ConstraintViolationException;
 
+
+
 public class ProductCuratorTest extends DatabaseTestFixture {
     @Inject private OwnerCurator ownerCurator;
     @Inject private ProductCurator productCurator;
     @Inject private ProductAttributeCurator attributeCurator;
     @Inject private SubscriptionCurator subCurator;
+    @Inject private PoolCurator poolCurator;
     @Inject private ContentCurator contentCurator;
     @Inject private Configuration config;
 
@@ -57,7 +59,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
     private Product providedProduct;
     private Product derivedProvidedProduct;
 
-    private Subscription sub;
+    private Pool pool;
 
     @Before
     public void setUp() {
@@ -93,11 +95,21 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         Set<Product> derivedProvidedProducts = new HashSet<Product>();
         derivedProvidedProducts.add(derivedProvidedProduct);
 
-        sub = new Subscription(owner, product, providedProducts, 16L,
-            TestUtil.createDate(2006, 10, 21), TestUtil.createDate(2020, 1, 1), new Date());
-        sub.setDerivedProduct(derivedProduct);
-        sub.setDerivedProvidedProducts(derivedProvidedProducts);
-        subCurator.create(sub);
+        pool = new Pool(
+            owner,
+            product,
+            providedProducts,
+            16L,
+            TestUtil.createDate(2006, 10, 21),
+            TestUtil.createDate(2020, 1, 1),
+            "1",
+            "2",
+            "3"
+        );
+
+        pool.setDerivedProduct(derivedProduct);
+        pool.setDerivedProvidedProducts(derivedProvidedProducts);
+        poolCurator.create(pool);
     }
 
     @Test

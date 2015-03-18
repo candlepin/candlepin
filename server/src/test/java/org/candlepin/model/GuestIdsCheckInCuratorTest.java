@@ -15,6 +15,7 @@
 package org.candlepin.model;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import org.candlepin.test.DatabaseTestFixture;
 
@@ -50,6 +51,14 @@ public class GuestIdsCheckInCuratorTest extends DatabaseTestFixture {
         consumerCurator.merge(c1);
         c1.addGuestIdCheckIn();
         consumerCurator.merge(c1);
+
+        try {
+            Thread.sleep(2000);
+        }
+        catch (InterruptedException e) {
+            fail("Interrupted while waiting.");
+        }
+
         c1.addGuestIdCheckIn();
         consumerCurator.merge(c1);
         // find the keeper
@@ -68,6 +77,14 @@ public class GuestIdsCheckInCuratorTest extends DatabaseTestFixture {
         consumerCurator.merge(c2);
         c2.addGuestIdCheckIn();
         consumerCurator.merge(c2);
+
+        try {
+            Thread.sleep(2000);
+        }
+        catch (InterruptedException e) {
+            fail("Interrupted while waiting.");
+        }
+
         c2.addGuestIdCheckIn();
         consumerCurator.merge(c2);
         // find the keeper
