@@ -100,16 +100,26 @@ public class PoolRules {
         log.info("Creating pools for subscription: " + sub);
         PoolHelper helper = new PoolHelper(this.poolManager, null);
 
+        // Products given on a subscription should *always* already exist in the database
+        // at this point. We can't use those directly on the subscription because they
+        // will be detached objects.
+        Product sku = prodCurator.lookupById(sub.getOwner(), sub.getProduct().getId());
+
+        if (sku == null) {
+            throw new RuntimeException("Subscription product not found");
+        }
+
+        sub.setProduct(sku); // replace incoming detached sub product with one from db
+
         List<Pool> pools = new LinkedList<Pool>();
         Map<String, String> attributes =
             helper.getFlattenedAttributes(sub.getProduct());
         long quantity = calculateQuantity(sub);
 
         if (!hasMasterPool(existingPools)) {
-            Pool newPool = new Pool(sub.getOwner(), sub.getProduct(),
-                    new HashSet<Product>(sub.getProvidedProducts()), quantity,
-                    sub.getStartDate(), sub.getEndDate(), sub.getContractNumber(),
-                    sub.getAccountNumber(), sub.getOrderNumber()
+            Pool newPool = new Pool(sub.getOwner(), sku, null, quantity,
+                sub.getStartDate(), sub.getEndDate(), sub.getContractNumber(),
+                sub.getAccountNumber(), sub.getOrderNumber()
             );
 
             if (sub.getDerivedProvidedProducts() != null) {

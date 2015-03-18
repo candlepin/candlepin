@@ -882,6 +882,52 @@ public class OwnerResource {
         return consumer;
     }
 
+    private Product findProduct(Owner owner, String productId) {
+        Product product = this.prodCurator.lookupById(owner, productId);
+
+        if (product == null) {
+            throw new NotFoundException(i18n.tr(
+                "Could not find a product with ID \"{0}\" for owner \"{1}\"",
+                productId, owner.getKey()
+            ));
+        }
+
+        return product;
+    }
+
+    private Owner resolveOwner(Owner owner) {
+        if (owner == null || (owner.getKey() == null && owner.getId() == null)) {
+            throw new BadRequestException(i18n.tr(
+                "No owner specified, or owner lacks identifying information"
+            ));
+        }
+
+        if (owner.getKey() != null) {
+            owner = this.ownerCurator.lookupByKey(owner.getKey());
+
+            if (owner == null) {
+                throw new NotFoundException(i18n.tr(
+                    "Unable to find an owner with the key \"{0}\"", owner.getKey()
+                ));
+            }
+        }
+        else {
+            owner = this.ownerCurator.find(owner.getId());
+
+            if (owner == null) {
+                throw new NotFoundException(i18n.tr(
+                    "Unable to find an owner with the ID \"{0}\"", owner.getId()
+                ));
+            }
+        }
+
+        return owner;
+    }
+
+    private Product resolveProduct(Owner owner, Product product) {
+
+    }
+
     /**
      * Updates an Owner
      * <p>
@@ -929,6 +975,102 @@ public class OwnerResource {
         Event e = eventBuilder.setNewEntity(toUpdate).buildEvent();
         sink.queueEvent(e);
         return toUpdate;
+    }
+
+    /**
+     * Retrieves a list of Subscriptions for an Owner
+     *
+     * @return a list of Subscription objects
+     * @httpcode 404
+     * @httpcode 200
+     */
+    @GET
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{owner_key}/subscriptions")
+    public List<Subscription> getSubscriptions(@PathParam("owner_key") String ownerKey) {
+        Owner owner = this.findOwner(ownerKey);
+
+        List<Subscription> subscriptions = new LinkedList<Subscription>();
+
+        for (Pool pool : this.poolManager.listPoolsByOwner(owner)) {
+            SourceSubscription srcsub = pool.getSourceSubscription();
+
+            if (srcsub != null && "master".equalsIgnoreCase(srcsub.getSubscriptionSubKey())) {
+                subscriptions.add(this.poolManager.fabricateSubscriptionFromPool(pool));
+            }
+        }
+
+        return subscriptions;
+    }
+
+    /**
+     * Creates a Subscription for an Owner
+     *
+     * @return a Subscription object
+     * @httpcode 404
+     * @httpcode 200
+     */
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{owner_key}/subscriptions")
+    public Subscription createSubscription(
+        @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
+        Subscription subscription) {
+
+        // Correct owner & products
+        Owner owner = findOwner(ownerKey);
+        subscription.setOwner(owner);
+
+        Product product = this.findProduct(
+            owner,
+            (subscription.getProduct() != null ? subscription.getProduct().getId() : null)
+        );
+        subscription.setProduct(product);
+
+        // TODO: not sure if this is kept or not, subscription ID doesn't mean much anymore
+        if (subscription.getId() == null) {
+            subscription.setId(UUID.randomUUID().toString().replace("-", ""));
+        }
+        poolManager.createPoolsForSubscription(subscription);
+        return subscription;
+    }
+
+    /**
+     * Updates a Subscription for an Owner
+     *
+     * @httpcode 404
+     * @httpcode 200
+     */
+    @PUT
+    @Path("/subscriptions")
+    public void updateSubscription(Subscription subscription) {
+        if (this.poolManager.getMasterPoolBySubscriptionId(subscription.getId()) == null) {
+            throw new NotFoundException(i18n.tr(
+                "Unable to find a subscription with the ID \"{0}\".", subscription.getId()
+            ));
+        }
+
+        // Ensure the owner is set and is valid
+        subscription.setOwner(this.resolveOwner(subscription.getOwner()));
+
+        // Ensure the specified product exists for the given owner
+        subscription.setProduct();
+
+        // TODO:
+        // Is it an error condition if any of the product references are invalid? Currently, aside
+        // from the sku, they will be silently converted to null which seems both wrong and
+        // unfriendly.
+
+
+
+        // TODO:
+        // This needs a bit more care. It's very possible for API users to provide subscription data
+        // that causes all sorts of problems (subscription being changed to a different owner, for
+        // instance)
+
+        this.poolManager.updatePoolsForSubscription(subscription);
     }
 
     /**

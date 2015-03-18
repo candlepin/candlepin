@@ -368,8 +368,7 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         // Hand off to rules to determine which pools need updating:
-        List<PoolUpdate> updatedPools = poolRules.updatePools(sub, existingPools,
-                changedProducts);
+        List<PoolUpdate> updatedPools = poolRules.updatePools(sub, existingPools, changedProducts);
 
         // Update subpools if necessary
         if (updateStackDerived && !updatedPools.isEmpty() &&
@@ -497,6 +496,33 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     @Override
+    public void updatePoolsForSubscription(Subscription subscription) {
+        if (subscription == null) {
+            throw new IllegalArgumentException("subscription is null");
+        }
+
+        // Ensure the subscription is not expired
+        if (subscription.getEndDate() != null && subscription.getEndDate().before(new Date())) {
+            this.deletePoolsForSubscription(subscription);
+        }
+        else {
+            this.refreshPoolsForSubscription(subscription, true, Collections.<Product>emptySet());
+        }
+    }
+
+    @Override
+    public void deletePoolsForSubscription(Subscription subscription) {
+        if (subscription == null) {
+            throw new IllegalArgumentException("subscription is null");
+        }
+
+        if (subscription != null && subscription.getId() != null) {
+            for (Pool pool : this.getPoolsBySubscriptionId(subscription.getId())) {
+                this.poolManager.deletePool(pool);
+            }
+        }
+    }
+
     public Pool find(String poolId) {
         return this.poolCurator.find(poolId);
     }

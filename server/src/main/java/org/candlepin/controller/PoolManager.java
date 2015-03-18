@@ -50,6 +50,25 @@ public interface PoolManager {
     List<Pool> createPoolsForSubscription(Subscription sub);
 
     /**
+     * Updates the pools associated with the specified subscription, using the information stored
+     * in the given subscription. Because the input subscription is used to lookup pools, the ID
+     * field must be set for this method to operate properly.
+     *
+     * @param subscription
+     *  The subscription to use for updating the associated pools
+     */
+    void updatePoolsForSubscription(Subscription subscription);
+
+    /**
+     * Deletes the pools associated with the specified subscription. Because the input subscription
+     * is used to lookup pools, the ID field must be set for this method to operate properly.
+     *
+     * @param subscription
+     *  The subscription to use for deleting the associated pools
+     */
+    void deletePoolsForSubscription(Subscription subscription);
+
+    /**
      * Cleanup entitlements and safely delete the given pool.
      *
      * @param pool

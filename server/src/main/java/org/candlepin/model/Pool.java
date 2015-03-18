@@ -420,7 +420,11 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     }
 
     public void setAttributes(Set<PoolAttribute> attributes) {
-        this.attributes = attributes;
+        this.attributes.clear();
+
+        if (attributes != null) {
+            this.attributes.addAll(attributes);
+        }
     }
 
     public void addAttribute(PoolAttribute attrib) {
@@ -575,7 +579,10 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
 
     public void setProvidedProducts(Set<Product> providedProducts) {
         this.providedProducts.clear();
-        this.providedProducts.addAll(providedProducts);
+
+        if (providedProducts != null) {
+            this.providedProducts.addAll(providedProducts);
+        }
     }
 
     /**
@@ -764,7 +771,10 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
 
     public void setDerivedProvidedProducts(Set<Product> derivedProvidedProducts) {
         this.derivedProvidedProducts.clear();
-        this.derivedProvidedProducts.addAll(derivedProvidedProducts);
+
+        if (derivedProvidedProducts != null) {
+            this.derivedProvidedProducts.addAll(derivedProvidedProducts);
+        }
     }
 
     /*
