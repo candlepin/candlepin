@@ -112,6 +112,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -390,6 +391,8 @@ public class OwnerResource {
             log.info("Deleting environment: " + e.getId());
             envCurator.delete(e);
         }
+
+        // TODO: Probably pointless and safe to remove now.
         for (Subscription s : subscriptionCurator.listByOwner(owner)) {
             log.info("Deleting subscription: " + s);
             subscriptionCurator.delete(s);
@@ -867,7 +870,7 @@ public class OwnerResource {
 
         if (product == null) {
             throw new NotFoundException(i18n.tr(
-                "Could not find a product with ID \"{0}\" for owner \"{1}\"",
+                "Unable to find a product with the ID \"{0}\" for owner \"{1}\"",
                 productId, owner.getKey()
             ));
         }
@@ -905,7 +908,57 @@ public class OwnerResource {
     }
 
     private Product resolveProduct(Owner owner, Product product) {
+        if (product == null || product.getId() == null) {
+            throw new BadRequestException(i18n.tr(
+                "No product specified, or product lacks identifying information"
+            ));
+        }
 
+        // TODO: Maybe add UUID resolution as well?
+        return this.findProduct(owner, product.getId());
+    }
+
+    private Subscription resolveSubscription(Subscription subscription) {
+        // Impl note:
+        // We don't check that the subscription exists here, because it's entirely possible that it
+        // doesn't (i.e. during creation). We just need to make sure it's not null.
+        if (subscription == null) {
+            throw new BadRequestException(i18n.tr(
+                "No subscription specified"
+            ));
+        }
+
+        // Ensure the owner is set and is valid
+        Owner owner = this.resolveOwner(subscription.getOwner());
+        subscription.setOwner(owner);
+
+        // Ensure the specified product(s) exists for the given owner
+        subscription.setProduct(this.resolveProduct(owner, subscription.getProduct()));
+
+        if (subscription.getDerivedProduct() != null) {
+            subscription.setDerivedProduct(
+                this.resolveProduct(owner, subscription.getDerivedProduct())
+            );
+        }
+
+        HashSet<Product> presolved = new HashSet<Product>();
+
+        for (Product product : subscription.getProvidedProducts()) {
+            presolved.add(this.resolveProduct(owner, product));
+        }
+
+        subscription.setProvidedProducts(presolved);
+        presolved.clear();
+
+        for (Product product : subscription.getDerivedProvidedProducts()) {
+            presolved.add(this.resolveProduct(owner, product));
+        }
+
+        subscription.setDerivedProvidedProducts(presolved);
+
+        // TODO: Do we need to resolve Branding objects?
+
+        return subscription;
     }
 
     /**
@@ -1002,16 +1055,13 @@ public class OwnerResource {
         Owner owner = findOwner(ownerKey);
         subscription.setOwner(owner);
 
-        Product product = this.findProduct(
-            owner,
-            (subscription.getProduct() != null ? subscription.getProduct().getId() : null)
-        );
-        subscription.setProduct(product);
+        subscription = this.resolveSubscription(subscription);
 
         // TODO: not sure if this is kept or not, subscription ID doesn't mean much anymore
         if (subscription.getId() == null) {
             subscription.setId(UUID.randomUUID().toString().replace("-", ""));
         }
+
         poolManager.createPoolsForSubscription(subscription);
         return subscription;
     }
@@ -1031,23 +1081,7 @@ public class OwnerResource {
             ));
         }
 
-        // Ensure the owner is set and is valid
-        subscription.setOwner(this.resolveOwner(subscription.getOwner()));
-
-        // Ensure the specified product exists for the given owner
-        subscription.setProduct();
-
-        // TODO:
-        // Is it an error condition if any of the product references are invalid? Currently, aside
-        // from the sku, they will be silently converted to null which seems both wrong and
-        // unfriendly.
-
-
-
-        // TODO:
-        // This needs a bit more care. It's very possible for API users to provide subscription data
-        // that causes all sorts of problems (subscription being changed to a different owner, for
-        // instance)
+        subscription = this.resolveSubscription(subscription);
 
         this.poolManager.updatePoolsForSubscription(subscription);
     }
@@ -1120,6 +1154,10 @@ public class OwnerResource {
 
         Owner owner = findOwner(ownerKey);
         log.info("Deleting all subscriptions from manifests for owner: " + ownerKey);
+
+        // TODO:
+        // This needs to be revisited. We no longer have subscriptions in the DB, so the next line
+        // will always return an empty list. And as we fabricate outbound subscriptions, we don't
 
         // In this situation we know we should be querying the curator rather than the
         // service:

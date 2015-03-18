@@ -251,6 +251,7 @@ public class SubscriptionResource {
             throw new NotFoundException(
                 i18n.tr("Subscription with id {0} could not be found.", subscriptionId));
         }
+
         return subscription;
     }
 }

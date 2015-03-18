@@ -476,9 +476,8 @@ public class CandlepinPoolManager implements PoolManager {
     @Override
     public Pool createPool(Pool p) {
         Pool created = poolCurator.create(p);
-        if (log.isDebugEnabled()) {
-            log.debug("   new pool: " + p);
-        }
+        log.debug("   new pool: {}", p);
+
         if (created != null) {
             sink.emitPoolCreated(created);
         }
@@ -509,7 +508,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         if (subscription != null && subscription.getId() != null) {
             for (Pool pool : this.getPoolsBySubscriptionId(subscription.getId())) {
-                this.poolManager.deletePool(pool);
+                this.deletePool(pool);
             }
         }
     }

@@ -322,7 +322,11 @@ public class Subscription extends AbstractHibernateObject implements Owned, Name
     }
 
     public void setProvidedProducts(Set<Product> providedProducts) {
-        this.providedProducts = providedProducts;
+        this.providedProducts.clear();
+
+        if (providedProducts != null) {
+            this.providedProducts.addAll(providedProducts);
+        }
     }
 
     public void setUpstreamPoolId(String upstreamPoolId) {
