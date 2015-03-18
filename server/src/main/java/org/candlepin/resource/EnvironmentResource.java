@@ -148,11 +148,31 @@ public class EnvironmentResource {
 
 
     /**
-     * Verifies that the content specified by the given content object's ID exists
+     * Verifies that the content specified by the given content object's ID exists.
      *
+     * @param owner
+     *  The owner with which the content is associated
      *
+     * @param content
+     *  The content to resolve
+     *
+     * @throws BadRequestException
+     *  if content is null or has not been assigned a valid content ID
+     *
+     * @throws NotFoundException
+     *  if the specified content object does not represent a valid content object for the given
+     *  owner
+     *
+     * @return
+     *  the resolved content instance.
      */
     private Content resolveContent(Owner owner, Content content) {
+        if (content == null || content.getId() == null) {
+            throw new BadRequestException(i18n.tr(
+                "No content specified, or content lacks identifying information"
+            ));
+        }
+
         Content resolved = this.contentCurator.lookupById(owner, content.getId());
 
         if (resolved == null) {
