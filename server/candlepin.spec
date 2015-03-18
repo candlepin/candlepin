@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.46
+Version: 0.9.47
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -394,6 +394,15 @@ fi
 
 
 %changelog
+* Wed Mar 18 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.47-1
+- 1201520: Addition of (Temporary) to pool description (wpoteat@redhat.com)
+- 1200142: Force content metadata expire to 0 in standalone.
+  (dgoodwin@redhat.com)
+- Remove redundant method used to calculate temp entitlement lifetime.
+  (awood@redhat.com)
+- 1199443: Add entitlement end date override. (dgoodwin@redhat.com)
+- Fix NPE deleting consumer without identity cert. (dgoodwin@redhat.com)
+
 * Mon Mar 09 2015 Alex Wood <awood@redhat.com> 0.9.46-1
 - 1198494: Unmapped guest pool only attaches once on auto-heal
   (wpoteat@redhat.com)
