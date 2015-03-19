@@ -106,15 +106,13 @@ public class DefaultEntitlementCertServiceAdapter extends
     // NOTE: we use entitlement here, but it version does not...
     // NOTE: we can get consumer from entitlement.getConsumer()
     @Override
-    public EntitlementCertificate generateEntitlementCert(Entitlement entitlement,
-        Product product)
+    public EntitlementCertificate generateEntitlementCert(Entitlement entitlement, Product product)
         throws GeneralSecurityException, IOException {
         return generateEntitlementCert(entitlement, product, false);
     }
 
     @Override
-    public EntitlementCertificate generateUeberCert(Entitlement entitlement,
-        Product product)
+    public EntitlementCertificate generateUeberCert(Entitlement entitlement, Product product)
         throws GeneralSecurityException, IOException {
         return generateEntitlementCert(entitlement, product, true);
     }
@@ -336,9 +334,8 @@ public class DefaultEntitlementCertServiceAdapter extends
         return output.toString().replace("%24", "$");
     }
 
-    private EntitlementCertificate generateEntitlementCert(Entitlement entitlement,
-            Product product, boolean thisIsUeberCert)
-        throws GeneralSecurityException, IOException {
+    private EntitlementCertificate generateEntitlementCert(Entitlement entitlement, Product product,
+        boolean thisIsUeberCert) throws GeneralSecurityException, IOException {
 
         log.info("Generating entitlement cert.");
 
@@ -348,8 +345,7 @@ public class DefaultEntitlementCertServiceAdapter extends
         // otherwise we could have used cascading create
         serial = serialCurator.create(serial);
 
-        Set<Product> products = new HashSet<Product>(
-                entitlement.getPool().getProvidedProducts());
+        Set<Product> products = new HashSet<Product>(entitlement.getPool().getProvidedProducts());
 
         // If creating a certificate for a distributor, we need
         // to add any derived products as well so that their content

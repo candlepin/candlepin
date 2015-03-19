@@ -307,7 +307,7 @@
 
     <changeSet id="20150210094558-18" author="crog">
         <addUniqueConstraint tableName="cpo_product_attributes"
-            columnNames="name, id"
+            columnNames="name, product_uuid"
             constraintName="cpo_product_attributes_unq1"
         />
     </changeSet>
@@ -466,9 +466,38 @@
     </changeSet>
 
 
+    <!-- cpo_pool_stack_prod_attribs -->
+    <changeSet id="20150210094558-33" author="crog">
+        <createTable tableName="cpo_pool_stack_prod_attribs">
+            <column name="pool_id" type="varchar(32)">
+                <constraints
+                    nullable="false"
+                    foreignKeyName="cpo_pool_stack_prod_attribs_f1"
+                    references="cp_pool(id)"
+                    deleteCascade="true"
+                />
+            </column>
+            <column name="attribute_id" type="varchar(32)">
+                <constraints
+                    nullable="false"
+                    foreignKeyName="cpo_pool_stack_prod_attribs_f2"
+                    references="cpo_product_attributes(id)"
+                    deleteCascade="true"
+                />
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20150210094558-34" author="crog">
+        <addPrimaryKey tableName="cpo_pool_stack_prod_attribs"
+            columnNames="pool_id, attribute_id"
+            constraintName="cpo_pool_stack_prod_attribs_pk"
+        />
+    </changeSet>
+
 
     <!-- cpo_subscriptions -->
-    <changeSet id="20150210094558-33" author="crog">
+    <changeSet id="20150210094558-35" author="crog">
         <createTable tableName="cpo_subscriptions">
             <column name="id" type="varchar(32)">
                 <constraints primaryKey="true" primaryKeyName="cpo_subscriptions_pk"/>
@@ -524,7 +553,7 @@
 
 
     <!-- cpo_pool_source_sub -->
-    <changeSet id="20150210094558-34" author="crog">
+    <changeSet id="20150210094558-36" author="crog">
         <createTable tableName="cpo_pool_source_sub">
             <column name="id" type="varchar(32)">
                 <constraints primaryKey="true" primaryKeyName="cpo_pool_source_sub_pk"/>
@@ -548,7 +577,7 @@
         </createTable>
     </changeSet>
 
-    <changeSet id="20150210094558-35" author="crog">
+    <changeSet id="20150210094558-37" author="crog">
         <addUniqueConstraint tableName="cpo_pool_source_sub"
             columnNames="subscription_id, subscription_sub_key"
             constraintName="cpo_pool_source_sub_unq1"
@@ -558,7 +587,7 @@
 
 
     <!-- cpo_sub_branding -->
-    <changeSet id="20150210094558-36" author="crog">
+    <changeSet id="20150210094558-38" author="crog">
         <createTable tableName="cpo_sub_branding">
             <column name="subscription_id" type="varchar(32)">
                 <constraints
@@ -580,7 +609,7 @@
 
 
     <!-- cpo_subscription_products -->
-    <changeSet id="20150210094558-37" author="crog">
+    <changeSet id="20150210094558-39" author="crog">
         <createTable tableName="cpo_subscription_products">
             <column name="subscription_id" type="varchar(32)">
                 <constraints
@@ -599,7 +628,7 @@
         </createTable>
     </changeSet>
 
-    <changeSet id="20150210094558-38" author="crog">
+    <changeSet id="20150210094558-40" author="crog">
         <addPrimaryKey tableName="cpo_subscription_products"
             columnNames="subscription_id, product_uuid"
             constraintName="cpo_subscription_products_pk"
@@ -609,7 +638,7 @@
 
 
     <!-- cpo_sub_derived_products -->
-    <changeSet id="20150210094558-39" author="crog">
+    <changeSet id="20150210094558-41" author="crog">
         <createTable tableName="cpo_sub_derived_products">
             <column name="subscription_id" type="varchar(32)">
                 <constraints
@@ -628,7 +657,7 @@
         </createTable>
     </changeSet>
 
-    <changeSet id="20150210094558-40" author="crog">
+    <changeSet id="20150210094558-42" author="crog">
         <addPrimaryKey tableName="cpo_sub_derived_products"
             columnNames="subscription_id, product_uuid"
             constraintName="cpo_sub_derived_products_pk"
@@ -636,7 +665,7 @@
     </changeSet>
 
     <!-- migration task -->
-    <changeSet id="20150210094558-41" author="crog">
+    <changeSet id="20150210094558-43" author="crog">
         <comment>Migrate data from obsoleted tables to new org-specific tables.</comment>
 
         <customChange class="org.candlepin.liquibase.MultiOrgUpgradeLiquibaseWrapper"/>

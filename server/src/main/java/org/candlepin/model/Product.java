@@ -96,25 +96,26 @@ public class Product extends AbstractHibernateObject implements Linkable {
     @OneToMany(mappedBy = "product")
     @Cascade({ org.hibernate.annotations.CascadeType.ALL,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN })
-    private Set<ProductAttribute> attributes;
+    private Set<ProductAttribute> attributes = new HashSet<ProductAttribute>();
 
     @ElementCollection
     @CollectionTable(name = "cpo_product_content",
                      joinColumns = @JoinColumn(name = "product_uuid"))
     @Column(name = "element")
     @LazyCollection(LazyCollectionOption.EXTRA) // allows .size() without loading all data
-    private List<ProductContent> productContent;
+    private List<ProductContent> productContent = new LinkedList<ProductContent>();
 
     @ManyToMany(mappedBy = "providedProducts")
-    private List<Subscription> subscriptions;
+    private List<Subscription> subscriptions = new LinkedList<Subscription>();
 
     @ElementCollection
     @CollectionTable(name = "cpo_product_dependent_products",
                      joinColumns = @JoinColumn(name = "product_uuid"))
     @Column(name = "element")
-    private Set<String> dependentProductIds;
+    private Set<String> dependentProductIds = new HashSet<String>();
 
     protected Product() {
+
     }
 
     /**
@@ -132,10 +133,6 @@ public class Product extends AbstractHibernateObject implements Linkable {
         setName(name);
         setOwner(owner);
         setMultiplier(multiplier);
-        setAttributes(new HashSet<ProductAttribute>());
-        setProductContent(new LinkedList<ProductContent>());
-        setSubscriptions(new LinkedList<Subscription>());
-        setDependentProductIds(new HashSet<String>());
     }
 
     public Product(String productId, String name, Owner owner, String variant, String version,
@@ -251,7 +248,11 @@ public class Product extends AbstractHibernateObject implements Linkable {
     }
 
     public void setAttributes(Set<ProductAttribute> attributes) {
-        this.attributes = attributes;
+        this.attributes.clear();
+
+        if (attributes != null) {
+            this.attributes.addAll(attributes);
+        }
     }
 
     public void setAttribute(String key, String value) {
@@ -286,6 +287,7 @@ public class Product extends AbstractHibernateObject implements Linkable {
                 }
             }
         }
+
         return null;
     }
 
@@ -297,6 +299,7 @@ public class Product extends AbstractHibernateObject implements Linkable {
                 }
             }
         }
+
         return null;
     }
 
@@ -309,6 +312,7 @@ public class Product extends AbstractHibernateObject implements Linkable {
                 toReturn.add(attribute.getName());
             }
         }
+
         return toReturn;
     }
 
@@ -351,7 +355,6 @@ public class Product extends AbstractHibernateObject implements Linkable {
         }
 
         Product another = (Product) anObject;
-
         return getId().equals(another.getId()) && name.equals(another.getName());
     }
 
@@ -367,27 +370,25 @@ public class Product extends AbstractHibernateObject implements Linkable {
      * @param content
      */
     public void addContent(Content content) {
-        if (productContent == null) {
-            productContent = new LinkedList<ProductContent>();
-        }
-        productContent.add(new ProductContent(this, content, false));
+        this.productContent.add(new ProductContent(this, content, false));
     }
 
     /**
      * @param content
      */
     public void addEnabledContent(Content content) {
-        if (productContent == null) {
-            productContent = new LinkedList<ProductContent>();
-        }
-        productContent.add(new ProductContent(this, content, true));
+        this.productContent.add(new ProductContent(this, content, true));
     }
 
     /**
      * @param productContent the productContent to set
      */
     public void setProductContent(List<ProductContent> productContent) {
-        this.productContent = productContent;
+        this.productContent.clear();
+
+        if (productContent != null) {
+            this.productContent.addAll(productContent);
+        }
     }
 
     /**
@@ -397,9 +398,9 @@ public class Product extends AbstractHibernateObject implements Linkable {
         return productContent;
     }
 
-    public void addProductContent(ProductContent c) {
-        c.setProduct(this);
-        this.getProductContent().add(c);
+    public void addProductContent(ProductContent content) {
+        content.setProduct(this);
+        this.productContent.add(content);
     }
 
     // FIXME: this seems wrong, shouldn't this reset the content
@@ -408,11 +409,9 @@ public class Product extends AbstractHibernateObject implements Linkable {
         if (content == null) {
             return;
         }
-        if (productContent == null) {
-            productContent = new LinkedList<ProductContent>();
-        }
+
         for (Content newContent : content) {
-            productContent.add(new ProductContent(this, newContent, false));
+            this.productContent.add(new ProductContent(this, newContent, false));
         }
     }
 
@@ -422,14 +421,22 @@ public class Product extends AbstractHibernateObject implements Linkable {
     }
 
     public void setSubscriptions(List<Subscription> subscriptions) {
-        this.subscriptions = subscriptions;
+        this.subscriptions.clear();
+
+        if (subscriptions != null) {
+            this.subscriptions.addAll(subscriptions);
+        }
     }
 
     /**
      * @param dependentProductIds the dependentProductIds to set
      */
     public void setDependentProductIds(Set<String> dependentProductIds) {
-        this.dependentProductIds = dependentProductIds;
+        this.dependentProductIds.clear();
+
+        if (dependentProductIds != null) {
+            this.dependentProductIds.addAll(dependentProductIds);
+        }
     }
 
     /**

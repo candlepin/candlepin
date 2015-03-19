@@ -27,14 +27,17 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import javax.persistence.CollectionTable;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -189,6 +192,14 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
 
     @Size(max = 255)
     private String orderNumber;
+
+    // This should be encapsulated and a separate object, but I don't feel like fighting with an ORM today.
+    @ElementCollection
+    @CollectionTable(name = "cpo_pool_stack_prod_attribs",
+                     joinColumns = @JoinColumn(name = "pool_id"))
+    @Column(name = "attribute_id")
+    @LazyCollection(LazyCollectionOption.EXTRA)
+    private Set<ProductAttribute> stackedProdAttributes = new HashSet<ProductAttribute>();
 
     @Formula("(select sum(ent.quantity) from cp_entitlement ent " +
              "where ent.pool_id = id)")
@@ -716,6 +727,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         if (this.getSourceSubscription() != null) {
             return this.getSourceSubscription().getSubscriptionSubKey();
         }
+
         return null;
     }
 
@@ -747,6 +759,10 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     }
 
     public Set<ProductAttribute> getProductAttributes() {
+        if (this.isStacked()) {
+            return this.getStackedProductAttributes();
+        }
+
         return this.getProduct() != null ?
             this.getProduct().getAttributes() :
             new HashSet<ProductAttribute>();
@@ -896,5 +912,79 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
 
     public void setMarkedForDelete(boolean markedForDelete) {
         this.markedForDelete = markedForDelete;
+    }
+
+
+    /**
+     * Retrieves the product attributes currently assigned to this pool's attribute stack. If no
+     * attributes have been assigned to the stack, this method returns an empty set.
+     * <p/>
+     * <strong>Note:</strong> changes made to the set returned by this method will be reflected by
+     * this object.
+     *
+     * @return
+     *  The set of product attributes currently assigned to this attribute stack.
+     */
+    @XmlTransient
+    public Set<ProductAttribute> getStackedProductAttributes() {
+        return this.stackedProdAttributes;
+    }
+
+    /**
+     * Sets the product attributes to be associated with this pool's attribute stack, clearing any
+     * previous associations. If the given collection of attributes is null or empty, no attributes
+     * will be associated with the stack.
+     * <p/>
+     * <strong>Note:</strong> Duplicate references to a given product attribute will be silently
+     * discarded.
+     * <p/>
+     * <strong>Note:</strong> Further changes made to the provided collection <em>will not</em> be
+     * reflected by this object.
+     *
+     * @param attributes
+     *  A collection of product attributes to associate with this pool's attribute stack.
+     *
+     * @return
+     *  a reference to this pool
+     */
+    @XmlTransient
+    public Pool setStackedProductAttributes(Collection<ProductAttribute> attributes) {
+        this.stackedProdAttributes.clear();
+
+        if (attributes != null) {
+            this.stackedProdAttributes.addAll(attributes);
+        }
+
+        return this;
+    }
+
+    /**
+     * Adds the specified product attribute to this pool's attribute stack. If the attribute has
+     * already been added, it will be ignored.
+     *
+     * @param attribute
+     *  The attribute to add to this pool's attribute stack
+     *
+     * @return
+     *  true if the attribute was added sucessfully; false otherwise.
+     */
+    @XmlTransient
+    public boolean addStackedProductAttribute(ProductAttribute attribute) {
+        return this.stackedProdAttributes.add(attribute);
+    }
+
+    /**
+     * Removes the specified product attribute from this attribute stack. If the attribute has not
+     * been associated with this stack, it will be ignored.
+     *
+     * @param attribute
+     *  The attribute to remove from pool's attribute stack
+     *
+     * @return
+     *  true if the attribute was removed sucessfully; false otherwise.
+     */
+    @XmlTransient
+    public boolean removeStackedProductAttribute(ProductAttribute attribute) {
+        return this.stackedProdAttributes.remove(attribute);
     }
 }

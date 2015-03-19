@@ -1692,7 +1692,15 @@ public class ConsumerResource {
         }
 
         throw new NotFoundException(i18n.tr(
-            "Entitlement with ID ''{0}'' could not be found.", dbid));
+            "Entitlement with ID ''{0}'' could not be found.", dbid
+        ));
+    }
+
+    @PUT
+    @Path("/logloglog")
+    @SecurityHole(noAuth = true)
+    public void injectLog(@QueryParam("msg") String message) {
+        log.debug("MESSAGE FROM CLIENT: {}", message);
     }
 
     /**

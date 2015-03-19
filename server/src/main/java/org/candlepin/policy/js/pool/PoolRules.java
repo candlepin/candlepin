@@ -105,7 +105,7 @@ public class PoolRules {
             throw new IllegalArgumentException("subscription is null");
         }
 
-        log.info("Creating pools for subscription: " + sub);
+        log.info("Creating pools for subscription: {}", sub);
         PoolHelper helper = new PoolHelper(this.poolManager, null);
 
         List<Pool> pools = new LinkedList<Pool>();
@@ -375,14 +375,9 @@ public class PoolRules {
 
         // Check if product attributes have changed.
         Set<ProductAttribute> expectedAttrs = acc.getExpectedAttributes();
-        if (!pool.getProduct().getAttributes().equals(expectedAttrs)) {
-            // Make sure each attribute has correct product ID on it,
-            // and update the pool.
-            pool.getProduct().getAttributes().clear();
-            for (ProductAttribute attr : expectedAttrs) {
-                attr.setProduct(pool.getProduct());
-                pool.getProduct().addAttribute(attr);
-            }
+
+        if (!pool.getProductAttributes().equals(expectedAttrs)) {
+            pool.setStackedProductAttributes(expectedAttrs);
             update.setProductAttributesChanged(true);
         }
 

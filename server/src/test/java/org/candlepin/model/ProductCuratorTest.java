@@ -347,7 +347,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         ProductAttribute a3 = modified.getAttribute("a3");
         a3.setValue("a3-modified");
         a3.setProduct(modified);
-        newAttributes.add(a3);
+        // newAttributes.add(a3);
         ProductAttribute a4 = new ProductAttribute("a4", "a4");
         a4.setProduct(modified);
         newAttributes.add(a4);

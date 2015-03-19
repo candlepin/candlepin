@@ -14,29 +14,38 @@ describe 'One Sub Pool Per Stack' do
 
     @stack_id = 'mixed-stack'
 
-    @virt_limit_product = create_product(nil, nil, {
+    @virt_limit_product = create_product('vlprod', 'vlprod', {
         :attributes => {
             'virt_limit' => 3,
             'stacking_id' => @stack_id,
-            'multi-entitlement' => 'yes'
+            'multi-entitlement' => 'yes',
+            'PROD' => 'vert_limit_product',
+            'PRODKEY' => 'vlprod',
+            'TEST-A' => 'A'
         }
     })
 
-    @virt_limit_product2 = create_product(nil, nil, {
+    @virt_limit_product2 = create_product('vlprod2', 'vlprod2', {
         :attributes => {
             'virt_limit' => 6,
             'stacking_id' => @stack_id,
-            'multi-entitlement' => 'yes'
+            'multi-entitlement' => 'yes',
+            'PROD' => 'vert_limit_product2',
+            'PRODKEY' => 'vlprod2',
+            'TEST-B' => 'B'
         }
     })
 
     @virt_limit_provided_product = create_product()
 
-    @regular_stacked_product = create_product(nil, nil, {
+    @regular_stacked_product = create_product('target-id', 'target product', {
         :attributes => {
             'stacking_id' => @stack_id,
             'multi-entitlement' => 'yes',
-            'sockets' => 6
+            'sockets' => 6,
+            'PROD' => 'regular_stacked_product',
+            'PRODKEY' => 'target-id',
+            'TEST-C' => 'C'
         }
     })
 
@@ -103,7 +112,7 @@ describe 'One Sub Pool Per Stack' do
     # Determine our pools by matching on contract number.
     pools = @user.list_pools :owner => @owner.id
 
-    # test does not use unmapped guest pools 
+    # test does not use unmapped guest pools
     filter_unmapped_guest_pools(pools)
 
     @initial_pool_count = pools.size
@@ -228,7 +237,7 @@ describe 'One Sub Pool Per Stack' do
     sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
     sub_pool.should_not be_nil
     sub_pool['providedProducts'].length.should == 1
-    sub_pool['providedProducts'][0]['productId'].should == @virt_limit_provided_product.id
+    sub_pool['providedProducts'][0]['id'].should == @virt_limit_provided_product.id
 
     @host_client.consume_pool(@stacked_non_virt_pool['id'], {:quantity => 1})[0]
 
@@ -241,7 +250,7 @@ describe 'One Sub Pool Per Stack' do
     sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
     sub_pool.should_not be_nil
     sub_pool['providedProducts'].length.should == 1
-    sub_pool['providedProducts'][0]['productId'].should == @regular_stacked_provided_product.id
+    sub_pool['providedProducts'][0]['id'].should == @regular_stacked_provided_product.id
   end
 
   it 'should incude derived provided products if supporting entitlements are in stack' do
@@ -253,7 +262,7 @@ describe 'One Sub Pool Per Stack' do
     sub_pool.should_not be_nil
     sub_pool['productId'].should == @derived_product.id
     sub_pool['providedProducts'].length.should == 1
-    sub_pool['providedProducts'][0]['productId'].should == @derived_provided_product.id
+    sub_pool['providedProducts'][0]['id'].should == @derived_provided_product.id
 
     @host_client.consume_pool(@stacked_non_virt_pool['id'], {:quantity => 1})[0]
 
@@ -266,7 +275,7 @@ describe 'One Sub Pool Per Stack' do
     sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
     sub_pool.should_not be_nil
     sub_pool['providedProducts'].length.should == 1
-    sub_pool['providedProducts'][0]['productId'].should == @regular_stacked_provided_product.id
+    sub_pool['providedProducts'][0]['id'].should == @regular_stacked_provided_product.id
   end
 
   it 'should update product data on removing entitlement of same stack' do
@@ -351,7 +360,7 @@ describe 'One Sub Pool Per Stack' do
 
   it 'should update guest sub pool ent when product is updated' do
     # Attach sub to host and ensure sub pool is created.
-    @host_client.consume_pool(@stacked_virt_pool1['id'], {:quantity => 1})[0]
+    result = @host_client.consume_pool(@stacked_virt_pool1['id'], {:quantity => 1})[0]
     sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
     sub_pool.should_not be_nil
 
@@ -362,8 +371,8 @@ describe 'One Sub Pool Per Stack' do
 
     attrs = @virt_limit_product['attributes']
     attrs << {"name" => "sockets", "value" => "4"}
-    @cp.update_product(@virt_limit_product.id, :attributes => attrs)
-    @cp.get_product(@virt_limit_product.id)
+    @cp.update_product(@owner['key'], @virt_limit_product.id, :attributes => attrs)
+    @cp.get_product(@owner['key'], @virt_limit_product.id)
 
     @cp.refresh_pools(@owner['key'])
 
@@ -372,15 +381,25 @@ describe 'One Sub Pool Per Stack' do
   end
 
   it 'should update guest sub pool ent as host stack is updated' do
-    @host_client.consume_pool(@stacked_virt_pool1['id'], {:quantity => 1})
+    result = @host_client.consume_pool(@stacked_virt_pool1['id'], {:quantity => 1})
+    puts("RESULT: #{result}")
+
+
     ent = @host_client.consume_pool(@stacked_non_virt_pool['id'], {:quantity => 1})[0]
 
     sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
     sub_pool.should_not be_nil
+
+    # Why does this have a different product ID than the entitlement? If that's normal, why does it
+    # have the expected product's attributes...? Somethings definitely wonky here.
+    puts("SUB POOL: #{sub_pool}")
+
     @guest_client.consume_pool(sub_pool['id'], {:quantity => 1})[0]
 
     # Remove an ent from the host so that the guest ent will be updated.
+    @host_client.put("/consumers/logloglog?msg=STARTING%20UNBIND%20OPERATION")
     @host_client.unbind_entitlement(ent['id'])
+    @host_client.put("/consumers/logloglog?msg=FINISHED%20UNBIND%20OPERATION")
 
     # Check that the product data was copied.
     updated_ent = @guest_client.list_entitlements[0]
@@ -402,10 +421,12 @@ describe 'One Sub Pool Per Stack' do
 
     @host_client.unbind_entitlement(ent1['id'])
     sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
+    sub_pool.should_not be_nil
     sub_pool['quantity'].should == 6
 
     @host_client.unbind_entitlement(ent3['id'])
     sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
+    sub_pool.should_not be_nil
     # quantity should not have changed since there was no entitlement
     # specifying virt_limit -- use the last instead.
     sub_pool['quantity'].should == 6
@@ -462,7 +483,7 @@ describe 'One Sub Pool Per Stack' do
   end
 
   def find_product_attribute(pool, attribute_name)
-    return pool['productAttributes'].detect { |a| a['name'] == attribute_name }
+    return pool['product']['attributes'].detect { |a| a['name'] == attribute_name }
   end
 
   def check_product_attr_value(pool, attribute_name, expected_value)
