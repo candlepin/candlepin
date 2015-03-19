@@ -213,6 +213,7 @@ public class DefaultEntitlementCertServiceAdapter extends
             log.info("Setting 24h expiration for unmapped guest pool entilement: " +
                     oneDayFromRegistration);
             ent.setEndDateOverride(oneDayFromRegistration);
+            entCurator.merge(ent);
         }
     }
 
