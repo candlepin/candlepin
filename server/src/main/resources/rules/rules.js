@@ -1424,23 +1424,14 @@ var Entitlement = {
 
         if (unmapped_guest_pool) {
             if (context.hostConsumer){
-                if (BEST_POOLS_CALLER == caller ||
-                    BIND_CALLER == caller) {
-                    result.addError("virt.guest.cannot.use.unmapped.guest.pool.has.host");
-                }
-                else {
-                    result.addWarning("virt.guest.cannot.use.unmapped.guest.pool.has.host");
-                }
+                /* We want to hide the temporary pools completely if the consumer can't use
+                 * them.  Using an error instead of a warning keeps the pool from appearing in
+                 * the results of a subscription-manager list --available --all */
+                result.addError("virt.guest.cannot.use.unmapped.guest.pool.has.host");
             }
 
             if (!Utils.isNewborn(consumer)) {
-                if (BEST_POOLS_CALLER == caller ||
-                    BIND_CALLER == caller) {
-                    result.addError("virt.guest.cannot.use.unmapped.guest.pool.not.new");
-                }
-                else {
-                    result.addWarning("virt.guest.cannot.use.unmapped.guest.pool.not.new");
-                }
+                result.addError("virt.guest.cannot.use.unmapped.guest.pool.not.new");
             }
         }
     },
