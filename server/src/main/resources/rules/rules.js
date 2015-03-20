@@ -2278,6 +2278,11 @@ var Autobind = {
             // Since pool.quantity may change, track initial unlimited state here.
             var pool_not_empty = this.is_pool_not_empty(pool);
 
+            /* We don't need to check for unmapped_guests_only pools here because those
+             * pools should not even be candidates for an auto-bind if the consumer is
+             * not eligible.  CandlepinPoolManager takes care of removing unmapped_guests_only
+             * pools for ineligible consumers via a call to Enforcer.preEntitlement
+             */
             if (this.is_pool_arch_valid(context, pool, consumerArch) &&
                     this.is_pool_virt_valid(pool, isGuest) &&
                     this.is_pool_sla_valid(context, pool, consumerSLA) &&
