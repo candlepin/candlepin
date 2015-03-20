@@ -26,6 +26,9 @@ import org.candlepin.test.TestUtil;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -45,6 +48,8 @@ import javax.validation.ConstraintViolationException;
 
 
 public class ProductCuratorTest extends DatabaseTestFixture {
+    private static Logger log = LoggerFactory.getLogger(ProductCuratorTest.class);
+
     @Inject private OwnerCurator ownerCurator;
     @Inject private ProductCurator productCurator;
     @Inject private ProductAttributeCurator attributeCurator;
@@ -347,7 +352,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         ProductAttribute a3 = modified.getAttribute("a3");
         a3.setValue("a3-modified");
         a3.setProduct(modified);
-        // newAttributes.add(a3);
+        newAttributes.add(a3);
         ProductAttribute a4 = new ProductAttribute("a4", "a4");
         a4.setProduct(modified);
         newAttributes.add(a4);

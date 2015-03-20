@@ -305,13 +305,16 @@
         </createTable>
     </changeSet>
 
+<!--
+    Apparently Hibernate doesn't delete attributes before adding new ones, so this causes issues.
+
     <changeSet id="20150210094558-18" author="crog">
         <addUniqueConstraint tableName="cpo_product_attributes"
             columnNames="name, product_uuid"
             constraintName="cpo_product_attributes_unq1"
         />
     </changeSet>
-
+-->
 
 
     <!-- cpo_product_certificates -->

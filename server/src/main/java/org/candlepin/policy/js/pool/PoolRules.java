@@ -75,7 +75,7 @@ public class PoolRules {
             sub.getUpstreamPoolId() == null) {
 
             int instanceMultiplier = Integer.parseInt(
-                sub.getProduct().getAttribute("instance_multiplier").getValue());
+                sub.getProduct().getAttributeValue("instance_multiplier"));
             log.debug("Increasing pool quantity for instance multiplier: " +
                 instanceMultiplier);
             quantity = quantity * instanceMultiplier;

@@ -34,10 +34,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import javax.persistence.CollectionTable;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
-import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -194,11 +192,12 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     private String orderNumber;
 
     // This should be encapsulated and a separate object, but I don't feel like fighting with an ORM today.
-    @ElementCollection
-    @CollectionTable(name = "cpo_pool_stack_prod_attribs",
-                     joinColumns = @JoinColumn(name = "pool_id"))
-    @Column(name = "attribute_id")
-    @LazyCollection(LazyCollectionOption.EXTRA)
+    @ManyToMany
+    @JoinTable(
+        name = "cpo_pool_stack_prod_attribs",
+        joinColumns = {@JoinColumn(name = "pool_id", insertable = false, updatable = false)},
+        inverseJoinColumns = {@JoinColumn(name = "attribute_id")}
+    )
     private Set<ProductAttribute> stackedProdAttributes = new HashSet<ProductAttribute>();
 
     @Formula("(select sum(ent.quantity) from cp_entitlement ent " +
@@ -766,6 +765,25 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         return this.getProduct() != null ?
             this.getProduct().getAttributes() :
             new HashSet<ProductAttribute>();
+    }
+
+    @XmlTransient
+    public ProductAttribute getProductAttribute(String key) {
+        if (key != null) {
+            for (ProductAttribute attribute : this.getProductAttributes()) {
+                if (key.equalsIgnoreCase(attribute.getName())) {
+                    return attribute;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    @XmlTransient
+    public String getProductAttributeValue(String key) {
+        ProductAttribute attribute = this.getProductAttribute(key);
+        return attribute != null ? attribute.getValue() : null;
     }
 
     public void setDerivedProduct(Product derived) {

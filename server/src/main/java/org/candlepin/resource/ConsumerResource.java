@@ -1696,13 +1696,6 @@ public class ConsumerResource {
         ));
     }
 
-    @PUT
-    @Path("/logloglog")
-    @SecurityHole(noAuth = true)
-    public void injectLog(@QueryParam("msg") String message) {
-        log.debug("MESSAGE FROM CLIENT: {}", message);
-    }
-
     /**
      * Removes an Entitlement from a Consumer
      * <p>

@@ -467,12 +467,6 @@ public class CandlepinPoolManager implements PoolManager {
 
         List<Pool> pools = poolRules.createPools(sub, existingPools);
         for (Pool pool : pools) {
-            log.debug("\n\n");
-            log.debug("CREATING POOL: {}", pool);
-            log.debug("POOL ATTRIBUTES: {}", pool.getAttributes());
-            log.debug("POOL PROD ATTRIBUTES: {}", pool.getProduct().getAttributes());
-            log.debug("\n\n");
-
             createPool(pool);
         }
 
@@ -700,7 +694,7 @@ public class CandlepinPoolManager implements PoolManager {
             // Would parse the int here, but it can be 'unlimited'
             // and we only need to check that it's non-zero
             if (pool.getProduct().hasAttribute("virt_limit") &&
-                    !pool.getProduct().getAttribute("virt_limit").getValue().equals("0")) {
+                    !pool.getProduct().getAttributeValue("virt_limit").equals("0")) {
                 for (String productId : productIds) {
                     // If this is a derived pool, we need to see if the derived product
                     // provides anything for the guest, otherwise we use the parent.
@@ -788,7 +782,7 @@ public class CandlepinPoolManager implements PoolManager {
             // even if they do not provide any products
             if (pool.getProduct().hasAttribute("stacking_id") &&
                     compliance.getPartialStacks().containsKey(
-                        pool.getProduct().getAttribute("stacking_id").getValue())) {
+                        pool.getProduct().getAttributeValue("stacking_id"))) {
                 providesProduct = true;
             }
             else {
@@ -1112,8 +1106,6 @@ public class CandlepinPoolManager implements PoolManager {
      */
     @Transactional
     void removeEntitlement(Entitlement entitlement, boolean regenModified) {
-        log.debug("REMOVING ENTITLEMENT {}, REGEN: {}", entitlement, regenModified);
-
         Consumer consumer = entitlement.getConsumer();
         Pool pool = entitlement.getPool();
 
@@ -1121,9 +1113,6 @@ public class CandlepinPoolManager implements PoolManager {
         // This won't do anything for over/under consumption, but it will prevent
         // concurrency issues if someone else is operating on the pool.
         pool = poolCurator.lockAndLoad(pool);
-
-        log.debug("REMOVING ENTITLEMENT FROM CONSUMER {}", consumer);
-
         consumer.removeEntitlement(entitlement);
 
         // Look for pools referencing this entitlement as their source
@@ -1134,14 +1123,10 @@ public class CandlepinPoolManager implements PoolManager {
         // the loop (#811581)
         Set<Pool> deletablePools = new HashSet<Pool>();
 
-        log.debug("CHECKING FOR DELETABLE POOLS & REVOKING NESTED ENTITLEMENTS");
-
         for (Pool p : poolCurator.listBySourceEntitlement(entitlement)) {
             for (Entitlement e : p.getEntitlements()) {
                 this.revokeEntitlement(e);
             }
-
-            log.debug("QUEUING DELETION OF POOL {}", p);
 
             deletablePools.add(p);
         }
@@ -1156,9 +1141,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         // The quantity is calculated at fetch time. We update it here
         // To reflect what we just removed from the db.
-        log.debug("UPDATING CONSUMED COUNT. CURRENT COUNT: {}", pool.getConsumed());
         pool.setConsumed(pool.getConsumed() - entitlement.getQuantity());
-        log.debug("NEW COUNT: {}", pool.getConsumed());
 
         if (consumer.getType().isManifest()) {
             pool.setExported(pool.getExported() - entitlement.getQuantity());
@@ -1166,12 +1149,8 @@ public class CandlepinPoolManager implements PoolManager {
 
         // Check for a single stacked sub pool as well. We'll need to either
         // update or delete the sub pool now that all other pools have been deleted.
-        log.debug("CHECKING FOR SINGLE STACKED SUB POOL. DERIVED: {}, ID PRESENT: {}", pool.getAttributeValue("pool_derived"), pool.getProduct().hasAttribute("stacking_id"));
-        log.debug("PRODUCT {}\nATTRIBUTES: {}", pool.getProduct(), pool.getProduct().getAttributes());
-
         if (!"true".equals(pool.getAttributeValue("pool_derived")) &&
             pool.getProduct().hasAttribute("stacking_id")) {
-            log.debug("POOL APPEARS TO BE STACKED: {}", pool);
 
             String stackId = pool.getProduct().getAttributeValue("stacking_id");
             Pool stackedSubPool = poolCurator.getSubPoolForStackId(consumer, stackId);
@@ -1190,8 +1169,6 @@ public class CandlepinPoolManager implements PoolManager {
                     poolCurator.merge(stackedSubPool);
                 }
             }
-        } else {
-            log.debug("POOL DOES NOT LOOK TO BE STACKED: {}", pool);
         }
 
         // post unbind actions
@@ -1202,7 +1179,6 @@ public class CandlepinPoolManager implements PoolManager {
             // Find all of the entitlements that modified the original entitlement,
             // and regenerate those to remove the content sets.
             // Lazy regeneration is ok here.
-            log.debug("REGENERATING CERTIFICATES FOR ENTITLEMENT: {}", entitlement);
             this.regenerateCertificatesOf(entitlementCurator.listModifying(entitlement), true);
         }
 
