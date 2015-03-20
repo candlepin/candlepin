@@ -92,9 +92,7 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
 
     # Find the host-restricted pool:
     pools = @guest1_client.list_pools :consumer => @guest1['uuid'], :listall => true, :product => arch_virt_product.id
-    pools.should have(3).things
-    #unmapped guest pool not part of test
-    filter_unmapped_guest_pools(pools)
+    pools.should have(2).things
     # Find the correct host-restricted subpool
     guest_pool_with_arch = pools.find_all { |i| !i['sourceConsumer'].nil? }[0]
     guest_pool_with_arch.should_not == nil

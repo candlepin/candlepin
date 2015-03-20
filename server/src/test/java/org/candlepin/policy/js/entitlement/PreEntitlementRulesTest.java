@@ -658,10 +658,10 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         Date twentyFiveHoursAgo = new Date(new Date().getTime() - 25L * 60L * 60L * 1000L);
         tooOld.setCreated(twentyFiveHoursAgo);
         ValidationResult result = enforcer.preEntitlement(tooOld, pool, 1);
-        assertTrue(result.hasWarnings());
-        assertEquals(1, result.getWarnings().size());
+        assertTrue(result.hasErrors());
+        assertEquals(1, result.getErrors().size());
         assertEquals("virt.guest.cannot.use.unmapped.guest.pool.not.new",
-            result.getWarnings().get(0).getResourceKey());
+            result.getErrors().get(0).getResourceKey());
     }
 
     @Test
@@ -679,10 +679,10 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         when(consumerCurator.getHost(guestId, owner)).thenReturn(parent);
 
         ValidationResult result = enforcer.preEntitlement(newborn, pool, 1);
-        assertTrue(result.hasWarnings());
-        assertEquals(1, result.getWarnings().size());
+        assertTrue(result.hasErrors());
+        assertEquals(1, result.getErrors().size());
         assertEquals("virt.guest.cannot.use.unmapped.guest.pool.has.host",
-            result.getWarnings().get(0).getResourceKey());
+            result.getErrors().get(0).getResourceKey());
     }
 
     private Pool setupUserRestrictedPool() {

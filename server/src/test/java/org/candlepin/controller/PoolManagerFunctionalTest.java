@@ -22,10 +22,12 @@ import static org.mockito.Mockito.reset;
 
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventSink;
+import org.candlepin.common.paging.Page;
+import org.candlepin.common.paging.PageRequest;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
-import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
@@ -35,6 +37,7 @@ import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
+import org.candlepin.model.PoolAttribute;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.Product;
@@ -43,8 +46,6 @@ import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.model.activationkeys.ActivationKey;
-import org.candlepin.common.paging.Page;
-import org.candlepin.common.paging.PageRequest;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
@@ -413,6 +414,27 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         // Pool in error should not be included. Should have the same number of
         // initial pools.
         assertEquals(4, results.getPageData().size());
+    }
+
+    @Test
+    public void testListAllForOldGuestExcludesTempPools() {
+        Pool pool = createPoolAndSub(o, virtGuest, 100L,
+            TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
+        pool.addAttribute(new PoolAttribute("unmapped_guests_only", "true"));
+        poolCurator.create(pool);
+        Page<List<Pool>> results = poolManager.listAvailableEntitlementPools(
+            childVirtSystem, null, o, virtGuest.getId(), null, true,
+            true, new PoolFilterBuilder(), new PageRequest());
+        int newbornPools = results.getPageData().size();
+
+        childVirtSystem.setCreated(TestUtil.createDate(2000, 01, 01));
+        consumerCurator.update(childVirtSystem);
+
+        results = poolManager.listAvailableEntitlementPools(
+            childVirtSystem, null, o, virtGuest.getId(), null, true,
+            true, new PoolFilterBuilder(), new PageRequest());
+
+        assertEquals(newbornPools - 1, results.getPageData().size());
     }
 
     /**
