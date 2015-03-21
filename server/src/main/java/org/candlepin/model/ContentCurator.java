@@ -77,7 +77,8 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
         }
 
         // Copy the ID so Hibernate knows this is an existing entity to merge:
-        return merge(c);
+        copy(c, existing);
+        return merge(existing);
     }
 
     // Needs an override due to the use of UUID as db identifier.
@@ -87,4 +88,22 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
         Content toDelete = find(entity.getUuid());
         currentSession().delete(toDelete);
     }
+
+    public void copy(Content src, Content dest) {
+        if (src.getId() == null ? dest.getId() != null :
+            !src.getId().equals(dest.getId())) {
+            throw new RuntimeException(i18n.tr(
+                "Contents do not have matching IDs: {0} != {1}", src.getId(), dest.getId()
+            ));
+        }
+
+        dest.setName(src.getName());
+        dest.setArches(src.getArches());
+        dest.setContentUrl(src.getContentUrl());
+        dest.setGpgUrl(src.getGpgUrl());
+        dest.setLabel(src.getLabel());
+        dest.setMetadataExpire(src.getMetadataExpire());
+        dest.setModifiedProductIds(src.getModifiedProductIds());
+    }
+
 }
