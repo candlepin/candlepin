@@ -421,8 +421,7 @@ class Candlepin
     return results
   end
 
-  def refresh_pools(owner_key, immediate=false, create_owner=false,
-    lazy_regen=true)
+  def refresh_pools(owner_key, immediate=false, create_owner=false, lazy_regen=true)
     return async_call(immediate) do
       url = "/owners/#{owner_key}/subscriptions?"
       url += "auto_create_owner=true&" if create_owner
@@ -484,11 +483,26 @@ class Candlepin
     post("/owners/#{owner_key}/entitlements")
   end
 
-  def list_products(product_uuids=nil)
+  def autoheal_consumer(uuid = nil)
+    uuid = @uuid unless uuid
+    post("/consumers/#{uuid}/entitlements")
+  end
+
+  def list_products(product_ids=nil)
     method = "/products?"
-    if product_uuids
-      product_uuids.each { |uuid|
-        method << "&product=" << uuid
+    if product_ids
+      product_ids.each { |id|
+        method << "&product=" << id
+      }
+    end
+    get(method)
+  end
+
+  def list_products_by_owner(owner_key, product_ids=nil)
+    method = "/owners/#{owner_key}/products?"
+    if product_ids
+      product_ids.each { |id|
+        method << "&product=" << id
       }
     end
     get(method)
@@ -522,44 +536,44 @@ class Candlepin
     end
   end
 
-  def create_batch_content(contents=[])
-    post("/content/batch", contents)
+  def create_batch_content(owner_key, contents=[])
+    post("/owners/#{owner_key}/content/batch", contents)
   end
 
-  def list_content
-    get("/content")
+  def list_content(owner_key)
+    get("/owners/#{owner_key}/content")
   end
 
-  def get_content(content_id)
-    get("/content/#{content_id}")
+  def get_content(owner_key, content_id)
+    get("/owners/#{owner_key}/content/#{content_id}")
   end
 
-  def delete_content(content_id)
-    delete("/content/#{content_id}")
+  def delete_content(owner_key, content_id)
+    delete("/owners/#{owner_key}/content/#{content_id}")
   end
 
-  def update_content(content_id, updates={})
-    current_content = get_content(content_id)
+  def update_content(owner_key, content_id, updates={})
+    current_content = get_content(owner_key, content_id)
     updates.each do |key, value|
       current_content[key] = value
     end
-    put("/content/#{content_id}", current_content)
+    put("/owners/#{owner_key}/content/#{content_id}", current_content)
   end
 
   def add_content_to_product(owner_key, product_id, content_id, enabled=true)
     post("/owners/#{owner_key}/products/#{product_id}/content/#{content_id}?enabled=#{enabled}")
   end
 
-  def add_batch_content_to_product(product_id, content_ids, enabled=true)
+  def add_batch_content_to_product(owner_key, product_id, content_ids, enabled=true)
     data = {}
     content_ids.each do |id|
       data[id] = enabled
     end
-    post("/products/#{product_id}/batch_content", data)
+    post("/owners/#{owner_key}/products/#{product_id}/batch_content", data)
   end
 
-  def remove_content_from_product(product_id, content_id)
-    delete("/products/#{product_id}/content/#{content_id}")
+  def remove_content_from_product(owner_key, product_id, content_id)
+    delete("/owners/#{owner_key}/products/#{product_id}/content/#{content_id}")
   end
 
   def add_product_reliance(product_id, rely_id)
@@ -605,9 +619,9 @@ class Candlepin
     get(url)
   end
 
-  def refresh_pools_for_product(product_id, immediate=false, lazy_regen=true)
+  def refresh_pools_for_product(owner_key, product_id, immediate=false, lazy_regen=true)
     return async_call(immediate) do
-      url="/products/#{product_id}/subscriptions?"
+      url="/owners/#{owner_key}/products/#{product_id}/subscriptions?"
       url += "lazy_regen=false&" if !lazy_regen
       put(url)
     end
@@ -634,8 +648,7 @@ class Candlepin
     post("/owners/#{owner_key}/products", product)
   end
 
-  def update_product(product_id, params={})
-
+  def update_product(owner_key, product_id, params={})
     product = {
       :id => product_id
     }
@@ -646,11 +659,11 @@ class Candlepin
     product[:dependentProductIds] = params[:dependentProductIds] if params[:dependentProductIds]
     product[:relies_on] = params[:relies_on] if params[:relies_on]
 
-    put("/products/#{product_id}", product)
+    put("/owners/#{owner_key}/products/#{product_id}", product)
   end
 
-  def get_product(product_id)
-    get("/products/#{product_id}")
+  def get_product(owner_key, product_id)
+    get("/owners/#{owner_key}/products/#{product_id}")
   end
 
   def delete_product(owner_key, product_id)

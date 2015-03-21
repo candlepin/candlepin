@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.45
+Version: 0.9.46
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -394,6 +394,14 @@ fi
 
 
 %changelog
+* Mon Mar 09 2015 Alex Wood <awood@redhat.com> 0.9.46-1
+- 1198494: Unmapped guest pool only attaches once on auto-heal
+  (wpoteat@redhat.com)
+- 1199078: Remove expired unmapped guest pools on autoheal (awood@redhat.com)
+- Fix unmapped guest pools with derived product data. (dgoodwin@redhat.com)
+- Improved error message for blocked host restricted pool binds.
+  (dgoodwin@redhat.com)
+
 * Wed Feb 25 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.45-1
 - Fix mistaken index copying error in liquibase xml. (dgoodwin@redhat.com)
 

@@ -17,7 +17,6 @@ package org.candlepin.policy.js;
 import org.candlepin.model.Attribute;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductAttribute;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -42,7 +41,7 @@ public class AttributeHelper {
     public Map<String, String> getFlattenedAttributes(Pool pool) {
         Map<String, String> allAttributes = new HashMap<String, String>();
         if (pool != null) {
-            allAttributes.putAll(getFlattenedAttributes(pool.getProduct().getAttributes()));
+            allAttributes.putAll(getFlattenedAttributes(pool.getProductAttributes()));
             allAttributes.putAll(getFlattenedAttributes(pool.getAttributes()));
         }
         return allAttributes;

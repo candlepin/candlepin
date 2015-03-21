@@ -3,6 +3,12 @@ require 'candlepin_scenarios'
 require 'tmpdir'
 require 'openssl'
 
+
+# An error occurred in an after(:all) hook.
+#   RestClient::BadRequest: 400 Bad Request
+#   occurred at /home/crog/.gem/ruby/gems/rest-client-1.6.7/lib/restclient/abstract_response.rb:48:in `return!'
+
+
 describe 'Export', :serial => true do
 
   include CandlepinMethods

@@ -24,10 +24,13 @@ import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.Content;
+import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.EnvironmentCurator;
+import org.candlepin.model.Owner;
 import org.candlepin.pinsetter.tasks.RegenEnvEntitlementCertsJob;
 import org.candlepin.util.Util;
 
@@ -66,12 +69,12 @@ public class EnvironmentResource {
     private ConsumerResource consumerResource;
     private PoolManager poolManager;
     private ConsumerCurator consumerCurator;
+    private ContentCurator contentCurator;
 
     @Inject
     public EnvironmentResource(EnvironmentCurator envCurator, I18n i18n,
-        EnvironmentContentCurator envContentCurator,
-        ConsumerResource consumerResource, PoolManager poolManager,
-        ConsumerCurator consumerCurator) {
+        EnvironmentContentCurator envContentCurator, ConsumerResource consumerResource,
+        PoolManager poolManager, ConsumerCurator consumerCurator, ContentCurator contentCurator) {
 
         this.envCurator = envCurator;
         this.i18n = i18n;
@@ -79,6 +82,7 @@ public class EnvironmentResource {
         this.consumerResource = consumerResource;
         this.poolManager = poolManager;
         this.consumerCurator = consumerCurator;
+        this.contentCurator = contentCurator;
     }
 
     /**
@@ -142,6 +146,44 @@ public class EnvironmentResource {
         return envCurator.listAll();
     }
 
+
+    /**
+     * Verifies that the content specified by the given content object's ID exists.
+     *
+     * @param owner
+     *  The owner with which the content is associated
+     *
+     * @param content
+     *  The content to resolve
+     *
+     * @throws BadRequestException
+     *  if content is null or has not been assigned a valid content ID
+     *
+     * @throws NotFoundException
+     *  if the specified content object does not represent a valid content object for the given
+     *  owner
+     *
+     * @return
+     *  the resolved content instance.
+     */
+    private Content resolveContent(Owner owner, Content content) {
+        if (content == null || content.getId() == null) {
+            throw new BadRequestException(i18n.tr(
+                "No content specified, or content lacks identifying information"
+            ));
+        }
+
+        Content resolved = this.contentCurator.lookupById(owner, content.getId());
+
+        if (resolved == null) {
+            throw new NotFoundException(i18n.tr(
+                "Unable to find content with the ID \"{0}\".", content.getId()
+            ));
+        }
+
+        return resolved;
+    }
+
     /**
      * Promotes a Content into an Environment.
      * <p>
@@ -174,8 +216,9 @@ public class EnvironmentResource {
         Set<String> contentIds = new HashSet<String>();
         for (EnvironmentContent promoteMe : contentToPromote) {
             // Make sure the content exists:
-            // promoteMe.setContentId(promoteMe.getContentId()); // What was the point of this?
+            promoteMe.setContent(this.resolveContent(env.getOwner(), promoteMe.getContent()));
             promoteMe.setEnvironment(env);
+
             envContentCurator.create(promoteMe);
             env.getEnvironmentContent().add(promoteMe);
             contentIds.add(promoteMe.getContent().getId());

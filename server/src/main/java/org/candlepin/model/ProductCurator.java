@@ -83,8 +83,8 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     }
 
     /**
-     * @param owner owner to lookup product for
-     * @param id Product ID to lookup. (note: not the database ID)
+     * @param ownerId The ID of the owner for which to lookup a product
+     * @param productId The ID of the product to lookup. (note: not the database ID)
      * @return the Product which matches the given id.
      */
     @Transactional
@@ -126,9 +126,22 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
         );
     }
 
+    /**
+     * List all products with a Red Hat ID matching any of the IDs provided. Note that this method
+     * may return multiple products for a given ID if multiple owners have a product with the same
+     * ID.
+     *
+     * @param ids
+     *  A collection of product IDs for which to search
+     *
+     * @return
+     *  a list of Product instances with IDs matching those provided
+     */
     @Override
     public List<Product> listAllByIds(Collection<? extends Serializable> ids) {
-        throw new UnsupportedOperationException("An owner must be specified when listing products by ID");
+        return this.listByCriteria(
+            this.createSecureCriteria().add(Restrictions.in("id", ids))
+        );
     }
 
     public List<Product> listAllByUuids(Collection<? extends Serializable> uuids) {
@@ -156,35 +169,34 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
         }
     }
 
-    public void copy(Product incoming, Product existing) {
-        if (incoming.getId() != existing.getId()) {
-            throw new RuntimeException("Products do not have matching IDs: " +
-                    incoming.getId() + " != " + existing.getId());
+    public void copy(Product src, Product dest) {
+        if (src.getId() == null ? dest.getId() != null : !src.getId().equals(dest.getId())) {
+            throw new RuntimeException(i18n.tr(
+                "Products do not have matching IDs: {0} != {1}", src.getId(), dest.getId()
+            ));
         }
 
-        existing.setName(incoming.getName());
-        existing.setMultiplier(incoming.getMultiplier());
+        dest.setName(src.getName());
+        dest.setMultiplier(src.getMultiplier());
 
-        if (!existing.getAttributes().equals(incoming.getAttributes())) {
-            existing.getAttributes().clear();
-            for (ProductAttribute attr : incoming.getAttributes()) {
-                ProductAttribute newAttr = new ProductAttribute(attr.getName(),
-                        attr.getValue());
-                existing.addAttribute(newAttr);
+        if (!dest.getAttributes().equals(src.getAttributes())) {
+            dest.getAttributes().clear();
+            for (ProductAttribute attr : src.getAttributes()) {
+                ProductAttribute newAttr = new ProductAttribute(attr.getName(), attr.getValue());
+                dest.addAttribute(newAttr);
             }
         }
 
-        if (!existing.getProductContent().equals(incoming.getProductContent())) {
-            existing.getProductContent().clear();
-            for (ProductContent pc : incoming.getProductContent()) {
-                existing.addProductContent(new ProductContent(existing, pc.getContent(),
-                        pc.getEnabled()));
+        if (!dest.getProductContent().equals(src.getProductContent())) {
+            dest.getProductContent().clear();
+            for (ProductContent pc : src.getProductContent()) {
+                dest.addProductContent(new ProductContent(dest, pc.getContent(), pc.getEnabled()));
             }
         }
 
-        if (!existing.getDependentProductIds().equals(incoming.getDependentProductIds())) {
-            existing.getDependentProductIds().clear();
-            existing.setDependentProductIds(incoming.getDependentProductIds());
+        if (!dest.getDependentProductIds().equals(src.getDependentProductIds())) {
+            dest.getDependentProductIds().clear();
+            dest.setDependentProductIds(src.getDependentProductIds());
         }
 
     }
@@ -300,14 +312,14 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     }
 
     public boolean productHasSubscriptions(Product prod) {
-        return ((Long) currentSession().createCriteria(Subscription.class)
+        return ((Long) currentSession().createCriteria(Pool.class)
             .createAlias("providedProducts", "providedProd", JoinType.LEFT_OUTER_JOIN)
             .createAlias("derivedProvidedProducts", "derivedProvidedProd", JoinType.LEFT_OUTER_JOIN)
             .add(Restrictions.or(
-                Restrictions.eq("product", prod),
-                Restrictions.eq("derivedProduct", prod),
-                Restrictions.eq("providedProd.id", prod.getId()),
-                Restrictions.eq("derivedProvidedProd.id", prod.getId())))
+                Restrictions.eq("product.uuid", prod.getUuid()),
+                Restrictions.eq("derivedProduct.uuid", prod.getUuid()),
+                Restrictions.eq("providedProd.uuid", prod.getUuid()),
+                Restrictions.eq("derivedProvidedProd.uuid", prod.getUuid())))
             .setProjection(Projections.count("id"))
             .uniqueResult()) > 0;
     }

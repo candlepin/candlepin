@@ -53,7 +53,7 @@ public class SourceSubscription extends AbstractHibernateObject {
     // could exist in another system only accessible to us as a service.
     // Actual implementations of our SubscriptionService will be used to use
     // this data.
-    @Column(name="subscription_id", nullable = false)
+    @Column(name = "subscription_id", nullable = false)
     @Size(max = 255)
     private String subscriptionId;
 
@@ -61,7 +61,7 @@ public class SourceSubscription extends AbstractHibernateObject {
     // combination of subid/some other key to uniquely identify a pool.
     // subscriptionSubKey is set in the js rules, according to the same logic
     // that will create more than one pool per sub.
-    @Column(name="subscription_sub_key", nullable = false)
+    @Column(name = "subscription_sub_key", nullable = false)
     @Size(max = 255)
     private String subscriptionSubKey;
 

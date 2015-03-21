@@ -14,7 +14,6 @@
  */
 package org.candlepin.resource;
 
-import org.candlepin.auth.interceptor.Verify;
 import org.candlepin.common.auth.SecurityHole;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
@@ -39,7 +38,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -223,7 +221,7 @@ public class OwnerProductResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Product updateProduct(
         @PathParam("owner_key") String ownerKey,
-        @PathParam("product_id") @Verify(Product.class) String productId,
+        @PathParam("product_id") String productId,
         Product product) {
 
         Product toUpdate = this.getProduct(ownerKey, productId);
@@ -401,8 +399,11 @@ public class OwnerProductResource {
 
         if (productCurator.productHasSubscriptions(product)) {
             throw new BadRequestException(
-                i18n.tr("Product with ID ''{0}'' cannot be deleted " +
-                    "while subscriptions exist.", productId));
+                i18n.tr(
+                    "Product with ID ''{0}'' cannot be deleted while subscriptions exist.",
+                    productId
+                )
+            );
         }
 
         productCurator.delete(product);

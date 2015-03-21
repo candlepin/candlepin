@@ -352,7 +352,6 @@ public class EntitlementResource {
         prodAdapter.purgeCache(Arrays.asList(productId));
 
         JobDataMap map = new JobDataMap();
-        // TODO: We need an owner ID here to get anything done.
         map.put(RegenProductEntitlementCertsJob.PROD_ID, productId);
         map.put(RegenProductEntitlementCertsJob.LAZY_REGEN, lazyRegen);
 

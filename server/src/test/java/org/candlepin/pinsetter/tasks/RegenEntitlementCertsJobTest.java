@@ -26,6 +26,9 @@ import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 
+import java.util.Arrays;
+
+
 
 /**
  * RegenEntitlementCertsJobTest
@@ -47,9 +50,8 @@ public class RegenEntitlementCertsJobTest {
 
         Owner owner = new Owner(ownerId);
 
-        when(oc.find(ownerId)).thenReturn(owner);
+        when(oc.listAll()).thenReturn(Arrays.asList(owner));
 
-        when(jdm.getString(eq(RegenProductEntitlementCertsJob.OWNER_ID))).thenReturn(ownerId);
         when(jdm.getString(eq(RegenProductEntitlementCertsJob.PROD_ID))).thenReturn(prodId);
         when(jdm.getBoolean(eq(RegenProductEntitlementCertsJob.LAZY_REGEN))).thenReturn(lazyRegen);
         when(detail.getJobDataMap()).thenReturn(jdm);

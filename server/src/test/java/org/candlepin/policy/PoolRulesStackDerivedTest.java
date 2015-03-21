@@ -243,10 +243,10 @@ public class PoolRulesStackDerivedTest {
         PoolUpdate update = poolRules.updatePoolFromStack(stackDerivedPool, null);
         assertTrue(update.changed());
         assertTrue(update.getProductAttributesChanged());
-        assertEquals(6, stackDerivedPool.getProduct().getAttributes().size());
+        assertEquals(6, stackDerivedPool.getProductAttributes().size());
 
-        assertEquals("2", stackDerivedPool.getProduct().getAttributeValue("testattr2"));
-        assertEquals("1", stackDerivedPool.getProduct().getAttributeValue("testattr1"));
+        assertEquals("2", stackDerivedPool.getProductAttributeValue("testattr2"));
+        assertEquals("1", stackDerivedPool.getProductAttributeValue("testattr1"));
     }
 
     @Test

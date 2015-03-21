@@ -67,6 +67,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Statistic;
 import org.candlepin.model.StatisticCurator;
+import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.model.UeberCertificateGenerator;
@@ -111,6 +112,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -389,6 +391,8 @@ public class OwnerResource {
             log.info("Deleting environment: " + e.getId());
             envCurator.delete(e);
         }
+
+        // TODO: Probably pointless and safe to remove now.
         for (Subscription s : subscriptionCurator.listByOwner(owner)) {
             log.info("Deleting subscription: " + s);
             subscriptionCurator.delete(s);
@@ -773,8 +777,8 @@ public class OwnerResource {
             key = activationKeyCurator.lookupForOwner(activationKeyName, owner);
             if (key == null) {
                 throw new BadRequestException(
-                    i18n.tr("ActivationKey with id {0} could not be found.",
-                        activationKeyName));
+                    i18n.tr("ActivationKey with id {0} could not be found.", activationKeyName)
+                );
             }
         }
 
@@ -787,8 +791,9 @@ public class OwnerResource {
             poolFilters.addMatchesFilter(matches);
         }
 
-        Page<List<Pool>> page = poolManager.listAvailableEntitlementPools(c, key, owner,
-            productId, activeOnDate, true, listAll, poolFilters, pageRequest);
+        Page<List<Pool>> page = poolManager.listAvailableEntitlementPools(c, key, owner, productId,
+            activeOnDate, true, listAll, poolFilters, pageRequest
+        );
         List<Pool> poolList = page.getPageData();
 
         if (c != null) {
@@ -798,39 +803,6 @@ public class OwnerResource {
         // Store the page for the LinkHeaderPostInterceptor
         ResteasyProviderFactory.pushContext(Page.class, page);
         return poolList;
-    }
-
-    /**
-     * Creates a Subscription for an Owner
-     *
-     * @return a Subscription object
-     * @httpcode 404
-     * @httpcode 200
-     */
-    @POST
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("{owner_key}/subscriptions")
-    public Subscription createSubscription(
-        @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
-        Subscription subscription) {
-
-        // Correct owner & products
-        Owner owner = findOwner(ownerKey);
-        subscription.setOwner(owner);
-
-        Product product = this.findProduct(
-            owner,
-            (subscription.getProduct() != null ? subscription.getProduct().getId() : null)
-        );
-        subscription.setProduct(product);
-
-        // TODO: not sure if this is kept or not, subscription ID doesn't mean much anymore
-        if (subscription.getId() == null) {
-            subscription.setId(UUID.randomUUID().toString().replace("-", ""));
-        }
-        poolManager.createPoolsForSubscription(subscription);
-        return subscription;
     }
 
     /**
@@ -873,30 +845,11 @@ public class OwnerResource {
         return events;
     }
 
-    /**
-     * Retrieves a list of Subscriptions for an Owner
-     *
-     * @return a list of Subscription objects
-     * @httpcode 404
-     * @httpcode 200
-     */
-    @GET
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("{owner_key}/subscriptions")
-    public List<Subscription> getSubscriptions(
-        @PathParam("owner_key") @Verify(value = Owner.class,
-            subResource = SubResource.SUBSCRIPTIONS) String ownerKey) {
-        Owner o = findOwner(ownerKey);
-        return subService.getSubscriptions(o);
-    }
-
     private Owner findOwner(String key) {
         Owner owner = ownerCurator.lookupByKey(key);
 
         if (owner == null) {
-            throw new NotFoundException(i18n.tr(
-                "owner with key: {0} was not found.", key));
+            throw new NotFoundException(i18n.tr("owner with key: {0} was not found.", key));
         }
 
         return owner;
@@ -917,12 +870,95 @@ public class OwnerResource {
 
         if (product == null) {
             throw new NotFoundException(i18n.tr(
-                "Could not find a product with ID \"{0}\" for owner \"{1}\"",
+                "Unable to find a product with the ID \"{0}\" for owner \"{1}\"",
                 productId, owner.getKey()
             ));
         }
 
         return product;
+    }
+
+    private Owner resolveOwner(Owner owner) {
+        if (owner == null || (owner.getKey() == null && owner.getId() == null)) {
+            throw new BadRequestException(i18n.tr(
+                "No owner specified, or owner lacks identifying information"
+            ));
+        }
+
+        if (owner.getKey() != null) {
+            owner = this.ownerCurator.lookupByKey(owner.getKey());
+
+            if (owner == null) {
+                throw new NotFoundException(i18n.tr(
+                    "Unable to find an owner with the key \"{0}\"", owner.getKey()
+                ));
+            }
+        }
+        else {
+            owner = this.ownerCurator.find(owner.getId());
+
+            if (owner == null) {
+                throw new NotFoundException(i18n.tr(
+                    "Unable to find an owner with the ID \"{0}\"", owner.getId()
+                ));
+            }
+        }
+
+        return owner;
+    }
+
+    private Product resolveProduct(Owner owner, Product product) {
+        if (product == null || product.getId() == null) {
+            throw new BadRequestException(i18n.tr(
+                "No product specified, or product lacks identifying information"
+            ));
+        }
+
+        // TODO: Maybe add UUID resolution as well?
+        return this.findProduct(owner, product.getId());
+    }
+
+    private Subscription resolveSubscription(Subscription subscription) {
+        // Impl note:
+        // We don't check that the subscription exists here, because it's entirely possible that it
+        // doesn't (i.e. during creation). We just need to make sure it's not null.
+        if (subscription == null) {
+            throw new BadRequestException(i18n.tr(
+                "No subscription specified"
+            ));
+        }
+
+        // Ensure the owner is set and is valid
+        Owner owner = this.resolveOwner(subscription.getOwner());
+        subscription.setOwner(owner);
+
+        // Ensure the specified product(s) exists for the given owner
+        subscription.setProduct(this.resolveProduct(owner, subscription.getProduct()));
+
+        if (subscription.getDerivedProduct() != null) {
+            subscription.setDerivedProduct(
+                this.resolveProduct(owner, subscription.getDerivedProduct())
+            );
+        }
+
+        HashSet<Product> presolved = new HashSet<Product>();
+
+        for (Product product : subscription.getProvidedProducts()) {
+            presolved.add(this.resolveProduct(owner, product));
+        }
+
+        subscription.setProvidedProducts(presolved);
+        presolved.clear();
+
+        for (Product product : subscription.getDerivedProvidedProducts()) {
+            presolved.add(this.resolveProduct(owner, product));
+        }
+
+        subscription.setDerivedProvidedProducts(presolved);
+
+        // TODO: Do we need to resolve Branding objects?
+
+        return subscription;
     }
 
     /**
@@ -940,11 +976,10 @@ public class OwnerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}")
     @Transactional
-    public Owner updateOwner(@PathParam("owner_key") @Verify(Owner.class) String key,
-        Owner owner) {
+    public Owner updateOwner(@PathParam("owner_key") @Verify(Owner.class) String key, Owner owner) {
         Owner toUpdate = findOwner(key);
         EventBuilder eventBuilder = eventFactory.getEventBuilder(Target.OWNER, Type.MODIFIED)
-                .setOldEntity(toUpdate);
+            .setOldEntity(toUpdate);
 
         log.debug("Updating owner: " + key);
 
@@ -975,6 +1010,83 @@ public class OwnerResource {
     }
 
     /**
+     * Retrieves a list of Subscriptions for an Owner
+     *
+     * @return a list of Subscription objects
+     * @httpcode 404
+     * @httpcode 200
+     */
+    @GET
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{owner_key}/subscriptions")
+    public List<Subscription> getSubscriptions(@PathParam("owner_key") String ownerKey) {
+        Owner owner = this.findOwner(ownerKey);
+
+        List<Subscription> subscriptions = new LinkedList<Subscription>();
+
+        for (Pool pool : this.poolManager.listPoolsByOwner(owner)) {
+            SourceSubscription srcsub = pool.getSourceSubscription();
+
+            if (srcsub != null && "master".equalsIgnoreCase(srcsub.getSubscriptionSubKey())) {
+                subscriptions.add(this.poolManager.fabricateSubscriptionFromPool(pool));
+            }
+        }
+
+        return subscriptions;
+    }
+
+    /**
+     * Creates a Subscription for an Owner
+     *
+     * @return a Subscription object
+     * @httpcode 404
+     * @httpcode 200
+     */
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{owner_key}/subscriptions")
+    public Subscription createSubscription(
+        @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
+        Subscription subscription) {
+
+        // Correct owner & products
+        Owner owner = findOwner(ownerKey);
+        subscription.setOwner(owner);
+
+        subscription = this.resolveSubscription(subscription);
+
+        // TODO: not sure if this is kept or not, subscription ID doesn't mean much anymore
+        if (subscription.getId() == null) {
+            subscription.setId(UUID.randomUUID().toString().replace("-", ""));
+        }
+
+        poolManager.createPoolsForSubscription(subscription);
+        return subscription;
+    }
+
+    /**
+     * Updates a Subscription for an Owner
+     *
+     * @httpcode 404
+     * @httpcode 200
+     */
+    @PUT
+    @Path("/subscriptions")
+    public void updateSubscription(Subscription subscription) {
+        if (this.poolManager.getMasterPoolBySubscriptionId(subscription.getId()) == null) {
+            throw new NotFoundException(i18n.tr(
+                "Unable to find a subscription with the ID \"{0}\".", subscription.getId()
+            ));
+        }
+
+        subscription = this.resolveSubscription(subscription);
+
+        this.poolManager.updatePoolsForSubscription(subscription);
+    }
+
+    /**
      * Refreshes the Pools for an Owner
      * <p>
      * 'Tickle' an owner to have all of their entitlement pools synced with
@@ -997,13 +1109,11 @@ public class OwnerResource {
 
         Owner owner = ownerCurator.lookupByKey(ownerKey);
         if (owner == null) {
-            if (autoCreateOwner &&
-                ownerService.isOwnerKeyValidForCreation(ownerKey)) {
+            if (autoCreateOwner && ownerService.isOwnerKeyValidForCreation(ownerKey)) {
                 owner = this.createOwner(new Owner(ownerKey, ownerKey));
             }
             else {
-                throw new NotFoundException(i18n.tr(
-                    "owner with key: {0} was not found.", ownerKey));
+                throw new NotFoundException(i18n.tr("owner with key: {0} was not found.", ownerKey));
             }
         }
 
@@ -1013,25 +1123,6 @@ public class OwnerResource {
         }
 
         return RefreshPoolsJob.forOwner(owner, lazyRegen);
-    }
-
-    /**
-     * Updates a Subscription for an Owner
-     *
-     * @httpcode 404
-     * @httpcode 200
-     */
-    @PUT
-    @Path("/subscriptions")
-    public void updateSubscription(Subscription subscription) {
-        // TODO: Do we even need the owner id here?
-        Subscription existingSubscription = this.subscriptionCurator
-            .find(subscription.getId());
-        if (existingSubscription == null) {
-            throw new NotFoundException(i18n.tr(
-                "subscription with id: {0} not found.", subscription.getId()));
-        }
-        this.subscriptionCurator.merge(subscription);
     }
 
     /**
@@ -1063,6 +1154,10 @@ public class OwnerResource {
 
         Owner owner = findOwner(ownerKey);
         log.info("Deleting all subscriptions from manifests for owner: " + ownerKey);
+
+        // TODO:
+        // This needs to be revisited. We no longer have subscriptions in the DB, so the next line
+        // will always return an empty list. And as we fabricate outbound subscriptions, we don't
 
         // In this situation we know we should be querying the curator rather than the
         // service:

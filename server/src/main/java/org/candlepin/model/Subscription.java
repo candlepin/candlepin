@@ -63,12 +63,12 @@ public class Subscription extends AbstractHibernateObject implements Owned, Name
     private Owner owner;
 
     @ManyToOne
-    @JoinColumn(name="product_uuid", nullable = false)
+    @JoinColumn(name = "product_uuid", nullable = false)
     @NotNull
     private Product product;
 
     @ManyToOne
-    @JoinColumn(name="derived_product_uuid", nullable = true)
+    @JoinColumn(name = "derived_product_uuid", nullable = true)
     private Product derivedProduct;
 
     @ManyToMany(targetEntity = Product.class)
@@ -322,7 +322,11 @@ public class Subscription extends AbstractHibernateObject implements Owned, Name
     }
 
     public void setProvidedProducts(Set<Product> providedProducts) {
-        this.providedProducts = providedProducts;
+        this.providedProducts.clear();
+
+        if (providedProducts != null) {
+            this.providedProducts.addAll(providedProducts);
+        }
     }
 
     public void setUpstreamPoolId(String upstreamPoolId) {
@@ -371,7 +375,10 @@ public class Subscription extends AbstractHibernateObject implements Owned, Name
 
     public void setDerivedProvidedProducts(Set<Product> subProvidedProducts) {
         this.derivedProvidedProducts.clear();
-        this.derivedProvidedProducts.addAll(subProvidedProducts);
+
+        if (subProvidedProducts != null) {
+            this.derivedProvidedProducts.addAll(subProvidedProducts);
+        }
     }
 
     public Cdn getCdn() {

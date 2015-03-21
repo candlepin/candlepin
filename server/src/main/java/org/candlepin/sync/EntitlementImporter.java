@@ -159,7 +159,7 @@ public class EntitlementImporter {
 
         Product product = productsById.get(productId);
         if (product == null) {
-            throw new SyncDataFormatException(i18n.tr("Unable to find product with ID: {}", productId));
+            throw new SyncDataFormatException(i18n.tr("Unable to find product with ID: {0}", productId));
         }
 
         return product;

@@ -61,8 +61,13 @@ public class EntitlementRulesTranslator {
                 pool.getId());
         }
         else if (errorKey.equals("virt.guest.host.does.not.match.pool.owner")) {
-            msg = i18n.tr("Guest''s host does not match owner of pool: ''{0}''.",
-                pool.getId());
+            // Logically this attribute must be set, but just in case:
+            String host = pool.getAttributeValue("requires_host");
+            if (host == null) {
+                host = "";
+            }
+            msg = i18n.tr("Pool ''{0}'' is restricted to guests running on host: ''{1}''.",
+                pool.getId(), host);
         }
         else if (errorKey.equals("pool.not.available.to.manifest.consumers")) {
             msg = i18n.tr("Pool not available to subscription management " +

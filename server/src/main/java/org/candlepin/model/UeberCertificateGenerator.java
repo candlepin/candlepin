@@ -18,7 +18,6 @@ import org.candlepin.auth.Principal;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.policy.EntitlementRefusedException;
-import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UniqueIdGenerator;
 
@@ -37,7 +36,7 @@ public class UeberCertificateGenerator {
 
     private PoolManager poolManager;
     private PoolCurator poolCurator;
-    private ProductServiceAdapter prodAdapter;
+    private ProductCurator productCurator;
     private ContentCurator contentCurator;
     private UniqueIdGenerator idGenerator;
     private SubscriptionServiceAdapter subService;
@@ -48,7 +47,7 @@ public class UeberCertificateGenerator {
     @Inject
     public UeberCertificateGenerator(PoolManager poolManager,
         PoolCurator poolCurator,
-        ProductServiceAdapter prodAdapter,
+        ProductCurator productCurator,
         ContentCurator contentCurator,
         UniqueIdGenerator idGenerator,
         SubscriptionServiceAdapter subService,
@@ -58,7 +57,7 @@ public class UeberCertificateGenerator {
 
         this.poolManager = poolManager;
         this.poolCurator = poolCurator;
-        this.prodAdapter = prodAdapter;
+        this.productCurator = productCurator;
         this.contentCurator = contentCurator;
         this.idGenerator = idGenerator;
         this.subService = subService;
@@ -82,13 +81,13 @@ public class UeberCertificateGenerator {
     }
 
     public Product createUeberProduct(Owner o) {
-        Product ueberProduct =
-            prodAdapter.createProduct(Product.createUeberProductForOwner(o));
-        Content ueberContent =
-            contentCurator.create(Content.createUeberContent(idGenerator, o, ueberProduct));
+        Product ueberProduct = Product.createUeberProductForOwner(idGenerator, o);
+        productCurator.create(ueberProduct);
 
-        ProductContent productContent =
-            new ProductContent(ueberProduct, ueberContent, true);
+        Content ueberContent = Content.createUeberContent(idGenerator, o, ueberProduct);
+        contentCurator.create(ueberContent);
+
+        ProductContent productContent = new ProductContent(ueberProduct, ueberContent, true);
         ueberProduct.getProductContent().add(productContent);
 
         return ueberProduct;

@@ -19,12 +19,9 @@ import liquibase.exception.DatabaseException;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.Statement;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -75,7 +72,8 @@ public class MultiOrgUpgradeTask {
         for (int i = 0; i < argv.length; ++i) {
             if (argv[i] != null) {
                 statement.setObject(i + 1, argv[i]);
-            } else {
+            }
+            else {
                 // Impl note:
                 // Oracle has trouble with setNull. See the comments on this SO question for details:
                 // http://stackoverflow.com/questions/11793483/setobject-method-of-preparedstatement
@@ -144,7 +142,7 @@ public class MultiOrgUpgradeTask {
      */
     protected ResultSet getProductIDs(String orgid) throws DatabaseException, SQLException {
         return this.executeQuery(
-            "SELECT p.product_id_old "+
+            "SELECT p.product_id_old " +
             "  FROM cp_pool p " +
             "  WHERE p.owner_id = ? " +
             "    AND p.product_id_old IS NOT NULL " +
@@ -218,8 +216,12 @@ public class MultiOrgUpgradeTask {
      * Executes the multi-org upgrade task.
      *
      * @throws DatabaseException
-     *  if an error occurs while performing a database operation.
+     *  if an error occurs while performing a database operation
+     *
+     * @throws SQLException
+     *  if an error occurs while executing an SQL statement
      */
+    @SuppressWarnings("checkstyle:methodlength")
     public void execute() throws DatabaseException, SQLException {
         // Store the connection's auto commit setting, so we may temporarily clobber it.
         boolean autocommit = this.connection.getAutoCommit();

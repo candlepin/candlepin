@@ -84,14 +84,27 @@ module CandlepinMethods
       random_str, params)
   end
 
-  def create_batch_content(count=1)
+  def create_batch_content(count=1, params={})
+    # If owner given in params, use it, if not, try to find @owner, if neither
+    # is set error out.
+    # NOTE: this is the owner key being passed in as a string
+    if params[:owner]
+      owner = params[:owner]
+    elsif @owner
+      owner = @owner['key']
+    end
+    if ! owner
+      raise "Must call create_product with owner param or set @owner in spec suite."
+    end
+
     contents = []
     (0..count).each do |i|
       random_str = random_string(nil, true).to_i
-      contents << @cp.create_content(random_str, random_str, random_str, "yum",
+      contents << @cp.create_content(owner, random_str, random_str, random_str, "yum",
         random_str, {:content_url => "/content/dist/rhel/$releasever#{i}/$basearch#{i}/debug#{i}"}, false)
     end
-    @cp.create_batch_content(contents)
+
+    @cp.create_batch_content(owner, contents)
   end
 
   # Wrapper for ruby API so we can track all distributor versions we created and clean them up.
@@ -405,10 +418,10 @@ class StandardExporter < Exporter
                                    :required_tags => "TAG1,TAG2",
                                    :arches => "i386,x86_64"})
 
-    @cp.add_content_to_product(@products[:product1].id, content.id)
-    @cp.add_content_to_product(@products[:product2].id, content.id)
-    @cp.add_content_to_product(@products[:product2].id, arch_content.id)
-    @cp.add_content_to_product(@products[:derived_product].id, content.id)
+    @cp.add_content_to_product(@owner['key'], @products[:product1].id, content.id)
+    @cp.add_content_to_product(@owner['key'], @products[:product2].id, content.id)
+    @cp.add_content_to_product(@owner['key'], @products[:product2].id, arch_content.id)
+    @cp.add_content_to_product(@owner['key'], @products[:derived_product].id, content.id)
 
     end_date = Date.new(2025, 5, 29)
 

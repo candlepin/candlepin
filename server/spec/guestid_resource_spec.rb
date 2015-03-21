@@ -152,7 +152,7 @@ describe 'GuestId Resource' do
       {'virt.uuid' => uuid1, 'virt.is_guest' => 'true'}, nil, @owner1['key'], [], [])
     # Create a product/subscription
     super_awesome = create_product(nil, random_string('super_awesome'),
-                            :attributes => { "virt_limit" => "10" })
+                            :attributes => { "virt_limit" => "10" }, :owner => @owner1['key'])
     @cp.create_subscription(@owner1['key'], super_awesome.id, 20)
     @cp.refresh_pools(@owner1['key'])
 
@@ -207,7 +207,7 @@ describe 'GuestId Resource' do
       {'virt.uuid' => uuid1, 'virt.is_guest' => 'true'}, nil, @owner1['key'], [], [])
     # Create a product/subscription
     super_awesome = create_product(nil, random_string('super_awesome'),
-                            :attributes => { "virt_limit" => "10" })
+                            :attributes => { "virt_limit" => "10" }, :owner => @owner1['key'])
     @cp.create_subscription(@owner1['key'], super_awesome.id, 20)
     @cp.refresh_pools(@owner1['key'])
 

@@ -28,7 +28,6 @@ import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
-import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.model.Owner;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.X509V3ExtensionUtil.NodePair;
@@ -50,7 +49,6 @@ import java.util.Set;
 public class X509V3ExtensionUtilTest {
     private Configuration config;
     private EntitlementCurator ec;
-    private ProductServiceAdapter psa;
     private X509V3ExtensionUtil util;
 
 
@@ -58,8 +56,7 @@ public class X509V3ExtensionUtilTest {
     public void init() {
         config = mock(Configuration.class);
         ec = mock(EntitlementCurator.class);
-        psa = mock(ProductServiceAdapter.class);
-        util = new X509V3ExtensionUtil(config, ec, psa);
+        util = new X509V3ExtensionUtil(config, ec);
     }
 
     @Test
@@ -147,7 +144,6 @@ public class X509V3ExtensionUtilTest {
         pool.getBranding().add(new Branding(engProdId, "OS", brandedName));
         Consumer consumer = new Consumer();
         Entitlement e = new Entitlement(pool, consumer, 10);
-        when(psa.getProductById(eq(owner), eq("mkt"))).thenReturn(mktProd);
 
         List<org.candlepin.json.model.Product> certProds = util.createProducts(prods, "",
             new HashMap<String, EnvironmentContent>(),  new Consumer(), e);
@@ -176,7 +172,6 @@ public class X509V3ExtensionUtilTest {
         }
         Consumer consumer = new Consumer();
         Entitlement e = new Entitlement(pool, consumer, 10);
-        when(psa.getProductById(eq(owner), eq("mkt"))).thenReturn(mktProd);
 
         List<org.candlepin.json.model.Product> certProds = util.createProducts(prods, "",
             new HashMap<String, EnvironmentContent>(),  new Consumer(), e);

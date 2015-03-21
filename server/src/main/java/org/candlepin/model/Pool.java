@@ -27,6 +27,7 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -145,27 +146,27 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     private Date endDate;
 
     @ManyToOne
-    @JoinColumn(name="product_uuid", nullable = false)
+    @JoinColumn(name = "product_uuid", nullable = false)
     @NotNull
     private Product product;
 
     @ManyToOne
-    @JoinColumn(name="derived_product_uuid")
+    @JoinColumn(name = "derived_product_uuid")
     private Product derivedProduct;
 
     @ManyToMany
     @JoinTable(
-        name="cpo_pool_provided_products",
-        joinColumns={@JoinColumn(name="pool_id", insertable = false, updatable = false)},
-        inverseJoinColumns={@JoinColumn(name="product_uuid")}
+        name = "cpo_pool_provided_products",
+        joinColumns = {@JoinColumn(name = "pool_id", insertable = false, updatable = false)},
+        inverseJoinColumns = {@JoinColumn(name = "product_uuid")}
     )
     private Set<Product> providedProducts = new HashSet<Product>();
 
     @ManyToMany
     @JoinTable(
-        name="cpo_pool_derived_products",
-        joinColumns={@JoinColumn(name="pool_id", insertable = false, updatable = false)},
-        inverseJoinColumns={@JoinColumn(name="product_uuid")}
+        name = "cpo_pool_derived_products",
+        joinColumns = {@JoinColumn(name = "pool_id", insertable = false, updatable = false)},
+        inverseJoinColumns = {@JoinColumn(name = "product_uuid")}
     )
     private Set<Product> derivedProvidedProducts = new HashSet<Product>();
 
@@ -189,6 +190,15 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
 
     @Size(max = 255)
     private String orderNumber;
+
+    // This should be encapsulated and a separate object, but I don't feel like fighting with an ORM today.
+    @ManyToMany
+    @JoinTable(
+        name = "cpo_pool_stack_prod_attribs",
+        joinColumns = {@JoinColumn(name = "pool_id", insertable = false, updatable = false)},
+        inverseJoinColumns = {@JoinColumn(name = "attribute_id")}
+    )
+    private Set<ProductAttribute> stackedProdAttributes = new HashSet<ProductAttribute>();
 
     @Formula("(select sum(ent.quantity) from cp_entitlement ent " +
              "where ent.pool_id = id)")
@@ -417,7 +427,10 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
 
     public void setAttributes(Set<PoolAttribute> attributes) {
         this.attributes.clear();
-        this.attributes.addAll(attributes);
+
+        if (attributes != null) {
+            this.attributes.addAll(attributes);
+        }
     }
 
     public void addAttribute(PoolAttribute attrib) {
@@ -567,7 +580,10 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
 
     public void setProvidedProducts(Set<Product> providedProducts) {
         this.providedProducts.clear();
-        this.providedProducts.addAll(providedProducts);
+
+        if (providedProducts != null) {
+            this.providedProducts.addAll(providedProducts);
+        }
     }
 
     /**
@@ -710,6 +726,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         if (this.getSourceSubscription() != null) {
             return this.getSourceSubscription().getSubscriptionSubKey();
         }
+
         return null;
     }
 
@@ -741,9 +758,32 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     }
 
     public Set<ProductAttribute> getProductAttributes() {
+        if (this.isStacked()) {
+            return this.getStackedProductAttributes();
+        }
+
         return this.getProduct() != null ?
             this.getProduct().getAttributes() :
             new HashSet<ProductAttribute>();
+    }
+
+    @XmlTransient
+    public ProductAttribute getProductAttribute(String key) {
+        if (key != null) {
+            for (ProductAttribute attribute : this.getProductAttributes()) {
+                if (key.equalsIgnoreCase(attribute.getName())) {
+                    return attribute;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    @XmlTransient
+    public String getProductAttributeValue(String key) {
+        ProductAttribute attribute = this.getProductAttribute(key);
+        return attribute != null ? attribute.getValue() : null;
     }
 
     public void setDerivedProduct(Product derived) {
@@ -756,11 +796,10 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
 
     public void setDerivedProvidedProducts(Set<Product> derivedProvidedProducts) {
         this.derivedProvidedProducts.clear();
-        this.derivedProvidedProducts.addAll(derivedProvidedProducts);
-    }
 
-    public void addDerivedProvidedProduct(Product provided) {
-        this.derivedProvidedProducts.add(provided);
+        if (derivedProvidedProducts != null) {
+            this.derivedProvidedProducts.addAll(derivedProvidedProducts);
+        }
     }
 
     /*
@@ -887,5 +926,79 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
 
     public void setMarkedForDelete(boolean markedForDelete) {
         this.markedForDelete = markedForDelete;
+    }
+
+
+    /**
+     * Retrieves the product attributes currently assigned to this pool's attribute stack. If no
+     * attributes have been assigned to the stack, this method returns an empty set.
+     * <p/>
+     * <strong>Note:</strong> changes made to the set returned by this method will be reflected by
+     * this object.
+     *
+     * @return
+     *  The set of product attributes currently assigned to this attribute stack.
+     */
+    @XmlTransient
+    public Set<ProductAttribute> getStackedProductAttributes() {
+        return this.stackedProdAttributes;
+    }
+
+    /**
+     * Sets the product attributes to be associated with this pool's attribute stack, clearing any
+     * previous associations. If the given collection of attributes is null or empty, no attributes
+     * will be associated with the stack.
+     * <p/>
+     * <strong>Note:</strong> Duplicate references to a given product attribute will be silently
+     * discarded.
+     * <p/>
+     * <strong>Note:</strong> Further changes made to the provided collection <em>will not</em> be
+     * reflected by this object.
+     *
+     * @param attributes
+     *  A collection of product attributes to associate with this pool's attribute stack.
+     *
+     * @return
+     *  a reference to this pool
+     */
+    @XmlTransient
+    public Pool setStackedProductAttributes(Collection<ProductAttribute> attributes) {
+        this.stackedProdAttributes.clear();
+
+        if (attributes != null) {
+            this.stackedProdAttributes.addAll(attributes);
+        }
+
+        return this;
+    }
+
+    /**
+     * Adds the specified product attribute to this pool's attribute stack. If the attribute has
+     * already been added, it will be ignored.
+     *
+     * @param attribute
+     *  The attribute to add to this pool's attribute stack
+     *
+     * @return
+     *  true if the attribute was added sucessfully; false otherwise.
+     */
+    @XmlTransient
+    public boolean addStackedProductAttribute(ProductAttribute attribute) {
+        return this.stackedProdAttributes.add(attribute);
+    }
+
+    /**
+     * Removes the specified product attribute from this attribute stack. If the attribute has not
+     * been associated with this stack, it will be ignored.
+     *
+     * @param attribute
+     *  The attribute to remove from pool's attribute stack
+     *
+     * @return
+     *  true if the attribute was removed sucessfully; false otherwise.
+     */
+    @XmlTransient
+    public boolean removeStackedProductAttribute(ProductAttribute attribute) {
+        return this.stackedProdAttributes.remove(attribute);
     }
 }

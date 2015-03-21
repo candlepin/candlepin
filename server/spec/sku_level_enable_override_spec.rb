@@ -90,7 +90,7 @@ describe 'SKU Level Enable Override' do
     # Override enabled to true:
     job = @org_admin.promote_content(env['id'],
         [{
-          :contentId => @content3['id'],
+          :content => @content3['id'],
           :enabled => true,
         }])
     wait_for_job(job['id'], 15)
@@ -170,7 +170,7 @@ describe 'SKU Level Enable Override' do
     # Override enabled to true:
     job = @org_admin.promote_content(env['id'],
         [{
-          :contentId => @content3['id'],
+          :content => @content3['id'],
           :enabled => true,
         }])
     wait_for_job(job['id'], 15)

@@ -16,7 +16,6 @@ package org.candlepin.model;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.hibernate.annotations.Index;
 import org.hibernate.annotations.Parent;
 
 import java.io.Serializable;

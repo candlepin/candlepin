@@ -198,11 +198,11 @@ public class DefaultEntitlementCertServiceAdapterTest {
         );
         injector.injectMembers(this);
 
-        v3extensionUtil = new X509V3ExtensionUtil(config, entCurator, productAdapter);
+        v3extensionUtil = new X509V3ExtensionUtil(config, entCurator);
         certServiceAdapter = new DefaultEntitlementCertServiceAdapter(
             mockedPKI, extensionUtil, v3extensionUtil,
-            mock(EntitlementCertificateCurator.class), keyPairCurator,
-            serialCurator, productAdapter, entCurator,
+            mock(EntitlementCertificateCurator.class),
+            keyPairCurator, serialCurator, entCurator,
             I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
             config);
 
@@ -295,11 +295,11 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         product.setContent(Collections.singleton(content));
 
-        when(productAdapter.getProductById(eq(product.getOwner()), eq(product.getId())))
-            .thenReturn(product);
-        when(productAdapter.getProductById(
-            eq(largeContentProduct.getOwner()), eq(largeContentProduct.getId()))
-        ).thenReturn(largeContentProduct);
+        // when(productAdapter.getProductById(eq(product.getOwner()), eq(product.getId())))
+        //     .thenReturn(product);
+        // when(productAdapter.getProductById(
+        //     eq(largeContentProduct.getOwner()), eq(largeContentProduct.getId()))
+        // ).thenReturn(largeContentProduct);
     }
 
     private Content createContent(String name, String id, String label,
@@ -319,8 +319,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
         // Set up an adapter with a real PKIUtil
         certServiceAdapter = new DefaultEntitlementCertServiceAdapter(
             realPKI, extensionUtil, v3extensionUtil,
-            mock(EntitlementCertificateCurator.class), keyPairCurator,
-            serialCurator, productAdapter, entCurator,
+            mock(EntitlementCertificateCurator.class),
+            keyPairCurator, serialCurator, entCurator,
             I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
             config);
 
@@ -742,8 +742,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
         DefaultEntitlementCertServiceAdapter entAdapter =
             new DefaultEntitlementCertServiceAdapter(
                 mockedPKI, mockExtensionUtil, mockV3extensionUtil,
-                mock(EntitlementCertificateCurator.class), keyPairCurator,
-                serialCurator, productAdapter, entCurator,
+                mock(EntitlementCertificateCurator.class),
+                keyPairCurator, serialCurator, entCurator,
                 I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
                 mockConfig);
 
@@ -780,8 +780,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
         DefaultEntitlementCertServiceAdapter entAdapter =
             new DefaultEntitlementCertServiceAdapter(
                 mockedPKI, mockExtensionUtil, mockV3extensionUtil,
-                mock(EntitlementCertificateCurator.class), keyPairCurator,
-                serialCurator, productAdapter, entCurator,
+                mock(EntitlementCertificateCurator.class),
+                keyPairCurator, serialCurator, entCurator,
                 I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
                 mockConfig);
 
@@ -811,8 +811,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
         DefaultEntitlementCertServiceAdapter entAdapter =
             new DefaultEntitlementCertServiceAdapter(
                 mockedPKI, mockExtensionUtil, mockV3extensionUtil,
-                mock(EntitlementCertificateCurator.class), keyPairCurator,
-                serialCurator, productAdapter, entCurator,
+                mock(EntitlementCertificateCurator.class),
+                keyPairCurator, serialCurator, entCurator,
                 I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
                 mockConfig);
 
@@ -839,8 +839,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
         DefaultEntitlementCertServiceAdapter entAdapter =
             new DefaultEntitlementCertServiceAdapter(
                 mockedPKI, mockExtensionUtil, mockV3extensionUtil,
-                mock(EntitlementCertificateCurator.class), keyPairCurator,
-                serialCurator, productAdapter, entCurator,
+                mock(EntitlementCertificateCurator.class),
+                keyPairCurator, serialCurator, entCurator,
                 I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
                 mockConfig);
 
@@ -864,8 +864,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
         DefaultEntitlementCertServiceAdapter entAdapter =
             new DefaultEntitlementCertServiceAdapter(
                 mockedPKI, mockExtensionUtil, mockV3extensionUtil,
-                mock(EntitlementCertificateCurator.class), keyPairCurator,
-                serialCurator, productAdapter, entCurator,
+                mock(EntitlementCertificateCurator.class),
+                keyPairCurator, serialCurator, entCurator,
                 I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
                 mockConfig);
 
@@ -1338,6 +1338,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         inheritedArchProduct.setContent(Collections.singleton(noArchContent));
         products.add(inheritedArchProduct);
+
         when(productAdapter.getProductById(
             eq(inheritedArchProduct.getOwner()),
             eq(inheritedArchProduct.getId()))
