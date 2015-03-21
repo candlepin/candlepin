@@ -216,6 +216,8 @@ public class CandlepinPoolManager implements PoolManager {
                     changedProducts.add(incoming);
                     // TODO: signal back to caller the set of changed products, we'll
                     // need to know during refreshing of existing pools.
+
+                    // TODO what about content?
                 }
             }
         }
