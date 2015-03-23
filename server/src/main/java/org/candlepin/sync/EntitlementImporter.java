@@ -330,12 +330,15 @@ public class EntitlementImporter {
         subscription.setId(local.getId());
         map.remove(local.getUpstreamEntitlementId());
         subscriptionCurator.merge(subscription);
+        //subscriptionCurator.refresh(subscription);
+
         // send updated event
         sink.emitSubscriptionModified(local, subscription);
     }
 
     private void createSubscription(Subscription subscription) {
         subscriptionCurator.create(subscription);
+        subscriptionCurator.refresh(subscription);
         // send out created event
         log.debug("emitting subscription event");
         sink.emitSubscriptionCreated(subscription);

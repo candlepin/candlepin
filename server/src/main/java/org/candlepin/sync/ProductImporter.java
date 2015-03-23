@@ -98,16 +98,17 @@ public class ProductImporter {
         }
         for (Content c : contToStore.values()) {
             log.debug("Store Content: " + c.getLabel());
-            contentCurator.createOrUpdate(c);
+            Content newContent = contentCurator.createOrUpdate(c);
+            contentCurator.refresh(newContent);
         }
-        contentCurator.flush();
-        curator.flush();
+        //contentCurator.flush();
+        //curator.flush();
         for (Product p : prodToStore.values()) {
             log.debug("Store Product: " + p.getName());
             curator.createOrUpdate(p);
+            curator.refresh(p);
         }
-        contentCurator.flush();
-        curator.flush();
+
     }
 
     /**

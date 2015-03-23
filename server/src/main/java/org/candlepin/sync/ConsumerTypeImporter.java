@@ -54,7 +54,9 @@ public class ConsumerTypeImporter {
             if (curator.lookupByLabel(consumerType.getLabel()) == null) {
                 curator.create(consumerType);
                 log.debug("Created consumer type: " + consumerType.getLabel());
+                curator.refresh(consumerType);
             }
         }
+        
     }
 }

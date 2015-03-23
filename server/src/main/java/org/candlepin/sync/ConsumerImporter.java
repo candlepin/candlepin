@@ -123,6 +123,7 @@ public class ConsumerImporter {
         owner.setUpstreamConsumer(uc);
 
         curator.merge(owner);
+        //curator.refresh(owner);
     }
 
 }
