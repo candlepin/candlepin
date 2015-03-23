@@ -385,16 +385,19 @@ public class Importer {
         importRules(rules, metadata);
 
         importConsumerTypes(consumerTypes.listFiles());
+        consumerTypeCurator.flush();
 
         File distributorVersions = importFiles.get(ImportFile.DISTRIBUTOR_VERSIONS.fileName());
         if (distributorVersions != null) {
             importDistributorVersions(distributorVersions.listFiles());
         }
-
+        distVerCurator.flush();
+        
         File cdns = importFiles.get(ImportFile.CONTENT_DELIVERY_NETWORKS.fileName());
         if (cdns != null) {
             importContentDeliveryNetworks(cdns.listFiles());
         }
+        cdnCurator.flush();
 
         // per user elements
         try {
@@ -419,7 +422,9 @@ public class Importer {
         catch (ImportConflictException e) {
             conflictExceptions.add(e);
         }
+        ownerCurator.flush();
 
+        
         // At this point we're done checking for any potential conflicts:
         if (!conflictExceptions.isEmpty()) {
             log.error("Conflicts occurred during import that were not overridden:");
@@ -429,6 +434,8 @@ public class Importer {
             throw new ImportConflictException(conflictExceptions);
         }
 
+        subCurator.flush();
+        productCurator.flush();
         // If the consumer has no entitlements, this products directory will end up empty.
         // This also implies there will be no entitlements to import.
         Refresher refresher = poolManager.getRefresher();
