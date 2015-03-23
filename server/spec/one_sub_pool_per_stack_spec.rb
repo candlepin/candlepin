@@ -218,7 +218,6 @@ describe 'One Sub Pool Per Stack' do
     # Check that the product data was copied.
     check_product_attr_value(sub_pool, "virt_limit", '3')
     check_product_attr_value(sub_pool, "multi-entitlement", 'yes')
-    check_product_attr_value(sub_pool, "sockets", "6")
     check_product_attr_value(sub_pool, "stacking_id", @stack_id)
   end
 

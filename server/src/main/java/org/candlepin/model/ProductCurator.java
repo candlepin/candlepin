@@ -64,7 +64,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      *  was not found.
      */
     public Product lookupByName(Owner owner, String name) {
-        return (Product) this.currentSession().createCriteria(Product.class)
+        return (Product) this.createSecureCriteria()
             .add(Restrictions.eq("owner", owner))
             .add(Restrictions.eq("name", name))
             .uniqueResult();
@@ -77,7 +77,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      */
     @Transactional
     public Product lookupById(Owner owner, String id) {
-        return (Product) currentSession().createCriteria(Product.class)
+        return (Product) this.createSecureCriteria()
             .add(Restrictions.eq("owner", owner))
             .add(Restrictions.eq("id", id)).uniqueResult();
     }
@@ -89,7 +89,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      */
     @Transactional
     public Product lookupById(String ownerId, String productId) {
-        return (Product) currentSession().createCriteria(Product.class)
+        return (Product) this.createSecureCriteria()
             .add(Restrictions.eq("owner.id", ownerId))
             .add(Restrictions.eq("id", productId)).uniqueResult();
     }
@@ -107,14 +107,14 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      */
     @Transactional
     public Product lookupByUuid(String uuid) {
-        return (Product) currentSession().createCriteria(Product.class)
+        return (Product) this.createSecureCriteria()
             .add(Restrictions.eq("uuid", uuid)).uniqueResult();
     }
 
     @SuppressWarnings("unchecked")
     @Transactional
     public List<Product> listByOwner(Owner owner) {
-        return currentSession().createCriteria(Product.class)
+        return this.createSecureCriteria()
             .add(Restrictions.eq("owner", owner)).list();
     }
 
@@ -330,7 +330,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
             return new LinkedList<Product>();
         }
 
-        return currentSession().createCriteria(Product.class)
+        return this.createSecureCriteria()
             .createAlias("productContent", "pcontent")
             .createAlias("pcontent.content", "content")
             .add(Restrictions.eq("owner", owner))
@@ -346,7 +346,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
             return new LinkedList<Product>();
         }
 
-        return currentSession().createCriteria(Product.class)
+        return this.createSecureCriteria()
             .createAlias("productContent", "pcontent")
             .createAlias("pcontent.content", "content")
             .add(Restrictions.in("content.uuid", contentUuids))
