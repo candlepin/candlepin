@@ -43,7 +43,7 @@
         />
     </changeSet>
 
-    <!-- cpo_activationkey_products -->
+    <!-- cpo_activation_key_products -->
     <changeSet id="20150210094558-3" author="crog">
         <createTable tableName="cpo_activation_key_products">
             <column name="key_id" type="varchar(32)">
@@ -445,32 +445,37 @@
 
 
 
-    <!-- cp_pool_branding -->
+    <!-- cpo_pool_branding -->
     <changeSet id="20150210094558-30" author="crog">
-        <dropForeignKeyConstraint baseTableName="cp_pool_branding"
-            constraintName="fk_pool_branding_branding_id"
-        />
+        <createTable tableName="cpo_pool_branding">
+            <column name="pool_id" type="varchar(32)">
+                <constraints
+                    nullable="false"
+                    foreignKeyName="cpo_pool_branding_fk1"
+                    references="cp_pool(id)"
+                />
+            </column>
+            <column name="branding_id" type="varchar(32)">
+                <constraints
+                    nullable="false"
+                    foreignKeyName="cpo_pool_branding_fk2"
+                    references="cpo_branding(id)"
+                />
+            </column>
+        </createTable>
     </changeSet>
 
     <changeSet id="20150210094558-31" author="crog">
-        <addForeignKeyConstraint baseTableName="cp_pool_branding"
-            baseColumnNames="branding_id"
-            referencedTableName="cpo_branding"
-            referencedColumnNames="id"
-            constraintName="cp_sub_derived_products_fk2"
+        <addPrimaryKey tableName="cpo_pool_branding"
+            columnNames="pool_id, branding_id"
+            constraintName="cpo_pool_branding_pk"
         />
     </changeSet>
 
-    <changeSet id="20150210094558-32" author="crog">
-        <addPrimaryKey tableName="cp_pool_branding"
-            columnNames="pool_id, branding_id"
-            constraintName="cp_sub_derived_products_pk"
-        />
-    </changeSet>
 
 
     <!-- cpo_pool_stack_prod_attribs -->
-    <changeSet id="20150210094558-33" author="crog">
+    <changeSet id="20150210094558-32" author="crog">
         <createTable tableName="cpo_pool_stack_prod_attribs">
             <column name="pool_id" type="varchar(32)">
                 <constraints
@@ -491,7 +496,7 @@
         </createTable>
     </changeSet>
 
-    <changeSet id="20150210094558-34" author="crog">
+    <changeSet id="20150210094558-33" author="crog">
         <addPrimaryKey tableName="cpo_pool_stack_prod_attribs"
             columnNames="pool_id, attribute_id"
             constraintName="cpo_pool_stack_prod_attribs_pk"
@@ -500,7 +505,7 @@
 
 
     <!-- cpo_subscriptions -->
-    <changeSet id="20150210094558-35" author="crog">
+    <changeSet id="20150210094558-34" author="crog">
         <createTable tableName="cpo_subscriptions">
             <column name="id" type="varchar(32)">
                 <constraints primaryKey="true" primaryKeyName="cpo_subscriptions_pk"/>
@@ -556,7 +561,7 @@
 
 
     <!-- cpo_pool_source_sub -->
-    <changeSet id="20150210094558-36" author="crog">
+    <changeSet id="20150210094558-35" author="crog">
         <createTable tableName="cpo_pool_source_sub">
             <column name="id" type="varchar(32)">
                 <constraints primaryKey="true" primaryKeyName="cpo_pool_source_sub_pk"/>
@@ -580,7 +585,7 @@
         </createTable>
     </changeSet>
 
-    <changeSet id="20150210094558-37" author="crog">
+    <changeSet id="20150210094558-36" author="crog">
         <addUniqueConstraint tableName="cpo_pool_source_sub"
             columnNames="subscription_id, subscription_sub_key"
             constraintName="cpo_pool_source_sub_unq1"
@@ -590,7 +595,7 @@
 
 
     <!-- cpo_sub_branding -->
-    <changeSet id="20150210094558-38" author="crog">
+    <changeSet id="20150210094558-37" author="crog">
         <createTable tableName="cpo_sub_branding">
             <column name="subscription_id" type="varchar(32)">
                 <constraints
@@ -607,6 +612,13 @@
                 />
             </column>
         </createTable>
+    </changeSet>
+
+    <changeSet id="20150210094558-38" author="crog">
+        <addPrimaryKey tableName="cpo_sub_branding"
+            columnNames="subscription_id, branding_id"
+            constraintName="cpo_sub_branding_pk"
+        />
     </changeSet>
 
 

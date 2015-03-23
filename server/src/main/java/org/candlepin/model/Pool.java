@@ -200,7 +200,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     private Long exported;
 
     @OneToMany
-    @JoinTable(name = "cp_pool_branding",
+    @JoinTable(name = "cpo_pool_branding",
         joinColumns = @JoinColumn(name = "pool_id"),
         inverseJoinColumns = @JoinColumn(name = "branding_id"))
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
