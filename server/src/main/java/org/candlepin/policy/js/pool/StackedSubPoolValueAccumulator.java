@@ -17,13 +17,10 @@ package org.candlepin.policy.js.pool;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductAttribute;
 
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 
@@ -42,10 +39,6 @@ public class StackedSubPoolValueAccumulator {
     private Date endDate;
     private Set<Product> expectedProvidedProds = new HashSet<Product>();
 
-    // Store the product pool attributes in a map by name so that
-    // we don't end up with multiple attributes with the same name.
-    private Map<String, ProductAttribute> expectedAttrs = new HashMap<String, ProductAttribute>();
-
     public StackedSubPoolValueAccumulator(Pool stackedSubPool, List<Entitlement> stackedEnts) {
         for (Entitlement nextStacked : stackedEnts) {
             Pool nextStackedPool = nextStacked.getPool();
@@ -53,7 +46,6 @@ public class StackedSubPoolValueAccumulator {
             accumulateDateRange(nextStacked);
             updateEldestWithVirtLimit(nextStacked);
             accumulateProvidedProducts(stackedSubPool, nextStackedPool);
-            accumulateProductAttributes(stackedSubPool, nextStackedPool);
         }
     }
 
@@ -128,27 +120,6 @@ public class StackedSubPoolValueAccumulator {
         }
     }
 
-    /**
-     * Update the product pool attributes - we need to be sure to check for any
-     * derived products for the sub pool. If it exists, then we need to use the
-     * derived product pool attributes.
-     *
-     * Using the pool's *current* product ID here, we may have to change it later
-     * if it changes.
-     *
-     * @param stackedSubPool
-     * @param nextStackedPool
-     */
-    private void accumulateProductAttributes(Pool stackedSubPool, Pool nextStackedPool) {
-        Product product = nextStackedPool.getDerivedProduct() != null ?
-            nextStackedPool.getDerivedProduct() :
-            nextStackedPool.getProduct();
-
-        for (ProductAttribute attribute : product.getAttributes()) {
-            expectedAttrs.put(attribute.getName(), attribute);
-        }
-    }
-
     public Entitlement getEldest() {
         return eldest;
     }
@@ -167,10 +138,6 @@ public class StackedSubPoolValueAccumulator {
 
     public Set<Product> getExpectedProvidedProds() {
         return expectedProvidedProds;
-    }
-
-    public Set<ProductAttribute> getExpectedAttributes() {
-        return new HashSet<ProductAttribute>(expectedAttrs.values());
     }
 
 }

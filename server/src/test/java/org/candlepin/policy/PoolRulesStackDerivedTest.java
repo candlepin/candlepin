@@ -116,13 +116,13 @@ public class PoolRulesStackDerivedTest {
             new ConsumerType(ConsumerTypeEnum.SYSTEM));
 
         // Two subtly different products stacked together:
-        prod1 = TestUtil.createProduct(owner);
+        prod1 = TestUtil.createProduct("prod1", "prod1", owner);
         prod1.addAttribute(new ProductAttribute("virt_limit", "2"));
         prod1.addAttribute(new ProductAttribute("stacking_id", STACK));
         prod1.addAttribute(new ProductAttribute("testattr1", "1"));
         when(productCuratorMock.find(prod1.getUuid())).thenReturn(prod1);
 
-        prod2 = TestUtil.createProduct(owner);
+        prod2 = TestUtil.createProduct("prod2", "prod2", owner);
         prod2.addAttribute(new ProductAttribute("virt_limit", "unlimited"));
         prod2.addAttribute(new ProductAttribute("stacking_id", STACK));
         prod2.addAttribute(new ProductAttribute("testattr2", "2"));
@@ -238,15 +238,16 @@ public class PoolRulesStackDerivedTest {
 
     @Test
     public void mergedProductAttributes() {
-        stackedEnts.add(createEntFromPool(pool1));
+        Entitlement ent1 = createEntFromPool(pool1);
+        ent1.setCreated(new Date(System.currentTimeMillis() - 86400000));
+
+        stackedEnts.add(ent1);
         stackedEnts.add(createEntFromPool(pool3));
         PoolUpdate update = poolRules.updatePoolFromStack(stackDerivedPool, null);
         assertTrue(update.changed());
-        assertTrue(update.getProductAttributesChanged());
-        assertEquals(6, stackDerivedPool.getProductAttributes().size());
 
-        assertEquals("2", stackDerivedPool.getProductAttributeValue("testattr2"));
-        assertEquals("1", stackDerivedPool.getProductAttributeValue("testattr1"));
+        assertTrue(update.getProductAttributesChanged());
+        assertEquals(pool1.getProductAttributes(), stackDerivedPool.getProductAttributes());
     }
 
     @Test

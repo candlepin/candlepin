@@ -349,7 +349,7 @@ public class PoolRules {
         if (eldestWithVirtLimit != null) {
             // Quantity may have changed, lets see.
             String virtLimit =
-                eldestWithVirtLimit.getPool().getProduct().getAttributeValue("virt_limit");
+                eldestWithVirtLimit.getPool().getProductAttributeValue("virt_limit");
 
             Long quantity =
                 virtLimit.equalsIgnoreCase("unlimited") ? -1L : Long.parseLong(virtLimit);
@@ -369,23 +369,18 @@ public class PoolRules {
         boolean useDerived = eldestEntPool.getDerivedProduct() != null;
         Product product = useDerived ? eldestEntPool.getDerivedProduct() : eldestEntPool.getProduct();
 
+        update.setProductAttributesChanged(
+            !pool.getProductAttributes().equals(product.getAttributes())
+        );
+
         // Check if product ID, name, or provided products have changed.
-        update.setProductsChanged(checkForChangedProducts(product,
-                acc.getExpectedProvidedProds(), pool, changedProducts));
+        update.setProductsChanged(checkForChangedProducts(
+            product, acc.getExpectedProvidedProds(), pool, changedProducts
+        ));
 
-        // Check if product attributes have changed.
-        Set<ProductAttribute> expectedAttrs = acc.getExpectedAttributes();
-
-        if (!pool.getProductAttributes().equals(expectedAttrs)) {
-            pool.setStackedProductAttributes(expectedAttrs);
-            update.setProductAttributesChanged(true);
-        }
-
-        if (!StringUtils.equals(eldestEntPool.getContractNumber(),
-            pool.getContractNumber()) ||
+        if (!StringUtils.equals(eldestEntPool.getContractNumber(), pool.getContractNumber()) ||
             !StringUtils.equals(eldestEntPool.getOrderNumber(), pool.getOrderNumber()) ||
-            !StringUtils.equals(eldestEntPool.getAccountNumber(),
-                pool.getAccountNumber())) {
+            !StringUtils.equals(eldestEntPool.getAccountNumber(), pool.getAccountNumber())) {
 
             pool.setContractNumber(eldestEntPool.getContractNumber());
             pool.setAccountNumber(eldestEntPool.getAccountNumber());
@@ -459,9 +454,8 @@ public class PoolRules {
         return incomingProvided;
     }
 
-    private boolean checkForChangedProducts(Product incomingProduct,
-            Set<Product> incomingProvided, Pool existingPool,
-            Set<Product> changedProducts) {
+    private boolean checkForChangedProducts(Product incomingProduct, Set<Product> incomingProvided,
+        Pool existingPool, Set<Product> changedProducts) {
 
         Product existingProduct = existingPool.getProduct();
         Set<Product> currentProvided = existingPool.getProvidedProducts();
