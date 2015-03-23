@@ -443,20 +443,29 @@ public class Importer {
         if (importFiles.get(ImportFile.PRODUCTS.fileName()) != null) {
             ProductImporter importer = new ProductImporter(productCurator, contentCurator);
 
+            log.debug("before importProducts");
             Set<Product> productsToImport = importProducts(
                 importFiles.get(ImportFile.PRODUCTS.fileName()).listFiles(),
                 importer);
 
+            log.debug("before getModifiedProducts");
             Set<Product> modifiedProducts = importer.getChangedProducts(productsToImport);
             for (Product product : modifiedProducts) {
                 refresher.add(product);
+                log.debug("modified product: " + product.getId());
             }
 
+            log.debug("before productsToImport.store");
             importer.store(productsToImport);
+            log.debug("after productsToImport.store");
+
 
             meta = mapper.readValue(metadata, Meta.class);
+            log.debug("before importEntitlements");
             importEntitlements(owner, productsToImport, entitlements.listFiles(),
                 consumer, meta);
+            log.debug("after importEntitlements");
+            
 
             refresher.add(owner);
             refresher.run();

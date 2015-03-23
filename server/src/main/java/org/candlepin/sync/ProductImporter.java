@@ -89,9 +89,11 @@ public class ProductImporter {
                 // immediately get changes to content when published on the server.
                 // We can assume this is a standalone server due to the fact that
                 // import is being used, so no need to guard this behavior:
+
                 //c.setMetadataExpire(new Long(0));
                 contToStore.put(c.getId(), c);
                 //contentCurator.createOrUpdate(c);
+
             }
             prodToStore.put(importedProduct.getId(), importedProduct);
 
