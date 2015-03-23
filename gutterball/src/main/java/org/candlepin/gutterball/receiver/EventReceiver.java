@@ -19,9 +19,10 @@ import org.candlepin.gutterball.config.ConfigProperties;
 
 import com.google.inject.Inject;
 
-import org.apache.qpid.AMQException;
 import org.apache.qpid.client.AMQAnyDestination;
-import org.apache.qpid.client.AMQConnection;
+import org.apache.qpid.client.AMQConnectionFactory;
+import org.apache.qpid.jms.BrokerDetails;
+import org.apache.qpid.url.URLSyntaxException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,75 +48,62 @@ public class EventReceiver {
     private TopicSubscriber consumer;
     private Session sess;
     private Topic dest;
-    private Connection conn;
-    private String connstr;
 
     private EventMessageListener eventMessageListener;
+
+    private Connection conn;
 
     @Inject
     public EventReceiver(Configuration config, EventMessageListener eventMessageListener)
         throws Exception {
         this.eventMessageListener = eventMessageListener;
-        configureSslProperties(config);
-
-        int maxRetries = config.getInt(ConfigProperties.AMQP_CONNECTION_RETRY_ATTEMPTS);
-        long waitTimeInSeconds = config.getLong(ConfigProperties.AMQP_CONNECTION_RETRY_INTERVAL);
-
-        while (maxRetries > 0) {
-            try {
-                init(config);
-                break;
-            }
-            catch (Exception e) {
-                maxRetries--;
-                if (maxRetries == 0) {
-                    // Rethrow the exception so that it bubbles up on the last failed attempt.
-                    throw e;
-                }
-
-                log.info("Failed to connect to message bus: " + e.getMessage());
-                log.info("Trying " + maxRetries + " more time(s).");
-
-                try {
-                    log.info("Waiting for " + waitTimeInSeconds + "s before retrying.");
-                    Thread.sleep(waitTimeInSeconds * 1000);
-                }
-                catch (InterruptedException e1) {
-                    // If interrupted, just throw the initial error.
-                    throw e;
-                }
-            }
-        }
+        init(config);
     }
 
-    protected void init(Configuration config) throws AMQException, JMSException, URISyntaxException  {
-        conn = new AMQConnection(config.getString(ConfigProperties.AMQP_CONNECT_STRING));
+    protected void init(final Configuration config) throws JMSException, URISyntaxException {
+        AMQConnectionFactory connectionFactory = configureConnectionFactory(config);
+        conn = connectionFactory.createConnection();
         conn.start();
+
         sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
         dest = new AMQAnyDestination("event");
         consumer = sess.createDurableSubscriber(dest, "event");
         consumer.setMessageListener(eventMessageListener);
         log.info("Receiver init complete");
-
     }
 
-    private void configureSslProperties(Configuration config) {
-        // FIXME: Setting the property here is dangerous,
-        // but in theory nothing else is setting/using it
-        // http://qpid.apache.org/releases/qpid-0.24/programming/book/ch03s06.html
+    private AMQConnectionFactory configureConnectionFactory(Configuration config) throws URLSyntaxException {
+        int maxRetries = config.getInt(ConfigProperties.AMQP_CONNECTION_RETRY_ATTEMPTS);
+        long waitTimeInSeconds = config.getLong(ConfigProperties.AMQP_CONNECTION_RETRY_INTERVAL);
 
-        System.setProperty("javax.net.ssl.keyStore",
-            config.getString(ConfigProperties.AMQP_KEYSTORE));
-        System.setProperty("javax.net.ssl.keyStorePassword",
-            config.getString(ConfigProperties.AMQP_KEYSTORE_PASSWORD));
-        System.setProperty("javax.net.ssl.trustStore",
-            config.getString(ConfigProperties.AMQP_TRUSTSTORE));
-        System.setProperty("javax.net.ssl.trustStorePassword",
-            config.getString(ConfigProperties.AMQP_TRUSTSTORE_PASSWORD));
+        AMQConnectionFactory connFactory = new AMQConnectionFactory(config.getString(ConfigProperties.AMQP_CONNECT_STRING));
+        for (BrokerDetails broker : connFactory.getConnectionURL().getAllBrokerDetails()) {
+            broker.setProperty("trust_store", config.getString(ConfigProperties.AMQP_TRUSTSTORE));
+            broker.setProperty("trust_store_password", config.getString(ConfigProperties.AMQP_TRUSTSTORE_PASSWORD));
+            broker.setProperty("key_store", config.getString(ConfigProperties.AMQP_KEYSTORE));
+            broker.setProperty("key_store_password", config.getString(ConfigProperties.AMQP_KEYSTORE_PASSWORD));
 
-        log.info("Configured SSL properites.");
+            // It is important that broker urls are configured with retries and connection
+            // delays to help avoid issues when the qpidd connection is lost. Candlepin
+            // will set defaults, or configured value automatically if they are not
+            // specified in the broker urls.
+            if (broker.getProperty("retries") == null) {
+                broker.setProperty("retries", Integer.toString(maxRetries));
+            }
+
+            if (broker.getProperty("connectdelay") == null) {
+                long delay = 1000 * waitTimeInSeconds;
+                broker.setProperty("connectdelay", Long.toString(delay));
+            }
+            log.info("Broker configured: " + broker);
+        }
+
+        log.info("Configured AMQP connection factory.");
+        return connFactory;
     }
 
+    // FIXME [mstead] This is not being called and should probably be called
+    //       when the app is being shut down.
     private void finish() throws JMSException {
         consumer.close();
         sess.close();

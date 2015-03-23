@@ -26,13 +26,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 
+import org.apache.qpid.client.AMQConnectionFactory;
+import org.apache.qpid.jms.BrokerDetails;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
 import javax.jms.Session;
 import javax.jms.Topic;
@@ -66,22 +67,10 @@ public class AMQPBusPubProvider implements Provider<AMQPBusPublisher> {
     @Inject
     public AMQPBusPubProvider(Configuration config, ObjectMapper omapper) {
         try {
-            configureSslProperties(config);
-
             mapper = omapper;
-
             log.info("building initialcontext");
             ctx = new InitialContext(buildConfigurationProperties(config));
-
-            log.info("looking up qpidConnectionfactory");
-            ConnectionFactory connectionFactory =
-                (ConnectionFactory) ctx.lookup("qpidConnectionfactory");
-
-            log.info("creating connection");
-            connection = (TopicConnection) connectionFactory.createConnection();
-
-            log.info("creating topic session");
-            session = connection.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
+            init(config);
         }
         catch (Exception ex) {
             log.error("Unable to instantiate AMQPBusProvider: ", ex);
@@ -89,21 +78,50 @@ public class AMQPBusPubProvider implements Provider<AMQPBusPublisher> {
         }
     }
 
-    private void configureSslProperties(Configuration config) {
-        // FIXME: Setting the property here is dangerous,
-        // but in theory nothing else is setting/using it
-        // http://qpid.apache.org/releases/qpid-0.24/programming/book/ch03s06.html
+    private void init(Configuration config) throws Exception  {
+        AMQConnectionFactory connectionFactory = createConnectionFactory(ctx, config);
+        log.info("creating connection");
+        connection = (TopicConnection) connectionFactory.createConnection();
+        connection.start();
 
-        System.setProperty("javax.net.ssl.keyStore",
-            config.getString(ConfigProperties.AMQP_KEYSTORE));
-        System.setProperty("javax.net.ssl.keyStorePassword",
-            config.getString(ConfigProperties.AMQP_KEYSTORE_PASSWORD));
-        System.setProperty("javax.net.ssl.trustStore",
-            config.getString(ConfigProperties.AMQP_TRUSTSTORE));
-        System.setProperty("javax.net.ssl.trustStorePassword",
-            config.getString(ConfigProperties.AMQP_TRUSTSTORE_PASSWORD));
+        log.info("creating topic session");
+        session = connection.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
+        log.info("AMQP session created successfully...");
+    }
 
-        log.info("Configured SSL properites.");
+    private AMQConnectionFactory createConnectionFactory(Context ctx, Configuration config)
+        throws NamingException {
+        log.info("looking up qpidConnectionfactory");
+
+        int maxRetries = config.getInt(ConfigProperties.AMQP_CONNECTION_RETRY_ATTEMPTS);
+        long waitTimeInSeconds = config.getLong(ConfigProperties.AMQP_CONNECTION_RETRY_INTERVAL);
+
+        AMQConnectionFactory connectionFactory = (AMQConnectionFactory) ctx.lookup("qpidConnectionfactory");
+        for (BrokerDetails broker : connectionFactory.getConnectionURL().getAllBrokerDetails()) {
+            broker.setProperty("trust_store",
+                config.getString(ConfigProperties.AMQP_TRUSTSTORE));
+            broker.setProperty("trust_store_password",
+                config.getString(ConfigProperties.AMQP_TRUSTSTORE_PASSWORD));
+            broker.setProperty("key_store", config.getString(ConfigProperties.AMQP_KEYSTORE));
+            broker.setProperty("key_store_password",
+                config.getString(ConfigProperties.AMQP_KEYSTORE_PASSWORD));
+
+            // It is important that broker urls are configured with retries and connection
+            // delays to help avoid issues when the qpidd connection is lost. Candlepin
+            // will set defaults, or configured value automatically if they are not
+            // specified in the broker urls.
+            if (broker.getProperty("retries") == null) {
+                broker.setProperty("retries", Integer.toString(maxRetries));
+            }
+
+            if (broker.getProperty("connectdelay") == null) {
+                long delay = 1000 * waitTimeInSeconds;
+                broker.setProperty("connectdelay", Long.toString(delay));
+            }
+            log.info("Broker configured: " + broker);
+        }
+        log.info("AMQP connection factory created.");
+        return connectionFactory;
     }
 
     /**
