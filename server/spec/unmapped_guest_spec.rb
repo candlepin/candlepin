@@ -233,4 +233,19 @@ describe 'Unmapped Guest Pools' do
     compliance_status.should have_key('reasons')
     compliance_status['reasons'].size.should == 1
   end
+
+  it 'allows future pools to be seen from unmapped guests only when future date specified' do
+    future_sub = @cp.create_subscription(@owner['key'], @virt_limit_product.id, 10, [], '', '12345', '6789', Date.today + 370, Date.today + 735)
+    @cp.refresh_pools(@owner['key'])
+
+    # just the common pool
+    pools = @guest1_client.list_pools :consumer => @guest1_client.uuid
+    pools.should have(1).things
+    pools[0].subscriptionId.should == @sub1.id
+
+    # just the future one, created in this method
+    pools = @guest1_client.list_pools :consumer => @guest1_client.uuid, :activeon => Date.today + 500
+    pools.should have(1).things
+    pools[0].subscriptionId.should == future_sub.id
+  end
 end
