@@ -80,16 +80,20 @@ public class LoggingFilter implements Filter {
             // Not sure this is useful yet.
             resp.setHeader(customHeaderName, requestUUID);
 
-            log.info("{}", ServletLogger.logBasicRequestInfo(req));
             if (log.isDebugEnabled()) {
                 log.debug("{}", ServletLogger.logRequest(req));
+            }
+            else {
+                log.info("{}", ServletLogger.logBasicRequestInfo(req));
             }
 
             chain.doFilter(req, resp);
 
-            log.info("{}", ServletLogger.logBasicResponseInfo(resp, startTime));
             if (log.isDebugEnabled()) {
-                log.debug("{}", ServletLogger.logResponse(resp));
+                log.debug("{}", ServletLogger.logResponse(resp, startTime));
+            }
+            else {
+                log.info("{}", ServletLogger.logBasicResponseInfo(resp, startTime));
             }
 
             resp.finish();
