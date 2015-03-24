@@ -39,6 +39,7 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 
@@ -183,7 +184,7 @@ public class StatusTrendReportTest {
         MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
 
         ComplianceSnapshotCurator mockCSCurator = mock(ComplianceSnapshotCurator.class);
-        when(mockCSCurator.getComplianceStatusCounts(null, null, null, null, null, null, null))
+        when(mockCSCurator.getComplianceStatusCounts(null, null, null, null, null, null, null, null))
             .thenReturn(testpage);
 
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
@@ -194,7 +195,7 @@ public class StatusTrendReportTest {
 
         assertEquals(expected, actual);
 
-        verify(mockCSCurator).getComplianceStatusCounts(null, null, null, null, null, null, null);
+        verify(mockCSCurator).getComplianceStatusCounts(null, null, null, null, null, null, null, null);
         verifyNoMoreInteractions(mockCSCurator);
     }
 
@@ -220,7 +221,7 @@ public class StatusTrendReportTest {
         when(params.getFirst("end_date")).thenReturn("2014-11-08");
 
         ComplianceSnapshotCurator mockCSCurator = mock(ComplianceSnapshotCurator.class);
-        when(mockCSCurator.getComplianceStatusCounts(startDate, endDate, null, null, null, null, null))
+        when(mockCSCurator.getComplianceStatusCounts(startDate, endDate, null, null, null, null, null, null))
             .thenReturn(testpage);
 
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
@@ -231,7 +232,9 @@ public class StatusTrendReportTest {
 
         assertEquals(expected, actual);
 
-        verify(mockCSCurator).getComplianceStatusCounts(startDate, endDate, null, null, null, null, null);
+        verify(mockCSCurator).getComplianceStatusCounts(
+            startDate, endDate, null, null, null, null, null, null
+        );
         verifyNoMoreInteractions(mockCSCurator);
     }
 
@@ -261,7 +264,7 @@ public class StatusTrendReportTest {
         when(params.getFirst("owner")).thenReturn(owner);
 
         ComplianceSnapshotCurator mockCSCurator = mock(ComplianceSnapshotCurator.class);
-        when(mockCSCurator.getComplianceStatusCounts(startDate, endDate, owner, null, null, null, null))
+        when(mockCSCurator.getComplianceStatusCounts(startDate, endDate, owner, null, null, null, null, null))
             .thenReturn(testpage);
 
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
@@ -272,7 +275,43 @@ public class StatusTrendReportTest {
 
         assertEquals(expected, actual);
 
-        verify(mockCSCurator).getComplianceStatusCounts(startDate, endDate, owner, null, null, null, null);
+        verify(mockCSCurator).getComplianceStatusCounts(
+            startDate, endDate, owner, null, null, null, null, null
+        );
+        verifyNoMoreInteractions(mockCSCurator);
+    }
+
+    @Test
+    public void testReportingByConsumer() {
+        HashMap<String, Integer> testcount = new HashMap<String, Integer>();
+        Page<Map<Date, Map<String, Integer>>> testpage = new Page<Map<Date, Map<String, Integer>>>();
+        HashMap<Date, Map<String, Integer>> testoutput = new HashMap<Date, Map<String, Integer>>();
+        testcount.put("testcount1", 1);
+        testoutput.put(this.testDate, testcount);
+        testpage.setPageData(testoutput);
+
+        List<String> consumers = Arrays.asList("c1", "c2", "c3");
+
+        MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
+        when(params.containsKey("consumer_uuid")).thenReturn(true);
+        when(params.getFirst("consumer_uuid")).thenReturn(consumers.get(0));
+        when(params.get("consumer_uuid")).thenReturn(consumers);
+
+        ComplianceSnapshotCurator mockCSCurator = mock(ComplianceSnapshotCurator.class);
+        when(mockCSCurator
+            .getComplianceStatusCounts(null, null, null, consumers, null, null, null, null))
+            .thenReturn(testpage);
+
+        StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
+
+        StatusTrendReportResult actual = report.run(params, null);
+        StatusTrendReportResult expected = new StatusTrendReportResult();
+        expected.put(this.testDateString, testcount);
+
+        assertEquals(expected, actual);
+
+        verify(mockCSCurator)
+            .getComplianceStatusCounts(null, null, null, consumers, null, null, null, null);
         verifyNoMoreInteractions(mockCSCurator);
     }
 
@@ -291,7 +330,7 @@ public class StatusTrendReportTest {
         when(params.get("sku")).thenReturn(Arrays.asList("testsku1"));
 
         ComplianceSnapshotCurator mockCSCurator = mock(ComplianceSnapshotCurator.class);
-        when(mockCSCurator.getComplianceStatusCounts(null, null, null, "testsku1", null, null, null))
+        when(mockCSCurator.getComplianceStatusCounts(null, null, null, null, "testsku1", null, null, null))
             .thenReturn(testpage);
 
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
@@ -302,7 +341,7 @@ public class StatusTrendReportTest {
 
         assertEquals(expected, actual);
 
-        verify(mockCSCurator).getComplianceStatusCounts(null, null, null, "testsku1", null, null, null);
+        verify(mockCSCurator).getComplianceStatusCounts(null, null, null, null, "testsku1", null, null, null);
         verifyNoMoreInteractions(mockCSCurator);
     }
 
@@ -327,7 +366,7 @@ public class StatusTrendReportTest {
         when(params.getFirst("owner")).thenReturn(owner);
 
         ComplianceSnapshotCurator mockCSCurator = mock(ComplianceSnapshotCurator.class);
-        when(mockCSCurator.getComplianceStatusCounts(null, null, owner, sku, null, null, null))
+        when(mockCSCurator.getComplianceStatusCounts(null, null, owner, null, sku, null, null, null))
             .thenReturn(testpage);
 
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
@@ -338,7 +377,7 @@ public class StatusTrendReportTest {
 
         assertEquals(expected, actual);
 
-        verify(mockCSCurator).getComplianceStatusCounts(null, null, owner, sku, null, null, null);
+        verify(mockCSCurator).getComplianceStatusCounts(null, null, owner, null, sku, null, null, null);
         verifyNoMoreInteractions(mockCSCurator);
     }
 
@@ -368,7 +407,7 @@ public class StatusTrendReportTest {
         when(params.get("sku")).thenReturn(Arrays.asList(sku));
 
         ComplianceSnapshotCurator mockCSCurator = mock(ComplianceSnapshotCurator.class);
-        when(mockCSCurator.getComplianceStatusCounts(startDate, endDate, null, sku, null, null, null))
+        when(mockCSCurator.getComplianceStatusCounts(startDate, endDate, null, null, sku, null, null, null))
             .thenReturn(testpage);
 
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
@@ -379,7 +418,9 @@ public class StatusTrendReportTest {
 
         assertEquals(expected, actual);
 
-        verify(mockCSCurator).getComplianceStatusCounts(startDate, endDate, null, sku, null, null, null);
+        verify(mockCSCurator).getComplianceStatusCounts(
+            startDate, endDate, null, null, sku, null, null, null
+        );
         verifyNoMoreInteractions(mockCSCurator);
     }
 
@@ -414,7 +455,7 @@ public class StatusTrendReportTest {
         when(params.getFirst("owner")).thenReturn(owner);
 
         ComplianceSnapshotCurator mockCSCurator = mock(ComplianceSnapshotCurator.class);
-        when(mockCSCurator.getComplianceStatusCounts(startDate, endDate, owner, sku, null, null, null))
+        when(mockCSCurator.getComplianceStatusCounts(startDate, endDate, owner, null, sku, null, null, null))
             .thenReturn(testpage);
 
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
@@ -425,7 +466,47 @@ public class StatusTrendReportTest {
 
         assertEquals(expected, actual);
 
-        verify(mockCSCurator).getComplianceStatusCounts(startDate, endDate, owner, sku, null, null, null);
+        verify(mockCSCurator).getComplianceStatusCounts(
+            startDate, endDate, owner, null, sku, null, null, null
+        );
+        verifyNoMoreInteractions(mockCSCurator);
+    }
+
+    @Test
+    public void testReportingByConsumerAndSku() {
+        HashMap<String, Integer> testcount = new HashMap<String, Integer>();
+        Page<Map<Date, Map<String, Integer>>> testpage = new Page<Map<Date, Map<String, Integer>>>();
+        HashMap<Date, Map<String, Integer>> testoutput = new HashMap<Date, Map<String, Integer>>();
+        testcount.put("testcount1", 1);
+        testoutput.put(this.testDate, testcount);
+        testpage.setPageData(testoutput);
+
+        List<String> consumers = Arrays.asList("c1", "c2", "c3");
+
+        MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
+        when(params.containsKey("consumer_uuid")).thenReturn(true);
+        when(params.getFirst("consumer_uuid")).thenReturn(consumers.get(0));
+        when(params.get("consumer_uuid")).thenReturn(consumers);
+
+        when(params.containsKey("sku")).thenReturn(true);
+        when(params.getFirst("sku")).thenReturn("testsku1");
+        when(params.get("sku")).thenReturn(Arrays.asList("testsku1"));
+
+        ComplianceSnapshotCurator mockCSCurator = mock(ComplianceSnapshotCurator.class);
+        when(mockCSCurator
+            .getComplianceStatusCounts(null, null, null, consumers, "testsku1", null, null, null))
+            .thenReturn(testpage);
+
+        StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
+
+        StatusTrendReportResult actual = report.run(params, null);
+        StatusTrendReportResult expected = new StatusTrendReportResult();
+        expected.put(this.testDateString, testcount);
+
+        assertEquals(expected, actual);
+
+        verify(mockCSCurator)
+            .getComplianceStatusCounts(null, null, null, consumers, "testsku1", null, null, null);
         verifyNoMoreInteractions(mockCSCurator);
     }
 
@@ -446,7 +527,7 @@ public class StatusTrendReportTest {
         when(params.get("subscription_name")).thenReturn(Arrays.asList(subscription));
 
         ComplianceSnapshotCurator mockCSCurator = mock(ComplianceSnapshotCurator.class);
-        when(mockCSCurator.getComplianceStatusCounts(null, null, null, null, subscription, null, null))
+        when(mockCSCurator.getComplianceStatusCounts(null, null, null, null, null, subscription, null, null))
             .thenReturn(testpage);
 
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
@@ -457,7 +538,7 @@ public class StatusTrendReportTest {
 
         assertEquals(expected, actual);
 
-        verify(mockCSCurator).getComplianceStatusCounts(null, null, null, null, subscription, null, null);
+        verify(mockCSCurator).getComplianceStatusCounts(null, null, null, null, null, subscription, null, null);
         verifyNoMoreInteractions(mockCSCurator);
     }
 
@@ -482,7 +563,7 @@ public class StatusTrendReportTest {
         when(params.getFirst("owner")).thenReturn(owner);
 
         ComplianceSnapshotCurator mockCSCurator = mock(ComplianceSnapshotCurator.class);
-        when(mockCSCurator.getComplianceStatusCounts(null, null, owner, null, subscription, null, null))
+        when(mockCSCurator.getComplianceStatusCounts(null, null, owner, null, null, subscription, null, null))
             .thenReturn(testpage);
 
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
@@ -493,7 +574,9 @@ public class StatusTrendReportTest {
 
         assertEquals(expected, actual);
 
-        verify(mockCSCurator).getComplianceStatusCounts(null, null, owner, null, subscription, null, null);
+        verify(mockCSCurator).getComplianceStatusCounts(
+            null, null, owner, null, null, subscription, null, null
+        );
         verifyNoMoreInteractions(mockCSCurator);
     }
 
@@ -523,14 +606,9 @@ public class StatusTrendReportTest {
         when(params.get("subscription_name")).thenReturn(Arrays.asList(subscription));
 
         ComplianceSnapshotCurator mockCSCurator = mock(ComplianceSnapshotCurator.class);
-        when(mockCSCurator.getComplianceStatusCounts(startDate,
-            endDate,
-            null,
-            null,
-            subscription,
-            null,
-            null
-        )).thenReturn(testpage);
+        when(mockCSCurator
+            .getComplianceStatusCounts(startDate, endDate, null, null, null, subscription, null, null))
+            .thenReturn(testpage);
 
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
 
@@ -540,15 +618,8 @@ public class StatusTrendReportTest {
 
         assertEquals(expected, actual);
 
-        verify(mockCSCurator).getComplianceStatusCounts(
-            startDate,
-            endDate,
-            null,
-            null,
-            subscription,
-            null,
-            null
-        );
+        verify(mockCSCurator)
+            .getComplianceStatusCounts(startDate, endDate, null, null, null, subscription, null, null);
         verifyNoMoreInteractions(mockCSCurator);
     }
 
@@ -583,14 +654,8 @@ public class StatusTrendReportTest {
 
         ComplianceSnapshotCurator mockCSCurator = mock(ComplianceSnapshotCurator.class);
         when(mockCSCurator.getComplianceStatusCounts(
-            startDate,
-            endDate,
-            owner,
-            null,
-            subscription,
-            null,
-            null
-        )).thenReturn(testpage);
+            startDate, endDate, owner, null, null, subscription, null, null))
+            .thenReturn(testpage);
 
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
 
@@ -601,10 +666,50 @@ public class StatusTrendReportTest {
         assertEquals(expected, actual);
 
         verify(mockCSCurator)
-            .getComplianceStatusCounts(startDate, endDate, owner, null, subscription, null, null);
+            .getComplianceStatusCounts(startDate, endDate, owner, null, null, subscription, null, null);
 
         verifyNoMoreInteractions(mockCSCurator);
     }
+
+    @Test
+    public void testReportingByConsumerAndSubscription() {
+        HashMap<String, Integer> testcount = new HashMap<String, Integer>();
+        Page<Map<Date, Map<String, Integer>>> testpage = new Page<Map<Date, Map<String, Integer>>>();
+        HashMap<Date, Map<String, Integer>> testoutput = new HashMap<Date, Map<String, Integer>>();
+        testcount.put("testcount1", 1);
+        testoutput.put(this.testDate, testcount);
+        testpage.setPageData(testoutput);
+
+        List<String> consumers = Arrays.asList("c1", "c2", "c3");
+        String subscription = "test_sub";
+
+        MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
+        when(params.containsKey("consumer_uuid")).thenReturn(true);
+        when(params.getFirst("consumer_uuid")).thenReturn(consumers.get(0));
+        when(params.get("consumer_uuid")).thenReturn(consumers);
+
+        when(params.containsKey("subscription_name")).thenReturn(true);
+        when(params.getFirst("subscription_name")).thenReturn(subscription);
+        when(params.get("subscription_name")).thenReturn(Arrays.asList(subscription));
+
+        ComplianceSnapshotCurator mockCSCurator = mock(ComplianceSnapshotCurator.class);
+        when(mockCSCurator
+            .getComplianceStatusCounts(null, null, null, consumers, null, subscription, null, null))
+            .thenReturn(testpage);
+
+        StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
+
+        StatusTrendReportResult actual = report.run(params, null);
+        StatusTrendReportResult expected = new StatusTrendReportResult();
+        expected.put(this.testDateString, testcount);
+
+        assertEquals(expected, actual);
+
+        verify(mockCSCurator)
+            .getComplianceStatusCounts(null, null, null, consumers, null, subscription, null, null);
+        verifyNoMoreInteractions(mockCSCurator);
+    }
+
 
     @Test
     public void testReportingByManagementEnabled() {
@@ -624,7 +729,7 @@ public class StatusTrendReportTest {
         attributes.put("management_enabled", "1");
 
         ComplianceSnapshotCurator mockCSCurator = mock(ComplianceSnapshotCurator.class);
-        when(mockCSCurator.getComplianceStatusCounts(null, null, null, null, null, attributes, null))
+        when(mockCSCurator.getComplianceStatusCounts(null, null, null, null, null, null, attributes, null))
             .thenReturn(testpage);
 
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
@@ -635,7 +740,9 @@ public class StatusTrendReportTest {
 
         assertEquals(expected, actual);
 
-        verify(mockCSCurator).getComplianceStatusCounts(null, null, null, null, null, attributes, null);
+        verify(mockCSCurator)
+            .getComplianceStatusCounts(null, null, null, null, null, null, attributes, null);
+
         verifyNoMoreInteractions(mockCSCurator);
     }
 
@@ -662,7 +769,8 @@ public class StatusTrendReportTest {
         attributes.put("management_enabled", "1");
 
         ComplianceSnapshotCurator mockCSCurator = mock(ComplianceSnapshotCurator.class);
-        when(mockCSCurator.getComplianceStatusCounts(null, null, owner, null, null, attributes, null))
+        when(mockCSCurator
+            .getComplianceStatusCounts(null, null, owner, null, null, null, attributes, null))
             .thenReturn(testpage);
 
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
@@ -673,7 +781,8 @@ public class StatusTrendReportTest {
 
         assertEquals(expected, actual);
 
-        verify(mockCSCurator).getComplianceStatusCounts(null, null, owner, null, null, attributes, null);
+        verify(mockCSCurator)
+            .getComplianceStatusCounts(null, null, owner, null, null, null, attributes, null);
         verifyNoMoreInteractions(mockCSCurator);
     }
 
@@ -705,7 +814,8 @@ public class StatusTrendReportTest {
         attributes.put("management_enabled", "1");
 
         ComplianceSnapshotCurator mockCSCurator = mock(ComplianceSnapshotCurator.class);
-        when(mockCSCurator.getComplianceStatusCounts(startDate, endDate, null, null, null, attributes, null))
+        when(mockCSCurator
+            .getComplianceStatusCounts(startDate, endDate, null, null, null, null, attributes, null))
             .thenReturn(testpage);
 
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
@@ -716,15 +826,8 @@ public class StatusTrendReportTest {
 
         assertEquals(expected, actual);
 
-        verify(mockCSCurator).getComplianceStatusCounts(
-            startDate,
-            endDate,
-            null,
-            null,
-            null,
-            attributes,
-            null
-        );
+        verify(mockCSCurator)
+            .getComplianceStatusCounts(startDate, endDate, null, null, null, null, attributes, null);
         verifyNoMoreInteractions(mockCSCurator);
     }
 
@@ -760,7 +863,8 @@ public class StatusTrendReportTest {
         attributes.put("management_enabled", "1");
 
         ComplianceSnapshotCurator mockCSCurator = mock(ComplianceSnapshotCurator.class);
-        when(mockCSCurator.getComplianceStatusCounts(startDate, endDate, owner, null, null, attributes, null))
+        when(mockCSCurator
+            .getComplianceStatusCounts(startDate, endDate, owner, null, null, null, attributes, null))
             .thenReturn(testpage);
 
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
@@ -771,15 +875,50 @@ public class StatusTrendReportTest {
 
         assertEquals(expected, actual);
 
-        verify(mockCSCurator).getComplianceStatusCounts(
-            startDate,
-            endDate,
-            owner,
-            null,
-            null,
-            attributes,
-            null
-        );
+        verify(mockCSCurator)
+            .getComplianceStatusCounts(startDate, endDate, owner, null, null, null, attributes, null);
+        verifyNoMoreInteractions(mockCSCurator);
+    }
+
+    @Test
+    public void testReportingByConsumerAndManagementEnabled() {
+        HashMap<String, Integer> testcount = new HashMap<String, Integer>();
+        Page<Map<Date, Map<String, Integer>>> testpage = new Page<Map<Date, Map<String, Integer>>>();
+        HashMap<Date, Map<String, Integer>> testoutput = new HashMap<Date, Map<String, Integer>>();
+        testcount.put("testcount1", 1);
+        testoutput.put(this.testDate, testcount);
+        testpage.setPageData(testoutput);
+
+        List<String> consumers = Arrays.asList("c1", "c2", "c3");
+
+        MultivaluedMap<String, String> params = mock(MultivaluedMap.class);
+        when(params.containsKey("consumer_uuid")).thenReturn(true);
+        when(params.getFirst("consumer_uuid")).thenReturn(consumers.get(0));
+        when(params.get("consumer_uuid")).thenReturn(consumers);
+
+        when(params.containsKey("management_enabled")).thenReturn(true);
+        when(params.getFirst("management_enabled")).thenReturn("true");
+        when(params.get("management_enabled")).thenReturn(Arrays.asList("true"));
+
+        HashMap<String, String> attributes = new HashMap<String, String>();
+        attributes.put("management_enabled", "1");
+
+        ComplianceSnapshotCurator mockCSCurator = mock(ComplianceSnapshotCurator.class);
+        when(mockCSCurator
+            .getComplianceStatusCounts(null, null, null, consumers, null, null, attributes, null))
+            .thenReturn(testpage);
+
+        StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
+
+        StatusTrendReportResult actual = report.run(params, null);
+        StatusTrendReportResult expected = new StatusTrendReportResult();
+        expected.put(this.testDateString, testcount);
+
+        assertEquals(expected, actual);
+
+        verify(mockCSCurator)
+            .getComplianceStatusCounts(null, null, null, consumers, null, null, attributes, null);
+
         verifyNoMoreInteractions(mockCSCurator);
     }
 
@@ -805,7 +944,7 @@ public class StatusTrendReportTest {
         when(params.getFirst("timezone")).thenReturn(tzString);
 
         ComplianceSnapshotCurator mockCSCurator = mock(ComplianceSnapshotCurator.class);
-        when(mockCSCurator.getComplianceStatusCounts(null, null, null, null, null, null, null))
+        when(mockCSCurator.getComplianceStatusCounts(null, null, null, null, null, null, null, null))
             .thenReturn(testpage);
 
         StatusTrendReport report = new StatusTrendReport(this.i18nProvider, mockCSCurator);
@@ -817,7 +956,7 @@ public class StatusTrendReportTest {
 
         assertEquals(expected, actual);
 
-        verify(mockCSCurator).getComplianceStatusCounts(null, null, null, null, null, null, null);
+        verify(mockCSCurator).getComplianceStatusCounts(null, null, null, null, null, null, null, null);
         verifyNoMoreInteractions(mockCSCurator);
     }
 }

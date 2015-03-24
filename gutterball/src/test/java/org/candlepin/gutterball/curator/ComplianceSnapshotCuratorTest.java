@@ -596,14 +596,8 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
     @Test
     public void testGetComplianceStatusCounts() {
         Map<Date, Map<String, Integer>> expected = this.buildMapForAllStatusCounts();
-        Map<Date, Map<String, Integer>> actual = this.complianceSnapshotCurator.getComplianceStatusCounts(
-            null,
-            null,
-            null,
-            null,
-            null,
-            null
-        );
+        Map<Date, Map<String, Integer>> actual = this.complianceSnapshotCurator
+            .getComplianceStatusCounts(null, null, null, null, null, null, null);
 
         assertEquals(expected, actual);
     }
@@ -624,15 +618,7 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
             pageRequest.setPage(p);
 
             Page<Map<Date, Map<String, Integer>>> page = this.complianceSnapshotCurator
-                .getComplianceStatusCounts(
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                pageRequest
-            );
+                .getComplianceStatusCounts(null, null, null, null, null, null, null, pageRequest);
 
             if (pages == 0) {
                 pages = page.getMaxRecords();
@@ -659,14 +645,8 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
     @Test
     @Parameters(method = "buildMapForStatusCountsAfterDate")
     public void testGetComplianceStatusCountsAfterDate(Date date, Map<Date, Map<String, Integer>> expected) {
-        Map<Date, Map<String, Integer>> actual = this.complianceSnapshotCurator.getComplianceStatusCounts(
-            date,
-            null,
-            null,
-            null,
-            null,
-            null
-        );
+        Map<Date, Map<String, Integer>> actual = this.complianceSnapshotCurator
+            .getComplianceStatusCounts(date, null, null, null, null, null, null);
 
         assertEquals(expected, actual);
     }
@@ -674,14 +654,8 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
     @Test
     @Parameters(method = "buildMapForStatusCountsBeforeDate")
     public void testGetComplianceStatusCountsBeforeDate(Date date, Map<Date, Map<String, Integer>> expected) {
-        Map<Date, Map<String, Integer>> actual = this.complianceSnapshotCurator.getComplianceStatusCounts(
-            null,
-            date,
-            null,
-            null,
-            null,
-            null
-        );
+        Map<Date, Map<String, Integer>> actual = this.complianceSnapshotCurator
+            .getComplianceStatusCounts(null, date, null, null, null, null, null);
 
         assertEquals(expected, actual);
     }
@@ -691,14 +665,8 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
     public void testGetComplianceStatusCountsBetweenDates(Date startDate, Date endDate,
         Map<Date, Map<String, Integer>> expected) {
 
-        Map<Date, Map<String, Integer>> actual = this.complianceSnapshotCurator.getComplianceStatusCounts(
-            startDate,
-            endDate,
-            null,
-            null,
-            null,
-            null
-        );
+        Map<Date, Map<String, Integer>> actual = this.complianceSnapshotCurator
+            .getComplianceStatusCounts(startDate, endDate, null, null, null, null, null);
 
         assertEquals(expected, actual);
     }
@@ -709,14 +677,8 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         Map<Date, Map<String, Integer>> expected) {
         Map<Date, Map<String, Integer>> actual;
 
-        actual = this.complianceSnapshotCurator.getComplianceStatusCounts(
-            startDate,
-            endDate,
-            null,
-            sku,
-            null,
-            null
-        );
+        actual = this.complianceSnapshotCurator
+            .getComplianceStatusCounts(startDate, endDate, null, null, sku, null, null);
 
         assertEquals(expected, actual);
     }
@@ -727,14 +689,8 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         String subscriptionName, Map<Date, Map<String, Integer>> expected) {
         Map<Date, Map<String, Integer>> actual;
 
-        actual = this.complianceSnapshotCurator.getComplianceStatusCounts(
-            startDate,
-            endDate,
-            null,
-            null,
-            subscriptionName,
-            null
-        );
+        actual = this.complianceSnapshotCurator
+            .getComplianceStatusCounts(startDate, endDate, null, null, null, subscriptionName, null);
 
         assertEquals(expected, actual);
     }
@@ -745,14 +701,51 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         Map<String, String> attributes, Map<Date, Map<String, Integer>> expected) {
         Map<Date, Map<String, Integer>> actual;
 
-        actual = this.complianceSnapshotCurator.getComplianceStatusCounts(
-            startDate,
-            endDate,
-            null,
-            null,
-            null,
-            attributes
-        );
+        actual = this.complianceSnapshotCurator
+            .getComplianceStatusCounts(startDate, endDate, null, null, null, null, attributes);
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testGetComplianceStatusCountsByConsumers() {
+        Calendar cal = this.getCalendar();
+        cal.set(Calendar.YEAR, 2012);
+        cal.set(Calendar.DAY_OF_MONTH, 10);
+        cal.set(Calendar.HOUR_OF_DAY, 23);
+        cal.set(Calendar.MINUTE, 59);
+        cal.set(Calendar.SECOND, 59);
+        cal.set(Calendar.MILLISECOND, 999);
+
+        Map<Date, Map<String, Integer>> expected = new TreeMap<Date, Map<String, Integer>>();
+        HashMap<String, Integer> counts;
+
+        cal.set(Calendar.MONTH, Calendar.APRIL);
+        counts = new HashMap<String, Integer>();
+        counts.put("invalid", 1);
+        for (int i = 0; i < 30; ++i) {
+            expected.put(cal.getTime(), counts);
+            cal.add(Calendar.DATE, 1);
+        }
+
+        cal.set(Calendar.MONTH, Calendar.MAY);
+        counts = new HashMap<String, Integer>();
+        counts.put("invalid", 2);
+        for (int i = 0; i < 31; ++i) {
+            expected.put(cal.getTime(), counts);
+            cal.add(Calendar.DATE, 1);
+        }
+
+        cal.set(Calendar.MONTH, Calendar.JUNE);
+        counts = new HashMap<String, Integer>();
+        counts.put("invalid", 1);
+        counts.put("partial", 1);
+        expected.put(cal.getTime(), counts);
+
+        List<String> consumers = Arrays.asList("c2", "c3");
+
+        Map<Date, Map<String, Integer>> actual = this.complianceSnapshotCurator
+            .getComplianceStatusCounts(null, null, null, consumers, null, null, null);
 
         assertEquals(expected, actual);
     }
@@ -1010,6 +1003,62 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         }
 
         return tests.toArray();
+    }
+
+    private Map<Date, Map<String, Integer>> buildMapForStatusCounts() {
+        Calendar cal = this.getCalendar();
+        cal.set(Calendar.YEAR, 2012);
+        cal.set(Calendar.DAY_OF_MONTH, 10);
+        cal.set(Calendar.HOUR_OF_DAY, 23);
+        cal.set(Calendar.MINUTE, 59);
+        cal.set(Calendar.SECOND, 59);
+        cal.set(Calendar.MILLISECOND, 999);
+
+        Map<Date, Map<String, Integer>> expected = new TreeMap<Date, Map<String, Integer>>();
+        HashMap<String, Integer> counts;
+
+        cal.set(Calendar.MONTH, Calendar.MARCH);
+        counts = new HashMap<String, Integer>();
+        counts.put("invalid", 1);
+        for (int i = 0; i < 31; ++i) {
+            expected.put(cal.getTime(), counts);
+            cal.add(Calendar.DATE, 1);
+        }
+
+        cal.set(Calendar.MONTH, Calendar.APRIL);
+        counts = new HashMap<String, Integer>();
+        counts.put("invalid", 2);
+        for (int i = 0; i < 30; ++i) {
+            expected.put(cal.getTime(), counts);
+            cal.add(Calendar.DATE, 1);
+        }
+
+        cal.set(Calendar.MONTH, Calendar.MAY);
+        counts = new HashMap<String, Integer>();
+        counts.put("valid", 1);
+        counts.put("invalid", 3);
+        for (int i = 0; i < 31; ++i) {
+            expected.put(cal.getTime(), counts);
+            cal.add(Calendar.DATE, 1);
+        }
+
+        cal.set(Calendar.MONTH, Calendar.JUNE);
+        counts = new HashMap<String, Integer>();
+        counts.put("invalid", 1);
+        counts.put("partial", 2);
+        for (int i = 0; i < 30; ++i) {
+            expected.put(cal.getTime(), counts);
+            cal.add(Calendar.DATE, 1);
+        }
+
+        cal.set(Calendar.MONTH, Calendar.JULY);
+        counts = new HashMap<String, Integer>();
+        counts.put("invalid", 1);
+        counts.put("partial", 1);
+        counts.put("valid", 1);
+        expected.put(cal.getTime(), counts);
+
+        return expected;
     }
 
     private Object[][] buildSubMapForStatusCountsWithSku() {
