@@ -76,4 +76,15 @@ public class ContentCuratorTest extends DatabaseTestFixture {
         assertEquals(toBeUpdated.getModifiedProductIds(), updates.getModifiedProductIds());
         assertEquals(toBeUpdated.getArches(), updates.getArches());
     }
+
+    @Test
+    public void importSameContentForMultipleProducts() {
+        Content c1 = new Content(owner, "mycontent", "5006", "mycontent", "yum",
+                "vendor", "nobodycares", "nobodystillcares", "x86_64");
+        Content c2 = new Content(owner, "mycontent", "5006", "mycontent", "yum",
+                "vendor", "nobodycares", "nobodystillcares", "x86_64");
+        contentCurator.createOrUpdate(c1);
+        contentCurator.createOrUpdate(c2);
+
+    }
 }

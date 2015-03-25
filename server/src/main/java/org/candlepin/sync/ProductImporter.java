@@ -16,6 +16,7 @@ package org.candlepin.sync;
 
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
+import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProductContent;
@@ -59,7 +60,7 @@ public class ProductImporter {
         return importedProduct;
     }
 
-    public void store(Set<Product> products) {
+    public void store(Set<Product> products, Owner o) {
         for (Product importedProduct : products) {
             // Handling the storing/updating of Content here. This is technically a
             // disjoint entity, but really only makes sense in the concept of
@@ -67,6 +68,12 @@ public class ProductImporter {
             //
             // The downside is if multiple products reference the same content, it
             // will be updated multiple times during the import.
+            //
+            // TODO: Product storage moved to refresher so we could check for changes
+            // before we overwrote the old data, which is important refresh functionality.
+            // However not storing objects during the importer phase somewhat contradicts
+            // what other importers do. (consumer types for ex) At the very least however,
+            // content import should go to refresher as well.
             for (ProductContent content : importedProduct.getProductContent()) {
                 // BZ 990113 error occurs because incoming content data has
                 //  no value for Vendor. Will place one to avoid DB issues.
@@ -74,10 +81,11 @@ public class ProductImporter {
                 if (StringUtils.isBlank(c.getVendor())) {
                     c.setVendor("unknown");
                 }
+                c.setOwner(o);
                 contentCurator.createOrUpdate(c);
             }
 
-            curator.createOrUpdate(importedProduct);
+//            curator.createOrUpdate(importedProduct);
         }
     }
 
