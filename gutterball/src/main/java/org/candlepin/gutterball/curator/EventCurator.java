@@ -19,6 +19,10 @@ import org.candlepin.gutterball.model.Event;
 
 import com.google.inject.Inject;
 
+import org.hibernate.Criteria;
+import org.hibernate.criterion.Projections;
+import org.hibernate.criterion.Restrictions;
+
 /**
  * Responsible for managing {@link Event} model objects and storing/retrieving to/from
  * the database.
@@ -30,4 +34,14 @@ public class EventCurator extends BaseCurator<Event> {
         super(Event.class);
     }
 
+    public boolean hasEventForMessage(String messageId) {
+        // Do not include UNKNOWN since they were Events that
+        // existed pre-update and there is no way to recover the
+        // message ID.
+        Criteria criteria = currentSession().createCriteria(Event.class)
+            .add(Restrictions.eq("messageId", messageId))
+            .add(Restrictions.ne("messageId", "UNKNOWN"))
+            .setProjection(Projections.count("id"));
+        return ((Long) criteria.uniqueResult()) > 0;
+    }
 }

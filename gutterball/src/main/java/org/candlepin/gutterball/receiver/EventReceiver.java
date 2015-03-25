@@ -76,12 +76,15 @@ public class EventReceiver {
         int maxRetries = config.getInt(ConfigProperties.AMQP_CONNECTION_RETRY_ATTEMPTS);
         long waitTimeInSeconds = config.getLong(ConfigProperties.AMQP_CONNECTION_RETRY_INTERVAL);
 
-        AMQConnectionFactory connFactory = new AMQConnectionFactory(config.getString(ConfigProperties.AMQP_CONNECT_STRING));
+        AMQConnectionFactory connFactory = new AMQConnectionFactory(
+            config.getString(ConfigProperties.AMQP_CONNECT_STRING));
         for (BrokerDetails broker : connFactory.getConnectionURL().getAllBrokerDetails()) {
             broker.setProperty("trust_store", config.getString(ConfigProperties.AMQP_TRUSTSTORE));
-            broker.setProperty("trust_store_password", config.getString(ConfigProperties.AMQP_TRUSTSTORE_PASSWORD));
+            broker.setProperty("trust_store_password",
+                config.getString(ConfigProperties.AMQP_TRUSTSTORE_PASSWORD));
             broker.setProperty("key_store", config.getString(ConfigProperties.AMQP_KEYSTORE));
-            broker.setProperty("key_store_password", config.getString(ConfigProperties.AMQP_KEYSTORE_PASSWORD));
+            broker.setProperty("key_store_password",
+                config.getString(ConfigProperties.AMQP_KEYSTORE_PASSWORD));
 
             // It is important that broker urls are configured with retries and connection
             // delays to help avoid issues when the qpidd connection is lost. Candlepin

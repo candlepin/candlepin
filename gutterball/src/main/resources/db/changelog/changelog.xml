@@ -6,4 +6,5 @@
     <include file="db/changelog/2014-12-03-15-20-drop-unused-messagetext-event-column.xml"/>
     <include file="db/changelog/2014-12-03-15-39-add-event-status.xml"/>
     <include file="db/changelog/2015-03-11-09-28-add-management-enabled-to-compliance.xml"/>
+    <include file="db/changelog/2015-03-25-08-22-add-message-id-to-event.xml"/>
 </databaseChangeLog>
