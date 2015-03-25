@@ -87,7 +87,7 @@ public class ProductImporterTest {
         Set<Product> storeThese = new HashSet<Product>();
         storeThese.add(created);
         when(productCuratorMock.lookupById(product.getOwner(), product.getId())).thenReturn(null);
-        importer.store(storeThese);
+        importer.store(storeThese, owner);
         verify(productCuratorMock).createOrUpdate(created);
     }
 
@@ -109,7 +109,7 @@ public class ProductImporterTest {
         // Simulate the pre-existing product:
         when(productCuratorMock.lookupById(product.getOwner(), product.getId())).thenReturn(product);
 
-        importer.store(storeThese);
+        importer.store(storeThese, owner);
 
         verify(productCuratorMock).createOrUpdate(created);
     }
@@ -125,7 +125,7 @@ public class ProductImporterTest {
         Content c = created.getProductContent().iterator().next().getContent();
         Set<Product> storeThese = new HashSet<Product>();
         storeThese.add(created);
-        importer.store(storeThese);
+        importer.store(storeThese, owner);
 
         verify(contentCuratorMock).createOrUpdate(c);
 
@@ -147,7 +147,7 @@ public class ProductImporterTest {
         Set<Product> storeThese = new HashSet<Product>();
         storeThese.add(newProduct);
 
-        importer.store(storeThese);
+        importer.store(storeThese, owner);
 
         verify(productCuratorMock).createOrUpdate(newProduct);
         verify(contentCuratorMock).createOrUpdate(c);
@@ -165,7 +165,7 @@ public class ProductImporterTest {
         Content c = created.getProductContent().iterator().next().getContent();
         Set<Product> storeThese = new HashSet<Product>();
         storeThese.add(created);
-        importer.store(storeThese);
+        importer.store(storeThese, owner);
 
         verify(contentCuratorMock).createOrUpdate(c);
 

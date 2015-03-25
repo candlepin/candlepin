@@ -441,7 +441,7 @@ public class Importer {
                 importFiles.get(ImportFile.PRODUCTS.fileName()).listFiles(),
                 importer);
 
-            importer.store(productsToImport);
+            importer.store(productsToImport, owner);
 
             meta = mapper.readValue(metadata, Meta.class);
             importEntitlements(owner, productsToImport, entitlements.listFiles(),
