@@ -53,11 +53,26 @@ public class ConsumerHandlerTest {
         Event event = new Event();
         event.setNewEntity("test-string");
 
-        ConsumerState state = new ConsumerState();
+        ConsumerState state = new ConsumerState("test-uuid", "owner-key", new Date());
         when(mapper.readValue(eq(event.getNewEntity()), eq(ConsumerState.class))).thenReturn(state);
+        when(consumerStateCurator.findByUuid(state.getUuid())).thenReturn(null);
 
         handler.handleCreated(event);
         verify(consumerStateCurator).create(eq(state));
+    }
+
+    @Test
+    public void testConsumerStateCreationSkippedIfRecordAlreadyExists() throws Exception {
+        Event event = new Event();
+        event.setNewEntity("test-string");
+
+        ConsumerState state = new ConsumerState("test-uuid", "owner-key", new Date());
+        when(mapper.readValue(eq(event.getNewEntity()), eq(ConsumerState.class))).thenReturn(state);
+        when(consumerStateCurator.findByUuid(eq("test-uuid"))).thenReturn(state);
+
+        handler.handleCreated(event);
+        verify(consumerStateCurator).findByUuid(eq("test-uuid"));
+        verifyNoMoreInteractions(consumerStateCurator);
     }
 
     @Test
