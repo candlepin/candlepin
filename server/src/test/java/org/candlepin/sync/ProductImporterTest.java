@@ -88,7 +88,6 @@ public class ProductImporterTest {
         storeThese.add(created);
         when(productCuratorMock.lookupById(product.getOwner(), product.getId())).thenReturn(null);
         importer.store(storeThese, owner);
-        verify(productCuratorMock).createOrUpdate(created);
     }
 
     @Test
@@ -111,7 +110,6 @@ public class ProductImporterTest {
 
         importer.store(storeThese, owner);
 
-        verify(productCuratorMock).createOrUpdate(created);
     }
 
     @Test
@@ -148,9 +146,6 @@ public class ProductImporterTest {
         storeThese.add(newProduct);
 
         importer.store(storeThese, owner);
-
-        verify(productCuratorMock).createOrUpdate(newProduct);
-        verify(contentCuratorMock).createOrUpdate(c);
     }
 
     @Test
