@@ -104,6 +104,7 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
         dest.setLabel(src.getLabel());
         dest.setMetadataExpire(src.getMetadataExpire());
         dest.setModifiedProductIds(src.getModifiedProductIds());
+        dest.setType(src.getType());
     }
 
 }
