@@ -594,20 +594,20 @@
 
 
 
-    <!-- cpo_sub_branding -->
+    <!-- cpo_subscription_branding -->
     <changeSet id="20150210094558-37" author="crog">
-        <createTable tableName="cpo_sub_branding">
+        <createTable tableName="cpo_subscription_branding">
             <column name="subscription_id" type="varchar(32)">
                 <constraints
                     nullable="false"
-                    foreignKeyName="cpo_sub_branding_fk1"
+                    foreignKeyName="cpo_subscription_branding_fk1"
                     references="cpo_subscriptions(id)"
                 />
             </column>
             <column name="branding_id" type="varchar(32)">
                 <constraints
                     nullable="false"
-                    foreignKeyName="cpo_sub_branding_fk2"
+                    foreignKeyName="cpo_subscription_branding_fk2"
                     references="cpo_branding(id)"
                 />
             </column>
@@ -615,9 +615,9 @@
     </changeSet>
 
     <changeSet id="20150210094558-38" author="crog">
-        <addPrimaryKey tableName="cpo_sub_branding"
+        <addPrimaryKey tableName="cpo_subscription_branding"
             columnNames="subscription_id, branding_id"
-            constraintName="cpo_sub_branding_pk"
+            constraintName="cpo_subscription_branding_pk"
         />
     </changeSet>
 
