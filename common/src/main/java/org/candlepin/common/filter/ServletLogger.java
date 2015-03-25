@@ -69,7 +69,7 @@ public class ServletLogger {
 
     public static StringBuilder logRequest(TeeHttpServletRequest req) {
         StringBuilder builder = new StringBuilder();
-        builder.append("\nRequest: ")
+        builder.append("Request: ")
             .append(req.getMethod()).append(" ").append(req.getRequestURI());
         if (req.getQueryString() != null) {
             builder.append("?").append(req.getQueryString());
@@ -87,7 +87,7 @@ public class ServletLogger {
 
         StringBuilder builder = new StringBuilder();
         int statusCode = resp.getStatus();
-        return builder.append("\nResponse: ")
+        return builder.append("Response: ")
             .append(statusCode)
             .append(" ")
             .append(Response.Status.fromStatusCode(statusCode))
