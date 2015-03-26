@@ -165,6 +165,9 @@ public class Entitlement extends AbstractHibernateObject
     @XmlTransient
     public String getProductId() {
         if (this.pool != null) {
+            if (pool.getImportedProductId() != null) {
+                return pool.getImportedProductId();
+            }
             return this.pool.getProductId();
         }
         return null;
