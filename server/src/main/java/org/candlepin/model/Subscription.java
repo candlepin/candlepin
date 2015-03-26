@@ -84,7 +84,7 @@ public class Subscription extends AbstractHibernateObject implements Owned, Name
     private Set<Product> derivedProvidedProducts = new HashSet<Product>();
 
     @OneToMany
-    @JoinTable(name = "cpo_sub_branding",
+    @JoinTable(name = "cpo_subscription_branding",
         joinColumns = @JoinColumn(name = "subscription_id"),
         inverseJoinColumns = @JoinColumn(name = "branding_id"))
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
