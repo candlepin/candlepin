@@ -1433,6 +1433,12 @@ var Entitlement = {
             if (!Utils.isNewborn(consumer)) {
                 result.addError("virt.guest.cannot.use.unmapped.guest.pool.not.new");
             }
+            var now = new Date();
+            var startDate = new Date(context.pool.startDate);
+            if (BIND_CALLER == caller &&
+                    Utils.date_compare(startDate, now) > 0) {
+                result.addError("virt.guest.cannot.bind.future.unmapped.guest.pool");
+            }
         }
     },
 

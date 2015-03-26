@@ -14,14 +14,9 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventFactory;
@@ -36,6 +31,7 @@ import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.common.exceptions.IseException;
 import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.common.paging.PageRequest;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.model.Consumer;
@@ -64,7 +60,6 @@ import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
-import org.candlepin.common.paging.PageRequest;
 import org.candlepin.resteasy.parameter.CandlepinParam;
 import org.candlepin.resteasy.parameter.CandlepinParameterUnmarshaller;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
@@ -95,6 +90,7 @@ import java.lang.annotation.Annotation;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -417,6 +413,50 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         ownerResource.listPools(owner.getKey(), null, null, null, false, null,
             null, new ArrayList<KeyValueParameter>(), principal, null);
+    }
+
+    @Test
+    public void testUnmappedGuestConsumerCanListPoolsForFuture() {
+        Consumer c = TestUtil.createConsumer(owner);
+        consumerTypeCurator.create(c.getType());
+        c.setFact("virt.is_guest", "true");
+        c.setFact("virt.uuid", "system_uuid");
+        consumerCurator.create(c);
+        Principal principal = setupPrincipal(new ConsumerPrincipal(c));
+
+        securityInterceptor.enable();
+
+        Date now = new Date();
+        Product p = TestUtil.createProduct();
+        productCurator.create(p);
+        Pool pool1 = TestUtil.createPool(owner, p);
+        pool1.setAttribute("virt_only", "true");
+        pool1.setAttribute("pool_derived", "true");
+        pool1.setAttribute("physical_only", "false");
+        pool1.setAttribute("unmapped_guests_only", "true");
+        pool1.setStartDate(now);
+        pool1.setEndDate(new Date(now.getTime() + 1000L * 60 * 60 * 24 * 365));
+        Pool pool2 = TestUtil.createPool(owner, p);
+        pool2.setAttribute("virt_only", "true");
+        pool2.setAttribute("pool_derived", "true");
+        pool2.setAttribute("physical_only", "false");
+        pool2.setAttribute("unmapped_guests_only", "true");
+        pool2.setStartDate(new Date(now.getTime() + 2 * 1000L * 60 * 60 * 24 * 365));
+        pool2.setEndDate(new Date(now.getTime() + 3 * 1000L * 60 * 60 * 24 * 365));
+        poolCurator.create(pool1);
+        poolCurator.create(pool2);
+
+        List<Pool> nowList = ownerResource.listPools(owner.getKey(), c.getUuid(), null, null, false, null,
+            null, new ArrayList<KeyValueParameter>(), principal, null);
+        assertEquals(1, nowList.size());
+        assert (nowList.get(0).getId().equals(pool1.getId()));
+
+        Date activeOn = new Date(pool2.getStartDate().getTime() + 1000L * 60 * 60 * 24);
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        List<Pool> futureList = ownerResource.listPools(owner.getKey(), c.getUuid(), null, null, false,
+                sdf.format(activeOn), null, new ArrayList<KeyValueParameter>(), principal, null);
+        assertEquals(1, futureList.size());
+        assert (futureList.get(0).getId().equals(pool2.getId()));
     }
 
     @Test
