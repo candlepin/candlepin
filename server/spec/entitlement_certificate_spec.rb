@@ -220,8 +220,6 @@ describe 'Entitlement Certificate' do
     sys2_new_certs.length.should == 2
     sys3_new_certs.length.should == 2
 
-    puts("CERT MAP! #{sys1_new_certs}")
-
     # Cert IDs should have changed across the board for prod, but safe_prod should remain untouched.
     sys1_old_ids = sys1_old_certs.map { |cert| cert['serial']['id'] }
     sys1_new_ids = sys1_new_certs.map { |cert| cert['serial']['id'] }

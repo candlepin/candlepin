@@ -18,7 +18,6 @@ describe 'Product Resource' do
         'derived_product_id' => @derived_product.id,
         'derived_provided_products' => [@derived_prov_product.id]
       })
-
   end
 
   it 'throws exception on write operation' do
@@ -70,6 +69,36 @@ describe 'Product Resource' do
     else
       bulk_get_products[0]['id'].should == prod2_id
       bulk_get_products[1]['id'].should == prod1_id
+    end
+  end
+
+  it "censors owner information on owner-agnostic retrieval" do
+    prod_id = "test_prod"
+
+    owner1 = create_owner(random_string("test_owner_1"))
+    owner2 = create_owner(random_string("test_owner_2"))
+    owner3 = create_owner(random_string("test_owner_3"))
+
+    prod1 = create_product(prod_id, "test product", {:owner => owner1['key']})
+    prod2 = create_product(prod_id, "test product", {:owner => owner2['key']})
+    prod3 = create_product(prod_id, "test product", {:owner => owner3['key']})
+
+    result = @cp.get("/products/#{prod_id}")
+    result.should_not be_nil
+
+    result["id"].should == prod_id
+    result["owner"].should be_nil
+  end
+
+  it "censors owner information for owner-agnostic statistics" do
+    @cp.generate_statistics()
+
+    result = @cp.get("/products/#{@product.id}/statistics")
+    result.should_not be_nil
+    result.length.should == 3
+
+    result.each do |stats|
+      stats['ownerId'].should be_nil
     end
   end
 
