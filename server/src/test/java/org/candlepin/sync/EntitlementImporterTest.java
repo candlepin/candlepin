@@ -139,7 +139,7 @@ public class EntitlementImporterTest {
         when(curator.listByOwner(owner)).thenReturn(new LinkedList<Subscription>());
 
         // when
-        importer.store(owner, new HashSet<Subscription>() {
+        importer.store(owner, new LinkedList<Subscription>() {
             {
                 add(testSub1);
             }
@@ -162,7 +162,7 @@ public class EntitlementImporterTest {
         });
 
         // when
-        importer.store(owner, new HashSet<Subscription>() {
+        importer.store(owner, new LinkedList<Subscription>() {
             {
                 add(testSub1);
             }
@@ -185,7 +185,7 @@ public class EntitlementImporterTest {
         });
 
         // when
-        importer.store(owner, new HashSet<Subscription>());
+        importer.store(owner, new LinkedList<Subscription>());
 
         // then
         verify(curator, never()).create(testSub1);
@@ -205,7 +205,7 @@ public class EntitlementImporterTest {
         });
 
         // when
-        importer.store(owner, new HashSet<Subscription>() {
+        importer.store(owner, new LinkedList<Subscription>() {
             {
                 add(testSub2);
                 add(testSub3);
@@ -230,7 +230,7 @@ public class EntitlementImporterTest {
         });
 
         // when
-        importer.store(owner, new HashSet<Subscription>() {
+        importer.store(owner, new LinkedList<Subscription>() {
             {
                 add(testSub3);
             }
@@ -255,7 +255,7 @@ public class EntitlementImporterTest {
         });
 
         // when
-        importer.store(owner, new HashSet<Subscription>() {
+        importer.store(owner, new LinkedList<Subscription>() {
             {
                 add(testSub2);
                 add(testSub4);
@@ -286,7 +286,7 @@ public class EntitlementImporterTest {
         });
 
         // when
-        importer.store(owner, new HashSet<Subscription>() {
+        importer.store(owner, new LinkedList<Subscription>() {
             {
                 add(testSub6);
                 add(testSub7);
@@ -321,7 +321,7 @@ public class EntitlementImporterTest {
         });
 
         // when
-        importer.store(owner, new HashSet<Subscription>() {
+        importer.store(owner, new LinkedList<Subscription>() {
             {
                 add(testSub6);
                 add(testSub8);
@@ -352,7 +352,7 @@ public class EntitlementImporterTest {
         });
 
         // when
-        importer.store(owner, new HashSet<Subscription>() {
+        importer.store(owner, new LinkedList<Subscription>() {
             {
                 add(testSub6);
                 add(testSub7);
@@ -383,7 +383,7 @@ public class EntitlementImporterTest {
         });
 
         // when
-        importer.store(owner, new HashSet<Subscription>() {
+        importer.store(owner, new LinkedList<Subscription>() {
             {
                 add(testSub3);
                 add(testSub4);
@@ -418,7 +418,7 @@ public class EntitlementImporterTest {
         });
 
         // when
-        importer.store(owner, new HashSet<Subscription>() {
+        importer.store(owner, new LinkedList<Subscription>() {
             {
                 add(testSub12); //quantity 23
                 add(testSub13); //quantity 17
@@ -454,7 +454,7 @@ public class EntitlementImporterTest {
         });
 
         // when
-        importer.store(owner, new HashSet<Subscription>() {
+        importer.store(owner, new LinkedList<Subscription>() {
             {
                 add(testSub12); // quantity 23
                 add(testSub14); // quantity 10
@@ -486,7 +486,7 @@ public class EntitlementImporterTest {
         });
 
         // when
-        importer.store(owner, new HashSet<Subscription>() {
+        importer.store(owner, new LinkedList<Subscription>() {
             {
                 add(testSub3); // quantity 15
                 add(testSub16); // quantity 15
@@ -525,7 +525,7 @@ public class EntitlementImporterTest {
         });
 
         // when
-        importer.store(owner, new HashSet<Subscription>() {
+        importer.store(owner, new LinkedList<Subscription>() {
             {
                 add(testSub1); // quantity 25
                 add(testSub2); // quantity 20

@@ -429,11 +429,8 @@ public class Importer {
 
         // If the consumer has no entitlements, this products directory will end up empty.
         // This also implies there will be no entitlements to import.
-        // TODO Set the subscription list from the entitlement importer.
-        SubscriptionServiceAdapter adapter =
-                new ImportSubscriptionServiceAdapter(new ArrayList<Subscription>());
-        Refresher refresher = poolManager.getRefresher(adapter);
         Meta meta = mapper.readValue(metadata, Meta.class);
+        List<Subscription> importSubs = new ArrayList<Subscription>();
         if (importFiles.get(ImportFile.PRODUCTS.fileName()) != null) {
             ProductImporter importer = new ProductImporter(productCurator, contentCurator);
 
@@ -444,19 +441,22 @@ public class Importer {
             importer.store(productsToImport, owner);
 
             meta = mapper.readValue(metadata, Meta.class);
-            importEntitlements(owner, productsToImport, entitlements.listFiles(),
-                consumer, meta);
-
-            refresher.add(owner);
-            refresher.run();
+            importSubs = importEntitlements(owner, productsToImport,
+                    entitlements.listFiles(), consumer, meta);
         }
         else {
             log.warn("No products found to import, skipping product import.");
             log.warn("No entitlements in manifest, removing all subscriptions for owner.");
             importEntitlements(owner, new HashSet<Product>(), new File[]{}, consumer, meta);
-            refresher.add(owner);
-            refresher.run();
         }
+
+        // Setup our import subscription adapter with the subscriptions imported:
+        SubscriptionServiceAdapter adapter =
+                new ImportSubscriptionServiceAdapter(importSubs);
+        Refresher refresher = poolManager.getRefresher(adapter);
+        refresher.add(owner);
+        refresher.run();
+
         return consumer;
     }
 
@@ -581,7 +581,7 @@ public class Importer {
         return productsToImport;
     }
 
-    public void importEntitlements(Owner owner, Set<Product> products, File[] entitlements,
+    public List<Subscription> importEntitlements(Owner owner, Set<Product> products, File[] entitlements,
         ConsumerDto consumer, Meta meta)
         throws IOException, SyncDataFormatException {
         EntitlementImporter importer = new EntitlementImporter(subCurator, csCurator,
@@ -595,7 +595,7 @@ public class Importer {
             productsById.put(product.getId(), product);
         }
 
-        Set<Subscription> subscriptionsToImport = new HashSet<Subscription>();
+        List<Subscription> subscriptionsToImport = new ArrayList<Subscription>();
         for (File entitlement : entitlements) {
             Reader reader = null;
             try {
@@ -611,7 +611,9 @@ public class Importer {
             }
         }
 
+        // TODO: update this reconciliation for the new transient subscriptions:
         importer.store(owner, subscriptionsToImport);
+        return subscriptionsToImport;
     }
 
     /**

@@ -172,15 +172,18 @@ public class EntitlementImporter {
      *  Each set is mapped against the upstream pool id.
      *  First match attempt will use entitlement id from incoming
      *   entitlements for comparison to existing subscriptions.
+     *
      *  Next attempt will use the exact quantity for comparison. This is to
      *   cover scenarios where the intent is to re-establish the distributor
      *   from the host.
+     *
      *  The final attempt will use ordering of the remaining incoming entitlements
      *   and of remaining existing subscriptions in descending order by quantity.
+     *
      *  Either the remaining subscriptions will be deleted, or the unmatched incoming
      *   entitlements will be turned into new subscriptions.
      */
-    public void store(Owner owner, Set<Subscription> subsToImport) {
+    public void store(Owner owner, List<Subscription> subsToImport) {
 
         Map<String, Map<String, Subscription>> existingSubsByUpstreamPool =
             mapSubsByUpstreamPool(owner);
