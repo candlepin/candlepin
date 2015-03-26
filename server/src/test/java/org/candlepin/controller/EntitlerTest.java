@@ -378,6 +378,7 @@ public class EntitlerTest {
         c.setCreated(twelveHoursAgo);
 
         Entitlement e1 = TestUtil.createEntitlement(owner1, c, p1, null);
+        // expire an hour from now
         e1.setEndDateOverride(new Date(new Date().getTime() + 1L * 60L * 60L * 1000L));
         Set<Entitlement> entitlementSet1 = new HashSet<Entitlement>();
         entitlementSet1.add(e1);
@@ -388,7 +389,8 @@ public class EntitlerTest {
         c.setCreated(twelveHoursAgo);
 
         Entitlement e2 = TestUtil.createEntitlement(owner2, c, p2, null);
-        e2.setEndDateOverride(thirtySixHoursAgo);
+        // expire 24 hours ago
+        e2.setEndDateOverride(new Date(thirtySixHoursAgo.getTime() + 12L * 60L * 60L * 1000L));
         Set<Entitlement> entitlementSet2 = new HashSet<Entitlement>();
         entitlementSet2.add(e2);
 
