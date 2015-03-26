@@ -33,6 +33,7 @@ import org.candlepin.policy.js.ProductCache;
 
 import com.google.inject.Inject;
 
+import org.apache.commons.lang.BooleanUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -176,17 +177,18 @@ public class PoolRules {
             if (virtQuantity != null) {
                 Product poolProduct = sub.getProduct();
                 // Favor derived products if they are available
+                // Set the pool's product to the sub's derived product
                 if (sub.getDerivedProduct() != null) {
                     poolProduct = sub.getDerivedProduct();
                 }
 
-                Pool derivedPool = helper.createPool(sub, poolProduct.getId(),
+                Pool newPool = helper.createPool(sub, poolProduct.getId(),
                     virtQuantity, virtAttributes);
 
                 // Using derived here because only one derived pool
                 // is created for this subscription
-                derivedPool.setSourceSubscription(new SourceSubscription(sub.getId(), "derived"));
-                pools.add(derivedPool);
+                newPool.setSourceSubscription(new SourceSubscription(sub.getId(), "derived"));
+                pools.add(newPool);
             }
         }
         return pools;
@@ -237,7 +239,7 @@ public class PoolRules {
     /**
      * Refresh pools which have no subscription tied (directly) to them.
      *
-     * @param floatingPools ools with no subscription ID
+     * @param floatingPools pools with no subscription ID
      * @return pool updates
      */
     public List<PoolUpdate> updatePools(List<Pool> floatingPools) {
@@ -290,14 +292,25 @@ public class PoolRules {
                 // Checks product name, ID, and provided products. Attributes are handled
                 // separately.
                 // TODO: should they be separate? ^^
+
+                boolean useDerived = BooleanUtils.toBoolean(existingPool.getAttributeValue("pool_derived")) &&
+                    sub.getDerivedProduct() != null;
+                String prodId = useDerived ?
+                    sub.getDerivedProduct().getId() : sub.getProduct().getId();
+                String prodName = useDerived ?
+                    sub.getDerivedProduct().getName() : sub.getProduct().getName();
+
                 update.setProductsChanged(
-                    checkForChangedProducts(sub.getProduct().getId(),
-                        sub.getProduct().getName(),
-                        getExpectedProvidedProducts(sub, existingPool),
+                    checkForChangedProducts(
+                        prodId,
+                        prodName,
+                        getExpectedProvidedProducts(sub, existingPool, useDerived),
                         existingPool));
 
-                update.setDerivedProductsChanged(
-                    checkForChangedDerivedProducts(sub, existingPool));
+                if (!useDerived) {
+                    update.setDerivedProductsChanged(
+                        checkForChangedDerivedProducts(sub, existingPool));
+                }
 
                 update.setProductAttributesChanged(checkForProductAttributeChanges(sub,
                     helper, existingPool));
@@ -495,10 +508,18 @@ public class PoolRules {
     }
 
     private Set<ProvidedProduct> getExpectedProvidedProducts(Subscription sub,
-        Pool existingPool) {
+        Pool existingPool, boolean useDerived) {
         Set<ProvidedProduct> incomingProvided = new HashSet<ProvidedProduct>();
-        if (sub.getProvidedProducts() != null) {
-            for (Product p : sub.getProvidedProducts()) {
+        Set<Product> subscriptionSet = null;
+        if (useDerived) {
+            subscriptionSet = sub.getDerivedProvidedProducts();
+        }
+        else {
+            subscriptionSet = sub.getProvidedProducts();
+        }
+
+        if (subscriptionSet != null) {
+            for (Product p : subscriptionSet) {
                 incomingProvided.add(new ProvidedProduct(p.getId(), p.getName(),
                     existingPool));
             }
@@ -507,17 +528,12 @@ public class PoolRules {
     }
 
     private boolean checkForChangedProducts(String incomingProductId,
-        String incomingProductName, Set<ProvidedProduct> incomingProvided,
-        Pool existingPool) {
+        String incomingProductName, Set<ProvidedProduct> incomingProvided, Pool existingPool) {
 
-        boolean productsChanged =
-            !incomingProductId.equals(existingPool.getProductId());
-        productsChanged = productsChanged ||
-            !incomingProductName.equals(existingPool.getProductName());
-
-        // Build expected set of ProvidedProducts and compare:
-        Set<ProvidedProduct> currentProvided = existingPool.getProvidedProducts();
-        productsChanged = productsChanged || !currentProvided.equals(incomingProvided);
+        boolean productsChanged = false;
+        productsChanged = productsChanged || !incomingProductId.equals(existingPool.getProductId());
+        productsChanged = productsChanged || !incomingProductName.equals(existingPool.getProductName());
+        productsChanged = productsChanged || !incomingProvided.equals(existingPool.getProvidedProducts());
 
         if (productsChanged) {
             existingPool.setProductId(incomingProductId);
@@ -615,9 +631,14 @@ public class PoolRules {
          *  pools in hosted (created when sub is first detected), and host restricted
          *  virt pools when on-site. (created when a host binds)
          */
+
+        /* Check the product attribute off the subscription too because
+         * derived products on the subscription are graduated to be the pool products and
+         * derived products aren't going to have a virt_limit attribute
+         */
         if (existingPool.hasAttribute("pool_derived") &&
             existingPool.attributeEquals("virt_only", "true") &&
-            existingPool.hasProductAttribute("virt_limit")) {
+            (attributes.containsKey("virt_limit") || existingPool.hasProductAttribute("virt_limit"))) {
 
             if (!attributes.containsKey("virt_limit")) {
                 log.warn("virt_limit attribute has been removed from subscription, " +
