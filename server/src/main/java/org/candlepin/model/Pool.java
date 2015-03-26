@@ -217,11 +217,22 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     @Transient
     private boolean markedForDelete = false;
 
+    /*
+     * These DTO collections are only used when importing manifests. For backward
+     * compatability reasons we serialize a DTO for the provided products, not the full
+     * product object itself.
+     */
     @Transient
     private Set<ProvidedProduct> providedProductDtos = null;
 
     @Transient
     private Set<ProvidedProduct> derivedProvidedProductDtos = null;
+
+    /*
+     * Only used for importing legacy manifests.
+     */
+    @Transient
+    private String importedProductId = null;
 
     public Pool() {
     }
@@ -663,6 +674,15 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     @HateoasInclude
     public String getProductId() {
         return (this.getProduct() != null ? this.getProduct().getId() : null);
+    }
+
+    public void setProductId(String productId) {
+        this.importedProductId = productId;
+    }
+
+    @XmlTransient
+    public String getImportedProductId() {
+        return this.importedProductId;
     }
 
     /**
