@@ -203,7 +203,7 @@ function createPool(pool) {
         for (var k = 0; k < this.providedProducts.length; k++) {
             var provided = this.providedProducts[k];
 
-            if (provided.id == productId) {
+            if (provided.productId == productId) {
                 return true;
             }
         }
@@ -215,7 +215,7 @@ function createPool(pool) {
         if (this.product_list == 0) {
             this.product_list.push(this.productId);
             for (var k = 0; k < this.providedProducts.length; k++) {
-                this.product_list.push(this.providedProducts[k].id);
+                this.product_list.push(this.providedProducts[k].productId);
             }
         }
         return this.product_list;
@@ -256,7 +256,7 @@ function createPool(pool) {
         if (this.derived_product_list == 0) {
             this.derived_product_list.push(this.derivedProductId);
             for (var k = 0; k < this.derivedProvidedProducts.length; k++) {
-                this.derived_product_list.push(this.derivedProvidedProducts[k].id);
+                this.derived_product_list.push(this.derivedProvidedProducts[k].productId);
             }
         }
         return this.derived_product_list;

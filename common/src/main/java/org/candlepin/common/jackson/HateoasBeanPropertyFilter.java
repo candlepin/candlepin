@@ -22,7 +22,7 @@ import com.fasterxml.jackson.databind.ser.PropertyWriter;
 /**
  * HateoasBeanPropertyFilter: This is a Jackson filter which first checks if we
  * are serializing a nested object, and if so switches to HATEOAS style
- * serialization. Only properties whose getters have the HateoasField annotation
+ * serialization. Only properties whose getters have the HateoasInclude annotation
  * will be included in the resulting JSON. Otherwise we will serialize the
  * object normally.
  */
