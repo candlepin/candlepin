@@ -767,11 +767,12 @@ public class PoolRulesTest {
         assert ("true".equals(unmappedVirtPool.getAttributeValue("virt_only")));
         assert ("true".equals(unmappedVirtPool.getAttributeValue("unmapped_guests_only")));
 
-        assertProvidedProducts(s.getProvidedProducts(),
+        // The derived provided products of the sub should be promoted to provided products
+        // on the pool
+        assertProvidedProducts(s.getDerivedProvidedProducts(),
                 unmappedVirtPool.getProvidedProducts());
         assertDerivedProvidedProducts(new HashSet<Product>(),
                 unmappedVirtPool.getDerivedProvidedProducts());
-
     }
 
     @Test

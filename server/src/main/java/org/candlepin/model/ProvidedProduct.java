@@ -154,6 +154,14 @@ public class ProvidedProduct extends AbstractHibernateObject {
     }
 
     @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(productName).append("(").append(productId).append(") ");
+        sb.append("Pool: [").append(pool).append("] ");
+        return sb.toString();
+    }
+
+    @Override
     public boolean equals(Object anObject) {
         if (this == anObject) {
             return true;
