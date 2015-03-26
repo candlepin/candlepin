@@ -193,7 +193,7 @@ public class EntitlementImporter {
             Map<String, Subscription> map = existingSubsByUpstreamPool.get(
                 subscription.getUpstreamPoolId());
             if (map == null || map.isEmpty()) {
-                createSubscription(subscription);
+//                createSubscription(subscription);
                 log.info("Creating new subscription for incoming entitlement with id [" +
                     subscription.getUpstreamEntitlementId() +
                     "]");
@@ -265,7 +265,7 @@ public class EntitlementImporter {
             Map<String, Subscription> map = existingSubsByUpstreamPool.get(
                 subscription.getUpstreamPoolId());
             if (map == null || map.isEmpty()) {
-                createSubscription(subscription);
+//                createSubscription(subscription);
                 log.info("Creating new subscription for incoming entitlement with id [" +
                     subscription.getUpstreamEntitlementId() +
                     "]");
@@ -332,13 +332,6 @@ public class EntitlementImporter {
         subscriptionCurator.merge(subscription);
         // send updated event
         sink.emitSubscriptionModified(local, subscription);
-    }
-
-    private void createSubscription(Subscription subscription) {
-        subscriptionCurator.create(subscription);
-        // send out created event
-        log.debug("emitting subscription event");
-        sink.emitSubscriptionCreated(subscription);
     }
 
     /**
