@@ -18,6 +18,7 @@ import org.candlepin.common.jackson.HateoasInclude;
 import org.candlepin.util.DateSource;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import org.apache.commons.lang.StringUtils;
@@ -215,6 +216,12 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
 
     @Transient
     private boolean markedForDelete = false;
+
+    @Transient
+    private Set<ProvidedProduct> providedProductDtos = null;
+
+    @Transient
+    private Set<ProvidedProduct> derivedProvidedProductDtos = null;
 
     public Pool() {
     }
@@ -560,6 +567,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         );
     }
 
+    @JsonIgnore
     public Set<Product> getProvidedProducts() {
         return this.providedProducts;
     }
@@ -574,6 +582,22 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         if (providedProducts != null) {
             this.providedProducts.addAll(providedProducts);
         }
+    }
+
+    @JsonProperty("providedProducts")
+    public Set<ProvidedProduct> getProvidedProductDtos() {
+        Set<ProvidedProduct> prods = new HashSet<ProvidedProduct>();
+        for (Product p : getProvidedProducts()) {
+            prods.add(new ProvidedProduct(p));
+        }
+        return prods;
+    }
+
+    /*
+     * Used temporarily while importing a manifest.
+     */
+    public void setProvidedProductDtos(Set<ProvidedProduct> dtos) {
+        providedProductDtos = dtos;
     }
 
     /**
@@ -776,6 +800,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         this.derivedProduct = derived;
     }
 
+    @JsonIgnore
     public Set<Product> getDerivedProvidedProducts() {
         return derivedProvidedProducts;
     }
@@ -786,6 +811,22 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         if (derivedProvidedProducts != null) {
             this.derivedProvidedProducts.addAll(derivedProvidedProducts);
         }
+    }
+
+    @JsonProperty("derivedProvidedProducts")
+    public Set<ProvidedProduct> getDerivedProvidedProductDtos() {
+        Set<ProvidedProduct> prods = new HashSet<ProvidedProduct>();
+        for (Product p : getDerivedProvidedProducts()) {
+            prods.add(new ProvidedProduct(p));
+        }
+        return prods;
+    }
+
+    /*
+     * Used temporarily while importing a manifest.
+     */
+    public void setDerivedProvidedProductDtos(Set<ProvidedProduct> dtos) {
+        providedProductDtos = dtos;
     }
 
     /*
