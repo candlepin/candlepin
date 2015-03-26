@@ -58,7 +58,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cpo_products")
-public class Product extends AbstractHibernateObject implements Linkable {
+public class Product extends AbstractHibernateObject implements Linkable, Cloneable {
 
     public static final  String UEBER_PRODUCT_POSTFIX = "_ueber_product";
 
@@ -112,7 +112,7 @@ public class Product extends AbstractHibernateObject implements Linkable {
     @CollectionTable(name = "cpo_product_dependent_products",
                      joinColumns = @JoinColumn(name = "product_uuid"))
     @Column(name = "element")
-    private Set<String> dependentProductIds;
+    private Set<String> dependentProductIds; // Should these be product references?
 
     protected Product() {
 
@@ -147,6 +147,50 @@ public class Product extends AbstractHibernateObject implements Linkable {
         setAttribute("variant", variant);
         setAttribute("type", type);
         setAttribute("arch", arch);
+    }
+
+    /**
+     * Creates a shallow copy of the specified source product. Owners, attributes and content are
+     * not duplicated, but the joining objects are (ProductAttribute, ProductContent, etc.).
+     *
+     * @param source
+     *  The Product instance to copy
+     */
+    protected Product(Product source) {
+        this.setUuid(source.getUuid());
+        this.setId(source.getId());
+        this.setName(source.getName());
+        this.setOwner(source.getOwner());
+        this.setMultiplier(source.getMultiplier());
+
+        // Copy attributes
+        Set<ProductAttribute> attributes = new HashSet<ProductAttribute>();
+        for (ProductAttribute src : source.getAttributes()) {
+            ProductAttribute dest = new ProductAttribute(src.getName(), src.getValue());
+            dest.setCreated(src.getCreated());
+            dest.setUpdated(src.getUpdated());
+            dest.setProduct(this);
+
+            attributes.add(dest);
+        }
+        this.setAttributes(attributes);
+
+        // Copy content
+        List<ProductContent> content = new LinkedList<ProductContent>();
+        for (ProductContent src : source.getProductContent()) {
+            ProductContent dest = new ProductContent(this, src.getContent(), src.getEnabled());
+            dest.setCreated(src.getCreated());
+            dest.setUpdated(src.getUpdated());
+
+            content.add(dest);
+        }
+        this.setProductContent(content);
+
+        this.setSubscriptions(source.getSubscriptions());
+        this.setDependentProductIds(source.getDependentProductIds());
+
+        this.setCreated(source.getCreated());
+        this.setUpdated(source.getUpdated());
     }
 
     public static Product createUeberProductForOwner(UniqueIdGenerator idGenerator, Owner owner) {
@@ -364,7 +408,16 @@ public class Product extends AbstractHibernateObject implements Linkable {
         }
 
         Product another = (Product) anObject;
-        return getId().equals(another.getId()) && name.equals(another.getName());
+
+        // TODO: Maybe checking the UUID would be better here...?
+        return (this.getOwner() != null ? this.getOwner().equals(another.getOwner()) :
+            another.getOwner() == null) && getId().equals(another.getId()) &&
+            name.equals(another.getName());
+    }
+
+    @Override
+    public Object clone() {
+        return new Product(this);
     }
 
     @Override
@@ -399,8 +452,8 @@ public class Product extends AbstractHibernateObject implements Linkable {
 
         this.productContent.clear();
 
-        if (productContent != null) {
-            this.productContent.addAll(productContent);
+        for (ProductContent pc : productContent) {
+            this.addProductContent(pc);
         }
     }
 

@@ -37,6 +37,7 @@ import org.xnap.commons.i18n.I18n;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.LinkedList;
 import java.util.Map;
 
 import javax.ws.rs.Consumes;
@@ -96,6 +97,40 @@ public class ProductResource {
     }
 
     /**
+     * Attempts to find a product with the specified ID. The Product returned will be the first
+     * found for any owner. Subsequent calls to this method with the same product ID are not
+     * guaranteed to return the same product.
+     *
+     * @param productId
+     *  The ID of the product to find
+     *
+     * @throws NotFoundException
+     *  if a product with the specified ID could not be found
+     *
+     * @return
+     *  a product instance with the specified product ID
+     */
+    private Product findProduct(String productId) {
+        Product product = null;
+
+        for (Owner owner : this.ownerCurator.listAll()) {
+            product = this.productCurator.lookupById(owner, productId);
+
+            if (product != null) {
+                break;
+            }
+        }
+
+        if (product == null) {
+            throw new NotFoundException(
+                i18n.tr("Product with ID ''{0}'' could not be found.", productId)
+            );
+        }
+
+        return product;
+    }
+
+    /**
      * Retrieves a single Product
      * <p>
      * <pre>
@@ -127,23 +162,15 @@ public class ProductResource {
     @Produces(MediaType.APPLICATION_JSON)
     @SecurityHole
     public Product getProduct(@PathParam("product_id") String productId) {
-        Product product = null;
+        Product product = this.findProduct(productId);
 
-        for (Owner owner : this.ownerCurator.listAll()) {
-            product = this.productCurator.lookupById(owner, productId);
+        // Make sure the owner cannot be identified from the returned product
+        // TODO: It may be better/cleaner to evict the object (and its related objects) from
+        // Hibernate's session cache rather than creating a copy.
+        Product censored = (Product) product.clone();
+        censored.setOwner(null);
 
-            if (product != null) {
-                break;
-            }
-        }
-
-        if (product == null) {
-            throw new NotFoundException(
-                i18n.tr("Product with ID ''{0}'' could not be found.", productId)
-            );
-        }
-
-        return product;
+        return censored;
     }
 
     /**
@@ -158,7 +185,7 @@ public class ProductResource {
     @Produces(MediaType.APPLICATION_JSON)
     @SecurityHole
     public ProductCertificate getProductCertificate(@PathParam("product_id") String productId) {
-        Product product = this.getProduct(productId);
+        Product product = this.findProduct(productId);
         return this.productCertCurator.getCertForProduct(product);
     }
 
@@ -331,7 +358,7 @@ public class ProductResource {
                             @QueryParam("to") String to,
                             @QueryParam("days") String days) {
 
-        return this.getProductStats(productId, from, to, days);
+        return this.getProductStats(productId, null, from, to, days);
     }
 
     /**
@@ -352,11 +379,24 @@ public class ProductResource {
                             @QueryParam("to") String to,
                             @QueryParam("days") String days) {
 
-        Product product = this.getProduct(productId);
+        Product product = this.findProduct(productId);
 
-        return statisticCurator.getStatisticsByProduct(product.getOwner(), productId, valueType,
-                                ResourceDateParser.getFromDate(from, to, days),
-                                ResourceDateParser.parseDateString(to));
+        List<Statistic> stats =  statisticCurator.getStatisticsByProduct(product.getOwner(),
+             productId, valueType, ResourceDateParser.getFromDate(from, to, days),
+             ResourceDateParser.parseDateString(to)
+        );
+
+        List<Statistic> censored = new LinkedList<Statistic>();
+
+        for (Statistic src : stats) {
+            Statistic dest = new Statistic(src.getEntryType(), src.getValueType(),
+                src.getValueReference(), src.getValue(), null
+            );
+
+            censored.add(dest);
+        }
+
+        return censored;
     }
 
     /**

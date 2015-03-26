@@ -111,12 +111,16 @@ public class ProductResourceTest extends DatabaseTestFixture {
     @Test
     public void getProduct() {
         Owner owner = ownerCurator.create(new Owner("Example-Corporation"));
-        Product p = productCurator.create(createProduct(owner));
+        Product product = productCurator.create(createProduct(owner));
 
         securityInterceptor.enable();
 
-        Product p1 = productResource.getProduct(p.getId());
-        assertEquals(p1, p);
+        // The returned product should be have the owner information removed.
+        Product expected = (Product) product.clone();
+        expected.setOwner(null);
+
+        Product actual = productResource.getProduct(product.getId());
+        assertEquals(actual, expected);
     }
 
     @Test
