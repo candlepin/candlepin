@@ -82,21 +82,6 @@ public class ProductResource {
     }
 
     /**
-     * Retrieves a list of Products
-     *
-     * @param productIds if specified, the list of product IDs to return product info for
-     * @return a list of Product objects
-     * @httpcode 200
-     */
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public List<Product> list(@QueryParam("product") List<String> productIds) {
-        return productIds.isEmpty() ?
-            productCurator.listAll() :
-            productCurator.listAllByIds(productIds);
-    }
-
-    /**
      * Attempts to find a product with the specified ID. The Product returned will be the first
      * found for any owner. Subsequent calls to this method with the same product ID are not
      * guaranteed to return the same product.
