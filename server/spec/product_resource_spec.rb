@@ -46,32 +46,6 @@ describe 'Product Resource' do
     end.should raise_exception(RestClient::BadRequest)
   end
 
-  it 'lists all products in bulk fetch' do
-    prod1_id = random_string("test_id")
-    prod2_id = random_string("test_id")
-    prod3_id = random_string("test_id")
-    prod1 = create_product(prod1_id, random_string("test_name"))
-    prod2 = create_product(prod2_id, random_string("test_name"))
-    prod3 = create_product(prod3_id, random_string("test_name"))
-    all_products = @cp.list_products()
-    all_products.size.should > 2
-
-    # Pick two products to use in a bulk get
-    prod_ids_to_get = [prod1_id, prod2_id]
-
-    # Get 2 products
-    bulk_get_products = @cp.list_products(prod_ids_to_get)
-    bulk_get_products.size.should == 2
-
-    # Make sure it got the correct ones
-    if (bulk_get_products[0]['id'] == prod1_id)
-      bulk_get_products[1]['id'].should == prod2_id
-    else
-      bulk_get_products[0]['id'].should == prod2_id
-      bulk_get_products[1]['id'].should == prod1_id
-    end
-  end
-
   it "censors owner information on owner-agnostic retrieval" do
     prod_id = "test_prod"
 
