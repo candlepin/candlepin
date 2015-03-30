@@ -133,7 +133,7 @@ public class AMQPBusPubProvider implements Provider<AMQPBusPublisher> {
         properties.put("java.naming.factory.initial",
             "org.apache.qpid.jndi.PropertiesFileInitialContextFactory");
         properties.put("connectionfactory.qpidConnectionfactory",
-            "amqp://guest:guest@localhost/test?brokerlist='" +
+            "amqp://guest:guest@localhost/test?sync_publish='persistent'&brokerlist='" +
             config.getString(ConfigProperties.AMQP_CONNECT_STRING) + "'");
 
         for (Target target : Target.values()) {
