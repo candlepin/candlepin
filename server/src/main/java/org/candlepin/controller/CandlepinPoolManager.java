@@ -26,6 +26,7 @@ import org.candlepin.common.paging.PageRequest;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCertificateCurator;
@@ -468,8 +469,13 @@ public class CandlepinPoolManager implements PoolManager {
             entitleDate, owner, null, fromPools);
 
         if (bestPools == null) {
-            throw new RuntimeException("No entitlements for products: " +
-                Arrays.toString(productIds));
+            List<String> fullList = new ArrayList<String>();
+            fullList.addAll(Arrays.asList(productIds));
+            for (ConsumerInstalledProduct cip : consumer.getInstalledProducts()) {
+                fullList.add(cip.getId());
+            }
+            log.warn("No entitlements available for products: " + fullList);
+            return null;
         }
 
         // now make the entitlements
@@ -519,7 +525,8 @@ public class CandlepinPoolManager implements PoolManager {
             entitleDate, owner, null, possiblePools);
 
         if (bestPools == null) {
-            throw new RuntimeException("No entitlements for host: " + host.getUuid());
+            log.warn("No entitlements for host: " + host.getUuid());
+            return null;
         }
 
         // now make the entitlements
@@ -766,7 +773,9 @@ public class CandlepinPoolManager implements PoolManager {
             productIds, filteredPools, compliance, serviceLevelOverride,
             poolCurator.retrieveServiceLevelsForOwner(owner, true), false);
         // Sort the resulting pools to avoid deadlocks
-        Collections.sort(enforced);
+        if (enforced != null) {
+            Collections.sort(enforced);
+        }
         return enforced;
     }
 

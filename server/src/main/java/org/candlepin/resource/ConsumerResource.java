@@ -95,7 +95,6 @@ import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.sync.ExportCreationException;
 import org.candlepin.sync.Exporter;
 import org.candlepin.util.Util;
-import org.candlepin.version.CertVersionConflictException;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -1478,20 +1477,9 @@ public class ConsumerResource {
             entitlements = entitler.bindByPool(poolIdString, consumer, quantity);
         }
         else {
-            try {
-                AutobindData autobindData = AutobindData.create(consumer).on(entitleDate)
-                        .forProducts(productIds).withPools(fromPools);
-                entitlements = entitler.bindByProducts(autobindData);
-            }
-            catch (ForbiddenException fe) {
-                throw fe;
-            }
-            catch (CertVersionConflictException cvce) {
-                throw cvce;
-            }
-            catch (RuntimeException re) {
-                log.error("Autobind error", re);
-            }
+            AutobindData autobindData = AutobindData.create(consumer).on(entitleDate)
+                    .forProducts(productIds).withPools(fromPools);
+            entitlements = entitler.bindByProducts(autobindData);
         }
 
         // Trigger events:
@@ -1538,6 +1526,9 @@ public class ConsumerResource {
         try {
             consumerBindUtil.validateServiceLevel(consumer.getOwner(), serviceLevel);
             dryRunPools = entitler.getDryRun(consumer, serviceLevel);
+            if (dryRunPools == null) {
+                return new ArrayList<PoolQuantity>();
+            }
         }
         catch (ForbiddenException fe) {
             return dryRunPools;
