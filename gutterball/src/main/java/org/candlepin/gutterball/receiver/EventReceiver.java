@@ -98,10 +98,10 @@ public class EventReceiver {
                 long delay = 1000 * waitTimeInSeconds;
                 broker.setProperty("connectdelay", Long.toString(delay));
             }
-            log.info("Broker configured: " + broker);
+            log.debug("Broker configured: " + broker);
         }
 
-        log.info("Configured AMQP connection factory.");
+        log.debug("Configured AMQP connection factory.");
         return connFactory;
     }
 

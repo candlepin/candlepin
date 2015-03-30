@@ -68,7 +68,7 @@ public class AMQPBusPubProvider implements Provider<AMQPBusPublisher> {
     public AMQPBusPubProvider(Configuration config, ObjectMapper omapper) {
         try {
             mapper = omapper;
-            log.info("building initialcontext");
+            log.debug("building initialcontext");
             ctx = new InitialContext(buildConfigurationProperties(config));
             init(config);
         }
@@ -80,18 +80,18 @@ public class AMQPBusPubProvider implements Provider<AMQPBusPublisher> {
 
     private void init(Configuration config) throws Exception  {
         AMQConnectionFactory connectionFactory = createConnectionFactory(ctx, config);
-        log.info("creating connection");
+        log.debug("creating connection");
         connection = (TopicConnection) connectionFactory.createConnection();
         connection.start();
 
-        log.info("creating topic session");
+        log.debug("creating topic session");
         session = connection.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
         log.info("AMQP session created successfully...");
     }
 
     private AMQConnectionFactory createConnectionFactory(Context ctx, Configuration config)
         throws NamingException {
-        log.info("looking up qpidConnectionfactory");
+        log.debug("looking up qpidConnectionfactory");
 
         int maxRetries = config.getInt(ConfigProperties.AMQP_CONNECTION_RETRY_ATTEMPTS);
         long waitTimeInSeconds = config.getLong(ConfigProperties.AMQP_CONNECTION_RETRY_INTERVAL);
@@ -118,7 +118,7 @@ public class AMQPBusPubProvider implements Provider<AMQPBusPublisher> {
                 long delay = 1000 * waitTimeInSeconds;
                 broker.setProperty("connectdelay", Long.toString(delay));
             }
-            log.info("Broker configured: " + broker);
+            log.debug("Broker configured: " + broker);
         }
         log.info("AMQP connection factory created.");
         return connectionFactory;
