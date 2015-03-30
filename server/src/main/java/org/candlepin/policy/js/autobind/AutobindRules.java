@@ -71,6 +71,8 @@ public class AutobindRules {
 
         int poolsBeforeContentFilter = pools.size();
         pools = filterPoolsForV1Certificates(consumer, pools);
+        log.debug("pools.size() before V1 certificate filter: {}, after: {}",
+                poolsBeforeContentFilter, pools.size());
 
         // per dgoodwin, this needs to throw an exception for legacy clients
         if (pools.size() == 0) {

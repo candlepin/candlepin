@@ -21,6 +21,8 @@ import org.candlepin.audit.EventBuilder;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.common.config.Configuration;
+import org.candlepin.common.paging.Page;
+import org.candlepin.common.paging.PageRequest;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -39,8 +41,6 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.activationkeys.ActivationKey;
-import org.candlepin.common.paging.Page;
-import org.candlepin.common.paging.PageRequest;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.ProductCache;
@@ -551,6 +551,7 @@ public class CandlepinPoolManager implements PoolManager {
         throws EntitlementRefusedException {
 
         ValidationResult failedResult = null;
+        log.debug("Looking up best pools for host: " + host);
 
         Date activePoolDate = entitleDate;
         if (entitleDate == null) {
@@ -561,22 +562,32 @@ public class CandlepinPoolManager implements PoolManager {
         List<Pool> allOwnerPools = this.listAvailableEntitlementPools(
             host, null, owner, (String) null, activePoolDate, true, false,
             poolFilter, null).getPageData();
+        log.debug("Found {} total pools in org.", allOwnerPools.size());
+        logPools(allOwnerPools);
+
         List<Pool> allOwnerPoolsForGuest = this.listAvailableEntitlementPools(
             guest, null, owner, (String) null, activePoolDate,
             true, false, poolFilter,
             null).getPageData();
+        log.debug("Found {} total pools already available for guest",
+                allOwnerPoolsForGuest.size());
+        logPools(allOwnerPoolsForGuest);
+
         for (Entitlement ent : host.getEntitlements()) {
             //filter out pools that are attached, there is no need to
             //complete partial stacks, as they are already granting
             //virtual pools
+            log.debug("Removing pool host is already entitled to: " + ent.getPool());
             allOwnerPools.remove(ent.getPool());
         }
         List<Pool> filteredPools = new LinkedList<Pool>();
 
-        ComplianceStatus guestCompliance = complianceRules.getStatus(guest, entitleDate, false);
+        ComplianceStatus guestCompliance = complianceRules.getStatus(guest, entitleDate,
+                false);
         Set<String> tmpSet = new HashSet<String>();
         //we only want to heal red products, not yellow
         tmpSet.addAll(guestCompliance.getNonCompliantProducts());
+        log.debug("Guest's non-compliant products: {}", Util.collectionToString(tmpSet));
 
         /*Do not attempt to create subscriptions for products that
           already have virt_only pools available to the guest */
@@ -590,14 +601,14 @@ public class CandlepinPoolManager implements PoolManager {
                 }
             }
         }
+        log.debug("Guest already will have virt-only pools to cover: " +
+                Util.collectionToString(productsToRemove));
         tmpSet.removeAll(productsToRemove);
         String[] productIds = tmpSet.toArray(new String [] {});
 
         if (log.isDebugEnabled()) {
-            log.debug("Attempting for products on date: " + entitleDate);
-            for (String productId : productIds) {
-                log.debug("  " + productId);
-            }
+            log.debug("Attempting host autobind for guest products: " +
+                    Util.collectionToString(tmpSet));
         }
 
         for (Pool pool : allOwnerPools) {
@@ -610,6 +621,8 @@ public class CandlepinPoolManager implements PoolManager {
                     // If this is a derived pool, we need to see if the derived product
                     // provides anything for the guest, otherwise we use the parent.
                     if (pool.providesDerived(productId)) {
+                        log.debug("Found virt_limit pool providing product {}: {}",
+                                productId, pool);
                         providesProduct = true;
                         break;
                     }
@@ -623,9 +636,12 @@ public class CandlepinPoolManager implements PoolManager {
                     // Just keep the last one around, if we need it
                     failedResult = result;
                     if (log.isDebugEnabled()) {
-                        log.debug("Pool filtered from candidates due to rules " +
-                            "failure: " +
-                            pool.getId());
+                        log.debug("Pool filtered from candidates due to failed rule(s): {}"
+                                + pool);
+                        log.debug("   warnings: " +
+                                Util.collectionToString(result.getWarnings()));
+                        log.debug("   errors: " +
+                                Util.collectionToString(result.getErrors()));
                     }
                 }
                 else {
@@ -640,10 +656,28 @@ public class CandlepinPoolManager implements PoolManager {
         }
         ComplianceStatus hostCompliance = complianceRules.getStatus(host, entitleDate, false);
 
+        log.debug("Host pools being sent to rules: {}", filteredPools.size());
+        logPools(filteredPools);
         List<PoolQuantity> enforced = autobindRules.selectBestPools(host,
             productIds, filteredPools, hostCompliance, serviceLevelOverride,
             poolCurator.retrieveServiceLevelsForOwner(owner, true), true);
+
+        if (log.isDebugEnabled()) {
+            log.debug("Host selectBestPools returned {} pools: ", enforced.size());
+            for (PoolQuantity poolQuantity : enforced) {
+                log.debug("   " + poolQuantity.getPool());
+            }
+        }
+
         return enforced;
+    }
+
+    private void logPools(Collection<Pool> pools) {
+        if (log.isDebugEnabled()) {
+            for (Pool p : pools) {
+                log.debug("   " + p);
+            }
+        }
     }
 
     @Override
