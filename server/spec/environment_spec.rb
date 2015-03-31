@@ -77,14 +77,60 @@ describe 'Environments' do
     @env['environmentContent'].size.should == 1
   end
 
-  it 'cleans up env content when content is deleted' do
-    content = create_content
-    job = @org_admin.promote_content(@env['id'],
-        [{:contentId => content['id']}])
+  it 'does not allow content to be promoted more than once' do
+    content1 = create_content
+    content2 = create_content
+
+    job = @org_admin.promote_content(@env['id'], [{:contentId => content1['id']}])
     wait_for_job(job['id'], 15)
+
+    lambda do
+      @org_admin.promote_content(
+        @env['id'], [{:contentId => content2['id']}, {:contentId => content1['id']}]
+      )
+    end.should raise_exception(RestClient::Conflict)
+
+    # The promotion of content2 should have been aborted due to the conflict with content1
     @env = @org_admin.get_environment(@env['id'])
     @env['environmentContent'].size.should == 1
-    @cp.delete_content(content['id'])
+  end
+
+  it 'can promote multiple contents' do
+    content = create_content
+    job = @org_admin.promote_content(@env['id'], [{:contentId => content['id']}])
+    wait_for_job(job['id'], 15)
+
+    content2 = create_content
+    job = @org_admin.promote_content(@env['id'], [{:contentId => content2['id']}])
+    wait_for_job(job['id'], 15)
+
+    content3 = create_content
+    content4 = create_content
+    job = @org_admin.promote_content(
+      @env['id'], [{:contentId => content3['id']}, {:contentId => content4['id']}]
+    )
+    wait_for_job(job['id'], 15)
+
+    @env = @org_admin.get_environment(@env['id'])
+    @env['environmentContent'].size.should == 4
+  end
+
+  it 'cleans up env content when content is deleted' do
+    content1 = create_content
+    content2 = create_content
+    job = @org_admin.promote_content(
+      @env['id'], [{:contentId => content1['id']}, {:contentId => content2['id']}]
+    )
+    wait_for_job(job['id'], 15)
+
+    @env = @org_admin.get_environment(@env['id'])
+    @env['environmentContent'].size.should == 2
+
+    @cp.delete_content(content1['id'])
+    @env = @org_admin.get_environment(@env['id'])
+    @env['environmentContent'].size.should == 1
+
+    @cp.delete_content(content2['id'])
     @env = @org_admin.get_environment(@env['id'])
     @env['environmentContent'].size.should == 0
   end
