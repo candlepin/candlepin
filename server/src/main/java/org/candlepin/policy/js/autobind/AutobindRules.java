@@ -67,6 +67,8 @@ public class AutobindRules {
 
         int poolsBeforeContentFilter = pools.size();
         pools = filterPoolsForV1Certificates(consumer, pools);
+        log.debug("pools.size() before V1 certificate filter: {}, after: {}",
+                poolsBeforeContentFilter, pools.size());
 
         // per dgoodwin, this needs to throw an exception for legacy clients
         if (pools.size() == 0) {
@@ -163,9 +165,7 @@ public class AutobindRules {
      */
     private List<Pool> filterPoolsForV1Certificates(Consumer consumer,
         List<Pool> pools) {
-        if (!consumer.hasFact("system.certificate_version") ||
-            (consumer.hasFact("system.certificate_version") &&
-            consumer.getFact("system.certificate_version").startsWith("1."))) {
+        if (!consumer.isCertV3Capable()) {
             List<Pool> newPools = new LinkedList<Pool>();
 
             for (Pool p : pools) {

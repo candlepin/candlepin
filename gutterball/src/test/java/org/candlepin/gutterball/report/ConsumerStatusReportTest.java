@@ -21,7 +21,6 @@ import static org.mockito.Mockito.*;
 
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
-
 import org.candlepin.gutterball.TestUtils;
 import org.candlepin.gutterball.curator.ComplianceSnapshotCurator;
 import org.candlepin.gutterball.guice.I18nProvider;
@@ -42,6 +41,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -77,7 +77,8 @@ public class ConsumerStatusReportTest {
 
         // Indentation note: This is what checkstyle actually wants. :/
         when(complianceSnapshotCurator.getSnapshotIterator(
-                any(Date.class), any(List.class), any(List.class), any(List.class), any(PageRequest.class)
+                any(Date.class), any(List.class), any(List.class), any(List.class), any(Map.class),
+                any(PageRequest.class)
         )).thenReturn(page);
 
         report = new ConsumerStatusReport(i18nProvider, complianceSnapshotCurator, messageGenerator);
@@ -115,7 +116,7 @@ public class ConsumerStatusReportTest {
         report.run(params, pageRequest);
 
         verify(complianceSnapshotCurator).getSnapshotIterator(eq(cal.getTime()),
-                eq(uuids), eq(owners), eq(status), eq(pageRequest));
+                eq(uuids), eq(owners), eq(status), any(Map.class), eq(pageRequest));
         verifyNoMoreInteractions(complianceSnapshotCurator);
     }
 
@@ -133,7 +134,7 @@ public class ConsumerStatusReportTest {
         report.run(params, pageRequest);
 
         verify(complianceSnapshotCurator).getSnapshotIterator(any(Date.class),
-                eq(uuids), eq(owners), eq(status), eq(pageRequest));
+                eq(uuids), eq(owners), eq(status), any(Map.class), eq(pageRequest));
         verifyNoMoreInteractions(complianceSnapshotCurator);
     }
 
@@ -151,6 +152,7 @@ public class ConsumerStatusReportTest {
         verify(complianceSnapshotCurator).getSnapshotIterator(any(Date.class),
                 eq(uuids), eq(owners),
                 eq(Arrays.asList("partial")),
+                any(Map.class),
                 eq(pageRequest));
         verifyNoMoreInteractions(complianceSnapshotCurator);
     }
@@ -172,6 +174,7 @@ public class ConsumerStatusReportTest {
                 eq(uuids),
                 eq(owners),
                 eq(statuses),
+                any(Map.class),
                 eq(pageRequest)
         );
         verifyNoMoreInteractions(complianceSnapshotCurator);
@@ -190,7 +193,8 @@ public class ConsumerStatusReportTest {
         page.setPageData(complianceList.iterator());
 
         when(complianceSnapshotCurator.getSnapshotIterator(
-                any(Date.class), any(List.class), any(List.class), any(List.class), any(PageRequest.class)
+                any(Date.class), any(List.class), any(List.class), any(List.class), any(Map.class),
+                any(PageRequest.class)
         )).thenReturn(page);
 
         ComplianceTransformerIterator result = (ComplianceTransformerIterator) report.run(params, null);
@@ -212,7 +216,8 @@ public class ConsumerStatusReportTest {
         page.setPageData(complianceList.iterator());
 
         when(complianceSnapshotCurator.getSnapshotIterator(
-                any(Date.class), any(List.class), any(List.class), any(List.class), any(PageRequest.class)
+                any(Date.class), any(List.class), any(List.class), any(List.class),
+                any(Map.class), any(PageRequest.class)
         )).thenReturn(page);
 
         ReasonGeneratingReportResult result = (ReasonGeneratingReportResult) report.run(params, null);

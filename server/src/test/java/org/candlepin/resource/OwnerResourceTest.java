@@ -90,6 +90,7 @@ import java.lang.annotation.Annotation;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -412,6 +413,50 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         ownerResource.listPools(owner.getKey(), null, null, null, false, null,
             null, new ArrayList<KeyValueParameter>(), principal, null);
+    }
+
+    @Test
+    public void testUnmappedGuestConsumerCanListPoolsForFuture() {
+        Consumer c = TestUtil.createConsumer(owner);
+        consumerTypeCurator.create(c.getType());
+        c.setFact("virt.is_guest", "true");
+        c.setFact("virt.uuid", "system_uuid");
+        consumerCurator.create(c);
+        Principal principal = setupPrincipal(new ConsumerPrincipal(c));
+
+        securityInterceptor.enable();
+
+        Date now = new Date();
+        Product p = TestUtil.createProduct(owner);
+        productCurator.create(p);
+        Pool pool1 = TestUtil.createPool(owner, p);
+        pool1.setAttribute("virt_only", "true");
+        pool1.setAttribute("pool_derived", "true");
+        pool1.setAttribute("physical_only", "false");
+        pool1.setAttribute("unmapped_guests_only", "true");
+        pool1.setStartDate(now);
+        pool1.setEndDate(new Date(now.getTime() + 1000L * 60 * 60 * 24 * 365));
+        Pool pool2 = TestUtil.createPool(owner, p);
+        pool2.setAttribute("virt_only", "true");
+        pool2.setAttribute("pool_derived", "true");
+        pool2.setAttribute("physical_only", "false");
+        pool2.setAttribute("unmapped_guests_only", "true");
+        pool2.setStartDate(new Date(now.getTime() + 2 * 1000L * 60 * 60 * 24 * 365));
+        pool2.setEndDate(new Date(now.getTime() + 3 * 1000L * 60 * 60 * 24 * 365));
+        poolCurator.create(pool1);
+        poolCurator.create(pool2);
+
+        List<Pool> nowList = ownerResource.listPools(owner.getKey(), c.getUuid(), null, null, false, null,
+            null, new ArrayList<KeyValueParameter>(), principal, null);
+        assertEquals(1, nowList.size());
+        assert (nowList.get(0).getId().equals(pool1.getId()));
+
+        Date activeOn = new Date(pool2.getStartDate().getTime() + 1000L * 60 * 60 * 24);
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        List<Pool> futureList = ownerResource.listPools(owner.getKey(), c.getUuid(), null, null, false,
+                sdf.format(activeOn), null, new ArrayList<KeyValueParameter>(), principal, null);
+        assertEquals(1, futureList.size());
+        assert (futureList.get(0).getId().equals(pool2.getId()));
     }
 
     @Test

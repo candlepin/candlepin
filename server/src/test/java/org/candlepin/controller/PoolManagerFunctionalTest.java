@@ -37,6 +37,7 @@ import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
+import org.candlepin.model.PoolAttribute;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.Product;
@@ -410,6 +411,27 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         // Pool in error should not be included. Should have the same number of
         // initial pools.
         assertEquals(4, results.getPageData().size());
+    }
+
+    @Test
+    public void testListAllForOldGuestExcludesTempPools() {
+        Pool pool = createPoolAndSub(o, virtGuest, 100L,
+            TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
+        pool.addAttribute(new PoolAttribute("unmapped_guests_only", "true"));
+        poolCurator.create(pool);
+        Page<List<Pool>> results = poolManager.listAvailableEntitlementPools(
+            childVirtSystem, null, o, virtGuest.getId(), null, true,
+            true, new PoolFilterBuilder(), new PageRequest());
+        int newbornPools = results.getPageData().size();
+
+        childVirtSystem.setCreated(TestUtil.createDate(2000, 01, 01));
+        consumerCurator.update(childVirtSystem);
+
+        results = poolManager.listAvailableEntitlementPools(
+            childVirtSystem, null, o, virtGuest.getId(), null, true,
+            true, new PoolFilterBuilder(), new PageRequest());
+
+        assertEquals(newbornPools - 1, results.getPageData().size());
     }
 
     /**

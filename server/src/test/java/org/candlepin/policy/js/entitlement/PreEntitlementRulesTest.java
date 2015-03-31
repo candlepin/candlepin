@@ -27,6 +27,7 @@ import org.candlepin.model.PoolAttribute;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.policy.ValidationResult;
+import org.candlepin.policy.js.entitlement.Enforcer.CallerType;
 import org.candlepin.test.TestUtil;
 
 import org.junit.Test;
@@ -670,10 +671,27 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         Date twentyFiveHoursAgo = new Date(new Date().getTime() - 25L * 60L * 60L * 1000L);
         tooOld.setCreated(twentyFiveHoursAgo);
         ValidationResult result = enforcer.preEntitlement(tooOld, pool, 1);
-        assertTrue(result.hasWarnings());
-        assertEquals(1, result.getWarnings().size());
+        assertTrue(result.hasErrors());
+        assertEquals(1, result.getErrors().size());
         assertEquals("virt.guest.cannot.use.unmapped.guest.pool.not.new",
-            result.getWarnings().get(0).getResourceKey());
+            result.getErrors().get(0).getResourceKey());
+    }
+
+    @Test
+    public void unmappedGuestFuturePoolDate() {
+        Date fourHoursFromNow = new Date(new Date().getTime() + 4L * 60L * 60L * 1000L);
+        Pool pool = setupUnmappedGuestPool();
+        pool.setStartDate(fourHoursFromNow);
+
+        Consumer consumer = new Consumer("test newborn consumer", "test user", owner,
+                new ConsumerType(ConsumerTypeEnum.SYSTEM));
+        consumer.setFact("virt.is_guest", "true");
+        consumer.setCreated(new Date());
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1, CallerType.BIND);
+        assertTrue(result.hasErrors());
+        assertEquals(1, result.getErrors().size());
+        assertEquals("virt.guest.cannot.bind.future.unmapped.guest.pool",
+            result.getErrors().get(0).getResourceKey());
     }
 
     @Test
@@ -691,10 +709,10 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         when(consumerCurator.getHost(guestId, owner)).thenReturn(parent);
 
         ValidationResult result = enforcer.preEntitlement(newborn, pool, 1);
-        assertTrue(result.hasWarnings());
-        assertEquals(1, result.getWarnings().size());
+        assertTrue(result.hasErrors());
+        assertEquals(1, result.getErrors().size());
         assertEquals("virt.guest.cannot.use.unmapped.guest.pool.has.host",
-            result.getWarnings().get(0).getResourceKey());
+            result.getErrors().get(0).getResourceKey());
     }
 
     private Pool setupUserRestrictedPool() {

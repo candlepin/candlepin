@@ -2260,5 +2260,7 @@
     <include file="db/changelog/20141126150611-create-content-tags-table.xml"/>
     <include file="db/changelog/20150123105016-add-consumer-checkin-table.xml"/>
     <include file="db/changelog/20150211111319-add-last-guest-update-table.xml"/>
+    <include file="db/changelog/20150316122833-add-entitlement-end-date-override.xml"/>
+    <include file="db/changelog/20150311151612-force-all-content-metadataexpire-to-0.xml"/>
     <include file="db/changelog/20150210094558-multiorg-phase-1.xml"/>
 </databaseChangeLog>

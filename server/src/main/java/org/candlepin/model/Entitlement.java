@@ -108,6 +108,8 @@ public class Entitlement extends AbstractHibernateObject
     // rerun compliance once we hit the active date range.
     private boolean updatedOnStart = false;
 
+    private Date endDateOverride;
+
     /**
      * default ctor
      */
@@ -202,17 +204,41 @@ public class Entitlement extends AbstractHibernateObject
     }
 
     /**
-     * @return Returns the endDate.
+     * @return Returns the endDate. If an override is specified for this entitlement,
+     * we return this value. If not we'll use the end date of the pool.
      */
     public Date getEndDate() {
+        if (endDateOverride != null) {
+            return endDateOverride;
+        }
+
         if (pool == null) {
             return null;
         }
+
         return pool.getEndDate();
     }
 
     public void setEndDate(Date date) {
         // Only for serialization, end date lives on pool now.
+    }
+
+
+    /**
+     * An optional end date override for this entitlement.
+     *
+     * Typically this is set to null, and the pool's end date is used. In some cases
+     * we need to control the expiry of an entitlement separate from the pool.
+     *
+     * @return optional end date override for this entitlement.
+     */
+    @XmlTransient
+    public Date getEndDateOverride() {
+        return endDateOverride;
+    }
+
+    public void setEndDateOverride(Date endDateOverride) {
+        this.endDateOverride = endDateOverride;
     }
 
     /**

@@ -15,6 +15,7 @@
 
 package org.candlepin.gutterball.report;
 
+import org.candlepin.common.config.ConversionException;
 import org.candlepin.common.config.PropertyConverter;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
@@ -27,8 +28,10 @@ import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import javax.inject.Provider;
 import javax.ws.rs.core.MultivaluedMap;
@@ -85,8 +88,19 @@ public class ConsumerStatusReport extends Report<ReportResult> {
         );
 
         addParameter(
+            builder.init(
+                "management_enabled",
+                i18n.tr("Filter on subscriptions which have management enabled set to this value (boolean)"))
+                .getParameter()
+        );
+
+        addParameter(
             builder.init(CUSTOM_RESULTS_PARAM, i18n.tr("Enables/disables custom report result " +
                     "functionality via attribute filtering (boolean).")).getParameter());
+
+        addParameter(builder.init("include_reasons", i18n.tr("Include status reasons in results"))
+                .mustNotHave(CUSTOM_RESULTS_PARAM)
+                .getParameter());
 
         addParameter(builder.init("include", i18n.tr("Includes the specified attribute in the result JSON"))
                 .mustHave(CUSTOM_RESULTS_PARAM)
@@ -115,6 +129,24 @@ public class ConsumerStatusReport extends Report<ReportResult> {
             parseDateTime(queryParams.getFirst("on_date")) :
             new Date();
 
+        Map<String, String> attributeFilters = new HashMap<String, String>();
+        String managementEnabled = queryParams.getFirst("management_enabled");
+        if (managementEnabled != null) {
+            try {
+                attributeFilters.put(
+                    "management_enabled", (PropertyConverter.toBoolean(managementEnabled) ? "1" : "0")
+                );
+            }
+            catch (ConversionException e) {
+                // This shouldn't happen; but if it does, do nothing. Maybe assume false?
+            }
+        }
+
+        boolean includeReasons = true;
+        if (queryParams.containsKey("include_reasons")) {
+            includeReasons = PropertyConverter.toBoolean(queryParams.getFirst("include_reasons"));
+        }
+
         String custom = queryParams.containsKey(CUSTOM_RESULTS_PARAM) ?
             queryParams.getFirst(CUSTOM_RESULTS_PARAM) : "";
         boolean useCustom = PropertyConverter.toBoolean(custom);
@@ -124,6 +156,7 @@ public class ConsumerStatusReport extends Report<ReportResult> {
             consumerIds,
             ownerFilters,
             statusFilters,
+            attributeFilters,
             pageRequest
         );
 
@@ -131,6 +164,6 @@ public class ConsumerStatusReport extends Report<ReportResult> {
 
         return useCustom ?
             new ReasonGeneratingReportResult(page.getPageData(), this.messageGenerator) :
-            new ConsumerStatusReportDefaultResult(page.getPageData());
+            new ConsumerStatusReportDefaultResult(page.getPageData(), includeReasons);
     }
 }

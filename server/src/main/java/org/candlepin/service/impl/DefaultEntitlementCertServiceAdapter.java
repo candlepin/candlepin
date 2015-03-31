@@ -19,8 +19,6 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Consumer;
-import org.candlepin.model.ConsumerCapability;
-import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCertificateCurator;
@@ -153,56 +151,41 @@ public class DefaultEntitlementCertServiceAdapter extends
                 promotedContent);
         }
 
+        setupEntitlementEndDate(ent);
         X509Certificate x509Cert =  this.pki.createX509Certificate(
-                createDN(ent), extensions, byteExtensions, ent.getPool().getStartDate(),
-                findPoolEndDate(ent), keyPair, serialNumber, null);
+                createDN(ent), extensions, byteExtensions, ent.getStartDate(),
+                ent.getEndDate(), keyPair, serialNumber, null);
         return x509Cert;
     }
 
-    private Date findPoolEndDate(Entitlement ent) {
+    /**
+     * Modify the entitlements end date
+     * @param ent
+     */
+    private void setupEntitlementEndDate(Entitlement ent) {
         Pool pool = ent.getPool();
         Consumer consumer = ent.getConsumer();
 
         Date startDate = new Date();
-
         if (consumer.getCreated() != null) {
             startDate = consumer.getCreated();
         }
 
-        Date oneDayFromRegistration = new Date(startDate.getTime() + (24 * 60 * 60 * 1000));
-
-        boolean isUnmappedGuestPool = BooleanUtils.toBoolean(pool.getAttributeValue("unmapped_guests_only"));
+        boolean isUnmappedGuestPool = BooleanUtils.toBoolean(
+                pool.getAttributeValue("unmapped_guests_only"));
 
         if (isUnmappedGuestPool) {
-            return oneDayFromRegistration;
-        }
-        else {
-            return pool.getEndDate();
+            Date oneDayFromRegistration = new Date(startDate.getTime() + 24L * 60L * 60L * 1000L);
+            log.info("Setting 24h expiration for unmapped guest pool entilement: " +
+                    oneDayFromRegistration);
+            ent.setEndDateOverride(oneDayFromRegistration);
+            entCurator.merge(ent);
         }
     }
 
     private boolean shouldGenerateV3(Entitlement entitlement) {
         Consumer consumer = entitlement.getConsumer();
-
-        if (consumer.getType().isManifest()) {
-            for (ConsumerCapability capability : consumer.getCapabilities()) {
-                if ("cert_v3".equals(capability.getName())) {
-                    return true;
-                }
-            }
-            return false;
-        }
-        else if (consumer.getType().getLabel().equals(
-            ConsumerTypeEnum.HYPERVISOR.getLabel())) {
-            // Hypervisors in this context don't use content, so allow v3
-            return true;
-        }
-        else {
-            String entitlementVersion = consumer.getFact("system.certificate_version");
-            log.debug("Entitlement version: {}", entitlementVersion);
-
-            return entitlementVersion != null && entitlementVersion.startsWith("3.");
-        }
+        return consumer != null && consumer.isCertV3Capable();
     }
 
     /**

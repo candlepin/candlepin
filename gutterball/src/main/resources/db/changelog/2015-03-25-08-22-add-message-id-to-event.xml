@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <changeSet id="20150325082205-1" author="mstead">
+        <comment>Add messageId column to gb_event</comment>
+        <addColumn tableName="gb_event">
+          <!-- Set the value of existing records to unknown as there is no way -->
+          <!-- to get the message id at this point. JMS Message IDs can be     -->
+          <!-- different based on the implementation. varchar(64) should be big-->
+          <!-- enough.                                                         -->
+          <column name="messageid" type="varchar(64)" defaultValue="UNKNOWN" >
+              <constraints nullable="false"/>
+          </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="20150325082205-2" author="mstead">
+        <createIndex indexName="ix_message_id" tableName="gb_event" unique="false">
+            <column name="messageid"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>
+<!-- vim: set expandtab sts=4 sw=4 ai: -->

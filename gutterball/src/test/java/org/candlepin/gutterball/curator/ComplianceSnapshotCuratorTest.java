@@ -19,9 +19,9 @@ import static org.candlepin.gutterball.TestUtils.*;
 import static org.junit.Assert.*;
 import static junitparams.JUnitParamsRunner.*;
 
+import org.candlepin.common.config.PropertyConverter;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
-
 import org.candlepin.gutterball.DatabaseTestFixture;
 import org.candlepin.gutterball.jackson.GutterballObjectMapper;
 import org.candlepin.gutterball.model.ConsumerState;
@@ -95,6 +95,7 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
                     this.put("attrib1", "val1");
                     this.put("attrib2", "val2");
                     this.put("attrib3", "val3");
+                    this.put("management_enabled", "1");
                 }
             }
         );
@@ -120,6 +121,7 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
             new HashMap<String, String>() {
                 {
                     this.put("attrib2", "val2");
+                    this.put("management_enabled", "0");
                 }
             }
         );
@@ -237,7 +239,8 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
     public void testGetAllLatestStatusReportsIterator() {
         // c1 was deleted before the report date.
         List<String> expectedConsumerUuids = Arrays.asList("c2", "c3", "c4");
-        Iterator<Compliance> snaps = complianceSnapshotCurator.getSnapshotIterator(null, null, null, null);
+        Iterator<Compliance> snaps = complianceSnapshotCurator.getSnapshotIterator(null, null, null, null,
+                null);
 
         int received = 0;
         while (snaps.hasNext()) {
@@ -251,6 +254,58 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void testFilterLatestByManagementEnabled() {
+        // c1 was deleted before the report date.
+        List<String> expectedConsumerUuids = Arrays.asList("c2");
+
+        Map<String, String> attributeFilters = new HashMap<String, String>();
+        attributeFilters.put("management_enabled", "1");
+        Iterator<Compliance> snaps = complianceSnapshotCurator.getSnapshotIterator(null, null, null, null,
+                attributeFilters);
+
+        int received = 0;
+        Compliance comp = null;
+        while (snaps.hasNext()) {
+            comp = snaps.next();
+            assertTrue(expectedConsumerUuids.contains(comp.getConsumer().getUuid()));
+            assertTrue(hasManagementEnabledEnt(comp.getEntitlements()));
+            ++received;
+        }
+        assertEquals(expectedConsumerUuids.size(), received);
+    }
+
+    @Test
+    public void testFilterLatestByNonManagementEnabled() {
+        // c1 was deleted before the report date.
+        List<String> expectedConsumerUuids = Arrays.asList("c3", "c4");
+
+        Map<String, String> attributeFilters = new HashMap<String, String>();
+        attributeFilters.put("management_enabled", "0");
+        Iterator<Compliance> snaps = complianceSnapshotCurator.getSnapshotIterator(null, null, null, null,
+                attributeFilters);
+
+        int received = 0;
+        while (snaps.hasNext()) {
+            Compliance comp = snaps.next();
+            assertTrue(expectedConsumerUuids.contains(comp.getConsumer().getUuid()));
+
+            assertFalse(hasManagementEnabledEnt(comp.getEntitlements()));
+            ++received;
+        }
+        assertEquals(expectedConsumerUuids.size(), received);
+    }
+
+    private boolean hasManagementEnabledEnt(Set<Entitlement> ents) {
+        for (Entitlement ent : ents) {
+            Map<String, String> attrs = ent.getAttributes();
+            if (attrs.containsKey("management_enabled") && "1".equals(attrs.get("management_enabled"))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Test
     public void testGetSnapshotIteratorOnDate() {
         Calendar cal = this.getCalendar();
         cal.setTime(baseTestingDate);
@@ -259,6 +314,7 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
 
         Iterator<Compliance> snaps = complianceSnapshotCurator.getSnapshotIterator(
             cal.getTime(),
+            null,
             null,
             null,
             null
@@ -328,6 +384,7 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
                 null,
                 null,
                 null,
+                null,
                 pageRequest
             );
 
@@ -360,6 +417,7 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
             cal.getTime(),
             null,
             null,
+            null,
             null
         );
 
@@ -382,6 +440,7 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
             new Date(),
             null,
             Arrays.asList(expectedOwner),
+            null,
             null
         );
 
@@ -398,6 +457,7 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         Iterator<Compliance> snaps = complianceSnapshotCurator.getSnapshotIterator(
             new Date(),
             Arrays.asList("c1", "c4"),
+            null,
             null,
             null
         );
@@ -437,7 +497,8 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
             null,
             null,
             null,
-            Arrays.asList(expectedStatus)
+            Arrays.asList(expectedStatus),
+            null
         );
 
         assertTrue(snaps.hasNext());
@@ -1460,7 +1521,30 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         copy.setAttributes(entitlement.getAttributes());
 
         compliance.addEntitlementSnapshot(copy);
+
+        // Check that the management enabled flag is updated.
+        compliance.getStatus().setManagementEnabled(determineIfManaged(compliance));
+
         complianceSnapshotCurator.save(compliance);
+    }
+
+    private boolean determineIfManaged(Compliance compliance) {
+        for (Entitlement ent : compliance.getEntitlements()) {
+            boolean managed = entitlementIsManaged(ent);
+            if (managed) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean entitlementIsManaged(Entitlement e) {
+        boolean managed = false;
+        Map<String, String> attrs = e.getAttributes();
+        if (attrs != null && attrs.containsKey("management_enabled")) {
+            managed = PropertyConverter.toBoolean(attrs.get("management_enabled"));
+        }
+        return managed;
     }
 
     private void processAndCheckResults(Map<String, Integer> expected, Set<Compliance> results) {

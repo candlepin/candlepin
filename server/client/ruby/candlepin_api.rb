@@ -725,8 +725,20 @@ class Candlepin
     get_text("/rules")
   end
 
-  def upload_rules(rule_set)
-    post_text("/rules/", rule_set)
+  def upload_rules_file(rule_file)
+    lines = []
+    File.open(rule_file) do |f|
+      f.each_line do |line|
+        lines << line
+      end
+    end
+
+    post_data = Base64.encode64(lines.join(""))
+    post_text("/rules/", post_data)
+  end
+
+  def upload_rules(encoded_rules)
+    post_text("/rules/", encoded_rules)
   end
 
   def delete_rules()
@@ -1057,7 +1069,7 @@ class Candlepin
         end
       else
         # Old style, force=true/false:
-        path += "force=#{force}"
+        path += "force=#{params[:force]}"
       end
     end
     post_file path, File.new(filename)

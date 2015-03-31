@@ -17,11 +17,14 @@ package org.candlepin.gutterball.report.dto;
 
 import org.candlepin.gutterball.model.ConsumerState;
 import org.candlepin.gutterball.model.snapshot.Compliance;
+import org.candlepin.gutterball.model.snapshot.ComplianceReason;
 import org.candlepin.gutterball.model.snapshot.ComplianceStatus;
 import org.candlepin.gutterball.model.snapshot.Consumer;
 import org.candlepin.gutterball.model.snapshot.Owner;
 
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -31,7 +34,7 @@ import java.util.Map;
  */
 public class ConsumerStatusComplianceDto extends HashMap<String, Object> {
 
-    public ConsumerStatusComplianceDto(Compliance snap) {
+    public ConsumerStatusComplianceDto(Compliance snap, boolean includeReasons) {
         // TODO: Using maps instead of individual fields seems to be a little faster to serialize
         //       and allows us to keep the same result JSON structure as using the custom report.
         //       Should this object just contain a field for each property that we want to return.
@@ -56,11 +59,22 @@ public class ConsumerStatusComplianceDto extends HashMap<String, Object> {
         consumerData.put("facts", new HashMap<String, String>(consumer.getFacts()));
         consumerData.put("consumerState", consumerStateData);
 
-
         Map<String, Object> statusData = new HashMap<String, Object>();
         ComplianceStatus status = snap.getStatus();
         statusData.put("status", status.getStatus());
         statusData.put("date", status.getDate());
+        statusData.put("managementEnabled", status.getManagementEnabled());
+
+        if (includeReasons) {
+            List<Map<String, Object>> reasonsData = new LinkedList<Map<String, Object>>();
+            for (ComplianceReason cr : status.getReasons()) {
+                HashMap<String, Object> reasonData = new HashMap<String, Object>();
+                reasonData.put("message", cr.getMessage());
+                reasonData.put("attributes", new HashMap<String, String>(cr.getAttributes()));
+                reasonsData.add(reasonData);
+            }
+            statusData.put("reasons", reasonsData);
+        }
 
         put("consumer", consumerData);
         put("status", statusData);

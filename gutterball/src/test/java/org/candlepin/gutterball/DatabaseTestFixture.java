@@ -54,6 +54,7 @@ public class DatabaseTestFixture {
         GutterballTestingModule testingModule = new GutterballTestingModule(config);
         injector = Guice.createInjector(testingModule);
 
+        // FIXME Shouldn't have to do this.
         injector.getInstance(EntityManagerFactory.class);
         emf = injector.getProvider(EntityManagerFactory.class).get();
         em = injector.getProvider(EntityManager.class).get();

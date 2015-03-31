@@ -115,6 +115,10 @@ public class EntitlementRulesTranslator {
             msg = i18n.tr("Pool is restricted to virtual guests in their first day of " +
                 "existence: ''{0}''", pool.getId());
         }
+        else if (errorKey.equals("virt.guest.cannot.bind.future.unmapped.guest.pool")) {
+            msg = i18n.tr("Pool is restricted when it is temporary and begins in the future: " +
+                " ''{0}''", pool.getId());
+        }
         else {
             msg = i18n.tr("Unable to attach pool with ID ''{0}''.: {1}.",
                 pool.getId().toString(), errorKey);

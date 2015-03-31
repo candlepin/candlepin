@@ -15,19 +15,19 @@
 
 package org.candlepin.gutterball.curator;
 
+import org.candlepin.common.config.PropertyConverter;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
-
-import org.candlepin.gutterball.util.AutoEvictingColumnarResultsIterator;
 import org.candlepin.gutterball.model.snapshot.Compliance;
+import org.candlepin.gutterball.util.AutoEvictingColumnarResultsIterator;
 
 import com.google.inject.Inject;
 
-import org.hibernate.Criteria;
 import org.hibernate.CacheMode;
+import org.hibernate.Criteria;
 import org.hibernate.Query;
-import org.hibernate.ScrollableResults;
 import org.hibernate.ScrollMode;
+import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
@@ -102,13 +102,14 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
      *  An iterator over the compliance snapshots for the target date.
      */
     public Iterator<Compliance> getSnapshotIterator(Date targetDate, List<String> consumerUuids,
-        List<String> ownerFilters, List<String> statusFilters) {
+        List<String> ownerFilters, List<String> statusFilters, Map<String, String> attributeFilters) {
 
         Page<Iterator<Compliance>> result = this.getSnapshotIterator(
             targetDate,
             consumerUuids,
             ownerFilters,
             statusFilters,
+            attributeFilters,
             null
         );
 
@@ -143,7 +144,8 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
      *  the paging information for the query.
      */
     public Page<Iterator<Compliance>> getSnapshotIterator(Date targetDate, List<String> consumerUuids,
-        List<String> ownerFilters, List<String> statusFilters, PageRequest pageRequest) {
+        List<String> ownerFilters, List<String> statusFilters, Map<String, String> attributeFilters,
+        PageRequest pageRequest) {
 
         Page<Iterator<Compliance>> page = new Page<Iterator<Compliance>>();
         page.setPageRequest(pageRequest);
@@ -185,9 +187,19 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
             .setCacheMode(CacheMode.IGNORE)
             .setReadOnly(true);
 
-        if (statusFilters != null && !statusFilters.isEmpty()) {
+
+        if ((statusFilters != null && !statusFilters.isEmpty()) ||
+                (attributeFilters != null && attributeFilters.containsKey("management_enabled"))) {
             query.createAlias("status", "stat");
-            query.add(Restrictions.in("stat.status", statusFilters));
+            if (statusFilters != null && !statusFilters.isEmpty()) {
+                query.add(Restrictions.in("stat.status", statusFilters));
+            }
+
+            if (attributeFilters != null && attributeFilters.containsKey("management_enabled")) {
+                boolean managementEnabledFilter =
+                        PropertyConverter.toBoolean(attributeFilters.get("management_enabled"));
+                query.add(Restrictions.eq("stat.managementEnabled", managementEnabledFilter));
+            }
         }
 
         if (pageRequest != null && pageRequest.isPaging()) {
@@ -817,6 +829,18 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
             }
 
             if (attributes != null) {
+
+                if (attributes.containsKey("management_enabled")) {
+                    boolean managementEnabledFilter =
+                            PropertyConverter.toBoolean(attributes.get("management_enabled"));
+                    criteria.add("ComplianceStatusSnap.managementEnabled = ?" + ++counter);
+                    parameters.add(managementEnabledFilter);
+
+                    // Don't process this attribute as part of entitlement attributes,
+                    // as it has already been handled.
+                    attributes.remove("management_enabled");
+                }
+
                 for (Map.Entry<String, String> entry : attributes.entrySet()) {
                     criteria.add(String.format(
                         "(?%d, ?%d) IN (" +

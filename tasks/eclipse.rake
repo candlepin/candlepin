@@ -4,8 +4,19 @@ module ModifiedEclipse
   class << self
     def fix_classpath(project)
       doc = REXML::Document.new(File.new(project.path_to('.classpath')))
-      elements = REXML::XPath.match(doc, "/classpath/classpathentry[@path='src/main/resources']")
-      elements.map! { |e| e.delete_attribute('output') }
+      xpaths = [
+        "/classpath/classpathentry[@path='src/test/java']",
+        "/classpath/classpathentry[@path='src/test/resources']",
+        "/classpath/classpathentry[@path='src/main/resources']",
+      ]
+      xpaths.each do |exp|
+        elements = REXML::XPath.match(doc, exp)
+        elements.map! { |e| e.delete_attribute('output') }
+      end
+
+      elements = REXML::XPath.match(doc, "/classpath/classpathentry[@kind='output']")
+      elements.map! { |e| e.add_attribute('path', 'target-eclipse') }
+
       File.open(project.path_to('.classpath'), 'w') do |f|
         doc.write(f)
       end
@@ -24,10 +35,10 @@ module ModifiedEclipse
     #
     # The other approach is to generate the .checkstyle file programmatically
     # for each project when the Eclipse task is run.  The master .checkstyle
-    # file uses an HTML entity to point to the project_conf directory
+    # file uses an XML entity to point to the project_conf directory
     #
     # The method below takes the master .checkstyle file which lives in
-    # project_conf, reads it, takes the HTML entity and alters it to point to
+    # project_conf, reads it, takes the XML entity and alters it to point to
     # the absolute path of checks.xml and then writes the file in the project.
     def fix_checkstyle(project)
       cs = project.checkstyle

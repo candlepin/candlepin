@@ -22,6 +22,7 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
+import org.candlepin.model.PoolAttribute;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProductCurator;
@@ -107,6 +108,30 @@ public class CalculatedAttributesUtilTest extends DatabaseTestFixture {
         assertTrue(attrs.containsKey("compliance_type"));
         verify(poolTypeRules).getPoolType(pool1);
         assertEquals("Other", attrs.get("compliance_type"));
+    }
+
+    @Test
+    public void testCalculatedAttributesTemporary() {
+        SuggestedQuantity suggested = new SuggestedQuantity();
+        suggested.setSuggested(1L);
+        suggested.setIncrement(1L);
+        when(quantityRules.getSuggestedQuantity(any(Pool.class),
+            any(Consumer.class), any(Date.class))).
+            thenReturn(suggested);
+
+        PoolComplianceType pt = new PoolComplianceType();
+        pt.setRawPoolType("standard");
+        pt.translatePoolType(i18n);
+
+        when(poolTypeRules.getPoolType(any(Pool.class))).
+            thenReturn(pt);
+        pool1.addAttribute(new PoolAttribute("unmapped_guests_only", "true"));
+
+        Date date = new Date();
+        Map<String, String> attrs =
+            attrUtil.buildCalculatedAttributes(pool1, consumer, date);
+        verify(poolTypeRules).getPoolType(pool1);
+        assertEquals("Standard (Temporary)", attrs.get("compliance_type"));
     }
 
     @Test

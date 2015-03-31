@@ -52,7 +52,9 @@ public class CalculatedAttributesUtil {
 
         PoolComplianceType type = poolTypeRules.getPoolType(p);
         type.translatePoolType(i18n);
-        attrMap.put("compliance_type", type.getPoolType());
+        attrMap.put("compliance_type", type.getPoolType() +
+                ("true".equals(p.getAttributeValue("unmapped_guests_only")) ?
+                " " + i18n.tr("(Temporary)") : ""));
 
         if (c == null) {
             return attrMap;
@@ -83,7 +85,9 @@ public class CalculatedAttributesUtil {
 
             PoolComplianceType type = poolTypeRules.getPoolType(p);
             type.translatePoolType(i18n);
-            attrMap.put("compliance_type", type.getPoolType());
+            attrMap.put("compliance_type", type.getPoolType() +
+                    ("true".equals(p.getAttributeValue("unmapped_guests_only")) ?
+                    " " + i18n.tr("(Temporary)") : ""));
 
 
             attrMap.put("suggested_quantity",

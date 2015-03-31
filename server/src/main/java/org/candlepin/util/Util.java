@@ -39,6 +39,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -409,5 +410,14 @@ public class Util {
 
     public static boolean isUuid(String uuid) {
         return uuid != null && uuid.matches(UUID_REGEX);
+    }
+
+    public static String collectionToString(Collection c) {
+        StringBuffer buf = new StringBuffer();
+        for (Object o : c) {
+            buf.append(o.toString());
+            buf.append(" ");
+        }
+        return buf.toString();
     }
 }

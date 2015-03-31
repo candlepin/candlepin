@@ -81,7 +81,21 @@ public class ProductImporter {
                 if (StringUtils.isBlank(c.getVendor())) {
                     c.setVendor("unknown");
                 }
+
                 c.setOwner(o);
+
+                /*
+                 * On standalone servers we will set metadata expire to 1 second so
+                 * clients an immediately get changes to content when published on the
+                 * server. We would use 0, but the client plugin interprets this as unset
+                 * and ignores it completely resulting in the default yum values being
+                 * used.
+                 *
+                 * We know this is a standalone server due to the fact that import is
+                 * being used, so there is no need to guard this behavior.
+                 */
+                c.setMetadataExpire(new Long(1));
+
                 contentCurator.createOrUpdate(c);
             }
 

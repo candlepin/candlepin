@@ -1,4 +1,4 @@
-// Version: 5.14
+// Version: 5.15
 
 /*
  * Default Candlepin rule set.
@@ -1424,23 +1424,20 @@ var Entitlement = {
 
         if (unmapped_guest_pool) {
             if (context.hostConsumer){
-                if (BEST_POOLS_CALLER == caller ||
-                    BIND_CALLER == caller) {
-                    result.addError("virt.guest.cannot.use.unmapped.guest.pool.has.host");
-                }
-                else {
-                    result.addWarning("virt.guest.cannot.use.unmapped.guest.pool.has.host");
-                }
+                /* We want to hide the temporary pools completely if the consumer can't use
+                 * them.  Using an error instead of a warning keeps the pool from appearing in
+                 * the results of a subscription-manager list --available --all */
+                result.addError("virt.guest.cannot.use.unmapped.guest.pool.has.host");
             }
 
             if (!Utils.isNewborn(consumer)) {
-                if (BEST_POOLS_CALLER == caller ||
-                    BIND_CALLER == caller) {
-                    result.addError("virt.guest.cannot.use.unmapped.guest.pool.not.new");
-                }
-                else {
-                    result.addWarning("virt.guest.cannot.use.unmapped.guest.pool.not.new");
-                }
+                result.addError("virt.guest.cannot.use.unmapped.guest.pool.not.new");
+            }
+            var now = new Date();
+            var startDate = new Date(context.pool.startDate);
+            if (BIND_CALLER == caller &&
+                    Utils.date_compare(startDate, now) > 0) {
+                result.addError("virt.guest.cannot.bind.future.unmapped.guest.pool");
             }
         }
     },
@@ -1669,8 +1666,6 @@ var Entitlement = {
         var pool = context.pool;
         var caller = context.caller;
         var consumer = context.consumer;
-
-        log.debug("pre_global being called by [" + caller + "]");
 
         // Manifest should be able to extract by default.
         if (consumer.type.manifest) {
@@ -2287,6 +2282,11 @@ var Autobind = {
             // Since pool.quantity may change, track initial unlimited state here.
             var pool_not_empty = this.is_pool_not_empty(pool);
 
+            /* We don't need to check for unmapped_guests_only pools here because those
+             * pools should not even be candidates for an auto-bind if the consumer is
+             * not eligible.  CandlepinPoolManager takes care of removing unmapped_guests_only
+             * pools for ineligible consumers via a call to Enforcer.preEntitlement
+             */
             if (this.is_pool_arch_valid(context, pool, consumerArch) &&
                     this.is_pool_virt_valid(pool, isGuest) &&
                     this.is_pool_sla_valid(context, pool, consumerSLA) &&
@@ -3197,8 +3197,6 @@ var Utils = {
             return false;
         }
 
-        log.debug(consumer.facts[IS_VIRT_GUEST_FACT]);
-        log.debug("is guest? " + Utils.equalsIgnoreCase('true', consumer.facts[IS_VIRT_GUEST_FACT]));
         return Utils.equalsIgnoreCase('true', consumer.facts[IS_VIRT_GUEST_FACT]);
     },
 

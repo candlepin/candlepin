@@ -51,6 +51,7 @@ public class ConsumerTrendComplianceDto extends HashMap<String, Object> {
         statusData.put("status", status.getStatus());
         statusData.put("date", status.getDate());
         statusData.put("reasons", reasonsData);
+        statusData.put("managementEnabled", status.getManagementEnabled());
 
         Map<String, Object> consumerData = new HashMap<String, Object>();
         consumerData.put("uuid", consumer.getUuid());

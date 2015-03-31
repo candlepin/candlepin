@@ -90,6 +90,9 @@ public class Event {
     private String id;
 
     @Column(nullable = false)
+    private String messageId;
+
+    @Column(nullable = false)
     @NotNull
     private String type;
 
@@ -155,11 +158,13 @@ public class Event {
     public Event() {
     }
 
-    public Event(String type, String target, String targetName,
+    public Event(String messageId, String type, Event.Status status, String target, String targetName,
         String principal, String ownerId, String consumerId,
         String entityId, String oldEntity, String newEntity,
         String referenceId, String referenceType, Date timestamp) {
+        this.messageId = messageId;
         this.type = type;
+        this.status = status;
         this.target = target;
         this.targetName = targetName;
 
@@ -186,6 +191,14 @@ public class Event {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getMessageId() {
+        return messageId;
+    }
+
+    public void setMessageId(String messageId) {
+        this.messageId = messageId;
     }
 
     public String getType() {

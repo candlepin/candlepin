@@ -14,7 +14,7 @@
  */
 package org.candlepin.sync;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.common.config.MapConfiguration;
@@ -127,7 +127,8 @@ public class ProductImporterTest {
 
         verify(contentCuratorMock).createOrUpdate(c);
 
-        assertEquals(new Long(1000), c.getMetadataExpire());
+        // Metadata expiry should be overridden to 0 on import:
+        assertEquals(new Long(1), c.getMetadataExpire());
     }
 
     @Test
@@ -149,7 +150,6 @@ public class ProductImporterTest {
     }
 
     @Test
-
     public void testVendorSetToUnknown() throws Exception {
         Product product = TestUtil.createProduct(owner);
         addNoVendorContentTo(product);
@@ -168,19 +168,25 @@ public class ProductImporterTest {
     }
 
     // Returns the Content object added
-    private void addContentTo(Product p) {
+    private Content addContentTo(Product p) {
         Owner owner = new Owner("Example-Corporation");
-        Content c = new Content(owner, "name", "100130", "label", "type",
-            "vendor", "url", "gpgurl", "arch");
+        Content c = new Content(
+            owner, "name", "100130", "label", "type", "vendor", "url", "gpgurl", "arch"
+        );
+
         c.setMetadataExpire(1000L);
         p.getProductContent().add(new ProductContent(p, c, true));
+
+        return c;
     }
 
     // Returns the Content object added without vendor
     private void addNoVendorContentTo(Product p) {
         Owner owner = new Owner("Example-Corporation");
-        Content c = new Content(owner, "name", "100130", "label", "type",
-            "", "url", "gpgurl", "arch");
+        Content c = new Content(
+            owner, "name", "100130", "label", "type", "", "url", "gpgurl", "arch"
+        );
+
         c.setMetadataExpire(1000L);
         p.getProductContent().add(new ProductContent(p, c, true));
     }

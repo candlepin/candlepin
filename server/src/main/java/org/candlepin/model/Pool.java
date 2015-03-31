@@ -89,7 +89,8 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         NORMAL,
         ENTITLEMENT_DERIVED,
         STACK_DERIVED,
-        BONUS
+        BONUS,
+        UNMAPPED_GUEST
     }
 
     @Id
@@ -569,12 +570,12 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
 
     public String toString() {
         return String.format(
-            "Pool[id: %s, owner: %s, product: %s, quantity: %d, expires: %s]",
-            this.getId(),
-            this.owner,
+            "Pool<type=%s, product=%s, productName=%s, id=%s, quantity=%s>",
+            this.getType(),
             this.getProductId(),
-            this.getQuantity(),
-            this.getEndDate()
+            this.getProductName(),
+            this.getId(),
+            this.getQuantity()
         );
     }
 
@@ -894,6 +895,9 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
             else {
                 return PoolType.BONUS;
             }
+        }
+        if (hasAttribute("unmapped_guest")) {
+            return PoolType.UNMAPPED_GUEST;
         }
         return PoolType.NORMAL;
     }
