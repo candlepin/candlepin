@@ -47,7 +47,13 @@ public class ConsumerHandler extends EventHandler {
         // JPA Insertion
         try {
             ConsumerState consumerState = mapper.readValue(newConsumerJson, ConsumerState.class);
-            consumerStateCurator.create(consumerState);
+            // ConsumerState may have been already created for this consumer via a Compliance event
+            // if it was received first. Check to make sure that one doesn't already exist. There
+            // is no need to update the ConsumerState record as the record would already contain
+            // the latest data from the Compliance event.
+            if (consumerStateCurator.findByUuid(consumerState.getUuid()) == null) {
+                consumerStateCurator.create(consumerState);
+            }
             return Status.PROCESSED;
         }
         catch (IOException e) {
