@@ -80,8 +80,7 @@ module CandlepinMethods
     label = random_string("label")
     # Apologies, passing optional params straight through to prevent just pulling
     # each one out and putting it into a new hash.
-    @cp.create_content(owner, random_str, random_str, label, "yum",
-      random_str, params)
+    @cp.create_content(owner, random_str, random_str, label, "yum", random_str, params)
   end
 
   def create_batch_content(count=1, params={})

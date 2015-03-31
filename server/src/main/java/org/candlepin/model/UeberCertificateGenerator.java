@@ -77,7 +77,6 @@ public class UeberCertificateGenerator {
 
         Pool ueberPool = poolCurator.findUeberPool(o);
         return generateUeberCertificate(consumer, ueberPool);
-
     }
 
     public Product createUeberProduct(Owner o) {

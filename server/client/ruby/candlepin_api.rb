@@ -955,8 +955,14 @@ class Candlepin
       return get("/activation_keys/#{key_id}/content_overrides")
   end
 
-  def list_certificates(serials = [])
-    path = "/consumers/#{@uuid}/certificates"
+  def list_certificates(serials = [], params = {})
+    if params[:uuid]
+      uuid = params[:uuid]
+    else
+      uuid = @uuid
+    end
+
+    path = "/consumers/#{uuid}/certificates"
     path += "?serials=" + serials.join(",") if serials.length > 0
     return get(path)
   end

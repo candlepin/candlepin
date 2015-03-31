@@ -1418,8 +1418,7 @@ public class OwnerResource {
                 "owner with key: {0} was not found.", ownerKey));
         }
 
-        Consumer ueberConsumer =
-            consumerCurator.findByName(o, Consumer.UEBER_CERT_CONSUMER);
+        Consumer ueberConsumer = consumerCurator.findByName(o, Consumer.UEBER_CERT_CONSUMER);
 
         // ueber cert has already been generated - re-generate it now
         if (ueberConsumer != null) {

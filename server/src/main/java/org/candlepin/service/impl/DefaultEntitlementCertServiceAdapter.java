@@ -199,6 +199,8 @@ public class DefaultEntitlementCertServiceAdapter extends
         }
         else {
             String entitlementVersion = consumer.getFact("system.certificate_version");
+            log.debug("Entitlement version: {}", entitlementVersion);
+
             return entitlementVersion != null && entitlementVersion.startsWith("3.");
         }
     }
@@ -260,9 +262,10 @@ public class DefaultEntitlementCertServiceAdapter extends
 
         Product skuProd = ent.getPool().getProduct();
 
-        for (Product prod : Collections2
-            .filter(products, X509Util.PROD_FILTER_PREDICATE)) {
+        for (Product prod : Collections2.filter(products, X509Util.PROD_FILTER_PREDICATE)) {
+            log.debug("Adding X509 extensions for product: {}", prod);
             result.addAll(extensionUtil.productExtensions(prod));
+
             Set<ProductContent> filteredContent =
                 extensionUtil.filterProductContent(prod, ent, entCurator,
                     promotedContent, enableEnvironmentFiltering, entitledProductIds);
@@ -273,6 +276,7 @@ public class DefaultEntitlementCertServiceAdapter extends
             // Keep track of the number of content sets that are being added.
             contentCounter += filteredContent.size();
 
+            log.debug("Adding X509 extensions for content: {}", filteredContent);
             result.addAll(extensionUtil.contentExtensions(filteredContent,
                 contentPrefix, promotedContent, ent.getConsumer(), skuProd));
         }
@@ -295,8 +299,7 @@ public class DefaultEntitlementCertServiceAdapter extends
 
         if (log.isDebugEnabled()) {
             for (X509ExtensionWrapper eWrapper : result) {
-                log.debug(String.format("Extension %s with value %s",
-                    eWrapper.getOid(), eWrapper.getValue()));
+                log.debug("Extension {} with value {}", eWrapper.getOid(), eWrapper.getValue());
             }
         }
         return result;
@@ -337,7 +340,7 @@ public class DefaultEntitlementCertServiceAdapter extends
     private EntitlementCertificate generateEntitlementCert(Entitlement entitlement, Product product,
         boolean thisIsUeberCert) throws GeneralSecurityException, IOException {
 
-        log.info("Generating entitlement cert.");
+        log.info("Generating entitlement cert for entitlement: {}", entitlement);
 
         KeyPair keyPair = keyPairCurator.getConsumerKeyPair(entitlement.getConsumer());
         CertificateSerial serial = new CertificateSerial(entitlement.getEndDate());
@@ -352,7 +355,8 @@ public class DefaultEntitlementCertServiceAdapter extends
         // is available in the upstream certificate.
         products.addAll(getDerivedProductsForDistributor(entitlement));
 
-        log.info("Creating X509 cert.");
+        log.info("Creating X509 cert for product: {}", product);
+        log.debug("Provided products: {}", products);
         X509Certificate x509Cert = createX509Certificate(entitlement,
             product, products, BigInteger.valueOf(serial.getId()), keyPair,
             !thisIsUeberCert);
@@ -369,6 +373,8 @@ public class DefaultEntitlementCertServiceAdapter extends
         String pem = new String(this.pki.getPemEncoded(x509Cert));
 
         if (shouldGenerateV3(entitlement)) {
+            log.debug("Generating v3 entitlement data");
+
             byte[] payloadBytes = v3extensionUtil.createEntitlementDataPayload(products,
                 entitlement, contentPrefix, promotedContent);
             String payload = "-----BEGIN ENTITLEMENT DATA-----\n";
