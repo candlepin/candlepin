@@ -85,8 +85,7 @@ public class EventMessageListener implements MessageListener {
      * @return Event parsed from the message JSON.
      */
     private Event storeEvent(Message message) {
-        // TODO: get this down to debug when we have support for viewing debug logging:
-        log.info(message.toString());
+        log.debug(message.toString());
 
         String messageBody = getMessageBody(message);
         Event event = null;
