@@ -16,6 +16,7 @@ package org.candlepin.model;
 
 import org.candlepin.common.jackson.HateoasArrayExclude;
 import org.candlepin.common.jackson.HateoasInclude;
+import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.util.Util;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
@@ -338,8 +339,9 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
 
     @Override
     public String toString() {
-        return "Consumer [id = " + getId() + ", type = " + getType() + ", getName() = " +
-            getName() + "]";
+        String consumerType = (getType() == null) ? "null" : getType().getLabel();
+        return "Consumer<id=" + getId() + ", uuid=" + getUuid() +
+                ", type=" + consumerType + ", name=" + getName() + ">";
     }
 
 
@@ -715,4 +717,32 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         this.guestIdsCheckIns.add(new GuestIdsCheckIn(this));
     }
 
+    /**
+     * Logic to determine if this consumer can handle a V3 or greater certificate.
+     * Used to determine what type of certificate to generate, as well as to guard access
+     * to subscription that provide too much content to fit in a V1 certificate.
+     *
+     * @return true is the consumer can handle V3 (or greater) certificates.
+     */
+    @XmlTransient
+    public boolean isCertV3Capable() {
+        if (getType().isManifest()) {
+            for (ConsumerCapability capability : getCapabilities()) {
+                if ("cert_v3".equals(capability.getName())) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        else if (getType().getLabel().equals(
+            ConsumerTypeEnum.HYPERVISOR.getLabel())) {
+            // Hypervisors in this context don't use content, so V3 is allowed:
+            return true;
+        }
+        else {
+            // NOTE: in future this might need to change to accomodate v4 certificates.
+            String entitlementVersion = getFact("system.certificate_version");
+            return entitlementVersion != null && entitlementVersion.startsWith("3.");
+        }
+    }
 }

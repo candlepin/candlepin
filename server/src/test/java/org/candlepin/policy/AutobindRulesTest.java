@@ -14,10 +14,7 @@
  */
 package org.candlepin.policy;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
@@ -132,23 +129,7 @@ public class AutobindRulesTest {
 
     @Test
     public void testSelectBestPoolsFiltersTooMuchContent() {
-        Product mktProduct = new Product(productId, "A test product");
-        Product engProduct = new Product(Integer.toString(TestUtil.randomInt()),
-            "An ENG product");
-
-        Set<Content> productContent = new HashSet<Content>();
-        for (int i = 0; i < X509ExtensionUtil.V1_CONTENT_LIMIT + 1; i++) {
-            productContent.add(new Content("fake" + i, "fake" + i,
-                "fake" + i, "yum", "vendor", "", "", ""));
-        }
-
-        engProduct.setContent(productContent);
-        Pool pool = TestUtil.createPool(owner, mktProduct);
-        pool.setId("DEAD-BEEF");
-        pool.addProvidedProduct(new ProvidedProduct(engProduct.getId(),
-            engProduct.getName()));
-        when(this.prodAdapter.getProductById(productId)).thenReturn(mktProduct);
-        when(this.prodAdapter.getProductById(engProduct.getId())).thenReturn(engProduct);
+        Pool pool = createV3OnlyPool();
 
         List<Pool> pools = new LinkedList<Pool>();
         pools.add(pool);
@@ -177,10 +158,49 @@ public class AutobindRulesTest {
     }
 
     @Test
-    public void testSelectBestPoolsLotsOfContentV2Client() {
+    public void testSelectBestPoolsDoesntFilterTooMuchContentForHypervisor() {
+        Pool pool = createV3OnlyPool();
+
+        List<Pool> pools = new LinkedList<Pool>();
+        pools.add(pool);
+
+        // Create a hypervisor consumer which does *not* have a certificate version fact.
+        // This replicates the real world scenario for virt-who created hypervisors.
+        consumer = new Consumer("test consumer", "test user", owner,
+                new ConsumerType(ConsumerTypeEnum.HYPERVISOR));
+
+        List<PoolQuantity> results = autobindRules.selectBestPools(consumer,
+                new String[]{ productId }, pools, compliance, null, new HashSet<String>(),
+                false);
+        assertEquals(1, results.size());
+    }
+
+    @Test
+    public void testSelectBestPoolsLotsOfContentV3Client() {
+        Pool pool = createV3OnlyPool();
+
+        List<Pool> pools = new LinkedList<Pool>();
+        pools.add(pool);
+
+        // Shouldn't throw an exception as we do for certv1 clients.
+        consumer.setFact("system.certificate_version", "3.5");
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{ productId }, pools, compliance, null, new HashSet<String>(),
+            false);
+        assertEquals(1, bestPools.size());
+    }
+
+
+    /*
+     * Create a pool with too much content for a V1 certificate, consumer must be V3
+     * capable.
+     */
+    public Pool createV3OnlyPool() {
         Product mktProduct = new Product(productId, "A test product");
         Product engProduct = new Product(Integer.toString(TestUtil.randomInt()),
             "An ENG product");
+        when(this.prodAdapter.getProductById(productId)).thenReturn(mktProduct);
+        when(this.prodAdapter.getProductById(engProduct.getId())).thenReturn(engProduct);
 
         Set<Content> productContent = new HashSet<Content>();
         for (int i = 0; i < X509ExtensionUtil.V1_CONTENT_LIMIT + 1; i++) {
@@ -193,18 +213,7 @@ public class AutobindRulesTest {
         pool.setId("DEAD-BEEF");
         pool.addProvidedProduct(new ProvidedProduct(engProduct.getId(),
             engProduct.getName()));
-        when(this.prodAdapter.getProductById(productId)).thenReturn(mktProduct);
-        when(this.prodAdapter.getProductById(engProduct.getId())).thenReturn(engProduct);
-
-        List<Pool> pools = new LinkedList<Pool>();
-        pools.add(pool);
-
-        // Shouldn't throw an exception as we do for certv1 clients.
-        consumer.setFact("system.certificate_version", "2.5");
-        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance, null, new HashSet<String>(),
-            false);
-        assertEquals(1, bestPools.size());
+        return pool;
     }
 
     @Test

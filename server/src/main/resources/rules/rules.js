@@ -1,4 +1,4 @@
-// Version: 5.14
+// Version: 5.15
 
 /*
  * Default Candlepin rule set.
@@ -1667,8 +1667,6 @@ var Entitlement = {
         var caller = context.caller;
         var consumer = context.consumer;
 
-        log.debug("pre_global being called by [" + caller + "]");
-
         // Manifest should be able to extract by default.
         if (consumer.type.manifest) {
             // Distributors should not be able to consume from pools with sub products
@@ -3199,8 +3197,6 @@ var Utils = {
             return false;
         }
 
-        log.debug(consumer.facts[IS_VIRT_GUEST_FACT]);
-        log.debug("is guest? " + Utils.equalsIgnoreCase('true', consumer.facts[IS_VIRT_GUEST_FACT]));
         return Utils.equalsIgnoreCase('true', consumer.facts[IS_VIRT_GUEST_FACT]);
     },
 
