@@ -636,8 +636,8 @@ public class CandlepinPoolManager implements PoolManager {
                     // Just keep the last one around, if we need it
                     failedResult = result;
                     if (log.isDebugEnabled()) {
-                        log.debug("Pool filtered from candidates due to failed rule(s): {}"
-                                + pool);
+                        log.debug("Pool filtered from candidates due to failed rule(s): {}" +
+                                pool);
                         log.debug("   warnings: " +
                                 Util.collectionToString(result.getWarnings()));
                         log.debug("   errors: " +
