@@ -22,7 +22,7 @@
 %endif
 
 Name: gutterball
-Version: 1.0.14
+Version: 1.0.15
 Release: 1%{?dist}
 Summary: Data aggregator for Candlepin
 
@@ -215,6 +215,9 @@ rm -rf %{buildroot}
 %attr(775, tomcat, root) %{_localstatedir}/log/%{name}
 
 %changelog
+* Wed Apr 01 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 1.0.15-1
+- 1207810: Add missing symlink for gutterball and c3p0. (dgoodwin@redhat.com)
+
 * Tue Mar 31 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 1.0.14-1
 - Stop logging full message body at INFO level. (dgoodwin@redhat.com)
 - Reduce QPID connection logging to debug in various places (mstead@redhat.com)
