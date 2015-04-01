@@ -273,6 +273,20 @@ describe 'Hypervisor Resource', :type => :virt do
     results.unchanged.size.should == 1
   end
 
+  # simple end to end test
+  it 'should allow virt-who to update host facts' do
+    virtwho1 = create_virtwho_client(@user)
+    host_uuid = random_string("host_uuid")
+    host_fact_mapping = {"fact1" => "value1", "fact2" => "value2"}
+    results = virtwho1.hypervisor_fact_update(host_uuid, @owner['key'], host_fact_mapping)
+    results.should_not be_nil
+    results.created.size.should == 1
+
+    results = virtwho1.hypervisor_fact_update(host_uuid, @owner['key'], host_fact_mapping)
+    results.should_not be_nil
+    results.unchanged.size.should == 1
+  end
+
   it 'should block virt-who if owner does not match identity cert' do
     virtwho1 = create_virtwho_client(@user)
     host_guest_mapping = get_host_guest_mapping(random_string('my-host'), ['g1', 'g2'])

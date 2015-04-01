@@ -16,7 +16,7 @@ package org.candlepin.resource;
 
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
@@ -43,6 +43,7 @@ import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.resource.dto.HypervisorCheckInResult;
+import org.candlepin.resource.dto.HypervisorFactUpdateResult;
 import org.candlepin.resource.util.ConsumerBindUtil;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
@@ -319,5 +320,56 @@ public class HypervisorResourceTest {
     @Test(expected = BadRequestException.class)
     public void ensureBadRequestWhenNoMappingIsIncludedInRequest() {
         hypervisorResource.hypervisorCheckIn(null, principal, "an-owner", false);
+    }
+
+    @Test
+    public void hypervisorFactUpdateExistingConsumer() throws Exception {
+        Owner owner = new Owner("admin");
+        String hypervisorId = "test-system-uuid";
+
+        Map<String, String> hostFactMap = new HashMap<String, String>();
+        hostFactMap.put("fact1", "value1");
+        hostFactMap.put("fact2", "value2");
+
+        when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
+        when(consumerCurator.getHypervisor(eq(hypervisorId), eq(owner))).thenReturn(null);
+        when(principal.canAccess(eq(owner), eq(SubResource.CONSUMERS), eq(Access.CREATE))).
+            thenReturn(true);
+        when(consumerTypeCurator.lookupByLabel(
+            eq(ConsumerTypeEnum.HYPERVISOR.getLabel()))).thenReturn(hypervisorType);
+        when(idCertService.generateIdentityCert(any(Consumer.class)))
+            .thenReturn(new IdentityCertificate());
+
+        HypervisorFactUpdateResult result = hypervisorResource.updateHypervisorFacts(hypervisorId,
+            hostFactMap, principal, owner.getKey(), true);
+
+        Set<Consumer> created = result.getCreated();
+        assertEquals(1, created.size());
+
+        Consumer c1 = created.iterator().next();
+        assertEquals(hypervisorId, c1.getHypervisorId().getHypervisorId());
+        assertEquals("value1", c1.getFact("fact1"));
+        assertEquals("value2", c1.getFact("fact2"));
+        assertEquals("x86_64", c1.getFact("uname.machine"));
+        assertEquals("hypervisor", c1.getType().getLabel());
+
+        hostFactMap.put("fact2", "value22");
+        hostFactMap.put("fact3", "value3");
+
+        when(consumerCurator.getHypervisor(eq(hypervisorId), eq(owner))).thenReturn(c1);
+        result = hypervisorResource.updateHypervisorFacts(hypervisorId,
+            hostFactMap, principal, owner.getKey(), true);
+
+        Set<Consumer> updated = result.getUpdated();
+        assertEquals(1, updated.size());
+
+        c1 = updated.iterator().next();
+        assertEquals(hypervisorId, c1.getHypervisorId().getHypervisorId());
+        assertEquals("value1", c1.getFact("fact1"));
+        assertEquals("value22", c1.getFact("fact2"));
+        assertEquals("value3", c1.getFact("fact3"));
+        assertEquals("x86_64", c1.getFact("uname.machine"));
+        assertEquals("hypervisor", c1.getType().getLabel());
+
     }
 }

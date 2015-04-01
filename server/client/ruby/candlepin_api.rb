@@ -105,6 +105,15 @@ class Candlepin
     return consumers
   end
 
+  def hypervisor_fact_update(host_uuid, owner, fact_mapping={}, create_missing=nil)
+    path = get_path("hypervisors") + "/#{host_uuid}?owner=#{owner}"
+    unless create_missing.nil?
+      path << "&create_missing=#{create_missing}"
+    end
+    consumers = post(path, fact_mapping)
+    return consumers
+  end
+
   def remove_deletion_record(deleted_uuid)
     path = get_path("consumers") + "/#{deleted_uuid}/deletionrecord"
     result = delete(path)

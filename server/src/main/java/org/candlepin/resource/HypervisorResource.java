@@ -30,6 +30,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.resource.dto.HypervisorCheckInResult;
+import org.candlepin.resource.dto.HypervisorFactUpdateResult;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -48,6 +49,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
@@ -183,6 +185,90 @@ public class HypervisorResource {
                 result.failed(hypervisorId, e.getMessage());
             }
         }
+        return result;
+    }
+
+    /**
+     * Updates the list of Hypervisor Host facts
+     * <p>
+     * Allows agents such as virt-who to update a hosts fact list. This is typically
+     * used when a host is unable to register to candlepin via subscription manager.
+     * <p>
+     * In situations where consumers already exist it is probably best not to
+     * allow creation of new hypervisor consumers.  Most consumers do not
+     * have a hypervisorId attribute, so that should be added manually
+     * when necessary by the management environment.
+     *
+     * @param hypervisorId the system UUID if the hypervisor
+     * @param principal
+     * @param ownerKey key of owner to update
+     * @param createMissing specify whether or not to create missing hypervisors.
+     * Default is true.  If false is specified, hypervisorIds that are not found
+     * will result in failed entries in the resulting HypervisorFactUpdateResult
+     * @return a HypervisorFactUpdateResult object
+     *
+     * @httpcode 202
+     * @httpcode 200
+     *
+     */
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Transactional
+    @Path("/{hypervisor_system_uuid}")
+    public HypervisorFactUpdateResult updateHypervisorFacts(
+        @PathParam("hypervisor_system_uuid") String hypervisorId,
+        Map<String, String> factMap, @Context Principal principal,
+        @QueryParam("owner") @Verify(value = Owner.class,
+            require = Access.READ_ONLY,
+            subResource = SubResource.HYPERVISOR) String ownerKey,
+        @QueryParam("create_missing") @DefaultValue("true") boolean createMissing) {
+
+        log.info("Hypervisor fact update by principal: " + principal);
+
+        if (factMap == null) {
+            log.debug("fact mapping provided during hypervisor checkin was null.");
+            throw new BadRequestException(
+                i18n.tr("fact mapping was not provided for hypervisor fact update."));
+        }
+
+        Owner owner = this.getOwner(ownerKey);
+
+        HypervisorFactUpdateResult result = new HypervisorFactUpdateResult();
+        boolean hostConsumerCreated = false;
+        Consumer host = consumerCurator.getHypervisor(hypervisorId, owner);
+        if (host == null) {
+            if (!createMissing) {
+                log.info("Unable to find hypervisor with id " + hypervisorId + " in org " + ownerKey);
+                result.failed(hypervisorId, i18n.tr("Unable to find hypervisor in org ''{0}''", ownerKey));
+                return result;
+            }
+            log.info("Registering new host consumer for hypervisor ID: {}", hypervisorId);
+            host = this.createConsumerForHypervisorId(hypervisorId, owner, principal);
+            hostConsumerCreated = true;
+        }
+
+        boolean factsChanged = false;
+        for (String key : factMap.keySet()) {
+            String value = factMap.get(key);
+            if (!value.equals(host.getFact(key))) {
+                host.setFact(key, value);
+                factsChanged = true;
+            }
+        }
+        // Populate the result with the processed consumer.
+        if (hostConsumerCreated) {
+            result.created(host);
+            consumerCurator.create(host);
+        }
+        else if (factsChanged) {
+            result.updated(host);
+            consumerCurator.update(host);
+        }
+        else {
+            result.unchanged(host);
+        }
+
         return result;
     }
 
