@@ -538,7 +538,8 @@ public class StatusTrendReportTest {
 
         assertEquals(expected, actual);
 
-        verify(mockCSCurator).getComplianceStatusCounts(null, null, null, null, null, subscription, null, null);
+        verify(mockCSCurator)
+            .getComplianceStatusCounts(null, null, null, null, null, subscription, null, null);
         verifyNoMoreInteractions(mockCSCurator);
     }
 

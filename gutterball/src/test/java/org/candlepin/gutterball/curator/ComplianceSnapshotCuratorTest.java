@@ -708,47 +708,31 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testGetComplianceStatusCountsByConsumers() {
-        Calendar cal = this.getCalendar();
-        cal.set(Calendar.YEAR, 2012);
-        cal.set(Calendar.DAY_OF_MONTH, 10);
-        cal.set(Calendar.HOUR_OF_DAY, 23);
-        cal.set(Calendar.MINUTE, 59);
-        cal.set(Calendar.SECOND, 59);
-        cal.set(Calendar.MILLISECOND, 999);
-
-        Map<Date, Map<String, Integer>> expected = new TreeMap<Date, Map<String, Integer>>();
-        HashMap<String, Integer> counts;
-
-        cal.set(Calendar.MONTH, Calendar.APRIL);
-        counts = new HashMap<String, Integer>();
-        counts.put("invalid", 1);
-        for (int i = 0; i < 30; ++i) {
-            expected.put(cal.getTime(), counts);
-            cal.add(Calendar.DATE, 1);
-        }
-
-        cal.set(Calendar.MONTH, Calendar.MAY);
-        counts = new HashMap<String, Integer>();
-        counts.put("invalid", 2);
-        for (int i = 0; i < 31; ++i) {
-            expected.put(cal.getTime(), counts);
-            cal.add(Calendar.DATE, 1);
-        }
-
-        cal.set(Calendar.MONTH, Calendar.JUNE);
-        counts = new HashMap<String, Integer>();
-        counts.put("invalid", 1);
-        counts.put("partial", 1);
-        expected.put(cal.getTime(), counts);
-
-        List<String> consumers = Arrays.asList("c2", "c3");
+    @Parameters(method = "buildSubMapForStatusCountsForConsumer")
+    public void testGetComplianceStatusCountsByConsumers(List<String> consumers,
+        Map<Date, Map<String, Integer>> expected) {
 
         Map<Date, Map<String, Integer>> actual = this.complianceSnapshotCurator
             .getComplianceStatusCounts(null, null, null, consumers, null, null, null);
 
         assertEquals(expected, actual);
     }
+
+    @Test
+    @Parameters(method = "buildMapForStatusCountsForConsumersBetweenDates")
+    public void testGetComplianceStatusCountsByConsumersAndDate(Date startDate, Date endDate,
+        List<String> consumers, Map<Date, Map<String, Integer>> expected) {
+
+        Map<Date, Map<String, Integer>> actual = this.complianceSnapshotCurator
+            .getComplianceStatusCounts(startDate, endDate, null, consumers, null, null, null);
+
+        assertEquals(expected, actual);
+    }
+
+
+
+
+
 
     private Map<Date, Map<String, Integer>> buildMapForAllStatusCounts() {
         Calendar cal = this.getCalendar();
@@ -1172,6 +1156,97 @@ public class ComplianceSnapshotCuratorTest extends DatabaseTestFixture {
         output[4] = $("badsku", new HashMap<Date, Map<String, Integer>>());
 
         return output;
+    }
+
+    private Object[][] buildSubMapForStatusCountsForConsumer() {
+        Calendar cal = this.getCalendar();
+        cal.set(Calendar.YEAR, 2012);
+        cal.set(Calendar.DAY_OF_MONTH, 10);
+        cal.set(Calendar.HOUR_OF_DAY, 23);
+        cal.set(Calendar.MINUTE, 59);
+        cal.set(Calendar.SECOND, 59);
+        cal.set(Calendar.MILLISECOND, 999);
+
+        Object[][] output = new Object[5][];
+        Map<Date, Map<String, Integer>> expected;
+        HashMap<String, Integer> counts;
+
+        output[0] = $(null, this.buildMapForAllStatusCounts());
+        output[1] = $(new LinkedList<String>(), this.buildMapForAllStatusCounts());
+
+        expected = new TreeMap<Date, Map<String, Integer>>();
+
+        cal.set(Calendar.MONTH, Calendar.MARCH);
+        counts = new HashMap<String, Integer>();
+        counts.put("invalid", 1);
+        for (int i = 0; i < 61; ++i) {
+            expected.put(cal.getTime(), counts);
+            cal.add(Calendar.DATE, 1);
+        }
+
+        cal.set(Calendar.MONTH, Calendar.MAY);
+        counts = new HashMap<String, Integer>();
+        counts.put("valid", 1);
+        expected.put(cal.getTime(), counts);
+
+        output[2] = $(Arrays.asList("c1"), expected);
+
+
+        expected = new TreeMap<Date, Map<String, Integer>>();
+
+        cal.set(Calendar.MONTH, Calendar.APRIL);
+        counts = new HashMap<String, Integer>();
+        counts.put("invalid", 1);
+        for (int i = 0; i < 30; ++i) {
+            expected.put(cal.getTime(), counts);
+            cal.add(Calendar.DATE, 1);
+        }
+
+        cal.set(Calendar.MONTH, Calendar.MAY);
+        counts = new HashMap<String, Integer>();
+        counts.put("invalid", 2);
+        for (int i = 0; i < 31; ++i) {
+            expected.put(cal.getTime(), counts);
+            cal.add(Calendar.DATE, 1);
+        }
+
+        cal.set(Calendar.MONTH, Calendar.JUNE);
+        counts = new HashMap<String, Integer>();
+        counts.put("invalid", 1);
+        counts.put("partial", 1);
+        expected.put(cal.getTime(), counts);
+
+        output[3] = $(Arrays.asList("c2", "c3"), expected);
+
+        output[4] = $(Arrays.asList("nonexistant"), new HashMap<Date, Map<String, Integer>>());
+
+        return output;
+    }
+
+    public Object[] buildMapForStatusCountsForConsumersBetweenDates() {
+        LinkedList<Object[]> tests = new LinkedList<Object[]>();
+        Object[][] beforeSet = this.buildMapForStatusCountsBeforeDate();
+        Object[][] afterSet = this.buildMapForStatusCountsAfterDate();
+        Object[][] consumerSet = this.buildSubMapForStatusCountsForConsumer();
+
+        for (Object[] before : beforeSet) {
+            for (Object[] after : afterSet) {
+                for (Object[] consumers : consumerSet) {
+                    tests.add(new Object[] {
+                        after[0],
+                        before[0],
+                        consumers[0],
+                        this.intersect(
+                            (Map<Date, Map<String, Integer>>) after[1],
+                            (Map<Date, Map<String, Integer>>) before[1],
+                            (Map<Date, Map<String, Integer>>) consumers[1]
+                        )
+                    });
+                }
+            }
+        }
+
+        return tests.toArray();
     }
 
     private Object[][] buildSubMapForStatusCountsWithSubscriptionName() {
