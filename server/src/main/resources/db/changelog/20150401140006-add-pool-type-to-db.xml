@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <changeSet id="20150401140006-1" author="crog">
+        <comment>Add the pool type field to the cp_pool table</comment>
+
+        <addColumn tableName="cp_pool">
+            <column name="type" type="varchar(32)"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="20150401140006-2" author="crog">
+        <comment>Task to populate the type field for existing pools</comment>
+
+        <customChange class="org.candlepin.liquibase.PoolTypeUpgradeLiquibaseWrapper"/>
+    </changeSet>
+
+    <changeSet id="20150401140006-3" author="crog">
+        <comment>Add the not-null constraint to the new pool type column</comment>
+
+        <addNotNullConstraint tableName="cp_pool" columnName="type"/>
+    </changeSet>
+
+</databaseChangeLog>
+<!-- vim: set expandtab sts=4 sw=4 ai: -->
