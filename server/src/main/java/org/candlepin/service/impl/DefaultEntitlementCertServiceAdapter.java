@@ -19,8 +19,6 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Consumer;
-import org.candlepin.model.ConsumerCapability;
-import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCertificateCurator;
@@ -213,29 +211,13 @@ public class DefaultEntitlementCertServiceAdapter extends
             log.info("Setting 24h expiration for unmapped guest pool entilement: " +
                     oneDayFromRegistration);
             ent.setEndDateOverride(oneDayFromRegistration);
+            entCurator.merge(ent);
         }
     }
 
     private boolean shouldGenerateV3(Entitlement entitlement) {
         Consumer consumer = entitlement.getConsumer();
-
-        if (consumer.getType().isManifest()) {
-            for (ConsumerCapability capability : consumer.getCapabilities()) {
-                if ("cert_v3".equals(capability.getName())) {
-                    return true;
-                }
-            }
-            return false;
-        }
-        else if (consumer.getType().getLabel().equals(
-            ConsumerTypeEnum.HYPERVISOR.getLabel())) {
-            // Hypervisors in this context don't use content, so allow v3
-            return true;
-        }
-        else {
-            String entitlementVersion = consumer.getFact("system.certificate_version");
-            return entitlementVersion != null && entitlementVersion.startsWith("3.");
-        }
+        return consumer.isCertV3Capable();
     }
 
     /**

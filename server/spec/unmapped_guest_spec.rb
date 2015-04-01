@@ -116,6 +116,21 @@ describe 'Unmapped Guest Pools' do
     ents.should have(1).things
   end
 
+  it 'unmapped guest entitlement does not have pool end date' do
+    all_pools = @user.list_pools :owner => @owner.id, :product => @virt_limit_product.id
+    unmapped_pool = nil
+    all_pools.each do |pool|
+      unmapped = pool['attributes'].select {|i| i['name'] == 'unmapped_guests_only' }[0]
+      if !unmapped.nil? && unmapped['value'] == 'true'
+        unmapped_pool = pool
+        @guest1_client.consume_pool(pool['id'], :quantity => 1)
+      end
+    end
+    ents = @guest1_client.list_entitlements()
+    ents.should have(1).things
+    ents[0]['endDate'].should_not == unmapped_pool['endDate']
+  end
+
   it 'revokes the unmapped guest pool once the guest is mapped' do
     all_pools = @user.list_pools :owner => @owner.id, :product => @virt_limit_product.id
     all_pools.each do |pool|

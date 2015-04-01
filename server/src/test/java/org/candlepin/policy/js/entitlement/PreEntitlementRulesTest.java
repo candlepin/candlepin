@@ -27,6 +27,7 @@ import org.candlepin.model.PoolAttribute;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.policy.ValidationResult;
+import org.candlepin.policy.js.entitlement.Enforcer.CallerType;
 import org.candlepin.test.TestUtil;
 
 import org.junit.Test;
@@ -661,6 +662,23 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         assertTrue(result.hasErrors());
         assertEquals(1, result.getErrors().size());
         assertEquals("virt.guest.cannot.use.unmapped.guest.pool.not.new",
+            result.getErrors().get(0).getResourceKey());
+    }
+
+    @Test
+    public void unmappedGuestFuturePoolDate() {
+        Date fourHoursFromNow = new Date(new Date().getTime() + 4L * 60L * 60L * 1000L);
+        Pool pool = setupUnmappedGuestPool();
+        pool.setStartDate(fourHoursFromNow);
+
+        Consumer consumer = new Consumer("test newborn consumer", "test user", owner,
+                new ConsumerType(ConsumerTypeEnum.SYSTEM));
+        consumer.setFact("virt.is_guest", "true");
+        consumer.setCreated(new Date());
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1, CallerType.BIND);
+        assertTrue(result.hasErrors());
+        assertEquals(1, result.getErrors().size());
+        assertEquals("virt.guest.cannot.bind.future.unmapped.guest.pool",
             result.getErrors().get(0).getResourceKey());
     }
 

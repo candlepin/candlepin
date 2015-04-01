@@ -22,7 +22,7 @@
 %endif
 
 Name: gutterball
-Version: 1.0.13
+Version: 1.0.14
 Release: 1%{?dist}
 Summary: Data aggregator for Candlepin
 
@@ -215,6 +215,13 @@ rm -rf %{buildroot}
 %attr(775, tomcat, root) %{_localstatedir}/log/%{name}
 
 %changelog
+* Tue Mar 31 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 1.0.14-1
+- Stop logging full message body at INFO level. (dgoodwin@redhat.com)
+- Reduce QPID connection logging to debug in various places (mstead@redhat.com)
+- Ensure ConsumerState does not exist before persisting (mstead@redhat.com)
+- Do not process messages already handled by gutterball (mstead@redhat.com)
+- Auto configure AMQP connection retry/wait connections (mstead@redhat.com)
+
 * Wed Mar 18 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 1.0.13-1
 - Add jcl-over-slf4j to EL7 gutterball. (awood@redhat.com)
 - 1201924: Add missing cglib dependency for gutterball in EL7.

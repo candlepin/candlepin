@@ -40,7 +40,7 @@
         <!-- re-use the consumer ID as the first checkin ID to avoid generated ID problem, we know it will be unique -->
         <sql>
             INSERT INTO cp_guest_ids_checkin(id, consumer_id, created, updated)
-                SELECT DISTINCT cp_consumer.id, cp_consumer.id, cp_consumer_guests.created, cp_consumer_guests.updated FROM cp_consumer INNER JOIN cp_consumer_guests ON cp_consumer.id = cp_consumer_guests.consumer_id
+                SELECT consumer_id, consumer_id, max(updated), max(updated) FROM cp_consumer_guests group by consumer_id;
         </sql>
     </changeSet>
 

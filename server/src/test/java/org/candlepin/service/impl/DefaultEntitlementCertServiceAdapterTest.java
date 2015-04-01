@@ -138,9 +138,9 @@ public class DefaultEntitlementCertServiceAdapterTest {
     @Mock private CertificateSerialCurator serialCurator;
     @Mock private KeyPairCurator keyPairCurator;
     @Mock private PKIUtility mockedPKI;
-    @Mock private Consumer consumer;
     @Mock private ProductServiceAdapter productAdapter;
 
+    private Consumer consumer;
     private Product product;
     private Product largeContentProduct;
     private Subscription subscription;
@@ -270,8 +270,9 @@ public class DefaultEntitlementCertServiceAdapterTest {
         largeContentPool.setProductId(largeContentProduct.getId());
         largeContentPool.setProductName(largeContentProduct.getName());
 
-        when(consumer.getType()).thenReturn(
-            new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM));
+        consumer = new Consumer("Test Consumer", "bob", owner,
+                new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM));
+        consumer.setUuid("test-consumer");
         entitlement = new Entitlement();
         entitlement.setQuantity(new Integer(ENTITLEMENT_QUANTITY));
         entitlement.setConsumer(consumer);
@@ -300,7 +301,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     @Test
     public void temporaryCertificateForUnmappedGuests() throws Exception {
         Date now = new Date();
-        when(consumer.getCreated()).thenReturn(now);
+        consumer.setCreated(now);
         pool.addAttribute(new PoolAttribute("unmapped_guests_only", "true"));
 
         // Set up an adapter with a real PKIUtil
@@ -394,7 +395,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         // Environment, with promoted content:
         Environment e = new Environment("env1", "Env 1", owner);
         e.getEnvironmentContent().add(new EnvironmentContent(e, content.getId(), true));
-        when(entitlement.getConsumer().getEnvironment()).thenReturn(e);
+        consumer.setEnvironment(e);
 
         Map<String, EnvironmentContent> promotedContent =
             new HashMap<String, EnvironmentContent>();
@@ -459,7 +460,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         // Setup an environment for the consumer:
         Environment e = new Environment("env1", "Awesome Environment #1", owner);
         e.getEnvironmentContent().add(new EnvironmentContent(e, content.getId(), true));
-        when(entitlement.getConsumer().getEnvironment()).thenReturn(e);
+        consumer.setEnvironment(e);
 
         certServiceAdapter.createX509Certificate(entitlement,
             product, new HashSet<Product>(), new BigInteger("1234"), keyPair, true);
@@ -479,7 +480,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         // Setup an environment for the consumer:
         Environment e = new Environment("env1", "Awesome Environment #1", owner);
         e.getEnvironmentContent().add(new EnvironmentContent(e, content.getId(), true));
-        when(entitlement.getConsumer().getEnvironment()).thenReturn(e);
+        consumer.setEnvironment(e);
 
         certServiceAdapter.createX509Certificate(entitlement,
             product, new HashSet<Product>(), new BigInteger("1234"), keyPair, true);
@@ -591,7 +592,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         // Make sure that we filter by environment when asked.
         Environment environment = new Environment();
-        when(consumer.getEnvironment()).thenReturn(environment);
+        consumer.setEnvironment(environment);
 
         Map<String, EnvironmentContent> promotedContent =
             new HashMap<String, EnvironmentContent>();
@@ -718,7 +719,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         throws Exception {
         Configuration mockConfig = mock(Configuration.class);
 
-        when(consumer.getFact(eq("system.certificate_version"))).thenReturn("3.2");
+        consumer.setFact("system.certificate_version", "3.2");
         ProductAttribute attr = new ProductAttribute("ram", "4");
         subscription.getProduct().addAttribute(attr);
 
@@ -758,7 +759,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     public void ensureV3CertIsCreatedWhenEnableCertV3ConfigIsTrue() throws Exception {
         Configuration mockConfig = mock(Configuration.class);
 
-        when(consumer.getFact(eq("system.certificate_version"))).thenReturn("3.0");
+        consumer.setFact("system.certificate_version", "3.0");
 
         X509V3ExtensionUtil mockV3extensionUtil = mock(X509V3ExtensionUtil.class);
         X509ExtensionUtil mockExtensionUtil = mock(X509ExtensionUtil.class);
@@ -784,12 +785,11 @@ public class DefaultEntitlementCertServiceAdapterTest {
     public void ensureV3CertIsCreatedWhenV3CapabilityPresent() throws Exception {
         Configuration mockConfig = mock(Configuration.class);
 
-        when(consumer.getType()).thenReturn(
-            new ConsumerType(ConsumerType.ConsumerTypeEnum.CANDLEPIN));
+        consumer.setType(new ConsumerType(ConsumerType.ConsumerTypeEnum.CANDLEPIN));
 
         Set<ConsumerCapability> set = new HashSet<ConsumerCapability>();
         set.add(new ConsumerCapability(consumer, "cert_v3"));
-        when(consumer.getCapabilities()).thenReturn(set);
+        consumer.setCapabilities(set);
 
         X509V3ExtensionUtil mockV3extensionUtil = mock(X509V3ExtensionUtil.class);
         X509ExtensionUtil mockExtensionUtil = mock(X509ExtensionUtil.class);
@@ -816,8 +816,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     public void ensureV1CertIsCreatedWhenV3factNotPresent() throws Exception {
         Configuration mockConfig = mock(Configuration.class);
 
-        when(consumer.getType()).thenReturn(
-            new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM));
+        consumer.setType(new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM));
 
         X509V3ExtensionUtil mockV3extensionUtil = mock(X509V3ExtensionUtil.class);
         X509ExtensionUtil mockExtensionUtil = mock(X509ExtensionUtil.class);
@@ -841,8 +840,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     public void ensureV3CertIsCreatedWhenHypervisor() throws Exception {
         Configuration mockConfig = mock(Configuration.class);
 
-        when(consumer.getType()).thenReturn(
-            new ConsumerType(ConsumerType.ConsumerTypeEnum.HYPERVISOR));
+        consumer.setType(new ConsumerType(ConsumerType.ConsumerTypeEnum.HYPERVISOR));
 
         X509V3ExtensionUtil mockV3extensionUtil = mock(X509V3ExtensionUtil.class);
         X509ExtensionUtil mockExtensionUtil = mock(X509ExtensionUtil.class);
@@ -1124,10 +1122,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
         GeneralSecurityException {
         Set<Product> products = new HashSet<Product>();
         products.add(product);
-        when(entitlement.getConsumer().getFact("system.certificate_version"))
-            .thenReturn("3.2");
-        when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
-        when(entitlement.getConsumer().getFact("uname.machine")).thenReturn("x86_64");
+        consumer.setFact("system.certificate_version", "3.2");
+        consumer.setFact("uname.machine", "x86_64");
 
         pool.setProductAttribute("warning_period", "20", "p");
         pool.setProductAttribute("sockets", "4", "p");
@@ -1232,11 +1228,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
     }
 
     private void setupEntitlements(String consumerArch, String certVersion) {
-        when(entitlement.getConsumer().getFact("system.certificate_version"))
-            .thenReturn(certVersion);
-        when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
-        when(entitlement.getConsumer().getFact("uname.machine")).thenReturn(
-            consumerArch);
+        consumer.setFact("system.certificate_version", certVersion);
+        consumer.setFact("uname.machine", consumerArch);
 
         subscription.getProduct().setAttribute("warning_period", "20");
         subscription.getProduct().setAttribute("sockets", "4");
@@ -1435,10 +1428,9 @@ public class DefaultEntitlementCertServiceAdapterTest {
     public void testPrepareV3EntitlementDataForDefaults() throws IOException {
         Set<Product> products = new HashSet<Product>();
         products.add(product);
-        when(entitlement.getConsumer().getFact("system.certificate_version"))
-            .thenReturn("3.2");
-        when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
-        when(entitlement.getConsumer().getFact("uname.machine")).thenReturn("x86_64");
+
+        consumer.setFact("system.certificate_version", "3.2");
+        consumer.setFact("uname.machine", "x86_64");
 
         subscription.getProduct().setAttribute("warning_period", "0");
         subscription.getProduct().setAttribute("management_enabled", "false");
@@ -1490,10 +1482,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
     public void testPrepareV3EntitlementDataForBooleans() throws IOException {
         Set<Product> products = new HashSet<Product>();
         products.add(product);
-        when(entitlement.getConsumer().getFact("system.certificate_version"))
-            .thenReturn("3.2");
-        when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
-        when(entitlement.getConsumer().getFact("uname.machine")).thenReturn("x86_64");
+        consumer.setFact("system.certificate_version", "3.2");
+        consumer.setFact("uname.machine", "x86_64");
 
         pool.setProductAttribute("management_enabled", "1", "p");
         entitlement.getPool().setAttribute("virt_only", "1");
@@ -1554,10 +1544,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Set<Product> products = new HashSet<Product>();
         products.add(product);
         product.setContent(superContent);
-        when(entitlement.getConsumer().getFact("system.certificate_version"))
-            .thenReturn("3.2");
-        when(entitlement.getConsumer().getFact("uname.machine")).thenReturn("x86_64");
-        when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
+        consumer.setFact("system.certificate_version", "3.2");
+        consumer.setFact("uname.machine", "x86_64");
 
         Set<X509ByteExtensionWrapper> byteExtensions =
             certServiceAdapter.prepareV3ByteExtensions(products, entitlement, "prefix",
@@ -1599,10 +1587,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         product.setContent(superContent);
         product.addContent(wrongArchContent);
 
-        when(entitlement.getConsumer().getFact("system.certificate_version"))
-            .thenReturn("3.2");
-        when(entitlement.getConsumer().getFact("uname.machine")).thenReturn(null);
-        when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
+        consumer.setFact("system.certificate_version", "3.2");
 
         Set<X509ByteExtensionWrapper> byteExtensions =
             certServiceAdapter.prepareV3ByteExtensions(products, entitlement, "prefix",
@@ -1637,9 +1622,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Set<Product> products = new HashSet<Product>();
         products.add(largeContentProduct);
         largeContentProduct.setContent(largeContent);
-        when(largeContentEntitlement.getConsumer().getFact("system.certificate_version"))
-            .thenReturn("3.2");
-        when(largeContentEntitlement.getConsumer().getUuid()).thenReturn("test-consumer");
+        consumer.setFact("system.certificate_version", "3.2");
 
         Set<X509ByteExtensionWrapper> byteExtensions =
             certServiceAdapter.prepareV3ByteExtensions(products, largeContentEntitlement,
@@ -1683,9 +1666,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
                 CONTENT_TYPE, CONTENT_VENDOR, url, CONTENT_GPG_URL, ARCH_LABEL));
         }
         extremeProduct.setContent(extremeContent);
-        when(entitlement.getConsumer().getFact("system.certificate_version"))
-            .thenReturn("3.2");
-        when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
+        consumer.setFact("system.certificate_version", "3.2");
         when(productAdapter.getProductById(eq(extremeProduct.getId()))).thenReturn(extremeProduct);
 
         certServiceAdapter.prepareV3Extensions(entitlement, "prefix", null);

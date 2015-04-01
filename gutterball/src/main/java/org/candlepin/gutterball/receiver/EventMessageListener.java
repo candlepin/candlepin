@@ -60,7 +60,10 @@ public class EventMessageListener implements MessageListener {
     @Override
     public void onMessage(Message message) {
         Event event = storeEvent(message);
-
+        // Event already exists, no need to process.
+        if (event == null) {
+            return;
+        }
         processEvent(event);
     }
 
@@ -82,8 +85,7 @@ public class EventMessageListener implements MessageListener {
      * @return Event parsed from the message JSON.
      */
     private Event storeEvent(Message message) {
-        // TODO: get this down to debug when we have support for viewing debug logging:
-        log.info(message.toString());
+        log.debug(message.toString());
 
         String messageBody = getMessageBody(message);
         Event event = null;
@@ -97,7 +99,15 @@ public class EventMessageListener implements MessageListener {
             event.setStatus(Status.RECEIVED);
 
             unitOfWork.begin();
+
+            String messageId = message.getJMSMessageID();
+            if (eventCurator.hasEventForMessage(messageId)) {
+                log.info("Event already created for message. Skipping message: " + messageId);
+                return null;
+            }
+
             // Store every event
+            event.setMessageId(messageId);
             eventCurator.create(event);
         }
         catch (JsonParseException e) {
@@ -114,6 +124,9 @@ public class EventMessageListener implements MessageListener {
             log.error("Error processing event", e);
             log.error("Event message body: {}", messageBody);
             throw new RuntimeException("Error processing event", e);
+        }
+        catch (JMSException e) {
+            throw new RuntimeException("Unable to get the message id when creating the event.", e);
         }
         finally {
             unitOfWork.end();

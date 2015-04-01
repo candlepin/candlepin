@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.47
+Version: 0.9.48
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -394,6 +394,23 @@ fi
 
 
 %changelog
+* Tue Mar 31 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.48-1
+- 1200142: Force metadata expire to 1 in standalone. (dgoodwin@redhat.com)
+- 1207316: Fix host autobind for guest when subscription requires cert v3.
+  (dgoodwin@redhat.com)
+- Improved debug logging for host autobind initiated by guest.
+  (dgoodwin@redhat.com)
+- Fix SQL in guest ID checkin time upgrade script. (dgoodwin@redhat.com)
+- Reduce QPID connection logging to debug in various places (mstead@redhat.com)
+- 1200877: Enable sync_publish option for Qpid to combat timeouts.
+  (awood@redhat.com)
+- Auto configure AMQP connection retry/wait connections (mstead@redhat.com)
+- 1204086: Disallow unmapped guests from attaching to future subscriptions
+  (wpoteat@redhat.com)
+- 1199483: Entitlement date override not persisting during entitlement
+  generation (wpoteat@redhat.com)
+- Always hide temporary pools from ineligible consumers. (awood@redhat.com)
+
 * Wed Mar 18 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.47-1
 - 1201520: Addition of (Temporary) to pool description (wpoteat@redhat.com)
 - 1200142: Force content metadata expire to 0 in standalone.

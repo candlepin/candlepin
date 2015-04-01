@@ -128,7 +128,7 @@ public class ProductImporterTest {
         verify(contentCuratorMock).createOrUpdate(c);
 
         // Metadata expiry should be overridden to 0 on import:
-        assertEquals(new Long(0), c.getMetadataExpire());
+        assertEquals(new Long(1), c.getMetadataExpire());
     }
 
     @Test
