@@ -74,6 +74,7 @@ public class ServletLogger {
         if (req.getQueryString() != null) {
             builder.append("?").append(req.getQueryString());
         }
+        builder.append("\n");
 
         return builder
             .append(logHeaders(req))
