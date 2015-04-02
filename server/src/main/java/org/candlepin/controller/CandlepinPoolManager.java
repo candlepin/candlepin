@@ -414,6 +414,7 @@ public class CandlepinPoolManager implements PoolManager {
     @Override
     public Pool createPool(Pool p) {
         Pool created = poolCurator.create(p);
+        poolCurator.refresh(p);
         if (log.isDebugEnabled()) {
             log.debug("   new pool: " + p);
         }
