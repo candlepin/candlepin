@@ -66,6 +66,7 @@ import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import javax.persistence.FlushModeType;
 import javax.persistence.PersistenceException;
 
 
@@ -370,6 +371,10 @@ public class Importer {
          */
 //        validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, metadata, force);
 
+        
+        // Set The transactions flush mode to COMMIT
+        contentCurator.setFlushMode(FlushModeType.COMMIT);
+        
         // If any calls find conflicts we'll assemble them into one exception detailing all
         // the conflicts which occurred, so the caller can override them all at once
         // if desired:
