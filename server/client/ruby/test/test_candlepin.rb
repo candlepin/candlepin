@@ -63,6 +63,12 @@ module Candlepin
         ).content
       end
 
+      let(:role) do
+        user_client.create_role(
+          :name => rand_string,
+        ).content
+      end
+
       it 'gets a status as JSON' do
         res = no_auth_client.get('/status')
         expect(res.content.key?('version')).to be_true
@@ -183,20 +189,10 @@ module Candlepin
       end
 
       it 'creates roles' do
-        res = user_client.create_role(
-          :name => rand_string,
-        )
-        role = res.content
-
         expect(role["id"]).to_not be_nil
       end
 
       it 'gets roles' do
-        res = user_client.create_role(
-          :name => rand_string,
-        )
-        role = res.content
-
         res = user_client.get_role(
           :role_id => role["id"],
         )
@@ -204,11 +200,6 @@ module Candlepin
       end
 
       it 'updates roles' do
-        res = user_client.create_role(
-          :name => rand_string,
-        )
-        role = res.content
-
         res = user_client.update_role(
           :role_id => role["id"],
           :name => rand_string,
@@ -217,11 +208,6 @@ module Candlepin
       end
 
       it 'deletes roles' do
-        res = user_client.create_role(
-          :name => rand_string,
-        )
-        role = res.content
-
         expect(role["id"]).to_not be_nil
 
         res = user_client.delete_role(
@@ -231,10 +217,6 @@ module Candlepin
       end
 
       it 'creates role users' do
-        role = user_client.create_role(
-          :name => rand_string,
-        ).content
-
         res = user_client.add_role_user(
           :role_id => role["id"],
           :username => user["username"],
@@ -243,10 +225,6 @@ module Candlepin
       end
 
       it 'deletes role users' do
-        role = user_client.create_role(
-          :name => rand_string,
-        ).content
-
         res = user_client.add_role_user(
           :role_id => role["id"],
           :username => user["username"],
@@ -260,6 +238,31 @@ module Candlepin
         expect(res.content["users"]).to be_empty
       end
 
+      it 'adds role permissions' do
+        res = user_client.add_role_permission(
+          :role_id => role['id'],
+          :owner => owner['key'],
+          :type => 'OWNER',
+          :access => 'ALL',
+        )
+        expect(res).to be_2xx
+      end
+
+      it 'deletes role permissions' do
+        perm = user_client.add_role_permission(
+          :role_id => role['id'],
+          :owner => owner['key'],
+          :type => 'OWNER',
+          :access => 'ALL',
+        ).content
+
+        res = user_client.delete_role_permission(
+          :role_id => role['id'],
+          :permission_id => perm['permissions'].first['id'],
+        )
+        expect(res).to be_2xx
+      end
+
       it 'creates owners' do
         res = user_client.create_owner(
           :key => rand_string,
@@ -267,6 +270,39 @@ module Candlepin
         )
         expect(res).to be_2xx
         expect(res.content).to have_key('id')
+      end
+
+      it 'gets owner hypervisors' do
+        host1 = user_client.register(
+          :owner => owner['key'],
+          :username => 'admin',
+          :name => rand_string,
+        ).content
+
+        host2 = user_client.register(
+          :owner => owner['key'],
+          :username => 'admin',
+          :name => rand_string,
+        ).content
+
+        user_client.register(
+          :owner => owner['key'],
+          :username => 'admin',
+          :name => rand_string,
+          :hypervisor_id => host1["uuid"],
+        ).content
+
+        res = user_client.get_owner_hypervisors(
+          :key => owner['key'],
+        )
+        expect(res).to be_2xx
+
+        res = user_client.get_owner_hypervisors(
+          :key => owner['key'],
+          :hypervisor_ids => [host1['uuid'], host2['uuid']],
+        )
+        expect(res).to be_2xx
+        expect(res.content.length).to be(1)
       end
 
       it 'creates owner environments' do

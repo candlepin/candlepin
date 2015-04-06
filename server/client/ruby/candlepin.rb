@@ -209,6 +209,12 @@ module Candlepin
     # def create_user(opts)
     #   do stuff here
     # end
+    #
+    # Really what we need is a Python-type decorator.  There is an implementation at
+    # https://github.com/wycats/ruby_decorators but it uses evals and a lot of tricky
+    # meta-programming.
+    #
+    # Thor does method decorators but it's quite complex.
 
     def self.included(klass)
       # Mixin the Util module's methods into this module
@@ -224,7 +230,6 @@ module Candlepin
           include const_get(sym) if const_get(sym).kind_of?(Module)
         end
       end
-
     end
 
     attr_writer :uuid
@@ -779,20 +784,20 @@ module Candlepin
       def add_role_permission(opts = {})
         defaults = {
           :role_id => nil,
-          :permission => nil,
+          :type => nil,
+          :owner => nil,
+          :access => 'READ_ONLY',
         }
         opts = verify_and_merge(opts, defaults)
 
-        permission = select_from(opts, :owner, :access)
-        post("/roles/#{opts[:role_id]}/permissions/#{opts[:permission_id]}", permission)
+        permission = select_from(opts, :owner, :access, :type)
+        post("/roles/#{opts[:role_id]}/permissions/", permission)
       end
 
       def delete_role_permission(opts = {})
         defaults = {
           :role_id => nil,
           :permission_id => nil,
-          :owner => nil,
-          :access => 'READ_ONLY',
         }
         opts = verify_and_merge(opts, defaults)
 
@@ -850,6 +855,7 @@ module Candlepin
           :name => nil,
         }
         opts = verify_and_merge(opts, defaults)
+
         get("/owners/#{opts[:key]}/environments", select_from(opts, :name))
       end
 
