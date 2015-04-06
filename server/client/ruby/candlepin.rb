@@ -237,6 +237,15 @@ module Candlepin
       return @uuid || nil
     end
 
+    def page_options
+      return {
+        :page => nil,
+        :per_page => 10,
+        :order => 'asc',
+        :sort_by => nil,
+      }
+    end
+
     module GenericResource
       # There are so many GET /resource/:id methods that it
       # makes sense to provide a generic implementation.  The
@@ -849,6 +858,16 @@ module Candlepin
         get_owner_subresource("activation_keys", opts)
       end
 
+      def get_owner_service_levels(opts = {})
+        defaults = {
+          :key => nil,
+          :exempt => false,
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        get("/owners/#{opts[:key]}/servicelevels", select_from(opts, :exempt))
+      end
+
       def get_owner_environment(opts = {})
         defaults = {
           :key => nil,
@@ -861,6 +880,25 @@ module Candlepin
 
       def get_all_owners
         get("/owners")
+      end
+
+      def get_owner_pools(opts = {})
+        defaults = {
+          :key => nil,
+          :consumer => nil,
+          :product => nil,
+          :listall => nil,
+          :attributes => [],
+        }.merge(page_options)
+
+        opts = verify_and_merge(opts, defaults)
+        params = opts.dup.delete(:key)
+        params = select_from(opts, params))
+        params[:attributes] = opts[:attributes].map do |k, v|
+          { :name => k, :value => v }
+        end
+
+        get("/owners/#{opts[:key]}/pools", params)
       end
 
       def autoheal_owner(opts = {})
@@ -995,6 +1033,29 @@ module Candlepin
       def delete_content(opts = {})
         delete_by_id("/content", :content_id, opts)
       end
+
+      def create_content(opts = {})
+        defaults = {
+          :content_id => nil,
+          :name => nil,
+          :label => nil,
+          :type => "yum",
+          :vendor => "Red Hat",
+          :content_url => "",
+          :gpg_url => "",
+          :modified_product_ids => [],
+          :arches => nil,
+          :required_tags => nil,
+          :metadata_expire => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        content = opts.dup
+        content.delete(:content_id)
+        content = camelize_hash(content)
+        content[:id] = opts[:content_id]
+        post("/content", content)
+      end
     end
 
     module RuleResource
@@ -1016,11 +1077,19 @@ module Candlepin
           :multiplier => nil,
           :attributes => [],
           :dependent_product_ids => [],
+          :product_content => [],
           :relies_on => [],
         }
         opts = verify_and_merge(opts, defaults)
 
-        product = camelize_hash(opts, :type, :name, :multiplier, :dependent_product_ids, :relies_on)
+        product = camelize_hash(opts,
+          :type,
+          :name,
+          :multiplier,
+          :dependent_product_ids,
+          :relies_on,
+          :product_content,
+        )
         product[:id] = opts[:product_id]
         product[:attributes] = opts[:attributes].map do |k, v|
           { :name => k, :value => v }
@@ -1074,6 +1143,28 @@ module Candlepin
 
       def delete_product(opts = {})
         delete_by_id("/products", :product_id, opts)
+      end
+
+      def update_product_content(opts = {})
+        defaults = {
+          :product_id => nil,
+          :content_id => nil,
+          :enabled => true,
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        post("/products/#{opts[:product_id]}/content/#{opts[:content_id]}",
+          :query => select_from(opts, :enabled))
+      end
+
+      def delete_product_content(opts = {})
+        defaults = {
+          :product_id => nil,
+          :content_id => nil,
+        }
+        opts = verify_and_merge(opts, defaults)
+
+        delete("/products/#{opts[:product_id]}/content/#{opts[:content_id]}")
       end
     end
 

@@ -69,6 +69,14 @@ module Candlepin
         ).content
       end
 
+      let(:content) do
+        user_client.create_content(
+          :content_id => "hello",
+          :name => "Hello",
+          :label => "hello",
+        ).content
+      end
+
       it 'gets a status as JSON' do
         res = no_auth_client.get('/status')
         expect(res.content.key?('version')).to be_true
@@ -366,6 +374,15 @@ module Candlepin
         expect(res.content['displayName']).to_not eq(old_name)
       end
 
+      it 'gets owner service levels' do
+        res = user_client.get_owner_service_levels(
+          :key => owner['key'],
+          :exempt => true,
+        )
+
+        expect(res).to be_2xx
+      end
+
       it 'sets owner log level' do
         res = user_client.set_owner_log_level(
           :key => owner['key'],
@@ -471,6 +488,54 @@ module Candlepin
         expect(res.content['multiplier']).to eq(8)
       end
 
+      it 'updates product content' do
+        product = user_client.create_product(
+          :product_id => rand_string,
+          :name => rand_string,
+          :multiplier => 2,
+          :attributes => { :arch => 'x86_64' },
+        ).content
+
+        res = user_client.update_product_content(
+          :product_id => product['id'],
+          :content_id => content['id'],
+        )
+
+        expect(res).to be_2xx
+      end
+
+      it 'deletes product content' do
+        product = user_client.create_product(
+          :product_id => rand_string,
+          :name => rand_string,
+          :multiplier => 2,
+          :attributes => { :arch => 'x86_64' },
+        ).content
+        expect(product['productContent']).to be_empty
+
+        res = user_client.update_product_content(
+          :product_id => product['id'],
+          :content_id => content['id'],
+        )
+        expect(res).to be_2xx
+
+        product = user_client.get_product(
+          :product_id => product['id'],
+        ).content
+        expect(product['productContent']).to_not be_empty
+
+        res = user_client.delete_product_content(
+          :product_id => product['id'],
+          :content_id => content['id'],
+        )
+        expect(res).to be_2xx
+
+        product = user_client.get_product(
+          :product_id => product['id'],
+        ).content
+        expect(product['productContent']).to be_empty
+      end
+
       it 'creates a distributor version' do
         name = rand_string
         res = user_client.create_distributor_version(
@@ -535,6 +600,23 @@ module Candlepin
           :type_id => type['id']
         )
         expect(res).to be_missing
+      end
+
+      it 'creates content' do
+        res = user_client.create_content(
+          :content_id => "hello",
+          :name => "Hello",
+          :label => "hello",
+        )
+
+        expect(res).to be_2xx
+      end
+
+      it 'deletes content' do
+        res = user_client.delete_content(
+          :content_id => content["id"],
+        )
+        expect(res).to be_2xx
       end
     end
 
