@@ -44,8 +44,24 @@ module Candlepin
     end
 
     context "in a functional context", :functional => true do
+      # The let! prevents lazy loading
       let!(:user_client) { BasicAuthClient.new }
       let!(:no_auth_client) { NoAuthClient.new }
+
+      let(:owner) do
+        user_client.create_owner(
+          :key => rand_string,
+          :display_name => rand_string,
+        ).content
+      end
+
+      let(:user) do
+        user_client.create_user(
+          :username => rand_string,
+          :password => rand_string,
+          :super_admin => false,
+        ).content
+      end
 
       it 'gets a status as JSON' do
         res = no_auth_client.get('/status')
@@ -144,47 +160,20 @@ module Candlepin
       end
 
       it 'creates users' do
-        res = user_client.create_user(
-          :username => rand_string,
-          :password => rand_string,
-          :super_admin => false,
-        )
-        user = res.content
         expect(user["hashedPassword"].length).to eq(40)
       end
 
       it 'gets users' do
-        res = user_client.create_user(
-          :username => rand_string,
-          :password => rand_string,
-          :super_admin => false,
-        )
-        user = res.content
-
         res = user_client.get_user(:username => user["username"])
         expect(res.content["id"]).to eq(user["id"])
       end
 
       it 'updates users' do
-        res = user_client.create_user(
-          :username => rand_string,
-          :password => rand_string,
-          :super_admin => false,
-        )
-        user = res.content
-
         res = user_client.update_user(:username => user["username"], :password => rand_string)
         expect(res.content["hashedPassword"]).to_not eq(user["hashedPassword"])
       end
 
       it 'deletes users' do
-        res = user_client.create_user(
-          :username => rand_string,
-          :password => rand_string,
-          :super_admin => false,
-        )
-        user = res.content
-
         res = user_client.delete_user(:username => user["username"])
         expect(res).to be_2xx
 
@@ -242,12 +231,6 @@ module Candlepin
       end
 
       it 'creates role users' do
-        user = user_client.create_user(
-          :username => rand_string,
-          :password => rand_string,
-          :super_admin => false,
-        ).content
-
         role = user_client.create_role(
           :name => rand_string,
         ).content
@@ -260,12 +243,6 @@ module Candlepin
       end
 
       it 'deletes role users' do
-        user = user_client.create_user(
-          :username => rand_string,
-          :password => rand_string,
-          :super_admin => false,
-        ).content
-
         role = user_client.create_role(
           :name => rand_string,
         ).content
@@ -293,11 +270,6 @@ module Candlepin
       end
 
       it 'creates owner environments' do
-        owner = user_client.create_owner(
-          :key => rand_string,
-          :display_name => rand_string,
-        ).content
-
         res = user_client.create_owner_environment(
           :key => owner['key'],
           :id => rand_string,
@@ -309,11 +281,6 @@ module Candlepin
       end
 
       it 'gets owner environments' do
-        owner = user_client.create_owner(
-          :key => rand_string,
-          :display_name => rand_string,
-        ).content
-
         env = user_client.create_owner_environment(
           :key => owner['key'],
           :id => rand_string,
@@ -329,11 +296,6 @@ module Candlepin
       end
 
       it 'deletes owners' do
-        owner = user_client.create_owner(
-          :key => rand_string,
-          :display_name => rand_string,
-        ).content
-
         res = user_client.delete_owner(
           :key => owner['key']
         )
@@ -346,11 +308,7 @@ module Candlepin
       end
 
       it 'creates child owners' do
-        parent = user_client.create_owner(
-          :key => rand_string,
-          :display_name => rand_string,
-        ).content
-
+        parent = owner
         child = user_client.create_owner(
           :key => rand_string,
           :display_name => rand_string,
@@ -362,10 +320,6 @@ module Candlepin
       end
 
       it 'updates owners' do
-        owner = user_client.create_owner(
-          :key => rand_string,
-          :display_name => rand_string,
-        ).content
         old_name = owner['displayName']
 
         res = user_client.update_owner(
@@ -377,11 +331,6 @@ module Candlepin
       end
 
       it 'sets owner log level' do
-        owner = user_client.create_owner(
-          :key => rand_string,
-          :display_name => rand_string,
-        ).content
-
         res = user_client.set_owner_log_level(
           :key => owner['key'],
           :level => 'debug',
@@ -391,11 +340,6 @@ module Candlepin
       end
 
       it 'deletes owner log level' do
-        owner = user_client.create_owner(
-          :key => rand_string,
-          :display_name => rand_string,
-        ).content
-
         res = user_client.set_owner_log_level(
           :key => owner['key'],
           :level => 'debug',
@@ -410,11 +354,6 @@ module Candlepin
       end
 
       it 'gets owners' do
-        owner = user_client.create_owner(
-          :key => rand_string,
-          :display_name => rand_string,
-        ).content
-
         res = user_client.get_owner(
           :key => owner['key'],
         )
@@ -423,11 +362,6 @@ module Candlepin
       end
 
       it 'gets owner info' do
-        owner = user_client.create_owner(
-          :key => rand_string,
-          :display_name => rand_string,
-        ).content
-
         res = user_client.get_owner_info(
           :key => owner['key'],
         )
@@ -435,11 +369,6 @@ module Candlepin
       end
 
       it "gets an owner's jobs" do
-        owner = user_client.create_owner(
-          :key => rand_string,
-          :display_name => rand_string,
-        ).content
-
         res = user_client.get_owner_jobs(
           :owner => owner['key'],
         )
