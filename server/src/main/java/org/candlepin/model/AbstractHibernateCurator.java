@@ -404,7 +404,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     public void evict(E object) {
         currentSession().evict(object);
     }
-    
+
     public void setFlushMode(FlushModeType flushModeType) {
         log.debug("setFlushMode=" + flushModeType);
         log.debug("setFlushMode em " + getEntityManager().getTransaction().toString());

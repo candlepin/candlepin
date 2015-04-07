@@ -67,9 +67,9 @@ public class ProductImporter {
     }
 
     public void store(Set<Product> products) {
-        Map <String, Product> prodToStore = new HashMap<String, Product>();
-        Map <String, Content> contToStore = new HashMap<String, Content>();
-        
+        Map<String, Product> prodToStore = new HashMap<String, Product>();
+        Map<String, Content> contToStore = new HashMap<String, Content>();
+
         for (Product importedProduct : products) {
             // Handling the storing/updating of Content here. This is technically a
             // disjoint entity, but really only makes sense in the concept of

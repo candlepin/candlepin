@@ -204,7 +204,6 @@ public class CandlepinPoolManager implements PoolManager {
         //  if only one of the pair still exists.
         createPoolsForSubscription(sub, subscriptionPools);
 
-        
         //regenerateCertificatesByEntIds
         log.debug("about to updatePoolsForSubscription");
         Set<String> poolSet = updatePoolsForSubscription(subscriptionPools, sub, false);
@@ -427,7 +426,7 @@ public class CandlepinPoolManager implements PoolManager {
             createPool(pool);
         }
         if (log.isDebugEnabled()) {
-            log.debug("Creating new pool post createPool " );
+            log.debug("Creating new pool post createPool ");
         }
 
         return pools;

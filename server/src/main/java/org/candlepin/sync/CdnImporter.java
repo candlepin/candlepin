@@ -65,7 +65,6 @@ public class CdnImporter {
                 //curator.refresh(existing);
                 log.debug("Updating CDN: " + cdn.getName());
             }
-            
         }
     }
 }

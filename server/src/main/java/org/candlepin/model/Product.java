@@ -297,7 +297,6 @@ public class Product extends AbstractHibernateObject implements Linkable {
                 .toHashCode();
     }
 
-    
     /**
      * @param content
      */

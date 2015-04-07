@@ -57,6 +57,6 @@ public class ConsumerTypeImporter {
                 curator.refresh(consumerType);
             }
         }
-        
+
     }
 }

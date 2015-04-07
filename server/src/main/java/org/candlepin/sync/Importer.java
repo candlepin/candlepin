@@ -362,21 +362,17 @@ public class Importer {
                                         "required entitlements directory"));
         }
 
-
         // system level elements
         /*
          * Checking a system wide last import date breaks multi-tenant deployments whenever
          * one org imports a manifest slightly older than another org who has already
          * imported. Disabled for now. See bz #769644.
          */
-//        validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, metadata, force);
+        //        validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, metadata, force);
 
-        
-        
         // Set The transactions flush mode to COMMIT
-        log.debug("Setting FlushModeType=Commit");
         contentCurator.setFlushMode(FlushModeType.COMMIT);
-        
+
         // If any calls find conflicts we'll assemble them into one exception detailing all
         // the conflicts which occurred, so the caller can override them all at once
         // if desired:
@@ -387,19 +383,15 @@ public class Importer {
         importRules(rules, metadata);
 
         importConsumerTypes(consumerTypes.listFiles());
-        //consumerTypeCurator.refresh();
 
         File distributorVersions = importFiles.get(ImportFile.DISTRIBUTOR_VERSIONS.fileName());
         if (distributorVersions != null) {
             importDistributorVersions(distributorVersions.listFiles());
         }
-        //distVerCurator.flush();
-        
         File cdns = importFiles.get(ImportFile.CONTENT_DELIVERY_NETWORKS.fileName());
         if (cdns != null) {
             importContentDeliveryNetworks(cdns.listFiles());
         }
-        //cdnCurator.flush();
 
         // per user elements
         try {
@@ -424,9 +416,7 @@ public class Importer {
         catch (ImportConflictException e) {
             conflictExceptions.add(e);
         }
-        //ownerCurator.flush();
 
-        
         // At this point we're done checking for any potential conflicts:
         if (!conflictExceptions.isEmpty()) {
             log.error("Conflicts occurred during import that were not overridden:");
@@ -436,8 +426,6 @@ public class Importer {
             throw new ImportConflictException(conflictExceptions);
         }
 
-        //subCurator.flush();
-        //productCurator.flush();
         // If the consumer has no entitlements, this products directory will end up empty.
         // This also implies there will be no entitlements to import.
         Refresher refresher = poolManager.getRefresher();
@@ -450,7 +438,6 @@ public class Importer {
                 importFiles.get(ImportFile.PRODUCTS.fileName()).listFiles(),
                 importer);
 
-            log.debug("before getModifiedProducts");
             Set<Product> modifiedProducts = importer.getChangedProducts(productsToImport);
             for (Product product : modifiedProducts) {
                 refresher.add(product);
@@ -461,13 +448,9 @@ public class Importer {
             importer.store(productsToImport);
             log.debug("after productsToImport.store");
 
-
             meta = mapper.readValue(metadata, Meta.class);
-            log.debug("before importEntitlements");
             importEntitlements(owner, productsToImport, entitlements.listFiles(),
                 consumer, meta);
-            log.debug("after importEntitlements");
-            
 
             refresher.add(owner);
             refresher.run();

@@ -38,7 +38,7 @@ public class EventBuilder {
     private final EventFactory factory;
 
     private Event event;
-    
+
     private static Logger log = LoggerFactory.getLogger(EventBuilder.class);
 
     public EventBuilder(EventFactory factory, Target target, Type type) {
