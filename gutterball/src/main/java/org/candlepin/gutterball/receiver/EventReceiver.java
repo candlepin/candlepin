@@ -122,13 +122,32 @@ public class EventReceiver {
         return connFactory;
     }
 
-    // FIXME [mstead] This is not being called and should probably be called
-    //       when the app is being shut down.
-    private void finish() throws JMSException {
-        consumer.close();
-        sess.close();
-        conn.close();
-        log.info("DONE");
+    public void finish() {
+        log.info("Closing QPID connection");
+        try {
+            consumer.close();
+        }
+        catch (JMSException e) {
+            // Ok - just log the exception
+            log.debug("Unable to close consumer connection", e);
+        }
+
+        try {
+            sess.close();
+        }
+        catch (JMSException e) {
+            // Ok - just log the exception
+            log.debug("Unable to close session", e);
+        }
+
+        try {
+            conn.close();
+        }
+        catch (JMSException e) {
+            // Ok - just log the exception
+            log.debug("Unable to close connection", e);
+        }
+        log.info("Finished closing QPID connection");
     }
 
     /**
