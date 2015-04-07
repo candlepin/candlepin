@@ -35,7 +35,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.9.48
+Version: 0.9.49
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -394,6 +394,12 @@ fi
 
 
 %changelog
+* Tue Apr 07 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.49-1
+- 1204311: Promote derived objects to first-class objects on temporary pools
+  (awood@redhat.com)
+- Rewrite Entitlement.toString to avoid String concats. (awood@redhat.com)
+- 1207822: EnvironmentResource fix for duplicate content IDs (crog@redhat.com)
+
 * Tue Mar 31 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 0.9.48-1
 - 1200142: Force metadata expire to 1 in standalone. (dgoodwin@redhat.com)
 - 1207316: Fix host autobind for guest when subscription requires cert v3.
