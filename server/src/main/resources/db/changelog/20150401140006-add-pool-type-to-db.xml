@@ -15,12 +15,72 @@
     </changeSet>
 
     <changeSet id="20150401140006-2" author="crog">
-        <comment>Task to populate the type field for existing pools</comment>
-
-        <customChange class="org.candlepin.liquibase.PoolTypeUpgradeLiquibaseWrapper"/>
+        <sql>
+            UPDATE cp_pool SET type = 'ENTITLEMENT_DERIVED' WHERE cp_pool.id IN (
+              SELECT P.id
+              FROM cp_pool P
+                INNER JOIN cp_pool_attribute PA ON (P.id = PA.pool_id AND PA.name = 'pool_derived')
+              WHERE
+                PA.value = 'true'
+                AND (P.sourceentitlement_id IS NOT NULL AND p.sourceentitlement_id != '')
+            )
+        </sql>
     </changeSet>
 
     <changeSet id="20150401140006-3" author="crog">
+        <sql>
+            UPDATE cp_pool SET type = 'STACK_DERIVED' WHERE cp_pool.id IN (
+              SELECT P.id
+              FROM cp_pool P
+                INNER JOIN cp_pool_attribute PA ON (P.id = PA.pool_id AND PA.name = 'pool_derived')
+                INNER JOIN cp_pool_source_stack SS ON p.id = SS.derivedpool_id
+              WHERE
+                PA.value = 'true'
+                AND (P.sourceentitlement_id IS NULL OR p.sourceentitlement_id = '')
+            )
+        </sql>
+    </changeSet>
+
+    <changeSet id="20150401140006-4" author="crog">
+        <sql>
+            UPDATE cp_pool SET type = 'BONUS' WHERE cp_pool.id IN (
+              SELECT P.id
+              FROM cp_pool P
+                INNER JOIN cp_pool_attribute PA ON (P.id = PA.pool_id AND PA.name = 'pool_derived')
+                LEFT JOIN cp_pool_source_stack SS ON p.id = SS.derivedpool_id
+              WHERE
+                PA.value = 'true'
+                AND (P.sourceentitlement_id IS NULL OR p.sourceentitlement_id = '')
+                AND SS.id IS NULL
+            )
+        </sql>
+    </changeSet>
+
+    <changeSet id="20150401140006-5" author="crog">
+        <sql>
+            UPDATE cp_pool SET type = 'UNMAPPED_GUEST' WHERE cp_pool.id IN (
+              SELECT P.id
+              FROM cp_pool P
+                LEFT JOIN cp_pool_attribute PA1 ON (P.id = PA1.pool_id AND PA1.name = 'pool_derived')
+                INNER JOIN cp_pool_attribute PA2 ON (P.id = PA2.pool_id AND PA2.name = 'unmapped_guest')
+              WHERE PA1.id IS NULL AND PA2.value = 'true'
+            )
+        </sql>
+    </changeSet>
+
+    <changeSet id="20150401140006-6" author="crog">
+        <sql>
+            UPDATE cp_pool SET type = 'NORMAL' WHERE cp_pool.id IN (
+              SELECT P.id
+              FROM cp_pool P
+                LEFT JOIN cp_pool_attribute PA1 ON (P.id = PA1.pool_id AND PA1.name = 'pool_derived')
+                LEFT JOIN cp_pool_attribute PA2 ON (P.id = PA2.pool_id AND PA2.name = 'unmapped_guest')
+              WHERE PA1.id IS NULL AND PA2.id IS NULL
+            )
+        </sql>
+    </changeSet>
+
+    <changeSet id="20150401140006-7" author="crog">
         <comment>Add the not-null constraint to the new pool type column</comment>
 
         <addNotNullConstraint tableName="cp_pool" columnName="type"/>
