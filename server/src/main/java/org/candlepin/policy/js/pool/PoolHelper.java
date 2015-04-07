@@ -160,17 +160,22 @@ public class PoolHelper extends AttributeHelper {
      * @param destination pool
      */
     private void copyProvidedProducts(Subscription source, Pool destination) {
-        Set<Product> products = source.getProvidedProducts();
         // Use derived product data if it exists, as this is a derived bonus pool:
-        if (source.getDerivedProvidedProducts() != null &&
-                source.getDerivedProvidedProducts().size() > 0) {
-            products = source.getDerivedProvidedProducts();
+        if (source.getDerivedProduct() != null) {
+            Set<ProvidedProduct> provided = new HashSet<ProvidedProduct>();
+            if (source.getDerivedProvidedProducts() != null) {
+                for (Product p : source.getDerivedProvidedProducts()) {
+                    provided.add(new ProvidedProduct(p.getId(), p.getName(), destination));
+                }
+            }
+            destination.setProvidedProducts(provided);
         }
-        for (Product providedProduct : products) {
-            destination.addProvidedProduct(new ProvidedProduct(providedProduct.getId(),
-                providedProduct.getName()));
+        else {
+            for (Product providedProduct : source.getProvidedProducts()) {
+                destination.addProvidedProduct(
+                    new ProvidedProduct(providedProduct.getId(), providedProduct.getName()));
+            }
         }
-
     }
 
     public Pool createPool(Subscription sub, String productId,

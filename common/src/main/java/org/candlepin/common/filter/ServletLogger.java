@@ -25,6 +25,7 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 /**
  * ServletLogger
@@ -40,50 +41,64 @@ public class ServletLogger {
     }
 
     protected ServletLogger() {
-
+        // Static methods only
     }
 
     public static StringBuilder logHeaders(HttpServletRequest req) {
         Enumeration<?> headerNames = req.getHeaderNames();
         StringBuilder builder = new StringBuilder();
 
-        builder.append("\n====Headers====");
         while (headerNames.hasMoreElements()) {
             String headerName = (String) headerNames.nextElement();
-            builder.append("\n  ").append(headerName).append(": ")
-                .append(req.getHeader(headerName));
+            builder.append(headerName).append(": ").append(req.getHeader(headerName)).append("\n");
         }
-        builder.append("\n====End Headers====\n");
+        builder.append("---\n");
         return builder;
     }
 
     public static StringBuilder logHeaders(TeeHttpServletResponse resp) {
         Map<String, List<String>> headers = resp.getHeaders();
         StringBuilder builder = new StringBuilder();
-        builder.append("\n====Headers====");
         for (Map.Entry<String, List<String>> header : headers.entrySet()) {
-            builder.append("\n");
-            builder.append(header.getKey()).append(": ").append(header.getValue());
+            builder.append(header.getKey()).append(": ").append(header.getValue()).append("\n");
         }
 
-        builder.append("\n====End Headers====\n");
+        builder.append("---\n");
         return builder;
     }
 
     public static StringBuilder logRequest(TeeHttpServletRequest req) {
-        return logHeaders(req).append(logBody("Request", req, true));
+        StringBuilder builder = new StringBuilder();
+        builder.append("Request: ")
+            .append(req.getMethod()).append(" ").append(req.getRequestURI());
+        if (req.getQueryString() != null) {
+            builder.append("?").append(req.getQueryString());
+        }
+        builder.append("\n");
+
+        return builder
+            .append(logHeaders(req))
+            .append(logBody("Request", req, true));
     }
 
-    public static StringBuilder logResponse(TeeHttpServletResponse resp) {
+    public static StringBuilder logResponse(TeeHttpServletResponse resp, long startTime) {
         // Impl note:
         // We're not formatting JSON output here as our JsonProvider already takes care of that.
-        return logHeaders(resp).append(logBody("Response", resp, false));
+        long duration = System.currentTimeMillis() - startTime;
+
+        StringBuilder builder = new StringBuilder();
+        int statusCode = resp.getStatus();
+        return builder.append("Response: ")
+            .append(statusCode)
+            .append(" ")
+            .append(Response.Status.fromStatusCode(statusCode))
+            .append(" (").append(duration).append(" ms)\n")
+            .append(logHeaders(resp))
+            .append(logBody("Response", resp, false));
     }
 
     public static StringBuilder logBody(String type, BodyLogger bodyLogger, boolean formatJson) {
         StringBuilder builder = new StringBuilder();
-        builder.append("====").append(type).append(" Body====\n");
-
         String content = bodyLogger.getBody();
 
         if (formatJson && MediaType.APPLICATION_JSON.equals(bodyLogger.getContentType())) {

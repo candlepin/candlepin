@@ -28,9 +28,7 @@ public class EnvironmentContentCurator extends
         super(EnvironmentContent.class);
     }
 
-    public EnvironmentContent lookupByEnvironmentAndContent(
-        Environment e, String contentId) {
-
+    public EnvironmentContent lookupByEnvironmentAndContent(Environment e, String contentId) {
         return (EnvironmentContent) this.currentSession().createCriteria(
             EnvironmentContent.class).add(Restrictions.eq("environment", e))
             .add(Restrictions.eq("contentId", contentId)).uniqueResult();
