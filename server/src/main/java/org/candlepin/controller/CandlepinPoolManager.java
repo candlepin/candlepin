@@ -205,7 +205,6 @@ public class CandlepinPoolManager implements PoolManager {
         createPoolsForSubscription(sub, subscriptionPools);
 
         
-        
         //regenerateCertificatesByEntIds
         log.debug("about to updatePoolsForSubscription");
         Set<String> poolSet = updatePoolsForSubscription(subscriptionPools, sub, false);
@@ -355,7 +354,9 @@ public class CandlepinPoolManager implements PoolManager {
             // Explicitly call flush to avoid issues with how we sync up the attributes.
             // This prevents "instance does not yet exist as a row in the database" errors
             // when we later try to lock the pool if we need to revoke entitlements:
-            this.poolCurator.flush();
+            // FIXME: This slows things down a lot...
+            log.debug("NOT FLUSHING in processPoolUpdates");
+            //this.poolCurator.flush();
 
             // quantity has changed. delete any excess entitlements from pool
             if (updatedPool.getQuantityChanged()) {
@@ -438,7 +439,7 @@ public class CandlepinPoolManager implements PoolManager {
             log.debug("  about to create new pool: " + p);
         }
         Pool created = poolCurator.create(p);
-        poolCurator.refresh(p);
+        //poolCurator.refresh(p);
         if (log.isDebugEnabled()) {
             log.debug("   created new pool: " + p);
         }

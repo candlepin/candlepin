@@ -340,8 +340,9 @@ public class EntitlementImporter {
         subscriptionCurator.create(subscription);
         subscriptionCurator.refresh(subscription);
         // send out created event
-        log.debug("emitting subscription event");
+        log.debug("about to emit subscription event");
         sink.emitSubscriptionCreated(subscription);
+        log.debug("finished emitting subscription event");
     }
 
     /**

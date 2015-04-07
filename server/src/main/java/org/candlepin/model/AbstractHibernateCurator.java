@@ -406,6 +406,8 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     }
     
     public void setFlushMode(FlushModeType flushModeType) {
+        log.debug("setFlushMode=" + flushModeType);
+        log.debug("setFlushMode em " + getEntityManager().getTransaction().toString());
         getEntityManager().setFlushMode(flushModeType);
     }
 

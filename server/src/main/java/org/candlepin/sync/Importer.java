@@ -372,7 +372,9 @@ public class Importer {
 //        validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, metadata, force);
 
         
+        
         // Set The transactions flush mode to COMMIT
+        log.debug("Setting FlushModeType=Commit");
         contentCurator.setFlushMode(FlushModeType.COMMIT);
         
         // If any calls find conflicts we'll assemble them into one exception detailing all
