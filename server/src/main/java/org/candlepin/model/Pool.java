@@ -39,6 +39,8 @@ import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.Enumerated;
+import javax.persistence.EnumType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -70,8 +72,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     /**
      * PoolType
      *
-     * Pools can have be of several major types which can radically alter how they
-     * behave.
+     * Pools can be of several major types which can radically alter how they behave.
      *
      * NORMAL - A regular pool. Usually created 1-1 with a subscription.
      *
@@ -85,6 +86,8 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
      *
      * BONUS - A virt-only pool created only in hosted environments when a subscription
      * has a virt_limit attribute but no host_limited attribute.
+     *
+     * UNMAPPED_GUEST - TODO
      */
     public enum PoolType {
         NORMAL,
@@ -100,6 +103,10 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     @Column(length = 32)
     @NotNull
     private String id;
+
+    @Enumerated(EnumType.STRING)
+    @NotNull
+    private PoolType type;
 
     @ManyToOne
     @ForeignKey(name = "fk_pool_owner")
@@ -254,6 +261,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         Set<ProvidedProduct> providedProducts,
         Long quantityIn, Date startDateIn, Date endDateIn, String contractNumber,
         String accountNumber, String orderNumber) {
+
         this.productId = productId;
         this.productName = productName;
         this.owner = ownerIn;
@@ -988,5 +996,17 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
 
     public void setMarkedForDelete(boolean markedForDelete) {
         this.markedForDelete = markedForDelete;
+    }
+
+    @Override
+    protected void onCreate() {
+        super.onCreate();
+        this.type = this.getType();
+    }
+
+    @Override
+    protected void onUpdate() {
+        super.onCreate();
+        this.type = this.getType();
     }
 }
