@@ -22,6 +22,7 @@ import org.candlepin.common.logging.LoggingConfigurator;
 import org.candlepin.gutterball.config.ConfigProperties;
 import org.candlepin.gutterball.guice.GutterballModule;
 import org.candlepin.gutterball.guice.GutterballServletModule;
+import org.candlepin.gutterball.receiver.EventReceiver;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
@@ -173,4 +174,15 @@ public class GutterballContextListener extends
         injector = inj;
         super.processInjector(context, injector);
     }
+
+    @Override
+    public void contextDestroyed(ServletContextEvent event) {
+        log.info("Destroying gutterball context");
+        super.contextDestroyed(event);
+
+        EventReceiver reciever = injector.getInstance(EventReceiver.class);
+        reciever.finish();
+    }
+
+
 }
