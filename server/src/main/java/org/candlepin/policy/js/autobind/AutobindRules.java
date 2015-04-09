@@ -81,7 +81,7 @@ public class AutobindRules {
             for (ConsumerInstalledProduct cip : consumer.getInstalledProducts()) {
                 fullList.add(cip.getId());
             }
-            log.warn("No pools available to rules for products: " + fullList);
+            log.info("No pools available to rules for products: " + fullList);
             return null;
         }
 

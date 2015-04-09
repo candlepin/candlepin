@@ -474,7 +474,7 @@ public class CandlepinPoolManager implements PoolManager {
             for (ConsumerInstalledProduct cip : consumer.getInstalledProducts()) {
                 fullList.add(cip.getId());
             }
-            log.warn("No entitlements available for products: " + fullList);
+            log.info("No entitlements available for products: " + fullList);
             return null;
         }
 
@@ -525,7 +525,7 @@ public class CandlepinPoolManager implements PoolManager {
             entitleDate, owner, null, possiblePools);
 
         if (bestPools == null) {
-            log.warn("No entitlements for host: " + host.getUuid());
+            log.info("No entitlements for host: " + host.getUuid());
             return null;
         }
 
