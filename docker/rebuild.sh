@@ -16,3 +16,8 @@ cd ../oracle
 docker build -t candlepin-oracle .
 docker tag candlepin-oracle docker.usersys.redhat.com/candlepin/candlepin-oracle
 docker push docker.usersys.redhat.com/candlepin/candlepin-oracle
+
+cd ../mysql
+docker build -t candlepin-mysql .
+docker tag candlepin-mysql docker.usersys.redhat.com/candlepin/candlepin-mysql
+docker push docker.usersys.redhat.com/candlepin/candlepin-mysql
