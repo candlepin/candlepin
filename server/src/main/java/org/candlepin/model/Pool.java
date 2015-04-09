@@ -70,6 +70,18 @@ import javax.xml.bind.annotation.XmlTransient;
 public class Pool extends AbstractHibernateObject implements Persisted, Owned, Named, Comparable<Pool> {
 
     /**
+     * Attribute used to determine whether or not the pool is derived from the use of an
+     * entitlement.
+     */
+    public static final String DERIVED_POOL_ATTRIBUTE = "pool_derived";
+
+    /**
+     * Attribute used to identify unmapped guest pools. Pool must also be a derived pool.
+     */
+    public static final String UNMAPPED_GUESTS_ATTRIBUTE = "unmapped_guests_only";
+
+
+    /**
      * PoolType
      *
      * Pools can be of several major types which can radically alter how they behave.
@@ -490,6 +502,30 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     }
 
     /**
+     * Removes the specified attribute from this pool, returning its last known value. If the
+     * attribute does not exist, this method returns null.
+     *
+     * @param key
+     *  The attribute to remove from this pool
+     *
+     * @return
+     *  the last value of the removed attribute, or null if the attribute did not exist
+     */
+    public String removeAttribute(String key) {
+        PoolAttribute attrib = this.findAttribute(this.attributes, key);
+        String value = null;
+
+        if (attrib != null) {
+            this.attributes.remove(attrib);
+            attrib.setPool(null);
+
+            value = attrib.getValue();
+        }
+
+        return value;
+    }
+
+    /**
      * returns true if the pool is considered expired based on the given date.
      * @param dateSource date to compare to.
      * @return true if the pool is considered expired based on the given date.
@@ -904,8 +940,11 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
      * @return pool type
      */
     public PoolType getType() {
-        if (hasAttribute("pool_derived")) {
-            if (getSourceEntitlement() != null) {
+        if (hasAttribute(DERIVED_POOL_ATTRIBUTE)) {
+            if (hasAttribute(UNMAPPED_GUESTS_ATTRIBUTE)) {
+                return PoolType.UNMAPPED_GUEST;
+            }
+            else if (getSourceEntitlement() != null) {
                 return PoolType.ENTITLEMENT_DERIVED;
             }
             else if (getSourceStack() != null) {
@@ -915,9 +954,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
                 return PoolType.BONUS;
             }
         }
-        if (hasAttribute("unmapped_guest")) {
-            return PoolType.UNMAPPED_GUEST;
-        }
+
         return PoolType.NORMAL;
     }
 
