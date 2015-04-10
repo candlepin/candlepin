@@ -33,6 +33,7 @@ usage() {
 
     OPTIONS:
         -d  deploy a live candlepin
+        -t  populate Candlepin database with test data (only applicable with -d)
         -r  run rspec test suite
         -u  run unit test suite
         -s  run a bash shell when done
@@ -41,7 +42,7 @@ usage() {
 HELP
 }
 
-while getopts ":rusdc:p:" opt; do
+while getopts ":rusdtc:p:" opt; do
     case $opt in
         r  )
             RSPEC="1"
@@ -50,6 +51,7 @@ while getopts ":rusdc:p:" opt; do
         u  ) UNITTEST="1";;
         s  ) LAUNCHSHELL="1";;
         d  ) DEPLOY="1";;
+        t  ) TESTDATA="1";;
         c  ) CHECKOUT="${OPTARG}";;
         p  ) PROJECT="${OPTARG}";;
         ?  ) usage; exit;;
@@ -95,7 +97,13 @@ fi
 
 if [ "$DEPLOY" == "1" ]; then
     echo "Deploying candlepin."
-    bin/deploy -g
+
+    if [ "$TESTDATA" == "1" ]; then
+        bin/deploy -g -t
+    else
+        bin/deploy -g
+    fi
+
     sleep 7
 fi
 
