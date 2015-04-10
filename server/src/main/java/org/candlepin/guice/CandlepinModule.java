@@ -56,6 +56,7 @@ import org.candlepin.pinsetter.core.PinsetterKernel;
 import org.candlepin.pinsetter.tasks.CertificateRevocationListTask;
 import org.candlepin.pinsetter.tasks.EntitlerJob;
 import org.candlepin.pinsetter.tasks.ExportCleaner;
+import org.candlepin.pinsetter.tasks.HypervisorUpdateJob;
 import org.candlepin.pinsetter.tasks.JobCleaner;
 import org.candlepin.pinsetter.tasks.RefreshPoolsJob;
 import org.candlepin.pinsetter.tasks.SweepBarJob;
@@ -251,6 +252,7 @@ public class CandlepinModule extends AbstractModule {
         // Async Jobs
         bind(RefreshPoolsJob.class);
         bind(EntitlerJob.class);
+        bind(HypervisorUpdateJob.class);
 
         // UeberCerts
         bind(UeberCertificateGenerator.class);

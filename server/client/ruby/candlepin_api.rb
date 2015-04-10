@@ -105,13 +105,13 @@ class Candlepin
     return consumers
   end
 
-  def hypervisor_fact_update(host_uuid, owner, fact_mapping={}, create_missing=nil)
-    path = get_path("hypervisors") + "/#{host_uuid}?owner=#{owner}"
+  def hypervisor_update(owner, json_data, create_missing=nil)
+    path = get_path("hypervisors") + "/#{owner}"
     unless create_missing.nil?
       path << "&create_missing=#{create_missing}"
     end
-    consumers = post(path, fact_mapping)
-    return consumers
+    job_detail = post_text_return_json(path, json_data)
+    return job_detail
   end
 
   def remove_deletion_record(deleted_uuid)
@@ -1233,6 +1233,11 @@ class Candlepin
 
   def post_text(uri, data=nil)
     response = get_client(uri, Net::HTTP::Post, :post)[URI.escape(uri)].post(data, :content_type => 'text/plain', :accept => 'text/plain' )
+    return response.body
+  end
+
+  def post_text_return_json(uri, data=nil)
+    response = get_client(uri, Net::HTTP::Post, :post)[URI.escape(uri)].post(data, :content_type => 'text/plain', :accept => :json)
     return response.body
   end
 

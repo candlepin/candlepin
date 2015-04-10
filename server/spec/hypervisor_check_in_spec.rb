@@ -273,20 +273,6 @@ describe 'Hypervisor Resource', :type => :virt do
     results.unchanged.size.should == 1
   end
 
-  # simple end to end test
-  it 'should allow virt-who to update host facts' do
-    virtwho1 = create_virtwho_client(@user)
-    host_uuid = random_string("host_uuid")
-    host_fact_mapping = {"fact1" => "value1", "fact2" => "value2"}
-    results = virtwho1.hypervisor_fact_update(host_uuid, @owner['key'], host_fact_mapping)
-    results.should_not be_nil
-    results.created.size.should == 1
-
-    results = virtwho1.hypervisor_fact_update(host_uuid, @owner['key'], host_fact_mapping)
-    results.should_not be_nil
-    results.unchanged.size.should == 1
-  end
-
   it 'should block virt-who if owner does not match identity cert' do
     virtwho1 = create_virtwho_client(@user)
     host_guest_mapping = get_host_guest_mapping(random_string('my-host'), ['g1', 'g2'])
@@ -300,6 +286,20 @@ describe 'Hypervisor Resource', :type => :virt do
     lambda do
       virtwho.hypervisor_check_in(@owner['key'], nil)
     end.should raise_exception(RestClient::BadRequest)
+  end
+
+  # simple end to end test
+  it 'should allow virt-who to report hypervisor data' do
+    virtwho = create_virtwho_client(@user)
+    json ="{\"hypervisors\":" +
+          "[{" +
+          "\"name\" : \"hypervisor_999\"," +
+          "\"hypervisorId\" : {\"hypervisorId\":\"uuid_999\"}," +
+          "\"guestIds\" : [{\"guestId\" : \"guestId_1_999\"}]" +
+          "}]}";
+    job_detail = JSON.parse(virtwho.hypervisor_update(@owner['key'], json))
+    job_detail['state'].should == 'CREATED'
+    job_detail['id'].should start_with('hypervisor_update_')
   end
 
   def create_virtwho_client(user)
