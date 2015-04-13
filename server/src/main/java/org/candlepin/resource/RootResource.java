@@ -76,7 +76,6 @@ public class RootResource {
         addResource(SubscriptionResource.class);
         addResource(ActivationKeyResource.class);
         addResource(RoleResource.class);
-        addResource(MigrationResource.class);
         addResource(HypervisorResource.class);
         addResource(EnvironmentResource.class);
         addResource(RootResource.class);
