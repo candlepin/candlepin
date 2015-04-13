@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.candlepin</groupId>
   <artifactId>candlepin-common</artifactId>
-  <version>1.0.19</version>
+  <version>1.0.22</version>
   <properties>
     <commons-codec-commons-codec.version>1.4</commons-codec-commons-codec.version>
     <commons-collections-commons-collections.version>3.1</commons-collections-commons-collections.version>
