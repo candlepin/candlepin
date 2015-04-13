@@ -413,6 +413,7 @@
         <renameColumn tableName="cp_pool"
             oldColumnName="productid"
             newColumnName="product_id_old"
+            columnDataType="varchar(255)"
         />
         <!--remarks="deprecated; obsoleted by product_id"-->
     </changeSet>
@@ -421,6 +422,7 @@
         <renameColumn tableName="cp_pool"
             oldColumnName="derivedproductid"
             newColumnName="derived_product_id_old"
+            columnDataType="varchar(255)"
         />
         <!--remarks="deprecated; obsoleted by derived_product_id"-->
     </changeSet>
@@ -440,6 +442,7 @@
     <changeSet id="20150210094558-29" author="crog">
         <dropNotNullConstraint tableName="cp_pool"
             columnName="product_id_old"
+            columnDataType="varchar(255)"
         />
     </changeSet>
 
