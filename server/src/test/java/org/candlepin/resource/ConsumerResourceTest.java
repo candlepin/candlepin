@@ -14,18 +14,10 @@
  */
 package org.candlepin.resource;
 
-import static org.candlepin.test.TestUtil.createIdCert;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.candlepin.test.TestUtil.*;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
@@ -97,6 +89,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+
+import javax.ws.rs.core.Response;
 
 /**
  * ConsumerResourceTest
@@ -357,29 +351,24 @@ public class ConsumerResourceTest {
 
     @Test
     public void testProductNoPool() {
-        try {
-            Consumer c = mock(Consumer.class);
-            Owner o = mock(Owner.class);
-            SubscriptionServiceAdapter sa = mock(SubscriptionServiceAdapter.class);
-            Entitler e = mock(Entitler.class);
-            ConsumerCurator cc = mock(ConsumerCurator.class);
-            String[] prodIds = {"notthere"};
+        Consumer c = mock(Consumer.class);
+        Owner o = mock(Owner.class);
+        SubscriptionServiceAdapter sa = mock(SubscriptionServiceAdapter.class);
+        Entitler e = mock(Entitler.class);
+        ConsumerCurator cc = mock(ConsumerCurator.class);
+        String[] prodIds = {"notthere"};
 
-            when(c.getOwner()).thenReturn(o);
-            when(sa.hasUnacceptedSubscriptionTerms(eq(o))).thenReturn(false);
-            when(cc.verifyAndLookupConsumer(eq("fakeConsumer"))).thenReturn(c);
-            when(e.bindByProducts(any(AutobindData.class)))
-                .thenThrow(new RuntimeException());
+        when(c.getOwner()).thenReturn(o);
+        when(sa.hasUnacceptedSubscriptionTerms(eq(o))).thenReturn(false);
+        when(cc.verifyAndLookupConsumer(eq("fakeConsumer"))).thenReturn(c);
+        when(e.bindByProducts(any(AutobindData.class))).thenReturn(null);
 
-            ConsumerResource cr = new ConsumerResource(cc, null,
-                null, sa, null, null, null, i18n, null, null, null, null, null,
-                null, null, null, null, null, e, null, null, null, null,
-                new CandlepinCommonTestConfig(), null, null, null, consumerBindUtil);
-            cr.bind("fakeConsumer", null, prodIds, null, null, null, false, null, null);
-        }
-        catch (Throwable t) {
-            fail("Runtime exception should be caught in ConsumerResource.bind");
-        }
+        ConsumerResource cr = new ConsumerResource(cc, null,
+            null, sa, null, null, null, i18n, null, null, null, null, null,
+            null, null, null, null, null, e, null, null, null, null,
+            new CandlepinCommonTestConfig(), null, null, null, consumerBindUtil);
+        Response r = cr.bind("fakeConsumer", null, prodIds, null, null, null, false, null, null);
+        assertEquals(null, r.getEntity());
     }
 
     @Test

@@ -182,15 +182,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         }
 
         // The cert should specify 5 monitoring entitlements, taking a 6th should fail:
-        try {
-            poolManager.entitleByProducts(data);
-            fail();
-        }
-        // With criteria filtered pools we end up with a RuntimeException
-        // here.
-        catch (RuntimeException e) {
-            //expected
-        }
+        assertEquals(null, poolManager.entitleByProducts(data));
 
         assertEquals(Long.valueOf(5), monitoringPool.getConsumed());
     }

@@ -369,7 +369,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             dppa.setPool(pool);
         }
 
-        // Looks like this is restored in MigrateOwnerJob.replicateEntitlements:
         pool.setSourceEntitlement(null);
 
         this.currentSession().replicate(pool, ReplicationMode.EXCEPTION);

@@ -15,6 +15,7 @@
 package org.candlepin.policy.js.autobind;
 
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
@@ -74,10 +75,14 @@ public class AutobindRules {
         log.debug("pools.size() before V1 certificate filter: {}, after: {}",
                 poolsBeforeContentFilter, pools.size());
 
-        // per dgoodwin, this needs to throw an exception for legacy clients
         if (pools.size() == 0) {
-            throw new RuntimeException("No entitlements for products: " +
-                Arrays.toString(productIds));
+            List<String> fullList = new ArrayList<String>();
+            fullList.addAll(Arrays.asList(productIds));
+            for (ConsumerInstalledProduct cip : consumer.getInstalledProducts()) {
+                fullList.add(cip.getId());
+            }
+            log.info("No pools available to rules for products: " + fullList);
+            return null;
         }
 
         if (log.isDebugEnabled()) {
@@ -120,8 +125,13 @@ public class AutobindRules {
         }
 
         if (pools.size() > 0 && (result == null || result.isEmpty())) {
-            throw new RuleExecutionException(
-                "Rule did not select a pool for products: " + Arrays.toString(productIds));
+            List<String> fullList = new ArrayList<String>();
+            fullList.addAll(Arrays.asList(productIds));
+            for (ConsumerInstalledProduct cip : consumer.getInstalledProducts()) {
+                fullList.add(cip.getId());
+            }
+            log.info("Rules did not select a pools for products: " + fullList);
+            return null;
         }
 
         List<PoolQuantity> bestPools = new ArrayList<PoolQuantity>();
