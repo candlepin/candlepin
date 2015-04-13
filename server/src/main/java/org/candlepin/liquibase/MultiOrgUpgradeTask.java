@@ -127,7 +127,7 @@ public class MultiOrgUpgradeTask {
      * @return
      *  a 32-character UUID
      */
-    public String generateUUID() {
+    protected String generateUUID() {
         // Maybe this method should move to Utils and be called from there?
         return UUID.randomUUID().toString().replace("-", "");
     }
@@ -150,6 +150,7 @@ public class MultiOrgUpgradeTask {
         ResultSet orgids = this.executeQuery("SELECT id FROM cp_owner");
         while (orgids.next()) {
             String orgid = orgids.getString(1);
+            this.logger.info(String.format("Migrating data for org %s", orgid));
 
             this.migrateProductData(orgid);
             this.migrateActivationKeyData(orgid);
@@ -174,32 +175,35 @@ public class MultiOrgUpgradeTask {
     private void migrateProductData(String orgid) throws DatabaseException, SQLException {
         Map<String, String> contentCache = new HashMap<String, String>();
 
+        this.logger.info("Migrating product data for org " + orgid);
+
         ResultSet productids = this.executeQuery(
             "SELECT p.product_id_old " +
             "  FROM cp_pool p " +
             "  WHERE p.owner_id = ? " +
-            "    AND p.product_id_old IS NOT NULL " +
-            "    AND p.product_id_old != '' " +
+            "  AND NOT NULLIF(p.product_id_old, '') IS NULL " +
             "UNION " +
             "SELECT p.derived_product_id_old " +
             "  FROM cp_pool p " +
             "  WHERE p.owner_id = ? " +
-            "  AND p.derived_product_id_old IS NOT NULL " +
-            "  AND p.derived_product_id_old != '' " +
+            "  AND NOT NULLIF(p.derived_product_id_old, '') IS NULL " +
             "UNION " +
             "SELECT pp.product_id " +
             "  FROM cp_pool p " +
             "  JOIN cp_pool_products pp " +
             "    ON p.id = pp.pool_id " +
             "  WHERE p.owner_id = ? " +
-            "    AND pp.product_id IS NOT NULL " +
-            "    AND pp.product_id != ''",
+            "  AND NOT NULLIF(pp.product_id, '') IS NULL ",
             orgid, orgid, orgid
         );
 
         while (productids.next()) {
             String productid = productids.getString(1);
             String productuuid = this.generateUUID();
+
+            this.logger.info(
+                String.format("Mapping org/prod %s/%s to UUID %s", orgid, productid, productuuid)
+            );
 
             // Migration information from pre-existing tables to cpo_* tables
             this.executeUpdate(
@@ -355,6 +359,9 @@ public class MultiOrgUpgradeTask {
      *  The id of the owner/organization for which to migrate activation key data
      */
     private void migrateActivationKeyData(String orgid) throws DatabaseException, SQLException {
+
+        this.logger.info("Migrating activation key data for org " + orgid);
+
         this.executeUpdate(
             "INSERT INTO cpo_activation_key_products(key_id, product_uuid) " +
             "SELECT AK.id, (SELECT uuid FROM cpo_products " +
@@ -374,6 +381,8 @@ public class MultiOrgUpgradeTask {
      */
     private void migratePoolData(String orgid) throws DatabaseException, SQLException {
 
+        this.logger.info("Migrating pool data for org " + orgid);
+
         ResultSet pools = this.executeQuery("SELECT id FROM cp_pool WHERE owner_id = ?", orgid);
 
         while (pools.next()) {
@@ -381,7 +390,7 @@ public class MultiOrgUpgradeTask {
 
             ResultSet branding = this.executeQuery(
                 "SELECT B.id, B.created, B.updated, (SELECT uuid FROM cpo_products " +
-                "    WHERE owner_id = ? AND product_id = B.productid), B.type, B.name " +
+                "    WHERE owner_id = ? AND product_id = B.productid), B.type, B.name, B.productid " +
                 "FROM cp_branding B " +
                 "  JOIN cp_pool_branding PB ON PB.branding_id = B.id " +
                 "WHERE PB.pool_id = ?",
@@ -391,6 +400,14 @@ public class MultiOrgUpgradeTask {
             while (branding.next()) {
                 String brandingid = branding.getString(1);
                 String brandinguuid = this.generateUUID();
+
+                this.logger.info(
+                    String.format(
+                        "Migrating branding details for ID (legacy: %s, migrated: %s), " +
+                        "Org/product: %s, %s",
+                        brandingid, brandinguuid, orgid, branding.getString(7)
+                    )
+                );
 
                 this.executeUpdate(
                     "INSERT INTO cpo_branding(id, created, updated, product_uuid, type, name) " +
@@ -419,6 +436,8 @@ public class MultiOrgUpgradeTask {
      *  The id of the owner/organization for which to migrate subscription data
      */
     private void migrateSubscriptionData(String orgid) throws DatabaseException, SQLException {
+
+        this.logger.info("Migrating subscription data for org " + orgid);
 
         ResultSet subscriptionids = this.executeQuery(
             "SELECT id FROM cp_subscription WHERE owner_id = ?",
