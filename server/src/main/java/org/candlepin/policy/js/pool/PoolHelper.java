@@ -157,16 +157,22 @@ public class PoolHelper extends AttributeHelper {
      * @param destination pool
      */
     private void copyProvidedProducts(Subscription source, Pool destination,
-            ProductCurator prodCurator) {
-        Set<Product> products = source.getProvidedProducts();
-        // Use derived product data if it exists, as this is a derived bonus pool:
-        if (source.getDerivedProvidedProducts() != null &&
-                source.getDerivedProvidedProducts().size() > 0) {
+        ProductCurator prodCurator) {
+
+        Set<Product> products;
+
+        if (source.getDerivedProduct() != null) {
             products = source.getDerivedProvidedProducts();
+        } else {
+            products = source.getProvidedProducts();
         }
-        for (Product providedProduct : products) {
-            destination.addProvidedProduct(prodCurator.lookupById(
-                    destination.getOwner(), providedProduct.getId()));
+
+        for (Product product : products) {
+            // This is a potential issue. If the product is specified, we should expect to find it
+            // in the org, but there's no guarantee.
+            // TODO: Perhaps we should throw an exception if it's not found?
+            Product destprod = prodCurator.lookupById(destination.getOwner(), product.getId());
+            destination.addProvidedProduct(destprod);
         }
     }
 

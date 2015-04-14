@@ -228,7 +228,7 @@ public class ConfigProperties {
                 this.put(AMQP_TRUSTSTORE_PASSWORD, "password");
 
                 this.put(AMQP_CONNECTION_RETRY_INTERVAL, "10"); // Every 10 seconds
-                this.put(AMQP_CONNECTION_RETRY_ATTEMPTS, "360"); // Try for 1h (10s * 360)
+                this.put(AMQP_CONNECTION_RETRY_ATTEMPTS, "12"); // Try for 2 mins (10s * 12)
 
                 this.put(IDENTITY_CERT_YEAR_ADDENDUM, "16");
                 this.put(IDENTITY_CERT_EXPIRY_THRESHOLD, "90");

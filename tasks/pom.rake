@@ -88,8 +88,10 @@ module PomTask
       pom = project.pom
       if pom.enabled?
         project.recursive_task('pom') do
-          # Filter out Rake::FileTask dependencies
-          deps = project.compile.dependencies.select { |dep| dep.is_a?(Buildr::Artifact) }
+          # Filter out Rake::FileTask dependencies (note the use of instance_of
+          # because we need to match exact instances of FileTask and not
+          # child classes since other Buildr tasks inherit from FileTask)
+          deps = project.compile.dependencies.reject { |dep| dep.instance_of?(Rake::FileTask) }
           pom.artifacts.each do |artifact|
             spec = artifact.to_hash
             destination = project.path_to("pom.xml")

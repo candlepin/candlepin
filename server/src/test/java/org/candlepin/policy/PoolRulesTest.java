@@ -751,12 +751,23 @@ public class PoolRulesTest {
         Subscription s = createVirtLimitSub("virtLimitProduct", 10, 10);
 
         Product provided1 = TestUtil.createProduct(owner);
-        when(prodCuratorMock.lookupById(owner, provided1.getId())).thenReturn(provided1);
         Product provided2 = TestUtil.createProduct(owner);
+        Product derivedProd = TestUtil.createProduct(owner);
+        Product derivedProvidedProd1 = TestUtil.createProduct(owner);
+        Product derivedProvidedProd2 = TestUtil.createProduct(owner);
+
+        when(prodCuratorMock.lookupById(owner, provided1.getId())).thenReturn(provided1);
         when(prodCuratorMock.lookupById(owner, provided2.getId())).thenReturn(provided2);
+        when(prodCuratorMock.lookupById(owner, derivedProd.getId())).thenReturn(derivedProd);
+        when(prodCuratorMock.lookupById(owner, derivedProvidedProd1.getId())).thenReturn(derivedProvidedProd1);
+        when(prodCuratorMock.lookupById(owner, derivedProvidedProd2.getId())).thenReturn(derivedProvidedProd2);
 
         s.getProvidedProducts().add(provided1);
         s.getProvidedProducts().add(provided2);
+        s.setDerivedProduct(derivedProd);
+        when(productAdapterMock.getProductById(owner, derivedProd.getId())).thenReturn(derivedProd);
+        s.getDerivedProvidedProducts().add(derivedProvidedProd1);
+        s.getDerivedProvidedProducts().add(derivedProvidedProd2);
         List<Pool> pools = poolRules.createPools(s);
 
         // Should be virt_only pool for unmapped guests:
@@ -772,11 +783,17 @@ public class PoolRulesTest {
         assert ("true".equals(unmappedVirtPool.getAttributeValue("virt_only")));
         assert ("true".equals(unmappedVirtPool.getAttributeValue("unmapped_guests_only")));
 
-        assertProvidedProducts(s.getProvidedProducts(),
+        // The derived provided products of the sub should be promoted to provided products
+        // on the unmappedVirtPool
+        assertProvidedProducts(s.getDerivedProvidedProducts(),
                 unmappedVirtPool.getProvidedProducts());
         assertProvidedProducts(new HashSet<Product>(),
                 unmappedVirtPool.getDerivedProvidedProducts());
 
+        // Test for BZ 1204311 - Refreshing pools should not change unmapped guest pools
+        // Refresh is a no-op in multiorg
+        // List<PoolUpdate> updates = poolRules.updatePools(s, pools);
+        // assertTrue(updates.isEmpty());
     }
 
     @Test

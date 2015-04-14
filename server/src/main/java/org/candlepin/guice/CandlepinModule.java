@@ -90,7 +90,6 @@ import org.candlepin.resource.EventResource;
 import org.candlepin.resource.GuestIdResource;
 import org.candlepin.resource.HypervisorResource;
 import org.candlepin.resource.JobResource;
-import org.candlepin.resource.MigrationResource;
 import org.candlepin.resource.OwnerContentResource;
 import org.candlepin.resource.OwnerProductResource;
 import org.candlepin.resource.OwnerResource;
@@ -194,7 +193,6 @@ public class CandlepinModule extends AbstractModule {
         bind(RoleResource.class);
         bind(RootResource.class);
         bind(ProductResource.class);
-        bind(MigrationResource.class);
         bind(SubscriptionResource.class);
         bind(ActivationKeyResource.class);
         bind(CertificateSerialResource.class);

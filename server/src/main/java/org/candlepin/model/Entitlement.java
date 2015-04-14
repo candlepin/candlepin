@@ -281,9 +281,19 @@ public class Entitlement extends AbstractHibernateObject
         certificates.add(certificate);
     }
 
+    @Override
     public String toString() {
-        return "Entitlement[id=" + getId() + ", product=" + getProductId() +
-            ", consumer= " + (consumer == null ? "null" : consumer.getUuid()) + "]";
+        StringBuilder sb = new StringBuilder();
+        sb.append("Entitlement[id=").append(id);
+        sb.append(", product=").append(getProductId());
+        if (pool != null) {
+            sb.append(", pool=").append(pool.getId());
+        }
+        if (consumer != null) {
+            sb.append(", consumer=").append(consumer.getUuid());
+        }
+        sb.append("]");
+        return sb.toString();
     }
 
     @HateoasInclude

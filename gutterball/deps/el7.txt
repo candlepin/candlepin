@@ -10,6 +10,7 @@ antlr
 aopalliance
 apache-mime4j
 atinject
+c3p0
 candlepin-common
 candlepin-guice // This will pull in all the jars under candlepin-guice
 cglib

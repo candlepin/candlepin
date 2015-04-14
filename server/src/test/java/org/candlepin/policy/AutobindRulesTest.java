@@ -35,7 +35,6 @@ import org.candlepin.model.RulesCurator;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsRunnerProvider;
-import org.candlepin.policy.js.RuleExecutionException;
 import org.candlepin.policy.js.autobind.AutobindRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.test.TestDateUtil;
@@ -124,27 +123,17 @@ public class AutobindRulesTest {
         List<Pool> pools = new LinkedList<Pool>();
         pools.add(pool);
 
-        try {
-            autobindRules.selectBestPools(consumer,
-                new String[]{ productId }, pools, compliance, null, new HashSet<String>(),
-                false);
-            fail();
-        }
-        catch (RuntimeException e) {
-            // expected
-        }
+        List<PoolQuantity> poolQs = autobindRules.selectBestPools(consumer,
+            new String[]{ productId }, pools, compliance, null, new HashSet<String>(),
+            false);
+        assertEquals(null, poolQs);
 
         // Try again with explicitly setting the consumer to cert v1:
         consumer.setFact("system.certificate_version", "1.0");
-        try {
-            autobindRules.selectBestPools(consumer,
-                new String[]{ productId }, pools, compliance, null, new HashSet<String>(),
-                false);
-            fail();
-        }
-        catch (RuntimeException e) {
-            // expected
-        }
+        poolQs = autobindRules.selectBestPools(consumer,
+            new String[]{ productId }, pools, compliance, null, new HashSet<String>(),
+            false);
+        assertEquals(null, poolQs);
     }
 
     @Test
@@ -488,12 +477,12 @@ public class AutobindRulesTest {
         return p;
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void testSelectBestPoolNoPools() {
         // There are no pools for the product in this case:
-        autobindRules.selectBestPools(consumer,
+        assertEquals(null, autobindRules.selectBestPools(consumer,
             new String[] {HIGHEST_QUANTITY_PRODUCT}, new LinkedList<Pool>(), compliance,
-            null, new HashSet<String>(), false);
+            null, new HashSet<String>(), false));
     }
 
     @Test
@@ -612,26 +601,26 @@ public class AutobindRulesTest {
         assertEquals(new Integer(8), q.getQuantity());
     }
 
-    @Test(expected = RuleExecutionException.class)
+    @Test
     public void instanceAutobindForPhysical8SocketNotEnoughUneven() {
         List<Pool> pools = createInstanceBasedPool();
         pools.get(0).setQuantity(7L); // Only 7 available
         setupConsumer("8", false);
 
-        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+        assertEquals(null, autobindRules.selectBestPools(consumer,
             new String[]{ productId }, pools, compliance, null, new HashSet<String>(),
-            false);
+            false));
     }
 
-    @Test(expected = RuleExecutionException.class)
+    @Test
     public void instanceAutobindForPhysical8SocketNotEnoughEven() {
         List<Pool> pools = createInstanceBasedPool();
         pools.get(0).setQuantity(4L); // Only 4 available
         setupConsumer("8", false);
 
-        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+        assertEquals(null, autobindRules.selectBestPools(consumer,
             new String[]{ productId }, pools, compliance, null, new HashSet<String>(),
-            false);
+            false));
     }
 
     @Test
@@ -807,7 +796,7 @@ public class AutobindRulesTest {
      * Expect nothing to happen. We cannot bind the hypervisor in order to make
      * the guests compliant, but that'd be a nice feature in the future.
      */
-    @Test(expected = RuleExecutionException.class)
+    @Test
     public void guestLimitAutobindNeitherAttached() {
         consumer.setFact("cpu.cpu_socket(s)", "8");
         for (int i = 0; i < 5; i++) {
@@ -827,9 +816,9 @@ public class AutobindRulesTest {
         pools.add(serverPool);
         pools.add(hyperPool);
 
-        autobindRules.selectBestPools(consumer,
+        assertEquals(null, autobindRules.selectBestPools(consumer,
             new String[]{ server.getUuid() }, pools, compliance, null,
-            new HashSet<String>(), false);
+            new HashSet<String>(), false));
     }
 
     /*

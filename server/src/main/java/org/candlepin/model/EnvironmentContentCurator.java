@@ -28,13 +28,18 @@ public class EnvironmentContentCurator extends
         super(EnvironmentContent.class);
     }
 
-    public EnvironmentContent lookupByEnvironmentAndContent(
-        Environment e, String contentId) {
-
+    public EnvironmentContent lookupByEnvironmentAndContent(Environment e, String contentId) {
         return (EnvironmentContent) this.currentSession().createCriteria(EnvironmentContent.class)
             .createAlias("content", "content")
             .add(Restrictions.eq("environment", e))
             .add(Restrictions.eq("content.id", contentId))
+            .uniqueResult();
+    }
+
+    public EnvironmentContent lookupByEnvironmentAndContent(Environment e, Content content) {
+        return (EnvironmentContent) this.currentSession().createCriteria(EnvironmentContent.class)
+            .add(Restrictions.eq("environment", e))
+            .add(Restrictions.eq("content", content))
             .uniqueResult();
     }
 

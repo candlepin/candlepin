@@ -26,6 +26,7 @@ import org.apache.qpid.url.URLSyntaxException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.Thread.UncaughtExceptionHandler;
 import java.net.URISyntaxException;
 
 import javax.jms.Connection;
@@ -57,7 +58,23 @@ public class EventReceiver {
     public EventReceiver(Configuration config, EventMessageListener eventMessageListener)
         throws Exception {
         this.eventMessageListener = eventMessageListener;
-        init(config);
+
+        // Connect in a separate thread so that gutterball deployment isn't
+        // blocked on startup.
+        //
+        // NOTE: This is safe since Event processing does not occur until a
+        //       connection is made and there is only one instance of the
+        //       EventReceiver class.
+        QpidConnectionThread connThread = new QpidConnectionThread(config);
+        connThread.setUncaughtExceptionHandler(new UncaughtExceptionHandler() {
+
+            @Override
+            public void uncaughtException(Thread t, Throwable e) {
+                log.error("Unable to initialize connection to QPID.", e);
+            }
+
+        });
+        connThread.start();
     }
 
     protected void init(final Configuration config) throws JMSException, URISyntaxException {
@@ -105,12 +122,64 @@ public class EventReceiver {
         return connFactory;
     }
 
-    // FIXME [mstead] This is not being called and should probably be called
-    //       when the app is being shut down.
-    private void finish() throws JMSException {
-        consumer.close();
-        sess.close();
-        conn.close();
-        log.info("DONE");
+    public void finish() {
+        log.info("Closing QPID connection");
+        try {
+            consumer.close();
+        }
+        catch (JMSException e) {
+            // Ok - just log the exception
+            log.debug("Unable to close consumer connection", e);
+        }
+
+        try {
+            sess.close();
+        }
+        catch (JMSException e) {
+            // Ok - just log the exception
+            log.debug("Unable to close session", e);
+        }
+
+        try {
+            conn.close();
+        }
+        catch (JMSException e) {
+            // Ok - just log the exception
+            log.debug("Unable to close connection", e);
+        }
+        log.info("Finished closing QPID connection");
+    }
+
+    /**
+     * Initializes the QPID connection outside of the server's main thread
+     * to allow gutterball's context to fully initialize even if there are
+     * connection problems to QPID.
+     *
+     */
+    private class QpidConnectionThread extends Thread {
+
+        private Configuration config;
+
+        public QpidConnectionThread(Configuration config) {
+            super("gutterball-qpid-connect");
+            this.config = config;
+        }
+
+        public void run() {
+            try {
+                // Make this thread sleep for 30 seconds to allow the gutterball
+                // context to fully load before connecting and processing events.
+                //
+                // NOTE: This is a hacky solution to wait for hibernate to fully
+                // load before events start flowing.
+                sleep(30000);
+                EventReceiver.this.init(config);
+            }
+            catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+
     }
 }
