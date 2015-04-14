@@ -40,6 +40,7 @@ module PomTask
         xml.groupId(artifact_spec[:group])
         xml.artifactId(artifact_spec[:id])
         xml.version(artifact_spec[:version])
+        xml.packaging(artifact_spec[:type].to_s)
 
         version_properties = {}
 
