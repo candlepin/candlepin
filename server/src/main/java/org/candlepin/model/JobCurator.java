@@ -99,13 +99,12 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
 
     @SuppressWarnings("unchecked")
     public List<JobStatus> findByPrincipalName(String principalName) {
-        return this.currentSession().createCriteria(JobStatus.class)
-        .add(Restrictions.eq("principalName", principalName)).list();
+        return createSecureCriteria().add(Restrictions.eq("principalName", principalName)).list();
     }
 
     @SuppressWarnings("unchecked")
     private List<JobStatus> findByTarget(TargetType type, String tgtid) {
-        return currentSession().createCriteria(JobStatus.class)
+        return createSecureCriteria()
             .add(Restrictions.eq("targetId", tgtid))
             .add(Restrictions.eq("targetType", type)).list();
     }

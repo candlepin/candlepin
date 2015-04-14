@@ -14,6 +14,7 @@
  */
 package org.candlepin.resource;
 
+import org.candlepin.auth.interceptor.Verify;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.IseException;
 import org.candlepin.common.exceptions.NotFoundException;
@@ -203,7 +204,7 @@ public class JobResource {
     @GET
     @Path("/{job_id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public JobStatus getStatus(@PathParam("job_id") String jobId) {
+    public JobStatus getStatus(@PathParam("job_id") @Verify(JobStatus.class) String jobId) {
         return curator.find(jobId);
     }
 
@@ -218,7 +219,7 @@ public class JobResource {
     @DELETE
     @Path("/{job_id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public JobStatus cancel(@PathParam("job_id") String jobId) {
+    public JobStatus cancel(@PathParam("job_id") @Verify(JobStatus.class) String jobId) {
         JobStatus j = curator.find(jobId);
         if (j.getState().equals(JobState.CANCELED)) {
             throw new BadRequestException(i18n.tr("job already canceled"));
@@ -239,7 +240,8 @@ public class JobResource {
     @POST
     @Path("/{job_id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public JobStatus getStatusAndDeleteIfFinished(@PathParam("job_id") String jobId) {
+    public JobStatus getStatusAndDeleteIfFinished(
+        @PathParam("job_id") @Verify(JobStatus.class) String jobId) {
         JobStatus status = curator.find(jobId);
 
         if (status != null && status.getState() == JobState.FINISHED) {
