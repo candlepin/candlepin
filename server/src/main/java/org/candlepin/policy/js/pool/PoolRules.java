@@ -263,8 +263,7 @@ public class PoolRules {
         PoolHelper helper = new PoolHelper(this.poolManager, null);
 
         List<PoolUpdate> poolsUpdated = new LinkedList<PoolUpdate>();
-        Map<String, String> attributes =
-            helper.getFlattenedAttributes(sub.getProduct());
+        Map<String, String> attributes = helper.getFlattenedAttributes(sub.getProduct());
         for (Pool existingPool : existingPools) {
 
             log.debug("Checking pool: " + existingPool.getId());
@@ -279,16 +278,8 @@ public class PoolRules {
                 checkForQuantityChange(sub, existingPool, existingPools, attributes));
 
             if (!existingPool.isMarkedForDelete()) {
-                // Checks product name, ID, and provided products. Attributes are handled
-                // separately.
-                // TODO: should they be separate? ^^
-
                 boolean useDerived = BooleanUtils.toBoolean(existingPool.getAttributeValue("pool_derived")) &&
                     sub.getDerivedProduct() != null;
-                String prodId = useDerived ?
-                    sub.getDerivedProduct().getId() : sub.getProduct().getId();
-                String prodName = useDerived ?
-                    sub.getDerivedProduct().getName() : sub.getProduct().getName();
 
                 update.setProductsChanged(
                     checkForChangedProducts(
