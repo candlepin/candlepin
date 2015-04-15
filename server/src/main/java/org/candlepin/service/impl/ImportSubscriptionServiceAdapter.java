@@ -22,6 +22,7 @@ import org.candlepin.model.Subscription;
 import org.candlepin.service.SubscriptionServiceAdapter;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -34,7 +35,7 @@ public class ImportSubscriptionServiceAdapter implements
         SubscriptionServiceAdapter {
 
     private List<Subscription> subscriptions;
-    private Map<String, Subscription> subsBySubId;
+    private Map<String, Subscription> subsBySubId = new HashMap<String, Subscription>();
 
     public ImportSubscriptionServiceAdapter(List<Subscription> subs) {
         this.subscriptions = subs;

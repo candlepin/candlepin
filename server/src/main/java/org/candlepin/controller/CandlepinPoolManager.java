@@ -212,6 +212,7 @@ public class CandlepinPoolManager implements PoolManager {
             if (existing == null) {
                 log.info("Creating new product for org {}: {}", o.getKey(),
                         incoming.getId());
+                incoming.setOwner(o);
                 prodCurator.create(incoming);
             }
             else {

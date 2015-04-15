@@ -73,8 +73,8 @@ public class EntitlementImporterTest {
         this.owner = new Owner();
 
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
-        this.importer = new EntitlementImporter(this.curator, certSerialCurator,
-            cdnCurator, this.sink, i18n);
+        this.importer = new EntitlementImporter(certSerialCurator, cdnCurator,
+            i18n);
     }
 
     @Test

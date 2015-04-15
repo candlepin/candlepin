@@ -584,8 +584,8 @@ public class Importer {
     public List<Subscription> importEntitlements(Owner owner, Set<Product> products, File[] entitlements,
         ConsumerDto consumer, Meta meta)
         throws IOException, SyncDataFormatException {
-        EntitlementImporter importer = new EntitlementImporter(subCurator, csCurator,
-            cdnCurator, sink, i18n);
+        EntitlementImporter importer = new EntitlementImporter(csCurator, cdnCurator,
+            i18n);
 
         Map<String, Product> productsById = new HashMap<String, Product>();
         for (Product product : products) {
@@ -611,8 +611,6 @@ public class Importer {
             }
         }
 
-        // TODO: update this reconciliation for the new transient subscriptions:
-        importer.store(owner, subscriptionsToImport);
         return subscriptionsToImport;
     }
 
