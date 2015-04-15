@@ -163,7 +163,8 @@ public class PoolHelper extends AttributeHelper {
 
         if (source.getDerivedProduct() != null) {
             products = source.getDerivedProvidedProducts();
-        } else {
+        }
+        else {
             products = source.getProvidedProducts();
         }
 
