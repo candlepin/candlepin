@@ -31,7 +31,6 @@ import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.EnvironmentCurator;
-import org.candlepin.model.Owner;
 import org.candlepin.pinsetter.tasks.RegenEnvEntitlementCertsJob;
 import org.candlepin.util.Util;
 
@@ -40,6 +39,8 @@ import com.google.inject.Inject;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.HashSet;
@@ -63,6 +64,8 @@ import javax.ws.rs.core.MediaType;
  */
 @Path("/environments")
 public class EnvironmentResource {
+
+    private static Logger log = LoggerFactory.getLogger(AdminResource.class);
 
     private EnvironmentCurator envCurator;
     private I18n i18n;
@@ -147,43 +150,50 @@ public class EnvironmentResource {
         return envCurator.listAll();
     }
 
-
     /**
      * Verifies that the content specified by the given content object's ID exists.
      *
-     * @param owner
-     *  The owner with which the content is associated
+     * @param environment
+     *  The environment with which the content will be associated
      *
-     * @param content
-     *  The content to resolve
+     * @param contentId
+     *  The ID of the content to resolve
      *
      * @throws BadRequestException
-     *  if content is null or has not been assigned a valid content ID
+     *  if either environment or contentId is null, or the given environment is not associated with
+     *  a valid owner
      *
      * @throws NotFoundException
      *  if the specified content object does not represent a valid content object for the given
-     *  owner
+     *  environment
      *
      * @return
      *  the resolved content instance.
      */
-    private Content resolveContent(Owner owner, Content content) {
-        if (content == null || content.getId() == null) {
-            throw new BadRequestException(i18n.tr(
-                "No content specified, or content lacks identifying information"
-            ));
+    private Content resolveContent(Environment environment, String contentId) {
+        if (environment == null || environment.getOwner() == null) {
+            throw new BadRequestException(
+                i18n.tr("No environment specified, or environment lacks owner information")
+            );
         }
 
-        Content resolved = this.contentCurator.lookupById(owner, content.getId());
+        if (contentId == null) {
+            throw new BadRequestException(
+                i18n.tr("No content ID specified")
+            );
+        }
+
+        Content resolved = this.contentCurator.lookupById(environment.getOwner(), contentId);
 
         if (resolved == null) {
             throw new NotFoundException(i18n.tr(
-                "Unable to find content with the ID \"{0}\".", content.getId()
+                "Unable to find content with the ID \"{0}\".", contentId
             ));
         }
 
         return resolved;
     }
+
 
     /**
      * Promotes a Content into an Environment.
@@ -209,7 +219,7 @@ public class EnvironmentResource {
     @Path("/{env_id}/content")
     public JobDetail promoteContent(
             @PathParam("env_id") @Verify(Environment.class) String envId,
-            List<EnvironmentContent> contentToPromote,
+            List<org.candlepin.json.model.EnvironmentContent> contentToPromote,
             @QueryParam("lazy_regen") @DefaultValue("true") Boolean lazyRegen) {
 
         Environment env = lookupEnvironment(envId);
@@ -219,23 +229,35 @@ public class EnvironmentResource {
         // Impl note:
         // We have to do this in a separate loop or we'll end up with an undefined state, should
         // there be a problem with the request.
-        for (EnvironmentContent promoteMe : contentToPromote) {
-            if (this.envContentCurator.lookupByEnvironmentAndContent(env, promoteMe.getContent()) != null) {
+        for (org.candlepin.json.model.EnvironmentContent promoteMe : contentToPromote) {
+            log.debug(
+                "EnvironmentContent to promote: {}:{}",
+                promoteMe.getEnvironmentId(), promoteMe.getContentId()
+            );
+
+            EnvironmentContent existing = this.envContentCurator.lookupByEnvironmentAndContent(
+                env, promoteMe.getContentId()
+            );
+
+            if (existing != null) {
                 throw new ConflictException(i18n.tr(
                     "The content with id {0} has already been promoted in this environment.",
-                    promoteMe.getContent().getId()
+                    promoteMe.getContentId()
                 ));
             }
         }
 
-        for (EnvironmentContent promoteMe : contentToPromote) {
+        for (org.candlepin.json.model.EnvironmentContent promoteMe : contentToPromote) {
             // Make sure the content exists:
-            promoteMe.setContent(this.resolveContent(env.getOwner(), promoteMe.getContent()));
-            promoteMe.setEnvironment(env);
+            EnvironmentContent envcontent = new EnvironmentContent();
 
-            envContentCurator.create(promoteMe);
-            env.getEnvironmentContent().add(promoteMe);
-            contentIds.add(promoteMe.getContent().getId());
+            envcontent.setEnvironment(env);
+            envcontent.setContent(this.resolveContent(env, promoteMe.getContentId()));
+            envcontent.setEnabled(promoteMe.getEnabled());
+
+            envContentCurator.create(envcontent);
+            env.getEnvironmentContent().add(envcontent);
+            contentIds.add(promoteMe.getContentId());
         }
 
         JobDataMap map = new JobDataMap();
