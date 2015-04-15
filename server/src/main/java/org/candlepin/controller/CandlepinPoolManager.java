@@ -57,6 +57,7 @@ import org.candlepin.policy.js.pool.PoolUpdate;
 import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
+import org.candlepin.sync.SubscriptionReconciler;
 import org.candlepin.util.CertificateSizeException;
 import org.candlepin.util.Util;
 import org.candlepin.version.CertVersionConflictException;
@@ -146,8 +147,12 @@ public class CandlepinPoolManager implements PoolManager {
     void refreshPoolsWithRegeneration(SubscriptionServiceAdapter subAdapter, Owner owner, boolean lazy) {
         log.info("Refreshing pools for owner: " + owner.getKey());
         List<Subscription> subs = subAdapter.getSubscriptions(owner);
+        log.debug("Found " + subs.size() + " existing subscriptions.");
+
+        SubscriptionReconciler reconciler = new SubscriptionReconciler();
+        reconciler.reconcile(owner, subs, poolCurator);
+
         Set<String> subIds = Util.newSet();
-        log.debug("Found " + subIds.size() + " existing subscriptions.");
 
         Set<Product> changedProducts = refreshProducts(owner, subs);
 
