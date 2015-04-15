@@ -16,6 +16,7 @@ package org.candlepin.model;
 
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
+import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyPool;
 import org.candlepin.policy.criteria.CriteriaRules;
@@ -88,6 +89,16 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     public List<Pool> listByOwner(Owner o) {
         return listByOwner(o, null);
     }
+
+
+    @Transactional
+    public List<Pool> listByOwnerAndType(Owner o, PoolType t) {
+        Criteria crit = currentSession().createCriteria(Pool.class)
+            .add(Restrictions.eq("owner", o))
+            .add(Restrictions.eq("type", t));
+        return crit.list();
+    }
+
 
     /**
      * Returns list of pools owned by the given Owner.

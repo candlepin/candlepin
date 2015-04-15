@@ -37,8 +37,8 @@ import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.Enumerated;
 import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -253,6 +253,18 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
      */
     @Transient
     private String importedProductId = null;
+
+    @Column(name = "upstream_pool_id")
+    @Size(max = 255)
+    private String upstreamPoolId;
+
+    @Column(name = "upstream_entitlement_id")
+    @Size(max = 37)
+    private String upstreamEntitlementId;
+
+    @Column(name = "upstream_consumer_id")
+    @Size(max = 255)
+    private String upstreamConsumerId;
 
     public Pool() {
     }
@@ -1035,4 +1047,30 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         super.onCreate();
         this.type = this.getType();
     }
+
+    public String getUpstreamPoolId() {
+        return upstreamPoolId;
+    }
+
+    public void setUpstreamPoolId(String upstreamPoolId) {
+        this.upstreamPoolId = upstreamPoolId;
+    }
+
+    public String getUpstreamEntitlementId() {
+        return upstreamEntitlementId;
+    }
+
+    public void setUpstreamEntitlementId(String upstreamEntitlementId) {
+        this.upstreamEntitlementId = upstreamEntitlementId;
+    }
+
+    public String getUpstreamConsumerId() {
+        return upstreamConsumerId;
+    }
+
+    public void setUpstreamConsumerId(String upstreamConsumerId) {
+        this.upstreamConsumerId = upstreamConsumerId;
+    }
+
+
 }
