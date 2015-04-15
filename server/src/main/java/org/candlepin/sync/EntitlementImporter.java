@@ -25,6 +25,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.SubscriptionsCertificate;
+import org.candlepin.util.Util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -63,6 +64,12 @@ public class EntitlementImporter {
 
         Entitlement entitlement = mapper.readValue(reader, Entitlement.class);
         Subscription subscription = new Subscription();
+
+        // Now that we no longer store Subscriptions in the on-site database, we need to
+        // manually give the subscription a downstream ID. Note that this may later be
+        // overwritten by reconciliation code if it determines this Subscription
+        // should replace and existing one.
+        subscription.setId(Util.generateDbUUID());
 
         subscription.setUpstreamPoolId(entitlement.getPool().getId());
         subscription.setUpstreamEntitlementId(entitlement.getId());
