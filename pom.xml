@@ -27,6 +27,14 @@
                         <target>1.5</target>
                     </configuration>
                 </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <!-- Always skip tests.  Tests are run with buildr -->
+                    <configuration>
+                        <skipTests>true</skipTests>
+                    </configuration>
+                 </plugin>
             </plugins>
         </pluginManagement>
     </build>
