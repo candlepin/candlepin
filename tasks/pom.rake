@@ -1,18 +1,48 @@
 require 'builder'
+require './tasks/util'
 
+# Buildr does provide some fairly sophisticated POM generation in the buildr/custom_pom
+# module.  However, it does not really allow for definition and configuration of Maven
+# plugins.  At some point it may be worth taking some code from it as its method of
+# resolving all the dependencies is more comprehensive than ours.  It handles adding
+# test, and optional dependencies, for example.
 module PomTask
-  class Config
-    def enabled?
-      !artifacts.nil? && !artifacts.empty?
-    end
+  include Candlepin::Util
 
+  class Config
     def initialize(project)
       @project = project
+    end
+
+    def enabled?
+      !artifacts.nil? && !artifacts.empty?
     end
 
     attr_writer :artifacts
     def artifacts
       @artifacts ||= []
+    end
+
+    attr_writer :pom_parent
+    def pom_parent
+      @pom_parent ||= PomTask.top_project(@project)
+    end
+
+    def provided_dependencies=(val)
+      if val.respond_to?(:each)
+        @provided_dependencies = val
+      else
+        @provided_dependencies = [val]
+      end
+    end
+
+    def provided_dependencies
+      @provided_dependencies ||= []
+    end
+
+    attr_writer :pom_parent_suffix
+    def pom_parent_suffix
+      @pom_parent_suffix ||= "-parent"
     end
 
     attr_writer :create_assembly
@@ -37,16 +67,35 @@ module PomTask
     # end
     #
     # plugin_procs << p
-    def plugin_procs=(val)
-      if val.respond_to?(:each)
-        @plugin_procs = val
-      else
-        @plugin_procs = [val]
-      end
-    end
-
+    #
+    # It is unlikely that you want to call plugin_procs= as that would
+    # clear the default procs that are created to add some essential maven
+    # plugins.  Therefore that method is not provided.  If a plugin_procs=
+    # method becomes necessary, here is an implementation:
+    #
+    # def plugin_procs=(val)
+    #   if val.respond_to?(:each)
+    #     @plugin_procs = val
+    #   else
+    #     @plugin_procs = [val]
+    #   end
+    # end
     def plugin_procs
-      @plugin_procs ||= []
+      unless @plugin_procs
+        @plugin_procs = []
+        default_plugins = [
+          "maven-surefire-plugin",
+          "maven-assembly-plugin",
+          "maven-compiler-plugin",
+        ]
+        default_plugins.each do |p|
+          @plugin_procs << Proc.new do |xml, proj|
+            xml.groupId("org.apache.maven.plugins")
+            xml.artifactId(p)
+          end
+        end
+      end
+      @plugin_procs
     end
   end
 
@@ -60,11 +109,10 @@ module PomTask
       @artifact = artifact
       @project = project
       @config = config
-      # Filter out Rake::FileTask dependencies (note the use of instance_of
-      # because we need to match exact instances of FileTask and not
-      # child classes since other Buildr tasks inherit from FileTask)
-      @dependencies = project.compile.dependencies.reject do |dep|
-        dep.instance_of?(Rake::FileTask)
+
+      # Filter anything that can't be treated as an artifact
+      @dependencies = project.compile.dependencies.select do |dep|
+       dep.respond_to?(:to_spec)
       end
       @buffer = ""
       build
@@ -72,14 +120,31 @@ module PomTask
 
     def build
       artifact_spec = artifact.to_hash
+      parent_spec = PomTask.as_pom_artifact(@config.pom_parent).to_hash
+
+      # Ugly hack to allow for the fact that the "server" project artifactId is
+      # "candlepin" which conflicts with the name of the top-level buildr project
+      parent_spec[:id] = "#{parent_spec[:id]}#{@config.pom_parent_suffix}"
+
       xml = Builder::XmlMarkup.new(:target => @buffer, :indent => 2)
       xml.instruct!
+      xml.comment!(" vim: set expandtab sts=4 sw=4 ai: ")
       xml.project(
         "xsi:schemaLocation" => "http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd",
         "xmlns" => "http://maven.apache.org/POM/4.0.0",
         "xmlns:xsi" => "http://www.w3.org/2001/XMLSchema-instance"
       ) do
         xml.modelVersion("4.0.0")
+
+        xml.parent do
+          xml.groupId(parent_spec[:group])
+          xml.artifactId(parent_spec[:id])
+          xml.version(parent_spec[:version])
+          project_path = Pathname.new(@project.base_dir)
+          parent_path = Pathname.new(@config.pom_parent.base_dir)
+          xml.relativePath(parent_path.relative_path_from(project_path).to_s)
+        end
+
         xml.groupId(artifact_spec[:group])
         xml.artifactId(artifact_spec[:id])
         xml.version(artifact_spec[:version])
@@ -104,39 +169,16 @@ module PomTask
               xml.groupId(h[:group])
               xml.artifactId(h[:id])
               xml.version(version_properties[h])
+
+              if @config.provided_dependencies.include?(dep.to_spec)
+                xml.scope("provided")
+              end
             end
           end
         end
 
         xml.build do
           xml.plugins do
-            xml.plugin do
-              # See https://maven.apache.org/plugins/maven-assembly-plugin
-              xml.artifactId("maven-assembly-plugin")
-              xml.configuration do
-                xml.descriptorRefs do
-                  # This descriptor just archives the entire project.  Any
-                  # customizations to the assembly process will require the
-                  # definition of an assembly descriptor which is another
-                  # XML file that the assembly plugin reads to see which
-                  # directories to exclude.  Probably the best way would
-                  # be to declare the assembly descriptor in the parent POM
-                  # and have all the child projects reference it.  See
-                  # https://maven.apache.org/plugins/maven-assembly-plugin/examples/sharing-descriptors.html
-                  xml.descriptorRef("project")
-                end
-              end
-              xml.executions do
-                xml.execution do
-                  xml.id("create-archive")
-                  xml.phase("package")
-                  xml.goals do
-                    xml.goal("single")
-                  end
-                end
-              end
-            end
-
             config.plugin_procs.each do |plugin_proc|
               xml.plugin do
                 plugin_proc.call(xml, project)

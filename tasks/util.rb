@@ -50,6 +50,17 @@ module Candlepin
         end
         return Pathname.new(project.path_to(*pieces)).expand_path == Pathname.new(path).expand_path
       end
+
+      def as_pom_artifact(project)
+        pom_task = task('project-artifact' => project.package)
+        pom_task.extend(ActsAsArtifact)
+        spec = {}
+        spec[:id] = project.name
+        spec[:group] = project.group
+        spec[:version] = project.version
+        spec[:type] = :pom
+        pom_task.send(:apply_spec, spec)
+      end
     end
 
     module InstanceMethods
