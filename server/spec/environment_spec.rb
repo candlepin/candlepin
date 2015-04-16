@@ -55,8 +55,7 @@ describe 'Environments' do
 
     lambda {
       content = create_content
-      foreign_admin.promote_content(@env['id'],
-        [{:content => content['id']}])
+      foreign_admin.promote_content(@env['id'], [{:contentId => content['id']}])
     }.should raise_exception(RestClient::ResourceNotFound)
   end
 
@@ -70,8 +69,7 @@ describe 'Environments' do
 
   it 'can have promoted content' do
     content = create_content
-    job = @org_admin.promote_content(@env['id'],
-        [{:content => content['id']}])
+    job = @org_admin.promote_content(@env['id'], [{:contentId => content['id']}])
     wait_for_job(job['id'], 15)
     @env = @org_admin.get_environment(@env['id'])
     @env['environmentContent'].size.should == 1
@@ -139,11 +137,9 @@ describe 'Environments' do
   it 'can demote content' do
     content = create_content
     content2 = create_content
-    job = @org_admin.promote_content(@env['id'],
-        [{:content => content['id']}])
+    job = @org_admin.promote_content(@env['id'], [{:contentId => content['id']}])
     wait_for_job(job['id'], 15)
-    job = @org_admin.promote_content(@env['id'],
-        [{:content => content2['id']}])
+    job = @org_admin.promote_content(@env['id'], [{:contentId => content2['id']}])
     wait_for_job(job['id'], 15)
     job = @org_admin.demote_content(@env['id'], [content['id'], content2['id']])
     wait_for_job(job['id'], 15)
@@ -167,7 +163,7 @@ describe 'Environments' do
     # Override enabled to false:
     job = @org_admin.promote_content(@env['id'],
         [{
-          :content => content['id'],
+          :contentId => content['id'],
           :enabled => false,
         }])
     wait_for_job(job['id'], 15)
@@ -204,7 +200,7 @@ describe 'Environments' do
     # Override enabled to false:
     job = @org_admin.promote_content(@env['id'],
         [{
-          :content => content['id'],
+          :contentId => content['id'],
         }])
     wait_for_job(job['id'], 15)
 
@@ -223,7 +219,7 @@ describe 'Environments' do
     # Promote the other content set and make sure certs were regenerated:
     job = @org_admin.promote_content(@env['id'],
         [{
-          :content => content2['id'],
+          :contentId => content2['id'],
         }])
     wait_for_job(job['id'], 15)
 

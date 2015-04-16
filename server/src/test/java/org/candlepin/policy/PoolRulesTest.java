@@ -759,8 +759,10 @@ public class PoolRulesTest {
         when(prodCuratorMock.lookupById(owner, provided1.getId())).thenReturn(provided1);
         when(prodCuratorMock.lookupById(owner, provided2.getId())).thenReturn(provided2);
         when(prodCuratorMock.lookupById(owner, derivedProd.getId())).thenReturn(derivedProd);
-        when(prodCuratorMock.lookupById(owner, derivedProvidedProd1.getId())).thenReturn(derivedProvidedProd1);
-        when(prodCuratorMock.lookupById(owner, derivedProvidedProd2.getId())).thenReturn(derivedProvidedProd2);
+        when(prodCuratorMock.lookupById(owner, derivedProvidedProd1.getId()))
+            .thenReturn(derivedProvidedProd1);
+        when(prodCuratorMock.lookupById(owner, derivedProvidedProd2.getId()))
+            .thenReturn(derivedProvidedProd2);
 
         s.getProvidedProducts().add(provided1);
         s.getProvidedProducts().add(provided2);
