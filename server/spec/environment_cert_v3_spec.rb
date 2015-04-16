@@ -29,7 +29,7 @@ describe 'Environments Certificate V3' do
     # Override enabled to false:
     job = @org_admin.promote_content(@env['id'],
         [{
-          :content => content['id'],
+          :contentId => content['id'],
           :enabled => false,
         }])
     wait_for_job(job['id'], 15)
@@ -67,7 +67,7 @@ describe 'Environments Certificate V3' do
     # Override enabled to false:
     job = @org_admin.promote_content(@env['id'],
         [{
-          :content => content['id']
+          :contentId => content['id']
         }])
     wait_for_job(job['id'], 15)
 
@@ -89,7 +89,7 @@ describe 'Environments Certificate V3' do
     # Promote the other content set and make sure certs were regenerated:
     job = @org_admin.promote_content(@env['id'],
         [{
-          :content => content2['id']
+          :contentId => content2['id']
         }])
     wait_for_job(job['id'], 15)
     ent = consumer_cp.list_entitlements()[0]

@@ -227,7 +227,7 @@ describe 'One Sub Pool Per Stack' do
     sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
     sub_pool.should_not be_nil
     sub_pool['providedProducts'].length.should == 1
-    sub_pool['providedProducts'][0]['id'].should == @virt_limit_provided_product.id
+    sub_pool['providedProducts'][0]['productId'].should == @virt_limit_provided_product.id
 
     @host_client.consume_pool(@stacked_non_virt_pool['id'], {:quantity => 1})[0]
 
@@ -240,7 +240,7 @@ describe 'One Sub Pool Per Stack' do
     sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
     sub_pool.should_not be_nil
     sub_pool['providedProducts'].length.should == 1
-    sub_pool['providedProducts'][0]['id'].should == @regular_stacked_provided_product.id
+    sub_pool['providedProducts'][0]['productId'].should == @regular_stacked_provided_product.id
   end
 
   it 'should include derived provided products if supporting entitlements are in stack' do
@@ -252,7 +252,7 @@ describe 'One Sub Pool Per Stack' do
     sub_pool.should_not be_nil
     sub_pool['productId'].should == @derived_product.id
     sub_pool['providedProducts'].length.should == 1
-    sub_pool['providedProducts'][0]['id'].should == @derived_provided_product.id
+    sub_pool['providedProducts'][0]['productId'].should == @derived_provided_product.id
 
     @host_client.consume_pool(@stacked_non_virt_pool['id'], {:quantity => 1})[0]
 
@@ -265,7 +265,7 @@ describe 'One Sub Pool Per Stack' do
     sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
     sub_pool.should_not be_nil
     sub_pool['providedProducts'].length.should == 1
-    sub_pool['providedProducts'][0]['id'].should == @regular_stacked_provided_product.id
+    sub_pool['providedProducts'][0]['productId'].should == @regular_stacked_provided_product.id
   end
 
   it 'should update product data on removing entitlement of same stack' do
