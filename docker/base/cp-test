@@ -20,11 +20,36 @@ export AUTOCONF=1
 export FORCECERT=1
 export HOME=/root
 
+trapex() {
+    target="$1"
+    shift
+
+    for sig in "$@"; do
+        trap "$target $sig" "$sig"
+        signals="$signals $sig"
+    done
+}
+
 # Be sure to run cleanup on any error, SIGINT, or SIGTERM
-trap cleanup ERR INT TERM
+trapex cleanup SIGINT SIGTERM ERR EXIT
 cleanup() {
+    # Remove our traps so we don't end up calling this more than once
+    trap - $signals
+    trap "" ERR EXIT
+
+    # Run buildr clean in our target CP directory
     cd $CP_HOME
     buildr clean
+
+    # Errors in the script should still launch the shell, as they're likely CP config errors, not
+    # actual errors with the script
+    if [ "$1" == "" ] || [ "$1" == "ERR" ] || [ "$1" == "EXIT" ]; then
+        echo "Launching shell..."
+        /bin/bash -i -l
+    else
+        # exit, propagating any signal we received
+        kill -$1 $$
+    fi
 }
 
 usage() {
@@ -119,10 +144,6 @@ if [ "$RSPEC" == "1" ]; then
         cp -v /var/log/candlepin/candlepin.log /artifacts/
         cp -v /var/log/candlepin/error.log /artifacts/
     fi
-fi
-
-if [ "$LAUNCHSHELL" == "1" ]; then
-    /bin/bash -i -l
 fi
 
 cleanup
