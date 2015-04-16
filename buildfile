@@ -184,6 +184,7 @@ end
 desc "The Candlepin Project"
 define "candlepin" do
   project.group = "org.candlepin"
+  project.version = "1.0"
   manifest["Copyright"] = "Red Hat, Inc. #{Date.today.strftime('%Y')}"
 
   compile.options.target = '1.6'
@@ -341,6 +342,7 @@ define "candlepin" do
       war.classes << msgfmt.destination if msgfmt.enabled?
     end
     pom.artifacts << gutterball_war
+    pom.provided_dependencies = PROVIDED
   end
 
   desc "The Candlepin Server"
@@ -424,6 +426,8 @@ define "candlepin" do
     # NOTE: changes here must also be made in build.xml!
     candlepin_path = "org/candlepin"
     compiled_cp_path = "#{compile.target}/#{candlepin_path}"
+
+    pom.provided_dependencies = PROVIDED
 
     api_jar = package(:jar, :id=>'candlepin-api').tap do |jar|
       jar.clean
