@@ -37,6 +37,32 @@
         <maven.test.skip>true</maven.test.skip>
     </properties>
 
+    <profiles>
+        <profile>
+            <id>build</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <repositories>
+                <repository>
+                    <id>gettext-commons</id>
+                    <name>Gettext Commons</name>
+                    <url>http://gettext-commons.googlecode.com/svn/maven-repository/</url>
+                </repository>
+                <repository>
+                    <id>jboss</id>
+                    <name>JBoss</name>
+                    <url>http://repository.jboss.org/nexus/content/groups/public/</url>
+                </repository>
+                <repository>
+                    <id>oauth</id>
+                    <name>OAuth</name>
+                    <url>http://oauth.googlecode.com/svn/code/maven/</url>
+                </repository>
+            </repositories>
+        </profile>
+    </profiles>
+
     <build>
         <pluginManagement>
             <!-- If you add plugins here, you still need to add a plugin block
