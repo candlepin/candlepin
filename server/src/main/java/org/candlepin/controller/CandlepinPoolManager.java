@@ -145,7 +145,7 @@ public class CandlepinPoolManager implements PoolManager {
      * so we don't miss anything
      */
     void refreshPoolsWithRegeneration(SubscriptionServiceAdapter subAdapter, Owner owner, boolean lazy) {
-        log.info("Refreshing pools for owner: " + owner.getKey());
+        log.info("Refreshing pools for owner: {}", owner);
         List<Subscription> subs = subAdapter.getSubscriptions(owner);
         log.debug("Found " + subs.size() + " existing subscriptions.");
 
@@ -195,8 +195,12 @@ public class CandlepinPoolManager implements PoolManager {
          */
         Set<Product> allProducts = Util.newSet();
         for (Subscription sub : subs) {
+            log.debug("Owner on subscription: {}", sub.getOwner());
             allProducts.add(sub.getProduct());
             allProducts.addAll(sub.getProvidedProducts());
+
+            allProducts.add(sub.getDerivedProduct());
+            allProducts.addAll(sub.getDerivedProvidedProducts());
         }
 
         return getChangedProducts(o, allProducts);
@@ -207,6 +211,10 @@ public class CandlepinPoolManager implements PoolManager {
 
         log.debug("Syncing {} incoming products.", allProducts.size());
         for (Product incoming : allProducts) {
+            log.debug("Owner for incoming product: {}\nSpecified owner: {}", incoming.getOwner(), o);
+
+            // We seem to be getting products with the wrong owner on the subscription.
+
             Product existing = prodCurator.lookupById(o, incoming.getId());
             // TODO: compare and update
             if (existing == null) {
@@ -228,6 +236,7 @@ public class CandlepinPoolManager implements PoolManager {
                 }
             }
         }
+
         return changedProducts;
     }
 

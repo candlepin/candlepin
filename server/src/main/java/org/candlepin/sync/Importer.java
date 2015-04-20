@@ -342,6 +342,8 @@ public class Importer {
         ConflictOverrides overrides)
         throws IOException, ImporterException {
 
+        log.debug("Importing objects for owner: {}", owner);
+
         File metadata = importFiles.get(ImportFile.META.fileName());
         if (metadata == null) {
             throw new ImporterException(i18n.tr("The archive does not contain the " +
@@ -584,14 +586,22 @@ public class Importer {
     public List<Subscription> importEntitlements(Owner owner, Set<Product> products, File[] entitlements,
         ConsumerDto consumer, Meta meta)
         throws IOException, SyncDataFormatException {
+
+        log.debug("Importing entitlements for owner: {}", owner);
+
         EntitlementImporter importer = new EntitlementImporter(csCurator, cdnCurator,
             i18n);
 
         Map<String, Product> productsById = new HashMap<String, Product>();
         for (Product product : products) {
+            log.debug("Adding product owned by {} to ID map", owner.getKey());
+
             // TODO: If this should be the UUID instead of the RHID, we need to update several
             // parts of the EntitlementImporter (and any other class that receives this map) to
             // expect UUIDs as well.
+
+            // Note: This may actually be causing problems with subscriptions receiving the wrong
+            // version of a product
             productsById.put(product.getId(), product);
         }
 

@@ -25,6 +25,8 @@ import org.candlepin.model.ProductCurator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -34,6 +36,7 @@ import java.util.Set;
  * ProductImporter
  */
 public class ProductImporter {
+    private static Logger log = LoggerFactory.getLogger(ProductImporter.class);
 
     private ProductCurator curator;
     private ContentCurator contentCurator;
@@ -48,9 +51,13 @@ public class ProductImporter {
         final Product importedProduct = mapper.readValue(reader, Product.class);
         // Make sure the ID's are null, otherwise Hibernate thinks these are
         // detached entities.
+        importedProduct.setUuid(null);
         for (ProductAttribute a : importedProduct.getAttributes()) {
             a.setId(null);
         }
+
+        // Clear any owner on the product
+        importedProduct.setOwner(null);
 
         // Multiplication has already happened on the upstream candlepin. set this to 1
         // so we can use multipliers on local products if necessary.
@@ -99,7 +106,7 @@ public class ProductImporter {
                 contentCurator.createOrUpdate(c);
             }
 
-//            curator.createOrUpdate(importedProduct);
+            // curator.createOrUpdate(importedProduct);
         }
     }
 
