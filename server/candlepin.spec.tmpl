@@ -107,40 +107,40 @@ rm -rf %{buildroot}
 
 ## Create the directory structure required to lay down our files
 ## common
-install -d -m 755 %{buildroot}/%{_sysconfdir}/%{name}/certs/upstream/
-install -d -m 755 %{buildroot}/%{_sysconfdir}/%{name}/certs/amqp/
-install -m 644 conf/candlepin-redhat-ca.crt %{buildroot}%{_sysconfdir}/%{name}/certs/upstream/
+%{__install} -d -m 755 %{buildroot}/%{_sysconfdir}/%{name}/certs/upstream/
+%{__install} -d -m 755 %{buildroot}/%{_sysconfdir}/%{name}/certs/amqp/
+%{__install} -m 644 conf/candlepin-redhat-ca.crt %{buildroot}%{_sysconfdir}/%{name}/certs/upstream/
 
-install -d 755 %{buildroot}%{_sysconfdir}/logrotate.d/
-install -m 644 conf/logrotate.conf %{buildroot}%{_sysconfdir}/logrotate.d/%{name}
+%{__install} -d 755 %{buildroot}%{_sysconfdir}/logrotate.d/
+%{__install} -m 644 conf/logrotate.conf %{buildroot}%{_sysconfdir}/logrotate.d/%{name}
 
-install -d -m 755 %{buildroot}/%{_datadir}/%{name}/
+%{__install} -d -m 755 %{buildroot}/%{_datadir}/%{name}/
 
-install -m 755 code/setup/cpsetup %{buildroot}/%{_datadir}/%{name}/cpsetup
-install -m 755 code/setup/cpdb %{buildroot}/%{_datadir}/%{name}/cpdb
+%{__install} -m 755 code/setup/cpsetup %{buildroot}/%{_datadir}/%{name}/cpsetup
+%{__install} -m 755 code/setup/cpdb %{buildroot}/%{_datadir}/%{name}/cpdb
 
-install -d -m 755 %{buildroot}/%{_sysconfdir}/%{name}/
+%{__install} -d -m 755 %{buildroot}/%{_sysconfdir}/%{name}/
 touch %{buildroot}/%{_sysconfdir}/%{name}/%{name}.conf
 
 ## tomcat
-install -d -m 755 %{buildroot}/%{_sharedstatedir}/%{tomcat}/webapps/%{name}
-install -d -m 755 %{buildroot}/%{_sysconfdir}/%{tomcat}/
+%{__install} -d -m 755 %{buildroot}/%{_sharedstatedir}/%{tomcat}/webapps/%{name}
+%{__install} -d -m 755 %{buildroot}/%{_sysconfdir}/%{tomcat}/
 %{__unzip} %{SOURCE1} -d %{buildroot}/%{_sharedstatedir}/%{tomcat}/webapps/%{name}
 
 %{__ln_s} /etc/candlepin/certs/keystore %{buildroot}/%{_sysconfdir}/%{tomcat}/keystore
 
 ## /var/lib dir for hornetq state
-install -d -m 755 %{buildroot}/%{_sharedstatedir}/%{name}
+%{__install} -d -m 755 %{buildroot}/%{_sharedstatedir}/%{name}
 
-install -d -m 755 %{buildroot}/%{_localstatedir}/log/%{name}
-install -d -m 755 %{buildroot}/%{_localstatedir}/cache/%{name}
+%{__install} -d -m 755 %{buildroot}/%{_localstatedir}/log/%{name}
+%{__install} -d -m 755 %{buildroot}/%{_localstatedir}/cache/%{name}
 
 cd selinux
 #raw
 for selinuxvariant in %{selinux_variants}
 do
-  install -d %{buildroot}/%{_datadir}/selinux/$selinuxvariant
-  install -p -m 644 %{modulename}.pp.$selinuxvariant \
+  %{__install} -d %{buildroot}/%{_datadir}/selinux/$selinuxvariant
+  %{__install} -p -m 644 %{modulename}.pp.$selinuxvariant \
     %{buildroot}/%{_datadir}/selinux/$selinuxvariant/%{modulename}.pp
 done
 #end raw
