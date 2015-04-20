@@ -276,7 +276,7 @@ define "candlepin" do
 
   desc "The Gutterball Reporting Engine"
   define "gutterball" do
-    spec_file = "gutterball.spec"
+    spec_file = "gutterball.spec.tmpl"
     project.version = spec_version(spec_file)
     release_number = spec_release(spec_file)
 
@@ -347,7 +347,7 @@ define "candlepin" do
 
   desc "The Candlepin Server"
   define "server" do
-    spec_file = "candlepin.spec"
+    spec_file = "candlepin.spec.tmpl"
     project.version = spec_version(spec_file)
     release_number = spec_release(spec_file)
 
