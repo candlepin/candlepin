@@ -15,12 +15,7 @@ module PomTask
     end
 
     def enabled?
-      !artifacts.nil? && !artifacts.empty?
-    end
-
-    attr_writer :artifacts
-    def artifacts
-      @artifacts ||= []
+      !@project.packages.empty?
     end
 
     attr_writer :pom_parent
@@ -105,17 +100,21 @@ module PomTask
     attr_reader :project
     attr_reader :config
 
-    def initialize(artifact, project, config)
+    def initialize(artifact, project)
       @artifact = artifact
       @project = project
-      @config = config
-
+      @config = project.pom
       # Filter anything that can't be treated as an artifact
       @dependencies = project.compile.dependencies.select do |dep|
         dep.respond_to?(:to_spec)
       end
       @buffer = ""
-      build
+    end
+
+    def dependencies=(val)
+      @dependencies = val.select do |dep|
+        dep.respond_to?(:to_spec)
+      end
     end
 
     def build
@@ -199,7 +198,11 @@ module PomTask
       end
     end
 
-    def write_pom(destination)
+    def content
+      @buffer
+    end
+
+    def write_to_file(destination)
       FileUtils.mkdir_p(File.dirname(destination))
       File.open(destination, "w") { |f| f.write(@buffer) }
     end
@@ -217,22 +220,73 @@ module PomTask
       Project.local_task('pom')
     end
 
+    before_define do |project|
+      project.recursive_task('pom')
+    end
+
     after_define do |project|
       pom = project.pom
       if pom.enabled?
-        project.recursive_task('pom') do
-          pom.artifacts.each do |artifact|
-            spec = artifact.to_hash
-            destination = project.path_to("pom.xml")
+        project.packages.each do |pkg|
+          if %w[jar war ear].include?(pkg.type.to_s)
+            # Inject code into the package task.  E.g. WarTask or JarTask
+            class << pkg
+              def pom_xml
+                self.pom.content
+              end
 
-            # Special case for when we want to build a POM for just candlepin-api.jar
-            if pom.artifacts.length > 1 && spec[:type] != :war
-              destination = project.path_to(:target, "#{spec[:id]}-#{spec[:version]}.pom")
+              def pom
+                unless @pom
+                  if @project.packages.length > 1 && self.type != :war
+                    destination = Util.replace_extension(name, 'pom')
+                  else
+                    destination = @project.path_to("pom.xml")
+                  end
+
+                  spec = {
+                    :group => group,
+                    :id => id,
+                    :version => version,
+                    :type => :pom
+                  }
+
+                  # The four lines below are copied from Buildr.artifact
+                  @pom = Artifact.define_task(destination)
+                  @pom.send(:apply_spec, spec)
+                  Rake::Task['rake:artifacts'].enhance([@pom])
+                  Artifact.register(@pom)
+
+                  @pom.enhance do |task|
+                    info("Wrote #{task}")
+                  end
+
+                  xml = PomBuilder.new(self, @project)
+
+                  # We do some manipulation of the generated WARs to add
+                  # optional dependencies (e.g. HSQLDB for Candlepin) in the
+                  # packaging task so we need to reflect that in the Maven-built
+                  # WAR.
+                  if self.type == :war
+                    xml.dependencies += self.libs
+                    xml.dependencies.uniq!
+                  end
+                  xml.build
+
+                  @pom.content(xml.content)
+                end
+                @pom
+              end
+
+              private
+
+              def associate_with(project)
+                @project = project
+              end
             end
+            pkg.instance_variable_set('@pom', nil)
+            pkg.send(:associate_with, project)
 
-            xml = PomBuilder.new(artifact, project, pom)
-            xml.write_pom(destination)
-            info("POM written to #{destination}")
+            project.task('pom').enhance([pkg.pom])
           end
         end
       end

@@ -242,7 +242,6 @@ define "candlepin" do
     common_jar = package(:jar).tap do |jar|
       jar.include(:from => msgfmt.destination)
     end
-    pom.artifacts << common_jar
   end
 
   desc "API Crawl"
@@ -341,7 +340,6 @@ define "candlepin" do
       war.classes << resources.target
       war.classes << msgfmt.destination if msgfmt.enabled?
     end
-    pom.artifacts << gutterball_war
     pom.provided_dependencies = PROVIDED
   end
 
@@ -435,7 +433,6 @@ define "candlepin" do
       p = jar.path(candlepin_path)
       p.include(pkgs)
     end
-    pom.artifacts << api_jar
 
     package(:jar, :id=>"candlepin-certgen").tap do |jar|
       jar.clean
@@ -453,7 +450,6 @@ define "candlepin" do
       web_inf = war.path('WEB-INF/classes')
       web_inf.path(candlepin_path).include("#{compiled_cp_path}/**")
     end
-    pom.artifacts << war_file
 
     desc 'Crawl the REST API and print a summary.'
     task :apicrawl => [project('apicrawl').task(:package), :compile] do
