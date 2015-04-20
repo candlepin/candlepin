@@ -112,7 +112,7 @@ module PomTask
 
       # Filter anything that can't be treated as an artifact
       @dependencies = project.compile.dependencies.select do |dep|
-       dep.respond_to?(:to_spec)
+        dep.respond_to?(:to_spec)
       end
       @buffer = ""
       build
@@ -172,6 +172,16 @@ module PomTask
 
               if @config.provided_dependencies.include?(dep.to_spec)
                 xml.scope("provided")
+              end
+
+              # We manage all dependencies explicitly and we don't want to drag
+              # in any conflicting versions.  For example, we use Guice 3.0 but the
+              # Resteasy Guice library has a dependency on Guice 2.0.
+              xml.exclusions do
+                xml.exclusion do
+                  xml.groupId('*')
+                  xml.artifactId('*')
+                end
               end
             end
           end
