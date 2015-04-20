@@ -151,7 +151,6 @@ public class SubscriptionResource {
     public String getSubCertAsPem(
         @PathParam("subscription_id") String subscriptionId) {
         SubscriptionsCertificate subCert = getSubCertWorker(subscriptionId);
-        log.debug("get as pem");
         return subCert.getCert() + subCert.getKey();
     }
 
@@ -175,6 +174,8 @@ public class SubscriptionResource {
         Subscription sub = verifyAndFind(subscriptionId);
         SubscriptionsCertificate subCert = sub.getCertificate();
         if (subCert == null) {
+            log.debug("No cert found for subscription: {}", subscriptionId);
+
             throw new BadRequestException(
                 i18n.tr("no certificate for subscription {0}", subscriptionId));
         }

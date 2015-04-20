@@ -437,10 +437,8 @@ public class Importer {
             ProductImporter importer = new ProductImporter(productCurator, contentCurator);
 
             Set<Product> productsToImport = importProducts(
-                importFiles.get(ImportFile.PRODUCTS.fileName()).listFiles(),
-                importer);
-
-            importer.store(productsToImport, owner);
+                importFiles.get(ImportFile.PRODUCTS.fileName()).listFiles(), importer, owner
+            );
 
             meta = mapper.readValue(metadata, Meta.class);
             importSubs = importEntitlements(owner, productsToImport,
@@ -556,17 +554,18 @@ public class Importer {
         return consumer;
     }
 
-    public Set<Product> importProducts(File[] products, ProductImporter importer)
+    public Set<Product> importProducts(File[] products, ProductImporter importer, Owner owner)
         throws IOException {
         Set<Product> productsToImport = new HashSet<Product>();
         for (File product : products) {
             // Skip product.pem's, we just need the json to import:
             if (product.getName().endsWith(".json")) {
-                log.debug("Import product: " + product.getName());
+                log.debug("Importing product {} for owner {}", product.getName(), owner.getKey());
+
                 Reader reader = null;
                 try {
                     reader = new FileReader(product);
-                    productsToImport.add(importer.createObject(mapper, reader));
+                    productsToImport.add(importer.createObject(mapper, reader, owner));
                 }
                 finally {
                     if (reader != null) {
