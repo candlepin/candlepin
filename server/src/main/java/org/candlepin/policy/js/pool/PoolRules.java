@@ -139,6 +139,11 @@ public class PoolRules {
                 newPool.addAttribute(new PoolAttribute("virt_only", virtAtt.getValue()));
             }
 
+            // Copy over upstream details...?
+            newPool.setUpstreamPoolId(sub.getUpstreamPoolId());
+            newPool.setUpstreamEntitlementId(sub.getUpstreamEntitlementId());
+            newPool.setUpstreamConsumerId(sub.getUpstreamConsumerId());
+
             pools.add(newPool);
         }
 

@@ -575,11 +575,15 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         Criteria crit = currentSession().createCriteria(Pool.class)
                 .add(Restrictions.eq("owner", owner));
         if (!expectedSubIds.isEmpty()) {
+            log.debug("Expected Subscription IDs: {}", expectedSubIds);
+
             crit.createAlias("sourceSubscription", "sourceSub");
             crit.add(Restrictions.and(
                 Restrictions.not(Restrictions.in("sourceSub.subscriptionId", expectedSubIds)),
                 Restrictions.isNotNull("sourceSub.subscriptionId")
             ));
+        } else {
+            log.debug("Expected Subscription list is empty");
         }
         crit.addOrder(Order.asc("id"));
         return crit.list();
@@ -591,6 +595,15 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             .createAlias("sourceSubscription", "sourceSub",
                     JoinType.LEFT_OUTER_JOIN)
             .add(Restrictions.eq("sourceSub.subscriptionId", subId))
+            .addOrder(Order.asc("id"))
+            .list();
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<Pool> getPoolsBySubscriptionIds(Collection<String> subIds) {
+        return currentSession().createCriteria(Pool.class)
+            .createAlias("sourceSubscription", "sourceSub", JoinType.LEFT_OUTER_JOIN)
+            .add(Restrictions.in("sourceSub.subscriptionId", subIds))
             .addOrder(Order.asc("id"))
             .list();
     }

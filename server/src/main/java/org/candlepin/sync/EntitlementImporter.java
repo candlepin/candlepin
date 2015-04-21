@@ -76,6 +76,14 @@ public class EntitlementImporter {
         subscription.setId(Util.generateDbUUID());
 
         subscription.setUpstreamPoolId(entitlement.getPool().getId());
+
+        if (subscription.getUpstreamPoolId() == null) {
+            log.debug("CREATING A SUB WITHOUT AN UPSTREAM POOL ID: {}", subscription.getId());
+        } else {
+            log.debug("Creating new sub with ID: {}", subscription.getId());
+        }
+
+
         subscription.setUpstreamEntitlementId(entitlement.getId());
         subscription.setUpstreamConsumerId(consumer.getUuid());
 

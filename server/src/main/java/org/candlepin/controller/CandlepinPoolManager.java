@@ -182,9 +182,16 @@ public class CandlepinPoolManager implements PoolManager {
         // remove everything that isn't actually active
         subIds.removeAll(deletedSubs);
         // delete pools whose subscription disappeared:
-        for (Pool p : poolCurator.getPoolsFromBadSubs(owner, subIds)) {
-            if (p.getType() == PoolType.NORMAL || p.getType() == PoolType.BONUS) {
-                deletePool(p);
+        if (subIds.size() > 0) {
+            for (Pool p : poolCurator.getPoolsFromBadSubs(owner, subIds)) {
+                log.debug("Checking pool {}", p.getId());
+
+                if (p.getType() == PoolType.NORMAL || p.getType() == PoolType.BONUS) {
+                    log.debug("Deleting pool {}, sid: {}", p.getId(), p.getSubscriptionId());
+                    deletePool(p);
+                } else {
+                    log.debug("Not deleting pool {}, sid: {}", p.getId(), p.getSubscriptionId());
+                }
             }
         }
 
@@ -208,6 +215,8 @@ public class CandlepinPoolManager implements PoolManager {
     protected Set<Content> refreshContent(Owner owner, Collection<Subscription> subs) {
         // All inbound content, mapped by content ID. We're assuming it's all under the same org
         Map<String, Content> content = new HashMap<String, Content>();
+
+        log.info("Refreshing content for {} subscriptions.", subs.size());
 
         for (Subscription sub : subs) {
             // Grab all the content from each product
@@ -252,6 +261,8 @@ public class CandlepinPoolManager implements PoolManager {
     public Set<Content> getChangedContent(Owner owner, Collection<Content> content) {
         Set<Content> changed = Util.newSet();
 
+        log.debug("Syncing {} incoming content.", content.size());
+
         for (Content inbound : content) {
             Content existing = this.contentCurator.lookupById(owner, inbound.getId());
 
@@ -263,6 +274,7 @@ public class CandlepinPoolManager implements PoolManager {
             }
             else if (!inbound.equals(existing)) {
                 log.info("Updating existing content for org {}: {}", owner.getKey(), inbound.getId());
+                log.debug("Uuid match? {} == {}?", inbound.getUuid(), existing.getUuid());
                 inbound.setOwner(owner);
 
                 this.contentCurator.createOrUpdate(inbound);
@@ -280,6 +292,9 @@ public class CandlepinPoolManager implements PoolManager {
          * database.
          */
         Set<Product> allProducts = Util.newSet();
+
+        log.info("Refreshing products for {} subscriptions.", subs.size());
+
         for (Subscription sub : subs) {
             allProducts.add(sub.getProduct());
             allProducts.addAll(sub.getProvidedProducts());
@@ -326,6 +341,7 @@ public class CandlepinPoolManager implements PoolManager {
             else {
                 if (hasProductChanged(existing, incoming)) {
                     log.info("Product changed for org {}: {}", o.getKey(), incoming.getId());
+                    log.debug("product uuid check: {} == {}?", incoming.getUuid(), existing.getUuid());
                     prodCurator.createOrUpdate(incoming);
                     changedProducts.add(incoming);
                     // TODO: signal back to caller the set of changed products, we'll
@@ -564,8 +580,7 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         // Hand off to rules to determine which pools need updating:
-        List<PoolUpdate> updatedPools = poolRules.updatePools(floatingPools,
-                changedProducts);
+        List<PoolUpdate> updatedPools = poolRules.updatePools(floatingPools, changedProducts);
         regenerateCertificatesByEntIds(processPoolUpdates(poolEvents, updatedPools), lazy);
     }
 
@@ -590,8 +605,15 @@ public class CandlepinPoolManager implements PoolManager {
 
     @Override
     public Pool createPool(Pool p) {
+        // Dumb hack:
+        org.candlepin.model.SourceSubscription tmp = p.getSourceSubscription();
+        p.setSourceSubscription(null);
+
         Pool created = poolCurator.create(p);
         log.debug("   new pool: {}", p);
+
+        p.setSourceSubscription(tmp);
+        poolCurator.merge(p);
 
         if (created != null) {
             sink.emitPoolCreated(created);
@@ -621,12 +643,26 @@ public class CandlepinPoolManager implements PoolManager {
             throw new IllegalArgumentException("subscription is null");
         }
 
-        if (subscription != null && subscription.getId() != null) {
+        if (subscription.getId() != null) {
             for (Pool pool : this.getPoolsBySubscriptionId(subscription.getId())) {
                 this.deletePool(pool);
             }
         }
     }
+
+    @Override
+    public void deletePoolsForSubscriptions(Collection<String> subscriptionIds) {
+        if (subscriptionIds == null) {
+            throw new IllegalArgumentException("subscriptionIds is null");
+        }
+
+        if (subscriptionIds.size() > 0) {
+            for (Pool pool : this.poolCurator.getPoolsBySubscriptionIds(subscriptionIds)) {
+                this.deletePool(pool);
+            }
+        }
+    }
+
 
     @Override
     public Pool find(String poolId) {
