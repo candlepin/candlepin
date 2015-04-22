@@ -69,6 +69,14 @@ public interface PoolManager {
     void deletePoolsForSubscription(Subscription subscription);
 
     /**
+     * Deletes the pools associated with the specified subscription IDs.
+     *
+     * @param subscriptionIds
+     *  A collection of subscription IDs used to lookup and delete pools
+     */
+    void deletePoolsForSubscriptions(Collection<String> subscriptionIds);
+
+    /**
      * Cleanup entitlements and safely delete the given pool.
      *
      * @param pool

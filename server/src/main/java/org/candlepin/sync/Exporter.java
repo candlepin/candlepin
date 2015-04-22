@@ -498,6 +498,10 @@ public class Exporter {
         }
 
         for (Product product : products.values()) {
+            // Clear the owner and UUID so they can be re-generated/assigned on import
+            // product.setUuid(null);
+            // product.setOwner(null);
+
             String path = productDir.getCanonicalPath();
             String productId = product.getId();
             File file = new File(path, productId + ".json");

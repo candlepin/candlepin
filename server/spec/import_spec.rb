@@ -73,7 +73,7 @@ describe 'Import', :serial => true do
   it 'can be undone' do
     # Make a custom subscription so we can be sure it does not get wiped
     # out during either the undo or a subsequent re-import:
-    custom_product = create_product(random_string(), random_string())
+    custom_product = create_product(random_string(), random_string(), {:owner => @import_owner['key']})
     custom_sub = @cp.create_subscription(@import_owner['key'], custom_product['id'])
 
     job = @import_owner_client.undo_import(@import_owner['key'])

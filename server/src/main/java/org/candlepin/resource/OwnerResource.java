@@ -89,6 +89,7 @@ import org.candlepin.sync.Meta;
 import org.candlepin.sync.SyncDataFormatException;
 import org.candlepin.util.ContentOverrideValidator;
 import org.candlepin.util.ServiceLevelValidator;
+import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -1059,7 +1060,7 @@ public class OwnerResource {
 
         // TODO: not sure if this is kept or not, subscription ID doesn't mean much anymore
         if (subscription.getId() == null) {
-            subscription.setId(UUID.randomUUID().toString().replace("-", ""));
+            subscription.setId(Util.generateDbUUID());
         }
 
         poolManager.createPoolsForSubscription(subscription);
@@ -1153,39 +1154,39 @@ public class OwnerResource {
         @Context Principal principal) {
 
         Owner owner = findOwner(ownerKey);
-        log.info("Deleting all subscriptions from manifests for owner: " + ownerKey);
 
-        // TODO:
-        // This needs to be revisited. We no longer have subscriptions in the DB, so the next line
-        // will always return an empty list. And as we fabricate outbound subscriptions, we don't
+        ExporterMetadata metadata = exportCurator.lookupByTypeAndOwner(
+            ExporterMetadata.TYPE_PER_USER, owner
+        );
 
-        // In this situation we know we should be querying the curator rather than the
-        // service:
-        List<Subscription> subs = subscriptionCurator.listByOwner(owner);
-        for (Subscription sub : subs) {
+        if (metadata == null) {
+            throw new NotFoundException("No import found for owner " + ownerKey);
+        }
 
-            // Subscriptions from manifests will have an upstream pool ID, so only
-            // these should be deleted. Anything else is likely a custom subscription
-            // and needs to be left alone.
-            if (sub.getUpstreamPoolId() != null) {
-                subscriptionCurator.delete(sub);
+        log.info("Deleting all pools from manifests for owner: {}", ownerKey);
+
+        Set<String> subscriptions = new HashSet<String>();
+
+        List<Pool> pools = this.poolManager.listPoolsByOwner(owner);
+        for (Pool pool : pools) {
+            log.debug("Checking pool: {}, subscription Id: {}", pool.getId(), pool.getSubscriptionId());
+            if (pool.getUpstreamPoolId() != null) {
+                log.debug("Marking manifest pool for deletion: {}, subscription Id: {}", pool.getId(), pool.getSubscriptionId());
+                subscriptions.add(pool.getSubscriptionId());
             }
         }
+
+        this.poolManager.deletePoolsForSubscriptions(subscriptions);
 
         // Clear out upstream ID so owner can import from other distributors:
         UpstreamConsumer uc = owner.getUpstreamConsumer();
         owner.setUpstreamConsumer(null);
 
-        ExporterMetadata metadata = exportCurator.lookupByTypeAndOwner(
-            ExporterMetadata.TYPE_PER_USER, owner);
-        if (metadata == null) {
-            throw new NotFoundException("No import found for owner " + ownerKey);
-        }
         exportCurator.delete(metadata);
-
         this.recordManifestDeletion(owner, principal.getUsername(), uc);
 
-        // Refresh pools to cleanup entitlements:
+        // Refresh pools to cleanup entitlements
+        // TODO: This may be unnecessary now that we're deleting pools directly.
         return RefreshPoolsJob.forOwner(owner, false);
     }
 

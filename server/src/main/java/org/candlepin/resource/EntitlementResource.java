@@ -28,6 +28,7 @@ import org.candlepin.model.Cdn;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Entitlement;
+import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.ProductCurator;
@@ -54,6 +55,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -284,38 +286,39 @@ public class EntitlementResource {
                 "Entitlement with ID ''{0}'' could not be found.", entitlementId));
         }
 
-        String subscriptionId = null;
         Pool entPool = ent.getPool();
-        if (StringUtils.isBlank(entPool.getSourceStackId())) {
-            subscriptionId = entPool.getSubscriptionId();
-        }
-        /*
-         * A derived pool originating from a stacked parent pool will have no subscription
-         * ID as the pool is technically from many subscriptions. (i.e. all the
-         * entitlements in the stack) In this case we must look up an active entitlement
-         * in the hosts stack, and use this as our upstream certificate.
-         */
-        else {
+        if (!StringUtils.isBlank(entPool.getSourceStackId())) {
+            /*
+             * A derived pool originating from a stacked parent pool will have no subscription
+             * ID as the pool is technically from many subscriptions. (i.e. all the
+             * entitlements in the stack) In this case we must look up an active entitlement
+             * in the hosts stack, and use this as our upstream certificate.
+             */
             log.debug("Entitlement is from a stack derived pool, searching for oldest " +
                 "active entitlements in source stack.");
-            Entitlement e = entitlementCurator.findUpstreamEntitlementForStack(
+
+            ent = entitlementCurator.findUpstreamEntitlementForStack(
                 entPool.getSourceConsumer(),
                 entPool.getSourceStackId());
-            if (e != null) {
-                subscriptionId = e.getPool().getSubscriptionId();
-            }
+
+            log.debug("Found entitlement: {}", ent);
         }
 
-        if (subscriptionId == null) {
+        if (ent == null || ent.getCertificates().size() < 1) {
+            log.debug("No cert found");
+
             throw new NotFoundException(
                 i18n.tr("Unable to find upstream certificate for entitlement: {0}",
                     entitlementId));
         }
 
-        return subResource.getSubCertAsPem(subscriptionId);
-        // Cdn cdn = subResource.getSubscription(subscriptionId).getCdn();
-        // CdnInfo result = new CdnInfo(cdn, subResource.getSubCertAsPem(subscriptionId));
-        // return result;
+        String output = null;
+        for (EntitlementCertificate cert : ent.getCertificates()) {
+            output = cert.getCert() + cert.getKey();
+            break;
+        }
+
+        return output;
     }
 
     /**
