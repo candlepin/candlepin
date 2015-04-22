@@ -26,6 +26,8 @@ import org.hibernate.Criteria;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.io.Serializable;
@@ -38,6 +40,8 @@ import java.util.Set;
  * interact with Products.
  */
 public class ProductCurator extends AbstractHibernateCurator<Product> {
+
+    private static Logger log = LoggerFactory.getLogger(ProductCurator.class);
 
     @Inject private Configuration config;
     @Inject private I18n i18n;
@@ -156,17 +160,19 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      *
      * @param p Product to create or update.
      */
-    public void createOrUpdate(Product p) {
+    public Product createOrUpdate(Product p) {
         // TODO: Should we also verify that the UUID isn't in use?
+        log.debug("Creating or updating product: {}", p);
 
         Product existing = this.lookupById(p.getOwner(), p.getId());
+
         if (existing == null) {
             create(p);
+            return p;
         }
-        else {
-            copy(p, existing);
-            merge(existing);
-        }
+
+        copy(p, existing);
+        return merge(existing);
     }
 
     public void copy(Product src, Product dest) {
@@ -213,6 +219,8 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
             validateAttributeValue(attr);
         }
 
+        log.debug("Persisting new product entity: {}", entity);
+
         /*
          * Ensure that no circular reference exists
          */
@@ -234,6 +242,8 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
         /*
          * Ensure that no circular reference exists
          */
+
+        log.debug("Merging product entity: {}", entity);
 
         return super.merge(entity);
     }

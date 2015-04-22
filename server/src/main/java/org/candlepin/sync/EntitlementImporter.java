@@ -23,6 +23,7 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.SubscriptionsCertificate;
 import org.candlepin.util.Util;
@@ -76,14 +77,6 @@ public class EntitlementImporter {
         subscription.setId(Util.generateDbUUID());
 
         subscription.setUpstreamPoolId(entitlement.getPool().getId());
-
-        if (subscription.getUpstreamPoolId() == null) {
-            log.debug("CREATING A SUB WITHOUT AN UPSTREAM POOL ID: {}", subscription.getId());
-        } else {
-            log.debug("Creating new sub with ID: {}", subscription.getId());
-        }
-
-
         subscription.setUpstreamEntitlementId(entitlement.getId());
         subscription.setUpstreamConsumerId(consumer.getUuid());
 
@@ -130,6 +123,14 @@ public class EntitlementImporter {
         for (Product subProvProd : entitlement.getPool().getDerivedProvidedProducts()) {
             subProvProds.add(findProduct(productsById, subProvProd.getId()));
         }
+
+        for (ProvidedProduct pp : entitlement.getPool().getDerivedProvidedProductDtos()) {
+            subProvProds.add(this.findProduct(productsById, pp.getProductId()));
+        }
+
+        log.debug("Entitlement has {} dpp", entitlement.getPool().getDerivedProvidedProducts().size());
+        log.debug("Entitlement has {} dpp-dto", entitlement.getPool().getDerivedProvidedProductDtos().size());
+        log.debug("Subscription has {} derived provided products.", subProvProds.size());
 
         subscription.setDerivedProvidedProducts(subProvProds);
 

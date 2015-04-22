@@ -29,7 +29,7 @@ describe 'Import', :serial => true do
     @cp.delete_user(@import_username)
     @cp.delete_owner(@import_owner['key'])
     @exporters.each do |e|
-      e.cleanup()
+      # e.cleanup()
     end
   end
 
@@ -76,8 +76,11 @@ describe 'Import', :serial => true do
     custom_product = create_product(random_string(), random_string(), {:owner => @import_owner['key']})
     custom_sub = @cp.create_subscription(@import_owner['key'], custom_product['id'])
 
+    puts "Custom sub ID: #{custom_sub['id']}"
+
     job = @import_owner_client.undo_import(@import_owner['key'])
     wait_for_job(job['id'], 30)
+
     pools = @import_owner_client.list_pools({:owner => @import_owner['id']})
     pools.length.should == 1 # this is our custom pool
     pools[0]['subscriptionId'].should == custom_sub['id']
@@ -85,7 +88,8 @@ describe 'Import', :serial => true do
     o['upstreamConsumer'].should be_nil
 
     # Make sure this still exists:
-    custom_sub = @cp.get_subscription(custom_sub['id'])
+    custom_sub_chk = @cp.get_subscription(custom_sub['id'])
+    custom_sub_chk.should = custom_sub
 
     # should be able to re-import without an "older than existing" error:
     @cp.import(@import_owner['key'], @cp_export_file)
@@ -96,6 +100,12 @@ describe 'Import', :serial => true do
     # same manifest:
     job = @import_owner_client.undo_import(@import_owner['key'])
     wait_for_job(job['id'], 30)
+
+    # Verify our custom sub still exists
+    pools = @import_owner_client.list_pools({:owner => @import_owner['id']})
+    pools.length.should == 1 # this is our custom pool
+    pools[0]['subscriptionId'].should == custom_sub['id']
+
     another_owner = @cp.create_owner(random_string('testowner'))
     @cp.import(another_owner['key'], @cp_export_file)
     @cp.delete_owner(another_owner['key'])
@@ -244,7 +254,7 @@ describe 'Import', :serial => true do
   end
 
   it 'should import arch content correctly' do
-      contents = @cp.list_content()
+      contents = @cp.list_content(@import_owner['key'])
       contents.each do |content|
         if content.has_key('content_url')
           if content['content_url'] == '/path/to/arch/specific/content'
@@ -326,6 +336,9 @@ describe 'Import', :serial => true do
     pool = @cp.list_pools(:owner => @import_owner.id,
       :product => @cp_export.products[:product3].id)[0]
     pool.should_not be_nil
+
+    pp pool
+
     pool["derivedProductId"].should == @cp_export.products[:derived_product].id
     pool["derivedProvidedProducts"].length.should == 1
     pool["derivedProvidedProducts"][0]["productId"].should == @cp_export.products[:derived_provided_prod].id

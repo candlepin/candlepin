@@ -891,12 +891,18 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     }
 
     @JsonProperty("derivedProvidedProducts")
-    public Set<ProvidedProduct> getDerivedProvidedProductDtos() {
+    public Set<ProvidedProduct> buildDerivedProvidedProductDtos() {
         Set<ProvidedProduct> prods = new HashSet<ProvidedProduct>();
         for (Product p : getDerivedProvidedProducts()) {
             prods.add(new ProvidedProduct(p));
         }
+
         return prods;
+    }
+
+    @JsonIgnore
+    public Set<ProvidedProduct> getDerivedProvidedProductDtos() {
+        return this.providedProductDtos;
     }
 
     /*

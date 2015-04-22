@@ -955,6 +955,8 @@ public class OwnerResource {
             presolved.add(this.resolveProduct(owner, product));
         }
 
+        log.debug("Resolved {} derived provided products for subscription {}", presolved.size(), subscription.getId());
+
         subscription.setDerivedProvidedProducts(presolved);
 
         // TODO: Do we need to resolve Branding objects?
@@ -1186,7 +1188,6 @@ public class OwnerResource {
         this.recordManifestDeletion(owner, principal.getUsername(), uc);
 
         // Refresh pools to cleanup entitlements
-        // TODO: This may be unnecessary now that we're deleting pools directly.
         return RefreshPoolsJob.forOwner(owner, false);
     }
 

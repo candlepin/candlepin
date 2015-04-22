@@ -151,6 +151,20 @@ public class CandlepinPoolManager implements PoolManager {
     void refreshPoolsWithRegeneration(SubscriptionServiceAdapter subAdapter, Owner owner, boolean lazy) {
         log.info("Refreshing pools for owner: {}", owner);
         List<Subscription> subs = subAdapter.getSubscriptions(owner);
+
+        // TODO: Remove this; temporary proof-of-concept hack
+        poolloop: for (Pool pool : this.poolCurator.listByOwner(owner)) {
+            if ("master".equalsIgnoreCase(pool.getSubscriptionSubKey())) {
+                for (Subscription sub : subs) {
+                    if (sub.getId().equals(pool.getSubscriptionId())) {
+                        continue poolloop;
+                    }
+                }
+
+                subs.add(this.fabricateSubscriptionFromPool(pool));
+            }
+        }
+
         log.debug("Found " + subs.size() + " existing subscriptions.");
 
         SubscriptionReconciler reconciler = new SubscriptionReconciler();
@@ -182,16 +196,14 @@ public class CandlepinPoolManager implements PoolManager {
         // remove everything that isn't actually active
         subIds.removeAll(deletedSubs);
         // delete pools whose subscription disappeared:
-        if (subIds.size() > 0) {
-            for (Pool p : poolCurator.getPoolsFromBadSubs(owner, subIds)) {
-                log.debug("Checking pool {}", p.getId());
+        for (Pool p : poolCurator.getPoolsFromBadSubs(owner, subIds)) {
+            log.debug("Checking pool {}", p.getId());
 
-                if (p.getType() == PoolType.NORMAL || p.getType() == PoolType.BONUS) {
-                    log.debug("Deleting pool {}, sid: {}", p.getId(), p.getSubscriptionId());
-                    deletePool(p);
-                } else {
-                    log.debug("Not deleting pool {}, sid: {}", p.getId(), p.getSubscriptionId());
-                }
+            if (p.getType() == PoolType.NORMAL || p.getType() == PoolType.BONUS) {
+                log.debug("Deleting pool {}, sid: {}", p.getId(), p.getSubscriptionId());
+                deletePool(p);
+            } else {
+                log.debug("Not deleting pool {}, sid: {}", p.getId(), p.getSubscriptionId());
             }
         }
 
@@ -232,7 +244,24 @@ public class CandlepinPoolManager implements PoolManager {
             }
         }
 
-        return this.getChangedContent(owner, content.values());
+        Set<Content> changed = this.getChangedContent(owner, content.values());
+
+        // Go back through each sub and update content references so we don't end up with dangling,
+        // transient or duplicate references on any of the subs' products.
+        for (Subscription sub : subs) {
+            this.updateContentRefs(sub.getProduct());
+            this.updateContentRefs(sub.getDerivedProduct());
+
+            for (Product product : sub.getProvidedProducts()) {
+                this.updateContentRefs(product);
+            }
+
+            for (Product product : sub.getDerivedProvidedProducts()) {
+                this.updateContentRefs(product);
+            }
+        }
+
+        return changed;
     }
 
     private void addProductContentToMap(Map<String, Content> contentMap, Product product) {
@@ -258,6 +287,24 @@ public class CandlepinPoolManager implements PoolManager {
         }
     }
 
+    private void updateContentRefs(Product product) {
+        if (product == null) {
+            return;
+        }
+
+        for (ProductContent pc : product.getProductContent()) {
+            Content content = pc.getContent();
+            Content existing = this.contentCurator.lookupById(content.getOwner(), content.getId());
+
+            if (existing == null) {
+                // This should never happen.
+                throw new RuntimeException("Unable to resolve content reference");
+            }
+
+            pc.setContent(existing);
+        }
+    }
+
     public Set<Content> getChangedContent(Owner owner, Collection<Content> content) {
         Set<Content> changed = Util.newSet();
 
@@ -274,7 +321,6 @@ public class CandlepinPoolManager implements PoolManager {
             }
             else if (!inbound.equals(existing)) {
                 log.info("Updating existing content for org {}: {}", owner.getKey(), inbound.getId());
-                log.debug("Uuid match? {} == {}?", inbound.getUuid(), existing.getUuid());
                 inbound.setOwner(owner);
 
                 this.contentCurator.createOrUpdate(inbound);
@@ -291,46 +337,84 @@ public class CandlepinPoolManager implements PoolManager {
          * these product objects are detached, and need to be synced with what's in the
          * database.
          */
-        Set<Product> allProducts = Util.newSet();
+        Map<String, Product> products = new HashMap<String, Product>();
 
         log.info("Refreshing products for {} subscriptions.", subs.size());
 
         for (Subscription sub : subs) {
-            allProducts.add(sub.getProduct());
-            allProducts.addAll(sub.getProvidedProducts());
+            this.addProductToMap(products, sub.getProduct());
+            this.addProductToMap(products, sub.getDerivedProduct());
 
-            if (sub.getDerivedProduct() != null) {
-                allProducts.add(sub.getDerivedProduct());
+            for (Product product : sub.getProvidedProducts()) {
+                this.addProductToMap(products, product);
             }
 
-            allProducts.addAll(sub.getDerivedProvidedProducts());
+            for (Product product : sub.getDerivedProvidedProducts()) {
+                this.addProductToMap(products, product);
+            }
         }
 
-        return getChangedProducts(o, allProducts);
+        Set<Product> changed = this.getChangedProducts(o, products.values());
+
+        // Go back through each sub and update product references so we don't end up with dangling,
+        // transient or duplicate references on any of the subs.
+        for (Subscription sub : subs) {
+            sub.setProduct(this.resolveProductRef(sub.getProduct()));
+
+            if (sub.getDerivedProduct() != null) {
+                sub.setDerivedProduct(this.resolveProductRef(sub.getDerivedProduct()));
+            }
+
+            Set<Product> pset = new HashSet<Product>();
+            for (Product product : sub.getProvidedProducts()) {
+                pset.add(this.resolveProductRef(product));
+            }
+            sub.setProvidedProducts(pset);
+
+            pset.clear();
+            for (Product product : sub.getDerivedProvidedProducts()) {
+                pset.add(this.resolveProductRef(product));
+            }
+            sub.setDerivedProvidedProducts(pset);
+        }
+
+        return changed;
     }
 
-    public Set<Product> getChangedProducts(Owner o, Set<Product> allProducts) {
+    private void addProductToMap(Map<String, Product> productMap, Product product) {
+        if (product != null) {
+            // Check that the product hasn't changed if we've already seen it.
+            Product existing = productMap.get(product.getId());
+
+            if (existing != null && !this.hasProductChanged(existing, product)) {
+                // TODO: Is this condition exception worthy?
+                log.warn(
+                    "Preexisting product found with new data. Using new version for product: {}",
+                    product.getId()
+                );
+            }
+
+            productMap.put(product.getId(), product);
+        }
+    }
+
+    private Product resolveProductRef(Product product) {
+        Product resolved = null;
+
+        if (product != null && product.getOwner() != null && product.getId() != null) {
+            resolved = this.prodCurator.lookupById(product.getOwner(), product.getId());
+        }
+
+        return resolved != null ? resolved : product;
+    }
+
+    public Set<Product> getChangedProducts(Owner o, Collection<Product> allProducts) {
         Set<Product> changedProducts = Util.newSet();
+
+        HashMap<String, Content> cmap = new HashMap<String, Content>();
 
         log.debug("Syncing {} incoming products.", allProducts.size());
         for (Product incoming : allProducts) {
-            // Update content references on inbound product (should this be done while refreshing
-            // content instead?)
-            for (ProductContent pc : incoming.getProductContent()) {
-                Content existing = this.contentCurator.lookupById(o, pc.getContent().getId());
-
-                if (existing == null) {
-                    throw new RuntimeException("CONTENT DOESN'T EXIST THAT TOTALLY SHOULD: " + pc.getContent().getId());
-                }
-
-                if (!existing.equals(pc.getContent())) {
-                    throw new RuntimeException("Existing content isn't equal to our inbound content: " + pc.getContent().getId());
-                }
-
-                pc.setContent(existing);
-            }
-
-
             Product existing = prodCurator.lookupById(o, incoming.getId());
 
             if (existing == null) {
@@ -341,7 +425,6 @@ public class CandlepinPoolManager implements PoolManager {
             else {
                 if (hasProductChanged(existing, incoming)) {
                     log.info("Product changed for org {}: {}", o.getKey(), incoming.getId());
-                    log.debug("product uuid check: {} == {}?", incoming.getUuid(), existing.getUuid());
                     prodCurator.createOrUpdate(incoming);
                     changedProducts.add(incoming);
                     // TODO: signal back to caller the set of changed products, we'll
@@ -353,7 +436,7 @@ public class CandlepinPoolManager implements PoolManager {
         return changedProducts;
     }
 
-    // TODO: move to comparator?
+    // TODO: move to comparator? Perhaps updating Product.equals and using that would be better?
     protected final boolean hasProductChanged(Product existingProd, Product importedProd) {
         // trying to go in order from least to most work.
         if (!existingProd.getName().equals(importedProd.getName())) {
@@ -604,16 +687,9 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     @Override
-    public Pool createPool(Pool p) {
-        // Dumb hack:
-        org.candlepin.model.SourceSubscription tmp = p.getSourceSubscription();
-        p.setSourceSubscription(null);
-
-        Pool created = poolCurator.create(p);
-        log.debug("   new pool: {}", p);
-
-        p.setSourceSubscription(tmp);
-        poolCurator.merge(p);
+    public Pool createPool(Pool pool) {
+        Pool created = poolCurator.create(pool);
+        log.debug("   new pool: {}", pool);
 
         if (created != null) {
             sink.emitPoolCreated(created);
