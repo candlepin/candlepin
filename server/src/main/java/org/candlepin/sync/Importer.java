@@ -102,7 +102,6 @@ public class Importer {
         public String fileName() {
             return fileName;
         }
-
     }
 
     /**

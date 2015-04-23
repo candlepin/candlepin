@@ -576,17 +576,15 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     public List<Pool> getPoolsFromBadSubs(Owner owner, Collection<String> expectedSubIds) {
         Criteria crit = currentSession().createCriteria(Pool.class)
                 .add(Restrictions.eq("owner", owner));
-        if (!expectedSubIds.isEmpty()) {
-            log.debug("Expected Subscription IDs: {}", expectedSubIds);
 
+        if (!expectedSubIds.isEmpty()) {
             crit.createAlias("sourceSubscription", "sourceSub");
             crit.add(Restrictions.and(
                 Restrictions.not(Restrictions.in("sourceSub.subscriptionId", expectedSubIds)),
                 Restrictions.isNotNull("sourceSub.subscriptionId")
             ));
-        } else {
-            log.debug("Expected Subscription list is empty");
         }
+
         crit.addOrder(Order.asc("id"));
         return crit.list();
     }

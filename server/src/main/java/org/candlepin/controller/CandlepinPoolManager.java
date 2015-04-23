@@ -197,13 +197,8 @@ public class CandlepinPoolManager implements PoolManager {
         subIds.removeAll(deletedSubs);
         // delete pools whose subscription disappeared:
         for (Pool p : poolCurator.getPoolsFromBadSubs(owner, subIds)) {
-            log.debug("Checking pool {}", p.getId());
-
             if (p.getType() == PoolType.NORMAL || p.getType() == PoolType.BONUS) {
-                log.debug("Deleting pool {}, sid: {}", p.getId(), p.getSubscriptionId());
                 deletePool(p);
-            } else {
-                log.debug("Not deleting pool {}, sid: {}", p.getId(), p.getSubscriptionId());
             }
         }
 
