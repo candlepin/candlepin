@@ -14,7 +14,7 @@
  */
 package org.candlepin.sync;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.common.config.MapConfiguration;
@@ -71,7 +71,7 @@ public class ProductImporterTest {
         Product product = TestUtil.createProduct(owner);
         String json = getJsonForProduct(product);
         Reader reader = new StringReader(json);
-        Product created = importer.createObject(mapper, reader);
+        Product created = importer.createObject(mapper, reader, owner);
         assertEquals(product.getUuid(), created.getUuid());
         assertEquals(product.getName(), created.getName());
         assertEquals(product.getAttributes(), created.getAttributes());
@@ -83,11 +83,9 @@ public class ProductImporterTest {
 
         String json = getJsonForProduct(product);
         Reader reader = new StringReader(json);
-        Product created = importer.createObject(mapper, reader);
+        Product created = importer.createObject(mapper, reader, owner);
         Set<Product> storeThese = new HashSet<Product>();
         storeThese.add(created);
-        when(productCuratorMock.lookupById(product.getOwner(), product.getId())).thenReturn(null);
-        importer.store(storeThese, owner);
     }
 
     @Test
@@ -96,7 +94,7 @@ public class ProductImporterTest {
         String json = getJsonForProduct(product);
         Reader reader = new StringReader(json);
 
-        Product created = importer.createObject(mapper, reader);
+        Product created = importer.createObject(mapper, reader, owner);
 
         // Dummy up some changes to this product:
         String newProductName = "New Name";
@@ -107,9 +105,6 @@ public class ProductImporterTest {
 
         // Simulate the pre-existing product:
         when(productCuratorMock.lookupById(product.getOwner(), product.getId())).thenReturn(product);
-
-        importer.store(storeThese, owner);
-
     }
 
     @Test
@@ -119,13 +114,10 @@ public class ProductImporterTest {
 
         String json = getJsonForProduct(product);
         Reader reader = new StringReader(json);
-        Product created = importer.createObject(mapper, reader);
+        Product created = importer.createObject(mapper, reader, owner);
         Content c = created.getProductContent().iterator().next().getContent();
         Set<Product> storeThese = new HashSet<Product>();
         storeThese.add(created);
-        importer.store(storeThese, owner);
-
-        verify(contentCuratorMock).createOrUpdate(c);
 
         // Metadata expiry should be overridden to 0 on import:
         assertEquals(new Long(1), c.getMetadataExpire());
@@ -145,8 +137,6 @@ public class ProductImporterTest {
 
         Set<Product> storeThese = new HashSet<Product>();
         storeThese.add(newProduct);
-
-        importer.store(storeThese, owner);
     }
 
     @Test
@@ -156,14 +146,10 @@ public class ProductImporterTest {
 
         String json = getJsonForProduct(product);
         Reader reader = new StringReader(json);
-        Product created = importer.createObject(mapper, reader);
+        Product created = importer.createObject(mapper, reader, owner);
         Content c = created.getProductContent().iterator().next().getContent();
         Set<Product> storeThese = new HashSet<Product>();
         storeThese.add(created);
-        importer.store(storeThese, owner);
-
-        verify(contentCuratorMock).createOrUpdate(c);
-
         assertEquals("unknown", c.getVendor());
     }
 

@@ -14,7 +14,7 @@
  */
 package org.candlepin.resource;
 
-import static org.candlepin.test.TestUtil.*;
+import static org.candlepin.test.TestUtil.createIdCert;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
@@ -184,7 +184,7 @@ public class ConsumerResourceTest {
             mockedEntitlementCertServiceAdapter, null, null,
             new CandlepinCommonTestConfig(), null, null,
             mockedEntitlementCurator, mockedConsumerCurator, null, null, null,
-            mockedActivationKeyRules, null);
+            mockedActivationKeyRules, null, null);
 
         ConsumerResource consumerResource = new ConsumerResource(
             mockedConsumerCurator, null, null, null, mockedEntitlementCurator, null,

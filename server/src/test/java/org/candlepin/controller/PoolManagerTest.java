@@ -33,6 +33,7 @@ import org.candlepin.model.AbstractHibernateObject;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Content;
+import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCertificateCurator;
@@ -132,6 +133,8 @@ public class PoolManagerTest {
     private ActivationKeyRules activationKeyRules;
     @Mock
     private ProductCurator productCuratorMock;
+    @Mock
+    private ContentCurator contentCuratorMock;
 
     private CandlepinPoolManager manager;
     private UserPrincipal principal;
@@ -160,7 +163,7 @@ public class PoolManagerTest {
             mockPoolCurator, mockSubAdapter, mockProductCurator, entCertAdapterMock, mockEventSink,
             eventFactory, mockConfig, enforcerMock, poolRulesMock, entitlementCurator,
             consumerCuratorMock, certCuratorMock, complianceRules, autobindRules,
-            activationKeyRules, productCuratorMock)
+            activationKeyRules, productCuratorMock, contentCuratorMock)
         );
 
         when(entCertAdapterMock.generateEntitlementCert(any(Entitlement.class),
