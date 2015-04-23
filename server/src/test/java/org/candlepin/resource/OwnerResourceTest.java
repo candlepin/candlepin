@@ -1023,7 +1023,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         ExporterMetadataCurator ec = mock(ExporterMetadataCurator.class);
         SubscriptionCurator sc = mock(SubscriptionCurator.class);
         OwnerResource thisOwnerResource = new OwnerResource(ownerCurator, sc,
-            null, null, null, i18n, es, null, null, null, null, null, ec,
+            null, null, null, i18n, es, null, null, null, null, this.poolManager, ec,
             null, importRecordCurator, null, null, null, null, null,
             null, null, null, contentOverrideValidator,
             serviceLevelValidator, null, null, null, null);

@@ -655,9 +655,18 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     @JsonProperty("providedProducts")
     public Set<ProvidedProduct> getProvidedProductDtos() {
         Set<ProvidedProduct> prods = new HashSet<ProvidedProduct>();
+
+        // TODO:
+        // These DTOs need to be resolved or we could start running into conflicts. Including these
+        // DTOs in the list is not a long-term solution.
+        if (this.providedProductDtos != null) {
+            prods.addAll(this.providedProductDtos);
+        }
+
         for (Product p : getProvidedProducts()) {
             prods.add(new ProvidedProduct(p));
         }
+
         return prods;
     }
 
@@ -891,18 +900,18 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     }
 
     @JsonProperty("derivedProvidedProducts")
-    public Set<ProvidedProduct> buildDerivedProvidedProductDtos() {
+    public Set<ProvidedProduct> getDerivedProvidedProductDtos() {
         Set<ProvidedProduct> prods = new HashSet<ProvidedProduct>();
+
+        if (this.derivedProvidedProductDtos != null) {
+            prods.addAll(this.derivedProvidedProductDtos);
+        }
+
         for (Product p : getDerivedProvidedProducts()) {
             prods.add(new ProvidedProduct(p));
         }
 
         return prods;
-    }
-
-    @JsonIgnore
-    public Set<ProvidedProduct> getDerivedProvidedProductDtos() {
-        return this.providedProductDtos;
     }
 
     /*

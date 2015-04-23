@@ -26,6 +26,7 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Entitlement;
+import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.ProductCurator;
@@ -44,7 +45,9 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
+import java.util.HashSet;
 import java.util.Locale;
+import java.util.Set;
 
 /**
  * EntitlementResourceTest
@@ -83,13 +86,20 @@ public class EntitlementResourceTest {
     public void getUpstreamCertSimple() {
         Entitlement e = TestUtil.createEntitlement();
         e.setId("entitlementID");
+
+        EntitlementCertificate entitlementCert = new EntitlementCertificate();
+        entitlementCert.setCert("HELLO");
+        entitlementCert.setKey("CERT");
+
+        Set<EntitlementCertificate> certs = new HashSet<EntitlementCertificate>();
+        certs.add(entitlementCert);
+        e.setCertificates(certs);
+
         when(entitlementCurator.find(eq(e.getId()))).thenReturn(e);
 
-        String expected = "HELLO";
-        // Mock out the PEM text so we can verify without actually generating a cert:
-        when(subResource.getSubCertAsPem(eq(e.getPool().getSubscriptionId())))
-            .thenReturn(expected);
+        String expected = "HELLOCERT";
         String result = entResource.getUpstreamCert(e.getId());
+
         assertEquals(expected, result);
     }
 
@@ -107,18 +117,25 @@ public class EntitlementResourceTest {
     public void getUpstreamCertStackSubPool() {
         Entitlement parentEnt = TestUtil.createEntitlement();
         parentEnt.setId("parentEnt");
+
+        EntitlementCertificate entitlementCert = new EntitlementCertificate();
+        entitlementCert.setCert("HELLO");
+        entitlementCert.setKey("CERT");
+
+        Set<EntitlementCertificate> certs = new HashSet<EntitlementCertificate>();
+        certs.add(entitlementCert);
+        parentEnt.setCertificates(certs);
+
         when(entitlementCurator.findUpstreamEntitlementForStack(consumer, "mystack"))
             .thenReturn(parentEnt);
 
-        String expected = "HELLO";
-        // Mock out the PEM text so we can verify without actually generating a cert:
-        when(subResource.getSubCertAsPem(eq(parentEnt.getPool().getSubscriptionId())))
-            .thenReturn(expected);
+        String expected = "HELLOCERT";
 
         // Entitlement from stack sub-pool:
         Entitlement e = TestUtil.createEntitlement();
         e.setId("entitlementID");
         e.getPool().setSourceStack(new SourceStack(consumer, "mystack"));
+
         when(entitlementCurator.find(eq(e.getId()))).thenReturn(e);
 
         String result = entResource.getUpstreamCert(e.getId());

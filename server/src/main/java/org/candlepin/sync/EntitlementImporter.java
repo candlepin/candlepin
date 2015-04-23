@@ -123,10 +123,12 @@ public class EntitlementImporter {
         for (Product subProvProd : entitlement.getPool().getDerivedProvidedProducts()) {
             subProvProds.add(findProduct(productsById, subProvProd.getId()));
         }
+        entitlement.getPool().setDerivedProvidedProducts(null);
 
         for (ProvidedProduct pp : entitlement.getPool().getDerivedProvidedProductDtos()) {
             subProvProds.add(this.findProduct(productsById, pp.getProductId()));
         }
+        entitlement.getPool().setDerivedProvidedProductDtos(null);
 
         log.debug("Entitlement has {} dpp", entitlement.getPool().getDerivedProvidedProducts().size());
         log.debug("Entitlement has {} dpp-dto", entitlement.getPool().getDerivedProvidedProductDtos().size());
