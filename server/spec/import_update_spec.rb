@@ -36,6 +36,7 @@ describe 'Import Update', :serial => true do
     new_sublist.each do |new_sub|
       @sublist.each do |sub|
         if(sub.id == new_sub.id)
+          pp new_sub
           if(sub.certificate.serial.id != new_sub.certificate.serial.id)
             hasChanged = true
           end

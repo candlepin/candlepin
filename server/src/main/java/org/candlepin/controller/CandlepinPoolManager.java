@@ -24,6 +24,7 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Consumer;
@@ -44,6 +45,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Subscription;
+import org.candlepin.model.SubscriptionsCertificate;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.ValidationResult;
@@ -153,17 +155,17 @@ public class CandlepinPoolManager implements PoolManager {
         List<Subscription> subs = subAdapter.getSubscriptions(owner);
 
         // TODO: Remove this; temporary proof-of-concept hack
-        poolloop: for (Pool pool : this.poolCurator.listByOwner(owner)) {
-            if ("master".equalsIgnoreCase(pool.getSubscriptionSubKey())) {
-                for (Subscription sub : subs) {
-                    if (sub.getId().equals(pool.getSubscriptionId())) {
-                        continue poolloop;
-                    }
-                }
+        // poolloop: for (Pool pool : this.poolCurator.listByOwner(owner)) {
+        //     if ("master".equalsIgnoreCase(pool.getSubscriptionSubKey())) {
+        //         for (Subscription sub : subs) {
+        //             if (sub.getId().equals(pool.getSubscriptionId())) {
+        //                 continue poolloop;
+        //             }
+        //         }
 
-                subs.add(this.fabricateSubscriptionFromPool(pool));
-            }
-        }
+        //         subs.add(this.fabricateSubscriptionFromPool(pool));
+        //     }
+        // }
 
         log.debug("Found " + subs.size() + " existing subscriptions.");
 
@@ -1733,6 +1735,38 @@ public class CandlepinPoolManager implements PoolManager {
         // TODO:
         // There's probably a fair amount of other stuff we need to migrate over to the
         // subscription. We should do that here.
+
+        // Get the certificate information from the source entitlement??
+        // Entitlement entitlement = pool.getSourceEntitlement();
+        log.debug("Pool upstream entitlement ID: {}", pool.getUpstreamEntitlementId());
+        log.debug("Attempting to get entitlements for subscription: {}", pool.getSubscriptionId());
+        log.debug("Source entitlement: {}", pool.getSourceEntitlement());
+
+        Entitlement upstreamEntitlement = this.entitlementCurator.find(pool.getUpstreamEntitlementId());
+        log.debug("Upstream entitlement: {}", upstreamEntitlement);
+
+        if (upstreamEntitlement != null) {
+            log.debug("Found an entitlement for pool: {}", pool.getId());
+
+            for (EntitlementCertificate cert : upstreamEntitlement.getCertificates()) {
+                log.debug("Found a certificate for fake sub: {}", pool.getSubscriptionId());
+
+                CertificateSerial cs = new CertificateSerial();
+                cs.setId(cert.getSerial().getId());
+                cs.setCollected(cert.getSerial().isCollected());
+                cs.setExpiration(cert.getSerial().getExpiration());
+                cs.setUpdated(cert.getSerial().getUpdated());
+                cs.setCreated(cert.getSerial().getCreated());
+
+                SubscriptionsCertificate sc = new SubscriptionsCertificate();
+                sc.setId(cert.getId());
+                sc.setKey(cert.getKey());
+                sc.setCertAsBytes(cert.getCertAsBytes());
+                sc.setSerial(cs);
+
+                fabricated.setCertificate(sc);
+            }
+        }
 
         return fabricated;
     }

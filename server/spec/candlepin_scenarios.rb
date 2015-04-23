@@ -481,9 +481,9 @@ class StandardExporter < Exporter
     arch_content = create_content({:metadata_expire => 6000,
                                    :required_tags => "TAG1,TAG2",
                                    :arches => "i686,x86_64"})
-    @cp.add_content_to_product(product1.id, content.id)
-    @cp.add_content_to_product(product2.id, content.id)
-    @cp.add_content_to_product(product2.id, arch_content.id)
+    @cp.add_content_to_product(@owner['key'], product1.id, content.id)
+    @cp.add_content_to_product(@owner['key'], product2.id, content.id)
+    @cp.add_content_to_product(@owner['key'], product2.id, arch_content.id)
 
     end_date = Date.new(2025, 5, 29)
     @cp.create_subscription(@owner['key'], product1.id, 12, [], '', '12345', '6789', nil, end_date)
