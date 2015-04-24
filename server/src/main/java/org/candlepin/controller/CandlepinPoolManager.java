@@ -154,19 +154,6 @@ public class CandlepinPoolManager implements PoolManager {
         log.info("Refreshing pools for owner: {}", owner);
         List<Subscription> subs = subAdapter.getSubscriptions(owner);
 
-        // TODO: Remove this; temporary proof-of-concept hack
-        // poolloop: for (Pool pool : this.poolCurator.listByOwner(owner)) {
-        //     if ("master".equalsIgnoreCase(pool.getSubscriptionSubKey())) {
-        //         for (Subscription sub : subs) {
-        //             if (sub.getId().equals(pool.getSubscriptionId())) {
-        //                 continue poolloop;
-        //             }
-        //         }
-
-        //         subs.add(this.fabricateSubscriptionFromPool(pool));
-        //     }
-        // }
-
         log.debug("Found " + subs.size() + " existing subscriptions.");
 
         SubscriptionReconciler reconciler = new SubscriptionReconciler();
@@ -1731,6 +1718,7 @@ public class CandlepinPoolManager implements PoolManager {
         );
 
         fabricated.setId(pool.getSubscriptionId());
+        fabricated.setUpstreamEntitlementId(pool.getUpstreamEntitlementId());
 
         // TODO:
         // There's probably a fair amount of other stuff we need to migrate over to the

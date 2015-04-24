@@ -75,7 +75,6 @@ public class OwnerInfoCurator {
             if (count > 0) {
                 info.addToEnabledConsumerTypeCountByPool(type, count);
             }
-
         }
 
         int activePools = getActivePoolCount(owner, now);

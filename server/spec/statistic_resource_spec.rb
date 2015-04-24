@@ -44,9 +44,6 @@ describe 'Statistic Resource' do
 
     @cp.get_system_physical_count(owner1['key']).first.value.should == 1
     @cp.get_system_virtual_count(owner1['key']).first.value.should == 0
-
-
   end
-
 
 end

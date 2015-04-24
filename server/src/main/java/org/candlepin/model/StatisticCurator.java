@@ -100,7 +100,6 @@ public class StatisticCurator extends AbstractHibernateCurator<Statistic> {
             ValueType.PHYSICAL, null, oi.getConsumerGuestCounts().get(OwnerInfo.PHYSICAL),
             owner.getId());
         create(consumerCountStatistic);
-
     }
 
     private void totalConsumers(Owner owner) {
