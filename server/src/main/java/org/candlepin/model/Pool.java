@@ -918,7 +918,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
      * Used temporarily while importing a manifest.
      */
     public void setDerivedProvidedProductDtos(Set<ProvidedProduct> dtos) {
-        providedProductDtos = dtos;
+        derivedProvidedProductDtos = dtos;
     }
 
     /*
