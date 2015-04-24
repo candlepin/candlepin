@@ -1279,6 +1279,8 @@ public class OwnerResource {
         this.recordManifestDeletion(owner, principal.getUsername(), uc);
 
         // Refresh pools to cleanup entitlements
+        // TODO: The above does all the revocation of entitlements, which should be in
+        // an async job whose status is returned here.
         return RefreshPoolsJob.forOwner(owner, false);
     }
 
