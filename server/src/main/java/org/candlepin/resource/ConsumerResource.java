@@ -388,7 +388,8 @@ public class ConsumerResource {
     public Consumer create(Consumer consumer, @Context Principal principal,
         @QueryParam("username") String userName,
         @QueryParam("owner") String ownerKey,
-        @QueryParam("activation_keys") String activationKeys)
+        @QueryParam("activation_keys") String activationKeys,
+        @QueryParam("identity_cert_creation") @DefaultValue("true") boolean identityCertCreation)
         throws BadRequestException {
         // API:registerConsumer
         Set<String> keyStrings = splitKeys(activationKeys);
@@ -486,8 +487,10 @@ public class ConsumerResource {
 
         try {
             consumer = consumerCurator.create(consumer);
-            IdentityCertificate idCert = generateIdCert(consumer, false);
-            consumer.setIdCert(idCert);
+            if (identityCertCreation) {
+                IdentityCertificate idCert = generateIdCert(consumer, false);
+                consumer.setIdCert(idCert);
+            }
 
             sink.emitConsumerCreated(consumer);
 
@@ -817,10 +820,17 @@ public class ConsumerResource {
         }
     }
 
-    @Transactional
-    protected boolean performConsumerUpdates(Consumer updated, Consumer toUpdate,
+    public boolean performConsumerUpdates(Consumer updated, Consumer toUpdate,
             VirtConsumerMap guestConsumerMap,
             VirtConsumerMap guestHypervisorConsumers) {
+        return performConsumerUpdates(updated, toUpdate, guestConsumerMap, guestHypervisorConsumers, true);
+    }
+
+    @Transactional
+    public boolean performConsumerUpdates(Consumer updated, Consumer toUpdate,
+            VirtConsumerMap guestConsumerMap,
+            VirtConsumerMap guestHypervisorConsumers,
+            boolean isIdCert) {
         if (log.isDebugEnabled()) {
             log.debug("Updating consumer: {}", toUpdate.getUuid());
         }
@@ -900,9 +910,11 @@ public class ConsumerResource {
                     toUpdate.getName(), updated.getName());
             toUpdate.setName(updated.getName());
 
-            // get the new name into the id cert
-            IdentityCertificate ic = generateIdCert(toUpdate, true);
-            toUpdate.setIdCert(ic);
+            // get the new name into the id cert if we are using the cert
+            if (isIdCert) {
+                IdentityCertificate ic = generateIdCert(toUpdate, true);
+                toUpdate.setIdCert(ic);
+            }
         }
 
         if (updated.getLastCheckin() != null) {
@@ -939,7 +951,13 @@ public class ConsumerResource {
             }
             else {
                 if (existingId != null) {
-                    existingId.setHypervisorId(incomingId.getHypervisorId());
+                    if (existingId.getHypervisorId() != null &&
+                        !existingId.getHypervisorId().equals(incomingId.getHypervisorId())) {
+                        existingId.setHypervisorId(incomingId.getHypervisorId());
+                    }
+                    else {
+                        return false;
+                    }
                 }
                 else {
                     // Safer to build a new clean HypervisorId object

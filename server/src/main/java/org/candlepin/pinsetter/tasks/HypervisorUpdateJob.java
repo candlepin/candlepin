@@ -21,13 +21,18 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.candlepin.model.GuestId;
+import org.candlepin.model.HypervisorId;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.resource.ConsumerResource;
+import org.candlepin.resource.dto.HypervisorCheckInResult;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
 
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
@@ -41,7 +46,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
 
@@ -74,17 +82,20 @@ public class HypervisorUpdateJob extends UniqueByOwnerJob {
      *
      * Executes {@link ConsumerResource#create(org.candlepin.model.Consumer, org.candlepin.auth.Principal,
      *  java.utl.String, java.utl.String, java.utl.String)}
-     * Executes (@link ConusmerResource#updateConsumer(java.utl.String, org.candlepin.model.Consumer)}
+     * Executes (@link ConusmerResource#performConsumerUpdates(java.utl.String, org.candlepin.model.Consumer)}
      * as a pinsetter job.
      *
      * @param context the job's execution context
      */
+    @Transactional
     public void toExecute(JobExecutionContext context) throws JobExecutionException {
         try {
             JobDataMap map = context.getMergedJobDataMap();
             String ownerKey = map.getString(JobStatus.TARGET_ID);
             Boolean create = map.getBoolean(CREATE);
             Principal principal = (Principal) map.get(PRINCIPAL);
+
+            HypervisorCheckInResult result = new HypervisorCheckInResult();
 
             Owner owner = ownerCurator.lookupByKey(ownerKey);
             if (owner == null) {
@@ -96,25 +107,62 @@ public class HypervisorUpdateJob extends UniqueByOwnerJob {
             HypervisorList hypervisors = (HypervisorList) Util.fromJson(json, HypervisorList.class);
             log.info("Hypervisor consumers for create/update: " + hypervisors.getHypervisors().size());
 
+            List<String> hosts = new ArrayList<String>();
+            List<String> guests = new ArrayList<String>();
+            Map<String, Consumer> incomingHosts = new HashMap<String, Consumer>();
+
             for (Consumer hypervisor : hypervisors.getHypervisors()) {
                 if (hypervisor.getHypervisorId() != null &&
                         hypervisor.getHypervisorId().getHypervisorId() != null) {
-                    String hypervisorId = hypervisor.getHypervisorId().getHypervisorId();
-                    hypervisor.setType(new ConsumerType(ConsumerTypeEnum.HYPERVISOR));
-                    Consumer knownHost = consumerCurator.getHypervisor(hypervisorId, owner);
-                    if (knownHost == null) {
-                        if (!create) {
-                            throw new Exception("Unable to find hypervisor with id " +
-                                                hypervisorId + " in org " + ownerKey);
+                    incomingHosts.put(hypervisor.getHypervisorId().getHypervisorId(), hypervisor);
+                    hosts.add(hypervisor.getHypervisorId().getHypervisorId());
+                    if (hypervisor.getGuestIds() != null && !hypervisor.getGuestIds().isEmpty()) {
+                        for (GuestId guestId : hypervisor.getGuestIds()) {
+                            guests.add(guestId.getGuestId());
                         }
-                        log.info("Registering new host consumer for hypervisor ID: {}", hypervisorId);
-                        consumerResource.create(hypervisor, principal, null, owner.getKey(), null);
-                    }
-                    else {
-                        consumerResource.updateConsumer(knownHost.getUuid(), hypervisor);
                     }
                 }
             }
+
+            // Maps virt hypervisor ID to registered consumer for that hypervisor, should one exist:
+            VirtConsumerMap hypervisorConsumersMap =
+                    consumerCurator.getHostConsumersMap(owner, hosts);
+
+            // Maps virt guest ID to registered consumer for guest, if one exists:
+            VirtConsumerMap guestConsumersMap = consumerCurator.getGuestConsumersMap(
+                    owner, guests);
+
+            // Maps virt guest ID to registered consumer for hypervisor, if one exists:
+            VirtConsumerMap guestHypervisorConsumers = consumerCurator.
+                    getGuestsHostMap(owner, guests);
+
+
+            for (String hypervisorId : hosts) {
+                Consumer knownHost = hypervisorConsumersMap.get(hypervisorId);
+                Consumer incoming = incomingHosts.get(hypervisorId);
+                if (knownHost == null) {
+                    if (!create) {
+                        throw new Exception("Unable to find hypervisor with id " +
+                                            hypervisorId + " in org " + ownerKey);
+                    }
+                    log.info("Registering new host consumer for hypervisor ID: {}", hypervisorId);
+                    Consumer newHost = createConsumerForHypervisorId(hypervisorId, owner, principal);
+                    consumerResource.performConsumerUpdates(incoming, newHost, guestConsumersMap,
+                            guestHypervisorConsumers, false);
+                    consumerResource.create(newHost, principal, null, owner.getKey(), null, false);
+                    hypervisorConsumersMap.add(hypervisorId, newHost);
+                    result.created(newHost);
+                }
+                else if (consumerResource.performConsumerUpdates(incoming, knownHost,
+                        guestConsumersMap, guestHypervisorConsumers, false)) {
+                    consumerCurator.update(knownHost);
+                    result.updated(knownHost);
+                }
+                else {
+                    result.unchanged(knownHost);
+                }
+            }
+            context.setResult(result);
         }
         catch (Exception e) {
             log.error("HypervisorUpdateJob encountered a problem.", e);
@@ -176,6 +224,23 @@ public class HypervisorUpdateJob extends UniqueByOwnerJob {
         catch (IOException e) {
             throw new AssertionError(e);
         }
+    }
+
+    /*
+     * Create a new hypervisor type consumer to represent the incoming hypervisorId
+     */
+    private Consumer createConsumerForHypervisorId(String incHypervisorId,
+            Owner owner, Principal principal) {
+        Consumer consumer = new Consumer();
+        consumer.setName(incHypervisorId);
+        consumer.setType(new ConsumerType(ConsumerTypeEnum.HYPERVISOR));
+        consumer.setFact("uname.machine", "x86_64");
+        consumer.setGuestIds(new ArrayList<GuestId>());
+        consumer.setOwner(owner);
+        // Create HypervisorId
+        HypervisorId hypervisorId = new HypervisorId(consumer, incHypervisorId);
+        consumer.setHypervisorId(hypervisorId);
+        return consumer;
     }
 
     /**

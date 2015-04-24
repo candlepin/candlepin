@@ -231,6 +231,31 @@ public class HypervisorResource {
         return HypervisorUpdateJob.forOwner(owner, hypervisorJson, createMissing, principal);
     }
 
+    @PUT
+    @Produces(MediaType.APPLICATION_JSON)
+    @Transactional
+    @Path("/consumers")
+    public List<Consumer> consumerJsonGenerate() {
+        Owner o = getOwner("admin");
+        List<Consumer> consumers = new ArrayList<Consumer>();
+        Consumer consumer = null;
+        for (int i = 0; i < 2000; i++) {
+            consumer = new Consumer();
+            consumer.setName("hypervisor_" + i);
+            consumer.setType(new ConsumerType(ConsumerTypeEnum.HYPERVISOR));
+            consumer.setFact("uname.machine", "x86_64");
+            consumer.setHypervisorId(new HypervisorId("uuid_" + i));
+            for (int j = 0; j <= 12; j++) {
+                consumer.addGuestId(new GuestId("guestId_" + i + "_" + j));
+            }
+            consumer.setFact("virt.is_guest", "false");
+            consumer.setFact("cpu.cpu_socket(s)", "1");
+            consumer.setOwner(o);
+            consumers.add(consumer);
+        }
+        return consumers;
+    }
+
     /*
      * Get the owner or bust
      */
@@ -287,7 +312,7 @@ public class HypervisorResource {
         HypervisorId hypervisorId = new HypervisorId(consumer, incHypervisorId);
         consumer.setHypervisorId(hypervisorId);
         // Create Consumer
-        return consumerResource.create(consumer, principal, null, owner.getKey(), null);
+        return consumerResource.create(consumer, principal, null, owner.getKey(), null, false);
     }
 
 }

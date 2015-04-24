@@ -89,7 +89,8 @@ public class HypervisorUpdateJobTest {
                                         eq(principal),
                                         anyString(),
                                         eq("joe"),
-                                        anyString());
+                                        anyString(),
+                                        eq(false));
     }
 
     @Test
@@ -131,6 +132,7 @@ public class HypervisorUpdateJobTest {
                                         any(Principal.class),
                                         anyString(),
                                         anyString(),
-                                        anyString());
+                                        anyString(),
+                                        eq(false));
     }
 }
