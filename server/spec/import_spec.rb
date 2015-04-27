@@ -71,25 +71,20 @@ describe 'Import', :serial => true do
   end
 
   it 'can be undone' do
-    # Make a custom subscription so we can be sure it does not get wiped
+    # Make a custom pool so we can be sure it does not get wiped
     # out during either the undo or a subsequent re-import:
-    custom_product = create_product(random_string(), random_string(), {:owner => @import_owner['key']})
-    custom_sub = @cp.create_subscription(@import_owner['key'], custom_product['id'])
-
-    puts "Custom sub ID: #{custom_sub['id']}"
+    prod = create_product(random_string(), random_string(), {:owner => @import_owner['key']})
+    custom_pool = @cp.create_pool(@import_owner['key'], prod['id'])
 
     job = @import_owner_client.undo_import(@import_owner['key'])
     wait_for_job(job['id'], 30)
 
     pools = @import_owner_client.list_pools({:owner => @import_owner['id']})
     pools.length.should == 1 # this is our custom pool
-    pools[0]['subscriptionId'].should == custom_sub['id']
+    pools[0]['id'].should == custom_pool['id']
+
     o = @cp.get_owner(@import_owner['key'])
     o['upstreamConsumer'].should be_nil
-
-    # Make sure this still exists:
-    custom_sub_chk = @cp.get_subscription(custom_sub['id'])
-    custom_sub_chk.should = custom_sub
 
     # should be able to re-import without an "older than existing" error:
     @cp.import(@import_owner['key'], @cp_export_file)
@@ -104,12 +99,12 @@ describe 'Import', :serial => true do
     # Verify our custom sub still exists
     pools = @import_owner_client.list_pools({:owner => @import_owner['id']})
     pools.length.should == 1 # this is our custom pool
-    pools[0]['subscriptionId'].should == custom_sub['id']
+    pools[0]['id'].should == custom_pool['id']
 
     another_owner = @cp.create_owner(random_string('testowner'))
     @cp.import(another_owner['key'], @cp_export_file)
     @cp.delete_owner(another_owner['key'])
-    @cp.delete_subscription(custom_sub['id'])
+    @cp.delete_pool(custom_pool['id'])
 
     # Re-import so the rest of the tests can pass:
     @cp.import(@import_owner['key'], @cp_export_file)

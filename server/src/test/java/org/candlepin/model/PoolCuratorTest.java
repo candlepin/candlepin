@@ -1014,4 +1014,5 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         pool.setSourceSubscription(new SourceSubscription(subId, "master"));
         return poolCurator.create(pool);
     }
+
 }

@@ -532,7 +532,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         Pool toDelete = find(entity.getId());
         if (toDelete != null) {
             log.debug("DELETING POOL w/SUBSCRIPTION ID: {}", toDelete.getSubscriptionId());
-            log.debug("CURRENT LOCATION", new RuntimeException());
             currentSession().delete(toDelete);
             this.flush();
         }

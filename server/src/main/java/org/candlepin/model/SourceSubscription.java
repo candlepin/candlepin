@@ -138,4 +138,12 @@ public class SourceSubscription extends AbstractHibernateObject {
     public void setId(String id) {
         this.id = id;
     }
+
+    @Override
+    public String toString() {
+        return "SourceSubscription [subscriptionId=" + subscriptionId
+                + ", subscriptionSubKey=" + subscriptionSubKey + "]";
+    }
+
+
 }

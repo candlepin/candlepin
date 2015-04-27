@@ -25,11 +25,11 @@ import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.CertificateSerial;
-import org.candlepin.model.Content;
-import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
+import org.candlepin.model.Content;
+import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCertificateCurator;
@@ -186,7 +186,8 @@ public class CandlepinPoolManager implements PoolManager {
         subIds.removeAll(deletedSubs);
         // delete pools whose subscription disappeared:
         for (Pool p : poolCurator.getPoolsFromBadSubs(owner, subIds)) {
-            if (p.getType() == PoolType.NORMAL || p.getType() == PoolType.BONUS) {
+            if (p.getSourceSubscription() != null &&
+                    (p.getType() == PoolType.NORMAL || p.getType() == PoolType.BONUS)) {
                 deletePool(p);
             }
         }

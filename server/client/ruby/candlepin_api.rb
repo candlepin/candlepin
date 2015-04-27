@@ -879,6 +879,32 @@ class Candlepin
     return delete("/subscriptions/#{subscription_id}")
   end
 
+  def create_pool(owner_key, product_id, params={})
+    quantity = params[:quantity] || 1
+    provided_products = params[:provided_products] || []
+
+    start_date = params[:start_date] || Date.today
+    end_date = params[:end_date] || start_date + 365
+
+    pool = {
+      'startDate' => start_date,
+      'endDate'   => end_date,
+      'quantity'  =>  quantity,
+      'product' => { 'id' => product_id },
+      'providedProducts' => provided_products.collect { |pid| {'productId' => pid} }
+    }
+
+    if params[:derived_product_id]
+      pool['derivedProduct'] = { 'id' => params[:derived_product_id] }
+    end
+
+    if params[:derived_provided_products]
+      pool['derivedProvidedProducts'] = params[:derived_provided_products].collect { |pid| {'productId' => pid} }
+    end
+
+    return post("/owners/#{owner_key}/pools", pool)
+  end
+
   def list_activation_keys(owner_key=nil)
     if owner_key.nil?
       return get("/activation_keys")

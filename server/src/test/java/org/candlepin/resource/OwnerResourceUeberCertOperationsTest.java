@@ -100,7 +100,7 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
             null, null, poolManager, null, null, null, subAdapter,
             null, consumerTypeCurator, entCertCurator, entitlementCurator,
             ueberCertGenerator, null, null, contentOverrideValidator,
-            serviceLevelValidator, null, null, null, null);
+            serviceLevelValidator, null, null, null, null, null);
     }
 
     @Test

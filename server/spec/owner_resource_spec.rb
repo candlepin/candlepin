@@ -366,6 +366,35 @@ describe 'Owner Resource' do
     pool['calculatedAttributes']['suggested_quantity'].should == "1"
   end
 
+  it 'can create custom floating pools' do
+    owner = create_owner random_string("owner1")
+    prod = create_product(nil, nil, {:owner => owner['key']})
+    provided1 = create_product(nil, nil, {:owner => owner['key']})
+    provided2 = create_product(nil, nil, {:owner => owner['key']})
+    provided3 = create_product(nil, nil, {:owner => owner['key']})
+    provided4 = create_product(nil, nil, {:owner => owner['key']})
+    @cp.create_pool(owner['key'], prod['id'],
+      {
+        :provided_products => [provided1['id'], provided2['id']],
+        :derived_product_id => provided3['id'],
+        :derived_provided_products => [provided4['id']]
+    })
+    pools = @cp.list_owner_pools(owner['key'])
+    pools.size.should == 1
+    pool = pools[0]
+    pool['providedProducts'].size.should == 2
+    pool['derivedProductId'].should == provided3['id']
+    pool['derivedProvidedProducts'].size.should == 1
+
+    # Refresh should have no effect:
+    @cp.refresh_pools(owner['key'])
+    @cp.list_owner_pools(owner['key']).size.should == 1
+
+    # Satellite will need to be able to clean it up as well:
+    @cp.delete_pool(pool['id'])
+    @cp.list_owner_pools(owner['key']).size.should == 0
+  end
+
   it 'should not double bind when healing an org' do
     # BZ 988549
     owner = create_owner(random_string("owner1"))

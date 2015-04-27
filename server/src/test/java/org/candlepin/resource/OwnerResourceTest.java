@@ -912,7 +912,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             null, akc, null, null, i18n, null, null, null,
             null, null, null, null, null, null, null,
             null, null, null, null, null, null, null, contentOverrideValidator,
-            serviceLevelValidator, null, null, null, null);
+            serviceLevelValidator, null, null, null, null, null);
         or.createActivationKey("testOwner", ak);
     }
 
@@ -990,7 +990,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             null, null, null, i18n, es, null, null, null, importer, null, null,
             null, importRecordCurator, null, null, null, null, null,
             null, null, null, contentOverrideValidator,
-            serviceLevelValidator, null, null, null, null);
+            serviceLevelValidator, null, null, null, null, null);
 
         MultipartInput input = mock(MultipartInput.class);
         InputPart part = mock(InputPart.class);
@@ -1026,7 +1026,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             null, null, null, i18n, es, null, null, null, null, this.poolManager, ec,
             null, importRecordCurator, null, null, null, null, null,
             null, null, null, contentOverrideValidator,
-            serviceLevelValidator, null, null, null, null);
+            serviceLevelValidator, null, null, null, null, null);
 
         ExporterMetadata metadata = new ExporterMetadata();
         when(ec.lookupByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, owner))
@@ -1050,7 +1050,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             null, null, null, i18n, es, null, null, null, importer, null, null,
             null, importRecordCurator, null, null, null, null, null,
             null, null, null, contentOverrideValidator,
-            serviceLevelValidator, null, null, null, null);
+            serviceLevelValidator, null, null, null, null, null);
 
         MultipartInput input = mock(MultipartInput.class);
         InputPart part = mock(InputPart.class);
@@ -1091,7 +1091,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerResource ownerres = new OwnerResource(oc, null,
             null, null, null, i18n, null, null, null, null, null, null, null,
             null, null, null, null, null, null, null, null, null, null,
-            contentOverrideValidator, serviceLevelValidator, null, null, null, null);
+            contentOverrideValidator, serviceLevelValidator, null, null, null, null, null);
 
         when(oc.lookupByKey(eq("admin"))).thenReturn(owner);
         when(owner.getUpstreamConsumer()).thenReturn(upstream);
@@ -1145,5 +1145,17 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertEquals(0, poolCurator.listByOwner(owner).size());
         ownerResource.createSubscription(owner.getKey(), s);
         assertEquals(1, poolCurator.listByOwner(owner).size());
+    }
+
+    @Test
+    public void createPool() {
+        Product prod = TestUtil.createProduct(owner);
+        productCurator.create(prod);
+        Pool pool = TestUtil.createPool(owner, prod);
+        assertEquals(0, poolCurator.listByOwner(owner).size());
+        ownerResource.createPool(owner.getKey(), pool);
+        assertEquals(1, poolCurator.listByOwner(owner).size());
+        assertNotNull(pool.getId());
+
     }
 }
