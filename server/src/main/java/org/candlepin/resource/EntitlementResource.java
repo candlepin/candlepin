@@ -280,6 +280,9 @@ public class EntitlementResource {
     @Path("{dbid}/upstream_cert")
     public String getUpstreamCert(
         @PathParam("dbid") String entitlementId) {
+
+        log.debug("Retrieving upstream entitlement cert");
+
         Entitlement ent = entitlementCurator.find(entitlementId);
         if (ent == null) {
             throw new NotFoundException(i18n.tr(
