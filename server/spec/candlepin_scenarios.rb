@@ -402,7 +402,7 @@ class StandardExporter < Exporter
 
     @products[:derived_product] = create_product(random_string('sub-prov-prod'), random_string(),
         {"sockets" => "2"})
-    @products[:derived_provided_prod] = create_product(random_string('derived-prov-prod', true), random_string());
+    @products[:derived_provided_prod] = create_product(random_string(nil, true), random_string());
 
     #this is for the update process
     @products[:product_up] = create_product(random_string('product_up'), random_string('product_up'))
