@@ -144,6 +144,9 @@ public class PoolRules {
             newPool.setUpstreamEntitlementId(sub.getUpstreamEntitlementId());
             newPool.setUpstreamConsumerId(sub.getUpstreamConsumerId());
 
+            newPool.setCdn(sub.getCdn());
+            newPool.setCertificate(sub.getCertificate());
+
             pools.add(newPool);
         }
 

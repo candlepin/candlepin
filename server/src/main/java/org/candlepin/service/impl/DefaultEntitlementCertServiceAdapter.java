@@ -373,7 +373,6 @@ public class DefaultEntitlementCertServiceAdapter extends
         }
 
         cert.setCert(pem);
-
         cert.setEntitlement(entitlement);
 
         if (log.isDebugEnabled()) {

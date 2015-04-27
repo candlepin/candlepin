@@ -406,6 +406,12 @@
         <addColumn tableName="cp_pool">
             <column name="product_uuid" type="varchar(32)"/>
             <column name="derived_product_uuid" type="varchar(32)"/>
+            <column name="cdn_id" type="varchar(32)">
+                <constraints foreignKeyName="cp_pool_fk1" references="cp_cdn(id)"/>
+            </column>
+            <column name="certificate_id" type="varchar(32)">
+                <constraints foreignKeyName="cp_pool_fk2" references="cp_certificate(id)"/>
+            </column>
         </addColumn>
     </changeSet>
 

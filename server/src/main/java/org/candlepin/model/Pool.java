@@ -266,6 +266,15 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
     @Size(max = 255)
     private String upstreamConsumerId;
 
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "certificate_id")
+    private SubscriptionsCertificate cert;
+
+    @OneToOne
+    @JoinColumn(name = "cdn_id")
+    private Cdn cdn;
+
+
     public Pool() {
     }
 
@@ -1087,5 +1096,20 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned, N
         this.upstreamConsumerId = upstreamConsumerId;
     }
 
+    public Cdn getCdn() {
+        return cdn;
+    }
+
+    public void setCdn(Cdn cdn) {
+        this.cdn = cdn;
+    }
+
+    public SubscriptionsCertificate getCertificate() {
+        return this.cert;
+    }
+
+    public void setCertificate(SubscriptionsCertificate cert) {
+        this.cert = cert;
+    }
 
 }

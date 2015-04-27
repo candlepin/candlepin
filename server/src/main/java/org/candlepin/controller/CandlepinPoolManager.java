@@ -1720,42 +1720,12 @@ public class CandlepinPoolManager implements PoolManager {
 
         fabricated.setId(pool.getSubscriptionId());
         fabricated.setUpstreamEntitlementId(pool.getUpstreamEntitlementId());
+        fabricated.setCdn(pool.getCdn());
+        fabricated.setCertificate(pool.getCertificate());
 
         // TODO:
         // There's probably a fair amount of other stuff we need to migrate over to the
         // subscription. We should do that here.
-
-        // Get the certificate information from the source entitlement??
-        // Entitlement entitlement = pool.getSourceEntitlement();
-        log.debug("Pool upstream entitlement ID: {}", pool.getUpstreamEntitlementId());
-        log.debug("Attempting to get entitlements for subscription: {}", pool.getSubscriptionId());
-        log.debug("Source entitlement: {}", pool.getSourceEntitlement());
-
-        Entitlement upstreamEntitlement = this.entitlementCurator.find(pool.getUpstreamEntitlementId());
-        log.debug("Upstream entitlement: {}", upstreamEntitlement);
-
-        if (upstreamEntitlement != null) {
-            log.debug("Found an entitlement for pool: {}", pool.getId());
-
-            for (EntitlementCertificate cert : upstreamEntitlement.getCertificates()) {
-                log.debug("Found a certificate for fake sub: {}", pool.getSubscriptionId());
-
-                CertificateSerial cs = new CertificateSerial();
-                cs.setId(cert.getSerial().getId());
-                cs.setCollected(cert.getSerial().isCollected());
-                cs.setExpiration(cert.getSerial().getExpiration());
-                cs.setUpdated(cert.getSerial().getUpdated());
-                cs.setCreated(cert.getSerial().getCreated());
-
-                SubscriptionsCertificate sc = new SubscriptionsCertificate();
-                sc.setId(cert.getId());
-                sc.setKey(cert.getKey());
-                sc.setCertAsBytes(cert.getCertAsBytes());
-                sc.setSerial(cs);
-
-                fabricated.setCertificate(sc);
-            }
-        }
 
         return fabricated;
     }
