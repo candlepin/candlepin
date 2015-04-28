@@ -22,7 +22,7 @@
 %endif
 
 Name: gutterball
-Version: 1.0.15
+Version: 1.0.15.0
 Release: 1%{?dist}
 Summary: Data aggregator for Candlepin
 
@@ -215,6 +215,11 @@ rm -rf %{buildroot}
 %attr(775, tomcat, root) %{_localstatedir}/log/%{name}
 
 %changelog
+* Tue Apr 28 2015 Michael Stead <mstead@redhat.com> 1.0.15.0-1
+- Adjusted default QPID connection timeouts/retries (mstead@redhat.com)
+- Properly close qpid connection on shutdown (mstead@redhat.com)
+- Make QPID connection in seperate thread (mstead@redhat.com)
+
 * Wed Apr 01 2015 Devan Goodwin <dgoodwin@rm-rf.ca> 1.0.15-1
 - 1207810: Add missing symlink for gutterball and c3p0. (dgoodwin@redhat.com)
 
