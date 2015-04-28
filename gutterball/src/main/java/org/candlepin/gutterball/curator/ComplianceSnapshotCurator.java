@@ -38,6 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -386,12 +387,14 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
      *  found for the given time span, an empty map will be returned.
      */
     public Map<Date, Map<String, Integer>> getComplianceStatusCounts(Date startDate, Date endDate,
-        String ownerKey, String sku, String subscriptionName, Map<String, String> attributes) {
+        String ownerKey, List<String> consumerUuids, String sku, String subscriptionName,
+        Map<String, String> attributes) {
 
         Page<Map<Date, Map<String, Integer>>> result = this.getComplianceStatusCounts(
             startDate,
             endDate,
             ownerKey,
+            consumerUuids,
             sku,
             subscriptionName,
             attributes,
@@ -445,8 +448,8 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
      *  no counts were found for the given time span, the page will contain an empty map.
      */
     public Page<Map<Date, Map<String, Integer>>> getComplianceStatusCounts(Date startDate, Date endDate,
-        String ownerKey, String sku, String subscriptionName, Map<String, String> attributes,
-        PageRequest pageRequest) {
+        String ownerKey, List<String> consumerUuids,  String sku, String subscriptionName,
+        Map<String, String> attributes, PageRequest pageRequest) {
 
         Page<Map<Date, Map<String, Integer>>> page = new Page<Map<Date, Map<String, Integer>>>();
         page.setPageRequest(pageRequest);
@@ -459,6 +462,7 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
             startDate,
             endDate,
             ownerKey,
+            consumerUuids,
             sku,
             subscriptionName,
             attributes
@@ -749,7 +753,8 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
      */
     @SuppressWarnings("checkstyle:methodlength")
     private Query buildComplianceStatusCountQuery(Session session, Date startDate, Date endDate,
-        String ownerKey, String sku, String subscriptionName, Map<String, String> attributes) {
+        String ownerKey, List<String> consumerUuids, String sku, String subscriptionName,
+        Map<String, String> attributes) {
 
         List<Object> parameters = new LinkedList<Object>();
         int counter = 0;
@@ -803,7 +808,7 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
 
         // Add our reporting criteria...
         if (sku != null || subscriptionName != null || (attributes != null && attributes.size() > 0) ||
-            ownerKey != null) {
+            ownerKey != null || (consumerUuids != null && consumerUuids.size() > 0)) {
 
             List<String> criteria = new LinkedList<String>();
             StringBuffer inner = new StringBuffer(
@@ -828,8 +833,7 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
                 parameters.add(subscriptionName);
             }
 
-            if (attributes != null) {
-
+            if (attributes != null && attributes.size() > 0) {
                 if (attributes.containsKey("management_enabled")) {
                     boolean managementEnabledFilter =
                             PropertyConverter.toBoolean(attributes.get("management_enabled"));
@@ -855,6 +859,11 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
                     parameters.add(entry.getKey());
                     parameters.add(entry.getValue());
                 }
+            }
+
+            if (consumerUuids != null && consumerUuids.size() > 0) {
+                criteria.add("ConsumerState.uuid IN (?" + ++counter + ")");
+                parameters.add(consumerUuids);
             }
 
             // Append the criteria to our where clause and close it.
@@ -886,7 +895,7 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
                         "year(ComplianceStatusSnap.date) = ?%1$d " +
                         " AND month(ComplianceStatusSnap.date) = ?%2$d " +
                         " AND day(ComplianceStatusSnap.date) >= ?%3$d" +
-                    ")" +
+                    ") " +
                     "OR (ComplianceStatusSnap.date, ConsumerSnap.uuid) IN (" +
                         "SELECT " +
                             "max(ComplianceStatusSnap2.date) AS maxdate, " +
@@ -957,7 +966,14 @@ public class ComplianceSnapshotCurator extends BaseCurator<Compliance> {
         query.setReadOnly(true);
 
         for (int i = 1; i <= counter; ++i) {
-            query.setParameter(String.valueOf(i), parameters.remove(0));
+            Object param = parameters.remove(0);
+
+            if (param instanceof Collection) {
+                query.setParameterList(String.valueOf(i), (Collection) param);
+            }
+            else {
+                query.setParameter(String.valueOf(i), param);
+            }
         }
 
         return query;

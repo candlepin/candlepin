@@ -207,8 +207,10 @@ public class PoolTypeUpgradeTask {
             "UPDATE cp_pool SET type = 'UNMAPPED_GUEST' WHERE cp_pool.id IN (?)",
             "SELECT P.id " +
             "FROM cp_pool P " +
-            "  INNER JOIN cp_pool_attribute PA1 ON (P.id = PA1.pool_id AND PA1.name = 'pool_derived') " +
-            "  INNER JOIN cp_pool_attribute PA2 ON (P.id = PA2.pool_id AND PA2.name = 'unmapped_guests_only') " +
+            "  INNER JOIN cp_pool_attribute PA1 " +
+            "    ON (P.id = PA1.pool_id AND PA1.name = 'pool_derived') " +
+            "  INNER JOIN cp_pool_attribute PA2 " +
+            "    ON (P.id = PA2.pool_id AND PA2.name = 'unmapped_guests_only') " +
             "WHERE P.type IS NULL AND PA1.value = 'true' AND PA2.value = 'true' "
         );
 
@@ -216,8 +218,10 @@ public class PoolTypeUpgradeTask {
             "UPDATE cp_pool SET type = 'ENTITLEMENT_DERIVED' WHERE cp_pool.id IN (?)",
             "SELECT P.id " +
             "FROM cp_pool P " +
-            "  INNER JOIN cp_pool_attribute PA1 ON (P.id = PA1.pool_id AND PA1.name = 'pool_derived') " +
-            "  LEFT JOIN cp_pool_attribute PA2 ON (P.id = PA2.pool_id AND PA2.name = 'unmapped_guests_only') " +
+            "  INNER JOIN cp_pool_attribute PA1 " +
+            "    ON (P.id = PA1.pool_id AND PA1.name = 'pool_derived') " +
+            "  LEFT JOIN cp_pool_attribute PA2 " +
+            "    ON (P.id = PA2.pool_id AND PA2.name = 'unmapped_guests_only') " +
             "WHERE " +
             "  P.type IS NULL " +
             "  AND PA1.value = 'true' AND PA2.id IS NULL " +
@@ -228,9 +232,12 @@ public class PoolTypeUpgradeTask {
             "UPDATE cp_pool SET type = 'STACK_DERIVED' WHERE cp_pool.id IN (?)",
             "SELECT P.id " +
             "FROM cp_pool P " +
-            "  INNER JOIN cp_pool_attribute PA1 ON (P.id = PA1.pool_id AND PA1.name = 'pool_derived') " +
-            "  INNER JOIN cp_pool_source_stack SS ON P.id = SS.derivedpool_id " +
-            "  LEFT JOIN cp_pool_attribute PA2 ON (P.id = PA2.pool_id AND PA2.name = 'unmapped_guests_only') " +
+            "  INNER JOIN cp_pool_attribute PA1 " +
+            "    ON (P.id = PA1.pool_id AND PA1.name = 'pool_derived') " +
+            "  INNER JOIN cp_pool_source_stack SS " +
+            "    ON P.id = SS.derivedpool_id " +
+            "  LEFT JOIN cp_pool_attribute PA2 " +
+            "    ON (P.id = PA2.pool_id AND PA2.name = 'unmapped_guests_only') " +
             "WHERE " +
             "  P.type IS NULL " +
             "  AND PA1.value = 'true' AND PA2.id IS NULL " +
@@ -241,9 +248,12 @@ public class PoolTypeUpgradeTask {
             "UPDATE cp_pool SET type = 'BONUS' WHERE cp_pool.id IN (?)",
             "SELECT P.id " +
             "FROM cp_pool P " +
-            "  INNER JOIN cp_pool_attribute PA1 ON (P.id = PA1.pool_id AND PA1.name = 'pool_derived') " +
-            "  LEFT JOIN cp_pool_source_stack SS ON P.id = SS.derivedpool_id " +
-            "  LEFT JOIN cp_pool_attribute PA2 ON (P.id = PA2.pool_id AND PA2.name = 'unmapped_guests_only') " +
+            "  INNER JOIN cp_pool_attribute PA1 " +
+            "    ON (P.id = PA1.pool_id AND PA1.name = 'pool_derived') " +
+            "  LEFT JOIN cp_pool_source_stack SS " +
+            "    ON P.id = SS.derivedpool_id " +
+            "  LEFT JOIN cp_pool_attribute PA2 " +
+            "    ON (P.id = PA2.pool_id AND PA2.name = 'unmapped_guests_only') " +
             "WHERE " +
             "  P.type IS NULL " +
             "  AND PA1.value = 'true' AND PA2.id IS NULL " +

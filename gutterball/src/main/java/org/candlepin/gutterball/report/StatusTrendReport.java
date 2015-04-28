@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 
@@ -94,6 +95,12 @@ public class StatusTrendReport extends Report<StatusTrendReportResult> {
         );
 
         this.addParameter(
+            builder.init("consumer_uuid", i18n.tr("The consumer UUID(s) on which to filter"))
+                .multiValued()
+                .getParameter()
+        );
+
+        this.addParameter(
             builder.init("owner", i18n.tr("An owner key on which to filter"))
                 .getParameter()
         );
@@ -141,6 +148,7 @@ public class StatusTrendReport extends Report<StatusTrendReportResult> {
         String ownerKey = queryParams.getFirst("owner");
         String sku = queryParams.getFirst("sku");
         String subscriptionName = queryParams.getFirst("subscription_name");
+        List<String> consumerUuids = queryParams.get("consumer_uuid");
 
         Page<Map<Date, Map<String, Integer>>> page;
         StatusTrendReportResult output = new StatusTrendReportResult();
@@ -164,6 +172,7 @@ public class StatusTrendReport extends Report<StatusTrendReportResult> {
                 startDate,
                 endDate,
                 ownerKey,
+                consumerUuids,
                 sku,
                 null,
                 null,
@@ -175,6 +184,7 @@ public class StatusTrendReport extends Report<StatusTrendReportResult> {
                 startDate,
                 endDate,
                 ownerKey,
+                consumerUuids,
                 null,
                 subscriptionName,
                 null,
@@ -186,6 +196,7 @@ public class StatusTrendReport extends Report<StatusTrendReportResult> {
                 startDate,
                 endDate,
                 ownerKey,
+                consumerUuids,
                 null,
                 null,
                 attributes,
@@ -197,6 +208,7 @@ public class StatusTrendReport extends Report<StatusTrendReportResult> {
                 startDate,
                 endDate,
                 ownerKey,
+                consumerUuids,
                 null,
                 null,
                 null,
