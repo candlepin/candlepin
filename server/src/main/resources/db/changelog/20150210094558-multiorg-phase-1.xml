@@ -412,10 +412,19 @@
             <column name="certificate_id" type="varchar(32)">
                 <constraints foreignKeyName="cp_pool_fk2" references="cp_certificate(id)"/>
             </column>
+            <column name="upstream_entitlement_id" type="varchar(32)"/>
+            <column name="upstream_consumer_id" type="varchar(255)"/>
+            <column name="upstream_pool_id" type="varchar(255)"/>
         </addColumn>
     </changeSet>
 
-    <changeSet id="20150210094558-25" author="crog">
+    <changeSet id="20150210094558-25" author="dgoodwin">
+        <createIndex indexName="cp_pool_upstream_pool_id_idx" tableName="cp_pool" unique="false">
+            <column name="upstream_pool_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20150210094558-26" author="crog">
         <renameColumn tableName="cp_pool"
             oldColumnName="productid"
             newColumnName="product_id_old"
@@ -424,7 +433,7 @@
         <!--remarks="deprecated; obsoleted by product_id"-->
     </changeSet>
 
-    <changeSet id="20150210094558-26" author="crog">
+    <changeSet id="20150210094558-27" author="crog">
         <renameColumn tableName="cp_pool"
             oldColumnName="derivedproductid"
             newColumnName="derived_product_id_old"
@@ -433,19 +442,19 @@
         <!--remarks="deprecated; obsoleted by derived_product_id"-->
     </changeSet>
 
-    <changeSet id="20150210094558-27" author="crog">
+    <changeSet id="20150210094558-28" author="crog">
         <dropColumn tableName="cp_pool"
             columnName="productname"
         />
     </changeSet>
 
-    <changeSet id="20150210094558-28" author="crog">
+    <changeSet id="20150210094558-29" author="crog">
         <dropColumn tableName="cp_pool"
             columnName="derivedproductname"
         />
     </changeSet>
 
-    <changeSet id="20150210094558-29" author="crog">
+    <changeSet id="20150210094558-30" author="crog">
         <dropNotNullConstraint tableName="cp_pool"
             columnName="product_id_old"
             columnDataType="varchar(255)"
@@ -455,7 +464,7 @@
 
 
     <!-- cpo_pool_branding -->
-    <changeSet id="20150210094558-30" author="crog">
+    <changeSet id="20150210094558-31" author="crog">
         <createTable tableName="cpo_pool_branding">
             <column name="pool_id" type="varchar(32)">
                 <constraints
@@ -474,7 +483,7 @@
         </createTable>
     </changeSet>
 
-    <changeSet id="20150210094558-31" author="crog">
+    <changeSet id="20150210094558-32" author="crog">
         <addPrimaryKey tableName="cpo_pool_branding"
             columnNames="pool_id, branding_id"
             constraintName="cpo_pool_branding_pk"
@@ -484,6 +493,9 @@
 
 
     <!-- cpo_pool_stack_prod_attribs -->
+    <!--
+        What was this intended to replace? It doesn't appear to be used anywhere.
+
     <changeSet id="20150210094558-32" author="crog">
         <createTable tableName="cpo_pool_stack_prod_attribs">
             <column name="pool_id" type="varchar(32)">
@@ -512,6 +524,7 @@
         />
     </changeSet>
 
+    -->
 
     <!-- cpo_subscriptions -->
     <changeSet id="20150210094558-34" author="crog">
