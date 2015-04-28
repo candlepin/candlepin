@@ -973,8 +973,6 @@ public class OwnerResource {
             presolved.add(this.resolveProduct(owner, product));
         }
 
-        log.debug("Resolved {} derived provided products for subscription {}", presolved.size(), subscription.getId());
-
         subscription.setDerivedProvidedProducts(presolved);
 
         // TODO: Do we need to resolve Branding objects?
@@ -1018,8 +1016,6 @@ public class OwnerResource {
         for (ProvidedProduct product : pool.getDerivedProvidedProductDtos()) {
             presolved.add(this.resolveProduct(owner, product.getProductId()));
         }
-
-        log.debug("Resolved {} derived provided products for subscription {}", presolved.size(), pool.getId());
 
         pool.setDerivedProvidedProducts(presolved);
 
@@ -1262,9 +1258,7 @@ public class OwnerResource {
 
         List<Pool> pools = this.poolManager.listPoolsByOwner(owner);
         for (Pool pool : pools) {
-            log.debug("Checking pool: {}, subscription Id: {}", pool.getId(), pool.getSubscriptionId());
             if (pool.getUpstreamPoolId() != null) {
-                log.debug("Marking manifest pool for deletion: {}, subscription Id: {}", pool.getId(), pool.getSubscriptionId());
                 subscriptions.add(pool.getSubscriptionId());
             }
         }

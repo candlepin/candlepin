@@ -159,6 +159,9 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      * existing product.
      *
      * @param p Product to create or update.
+     *
+     * @return
+     *  The updated or created Product instance
      */
     public Product createOrUpdate(Product p) {
         // TODO: Should we also verify that the UUID isn't in use?
