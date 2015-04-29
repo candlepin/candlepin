@@ -58,8 +58,8 @@ usage() {
 
     OPTIONS:
         -d  deploy a live candlepin
-        -t  populate Candlepin database with test data (only applicable with -d)
-        -r  run rspec test suite
+        -t  populate Candlepin database with test data (implies -d)
+        -r  run rspec test suite (implies -d)
         -u  run unit test suite
         -s  run a bash shell when done
         -c  git reference to checkout
@@ -76,7 +76,10 @@ while getopts ":rusdtc:p:" opt; do
         u  ) UNITTEST="1";;
         s  ) LAUNCHSHELL="1";;
         d  ) DEPLOY="1";;
-        t  ) TESTDATA="1";;
+        t  )
+            DEPLOY="1"
+            TESTDATA="1"
+            ;;
         c  ) CHECKOUT="${OPTARG}";;
         p  ) PROJECT="${OPTARG}";;
         ?  ) usage; exit;;
