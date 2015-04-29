@@ -148,7 +148,9 @@ public class CandlepinPoolManager implements PoolManager {
 
         List<String> deletedSubs = new LinkedList<String>();
         for (String subId : subIds) {
+            log.debug("about to getSubscription for: " + subId);
             Subscription sub = subAdapter.getSubscription(subId);
+            log.debug("got subscriptiption for: " + subId);
 
             // If this sub has been removed since getSubscriptionIds was called,
             if (sub == null) {
@@ -165,12 +167,15 @@ public class CandlepinPoolManager implements PoolManager {
                 continue;
             }
 
+            log.debug("about to refreshPoolsForSubscription");
             refreshPoolsForSubscription(sub, lazy);
         }
 
+        log.debug("about to removeAll: " + deletedSubs.size());
         // We deleted some, need to take that into account so we
         // remove everything that isn't actually active
         subIds.removeAll(deletedSubs);
+        log.debug("removedAll");
         // delete pools whose subscription disappeared:
         for (Pool p : poolCurator.getPoolsFromBadSubs(owner, subIds)) {
             if (p.getType() == PoolType.NORMAL || p.getType() == PoolType.BONUS) {
@@ -188,19 +193,26 @@ public class CandlepinPoolManager implements PoolManager {
     void refreshPoolsForSubscription(Subscription sub, boolean lazy) {
 
         // These don't all necessarily belong to this owner
+        log.debug("about to poolCurator.getPoolsBySubscriptionId");
         List<Pool> subscriptionPools = poolCurator.getPoolsBySubscriptionId(sub.getId());
 
+        log.debug("about to removeAndDeletePoolsOnOtherOwners");
         // Cleans up pools on other owners who have migrated subs away
         removeAndDeletePoolsOnOtherOwners(subscriptionPools, sub);
 
+        log.debug("about to createPoolsForSubscription");
         // BUG 1012386 This will regenerate master/derived for bonus scenarios
         //  if only one of the pair still exists.
         createPoolsForSubscription(sub, subscriptionPools);
 
-        regenerateCertificatesByEntIds(
+        //regenerateCertificatesByEntIds
+        log.debug("about to updatePoolsForSubscription");
+        Set<String> poolSet = updatePoolsForSubscription(subscriptionPools, sub, false);
+        log.debug("about to regenerateCertificateByEntIds");
+        regenerateCertificatesByEntIds(poolSet, lazy);
             // don't update floating here, we'll do that later
             // so we don't update anything twice
-            updatePoolsForSubscription(subscriptionPools, sub, false), lazy);
+      //      updatePoolsForSubscription(subscriptionPools, sub, false), lazy);
     }
 
     public void cleanupExpiredPools() {
@@ -227,6 +239,7 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     private boolean isExpired(Subscription subscription) {
+        log.debug("isExpired: " + subscription.getId());
         Date now = new Date();
         return now.after(subscription.getEndDate());
     }
@@ -341,7 +354,9 @@ public class CandlepinPoolManager implements PoolManager {
             // Explicitly call flush to avoid issues with how we sync up the attributes.
             // This prevents "instance does not yet exist as a row in the database" errors
             // when we later try to lock the pool if we need to revoke entitlements:
-            this.poolCurator.flush();
+            // FIXME: This slows things down a lot...
+            log.debug("NOT FLUSHING in processPoolUpdates");
+            //this.poolCurator.flush();
 
             // quantity has changed. delete any excess entitlements from pool
             if (updatedPool.getQuantityChanged()) {
@@ -405,8 +420,14 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         List<Pool> pools = poolRules.createPools(sub, existingPools);
+        if (log.isDebugEnabled()) {
+            log.debug("Creating new pool post poolRules.createPools: " + pools.size());
+        }
         for (Pool pool : pools) {
             createPool(pool);
+        }
+        if (log.isDebugEnabled()) {
+            log.debug("Creating new pool post createPool ");
         }
 
         return pools;
@@ -414,9 +435,13 @@ public class CandlepinPoolManager implements PoolManager {
 
     @Override
     public Pool createPool(Pool p) {
-        Pool created = poolCurator.create(p);
         if (log.isDebugEnabled()) {
-            log.debug("   new pool: " + p);
+            log.debug("  about to create new pool: " + p);
+        }
+        Pool created = poolCurator.create(p);
+        //poolCurator.refresh(p);
+        if (log.isDebugEnabled()) {
+            log.debug("   created new pool: " + p);
         }
         if (created != null) {
             sink.emitPoolCreated(created);

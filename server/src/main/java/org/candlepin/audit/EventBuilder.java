@@ -25,6 +25,9 @@ import org.candlepin.model.Owned;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * ConsumerEventBuilder Allows us to easily build a consumer modified
  * event one piece at a time.
@@ -35,6 +38,8 @@ public class EventBuilder {
     private final EventFactory factory;
 
     private Event event;
+
+    private static Logger log = LoggerFactory.getLogger(EventBuilder.class);
 
     public EventBuilder(EventFactory factory, Target target, Type type) {
         this.factory = factory;
@@ -86,6 +91,7 @@ public class EventBuilder {
     }
 
     public EventBuilder setNewEntity(AbstractHibernateObject updated) {
+        log.debug("entering setNewEntity");
         if (updated != null) {
             if (event.getType() == Type.DELETED) {
                 throw new IllegalArgumentException("You cannot set the new entity for a deletion event");
@@ -93,6 +99,7 @@ public class EventBuilder {
             setEventData(updated);
             event.setNewEntity(factory.entityToJson(updated));
         }
+        log.debug("leaving setNewEntity");
         return this;
     }
 

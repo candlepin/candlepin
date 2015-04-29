@@ -66,6 +66,7 @@ import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import javax.persistence.FlushModeType;
 import javax.persistence.PersistenceException;
 
 
@@ -361,14 +362,16 @@ public class Importer {
                                         "required entitlements directory"));
         }
 
-
         // system level elements
         /*
          * Checking a system wide last import date breaks multi-tenant deployments whenever
          * one org imports a manifest slightly older than another org who has already
          * imported. Disabled for now. See bz #769644.
          */
-//        validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, metadata, force);
+        //        validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, metadata, force);
+
+        // Set The transactions flush mode to COMMIT
+        contentCurator.setFlushMode(FlushModeType.COMMIT);
 
         // If any calls find conflicts we'll assemble them into one exception detailing all
         // the conflicts which occurred, so the caller can override them all at once
@@ -385,7 +388,6 @@ public class Importer {
         if (distributorVersions != null) {
             importDistributorVersions(distributorVersions.listFiles());
         }
-
         File cdns = importFiles.get(ImportFile.CONTENT_DELIVERY_NETWORKS.fileName());
         if (cdns != null) {
             importContentDeliveryNetworks(cdns.listFiles());
@@ -431,6 +433,7 @@ public class Importer {
         if (importFiles.get(ImportFile.PRODUCTS.fileName()) != null) {
             ProductImporter importer = new ProductImporter(productCurator, contentCurator);
 
+            log.debug("before importProducts");
             Set<Product> productsToImport = importProducts(
                 importFiles.get(ImportFile.PRODUCTS.fileName()).listFiles(),
                 importer);
@@ -438,9 +441,12 @@ public class Importer {
             Set<Product> modifiedProducts = importer.getChangedProducts(productsToImport);
             for (Product product : modifiedProducts) {
                 refresher.add(product);
+                log.debug("modified product: " + product.getId());
             }
 
+            log.debug("before productsToImport.store");
             importer.store(productsToImport);
+            log.debug("after productsToImport.store");
 
             meta = mapper.readValue(metadata, Meta.class);
             importEntitlements(owner, productsToImport, entitlements.listFiles(),

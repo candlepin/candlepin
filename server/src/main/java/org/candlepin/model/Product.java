@@ -14,6 +14,7 @@
  */
 package org.candlepin.model;
 
+import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
@@ -292,7 +293,8 @@ public class Product extends AbstractHibernateObject implements Linkable {
 
     @Override
     public int hashCode() {
-        return id.hashCode() * 31;
+        return new HashCodeBuilder(37, 17).append(this.id).append(this.name)
+                .toHashCode();
     }
 
     /**

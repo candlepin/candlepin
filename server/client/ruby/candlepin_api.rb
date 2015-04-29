@@ -1257,6 +1257,7 @@ class Candlepin
 
   def create_basic_client(username=nil, password=nil)
     @client = RestClient::Resource.new(@base_url,
+                                       :timeout => -1,
                                        :user => username, :password => password,
                                        :headers => {:accept_language => @lang})
   end
@@ -1267,6 +1268,7 @@ class Candlepin
     @uuid = @identity_certificate.subject.to_s.scan(/\/CN=([^\/=]+)/)[0][0]
 
     @client = RestClient::Resource.new(@base_url,
+                                       :timeout => -1,
                                        :ssl_client_cert => @identity_certificate,
                                        :ssl_client_key => @identity_key,
                                        :headers => {:accept_language => @lang})
@@ -1275,6 +1277,7 @@ class Candlepin
   def create_trusted_consumer_client(uuid)
     @uuid = uuid
     @client = RestClient::Resource.new(@base_url,
+                                       :timeout => -1,
                                        :headers => {"cp-consumer" => uuid,
                                                     :accept_language => @lang}
                                         )

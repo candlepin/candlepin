@@ -17,9 +17,9 @@ package org.candlepin.model;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.permissions.Permission;
 import org.candlepin.common.exceptions.ConcurrentModificationException;
-import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
+import org.candlepin.guice.PrincipalProvider;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -44,6 +44,7 @@ import java.util.Collection;
 import java.util.List;
 
 import javax.persistence.EntityManager;
+import javax.persistence.FlushModeType;
 import javax.persistence.OptimisticLockException;
 
 /**
@@ -402,6 +403,12 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
 
     public void evict(E object) {
         currentSession().evict(object);
+    }
+
+    public void setFlushMode(FlushModeType flushModeType) {
+        log.debug("setFlushMode=" + flushModeType);
+        log.debug("setFlushMode em " + getEntityManager().getTransaction().toString());
+        getEntityManager().setFlushMode(flushModeType);
     }
 
     public List<E> takeSubList(PageRequest pageRequest, List<E> results) {

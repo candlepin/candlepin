@@ -58,14 +58,15 @@ public class DistributorVersionImporter {
         for (DistributorVersion distVer : distVers) {
             DistributorVersion existing = curator.findByName(distVer.getName());
             if (existing == null) {
-                curator.create(distVer);
                 log.debug("Created distributor version: " + distVer.getName());
+                curator.create(distVer);
+                curator.refresh(distVer);
             }
             else {
+                log.debug("Updating distributor version: " + distVer.getName());
                 existing.setCapabilities(distVer.getCapabilities());
                 existing.setDisplayName(distVer.getDisplayName());
                 curator.merge(existing);
-                log.debug("Updating distributor version: " + distVer.getName());
             }
         }
     }

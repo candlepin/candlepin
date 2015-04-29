@@ -26,17 +26,21 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Sets;
 
 import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
  * ProductImporter
  */
 public class ProductImporter {
-
+    private static Logger log = LoggerFactory.getLogger(ProductImporter.class);
     private ProductCurator curator;
     private ContentCurator contentCurator;
 
@@ -63,6 +67,9 @@ public class ProductImporter {
     }
 
     public void store(Set<Product> products) {
+        Map<String, Product> prodToStore = new HashMap<String, Product>();
+        Map<String, Content> contToStore = new HashMap<String, Content>();
+
         for (Product importedProduct : products) {
             // Handling the storing/updating of Content here. This is technically a
             // disjoint entity, but really only makes sense in the concept of
@@ -78,23 +85,32 @@ public class ProductImporter {
                     c.setVendor("unknown");
                 }
 
-                /*
-                 * On standalone servers we will set metadata expire to 1 second so
-                 * clients an immediately get changes to content when published on the
-                 * server. We would use 0, but the client plugin interprets this as unset
-                 * and ignores it completely resulting in the default yum values being
-                 * used.
-                 *
-                 * We know this is a standalone server due to the fact that import is
-                 * being used, so there is no need to guard this behavior.
-                 */
-                c.setMetadataExpire(new Long(1));
+                // On standalone servers we need metadata expiry to be 0 so clients can
+                // immediately get changes to content when published on the server.
+                // We can assume this is a standalone server due to the fact that
+                // import is being used, so no need to guard this behavior:
 
-                contentCurator.createOrUpdate(c);
+                //c.setMetadataExpire(new Long(0));
+                contToStore.put(c.getId(), c);
+                //contentCurator.createOrUpdate(c);
+
             }
+            prodToStore.put(importedProduct.getId(), importedProduct);
 
-            curator.createOrUpdate(importedProduct);
         }
+        for (Content c : contToStore.values()) {
+            log.debug("Store Content: " + c.getLabel());
+            Content newContent = contentCurator.createOrUpdate(c);
+            contentCurator.refresh(newContent);
+        }
+        //contentCurator.flush();
+        //curator.flush();
+        for (Product p : prodToStore.values()) {
+            log.debug("Store Product: " + p.getName());
+            curator.createOrUpdate(p);
+            curator.refresh(p);
+        }
+
     }
 
     /**
