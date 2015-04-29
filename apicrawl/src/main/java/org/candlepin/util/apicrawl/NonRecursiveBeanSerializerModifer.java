@@ -14,8 +14,6 @@
  */
 package org.candlepin.util.apicrawl;
 
-import org.candlepin.util.Util;
-
 import com.fasterxml.jackson.databind.BeanDescription;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -24,6 +22,7 @@ import com.fasterxml.jackson.databind.ser.BeanSerializer;
 import com.fasterxml.jackson.databind.ser.BeanSerializerModifier;
 
 import java.lang.reflect.Type;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -35,7 +34,7 @@ class NonRecursiveBeanSerializerModifer extends BeanSerializerModifier {
     private ObjectMapper mapper;
 
     NonRecursiveBeanSerializerModifer(ObjectMapper mapper) {
-        seenClasses = Util.newSet();
+        seenClasses = new HashSet<Type>();
         this.mapper = mapper;
     }
 
