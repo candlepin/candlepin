@@ -44,8 +44,10 @@ cleanup() {
     # Errors in the script should still launch the shell, as they're likely CP config errors, not
     # actual errors with the script
     if [ "$1" == "" ] || [ "$1" == "ERR" ] || [ "$1" == "EXIT" ]; then
-        echo "Launching shell..."
-        /bin/bash -i -l
+        if [ "$LAUNCHSHELL" == "1" ]; then
+            echo "Launching shell..."
+            /bin/bash -i -l
+        fi
     else
         # exit, propagating any signal we received
         kill -$1 $$
